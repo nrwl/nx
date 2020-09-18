@@ -37,285 +37,290 @@ describe('getTouchedProjectsFromTsConfig', () => {
       },
     };
   });
-  it('should not return changes when tsconfig.json is not touched', () => {
-    const result = getTouchedProjectsFromTsConfig(
-      [
-        {
-          file: 'source.ts',
-          ext: '.ts',
-          hash: 'some-hash',
-          getChanges: () => [new WholeFileChange()],
-        },
-      ],
-      {},
-      {
-        npmScope: 'proj',
-        projects: {
-          proj1: {
-            tags: [],
-          },
-        },
-      }
-    );
-    expect(result).toEqual([]);
-  });
 
-  describe('Whole File Changes', () => {
-    it('should return all projects for a whole file change', () => {
-      const result = getTouchedProjectsFromTsConfig(
-        [
+  ['tsconfig.json', 'tsconfig.base.json'].forEach((tsConfig) => {
+    describe(`(${tsConfig})`, () => {
+      it(`should not return changes when ${tsConfig} is not touched`, () => {
+        const result = getTouchedProjectsFromTsConfig(
+          [
+            {
+              file: 'source.ts',
+              ext: '.ts',
+              hash: 'some-hash',
+              getChanges: () => [new WholeFileChange()],
+            },
+          ],
+          {},
           {
-            file: 'tsconfig.json',
-            ext: '.json',
-            hash: 'some-hash',
-            getChanges: () => [new WholeFileChange()],
-          },
-        ],
-        null,
-        null,
-        null,
-        graph
-      );
-      expect(result).toEqual(['proj1', 'proj2']);
-    });
-  });
+            npmScope: 'proj',
+            projects: {
+              proj1: {
+                tags: [],
+              },
+            },
+          }
+        );
+        expect(result).toEqual([]);
+      });
 
-  describe('Changes to other compiler options', () => {
-    it('should return all projects', () => {
-      const result = getTouchedProjectsFromTsConfig(
-        [
-          {
-            file: 'tsconfig.json',
-            ext: '.json',
-            hash: 'some-hash',
-            getChanges: () =>
-              jsonDiff(
-                {
-                  compilerOptions: {
-                    strict: false,
-                  },
-                },
-                {
-                  compilerOptions: {
-                    strict: true,
-                  },
-                }
-              ),
-          },
-        ],
-        null,
-        null,
-        null,
-        graph
-      );
-      expect(result).toEqual(['proj1', 'proj2']);
-    });
-  });
+      describe('Whole File Changes', () => {
+        it('should return all projects for a whole file change', () => {
+          const result = getTouchedProjectsFromTsConfig(
+            [
+              {
+                file: tsConfig,
+                ext: '.json',
+                hash: 'some-hash',
+                getChanges: () => [new WholeFileChange()],
+              },
+            ],
+            null,
+            null,
+            null,
+            graph
+          );
+          expect(result).toEqual(['proj1', 'proj2']);
+        });
+      });
 
-  describe('Adding new path mappings', () => {
-    it('should return projects pointed to by the path mappings', () => {
-      const result = getTouchedProjectsFromTsConfig(
-        [
-          {
-            file: 'tsconfig.json',
-            ext: '.json',
-            hash: 'some-hash',
-            getChanges: () =>
-              jsonDiff(
-                {
-                  compilerOptions: {
-                    paths: {},
-                  },
-                },
-                {
-                  compilerOptions: {
-                    paths: {
-                      '@proj/proj1': ['proj1/index.ts'],
+      describe('Changes to other compiler options', () => {
+        it('should return all projects', () => {
+          const result = getTouchedProjectsFromTsConfig(
+            [
+              {
+                file: tsConfig,
+                ext: '.json',
+                hash: 'some-hash',
+                getChanges: () =>
+                  jsonDiff(
+                    {
+                      compilerOptions: {
+                        strict: false,
+                      },
                     },
-                  },
-                }
-              ),
-          },
-        ],
-        null,
-        null,
-        null,
-        graph
-      );
-      expect(result).toEqual(['proj1']);
-    });
+                    {
+                      compilerOptions: {
+                        strict: true,
+                      },
+                    }
+                  ),
+              },
+            ],
+            null,
+            null,
+            null,
+            graph
+          );
+          expect(result).toEqual(['proj1', 'proj2']);
+        });
+      });
 
-    it('should accept different types of paths', () => {
-      const result = getTouchedProjectsFromTsConfig(
-        [
-          {
-            file: 'tsconfig.json',
-            ext: '.json',
-            hash: 'some-hash',
-            getChanges: () =>
-              jsonDiff(
-                {
-                  compilerOptions: {
-                    paths: {},
-                  },
-                },
-                {
-                  compilerOptions: {
-                    paths: {
-                      '@proj/proj1': ['./proj1/index.ts'],
+      describe('Adding new path mappings', () => {
+        it('should return projects pointed to by the path mappings', () => {
+          const result = getTouchedProjectsFromTsConfig(
+            [
+              {
+                file: tsConfig,
+                ext: '.json',
+                hash: 'some-hash',
+                getChanges: () =>
+                  jsonDiff(
+                    {
+                      compilerOptions: {
+                        paths: {},
+                      },
                     },
-                  },
-                }
-              ),
-          },
-        ],
-        null,
-        null,
-        null,
-        graph
-      );
-      expect(result).toEqual(['proj1']);
-    });
-  });
+                    {
+                      compilerOptions: {
+                        paths: {
+                          '@proj/proj1': ['proj1/index.ts'],
+                        },
+                      },
+                    }
+                  ),
+              },
+            ],
+            null,
+            null,
+            null,
+            graph
+          );
+          expect(result).toEqual(['proj1']);
+        });
 
-  describe('Removing path mappings', () => {
-    it('should affect all projects if a project is removed', () => {
-      const result = getTouchedProjectsFromTsConfig(
-        [
-          {
-            file: 'tsconfig.json',
-            ext: '.json',
-            hash: 'some-hash',
-            getChanges: () =>
-              jsonDiff(
-                {
-                  compilerOptions: {
-                    paths: {
-                      '@proj/proj1': ['proj1/index.ts'],
+        it('should accept different types of paths', () => {
+          const result = getTouchedProjectsFromTsConfig(
+            [
+              {
+                file: tsConfig,
+                ext: '.json',
+                hash: 'some-hash',
+                getChanges: () =>
+                  jsonDiff(
+                    {
+                      compilerOptions: {
+                        paths: {},
+                      },
                     },
-                  },
-                },
-                {
-                  compilerOptions: {
-                    paths: {},
-                  },
-                }
-              ),
-          },
-        ],
-        null,
-        null,
-        null,
-        graph
-      );
-      expect(result).toEqual(['proj1', 'proj2']);
-    });
+                    {
+                      compilerOptions: {
+                        paths: {
+                          '@proj/proj1': ['./proj1/index.ts'],
+                        },
+                      },
+                    }
+                  ),
+              },
+            ],
+            null,
+            null,
+            null,
+            graph
+          );
+          expect(result).toEqual(['proj1']);
+        });
+      });
 
-    it('should affect all projects if a path mapping is removed', () => {
-      const result = getTouchedProjectsFromTsConfig(
-        [
-          {
-            file: 'tsconfig.json',
-            ext: '.json',
-            hash: 'some-hash',
-            getChanges: () =>
-              jsonDiff(
-                {
-                  compilerOptions: {
-                    paths: {
-                      '@proj/proj1': ['proj1/index.ts', 'proj1/index2.ts'],
+      describe('Removing path mappings', () => {
+        it('should affect all projects if a project is removed', () => {
+          const result = getTouchedProjectsFromTsConfig(
+            [
+              {
+                file: tsConfig,
+                ext: '.json',
+                hash: 'some-hash',
+                getChanges: () =>
+                  jsonDiff(
+                    {
+                      compilerOptions: {
+                        paths: {
+                          '@proj/proj1': ['proj1/index.ts'],
+                        },
+                      },
                     },
-                  },
-                },
-                {
-                  compilerOptions: {
-                    paths: {
-                      '@proj/proj1': ['proj1/index.ts'],
-                    },
-                  },
-                }
-              ),
-          },
-        ],
-        null,
-        null,
-        null,
-        graph
-      );
-      expect(result).toContainEqual('proj1');
-      expect(result).toContainEqual('proj2');
-    });
-  });
+                    {
+                      compilerOptions: {
+                        paths: {},
+                      },
+                    }
+                  ),
+              },
+            ],
+            null,
+            null,
+            null,
+            graph
+          );
+          expect(result).toEqual(['proj1', 'proj2']);
+        });
 
-  describe('Modifying Path Mappings', () => {
-    it('should return projects that have path mappings modified within them', () => {
-      const result = getTouchedProjectsFromTsConfig(
-        [
-          {
-            file: 'tsconfig.json',
-            ext: '.json',
-            hash: 'some-hash',
-            getChanges: () =>
-              jsonDiff(
-                {
-                  compilerOptions: {
-                    paths: {
-                      '@proj/proj1': ['proj1/index.ts'],
+        it('should affect all projects if a path mapping is removed', () => {
+          const result = getTouchedProjectsFromTsConfig(
+            [
+              {
+                file: tsConfig,
+                ext: '.json',
+                hash: 'some-hash',
+                getChanges: () =>
+                  jsonDiff(
+                    {
+                      compilerOptions: {
+                        paths: {
+                          '@proj/proj1': ['proj1/index.ts', 'proj1/index2.ts'],
+                        },
+                      },
                     },
-                  },
-                },
-                {
-                  compilerOptions: {
-                    paths: {
-                      '@proj/proj1': ['proj1/index2.ts'],
-                    },
-                  },
-                }
-              ),
-          },
-        ],
-        null,
-        null,
-        null,
-        graph
-      );
-      expect(result).toContainEqual('proj1');
-      expect(result).not.toContainEqual('proj2');
-    });
+                    {
+                      compilerOptions: {
+                        paths: {
+                          '@proj/proj1': ['proj1/index.ts'],
+                        },
+                      },
+                    }
+                  ),
+              },
+            ],
+            null,
+            null,
+            null,
+            graph
+          );
+          expect(result).toContainEqual('proj1');
+          expect(result).toContainEqual('proj2');
+        });
+      });
 
-    it('should return both projects that the mappings used to point to and point to now', () => {
-      const result = getTouchedProjectsFromTsConfig(
-        [
-          {
-            file: 'tsconfig.json',
-            ext: '.json',
-            hash: 'some-hash',
-            getChanges: () =>
-              jsonDiff(
-                {
-                  compilerOptions: {
-                    paths: {
-                      '@proj/proj1': ['proj1/index.ts'],
+      describe('Modifying Path Mappings', () => {
+        it('should return projects that have path mappings modified within them', () => {
+          const result = getTouchedProjectsFromTsConfig(
+            [
+              {
+                file: tsConfig,
+                ext: '.json',
+                hash: 'some-hash',
+                getChanges: () =>
+                  jsonDiff(
+                    {
+                      compilerOptions: {
+                        paths: {
+                          '@proj/proj1': ['proj1/index.ts'],
+                        },
+                      },
                     },
-                  },
-                },
-                {
-                  compilerOptions: {
-                    paths: {
-                      '@proj/proj1': ['proj2/index.ts'],
+                    {
+                      compilerOptions: {
+                        paths: {
+                          '@proj/proj1': ['proj1/index2.ts'],
+                        },
+                      },
+                    }
+                  ),
+              },
+            ],
+            null,
+            null,
+            null,
+            graph
+          );
+          expect(result).toContainEqual('proj1');
+          expect(result).not.toContainEqual('proj2');
+        });
+
+        it('should return both projects that the mappings used to point to and point to now', () => {
+          const result = getTouchedProjectsFromTsConfig(
+            [
+              {
+                file: tsConfig,
+                ext: '.json',
+                hash: 'some-hash',
+                getChanges: () =>
+                  jsonDiff(
+                    {
+                      compilerOptions: {
+                        paths: {
+                          '@proj/proj1': ['proj1/index.ts'],
+                        },
+                      },
                     },
-                  },
-                }
-              ),
-          },
-        ],
-        null,
-        null,
-        null,
-        graph
-      );
-      expect(result).toContainEqual('proj1');
-      expect(result).toContainEqual('proj2');
+                    {
+                      compilerOptions: {
+                        paths: {
+                          '@proj/proj1': ['proj2/index.ts'],
+                        },
+                      },
+                    }
+                  ),
+              },
+            ],
+            null,
+            null,
+            null,
+            graph
+          );
+          expect(result).toContainEqual('proj1');
+          expect(result).toContainEqual('proj2');
+        });
+      });
     });
   });
 });
