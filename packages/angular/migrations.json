@@ -38,7 +38,7 @@
     },
     "update-10-3-0": {
       "version": "10.3.0-beta.1",
-      "description": "Update jest-preset-angular library to version 8.3.1",
+      "description": "Add tsconfig.editor.json to angular apps and update jest-angular-preset",
       "factory": "./src/migrations/update-10-3-0/update-10-3-0"
     }
   },

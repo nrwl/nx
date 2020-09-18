@@ -634,6 +634,28 @@ function updateE2eProject(options: NormalizedSchema): Rule {
   };
 }
 
+function addEditorTsConfigReference(options: NormalizedSchema): Rule {
+  // This should be the last tsconfig reference so it's not in the template.
+  return chain([
+    updateJsonInTree(
+      join(normalize(options.appProjectRoot), 'tsconfig.json'),
+      (json) => {
+        json.references.push({
+          path: './tsconfig.editor.json',
+        });
+        return json;
+      }
+    ),
+    updateWorkspace((workspace) => {
+      const tsConfigs = workspace.projects.get(options.name).targets.get('lint')
+        .options.tsConfig as string[];
+      tsConfigs.push(
+        join(normalize(options.appProjectRoot), 'tsconfig.editor.json')
+      );
+    }),
+  ]);
+}
+
 function addProxyConfig(options: NormalizedSchema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const projectConfig = getProjectConfig(host, options.name);
@@ -800,6 +822,7 @@ export default function (schema: Schema): Rule {
             linter: options.linter,
           })
         : noop(),
+      addEditorTsConfigReference(options),
       options.backendProject ? addProxyConfig(options) : noop(),
       options.strict ? enableStrictTypeChecking(options) : noop(),
       formatFiles(options),

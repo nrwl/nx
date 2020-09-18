@@ -1,0 +1,303 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`app --linter eslint should add an architect target for lint 1`] = `
+Object {
+  "builder": "@nrwl/linter:lint",
+  "options": Object {
+    "exclude": Array [
+      "**/node_modules/**",
+      "!apps/my-app/**/*",
+    ],
+    "linter": "eslint",
+    "tsConfig": Array [
+      "apps/my-app/tsconfig.app.json",
+      "apps/my-app/tsconfig.spec.json",
+      "apps/my-app/tsconfig.editor.json",
+    ],
+  },
+}
+`;
+
+exports[`app --linter eslint should add an architect target for lint 2`] = `
+Object {
+  "builder": "@nrwl/linter:lint",
+  "options": Object {
+    "exclude": Array [
+      "**/node_modules/**",
+      "!apps/my-app-e2e/**/*",
+    ],
+    "linter": "eslint",
+    "tsConfig": Array [
+      "apps/my-app-e2e/tsconfig.e2e.json",
+    ],
+  },
+}
+`;
+
+exports[`app nested should update workspace.json 1`] = `
+Object {
+  "architect": Object {
+    "build": Object {
+      "builder": "@angular-devkit/build-angular:browser",
+      "configurations": Object {
+        "production": Object {
+          "budgets": Array [
+            Object {
+              "maximumError": "5mb",
+              "maximumWarning": "2mb",
+              "type": "initial",
+            },
+            Object {
+              "maximumError": "10kb",
+              "maximumWarning": "6kb",
+              "type": "anyComponentStyle",
+            },
+          ],
+          "buildOptimizer": true,
+          "extractCss": true,
+          "extractLicenses": true,
+          "fileReplacements": Array [
+            Object {
+              "replace": "apps/my-dir/my-app/src/environments/environment.ts",
+              "with": "apps/my-dir/my-app/src/environments/environment.prod.ts",
+            },
+          ],
+          "namedChunks": false,
+          "optimization": true,
+          "outputHashing": "all",
+          "sourceMap": false,
+          "vendorChunk": false,
+        },
+      },
+      "options": Object {
+        "aot": true,
+        "assets": Array [
+          "apps/my-dir/my-app/src/favicon.ico",
+          "apps/my-dir/my-app/src/assets",
+        ],
+        "index": "apps/my-dir/my-app/src/index.html",
+        "main": "apps/my-dir/my-app/src/main.ts",
+        "outputPath": "dist/apps/my-dir/my-app",
+        "polyfills": "apps/my-dir/my-app/src/polyfills.ts",
+        "scripts": Array [],
+        "styles": Array [
+          "apps/my-dir/my-app/src/styles.css",
+        ],
+        "tsConfig": "apps/my-dir/my-app/tsconfig.app.json",
+      },
+    },
+    "extract-i18n": Object {
+      "builder": "@angular-devkit/build-angular:extract-i18n",
+      "options": Object {
+        "browserTarget": "my-dir-my-app:build",
+      },
+    },
+    "lint": Object {
+      "builder": "@angular-devkit/build-angular:tslint",
+      "options": Object {
+        "exclude": Array [
+          "**/node_modules/**",
+          "!apps/my-dir/my-app/**/*",
+        ],
+        "tsConfig": Array [
+          "apps/my-dir/my-app/tsconfig.app.json",
+          "apps/my-dir/my-app/tsconfig.spec.json",
+          "apps/my-dir/my-app/tsconfig.editor.json",
+        ],
+      },
+    },
+    "serve": Object {
+      "builder": "@angular-devkit/build-angular:dev-server",
+      "configurations": Object {
+        "production": Object {
+          "browserTarget": "my-dir-my-app:build:production",
+        },
+      },
+      "options": Object {
+        "browserTarget": "my-dir-my-app:build",
+      },
+    },
+    "test": Object {
+      "builder": "@nrwl/jest:jest",
+      "options": Object {
+        "jestConfig": "apps/my-dir/my-app/jest.config.js",
+        "passWithNoTests": true,
+      },
+    },
+  },
+  "prefix": "proj",
+  "projectType": "application",
+  "root": "apps/my-dir/my-app",
+  "schematics": Object {},
+  "sourceRoot": "apps/my-dir/my-app/src",
+}
+`;
+
+exports[`app nested should update workspace.json 2`] = `
+Object {
+  "architect": Object {
+    "e2e": Object {
+      "builder": "@nrwl/cypress:cypress",
+      "configurations": Object {
+        "production": Object {
+          "devServerTarget": "my-dir-my-app:serve:production",
+        },
+      },
+      "options": Object {
+        "cypressConfig": "apps/my-dir/my-app-e2e/cypress.json",
+        "devServerTarget": "my-dir-my-app:serve",
+        "tsConfig": "apps/my-dir/my-app-e2e/tsconfig.e2e.json",
+      },
+    },
+    "lint": Object {
+      "builder": "@angular-devkit/build-angular:tslint",
+      "options": Object {
+        "exclude": Array [
+          "**/node_modules/**",
+          "!apps/my-dir/my-app-e2e/**/*",
+        ],
+        "tsConfig": Array [
+          "apps/my-dir/my-app-e2e/tsconfig.e2e.json",
+        ],
+      },
+    },
+  },
+  "projectType": "application",
+  "root": "apps/my-dir/my-app-e2e",
+  "sourceRoot": "apps/my-dir/my-app-e2e/src",
+}
+`;
+
+exports[`app not nested should update workspace.json 1`] = `
+Object {
+  "architect": Object {
+    "build": Object {
+      "builder": "@angular-devkit/build-angular:browser",
+      "configurations": Object {
+        "production": Object {
+          "budgets": Array [
+            Object {
+              "maximumError": "5mb",
+              "maximumWarning": "2mb",
+              "type": "initial",
+            },
+            Object {
+              "maximumError": "10kb",
+              "maximumWarning": "6kb",
+              "type": "anyComponentStyle",
+            },
+          ],
+          "buildOptimizer": true,
+          "extractCss": true,
+          "extractLicenses": true,
+          "fileReplacements": Array [
+            Object {
+              "replace": "apps/my-app/src/environments/environment.ts",
+              "with": "apps/my-app/src/environments/environment.prod.ts",
+            },
+          ],
+          "namedChunks": false,
+          "optimization": true,
+          "outputHashing": "all",
+          "sourceMap": false,
+          "vendorChunk": false,
+        },
+      },
+      "options": Object {
+        "aot": true,
+        "assets": Array [
+          "apps/my-app/src/favicon.ico",
+          "apps/my-app/src/assets",
+        ],
+        "index": "apps/my-app/src/index.html",
+        "main": "apps/my-app/src/main.ts",
+        "outputPath": "dist/apps/my-app",
+        "polyfills": "apps/my-app/src/polyfills.ts",
+        "scripts": Array [],
+        "styles": Array [
+          "apps/my-app/src/styles.css",
+        ],
+        "tsConfig": "apps/my-app/tsconfig.app.json",
+      },
+    },
+    "extract-i18n": Object {
+      "builder": "@angular-devkit/build-angular:extract-i18n",
+      "options": Object {
+        "browserTarget": "my-app:build",
+      },
+    },
+    "lint": Object {
+      "builder": "@angular-devkit/build-angular:tslint",
+      "options": Object {
+        "exclude": Array [
+          "**/node_modules/**",
+          "!apps/my-app/**/*",
+        ],
+        "tsConfig": Array [
+          "apps/my-app/tsconfig.app.json",
+          "apps/my-app/tsconfig.spec.json",
+          "apps/my-app/tsconfig.editor.json",
+        ],
+      },
+    },
+    "serve": Object {
+      "builder": "@angular-devkit/build-angular:dev-server",
+      "configurations": Object {
+        "production": Object {
+          "browserTarget": "my-app:build:production",
+        },
+      },
+      "options": Object {
+        "browserTarget": "my-app:build",
+      },
+    },
+    "test": Object {
+      "builder": "@nrwl/jest:jest",
+      "options": Object {
+        "jestConfig": "apps/my-app/jest.config.js",
+        "passWithNoTests": true,
+      },
+    },
+  },
+  "prefix": "proj",
+  "projectType": "application",
+  "root": "apps/my-app",
+  "schematics": Object {},
+  "sourceRoot": "apps/my-app/src",
+}
+`;
+
+exports[`app not nested should update workspace.json 2`] = `
+Object {
+  "architect": Object {
+    "e2e": Object {
+      "builder": "@nrwl/cypress:cypress",
+      "configurations": Object {
+        "production": Object {
+          "devServerTarget": "my-app:serve:production",
+        },
+      },
+      "options": Object {
+        "cypressConfig": "apps/my-app-e2e/cypress.json",
+        "devServerTarget": "my-app:serve",
+        "tsConfig": "apps/my-app-e2e/tsconfig.e2e.json",
+      },
+    },
+    "lint": Object {
+      "builder": "@angular-devkit/build-angular:tslint",
+      "options": Object {
+        "exclude": Array [
+          "**/node_modules/**",
+          "!apps/my-app-e2e/**/*",
+        ],
+        "tsConfig": Array [
+          "apps/my-app-e2e/tsconfig.e2e.json",
+        ],
+      },
+    },
+  },
+  "projectType": "application",
+  "root": "apps/my-app-e2e",
+  "sourceRoot": "apps/my-app-e2e/src",
+}
+`;
