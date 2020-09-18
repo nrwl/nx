@@ -282,6 +282,11 @@
                     "file": "angular/api-workspace/schematics/remove"
                   },
                   {
+                    "name": "run-commands",
+                    "id": "run-commands",
+                    "file": "angular/api-workspace/schematics/run-commands"
+                  },
+                  {
                     "name": "workspace-schematic",
                     "id": "workspace-schematic",
                     "file": "angular/api-workspace/schematics/workspace-schematic"
@@ -447,6 +452,16 @@
                     "name": "component",
                     "id": "component",
                     "file": "angular/api-react/schematics/component"
+                  },
+                  {
+                    "name": "component-cypress-spec",
+                    "id": "component-cypress-spec",
+                    "file": "node/api-react/schematics/component-cypress-spec"
+                  },
+                  {
+                    "name": "component-story",
+                    "id": "component-story",
+                    "file": "node/api-react/schematics/component-story"
                   },
                   {
                     "name": "library",
@@ -654,9 +669,79 @@
                     "file": "angular/api-nest/schematics/application"
                   },
                   {
+                    "name": "class",
+                    "id": "class",
+                    "file": "angular/api-nest/schematics/class"
+                  },
+                  {
+                    "name": "controller",
+                    "id": "controller",
+                    "file": "angular/api-nest/schematics/controller"
+                  },
+                  {
+                    "name": "decorator",
+                    "id": "decorator",
+                    "file": "angular/api-nest/schematics/decorator"
+                  },
+                  {
+                    "name": "filter",
+                    "id": "filter",
+                    "file": "angular/api-nest/schematics/filter"
+                  },
+                  {
+                    "name": "gateway",
+                    "id": "gateway",
+                    "file": "angular/api-nest/schematics/gateway"
+                  },
+                  {
+                    "name": "guard",
+                    "id": "guard",
+                    "file": "angular/api-nest/schematics/guard"
+                  },
+                  {
+                    "name": "interceptor",
+                    "id": "interceptor",
+                    "file": "angular/api-nest/schematics/interceptor"
+                  },
+                  {
+                    "name": "interface",
+                    "id": "interface",
+                    "file": "angular/api-nest/schematics/interface"
+                  },
+                  {
                     "name": "library",
                     "id": "library",
                     "file": "angular/api-nest/schematics/library"
+                  },
+                  {
+                    "name": "middleware",
+                    "id": "middleware",
+                    "file": "angular/api-nest/schematics/middleware"
+                  },
+                  {
+                    "name": "module",
+                    "id": "module",
+                    "file": "angular/api-nest/schematics/module"
+                  },
+                  {
+                    "name": "pipe",
+                    "id": "pipe",
+                    "file": "angular/api-nest/schematics/pipe"
+                  },
+                  {
+                    "name": "provider",
+                    "id": "provider",
+                    "file": "angular/api-nest/schematics/provider"
+                  },
+                  {
+                    "name": "resolver",
+                    "id": "resolver",
+                    "file": "angular/api-nest/schematics/resolver"
+                  },
+                  {
+                    "name": "service",
+                    "id": "service",
+                    "file": "angular/api-nest/schematics/service"
                   }
                 ]
               }
@@ -680,6 +765,16 @@
                     "name": "application",
                     "id": "application",
                     "file": "angular/api-next/schematics/application"
+                  },
+                  {
+                    "name": "component",
+                    "id": "component",
+                    "file": "angular/api-next/schematics/component"
+                  },
+                  {
+                    "name": "page",
+                    "id": "page",
+                    "file": "angular/api-next/schematics/page"
                   }
                 ]
               },
@@ -721,9 +816,24 @@
                 "name": "Schematics",
                 "itemList": [
                   {
+                    "name": "builder",
+                    "id": "builder",
+                    "file": "angular/api-nx-plugin/schematics/builder"
+                  },
+                  {
+                    "name": "migration",
+                    "id": "migration",
+                    "file": "angular/api-nx-plugin/schematics/migration"
+                  },
+                  {
                     "name": "plugin",
                     "id": "plugin",
                     "file": "angular/api-nx-plugin/schematics/plugin"
+                  },
+                  {
+                    "name": "schematic",
+                    "id": "schematic",
+                    "file": "angular/api-nx-plugin/schematics/schematic"
                   }
                 ]
               },
@@ -1193,6 +1303,11 @@
                     "file": "react/api-workspace/schematics/remove"
                   },
                   {
+                    "name": "run-commands",
+                    "id": "run-commands",
+                    "file": "react/api-workspace/schematics/run-commands"
+                  },
+                  {
                     "name": "workspace-schematic",
                     "id": "workspace-schematic",
                     "file": "react/api-workspace/schematics/workspace-schematic"
@@ -1358,6 +1473,16 @@
                     "name": "component",
                     "id": "component",
                     "file": "react/api-react/schematics/component"
+                  },
+                  {
+                    "name": "component-cypress-spec",
+                    "id": "component-cypress-spec",
+                    "file": "react/api-react/schematics/component-cypress-spec"
+                  },
+                  {
+                    "name": "component-story",
+                    "id": "component-story",
+                    "file": "react/api-react/schematics/component-story"
                   },
                   {
                     "name": "library",
@@ -1562,12 +1687,82 @@
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "react/api-next/schematics/application"
+                    "file": "react/api-nest/schematics/application"
+                  },
+                  {
+                    "name": "class",
+                    "id": "class",
+                    "file": "react/api-nest/schematics/class"
+                  },
+                  {
+                    "name": "controller",
+                    "id": "controller",
+                    "file": "react/api-nest/schematics/controller"
+                  },
+                  {
+                    "name": "decorator",
+                    "id": "decorator",
+                    "file": "react/api-nest/schematics/decorator"
+                  },
+                  {
+                    "name": "filter",
+                    "id": "filter",
+                    "file": "react/api-nest/schematics/filter"
+                  },
+                  {
+                    "name": "gateway",
+                    "id": "gateway",
+                    "file": "react/api-nest/schematics/gateway"
+                  },
+                  {
+                    "name": "guard",
+                    "id": "guard",
+                    "file": "react/api-nest/schematics/guard"
+                  },
+                  {
+                    "name": "interceptor",
+                    "id": "interceptor",
+                    "file": "react/api-nest/schematics/interceptor"
+                  },
+                  {
+                    "name": "interface",
+                    "id": "interface",
+                    "file": "react/api-nest/schematics/interface"
                   },
                   {
                     "name": "library",
                     "id": "library",
                     "file": "react/api-nest/schematics/library"
+                  },
+                  {
+                    "name": "middleware",
+                    "id": "middleware",
+                    "file": "react/api-nest/schematics/middleware"
+                  },
+                  {
+                    "name": "module",
+                    "id": "module",
+                    "file": "react/api-nest/schematics/module"
+                  },
+                  {
+                    "name": "pipe",
+                    "id": "pipe",
+                    "file": "react/api-nest/schematics/pipe"
+                  },
+                  {
+                    "name": "provider",
+                    "id": "provider",
+                    "file": "react/api-nest/schematics/provider"
+                  },
+                  {
+                    "name": "resolver",
+                    "id": "resolver",
+                    "file": "react/api-nest/schematics/resolver"
+                  },
+                  {
+                    "name": "service",
+                    "id": "service",
+                    "file": "react/api-nest/schematics/service"
                   }
                 ]
               }
@@ -1591,6 +1786,16 @@
                     "name": "application",
                     "id": "application",
                     "file": "react/api-next/schematics/application"
+                  },
+                  {
+                    "name": "component",
+                    "id": "component",
+                    "file": "react/api-next/schematics/component"
+                  },
+                  {
+                    "name": "page",
+                    "id": "page",
+                    "file": "react/api-next/schematics/page"
                   }
                 ]
               },
@@ -1632,9 +1837,24 @@
                 "name": "Schematics",
                 "itemList": [
                   {
+                    "name": "builder",
+                    "id": "builder",
+                    "file": "react/api-nx-plugin/schematics/builder"
+                  },
+                  {
+                    "name": "migration",
+                    "id": "migration",
+                    "file": "react/api-nx-plugin/schematics/migration"
+                  },
+                  {
                     "name": "plugin",
                     "id": "plugin",
-                    "file": "angular/api-nx-plugin/schematics/plugin"
+                    "file": "react/api-nx-plugin/schematics/plugin"
+                  },
+                  {
+                    "name": "schematic",
+                    "id": "schematic",
+                    "file": "react/api-nx-plugin/schematics/schematic"
                   }
                 ]
               },
@@ -1645,7 +1865,7 @@
                   {
                     "name": "e2e",
                     "id": "e2e",
-                    "file": "angular/api-nx-plugin/builders/e2e"
+                    "file": "react/api-nx-plugin/builders/e2e"
                   }
                 ]
               }
@@ -2082,6 +2302,11 @@
                     "file": "node/api-workspace/schematics/remove"
                   },
                   {
+                    "name": "run-commands",
+                    "id": "run-commands",
+                    "file": "node/api-workspace/schematics/run-commands"
+                  },
+                  {
                     "name": "workspace-schematic",
                     "id": "workspace-schematic",
                     "file": "node/api-workspace/schematics/workspace-schematic"
@@ -2247,6 +2472,16 @@
                     "name": "component",
                     "id": "component",
                     "file": "node/api-react/schematics/component"
+                  },
+                  {
+                    "name": "component-cypress-spec",
+                    "id": "component-cypress-spec",
+                    "file": "node/api-react/schematics/component-cypress-spec"
+                  },
+                  {
+                    "name": "component-story",
+                    "id": "component-story",
+                    "file": "node/api-react/schematics/component-story"
                   },
                   {
                     "name": "library",
@@ -2451,12 +2686,82 @@
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "node/api-next/schematics/application"
+                    "file": "node/api-nest/schematics/application"
+                  },
+                  {
+                    "name": "class",
+                    "id": "class",
+                    "file": "node/api-nest/schematics/class"
+                  },
+                  {
+                    "name": "controller",
+                    "id": "controller",
+                    "file": "node/api-nest/schematics/controller"
+                  },
+                  {
+                    "name": "decorator",
+                    "id": "decorator",
+                    "file": "node/api-nest/schematics/decorator"
+                  },
+                  {
+                    "name": "filter",
+                    "id": "filter",
+                    "file": "node/api-nest/schematics/filter"
+                  },
+                  {
+                    "name": "gateway",
+                    "id": "gateway",
+                    "file": "node/api-nest/schematics/gateway"
+                  },
+                  {
+                    "name": "guard",
+                    "id": "guard",
+                    "file": "node/api-nest/schematics/guard"
+                  },
+                  {
+                    "name": "interceptor",
+                    "id": "interceptor",
+                    "file": "node/api-nest/schematics/interceptor"
+                  },
+                  {
+                    "name": "interface",
+                    "id": "interface",
+                    "file": "node/api-nest/schematics/interface"
                   },
                   {
                     "name": "library",
                     "id": "library",
                     "file": "node/api-nest/schematics/library"
+                  },
+                  {
+                    "name": "middleware",
+                    "id": "middleware",
+                    "file": "node/api-nest/schematics/middleware"
+                  },
+                  {
+                    "name": "module",
+                    "id": "module",
+                    "file": "node/api-nest/schematics/module"
+                  },
+                  {
+                    "name": "pipe",
+                    "id": "pipe",
+                    "file": "node/api-nest/schematics/pipe"
+                  },
+                  {
+                    "name": "provider",
+                    "id": "provider",
+                    "file": "node/api-nest/schematics/provider"
+                  },
+                  {
+                    "name": "resolver",
+                    "id": "resolver",
+                    "file": "node/api-nest/schematics/resolver"
+                  },
+                  {
+                    "name": "service",
+                    "id": "service",
+                    "file": "node/api-nest/schematics/service"
                   }
                 ]
               }
@@ -2480,6 +2785,16 @@
                     "name": "application",
                     "id": "application",
                     "file": "node/api-next/schematics/application"
+                  },
+                  {
+                    "name": "component",
+                    "id": "component",
+                    "file": "node/api-next/schematics/component"
+                  },
+                  {
+                    "name": "page",
+                    "id": "page",
+                    "file": "node/api-next/schematics/page"
                   }
                 ]
               },
@@ -2521,9 +2836,24 @@
                 "name": "Schematics",
                 "itemList": [
                   {
+                    "name": "builder",
+                    "id": "builder",
+                    "file": "node/api-nx-plugin/schematics/builder"
+                  },
+                  {
+                    "name": "migration",
+                    "id": "migration",
+                    "file": "node/api-nx-plugin/schematics/migration"
+                  },
+                  {
                     "name": "plugin",
                     "id": "plugin",
                     "file": "node/api-nx-plugin/schematics/plugin"
+                  },
+                  {
+                    "name": "schematic",
+                    "id": "schematic",
+                    "file": "node/api-nx-plugin/schematics/schematic"
                   }
                 ]
               },
