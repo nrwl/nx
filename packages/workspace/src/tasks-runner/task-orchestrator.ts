@@ -3,10 +3,9 @@ import { cliCommand } from '../core/file-utils';
 import { ProjectGraph } from '../core/project-graph';
 import { AffectedEventType, Task } from './tasks-runner';
 import { getOutputs, unparse } from './utils';
-import { fork } from 'child_process';
+import { ChildProcess, fork } from 'child_process';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { output } from '../utils/output';
-import * as path from 'path';
 import * as fs from 'fs';
 import { appRootPath } from '../utils/app-root';
 import * as dotenv from 'dotenv';
@@ -16,11 +15,15 @@ export class TaskOrchestrator {
   cache = new Cache(this.options);
   cli = cliCommand();
 
+  private processes: ChildProcess[] = [];
+
   constructor(
     private readonly initiatingProject: string | undefined,
     private readonly projectGraph: ProjectGraph,
     private readonly options: DefaultTasksRunnerOptions
-  ) {}
+  ) {
+    this.setupOnProcessExitListener();
+  }
 
   async run(tasksInStage: Task[]) {
     const { cached, rest } = await this.splitTasksIntoCachedAndNotCached(
@@ -166,9 +169,7 @@ export class TaskOrchestrator {
           stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
           env,
         });
-        process.addListener('SIGINT', () => {
-          p.kill('SIGINT');
-        });
+        this.processes.push(p);
         let out = [];
         let outWithErr = [];
         p.stdout.on('data', (chunk) => {
@@ -235,9 +236,7 @@ export class TaskOrchestrator {
           stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
           env,
         });
-        process.addListener('SIGINT', () => {
-          p.kill('SIGINT');
-        });
+        this.processes.push(p);
         p.on('exit', (code) => {
           if (code === null) code = 2;
           // we didn't print any output as we were running the command
@@ -335,6 +334,15 @@ export class TaskOrchestrator {
       `${task.target.project}:${task.target.target}${config}`,
       ...args,
     ];
+  }
+
+  private setupOnProcessExitListener() {
+    // Forward SIGINTs to all forked processes
+    process.addListener('SIGINT', () => {
+      this.processes.forEach((p) => {
+        p.kill('SIGINT');
+      });
+    });
   }
 }
 
