@@ -421,7 +421,7 @@
             "assets": [
               {
                 "input": "packages/storybook",
-                "glob": "**/lib-files/.storybook/**",
+                "glob": "**/project-files/.storybook/**",
                 "output": "/"
               },
               {
