@@ -230,7 +230,7 @@
     "verdaccio": "^4.4.2",
     "webpack": "4.42.0",
     "webpack-dev-middleware": "3.7.0",
-    "webpack-dev-server": "3.9.0",
+    "webpack-dev-server": "3.11.0",
     "webpack-merge": "4.2.1",
     "webpack-node-externals": "^1.7.2",
     "webpack-sources": "1.4.3",
