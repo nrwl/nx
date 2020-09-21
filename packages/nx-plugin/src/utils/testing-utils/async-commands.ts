@@ -1,5 +1,6 @@
 import { exec } from 'child_process';
 import { tmpProjPath } from './paths';
+import { getPackageManagerExecuteCommand } from '@nrwl/workspace/src/utils/detect-package-manager';
 
 /**
  * Run a command asynchronously inside the e2e directory.
@@ -41,7 +42,7 @@ export function runNxCommandAsync(
   }
 ): Promise<{ stdout: string; stderr: string }> {
   return runCommandAsync(
-    `node ./node_modules/@nrwl/cli/bin/nx.js ${command}`,
+    `${getPackageManagerExecuteCommand()} nx ${command}`,
     opts
   );
 }
