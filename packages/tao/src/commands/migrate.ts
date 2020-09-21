@@ -389,9 +389,10 @@ function versions(root: string, from: { [p: string]: string }) {
       if (from[packageName]) {
         return from[packageName];
       }
-      const content = readFileSync(
-        join(root, `./node_modules/${packageName}/package.json`)
-      );
+      const packageJsonPath = require.resolve(`${packageName}/package.json`, {
+        paths: [root],
+      });
+      const content = readFileSync(packageJsonPath);
       return JSON.parse(stripJsonComments(content.toString()))['version'];
     } catch (e) {
       return null;
@@ -412,12 +413,11 @@ function createFetcher(logger: logging.Logger) {
       execSync(`npm install ${packageName}@${packageVersion} --prefix=${dir}`, {
         stdio: [],
       });
+      const packageJsonPath = require.resolve(`${packageName}/package.json`, {
+        paths: [dir],
+      });
       const json = JSON.parse(
-        stripJsonComments(
-          readFileSync(
-            join(dir, 'node_modules', packageName, 'package.json')
-          ).toString()
-        )
+        stripJsonComments(readFileSync(packageJsonPath).toString())
       );
       let migrationsFile = json['nx-migrations'] || json['ng-update'];
 
@@ -431,12 +431,13 @@ function createFetcher(logger: logging.Logger) {
 
       try {
         if (migrationsFile && typeof migrationsFile === 'string') {
+          const migrationsFilePath = require.resolve(
+            `${packageName}/${migrationsFile}`,
+            { paths: [dir] }
+          );
+
           const json = JSON.parse(
-            stripJsonComments(
-              readFileSync(
-                join(dir, 'node_modules', packageName, migrationsFile)
-              ).toString()
-            )
+            stripJsonComments(readFileSync(migrationsFilePath).toString())
           );
           cache[`${packageName}-${packageVersion}`] = {
             version: resolvedVersion,
