@@ -355,8 +355,8 @@ forEachCli((currentCLIName) => {
 
       expect(stripIndents`${jestConfigContent}`).toEqual(
         stripIndents`module.exports = {
-                name: '${nestlib}',
-                preset: '../../jest.config.js',
+                displayName: '${nestlib}',
+                preset: '../../jest.preset.js',
                 globals: {
                   'ts-jest': {
                   tsConfig: '<rootDir>/tsconfig.spec.json',
