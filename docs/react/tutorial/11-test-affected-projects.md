@@ -33,15 +33,15 @@ export const Todos = (props: { todos: Todo[] }) => {
 export default Todos;
 ```
 
-**Run `nx affected:apps`**, and you should see `todos` printed out. The `affected:apps` looks at what you have changed and uses the dependency graph to figure out which apps can be affected by this change.
+**Run `npx nx affected:apps`**, and you should see `todos` printed out. The `affected:apps` looks at what you have changed and uses the dependency graph to figure out which apps can be affected by this change.
 
-**Run `nx affected:libs`**, and you should see `ui` printed out. This command works similarly, but instead of printing the affected apps, it prints the affected libs.
+**Run `npx nx affected:libs`**, and you should see `ui` printed out. This command works similarly, but instead of printing the affected apps, it prints the affected libs.
 
 ## Test Affected Projects
 
 Printing the affected projects can be handy, but usually you want to do something with them. For instance, you may want to test everything that has been affected.
 
-**Run `nx affected:test` to retest only the projects affected by the change.**
+**Run `npx nx affected:test` to retest only the projects affected by the change.**
 
 As you can see, since we updated the code, without updating the tests, the unit tests failed.
 
@@ -67,12 +67,12 @@ You can run any target against the affected projects in the graph like this:
 
 ```bash
 # The following are equivalent
-nx affected --target=build
-nx affected:build
+npx nx affected --target=build
+npx nx affected:build
 ```
 
 !!!!!
-Run "nx affected --target=invalid --base=master". What do you see?
+Run "npx nx affected --target=invalid --base=master". What do you see?
 !!!!!
 No projects with "invalid" were run
 An error message saying that the "invalid" target is invalid

@@ -54,7 +54,7 @@ export default App;
 ```
 
 !!!!!
-Run `nx serve todos` and open http://localhost:4200. What do you see?
+Run `npx nx serve todos` and open http://localhost:4200. What do you see?
 !!!!!
 "the server responded with a status of 404 (Not Found)" in Console.
 Blank screen.

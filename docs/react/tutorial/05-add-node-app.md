@@ -8,7 +8,7 @@ The requests fail because the API has not been created yet. Using Nx you can dev
 
 ## Add Express Plugin to Your Workspace
 
-Nx is an open platform with plugins for many modern tools and frameworks. **To see some plugins, run `nx list`:**
+Nx is an open platform with plugins for many modern tools and frameworks. **To see some plugins, run `npx nx list`:**
 
 ```bash
 >  NX  Installed plugins:
@@ -40,7 +40,7 @@ Nx is an open platform with plugins for many modern tools and frameworks. **To s
   ...
 ```
 
-**Now run `nx list @nrwl/express`, and you will see:**
+**Now run `npx nx list @nrwl/express`, and you will see:**
 
 ```bash
 >  NX   NOTE  @nrwl/express is not currently installed
@@ -60,14 +60,14 @@ or
 yarn add --dev @nrwl/express
 ```
 
-> `@nrwl/express` also added `@nrwl/node`. Run `nx list @nrwl/express` and `nx list @nrwl/node` to see what those plugins provide.
+> `@nrwl/express` also added `@nrwl/node`. Run `npx nx list @nrwl/express` and `npx nx list @nrwl/node` to see what those plugins provide.
 
 ## Generate an Express Application
 
 **Run the following to generate a new Express application:**
 
 ```bash
-nx g @nrwl/express:app api --frontendProject=todos
+npx nx g @nrwl/express:app api --frontendProject=todos
 ```
 
 After this is done, you should see something like this:
@@ -102,9 +102,9 @@ The `apps` directory is where Nx places anything you can run: frontend applicati
 
 You can run:
 
-- `nx serve api` to serve the application
-- `nx build api` to build the application
-- `nx test api` to test the application
+- `npx nx serve api` to serve the application
+- `npx nx build api` to build the application
+- `npx nx test api` to test the application
 
 **Add a file `apps/api/src/app/todos.ts`.**
 
@@ -152,7 +152,7 @@ server.on('error', console.error);
 ```
 
 !!!!!
-Run "nx serve api" and open http://localhost:3333/api/todos. What do you see?
+Run "npx nx serve api" and open http://localhost:3333/api/todos. What do you see?
 !!!!!
 `[{"title":"Todo 1"},{"title":"Todo 2"}]`
 Blank screen

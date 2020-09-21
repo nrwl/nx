@@ -17,7 +17,7 @@ To illustrate how useful libraries can be, create a library of React components.
 Run
 
 ```bash
-nx g @nrwl/react:lib ui
+npx nx g @nrwl/react:lib ui
 ```
 
 You should see the following:
@@ -75,7 +75,7 @@ Here, you can either change the UI component or generate a new one.
 **Add a component to the newly created ui library by running:**
 
 ```bash
-nx g @nrwl/react:component todos --project=ui --export
+npx nx g @nrwl/react:component todos --project=ui --export
 ```
 
 ```treeview
@@ -171,9 +171,9 @@ const App = () => {
 export default App;
 ```
 
-**Restart both `nx serve api` and `nx serve todos` and you should see the application running.**
+**Restart both `npx nx serve api` and `npx nx serve todos` and you should see the application running.**
 
-> Nx helps you explore code generation options. Run `nx g @nrwl/react:component --help` to see all options available. Pass `--dry-run` to the command to see what would be generated without actually changing anything, like this: `nx g @nrwl/react:component mycmp --project=ui --dry-run`.
+> Nx helps you explore code generation options. Run `npx nx g @nrwl/react:component --help` to see all options available. Pass `--dry-run` to the command to see what would be generated without actually changing anything, like this: `npx nx g @nrwl/react:component mycmp --project=ui --dry-run`.
 
 !!!!!
 Libraries' public API is defined in...

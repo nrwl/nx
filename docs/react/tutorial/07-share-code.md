@@ -9,7 +9,7 @@ Awesome! The application is working end to end! However, there is a problem. Bot
 **Run the following generator to create a library:**
 
 ```bash
-nx g @nrwl/workspace:lib data
+npx nx g @nrwl/workspace:lib data
 ```
 
 The result should look like this:
@@ -85,7 +85,7 @@ export const App = () => {
 export default App;
 ```
 
-Every time you add a new library, you have to restart `nx serve`. **So restart both `nx serve api` and `nx serve todos` and you should see the application running.**
+Every time you add a new library, you have to restart `npx nx serve`. **So restart both `npx nx serve api` and `npx nx serve todos` and you should see the application running.**
 
 !!!!!
 Nx allows you to share code...

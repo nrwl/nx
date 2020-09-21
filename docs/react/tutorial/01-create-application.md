@@ -75,10 +75,16 @@ The generate command added two projects to our workspace:
 Now that the application is set up, run it locally via:
 
 ```bash
-nx serve todos
+npx nx serve todos
 ```
 
 ## Note on the Nx CLI
+
+If you would prefer to run using a global installation of Nx, you can run:
+
+```bash
+nx serve todos
+```
 
 Depending on how your dev env is set up, the command above might result in `Command 'nx' not found`.
 
@@ -94,7 +100,7 @@ or
 yarn global add nx
 ```
 
-Or you can prepend every command with `npm run`:
+Alternatively, you can run the local installation of Nx by prepending every command with `npm run`:
 
 ```bash
 npm run nx -- serve todos
