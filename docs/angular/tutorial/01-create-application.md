@@ -77,12 +77,18 @@ The generate command added two projects to our workspace:
 Now that the application is set up, run it locally via:
 
 ```bash
-nx serve todos
+npx nx serve todos
 ```
 
 ## Note on `nx serve` and `ng serve`
 
 Internally, the Nx CLI delegates to the Angular CLI when running commands or generating code. The `nx serve` command produces the same result as `ng serve`, and `nx build` produces the same results as `ng build`. However, the Nx CLI supports advanced capabilities that aren't supported by the Angular CLI. For instance, Nx's computation cache only works when using the Nx CLI. In other words, using `nx` instead `ng` will result in the same output, but often will perform a lot better. [Read more about Nx CLI and Angular CLI.](/angular/cli/nx-and-cli)
+
+If you would prefer to run using a global installation of Nx, you can run:
+
+```bash
+nx serve todos
+```
 
 Depending on how your dev env is set up, the command above might result in `Command 'nx' not found`.
 
@@ -98,7 +104,7 @@ or
 yarn global add nx
 ```
 
-Or you can prepend every command with `npm run`:
+Alternatively, you can run the local installation of Nx by prepending every command with `npm run`:
 
 ```bash
 npm run nx -- serve todos

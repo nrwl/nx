@@ -6,10 +6,10 @@
 
 Nx has built-in computation caching, which helps drastically improve the performance of the commands.
 
-**To see it in action, run `nx build todos`:**
+**To see it in action, run `npx nx build todos`:**
 
 ```bash
-> nx run todos:build
+> npx nx run todos:build
 Generating ES5 bundles for differential loading...
 ES5 bundle generation complete.
 
@@ -25,10 +25,10 @@ chunk {vendor} vendor-es2015.js, vendor-es2015.js.map (vendor) 2.35 MB [initial]
 chunk {vendor} vendor-es5.js, vendor-es5.js.map (vendor) 2.75 MB [initial] [rendered]
 ```
 
-**Now, run `nx build todos` again, and you will see the results appearing instantly:**
+**Now, run `npx nx build todos` again, and you will see the results appearing instantly:**
 
 ```bash
-> nx run todos:build
+> npx nx run todos:build
 
 >  NX   NOTE  Cached Output:
 
@@ -53,7 +53,7 @@ Based on the state of the source code and the environment, Nx was able to figure
 
 ## Building Multiple Projects
 
-**Now, run `nx run-many --target=build --projects=todos,api` to rebuild the two applications:**
+**Now, run `npx nx run-many --target=build --projects=todos,api` to rebuild the two applications:**
 
 ```bash
 Nx read the output from cache instead of running the command for 1 out of 2 projects.
@@ -65,28 +65,28 @@ Nx built `api` and retrieved `todos` from its computation cache. Read more about
 
 As we saw already, Nx is smart, so it knows how applications and libraries in the workspace depend on each other.
 
-**Run `nx lint todos --with-deps`, and you see that Nx lints both the `todos` app and the libraries it depends on.**
+**Run `npx nx lint todos --with-deps`, and you see that Nx lints both the `todos` app and the libraries it depends on.**
 
 ```bash
 >  NX  Running target lint for project todos and its 2 deps.
 
 ———————————————————————————————————————————————
 
-> nx run todos:lint
+> npx nx run todos:lint
 
 Linting "todos"...
 
 All files pass linting.
 
 
-> nx run ui:lint
+> npx nx run ui:lint
 
 Linting "ui"...
 
 All files pass linting.
 
 
-> nx run data:lint
+> npx nx run data:lint
 
 Linting "data"...
 
@@ -101,7 +101,7 @@ All files pass linting.
 > Add --parallel to any command, and Nx will do most of the work in parallel.
 
 !!!!!
-Run `nx lint api --with-deps`. What do you see?
+Run `npx nx lint api --with-deps`. What do you see?
 !!!!!
 Nx read the output from cache instead of running the command for 1 out of 2 projects.
 Everything was retrieved from the cache

@@ -33,7 +33,7 @@ describe('TodoApps', () => {
 
 This is not a great example of an E2E test, but it will suffice for the purposes of this tutorial.
 
-If you have not done so already, stop the `nx serve` command and run `nx e2e todos-e2e --watch`.
+If you have not done so already, stop the `npx nx serve` command and run `npx nx e2e todos-e2e --watch`.
 
 A UI will open. Click the button in the top right corner that says "Run all specs". Keep the E2E tests running.
 
