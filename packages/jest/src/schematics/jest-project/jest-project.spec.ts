@@ -89,7 +89,7 @@ describe('jestProject', () => {
       tags.stripIndents`${resultTree.readContent('libs/lib1/jest.config.js')}`
     ).toBe(tags.stripIndents`module.exports = {
   displayName: 'lib1',
-  preset: '@nrwl/jest/preset',
+  preset: '../../jest.preset.js',
   globals: {
     'ts-jest': {
       tsConfig: '<rootDir>/tsconfig.spec.json',

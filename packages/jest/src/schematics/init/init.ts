@@ -58,7 +58,9 @@ const createJestConfig = (host: Tree) => {
     host.create(
       'jest.preset.js',
       `
-    module.exports = { preset: '@nrwl/jest/preset' }`
+      const nxPreset = require('@nrwl/jest/preset');
+     
+      module.exports = { ...nxPreset }`
     );
   }
 };

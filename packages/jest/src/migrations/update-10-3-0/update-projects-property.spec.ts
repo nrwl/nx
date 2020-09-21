@@ -122,13 +122,14 @@ describe('update projects property', () => {
 
     const jestPreset = result.readContent('jest.preset.js');
     expect(tags.stripIndents`${jestPreset}`).toEqual(tags.stripIndents`
+    const nxPreset = require('@nrwl/jest/preset');
     module.exports = {
+        ...nxPreset,
         testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
         transform: {
           '^.+\\\\.(ts|js|html)$': 'ts-jest',
         },
         maxWorkers: 2,
-        preset: '@nrwl/jest/preset',
       };
     `);
 

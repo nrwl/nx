@@ -7,6 +7,8 @@ import {
 import {
   formatFiles,
   getWorkspace,
+  insert,
+  InsertChange,
   offsetFromRoot,
   serializeJson,
 } from '@nrwl/workspace';
@@ -14,6 +16,7 @@ import {
   addPropertyToJestConfig,
   removePropertyFromJestConfig,
 } from '../../utils/config/update-config';
+import { jestConfigObjectAst } from '../../utils/config/functions';
 
 function updateRootJestConfig(): Rule {
   return async (host: Tree, context: SchematicContext) => {
@@ -63,17 +66,23 @@ The root jest.config.js file will be updated to include all references to each i
 A new jest.preset.js file will be created that would have your existing configuration. All projects will now have this preset.
         `);
 
-        const existingRootConfig = host
-          .read('jest.config.js')
-          .toString('utf-8');
+        let existingRootConfig = host.read('jest.config.js').toString('utf-8');
 
-        host.create('jest.preset.js', existingRootConfig);
-        addPropertyToJestConfig(
-          host,
-          'jest.preset.js',
-          'preset',
-          '@nrwl/jest/preset'
-        );
+        existingRootConfig =
+          "const nxPreset = require('@nrwl/jest/preset'); \n" +
+          existingRootConfig;
+
+        const presetPath = 'jest.preset.js';
+
+        host.create(presetPath, existingRootConfig);
+        const configObject = jestConfigObjectAst(host, presetPath);
+        insert(host, presetPath, [
+          new InsertChange(
+            presetPath,
+            configObject.getStart() + 1,
+            '\n...nxPreset,'
+          ),
+        ]);
 
         host.overwrite(
           'jest.config.js',

@@ -281,8 +281,8 @@ describe('app', () => {
       expect(tree.readContent(`apps/my-node-app/jest.config.js`))
         .toMatchInlineSnapshot(`
         "module.exports = {
-          name: 'my-node-app',
-          preset: '../../jest.config.js',
+          displayName: 'my-node-app',
+          preset: '../../jest.preset.js',
           transform: {
             '^.+\\\\\\\\.[tj]s$': [ 'babel-jest',
             { cwd: __dirname, configFile: './babel-jest.config.json' }]
