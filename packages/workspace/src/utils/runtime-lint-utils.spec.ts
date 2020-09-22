@@ -12,8 +12,8 @@ describe('should find the path between nodes', () => {
     const graph = {
       nodes: ['A', 'B'],
       dependencies: {
-        'A': ['B']
-      }
+        A: ['B'],
+      },
     };
 
     const g = transformGraph(graph);
@@ -23,7 +23,6 @@ describe('should find the path between nodes', () => {
   });
 
   it('should find direct path', () => {
-
     /*
 
     A -> B
@@ -33,8 +32,8 @@ describe('should find the path between nodes', () => {
     const graph = {
       nodes: ['A', 'B'],
       dependencies: {
-        'A': ['B']
-      }
+        A: ['B'],
+      },
     };
 
     const g = transformGraph(graph);
@@ -44,7 +43,6 @@ describe('should find the path between nodes', () => {
   });
 
   it('should find indirect path', () => {
-
     /*
 
     A -> B -> E -> F
@@ -59,8 +57,8 @@ describe('should find the path between nodes', () => {
         A: ['B'],
         B: ['C', 'E'],
         C: ['D'],
-        E: ['F']
-      }
+        E: ['F'],
+      },
     };
 
     const g = transformGraph(graph);
@@ -70,7 +68,6 @@ describe('should find the path between nodes', () => {
   });
 
   it('should find indirect path in a graph that has a simple cycle', () => {
-
     /*
 
     A -> B -> C -> F
@@ -86,8 +83,8 @@ describe('should find the path between nodes', () => {
         B: ['C'],
         C: ['D', 'F'],
         D: ['E'],
-        E: ['A']
-      }
+        E: ['A'],
+      },
     };
 
     const g = transformGraph(graph);
@@ -97,7 +94,6 @@ describe('should find the path between nodes', () => {
   });
 
   it('should find indirect path in a graph that has a cycle', () => {
-
     /*
 
     B <- A ->  D -> E
@@ -112,8 +108,8 @@ describe('should find the path between nodes', () => {
         A: ['B', 'D'],
         B: ['C'],
         C: ['A'],
-        D: ['E']
-      }
+        D: ['E'],
+      },
     };
 
     const g = transformGraph(graph);
@@ -123,7 +119,6 @@ describe('should find the path between nodes', () => {
   });
 
   it('should find indirect path in a graph with inner and outer cycles', () => {
-
     /*
 
         A  -->  B
@@ -144,8 +139,8 @@ describe('should find the path between nodes', () => {
         E: ['B'],
         F: ['H'],
         G: ['C'],
-        H: ['G', 'E']
-      }
+        H: ['G', 'E'],
+      },
     };
 
     const g = transformGraph(graph);
@@ -163,14 +158,14 @@ describe('should find the path between nodes', () => {
 
 interface SimplifiedGraph {
   nodes: Array<string>;
-  dependencies: Record<string, Array<string>>
+  dependencies: Record<string, Array<string>>;
 }
 
 function transformGraph(graph: SimplifiedGraph): ProjectGraph {
   const nodes = graph.nodes.reduce((acc, name) => {
     return {
       ...acc,
-      [name]: { name, type: 'app' }
+      [name]: { name, type: 'app' },
     };
   }, {});
 
@@ -181,19 +176,19 @@ function transformGraph(graph: SimplifiedGraph): ProjectGraph {
 
     return {
       ...acc,
-      [dep]: targets
+      [dep]: targets,
     };
   }, {});
 
   return {
     nodes,
-    dependencies
+    dependencies,
   };
 }
 
-function getPath(graph: ProjectGraph, node: { from: string, to: string }) {
+function getPath(graph: ProjectGraph, node: { from: string; to: string }) {
   const src = graph.nodes[node.to];
   const dest = graph.nodes[node.from];
   const path = checkCircularPath(graph, src, dest);
-  return path.map(n => n.name);
+  return path.map((n) => n.name);
 }

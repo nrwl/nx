@@ -2,7 +2,8 @@ import { normalize } from '@angular-devkit/core';
 import * as path from 'path';
 import { FileData } from '../core/file-utils';
 import {
-  DependencyType, isWorkspaceProject,
+  DependencyType,
+  isWorkspaceProject,
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphNode,
@@ -156,27 +157,29 @@ export function checkCircularPath(
 }
 
 interface Reach {
-  graph: ProjectGraph,
-  matrix: Record<string, Array<string>>,
-  adjList: Record<string, Array<string>>
+  graph: ProjectGraph;
+  matrix: Record<string, Array<string>>;
+  adjList: Record<string, Array<string>>;
 }
 
 const reach: Reach = {
   graph: null,
   matrix: null,
-  adjList: null
+  adjList: null,
 };
 
 function buildMatrix(graph: ProjectGraph) {
   const dependencies = graph.dependencies;
-  const nodes = Object.keys(graph.nodes).filter(s => isWorkspaceProject(graph.nodes[s]));
+  const nodes = Object.keys(graph.nodes).filter((s) =>
+    isWorkspaceProject(graph.nodes[s])
+  );
   const adjList = {};
   const matrix = {};
 
   const initMatrixValues = nodes.reduce((acc, value) => {
     return {
       ...acc,
-      [value]: false
+      [value]: false,
     };
   }, {});
 
@@ -207,11 +210,15 @@ function buildMatrix(graph: ProjectGraph) {
 
   return {
     matrix,
-    adjList
+    adjList,
   };
 }
 
-function getPath(graph: ProjectGraph, sourceProjectName: string, targetProjectName: string): Array<ProjectGraphNode> {
+function getPath(
+  graph: ProjectGraph,
+  sourceProjectName: string,
+  targetProjectName: string
+): Array<ProjectGraphNode> {
   if (sourceProjectName === targetProjectName) return [];
 
   if (reach.graph !== graph) {
@@ -234,16 +241,16 @@ function getPath(graph: ProjectGraph, sourceProjectName: string, targetProjectNa
     if (current === targetProjectName) break;
 
     adjList[current]
-      .filter(adj => visited.indexOf(adj) === -1)
-      .filter(adj => reach.matrix[adj][targetProjectName])
-      .forEach(adj => {
+      .filter((adj) => visited.indexOf(adj) === -1)
+      .filter((adj) => reach.matrix[adj][targetProjectName])
+      .forEach((adj) => {
         visited.push(adj);
         queue.push([adj, [...path]]);
       });
   }
 
   if (path.length > 1) {
-    return path.map(n => graph.nodes[n]);
+    return path.map((n) => graph.nodes[n]);
   } else {
     return [];
   }

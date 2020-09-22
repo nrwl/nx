@@ -161,9 +161,16 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     }
 
     // check for circular dependency
-    const circularPath = checkCircularPath(this.projectGraph, sourceProject, targetProject);
+    const circularPath = checkCircularPath(
+      this.projectGraph,
+      sourceProject,
+      targetProject
+    );
     if (circularPath.length !== 0) {
-      const path = circularPath.reduce((acc, v) => `${acc} -> ${v.name}`, sourceProject.name);
+      const path = circularPath.reduce(
+        (acc, v) => `${acc} -> ${v.name}`,
+        sourceProject.name
+      );
       const error = `Circular dependency between "${sourceProject.name}" and "${targetProject.name}" detected. The path is: ${path}`;
       this.addFailureAt(node.getStart(), node.getWidth(), error);
       return;

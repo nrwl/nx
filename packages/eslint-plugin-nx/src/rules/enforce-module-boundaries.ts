@@ -169,7 +169,11 @@ export default createESLintRule<Options, MessageIds>({
 
         // check constraints between libs and apps
         // check for circular dependency
-        const circularPath = checkCircularPath(projectGraph, sourceProject, targetProject);
+        const circularPath = checkCircularPath(
+          projectGraph,
+          sourceProject,
+          targetProject
+        );
         if (circularPath.length !== 0) {
           context.report({
             node,
@@ -177,8 +181,11 @@ export default createESLintRule<Options, MessageIds>({
             data: {
               sourceProjectName: sourceProject.name,
               targetProjectName: targetProject.name,
-              path: circularPath.reduce((acc, v) => `${acc} -> ${v.name}`, sourceProject.name)
-            }
+              path: circularPath.reduce(
+                (acc, v) => `${acc} -> ${v.name}`,
+                sourceProject.name
+              ),
+            },
           });
           return;
         }
