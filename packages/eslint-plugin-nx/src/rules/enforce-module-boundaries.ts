@@ -177,7 +177,7 @@ export default createESLintRule<Options, MessageIds>({
             data: {
               sourceProjectName: sourceProject.name,
               targetProjectName: targetProject.name,
-              path: circularPath.reduce((acc, v) => `${acc}->${v}`, '')
+              path: circularPath.reduce((acc, v) => `${acc} -> ${v.name}`, sourceProject.name)
             }
           });
           return;

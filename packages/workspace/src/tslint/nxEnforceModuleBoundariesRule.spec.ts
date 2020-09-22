@@ -714,7 +714,7 @@ describe('Enforce Module Boundaries', () => {
       }
     );
     expect(failures[0].getFailure()).toEqual(
-      'Circular dependency between "anotherlibName" and "mylibName" detected'
+      'Circular dependency between "anotherlibName" and "mylibName" detected. The path is: anotherlibName -> mylibName -> anotherlibName'
     );
   });
 
@@ -796,7 +796,7 @@ describe('Enforce Module Boundaries', () => {
       }
     );
     expect(failures[0].getFailure()).toEqual(
-      'Circular dependency between "mylibName" and "badcirclelibName" detected'
+      'Circular dependency between "mylibName" and "badcirclelibName" detected. The path is: mylibName -> badcirclelibName -> anotherlibName -> mylibName'
     );
   });
 

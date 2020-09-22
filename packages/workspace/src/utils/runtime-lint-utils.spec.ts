@@ -1,33 +1,5 @@
+import { ProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import { checkCircularPath } from './runtime-lint-utils';
-
-function transformGraph(graph) {
-  const nodes = graph.nodes.reduce((acc, name) => {
-    return {
-      ...acc,
-      [name]: { name }
-    };
-  }, {});
-
-  const dependencies = Object.keys(graph.dependencies).reduce((acc, dep) => {
-    const targets = graph.dependencies[dep].reduce((acc, name) => {
-      return [...acc, { source: dep, target: name }];
-    }, []);
-
-    return {
-      ...acc,
-      [dep]: targets
-    };
-  }, {});
-
-  return {
-    nodes,
-    dependencies
-  };
-}
-
-function getPath(graph, node) {
-  return checkCircularPath(graph as any, { name: node.to } as any, { name: node.from } as any);
-}
 
 describe('should find the path between nodes', () => {
   it('should return empty path when when there are no connecting edges', () => {
@@ -38,11 +10,9 @@ describe('should find the path between nodes', () => {
      */
 
     const graph = {
-      nodes: ['A', 'B', 'C', 'E'],
+      nodes: ['A', 'B'],
       dependencies: {
-        'A': ['B'],
-        'B': ['C'],
-        'C': ['E']
+        'A': ['B']
       }
     };
 
@@ -53,14 +23,15 @@ describe('should find the path between nodes', () => {
   });
 
   it('should find direct path', () => {
+
     /*
 
-    A -> B -> C - > E
+    A -> B
 
     */
 
     const graph = {
-      nodes: ['A', 'B', 'C'],
+      nodes: ['A', 'B'],
       dependencies: {
         'A': ['B']
       }
@@ -126,6 +97,7 @@ describe('should find the path between nodes', () => {
   });
 
   it('should find indirect path in a graph that has a cycle', () => {
+
     /*
 
     B <- A ->  D -> E
@@ -188,3 +160,40 @@ describe('should find the path between nodes', () => {
     expect(path3).toEqual(['B', 'F', 'H', 'G', 'C', 'A', 'D']);
   });
 });
+
+interface SimplifiedGraph {
+  nodes: Array<string>;
+  dependencies: Record<string, Array<string>>
+}
+
+function transformGraph(graph: SimplifiedGraph): ProjectGraph {
+  const nodes = graph.nodes.reduce((acc, name) => {
+    return {
+      ...acc,
+      [name]: { name, type: 'app' }
+    };
+  }, {});
+
+  const dependencies = Object.keys(graph.dependencies).reduce((acc, dep) => {
+    const targets = graph.dependencies[dep].reduce((acc, name) => {
+      return [...acc, { source: dep, target: name }];
+    }, []);
+
+    return {
+      ...acc,
+      [dep]: targets
+    };
+  }, {});
+
+  return {
+    nodes,
+    dependencies
+  };
+}
+
+function getPath(graph: ProjectGraph, node: { from: string, to: string }) {
+  const src = graph.nodes[node.to];
+  const dest = graph.nodes[node.from];
+  const path = checkCircularPath(graph, src, dest);
+  return path.map(n => n.name);
+}

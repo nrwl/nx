@@ -2,7 +2,7 @@ import { normalize } from '@angular-devkit/core';
 import * as path from 'path';
 import { FileData } from '../core/file-utils';
 import {
-  DependencyType,
+  DependencyType, isWorkspaceProject,
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphNode,
@@ -150,34 +150,40 @@ export function checkCircularPath(
   graph: ProjectGraph,
   sourceProject: ProjectGraphNode,
   targetProject: ProjectGraphNode
-): Array<any> {
+): Array<ProjectGraphNode> {
   if (!graph.nodes[targetProject.name]) return [];
   return getPath(graph, targetProject.name, sourceProject.name);
 }
 
-let reach = {
+interface Reach {
+  graph: ProjectGraph,
+  matrix: Record<string, Array<string>>,
+  adjList: Record<string, Array<string>>
+}
+
+const reach: Reach = {
   graph: null,
   matrix: null,
   adjList: null
 };
 
-function buildMatrix(graph) {
+function buildMatrix(graph: ProjectGraph) {
   const dependencies = graph.dependencies;
-  const nodes = Object.keys(graph.nodes).filter(s => !s.includes('npm:'));
-  const adjList = new Array(nodes.length);
+  const nodes = Object.keys(graph.nodes).filter(s => isWorkspaceProject(graph.nodes[s]));
+  const adjList = {};
   const matrix = {};
 
   const initMatrixValues = nodes.reduce((acc, value) => {
     return {
       ...acc,
-      [value]: 0
+      [value]: false
     };
   }, {});
 
-  for (let i = 0; i < nodes.length; i++) {
+  nodes.forEach((v, i) => {
     adjList[nodes[i]] = [];
     matrix[nodes[i]] = { ...initMatrixValues };
-  }
+  });
 
   for (let proj in dependencies) {
     for (let dep of dependencies[proj]) {
@@ -186,18 +192,18 @@ function buildMatrix(graph) {
   }
 
   const traverse = (s, v) => {
-    matrix[s][v] = 1;
+    matrix[s][v] = true;
 
     for (let adj of adjList[v]) {
-      if (matrix[s][adj] === 0) {
+      if (matrix[s][adj] === false) {
         traverse(s, adj);
       }
     }
   };
 
-  for (let i = 0; i < nodes.length; i++) {
+  nodes.forEach((v, i) => {
     traverse(nodes[i], nodes[i]);
-  }
+  });
 
   return {
     matrix,
@@ -205,7 +211,7 @@ function buildMatrix(graph) {
   };
 }
 
-function getPath(graph, sourceProjectName, targetProjectName) {
+function getPath(graph: ProjectGraph, sourceProjectName: string, targetProjectName: string): Array<ProjectGraphNode> {
   if (sourceProjectName === targetProjectName) return [];
 
   if (reach.graph !== graph) {
@@ -217,9 +223,9 @@ function getPath(graph, sourceProjectName, targetProjectName) {
 
   const adjList = reach.adjList;
 
-  let path = [];
-  let visited = [sourceProjectName];
-  let queue = [[sourceProjectName, path]];
+  let path: string[] = [];
+  const queue: Array<[string, string[]]> = [[sourceProjectName, path]];
+  const visited: string[] = [sourceProjectName];
 
   while (queue.length > 0) {
     const [current, p] = queue.pop();
@@ -229,18 +235,18 @@ function getPath(graph, sourceProjectName, targetProjectName) {
 
     adjList[current]
       .filter(adj => visited.indexOf(adj) === -1)
-      .filter(adj => reach.matrix[adj][targetProjectName] === 1)
+      .filter(adj => reach.matrix[adj][targetProjectName])
       .forEach(adj => {
         visited.push(adj);
         queue.push([adj, [...path]]);
       });
   }
 
-  if (path.length === 1) {
+  if (path.length > 1) {
+    return path.map(n => graph.nodes[n]);
+  } else {
     return [];
   }
-
-  return path;
 }
 
 export function findConstraintsFor(
