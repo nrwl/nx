@@ -77,9 +77,13 @@ function updateLintTarget(
     >[1]['uiFramework'],
   });
 
+  const mainTsConfigContent = getTsConfigContent(tree, paths.tsConfig);
+
   const tsConfig = {
-    main: getTsConfigContent(tree, paths.tsConfig),
-    lib: getTsConfigContent(tree, paths.tsConfigLib),
+    main: mainTsConfigContent,
+    lib: tree.exists(paths.tsConfigLib)
+      ? getTsConfigContent(tree, paths.tsConfigLib)
+      : mainTsConfigContent,
     storybook: getTsConfigContent(tree, paths.tsConfigStorybook),
   };
 
