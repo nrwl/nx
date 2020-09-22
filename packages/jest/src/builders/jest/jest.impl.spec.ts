@@ -63,7 +63,6 @@ describe('Jest Builder', () => {
           _: [],
           testPathPattern: [],
           watch: false,
-          projects: ['/root/jest.config.js'],
         },
         ['/root/jest.config.js']
       );
@@ -104,7 +103,6 @@ describe('Jest Builder', () => {
           coverageReporters: ['test'],
           coverageDirectory: '/test/path',
           watch: false,
-          projects: ['/root/jest.config.js'],
         },
         ['/root/jest.config.js']
       );
@@ -135,7 +133,6 @@ describe('Jest Builder', () => {
           testNamePattern: 'should load',
           testPathPattern: [],
           watch: false,
-          projects: ['/root/jest.config.js'],
         },
         ['/root/jest.config.js']
       );
@@ -204,7 +201,6 @@ describe('Jest Builder', () => {
           watch: false,
           watchAll: false,
           testLocationInResults: true,
-          projects: ['/root/jest.config.js'],
         },
         ['/root/jest.config.js']
       );
@@ -226,7 +222,6 @@ describe('Jest Builder', () => {
           _: [],
           maxWorkers: '50%',
           testPathPattern: [],
-          projects: ['/root/jest.config.js'],
         },
         ['/root/jest.config.js']
       );
@@ -250,7 +245,6 @@ describe('Jest Builder', () => {
           setupFilesAfterEnv: ['/root/test-setup.ts'],
           testPathPattern: [],
           watch: false,
-          projects: ['/root/jest.config.js'],
         },
         ['/root/jest.config.js']
       );
@@ -299,7 +293,6 @@ describe('Jest Builder', () => {
           setupFilesAfterEnv: ['/root/test-setup.ts'],
           testPathPattern: [],
           watch: false,
-          projects: ['/root/jest.config.js'],
         },
         ['/root/jest.config.js']
       );
@@ -337,7 +330,6 @@ describe('Jest Builder', () => {
           _: [],
           testPathPattern: [],
           watch: false,
-          projects: ['/root/jest.config.js'],
         },
         ['/root/jest.config.js']
       );

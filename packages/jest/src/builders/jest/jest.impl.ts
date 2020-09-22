@@ -69,7 +69,6 @@ function run(
     useStderr: options.useStderr,
     watch: options.watch,
     watchAll: options.watchAll,
-    projects: [options.jestConfig],
   };
 
   // for backwards compatibility

@@ -1,4 +1,3 @@
-import { tags } from '@angular-devkit/core';
 import { Tree } from '@angular-devkit/schematics';
 import { readJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
