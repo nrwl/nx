@@ -1,5 +1,9 @@
 # Step 1: Create Application
 
+## Video of this Lesson
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/i37yJKK8qGI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 In this tutorial you will use Nx to build a full-stack application out of common libraries using modern technologies like Cypress and Nest.
 
 ## Create a New Workspace

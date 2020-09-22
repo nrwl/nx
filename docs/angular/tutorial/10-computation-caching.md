@@ -1,5 +1,9 @@
 # Step 10: Computation Caching
 
+## Video of this Lesson
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/HX3--ilBhBs" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 Nx has built-in computation caching, which helps drastically improve the performance of the commands.
 
 **To see it in action, run `nx build todos`:**
