@@ -41,7 +41,7 @@ describe('init', () => {
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
-        packageJson.devDependencies['@storybook/addon-essentials']
+        packageJson.devDependencies['@storybook/addon-knobs']
       ).toBeDefined();
       expect(packageJson.devDependencies['@types/webpack']).toBeDefined();
 
@@ -81,7 +81,7 @@ describe('init', () => {
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
-        packageJson.devDependencies['@storybook/addon-essentials']
+        packageJson.devDependencies['@storybook/addon-knobs']
       ).toBeDefined();
 
       // react specific
