@@ -14,6 +14,7 @@
     "format": "./scripts/format.sh",
     "nx-release": "./scripts/nx-release.js",
     "test": "nx run-many --target=test --all --parallel",
+    "lint": "nx run-many --target=lint --all --parallel",
     "checkformat": "scripts/check-format.sh",
     "checkimports": "node ./scripts/check-imports.js",
     "checkversions": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/check-versions.ts",
