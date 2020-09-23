@@ -44,23 +44,25 @@ const removeNrwlJestFromDeps = (host: Tree) => {
 };
 
 const createJestConfig = (host: Tree) => {
-  if (host.exists('jest.config.js')) {
-    return;
+  if (!host.exists('jest.config.js')) {
+    host.create(
+      'jest.config.js',
+      stripIndents`
+  module.exports = {
+    projects: []
+  };`
+    );
   }
 
-  host.create(
-    'jest.config.js',
-    stripIndents`
-  module.exports = {
-    testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
-    transform: {
-      '^.+\\.(ts|js|html)$': 'ts-jest'
-    },
-    resolver: '@nrwl/jest/plugins/resolver',
-    moduleFileExtensions: ['ts', 'js', 'html'],
-    coverageReporters: ['html']
-  };`
-  );
+  if (!host.exists('jest.preset.js')) {
+    host.create(
+      'jest.preset.js',
+      `
+      const nxPreset = require('@nrwl/jest/preset');
+     
+      module.exports = { ...nxPreset }`
+    );
+  }
 };
 
 function updateDependencies(options: NormalizedSchema): Rule {

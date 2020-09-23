@@ -347,8 +347,8 @@ describe('app', () => {
       expect(tree.readContent(`apps/my-app/jest.config.js`))
         .toMatchInlineSnapshot(`
         "module.exports = {
-          name: 'my-app',
-          preset: '../../jest.config.js',
+          displayName: 'my-app',
+          preset: '../../jest.preset.js',
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
           transform: {
             '^.+\\\\\\\\.[tj]s$': [
