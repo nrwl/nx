@@ -1,5 +1,9 @@
 # Step 2: Add E2E Tests
 
+## Video of this Lesson
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/3HSzqt3WiVg" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 By default, Nx uses [Cypress](https://cypress.io) to run E2E tests.
 
 **Open `apps/todos-e2e/src/support/app.po.ts`.** It's a page object file that contains helpers for querying the page.

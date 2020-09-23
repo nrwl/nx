@@ -1,5 +1,9 @@
 # Step 1: Create Application
 
+## Video of this Lesson
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/HcQE5R6ucng" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 In this tutorial you will use Nx to build a full-stack application out of common libraries using modern technologies.
 
 > Next.js: Nx also has first-class Next.js support. Read more about it [here](https://nx.dev/react/plugins/next/overview)
