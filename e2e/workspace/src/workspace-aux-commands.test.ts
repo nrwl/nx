@@ -752,8 +752,8 @@ forEachCli((cli) => {
       expect(moveOutput).toContain(`CREATE ${jestConfigPath}`);
       checkFilesExist(jestConfigPath);
       const jestConfig = readFile(jestConfigPath);
-      expect(jestConfig).toContain(`name: 'shared-${lib1}-data-access'`);
-      expect(jestConfig).toContain(`preset: '../../../../jest.config.js'`);
+      expect(jestConfig).toContain(`displayName: 'shared-${lib1}-data-access'`);
+      expect(jestConfig).toContain(`preset: '../../../../jest.preset.js'`);
       expect(jestConfig).toContain(
         `coverageDirectory: '../../../../coverage/${newPath}'`
       );
@@ -891,8 +891,8 @@ forEachCli((cli) => {
       expect(moveOutput).toContain(`CREATE ${jestConfigPath}`);
       checkFilesExist(jestConfigPath);
       const jestConfig = readFile(jestConfigPath);
-      expect(jestConfig).toContain(`name: 'shared-${lib1}-data-access'`);
-      expect(jestConfig).toContain(`preset: '../../../../jest.config.js'`);
+      expect(jestConfig).toContain(`displayName: 'shared-${lib1}-data-access'`);
+      expect(jestConfig).toContain(`preset: '../../../../jest.preset.js'`);
       expect(jestConfig).toContain(
         `coverageDirectory: '../../../../coverage/${newPath}'`
       );
@@ -1032,8 +1032,8 @@ forEachCli((cli) => {
       expect(moveOutput).toContain(`CREATE ${jestConfigPath}`);
       checkFilesExist(jestConfigPath);
       const jestConfig = readFile(jestConfigPath);
-      expect(jestConfig).toContain(`name: 'shared-${lib1}-data-access'`);
-      expect(jestConfig).toContain(`preset: '../../../../jest.config.js'`);
+      expect(jestConfig).toContain(`displayName: 'shared-${lib1}-data-access'`);
+      expect(jestConfig).toContain(`preset: '../../../../jest.preset.js'`);
       expect(jestConfig).toContain(
         `coverageDirectory: '../../../../coverage/${newPath}'`
       );

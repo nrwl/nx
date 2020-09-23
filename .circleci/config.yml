@@ -101,6 +101,9 @@ jobs:
       - run:
           name: Check Commit Message Format
           command: yarn checkcommit
+      - run:
+          name: Run linting
+          command: yarn lint
   e2e-1:
     executor: default
     steps:
