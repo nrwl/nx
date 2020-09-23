@@ -2,7 +2,7 @@
 
 ## Video of this Lesson
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/5t77CPl-bbM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="600" src="https://www.youtube.com/embed/5t77CPl-bbM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Because Nx understands the dependency graph of your workspace, Nx can be efficient at retesting and rebuilding your projects.
 
