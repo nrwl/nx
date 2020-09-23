@@ -1,5 +1,9 @@
 # Step 6: Proxy
 
+## Video of this Lesson
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/xfvCz-yLeEw" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 You passed `--frontendProject=todos` when creating the node application. What did that argument do?
 
 It created a proxy configuration that allows the React application to talk to the API in development.
