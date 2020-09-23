@@ -234,7 +234,7 @@ export function createRollupOptions(
       : {};
 
     const externalPackages = dependencies
-      .map((d) => d.name)
+      .map((d) => d.name.split(':')[1])
       .concat(options.external || [])
       .concat(Object.keys(packageJson.dependencies || {}));
 
