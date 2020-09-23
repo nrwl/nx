@@ -63,24 +63,19 @@ describe('react:component-story', () => {
         expect(stripIndents`${tree.readContent(storyFilePath)}`)
           .toContain(stripIndents`
             import React from 'react';
-            import { TestUiLib } from './test-ui-lib';
-
+            import { TestUiLib, TestUiLibProps } from './test-ui-lib';
+            
             export default {
               component: TestUiLib,
               title: 'TestUiLib',
             };
-
-            /**
-             *
-             * If you already have props in your component, these props will automatically be passed to Storybook
-             * and they will appear as imports. If you do not have any props set up in your component, then
-             * you will get a message saying that you do not have any imports configured. You can add props like this:
-             *
-             * Basic.args = { argName: 'argValue' };
-             *
-             */
-
-            export const Basic = (args) => <TestUiLib {...args} />;
+            
+            export const primary = () => {
+              /* eslint-disable-next-line */
+              const props: TestUiLibProps = {};
+            
+              return <TestUiLib />;
+            };
           `);
       });
     });
@@ -132,18 +127,13 @@ describe('react:component-story', () => {
               component: Test,
               title: 'Test',
             };
-
-            /**
-             *
-             * If you already have props in your component, these props will automatically be passed to Storybook
-             * and they will appear as imports. If you do not have any props set up in your component, then
-             * you will get a message saying that you do not have any imports configured. You can add props like this:
-             *
-             * Basic.args = { argName: 'argValue' };
-             *
-             */
-
-            export const Basic = (args) => <Test {...args} />;
+            
+            export const primary = () => {
+              /* eslint-disable-next-line */
+              const props = {};
+            
+              return <Test />;
+            };
           `);
       });
     });
@@ -188,18 +178,10 @@ describe('react:component-story', () => {
               component: Test,
               title: 'Test',
             };
-
-            /**
-             *
-             * If you already have props in your component, these props will automatically be passed to Storybook
-             * and they will appear as imports. If you do not have any props set up in your component, then
-             * you will get a message saying that you do not have any imports configured. You can add props like this:
-             *
-             * Basic.args = { argName: 'argValue' };
-             *
-             */
-
-            export const Basic = (args) => <Test {...args} />;
+            
+            export const primary = () => {
+              return <Test />;
+            };
           `);
       });
     });
@@ -242,25 +224,23 @@ describe('react:component-story', () => {
       it('should setup knobs based on the component props', () => {
         expect(stripIndents`${tree.readContent(storyFilePath)}`)
           .toContain(stripIndents`
+            import { text, boolean } from '@storybook/addon-knobs';
             import React from 'react';
-            import { Test } from './test-ui-lib';
+            import { Test, TestProps } from './test-ui-lib';
             
             export default {
               component: Test,
               title: 'Test',
             };
-
-            /**
-             *
-             * If you already have props in your component, these props will automatically be passed to Storybook
-             * and they will appear as imports. If you do not have any props set up in your component, then
-             * you will get a message saying that you do not have any imports configured. You can add props like this:
-             *
-             * Basic.args = { argName: 'argValue' };
-             *
-             */
-
-            export const Basic = (args) => <Test {...args} />;
+            
+            export const primary = () => {
+              const props: TestProps = {
+                name: text('name', ''),
+                displayAge: boolean('displayAge', false),
+              };
+            
+              return <Test name={props.name} displayAge={props.displayAge} />;
+            };
           `);
       });
     });
@@ -369,6 +349,29 @@ describe('react:component-story', () => {
             appTree
           );
         });
+
+        it('should properly setup the knobs based on the component props', () => {
+          expect(stripIndents`${tree.readContent(storyFilePath)}`)
+            .toContain(stripIndents`
+            import { text, boolean } from '@storybook/addon-knobs';
+            import React from 'react';
+            import { Test, TestProps } from './test-ui-lib';
+            
+            export default {
+              component: Test,
+              title: 'Test',
+            };
+            
+            export const primary = () => {
+              const props: TestProps = {
+                name: text('name', ''),
+                displayAge: boolean('displayAge', false),
+              };
+            
+              return <Test name={props.name} displayAge={props.displayAge} />;
+            };
+          `);
+        });
       });
     });
   });
@@ -390,24 +393,19 @@ describe('react:component-story', () => {
       expect(stripIndents`${tree.readContent(storyFilePath)}`)
         .toContain(stripIndents`
           import React from 'react';
-          import { TestUiLib } from './test-ui-lib';
+          import { TestUiLib, TestUiLibProps } from './test-ui-lib';
           
           export default {
             component: TestUiLib,
             title: 'TestUiLib',
           };
-
-          /**
-           *
-           * If you already have props in your component, these props will automatically be passed to Storybook
-           * and they will appear as imports. If you do not have any props set up in your component, then
-           * you will get a message saying that you do not have any imports configured. You can add props like this:
-           *
-           * Basic.args = { argName: 'argValue' };
-           *
-           */
-
-          export const Basic = (args) => <TestUiLib {...args} />;
+          
+          export const primary = () => {
+            /* eslint-disable-next-line */
+            const props: TestUiLibProps = {};
+          
+            return <TestUiLib />;
+          };
         `);
     });
   });

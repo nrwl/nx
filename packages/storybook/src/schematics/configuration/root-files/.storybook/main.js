@@ -1,4 +1,4 @@
 module.exports = {
   stories: [],
-  addons: ['@storybook/addon-essentials'],
+  addons: ['@storybook/addon-knobs/register'],
 };

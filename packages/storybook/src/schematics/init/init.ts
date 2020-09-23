@@ -36,10 +36,10 @@ function checkDependenciesInstalled(schema: Schema): Rule {
      */
 
     if (
-      !packageJson.dependencies['@storybook/addon-essentials'] &&
-      !packageJson.devDependencies['@storybook/addon-essentials']
+      !packageJson.dependencies['@storybook/addon-knobs'] &&
+      !packageJson.devDependencies['@storybook/addon-knobs']
     ) {
-      devDependencies['@storybook/addon-essentials'] = storybookVersion;
+      devDependencies['@storybook/addon-knobs'] = storybookVersion;
     }
 
     if (isFramework('angular', schema)) {

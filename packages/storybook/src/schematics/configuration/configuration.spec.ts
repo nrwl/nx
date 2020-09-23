@@ -12,7 +12,7 @@ describe('schematic:configuration', () => {
     appTree = await createTestUILib('test-ui-lib', '@nrwl/angular');
     jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
       devDependencies: {
-        '@storybook/addon-essentials': '^6.0.21',
+        '@storybook/addon-knobs': '^6.0.21',
         '@storybook/angular': '^6.0.21',
       },
     });
@@ -44,6 +44,7 @@ describe('schematic:configuration', () => {
       tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
     ).toBeTruthy();
     expect(tree.exists('libs/test-ui-lib/.storybook/main.js')).toBeTruthy();
+    expect(tree.exists('libs/test-ui-lib/.storybook/preview.js')).toBeTruthy();
 
     const storybookTsconfigJson = readJsonInTree<{ exclude: string[] }>(
       tree,

@@ -1,3 +1,4 @@
+<% if(props.length > 0) { %>import { text, number, boolean } from '@storybook/addon-knobs';<% } %>
 import { <%=componentName%> } from './<%=componentFileName%>';
 
 export default {
@@ -10,6 +11,6 @@ export const primary = () => ({
   },
   component: <%=componentName%>,
   props: {<% for (let prop of props) { %>
-    <%=prop.name%>: <%=prop.defaultValue%>,<% } %>
+    <%=prop.name%>: <%=prop.type%>('<%=prop.name%>', <%=prop.defaultValue%>),<% } %>
   }
 })
