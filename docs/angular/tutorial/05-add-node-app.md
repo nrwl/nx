@@ -2,7 +2,7 @@
 
 ## Video of this Lesson
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/SsCx2WErVTI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="600" src="https://www.youtube.com/embed/SsCx2WErVTI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 The requests fail because the API has not been created yet. Using Nx you can develop node applications next to your Angular applications. You can use same commands to run and test them. You can share code between the backend and the frontend. Use this capability to implement the API service.
 
