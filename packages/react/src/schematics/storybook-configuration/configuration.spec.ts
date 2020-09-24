@@ -138,7 +138,6 @@ describe('react:storybook-configuration', () => {
   });
 });
 
-
 export async function createTestUILib(
   libName: string,
   plainJS = false

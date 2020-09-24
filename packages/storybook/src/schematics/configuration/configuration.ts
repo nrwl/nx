@@ -35,7 +35,6 @@ export default function (rawSchema: StorybookConfigureSchema): Rule {
 
   const workspaceStorybookVersion = readCurrentWorkspaceStorybookVersion();
 
-
   return (tree: Tree, context: SchematicContext) => {
     const { projectType } = getProjectConfig(tree, schema.name);
     return chain([
@@ -43,7 +42,12 @@ export default function (rawSchema: StorybookConfigureSchema): Rule {
         uiFramework: schema.uiFramework,
       }),
       createRootStorybookDir(schema.name, schema.js, workspaceStorybookVersion),
-      createProjectStorybookDir(schema.name, schema.uiFramework, schema.js, workspaceStorybookVersion),
+      createProjectStorybookDir(
+        schema.name,
+        schema.uiFramework,
+        schema.js,
+        workspaceStorybookVersion
+      ),
       configureTsProjectConfig(schema),
       configureTsSolutionConfig(schema),
       updateLintTask(schema),
@@ -80,10 +84,10 @@ function createRootStorybookDir(
   return (tree: Tree, context: SchematicContext) => {
     const { projectType } = getProjectConfig(tree, projectName);
     const projectDirectory = projectDir(projectType);
-context.logger.debug(
-  `adding .storybook folder to ${projectDirectory} -\n
+    context.logger.debug(
+      `adding .storybook folder to ${projectDirectory} -\n
   based on the Storybook version installed: ${workspaceStorybookVersion}, we'll bootstrap a scaffold for that particular version.`
-);
+    );
     return chain([
       applyWithSkipExisting(
         url(
@@ -102,8 +106,7 @@ function createProjectStorybookDir(
   workspaceStorybookVersion: string
 ): Rule {
   return (tree: Tree, context: SchematicContext) => {
-
-        /**
+    /**
      * Here, same as above
      * Check storybook version
      * and use the correct folder
@@ -113,14 +116,16 @@ function createProjectStorybookDir(
     const projectConfig = getProjectConfig(tree, projectName);
     const { projectType } = getProjectConfig(tree, projectName);
     const projectDirectory = projectDir(projectType);
-          context.logger.debug(
-            `adding .storybook folder to ${projectDirectory} - using Storybook version ${workspaceStorybookVersion}`
-          );
+    context.logger.debug(
+      `adding .storybook folder to ${projectDirectory} - using Storybook version ${workspaceStorybookVersion}`
+    );
 
     return chain([
       applyWithSkipExisting(
         url(
-          workspaceStorybookVersion === '6' ? './project-files' : './project-files-5'
+          workspaceStorybookVersion === '6'
+            ? './project-files'
+            : './project-files-5'
         ),
         [
           template({
