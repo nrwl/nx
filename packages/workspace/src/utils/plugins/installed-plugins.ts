@@ -1,50 +1,36 @@
 import { terminal } from '@angular-devkit/core';
-import { readdirSync } from 'fs';
-import * as path from 'path';
+import { readJsonFile } from '../fileutils';
 import { output } from '../output';
 import { CommunityPlugin, CorePlugin, PluginCapabilities } from './models';
 import { getPluginCapabilities } from './plugin-capabilities';
 import { hasElements } from './shared';
 
-function getPackagesFromNodeModules(
-  workspaceRoot: string,
-  requery: boolean = false
-): string[] {
-  let packageList: string[] = [];
-
-  if (!requery && packageList.length > 0) {
-    return packageList;
-  }
-
-  const nodeModulesDir = path.join(workspaceRoot, 'node_modules');
-  readdirSync(nodeModulesDir).forEach((npmPackageOrScope) => {
-    if (npmPackageOrScope.startsWith('@')) {
-      readdirSync(path.join(nodeModulesDir, npmPackageOrScope)).forEach((p) => {
-        packageList.push(`${npmPackageOrScope}/${p}`);
-      });
-    } else {
-      packageList.push(npmPackageOrScope);
-    }
-  });
-
-  return packageList;
-}
-
-export function getInstalledPluginsFromNodeModules(
+export function getInstalledPluginsFromPackageJson(
   workspaceRoot: string,
   corePlugins: CorePlugin[],
   communityPlugins: CommunityPlugin[]
 ): Array<PluginCapabilities> {
-  const corePluginNames = corePlugins.map((p) => p.name);
-  const communityPluginNames = communityPlugins.map((p) => p.name);
-  const packages = getPackagesFromNodeModules(workspaceRoot);
+  const packageJson = readJsonFile(`${workspaceRoot}/package.json`);
 
-  return packages
-    .filter(
-      (name) =>
-        corePluginNames.indexOf(name) > -1 ||
-        communityPluginNames.indexOf(name) > -1
-    )
+  const plugins = new Set([
+    ...corePlugins.map((p) => p.name),
+    ...communityPlugins.map((p) => p.name),
+    ...Object.keys(packageJson.dependencies || {}),
+    ...Object.keys(packageJson.devDependencies || {}),
+  ]);
+
+  return [...plugins]
+    .filter((name) => {
+      try {
+        // Check for `package.json` existence instead of requiring the module itself
+        // because malformed entries like `main`, may throw false exceptions.
+        require.resolve(`${name}/package.json`, { paths: [workspaceRoot] });
+        return true;
+      } catch {
+        return false;
+      }
+    })
+    .sort()
     .map((name) => getPluginCapabilities(workspaceRoot, name))
     .filter((x) => x && !!(x.schematics || x.builders));
 }
