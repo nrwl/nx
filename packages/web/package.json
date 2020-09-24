@@ -115,7 +115,7 @@
     "webpack-sources": "1.4.3",
     "webpack-subresource-integrity": "1.1.0-rc.5",
     "worker-plugin": "3.2.0",
-    "webpack-dev-server": "3.9.0",
+    "webpack-dev-server": "3.11.0",
     "webpack-node-externals": "1.7.2"
   }
 }

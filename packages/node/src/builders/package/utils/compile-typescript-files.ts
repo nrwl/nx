@@ -26,11 +26,25 @@ function createProgram(
       `Compiling TypeScript files for library ${context.target?.project}...`
     );
     try {
-      program.emit();
-      context.logger.info(
-        `Done compiling TypeScript files for library ${context.target?.project}`
-      );
-      subscriber.next({ success: true });
+      const results = program.emit();
+      if (results.emitSkipped) {
+        const diagnostics = ts.formatDiagnosticsWithColorAndContext(
+          results.diagnostics,
+          {
+            getCurrentDirectory: () => ts.sys.getCurrentDirectory(),
+            getNewLine: () => ts.sys.newLine,
+            getCanonicalFileName: (name) => name,
+          }
+        );
+        context.logger.error(diagnostics);
+        subscriber.next({ success: false });
+        process.exit(1);
+      } else {
+        context.logger.info(
+          `Done compiling TypeScript files for library ${context.target?.project}`
+        );
+        subscriber.next({ success: true });
+      }
     } catch {
       subscriber.error('Could not compile Typescript files');
     } finally {
@@ -70,6 +84,7 @@ export default function compileTypeScriptFiles(
 
   const tsconfig = readTsConfig(tsConfigPath);
   tsconfig.options.outDir = options.normalizedOutputPath;
+  tsconfig.options.noEmitOnError = true;
 
   if (options.srcRootForCompilationRoot) {
     tsconfig.options.rootDir = options.srcRootForCompilationRoot;

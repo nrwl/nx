@@ -1,10 +1,11 @@
 import * as stripJsonComments from 'strip-json-comments';
 import { ProjectGraphContext, AddProjectNode } from '../project-graph-models';
+import { FileRead } from '../../file-utils';
 
 export function buildNpmPackageNodes(
   ctx: ProjectGraphContext,
   addNode: AddProjectNode,
-  fileRead: (s: string) => string
+  fileRead: FileRead
 ) {
   const packageJson = JSON.parse(stripJsonComments(fileRead('package.json')));
   const deps = {

@@ -66,7 +66,7 @@
     "strip-json-comments": "2.0.1",
     "tmp": "0.0.33",
     "yargs": "15.4.1",
-    "yargs-parser": "17.0.0",
+    "yargs-parser": "20.0.0",
     "chalk": "2.4.2",
     "@nrwl/cli": "*",
     "axios": "0.19.2",

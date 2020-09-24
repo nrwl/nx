@@ -8,6 +8,7 @@ Array [
   "/tsconfig.base.json",
   "/tslint.json",
   "/jest.config.js",
+  "/jest.preset.js",
   "/libs/test-ui-lib/README.md",
   "/libs/test-ui-lib/tsconfig.lib.json",
   "/libs/test-ui-lib/tslint.json",

@@ -2,6 +2,7 @@ import * as ts from 'typescript';
 import * as path from 'path';
 import { DependencyType } from '../project-graph-models';
 import { stripSourceCode } from '../../../utils/strip-source-code';
+import { FileRead } from '../../file-utils';
 
 export class TypeScriptImportLocator {
   private readonly scanner: ts.Scanner = ts.createScanner(
@@ -9,7 +10,7 @@ export class TypeScriptImportLocator {
     false
   );
 
-  constructor(private readonly fileRead: (s: string) => string) {}
+  constructor(private readonly fileRead: FileRead) {}
 
   fromFile(
     filePath: string,

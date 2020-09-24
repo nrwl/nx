@@ -54,6 +54,18 @@
             ],
             "parallel": false
           }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "config": "packages/nx/.eslintrc",
+            "tsConfig": [
+              "packages/nx/tsconfig.lib.json",
+              "packages/nx/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**"]
+          }
         }
       }
     },
@@ -200,6 +212,18 @@
             ],
             "parallel": false
           }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "config": "packages/workspace/.eslintrc",
+            "tsConfig": [
+              "packages/workspace/tsconfig.lib.json",
+              "packages/workspace/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**"]
+          }
         }
       }
     },
@@ -268,6 +292,18 @@
             ],
             "parallel": false
           }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "config": "packages/web/.eslintrc",
+            "tsConfig": [
+              "packages/web/tsconfig.lib.json",
+              "packages/web/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**"]
+          }
         }
       }
     },
@@ -331,6 +367,18 @@
             ],
             "parallel": false
           }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "config": "packages/cypress/.eslintrc",
+            "tsConfig": [
+              "packages/cypress/tsconfig.lib.json",
+              "packages/cypress/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**"]
+          }
         }
       }
     },
@@ -393,6 +441,18 @@
               }
             ],
             "parallel": false
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "config": "packages/jest/.eslintrc",
+            "tsConfig": [
+              "packages/jest/tsconfig.lib.json",
+              "packages/jest/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**"]
           }
         }
       }
@@ -467,6 +527,18 @@
             ],
             "parallel": false
           }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "config": "packages/storybook/.eslintrc",
+            "tsConfig": [
+              "packages/storybook/tsconfig.lib.json",
+              "packages/storybook/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**"]
+          }
         }
       }
     },
@@ -533,6 +605,18 @@
             ],
             "parallel": false
           }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "config": "packages/react/.eslintrc",
+            "tsConfig": [
+              "packages/react/tsconfig.lib.json",
+              "packages/react/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**"]
+          }
         }
       }
     },
@@ -596,6 +680,18 @@
             ],
             "parallel": false
           }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "config": "packages/nx-plugin/.eslintrc",
+            "tsConfig": [
+              "packages/nx-plugin/tsconfig.lib.json",
+              "packages/nx-plugin/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**"]
+          }
         }
       }
     },
@@ -658,6 +754,18 @@
               }
             ],
             "parallel": false
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "config": "packages/node/.eslintrc",
+            "tsConfig": [
+              "packages/node/tsconfig.lib.json",
+              "packages/node/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**"]
           }
         }
       }
@@ -727,6 +835,18 @@
             ],
             "parallel": false
           }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "config": "packages/next/.eslintrc",
+            "tsConfig": [
+              "packages/next/tsconfig.lib.json",
+              "packages/next/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**"]
+          }
         }
       }
     },
@@ -789,6 +909,18 @@
               }
             ],
             "parallel": false
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "config": "packages/nest/.eslintrc",
+            "tsConfig": [
+              "packages/nest/tsconfig.lib.json",
+              "packages/nest/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**"]
           }
         }
       }
@@ -853,6 +985,18 @@
             ],
             "parallel": false
           }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "config": "packages/linter/.eslintrc",
+            "tsConfig": [
+              "packages/linter/tsconfig.lib.json",
+              "packages/linter/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**"]
+          }
         }
       }
     },
@@ -916,6 +1060,18 @@
             ],
             "parallel": false
           }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "config": "packages/express/.eslintrc",
+            "tsConfig": [
+              "packages/express/tsconfig.lib.json",
+              "packages/express/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**"]
+          }
         }
       }
     },
@@ -978,6 +1134,18 @@
               }
             ],
             "parallel": false
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "config": "packages/eslint-plugin-nx/.eslintrc",
+            "tsConfig": [
+              "packages/eslint-plugin-nx/tsconfig.lib.json",
+              "packages/eslint-plugin-nx/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**"]
           }
         }
       }
@@ -1045,6 +1213,18 @@
             ],
             "parallel": false
           }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "config": "packages/create-nx-workspace/.eslintrc",
+            "tsConfig": [
+              "packages/create-nx-workspace/tsconfig.lib.json",
+              "packages/create-nx-workspace/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**"]
+          }
         }
       }
     },
@@ -1110,6 +1290,18 @@
               }
             ],
             "parallel": false
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "config": "packages/create-nx-plugin/.eslintrc",
+            "tsConfig": [
+              "packages/create-nx-plugin/tsconfig.lib.json",
+              "packages/create-nx-plugin/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**"]
           }
         }
       }
@@ -1177,6 +1369,18 @@
             ],
             "parallel": false
           }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "config": "packages/cli/.eslintrc",
+            "tsConfig": [
+              "packages/cli/tsconfig.lib.json",
+              "packages/cli/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**"]
+          }
         }
       }
     },
@@ -1239,6 +1443,18 @@
               }
             ],
             "parallel": false
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "config": "packages/bazel/.eslintrc",
+            "tsConfig": [
+              "packages/bazel/tsconfig.lib.json",
+              "packages/bazel/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**"]
           }
         }
       }
@@ -1310,6 +1526,18 @@
               }
             ],
             "parallel": false
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "config": "packages/angular/.eslintrc",
+            "tsConfig": [
+              "packages/angular/tsconfig.lib.json",
+              "packages/angular/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**"]
           }
         }
       }

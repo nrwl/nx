@@ -81,6 +81,11 @@
       "description": "Connect the workspace to the free tier of the distributed cache provided by Nx Cloud",
       "type": "boolean",
       "default": false
+    },
+    "nxWorkspaceRoot": {
+      "type": "string",
+      "description": "Root directory.",
+      "hidden": true
     }
   }
 }

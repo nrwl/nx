@@ -1,5 +1,5 @@
 import * as ngSchematics from '@angular-devkit/schematics';
-import { readJsonInTree, readWorkspace } from '@nrwl/workspace';
+import { readWorkspace } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
 
@@ -80,19 +80,6 @@ describe('NxPlugin plugin', () => {
     const projectE2e = workspace.projects['plugins-my-plugin-e2e'];
     expect(project.root).toEqual('libs/plugins/my-plugin');
     expect(projectE2e.root).toEqual('apps/plugins/my-plugin-e2e');
-  });
-
-  it('should update the tsconfig.lib.json file', async () => {
-    const tree = await runSchematic(
-      'plugin',
-      { name: 'myPlugin', importPath: '@proj/my-plugin' },
-      appTree
-    );
-    const tsLibConfig = readJsonInTree(
-      tree,
-      'libs/my-plugin/tsconfig.lib.json'
-    );
-    expect(tsLibConfig.compilerOptions.rootDir).toEqual('.');
   });
 
   it('should create schematic and builder files', async () => {

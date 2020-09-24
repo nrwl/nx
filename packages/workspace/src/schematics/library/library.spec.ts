@@ -114,8 +114,8 @@ describe('lib', () => {
       expect(tree.readContent(`libs/my-lib/jest.config.js`))
         .toMatchInlineSnapshot(`
         "module.exports = {
-          name: 'my-lib',
-          preset: '../../jest.config.js',
+          displayName: 'my-lib',
+          preset: '../../jest.preset.js',
           globals: {
             'ts-jest': {
               tsConfig: '<rootDir>/tsconfig.spec.json',
@@ -376,8 +376,8 @@ describe('lib', () => {
       expect(tree.readContent(`libs/my-lib/jest.config.js`))
         .toMatchInlineSnapshot(`
         "module.exports = {
-          name: 'my-lib',
-          preset: '../../jest.config.js',
+          displayName: 'my-lib',
+          preset: '../../jest.preset.js',
           transform: {
             '^.+\\\\\\\\.[tj]sx?$': [
               'babel-jest',

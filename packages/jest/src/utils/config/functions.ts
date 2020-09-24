@@ -89,14 +89,20 @@ export function addOrUpdateProperty(
         return [];
       }
 
-      return [
-        createInsertChange(
-          path,
-          value,
-          arrayLiteral.elements.end,
-          arrayLiteral.elements.hasTrailingComma
-        ),
-      ];
+      if (arrayLiteral.elements.length === 0) {
+        return [
+          new InsertChange(path, arrayLiteral.elements.end, value as string),
+        ];
+      } else {
+        return [
+          createInsertChange(
+            path,
+            value,
+            arrayLiteral.elements.end,
+            arrayLiteral.elements.hasTrailingComma
+          ),
+        ];
+      }
     } else if (
       propertyAssignment.initializer.kind ===
       ts.SyntaxKind.ObjectLiteralExpression

@@ -3,6 +3,7 @@
 // we can't import from '@nrwl/workspace' because it will require typescript
 // eslint-disable-next-line @nrwl/nx/enforce-module-boundaries
 import { output } from '@nrwl/workspace/src/utils/output';
+import { getPackageManagerExecuteCommand } from '@nrwl/workspace/src/utils/detect-package-manager';
 import { dirSync } from 'tmp';
 import { writeFileSync, readFileSync, removeSync } from 'fs-extra';
 import * as path from 'path';
@@ -61,19 +62,23 @@ function createWorkspace(
     ...process.argv.slice(parsedArgs._[2] ? 3 : 2).map((a) => `"${a}"`),
   ].join(' ');
 
-  console.log(`new ${args} --preset=empty --collection=@nrwl/workspace`);
-  const executablePath = path.join(tmpDir, 'node_modules', '.bin', 'tao');
-  const collectionJsonPath = path.join(
-    tmpDir,
-    'node_modules',
-    '@nrwl',
-    'workspace',
-    'collection.json'
+  const command = `new ${args} --preset=empty --collection=@nrwl/workspace`;
+  console.log(command);
+
+  const collectionJsonPath = require.resolve(
+    '@nrwl/workspace/collection.json',
+    { paths: [tmpDir] }
   );
+
+  const packageExec = getPackageManagerExecuteCommand(packageManager);
   execSync(
-    `"${executablePath}" new ${args} --preset=empty --collection=${collectionJsonPath}`,
+    `${packageExec} tao ${command.replace(
+      '--collection=@nrwl/workspace',
+      `--collection=${collectionJsonPath}`
+    )} --nxWorkspaceRoot=${process.cwd()}`,
     {
       stdio: [0, 1, 2],
+      cwd: tmpDir,
     }
   );
   execSync(`${packageManager} add -D @nrwl/nx-plugin@${nxVersion}`, {
@@ -82,12 +87,13 @@ function createWorkspace(
   });
 }
 
-function createNxPlugin(workspaceName, pluginName) {
+function createNxPlugin(workspaceName, pluginName, packageManager) {
   console.log(
     `nx generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${workspaceName}/${pluginName}`
   );
+  const packageExec = getPackageManagerExecuteCommand(packageManager);
   execSync(
-    `node ./node_modules/@nrwl/cli/bin/nx.js generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${workspaceName}/${pluginName}`,
+    `${packageExec} nx generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${workspaceName}/${pluginName}`,
     {
       cwd: workspaceName,
       stdio: [0, 1, 2],
@@ -201,7 +207,7 @@ determineWorkspaceName(parsedArgs).then((workspaceName) => {
     const tmpDir = createSandbox(packageManager);
     createWorkspace(tmpDir, packageManager, parsedArgs, workspaceName);
     updateWorkspace(workspaceName);
-    createNxPlugin(workspaceName, pluginName);
+    createNxPlugin(workspaceName, pluginName, packageManager);
     commitChanges(workspaceName);
     showNxWarning(workspaceName);
   });
