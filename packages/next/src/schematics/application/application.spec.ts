@@ -197,17 +197,17 @@ describe('app', () => {
   });
 
   describe('--linter=eslint', () => {
-    it('should add .eslintrc and dependencies', async () => {
+    it('should add .eslintrc.json and dependencies', async () => {
       const tree = await runSchematic(
         'app',
         { name: 'myApp', linter: 'eslint' },
         appTree
       );
 
-      const eslintJson = readJsonInTree(tree, '/apps/my-app/.eslintrc');
+      const eslintJson = readJsonInTree(tree, '/apps/my-app/.eslintrc.json');
       const packageJson = readJsonInTree(tree, '/package.json');
 
-      expect(eslintJson.plugins).toEqual(
+      expect(eslintJson.overrides[1].plugins).toEqual(
         expect.arrayContaining(['react', 'react-hooks'])
       );
       expect(packageJson).toMatchObject({

@@ -1016,5 +1016,6 @@ function runRule(
     },
   };
 
-  return linter.verifyAndFix(content, config as any, contentPath).messages;
+  return linter.verifyAndFix(content, config as any, { filename: contentPath })
+    .messages;
 }

@@ -148,16 +148,24 @@ export function updateProject(options: NormalizedSchema): Rule {
 
         delete fixedProject.architect.test;
 
-        fixedProject.architect.lint.options.tsConfig = fixedProject.architect.lint.options.tsConfig.filter(
-          (path) =>
-            path !== join(normalize(options.projectRoot), 'tsconfig.spec.json')
-        );
-        fixedProject.architect.lint.options.exclude.push(
-          '!' + join(normalize(options.projectRoot), '**/*')
-        );
+        if (options.linter === Linter.TsLint) {
+          fixedProject.architect.lint.options.tsConfig = fixedProject.architect.lint.options.tsConfig.filter(
+            (path) =>
+              path !==
+              join(normalize(options.projectRoot), 'tsconfig.spec.json')
+          );
+          fixedProject.architect.lint.options.exclude.push(
+            '!' + join(normalize(options.projectRoot), '**/*')
+          );
+        }
+
         if (options.linter === Linter.EsLint) {
-          fixedProject.architect.lint.options.linter = Linter.EsLint;
-          fixedProject.architect.lint.builder = '@nrwl/linter:lint';
+          fixedProject.architect.lint.builder = '@nrwl/linter:eslint';
+          fixedProject.architect.lint.options.lintFilePatterns = [
+            `${options.projectRoot}/src/**/*.ts`,
+          ];
+          delete fixedProject.architect.lint.options.tsConfig;
+          delete fixedProject.architect.lint.options.exclude;
           host.delete(`${options.projectRoot}/tslint.json`);
         }
 

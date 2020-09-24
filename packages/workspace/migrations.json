@@ -109,6 +109,11 @@
       "version": "10.1.0-beta.0",
       "description": "Migrate .eslintrc files to use tsconfig with a wildcard",
       "factory": "./src/migrations/update-10-1-0/migrate-eslintrc-tsconfig-wildcard"
+    },
+    "update-eslint-builder-and-config": {
+      "version": "10.3.0-beta.0",
+      "description": "Migrate to the new ESLint builder and ESLint config style",
+      "factory": "./src/migrations/update-10-3-0/update-eslint-builder-and-config"
     }
   },
   "packageJsonUpdates": {
@@ -706,6 +711,23 @@
         },
         "@angular/service-worker": {
           "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "10.3.0": {
+      "version": "10.3.0-beta.0",
+      "packages": {
+        "@typescript-eslint/eslint-plugin": {
+          "version": "^3.9.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/parser": {
+          "version": "^3.9.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint": {
+          "version": "7.9.0",
           "alwaysAddToPackageJson": false
         }
       }

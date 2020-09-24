@@ -27,8 +27,8 @@ import {
   updateJsonInTree,
   updateWorkspace,
   addLintFiles,
-  NxJson,
   Linter,
+  generateProjectLint,
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import init from '../init/init';
@@ -43,6 +43,7 @@ import {
   updateWorkspaceInTree,
   appsDir,
 } from '@nrwl/workspace/src/utils/ast-utils';
+import { createAngularLintConfig } from '../../utils/lint';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -482,20 +483,26 @@ function updateProject(options: NormalizedSchema): Rule {
 
         delete fixedProject.architect.test;
 
-        fixedProject.architect.lint.options.tsConfig = fixedProject.architect.lint.options.tsConfig.filter(
-          (path) =>
-            path !==
-              join(normalize(options.appProjectRoot), 'tsconfig.spec.json') &&
-            path !==
-              join(normalize(options.appProjectRoot), 'e2e/tsconfig.json')
-        );
-        fixedProject.architect.lint.options.exclude.push(
-          '!' + join(normalize(options.appProjectRoot), '**/*')
-        );
+        if (options.linter === Linter.TsLint) {
+          fixedProject.architect.lint.options.tsConfig = fixedProject.architect.lint.options.tsConfig.filter(
+            (path) =>
+              path !==
+                join(normalize(options.appProjectRoot), 'tsconfig.spec.json') &&
+              path !==
+                join(normalize(options.appProjectRoot), 'e2e/tsconfig.json')
+          );
+          fixedProject.architect.lint.options.exclude.push(
+            '!' + join(normalize(options.appProjectRoot), '**/*')
+          );
+        }
 
         if (options.linter === Linter.EsLint) {
-          fixedProject.architect.lint.options.linter = Linter.EsLint;
-          fixedProject.architect.lint.builder = '@nrwl/linter:lint';
+          fixedProject.architect.lint.builder = '@nrwl/linter:eslint';
+          fixedProject.architect.lint.options.lintFilePatterns = [
+            `${options.appProjectRoot}/src/**/*.ts`,
+          ];
+          delete fixedProject.architect.lint.options.tsConfig;
+          delete fixedProject.architect.lint.options.exclude;
           host.delete(`${options.appProjectRoot}/tslint.json`);
         }
 
@@ -598,16 +605,12 @@ function updateE2eProject(options: NormalizedSchema): Rule {
           projectType: 'application',
           architect: {
             e2e: json.projects[options.name].architect.e2e,
-            lint: {
-              builder: '@angular-devkit/build-angular:tslint',
-              options: {
-                tsConfig: `${options.e2eProjectRoot}/tsconfig.e2e.json`,
-                exclude: [
-                  '**/node_modules/**',
-                  '!' + join(normalize(options.e2eProjectRoot), '**/*'),
-                ],
-              },
-            },
+            lint: generateProjectLint(
+              normalize(options.e2eProjectRoot),
+              join(normalize(options.e2eProjectRoot), 'tsconfig.e2e.json'),
+              options.linter,
+              [`${options.e2eProjectRoot}/**/*.ts`]
+            ),
           },
         };
 
@@ -777,6 +780,17 @@ export default function (schema: Schema): Rule {
       options.routing ? addRouterRootConfiguration(options) : noop(),
       addLintFiles(options.appProjectRoot, options.linter, {
         onlyGlobal: options.linter === Linter.TsLint, // local lint files are added differently when tslint
+        localConfig:
+          options.linter === Linter.EsLint
+            ? createAngularLintConfig({
+                parserOptionsProject: [
+                  // Will match tsconfig.app.json and tsconfig.spec.json
+                  `${options.appProjectRoot}/tsconfig.*?.json`,
+                ],
+                // See createAngularLintConfig() implementation for why this is needed
+                createDefaultProgram: true,
+              })
+            : undefined,
       }),
       options.linter === 'tslint' ? updateTsLintConfig(options) : noop(),
       options.unitTestRunner === 'jest'

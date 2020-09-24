@@ -23,7 +23,8 @@ export const enum Linter {
 export function generateProjectLint(
   projectRoot: string,
   tsConfigPath: string,
-  linter: Linter
+  linter: Linter,
+  eslintFilePatterns: string[]
 ) {
   if (linter === Linter.TsLint) {
     return {
@@ -35,14 +36,9 @@ export function generateProjectLint(
     };
   } else if (linter === Linter.EsLint) {
     return {
-      builder: '@nrwl/linter:lint',
+      builder: '@nrwl/linter:eslint',
       options: {
-        // No config option here because eslint resolve them automatically.
-        // By not specifying a config option we allow eslint to support
-        // nested configurations.
-        linter: 'eslint',
-        tsConfig: [tsConfigPath],
-        exclude: ['**/node_modules/**', '!' + projectRoot + '/**/*'],
+        lintFilePatterns: eslintFilePatterns,
       },
     };
   } else {
@@ -57,13 +53,17 @@ interface AddLintFileOptions {
     dependencies: { [key: string]: string };
     devDependencies: { [key: string]: string };
   };
+  // Used in ESLint configuration
+  defaultOverridesFiles?: string[];
 }
 export function addLintFiles(
   projectRoot: string,
   linter: Linter,
-  options: AddLintFileOptions = {}
+  options: AddLintFileOptions = {
+    defaultOverridesFiles: ['*.ts'],
+  }
 ): Rule {
-  return (host: Tree, context: SchematicContext) => {
+  return (host: Tree, _context: SchematicContext) => {
     if (options.onlyGlobal && options.localConfig) {
       throw new Error(
         'onlyGlobal and localConfig cannot be used at the same time'
@@ -96,9 +96,10 @@ export function addLintFiles(
     }
 
     if (linter === 'eslint') {
-      if (!host.exists('/.eslintrc')) {
+      // TODO: Handle case where only old .eslintrc file exists? Throw and suggest running migration?
+      if (!host.exists('/.eslintrc.json')) {
         chainedCommands.push((host: Tree) => {
-          host.create('/.eslintrc', globalESLint);
+          host.create('/.eslintrc.json', globalESLint);
 
           return addDepsToPackageJson(
             {
@@ -123,28 +124,48 @@ export function addLintFiles(
       if (!options.onlyGlobal) {
         chainedCommands.push((host: Tree) => {
           let configJson;
-          const rootConfig = `${offsetFromRoot(projectRoot)}.eslintrc`;
+          const rootConfig = `${offsetFromRoot(projectRoot)}.eslintrc.json`;
+
+          // Include all project files to be linted (since they are turned off in the root eslintrc file).
+          const ignorePatterns = ['!**/*'];
+
           if (options.localConfig) {
-            const extendsOption = options.localConfig.extends
-              ? Array.isArray(options.localConfig.extends)
-                ? options.localConfig.extends
-                : [options.localConfig.extends]
+            /**
+             * The end config is much easier to reason about if "extends" comes first,
+             * so as well as applying the extension from the root lint config, we also
+             * adjust the config to make extends come first.
+             */
+            const {
+              extends: extendsVal,
+              ...localConfigExceptExtends
+            } = options.localConfig;
+
+            const extendsOption = extendsVal
+              ? Array.isArray(extendsVal)
+                ? extendsVal
+                : [extendsVal]
               : [];
+
             configJson = {
-              rules: {},
-              ...options.localConfig,
               extends: [...extendsOption, rootConfig],
+              ignorePatterns,
+              ...localConfigExceptExtends,
             };
           } else {
             configJson = {
               extends: rootConfig,
-              rules: {},
+              ignorePatterns,
+              overrides: [
+                {
+                  files: options.defaultOverridesFiles,
+                  rules: {},
+                },
+              ],
             };
           }
-          // Include all project files to be linted (since they are turned off in the root eslintrc file).
-          configJson.ignorePatterns = ['!**/*'];
+
           host.create(
-            join(projectRoot as any, `.eslintrc`),
+            join(projectRoot as any, `.eslintrc.json`),
             JSON.stringify(configJson)
           );
         });
@@ -226,37 +247,40 @@ const globalTsLint = `
 const globalESLint = `
 {
   "root": true,
-  "parser": "@typescript-eslint/parser",
-  "parserOptions": {
-    "ecmaVersion": 2018,
-    "sourceType": "module",
-    "project": "./tsconfig.*?.json"
-  },
   "ignorePatterns": ["**/*"],
-  "plugins": ["@typescript-eslint", "@nrwl/nx"],
-  "extends": [
-    'eslint:recommended',
-    'plugin:@typescript-eslint/eslint-recommended',
-    'plugin:@typescript-eslint/recommended',
-    'prettier',
-    'prettier/@typescript-eslint'
-  ],
-  "rules": {
-    "@typescript-eslint/explicit-member-accessibility": "off",
-    "@typescript-eslint/explicit-function-return-type": "off",
-    "@typescript-eslint/no-parameter-properties": "off",
-    "@nrwl/nx/enforce-module-boundaries": [
-      "error",
-      {
-        "enforceBuildableLibDependency": true,
-        "allow": [],
-        "depConstraints": [
-          { "sourceTag": "*", "onlyDependOnLibsWithTags": ["*"] }
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx"],
+      "parser": "@typescript-eslint/parser",
+      "parserOptions": {
+        "ecmaVersion": 2020,
+        "sourceType": "module"
+      },
+      "plugins": ["@typescript-eslint", "@nrwl/nx"],
+      "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended",
+        "prettier",
+        "prettier/@typescript-eslint"
+      ],
+      "rules": {
+        "@typescript-eslint/explicit-member-accessibility": "off",
+        "@typescript-eslint/explicit-function-return-type": "off",
+        "@typescript-eslint/no-parameter-properties": "off",
+        "@typescript-eslint/explicit-module-boundary-types": "off",
+        "@nrwl/nx/enforce-module-boundaries": [
+          "error",
+          {
+            "enforceBuildableLibDependency": true,
+            "allow": [],
+            "depConstraints": [
+              { "sourceTag": "*", "onlyDependOnLibsWithTags": ["*"] }
+            ]
+          }
         ]
       }
-    ]
-  },
-  "overrides": [
+    },
     {
       "files": ["*.tsx"],
       "rules": {

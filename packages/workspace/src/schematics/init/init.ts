@@ -483,6 +483,7 @@ function createAdditionalFiles(options: Schema): Rule {
           'tsconfig.base.json': '*',
           'tslint.json': '*',
           'nx.json': '*',
+          '.eslintrc.json': '*',
         },
         projects: {
           [options.name]: {
@@ -590,6 +591,7 @@ const createNxJson = (host: Tree) => {
         'tsconfig.base.json': '*',
         'tslint.json': '*',
         'nx.json': '*',
+        '.eslintrc.json': '*',
       },
       projects: {
         [name]: {
