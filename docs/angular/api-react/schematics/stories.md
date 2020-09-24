@@ -42,4 +42,4 @@ Generate JavaScript files rather than TypeScript files.
 
 Type: `string`
 
-The library project name.
+Library or application name

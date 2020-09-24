@@ -48,6 +48,7 @@
     "@rollup/plugin-commonjs": "11.0.2",
     "@rollup/plugin-babel": "5.0.2",
     "@rollup/plugin-image": "2.0.4",
+    "@rollup/plugin-json": "4.1.0",
     "@rollup/plugin-node-resolve": "7.1.1",
     "ajv": "6.10.2",
     "autoprefixer": "9.7.4",

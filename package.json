@@ -79,7 +79,7 @@
     "@storybook/angular": "^6.0.21",
     "@storybook/core": "^6.0.21",
     "@storybook/react": "^6.0.21",
-    "@svgr/webpack": "^5.2.0",
+    "@svgr/webpack": "^5.4.0",
     "@testing-library/react": "9.4.0",
     "@types/copy-webpack-plugin": "6.0.0",
     "@types/eslint": "^6.1.8",

@@ -18,7 +18,6 @@ import {
   Linter,
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
-
 import {
   applyWithSkipExisting,
   isFramework,
@@ -29,39 +28,37 @@ import { StorybookConfigureSchema } from './schema';
 import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 import { readPackageJson } from '@nrwl/workspace/src/core/file-utils';
 import { storybookVersion } from '../../utils/versions';
+import { projectDir } from '@nrwl/workspace/src/utils/project-type';
 
 export default function (rawSchema: StorybookConfigureSchema): Rule {
   const schema = normalizeSchema(rawSchema);
 
   const workspaceStorybookVersion = readCurrentWorkspaceStorybookVersion();
 
-  return chain([
-    schematic('ng-add', {
-      uiFramework: schema.uiFramework,
-    }),
-    createRootStorybookDir(
-      schema.uiFramework,
-      schema.js,
-      workspaceStorybookVersion
-    ),
-    createLibStorybookDir(
-      schema.name,
-      schema.uiFramework,
-      schema.js,
-      workspaceStorybookVersion
-    ),
-    configureTsLibConfig(schema),
-    configureTsSolutionConfig(schema),
-    updateLintTask(schema),
-    addStorybookTask(schema.name, schema.uiFramework),
-    schema.configureCypress
-      ? schematic<CypressConfigureSchema>('cypress-project', {
-          name: schema.name,
-          js: schema.js,
-          linter: schema.linter,
-        })
-      : () => {},
-  ]);
+
+  return (tree: Tree, context: SchematicContext) => {
+    const { projectType } = getProjectConfig(tree, schema.name);
+    return chain([
+      schematic('ng-add', {
+        uiFramework: schema.uiFramework,
+      }),
+      createRootStorybookDir(schema.name, schema.js, workspaceStorybookVersion),
+      createProjectStorybookDir(schema.name, schema.uiFramework, schema.js, workspaceStorybookVersion),
+      configureTsProjectConfig(schema),
+      configureTsSolutionConfig(schema),
+      updateLintTask(schema),
+      addStorybookTask(schema.name, schema.uiFramework),
+      schema.configureCypress && projectType !== 'application'
+        ? schematic<CypressConfigureSchema>('cypress-project', {
+            name: schema.name,
+            js: schema.js,
+            linter: schema.linter,
+          })
+        : () => {
+            context.logger.warn('There is already an e2e project setup');
+          },
+    ]);
+  };
 }
 
 function normalizeSchema(schema: StorybookConfigureSchema) {
@@ -76,16 +73,17 @@ function normalizeSchema(schema: StorybookConfigureSchema) {
 }
 
 function createRootStorybookDir(
-  uiFramework: string,
+  projectName: string,
   js: boolean,
   workspaceStorybookVersion: string
 ): Rule {
   return (tree: Tree, context: SchematicContext) => {
-    context.logger.debug(
-      `adding .storybook folder to root -\n
-      based on the Storybook version installed: ${workspaceStorybookVersion}, we'll bootstrap a scaffold for that particular version.`
-    );
-
+    const { projectType } = getProjectConfig(tree, projectName);
+    const projectDirectory = projectDir(projectType);
+context.logger.debug(
+  `adding .storybook folder to ${projectDirectory} -\n
+  based on the Storybook version installed: ${workspaceStorybookVersion}, we'll bootstrap a scaffold for that particular version.`
+);
     return chain([
       applyWithSkipExisting(
         url(
@@ -97,34 +95,39 @@ function createRootStorybookDir(
   };
 }
 
-function createLibStorybookDir(
+function createProjectStorybookDir(
   projectName: string,
   uiFramework: StorybookConfigureSchema['uiFramework'],
   js: boolean,
   workspaceStorybookVersion: string
 ): Rule {
   return (tree: Tree, context: SchematicContext) => {
-    /**
+
+        /**
      * Here, same as above
      * Check storybook version
      * and use the correct folder
      * lib-files-5 or lib-files-6
      */
 
-    context.logger.debug(
-      `adding .storybook folder to lib - using Storybook version ${workspaceStorybookVersion}`
-    );
     const projectConfig = getProjectConfig(tree, projectName);
+    const { projectType } = getProjectConfig(tree, projectName);
+    const projectDirectory = projectDir(projectType);
+          context.logger.debug(
+            `adding .storybook folder to ${projectDirectory} - using Storybook version ${workspaceStorybookVersion}`
+          );
+
     return chain([
       applyWithSkipExisting(
         url(
-          workspaceStorybookVersion === '6' ? './lib-files' : './lib-files-5'
+          workspaceStorybookVersion === '6' ? './project-files' : './project-files-5'
         ),
         [
           template({
             tmpl: '',
             uiFramework,
             offsetFromRoot: offsetFromRoot(projectConfig.root),
+            projectType: projectDirectory,
           }),
           move(projectConfig.root),
           js ? toJS() : noop(),
@@ -134,12 +137,20 @@ function createLibStorybookDir(
   };
 }
 
-function configureTsLibConfig(schema: StorybookConfigureSchema): Rule {
+function getTsConfigPath(tree: Tree, projectName: string): string {
+  const { projectType } = getProjectConfig(tree, projectName);
+  const projectPath = getProjectConfig(tree, projectName).root;
+  return join(
+    projectPath,
+    projectType === 'application' ? 'tsconfig.app.json' : 'tsconfig.lib.json'
+  );
+}
+
+function configureTsProjectConfig(schema: StorybookConfigureSchema): Rule {
   const { name: projectName } = schema;
 
   return (tree: Tree) => {
-    const projectPath = getProjectConfig(tree, projectName).root;
-    const tsConfigPath = join(projectPath, 'tsconfig.lib.json');
+    const tsConfigPath = getTsConfigPath(tree, projectName);
     const tsConfigContent = getTsConfigContent(tree, tsConfigPath);
 
     tsConfigContent.exclude = [

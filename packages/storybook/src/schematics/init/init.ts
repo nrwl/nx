@@ -13,8 +13,10 @@ import {
   babelLoaderVersion,
   babelCoreVersion,
   storybookVersion,
+  svgrVersion,
   nxVersion,
   babelPresetTypescriptVersion,
+  urlLoaderVersion,
   webpackTypesVersion,
 } from '../../utils/versions';
 import { isFramework } from '../../utils/utils';
@@ -59,6 +61,9 @@ function checkDependenciesInstalled(schema: Schema): Rule {
     }
 
     if (isFramework('react', schema)) {
+      devDependencies['@storybook/react'] = storybookVersion;
+      devDependencies['@svgr/webpack'] = svgrVersion;
+      devDependencies['url-loader'] = urlLoaderVersion;
       devDependencies['babel-loader'] = babelLoaderVersion;
       devDependencies['@babel/core'] = babelCoreVersion;
       devDependencies[

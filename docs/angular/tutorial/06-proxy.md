@@ -43,7 +43,7 @@ It created a proxy configuration that allows the Angular application to talk to 
 This configuration tells `nx serve` to forward all requests starting with `/api` to the process listening on port 3333.
 
 !!!!!
-Now run both "nx serve todos" and "nx serve api" in separate terminals, open http://localhost:4200. What do you see
+Now run both "npx nx serve todos" and "npx nx serve api" in separate terminals, open http://localhost:4200. What do you see
 !!!!!
 Todos application is working!
 404 in the console

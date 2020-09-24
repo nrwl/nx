@@ -7,7 +7,7 @@ import {
 } from '../../utils/testing';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 
-describe('schematic:stories', () => {
+describe('angular:stories for libraries', () => {
   describe('Stories for empty Angular library', () => {
     let appTree: Tree;
     beforeEach(async () => {

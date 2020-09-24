@@ -5,7 +5,7 @@ import { UnitTestTree } from '@angular-devkit/schematics/testing';
 import { StorybookStoriesSchema } from './stories';
 import { Schema } from 'packages/react/src/schematics/application/schema';
 
-describe('react:stories', () => {
+describe('react:stories for libraries', () => {
   let appTree: Tree;
   let tree: UnitTestTree;
 
@@ -18,12 +18,12 @@ describe('react:stories', () => {
       `import React from 'react';
 
       import './test.scss';
-      
+
       export interface TestProps {
         name: string;
         displayAge: boolean;
       }
-      
+
       export const Test = (props: TestProps) => {
         return (
           <div>
@@ -31,8 +31,8 @@ describe('react:stories', () => {
           </div>
         );
       };
-      
-      export default Test;        
+
+      export default Test;
       `
     );
   });

@@ -11,7 +11,7 @@ Previously, some senior architect would create an ad-hoc dependency diagram and 
 With Nx, you can do better than that.
 
 !!!!!
-Run "nx dep-graph". What do you see?
+Run "npx nx dep-graph". What do you see?
 !!!!!
 A dependency diagram in the browser
 A dep-graph.html file created at the root of the workspace
