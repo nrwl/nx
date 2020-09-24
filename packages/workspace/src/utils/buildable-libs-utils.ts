@@ -63,7 +63,7 @@ export function calculateProjectDependencies(
         };
       } else if (depNode.type === 'npm') {
         return {
-          name: depNode.name,
+          name: depNode.data.packageName,
           outputs: [],
           node: depNode,
         };
