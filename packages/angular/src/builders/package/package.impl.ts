@@ -32,7 +32,7 @@ export interface BuildAngularLibraryBuilderOptions {
   watch?: boolean;
 
   updateBuildableProjectDepsInPackageJson?: boolean;
-  buildableProjectDepsInPackageJsonType: 'dependencies' | 'peerDependencies';
+  buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
 }
 
 async function initializeNgPackagr(
