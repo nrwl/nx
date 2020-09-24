@@ -10,6 +10,7 @@ import {
 import { getProjectConfig } from '@nrwl/workspace';
 import { SyntaxKind } from 'typescript';
 import { getTsSourceFile, getDecoratorMetadata } from '../../utils/ast-utils';
+import { projectRootPath } from '@nrwl/workspace/src/utils/project-type';
 import { CreateComponentSpecFileSchema } from '../component-cypress-spec/component-cypress-spec';
 import { CreateComponentStoriesFileSchema } from '../component-story/component-story';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
@@ -32,7 +33,8 @@ export function createAllStories(
   return (tree: Tree, context: SchematicContext) => {
     context.logger.debug('adding .storybook folder to lib');
 
-    const libPath = getProjectConfig(tree, projectName).sourceRoot + '/lib';
+    const libPath = projectRootPath(tree, projectName);
+
     let moduleFilePaths = [] as string[];
     tree.getDir(libPath).visit((filePath) => {
       if (!filePath.endsWith('.module.ts')) {

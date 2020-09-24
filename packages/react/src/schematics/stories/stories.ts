@@ -13,6 +13,7 @@ import { CreateComponentStoriesFileSchema } from '../component-story/component-s
 import { CreateComponentSpecFileSchema } from '../component-cypress-spec/component-cypress-spec';
 import { getComponentName } from '../../utils/ast-utils';
 import * as ts from 'typescript';
+import { projectRootPath } from '@nrwl/workspace/src/utils/project-type';
 
 export interface StorybookStoriesSchema {
   project: string;
@@ -46,7 +47,7 @@ export function createAllStories(
 ): Rule {
   return (tree: Tree, context: SchematicContext) => {
     const projectSrcRoot = getProjectConfig(tree, projectName).sourceRoot;
-    const libPath = join(projectSrcRoot, '/lib');
+    const libPath = projectRootPath(tree, projectName);
 
     let componentPaths: string[] = [];
     tree.getDir(libPath).visit((filePath) => {

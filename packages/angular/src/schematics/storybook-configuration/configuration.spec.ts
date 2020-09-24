@@ -1,7 +1,7 @@
 import { Tree } from '@angular-devkit/schematics';
 import { runSchematic } from '../../utils/testing';
 import { StorybookConfigureSchema } from './schema';
-import { createTestUILib } from '../stories/stories.spec';
+import { createTestUILib } from '../stories/stories-lib.spec';
 
 describe('schematic:configuration', () => {
   let appTree: Tree;
