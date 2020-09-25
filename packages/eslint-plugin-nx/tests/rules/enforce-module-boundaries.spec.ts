@@ -6,11 +6,12 @@ import {
 import { TSESLint } from '@typescript-eslint/experimental-utils';
 import * as parser from '@typescript-eslint/parser';
 import { vol } from 'memfs';
-import { extname } from 'path';
+import { extname, join } from 'path';
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from '../../src/rules/enforce-module-boundaries';
 import { TargetProjectLocator } from '@nrwl/workspace/src/core/target-project-locator';
+import { readFileSync } from 'fs';
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('@nrwl/workspace/src/utils/app-root', () => ({
   appRootPath: '/root',
@@ -31,6 +32,7 @@ const tsconfig = {
       '@mycompany/other/a': ['libs/other/src/a/index.ts'],
       '@mycompany/another/a/b': ['libs/another/a/b.ts'],
       '@mycompany/myapp': ['apps/myapp/src/index.ts'],
+      '@mycompany/myapp-e2e': ['apps/myapp-e2e/src/index.ts'],
       '@mycompany/mylib': ['libs/mylib/src/index.ts'],
       '@mycompany/mylibName': ['libs/mylibName/src/index.ts'],
       '@mycompany/anotherlibName': ['libs/anotherlibName/src/index.ts'],
@@ -664,6 +666,44 @@ describe('Enforce Module Boundaries', () => {
     expect(failures[0].message).toEqual('Imports of apps are forbidden');
   });
 
+  it('should error on importing an e2e project', () => {
+    const failures = runRule(
+      {},
+      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+      'import "@mycompany/myapp-e2e"',
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/mylib/src/main.ts`)],
+            },
+          },
+          myappE2eName: {
+            name: 'myappE2eName',
+            type: ProjectType.e2e,
+            data: {
+              root: 'apps/myapp-e2e',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`apps/myapp-e2e/src/index.ts`)],
+            },
+          },
+        },
+        dependencies: {},
+      }
+    );
+    expect(failures[0].message).toEqual(
+      'Imports of e2e projects are forbidden'
+    );
+  });
+
   it('should error when circular dependency detected', () => {
     const failures = runRule(
       {},
@@ -1006,7 +1046,8 @@ function runRule(
   (global as any).npmScope = 'mycompany';
   (global as any).projectGraph = projectGraph;
   (global as any).targetProjectLocator = new TargetProjectLocator(
-    projectGraph.nodes
+    projectGraph.nodes,
+    (path) => readFileSync(join('/root', path)).toString()
   );
 
   const config = {

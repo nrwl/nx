@@ -55,6 +55,12 @@ export function isWorkspaceProject(project: ProjectGraphNode) {
   );
 }
 
+export function isNpmProject(
+  project: ProjectGraphNode
+): project is ProjectGraphNode<{ packageName: string; version: string }> {
+  return project.type === 'npm';
+}
+
 export function getSortedProjectNodes(nodes: ProjectGraphNodeRecords) {
   return Object.values(nodes).sort((nodeA, nodeB) => {
     // If a or b is not a nx project, leave them in the same spot

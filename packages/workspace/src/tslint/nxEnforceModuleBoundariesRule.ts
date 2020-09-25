@@ -168,11 +168,21 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     }
 
     // cannot import apps
-    if (targetProject.type !== ProjectType.lib) {
+    if (targetProject.type === ProjectType.app) {
       this.addFailureAt(
         node.getStart(),
         node.getWidth(),
         'imports of apps are forbidden'
+      );
+      return;
+    }
+
+    // cannot import e2e projects
+    if (targetProject.type === ProjectType.e2e) {
+      this.addFailureAt(
+        node.getStart(),
+        node.getWidth(),
+        'imports of e2e projects are forbidden'
       );
       return;
     }
