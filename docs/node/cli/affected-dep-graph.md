@@ -68,6 +68,12 @@ Default: ``
 
 Exclude certain projects from being processed
 
+### excludeTags
+
+Default: ``
+
+Exclude projects with tags matching one or more of the provided tags
+
 ### file
 
 output file (e.g. --file=output.json or --file=dep-graph.html)
