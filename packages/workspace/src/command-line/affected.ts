@@ -47,7 +47,14 @@ export async function affected(
   const projects = parsedArgs.all ? projectGraph.nodes : affectedGraph.nodes;
   const env = readEnvironment(nxArgs.target, projects);
   const affectedProjects = Object.values(projects)
-    .filter((n) => !parsedArgs.exclude.includes(n.name))
+    .filter(
+      (n) =>
+        !parsedArgs.exclude.includes(n.name) &&
+        env.nxJson.projects[n.name] &&
+        env.nxJson.projects[n.name].tags.filter((tag) =>
+          parsedArgs.excludeTags.includes(tag)
+        ).length === 0
+    )
     .filter(
       (n) => !parsedArgs.onlyFailed || !env.workspaceResults.getResult(n.name)
     );

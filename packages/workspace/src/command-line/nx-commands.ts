@@ -279,6 +279,14 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     .option('verbose', {
       describe: 'Print additional error stack trace on failure',
     })
+    .option('excludeTags', {
+      describe:
+        'Exclude projects with tags matching one or more of the provided tags',
+      type: 'array',
+      requiresArg: false,
+      coerce: parseCSV,
+      default: [],
+    })
     .conflicts({
       files: ['uncommitted', 'untracked', 'base', 'head', 'all'],
       untracked: ['uncommitted', 'files', 'base', 'head', 'all'],

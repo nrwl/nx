@@ -72,6 +72,7 @@ export interface NxArgs {
   skipNxCache?: boolean;
   'skip-nx-cache'?: boolean;
   scan?: boolean;
+  excludeTags?: string[];
 }
 
 const ignoreArgs = ['$0', '_'];
