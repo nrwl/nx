@@ -38,6 +38,7 @@ export type MessageIds =
   | 'noRelativeOrAbsoluteImportsAcrossLibraries'
   | 'noCircularDependencies'
   | 'noImportsOfApps'
+  | 'noImportsOfE2e'
   | 'noImportOfNonBuildableLibraries'
   | 'noImportsOfLazyLoadedLibraries'
   | 'projectWithoutTagsCannotHaveDependencies'
@@ -78,6 +79,7 @@ export default createESLintRule<Options, MessageIds>({
       noRelativeOrAbsoluteImportsAcrossLibraries: `Libraries cannot be imported by a relative or absolute path, and must begin with a npm scope`,
       noCircularDependencies: `Circular dependency between "{{sourceProjectName}}" and "{{targetProjectName}}" detected`,
       noImportsOfApps: 'Imports of apps are forbidden',
+      noImportsOfE2e: 'Imports of e2e projects are forbidden',
       noImportOfNonBuildableLibraries:
         'Buildable libraries cannot import non-buildable libraries',
       noImportsOfLazyLoadedLibraries: `Imports of lazy-loaded libraries are forbidden`,
@@ -182,10 +184,19 @@ export default createESLintRule<Options, MessageIds>({
         }
 
         // cannot import apps
-        if (targetProject.type !== ProjectType.lib) {
+        if (targetProject.type === ProjectType.app) {
           context.report({
             node,
             messageId: 'noImportsOfApps',
+          });
+          return;
+        }
+
+        // cannot import e2e projects
+        if (targetProject.type === ProjectType.e2e) {
+          context.report({
+            node,
+            messageId: 'noImportsOfE2e',
           });
           return;
         }
