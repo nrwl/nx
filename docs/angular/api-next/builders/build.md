@@ -24,6 +24,12 @@ Type: `string`
 
 undefined
 
+### nextConfig
+
+Type: `string`
+
+Path to a function which takes phase, config, and builder options, and returns the resulting config.
+
 ### outputPath
 
 Type: `string`
