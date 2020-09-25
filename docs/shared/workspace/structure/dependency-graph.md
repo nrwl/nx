@@ -43,7 +43,10 @@ When migrating a new codebase into an nx workspace, you'll likely begin to uncov
 
 **To resolve circular dependencies:**
 
-1. Identify the `import` statements causing the dependency. Search in the source folder of `projectA` for references to `@myorg/projectB` and search in the source folder of `projectB` for references to `@myorg/projectA`.
-2. Look for small pieces of code that can be moved from one project to the other.
-3. Look for code that both libraries depend on and move that code into a new shared library.
-4. If (2) and (3) don't work, you may need to combine `projectA` and `projectB` into one library.
+First, identify the `import` statements causing the dependency. Search in the source folder of `projectA` for references to `@myorg/projectB` and search in the source folder of `projectB` for references to `@myorg/projectA`.
+
+Then there are three strategies you can use:
+
+1. Look for small pieces of code that can be moved from one project to the other.
+2. Look for code that both libraries depend on and move that code into a new shared library.
+3. Combine `projectA` and `projectB` into one library.
