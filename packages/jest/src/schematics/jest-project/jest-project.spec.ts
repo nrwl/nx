@@ -88,21 +88,20 @@ describe('jestProject', () => {
     expect(
       tags.stripIndents`${resultTree.readContent('libs/lib1/jest.config.js')}`
     ).toBe(tags.stripIndents`module.exports = {
-  displayName: 'lib1',
-  preset: '../../jest.preset.js',
-  globals: {
-    'ts-jest': {
-      tsConfig: '<rootDir>/tsconfig.spec.json',
-    }
-  },
-  coverageDirectory: '../../coverage/libs/lib1',
-  snapshotSerializers: [
-    'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',
-    'jest-preset-angular/build/AngularSnapshotSerializer.js',
-    'jest-preset-angular/build/HTMLCommentSerializer.js'
-  ]
-};
-`);
+      displayName: 'lib1',
+      preset: '../../jest.preset.js',
+      globals: {
+        'ts-jest': {
+          tsConfig: '<rootDir>/tsconfig.spec.json',
+        }
+      },
+      coverageDirectory: '../../coverage/libs/lib1',
+      snapshotSerializers: [
+        'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',
+        'jest-preset-angular/build/AngularSnapshotSerializer.js',
+        'jest-preset-angular/build/HTMLCommentSerializer.js'
+      ]
+     };`);
   });
 
   it('should add a project reference in the root jest.config.js', async () => {
@@ -184,7 +183,7 @@ describe('jestProject', () => {
       );
     });
 
-    it('should have setupFilesAfterEnv and globals.ts-ject in the jest.config when generated for angular', async () => {
+    it('should have setupFilesAfterEnv and globals.ts-jest in the jest.config when generated for angular', async () => {
       const resultTree = await runSchematic(
         'jest-project',
         {
@@ -203,10 +202,12 @@ describe('jestProject', () => {
     'ts-jest': {
       tsConfig: '<rootDir>/tsconfig.spec.json',
       stringifyContentPathRegex: '\\.(html|svg)$',
-      astTransformers: [
-        'jest-preset-angular/build/InlineFilesTransformer',
-        'jest-preset-angular/build/StripStylesTransformer'
-      ],`);
+      astTransformers: {
+        before: [
+          'jest-preset-angular/build/InlineFilesTransformer',
+          'jest-preset-angular/build/StripStylesTransformer'
+        ]
+      },`);
     });
 
     it('should not list the setup file in workspace.json', async () => {

@@ -53,9 +53,9 @@
     "prettier": "^2.0.4"
   },
   "dependencies": {
-    "@angular-devkit/architect": "~0.1000.0",
-    "@angular-devkit/core": "~10.0.0",
-    "@angular-devkit/schematics": "~10.0.0",
+    "@angular-devkit/architect": "~0.1001.3",
+    "@angular-devkit/core": "~10.1.3",
+    "@angular-devkit/schematics": "~10.1.3",
     "@nrwl/cli": "*",
     "cosmiconfig": "^4.0.0",
     "fs-extra": "7.0.1",
