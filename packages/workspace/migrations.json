@@ -109,6 +109,11 @@
       "version": "10.1.0-beta.0",
       "description": "Migrate .eslintrc files to use tsconfig with a wildcard",
       "factory": "./src/migrations/update-10-1-0/migrate-eslintrc-tsconfig-wildcard"
+    },
+    "add-cli-dependency": {
+      "version": "10.3.0-beta.0",
+      "description": "Add @nrwl/cli as dependency",
+      "factory": "./src/migrations/update-10-3-0/add-cli-dependency"
     }
   },
   "packageJsonUpdates": {
