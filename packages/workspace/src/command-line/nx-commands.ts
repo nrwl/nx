@@ -285,7 +285,6 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'array',
       requiresArg: false,
       coerce: parseCSV,
-      default: [],
     })
     .conflicts({
       files: ['uncommitted', 'untracked', 'base', 'head', 'all'],

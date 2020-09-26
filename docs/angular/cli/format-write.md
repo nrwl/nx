@@ -32,8 +32,6 @@ Exclude certain projects from being processed
 
 ### excludeTags
 
-Default: ``
-
 Exclude projects with tags matching one or more of the provided tags
 
 ### files
