@@ -491,6 +491,16 @@
               },
               {
                 "input": "packages/storybook",
+                "glob": "**/lib-files-5/.storybook/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/storybook",
+                "glob": "**/root-files-5/.storybook/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/storybook",
                 "glob": "**/*.json",
                 "output": "/"
               },
