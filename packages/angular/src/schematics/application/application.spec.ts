@@ -17,17 +17,8 @@ describe('app', () => {
       const tree = await runSchematic('app', { name: 'myApp' }, appTree);
       const workspaceJson = readJsonInTree(tree, '/workspace.json');
 
-      expect(workspaceJson.projects['my-app'].root).toEqual('apps/my-app');
-      expect(workspaceJson.projects['my-app-e2e'].root).toEqual(
-        'apps/my-app-e2e'
-      );
-
-      expect(
-        workspaceJson.projects['my-app'].architect.lint.options.exclude
-      ).toEqual(['**/node_modules/**', '!apps/my-app/**/*']);
-      expect(
-        workspaceJson.projects['my-app-e2e'].architect.lint.options.exclude
-      ).toEqual(['**/node_modules/**', '!apps/my-app-e2e/**/*']);
+      expect(workspaceJson.projects['my-app']).toMatchSnapshot();
+      expect(workspaceJson.projects['my-app-e2e']).toMatchSnapshot();
     });
 
     it('should remove the e2e target on the application', async () => {
@@ -70,6 +61,9 @@ describe('app', () => {
       });
       expect(tsconfig.references).toContainEqual({
         path: './tsconfig.spec.json',
+      });
+      expect(tsconfig.references).toContainEqual({
+        path: './tsconfig.editor.json',
       });
 
       const tsconfigApp = JSON.parse(
@@ -170,20 +164,8 @@ describe('app', () => {
       );
       const workspaceJson = readJsonInTree(tree, '/workspace.json');
 
-      expect(workspaceJson.projects['my-dir-my-app'].root).toEqual(
-        'apps/my-dir/my-app'
-      );
-      expect(workspaceJson.projects['my-dir-my-app-e2e'].root).toEqual(
-        'apps/my-dir/my-app-e2e'
-      );
-
-      expect(
-        workspaceJson.projects['my-dir-my-app'].architect.lint.options.exclude
-      ).toEqual(['**/node_modules/**', '!apps/my-dir/my-app/**/*']);
-      expect(
-        workspaceJson.projects['my-dir-my-app-e2e'].architect.lint.options
-          .exclude
-      ).toEqual(['**/node_modules/**', '!apps/my-dir/my-app-e2e/**/*']);
+      expect(workspaceJson.projects['my-dir-my-app']).toMatchSnapshot();
+      expect(workspaceJson.projects['my-dir-my-app-e2e']).toMatchSnapshot();
     });
 
     it('should update nx.json', async () => {
@@ -344,6 +326,25 @@ describe('app', () => {
     });
   });
 
+  describe('--linter', () => {
+    describe('eslint', () => {
+      it('should add an architect target for lint', async () => {
+        const tree = await runSchematic(
+          'app',
+          { name: 'myApp', linter: 'eslint' },
+          appTree
+        );
+        const workspaceJson = readJsonInTree(tree, 'workspace.json');
+        expect(
+          workspaceJson.projects['my-app'].architect.lint
+        ).toMatchSnapshot();
+        expect(
+          workspaceJson.projects['my-app-e2e'].architect.lint
+        ).toMatchSnapshot();
+      });
+    });
+  });
+
   describe('--unit-test-runner', () => {
     describe('default (jest)', () => {
       it('should generate jest.config.js with serializers', async () => {
@@ -380,6 +381,7 @@ describe('app', () => {
         ).toEqual([
           'apps/my-app/tsconfig.app.json',
           'apps/my-app/tsconfig.spec.json',
+          'apps/my-app/tsconfig.editor.json',
         ]);
         const tsconfigAppJson = readJsonInTree(
           tree,
@@ -407,7 +409,10 @@ describe('app', () => {
         expect(workspaceJson.projects['my-app'].architect.test).toBeUndefined();
         expect(
           workspaceJson.projects['my-app'].architect.lint.options.tsConfig
-        ).toEqual(['apps/my-app/tsconfig.app.json']);
+        ).toEqual([
+          'apps/my-app/tsconfig.app.json',
+          'apps/my-app/tsconfig.editor.json',
+        ]);
       });
     });
   });
