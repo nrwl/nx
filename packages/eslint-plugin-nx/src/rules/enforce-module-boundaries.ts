@@ -18,6 +18,7 @@ import { createESLintRule } from '../utils/create-eslint-rule';
 import { normalize } from '@angular-devkit/core';
 import {
   createProjectGraph,
+  isNpmProject,
   ProjectGraph,
   ProjectType,
 } from '@nrwl/workspace/src/core/project-graph';
@@ -169,6 +170,10 @@ export default createESLintRule<Options, MessageIds>({
           return;
         }
 
+        // project => npm package
+        if (isNpmProject(targetProject)) {
+          return;
+        }
         // check constraints between libs and apps
         // check for circular dependency
         const circularPath = checkCircularPath(

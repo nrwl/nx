@@ -244,6 +244,18 @@ describe('Enforce Module Boundaries', () => {
             files: [createFile(`libs/untagged/src/index.ts`)],
           },
         },
+        npmPackage: {
+          name: 'npmPackage',
+          type: 'npm',
+          data: {
+            packageName: 'npm-package',
+            version: '0.0.0',
+            tags: [],
+            implicitDependencies: [],
+            architect: {},
+            files: [],
+          },
+        },
       },
       dependencies: {},
     };
@@ -274,6 +286,19 @@ describe('Enforce Module Boundaries', () => {
       expect(failures[0].getFailure()).toEqual(
         'A project tagged with "api" can only depend on libs tagged with "api"'
       );
+    });
+
+    it('should allow imports to npm projects', () => {
+      const failures = runRule(
+        depConstraints,
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+        import 'npm-package';
+      `,
+        graph
+      );
+
+      expect(failures.length).toEqual(0);
     });
 
     it('should error when the target library is untagged', () => {
