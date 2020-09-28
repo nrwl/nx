@@ -12,7 +12,6 @@ import {
   uniq,
   updateFile,
   workspaceConfigName,
-  tmpProjPath,
 } from '@nrwl/e2e/utils';
 
 let originalCIValue: any;
@@ -752,6 +751,29 @@ forEachCli((cliName) => {
       cachedProjects.sort((a, b) => a.localeCompare(b));
       expectedCachedProjects.sort((a, b) => a.localeCompare(b));
       expect(cachedProjects).toEqual(expectedCachedProjects);
+    }
+  });
+
+  describe('workspace structure', () => {
+    ensureProject();
+    const extensions = readJson('.vscode/extensions.json');
+    if (cliName === 'angular') {
+      expect(extensions).toEqual({
+        recommendations: [
+          'nrwl.angular-console',
+          'angular.ng-template',
+          'ms-vscode.vscode-typescript-tslint-plugin',
+          'esbenp.prettier-vscode',
+        ],
+      });
+    } else {
+      expect(extensions).toEqual({
+        recommendations: [
+          'nrwl.angular-console',
+          'ms-vscode.vscode-typescript-tslint-plugin',
+          'esbenp.prettier-vscode',
+        ],
+      });
     }
   });
 });
