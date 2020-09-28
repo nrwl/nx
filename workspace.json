@@ -1397,54 +1397,6 @@
             "passWithNoTests": true
           }
         },
-        "build-base": {
-          "builder": "@nrwl/node:package",
-          "options": {
-            "outputPath": "build/packages/bazel",
-            "tsConfig": "packages/bazel/tsconfig.lib.json",
-            "packageJson": "packages/bazel/package.json",
-            "main": "packages/bazel/index.ts",
-            "updateBuildableProjectDepsInPackageJson": false,
-            "assets": [
-              {
-                "input": "packages/bazel",
-                "glob": "**/files/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/bazel",
-                "glob": "**/files/**/.gitkeep",
-                "output": "/"
-              },
-              {
-                "input": "packages/bazel",
-                "glob": "**/*.json",
-                "output": "/"
-              },
-              {
-                "input": "packages/bazel",
-                "glob": "**/*.js",
-                "output": "/"
-              },
-              "LICENSE"
-            ]
-          }
-        },
-        "build": {
-          "builder": "@nrwl/workspace:run-commands",
-          "outputs": ["build/packages/bazel"],
-          "options": {
-            "commands": [
-              {
-                "command": "nx build-base bazel"
-              },
-              {
-                "command": "node ./scripts/copy-readme.js bazel"
-              }
-            ],
-            "parallel": false
-          }
-        },
         "lint": {
           "builder": "@nrwl/linter:lint",
           "options": {
