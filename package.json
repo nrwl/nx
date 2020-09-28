@@ -67,7 +67,7 @@
     "@nrwl/eslint-plugin-nx": "10.2.1-beta.1",
     "@nrwl/jest": "10.2.1-beta.1",
     "@nrwl/node": "10.2.1-beta.1",
-    "@nrwl/nx-cloud": "^10.1.3",
+    "@nrwl/nx-cloud": "^10.1.6",
     "@nrwl/workspace": "10.2.1-beta.1",
     "@reduxjs/toolkit": "1.3.2",
     "@rollup/plugin-babel": "5.0.2",
