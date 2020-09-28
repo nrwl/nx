@@ -38,7 +38,7 @@
     "@nrwl/jest": "*",
     "@nrwl/web": "*",
     "@angular-devkit/schematics": "~10.0.0",
-    "@svgr/webpack": "^5.2.0",
+    "@svgr/webpack": "^5.4.0",
     "confusing-browser-globals": "^1.0.9",
     "eslint-plugin-import": "^2.20.1",
     "eslint-plugin-jsx-a11y": "^6.2.3",

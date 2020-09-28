@@ -60,6 +60,17 @@ function insertAfterLastOccurrence(
   return new InsertChange(file, lastItemPosition, toInsert);
 }
 
+function sortObjectByKeys(obj: unknown) {
+  return Object.keys(obj)
+    .sort()
+    .reduce((result, key) => {
+      return {
+        ...result,
+        [key]: obj[key],
+      };
+    }, {});
+}
+
 export function findNodes(
   node: ts.Node,
   kind: ts.SyntaxKind | ts.SyntaxKind[],
@@ -616,7 +627,8 @@ export function addDepsToPackageJson(
             ...devDeps,
             ...(json.devDependencies || {}),
           };
-
+          json.dependencies = sortObjectByKeys(json.dependencies);
+          json.devDependencies = sortObjectByKeys(json.devDependencies);
           return json;
         }),
         addInstallTask({
@@ -644,6 +656,8 @@ export function updatePackageJsonDependencies(
         ...(json.devDependencies || {}),
         ...devDeps,
       };
+      json.dependencies = sortObjectByKeys(json.dependencies);
+      json.devDependencies = sortObjectByKeys(json.devDependencies);
       return json;
     }),
     addInstallTask({

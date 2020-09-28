@@ -1,7 +1,14 @@
 import {
+  calculateProjectDependencies,
   DependentBuildableProjectNode,
   updatePaths,
 } from './buildable-libs-utils';
+import {
+  DependencyType,
+  ProjectGraph,
+  ProjectType,
+} from '../core/project-graph';
+import { getMockContext } from './testing';
 
 describe('updatePaths', () => {
   const deps: DependentBuildableProjectNode[] = [
@@ -28,6 +35,52 @@ describe('updatePaths', () => {
     expect(paths).toEqual({
       '@proj/lib': ['dist/libs/lib'],
       '@proj/lib/sub': ['dist/libs/lib/sub'],
+    });
+  });
+});
+
+describe('calculateProjectDependencies', () => {
+  it('should include npm packages in dependency list', async () => {
+    const graph: ProjectGraph = {
+      nodes: {
+        example: {
+          type: ProjectType.lib,
+          name: 'example',
+          data: {
+            files: [],
+            root: '/root/example',
+          },
+        },
+        'npm:formik': {
+          type: 'npm',
+          name: 'npm:formik',
+          data: {
+            files: [],
+            packageName: 'formik',
+            version: '0.0.0',
+          },
+        },
+      },
+      dependencies: {
+        example: [
+          {
+            source: 'example',
+            target: 'npm:formik',
+            type: DependencyType.static,
+          },
+        ],
+      },
+    };
+    const context = await getMockContext();
+    context.target.project = 'example';
+
+    const results = await calculateProjectDependencies(graph, context);
+    expect(results).toMatchObject({
+      target: {
+        type: ProjectType.lib,
+        name: 'example',
+      },
+      dependencies: [{ name: 'formik' }],
     });
   });
 });

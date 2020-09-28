@@ -1,21 +1,11 @@
 const mockCopyPlugin = jest.fn();
 jest.mock('rollup-plugin-copy', () => mockCopyPlugin);
 
-import { of, throwError } from 'rxjs';
-import { join } from 'path';
-
-import { workspaces } from '@angular-devkit/core';
-
-import * as f from '@nrwl/workspace/src/utils/fileutils';
 import { MockBuilderContext } from '@nrwl/workspace/testing';
 
-import * as impl from './package.impl';
-import * as rr from './run-rollup';
+import { createRollupOptions } from './package.impl';
 import { getMockContext } from '../../utils/testing';
 import { PackageBuilderOptions } from '../../utils/types';
-import * as projectGraphUtils from '@nrwl/workspace/src/core/project-graph';
-import { ProjectGraph } from '@nrwl/workspace/src/core/project-graph';
-import { createRollupOptions } from './package.impl';
 import { normalizePackageOptions } from '@nrwl/web/src/utils/normalize';
 
 jest.mock('tsconfig-paths-webpack-plugin');
@@ -23,8 +13,6 @@ jest.mock('tsconfig-paths-webpack-plugin');
 describe('WebPackagebuilder', () => {
   let context: MockBuilderContext;
   let testOptions: PackageBuilderOptions;
-  let runRollup: jasmine.Spy;
-  let writeJsonFile: jasmine.Spy;
 
   beforeEach(async () => {
     context = await getMockContext();
