@@ -31,6 +31,17 @@ describe('add VsCode extensions file', () => {
           updateWorkspace((workspace) => {
             workspace.projects
               .add({
+                name: 'project',
+                root: 'apps/project',
+                sourceRoot: 'apps/project/src',
+              })
+              .targets.add({
+                builder: '@nrwl/node:builder',
+                name: 'builder',
+              });
+
+            workspace.projects
+              .add({
                 name: 'angular-project',
                 root: 'apps/angular-project',
                 sourceRoot: 'apps/angular-project/src',

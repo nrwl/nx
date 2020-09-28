@@ -11,13 +11,16 @@ export default function (): Rule {
     const workspace = await getWorkspace(host);
 
     let needsAngularExtension = false;
-    workspace.projects.forEach((project) => {
+
+    for (let [, project] of workspace.projects) {
       needsAngularExtension = Array.from(
         project.targets
       ).some(([, targetDefinition]) =>
         targetDefinition.builder.startsWith('@angular-devkit')
       );
-    });
+
+      if (needsAngularExtension) break;
+    }
 
     const extensions = [
       'nrwl.angular-console',
