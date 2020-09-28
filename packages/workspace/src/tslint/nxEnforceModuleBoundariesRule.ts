@@ -3,6 +3,7 @@ import { IOptions } from 'tslint';
 import * as ts from 'typescript';
 import {
   createProjectGraph,
+  isNpmProject,
   ProjectGraph,
   ProjectType,
 } from '../core/project-graph';
@@ -156,6 +157,12 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
 
     // same project => allow
     if (sourceProject === targetProject) {
+      super.visitImportDeclaration(node);
+      return;
+    }
+
+    // project => npm package
+    if (isNpmProject(targetProject)) {
       super.visitImportDeclaration(node);
       return;
     }
