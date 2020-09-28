@@ -100,6 +100,7 @@ function updateExtensions(host: Tree, context: SchematicContext) {
     if (!json.recommendations.includes(extension)) {
       json.recommendations.push(extension);
     }
+    return json;
   })(host, context);
 }
 

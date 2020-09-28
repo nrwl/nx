@@ -55,6 +55,7 @@ describe('workspace', () => {
     ).recommendations;
 
     expect(recommendations).toEqual([
+      'nrwl.angular-console',
       'ms-vscode.vscode-typescript-tslint-plugin',
       'esbenp.prettier-vscode',
     ]);

@@ -119,6 +119,11 @@
       "version": "10.3.0-beta.0",
       "description": "Update typescript to v4",
       "factory": "./src/migrations/update-10-3-0/update-typescript"
+    },
+    "add-vscode-extensions": {
+      "version": "10.3.0-beta.1",
+      "description": "Adds .vscode/extensions.json to a workspace",
+      "factory": "./src/migrations/update-10-3-0/add-vscode-extensions"
     }
   },
   "packageJsonUpdates": {

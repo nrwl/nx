@@ -1,9 +1,9 @@
 import { Tree } from '@angular-devkit/schematics';
-import { readJsonInTree } from '@nrwl/workspace';
+import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { runSchematic } from '../../utils/testing';
+import { callRule, runSchematic } from '../../utils/testing';
 
-import { JestInitSchema } from './schema.d';
+import { JestInitSchema } from './schema';
 
 describe('jest', () => {
   let appTree: Tree;
@@ -54,6 +54,45 @@ describe('jest', () => {
       ).toBeDefined();
       expect(packageJson.devDependencies['@babel/preset-react']).toBeDefined();
       expect(packageJson.devDependencies['babel-jest']).toBeDefined();
+    });
+  });
+
+  describe('adds jest extension', () => {
+    beforeEach(async () => {
+      appTree = await callRule(
+        updateJsonInTree('.vscode/extensions.json', () => ({
+          recommendations: [
+            'nrwl.angular-console',
+            'angular.ng-template',
+            'ms-vscode.vscode-typescript-tslint-plugin',
+            'esbenp.prettier-vscode',
+          ],
+        })),
+        appTree
+      );
+    });
+
+    it('should add the jest extension to the recommended property', async () => {
+      const resultTree = await runSchematic<JestInitSchema>(
+        'init',
+        {},
+        appTree
+      );
+      const extensionsJson = readJsonInTree(
+        resultTree,
+        '.vscode/extensions.json'
+      );
+      expect(extensionsJson).toMatchInlineSnapshot(`
+        Object {
+          "recommendations": Array [
+            "nrwl.angular-console",
+            "angular.ng-template",
+            "ms-vscode.vscode-typescript-tslint-plugin",
+            "esbenp.prettier-vscode",
+            "firsttris.vscode-jest-runner",
+          ],
+        }
+      `);
     });
   });
 });
