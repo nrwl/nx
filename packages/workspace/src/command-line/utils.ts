@@ -138,10 +138,6 @@ export function splitArgsIntoNxArgsAndOverrides(
     nxArgs.skipNxCache = false;
   }
 
-  if (!nxArgs.excludeTags) {
-    nxArgs.excludeTags = [];
-  }
-
   return { nxArgs, overrides };
 }
 

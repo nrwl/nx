@@ -51,6 +51,7 @@ export async function affected(
       (n) =>
         !parsedArgs.exclude.includes(n.name) &&
         env.nxJson.projects[n.name] &&
+        Array.isArray(parsedArgs.excludeTags) &&
         env.nxJson.projects[n.name].tags.filter((tag) =>
           parsedArgs.excludeTags.includes(tag)
         ).length === 0
