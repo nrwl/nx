@@ -58,14 +58,18 @@ forEachCli(() => {
           `
             import React from 'react';
             import { Button, ButtonStyle } from './button';
+            import { text, number } from '@storybook/addon-knobs';
             
             export default { title: 'Button' };
             
             export const primary = () => (
               <Button
-                padding='0'
-                style='default'
-                text='Click me'
+                padding={number('Padding', 0)}
+                style={text('Style', 'default') as ButtonStyle}
+                text={text('Text', 'Click me')}
+                // padding='0'
+                // style='default'
+                // text='Click me'
               />
             );
             `
