@@ -3,7 +3,6 @@ import {
   ensureProject,
   exists,
   forEachCli,
-  newProject,
   readFile,
   readJson,
   runCLI,
@@ -18,10 +17,12 @@ import { NxJson } from '@nrwl/workspace';
 import { classify } from '@nrwl/workspace/src/utils/strings';
 
 forEachCli((cli) => {
+  beforeAll(() => {
+    ensureProject();
+  });
+
   describe('lint', () => {
     it('lint should ensure module boundaries', () => {
-      ensureProject();
-
       const myapp = uniq('myapp');
       const myapp2 = uniq('myapp2');
       const mylib = uniq('mylib');
@@ -83,13 +84,8 @@ forEachCli((cli) => {
       );
     }, 1000000);
 
-    describe('nx lint', () => {
-      afterAll(() => {
-        newProject();
-      });
-
-      it('should run nx lint', () => {
-        ensureProject();
+    describe('nx workspace-lint', () => {
+      it('should identify issues with the workspace', () => {
         const appBefore = uniq('before');
         const appAfter = uniq('after');
 
@@ -119,7 +115,6 @@ forEachCli((cli) => {
 
   describe('format', () => {
     it('format should check and reformat the code', () => {
-      ensureProject();
       const myapp = uniq('myapp');
       const mylib = uniq('mylib');
 
@@ -221,11 +216,12 @@ forEachCli((cli) => {
   });
 
   describe('workspace-schematic', () => {
-    function setup() {
-      ensureProject();
+    let custom: string;
+    let failing: string;
 
-      const custom = uniq('custom');
-      const failing = uniq('custom-failing');
+    beforeEach(() => {
+      custom = uniq('custom');
+      failing = uniq('custom-failing');
       runCLI(`g workspace-schematic ${custom} --no-interactive`);
       runCLI(`g workspace-schematic ${failing} --no-interactive`);
 
@@ -237,12 +233,9 @@ forEachCli((cli) => {
         `tools/schematics/${failing}/index.ts`,
         `tools/schematics/${failing}/schema.json`
       );
-
-      return { custom, failing };
-    }
+    });
 
     it('should compile only schematic files with dependencies', () => {
-      const { custom } = setup();
       const workspace = uniq('workspace');
 
       updateFile(
@@ -287,8 +280,6 @@ forEachCli((cli) => {
     });
 
     it('should support workspace-specific schematics', async () => {
-      const { custom, failing } = setup();
-
       const json = readJson(`tools/schematics/${custom}/schema.json`);
       json.properties['directory'] = {
         type: 'string',
@@ -373,31 +364,47 @@ forEachCli((cli) => {
   });
 
   describe('dep-graph', () => {
-    beforeEach(() => {
-      newProject();
-      runCLI('generate @nrwl/angular:app myapp');
-      runCLI('generate @nrwl/angular:app myapp2');
-      runCLI('generate @nrwl/angular:app myapp3');
-      runCLI('generate @nrwl/angular:lib mylib');
-      runCLI('generate @nrwl/angular:lib mylib2');
+    let myapp: string;
+    let myapp2: string;
+    let myapp3: string;
+    let myappE2e: string;
+    let myapp2E2e: string;
+    let myapp3E2e: string;
+    let mylib: string;
+    let mylib2: string;
+    beforeAll(() => {
+      myapp = uniq('myapp');
+      myapp2 = uniq('myapp2');
+      myapp3 = uniq('myapp3');
+      myappE2e = myapp + '-e2e';
+      myapp2E2e = myapp2 + '-e2e';
+      myapp3E2e = myapp3 + '-e2e';
+      mylib = uniq('mylib');
+      mylib2 = uniq('mylib2');
+
+      runCLI(`generate @nrwl/angular:app ${myapp}`);
+      runCLI(`generate @nrwl/angular:app ${myapp2}`);
+      runCLI(`generate @nrwl/angular:app ${myapp3}`);
+      runCLI(`generate @nrwl/angular:lib ${mylib}`);
+      runCLI(`generate @nrwl/angular:lib ${mylib2}`);
 
       updateFile(
-        'apps/myapp/src/main.ts',
+        `apps/${myapp}/src/main.ts`,
         `
-      import '@proj/mylib';
+      import '@proj/${mylib}';
 
-      const s = {loadChildren: '@proj/mylib2'};
+      const s = {loadChildren: '@proj/${mylib2}'};
     `
       );
 
       updateFile(
-        'apps/myapp2/src/app/app.component.spec.ts',
-        `import '@proj/mylib';`
+        `apps/${myapp2}/src/app/app.component.spec.ts`,
+        `import '@proj/${mylib}';`
       );
 
       updateFile(
-        'libs/mylib/src/mylib.module.spec.ts',
-        `import '@proj/mylib2';`
+        `libs/${mylib}/src/mylib.module.spec.ts`,
+        `import '@proj/${mylib2}';`
       );
     });
 
@@ -408,71 +415,73 @@ forEachCli((cli) => {
 
       const jsonFileContents = readJson('project-graph.json');
 
-      expect(jsonFileContents.graph.dependencies).toEqual({
-        'myapp3-e2e': [
-          {
-            source: 'myapp3-e2e',
-            target: 'myapp3',
-            type: 'implicit',
-          },
-        ],
-        myapp2: [
-          {
-            source: 'myapp2',
-            target: 'mylib',
-            type: 'static',
-          },
-        ],
-        'myapp2-e2e': [
-          {
-            source: 'myapp2-e2e',
-            target: 'myapp2',
-            type: 'implicit',
-          },
-        ],
-        mylib: [
-          {
-            source: 'mylib',
-            target: 'mylib2',
-            type: 'static',
-          },
-        ],
-        mylib2: [],
-        myapp: [
-          {
-            source: 'myapp',
-            target: 'mylib',
-            type: 'static',
-          },
-          { source: 'myapp', target: 'mylib2', type: 'dynamic' },
-        ],
-        'myapp-e2e': [
-          {
-            source: 'myapp-e2e',
-            target: 'myapp',
-            type: 'implicit',
-          },
-        ],
-        myapp3: [],
-      });
+      expect(jsonFileContents.graph.dependencies).toEqual(
+        jasmine.objectContaining({
+          [myapp3E2e]: [
+            {
+              source: myapp3E2e,
+              target: myapp3,
+              type: 'implicit',
+            },
+          ],
+          [myapp2]: [
+            {
+              source: myapp2,
+              target: mylib,
+              type: 'static',
+            },
+          ],
+          [myapp2E2e]: [
+            {
+              source: myapp2E2e,
+              target: myapp2,
+              type: 'implicit',
+            },
+          ],
+          [mylib]: [
+            {
+              source: mylib,
+              target: mylib2,
+              type: 'static',
+            },
+          ],
+          [mylib2]: [],
+          [myapp]: [
+            {
+              source: myapp,
+              target: mylib,
+              type: 'static',
+            },
+            { source: myapp, target: mylib2, type: 'dynamic' },
+          ],
+          [myappE2e]: [
+            {
+              source: myappE2e,
+              target: myapp,
+              type: 'implicit',
+            },
+          ],
+          [myapp3]: [],
+        })
+      );
 
       runCommand(
-        `npm run affected:dep-graph -- --files="libs/mylib/src/index.ts" --file="project-graph.json"`
+        `npm run affected:dep-graph -- --files="libs/${mylib}/src/index.ts" --file="project-graph.json"`
       );
 
       expect(() => checkFilesExist('project-graph.json')).not.toThrow();
 
       const jsonFileContents2 = readJson('project-graph.json');
 
-      expect(jsonFileContents2.criticalPath).toContain('myapp');
-      expect(jsonFileContents2.criticalPath).toContain('myapp2');
-      expect(jsonFileContents2.criticalPath).toContain('mylib');
-      expect(jsonFileContents2.criticalPath).not.toContain('mylib2');
+      expect(jsonFileContents2.criticalPath).toContain(myapp);
+      expect(jsonFileContents2.criticalPath).toContain(myapp2);
+      expect(jsonFileContents2.criticalPath).toContain(mylib);
+      expect(jsonFileContents2.criticalPath).not.toContain(mylib2);
     }, 1000000);
 
     it('dep-graph should focus requested project', () => {
       runCommand(
-        `npm run dep-graph -- --focus=myapp --file=project-graph.json`
+        `npm run dep-graph -- --focus=${myapp} --file=project-graph.json`
       );
 
       expect(() => checkFilesExist('project-graph.json')).not.toThrow();
@@ -480,20 +489,20 @@ forEachCli((cli) => {
       const jsonFileContents = readJson('project-graph.json');
       const projectNames = Object.keys(jsonFileContents.graph.nodes);
 
-      expect(projectNames).toContain('myapp');
-      expect(projectNames).toContain('mylib');
-      expect(projectNames).toContain('mylib2');
-      expect(projectNames).toContain('myapp-e2e');
+      expect(projectNames).toContain(myapp);
+      expect(projectNames).toContain(mylib);
+      expect(projectNames).toContain(mylib2);
+      expect(projectNames).toContain(myappE2e);
 
-      expect(projectNames).not.toContain('myapp2');
-      expect(projectNames).not.toContain('myapp3');
-      expect(projectNames).not.toContain('myapp2-e2e');
-      expect(projectNames).not.toContain('myapp3-e2e');
+      expect(projectNames).not.toContain(myapp2);
+      expect(projectNames).not.toContain(myapp3);
+      expect(projectNames).not.toContain(myapp2E2e);
+      expect(projectNames).not.toContain(myapp3E2e);
     }, 1000000);
 
     it('dep-graph should exclude requested projects', () => {
       runCommand(
-        `npm run dep-graph -- --exclude=myapp-e2e,myapp2-e2e,myapp3-e2e --file=project-graph.json`
+        `npm run dep-graph -- --exclude=${myappE2e},${myapp2E2e},${myapp3E2e} --file=project-graph.json`
       );
 
       expect(() => checkFilesExist('project-graph.json')).not.toThrow();
@@ -501,20 +510,20 @@ forEachCli((cli) => {
       const jsonFileContents = readJson('project-graph.json');
       const projectNames = Object.keys(jsonFileContents.graph.nodes);
 
-      expect(projectNames).toContain('myapp');
-      expect(projectNames).toContain('mylib');
-      expect(projectNames).toContain('mylib2');
-      expect(projectNames).toContain('myapp2');
-      expect(projectNames).toContain('myapp3');
+      expect(projectNames).toContain(myapp);
+      expect(projectNames).toContain(mylib);
+      expect(projectNames).toContain(mylib2);
+      expect(projectNames).toContain(myapp2);
+      expect(projectNames).toContain(myapp3);
 
-      expect(projectNames).not.toContain('myapp-e2e');
-      expect(projectNames).not.toContain('myapp2-e2e');
-      expect(projectNames).not.toContain('myapp3-e2e');
+      expect(projectNames).not.toContain(myappE2e);
+      expect(projectNames).not.toContain(myapp2E2e);
+      expect(projectNames).not.toContain(myapp3E2e);
     }, 1000000);
 
     it('dep-graph should exclude requested projects that were included by a focus', () => {
       runCommand(
-        `npm run dep-graph -- --focus=myapp --exclude=myapp-e2e --file=project-graph.json`
+        `npm run dep-graph -- --focus=${myapp} --exclude=${myappE2e} --file=project-graph.json`
       );
 
       expect(() => checkFilesExist('project-graph.json')).not.toThrow();
@@ -522,15 +531,15 @@ forEachCli((cli) => {
       const jsonFileContents = readJson('project-graph.json');
       const projectNames = Object.keys(jsonFileContents.graph.nodes);
 
-      expect(projectNames).toContain('myapp');
-      expect(projectNames).toContain('mylib');
-      expect(projectNames).toContain('mylib2');
+      expect(projectNames).toContain(myapp);
+      expect(projectNames).toContain(mylib);
+      expect(projectNames).toContain(mylib2);
 
-      expect(projectNames).not.toContain('myapp-e2e');
-      expect(projectNames).not.toContain('myapp2');
-      expect(projectNames).not.toContain('myapp3');
-      expect(projectNames).not.toContain('myapp2-e2e');
-      expect(projectNames).not.toContain('myapp3-e2e');
+      expect(projectNames).not.toContain(myappE2e);
+      expect(projectNames).not.toContain(myapp2);
+      expect(projectNames).not.toContain(myapp3);
+      expect(projectNames).not.toContain(myapp2E2e);
+      expect(projectNames).not.toContain(myapp3E2e);
     }, 1000000);
 
     it('dep-graph should output a deployable static website in an html file accompanied by a folder with static assets', () => {
@@ -546,86 +555,77 @@ forEachCli((cli) => {
   describe('Move Angular Project', () => {
     const workspace: string = cli === 'angular' ? 'angular' : 'workspace';
 
-    describe('Apps', () => {
-      let app1: string;
-      let app2: string;
-      let newPath: string;
+    let app1: string;
+    let app2: string;
+    let newPath: string;
 
-      beforeEach(() => {
-        app1 = uniq('app1');
-        app2 = uniq('app2');
-        newPath = `subfolder/${app2}`;
-        newProject();
-        runCLI(`generate @nrwl/angular:app ${app1}`);
-      });
+    beforeEach(() => {
+      app1 = uniq('app1');
+      app2 = uniq('app2');
+      newPath = `subfolder/${app2}`;
+      runCLI(`generate @nrwl/angular:app ${app1}`);
+    });
 
-      /**
-       * Tries moving an app from ${app1} -> subfolder/${app2}
-       */
-      it('should work for apps', () => {
-        const moveOutput = runCLI(
-          `generate @nrwl/angular:move --project ${app1} ${newPath}`
-        );
+    /**
+     * Tries moving an app from ${app1} -> subfolder/${app2}
+     */
+    it('should work for apps', () => {
+      const moveOutput = runCLI(
+        `generate @nrwl/angular:move --project ${app1} ${newPath}`
+      );
 
-        // just check the output
-        expect(moveOutput).toContain(`DELETE apps/${app1}`);
-        expect(moveOutput).toContain(`CREATE apps/${newPath}/.browserslistrc`);
-        expect(moveOutput).toContain(`CREATE apps/${newPath}/jest.config.js`);
-        expect(moveOutput).toContain(
-          `CREATE apps/${newPath}/tsconfig.app.json`
-        );
-        expect(moveOutput).toContain(`CREATE apps/${newPath}/tsconfig.json`);
-        expect(moveOutput).toContain(
-          `CREATE apps/${newPath}/tsconfig.spec.json`
-        );
-        expect(moveOutput).toContain(`CREATE apps/${newPath}/tslint.json`);
-        expect(moveOutput).toContain(`CREATE apps/${newPath}/src/favicon.ico`);
-        expect(moveOutput).toContain(`CREATE apps/${newPath}/src/index.html`);
-        expect(moveOutput).toContain(`CREATE apps/${newPath}/src/main.ts`);
-        expect(moveOutput).toContain(`CREATE apps/${newPath}/src/polyfills.ts`);
-        expect(moveOutput).toContain(`CREATE apps/${newPath}/src/styles.css`);
-        expect(moveOutput).toContain(
-          `CREATE apps/${newPath}/src/test-setup.ts`
-        );
-        expect(moveOutput).toContain(
-          `CREATE apps/${newPath}/src/app/app.component.html`
-        );
-        expect(moveOutput).toContain(
-          `CREATE apps/${newPath}/src/app/app.module.ts`
-        );
-        expect(moveOutput).toContain(
-          `CREATE apps/${newPath}/src/assets/.gitkeep`
-        );
-        expect(moveOutput).toContain(
-          `CREATE apps/${newPath}/src/environments/environment.prod.ts`
-        );
-        expect(moveOutput).toContain(
-          `CREATE apps/${newPath}/src/environments/environment.ts`
-        );
-        expect(moveOutput).toContain(`UPDATE nx.json`);
-        expect(moveOutput).toContain(`UPDATE ${workspace}.json`);
-      });
+      // just check the output
+      expect(moveOutput).toContain(`DELETE apps/${app1}`);
+      expect(moveOutput).toContain(`CREATE apps/${newPath}/.browserslistrc`);
+      expect(moveOutput).toContain(`CREATE apps/${newPath}/jest.config.js`);
+      expect(moveOutput).toContain(`CREATE apps/${newPath}/tsconfig.app.json`);
+      expect(moveOutput).toContain(`CREATE apps/${newPath}/tsconfig.json`);
+      expect(moveOutput).toContain(`CREATE apps/${newPath}/tsconfig.spec.json`);
+      expect(moveOutput).toContain(`CREATE apps/${newPath}/tslint.json`);
+      expect(moveOutput).toContain(`CREATE apps/${newPath}/src/favicon.ico`);
+      expect(moveOutput).toContain(`CREATE apps/${newPath}/src/index.html`);
+      expect(moveOutput).toContain(`CREATE apps/${newPath}/src/main.ts`);
+      expect(moveOutput).toContain(`CREATE apps/${newPath}/src/polyfills.ts`);
+      expect(moveOutput).toContain(`CREATE apps/${newPath}/src/styles.css`);
+      expect(moveOutput).toContain(`CREATE apps/${newPath}/src/test-setup.ts`);
+      expect(moveOutput).toContain(
+        `CREATE apps/${newPath}/src/app/app.component.html`
+      );
+      expect(moveOutput).toContain(
+        `CREATE apps/${newPath}/src/app/app.module.ts`
+      );
+      expect(moveOutput).toContain(
+        `CREATE apps/${newPath}/src/assets/.gitkeep`
+      );
+      expect(moveOutput).toContain(
+        `CREATE apps/${newPath}/src/environments/environment.prod.ts`
+      );
+      expect(moveOutput).toContain(
+        `CREATE apps/${newPath}/src/environments/environment.ts`
+      );
+      expect(moveOutput).toContain(`UPDATE nx.json`);
+      expect(moveOutput).toContain(`UPDATE ${workspace}.json`);
+    });
 
-      /**
-       * Tries moving an e2e project from ${app1} -> ${newPath}
-       */
-      it('should work for e2e projects', () => {
-        const moveOutput = runCLI(
-          `generate @nrwl/angular:move --projectName=${app1}-e2e --destination=${newPath}-e2e`
-        );
+    /**
+     * Tries moving an e2e project from ${app1} -> ${newPath}
+     */
+    it('should work for e2e projects', () => {
+      const moveOutput = runCLI(
+        `generate @nrwl/angular:move --projectName=${app1}-e2e --destination=${newPath}-e2e`
+      );
 
-        // just check that the cypress.json is updated correctly
-        const cypressJsonPath = `apps/${newPath}-e2e/cypress.json`;
-        expect(moveOutput).toContain(`CREATE ${cypressJsonPath}`);
-        checkFilesExist(cypressJsonPath);
-        const cypressJson = readJson(cypressJsonPath);
-        expect(cypressJson.videosFolder).toEqual(
-          `../../../dist/cypress/apps/${newPath}-e2e/videos`
-        );
-        expect(cypressJson.screenshotsFolder).toEqual(
-          `../../../dist/cypress/apps/${newPath}-e2e/screenshots`
-        );
-      });
+      // just check that the cypress.json is updated correctly
+      const cypressJsonPath = `apps/${newPath}-e2e/cypress.json`;
+      expect(moveOutput).toContain(`CREATE ${cypressJsonPath}`);
+      checkFilesExist(cypressJsonPath);
+      const cypressJson = readJson(cypressJsonPath);
+      expect(cypressJson.videosFolder).toEqual(
+        `../../../dist/cypress/apps/${newPath}-e2e/videos`
+      );
+      expect(cypressJson.screenshotsFolder).toEqual(
+        `../../../dist/cypress/apps/${newPath}-e2e/screenshots`
+      );
     });
 
     /**
@@ -634,7 +634,6 @@ forEachCli((cli) => {
     it('should work for libraries', () => {
       const lib1 = uniq('mylib');
       const lib2 = uniq('mylib');
-      newProject();
       runCLI(`generate @nrwl/angular:lib ${lib1}`);
 
       /**
@@ -695,7 +694,6 @@ forEachCli((cli) => {
       const lib1 = uniq('mylib');
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
-      newProject();
       runCLI(`generate @nrwl/workspace:lib ${lib1}/data-access`);
 
       updateFile(
@@ -832,7 +830,6 @@ forEachCli((cli) => {
       const lib1 = uniq('mylib');
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
-      newProject();
       runCLI(
         `generate @nrwl/workspace:lib ${lib1}/data-access --importPath=${importPath}`
       );
@@ -970,7 +967,6 @@ forEachCli((cli) => {
       const lib1 = uniq('mylib');
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
-      newProject();
 
       let nxJson = readJson('nx.json');
       nxJson.workspaceLayout = { libsDir: 'packages' };
@@ -1105,6 +1101,10 @@ forEachCli((cli) => {
       expect(lib2File).toContain(
         `import { fromLibOne } from '@proj/shared/${lib1}/data-access';`
       );
+
+      nxJson = readJson('nx.json');
+      delete nxJson.workspaceLayout;
+      updateFile('nx.json', JSON.stringify(nxJson));
     });
   });
 
@@ -1117,8 +1117,6 @@ forEachCli((cli) => {
     it('should work', () => {
       const lib1 = uniq('mylib');
       const lib2 = uniq('mylib');
-
-      newProject();
 
       runCLI(`generate @nrwl/workspace:lib ${lib1}`);
       expect(exists(tmpProjPath(`libs/${lib1}`))).toBeTruthy();
