@@ -771,7 +771,6 @@ forEachCli((cliName) => {
       } else {
         expect(extensions).toEqual({
           recommendations: [
-            'nrwl.angular-console',
             'ms-vscode.vscode-typescript-tslint-plugin',
             'esbenp.prettier-vscode',
             'firsttris.vscode-jest-runner',
