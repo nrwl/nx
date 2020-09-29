@@ -49,12 +49,14 @@
     ]
   },
   "peerDependencies": {
+    "@nrwl/cli": "*",
     "prettier": "^2.0.4"
   },
   "dependencies": {
     "@angular-devkit/architect": "~0.1000.0",
     "@angular-devkit/core": "~10.0.0",
     "@angular-devkit/schematics": "~10.0.0",
+    "@nrwl/cli": "*",
     "cosmiconfig": "^4.0.0",
     "fs-extra": "7.0.1",
     "dotenv": "6.2.0",
