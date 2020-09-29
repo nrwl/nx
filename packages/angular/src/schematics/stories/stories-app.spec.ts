@@ -21,9 +21,6 @@ describe('angular:stories for applications', () => {
       appTree
     );
 
-    console.log(appTree);
-    console.log(tree);
-
     expect(tree.exists('apps/test-app/src/app/app.component.ts')).toBeTruthy();
     expect(
       tree.exists('apps/test-app/src/app/app.component.stories.ts')

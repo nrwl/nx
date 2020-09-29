@@ -30,8 +30,6 @@ export default function (options: Schema): Rule {
 }
 
 function createPreset(options: Schema): Rule {
-  const linter = options.cli === 'angular' ? 'tslint' : 'eslint';
-
   if (options.preset === 'empty') {
     return noop();
   } else if (options.preset === 'oss') {
@@ -49,7 +47,6 @@ function createPreset(options: Schema): Rule {
       externalSchematic('@nrwl/react', 'application', {
         name: options.name,
         style: options.style,
-        linter,
       }),
       setDefaultCollection('@nrwl/react'),
     ]);
@@ -58,7 +55,6 @@ function createPreset(options: Schema): Rule {
       externalSchematic('@nrwl/next', 'application', {
         name: options.name,
         style: options.style,
-        linter,
       }),
       setDefaultCollection('@nrwl/next'),
     ]);
@@ -67,7 +63,6 @@ function createPreset(options: Schema): Rule {
       externalSchematic('@nrwl/web', 'application', {
         name: options.name,
         style: options.style,
-        linter,
       }),
       addDepsToPackageJson(
         {},
@@ -100,18 +95,12 @@ function createPreset(options: Schema): Rule {
       externalSchematic('@nrwl/react', 'application', {
         name: options.name,
         style: options.style,
-        linter,
       }),
       externalSchematic('@nrwl/express', 'application', {
         name: 'api',
         frontendProject: options.name,
-        linter,
       }),
-      schematic(
-        'library',
-        { name: 'api-interfaces', linter },
-        { interactive: false }
-      ),
+      schematic('library', { name: 'api-interfaces' }, { interactive: false }),
       setDefaultCollection('@nrwl/react'),
       connectReactAndExpress(options),
     ]);
@@ -119,7 +108,6 @@ function createPreset(options: Schema): Rule {
     return chain([
       externalSchematic('@nrwl/nest', 'application', {
         name: options.name,
-        linter,
       }),
       setDefaultCollection('@nrwl/nest'),
     ]);

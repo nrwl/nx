@@ -51,6 +51,7 @@ export interface Schema {
   commit?: { name: string; email: string; message?: string };
   defaultBase?: string;
   nxWorkspaceRoot?: string;
+  linter: 'tslint' | 'eslint';
 }
 
 class RunPresetTask {
@@ -132,7 +133,7 @@ export function sharedNew(cli: string, options: Schema): Rule {
 
     return chain([
       schematic('workspace', { ...workspaceOpts, cli }),
-      cli === 'angular' ? setDefaultLinter('tslint') : noop(),
+      cli === 'angular' ? setDefaultLinter(options.linter) : noop(),
       addPresetDependencies(options),
       addCloudDependencies(options),
       move('/', options.directory),
@@ -267,6 +268,11 @@ function setDefaultLinter(linter: string) {
     if (!json.schematics) {
       json.schematics = {};
     }
+    json.schematics['@nrwl/angular'] = {
+      application: { linter },
+      library: { linter },
+      'storybook-configuration': { linter },
+    };
     json.schematics['@nrwl/workspace'] = { library: { linter } };
     json.schematics['@nrwl/cypress'] = { 'cypress-project': { linter } };
     json.schematics['@nrwl/node'] = {

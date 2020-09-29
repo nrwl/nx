@@ -81,6 +81,12 @@
       "type": "string",
       "description": "Root directory.",
       "hidden": true
+    },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["tslint", "eslint"],
+      "default": "eslint"
     }
   }
 }
