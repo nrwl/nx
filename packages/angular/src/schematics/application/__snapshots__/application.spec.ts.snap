@@ -2,17 +2,10 @@
 
 exports[`app --linter eslint should add an architect target for lint 1`] = `
 Object {
-  "builder": "@nrwl/linter:lint",
+  "builder": "@nrwl/linter:eslint",
   "options": Object {
-    "exclude": Array [
-      "**/node_modules/**",
-      "!apps/my-app/**/*",
-    ],
-    "linter": "eslint",
-    "tsConfig": Array [
-      "apps/my-app/tsconfig.app.json",
-      "apps/my-app/tsconfig.spec.json",
-      "apps/my-app/tsconfig.editor.json",
+    "lintFilePatterns": Array [
+      "apps/my-app/src/**/*.ts",
     ],
   },
 }
@@ -20,15 +13,10 @@ Object {
 
 exports[`app --linter eslint should add an architect target for lint 2`] = `
 Object {
-  "builder": "@nrwl/linter:lint",
+  "builder": "@nrwl/linter:eslint",
   "options": Object {
-    "exclude": Array [
-      "**/node_modules/**",
-      "!apps/my-app-e2e/**/*",
-    ],
-    "linter": "eslint",
-    "tsConfig": Array [
-      "apps/my-app-e2e/tsconfig.e2e.json",
+    "lintFilePatterns": Array [
+      "apps/my-app-e2e/**/*.{js,ts}",
     ],
   },
 }

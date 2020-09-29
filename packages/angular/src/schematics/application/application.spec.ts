@@ -449,7 +449,7 @@ describe('app', () => {
             lint: {
               builder: '@angular-devkit/build-angular:tslint',
               options: {
-                tsConfig: 'apps/my-app-e2e/tsconfig.e2e.json',
+                tsConfig: ['apps/my-app-e2e/tsconfig.e2e.json'],
                 exclude: ['**/node_modules/**', '!apps/my-app-e2e/**/*'],
               },
             },

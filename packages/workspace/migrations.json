@@ -114,6 +114,11 @@
       "version": "10.3.0-beta.0",
       "description": "Add @nrwl/cli as dependency",
       "factory": "./src/migrations/update-10-3-0/add-cli-dependency"
+    },
+    "update-eslint-builder-and-config": {
+      "version": "10.3.0-beta.0",
+      "description": "Migrate to the new ESLint builder and ESLint config style",
+      "factory": "./src/migrations/update-10-3-0/update-eslint-builder-and-config"
     }
   },
   "packageJsonUpdates": {
@@ -711,6 +716,23 @@
         },
         "@angular/service-worker": {
           "version": "^10.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "10.3.0": {
+      "version": "10.3.0-beta.0",
+      "packages": {
+        "@typescript-eslint/eslint-plugin": {
+          "version": "3.10.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/parser": {
+          "version": "3.10.1",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint": {
+          "version": "7.10.0",
           "alwaysAddToPackageJson": false
         }
       }
