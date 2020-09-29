@@ -1078,5 +1078,5 @@ function runRule(
     },
   };
 
-  return linter.verifyAndFix(content, config as any, contentPath).messages;
+  return linter.verify(content, config as any, contentPath);
 }

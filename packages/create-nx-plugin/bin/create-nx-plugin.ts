@@ -9,8 +9,6 @@ import { writeFileSync, readFileSync, removeSync } from 'fs-extra';
 import * as path from 'path';
 import { execSync } from 'child_process';
 import * as inquirer from 'inquirer';
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-// @ts-ignore
 import yargsParser = require('yargs-parser');
 import { determinePackageManager, showNxWarning } from './shared';
 

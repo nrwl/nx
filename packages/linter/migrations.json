@@ -1,0 +1,24 @@
+{
+  "schematics": {
+    "update-10.3.0": {
+      "version": "10.3.0-beta.1",
+      "description": "Update @typescript-eslint to v4.3",
+      "factory": "./src/migrations/update-10-3-0/update-10-3-0"
+    }
+  },
+  "packageJsonUpdates": {
+    "10.3.0": {
+      "version": "10.3.0-beta.1",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "4.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "4.3.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
+}
