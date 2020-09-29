@@ -755,25 +755,29 @@ forEachCli((cliName) => {
   });
 
   describe('workspace structure', () => {
-    ensureProject();
-    const extensions = readJson('.vscode/extensions.json');
-    if (cliName === 'angular') {
-      expect(extensions).toEqual({
-        recommendations: [
-          'nrwl.angular-console',
-          'angular.ng-template',
-          'ms-vscode.vscode-typescript-tslint-plugin',
-          'esbenp.prettier-vscode',
-        ],
-      });
-    } else {
-      expect(extensions).toEqual({
-        recommendations: [
-          'nrwl.angular-console',
-          'ms-vscode.vscode-typescript-tslint-plugin',
-          'esbenp.prettier-vscode',
-        ],
-      });
-    }
+    it('should have a vscode/extensions.json file created', () => {
+      ensureProject();
+      const extensions = readJson('.vscode/extensions.json');
+      if (cliName === 'angular') {
+        expect(extensions).toEqual({
+          recommendations: [
+            'nrwl.angular-console',
+            'angular.ng-template',
+            'ms-vscode.vscode-typescript-tslint-plugin',
+            'esbenp.prettier-vscode',
+            'firsttris.vscode-jest-runner',
+          ],
+        });
+      } else {
+        expect(extensions).toEqual({
+          recommendations: [
+            'nrwl.angular-console',
+            'ms-vscode.vscode-typescript-tslint-plugin',
+            'esbenp.prettier-vscode',
+            'firsttris.vscode-jest-runner',
+          ],
+        });
+      }
+    });
   });
 });
