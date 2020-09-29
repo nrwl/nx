@@ -1,14 +1,18 @@
-import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { join } from 'path';
+import { Tree } from '@angular-devkit/schematics';
 
-const migrationRunner = new SchematicTestRunner(
-  '@nrwl/linter/migrations',
+const migrationTestRunner = new SchematicTestRunner(
+  '@nrwl/linter-migrations',
   join(__dirname, '../../migrations.json')
 );
 
-export function runMigration(migrationName: string, options: any, tree: Tree) {
-  return migrationRunner
-    .runSchematicAsync(migrationName, options, tree)
+export function runMigration<T = any>(
+  migrationName: string,
+  options: T,
+  tree: Tree
+) {
+  return migrationTestRunner
+    .runSchematicAsync<T>(migrationName, options, tree)
     .toPromise();
 }

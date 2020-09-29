@@ -47,7 +47,7 @@ export function forEachCli(
   const cb: any = callback ? callback : selectedCliOrFunction;
   clis.forEach((c) => {
     describe(`[${c}]`, () => {
-      beforeEach(() => {
+      beforeAll(() => {
         cli = c;
       });
       cb(c);
@@ -106,7 +106,6 @@ export function runCreateWorkspace(
   const create = execSync(command, {
     cwd: `./tmp/${cli}`,
     stdio: [0, 1, 2],
-    // stdio: ['pipe', 'pipe', 'pipe'],
     env: process.env,
   });
   return create ? create.toString() : '';
@@ -281,7 +280,7 @@ export function runCLI(
     if (opts.silenceError) {
       return e.stdout.toString();
     } else {
-      console.log(e.stdout.toString(), e.stderr.toString());
+      console.log(e.stdout?.toString(), e.stderr?.toString());
       throw e;
     }
   }

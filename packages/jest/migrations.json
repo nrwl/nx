@@ -44,6 +44,11 @@
       "version": "10.3.0-beta.1",
       "description": "Adds all jest projects into the root jest config",
       "factory": "./src/migrations/update-10-3-0/update-projects-property"
+    },
+    "update-ts-jest": {
+      "version": "10.3.0-beta.1",
+      "description": "Update ts-jest to v26.4",
+      "factory": "./src/migrations/update-10-3-0/update-ts-jest"
     }
   },
   "packageJsonUpdates": {
@@ -98,6 +103,15 @@
         },
         "babel-jest": {
           "version": "26.2.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "10.3.0": {
+      "version": "10.3.0-beta.1",
+      "packages": {
+        "ts-jest": {
+          "version": "26.4.0",
           "alwaysAddToPackageJson": false
         }
       }
