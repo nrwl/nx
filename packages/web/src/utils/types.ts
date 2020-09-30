@@ -58,6 +58,7 @@ export interface PackageBuilderOptions {
   watch?: boolean;
   assets?: any[];
   updateBuildableProjectDepsInPackageJson?: boolean;
+  buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
   umdName?: string;
 }
 
