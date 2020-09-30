@@ -49,6 +49,11 @@
       "version": "10.3.0-beta.1",
       "description": "Update ts-jest to v26.4",
       "factory": "./src/migrations/update-10-3-0/update-ts-jest"
+    },
+    "add-jest-extension": {
+      "version": "10.3.0-beta.1",
+      "description": "Adds a jest extension to the recommended extensions for vscode",
+      "factory": "./src/migrations/update-10-3-0/add-jest-extension"
     }
   },
   "packageJsonUpdates": {

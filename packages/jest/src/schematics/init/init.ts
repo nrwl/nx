@@ -1,5 +1,10 @@
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { chain, Rule, Tree } from '@angular-devkit/schematics';
+import {
+  chain,
+  Rule,
+  SchematicContext,
+  Tree,
+} from '@angular-devkit/schematics';
 import {
   addDepsToPackageJson,
   readJsonInTree,
@@ -84,6 +89,21 @@ function updateDependencies(options: NormalizedSchema): Rule {
   return addDepsToPackageJson({}, devDeps);
 }
 
+function updateExtensions(host: Tree, context: SchematicContext) {
+  if (!host.exists('.vscode/extensions.json')) {
+    return;
+  }
+
+  return updateJsonInTree('.vscode/extensions.json', (json) => {
+    json.recommendations = json.recommendations || [];
+    const extension = 'firsttris.vscode-jest-runner';
+    if (!json.recommendations.includes(extension)) {
+      json.recommendations.push(extension);
+    }
+    return json;
+  })(host, context);
+}
+
 export default function (schema: JestInitSchema): Rule {
   const options = normalizeOptions(schema);
 
@@ -91,6 +111,7 @@ export default function (schema: JestInitSchema): Rule {
     createJestConfig,
     updateDependencies(options),
     removeNrwlJestFromDeps,
+    updateExtensions,
   ]);
 }
 

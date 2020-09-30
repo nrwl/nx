@@ -2,7 +2,7 @@
   "recommendations": [
      <% if(cli === 'angular') { %>
     "nrwl.angular-console",
-    "angular.ng-template",<% } 
+    "angular.ng-template",<% }
     %>
     "ms-vscode.vscode-typescript-tslint-plugin",
     "esbenp.prettier-vscode"
