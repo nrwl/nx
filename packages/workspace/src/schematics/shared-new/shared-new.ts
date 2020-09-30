@@ -51,6 +51,7 @@ export interface Schema {
   commit?: { name: string; email: string; message?: string };
   defaultBase?: string;
   nxWorkspaceRoot?: string;
+  linter: 'tslint' | 'eslint';
 }
 
 class RunPresetTask {
@@ -132,7 +133,7 @@ export function sharedNew(cli: string, options: Schema): Rule {
 
     return chain([
       schematic('workspace', { ...workspaceOpts, cli }),
-      cli === 'angular' ? setDefaultLinter('tslint') : noop(),
+      setDefaultLinter(options),
       addPresetDependencies(options),
       addCloudDependencies(options),
       move('/', options.directory),
@@ -262,24 +263,65 @@ function normalizeOptions(options: Schema): Schema {
   return options;
 }
 
-function setDefaultLinter(linter: string) {
+function setDefaultLinter({ linter, preset }: Schema): Rule {
+  // Don't do anything if someone doesn't pick angular
+  if (preset === 'angular' || preset === 'angular-nest') {
+    switch (linter) {
+      case 'eslint': {
+        return setESLintDefault();
+      }
+      case 'tslint': {
+        return setTSLintDefault();
+      }
+      default: {
+        return noop();
+      }
+    }
+  } else {
+    return noop();
+  }
+}
+
+/**
+ * This sets ESLint as the default for any schematics that default to TSLint
+ */
+function setESLintDefault() {
   return updateWorkspaceInTree((json) => {
     if (!json.schematics) {
       json.schematics = {};
     }
-    json.schematics['@nrwl/workspace'] = { library: { linter } };
-    json.schematics['@nrwl/cypress'] = { 'cypress-project': { linter } };
+    json.schematics['@nrwl/angular'] = {
+      application: { linter: 'eslint' },
+      library: { linter: 'eslint' },
+      'storybook-configuration': { linter: 'eslint' },
+    };
+    return json;
+  });
+}
+
+/**
+ * This sets TSLint as the default for any schematics that default to ESLint
+ */
+function setTSLintDefault() {
+  return updateWorkspaceInTree((json) => {
+    if (!json.schematics) {
+      json.schematics = {};
+    }
+    json.schematics['@nrwl/workspace'] = { library: { linter: 'tslint' } };
+    json.schematics['@nrwl/cypress'] = {
+      'cypress-project': { linter: 'tslint' },
+    };
     json.schematics['@nrwl/node'] = {
-      application: { linter },
-      library: { linter },
+      application: { linter: 'tslint' },
+      library: { linter: 'tslint' },
     };
     json.schematics['@nrwl/nest'] = {
-      application: { linter },
-      library: { linter },
+      application: { linter: 'tslint' },
+      library: { linter: 'tslint' },
     };
     json.schematics['@nrwl/express'] = {
-      application: { linter },
-      library: { linter },
+      application: { linter: 'tslint' },
+      library: { linter: 'tslint' },
     };
     return json;
   });

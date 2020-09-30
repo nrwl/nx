@@ -5,6 +5,7 @@ import {
   MergeStrategy,
   mergeWith,
   move,
+  noop,
   Rule,
   SchematicContext,
   template,
@@ -191,15 +192,17 @@ export function updateProject(options: NormalizedSchema): Rule {
         },
       };
     }),
-    updateJsonInTree(`${options.projectRoot}/tslint.json`, (json) => {
-      return {
-        ...json,
-        extends: `${offsetFromRoot(options.projectRoot)}tslint.json`,
-        linterOptions: {
-          exclude: ['!**/*'],
-        },
-      };
-    }),
+    options.linter === Linter.TsLint
+      ? updateJsonInTree(`${options.projectRoot}/tslint.json`, (json) => {
+          return {
+            ...json,
+            extends: `${offsetFromRoot(options.projectRoot)}tslint.json`,
+            linterOptions: {
+              exclude: ['!**/*'],
+            },
+          };
+        })
+      : noop(),
     updateJsonInTree(`/nx.json`, (json) => {
       return {
         ...json,

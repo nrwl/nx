@@ -59,7 +59,6 @@ export default function (schema: Schema): Rule {
       (host) => {
         host.delete('tsconfig.json');
       },
-
       move(options.name, options.projectRoot),
       updateProject(options),
       updateTsConfig(options),
