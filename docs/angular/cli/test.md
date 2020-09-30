@@ -34,21 +34,27 @@ The options below are common to the `test` command used within an Nx workspace. 
 
 Indicates that test coverage information should be collected and reported in the output. (https://jestjs.io/docs/en/cli#coverage)
 
+### help
+
+Show help information.
+
 ### tsConfig
 
 The path to the Typescript configuration file.
+
+### version
+
+Show version number
 
 ### watch
 
 Watch files for changes and rerun tests.
 
-### help
+### with-deps
 
-Show help information.
+Default: `false`
 
-### version
-
-Show version number
+Include dependencies of specified projects when computing what to test
 
 ## Jest Options
 
