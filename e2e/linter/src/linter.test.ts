@@ -65,6 +65,22 @@ forEachCli('nx', () => {
 
       runCLI(`generate @nrwl/react:app ${myapp}`);
 
+      // This test is only relevant for the deprecated lint builder,
+      // so we need to patch the workspace.json to use it
+      const workspaceJson = readJson(`workspace.json`);
+      workspaceJson.projects[myapp].architect.lint = {
+        builder: '@nrwl/linter:lint',
+        options: {
+          linter: 'eslint',
+          tsConfig: [
+            `apps/${myapp}/tsconfig.app.json`,
+            `apps/${myapp}/tsconfig.spec.json`,
+          ],
+          exclude: ['**/node_modules/**', `!apps/${myapp}/**/*`],
+        },
+      };
+      updateFile('workspace.json', JSON.stringify(workspaceJson, null, 2));
+
       const eslintrc = readJson('.eslintrc');
       eslintrc.rules['no-console'] = undefined;
       updateFile('.eslintrc', JSON.stringify(eslintrc, null, 2));

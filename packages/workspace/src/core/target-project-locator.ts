@@ -1,33 +1,45 @@
 import { resolveModuleByImport } from '../utils/typescript';
 import { defaultFileRead, FileRead, normalizedProjectRoot } from './file-utils';
-import { ProjectGraphNodeRecords } from './project-graph/project-graph-models';
-import { getSortedProjectNodes, isWorkspaceProject } from './project-graph';
+import {
+  ProjectGraphNode,
+  ProjectGraphNodeRecords,
+} from './project-graph/project-graph-models';
+import {
+  getSortedProjectNodes,
+  isNpmProject,
+  isWorkspaceProject,
+} from './project-graph';
 import { isRelativePath, parseJsonWithComments } from '../utils/fileutils';
 import { dirname, join } from 'path';
 import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
 
 export class TargetProjectLocator {
-  private sortedWorkspaceProjects = [];
+  private sortedProjects = getSortedProjectNodes(this.nodes);
+
+  private sortedWorkspaceProjects = this.sortedProjects
+    .filter(isWorkspaceProject)
+    .map(
+      (node) =>
+        ({
+          ...node,
+          data: {
+            ...node.data,
+            normalizedRoot: normalizedProjectRoot(node),
+          },
+        } as ProjectGraphNode)
+    );
+  private npmProjects = this.sortedProjects.filter(isNpmProject);
   private tsConfigPath = this.getRootTsConfigPath();
   private absTsConfigPath = join(appRootPath, this.tsConfigPath);
   private paths = parseJsonWithComments(this.fileRead(this.tsConfigPath))
     ?.compilerOptions?.paths;
-  private cache = new Map<string, string>();
+  private typescriptResolutionCache = new Map<string, string | null>();
+  private npmResolutionCache = new Map<string, string | null>();
 
   constructor(
     private nodes: ProjectGraphNodeRecords,
     private fileRead: FileRead = defaultFileRead
-  ) {
-    this.sortedWorkspaceProjects = getSortedProjectNodes(nodes)
-      .filter((node) => isWorkspaceProject(node))
-      .map((node) => ({
-        ...node,
-        data: {
-          ...node.data,
-          normalizedRoot: normalizedProjectRoot(node),
-        },
-      }));
-  }
+  ) {}
 
   /**
    * Find a project based on its import
@@ -52,6 +64,11 @@ export class TargetProjectLocator {
       return this.findProjectOfResolvedModule(resolvedModule);
     }
 
+    const npmProject = this.findNpmPackage(importExpr);
+    if (npmProject) {
+      return npmProject;
+    }
+
     if (this.paths && this.paths[normalizedImportExpr]) {
       for (let p of this.paths[normalizedImportExpr]) {
         const maybeResolvedProject = this.findProjectOfResolvedModule(p);
@@ -61,15 +78,17 @@ export class TargetProjectLocator {
       }
     }
 
-    const resolvedModule = this.cache.has(normalizedImportExpr)
-      ? this.cache.get(normalizedImportExpr)
+    const resolvedModule = this.typescriptResolutionCache.has(
+      normalizedImportExpr
+    )
+      ? this.typescriptResolutionCache.get(normalizedImportExpr)
       : resolveModuleByImport(
           normalizedImportExpr,
           filePath,
           this.absTsConfigPath
         );
 
-    this.cache.set(normalizedImportExpr, resolvedModule);
+    this.typescriptResolutionCache.set(normalizedImportExpr, resolvedModule);
     if (resolvedModule) {
       return this.findProjectOfResolvedModule(resolvedModule);
     }
@@ -80,6 +99,18 @@ export class TargetProjectLocator {
     });
 
     return importedProject?.name;
+  }
+
+  private findNpmPackage(npmImport: string) {
+    if (this.npmResolutionCache.has(npmImport)) {
+      return this.npmResolutionCache.get(npmImport);
+    } else {
+      const pkgName = this.npmProjects.find((pkg) =>
+        npmImport.startsWith(pkg.data.packageName)
+      )?.name;
+      this.npmResolutionCache.set(npmImport, pkgName);
+      return pkgName;
+    }
   }
 
   private findProjectOfResolvedModule(resolvedModule: string) {

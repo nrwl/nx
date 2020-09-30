@@ -163,24 +163,27 @@ describe('findTargetProjectWithImport', () => {
         },
       },
       '@ng/core': {
-        name: '@ng/core',
+        name: 'npm:@ng/core',
         type: 'npm',
         data: {
           files: [],
+          packageName: '@ng/core',
         },
       },
       '@ng/common': {
-        name: '@ng/common',
+        name: 'npm:@ng/common',
         type: 'npm',
         data: {
           files: [],
+          packageName: '@ng/common',
         },
       },
       'npm-package': {
-        name: 'npm-package',
+        name: 'npm:npm-package',
         type: 'npm',
         data: {
           files: [],
+          packageName: 'npm-package',
         },
       },
       'proj1234-child': {
@@ -239,6 +242,23 @@ describe('findTargetProjectWithImport', () => {
     expect(proj2).toEqual('proj2');
     expect(proj3a).toEqual('proj3a');
   });
+
+  it('should be able to npm dependencies', () => {
+    const result1 = targetProjectLocator.findProjectWithImport(
+      '@ng/core',
+      'libs/proj1/index.ts',
+      ctx.nxJson.npmScope
+    );
+    const result2 = targetProjectLocator.findProjectWithImport(
+      'npm-package',
+      'libs/proj1/index.ts',
+      ctx.nxJson.npmScope
+    );
+
+    expect(result1).toEqual('npm:@ng/core');
+    expect(result2).toEqual('npm:npm-package');
+  });
+
   it('should be able to resolve a module using a normalized path', () => {
     const proj4ab = targetProjectLocator.findProjectWithImport(
       '@proj/proj4ab',

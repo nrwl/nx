@@ -46,14 +46,9 @@ describe('NxPlugin plugin', () => {
       },
     });
     expect(project.architect.lint).toEqual({
-      builder: '@nrwl/linter:lint',
+      builder: '@nrwl/linter:eslint',
       options: {
-        linter: 'eslint',
-        exclude: ['**/node_modules/**', '!libs/my-plugin/**/*'],
-        tsConfig: [
-          'libs/my-plugin/tsconfig.lib.json',
-          'libs/my-plugin/tsconfig.spec.json',
-        ],
+        lintFilePatterns: ['libs/my-plugin/**/*.ts'],
       },
     });
     expect(project.architect.test).toEqual({

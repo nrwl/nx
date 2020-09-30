@@ -38,7 +38,7 @@
     },
     "update-10-3-0": {
       "version": "10.3.0-beta.1",
-      "description": "Update jest-preset-angular library to version 8.3.1",
+      "description": "Add tsconfig.editor.json to angular apps and update jest-angular-preset",
       "factory": "./src/migrations/update-10-3-0/update-10-3-0"
     }
   },
@@ -84,6 +84,54 @@
     "10.3.0": {
       "version": "10.3.0-beta.1",
       "packages": {
+        "@angular/core": {
+          "version": "^10.1.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/common": {
+          "version": "^10.1.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/forms": {
+          "version": "^10.1.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/compiler": {
+          "version": "^10.1.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/compiler-cli": {
+          "version": "^10.1.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-browser": {
+          "version": "^10.1.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-browser-dynamic": {
+          "version": "^10.1.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/router": {
+          "version": "^10.1.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/upgrade": {
+          "version": "^10.1.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/language-service": {
+          "version": "^10.1.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/animations": {
+          "version": "^10.1.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/service-worker": {
+          "version": "^10.1.3",
+          "alwaysAddToPackageJson": false
+        },
         "jest-preset-angular": {
           "version": "8.3.1",
           "alwaysAddToPackageJson": false

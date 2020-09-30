@@ -1,3 +1,6 @@
+// Force module scoping
+export default {};
+
 jest.mock('./file-utils', () => ({
   getFilesToLint: jest.fn(),
 }));

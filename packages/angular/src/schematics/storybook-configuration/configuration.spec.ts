@@ -2,12 +2,19 @@ import { Tree } from '@angular-devkit/schematics';
 import { runSchematic } from '../../utils/testing';
 import { StorybookConfigureSchema } from './schema';
 import { createTestUILib } from '../stories/stories-lib.spec';
+import * as fileUtils from '@nrwl/workspace/src/core/file-utils';
 
 describe('schematic:configuration', () => {
   let appTree: Tree;
 
   beforeEach(async () => {
     appTree = await createTestUILib('test-ui-lib');
+    jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
+      devDependencies: {
+        '@storybook/addon-essentials': '^6.0.21',
+        '@storybook/react': '^6.0.21',
+      },
+    });
   });
 
   it('should only configure storybook', async () => {
@@ -21,8 +28,7 @@ describe('schematic:configuration', () => {
       },
       appTree
     );
-    expect(tree.exists('libs/test-ui-lib/.storybook/addons.js')).toBeTruthy();
-    expect(tree.exists('libs/test-ui-lib/.storybook/config.js')).toBeTruthy();
+    expect(tree.exists('libs/test-ui-lib/.storybook/main.js')).toBeTruthy();
     expect(
       tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
     ).toBeTruthy();
@@ -60,8 +66,7 @@ describe('schematic:configuration', () => {
       },
       appTree
     );
-    expect(tree.exists('libs/test-ui-lib/.storybook/addons.js')).toBeTruthy();
-    expect(tree.exists('libs/test-ui-lib/.storybook/config.js')).toBeTruthy();
+    expect(tree.exists('libs/test-ui-lib/.storybook/main.js')).toBeTruthy();
     expect(
       tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
     ).toBeTruthy();

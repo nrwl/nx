@@ -87,7 +87,8 @@ function updateWorkspaceJson(options: CypressProjectSchema): Rule {
     architect.lint = generateProjectLint(
       normalize(options.projectRoot),
       join(normalize(options.projectRoot), 'tsconfig.e2e.json'),
-      options.linter
+      options.linter,
+      [`${options.projectRoot}/**/*.${options.js ? 'js' : '{js,ts}'}`]
     );
 
     json.projects[options.projectName] = {
@@ -110,6 +111,7 @@ function addLinter(options: CypressProjectSchema): Rule {
       : noop(),
     addLintFiles(options.projectRoot, options.linter, {
       localConfig: {
+        extends: ['plugin:cypress/recommended'],
         // we need this overrides because we enabled
         // allowJS in the tsconfig to allow for JS based
         // Cypress tests. That however leads to issues
@@ -123,7 +125,6 @@ function addLinter(options: CypressProjectSchema): Rule {
             },
           },
         ],
-        extends: ['plugin:cypress/recommended'],
       },
     }),
   ]);

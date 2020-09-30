@@ -23,7 +23,8 @@ export const enum Linter {
 export function generateProjectLint(
   projectRoot: string,
   tsConfigPath: string,
-  linter: Linter
+  linter: Linter,
+  eslintFilePatterns: string[]
 ) {
   if (linter === Linter.TsLint) {
     return {
@@ -35,14 +36,9 @@ export function generateProjectLint(
     };
   } else if (linter === Linter.EsLint) {
     return {
-      builder: '@nrwl/linter:lint',
+      builder: '@nrwl/linter:eslint',
       options: {
-        // No config option here because eslint resolve them automatically.
-        // By not specifying a config option we allow eslint to support
-        // nested configurations.
-        linter: 'eslint',
-        tsConfig: [tsConfigPath],
-        exclude: ['**/node_modules/**', '!' + projectRoot + '/**/*'],
+        lintFilePatterns: eslintFilePatterns,
       },
     };
   } else {
@@ -124,25 +120,40 @@ export function addLintFiles(
         chainedCommands.push((host: Tree) => {
           let configJson;
           const rootConfig = `${offsetFromRoot(projectRoot)}.eslintrc`;
+
+          // Include all project files to be linted (since they are turned off in the root eslintrc file).
+          const ignorePatterns = ['!**/*'];
+
           if (options.localConfig) {
-            const extendsOption = options.localConfig.extends
-              ? Array.isArray(options.localConfig.extends)
-                ? options.localConfig.extends
-                : [options.localConfig.extends]
+            /**
+             * The end config is much easier to reason about if "extends" comes first,
+             * so as well as applying the extension from the root lint config, we also
+             * adjust the config to make extends come first.
+             */
+            const {
+              extends: extendsVal,
+              ...localConfigExceptExtends
+            } = options.localConfig;
+
+            const extendsOption = extendsVal
+              ? Array.isArray(extendsVal)
+                ? extendsVal
+                : [extendsVal]
               : [];
+
             configJson = {
-              rules: {},
-              ...options.localConfig,
               extends: [...extendsOption, rootConfig],
+              ignorePatterns,
+              ...localConfigExceptExtends,
             };
           } else {
             configJson = {
               extends: rootConfig,
+              ignorePatterns,
               rules: {},
             };
           }
-          // Include all project files to be linted (since they are turned off in the root eslintrc file).
-          configJson.ignorePatterns = ['!**/*'];
+
           host.create(
             join(projectRoot as any, `.eslintrc`),
             JSON.stringify(configJson)
@@ -243,6 +254,7 @@ const globalESLint = `
   ],
   "rules": {
     "@typescript-eslint/explicit-member-accessibility": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/no-parameter-properties": "off",
     "@nrwl/nx/enforce-module-boundaries": [

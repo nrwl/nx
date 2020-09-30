@@ -48,17 +48,13 @@ export class Cache {
      */
     const shouldSpawnProcess = Math.floor(Math.random() * 50) === 1;
     if (shouldSpawnProcess) {
-      const scriptPath = join(
-        this.root,
-        'node_modules',
-        '@nrwl',
-        'workspace',
-        'src',
-        'tasks-runner',
-        'remove-old-cache-records.js'
+      const scriptPath = require.resolve(
+        '@nrwl/workspace/src/tasks-runner/remove-old-cache-records.js',
+        { paths: [this.root] }
       );
+
       try {
-        const p = spawn('node', [`"${scriptPath}"`, `"${this.cachePath}"`], {
+        const p = spawn('node', [scriptPath, `"${this.cachePath}"`], {
           stdio: 'ignore',
           detached: true,
         });

@@ -3,12 +3,19 @@ import { readJsonInTree, getProjectConfig } from '@nrwl/workspace';
 
 import { createTestUILib, runSchematic } from '../../utils/testing';
 import { getTsConfigContent, TsConfig } from '../../utils/utils';
+import * as fileUtils from '@nrwl/workspace/src/core/file-utils';
 
 describe('schematic:configuration', () => {
   let appTree: Tree;
 
   beforeEach(async () => {
     appTree = await createTestUILib('test-ui-lib', '@nrwl/angular');
+    jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
+      devDependencies: {
+        '@storybook/addon-knobs': '^6.0.21',
+        '@storybook/angular': '^6.0.21',
+      },
+    });
   });
 
   it('should generate files', async () => {
@@ -20,6 +27,7 @@ describe('schematic:configuration', () => {
 
     // Root
     expect(tree.exists('.storybook/tsconfig.json')).toBeTruthy();
+    expect(tree.exists('.storybook/main.js')).toBeTruthy();
     const rootStorybookTsconfigJson = readJsonInTree<TsConfig>(
       tree,
       '.storybook/tsconfig.json'
@@ -32,11 +40,11 @@ describe('schematic:configuration', () => {
     ]);
 
     // Local
-    expect(tree.exists('libs/test-ui-lib/.storybook/addons.js')).toBeTruthy();
-    expect(tree.exists('libs/test-ui-lib/.storybook/config.js')).toBeTruthy();
     expect(
       tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
     ).toBeTruthy();
+    expect(tree.exists('libs/test-ui-lib/.storybook/main.js')).toBeTruthy();
+    expect(tree.exists('libs/test-ui-lib/.storybook/preview.js')).toBeTruthy();
 
     const storybookTsconfigJson = readJsonInTree<{ exclude: string[] }>(
       tree,

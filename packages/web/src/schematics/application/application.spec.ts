@@ -267,7 +267,7 @@ describe('app', () => {
     });
   });
 
-  it('should setup the tslint builder', async () => {
+  it('should setup the eslint builder', async () => {
     const tree = await runSchematic(
       'app',
       {
@@ -278,14 +278,9 @@ describe('app', () => {
     const workspaceJson = readJsonInTree(tree, 'workspace.json');
 
     expect(workspaceJson.projects['my-app'].architect.lint).toEqual({
-      builder: '@nrwl/linter:lint',
+      builder: '@nrwl/linter:eslint',
       options: {
-        linter: 'eslint',
-        exclude: ['**/node_modules/**', '!apps/my-app/**/*'],
-        tsConfig: [
-          'apps/my-app/tsconfig.app.json',
-          'apps/my-app/tsconfig.spec.json',
-        ],
+        lintFilePatterns: ['apps/my-app/**/*.ts'],
       },
     });
   });
@@ -317,9 +312,17 @@ describe('app', () => {
       expect(tree.exists('apps/my-app/jest.config.js')).toBeFalsy();
       const workspaceJson = readJsonInTree(tree, 'workspace.json');
       expect(workspaceJson.projects['my-app'].architect.test).toBeUndefined();
-      expect(
-        workspaceJson.projects['my-app'].architect.lint.options.tsConfig
-      ).toEqual(['apps/my-app/tsconfig.app.json']);
+      expect(workspaceJson.projects['my-app'].architect.lint)
+        .toMatchInlineSnapshot(`
+        Object {
+          "builder": "@nrwl/linter:eslint",
+          "options": Object {
+            "lintFilePatterns": Array [
+              "apps/my-app/**/*.ts",
+            ],
+          },
+        }
+      `);
     });
   });
 

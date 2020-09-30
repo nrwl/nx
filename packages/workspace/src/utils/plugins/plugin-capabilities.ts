@@ -1,5 +1,4 @@
 import { terminal } from '@angular-devkit/core';
-import * as path from 'path';
 import { appRootPath } from '../app-root';
 import { detectPackageManager } from '../detect-package-manager';
 import { readJsonFile } from '../fileutils';
@@ -23,7 +22,8 @@ function getPackageManagerInstallCommand(): string {
 }
 
 function tryGetCollection<T>(
-  pluginPath: string,
+  workspaceRoot: string,
+  pluginName: string,
   jsonFile: string,
   propName: string
 ): T {
@@ -32,7 +32,10 @@ function tryGetCollection<T>(
   }
 
   try {
-    return readJsonFile<T>(path.join(pluginPath, jsonFile))[propName];
+    const jsonFilePath = require.resolve(`${pluginName}/${jsonFile}`, {
+      paths: [workspaceRoot],
+    });
+    return readJsonFile<T>(jsonFilePath)[propName];
   } catch {
     return null;
   }
@@ -43,16 +46,24 @@ export function getPluginCapabilities(
   pluginName: string
 ): PluginCapabilities {
   try {
-    const pluginPath = path.join(workspaceRoot, 'node_modules', pluginName);
-    const packageJson = readJsonFile(path.join(pluginPath, 'package.json'));
+    const packageJsonPath = require.resolve(`${pluginName}/package.json`, {
+      paths: [workspaceRoot],
+    });
+    const packageJson = readJsonFile(packageJsonPath);
     return {
       name: pluginName,
       schematics: tryGetCollection(
-        pluginPath,
+        workspaceRoot,
+        pluginName,
         packageJson.schematics,
         'schematics'
       ),
-      builders: tryGetCollection(pluginPath, packageJson.builders, 'builders'),
+      builders: tryGetCollection(
+        workspaceRoot,
+        pluginName,
+        packageJson.builders,
+        'builders'
+      ),
     };
   } catch {
     return null;

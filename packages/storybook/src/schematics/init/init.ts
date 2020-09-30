@@ -30,11 +30,28 @@ function checkDependenciesInstalled(schema: Schema): Rule {
 
     // base deps
     devDependencies['@nrwl/storybook'] = nxVersion;
-    devDependencies['@storybook/addon-knobs'] = storybookVersion;
     devDependencies['@types/webpack'] = webpackTypesVersion;
 
+    /**
+     * If Storybook already exists, do NOT update it to the latest version.
+     * Leave it alone.
+     */
+
+    if (
+      !packageJson.dependencies['@storybook/addon-knobs'] &&
+      !packageJson.devDependencies['@storybook/addon-knobs']
+    ) {
+      devDependencies['@storybook/addon-knobs'] = storybookVersion;
+    }
+
     if (isFramework('angular', schema)) {
-      devDependencies['@storybook/angular'] = storybookVersion;
+      if (
+        !packageJson.dependencies['@storybook/angular'] &&
+        !packageJson.devDependencies['@storybook/angular']
+      ) {
+        devDependencies['@storybook/angular'] = storybookVersion;
+      }
+
       if (
         !packageJson.dependencies['@angular/forms'] &&
         !packageJson.devDependencies['@angular/forms']
@@ -42,6 +59,7 @@ function checkDependenciesInstalled(schema: Schema): Rule {
         devDependencies['@angular/forms'] = '*';
       }
     }
+
     if (isFramework('react', schema)) {
       devDependencies['@storybook/react'] = storybookVersion;
       devDependencies['@svgr/webpack'] = svgrVersion;
@@ -51,6 +69,13 @@ function checkDependenciesInstalled(schema: Schema): Rule {
       devDependencies[
         '@babel/preset-typescript'
       ] = babelPresetTypescriptVersion;
+
+      if (
+        !packageJson.dependencies['@storybook/react'] &&
+        !packageJson.devDependencies['@storybook/react']
+      ) {
+        devDependencies['@storybook/react'] = storybookVersion;
+      }
     }
 
     return addDepsToPackageJson(dependencies, devDependencies);

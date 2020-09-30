@@ -225,7 +225,10 @@ export class Migrator {
         ].reduce(
           (m, c) => ({
             ...m,
-            [c]: { version: targetVersion, alwaysAddToPackageJson: false },
+            [c]: {
+              version: c === '@nrwl/nx-cloud' ? 'latest' : targetVersion,
+              alwaysAddToPackageJson: false,
+            },
           }),
           {}
         ),

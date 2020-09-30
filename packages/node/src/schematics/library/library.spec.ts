@@ -19,14 +19,9 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(workspaceJson.projects['my-lib'].architect.build).toBeUndefined();
       expect(workspaceJson.projects['my-lib'].architect.lint).toEqual({
-        builder: '@nrwl/linter:lint',
+        builder: '@nrwl/linter:eslint',
         options: {
-          linter: 'eslint',
-          exclude: ['**/node_modules/**', '!libs/my-lib/**/*'],
-          tsConfig: [
-            'libs/my-lib/tsconfig.lib.json',
-            'libs/my-lib/tsconfig.spec.json',
-          ],
+          lintFilePatterns: ['libs/my-lib/**/*.ts'],
         },
       });
       expect(workspaceJson.projects['my-lib'].architect.test).toEqual({
@@ -173,14 +168,9 @@ describe('lib', () => {
         'libs/my-dir/my-lib'
       );
       expect(workspaceJson.projects['my-dir-my-lib'].architect.lint).toEqual({
-        builder: '@nrwl/linter:lint',
+        builder: '@nrwl/linter:eslint',
         options: {
-          linter: 'eslint',
-          exclude: ['**/node_modules/**', '!libs/my-dir/my-lib/**/*'],
-          tsConfig: [
-            'libs/my-dir/my-lib/tsconfig.lib.json',
-            'libs/my-dir/my-lib/tsconfig.spec.json',
-          ],
+          lintFilePatterns: ['libs/my-dir/my-lib/**/*.ts'],
         },
       });
     });
@@ -265,9 +255,17 @@ describe('lib', () => {
           path: './tsconfig.lib.json',
         },
       ]);
-      expect(
-        workspaceJson.projects['my-lib'].architect.lint.options.tsConfig
-      ).toEqual(['libs/my-lib/tsconfig.lib.json']);
+      expect(workspaceJson.projects['my-lib'].architect.lint)
+        .toMatchInlineSnapshot(`
+        Object {
+          "builder": "@nrwl/linter:eslint",
+          "options": Object {
+            "lintFilePatterns": Array [
+              "libs/my-lib/**/*.ts",
+            ],
+          },
+        }
+      `);
     });
   });
 

@@ -16,6 +16,7 @@ import {
   updateWorkspaceInTree,
   serializeJson,
   Linter,
+  updateJsonInTree,
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import {
@@ -26,21 +27,31 @@ import {
 import { CypressConfigureSchema } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';
 import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
+import { readPackageJson } from '@nrwl/workspace/src/core/file-utils';
+import { storybookVersion } from '../../utils/versions';
 import { projectDir } from '@nrwl/workspace/src/utils/project-type';
 
 export default function (rawSchema: StorybookConfigureSchema): Rule {
   const schema = normalizeSchema(rawSchema);
+
+  const workspaceStorybookVersion = readCurrentWorkspaceStorybookVersion();
+
   return (tree: Tree, context: SchematicContext) => {
     const { projectType } = getProjectConfig(tree, schema.name);
     return chain([
       schematic('ng-add', {
         uiFramework: schema.uiFramework,
       }),
-      createRootStorybookDir(schema.name, schema.uiFramework, schema.js),
-      createProjectStorybookDir(schema.name, schema.uiFramework, schema.js),
+      createRootStorybookDir(schema.name, schema.js, workspaceStorybookVersion),
+      createProjectStorybookDir(
+        schema.name,
+        schema.uiFramework,
+        schema.js,
+        workspaceStorybookVersion
+      ),
       configureTsProjectConfig(schema),
       configureTsSolutionConfig(schema),
-      updateLintTask(schema),
+      updateLintConfig(schema),
       addStorybookTask(schema.name, schema.uiFramework),
       schema.configureCypress && projectType !== 'application'
         ? schematic<CypressConfigureSchema>('cypress-project', {
@@ -68,23 +79,23 @@ function normalizeSchema(schema: StorybookConfigureSchema) {
 
 function createRootStorybookDir(
   projectName: string,
-  uiFramework: StorybookConfigureSchema['uiFramework'],
-  js: boolean
+  js: boolean,
+  workspaceStorybookVersion: string
 ): Rule {
   return (tree: Tree, context: SchematicContext) => {
     const { projectType } = getProjectConfig(tree, projectName);
     const projectDirectory = projectDir(projectType);
-
-    context.logger.debug(`adding .storybook folder to' ${projectDirectory}`);
+    context.logger.debug(
+      `adding .storybook folder to ${projectDirectory} -\n
+  based on the Storybook version installed: ${workspaceStorybookVersion}, we'll bootstrap a scaffold for that particular version.`
+    );
     return chain([
-      applyWithSkipExisting(url('./root-files'), [
-        js ? toJS() : noop(),
-        template({
-          tmpl: '',
-          uiFramework,
-          projectType: projectDirectory,
-        }),
-      ]),
+      applyWithSkipExisting(
+        url(
+          workspaceStorybookVersion === '6' ? './root-files' : './root-files-5'
+        ),
+        [js ? toJS() : noop()]
+      ),
     ])(tree, context);
   };
 }
@@ -92,25 +103,42 @@ function createRootStorybookDir(
 function createProjectStorybookDir(
   projectName: string,
   uiFramework: StorybookConfigureSchema['uiFramework'],
-  js: boolean
+  js: boolean,
+  workspaceStorybookVersion: string
 ): Rule {
   return (tree: Tree, context: SchematicContext) => {
+    /**
+     * Here, same as above
+     * Check storybook version
+     * and use the correct folder
+     * lib-files-5 or lib-files-6
+     */
+
+    const projectConfig = getProjectConfig(tree, projectName);
     const { projectType } = getProjectConfig(tree, projectName);
     const projectDirectory = projectDir(projectType);
+    context.logger.debug(
+      `adding .storybook folder to ${projectDirectory} - using Storybook version ${workspaceStorybookVersion}`
+    );
 
-    context.logger.debug(`adding .storybook folder to ${projectDirectory}`);
-    const projectConfig = getProjectConfig(tree, projectName);
     return chain([
-      applyWithSkipExisting(url('./project-files'), [
-        template({
-          tmpl: '',
-          uiFramework,
-          offsetFromRoot: offsetFromRoot(projectConfig.root),
-          projectType: projectDirectory,
-        }),
-        move(projectConfig.root),
-        js ? toJS() : noop(),
-      ]),
+      applyWithSkipExisting(
+        url(
+          workspaceStorybookVersion === '6'
+            ? './project-files'
+            : './project-files-5'
+        ),
+        [
+          template({
+            tmpl: '',
+            uiFramework,
+            offsetFromRoot: offsetFromRoot(projectConfig.root),
+            projectType: projectDirectory,
+          }),
+          move(projectConfig.root),
+          js ? toJS() : noop(),
+        ]
+      ),
     ])(tree, context);
   };
 }
@@ -167,22 +195,53 @@ function configureTsSolutionConfig(schema: StorybookConfigureSchema): Rule {
   };
 }
 
-function updateLintTask(schema: StorybookConfigureSchema): Rule {
+/**
+ * When adding storybook we need to inform TSLint or ESLint
+ * of the additional tsconfig.json file which will be the only tsconfig
+ * which includes *.stories files.
+ *
+ * For TSLint this is done via the builder config, for ESLint this is
+ * done within the .eslintrc file.
+ */
+function updateLintConfig(schema: StorybookConfigureSchema): Rule {
   const { name: projectName } = schema;
 
-  return updateWorkspaceInTree((json) => {
-    const projectConfig = json.projects[projectName];
-    const lintTarget = projectConfig.architect.lint;
+  return chain([
+    updateWorkspaceInTree((json) => {
+      const projectConfig = json.projects[projectName];
+      const isUsingTSLint =
+        projectConfig.architect?.lint?.builder ===
+        '@angular-devkit/build-angular:tslint';
 
-    if (lintTarget) {
-      lintTarget.options.tsConfig = [
-        ...lintTarget.options.tsConfig,
-        `${projectConfig.root}/.storybook/tsconfig.json`,
-      ];
-    }
+      if (isUsingTSLint) {
+        projectConfig.architect.lint.options.tsConfig = [
+          ...projectConfig.architect.lint.options.tsConfig,
+          `${projectConfig.root}/.storybook/tsconfig.json`,
+        ];
+      }
 
-    return json;
-  });
+      return json;
+    }),
+    (tree: Tree) => {
+      const projectConfig = getProjectConfig(tree, projectName);
+      const isUsingESLint =
+        (projectConfig.architect?.lint?.builder === '@nrwl/linter:lint' &&
+          projectConfig.architect?.lint?.options?.linter === 'eslint') ||
+        projectConfig.architect?.lint?.builder === '@nrwl/linter:eslint';
+
+      if (!isUsingESLint) {
+        return;
+      }
+
+      return updateJsonInTree(`${projectConfig.root}/.eslintrc`, (json) => {
+        if (Array.isArray(json.parserOptions?.project)) {
+          json.parserOptions.project.push(
+            `${projectConfig.root}/.storybook/tsconfig.json`
+          );
+        }
+      });
+    },
+  ]);
 }
 
 function addStorybookTask(projectName: string, uiFramework: string): Rule {
@@ -227,4 +286,44 @@ function addStorybookTask(projectName: string, uiFramework: string): Rule {
       },
     });
   });
+}
+
+function readCurrentWorkspaceStorybookVersion(): string {
+  const packageJsonContents = readPackageJson();
+  let workspaceStorybookVersion = storybookVersion;
+  if (packageJsonContents && packageJsonContents['devDependencies']) {
+    if (packageJsonContents['devDependencies']['@storybook/angular']) {
+      workspaceStorybookVersion =
+        packageJsonContents['devDependencies']['@storybook/angular'];
+    }
+    if (packageJsonContents['devDependencies']['@storybook/react']) {
+      workspaceStorybookVersion =
+        packageJsonContents['devDependencies']['@storybook/react'];
+    }
+    if (packageJsonContents['devDependencies']['@storybook/core']) {
+      workspaceStorybookVersion =
+        packageJsonContents['devDependencies']['@storybook/core'];
+    }
+  }
+  if (packageJsonContents && packageJsonContents['dependencies']) {
+    if (packageJsonContents['dependencies']['@storybook/angular']) {
+      workspaceStorybookVersion =
+        packageJsonContents['dependencies']['@storybook/angular'];
+    }
+    if (packageJsonContents['dependencies']['@storybook/react']) {
+      workspaceStorybookVersion =
+        packageJsonContents['dependencies']['@storybook/react'];
+    }
+    if (packageJsonContents['dependencies']['@storybook/core']) {
+      workspaceStorybookVersion =
+        packageJsonContents['dependencies']['@storybook/core'];
+    }
+  }
+  if (
+    workspaceStorybookVersion.startsWith('6') ||
+    workspaceStorybookVersion.startsWith('^6')
+  ) {
+    workspaceStorybookVersion = '6';
+  }
+  return workspaceStorybookVersion;
 }
