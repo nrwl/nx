@@ -125,10 +125,10 @@
       "description": "Adds .vscode/extensions.json to a workspace",
       "factory": "./src/migrations/update-10-3-0/add-vscode-extensions"
     },
-     "add-buildable-project-deps-in-package-json-type": {
+    "add-buildable-project-deps-in-package-json-type": {
       "version": "10.3.0-beta.0",
       "description": "Adds `buildableProjectDepsInPackageJsonType` for web and angular package builders",
-      "factory": "./src/migrations/update-10-3-0/add-buildable-project-deps-in-package-json-type"'
+      "factory": "./src/migrations/update-10-3-0/add-buildable-project-deps-in-package-json-type"
     }
   },
   "packageJsonUpdates": {
