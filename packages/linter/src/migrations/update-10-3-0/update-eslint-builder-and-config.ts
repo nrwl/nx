@@ -1,17 +1,6 @@
-import {
-  chain,
-  noop,
-  SchematicContext,
-  Tree,
-} from '@angular-devkit/schematics';
-import {
-  formatFiles,
-  readJsonInTree,
-  updateJsonInTree,
-  updatePackagesInPackageJson,
-  updateWorkspace,
-} from '@nrwl/workspace';
-import { join } from 'path';
+import { chain, Tree } from '@angular-devkit/schematics';
+import { formatFiles, readJsonInTree, updateWorkspace } from '@nrwl/workspace';
+import { join, normalize } from '@angular-devkit/core';
 
 /**
  * When migrating projects we need to look up any relevant tsconfig files
@@ -62,7 +51,7 @@ function updateESLintBuilder(host: Tree) {
               return [...(tsconfig.include || []), ...(tsconfig.files || [])];
             })
             .reduce((flat, val) => flat.concat(val), [])
-            .map((pattern) => join(project.root, pattern));
+            .map((pattern) => join(normalize(project.root), pattern));
 
       lintTarget.options = {
         lintFilePatterns,
@@ -71,28 +60,6 @@ function updateESLintBuilder(host: Tree) {
   });
 }
 
-/**
- * As part of this migration we move to v3.x of @typescript-eslint, and this means that the
- * @typescript-eslint/explicit-module-boundary-types rule is now included in the recommended
- * config which we extend from. We generate code that would cause warnings from the rule so
- * we disable it for all files by default.
- */
-function updateRootESLintConfig() {
-  return updateJsonInTree('.eslintrc', (json) => {
-    json.rules = json.rules || {};
-    json.rules['@typescript-eslint/explicit-module-boundary-types'] = 'off';
-    return json;
-  });
-}
-
 export default function () {
-  return chain([
-    updateESLintBuilder,
-    updateRootESLintConfig,
-    updatePackagesInPackageJson(
-      join(__dirname, '../../../migrations.json'),
-      '10.3.0'
-    ),
-    formatFiles(),
-  ]);
+  return chain([updateESLintBuilder, formatFiles()]);
 }

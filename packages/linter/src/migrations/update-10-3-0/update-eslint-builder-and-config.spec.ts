@@ -109,16 +109,6 @@ describe('Update eslint builder and config for 10.3.0', () => {
     );
   });
 
-  it('should disable the @typescript-eslint/explicit-module-boundary-types rule in the root ESLint config', async () => {
-    await runMigration('update-eslint-builder-and-config', {}, tree);
-
-    const json = readJsonInTree(tree, '.eslintrc');
-
-    expect(
-      json.rules['@typescript-eslint/explicit-module-boundary-types']
-    ).toEqual('off');
-  });
-
   it('should migrate the lint builder usage to the new eslint builder', async () => {
     await runMigration('update-eslint-builder-and-config', {}, tree);
 
