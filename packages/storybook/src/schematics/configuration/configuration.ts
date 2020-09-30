@@ -16,6 +16,7 @@ import {
   updateWorkspaceInTree,
   serializeJson,
   Linter,
+  updateJsonInTree,
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import {
@@ -50,7 +51,7 @@ export default function (rawSchema: StorybookConfigureSchema): Rule {
       ),
       configureTsProjectConfig(schema),
       configureTsSolutionConfig(schema),
-      updateLintTask(schema),
+      updateLintConfig(schema),
       addStorybookTask(schema.name, schema.uiFramework),
       schema.configureCypress && projectType !== 'application'
         ? schematic<CypressConfigureSchema>('cypress-project', {
@@ -194,22 +195,53 @@ function configureTsSolutionConfig(schema: StorybookConfigureSchema): Rule {
   };
 }
 
-function updateLintTask(schema: StorybookConfigureSchema): Rule {
+/**
+ * When adding storybook we need to inform TSLint or ESLint
+ * of the additional tsconfig.json file which will be the only tsconfig
+ * which includes *.stories files.
+ *
+ * For TSLint this is done via the builder config, for ESLint this is
+ * done within the .eslintrc file.
+ */
+function updateLintConfig(schema: StorybookConfigureSchema): Rule {
   const { name: projectName } = schema;
 
-  return updateWorkspaceInTree((json) => {
-    const projectConfig = json.projects[projectName];
-    const lintTarget = projectConfig.architect.lint;
+  return chain([
+    updateWorkspaceInTree((json) => {
+      const projectConfig = json.projects[projectName];
+      const isUsingTSLint =
+        projectConfig.architect?.lint?.builder ===
+        '@angular-devkit/build-angular:tslint';
 
-    if (lintTarget) {
-      lintTarget.options.tsConfig = [
-        ...lintTarget.options.tsConfig,
-        `${projectConfig.root}/.storybook/tsconfig.json`,
-      ];
-    }
+      if (isUsingTSLint) {
+        projectConfig.architect.lint.options.tsConfig = [
+          ...projectConfig.architect.lint.options.tsConfig,
+          `${projectConfig.root}/.storybook/tsconfig.json`,
+        ];
+      }
 
-    return json;
-  });
+      return json;
+    }),
+    (tree: Tree) => {
+      const projectConfig = getProjectConfig(tree, projectName);
+      const isUsingESLint =
+        (projectConfig.architect?.lint?.builder === '@nrwl/linter:lint' &&
+          projectConfig.architect?.lint?.options?.linter === 'eslint') ||
+        projectConfig.architect?.lint?.builder === '@nrwl/linter:eslint';
+
+      if (!isUsingESLint) {
+        return;
+      }
+
+      return updateJsonInTree(`${projectConfig.root}/.eslintrc`, (json) => {
+        if (Array.isArray(json.parserOptions?.project)) {
+          json.parserOptions.project.push(
+            `${projectConfig.root}/.storybook/tsconfig.json`
+          );
+        }
+      });
+    },
+  ]);
 }
 
 function addStorybookTask(projectName: string, uiFramework: string): Rule {

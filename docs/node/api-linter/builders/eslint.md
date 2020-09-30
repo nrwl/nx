@@ -1,9 +1,9 @@
-# lint
+# eslint
 
-**[DEPRECATED]**: Please use the eslint builder instead, an automated migration was provided in v10.3.0
+Run ESLint on a project
 
 Builder properties can be configured in workspace.json when defining the builder, or when invoking it.
-Read more about how to use builders and the CLI here: https://nx.dev/react/guides/cli.
+Read more about how to use builders and the CLI here: https://nx.dev/node/guides/cli.
 
 ## Properties
 
@@ -21,23 +21,11 @@ Type: `string`
 
 Path to the cache file or directory.
 
-### config
+### eslintConfig
 
 Type: `string`
 
-The name of the configuration file.
-
-### exclude
-
-Type: `array`
-
-Files to exclude from linting.
-
-### files
-
-Type: `array`
-
-Files to include in linting.
+The name of the ESLint configuration file.
 
 ### fix
 
@@ -63,15 +51,17 @@ Type: `string`
 
 ESLint Output formatter (https://eslint.org/docs/user-guide/formatters).
 
-### linter
-
-Default: `eslint`
+### ignorePath
 
 Type: `string`
 
-Possible values: `eslint`, `tslint`
+The path of the .eslintignore file.
 
-The tool to use for running lint checks.
+### lintFilePatterns
+
+Type: `array`
+
+One or more files/dirs/globs to pass directly to ESLint's lintFiles() method.
 
 ### maxWarnings
 
@@ -102,9 +92,3 @@ Default: `false`
 Type: `boolean`
 
 Hide output text.
-
-### tsConfig
-
-Type: `string | string[]`
-
-The name of the TypeScript configuration file.

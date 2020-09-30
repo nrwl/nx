@@ -53,7 +53,8 @@ export function createComponentStoriesFile({
   return (tree: Tree, context: SchematicContext): Rule => {
     const proj = getProjectConfig(tree, project);
     const sourceRoot = proj.sourceRoot;
-    const usesEsLint = proj.architect.lint.options.linter === 'eslint';
+    // TODO: Remove this entirely, given we don't support TSLint with React?
+    const usesEsLint = true;
 
     const componentFilePath = normalize(join(sourceRoot, componentPath));
     const componentDirectory = componentFilePath.replace(

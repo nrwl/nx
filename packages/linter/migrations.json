@@ -4,6 +4,11 @@
       "version": "10.3.0-beta.1",
       "description": "Update @typescript-eslint to v4.3",
       "factory": "./src/migrations/update-10-3-0/update-10-3-0"
+    },
+    "update-eslint-builder-and-config": {
+      "version": "10.3.0-beta.0",
+      "description": "Migrate to the new ESLint builder and ESLint config style",
+      "factory": "./src/migrations/update-10-3-0/update-eslint-builder-and-config"
     }
   },
   "packageJsonUpdates": {
@@ -16,6 +21,10 @@
         },
         "@typescript-eslint/eslint-plugin": {
           "version": "4.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint": {
+          "version": "7.10.0",
           "alwaysAddToPackageJson": false
         }
       }

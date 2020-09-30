@@ -553,7 +553,7 @@ forEachCli((cli) => {
   });
 
   describe('Move Angular Project', () => {
-    const workspace: string = cli === 'angular' ? 'angular' : 'workspace';
+    const workspace = cli === 'angular' ? 'angular' : 'workspace';
 
     let app1: string;
     let app2: string;
@@ -685,7 +685,7 @@ forEachCli((cli) => {
   });
 
   describe('Move Project', () => {
-    const workspace: string = cli === 'angular' ? 'angular' : 'workspace';
+    const workspace = cli === 'angular' ? 'angular' : 'workspace';
 
     /**
      * Tries moving a library from ${lib}/data-access -> shared/${lib}/data-access
@@ -810,10 +810,17 @@ forEachCli((cli) => {
       expect(project).toBeTruthy();
       expect(project.root).toBe(newPath);
       expect(project.sourceRoot).toBe(`${newPath}/src`);
-      expect(project.architect.lint.options.tsConfig).toEqual([
-        `libs/shared/${lib1}/data-access/tsconfig.lib.json`,
-        `libs/shared/${lib1}/data-access/tsconfig.spec.json`,
-      ]);
+      if (workspace === 'angular') {
+        expect(project.architect.lint.options.tsConfig).toEqual([
+          `libs/shared/${lib1}/data-access/tsconfig.lib.json`,
+          `libs/shared/${lib1}/data-access/tsconfig.spec.json`,
+        ]);
+      }
+      if (workspace === 'workspace') {
+        expect(project.architect.lint.options.lintFilePatterns).toEqual([
+          `libs/shared/${lib1}/data-access/**/*.ts`,
+        ]);
+      }
 
       /**
        * Check that the import in lib2 has been updated
@@ -948,10 +955,17 @@ forEachCli((cli) => {
       expect(project).toBeTruthy();
       expect(project.root).toBe(newPath);
       expect(project.sourceRoot).toBe(`${newPath}/src`);
-      expect(project.architect.lint.options.tsConfig).toEqual([
-        `libs/shared/${lib1}/data-access/tsconfig.lib.json`,
-        `libs/shared/${lib1}/data-access/tsconfig.spec.json`,
-      ]);
+      if (workspace === 'angular') {
+        expect(project.architect.lint.options.tsConfig).toEqual([
+          `libs/shared/${lib1}/data-access/tsconfig.lib.json`,
+          `libs/shared/${lib1}/data-access/tsconfig.spec.json`,
+        ]);
+      }
+      if (workspace === 'workspace') {
+        expect(project.architect.lint.options.lintFilePatterns).toEqual([
+          `libs/shared/${lib1}/data-access/**/*.ts`,
+        ]);
+      }
 
       /**
        * Check that the import in lib2 has been updated
@@ -1088,10 +1102,17 @@ forEachCli((cli) => {
       expect(project).toBeTruthy();
       expect(project.root).toBe(newPath);
       expect(project.sourceRoot).toBe(`${newPath}/src`);
-      expect(project.architect.lint.options.tsConfig).toEqual([
-        `packages/shared/${lib1}/data-access/tsconfig.lib.json`,
-        `packages/shared/${lib1}/data-access/tsconfig.spec.json`,
-      ]);
+      if (workspace === 'angular') {
+        expect(project.architect.lint.options.tsConfig).toEqual([
+          `packages/shared/${lib1}/data-access/tsconfig.lib.json`,
+          `packages/shared/${lib1}/data-access/tsconfig.spec.json`,
+        ]);
+      }
+      if (workspace === 'workspace') {
+        expect(project.architect.lint.options.lintFilePatterns).toEqual([
+          `packages/shared/${lib1}/data-access/**/*.ts`,
+        ]);
+      }
 
       /**
        * Check that the import in lib2 has been updated
@@ -1109,7 +1130,7 @@ forEachCli((cli) => {
   });
 
   describe('Remove Project', () => {
-    const workspace: string = cli === 'angular' ? 'angular' : 'workspace';
+    const workspace = cli === 'angular' ? 'angular' : 'workspace';
 
     /**
      * Tries creating then deleting a lib

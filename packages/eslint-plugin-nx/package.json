@@ -29,7 +29,7 @@
   "homepage": "https://nx.dev",
   "peerDependencies": {
     "@nrwl/workspace": "*",
-    "@typescript-eslint/parser": "^2.19.2"
+    "@typescript-eslint/parser": "^4.3.0"
   },
   "dependencies": {
     "@angular-devkit/core": "~10.1.3",

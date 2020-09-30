@@ -76,7 +76,8 @@ export function addProject(options: NormalizedSchema): Rule {
     architect.lint = generateProjectLint(
       normalize(options.appProjectRoot),
       join(normalize(options.appProjectRoot), 'tsconfig.app.json'),
-      options.linter
+      options.linter,
+      [`${options.appProjectRoot}/**/*.{ts,tsx,js,jsx}`]
     );
 
     json.projects[options.projectName] = {

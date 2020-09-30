@@ -79,11 +79,9 @@ describe('schematic:cypress-project', () => {
       const project = workspaceJson.projects['my-app-e2e'];
 
       expect(project.architect.lint).toEqual({
-        builder: '@nrwl/linter:lint',
+        builder: '@nrwl/linter:eslint',
         options: {
-          linter: 'eslint',
-          tsConfig: ['apps/my-app-e2e/tsconfig.e2e.json'],
-          exclude: ['**/node_modules/**', '!apps/my-app-e2e/**/*'],
+          lintFilePatterns: ['apps/my-app-e2e/**/*.{js,ts}'],
         },
       });
     });
