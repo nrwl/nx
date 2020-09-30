@@ -810,17 +810,9 @@ forEachCli((cli) => {
       expect(project).toBeTruthy();
       expect(project.root).toBe(newPath);
       expect(project.sourceRoot).toBe(`${newPath}/src`);
-      if (workspace === 'angular') {
-        expect(project.architect.lint.options.tsConfig).toEqual([
-          `libs/shared/${lib1}/data-access/tsconfig.lib.json`,
-          `libs/shared/${lib1}/data-access/tsconfig.spec.json`,
-        ]);
-      }
-      if (workspace === 'workspace') {
-        expect(project.architect.lint.options.lintFilePatterns).toEqual([
-          `libs/shared/${lib1}/data-access/**/*.ts`,
-        ]);
-      }
+      expect(project.architect.lint.options.lintFilePatterns).toEqual([
+        `libs/shared/${lib1}/data-access/**/*.ts`,
+      ]);
 
       /**
        * Check that the import in lib2 has been updated
@@ -955,17 +947,9 @@ forEachCli((cli) => {
       expect(project).toBeTruthy();
       expect(project.root).toBe(newPath);
       expect(project.sourceRoot).toBe(`${newPath}/src`);
-      if (workspace === 'angular') {
-        expect(project.architect.lint.options.tsConfig).toEqual([
-          `libs/shared/${lib1}/data-access/tsconfig.lib.json`,
-          `libs/shared/${lib1}/data-access/tsconfig.spec.json`,
-        ]);
-      }
-      if (workspace === 'workspace') {
-        expect(project.architect.lint.options.lintFilePatterns).toEqual([
-          `libs/shared/${lib1}/data-access/**/*.ts`,
-        ]);
-      }
+      expect(project.architect.lint.options.lintFilePatterns).toEqual([
+        `libs/shared/${lib1}/data-access/**/*.ts`,
+      ]);
 
       /**
        * Check that the import in lib2 has been updated
@@ -1102,17 +1086,9 @@ forEachCli((cli) => {
       expect(project).toBeTruthy();
       expect(project.root).toBe(newPath);
       expect(project.sourceRoot).toBe(`${newPath}/src`);
-      if (workspace === 'angular') {
-        expect(project.architect.lint.options.tsConfig).toEqual([
-          `packages/shared/${lib1}/data-access/tsconfig.lib.json`,
-          `packages/shared/${lib1}/data-access/tsconfig.spec.json`,
-        ]);
-      }
-      if (workspace === 'workspace') {
-        expect(project.architect.lint.options.lintFilePatterns).toEqual([
-          `packages/shared/${lib1}/data-access/**/*.ts`,
-        ]);
-      }
+      expect(project.architect.lint.options.lintFilePatterns).toEqual([
+        `packages/shared/${lib1}/data-access/**/*.ts`,
+      ]);
 
       /**
        * Check that the import in lib2 has been updated

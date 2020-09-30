@@ -381,9 +381,9 @@ function determineStyle(preset: Preset, parsedArgs: any) {
   return Promise.resolve(parsedArgs.style);
 }
 
-function determineLinter(cli: { command: string }, parsedArgs: any) {
+function determineLinter(preset: Preset, parsedArgs: any) {
   if (!parsedArgs.linter) {
-    if (cli.command === 'ng') {
+    if (preset === Preset.Angular || preset === Preset.AngularWithNest) {
       return inquirer
         .prompt([
           {

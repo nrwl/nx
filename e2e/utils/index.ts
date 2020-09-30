@@ -91,7 +91,8 @@ export function runCreateWorkspace(
     base?: string;
   }
 ) {
-  const linterArg = preset === 'angular' ? ' --linter=tslint' : '';
+  const linterArg =
+    preset === 'angular' || preset === 'angular-nest' ? ' --linter=tslint' : '';
   let command = `npx create-nx-workspace@${process.env.PUBLISHED_VERSION} ${name} --cli=${cli} --preset=${preset} ${linterArg} --no-nxCloud --no-interactive`;
   if (appName) {
     command += ` --appName=${appName}`;
