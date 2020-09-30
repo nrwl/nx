@@ -22,7 +22,10 @@ module.exports = function (api: any, options: {}) {
           targets: isModern ? { esmodules: true } : undefined,
           bugfixes: true,
           // Exclude transforms that make all code slower
-          exclude: ['transform-typeof-symbol', isModern ? '@babel/plugin-transform-regenerator' : undefined].filter(Boolean),
+          exclude: [
+            'transform-typeof-symbol',
+            isModern ? '@babel/plugin-transform-regenerator' : undefined,
+          ].filter(Boolean),
         },
       ],
       require.resolve('@babel/preset-typescript'),
