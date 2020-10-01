@@ -93,7 +93,7 @@ determineWorkspaceName(parsedArgs).then((name) => {
     return determineAppName(preset, parsedArgs).then((appName) => {
       return determineStyle(preset, parsedArgs).then((style) => {
         return determineCli(preset, parsedArgs).then((cli) => {
-          return determineLinter(cli, parsedArgs).then((linter) => {
+          return determineLinter(preset, parsedArgs).then((linter) => {
             return askAboutNxCloud(parsedArgs).then((cloud) => {
               const tmpDir = createSandbox(packageManager);
               createApp(
