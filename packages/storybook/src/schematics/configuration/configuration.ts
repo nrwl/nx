@@ -201,7 +201,7 @@ function configureTsSolutionConfig(schema: StorybookConfigureSchema): Rule {
  * which includes *.stories files.
  *
  * For TSLint this is done via the builder config, for ESLint this is
- * done within the .eslintrc file.
+ * done within the .eslintrc.json file.
  */
 function updateLintConfig(schema: StorybookConfigureSchema): Rule {
   const { name: projectName } = schema;
@@ -233,13 +233,16 @@ function updateLintConfig(schema: StorybookConfigureSchema): Rule {
         return;
       }
 
-      return updateJsonInTree(`${projectConfig.root}/.eslintrc`, (json) => {
-        if (Array.isArray(json.parserOptions?.project)) {
-          json.parserOptions.project.push(
-            `${projectConfig.root}/.storybook/tsconfig.json`
-          );
+      return updateJsonInTree(
+        `${projectConfig.root}/.eslintrc.json`,
+        (json) => {
+          if (Array.isArray(json.parserOptions?.project)) {
+            json.parserOptions.project.push(
+              `${projectConfig.root}/.storybook/tsconfig.json`
+            );
+          }
         }
-      });
+      );
     },
   ]);
 }

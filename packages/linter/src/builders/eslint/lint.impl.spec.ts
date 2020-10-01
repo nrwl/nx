@@ -39,7 +39,7 @@ function createValidRunBuilderOptions(
 ): Schema {
   return {
     lintFilePatterns: [],
-    eslintConfig: './.eslintrc',
+    eslintConfig: './.eslintrc.json',
     fix: true,
     cache: true,
     cacheLocation: 'cacheLocation1',
@@ -118,7 +118,7 @@ describe('Linter Builder', () => {
     await runBuilder(
       createValidRunBuilderOptions({
         lintFilePatterns: [],
-        eslintConfig: './.eslintrc',
+        eslintConfig: './.eslintrc.json',
         fix: true,
         cache: true,
         cacheLocation: 'cacheLocation1',
@@ -131,9 +131,9 @@ describe('Linter Builder', () => {
         quiet: false,
       })
     );
-    expect(lint).toHaveBeenCalledWith('/root/.eslintrc', {
+    expect(lint).toHaveBeenCalledWith('/root/.eslintrc.json', {
       lintFilePatterns: [],
-      eslintConfig: './.eslintrc',
+      eslintConfig: './.eslintrc.json',
       fix: true,
       cache: true,
       cacheLocation: 'cacheLocation1',
@@ -164,7 +164,7 @@ describe('Linter Builder', () => {
     setupMocks();
     await runBuilder(
       createValidRunBuilderOptions({
-        eslintConfig: './.eslintrc',
+        eslintConfig: './.eslintrc.json',
         lintFilePatterns: ['includedFile1'],
         format: 'json',
       })
@@ -172,7 +172,7 @@ describe('Linter Builder', () => {
     expect(mockLoadFormatter).toHaveBeenCalledWith('json');
     await runBuilder(
       createValidRunBuilderOptions({
-        eslintConfig: './.eslintrc',
+        eslintConfig: './.eslintrc.json',
         lintFilePatterns: ['includedFile1'],
         format: 'html',
       })
@@ -184,7 +184,7 @@ describe('Linter Builder', () => {
     setupMocks();
     await runBuilder(
       createValidRunBuilderOptions({
-        eslintConfig: './.eslintrc',
+        eslintConfig: './.eslintrc.json',
         lintFilePatterns: ['includedFile1'],
         format: 'json',
         fix: false,
@@ -212,7 +212,7 @@ describe('Linter Builder', () => {
       setupMocks();
       await runBuilder(
         createValidRunBuilderOptions({
-          eslintConfig: './.eslintrc',
+          eslintConfig: './.eslintrc.json',
           lintFilePatterns: ['includedFile1'],
           format: 'json',
           silent: false,
@@ -255,7 +255,7 @@ describe('Linter Builder', () => {
       setupMocks();
       await runBuilder(
         createValidRunBuilderOptions({
-          eslintConfig: './.eslintrc',
+          eslintConfig: './.eslintrc.json',
           lintFilePatterns: ['includedFile1'],
           format: 'json',
           silent: false,
@@ -303,7 +303,7 @@ describe('Linter Builder', () => {
       setupMocks();
       await runBuilder(
         createValidRunBuilderOptions({
-          eslintConfig: './.eslintrc',
+          eslintConfig: './.eslintrc.json',
           lintFilePatterns: ['includedFile1'],
           format: 'json',
           silent: true,
@@ -347,7 +347,7 @@ describe('Linter Builder', () => {
     setupMocks();
     const output = await runBuilder(
       createValidRunBuilderOptions({
-        eslintConfig: './.eslintrc',
+        eslintConfig: './.eslintrc.json',
         lintFilePatterns: ['includedFile1'],
         format: 'json',
         silent: true,
@@ -375,7 +375,7 @@ describe('Linter Builder', () => {
     setupMocks();
     const output = await runBuilder(
       createValidRunBuilderOptions({
-        eslintConfig: './.eslintrc',
+        eslintConfig: './.eslintrc.json',
         lintFilePatterns: ['includedFile1'],
         format: 'json',
         silent: true,
@@ -403,7 +403,7 @@ describe('Linter Builder', () => {
     setupMocks();
     const output = await runBuilder(
       createValidRunBuilderOptions({
-        eslintConfig: './.eslintrc',
+        eslintConfig: './.eslintrc.json',
         lintFilePatterns: ['includedFile1'],
         format: 'json',
         silent: true,
@@ -422,7 +422,7 @@ describe('Linter Builder', () => {
     const { createDirectory } = require('@nrwl/workspace');
     await runBuilder(
       createValidRunBuilderOptions({
-        eslintConfig: './.eslintrc',
+        eslintConfig: './.eslintrc.json',
         lintFilePatterns: ['includedFile1'],
         format: 'json',
         silent: true,
@@ -442,7 +442,7 @@ describe('Linter Builder', () => {
     jest.spyOn(fs, 'writeFileSync').mockImplementation();
     await runBuilder(
       createValidRunBuilderOptions({
-        eslintConfig: './.eslintrc',
+        eslintConfig: './.eslintrc.json',
         lintFilePatterns: ['includedFile1'],
         format: 'json',
         silent: true,

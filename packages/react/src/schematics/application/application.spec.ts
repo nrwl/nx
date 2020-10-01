@@ -71,9 +71,9 @@ describe('app', () => {
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
       const eslintJson = JSON.parse(
-        stripJsonComments(tree.readContent('apps/my-app/.eslintrc'))
+        stripJsonComments(tree.readContent('apps/my-app/.eslintrc.json'))
       );
-      expect(eslintJson.extends).toEqual(['../../.eslintrc']);
+      expect(eslintJson.extends).toEqual(['../../.eslintrc.json']);
 
       expect(tree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
       const tsconfigE2E = JSON.parse(
@@ -155,9 +155,9 @@ describe('app', () => {
           expectedValue: '../../../dist/out-tsc',
         },
         {
-          path: 'apps/my-dir/my-app/.eslintrc',
+          path: 'apps/my-dir/my-app/.eslintrc.json',
           lookupFn: (json) => json.extends,
-          expectedValue: ['../../../.eslintrc'],
+          expectedValue: ['../../../.eslintrc.json'],
         },
       ].forEach(hasJsonValue);
     });
@@ -358,14 +358,14 @@ describe('app', () => {
     expect(appContent).not.toMatch(/extends Component/);
   });
 
-  it('should add .eslintrc and dependencies', async () => {
+  it('should add .eslintrc.json and dependencies', async () => {
     const tree = await runSchematic(
       'app',
       { name: 'myApp', linter: 'eslint' },
       appTree
     );
 
-    const eslintJson = readJsonInTree(tree, '/apps/my-app/.eslintrc');
+    const eslintJson = readJsonInTree(tree, '/apps/my-app/.eslintrc.json');
     const packageJson = readJsonInTree(tree, '/package.json');
 
     expect(eslintJson.plugins).toEqual(

@@ -70,9 +70,9 @@ describe('app', () => {
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
       const linter = JSON.parse(
-        stripJsonComments(tree.readContent('apps/my-app/.eslintrc'))
+        stripJsonComments(tree.readContent('apps/my-app/.eslintrc.json'))
       );
-      expect(linter.extends).toEqual('../../.eslintrc');
+      expect(linter.extends).toEqual('../../.eslintrc.json');
 
       expect(tree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
       const tsconfigE2E = JSON.parse(
@@ -154,9 +154,9 @@ describe('app', () => {
           expectedValue: '../../../dist/out-tsc',
         },
         {
-          path: 'apps/my-dir/my-app/.eslintrc',
+          path: 'apps/my-dir/my-app/.eslintrc.json',
           lookupFn: (json) => json.extends,
-          expectedValue: '../../../.eslintrc',
+          expectedValue: '../../../.eslintrc.json',
         },
       ].forEach(hasJsonValue);
     });
