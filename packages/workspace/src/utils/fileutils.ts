@@ -112,5 +112,5 @@ export function renameSync(
 }
 
 export function isRelativePath(path: string): boolean {
-  return path === '.' || path.startsWith('./') || path.startsWith('../');
+  return path === '.' || path === '..' || path.startsWith('./') || path.startsWith('../');
 }
