@@ -246,7 +246,7 @@ describe('schematic:cypress-project', () => {
           const packageJson = readJsonInTree(tree, 'package.json');
           const eslintrcJson = readJsonInTree(
             tree,
-            'apps/my-app-e2e/.eslintrc'
+            'apps/my-app-e2e/.eslintrc.json'
           );
 
           expect(

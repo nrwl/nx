@@ -112,9 +112,11 @@ describe('app', () => {
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
       const eslintrc = JSON.parse(
-        stripJsonComments(getFileContent(tree, 'apps/my-node-app/.eslintrc'))
+        stripJsonComments(
+          getFileContent(tree, 'apps/my-node-app/.eslintrc.json')
+        )
       );
-      expect(eslintrc.extends).toEqual('../../.eslintrc');
+      expect(eslintrc.extends).toEqual('../../.eslintrc.json');
     });
   });
 
@@ -192,9 +194,9 @@ describe('app', () => {
           expectedValue: ['node'],
         },
         {
-          path: 'apps/my-dir/my-node-app/.eslintrc',
+          path: 'apps/my-dir/my-node-app/.eslintrc.json',
           lookupFn: (json) => json.extends,
-          expectedValue: '../../../.eslintrc',
+          expectedValue: '../../../.eslintrc.json',
         },
       ].forEach(hasJsonValue);
     });

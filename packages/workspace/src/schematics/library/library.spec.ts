@@ -184,7 +184,7 @@ describe('lib', () => {
         tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.ts')
       ).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
-      expect(tree.exists(`libs/my-dir/my-lib/.eslintrc`)).toBeTruthy();
+      expect(tree.exists(`libs/my-dir/my-lib/.eslintrc.json`)).toBeTruthy();
     });
 
     it('should update workspace.json', async () => {
@@ -242,15 +242,15 @@ describe('lib', () => {
       ]);
     });
 
-    it('should create a local .eslintrc', async () => {
+    it('should create a local .eslintrc.json', async () => {
       const tree = await runSchematic(
         'lib',
         { name: 'myLib', directory: 'myDir' },
         appTree
       );
 
-      const lint = readJsonInTree(tree, 'libs/my-dir/my-lib/.eslintrc');
-      expect(lint.extends).toEqual('../../../.eslintrc');
+      const lint = readJsonInTree(tree, 'libs/my-dir/my-lib/.eslintrc.json');
+      expect(lint.extends).toEqual('../../../.eslintrc.json');
     });
   });
 

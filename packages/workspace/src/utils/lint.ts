@@ -92,9 +92,9 @@ export function addLintFiles(
     }
 
     if (linter === 'eslint') {
-      if (!host.exists('/.eslintrc')) {
+      if (!host.exists('/.eslintrc.json')) {
         chainedCommands.push((host: Tree) => {
-          host.create('/.eslintrc', globalESLint);
+          host.create('/.eslintrc.json', globalESLint);
 
           return addDepsToPackageJson(
             {
@@ -119,7 +119,7 @@ export function addLintFiles(
       if (!options.onlyGlobal) {
         chainedCommands.push((host: Tree) => {
           let configJson;
-          const rootConfig = `${offsetFromRoot(projectRoot)}.eslintrc`;
+          const rootConfig = `${offsetFromRoot(projectRoot)}.eslintrc.json`;
 
           // Include all project files to be linted (since they are turned off in the root eslintrc file).
           const ignorePatterns = ['!**/*'];
@@ -155,7 +155,7 @@ export function addLintFiles(
           }
 
           host.create(
-            join(projectRoot as any, `.eslintrc`),
+            join(projectRoot as any, `.eslintrc.json`),
             JSON.stringify(configJson)
           );
         });

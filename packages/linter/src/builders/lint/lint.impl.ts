@@ -42,7 +42,7 @@ async function run(options: Schema, context: BuilderContext): Promise<any> {
   }
 
   // We want users to have the option of not specifying the config path, and let
-  // eslint automatically resolve the `.eslintrc` files in each folder.
+  // eslint automatically resolve the `.eslintrc.json` files in each folder.
   const eslintConfigPath = options.config
     ? path.resolve(systemRoot, options.config)
     : undefined;

@@ -11,7 +11,7 @@
       "factory": "./src/migrations/update-10-3-0/update-eslint-builder-and-config"
     },
     "add-json-ext-to-eslintrc": {
-      "version": "10.3.0-beta.0",
+      "version": "10.3.0-beta.2",
       "description": "Add explicit .json file extension to .eslintrc files, not using an extension is deprecated",
       "factory": "./src/migrations/update-10-3-0/add-json-ext-to-eslintrc"
     }
