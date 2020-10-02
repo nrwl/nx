@@ -62,7 +62,11 @@ export {
   serializeTarget,
 } from './src/utils/cli-config-utils';
 
-export { getWorkspace, updateWorkspace } from './src/utils/workspace';
+export {
+  getWorkspace,
+  updateWorkspace,
+  updateBuilderConfig,
+} from './src/utils/workspace';
 export { addUpdateTask } from './src/utils/update-task';
 export { addLintFiles, generateProjectLint, Linter } from './src/utils/lint';
 

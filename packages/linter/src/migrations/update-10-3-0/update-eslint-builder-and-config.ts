@@ -1,5 +1,9 @@
 import { chain, Tree } from '@angular-devkit/schematics';
-import { formatFiles, readJsonInTree, updateWorkspace } from '@nrwl/workspace';
+import {
+  formatFiles,
+  readJsonInTree,
+  updateBuilderConfig,
+} from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 
 /**
@@ -9,55 +13,43 @@ import { join, normalize } from '@angular-devkit/core';
  * the migration.
  */
 function updateESLintBuilder(host: Tree) {
-  return updateWorkspace((workspace) => {
-    workspace.projects.forEach((project) => {
-      const lintTarget = project.targets.get('lint');
-      if (
-        lintTarget?.builder !== '@nrwl/linter:lint' ||
-        lintTarget?.options?.linter === 'tslint'
-      ) {
-        return;
-      }
-      lintTarget.builder = '@nrwl/linter:eslint';
+  return updateBuilderConfig((options, target, project) => {
+    if (options.linter === 'tslint') {
+      return options;
+    }
+    target.builder = '@nrwl/linter:eslint';
 
-      const tsconfigs = [];
+    const tsconfigs = [];
 
-      try {
-        tsconfigs.push(readJsonInTree(host, `${project.root}/tsconfig.json`));
-      } catch {}
-      try {
-        tsconfigs.push(
-          readJsonInTree(host, `${project.root}/tsconfig.app.json`)
-        );
-      } catch {}
-      try {
-        tsconfigs.push(
-          readJsonInTree(host, `${project.root}/tsconfig.lib.json`)
-        );
-      } catch {}
-      try {
-        tsconfigs.push(
-          readJsonInTree(host, `${project.root}/tsconfig.spec.json`)
-        );
-      } catch {}
+    try {
+      tsconfigs.push(readJsonInTree(host, `${project.root}/tsconfig.json`));
+    } catch {}
+    try {
+      tsconfigs.push(readJsonInTree(host, `${project.root}/tsconfig.app.json`));
+    } catch {}
+    try {
+      tsconfigs.push(readJsonInTree(host, `${project.root}/tsconfig.lib.json`));
+    } catch {}
+    try {
+      tsconfigs.push(
+        readJsonInTree(host, `${project.root}/tsconfig.spec.json`)
+      );
+    } catch {}
 
-      const defaultLintFilePatterns = [`${project.root}/**/*.ts`];
+    const defaultLintFilePatterns = [`${project.root}/**/*.ts`];
 
-      // Merge any available `includes` and `files` from the tsconfig files
-      const lintFilePatterns = !tsconfigs.length
-        ? defaultLintFilePatterns
-        : tsconfigs
-            .map((tsconfig) => {
-              return [...(tsconfig.include || []), ...(tsconfig.files || [])];
-            })
-            .reduce((flat, val) => flat.concat(val), [])
-            .map((pattern) => join(normalize(project.root), pattern));
+    // Merge any available `includes` and `files` from the tsconfig files
+    const lintFilePatterns = !tsconfigs.length
+      ? defaultLintFilePatterns
+      : tsconfigs
+          .map((tsconfig) => {
+            return [...(tsconfig.include || []), ...(tsconfig.files || [])];
+          })
+          .reduce((flat, val) => flat.concat(val), [])
+          .map((pattern) => join(normalize(project.root), pattern));
 
-      lintTarget.options = {
-        lintFilePatterns,
-      };
-    });
-  });
+    return { lintFilePatterns };
+  }, '@nrwl/linter:lint');
 }
 
 export default function () {

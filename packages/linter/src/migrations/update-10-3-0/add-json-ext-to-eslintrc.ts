@@ -1,42 +1,41 @@
 import { basename } from '@angular-devkit/core';
-import { chain, Tree } from '@angular-devkit/schematics';
+import { chain } from '@angular-devkit/schematics';
 import {
   formatFiles,
-  readJsonInTree,
-  serializeJson,
+  updateBuilderConfig,
   updateWorkspace,
   visitNotIgnoredFiles,
 } from '@nrwl/workspace';
 
 function updateESLintConfigReferencesInWorkspace() {
-  return updateWorkspace((workspace) => {
-    workspace.projects.forEach((project) => {
-      const lintTarget = project.targets.get('lint');
+  return updateBuilderConfig(
+    (options, target, project) => {
       if (
-        lintTarget?.builder !== '@nrwl/linter:eslint' &&
-        (lintTarget?.builder !== '@nrwl/linter:lint' ||
-          lintTarget?.options?.linter === 'tslint')
+        target.builder === '@nrwl/linter:lint' &&
+        options?.linter === 'tslint'
       ) {
-        return;
+        return options;
       }
 
-      if (lintTarget.builder === '@nrwl/linter:eslint') {
-        if (!lintTarget.options.eslintConfig) {
-          return;
+      if (target.builder === '@nrwl/linter:eslint') {
+        if (!options.eslintConfig) {
+          return options;
         }
-        lintTarget.options.eslintConfig = `${lintTarget.options.eslintConfig}.json`;
-        return;
+        options.eslintConfig = `${options.eslintConfig}.json`;
+        return options;
       }
 
-      if (lintTarget.builder === '@nrwl/linter:lint') {
-        if (!lintTarget.options.config) {
-          return;
+      if (target.builder === '@nrwl/linter:lint') {
+        if (!options.config) {
+          return options;
         }
-        lintTarget.options.config = `${lintTarget.options.config}.json`;
-        return;
+        options.config = `${options.config}.json`;
+        return options;
       }
-    });
-  });
+    },
+    '@nrwl/linter:eslint',
+    '@nrwl/linter:lint'
+  );
 }
 
 function renameESLintConfigFiles() {
