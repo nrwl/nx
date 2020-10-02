@@ -18,6 +18,7 @@ import {
   updateWorkspaceInTree,
   generateProjectLint,
   addLintFiles,
+  formatFiles,
 } from '@nrwl/workspace';
 import { toFileName } from '@nrwl/workspace';
 import { getProjectConfig } from '@nrwl/workspace';
@@ -167,6 +168,7 @@ export default function (schema: Schema): Rule {
           })
         : noop(),
       options.frontendProject ? addProxy(options) : noop(),
+      formatFiles(options),
     ])(host, context);
   };
 }

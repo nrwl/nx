@@ -1,6 +1,9 @@
 import { Tree, Rule } from '@angular-devkit/schematics';
 import { JsonArray, JsonObject, workspaces } from '@angular-devkit/core';
-import { ProjectDefinition } from '@angular-devkit/core/src/workspace';
+import {
+  ProjectDefinition,
+  TargetDefinition,
+} from '@angular-devkit/core/src/workspace';
 
 function createHost(tree: Tree): workspaces.WorkspaceHost {
   return {
@@ -65,12 +68,13 @@ export function updateWorkspace(
 /**
  * Updates builder options for options and configurations for given builder names
  */
-export function updateBuilderOptions(
+export function updateBuilderConfig(
   updater: (
     currentValue: Record<
       string,
       string | number | boolean | JsonArray | JsonObject
     >,
+    target?: TargetDefinition,
     project?: ProjectDefinition
   ) => Record<string, string | number | boolean | JsonArray | JsonObject>,
   ...builderNames: string[]
@@ -85,14 +89,18 @@ export function updateBuilderOptions(
           return;
         }
         if (target.options) {
-          target.options = updater(target.options, project);
+          target.options = updater(target.options, target, project);
         }
         if (!target.configurations) {
           return;
         }
         Object.entries(target.configurations).forEach(
           ([configName, options]) => {
-            target.configurations[configName] = updater(options, project);
+            target.configurations[configName] = updater(
+              options,
+              target,
+              project
+            );
           }
         );
       });
