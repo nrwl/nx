@@ -14,6 +14,11 @@
       "version": "10.3.0-beta.2",
       "description": "Add explicit .json file extension to .eslintrc files, not using an extension is deprecated",
       "factory": "./src/migrations/update-10-3-0/add-json-ext-to-eslintrc"
+    },
+    "add-root-eslintrc-json-to-workspace-implicit-deps": {
+      "version": "10.3.0-beta.3",
+      "description": "Update implicitDependencies within nx.json to include root .eslintrc.json",
+      "factory": "./src/migrations/update-10-3-0/add-root-eslintrc-json-to-workspace-implicit-deps"
     }
   },
   "packageJsonUpdates": {
