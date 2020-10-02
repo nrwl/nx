@@ -42,6 +42,7 @@ describe('fileutils', () => {
       expect(isRelativePath('./file')).toEqual(true);
     });
     it('should return true for upper imports', () => {
+      expect(isRelativePath('..')).toEqual(true);
       expect(isRelativePath('../file')).toEqual(true);
     });
     it('should return false for absolute imports', () => {
