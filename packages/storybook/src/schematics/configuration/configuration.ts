@@ -241,6 +241,7 @@ function updateLintConfig(schema: StorybookConfigureSchema): Rule {
               `${projectConfig.root}/.storybook/tsconfig.json`
             );
           }
+          return json;
         }
       );
     },

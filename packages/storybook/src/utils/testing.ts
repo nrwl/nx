@@ -63,13 +63,15 @@ export function runMigration(migrationName: string, options: any, tree: Tree) {
 
 export async function createTestUILib(
   libName: string,
-  collectionName: '@nrwl/angular' | '@nrwl/react'
+  collectionName: '@nrwl/angular' | '@nrwl/react',
+  options: any = {}
 ): Promise<Tree> {
   let appTree = Tree.empty();
   appTree = createEmptyWorkspace(appTree);
   appTree = await callRule(
     externalSchematic(collectionName, 'library', {
       name: libName,
+      ...options,
     }),
     appTree
   );
