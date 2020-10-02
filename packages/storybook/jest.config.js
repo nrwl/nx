@@ -1,6 +1,5 @@
 module.exports = {
-  name: 'storybook',
-  preset: '../../jest.config.js',
+  preset: '../../jest.preset.js',
   transform: {
     '^.+\\.[tj]sx?$': 'ts-jest',
   },
@@ -8,4 +7,5 @@ module.exports = {
   globals: {
     'ts-jest': { tsConfig: '<rootDir>/tsconfig.spec.json' },
   },
+  displayName: 'storybook',
 };

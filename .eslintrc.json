@@ -11,10 +11,9 @@
   },
   "ignorePatterns": ["**/*.ts"],
   "plugins": ["@typescript-eslint", "@nrwl/nx"],
-  "extends": [
-  ],
+  "extends": [],
   "rules": {
+    "@typescript-eslint/explicit-module-boundary-types": "off"
   },
-  "overrides": [
-  ]
+  "overrides": []
 }

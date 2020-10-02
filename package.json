@@ -64,11 +64,12 @@
     "@ngrx/store": "9.1.0",
     "@ngrx/store-devtools": "9.1.0",
     "@ngtools/webpack": "~10.1.3",
-    "@nrwl/eslint-plugin-nx": "10.2.1-beta.1",
-    "@nrwl/jest": "10.2.1-beta.1",
-    "@nrwl/node": "10.2.1-beta.1",
-    "@nrwl/nx-cloud": "^10.1.6",
-    "@nrwl/workspace": "10.2.1-beta.1",
+    "@nrwl/cli": "10.3.0-rc.3",
+    "@nrwl/eslint-plugin-nx": "10.3.0-rc.3",
+    "@nrwl/jest": "10.3.0-rc.3",
+    "@nrwl/node": "10.3.0-rc.3",
+    "@nrwl/nx-cloud": "10.1.6",
+    "@nrwl/workspace": "10.3.0-rc.3",
     "@reduxjs/toolkit": "1.3.2",
     "@rollup/plugin-babel": "5.0.2",
     "@rollup/plugin-commonjs": "11.0.2",
@@ -220,7 +221,7 @@
     "terser-webpack-plugin": "2.3.1",
     "tmp": "0.0.33",
     "tree-kill": "1.2.2",
-    "ts-jest": "26.1.4",
+    "ts-jest": "26.4.0",
     "ts-loader": "5.4.5",
     "ts-node": "^8.0.2",
     "tsconfig-paths-webpack-plugin": "3.2.0",
@@ -253,5 +254,6 @@
     "hooks": {
       "pre-push": "yarn check-commit && yarn documentation && pretty-quick --check"
     }
-  }
+  },
+  "dependencies": {}
 }
