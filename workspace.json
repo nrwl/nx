@@ -56,15 +56,17 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:lint",
+          "builder": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "config": "packages/nx/.eslintrc",
-            "tsConfig": [
-              "packages/nx/tsconfig.lib.json",
-              "packages/nx/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**"]
+            "lintFilePatterns": [
+              "packages/nx/**/*.ts",
+              "packages/nx/**/*.spec.ts",
+              "packages/nx/**/*_spec.ts",
+              "packages/nx/**/*.spec.tsx",
+              "packages/nx/**/*.spec.js",
+              "packages/nx/**/*.spec.jsx",
+              "packages/nx/**/*.d.ts"
+            ]
           }
         }
       }
@@ -134,15 +136,16 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:lint",
+          "builder": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "config": "packages/tao/.eslintrc",
-            "tsConfig": [
-              "packages/tao/tsconfig.lib.json",
-              "packages/tao/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**"]
+            "lintFilePatterns": [
+              "packages/tao/**/*.ts",
+              "packages/tao/**/*.spec.ts",
+              "packages/tao/**/*.spec.tsx",
+              "packages/tao/**/*.spec.js",
+              "packages/tao/**/*.spec.jsx",
+              "packages/tao/**/*.d.ts"
+            ]
           }
         }
       }
@@ -214,15 +217,16 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:lint",
+          "builder": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "config": "packages/workspace/.eslintrc",
-            "tsConfig": [
-              "packages/workspace/tsconfig.lib.json",
-              "packages/workspace/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**"]
+            "lintFilePatterns": [
+              "packages/workspace/**/*.ts",
+              "packages/workspace/**/*.spec.ts",
+              "packages/workspace/**/*.spec.tsx",
+              "packages/workspace/**/*.spec.js",
+              "packages/workspace/**/*.spec.jsx",
+              "packages/workspace/**/*.d.ts"
+            ]
           }
         }
       }
@@ -294,15 +298,17 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:lint",
+          "builder": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "config": "packages/web/.eslintrc",
-            "tsConfig": [
-              "packages/web/tsconfig.lib.json",
-              "packages/web/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**"]
+            "lintFilePatterns": [
+              "packages/web/**/*.ts",
+              "packages/web/**/*.spec.ts",
+              "packages/web/**/*_spec.ts",
+              "packages/web/**/*.spec.tsx",
+              "packages/web/**/*.spec.js",
+              "packages/web/**/*.spec.jsx",
+              "packages/web/**/*.d.ts"
+            ]
           }
         }
       }
@@ -369,15 +375,16 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:lint",
+          "builder": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "config": "packages/cypress/.eslintrc",
-            "tsConfig": [
-              "packages/cypress/tsconfig.lib.json",
-              "packages/cypress/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**"]
+            "lintFilePatterns": [
+              "packages/cypress/**/*.ts",
+              "packages/cypress/**/*.spec.ts",
+              "packages/cypress/**/*.spec.tsx",
+              "packages/cypress/**/*.spec.js",
+              "packages/cypress/**/*.spec.jsx",
+              "packages/cypress/**/*.d.ts"
+            ]
           }
         }
       }
@@ -444,15 +451,16 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:lint",
+          "builder": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "config": "packages/jest/.eslintrc",
-            "tsConfig": [
-              "packages/jest/tsconfig.lib.json",
-              "packages/jest/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**"]
+            "lintFilePatterns": [
+              "packages/jest/**/*.ts",
+              "packages/jest/**/*.spec.ts",
+              "packages/jest/**/*.spec.tsx",
+              "packages/jest/**/*.spec.js",
+              "packages/jest/**/*.spec.jsx",
+              "packages/jest/**/*.d.ts"
+            ]
           }
         }
       }
@@ -529,15 +537,17 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:lint",
+          "builder": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "config": "packages/storybook/.eslintrc",
-            "tsConfig": [
-              "packages/storybook/tsconfig.lib.json",
-              "packages/storybook/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**"]
+            "lintFilePatterns": [
+              "packages/storybook/**/*.ts",
+              "packages/storybook/**/*.spec.ts",
+              "packages/storybook/**/*_spec.ts",
+              "packages/storybook/**/*.spec.tsx",
+              "packages/storybook/**/*.spec.js",
+              "packages/storybook/**/*.spec.jsx",
+              "packages/storybook/**/*.d.ts"
+            ]
           }
         }
       }
@@ -607,15 +617,17 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:lint",
+          "builder": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "config": "packages/react/.eslintrc",
-            "tsConfig": [
-              "packages/react/tsconfig.lib.json",
-              "packages/react/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**"]
+            "lintFilePatterns": [
+              "packages/react/**/*.ts",
+              "packages/react/**/*.spec.ts",
+              "packages/react/**/*_spec.ts",
+              "packages/react/**/*.spec.tsx",
+              "packages/react/**/*.spec.js",
+              "packages/react/**/*.spec.jsx",
+              "packages/react/**/*.d.ts"
+            ]
           }
         }
       }
@@ -682,15 +694,17 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:lint",
+          "builder": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "config": "packages/nx-plugin/.eslintrc",
-            "tsConfig": [
-              "packages/nx-plugin/tsconfig.lib.json",
-              "packages/nx-plugin/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**"]
+            "lintFilePatterns": [
+              "packages/nx-plugin/**/*.ts",
+              "packages/nx-plugin/**/*.spec.ts",
+              "packages/nx-plugin/**/*_spec.ts",
+              "packages/nx-plugin/**/*.spec.tsx",
+              "packages/nx-plugin/**/*.spec.js",
+              "packages/nx-plugin/**/*.spec.jsx",
+              "packages/nx-plugin/**/*.d.ts"
+            ]
           }
         }
       }
@@ -757,15 +771,17 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:lint",
+          "builder": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "config": "packages/node/.eslintrc",
-            "tsConfig": [
-              "packages/node/tsconfig.lib.json",
-              "packages/node/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**"]
+            "lintFilePatterns": [
+              "packages/node/**/*.ts",
+              "packages/node/**/*.spec.ts",
+              "packages/node/**/*_spec.ts",
+              "packages/node/**/*.spec.tsx",
+              "packages/node/**/*.spec.js",
+              "packages/node/**/*.spec.jsx",
+              "packages/node/**/*.d.ts"
+            ]
           }
         }
       }
@@ -837,15 +853,17 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:lint",
+          "builder": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "config": "packages/next/.eslintrc",
-            "tsConfig": [
-              "packages/next/tsconfig.lib.json",
-              "packages/next/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**"]
+            "lintFilePatterns": [
+              "packages/next/**/*.ts",
+              "packages/next/**/*.spec.ts",
+              "packages/next/**/*_spec.ts",
+              "packages/next/**/*.spec.tsx",
+              "packages/next/**/*.spec.js",
+              "packages/next/**/*.spec.jsx",
+              "packages/next/**/*.d.ts"
+            ]
           }
         }
       }
@@ -912,15 +930,17 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:lint",
+          "builder": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "config": "packages/nest/.eslintrc",
-            "tsConfig": [
-              "packages/nest/tsconfig.lib.json",
-              "packages/nest/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**"]
+            "lintFilePatterns": [
+              "packages/nest/**/*.ts",
+              "packages/nest/**/*.spec.ts",
+              "packages/nest/**/*_spec.ts",
+              "packages/nest/**/*.spec.tsx",
+              "packages/nest/**/*.spec.js",
+              "packages/nest/**/*.spec.jsx",
+              "packages/nest/**/*.d.ts"
+            ]
           }
         }
       }
@@ -987,15 +1007,17 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:lint",
+          "builder": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "config": "packages/linter/.eslintrc",
-            "tsConfig": [
-              "packages/linter/tsconfig.lib.json",
-              "packages/linter/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**"]
+            "lintFilePatterns": [
+              "packages/linter/**/*.ts",
+              "packages/linter/**/*.spec.ts",
+              "packages/linter/**/*_spec.ts",
+              "packages/linter/**/*.spec.tsx",
+              "packages/linter/**/*.spec.js",
+              "packages/linter/**/*.spec.jsx",
+              "packages/linter/**/*.d.ts"
+            ]
           }
         }
       }
@@ -1062,15 +1084,17 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:lint",
+          "builder": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "config": "packages/express/.eslintrc",
-            "tsConfig": [
-              "packages/express/tsconfig.lib.json",
-              "packages/express/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**"]
+            "lintFilePatterns": [
+              "packages/express/**/*.ts",
+              "packages/express/**/*.spec.ts",
+              "packages/express/**/*_spec.ts",
+              "packages/express/**/*.spec.tsx",
+              "packages/express/**/*.spec.js",
+              "packages/express/**/*.spec.jsx",
+              "packages/express/**/*.d.ts"
+            ]
           }
         }
       }
@@ -1137,15 +1161,17 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:lint",
+          "builder": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "config": "packages/eslint-plugin-nx/.eslintrc",
-            "tsConfig": [
-              "packages/eslint-plugin-nx/tsconfig.lib.json",
-              "packages/eslint-plugin-nx/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**"]
+            "lintFilePatterns": [
+              "packages/eslint-plugin-nx/**/*.ts",
+              "packages/eslint-plugin-nx/**/*.spec.ts",
+              "packages/eslint-plugin-nx/**/*_spec.ts",
+              "packages/eslint-plugin-nx/**/*.spec.tsx",
+              "packages/eslint-plugin-nx/**/*.spec.js",
+              "packages/eslint-plugin-nx/**/*.spec.jsx",
+              "packages/eslint-plugin-nx/**/*.d.ts"
+            ]
           }
         }
       }
@@ -1215,15 +1241,17 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:lint",
+          "builder": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "config": "packages/create-nx-workspace/.eslintrc",
-            "tsConfig": [
-              "packages/create-nx-workspace/tsconfig.lib.json",
-              "packages/create-nx-workspace/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**"]
+            "lintFilePatterns": [
+              "packages/create-nx-workspace/**/*.ts",
+              "packages/create-nx-workspace/**/*.spec.ts",
+              "packages/create-nx-workspace/**/*_spec.ts",
+              "packages/create-nx-workspace/**/*.spec.tsx",
+              "packages/create-nx-workspace/**/*.spec.js",
+              "packages/create-nx-workspace/**/*.spec.jsx",
+              "packages/create-nx-workspace/**/*.d.ts"
+            ]
           }
         }
       }
@@ -1293,15 +1321,17 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:lint",
+          "builder": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "config": "packages/create-nx-plugin/.eslintrc",
-            "tsConfig": [
-              "packages/create-nx-plugin/tsconfig.lib.json",
-              "packages/create-nx-plugin/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**"]
+            "lintFilePatterns": [
+              "packages/create-nx-plugin/**/*.ts",
+              "packages/create-nx-plugin/**/*.spec.ts",
+              "packages/create-nx-plugin/**/*_spec.ts",
+              "packages/create-nx-plugin/**/*.spec.tsx",
+              "packages/create-nx-plugin/**/*.spec.js",
+              "packages/create-nx-plugin/**/*.spec.jsx",
+              "packages/create-nx-plugin/**/*.d.ts"
+            ]
           }
         }
       }
@@ -1371,15 +1401,17 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:lint",
+          "builder": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "config": "packages/cli/.eslintrc",
-            "tsConfig": [
-              "packages/cli/tsconfig.lib.json",
-              "packages/cli/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**"]
+            "lintFilePatterns": [
+              "packages/cli/**/*.ts",
+              "packages/cli/**/*.spec.ts",
+              "packages/cli/**/*_spec.ts",
+              "packages/cli/**/*.spec.tsx",
+              "packages/cli/**/*.spec.js",
+              "packages/cli/**/*.spec.jsx",
+              "packages/cli/**/*.d.ts"
+            ]
           }
         }
       }
@@ -1398,15 +1430,17 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:lint",
+          "builder": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "config": "packages/bazel/.eslintrc",
-            "tsConfig": [
-              "packages/bazel/tsconfig.lib.json",
-              "packages/bazel/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**"]
+            "lintFilePatterns": [
+              "packages/bazel/**/*.ts",
+              "packages/bazel/**/*.spec.ts",
+              "packages/bazel/**/*_spec.ts",
+              "packages/bazel/**/*.spec.tsx",
+              "packages/bazel/**/*.spec.js",
+              "packages/bazel/**/*.spec.jsx",
+              "packages/bazel/**/*.d.ts"
+            ]
           }
         }
       }
@@ -1481,15 +1515,17 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:lint",
+          "builder": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "config": "packages/angular/.eslintrc",
-            "tsConfig": [
-              "packages/angular/tsconfig.lib.json",
-              "packages/angular/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**"]
+            "lintFilePatterns": [
+              "packages/angular/**/*.ts",
+              "packages/angular/**/*.spec.ts",
+              "packages/angular/**/*_spec.ts",
+              "packages/angular/**/*.spec.tsx",
+              "packages/angular/**/*.spec.js",
+              "packages/angular/**/*.spec.jsx",
+              "packages/angular/**/*.d.ts"
+            ]
           }
         }
       }
