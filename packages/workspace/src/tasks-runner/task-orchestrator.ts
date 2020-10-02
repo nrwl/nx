@@ -342,6 +342,7 @@ export class TaskOrchestrator {
       this.processes.forEach((p) => {
         p.kill('SIGINT');
       });
+      process.exit();
     });
   }
 }
