@@ -21,25 +21,48 @@ function updateESLintBuilder(host: Tree) {
 
     const tsconfigs = [];
 
-    try {
-      tsconfigs.push(readJsonInTree(host, `${project.root}/tsconfig.json`));
-    } catch {}
-    try {
-      tsconfigs.push(readJsonInTree(host, `${project.root}/tsconfig.app.json`));
-    } catch {}
-    try {
-      tsconfigs.push(readJsonInTree(host, `${project.root}/tsconfig.lib.json`));
-    } catch {}
-    try {
-      tsconfigs.push(
-        readJsonInTree(host, `${project.root}/tsconfig.spec.json`)
-      );
-    } catch {}
+    if (options.tsConfig) {
+      const normalizedTsConfigOption = Array.isArray(options.tsConfig)
+        ? options.tsConfig
+        : [options.tsConfig];
+      normalizedTsConfigOption.forEach((tsConfigPath) => {
+        try {
+          tsconfigs.push(readJsonInTree(host, tsConfigPath as string));
+        } catch {}
+        try {
+          tsconfigs.push(readJsonInTree(host, `${project.root}/tsconfig.json`));
+        } catch {}
+      });
+    } else {
+      try {
+        tsconfigs.push(readJsonInTree(host, `${project.root}/tsconfig.json`));
+      } catch {}
+      try {
+        tsconfigs.push(
+          readJsonInTree(host, `${project.root}/tsconfig.app.json`)
+        );
+      } catch {}
+      try {
+        tsconfigs.push(
+          readJsonInTree(host, `${project.root}/tsconfig.lib.json`)
+        );
+      } catch {}
+      try {
+        tsconfigs.push(
+          readJsonInTree(host, `${project.root}/tsconfig.spec.json`)
+        );
+      } catch {}
+      try {
+        tsconfigs.push(
+          readJsonInTree(host, `${project.root}/tsconfig.e2e.json`)
+        );
+      } catch {}
+    }
 
     const defaultLintFilePatterns = [`${project.root}/**/*.ts`];
 
     // Merge any available `includes` and `files` from the tsconfig files
-    const lintFilePatterns = !tsconfigs.length
+    let lintFilePatterns = !tsconfigs.length
       ? defaultLintFilePatterns
       : tsconfigs
           .map((tsconfig) => {
@@ -47,6 +70,8 @@ function updateESLintBuilder(host: Tree) {
           })
           .reduce((flat, val) => flat.concat(val), [])
           .map((pattern) => join(normalize(project.root), pattern));
+
+    lintFilePatterns = [...new Set(lintFilePatterns)];
 
     return { lintFilePatterns };
   }, '@nrwl/linter:lint');

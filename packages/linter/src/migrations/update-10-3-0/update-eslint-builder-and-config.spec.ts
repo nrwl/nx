@@ -121,12 +121,12 @@ describe('Update eslint builder and config for 10.3.0', () => {
             "builder": "@nrwl/linter:eslint",
             "options": Object {
               "lintFilePatterns": Array [
-                "apps/testProject/something-ad-hoc/**/*.ts",
                 "apps/testProject/**/*.js",
                 "apps/testProject/**/*.jsx",
                 "apps/testProject/**/*.ts",
                 "apps/testProject/**/*.tsx",
                 "apps/testProject/some-random-relative-file.ts",
+                "apps/testProject/something-ad-hoc/**/*.ts",
                 "apps/testProject/**/*.spec.ts",
                 "apps/testProject/**/*.spec.tsx",
                 "apps/testProject/**/*.spec.js",
