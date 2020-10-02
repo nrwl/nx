@@ -103,6 +103,7 @@ forEachCli('angular', () => {
           'angular.json': '*',
           'package.json': '*',
           'tslint.json': '*',
+          '.eslintrc.json': '*',
           'tsconfig.base.json': '*',
           'nx.json': '*',
         },
