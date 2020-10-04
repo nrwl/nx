@@ -50,6 +50,12 @@ Show help information.
 
 Show version number
 
+### with-deps
+
+Default: `false`
+
+Include dependencies of specified projects when computing what to test
+
 ## Jest Options
 
 ### bail
