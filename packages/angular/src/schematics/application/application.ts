@@ -43,6 +43,7 @@ import {
   updateWorkspaceInTree,
   appsDir,
 } from '@nrwl/workspace/src/utils/ast-utils';
+import { createAngularLintConfig } from '../../utils/lint';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -808,6 +809,15 @@ export default function (schema: Schema): Rule {
       options.routing ? addRouterRootConfiguration(options) : noop(),
       addLintFiles(options.appProjectRoot, options.linter, {
         onlyGlobal: options.linter === Linter.TsLint, // local lint files are added differently when tslint
+        localConfig:
+          options.linter === Linter.EsLint
+            ? createAngularLintConfig({
+                parserOptionsProject: [
+                  // Will match tsconfig.app.json and tsconfig.spec.json
+                  `${options.appProjectRoot}/tsconfig.*?.json`,
+                ],
+              })
+            : undefined,
       }),
       options.linter === 'tslint' ? updateTsLintConfig(options) : noop(),
       options.unitTestRunner === 'jest'

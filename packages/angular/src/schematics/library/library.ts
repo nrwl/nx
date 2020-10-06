@@ -22,6 +22,7 @@ import { updateProject } from './lib/update-project';
 import { updateTsConfig } from './lib/update-tsconfig';
 import { Schema } from './schema';
 import { enableStrictTypeChecking } from './lib/enable-strict-type-checking';
+import { createAngularLintConfig } from '../../utils/lint';
 
 export default function (schema: Schema): Rule {
   return (host: Tree): Rule => {
@@ -39,6 +40,15 @@ export default function (schema: Schema): Rule {
     return chain([
       addLintFiles(options.projectRoot, options.linter, {
         onlyGlobal: options.linter === Linter.TsLint,
+        localConfig:
+          options.linter === Linter.EsLint
+            ? createAngularLintConfig({
+                parserOptionsProject: [
+                  // Will match tsconfig.lib.json and tsconfig.spec.json
+                  `${options.projectRoot}/tsconfig.*?.json`,
+                ],
+              })
+            : undefined,
       }),
       addUnitTestRunner(options),
       // TODO: Remove this after Angular 10.1.0

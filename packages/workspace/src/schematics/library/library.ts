@@ -107,7 +107,10 @@ export default function (schema: Schema): Rule {
     const options = normalizeOptions(host, schema);
 
     return chain([
-      addLintFiles(options.projectRoot, options.linter),
+      addLintFiles(options.projectRoot, options.linter, {
+        // TODO: Update this to be conditional once JS support for node libraries lands
+        defaultOverridesFiles: ['*.ts'],
+      }),
       createFiles(options),
       !options.skipTsConfig ? updateTsConfig(options) : noop(),
       addProject(options),

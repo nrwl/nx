@@ -19,7 +19,11 @@ forEachCli('nx', () => {
       runCLI(`generate @nrwl/react:app ${myapp}`);
 
       const eslintrc = readJson('.eslintrc.json');
-      eslintrc.rules['no-console'] = 'error';
+      eslintrc.overrides.forEach((override) => {
+        if (override.files.includes('*.ts')) {
+          override.rules['no-console'] = 'error';
+        }
+      });
       updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
 
       updateFile(`apps/${myapp}/src/main.ts`, `console.log("should fail");`);
@@ -35,7 +39,11 @@ forEachCli('nx', () => {
       runCLI(`generate @nrwl/react:app ${myapp}`);
 
       const eslintrc = readJson('.eslintrc.json');
-      eslintrc.rules['no-console'] = 'error';
+      eslintrc.overrides.forEach((override) => {
+        if (override.files.includes('*.ts')) {
+          override.rules['no-console'] = 'error';
+        }
+      });
       updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
 
       updateFile(`apps/${myapp}/src/main.ts`, `console.log("should fail");`);
@@ -50,7 +58,11 @@ forEachCli('nx', () => {
       runCLI(`generate @nrwl/react:app ${myapp}`);
 
       const eslintrc = readJson('.eslintrc.json');
-      eslintrc.rules['no-console'] = undefined;
+      eslintrc.overrides.forEach((override) => {
+        if (override.files.includes('*.ts')) {
+          override.rules['no-console'] = undefined;
+        }
+      });
       updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
 
       updateFile(`apps/${myapp}/src/main.ts`, `console.log("should fail");`);
@@ -82,7 +94,11 @@ forEachCli('nx', () => {
       updateFile('workspace.json', JSON.stringify(workspaceJson, null, 2));
 
       const eslintrc = readJson('.eslintrc.json');
-      eslintrc.rules['no-console'] = undefined;
+      eslintrc.overrides.forEach((override) => {
+        if (override.files.includes('*.ts')) {
+          override.rules['no-console'] = undefined;
+        }
+      });
       updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
 
       updateFile(`apps/${myapp}/src/main.ts`, `console.log("should fail");`);
@@ -130,7 +146,11 @@ forEachCli('nx', () => {
       runCLI(`generate @nrwl/react:app ${myapp}`);
 
       const eslintrc = readJson('.eslintrc.json');
-      eslintrc.rules['no-console'] = 'error';
+      eslintrc.overrides.forEach((override) => {
+        if (override.files.includes('*.ts')) {
+          override.rules['no-console'] = 'error';
+        }
+      });
       updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
       updateFile(`apps/${myapp}/src/main.ts`, `console.log("should fail");`);
 

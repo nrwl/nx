@@ -53,11 +53,15 @@ interface AddLintFileOptions {
     dependencies: { [key: string]: string };
     devDependencies: { [key: string]: string };
   };
+  // Used in ESLint configuration
+  defaultOverridesFiles?: string[];
 }
 export function addLintFiles(
   projectRoot: string,
   linter: Linter,
-  options: AddLintFileOptions = {}
+  options: AddLintFileOptions = {
+    defaultOverridesFiles: ['*.ts'],
+  }
 ): Rule {
   return (host: Tree, context: SchematicContext) => {
     if (options.onlyGlobal && options.localConfig) {
@@ -94,7 +98,13 @@ export function addLintFiles(
     if (linter === 'eslint') {
       if (!host.exists('/.eslintrc.json')) {
         chainedCommands.push((host: Tree) => {
-          host.create('/.eslintrc.json', globalESLint);
+          host.create(
+            '/.eslintrc.json',
+            `
+            // Curious about why it's important to use "overrides"? Check out this guide: https://nx.dev/guides/eslint-configs
+            ${globalESLintJSON}
+          `.trim()
+          );
 
           return addDepsToPackageJson(
             {
@@ -150,7 +160,12 @@ export function addLintFiles(
             configJson = {
               extends: rootConfig,
               ignorePatterns,
-              rules: {},
+              overrides: [
+                {
+                  files: options.defaultOverridesFiles,
+                  rules: {},
+                },
+              ],
             };
           }
 
@@ -234,47 +249,66 @@ const globalTsLint = `
 }
 `;
 
-const globalESLint = `
-{
-  "root": true,
-  "parser": "@typescript-eslint/parser",
-  "parserOptions": {
-    "ecmaVersion": 2018,
-    "sourceType": "module",
-    "project": "./tsconfig.*?.json"
-  },
-  "ignorePatterns": ["**/*"],
-  "plugins": ["@typescript-eslint", "@nrwl/nx"],
-  "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:@typescript-eslint/recommended",
-    "prettier",
-    "prettier/@typescript-eslint"
-  ],
-  "rules": {
-    "@typescript-eslint/explicit-member-accessibility": "off",
-    "@typescript-eslint/explicit-module-boundary-types": "off",
-    "@typescript-eslint/explicit-function-return-type": "off",
-    "@typescript-eslint/no-parameter-properties": "off",
-    "@nrwl/nx/enforce-module-boundaries": [
-      "error",
+const globalESLintJSON = JSON.stringify({
+  root: true,
+  ignorePatterns: ['**/*'],
+  plugins: ['@nrwl/nx'],
+  rules: {
+    '@nrwl/nx/enforce-module-boundaries': [
+      'error',
       {
-        "enforceBuildableLibDependency": true,
-        "allow": [],
-        "depConstraints": [
-          { "sourceTag": "*", "onlyDependOnLibsWithTags": ["*"] }
-        ]
-      }
-    ]
+        enforceBuildableLibDependency: true,
+        allow: [],
+        depConstraints: [{ sourceTag: '*', onlyDependOnLibsWithTags: ['*'] }],
+      },
+    ],
   },
-  "overrides": [
+  overrides: [
+    /**
+     * Config applicable to .js(x) files should not contain rules relating to types (otherwise
+     * there would be a lot of false positives), so they require their own entry in the `overrides`
+     * array, and are configured to use the built-in parser from ESLint (`espree`)
+     */
     {
-      "files": ["*.tsx"],
-      "rules": {
-        "@typescript-eslint/no-unused-vars": "off"
-      }
-    }
-  ]
-}
-`;
+      files: ['*.js', '*.jsx'],
+      parserOptions: {
+        ecmaVersion: 2020,
+        sourceType: 'module',
+      },
+      extends: ['eslint:recommended', 'prettier'],
+      rules: {},
+    },
+    {
+      files: ['*.ts', '*.tsx'],
+      parser: '@typescript-eslint/parser',
+      parserOptions: {
+        ecmaVersion: 2020,
+        sourceType: 'module',
+        // the `project` parserOption will be set on each individual project, so we don't set it here
+      },
+      plugins: ['@typescript-eslint'],
+      extends: [
+        'eslint:recommended',
+        'plugin:@typescript-eslint/eslint-recommended',
+        'plugin:@typescript-eslint/recommended',
+        'prettier',
+        'prettier/@typescript-eslint',
+      ],
+      rules: {
+        '@typescript-eslint/explicit-member-accessibility': 'off',
+        '@typescript-eslint/explicit-module-boundary-types': 'off',
+        '@typescript-eslint/explicit-function-return-type': 'off',
+        '@typescript-eslint/no-parameter-properties': 'off',
+      },
+    },
+    /**
+     * For TSX files, the no-unused-vars rule can be a little noisy
+     */
+    {
+      files: ['*.tsx'],
+      rules: {
+        '@typescript-eslint/no-unused-vars': 'off',
+      },
+    },
+  ],
+});
