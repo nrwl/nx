@@ -65,9 +65,14 @@
     "url": "https://github.com/twittwer/nx-tools/tree/master/libs/compodoc#readme"
   },
   {
+    "name": "@nxext/svelte",
+    "description": "Nx plugin to use Svelte within nx workspaces",
+    "url": "https://github.com/nxext/nx-extensions/tree/master/packages/svelte"
+  },
+  {
     "name": "@nxext/stencil",
     "description": "Nx plugin to use StencilJs within nx workspaces",
-    "url": "https://github.com/DominikPieper/nx-extensions"
+    "url": "https://github.com/nxext/nx-extensions/tree/master/packages/stencil"
   },
   {
     "name": "@joelcode/gcp-function",
