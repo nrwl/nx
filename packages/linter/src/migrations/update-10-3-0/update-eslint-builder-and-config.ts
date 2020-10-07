@@ -76,7 +76,7 @@ function updateESLintBuilder(host: Tree) {
            * 3rd party files anyway, and if they are relevant to the TypeScript Program
            * for the linting run they will still be included in that.
            */
-          .filter((pattern) => !pattern.startsWith('node_modules'));
+          .filter((pattern) => !pattern.includes('node_modules'));
 
     lintFilePatterns = [...new Set(lintFilePatterns)];
 

@@ -22,7 +22,7 @@ function updateESLintBuilder() {
     return {
       ...options,
       lintFilePatterns: lintFilePatterns.filter(
-        (pattern) => !pattern.startsWith('node_modules')
+        (pattern) => !pattern.includes('node_modules')
       ),
     };
   }, '@nrwl/linter:eslint');

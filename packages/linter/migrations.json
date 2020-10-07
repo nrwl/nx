@@ -21,7 +21,7 @@
       "factory": "./src/migrations/update-10-3-0/add-root-eslintrc-json-to-workspace-implicit-deps"
     },
     "revert-node-modules-files-in-eslint-builder-options": {
-      "version": "10.3.1",
+      "version": "10.3.1-beta.1",
       "description": "Revert any node_modules lintFilesPatterns that were accidentally included by update-eslint-builder-and-config",
       "factory": "./src/migrations/update-10-3-1/revert-node-modules-files-in-eslint-builder-options"
     }
