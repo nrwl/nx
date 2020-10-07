@@ -69,7 +69,14 @@ function updateESLintBuilder(host: Tree) {
             return [...(tsconfig.include || []), ...(tsconfig.files || [])];
           })
           .reduce((flat, val) => flat.concat(val), [])
-          .map((pattern) => join(normalize(project.root), pattern));
+          .map((pattern) => join(normalize(project.root), pattern))
+          /**
+           * Exclude any files coming from node_modules, they will be ignored by ESLint
+           * and it will print a warning about it. We shouldn't be spending time linting
+           * 3rd party files anyway, and if they are relevant to the TypeScript Program
+           * for the linting run they will still be included in that.
+           */
+          .filter((pattern) => !pattern.startsWith('node_modules'));
 
     lintFilePatterns = [...new Set(lintFilePatterns)];
 
