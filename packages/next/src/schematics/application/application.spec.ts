@@ -207,8 +207,8 @@ describe('app', () => {
       const eslintJson = readJsonInTree(tree, '/apps/my-app/.eslintrc.json');
       const packageJson = readJsonInTree(tree, '/package.json');
 
-      expect(eslintJson.plugins).toEqual(
-        expect.arrayContaining(['react', 'react-hooks'])
+      expect(eslintJson.extends).toEqual(
+        expect.arrayContaining(['plugin:@nrwl/nx/react'])
       );
       expect(packageJson).toMatchObject({
         devDependencies: {
