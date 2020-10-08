@@ -19,6 +19,11 @@
       "version": "10.3.0-beta.3",
       "description": "Update implicitDependencies within nx.json to include root .eslintrc.json",
       "factory": "./src/migrations/update-10-3-0/add-root-eslintrc-json-to-workspace-implicit-deps"
+    },
+    "update-eslint-configs-to-use-nx-presets": {
+      "version": "10.4.0-beta.0",
+      "description": "Update ESLint config files to use preset configs which eslint-plugin-nx exports",
+      "factory": "./src/migrations/update-10-4-0/update-eslint-configs-to-use-nx-presets"
     }
   },
   "packageJsonUpdates": {
