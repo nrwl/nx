@@ -85,7 +85,13 @@ describe('Update eslint builder and config for 10.3.0', () => {
     tree = await callRule(
       updateJsonInTree('apps/testProject/tsconfig.app.json', () => ({
         include: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
-        files: ['./some-random-relative-file.ts'],
+        files: [
+          // We want to include this custom file
+          './some-random-relative-file.ts',
+          // We don't want to include these files from node_modules
+          '../../node_modules/@nrwl/react/typings/cssmodule.d.ts',
+          '../../node_modules/@nrwl/react/typings/image.d.ts',
+        ],
       })),
       tree
     );
