@@ -186,7 +186,7 @@ async function createWorkflow(
   const workflow = new NodeWorkflow(fsHost, {
     force: opts.force,
     dryRun: opts.dryRun,
-    packageManager: await detectPackageManager(fsHost),
+    packageManager: detectPackageManager(),
     root: normalize(root),
     registry: new schema.CoreSchemaRegistry(formats.standardFormats),
     resolvePaths: [process.cwd(), root],

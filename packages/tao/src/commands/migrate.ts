@@ -14,6 +14,10 @@ import * as stripJsonComments from 'strip-json-comments';
 import { dirSync } from 'tmp';
 import { getLogger } from '../shared/logger';
 import { convertToCamelCase, handleErrors } from '../shared/params';
+import {
+  detectPackageManager,
+  getPackageManagerInstallCommand,
+} from '../shared/detect-package-manager';
 
 export type MigrationsJson = {
   version: string;
@@ -404,7 +408,7 @@ function versions(root: string, from: { [p: string]: string }) {
 }
 
 // testing-fetch-start
-function createFetcher(logger: logging.Logger) {
+function createFetcher(packageManager: string, logger: logging.Logger) {
   const cache = {};
   return async function f(
     packageName: string,
@@ -413,7 +417,8 @@ function createFetcher(logger: logging.Logger) {
     if (!cache[`${packageName}-${packageVersion}`]) {
       const dir = dirSync().name;
       logger.info(`Fetching ${packageName}@${packageVersion}`);
-      execSync(`npm install ${packageName}@${packageVersion} --prefix=${dir}`, {
+      const install = getPackageManagerInstallCommand(packageManager);
+      execSync(`${install} ${packageName}@${packageVersion} --prefix=${dir}`, {
         stdio: [],
       });
       const packageJsonPath = require.resolve(`${packageName}/package.json`, {
@@ -517,12 +522,13 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     to: { [p: string]: string };
   }
 ) {
+  const packageManager = detectPackageManager();
   try {
     logger.info(`Fetching meta data about packages.`);
     logger.info(`It may take a few minutes.`);
     const migrator = new Migrator({
       versions: versions(root, opts.from),
-      fetch: createFetcher(logger),
+      fetch: createFetcher(packageManager, logger),
       from: opts.from,
       to: opts.to,
     });
@@ -558,10 +564,11 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     }
   } catch (e) {
     const startVersion = versions(root, {})('@nrwl/workspace');
+    const installDev = getPackageManagerInstallCommand(packageManager, true);
     logger.error(
       `NX The migrate command failed. Try the following to migrate your workspace:`
     );
-    logger.error(`> npm install --save-dev @nrwl/workspace@latest`);
+    logger.error(`> ${installDev} @nrwl/workspace@latest`);
     logger.error(
       `> nx migrate ${opts.targetPackage}@${opts.targetVersion} --from="@nrwl/workspace@${startVersion}"`
     );
