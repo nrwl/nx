@@ -218,7 +218,7 @@
     "stylus-loader": "3.0.2",
     "tar": "5.0.5",
     "terser": "4.3.8",
-    "terser-webpack-plugin": "2.3.1",
+    "terser-webpack-plugin": "2.3.7",
     "tmp": "0.0.33",
     "tree-kill": "1.2.2",
     "ts-jest": "26.4.0",
