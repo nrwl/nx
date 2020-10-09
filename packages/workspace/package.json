@@ -75,6 +75,6 @@
     "minimatch": "3.0.4",
     "inquirer": "^6.3.1",
     "resolve": "1.17.0",
-    "tslib": "^1.9.3"
+    "tslib": "^2.0.0"
   }
 }

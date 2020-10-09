@@ -22,6 +22,7 @@ export const updateDependencies = addDepsToPackageJson(
     '@nestjs/platform-express': nestJsVersion,
     'reflect-metadata': reflectMetadataVersion,
     rxjs: rxjsVersion,
+    tslib: '^2.0.0',
   },
   {
     '@nestjs/schematics': nestJsSchematicsVersion,

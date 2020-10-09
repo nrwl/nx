@@ -34,6 +34,6 @@
     "@angular-devkit/architect": "~0.1001.3",
     "glob": "7.1.4",
     "minimatch": "3.0.4",
-    "tslib": "^1.9.3"
+    "tslib": "^2.0.0"
   }
 }
