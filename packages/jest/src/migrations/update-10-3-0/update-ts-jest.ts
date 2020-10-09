@@ -32,8 +32,11 @@ function updateAstTransformers(): Rule {
           join(appRootPath, target.options.jestConfig as string)
         );
 
-        if (!config.globals?.['ts-jest']?.astTransformers) {
-          return;
+        if (
+          !config.globals?.['ts-jest']?.astTransformers ||
+          !Array.isArray(config.globals?.['ts-jest']?.astTransformers)
+        ) {
+          continue;
         }
 
         try {
