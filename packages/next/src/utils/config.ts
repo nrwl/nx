@@ -108,15 +108,18 @@ export function prepareConfig(
   context: BuilderContext
 ) {
   const config = loadConfig(phase, options.root, null);
+  const userWebpack = config.webpack;
+  const userNextConfig = options.nextConfig
+    ? require(options.nextConfig)
+    : (_, x) => x;
   // Yes, these do have different capitalisation...
   config.outdir = `${offsetFromRoot(options.root)}${options.outputPath}`;
   config.distDir = join(config.outdir, '.next');
-  const userWebpack = config.webpack;
   config.webpack = (a, b) =>
     createWebpackConfig(
       context.workspaceRoot,
       options.root,
       options.fileReplacements
     )(userWebpack ? userWebpack(a, b) : a, b);
-  return config;
+  return userNextConfig(phase, config, { options });
 }
