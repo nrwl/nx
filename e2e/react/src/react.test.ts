@@ -47,6 +47,35 @@ forEachCli('nx', () => {
       });
     }, 120000);
 
+    it('should support vendor sourcemaps', () => {
+      ensureProject();
+      const appName = uniq('app');
+
+      runCLI(`generate @nrwl/react:app ${appName} --no-interactive`);
+
+      // By default, vendor sourcemaps are off
+      runCLI(`build ${appName}`);
+
+      let vendorContent = readFile(`dist/apps/${appName}/vendor.js`);
+
+      expect(vendorContent).not.toMatch(/sourceMappingURL/);
+
+      // Turn vendor sourcemaps on
+      updateFile(`workspace.json`, (content) => {
+        const json = JSON.parse(content);
+        json.projects[appName].architect.build.options.sourceMap = {
+          scripts: true,
+          vendor: true,
+        };
+        return JSON.stringify(json, null, 2);
+      });
+
+      runCLI(`build ${appName}`);
+      vendorContent = readFile(`dist/apps/${appName}/vendor.js`);
+
+      expect(vendorContent).toMatch(/sourceMappingURL/);
+    }, 120000);
+
     it('should be able to generate a publishable react lib', async () => {
       ensureProject();
       const libName = uniq('lib');
