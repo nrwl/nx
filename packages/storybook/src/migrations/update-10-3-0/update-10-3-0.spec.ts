@@ -1,12 +1,10 @@
-import * as path from 'path';
-
 import { Tree } from '@angular-devkit/schematics';
 import { readWorkspace } from '@nrwl/workspace';
 import { getFileContent } from '@nrwl/workspace/testing';
 
 import { runMigration } from '../../utils/testing';
 
-describe('Update 10-0-12', () => {
+describe('Update 10-3-0', () => {
   let tree: Tree;
 
   beforeEach(async () => {
@@ -146,7 +144,7 @@ describe('Update 10-0-12', () => {
   });
 
   it(`should add storybook tsconfig to lint target and update tsconfigs in project for Angular project`, async () => {
-    tree = await runMigration('update-10.0.12', {}, tree);
+    tree = await runMigration('update-10.3.1', {}, tree);
 
     const config = readWorkspace(tree);
 
@@ -198,7 +196,7 @@ describe('Update 10-0-12', () => {
   });
 
   it(`should add storybook tsconfig to lint target and update tsconfigs in project for React project`, async () => {
-    tree = await runMigration('update-10.0.12', {}, tree);
+    tree = await runMigration('update-10.3.1', {}, tree);
 
     const config = readWorkspace(tree);
 

@@ -10,15 +10,15 @@
       "description": "Add build-storybook to cacheable operations",
       "factory": "./src/migrations/update-9-2-0/update-9-2-0"
     },
-    "update-10.0.12": {
-      "version": "10.0.12",
-      "description": "Add missing storybook config to lint target",
-      "factory": "./src/migrations/update-10-0-12/update-10-0-12"
-    },
     "update-10.2.1": {
       "version": "10.2.1-beta.1",
       "description": "Adjusts the tsconfig mapping",
       "factory": "./src/migrations/update-10-2-1/update-10-2-1"
+    },
+    "update-10.3.1": {
+      "version": "10.3.1-beta.1",
+      "description": "Add missing storybook config to lint target",
+      "factory": "./src/migrations/update-10-3-0/update-10-3-0"
     }
   },
   "packageJsonUpdates": {

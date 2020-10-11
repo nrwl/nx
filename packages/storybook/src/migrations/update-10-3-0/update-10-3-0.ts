@@ -96,7 +96,12 @@ function updateLintTarget(
     tree.overwrite(paths.tsConfigLib, serializeJson(tsConfig.lib));
   }
 
-  if (Array.isArray(tsConfig.main.references)) {
+  if (
+    Array.isArray(tsConfig.main.references) &&
+    tsConfig.main.references.every(
+      (ref) => ref.path !== './.storybook/tsconfig.json'
+    )
+  ) {
     tsConfig.main.references.push({ path: './.storybook/tsconfig.json' });
     tree.overwrite(paths.tsConfig, serializeJson(tsConfig.main));
   }
