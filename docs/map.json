@@ -929,6 +929,11 @@
                 "file": "shared/workspace/grouping-libraries"
               },
               {
+                "name": "Buildable and Publishable Libraries",
+                "id": "buildable-and-publishable-libraries",
+                "file": "shared/workspace/buildable-and-publishable-libraries"
+              },
+              {
                 "name": "Using Tags",
                 "id": "monorepo-tags",
                 "file": "shared/monorepo-tags"
@@ -1950,6 +1955,11 @@
                 "file": "shared/workspace/grouping-libraries"
               },
               {
+                "name": "Buildable and Publishable Libraries",
+                "id": "buildable-and-publishable-libraries",
+                "file": "shared/workspace/buildable-and-publishable-libraries"
+              },
+              {
                 "name": "Using Tags",
                 "id": "monorepo-tags",
                 "file": "shared/monorepo-tags"
@@ -2947,6 +2957,11 @@
                 "name": "Grouping Libraries",
                 "id": "grouping-libraries",
                 "file": "shared/workspace/grouping-libraries"
+              },
+              {
+                "name": "Buildable and Publishable Libraries",
+                "id": "buildable-and-publishable-libraries",
+                "file": "shared/workspace/buildable-and-publishable-libraries"
               },
               {
                 "name": "Using Tags",
