@@ -54,6 +54,11 @@
       "version": "10.3.0-beta.1",
       "description": "Adds a jest extension to the recommended extensions for vscode",
       "factory": "./src/migrations/update-10-3-0/add-jest-extension"
+    },
+    "update-ts-jest": {
+      "version": "10.3.1-beta.1",
+      "description": "Fix ts-jest migration",
+      "factory": "./src/migrations/update-10-3-0/update-ts-jest"
     }
   },
   "packageJsonUpdates": {
