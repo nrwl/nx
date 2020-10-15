@@ -1008,6 +1008,11 @@
             "name": "Configuring Browser Support",
             "id": "browser-support",
             "file": "shared/guides/browser-support"
+          },
+          {
+            "name": "End to End Encryption for Nx Cloud Task Runner",
+            "id": "e2e-encryption-for-nx-cloud-task-runner",
+            "file": "shared/guides/e2e-encryption-for-nx-cloud-task-runner"
           }
         ]
       },
@@ -2010,6 +2015,11 @@
                 "name": "Incremental Builds",
                 "id": "incremental-builds",
                 "file": "shared/incremental-builds"
+              },
+              {
+                "name": "End to End Encryption for Nx Cloud Task Runner",
+                "id": "e2e-encryption-for-nx-cloud-task-runner",
+                "file": "shared/guides/e2e-encryption-for-nx-cloud-task-runner"
               }
             ]
           },
@@ -3014,6 +3024,11 @@
                 "name": "Incremental Builds",
                 "id": "incremental-builds",
                 "file": "shared/incremental-builds"
+              },
+              {
+                "name": "End to End Encryption for Nx Cloud Task Runner",
+                "id": "e2e-encryption-for-nx-cloud-task-runner",
+                "file": "shared/guides/e2e-encryption-for-nx-cloud-task-runner"
               }
             ]
           },
