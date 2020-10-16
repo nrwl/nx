@@ -18,7 +18,12 @@
     "update-10.3.1": {
       "version": "10.3.1-beta.1",
       "description": "Add missing storybook config to lint target",
-      "factory": "./src/migrations/update-10-3-0/update-10-3-0"
+      "factory": "./src/migrations/update-10-3-1/update-10-3-1"
+    },
+    "update-10.3.1-eslint": {
+      "version": "10.3.1-beta.2",
+      "description": "Add missing storybook eslint exclude",
+      "factory": "./src/migrations/update-10-3-1/update-10-3-1-eslint"
     }
   },
   "packageJsonUpdates": {

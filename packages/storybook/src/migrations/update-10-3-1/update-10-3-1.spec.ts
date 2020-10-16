@@ -4,7 +4,7 @@ import { getFileContent } from '@nrwl/workspace/testing';
 
 import { runMigration } from '../../utils/testing';
 
-describe('Update 10-3-0', () => {
+describe('Update 10-3-1', () => {
   let tree: Tree;
 
   beforeEach(async () => {
@@ -141,6 +141,29 @@ describe('Update 10-3-0', () => {
         include: ['../src/**/*'],
       })
     );
+
+    tree.create(
+      'libs/home/ui-react/.eslintrc.json',
+      JSON.stringify({
+        extends: ['../../.eslintrc.json'],
+        ignorePatterns: ['!**/*'],
+      })
+    );
+  });
+
+  it(`should add the proper ignore to the eslintrc file in react libraries`, async () => {
+    tree = await runMigration('update-10.3.1-eslint', {}, tree);
+
+    const config = readWorkspace(tree);
+
+    expect(getFileContent(tree, 'libs/home/ui-react/.eslintrc.json'))
+      .toMatchInlineSnapshot(`
+      "{
+        \\"extends\\": [\\"../../.eslintrc.json\\"],
+        \\"ignorePatterns\\": [\\"!**/*\\", \\".storybook/*\\"]
+      }
+      "
+    `);
   });
 
   it(`should add storybook tsconfig to lint target and update tsconfigs in project for Angular project`, async () => {

@@ -241,6 +241,8 @@ function updateLintConfig(schema: StorybookConfigureSchema): Rule {
               `${projectConfig.root}/.storybook/tsconfig.json`
             );
           }
+
+          json.ignorePatterns = [...json.ignorePatterns, '.storybook/*'];
           return json;
         }
       );
