@@ -208,6 +208,7 @@ export class Migrator {
         version: targetVersion,
         packages: [
           '@nrwl/angular',
+          '@nrwl/cli',
           '@nrwl/cypress',
           '@nrwl/eslint-plugin-nx',
           '@nrwl/express',

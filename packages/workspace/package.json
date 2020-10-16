@@ -34,6 +34,7 @@
       "@nrwl/workspace",
       "@nrwl/angular",
       "@nrwl/bazel",
+      "@nrwl/cli",
       "@nrwl/cypress",
       "@nrwl/eslint-plugin-nx",
       "@nrwl/express",
