@@ -1,4 +1,4 @@
-import yargs = require('yargs');
+import * as yargs from 'yargs';
 import { appRootPath } from '../utils/app-root';
 import { output } from '../utils/output';
 import {

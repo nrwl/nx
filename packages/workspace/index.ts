@@ -27,6 +27,12 @@ export { supportedNxCommands } from './src/command-line/supported-nx-commands';
 export { readWorkspaceJson, readNxJson } from './src/core/file-utils';
 export { NxJson } from './src/core/shared-interfaces';
 export {
+  ProjectGraphNode,
+  ProjectGraphDependency,
+  ProjectGraph,
+} from './src/core/project-graph';
+export { ProjectGraphCache } from './src/core/nx-deps/nx-deps-cache';
+export {
   readJsonInTree,
   updateJsonInTree,
   updateWorkspaceInTree,

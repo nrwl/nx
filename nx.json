@@ -54,7 +54,7 @@
     },
     "react": {
       "tags": [],
-      "implicitDependencies": ["workspace", "cypress", "jest"]
+      "implicitDependencies": ["workspace", "cypress", "jest", "web"]
     },
     "storybook": {
       "tags": [],
@@ -161,6 +161,13 @@
     "e2e-workspace": {
       "tags": [],
       "implicitDependencies": ["workspace", "create-nx-workspace"]
+    },
+    "dep-graph-client": {
+      "tags": ["core"]
+    },
+    "dep-graph-client-e2e": {
+      "tags": [],
+      "implicitDependencies": ["dep-graph-client"]
     }
   },
   "affected": {
