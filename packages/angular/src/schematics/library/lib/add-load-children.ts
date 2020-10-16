@@ -33,8 +33,8 @@ export function addLoadChildren(options: NormalizedSchema): Rule {
         sourceFile,
         `{path: '${toFileName(
           options.fileName
-        )}', loadChildren: () => import('@${npmScope}/${
-          options.projectDirectory
+        )}', loadChildren: () => import('${
+          options.importPath
         }').then(module => module.${options.moduleName})}`
       ),
     ]);
