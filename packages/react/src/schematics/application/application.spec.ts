@@ -73,7 +73,10 @@ describe('app', () => {
       const eslintJson = JSON.parse(
         stripJsonComments(tree.readContent('apps/my-app/.eslintrc.json'))
       );
-      expect(eslintJson.extends).toEqual(['../../.eslintrc.json']);
+      expect(eslintJson.extends).toEqual([
+        'plugin:@nrwl/nx/react',
+        '../../.eslintrc.json',
+      ]);
 
       expect(tree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
       const tsconfigE2E = JSON.parse(
@@ -157,7 +160,7 @@ describe('app', () => {
         {
           path: 'apps/my-dir/my-app/.eslintrc.json',
           lookupFn: (json) => json.extends,
-          expectedValue: ['../../../.eslintrc.json'],
+          expectedValue: ['plugin:@nrwl/nx/react', '../../../.eslintrc.json'],
         },
       ].forEach(hasJsonValue);
     });
@@ -368,8 +371,8 @@ describe('app', () => {
     const eslintJson = readJsonInTree(tree, '/apps/my-app/.eslintrc.json');
     const packageJson = readJsonInTree(tree, '/package.json');
 
-    expect(eslintJson.plugins).toEqual(
-      expect.arrayContaining(['react', 'react-hooks'])
+    expect(eslintJson.extends).toEqual(
+      expect.arrayContaining(['plugin:@nrwl/nx/react'])
     );
     expect(packageJson).toMatchObject({
       devDependencies: {
