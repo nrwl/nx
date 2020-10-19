@@ -151,15 +151,15 @@ export function allFilesInDir(
   return res;
 }
 
-function getIgnoredGlobs() {
+function readFileIfExisting(path: string) {
+  return fs.existsSync(path) ? fs.readFileSync(path, 'UTF-8').toString() : '';
+}
+
+export function getIgnoredGlobs() {
   const ig = ignore();
   ig.add(readFileIfExisting(`${appRootPath}/.gitignore`));
   ig.add(readFileIfExisting(`${appRootPath}/.nxignore`));
   return ig;
-}
-
-function readFileIfExisting(path: string) {
-  return fs.existsSync(path) ? fs.readFileSync(path, 'UTF-8').toString() : '';
 }
 
 export function readWorkspaceJson(): any {

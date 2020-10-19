@@ -2,7 +2,7 @@ import { ProjectGraph } from '../project-graph';
 import { NxJson } from '../shared-interfaces';
 import { Task } from '../../tasks-runner/tasks-runner';
 import { readFileSync } from 'fs';
-import { rootWorkspaceFileNames } from '../file-utils';
+import { getIgnoredGlobs, rootWorkspaceFileNames } from '../file-utils';
 import { execSync } from 'child_process';
 import {
   defaultFileHasher,
@@ -10,6 +10,7 @@ import {
   FileHasher,
 } from './file-hasher';
 import { defaultHashing, HashingImp } from './hashing-impl';
+import { Ignore } from 'ignore';
 
 const resolve = require('resolve');
 
@@ -50,12 +51,14 @@ export class Hasher {
   private fileHasher: FileHasher;
   private projectHashes: ProjectHasher;
   private hashing: HashingImp;
+  private ignore: Ignore;
 
   constructor(
     private readonly projectGraph: ProjectGraph,
     private readonly nxJson: NxJson,
     private readonly options: any,
-    hashing: HashingImp = undefined
+    hashing: HashingImp = undefined,
+    ignore: Ignore = getIgnoredGlobs()
   ) {
     if (!hashing) {
       this.hashing = defaultHashing;
@@ -69,6 +72,7 @@ export class Hasher {
       this.fileHasher,
       this.hashing
     );
+    this.ignore = ignore;
   }
 
   async hashTasks(tasks: Task[]): Promise<Hash[]> {
@@ -153,7 +157,7 @@ export class Hasher {
 
     const fileNames = [
       ...Object.keys(this.nxJson.implicitDependencies || {}),
-      ...rootWorkspaceFileNames(),
+      ...rootWorkspaceFileNames().filter((name) => !this.ignore.ignores(name)),
       'package-lock.json',
       'yarn.lock',
     ];
