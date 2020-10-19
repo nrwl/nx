@@ -143,6 +143,7 @@ export function generateGraph(
   args: {
     file?: string;
     host?: string;
+    port?: number;
     focus?: string;
     exclude?: string[];
     groupByFolder?: boolean;
@@ -265,11 +266,11 @@ export function generateGraph(
       process.exit(1);
     }
   } else {
-    startServer(html, args.host || '127.0.0.1');
+    startServer(html, args.host || '127.0.0.1', args.port || 4211);
   }
 }
 
-function startServer(html: string, host: string) {
+function startServer(html: string, host: string, port = 4211) {
   const app = http.createServer((req, res) => {
     // parse URL
     const parsedUrl = url.parse(req.url);
@@ -316,13 +317,13 @@ function startServer(html: string, host: string) {
     });
   });
 
-  app.listen(4211, host);
+  app.listen(port, host);
 
   output.note({
-    title: `Dep graph started at http://${host}:4211`,
+    title: `Dep graph started at http://${host}:${port}`,
   });
 
-  opn(`http://${host}:4211`, {
+  opn(`http://${host}:${port}`, {
     wait: false,
   });
 }
