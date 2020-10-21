@@ -9,25 +9,27 @@ export function names(
   name: string;
   className: string;
   propertyName: string;
+  constantName: string;
   fileName: string;
 } {
   return {
     name,
     className: toClassName(name),
     propertyName: toPropertyName(name),
+    constantName: toConstantName(name),
     fileName: toFileName(name),
   };
 }
 
 /**
- * hypenated to UpperCamelCase
+ * Hyphenated to UpperCamelCase
  */
 export function toClassName(str: string): string {
   return toCapitalCase(toPropertyName(str));
 }
 
 /**
- * Hypenated to lowerCamelCase
+ * Hyphenated to lowerCamelCase
  */
 export function toPropertyName(s: string): string {
   return s
@@ -38,7 +40,14 @@ export function toPropertyName(s: string): string {
 }
 
 /**
- * Upper camelCase to lowercase, hypenated
+ * Hyphenated to CONSTANT_CASE
+ */
+function toConstantName(s: string): string {
+  return s.replace(/(-|_|\.|\s)/g, '_').toUpperCase();
+}
+
+/**
+ * Upper camelCase to lowercase, hyphenated
  */
 export function toFileName(s: string): string {
   return s
@@ -47,6 +56,9 @@ export function toFileName(s: string): string {
     .replace(/[ _]/g, '-');
 }
 
+/**
+ * Capitalizes the first letter of a string
+ */
 function toCapitalCase(s: string): string {
   return s.charAt(0).toUpperCase() + s.substr(1);
 }

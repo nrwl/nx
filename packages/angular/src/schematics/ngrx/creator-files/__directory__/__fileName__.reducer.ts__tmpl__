@@ -4,7 +4,7 @@ import { EntityState, EntityAdapter, createEntityAdapter } from '@ngrx/entity';
 import * as <%= className %>Actions from './<%= fileName %>.actions';
 import { <%= className %>Entity } from './<%= fileName %>.models';
 
-export const <%= className.toUpperCase() %>_FEATURE_KEY = '<%= propertyName %>';
+export const <%= constantName %>_FEATURE_KEY = '<%= propertyName %>';
 
 export interface State extends EntityState<<%= className %>Entity> {
   selectedId ?: string | number;          // which <%= className %> record has been selected
@@ -13,7 +13,7 @@ export interface State extends EntityState<<%= className %>Entity> {
 }
 
 export interface <%= className %>PartialState {
-  readonly [<%= className.toUpperCase() %>_FEATURE_KEY]: State;
+  readonly [<%= constantName %>_FEATURE_KEY]: State;
 }
 
 export const <%= propertyName %>Adapter: EntityAdapter<<%= className %>Entity> = createEntityAdapter<<%= className %>Entity>();
