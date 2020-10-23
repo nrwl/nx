@@ -4,6 +4,7 @@ Nx helps configure your e2e tests for you. When running the Nx schematic to crea
 
 Let's say your existing app is named `my-awesome-app` and the e2e Protractor tests are located in `my-awesome-app-e2e`.
 
+0. Before you start, make sure you have a clean git working tree (by committing or stashing any in progress changes)
 1. Create a throw away app named `delete-this-app` using `Cypress` for the e2e setting.
    ```bash
    nx g @nrwl/angular:application --name=delete-this-app --e2eTestRunner=cypress
