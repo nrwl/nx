@@ -49,7 +49,6 @@
     ]
   },
   "peerDependencies": {
-    "@nrwl/cli": "*",
     "prettier": "^2.0.4"
   },
   "dependencies": {
