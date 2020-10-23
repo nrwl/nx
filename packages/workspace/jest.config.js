@@ -5,5 +5,16 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   globals: { 'ts-jest': { tsConfig: '<rootDir>/tsconfig.spec.json' } },
+  reporters: [
+    'default',
+    [
+      'jest-junit',
+      {
+        suiteName: 'workspace',
+        outputDirectory: 'reports/jest/workspace',
+        outputName: 'workspace.xml',
+      },
+    ],
+  ],
   displayName: 'workspace',
 };

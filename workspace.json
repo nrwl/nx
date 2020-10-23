@@ -157,6 +157,7 @@
       "schematics": {},
       "architect": {
         "test": {
+          "outputs": ["reports/jest/workspace"],
           "builder": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "packages/workspace/jest.config.js",
@@ -244,6 +245,7 @@
       "schematics": {},
       "architect": {
         "test": {
+          "outputs": ["reports/jest/web"],
           "builder": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "packages/web/jest.config.js",

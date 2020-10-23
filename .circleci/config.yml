@@ -79,6 +79,8 @@ jobs:
       - run:
           name: Run Unit Tests
           command: yarn test
+      - store_test_results:
+          path: reports/jest
       - run:
           name: Check Documentation
           command: yarn documentation

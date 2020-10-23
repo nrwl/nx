@@ -20,7 +20,7 @@ describe('getRunner', () => {
   it('gets a default runner when runner is not defined in the nx json', () => {
     const { tasksRunner, tasksOptions } = getRunner({}, nxJson, overrides);
 
-    expect(tasksRunner).toEqual(defaultTaskRunner);
+    expect(tasksRunner).not.toEqual(defaultTaskRunner);
     expect(tasksOptions).toEqual(overrides);
   });
 

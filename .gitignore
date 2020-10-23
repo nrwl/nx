@@ -12,3 +12,4 @@ tmp
 jest.debug.config.js
 .tool-versions
 /.verdaccio/build/local-registry
+/reports
