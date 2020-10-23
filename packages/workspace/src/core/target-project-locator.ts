@@ -105,8 +105,10 @@ export class TargetProjectLocator {
     if (this.npmResolutionCache.has(npmImport)) {
       return this.npmResolutionCache.get(npmImport);
     } else {
-      const pkgName = this.npmProjects.find((pkg) =>
-        npmImport.startsWith(pkg.data.packageName)
+      const pkgName = this.npmProjects.find(
+        (pkg) =>
+          npmImport === pkg.data.packageName ||
+          npmImport.startsWith(pkg.data.packageName + '/')
       )?.name;
       this.npmResolutionCache.set(npmImport, pkgName);
       return pkgName;
