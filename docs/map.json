@@ -993,7 +993,8 @@
             "itemList": [
               {
                 "name": "Moving from Protractor to Cypress",
-                "id": "protractor-to-cypress"
+                "id": "protractor-to-cypress",
+                "file": "angular/guides/modern-angular/protractor-to-cypress"
               }
             ]
           },
