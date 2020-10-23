@@ -236,11 +236,28 @@ function updateLintConfig(schema: StorybookConfigureSchema): Rule {
       return updateJsonInTree(
         `${projectConfig.root}/.eslintrc.json`,
         (json) => {
+          if (typeof json.parserOptions?.project === 'string') {
+            json.parserOptions.project = [json.parserOptions.project];
+          }
+
           if (Array.isArray(json.parserOptions?.project)) {
             json.parserOptions.project.push(
               `${projectConfig.root}/.storybook/tsconfig.json`
             );
           }
+
+          const overrides = json.overrides || [];
+          for (const override of overrides) {
+            if (typeof override.parserOptions?.project === 'string') {
+              override.parserOptions.project = [override.parserOptions.project];
+            }
+            if (Array.isArray(override.parserOptions?.project)) {
+              override.parserOptions.project.push(
+                `${projectConfig.root}/.storybook/tsconfig.json`
+              );
+            }
+          }
+
           return json;
         }
       );
