@@ -297,6 +297,10 @@ describe('Migration', () => {
             version: '2.0.0',
             alwaysAddToPackageJson: false,
           },
+          '@nrwl/cli': {
+            version: '2.0.0',
+            alwaysAddToPackageJson: false,
+          },
           '@nrwl/angular': { version: '2.0.0', alwaysAddToPackageJson: false },
           '@nrwl/cypress': { version: '2.0.0', alwaysAddToPackageJson: false },
           '@nrwl/eslint-plugin-nx': {

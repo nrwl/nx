@@ -2630,17 +2630,6 @@
     node-gyp "^6.1.0"
     read-package-json-fast "^1.1.3"
 
-"@nrwl/cli@10.3.0-rc.3":
-  version "10.3.0-rc.3"
-  resolved "https://registry.yarnpkg.com/@nrwl/cli/-/cli-10.3.0-rc.3.tgz#54cf7a2a8981b763aced39376645c5975bb5fbab"
-  integrity sha512-zgsUzlX1AuaSyfvNOB/yHzXxFEuCUmtGsiHSnUIYqIBBuxXbfaSG50aBwKh1q16R4CTgTk0PSv9VeClH8/diyw==
-  dependencies:
-    "@nrwl/tao" "10.3.0-rc.3"
-    chalk "2.4.2"
-    tmp "0.0.33"
-    yargs "15.4.1"
-    yargs-parser "20.0.0"
-
 "@nrwl/cli@10.3.1-beta.1":
   version "10.3.1-beta.1"
   resolved "https://registry.yarnpkg.com/@nrwl/cli/-/cli-10.3.1-beta.1.tgz#a67326315884c986a0f366dcc82b8c3cdf24e25f"
@@ -2733,22 +2722,6 @@
     rxjs "6.5.5"
     tar "5.0.5"
     uuid "^3.3.3"
-
-"@nrwl/tao@10.3.0-rc.3":
-  version "10.3.0-rc.3"
-  resolved "https://registry.yarnpkg.com/@nrwl/tao/-/tao-10.3.0-rc.3.tgz#41bb5355d3842e2698ba31bae247c1bbe3cecae5"
-  integrity sha512-SnAxgTFZRbaNG+sQ7Iu4hcshKpiFu6m/pyFkkiZUphyZJJyDcfNDvobxwhdw6sQAeR5omju0jlDhLfktF9zx5A==
-  dependencies:
-    "@angular-devkit/architect" "~0.1001.3"
-    "@angular-devkit/core" "~10.1.3"
-    "@angular-devkit/schematics" "~10.1.3"
-    inquirer "^6.3.1"
-    minimist "^1.2.0"
-    semver "6.3.0"
-    strip-json-comments "2.0.1"
-    tmp "0.0.33"
-    tslib "^1.9.3"
-    yargs-parser "20.0.0"
 
 "@nrwl/tao@10.3.1-beta.1":
   version "10.3.1-beta.1"
