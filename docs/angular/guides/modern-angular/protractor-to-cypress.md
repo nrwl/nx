@@ -27,7 +27,7 @@ Let's say your existing app is named `my-awesome-app` and the e2e Protractor tes
    ```bash
    rm apps/my-awesome-app-e2e/protractor.conf.js
    ```
-8. Migrate your Protractor `*.po.ts` files to Cypress page objects files.
+8. Migrate your `*.po.ts` files to use the Cypress API as opposed to the Protractor API.
 
    - The canonical way for Cypress to handle page objects is to create small reusable functions that use the `cy` object to return a reference to whatever element you want to interact with.
 
