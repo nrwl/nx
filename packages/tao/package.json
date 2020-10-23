@@ -37,7 +37,7 @@
     "strip-json-comments": "2.0.1",
     "semver": "6.3.0",
     "tmp": "0.0.33",
-    "tslib": "^1.9.3",
+    "tslib": "^2.0.0",
     "yargs-parser": "20.0.0"
   }
 }

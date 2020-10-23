@@ -18,6 +18,7 @@ function updateDependencies(): Rule {
     json.dependencies = {
       ...json.dependencies,
       'document-register-element': documentRegisterElementVersion,
+      tslib: '^2.0.0',
     };
     json.devDependencies = {
       ...json.devDependencies,

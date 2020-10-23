@@ -13,6 +13,7 @@ const updateDependencies = addDepsToPackageJson(
     next: nextVersion,
     react: reactVersion,
     'react-dom': reactDomVersion,
+    tslib: '^2.0.0',
   },
   {}
 );

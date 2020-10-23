@@ -31,6 +31,7 @@ export default function (schema: Schema) {
     addDepsToPackageJson(
       {
         express: expressVersion,
+        tslib: '^2.0.0',
       },
       {
         '@types/express': expressTypingsVersion,
