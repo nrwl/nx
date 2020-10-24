@@ -73,7 +73,7 @@ function createWorkspace(
     `${packageExec} tao ${command.replace(
       '--collection=@nrwl/workspace',
       `--collection=${collectionJsonPath}`
-    )} --nxWorkspaceRoot=${process.cwd()}`,
+    )} --nxWorkspaceRoot="${process.cwd()}"`,
     {
       stdio: [0, 1, 2],
       cwd: tmpDir,
