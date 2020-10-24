@@ -1,4 +1,6 @@
-import { forEachCli, runCreateWorkspace, uniq } from '@nrwl/e2e/utils';
+import { cli, forEachCli, runCreateWorkspace, uniq } from '@nrwl/e2e/utils';
+import { existsSync, mkdirSync } from 'fs-extra';
+import { execSync } from 'child_process';
 
 forEachCli(() => {
   describe('create-nx-workspace', () => {
@@ -91,6 +93,23 @@ forEachCli(() => {
         preset: 'nest',
         appName,
       });
+    });
+
+    it('should handle spaces in workspace path', () => {
+      const wsName = uniq('empty');
+
+      const tmpDir = `./tmp/${cli}/with space`;
+
+      mkdirSync(tmpDir);
+
+      const command = `npx create-nx-workspace@${process.env.PUBLISHED_VERSION} ${wsName} --cli=${cli} --preset=empty --no-nxCloud --no-interactive`;
+      execSync(command, {
+        cwd: tmpDir,
+        stdio: [0, 1, 2],
+        env: process.env,
+      });
+
+      expect(existsSync(`${tmpDir}/${wsName}/package.json`)).toBeTruthy();
     });
   });
 });
