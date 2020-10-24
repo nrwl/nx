@@ -84,11 +84,13 @@ export function runCreateWorkspace(
     appName,
     style,
     base,
+    packageManager,
   }: {
     preset: string;
     appName?: string;
     style?: string;
     base?: string;
+    packageManager?: string;
   }
 ) {
   const linterArg =
@@ -103,6 +105,10 @@ export function runCreateWorkspace(
 
   if (base) {
     command += ` --defaultBase="${base}"`;
+  }
+
+  if (packageManager) {
+    command += ` --package-manager=${packageManager}`;
   }
 
   const create = execSync(command, {

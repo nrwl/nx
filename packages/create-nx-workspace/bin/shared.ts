@@ -22,26 +22,19 @@ export function showNxWarning(workspaceName: string) {
   }
 }
 
-export function determinePackageManager() {
-  let packageManager = getPackageManagerFromAngularCLI();
-  if (packageManager === 'npm' || isPackageManagerInstalled(packageManager)) {
-    return packageManager;
-  }
-
-  if (isPackageManagerInstalled('yarn')) {
-    return 'yarn';
-  }
-
-  if (isPackageManagerInstalled('pnpm')) {
-    return 'pnpm';
-  }
-
-  return 'npm';
+export function determinePackageManager(preferredPackageManager?: string) {
+  return (
+    [
+      preferredPackageManager,
+      getPackageManagerFromAngularCLI(),
+      'yarn',
+      'pnpm',
+    ].find((pm) => pm && isPackageManagerInstalled(pm)) || 'npm'
+  );
 }
 
 function getPackageManagerFromAngularCLI(): string {
   // If you have Angular CLI installed, read Angular CLI config.
-  // If it isn't installed, default to 'yarn'.
   try {
     return execSync('ng config -g cli.packageManager', {
       stdio: ['ignore', 'pipe', 'ignore'],
@@ -50,7 +43,7 @@ function getPackageManagerFromAngularCLI(): string {
       .toString()
       .trim();
   } catch (e) {
-    return 'yarn';
+    return;
   }
 }
 
