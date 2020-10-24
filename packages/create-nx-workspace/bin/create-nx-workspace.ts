@@ -500,7 +500,7 @@ function createApp(
     `${packageExec} tao ${command.replace(
       '--collection=@nrwl/workspace',
       `--collection=${collectionJsonPath}`
-    )} --cli=${cli.command} --nxWorkspaceRoot=${process.cwd()}`,
+    )} --cli=${cli.command} --nxWorkspaceRoot="${process.cwd()}"`,
     {
       stdio: [0, 1, 2],
       cwd: tmpDir,
