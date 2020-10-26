@@ -316,13 +316,14 @@ function startServer(html: string, host: string) {
     });
   });
 
-  app.listen(4211, host);
+  const port = process.env.PORT || 4211;
+  app.listen(port, host);
 
   output.note({
-    title: `Dep graph started at http://${host}:4211`,
+    title: `Dep graph started at http://${host}:${port}`,
   });
 
-  opn(`http://${host}:4211`, {
+  opn(`http://${host}:${port}`, {
     wait: false,
   });
 }
