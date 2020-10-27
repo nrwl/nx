@@ -1,7 +1,4 @@
 import * as fs from 'fs';
-import { findWorkspaceRoot } from './find-workspace-root';
-
-const workspace = findWorkspaceRoot(process.cwd());
 
 if (process.env.NX_TERMINAL_OUTPUT_PATH) {
   setUpOutputWatching(
@@ -9,24 +6,25 @@ if (process.env.NX_TERMINAL_OUTPUT_PATH) {
     process.env.NX_FORWARD_OUTPUT === 'true'
   );
 }
+
+if (!process.env.NX_WORKSPACE_ROOT || !process.env.NX_CLI_PATH) {
+  console.error('Invalid Nx command invocation');
+  process.exit(1);
+}
 requireCli();
 
 function requireCli() {
   process.env.NX_CLI_SET = 'true';
-  let cliPath: string;
-  if (workspace.type === 'nx') {
-    cliPath = '@nrwl/tao/index.js';
-  } else {
-    cliPath = '@angular/cli/lib/init.js';
-  }
-
   try {
-    const cli = require.resolve(cliPath, {
-      paths: [workspace.dir],
+    const cli = require.resolve(process.env.NX_CLI_PATH, {
+      paths: [process.env.NX_WORKSPACE_ROOT],
     });
     require(cli);
   } catch (e) {
-    console.error(`Could not find ${cliPath} module in this workspace.`, e);
+    console.error(
+      `Could not find ${process.env.NX_CLI_PATH} module in this workspace.`,
+      e
+    );
     process.exit(1);
   }
 }

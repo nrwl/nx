@@ -166,7 +166,7 @@ export function readWorkspaceJson(): any {
   return readJsonFile(`${appRootPath}/${workspaceFileName()}`);
 }
 
-export function cliCommand() {
+export function defaultCliCommand() {
   return workspaceFileName() === 'angular.json' ? 'ng' : 'nx';
 }
 

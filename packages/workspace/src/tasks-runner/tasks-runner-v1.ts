@@ -10,7 +10,7 @@ import {
 import { output } from '../utils/output';
 import { readJsonFile } from '../utils/fileutils';
 import { getCommand, getCommandAsString } from './utils';
-import { cliCommand } from '../core/file-utils';
+import { defaultCliCommand } from '../core/file-utils';
 import { ProjectGraph } from '../core/project-graph';
 import { NxJson } from '../core/shared-interfaces';
 
@@ -110,7 +110,7 @@ async function runTasks(
   options: DefaultTasksRunnerOptions,
   context: { target: string; projectGraph: ProjectGraph }
 ): Promise<Array<{ task: Task; type: any; success: boolean }>> {
-  const cli = cliCommand();
+  const cli = defaultCliCommand();
   assertPackageJsonScriptExists(cli);
   const isYarn = basename(process.env.npm_execpath || 'npm').startsWith('yarn');
   const stages =

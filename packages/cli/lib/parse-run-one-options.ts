@@ -1,7 +1,6 @@
 import yargsParser = require('yargs-parser');
 
 export function parseRunOneOptions(
-  nxJson: any,
   workspaceConfigJson: any,
   args: string[]
 ): false | { project; target; configuration; parsedArgs } {

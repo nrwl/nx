@@ -5,6 +5,8 @@ import {
   convertToCamelCase,
   lookupUnmatched,
   Schema,
+  setDefaults,
+  validateOptsAgainstSchema,
 } from './params';
 
 describe('params', () => {
@@ -199,6 +201,154 @@ describe('params', () => {
           },
         ],
       });
+    });
+  });
+
+  describe('setDefault', () => {
+    it('should set default values', () => {
+      const opts = setDefaults(
+        { c: false },
+        {
+          properties: {
+            a: {
+              type: 'boolean',
+            },
+            b: {
+              type: 'boolean',
+              default: true,
+            },
+            c: {
+              type: 'boolean',
+              default: true,
+            },
+          },
+        }
+      );
+
+      expect(opts).toEqual({ b: true, c: false });
+    });
+
+    it('should set defaults in complex cases', () => {
+      const opts = setDefaults(
+        { a: [{}, {}] },
+        {
+          properties: {
+            a: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  key: {
+                    type: 'string',
+                    default: 'inner',
+                  },
+                },
+              },
+            },
+          },
+        }
+      );
+
+      expect(opts).toEqual({ a: [{ key: 'inner' }, { key: 'inner' }] });
+    });
+  });
+
+  describe('validateOptsAgainstSchema', () => {
+    it('should throw if missing the required field', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          {},
+          {
+            properties: {
+              a: {
+                type: 'boolean',
+              },
+            },
+            required: ['a'],
+          }
+        )
+      ).toThrow("Required property 'a' is missing");
+    });
+
+    it("should throw if the type doesn't match (primitive types)", () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: 'string' },
+          {
+            properties: {
+              a: {
+                type: 'boolean',
+              },
+            },
+          }
+        )
+      ).toThrow(
+        "Property 'a' does not match the schema. 'string' should be a 'boolean'."
+      );
+    });
+
+    it('should handle one of', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: 'string' },
+          {
+            properties: {
+              a: {
+                oneOf: [
+                  {
+                    type: 'string',
+                  },
+                  {
+                    type: 'boolean',
+                  },
+                ],
+              },
+            },
+          }
+        )
+      ).not.toThrow();
+    });
+
+    it("should throw if the type doesn't match (arrays)", () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: ['string', 123] },
+          {
+            properties: {
+              a: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+            },
+          }
+        )
+      ).toThrow(
+        "Property 'a' does not match the schema. '123' should be a 'string'."
+      );
+    });
+
+    it("should throw if the type doesn't match (objects)", () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: { key: 'string' } },
+          {
+            properties: {
+              a: {
+                type: 'object',
+                properties: {
+                  key: {
+                    type: 'boolean',
+                  },
+                },
+              },
+            },
+          }
+        )
+      ).toThrow(
+        "Property 'key' does not match the schema. 'string' should be a 'boolean'."
+      );
     });
   });
 });

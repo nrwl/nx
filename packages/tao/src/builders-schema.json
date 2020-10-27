@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "BuildersSchema",
+  "title": "Builders schema for validating a list of builders.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Link to schema."
+    },
+    "builders": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/builder"
+      }
+    }
+  },
+  "required": ["builders"],
+  "definitions": {
+    "builder": {
+      "type": "object",
+      "description": "Target options for Builders.",
+      "allOf": [
+        {
+          "properties": {
+            "schema": {
+              "type": "string",
+              "description": "Schema for builder option validation."
+            },
+            "description": {
+              "type": "string",
+              "description": "Builder description."
+            }
+          },
+          "required": ["schema", "description"]
+        },
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "implementation": {
+                  "type": "string",
+                  "description": "The next generation builder module."
+                }
+              },
+              "required": ["implementation"]
+            },
+            {
+              "properties": {
+                "class": {
+                  "type": "string",
+                  "description": "The builder class module."
+                }
+              },
+              "required": ["class"]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
