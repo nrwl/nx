@@ -1,26 +1,15 @@
-import { Architect } from '@angular-devkit/architect';
-import { WorkspaceNodeModulesArchitectHost } from '@angular-devkit/architect/node';
-import {
-  json,
-  JsonObject,
-  logging,
-  schema,
-  terminal,
-  workspaces,
-} from '@angular-devkit/core';
-import { NodeJsSyncHost } from '@angular-devkit/core/node';
-import { WorkspaceDefinition } from '@angular-devkit/core/src/workspace';
+import * as chalk from 'chalk';
 import * as minimist from 'minimist';
 import { getLogger } from '../shared/logger';
 import {
-  coerceTypes,
-  convertAliases,
+  combineOptions,
   convertToCamelCase,
   handleErrors,
   Options,
   Schema,
 } from '../shared/params';
 import { commandName, printHelp } from '../shared/print-help';
+import { WorkspaceDefinition, Workspaces } from '../shared/workspace';
 
 export interface RunOptions {
   project: string;
@@ -39,7 +28,7 @@ function throwInvalidInvocation() {
 function parseRunOpts(
   args: string[],
   defaultProjectName: string | null,
-  logger: logging.Logger
+  logger: Console
 ): RunOptions {
   const runOptions = convertToCamelCase(
     minimist(args, {
@@ -59,7 +48,7 @@ function parseRunOpts(
   ] = runOptions._[0].split(':');
   if (!project && defaultProjectName) {
     logger.debug(
-      `No project name specified. Using default project : ${terminal.bold(
+      `No project name specified. Using default project : ${chalk.default.bold(
         defaultProjectName
       )}`
     );
@@ -87,15 +76,15 @@ function parseRunOpts(
   return res;
 }
 
-function printRunHelp(
+export function printRunHelp(
   opts: RunOptions,
   schema: Schema,
-  logger: logging.Logger
+  logger: Console
 ) {
   printHelp(
     `${commandName} run ${opts.project}:${opts.target}`,
     schema,
-    logger
+    logger as any
   );
 }
 
@@ -103,19 +92,17 @@ export function validateTargetAndConfiguration(
   workspace: WorkspaceDefinition,
   opts: RunOptions
 ) {
-  const architect = workspace.projects.get(opts.project);
-  if (!architect) {
+  const project = workspace.projects[opts.project];
+  if (!project) {
     throw new Error(`Could not find project "${opts.project}"`);
   }
-  const targets = architect.targets;
-
-  const availableTargets = [...targets.keys()];
-  const target = targets.get(opts.target);
+  const target = project.architect[opts.target];
+  const availableTargets = Object.keys(project.architect);
   if (!target) {
     throw new Error(
       `Could not find target "${opts.target}" in the ${
         opts.project
-      } project. Valid targets are: ${terminal.bold(
+      } project. Valid targets are: ${chalk.default.bold(
         availableTargets.join(', ')
       )}`
     );
@@ -143,64 +130,33 @@ export function validateTargetAndConfiguration(
   }
 }
 
-function normalizeOptions(opts: Options, schema: Schema): Options {
-  return convertAliases(coerceTypes(opts, schema), schema, false);
-}
-
 export async function run(root: string, args: string[], isVerbose: boolean) {
-  const logger = getLogger(isVerbose);
+  const logger = getLogger(isVerbose) as any;
+  const ws = new Workspaces();
 
   return handleErrors(logger, isVerbose, async () => {
-    const fsHost = new NodeJsSyncHost();
-    const { workspace } = await workspaces.readWorkspace(
-      'workspace.json',
-      workspaces.createWorkspaceHost(fsHost)
-    );
+    const workspaceDefinition = await ws.readWorkspaceConfiguration(root);
+    const opts = parseRunOpts(args, workspaceDefinition.defaultProject, logger);
+    validateTargetAndConfiguration(workspaceDefinition, opts);
 
-    const opts = parseRunOpts(
-      args,
-      workspace.extensions['defaultProject'] as string,
-      logger
-    );
-    validateTargetAndConfiguration(workspace, opts);
-
-    const registry = new json.schema.CoreSchemaRegistry();
-    registry.addPostTransform(schema.transforms.addUndefinedDefaults);
-    const architectHost = new WorkspaceNodeModulesArchitectHost(
-      workspace,
-      root
-    );
-    const architect = new Architect(architectHost, registry);
-
-    const builderConf = await architectHost.getBuilderNameForTarget({
-      project: opts.project,
-      target: opts.target,
-    });
-    const builderDesc = await architectHost.resolveBuilder(builderConf);
-    const flattenedSchema = await registry
-      .flatten(builderDesc.optionSchema as json.JsonObject)
-      .toPromise();
-
-    if (opts.help) {
-      printRunHelp(opts, flattenedSchema as Schema, logger);
-      return 0;
+    const target =
+      workspaceDefinition.projects[opts.project].architect[opts.target];
+    if (ws.isNxBuilder(target)) {
+      const schema = ws.readBuilderSchema(target);
+      const combinedOptions = combineOptions(
+        opts.runOptions,
+        opts.configuration,
+        target,
+        schema
+      );
+      if (opts.help) {
+        printRunHelp(opts, schema, logger);
+        return 0;
+      }
+      const builderFn = ws.readBuilderFunction(target);
+      return await builderFn(combinedOptions);
+    } else {
+      return (await import('./ngcli-adapter')).run(logger, root, opts);
     }
-
-    const runOptions = normalizeOptions(
-      opts.runOptions,
-      flattenedSchema as Schema
-    );
-    const run = await architect.scheduleTarget(
-      {
-        project: opts.project,
-        target: opts.target,
-        configuration: opts.configuration,
-      },
-      runOptions as JsonObject,
-      { logger }
-    );
-    const result = await run.output.toPromise();
-    await run.stop();
-    return result.success ? 0 : 1;
   });
 }

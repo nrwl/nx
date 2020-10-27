@@ -42,15 +42,23 @@ const angularCLIInitPath = 'node_modules/@angular/cli/lib/cli/index.js';
  * Patch index.js to warn you if you invoke the undecorated Angular CLI.
  */
 function patchAngularCLI(initPath) {
-  const angularCLIInit = fs.readFileSync(initPath, 'utf-8').toString();
+  const angularCLIInitContent = fs.readFileSync(initPath, 'utf-8').toString();
 
-  if (!angularCLIInit.includes('NX_CLI_SET')) {
+  if (!angularCLIInitContent.includes('NX_CLI_SET')) {
     fs.writeFileSync(initPath, `
+// this env variable is set when invoked from within Nx
 if (!process.env['NX_CLI_SET']) {
+  const { isRunningNxBuilder } = require('@nrwl/cli/lib/is-nx-builder');
   const { output } = require('@nrwl/workspace');
-  output.warn({ title: 'The Angular CLI was invoked instead of the Nx CLI. Use "npx ng [command]" or "nx [command]" instead.' });
+
+  if (isRunningNxBuilder()) {
+    output.warn({ title: 'The command will use Nx CLI instead of Angular CLI because it uses an Nx builder. Read more at https://nx.dev/latest/angular/cli/overview' });
+    require('@nrwl/tao/index.js');
+  } else {
+    output.warn({ title: 'The Angular CLI was invoked instead of the Nx CLI. Use "npx ng [command]" or "nx [command]" instead. Read more at https://nx.dev/latest/angular/cli/overview' });
+  }
 }
-${angularCLIInit}
+${angularCLIInitContent}
     `);
   }
 }

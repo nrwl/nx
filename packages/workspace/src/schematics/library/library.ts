@@ -23,7 +23,7 @@ import { offsetFromRoot } from '@nrwl/workspace';
 
 import { generateProjectLint, addLintFiles } from '../../utils/lint';
 import { addProjectToNxJsonInTree, libsDir } from '../../utils/ast-utils';
-import { cliCommand } from '../../core/file-utils';
+import { defaultCliCommand } from '../../core/file-utils';
 import { toJS } from '../../utils/rules/to-js';
 
 export interface NormalizedSchema extends Schema {
@@ -87,7 +87,7 @@ function createFiles(options: NormalizedSchema): Rule {
       template({
         ...options,
         ...names(options.name),
-        cliCommand: cliCommand(),
+        cliCommand: defaultCliCommand(),
         tmpl: '',
         offsetFromRoot: offsetFromRoot(options.projectRoot),
         hasUnitTestRunner: options.unitTestRunner !== 'none',

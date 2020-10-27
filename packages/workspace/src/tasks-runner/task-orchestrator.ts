@@ -1,5 +1,5 @@
 import { Cache, TaskWithCachedResult } from './cache';
-import { cliCommand } from '../core/file-utils';
+import { defaultCliCommand, workspaceFileName } from '../core/file-utils';
 import { ProjectGraph } from '../core/project-graph';
 import { AffectedEventType, Task } from './tasks-runner';
 import { getOutputs, unparse } from './utils';
@@ -9,11 +9,11 @@ import { output } from '../utils/output';
 import * as fs from 'fs';
 import { appRootPath } from '../utils/app-root';
 import * as dotenv from 'dotenv';
+import { isNxBuilder } from '@nrwl/cli/lib/find-workspace-root';
 
 export class TaskOrchestrator {
   workspaceRoot = appRootPath;
   cache = new Cache(this.options);
-  cli = cliCommand();
 
   private processes: ChildProcess[] = [];
 
@@ -106,7 +106,7 @@ export class TaskOrchestrator {
         this.initiatingProject === t.task.target.project
       ) {
         const args = this.getCommandArgs(t.task);
-        output.logCommand(`${this.cli} ${args.join(' ')}`);
+        output.logCommand(`${this.getCliCommand(t.task)} ${args.join(' ')}`);
         output.note({ title: `Cached Output:` });
         process.stdout.write(t.cachedResult.terminalOutput);
       }
@@ -160,7 +160,7 @@ export class TaskOrchestrator {
             : process.env.FORCE_COLOR
         );
         const args = this.getCommandArgs(task);
-        const commandLine = `${this.cli} ${args.join(' ')}`;
+        const commandLine = `${this.getCliCommand(task)} ${args.join(' ')}`;
 
         if (forwardOutput) {
           output.logCommand(commandLine);
@@ -227,7 +227,7 @@ export class TaskOrchestrator {
           undefined
         );
         const args = this.getCommandArgs(task);
-        const commandLine = `${this.cli} ${args.join(' ')}`;
+        const commandLine = `${this.getCliCommand(task)} ${args.join(' ')}`;
 
         if (forwardOutput) {
           output.logCommand(commandLine);
@@ -286,12 +286,19 @@ export class TaskOrchestrator {
       ...parseEnv(`${task.projectRoot}/.env`),
       ...parseEnv(`${task.projectRoot}/.local.env`),
     };
+
     const env = {
       ...envsFromFiles,
       FORCE_COLOR: forceColor,
-      NX_INVOKED_BY_RUNNER: 'true',
       ...process.env,
+      NX_INVOKED_BY_RUNNER: 'true',
+      NX_WORKSPACE_ROOT: this.workspaceRoot,
+      NX_CLI_PATH:
+        this.getCliCommand(task) === 'nx'
+          ? '@nrwl/tao/index.js'
+          : '@angular/cli/lib/init.js',
     };
+
     if (outputPath) {
       env.NX_TERMINAL_OUTPUT_PATH = outputPath;
       if (this.options.captureStderr) {
@@ -344,6 +351,15 @@ export class TaskOrchestrator {
       });
       process.exit();
     });
+  }
+
+  private getCliCommand(task: Task) {
+    const nxBuilder = isNxBuilder(
+      `${this.workspaceRoot}/${workspaceFileName()}`,
+      task.target.project,
+      task.target.target
+    );
+    return nxBuilder ? 'nx' : defaultCliCommand();
   }
 }
 
