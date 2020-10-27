@@ -15,7 +15,6 @@ const runOne = [
   'exclude',
   'onlyFailed',
   'only-failed',
-  'verbose',
   'help',
   'version',
   'withDeps',
@@ -25,7 +24,7 @@ const runOne = [
   'scan',
 ];
 
-const runMany = [...runOne, 'projects', 'quiet', 'all'];
+const runMany = [...runOne, 'projects', 'quiet', 'all', 'verbose'];
 
 const runAffected = [
   ...runOne,
@@ -38,6 +37,7 @@ const runAffected = [
   'quiet',
   'plain',
   'select',
+  'verbose',
 ];
 
 export interface RawNxArgs extends NxArgs {

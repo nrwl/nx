@@ -111,23 +111,6 @@ forEachCli((currentCLIName) => {
           });
         });
       });
-      const config = readJson(workspaceConfigName());
-      config.projects[nodeapp].architect.waitAndPrint = {
-        builder: '@nrwl/workspace:run-commands',
-        options: {
-          commands: [
-            {
-              command: 'sleep 1 && echo DONE',
-            },
-          ],
-          readyWhen: 'DONE',
-        },
-      };
-
-      config.projects[nodeapp].architect.serve.options.waitUntilTargets = [
-        `${nodeapp}:waitAndPrint`,
-      ];
-      updateFile(workspaceConfigName(), JSON.stringify(config));
       const process = spawn(
         'node',
         ['./node_modules/.bin/nx', 'serve', nodeapp],
@@ -145,7 +128,6 @@ forEachCli((currentCLIName) => {
         const result = await getData();
         expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
         treeKill(process.pid, 'SIGTERM', (err) => {
-          expect(collectedOutput.indexOf('DONE') > -1).toBeTruthy();
           expect(err).toBeFalsy();
           done();
         });
@@ -179,7 +161,7 @@ forEachCli((currentCLIName) => {
 
       expect(config.options.emitDecoratorMetadata).toEqual(true); // required by nest to function properly
       expect(config.options.target).toEqual(ts.ScriptTarget.ES2015); // required by nest swagger to function properly
-    }, 120000);
+    }, 180000);
 
     it('should be able to generate a nest application', async (done) => {
       ensureProject();

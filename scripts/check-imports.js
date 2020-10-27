@@ -36,6 +36,7 @@ function check() {
     'packages/workspace/src/migrations/update-8-3-0/update-8-3-0.spec.ts',
     'packages/workspace/src/migrations/update-8-3-0/update-ng-cli-8-1.ts',
     'packages/workspace/src/migrations/update-8-12-0/update-package-json-deps.spec.ts',
+    'packages/workspace/src/tasks-runner/task-orchestrator.ts',
   ];
 
   const files = [

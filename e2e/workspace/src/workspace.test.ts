@@ -487,7 +487,7 @@ forEachCli((cliName) => {
             project: myapp,
             target: 'test',
           },
-          command: `npm run ${cliCommand} -- test ${myapp}`,
+          command: `npm run nx -- test ${myapp}`,
           outputs: [],
         },
       ]);
@@ -506,7 +506,7 @@ forEachCli((cliName) => {
             project: myapp,
             target: 'build',
           },
-          command: `npm run ${cliCommand} -- build ${myapp}`,
+          command: `npm run nx -- build ${myapp}`,
           outputs: [`dist/apps/${myapp}`],
         },
         {
@@ -516,7 +516,7 @@ forEachCli((cliName) => {
             project: mypublishablelib,
             target: 'build',
           },
-          command: `npm run ${cliCommand} -- build ${mypublishablelib}`,
+          command: `npm run nx -- build ${mypublishablelib}`,
           outputs: [`dist/libs/${mypublishablelib}`],
         },
       ]);
@@ -737,11 +737,14 @@ forEachCli((cliName) => {
       const cachedProjects = [];
       const lines = actualOutput.split('\n');
       lines.forEach((s, i) => {
-        if (s.startsWith(`> ${cliCommand} run`)) {
-          const projectName = s
-            .split(`> ${cliCommand} run `)[1]
-            .split(':')[0]
-            .trim();
+        if (s.startsWith(`> nx run`)) {
+          const projectName = s.split(`> nx run `)[1].split(':')[0].trim();
+          if (lines[i + 2].indexOf('Cached Output') > -1) {
+            cachedProjects.push(projectName);
+          }
+        }
+        if (s.startsWith(`> ng run`)) {
+          const projectName = s.split(`> ng run `)[1].split(':')[0].trim();
           if (lines[i + 2].indexOf('Cached Output') > -1) {
             cachedProjects.push(projectName);
           }

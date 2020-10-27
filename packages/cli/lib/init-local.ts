@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { Workspace } from './workspace';
 import { parseRunOneOptions } from './parse-run-one-options';
+import { isRunningNxBuilder } from './is-nx-builder';
 
 /**
  * Nx is being run inside a workspace.
@@ -9,6 +10,7 @@ import { parseRunOneOptions } from './parse-run-one-options';
  * @param workspace Relevant local workspace properties
  */
 process.env.NX_CLI_SET = 'true';
+
 export function initLocal(workspace: Workspace) {
   require('@nrwl/workspace/' + 'src/utils/perf-logging');
   const supportedNxCommands = require('@nrwl/workspace/' +
@@ -23,17 +25,19 @@ export function initLocal(workspace: Workspace) {
     require('@nrwl/workspace' + '/src/command-line/nx-commands').commandsObject
       .argv;
   } else {
-    if (runOpts === false || process.env.NX_SKIP_TASKS_RUNNER) {
-      loadCli(workspace);
+    if (runOpts === false) {
+      loadCli(workspace, false);
+    } else if (process.env.NX_SKIP_TASKS_RUNNER) {
+      loadCli(workspace, isRunningNxBuilder());
     } else {
       require('@nrwl/workspace' + '/src/command-line/run-one').runOne(runOpts);
     }
   }
 }
 
-function loadCli(workspace: Workspace) {
+function loadCli(workspace: Workspace, isNxBuilder: boolean) {
   let cliPath: string;
-  if (workspace.type === 'nx') {
+  if (workspace.type === 'nx' || isNxBuilder) {
     cliPath = '@nrwl/tao/index.js';
   } else if (workspace.type === 'angular') {
     cliPath = '@angular/cli/lib/init.js';
@@ -55,10 +59,6 @@ function runOneOptions(
   workspace: Workspace
 ): false | { project; target; configuration; parsedArgs } {
   try {
-    const nxJson = JSON.parse(
-      fs.readFileSync(path.join(workspace.dir, 'nx.json')).toString()
-    );
-
     const workspaceConfigJson = JSON.parse(
       fs
         .readFileSync(
@@ -70,11 +70,7 @@ function runOneOptions(
         .toString()
     );
 
-    return parseRunOneOptions(
-      nxJson,
-      workspaceConfigJson,
-      process.argv.slice(2)
-    );
+    return parseRunOneOptions(workspaceConfigJson, process.argv.slice(2));
   } catch (e) {
     return false;
   }
