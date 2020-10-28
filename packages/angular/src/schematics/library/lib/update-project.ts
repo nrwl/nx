@@ -164,6 +164,7 @@ export function updateProject(options: NormalizedSchema): Rule {
           fixedProject.architect.lint.builder = '@nrwl/linter:eslint';
           fixedProject.architect.lint.options.lintFilePatterns = [
             `${options.projectRoot}/src/**/*.ts`,
+            `${options.projectRoot}/src/**/*.html`,
           ];
           delete fixedProject.architect.lint.options.tsConfig;
           delete fixedProject.architect.lint.options.exclude;

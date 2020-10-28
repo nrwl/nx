@@ -1186,4 +1186,78 @@ describe('lib', () => {
       );
     });
   });
+
+  describe('--linter', () => {
+    describe('eslint', () => {
+      it('should add an architect target for lint', async () => {
+        const tree = await runSchematic(
+          'lib',
+          { name: 'myLib', linter: 'eslint' },
+          appTree
+        );
+        const workspaceJson = readJsonInTree(tree, 'workspace.json');
+        expect(workspaceJson.projects['my-lib'].architect.lint)
+          .toMatchInlineSnapshot(`
+          Object {
+            "builder": "@nrwl/linter:eslint",
+            "options": Object {
+              "lintFilePatterns": Array [
+                "libs/my-lib/src/**/*.ts",
+                "libs/my-lib/src/**/*.html",
+              ],
+            },
+          }
+        `);
+      });
+
+      it('should add valid eslint JSON configuration which extends from Nx presets', async () => {
+        const tree = await runSchematic(
+          'lib',
+          { name: 'myLib', linter: 'eslint' },
+          appTree
+        );
+
+        const eslintConfig = readJsonInTree(tree, 'libs/my-lib/.eslintrc.json');
+
+        expect(eslintConfig.overrides).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "extends": Array [
+                "plugin:@nrwl/nx/angular-code",
+              ],
+              "files": Array [
+                "*.ts",
+              ],
+              "parserOptions": Object {
+                "project": Array [
+                  "libs/my-lib/tsconfig.*?.json",
+                ],
+              },
+              "rules": Object {},
+            },
+            Object {
+              "extends": Array [
+                "plugin:@nrwl/nx/angular-template",
+              ],
+              "files": Array [
+                "*.html",
+              ],
+              "rules": Object {},
+            },
+            Object {
+              "extends": Array [
+                "plugin:@angular-eslint/template/process-inline-templates",
+              ],
+              "files": Array [
+                "*.component.ts",
+              ],
+              "settings": Object {
+                "NX_DOCUMENTATION_NOTE": "This entry in the overrides is only here to extract inline templates from Components, you should not configure rules here",
+              },
+            },
+          ]
+        `);
+      });
+    });
+  });
 });

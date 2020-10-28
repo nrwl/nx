@@ -335,12 +335,78 @@ describe('app', () => {
           appTree
         );
         const workspaceJson = readJsonInTree(tree, 'workspace.json');
-        expect(
-          workspaceJson.projects['my-app'].architect.lint
-        ).toMatchSnapshot();
-        expect(
-          workspaceJson.projects['my-app-e2e'].architect.lint
-        ).toMatchSnapshot();
+        expect(workspaceJson.projects['my-app'].architect.lint)
+          .toMatchInlineSnapshot(`
+          Object {
+            "builder": "@nrwl/linter:eslint",
+            "options": Object {
+              "lintFilePatterns": Array [
+                "apps/my-app/src/**/*.ts",
+                "apps/my-app/src/**/*.html",
+              ],
+            },
+          }
+        `);
+        expect(workspaceJson.projects['my-app-e2e'].architect.lint)
+          .toMatchInlineSnapshot(`
+          Object {
+            "builder": "@nrwl/linter:eslint",
+            "options": Object {
+              "lintFilePatterns": Array [
+                "apps/my-app-e2e/**/*.{js,ts}",
+              ],
+            },
+          }
+        `);
+      });
+
+      it('should add valid eslint JSON configuration which extends from Nx presets', async () => {
+        const tree = await runSchematic(
+          'app',
+          { name: 'myApp', linter: 'eslint' },
+          appTree
+        );
+
+        const eslintConfig = readJsonInTree(tree, 'apps/my-app/.eslintrc.json');
+
+        expect(eslintConfig.overrides).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "extends": Array [
+                "plugin:@nrwl/nx/angular-code",
+              ],
+              "files": Array [
+                "*.ts",
+              ],
+              "parserOptions": Object {
+                "project": Array [
+                  "apps/my-app/tsconfig.*?.json",
+                ],
+              },
+              "rules": Object {},
+            },
+            Object {
+              "extends": Array [
+                "plugin:@nrwl/nx/angular-template",
+              ],
+              "files": Array [
+                "*.html",
+              ],
+              "rules": Object {},
+            },
+            Object {
+              "extends": Array [
+                "plugin:@angular-eslint/template/process-inline-templates",
+              ],
+              "files": Array [
+                "*.component.ts",
+              ],
+              "settings": Object {
+                "NX_DOCUMENTATION_NOTE": "This entry in the overrides is only here to extract inline templates from Components, you should not configure rules here",
+              },
+            },
+          ]
+        `);
       });
     });
   });

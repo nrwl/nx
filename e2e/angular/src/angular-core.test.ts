@@ -120,7 +120,7 @@ forEachCli(() => {
       expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));
     }, 1000000);
 
-    it('should support eslint', async () => {
+    it('should support eslint and pass linting on the standard generated code', async () => {
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/angular:app ${myapp} --linter=eslint`);
       expect(runCLI(`lint ${myapp}`)).toContain('All files pass linting.');
@@ -128,6 +128,81 @@ forEachCli(() => {
       const mylib = uniq('mylib');
       runCLI(`generate @nrwl/angular:lib ${mylib} --linter=eslint`);
       expect(runCLI(`lint ${mylib}`)).toContain('All files pass linting.');
+    });
+
+    it('should support eslint and successfully lint external HTML files and inline templates', async () => {
+      const myapp = uniq('myapp');
+      runCLI(`generate @nrwl/angular:app ${myapp} --linter=eslint`);
+
+      const templateWhichFailsBananaInBoxLintCheck = `<div ([foo])="bar"></div>`;
+      const wrappedAsInlineTemplate = `
+        import { Component } from '@angular/core';
+
+        @Component({
+          selector: 'inline-template-component',
+          template: \`
+            ${templateWhichFailsBananaInBoxLintCheck}
+          \`,
+        })
+        export class InlineTemplateComponent {}
+      `;
+
+      // External HTML template file
+      updateFile(
+        `apps/${myapp}/src/app/app.component.html`,
+        templateWhichFailsBananaInBoxLintCheck
+      );
+
+      // Inline template within component.ts file
+      updateFile(
+        `apps/${myapp}/src/app/inline-template.component.ts`,
+        wrappedAsInlineTemplate
+      );
+
+      const appLintStdOut = runCLI(`lint ${myapp}`, { silenceError: true });
+
+      expect(appLintStdOut).toContain(
+        `apps/${myapp}/src/app/app.component.html`
+      );
+      expect(appLintStdOut).toContain(
+        `1:6  error  Invalid binding syntax. Use [(expr)] instead  @angular-eslint/template/banana-in-box`
+      );
+      expect(appLintStdOut).toContain(
+        `apps/${myapp}/src/app/inline-template.component.ts`
+      );
+      expect(appLintStdOut).toContain(
+        `7:18  error  Invalid binding syntax. Use [(expr)] instead  @angular-eslint/template/banana-in-box`
+      );
+
+      const mylib = uniq('mylib');
+      runCLI(`generate @nrwl/angular:lib ${mylib} --linter=eslint`);
+
+      // External HTML template file
+      updateFile(
+        `libs/${mylib}/src/lib/some.component.html`,
+        templateWhichFailsBananaInBoxLintCheck
+      );
+
+      // Inline template within component.ts file
+      updateFile(
+        `libs/${mylib}/src/lib/inline-template.component.ts`,
+        wrappedAsInlineTemplate
+      );
+
+      const libLintStdOut = runCLI(`lint ${mylib}`, { silenceError: true });
+
+      expect(libLintStdOut).toContain(
+        `libs/${mylib}/src/lib/some.component.html`
+      );
+      expect(libLintStdOut).toContain(
+        `1:6  error  Invalid binding syntax. Use [(expr)] instead  @angular-eslint/template/banana-in-box`
+      );
+      expect(libLintStdOut).toContain(
+        `libs/${mylib}/src/lib/inline-template.component.ts`
+      );
+      expect(libLintStdOut).toContain(
+        `7:18  error  Invalid binding syntax. Use [(expr)] instead  @angular-eslint/template/banana-in-box`
+      );
     });
   });
 });
