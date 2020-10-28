@@ -91,9 +91,9 @@ export function normalizeAssets(
       const resolvedAssetPath = resolve(root, assetPath);
       const resolvedSourceRoot = resolve(root, sourceRoot);
 
-      if (!resolvedAssetPath.startsWith(resolvedSourceRoot)) {
+      if (!resolvedAssetPath.startsWith(root)) {
         throw new Error(
-          `The ${resolvedAssetPath} asset path must start with the project source root: ${sourceRoot}`
+          `The ${resolvedAssetPath} asset path must start with the project root: ${root}`
         );
       }
 
