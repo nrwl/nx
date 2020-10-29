@@ -1,10 +1,6 @@
 import * as yargs from 'yargs';
-import { generateGraph } from './dep-graph';
-import { output } from '../utils/output';
-import { parseFiles } from './shared';
-import { runCommand } from '../tasks-runner/run-command';
-import { NxArgs, splitArgsIntoNxArgsAndOverrides, RawNxArgs } from './utils';
 import { filterAffected } from '../core/affected-project-graph';
+import { calculateFileChanges, readEnvironment } from '../core/file-utils';
 import {
   createProjectGraph,
   onlyWorkspaceProjects,
@@ -12,11 +8,15 @@ import {
   ProjectType,
   withDeps,
 } from '../core/project-graph';
-import { calculateFileChanges, readEnvironment } from '../core/file-utils';
-import { printAffected } from './print-affected';
-import { projectHasTarget } from '../utils/project-graph-utils';
 import { DefaultReporter } from '../tasks-runner/default-reporter';
+import { runCommand } from '../tasks-runner/run-command';
+import { output } from '../utils/output';
+import { projectHasTarget } from '../utils/project-graph-utils';
+import { generateGraph } from './dep-graph';
+import { printAffected } from './print-affected';
 import { promptForNxCloud } from './prompt-for-nx-cloud';
+import { parseFiles } from './shared';
+import { NxArgs, RawNxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
 
 export async function affected(
   command: 'apps' | 'libs' | 'dep-graph' | 'print-affected' | 'affected',
@@ -97,7 +97,7 @@ export async function affected(
             affectedProjects,
             nxArgs
           );
-          printAffected(
+          await printAffected(
             projectsWithTarget,
             affectedProjects,
             projectGraph,
@@ -105,7 +105,13 @@ export async function affected(
             overrides
           );
         } else {
-          printAffected([], affectedProjects, projectGraph, nxArgs, overrides);
+          await printAffected(
+            [],
+            affectedProjects,
+            projectGraph,
+            nxArgs,
+            overrides
+          );
         }
         break;
 

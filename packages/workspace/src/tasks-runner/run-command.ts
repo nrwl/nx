@@ -1,14 +1,18 @@
-import { AffectedEventType, Task, TasksRunner } from './tasks-runner';
+import { WorkspaceNodeModulesArchitectHost } from '@angular-devkit/architect/node';
+import { json, workspaces } from '@angular-devkit/core';
+import { NodeJsSyncHost } from '@angular-devkit/core/node';
+import { NxArgs } from '@nrwl/workspace/src/command-line/utils';
 import { join } from 'path';
-import { appRootPath } from '../utils/app-root';
-import { ReporterArgs } from './default-reporter';
 import * as yargs from 'yargs';
+import { workspaceFileName } from '../core/file-utils';
+import { Hasher } from '../core/hasher/hasher';
 import { ProjectGraph, ProjectGraphNode } from '../core/project-graph';
 import { Environment, NxJson } from '../core/shared-interfaces';
-import { NxArgs } from '@nrwl/workspace/src/command-line/utils';
+import { appRootPath } from '../utils/app-root';
 import { isRelativePath } from '../utils/fileutils';
-import { Hasher } from '../core/hasher/hasher';
 import { projectHasTargetAndConfiguration } from '../utils/project-graph-utils';
+import { ReporterArgs } from './default-reporter';
+import { AffectedEventType, Task, TasksRunner } from './tasks-runner';
 
 type RunArgs = yargs.Arguments & ReporterArgs;
 
@@ -32,14 +36,17 @@ export async function runCommand<T extends RunArgs>(
     ...overrides,
   });
 
-  const tasks: Task[] = projectsToRun.map((project) => {
-    return createTask({
-      project,
-      target: nxArgs.target,
-      configuration: nxArgs.configuration,
-      overrides: overrides,
-    });
-  });
+  const tasks: Task[] = [];
+  for (const project of projectsToRun) {
+    tasks.push(
+      await createTask({
+        project,
+        target: nxArgs.target,
+        configuration: nxArgs.configuration,
+        overrides: overrides,
+      })
+    );
+  }
 
   const hasher = new Hasher(projectGraph, nxJson, tasksOptions);
   const res = await hasher.hashTasks(tasks);
@@ -94,12 +101,12 @@ export interface TaskParams {
   overrides: Object;
 }
 
-export function createTask({
+export async function createTask({
   project,
   target,
   configuration,
   overrides,
-}: TaskParams): Task {
+}: TaskParams): Promise<Task> {
   const config = projectHasTargetAndConfiguration(
     project,
     target,
@@ -112,12 +119,83 @@ export function createTask({
     target,
     configuration: config,
   };
+
+  const interpolated = interpolateOverrides(
+    overrides,
+    project.name,
+    project.data
+  );
+
+  // TODO : could cache these?
+  const builderSchema = await getBuilderSchema(
+    project.data.architect[target].builder
+  );
+
+  // only remove unrecognised props if the builder doesn't support them
+  if (!builderSchema.additionalProperties) {
+    const builderProps = getBuilderProps(builderSchema);
+
+    for (const override in interpolated) {
+      if (!builderProps.has(override)) {
+        delete interpolated[override];
+      }
+    }
+  }
+
   return {
     id: getId(qualifiedTarget),
     target: qualifiedTarget,
     projectRoot: project.data.root,
-    overrides: interpolateOverrides(overrides, project.name, project.data),
+    overrides: interpolated,
   };
+}
+
+/**
+ * Returns a set containing all the builder schema
+ * property names (including aliases)
+ *
+ * @param schema The flattened schema of a builder
+ */
+function getBuilderProps(schema: json.JsonObject): Set<string> {
+  const props = new Set(Object.keys(schema.properties));
+
+  //add the aliases
+  const schemaProps = schema.properties as any;
+  for (const prop in schemaProps) {
+    if (schemaProps[prop].alias) props.add(schemaProps[prop].alias);
+    if (schemaProps[prop].aliases)
+      schemaProps[prop].aliases.forEach((x: string) => props.add(x));
+  }
+
+  return props;
+}
+
+/**
+ * Looks up the schema of the given builder and flattens it
+ *
+ * @param builder A builder name in the form {collection}:{builder}
+ */
+async function getBuilderSchema(builder: string): Promise<json.JsonObject> {
+  // create an architect host in order to resolve the builder
+  const fsHost = new NodeJsSyncHost();
+  const { workspace } = await workspaces.readWorkspace(
+    workspaceFileName(),
+    workspaces.createWorkspaceHost(fsHost),
+    workspaces.WorkspaceFormat.JSON
+  );
+  const architectHost = new WorkspaceNodeModulesArchitectHost(
+    workspace,
+    appRootPath
+  );
+  const builderDesc = await architectHost.resolveBuilder(builder);
+
+  // use the registry to flatten the builder schema
+  const registry = new json.schema.CoreSchemaRegistry();
+  const flattenedSchema = await registry
+    .flatten(builderDesc.optionSchema as json.JsonObject)
+    .toPromise();
+
+  return flattenedSchema;
 }
 
 function getId({

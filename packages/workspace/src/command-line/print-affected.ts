@@ -1,13 +1,13 @@
-import { ProjectGraph, ProjectGraphNode } from '../core/project-graph';
-import { Task } from '../tasks-runner/tasks-runner';
-import { createTask } from '../tasks-runner/run-command';
 import { basename } from 'path';
-import { getCommandAsString, getOutputs } from '../tasks-runner/utils';
 import * as yargs from 'yargs';
-import { NxArgs } from './utils';
 import { cliCommand } from '../core/file-utils';
+import { ProjectGraph, ProjectGraphNode } from '../core/project-graph';
+import { createTask } from '../tasks-runner/run-command';
+import { Task } from '../tasks-runner/tasks-runner';
+import { getCommandAsString, getOutputs } from '../tasks-runner/utils';
+import { NxArgs } from './utils';
 
-export function printAffected(
+export async function printAffected(
   affectedProjectsWithTargetAndConfig: ProjectGraphNode[],
   affectedProjects: ProjectGraphNode[],
   projectGraph: ProjectGraph,
@@ -15,7 +15,7 @@ export function printAffected(
   overrides: yargs.Arguments
 ) {
   const projectNames = affectedProjects.map((p) => p.name);
-  const tasksJson = createTasks(
+  const tasksJson = await createTasks(
     affectedProjectsWithTargetAndConfig,
     projectGraph,
     nxArgs,
@@ -33,21 +33,23 @@ export function printAffected(
   }
 }
 
-function createTasks(
+async function createTasks(
   affectedProjectsWithTargetAndConfig: ProjectGraphNode[],
   projectGraph: ProjectGraph,
   nxArgs: NxArgs,
   overrides: yargs.Arguments
 ) {
-  const tasks: Task[] = affectedProjectsWithTargetAndConfig.map(
-    (affectedProject) =>
-      createTask({
+  const tasks: Task[] = [];
+  for (const affectedProject of affectedProjectsWithTargetAndConfig) {
+    tasks.push(
+      await createTask({
         project: affectedProject,
         target: nxArgs.target,
         configuration: nxArgs.configuration,
         overrides: overrides,
       })
-  );
+    );
+  }
   const cli = cliCommand();
   const isYarn = basename(process.env.npm_execpath || 'npm').startsWith('yarn');
   return tasks.map((task) => ({
