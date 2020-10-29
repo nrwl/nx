@@ -458,6 +458,7 @@ function moveExistingFiles(options: Schema) {
         context.logger.info(
           `Renamed ${oldAppSourceRoot} -> ${newAppSourceRoot}`
         );
+        host.delete(oldAppSourceRoot);
       } else {
         context.logger.error(err);
         throw err;
@@ -473,6 +474,7 @@ function moveExistingFiles(options: Schema) {
       renameDirSyncInTree(host, oldE2eRoot, newE2eRoot, (err) => {
         if (!err) {
           context.logger.info(`Renamed ${oldE2eRoot} -> ${newE2eRoot}`);
+          host.delete(oldE2eRoot);
         } else {
           context.logger.error(err);
           throw err;
