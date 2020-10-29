@@ -40,6 +40,11 @@
       "version": "10.3.0-beta.1",
       "description": "Add tsconfig.editor.json to angular apps and update jest-angular-preset",
       "factory": "./src/migrations/update-10-3-0/update-10-3-0"
+    },
+    "add-template-support-and-presets-to-eslint": {
+      "version": "10.4.0-beta.0",
+      "description": "Update eslint config and builder to extend from new Nx Angular presets and lint templates",
+      "factory": "./src/migrations/update-10-4-0/add-template-support-and-presets-to-eslint"
     }
   },
   "packageJsonUpdates": {
