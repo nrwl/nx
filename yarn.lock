@@ -2630,17 +2630,6 @@
     node-gyp "^6.1.0"
     read-package-json-fast "^1.1.3"
 
-"@nrwl/cli@10.3.0-rc.3":
-  version "10.3.0-rc.3"
-  resolved "https://registry.yarnpkg.com/@nrwl/cli/-/cli-10.3.0-rc.3.tgz#54cf7a2a8981b763aced39376645c5975bb5fbab"
-  integrity sha512-zgsUzlX1AuaSyfvNOB/yHzXxFEuCUmtGsiHSnUIYqIBBuxXbfaSG50aBwKh1q16R4CTgTk0PSv9VeClH8/diyw==
-  dependencies:
-    "@nrwl/tao" "10.3.0-rc.3"
-    chalk "2.4.2"
-    tmp "0.0.33"
-    yargs "15.4.1"
-    yargs-parser "20.0.0"
-
 "@nrwl/cli@10.3.1-beta.1":
   version "10.3.1-beta.1"
   resolved "https://registry.yarnpkg.com/@nrwl/cli/-/cli-10.3.1-beta.1.tgz#a67326315884c986a0f366dcc82b8c3cdf24e25f"
@@ -2723,32 +2712,16 @@
     webpack-merge "4.2.1"
     webpack-node-externals "1.7.2"
 
-"@nrwl/nx-cloud@10.1.6":
-  version "10.1.6"
-  resolved "https://registry.yarnpkg.com/@nrwl/nx-cloud/-/nx-cloud-10.1.6.tgz#117da97562b1c60c17a25765d718d8e2963cf9ce"
-  integrity sha512-m/B3gBojAl7UI0L/HJeAR9mbUOEIzNPuIndL0yoBrla/mpd5RatSf4VUsKHUD0X+ST8RYnwbfkXIkKO3HVf7tQ==
+"@nrwl/nx-cloud@10.1.8":
+  version "10.1.8"
+  resolved "https://registry.yarnpkg.com/@nrwl/nx-cloud/-/nx-cloud-10.1.8.tgz#4bd99d1c5aaba01e93257592dd301f62340fb794"
+  integrity sha512-wHgnE2jfLi+HFLv2/AD2GNIKYwze07/QWf1dvhsuU0Lwe/++G/k1mcu4KXNgnuYDdSurL4FA23YU43RoctgENA==
   dependencies:
     axios "^0.19.0"
     node-machine-id "^1.1.12"
     rxjs "6.5.5"
     tar "5.0.5"
     uuid "^3.3.3"
-
-"@nrwl/tao@10.3.0-rc.3":
-  version "10.3.0-rc.3"
-  resolved "https://registry.yarnpkg.com/@nrwl/tao/-/tao-10.3.0-rc.3.tgz#41bb5355d3842e2698ba31bae247c1bbe3cecae5"
-  integrity sha512-SnAxgTFZRbaNG+sQ7Iu4hcshKpiFu6m/pyFkkiZUphyZJJyDcfNDvobxwhdw6sQAeR5omju0jlDhLfktF9zx5A==
-  dependencies:
-    "@angular-devkit/architect" "~0.1001.3"
-    "@angular-devkit/core" "~10.1.3"
-    "@angular-devkit/schematics" "~10.1.3"
-    inquirer "^6.3.1"
-    minimist "^1.2.0"
-    semver "6.3.0"
-    strip-json-comments "2.0.1"
-    tmp "0.0.33"
-    tslib "^1.9.3"
-    yargs-parser "20.0.0"
 
 "@nrwl/tao@10.3.1-beta.1":
   version "10.3.1-beta.1"
@@ -11442,7 +11415,7 @@ find-cache-dir@3.0.0:
     make-dir "^3.0.0"
     pkg-dir "^4.1.0"
 
-find-cache-dir@3.3.1, find-cache-dir@^3.2.0, find-cache-dir@^3.3.1:
+find-cache-dir@3.3.1, find-cache-dir@^3.3.1:
   version "3.3.1"
   resolved "https://registry.yarnpkg.com/find-cache-dir/-/find-cache-dir-3.3.1.tgz#89b33fad4a4670daa94f855f7fbe31d6d84fe880"
   integrity sha512-t2GDMt3oGC/v+BMwzmllWDuJF/xcDtE5j/fCGbqDD7OLuJkj0cfh1YSA5VKPvwMeLFLNDBkwOKZ2X85jGLVftQ==
@@ -14351,7 +14324,7 @@ jest-watcher@^26.2.0:
     jest-util "^26.2.0"
     string-length "^4.0.1"
 
-jest-worker@24.9.0, jest-worker@^24.9.0:
+jest-worker@24.9.0:
   version "24.9.0"
   resolved "https://registry.yarnpkg.com/jest-worker/-/jest-worker-24.9.0.tgz#5dbfdb5b2d322e98567898238a9697bcce67b3e5"
   integrity sha512-51PE4haMSXcHohnSMdM42anbvZANYTqMrr52tVKPqqsPJMzoP6FYYDVqahX/HrAoKEKz3uUPzSvKs9A3qR4iVw==
@@ -14373,6 +14346,14 @@ jest-worker@26.3.0, jest-worker@^26.3.0:
   integrity sha512-Vmpn2F6IASefL+DVBhPzI2J9/GJUsqzomdeN+P+dK8/jKxbh8R3BtFnx3FIta7wYlPU62cpJMJQo4kuOowcMnw==
   dependencies:
     "@types/node" "*"
+    merge-stream "^2.0.0"
+    supports-color "^7.0.0"
+
+jest-worker@^25.4.0:
+  version "25.5.0"
+  resolved "https://registry.yarnpkg.com/jest-worker/-/jest-worker-25.5.0.tgz#2611d071b79cea0f43ee57a3d118593ac1547db1"
+  integrity sha512-/dsSmUkIy5EBGfv/IjjqmFxrNAUpBERfGs1oHROyD7yxjG/w+t0GOJDX8O1k32ySmd7+a5IhnJU2qQFcJ4n1vw==
+  dependencies:
     merge-stream "^2.0.0"
     supports-color "^7.0.0"
 
@@ -17192,7 +17173,7 @@ p-limit@^1.1.0:
   dependencies:
     p-try "^1.0.0"
 
-p-limit@^2.0.0, p-limit@^2.2.0:
+p-limit@^2.0.0, p-limit@^2.2.0, p-limit@^2.3.0:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/p-limit/-/p-limit-2.3.0.tgz#3dd33c647a214fdfffd835933eb086da0dc21db1"
   integrity sha512-//88mFWSJx8lxCzwdAABTJL2MyWB12+eIY7MDL2SqLmAkeKU9qxRvWuSyTjm3FUmpBEMuFfckAIqEaVGUDxb6w==
@@ -20256,11 +20237,6 @@ send@0.17.1:
     range-parser "~1.2.1"
     statuses "~1.5.0"
 
-serialize-javascript@^2.1.2:
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/serialize-javascript/-/serialize-javascript-2.1.2.tgz#ecec53b0e0317bdc95ef76ab7074b7384785fa61"
-  integrity sha512-rs9OggEUF0V4jUSecXazOYsLfu7OGK2qIn3c7IPBiffz32XniEp/TX9Xmc9LQfK2nQ2QKHvZ2oygKUGU0lG4jQ==
-
 serialize-javascript@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/serialize-javascript/-/serialize-javascript-3.1.0.tgz#8bf3a9170712664ef2561b44b691eafe399214ea"
@@ -21505,18 +21481,19 @@ terminal-link@^2.0.0:
     ansi-escapes "^4.2.1"
     supports-hyperlinks "^2.0.0"
 
-terser-webpack-plugin@2.3.1:
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/terser-webpack-plugin/-/terser-webpack-plugin-2.3.1.tgz#6a63c27debc15b25ffd2588562ee2eeabdcab923"
-  integrity sha512-dNxivOXmDgZqrGxOttBH6B4xaxT4zNC+Xd+2K8jwGDMK5q2CZI+KZMA1AAnSRT+BTRvuzKsDx+fpxzPAmAMVcA==
+terser-webpack-plugin@2.3.7:
+  version "2.3.7"
+  resolved "https://registry.yarnpkg.com/terser-webpack-plugin/-/terser-webpack-plugin-2.3.7.tgz#4910ff5d1a872168cc7fa6cd3749e2b0d60a8a0b"
+  integrity sha512-xzYyaHUNhzgaAdBsXxk2Yvo/x1NJdslUaussK3fdpBbvttm1iIwU+c26dj9UxJcwk2c5UWt5F55MUTIA8BE7Dg==
   dependencies:
     cacache "^13.0.1"
-    find-cache-dir "^3.2.0"
-    jest-worker "^24.9.0"
-    schema-utils "^2.6.1"
-    serialize-javascript "^2.1.2"
+    find-cache-dir "^3.3.1"
+    jest-worker "^25.4.0"
+    p-limit "^2.3.0"
+    schema-utils "^2.6.6"
+    serialize-javascript "^3.1.0"
     source-map "^0.6.1"
-    terser "^4.4.3"
+    terser "^4.6.12"
     webpack-sources "^1.4.3"
 
 terser-webpack-plugin@4.1.0:
@@ -21573,7 +21550,7 @@ terser@4.3.8:
     source-map "~0.6.1"
     source-map-support "~0.5.12"
 
-terser@4.8.0, terser@^4.1.2, terser@^4.4.3, terser@^4.6.3, terser@^4.8.0:
+terser@4.8.0, terser@^4.1.2, terser@^4.6.12, terser@^4.6.3, terser@^4.8.0:
   version "4.8.0"
   resolved "https://registry.yarnpkg.com/terser/-/terser-4.8.0.tgz#63056343d7c70bb29f3af665865a46fe03a0df17"
   integrity sha512-EAPipTNeWsb/3wLPeup1tVPaXfIaU68xMnVdPafIL1TV05OhASArYyIfFvnvJCNrR2NIOvDVNNTFRa+Re2MWyw==

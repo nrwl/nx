@@ -29,6 +29,11 @@
       "version": "10.4.0-beta.0",
       "description": "Update ESLint config files to use preset configs which eslint-plugin-nx exports",
       "factory": "./src/migrations/update-10-4-0/update-eslint-configs-to-use-nx-presets"
+    },
+    "update-root-eslint-config-to-use-overrides": {
+      "version": "10.4.0-beta.1",
+      "description": "Update root ESLint config to use overrides",
+      "factory": "./src/migrations/update-10-4-0/update-root-eslint-config-to-use-overrides"
     }
   },
   "packageJsonUpdates": {

@@ -162,7 +162,7 @@ describe('findTargetProjectWithImport', () => {
           files: [],
         },
       },
-      '@ng/core': {
+      'npm:@ng/core': {
         name: 'npm:@ng/core',
         type: 'npm',
         data: {
@@ -170,7 +170,7 @@ describe('findTargetProjectWithImport', () => {
           packageName: '@ng/core',
         },
       },
-      '@ng/common': {
+      'npm:@ng/common': {
         name: 'npm:@ng/common',
         type: 'npm',
         data: {
@@ -178,12 +178,20 @@ describe('findTargetProjectWithImport', () => {
           packageName: '@ng/common',
         },
       },
-      'npm-package': {
+      'npm:npm-package': {
         name: 'npm:npm-package',
         type: 'npm',
         data: {
           files: [],
           packageName: 'npm-package',
+        },
+      },
+      'npm:@proj/proj123-base': {
+        name: 'npm:@proj/proj123-base',
+        type: 'npm',
+        data: {
+          files: [],
+          packageName: '@proj/proj123-base',
         },
       },
       'proj1234-child': {
@@ -289,5 +297,21 @@ describe('findTargetProjectWithImport', () => {
       ctx.nxJson.npmScope
     );
     expect(parentProj).toEqual('proj1234');
+  });
+
+  it('should be able to resolve npm projects', () => {
+    const similarImportFromNpm = targetProjectLocator.findProjectWithImport(
+      '@proj/proj123-base',
+      'libs/proj/index.ts',
+      ctx.nxJson.npmScope
+    );
+    expect(similarImportFromNpm).toEqual('npm:@proj/proj123-base');
+
+    const similarDeepImportFromNpm = targetProjectLocator.findProjectWithImport(
+      '@proj/proj123-base/deep',
+      'libs/proj/index.ts',
+      ctx.nxJson.npmScope
+    );
+    expect(similarDeepImportFromNpm).toEqual('npm:@proj/proj123-base');
   });
 });

@@ -45,7 +45,7 @@ function getUntrackedFiles(): string[] {
 }
 
 function getFilesUsingBaseAndHead(base: string, head: string): string[] {
-  const mergeBase = execSync(`git merge-base ${base} ${head}`, {
+  const mergeBase = execSync(`git merge-base --fork-point ${base} ${head} `, {
     maxBuffer: TEN_MEGABYTES,
   })
     .toString()

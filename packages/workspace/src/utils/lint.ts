@@ -234,24 +234,69 @@ const globalTsLint = `
 }
 `;
 
-const globalESLint = `
-{
-  "root": true,
-  "ignorePatterns": ["**/*"],
-  "plugins": ["@nrwl/nx"],
-  "extends": ["plugin:@nrwl/nx/typescript"],
-  "parserOptions": { "project": "./tsconfig.*?.json" },
-  "rules": {
-    "@nrwl/nx/enforce-module-boundaries": [
-      "error",
-      {
-        "enforceBuildableLibDependency": true,
-        "allow": [],
-        "depConstraints": [
-          { "sourceTag": "*", "onlyDependOnLibsWithTags": ["*"] }
-        ]
-      }
-    ]
-  }
-}
-`;
+const globalESLint = JSON.stringify({
+  root: true,
+  ignorePatterns: ['**/*'],
+  plugins: ['@nrwl/nx'],
+  /**
+   * We leverage ESLint's "overrides" capability so that we can set up a root config which will support
+   * all permutations of Nx workspaces across all frameworks, libraries and tools.
+   *
+   * The key point is that we need entirely different ESLint config to apply to different types of files,
+   * but we still want to share common config where possible.
+   */
+  overrides: [
+    /**
+     * This configuration is intended to apply to all "source code" (but not
+     * markup like HTML, or other custom file types like GraphQL)
+     */
+    {
+      files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+      rules: {
+        '@nrwl/nx/enforce-module-boundaries': [
+          'error',
+          {
+            enforceBuildableLibDependency: true,
+            allow: [],
+            depConstraints: [
+              { sourceTag: '*', onlyDependOnLibsWithTags: ['*'] },
+            ],
+          },
+        ],
+      },
+    },
+
+    /**
+     * This configuration is intended to apply to all TypeScript source files.
+     * See the eslint-plugin-nx package for what is in the referenced shareable config.
+     */
+    {
+      files: ['*.ts', '*.tsx'],
+      extends: ['plugin:@nrwl/nx/typescript'],
+      /**
+       * TODO: Remove this usage of project at the root in a follow up PR (and migration),
+       * it should be set in each project's config
+       */
+      parserOptions: { project: './tsconfig.*?.json' },
+      /**
+       * Having an empty rules object present makes it more obvious to the user where they would
+       * extend things from if they needed to
+       */
+      rules: {},
+    },
+
+    /**
+     * This configuration is intended to apply to all JavaScript source files.
+     * See the eslint-plugin-nx package for what is in the referenced shareable config.
+     */
+    {
+      files: ['*.js', '*.jsx'],
+      extends: ['plugin:@nrwl/nx/javascript'],
+      /**
+       * Having an empty rules object present makes it more obvious to the user where they would
+       * extend things from if they needed to
+       */
+      rules: {},
+    },
+  ],
+});
