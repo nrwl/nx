@@ -14,7 +14,7 @@ import { <%= className %>Facade } from './<%= fileName %>.facade';
 import * as <%= className %>Selectors from './<%= fileName %>.selectors';
 import * as <%= className %>Actions from './<%= fileName %>.actions';
 import {
-  <%= className.toUpperCase() %>_FEATURE_KEY,
+  <%= constantName %>_FEATURE_KEY,
   State,
   initialState,
   reducer
@@ -41,7 +41,7 @@ describe('<%= className %>Facade', () => {
     beforeEach(() => {
       @NgModule({
         imports: [
-          StoreModule.forFeature(<%= className.toUpperCase() %>_FEATURE_KEY, reducer),
+          StoreModule.forFeature(<%= constantName %>_FEATURE_KEY, reducer),
           EffectsModule.forFeature([<%= className %>Effects])
         ],
         providers: [<%= className %>Facade]
