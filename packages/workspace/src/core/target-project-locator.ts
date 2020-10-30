@@ -90,7 +90,11 @@ export class TargetProjectLocator {
 
     this.typescriptResolutionCache.set(normalizedImportExpr, resolvedModule);
     if (resolvedModule) {
-      return this.findProjectOfResolvedModule(resolvedModule);
+      const resolvedProject = this.findProjectOfResolvedModule(resolvedModule);
+
+      if (resolvedProject) {
+        return resolvedProject;
+      }
     }
 
     const importedProject = this.sortedWorkspaceProjects.find((p) => {
