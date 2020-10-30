@@ -160,6 +160,7 @@
     "identity-obj-proxy": "3.0.0",
     "ignore": "^5.0.4",
     "import-fresh": "^3.1.0",
+    "injection-js": "^2.3.1",
     "jasmine-core": "~2.99.1",
     "jasmine-marbles": "~0.6.0",
     "jasmine-spec-reporter": "~4.2.1",
@@ -263,5 +264,8 @@
       "pre-push": "yarn check-commit && yarn documentation && pretty-quick --check"
     }
   },
-  "dependencies": {}
+  "dependencies": {},
+  "resolutions": {
+    "ng-packagr/rxjs": "6.6.2"
+  }
 }
