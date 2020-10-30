@@ -361,6 +361,10 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
     .option('host', {
       describe: 'Bind the dep graph server to a specific ip address.',
       type: 'string',
+    })
+    .option('port', {
+      describe: 'Bind the dep graph server to a specific port.',
+      type: 'number',
     });
 }
 
