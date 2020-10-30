@@ -499,7 +499,7 @@
               },
               {
                 "input": "packages/storybook",
-                "glob": "**/lib-files-5/.storybook/**",
+                "glob": "**/project-files-5/.storybook/**",
                 "output": "/"
               },
               {
