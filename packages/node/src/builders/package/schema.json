@@ -30,6 +30,12 @@
       "description": "Update buildable project dependencies in package.json",
       "default": true
     },
+    "buildableProjectDepsInPackageJsonType": {
+      "type": "string",
+      "description": "When updateBuildableProjectDepsInPackageJson is true, this adds dependencies to either `peerDependencies` or `dependencies`",
+      "enum": ["dependencies", "peerDependencies"],
+      "default": "dependencies"
+    },
     "assets": {
       "type": "array",
       "description": "List of static library assets.",
@@ -41,6 +47,10 @@
     "packageJson": {
       "type": "string",
       "description": "The name of the package.json file"
+    },
+    "srcRootForCompilationRoot": {
+      "type": "string",
+      "description": "Sets the rootDir for TypeScript compilation. When not defined, it uses the project's root property"
     }
   },
   "required": ["tsConfig", "main"],

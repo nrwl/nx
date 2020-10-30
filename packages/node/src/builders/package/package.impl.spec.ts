@@ -1,64 +1,58 @@
-import { EventEmitter } from 'events';
 import { join } from 'path';
 import { getMockContext } from '../../utils/testing';
 import { MockBuilderContext } from '@nrwl/workspace/testing';
+import { mocked } from 'ts-jest/utils';
 jest.mock('@nrwl/workspace/src/core/project-graph');
-let projectGraph = require('@nrwl/workspace/src/core/project-graph');
+import * as projectGraph from '@nrwl/workspace/src/core/project-graph';
 import {
   ProjectGraph,
   ProjectType,
 } from '@nrwl/workspace/src/core/project-graph';
 
-import {
-  NodePackageBuilderOptions,
-  runNodePackageBuilder,
-} from './package.impl';
-import * as fsMock from 'fs';
+import { runNodePackageBuilder } from './package.impl';
+import { NodePackageBuilderOptions } from './utils/models';
 
 jest.mock('glob');
-let glob = require('glob');
+import * as glob from 'glob';
 jest.mock('fs-extra');
-let fs = require('fs-extra');
+import * as fs from 'fs-extra';
 jest.mock('@nrwl/workspace/src/utils/fileutils');
-let fsUtility = require('@nrwl/workspace/src/utils/fileutils');
-jest.mock('child_process');
-let { fork } = require('child_process');
-jest.mock('tree-kill');
-let treeKill = require('tree-kill');
+import * as fsUtility from '@nrwl/workspace/src/utils/fileutils';
+import * as tsUtils from '@nrwl/workspace/src/utils/typescript';
+import * as ts from 'typescript';
 
 describe('NodePackageBuilder', () => {
   let testOptions: NodePackageBuilderOptions;
   let context: MockBuilderContext;
-  let fakeEventEmitter: EventEmitter;
 
   beforeEach(async () => {
-    fakeEventEmitter = new EventEmitter();
-    (fakeEventEmitter as any).pid = 123;
-    fork.mockReturnValue(fakeEventEmitter);
-    treeKill.mockImplementation((pid, signal, callback) => {
-      callback();
-    });
-
-    fsUtility.readJsonFile.mockImplementation((arg: string) => {
-      if (arg.endsWith('tsconfig.lib.json')) {
-        return {
-          extends: './tsconfig.json',
-          compilerOptions: {
-            outDir: '../../dist/out-tsc',
-            declaration: true,
-            rootDir: './src',
-            types: ['node'],
-          },
-          exclude: ['**/*.spec.ts'],
-          include: ['**/*.ts'],
-        };
-      } else {
-        return {
-          name: 'nodelib',
-        };
+    mocked(fsUtility.readJsonFile).mockImplementation(
+      (path: string): unknown => {
+        if (path.endsWith('tsconfig.lib.json')) {
+          return {
+            extends: './tsconfig.json',
+            compilerOptions: {
+              outDir: '../../dist/out-tsc',
+              declaration: true,
+              rootDir: './src',
+              types: ['node'],
+            },
+            exclude: ['**/*.spec.ts'],
+            include: ['**/*.ts'],
+          };
+        } else {
+          return {
+            name: 'nodelib',
+          };
+        }
       }
-    });
-    fsUtility.writeJsonFile.mockImplementation(() => {});
+    );
+    mocked(fsUtility.writeJsonFile).mockImplementation(
+      (_: string, _2: unknown) => {
+        //empty
+        return;
+      }
+    );
     context = await getMockContext();
     context.target.target = 'build';
     context.target.project = 'nodelib';
@@ -75,54 +69,62 @@ describe('NodePackageBuilder', () => {
 
   describe('Without library dependencies', () => {
     beforeEach(() => {
-      // mock createProjectGraph without deps
       spyOn(projectGraph, 'createProjectGraph').and.callFake(() => {
         return {
-          nodes: {},
-          dependencies: {},
+          nodes: {
+            nodelib: {
+              type: ProjectType.lib,
+              name: 'nodelib',
+              data: {
+                files: [],
+                root: 'libs/nodelib',
+                architect: { build: { builder: 'any builder' } },
+              },
+            },
+            'nodelib-child': {
+              type: ProjectType.lib,
+              name: 'nodelib-child',
+              data: {
+                files: [],
+                root: 'libs/nodelib-child',
+                prefix: 'proj',
+                architect: {
+                  build: {
+                    builder: 'any builder',
+                    options: {
+                      assets: [],
+                      main: 'libs/nodelib-child/src/index.ts',
+                      outputPath: 'dist/libs/nodelib-child',
+                      packageJson: 'libs/nodelib-child/package.json',
+                      tsConfig: 'libs/nodelib-child/tsconfig.lib.json',
+                    },
+                  },
+                },
+              },
+            },
+          },
+          dependencies: {
+            nodelib: [],
+            'nodelib-child': [],
+          },
         } as ProjectGraph;
       });
-    });
-
-    it('should call tsc to compile', (done) => {
-      runNodePackageBuilder(testOptions, context).subscribe({
-        complete: () => {
-          expect(
-            fork
-          ).toHaveBeenCalledWith(
-            `${context.workspaceRoot}/node_modules/typescript/bin/tsc`,
-            [
-              '-p',
-              join(context.workspaceRoot, testOptions.tsConfig),
-              '--outDir',
-              join(context.workspaceRoot, testOptions.outputPath),
-            ],
-            { stdio: [0, 1, 2, 'ipc'] }
-          );
-
-          done();
-        },
-      });
-      fakeEventEmitter.emit('exit', 0);
     });
 
     it('should update the package.json after compiling typescript', (done) => {
       runNodePackageBuilder(testOptions, context).subscribe({
         complete: () => {
-          expect(fork).toHaveBeenCalled();
           expect(fsUtility.writeJsonFile).toHaveBeenCalledWith(
             `${testOptions.outputPath}/package.json`,
             {
               name: 'nodelib',
-              main: 'index.js',
-              typings: 'index.d.ts',
+              main: 'src/index.js',
+              typings: 'src/index.d.ts',
             }
           );
-
           done();
         },
       });
-      fakeEventEmitter.emit('exit', 0);
     });
 
     it('should have the output path in the BuilderOutput', (done) => {
@@ -134,7 +136,6 @@ describe('NodePackageBuilder', () => {
           done();
         },
       });
-      fakeEventEmitter.emit('exit', 0);
     });
 
     describe('Asset copying', () => {
@@ -143,7 +144,7 @@ describe('NodePackageBuilder', () => {
       });
 
       it('should be able to copy assets using the glob object', (done) => {
-        glob.sync.mockReturnValue(['logo.png']);
+        mocked(glob.sync).mockReturnValue(['logo.png']);
         runNodePackageBuilder(
           {
             ...testOptions,
@@ -168,10 +169,9 @@ describe('NodePackageBuilder', () => {
             done();
           },
         });
-        fakeEventEmitter.emit('exit', 0);
       });
       it('should be able to copy assets with a regular string', (done) => {
-        glob.sync.mockReturnValue(['lib/nodelib/src/LICENSE']);
+        mocked(glob.sync).mockReturnValue(['lib/nodelib/src/LICENSE']);
 
         runNodePackageBuilder(
           {
@@ -189,11 +189,10 @@ describe('NodePackageBuilder', () => {
             done();
           },
         });
-        fakeEventEmitter.emit('exit', 0);
       });
 
       it('should be able to copy assets with a glob string', (done) => {
-        glob.sync.mockReturnValue([
+        mocked(glob.sync).mockReturnValue([
           'lib/nodelib/src/README.md',
           'lib/nodelib/src/CONTRIBUTING.md',
         ]);
@@ -217,13 +216,50 @@ describe('NodePackageBuilder', () => {
             done();
           },
         });
-        fakeEventEmitter.emit('exit', 0);
+      });
+    });
+
+    describe('srcRootForCompilationRoot', () => {
+      let spy: jest.SpyInstance;
+      beforeEach(() => {
+        jest.clearAllMocks();
+        spy = jest.spyOn(ts, 'createCompilerHost');
+      });
+
+      it('should use srcRootForCompilationRoot when it is defined', (done) => {
+        testOptions.srcRootForCompilationRoot = 'libs/nodelib/src';
+
+        runNodePackageBuilder(testOptions, context).subscribe({
+          complete: () => {
+            expect(spy).toHaveBeenCalledWith(
+              expect.objectContaining({
+                rootDir: 'libs/nodelib/src',
+              })
+            );
+            done();
+          },
+        });
+      });
+      it('should not use srcRootForCompilationRoot when it is not defined', (done) => {
+        testOptions.srcRootForCompilationRoot = undefined;
+
+        runNodePackageBuilder(testOptions, context).subscribe({
+          complete: () => {
+            expect(spy).toHaveBeenCalledWith(
+              expect.objectContaining({
+                rootDir: 'libs/nodelib',
+              })
+            );
+            done();
+          },
+        });
       });
     });
   });
 
   describe('building with dependencies', () => {
     beforeEach(() => {
+      // fake that dep project has been built
       spyOn(projectGraph, 'createProjectGraph').and.callFake(() => {
         return {
           nodes: {
@@ -270,48 +306,28 @@ describe('NodePackageBuilder', () => {
           },
         } as ProjectGraph;
       });
-
-      // fake that dep project has been built
       // dist/libs/nodelib-child/package.json
-      fsUtility.fileExists.mockImplementation((arg: string) => {
-        if (arg.endsWith('dist/libs/nodelib-child/package.json')) {
-          return true;
-        } else {
-          return false;
-        }
+      mocked(fsUtility.fileExists).mockImplementation((arg: string) => {
+        return arg.endsWith('dist/libs/nodelib-child/package.json');
       });
-
-      // fsMock.unlinkSync.mockImplementation(() => {});
-
-      spyOn(fsMock, 'unlinkSync');
     });
 
     it('should call the tsc compiler with the modified tsconfig.json', (done) => {
-      let tmpTsConfigPath = join(
+      const tmpTsConfigPath = join(
         '/root',
         'tmp',
         'libs/nodelib',
         'tsconfig.generated.json'
       );
 
+      const tsConfigSpy = jest.spyOn(tsUtils, 'readTsConfig');
+
       runNodePackageBuilder(testOptions, context).subscribe({
         complete: () => {
-          expect(fork).toHaveBeenCalledWith(
-            `${context.workspaceRoot}/node_modules/typescript/bin/tsc`,
-            [
-              '-p',
-              tmpTsConfigPath,
-              // join(context.workspaceRoot, testOptions.tsConfig),
-              '--outDir',
-              join(context.workspaceRoot, testOptions.outputPath),
-            ],
-            { stdio: [0, 1, 2, 'ipc'] }
-          );
-
+          expect(tsConfigSpy).toHaveBeenCalledWith(tmpTsConfigPath);
           done();
         },
       });
-      fakeEventEmitter.emit('exit', 0);
     });
   });
 });

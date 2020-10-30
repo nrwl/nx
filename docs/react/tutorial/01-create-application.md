@@ -1,5 +1,9 @@
 # Step 1: Create Application
 
+## Video of this Lesson
+
+<iframe width="560" height="600" src="https://www.youtube.com/embed/HcQE5R6ucng" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 In this tutorial you will use Nx to build a full-stack application out of common libraries using modern technologies.
 
 > Next.js: Nx also has first-class Next.js support. Read more about it [here](https://nx.dev/react/plugins/next/overview)
@@ -68,13 +72,19 @@ The generate command added two projects to our workspace:
 
 ## Serve the newly created application
 
-Now that the application is setup, run it locally via:
+Now that the application is set up, run it locally via:
+
+```bash
+npx nx serve todos
+```
+
+## Note on the Nx CLI
+
+If you would prefer to run using a global installation of Nx, you can run:
 
 ```bash
 nx serve todos
 ```
-
-## Note on the Nx CLI
 
 Depending on how your dev env is set up, the command above might result in `Command 'nx' not found`.
 
@@ -90,7 +100,7 @@ or
 yarn global add nx
 ```
 
-Or you can prepend every command with `npm run`:
+Alternatively, you can run the local installation of Nx by prepending every command with `npm run`:
 
 ```bash
 npm run nx -- serve todos

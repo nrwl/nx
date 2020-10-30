@@ -560,7 +560,7 @@ import {
           syntax: 'creators',
           minimal: false,
           facade: true,
-          useDataPersistance: false,
+          useDataPersistence: false,
         },
         appTree
       );
@@ -702,10 +702,40 @@ import {
     });
   });
 
+  describe('classes syntax', () => {
+    it('should use fetch operator when useDataPersistence is set to false', async () => {
+      const appConfig = getAppConfig();
+      const tree = await runSchematic(
+        'ngrx',
+        {
+          name: 'users',
+          module: appConfig.appModule,
+          syntax: 'classes',
+          minimal: false,
+          facade: true,
+          useDataPersistence: false,
+        },
+        appTree
+      );
+
+      const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+      const content = tree.readContent(`${statePath}/users.effects.ts`);
+
+      [`{ fetch }`, `, ofType`, `ofType(UsersActionTypes.LoadUsers),`].forEach(
+        (text) => {
+          expect(content).toContain(text);
+        }
+      );
+
+      expect(content).not.toContain('dataPersistence.fetch');
+    });
+  });
+
   async function buildNgrxTree(
     appConfig: AppConfig,
     featureName: string = 'user',
-    withFacade = false
+    withFacade = false,
+    useDataPersistence = true
   ): Promise<UnitTestTree> {
     return await runSchematic(
       'ngrx',
@@ -715,7 +745,7 @@ import {
         facade: withFacade,
         syntax: 'classes',
         minimal: false,
-        useDataPersistance: true,
+        useDataPersistence,
       },
       appTree
     );

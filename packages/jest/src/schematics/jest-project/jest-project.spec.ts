@@ -2,7 +2,9 @@ import { Tree } from '@angular-devkit/schematics';
 import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { callRule, runSchematic } from '../../utils/testing';
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { tags } from '@angular-devkit/core';
+import { JestProjectSchema } from './schema.d';
+import { jestConfigObject } from '../../utils/config/functions';
 
 describe('jestProject', () => {
   let appTree: Tree;
@@ -28,7 +30,7 @@ describe('jestProject', () => {
       appTree
     );
     appTree = await callRule(
-      updateJsonInTree('libs/lib1/tsconfig.json', (json) => {
+      updateJsonInTree('libs/lib1/tsconfig.json', () => {
         return {
           files: [],
           include: [],
@@ -67,8 +69,6 @@ describe('jestProject', () => {
       builder: '@nrwl/jest:jest',
       options: {
         jestConfig: 'libs/lib1/jest.config.js',
-        setupFile: 'libs/lib1/src/test-setup.ts',
-        tsConfig: 'libs/lib1/tsconfig.spec.json',
         passWithNoTests: true,
       },
     });
@@ -78,6 +78,33 @@ describe('jestProject', () => {
   });
 
   it('should create a jest.config.js', async () => {
+    const resultTree = await runSchematic<JestProjectSchema>(
+      'jest-project',
+      {
+        project: 'lib1',
+      },
+      appTree
+    );
+    expect(
+      tags.stripIndents`${resultTree.readContent('libs/lib1/jest.config.js')}`
+    ).toBe(tags.stripIndents`module.exports = {
+      displayName: 'lib1',
+      preset: '../../jest.preset.js',
+      globals: {
+        'ts-jest': {
+          tsConfig: '<rootDir>/tsconfig.spec.json',
+        }
+      },
+      coverageDirectory: '../../coverage/libs/lib1',
+      snapshotSerializers: [
+        'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',
+        'jest-preset-angular/build/AngularSnapshotSerializer.js',
+        'jest-preset-angular/build/HTMLCommentSerializer.js'
+      ]
+     };`);
+  });
+
+  it('should add a project reference in the root jest.config.js', async () => {
     const resultTree = await runSchematic(
       'jest-project',
       {
@@ -85,23 +112,9 @@ describe('jestProject', () => {
       },
       appTree
     );
-    expect(stripIndents`${resultTree.readContent('libs/lib1/jest.config.js')}`)
-      .toBe(stripIndents`module.exports = {
-  name: 'lib1',
-  preset: '../../jest.config.js',
-  globals: {
-    'ts-jest': {
-      tsConfig: '<rootDir>/tsconfig.spec.json',
-    }
-  },
-  coverageDirectory: '../../coverage/libs/lib1',
-  snapshotSerializers: [
-    'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',
-    'jest-preset-angular/build/AngularSnapshotSerializer.js',
-    'jest-preset-angular/build/HTMLCommentSerializer.js'
-  ]
-};
-`);
+    const jestConfig = jestConfigObject(resultTree, 'jest.config.js');
+
+    expect(jestConfig.projects).toEqual(['<rootDir>/libs/lib1']);
   });
 
   it('should add a reference to solution tsconfig.json', async () => {
@@ -170,7 +183,7 @@ describe('jestProject', () => {
       );
     });
 
-    it('should have setupFilesAfterEnv and globals.ts-ject in the jest.config when generated for angular', async () => {
+    it('should have setupFilesAfterEnv and globals.ts-jest in the jest.config when generated for angular', async () => {
       const resultTree = await runSchematic(
         'jest-project',
         {
@@ -184,14 +197,17 @@ describe('jestProject', () => {
       expect(jestConfig).toContain(
         `setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],`
       );
-      expect(stripIndents`${jestConfig}`).toContain(stripIndents`globals: {
+      expect(tags.stripIndents`${jestConfig}`)
+        .toContain(tags.stripIndents`globals: {
     'ts-jest': {
       tsConfig: '<rootDir>/tsconfig.spec.json',
       stringifyContentPathRegex: '\\.(html|svg)$',
-      astTransformers: [
-        'jest-preset-angular/build/InlineFilesTransformer',
-        'jest-preset-angular/build/StripStylesTransformer'
-      ],`);
+      astTransformers: {
+        before: [
+          'jest-preset-angular/build/InlineFilesTransformer',
+          'jest-preset-angular/build/StripStylesTransformer'
+        ]
+      },`);
     });
 
     it('should not list the setup file in workspace.json', async () => {
@@ -293,8 +309,8 @@ describe('jestProject', () => {
   });
 
   describe('--support-tsx', () => {
-    it('should add tsx to moduleExtensions', async () => {
-      const resultTree = await runSchematic(
+    it('should add jest.transform', async () => {
+      const resultTree = await runSchematic<JestProjectSchema>(
         'jest-project',
         {
           project: 'lib1',
@@ -302,29 +318,51 @@ describe('jestProject', () => {
         },
         appTree
       );
-      const jestConfig = resultTree.readContent('libs/lib1/jest.config.js');
+      const jestConfig = tags.stripIndents`${resultTree.readContent(
+        'libs/lib1/jest.config.js'
+      )}`;
+
       expect(jestConfig).toContain(
-        `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],`
+        tags.stripIndents`transform: {
+          '^.+\\.[tj]sx?$':  'ts-jest'
+        },`
+      );
+    });
+
+    it('should add tsx to moduleExtensions', async () => {
+      const resultTree = await runSchematic<JestProjectSchema>(
+        'jest-project',
+        {
+          project: 'lib1',
+          supportTsx: true,
+        },
+        appTree
+      );
+      const jestConfig = tags.stripIndents`${resultTree.readContent(
+        'libs/lib1/jest.config.js'
+      )}`;
+      expect(jestConfig).toContain(
+        `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],`
       );
     });
   });
 
   describe('--babelJest', () => {
     it('should have globals.ts-jest configured when babelJest is false', async () => {
-      const resultTree = await runSchematic(
+      const resultTree = await runSchematic<JestProjectSchema>(
         'jest-project',
         {
           project: 'lib1',
           babelJest: false,
-          setupFile: 'none',
         },
         appTree
       );
-      const jestConfig = stripIndents`${resultTree.readContent(
+      const jestConfig = tags.stripIndents`${resultTree.readContent(
         'libs/lib1/jest.config.js'
       )}`;
+
       expect(jestConfig).toContain(
-        stripIndents`globals: {
+        tags.stripIndents`globals: {
           'ts-jest': {
             tsConfig: '<rootDir>/tsconfig.spec.json',
           }
@@ -332,26 +370,105 @@ describe('jestProject', () => {
       );
     });
 
-    it('should have NOT have globals.ts-jest configured when babelJest is true', async () => {
-      const resultTree = await runSchematic(
+    it('should NOT have globals.ts-jest configured when babelJest is true', async () => {
+      const resultTree = await runSchematic<JestProjectSchema>(
         'jest-project',
         {
           project: 'lib1',
           babelJest: true,
-          setupFile: 'none',
         },
         appTree
       );
-      const jestConfig = stripIndents`${resultTree.readContent(
+      const jestConfig = tags.stripIndents`${resultTree.readContent(
         'libs/lib1/jest.config.js'
       )}`;
+
       expect(jestConfig).not.toContain(
-        stripIndents`globals: {
+        tags.stripIndents`globals: {
           'ts-jest': {
             tsConfig: '<rootDir>/tsconfig.spec.json',
           }
         }`
       );
+    });
+
+    it('should generate proper jest.transform and babel-jest.config.json when babelJest is true', async () => {
+      const resultTree = await runSchematic<JestProjectSchema>(
+        'jest-project',
+        {
+          project: 'lib1',
+          babelJest: true,
+        },
+        appTree
+      );
+      const jestConfig = tags.stripIndents`${resultTree.readContent(
+        'libs/lib1/jest.config.js'
+      )}`;
+
+      expect(jestConfig).toContain(
+        tags.stripIndents`transform: {
+          '^.+\\.[tj]s$': [ 'babel-jest',
+          { cwd: __dirname, configFile: './babel-jest.config.json' }]
+          }`
+      );
+
+      expect(resultTree.exists('libs/lib1/babel-jest.config.json'));
+      expect(readJsonInTree(resultTree, 'libs/lib1/babel-jest.config.json'))
+        .toMatchInlineSnapshot(`
+        Object {
+          "presets": Array [
+            Array [
+              "@babel/preset-env",
+              Object {
+                "targets": Object {
+                  "node": "current",
+                },
+              },
+            ],
+            "@babel/preset-typescript",
+          ],
+        }
+      `);
+    });
+
+    it('should generate proper jest.transform and babel-jest.config.json when babelJest and supportTsx is true', async () => {
+      const resultTree = await runSchematic<JestProjectSchema>(
+        'jest-project',
+        {
+          project: 'lib1',
+          babelJest: true,
+          supportTsx: true,
+        },
+        appTree
+      );
+      const jestConfig = tags.stripIndents`${resultTree.readContent(
+        'libs/lib1/jest.config.js'
+      )}`;
+
+      expect(jestConfig).toContain(
+        tags.stripIndents`transform: {
+          '^.+\\.[tj]sx?$': [ 'babel-jest',
+          { cwd: __dirname, configFile: './babel-jest.config.json' }]
+          }`
+      );
+
+      expect(readJsonInTree(resultTree, 'libs/lib1/babel-jest.config.json'))
+        .toMatchInlineSnapshot(`
+        Object {
+          "presets": Array [
+            Array [
+              "@babel/preset-env",
+              Object {
+                "targets": Object {
+                  "node": "current",
+                },
+              },
+            ],
+            "@babel/preset-typescript",
+            "@babel/preset-react",
+          ],
+        }
+      `);
     });
   });
 });

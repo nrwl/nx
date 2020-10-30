@@ -207,3 +207,15 @@ Hello World
 
 Done.
 ```
+
+## Debugging Builders
+
+As part of Nx's computation cache process, Nx forks the node process, which can make it difficult to debug a builder command. Follow these steps to debug a builder:
+
+1. Make sure VSCode's `debug.node.autoAttach` setting is set to `On`.
+2. Find the builder code and set a breakpoint.
+3. Use node in debug to execute your builder command, replacing `nx` with the internal `tao` script.
+
+```bash
+node --inspect-brk node_modules/.bin/tao build best-app
+```

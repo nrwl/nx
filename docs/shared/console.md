@@ -1,25 +1,13 @@
 # Nx Console
 
-<figure>
-  <img
-    src="/assets/content/shared/nx-console-logo.png"
-    alt="Nx Console logo"
-    style="max-width: 100%;"
-  />
-</figure>
+![Nx Console logo](/shared/nx-console-logo.png)
 
 **Spend less time looking up command line arguments and more time shipping incredible products.**
 
 - [Install from the VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console)
 - [Contribute on GitHub](https://github.com/nrwl/nx-console)
 
-<figure>
-  <img
-    src="/assets/content/shared/nx-console-screenshot.png"
-    alt="Nx Console screenshot"
-    style="max-width: 100%;"
-  />
-</figure>
+![Nx Console screenshot](/shared/nx-console-screenshot.png)
 
 With Nx, you can get a full-stack application up and running in minutes, no need to figure out source maps, webpack, test runners. It all works out of the box. Nx also helps you enforce consistent development practices by generating components, services, and state management modules.
 

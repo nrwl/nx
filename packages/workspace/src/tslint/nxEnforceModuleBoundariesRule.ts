@@ -3,6 +3,7 @@ import { IOptions } from 'tslint';
 import * as ts from 'typescript';
 import {
   createProjectGraph,
+  isNpmProject,
   ProjectGraph,
   ProjectType,
 } from '../core/project-graph';
@@ -16,7 +17,7 @@ import {
   hasArchitectBuildBuilder,
   hasNoneOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
-  isCircular,
+  checkCircularPath,
   isRelativeImportIntoAnotherProject,
   matchImportWithWildcard,
   onlyLoadChildren,
@@ -160,19 +161,44 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       return;
     }
 
+    // project => npm package
+    if (isNpmProject(targetProject)) {
+      super.visitImportDeclaration(node);
+      return;
+    }
+
     // check for circular dependency
-    if (isCircular(this.projectGraph, sourceProject, targetProject)) {
-      const error = `Circular dependency between "${sourceProject.name}" and "${targetProject.name}" detected`;
+    const circularPath = checkCircularPath(
+      this.projectGraph,
+      sourceProject,
+      targetProject
+    );
+    if (circularPath.length !== 0) {
+      const path = circularPath.reduce(
+        (acc, v) => `${acc} -> ${v.name}`,
+        sourceProject.name
+      );
+      const error = `Circular dependency between "${sourceProject.name}" and "${targetProject.name}" detected: ${path}`;
       this.addFailureAt(node.getStart(), node.getWidth(), error);
       return;
     }
 
     // cannot import apps
-    if (targetProject.type !== ProjectType.lib) {
+    if (targetProject.type === ProjectType.app) {
       this.addFailureAt(
         node.getStart(),
         node.getWidth(),
         'imports of apps are forbidden'
+      );
+      return;
+    }
+
+    // cannot import e2e projects
+    if (targetProject.type === ProjectType.e2e) {
+      this.addFailureAt(
+        node.getStart(),
+        node.getWidth(),
+        'imports of e2e projects are forbidden'
       );
       return;
     }

@@ -1,5 +1,10 @@
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { chain, Rule, Tree } from '@angular-devkit/schematics';
+import {
+  chain,
+  Rule,
+  SchematicContext,
+  Tree,
+} from '@angular-devkit/schematics';
 import {
   addDepsToPackageJson,
   readJsonInTree,
@@ -17,7 +22,13 @@ import {
   nxVersion,
   tsJestVersion,
 } from '../../utils/versions';
-import { JestInitOptions } from './schema';
+import { JestInitSchema } from './schema';
+
+interface NormalizedSchema extends ReturnType<typeof normalizeOptions> {}
+
+const schemaDefaults = {
+  babelJest: false,
+} as const;
 
 const removeNrwlJestFromDeps = (host: Tree) => {
   // check whether updating the package.json is necessary
@@ -43,19 +54,23 @@ const createJestConfig = (host: Tree) => {
       'jest.config.js',
       stripIndents`
   module.exports = {
-    testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
-    transform: {
-      '^.+\\.(ts|js|html)$': 'ts-jest'
-    },
-    resolver: '@nrwl/jest/plugins/resolver',
-    moduleFileExtensions: ['ts', 'js', 'html'],
-    coverageReporters: ['html']
+    projects: []
   };`
+    );
+  }
+
+  if (!host.exists('jest.preset.js')) {
+    host.create(
+      'jest.preset.js',
+      `
+      const nxPreset = require('@nrwl/jest/preset');
+     
+      module.exports = { ...nxPreset }`
     );
   }
 };
 
-function updateDependencies(options: JestInitOptions): Rule {
+function updateDependencies(options: NormalizedSchema): Rule {
   const devDeps = {
     '@nrwl/jest': nxVersion,
     jest: jestVersion,
@@ -74,10 +89,35 @@ function updateDependencies(options: JestInitOptions): Rule {
   return addDepsToPackageJson({}, devDeps);
 }
 
-export default function (options: JestInitOptions): Rule {
+function updateExtensions(host: Tree, context: SchematicContext) {
+  if (!host.exists('.vscode/extensions.json')) {
+    return;
+  }
+
+  return updateJsonInTree('.vscode/extensions.json', (json) => {
+    json.recommendations = json.recommendations || [];
+    const extension = 'firsttris.vscode-jest-runner';
+    if (!json.recommendations.includes(extension)) {
+      json.recommendations.push(extension);
+    }
+    return json;
+  })(host, context);
+}
+
+export default function (schema: JestInitSchema): Rule {
+  const options = normalizeOptions(schema);
+
   return chain([
     createJestConfig,
     updateDependencies(options),
     removeNrwlJestFromDeps,
+    updateExtensions,
   ]);
+}
+
+function normalizeOptions(options: JestInitSchema) {
+  return {
+    ...schemaDefaults,
+    ...options,
+  };
 }

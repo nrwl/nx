@@ -1,3 +1,5 @@
+import * as flatten from 'flat';
+import * as minimatch from 'minimatch';
 import { WholeFileChange } from '../../file-utils';
 import {
   isJsonChange,
@@ -16,7 +18,7 @@ export const getImplicitlyTouchedProjectsByJsonChanges: TouchedProjectLocator<
     return [];
   }
 
-  const touched = [];
+  const touched = new Set<string>();
 
   for (const f of touchedFiles) {
     if (f.file.endsWith('.json') && implicitDependencies[f.file]) {
@@ -25,19 +27,19 @@ export const getImplicitlyTouchedProjectsByJsonChanges: TouchedProjectLocator<
         if (isJsonChange(c)) {
           const projects =
             getTouchedProjects(c.path, implicitDependencies[f.file]) || [];
-          projects.forEach((p) => touched.push(p));
+          projects.forEach((p) => touched.add(p));
         } else {
           const projects = getTouchedProjectsByJsonFile(
             implicitDependencies,
             f.file
           );
-          projects.forEach((p) => touched.push(p));
+          projects.forEach((p) => touched.add(p));
         }
       }
     }
   }
 
-  return touched;
+  return [...touched];
 };
 
 function getTouchedProjectsByJsonFile(
@@ -54,16 +56,18 @@ function getTouchedProjectsByJsonFile(
   return projects;
 }
 
-function getTouchedProjects(path: string[], implicitDependencyConfig: any) {
-  let curr = implicitDependencyConfig;
-  let found = true;
-  for (const key of path) {
-    if (curr[key]) {
-      curr = curr[key];
-    } else {
-      found = false;
-      break;
+function getTouchedProjects(
+  path: string[],
+  implicitDependencyConfig: any
+): string[] {
+  const flatConfig = flatten(implicitDependencyConfig, { safe: true });
+  const flatPath = path.join('.');
+
+  for (let [key, value] of Object.entries(flatConfig)) {
+    if (minimatch(flatPath, key)) {
+      return Array.isArray(value) ? value : [];
     }
   }
-  return found && Array.isArray(curr) ? curr : [];
+
+  return [];
 }

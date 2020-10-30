@@ -4,7 +4,6 @@ export interface Schema {
   npmPackageName: string;
   pluginOutputPath: string;
   jestConfig: string;
-  tsSpecConfig: string;
 }
 
 export interface NxPluginE2ESchema extends Schema {

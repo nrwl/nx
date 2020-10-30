@@ -16,6 +16,8 @@ describe('checkDestination Rule', () => {
     const schema: Schema = {
       projectName: 'my-lib',
       destination: '../apps/not-an-app',
+      importPath: undefined,
+      updateImportPath: true,
     };
 
     await expect(callRule(checkDestination(schema), tree)).rejects.toThrow(
@@ -29,6 +31,8 @@ describe('checkDestination Rule', () => {
     const schema: Schema = {
       projectName: 'my-lib',
       destination: 'my-other-lib',
+      importPath: undefined,
+      updateImportPath: true,
     };
 
     await expect(callRule(checkDestination(schema), tree)).rejects.toThrow(
@@ -40,6 +44,8 @@ describe('checkDestination Rule', () => {
     const schema: Schema = {
       projectName: 'my-lib',
       destination: 'my-other-lib',
+      importPath: undefined,
+      updateImportPath: true,
     };
 
     await expect(
@@ -51,6 +57,8 @@ describe('checkDestination Rule', () => {
     const schema: Schema = {
       projectName: 'my-lib',
       destination: '/my-other-lib//wibble',
+      importPath: undefined,
+      updateImportPath: true,
     };
 
     await callRule(checkDestination(schema), tree);

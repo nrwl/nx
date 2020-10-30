@@ -23,7 +23,11 @@ testRunner.registerCollection(
   join(__dirname, '../../../cypress/collection.json')
 );
 
-export function runSchematic(schematicName: string, options: any, tree: Tree) {
+export function runSchematic<T = any>(
+  schematicName: string,
+  options: T,
+  tree: Tree
+) {
   return testRunner.runSchematicAsync(schematicName, options, tree).toPromise();
 }
 

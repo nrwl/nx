@@ -28,7 +28,7 @@ describe('Build storybook', () => {
         config: {
           pluginPath: join(
             __dirname,
-            `/../../schematics/configuration/root-files/.storybook/addons.js`
+            `/../../schematics/configuration/root-files/.storybook/main.js`
           ),
           configPath: join(
             __dirname,

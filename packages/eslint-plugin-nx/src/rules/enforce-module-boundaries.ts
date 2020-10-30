@@ -8,7 +8,7 @@ import {
   hasArchitectBuildBuilder,
   hasNoneOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
-  isCircular,
+  checkCircularPath,
   isRelativeImportIntoAnotherProject,
   matchImportWithWildcard,
   onlyLoadChildren,
@@ -18,6 +18,7 @@ import { createESLintRule } from '../utils/create-eslint-rule';
 import { normalize } from '@angular-devkit/core';
 import {
   createProjectGraph,
+  isNpmProject,
   ProjectGraph,
   ProjectType,
 } from '@nrwl/workspace/src/core/project-graph';
@@ -38,6 +39,7 @@ export type MessageIds =
   | 'noRelativeOrAbsoluteImportsAcrossLibraries'
   | 'noCircularDependencies'
   | 'noImportsOfApps'
+  | 'noImportsOfE2e'
   | 'noImportOfNonBuildableLibraries'
   | 'noImportsOfLazyLoadedLibraries'
   | 'projectWithoutTagsCannotHaveDependencies'
@@ -76,8 +78,9 @@ export default createESLintRule<Options, MessageIds>({
     ],
     messages: {
       noRelativeOrAbsoluteImportsAcrossLibraries: `Libraries cannot be imported by a relative or absolute path, and must begin with a npm scope`,
-      noCircularDependencies: `Circular dependency between "{{sourceProjectName}}" and "{{targetProjectName}}" detected`,
+      noCircularDependencies: `Circular dependency between "{{sourceProjectName}}" and "{{targetProjectName}}" detected: {{path}}`,
       noImportsOfApps: 'Imports of apps are forbidden',
+      noImportsOfE2e: 'Imports of e2e projects are forbidden',
       noImportOfNonBuildableLibraries:
         'Buildable libraries cannot import non-buildable libraries',
       noImportsOfLazyLoadedLibraries: `Imports of lazy-loaded libraries are forbidden`,
@@ -167,25 +170,47 @@ export default createESLintRule<Options, MessageIds>({
           return;
         }
 
+        // project => npm package
+        if (isNpmProject(targetProject)) {
+          return;
+        }
         // check constraints between libs and apps
         // check for circular dependency
-        if (isCircular(projectGraph, sourceProject, targetProject)) {
+        const circularPath = checkCircularPath(
+          projectGraph,
+          sourceProject,
+          targetProject
+        );
+        if (circularPath.length !== 0) {
           context.report({
             node,
             messageId: 'noCircularDependencies',
             data: {
               sourceProjectName: sourceProject.name,
               targetProjectName: targetProject.name,
+              path: circularPath.reduce(
+                (acc, v) => `${acc} -> ${v.name}`,
+                sourceProject.name
+              ),
             },
           });
           return;
         }
 
         // cannot import apps
-        if (targetProject.type !== ProjectType.lib) {
+        if (targetProject.type === ProjectType.app) {
           context.report({
             node,
             messageId: 'noImportsOfApps',
+          });
+          return;
+        }
+
+        // cannot import e2e projects
+        if (targetProject.type === ProjectType.e2e) {
+          context.report({
+            node,
+            messageId: 'noImportsOfE2e',
           });
           return;
         }

@@ -43,7 +43,7 @@ function projectsToHtml(
   exclude: string[]
 ) {
   let f = readFileSync(
-    join(__dirname, '../core/dep-graph/dep-graph.html')
+    join(__dirname, '../core/dep-graph/index.html')
   ).toString();
 
   f = f
@@ -218,7 +218,7 @@ export function generateGraph(
       const assets: string[] = [];
       copySync(join(__dirname, '../core/dep-graph'), assetsFolder, {
         filter: (src, dest) => {
-          const isntHtml = !/dep-graph\.html/.test(dest);
+          const isntHtml = !/index\.html/.test(dest);
           if (isntHtml && dest.includes('.')) {
             assets.push(dest);
           }
@@ -226,10 +226,11 @@ export function generateGraph(
         },
       });
 
-      html = html.replace(
-        /<(script.*|link.*)="(.*\.(?:js|css))"(><\/script>| \/>?)/g,
-        '<$1="static/$2"$3'
-      );
+      html = html.replace(/src="/g, 'src="static/');
+      html = html.replace(/href="styles/g, 'href="static/styles');
+      html = html.replace('<base href="/">', '');
+      html = html.replace(/type="module"/g, '');
+
       writeFileSync(filename, html);
 
       output.success({

@@ -98,9 +98,9 @@ describe('preset', () => {
       expect(
         tree.exists('/libs/api-interfaces/src/lib/api-interfaces.ts')
       ).toBe(true);
-      expect(tree.exists('/apps/proj/.eslintrc')).toBe(true);
-      expect(tree.exists('/apps/api/.eslintrc')).toBe(true);
-      expect(tree.exists('/libs/api-interfaces/.eslintrc')).toBe(true);
+      expect(tree.exists('/apps/proj/.eslintrc.json')).toBe(true);
+      expect(tree.exists('/apps/api/.eslintrc.json')).toBe(true);
+      expect(tree.exists('/libs/api-interfaces/.eslintrc.json')).toBe(true);
     });
 
     it('should work with unnormalized names', async () => {

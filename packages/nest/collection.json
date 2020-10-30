@@ -1,7 +1,7 @@
 {
   "name": "nx/nest",
   "version": "0.1",
-  "extends": ["@nestjs/schematics", "@nrwl/workspace"],
+  "extends": ["@nrwl/workspace"],
   "schematics": {
     "init": {
       "factory": "./src/schematics/init/init",
@@ -10,19 +10,87 @@
       "aliases": ["ng-add"],
       "hidden": true
     },
-
     "application": {
       "factory": "./src/schematics/application/application",
       "schema": "./src/schematics/application/schema.json",
       "aliases": ["app"],
       "description": "Create a nest application"
     },
-
     "library": {
       "factory": "./src/schematics/library/library",
       "schema": "./src/schematics/library/schema.json",
       "aliases": ["lib"],
       "description": "Create a new nest library"
+    },
+    "class": {
+      "factory": "./src/schematics/nestjs-schematics/nestjs-schematics#classSchematic",
+      "schema": "./src/schematics/nestjs-schematics/schema.json",
+      "description": "Run the 'class' NestJs Schematic with Nx project support"
+    },
+    "controller": {
+      "factory": "./src/schematics/nestjs-schematics/nestjs-schematics#controller",
+      "schema": "./src/schematics/nestjs-schematics/schema.json",
+      "description": "Run the 'controller' NestJs Schematic with Nx project support"
+    },
+    "decorator": {
+      "factory": "./src/schematics/nestjs-schematics/nestjs-schematics#decorator",
+      "schema": "./src/schematics/nestjs-schematics/schema.json",
+      "description": "Run the 'decorator' NestJs Schematic with Nx project support"
+    },
+    "filter": {
+      "factory": "./src/schematics/nestjs-schematics/nestjs-schematics#filter",
+      "schema": "./src/schematics/nestjs-schematics/schema.json",
+      "description": "Run the 'filter' NestJs Schematic with Nx project support"
+    },
+    "gateway": {
+      "factory": "./src/schematics/nestjs-schematics/nestjs-schematics#gateway",
+      "schema": "./src/schematics/nestjs-schematics/schema.json",
+      "description": "Run the 'gateway' NestJs Schematic with Nx project support"
+    },
+    "guard": {
+      "factory": "./src/schematics/nestjs-schematics/nestjs-schematics#guard",
+      "schema": "./src/schematics/nestjs-schematics/schema.json",
+      "description": "Run the 'guard' NestJs Schematic with Nx project support"
+    },
+    "interceptor": {
+      "factory": "./src/schematics/nestjs-schematics/nestjs-schematics#interceptor",
+      "schema": "./src/schematics/nestjs-schematics/schema.json",
+      "description": "Run the 'interceptor' NestJs Schematic with Nx project support"
+    },
+    "interface": {
+      "factory": "./src/schematics/nestjs-schematics/nestjs-schematics#interfaceSchematic",
+      "schema": "./src/schematics/nestjs-schematics/schema.json",
+      "description": "Run the 'interface' NestJs Schematic with Nx project support"
+    },
+    "middleware": {
+      "factory": "./src/schematics/nestjs-schematics/nestjs-schematics#middleware",
+      "schema": "./src/schematics/nestjs-schematics/schema.json",
+      "description": "Run the 'middleware' NestJs Schematic with Nx project support"
+    },
+    "module": {
+      "factory": "./src/schematics/nestjs-schematics/nestjs-schematics#module",
+      "schema": "./src/schematics/nestjs-schematics/schema.json",
+      "description": "Run the 'module' NestJs Schematic with Nx project support"
+    },
+    "pipe": {
+      "factory": "./src/schematics/nestjs-schematics/nestjs-schematics#pipe",
+      "schema": "./src/schematics/nestjs-schematics/schema.json",
+      "description": "Run the 'pipe' NestJs Schematic with Nx project support"
+    },
+    "provider": {
+      "factory": "./src/schematics/nestjs-schematics/nestjs-schematics#provider",
+      "schema": "./src/schematics/nestjs-schematics/schema.json",
+      "description": "Run the 'provider' NestJs Schematic with Nx project support"
+    },
+    "resolver": {
+      "factory": "./src/schematics/nestjs-schematics/nestjs-schematics#resolver",
+      "schema": "./src/schematics/nestjs-schematics/schema.json",
+      "description": "Run the 'resolver' NestJs Schematic with Nx project support"
+    },
+    "service": {
+      "factory": "./src/schematics/nestjs-schematics/nestjs-schematics#service",
+      "schema": "./src/schematics/nestjs-schematics/schema.json",
+      "description": "Run the 'service' NestJs Schematic with Nx project support"
     }
   }
 }

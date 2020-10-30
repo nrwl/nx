@@ -63,7 +63,7 @@ The directory where Jest should output its coverage files.
 
 ### coverageReporters
 
-Type: `string`
+Type: `array`
 
 A list of reporter names that Jest uses when writing coverage reports. Any istanbul reporter
 

@@ -40,15 +40,15 @@ export const report = {
  *
  */
 function reportHandler() {
-  const nodeModulesDir = path.join(appRootPath, 'node_modules');
   const bodyLines = [];
 
   packagesWeCareAbout.forEach((p) => {
     let status = 'Not Found';
     try {
-      const packageJson = JSON.parse(
-        readFileSync(path.join(nodeModulesDir, p, 'package.json')).toString()
-      );
+      const packageJsonPath = require.resolve(`${p}/package.json`, {
+        paths: [appRootPath],
+      });
+      const packageJson = JSON.parse(readFileSync(packageJsonPath).toString());
       status = packageJson.version;
     } catch {}
     bodyLines.push(`${terminal.green(p)} : ${terminal.bold(status)}`);

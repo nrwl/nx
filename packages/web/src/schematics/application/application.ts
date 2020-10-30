@@ -134,7 +134,8 @@ function addProject(options: NormalizedSchema): Rule {
     architect.lint = generateProjectLint(
       normalize(options.appProjectRoot),
       join(normalize(options.appProjectRoot), 'tsconfig.app.json'),
-      options.linter
+      options.linter,
+      [`${options.appProjectRoot}/**/*.ts`]
     );
 
     json.projects[options.projectName] = {
@@ -177,6 +178,7 @@ export default function (schema: Schema): Rule {
             project: options.projectName,
             skipSerializers: true,
             setupFile: 'web-components',
+            babelJest: options.babelJest,
           })
         : noop(),
       formatFiles(options),

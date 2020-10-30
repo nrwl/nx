@@ -64,11 +64,21 @@
       "type": "string",
       "description": "The library name used to import it, like @myorg/my-awesome-lib. Must be a valid npm name."
     },
+    "rootDir": {
+      "type": "string",
+      "alias": "srcRootForCompilationRoot",
+      "description": "Sets the rootDir for TypeScript compilation. When not defined, it uses the project's root property, or srcRootForCompilationRoot if it is defined."
+    },
     "testEnvironment": {
       "type": "string",
       "enum": ["jsdom", "node"],
       "description": "The test environment to use if unitTestRunner is set to jest",
       "default": "jsdom"
+    },
+    "babelJest": {
+      "type": "boolean",
+      "description": "Use babel instead ts-jest",
+      "default": false
     }
   },
   "required": ["name"]

@@ -36,6 +36,7 @@ function parseGitStatus(output: string): Map<string, string> {
         .match(/(?:[^\s"]+|"[^"]*")+/g)
         .map((r) => (r.startsWith('"') ? r.substring(1, r.length - 1) : r))
         .filter((r) => !!r);
+
       if (changeType && filenames && filenames.length > 0) {
         // the before filename we mark as deleted, so we remove it from the map
         // changeType can be A/D/R/RM etc
@@ -43,8 +44,12 @@ function parseGitStatus(output: string): Map<string, string> {
         // the before part gets marked as deleted
         if (changeType[0] === 'R') {
           changes.set(filenames[0], 'D');
+          changes.set(filenames[filenames.length - 1], changeType);
+        } else if (changeType === '??') {
+          changes.set(filenames.join(' '), changeType);
+        } else {
+          changes.set(filenames[filenames.length - 1], changeType);
         }
-        changes.set(filenames[filenames.length - 1], changeType);
       }
     });
   return changes;

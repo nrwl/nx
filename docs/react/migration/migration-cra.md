@@ -177,7 +177,7 @@ echo "node_modules" >> .gitignore
 
 [View the code changes](https://github.com/nrwl/migrate-cra-to-nx/commit/9c02fcda2f39cf3b29ceab75d0c519b9b1b333ba)
 
-# 10. Try the commands
+## 10. Try the commands
 
 The following commands are now available for you to try.
 

@@ -4,13 +4,14 @@ import { readEnvironment } from '../core/file-utils';
 import { EmptyReporter } from '../tasks-runner/empty-reporter';
 import { splitArgsIntoNxArgsAndOverrides } from './utils';
 import { projectHasTarget } from '../utils/project-graph-utils';
+import { promptForNxCloud } from './prompt-for-nx-cloud';
 
-export function runOne(opts: {
+export async function runOne(opts: {
   project: string;
   target: string;
   configuration: string;
   parsedArgs: any;
-}): void {
+}) {
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     {
       ...opts.parsedArgs,
@@ -19,6 +20,8 @@ export function runOne(opts: {
     },
     'run-one'
   );
+
+  await promptForNxCloud(nxArgs.scan);
 
   const projectGraph = createProjectGraph();
   const { projects, projectsMap } = getProjects(

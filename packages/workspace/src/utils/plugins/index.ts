@@ -4,7 +4,7 @@ export {
 } from './community-plugins';
 export { fetchCorePlugins, listCorePlugins } from './core-plugins';
 export {
-  getInstalledPluginsFromNodeModules,
+  getInstalledPluginsFromPackageJson,
   listInstalledPlugins,
 } from './installed-plugins';
 export {

@@ -1,3 +1,6 @@
+// Force module scoping
+export default {};
+
 jest.mock('./file-utils', () => ({
   getFilesToLint: jest.fn(),
 }));
@@ -28,7 +31,7 @@ describe('eslint-util', () => {
     const lintedFiles = new Set();
     await lint(
       '/root',
-      './.eslintrc',
+      './.eslintrc.json',
       <any>{ foo: 'bar' },
       lintedFiles,
       'ts-program'
@@ -43,13 +46,13 @@ describe('eslint-util', () => {
     const lintedFiles = new Set();
     await lint(
       '/root',
-      './.eslintrc',
+      './.eslintrc.json',
       <any>{ fix: true, cache: true, cacheLocation: '/root/cache' },
       lintedFiles,
       'ts-program'
     ).catch(() => {});
     expect(CLIEngine).toHaveBeenCalledWith({
-      configFile: './.eslintrc',
+      configFile: './.eslintrc.json',
       fix: true,
       cache: true,
       cacheLocation: '/root/cache',
@@ -69,7 +72,7 @@ describe('eslint-util', () => {
     lintedFiles.add('file4');
     const reports = await lint(
       '/root',
-      './.eslintrc',
+      './.eslintrc.json',
       <any>{ foo: 'bar' },
       lintedFiles
     );
@@ -88,7 +91,7 @@ describe('eslint-util', () => {
     const lintedFiles = new Set();
     const lintPromise = lint(
       '/root',
-      './.eslintrc',
+      './.eslintrc.json',
       <any>{ tsConfig: 'my-ts-project' },
       lintedFiles,
       program,
@@ -111,7 +114,7 @@ describe('eslint-util', () => {
     const lintedFiles = new Set();
     const lintPromise = lint(
       '/root',
-      './.eslintrc',
+      './.eslintrc.json',
       <any>{ tsConfig: 'my-ts-project' },
       lintedFiles,
       program,

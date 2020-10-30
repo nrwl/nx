@@ -18,3 +18,17 @@ export function detectPackageManager(): string {
       : 'npm';
   }
 }
+
+export function getPackageManagerExecuteCommand(
+  packageManager = detectPackageManager()
+) {
+  if (packageManager === 'yarn') {
+    return `yarn`;
+  }
+
+  if (packageManager === 'pnpm') {
+    return `pnpx`;
+  }
+
+  return `npx`;
+}

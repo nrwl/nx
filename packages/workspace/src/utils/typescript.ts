@@ -1,6 +1,8 @@
-import { dirname } from 'path';
+import { dirname, join } from 'path';
 import * as ts from 'typescript';
 import { appRootPath } from './app-root';
+import { existsSync } from 'fs';
+import { FileRead } from '@nrwl/workspace/src/core/file-utils';
 
 const normalizedAppRoot = appRootPath.replace(/\\/g, '/');
 
@@ -24,9 +26,14 @@ let compilerHost: {
  *
  * @param importExpr Import used to resolve to a module
  * @param filePath
+ * @param tsConfigPath
  */
-export function resolveModuleByImport(importExpr: string, filePath: string) {
-  compilerHost = compilerHost || getCompilerHost();
+export function resolveModuleByImport(
+  importExpr: string,
+  filePath: string,
+  tsConfigPath: string
+) {
+  compilerHost = compilerHost || getCompilerHost(tsConfigPath);
   const { options, host, moduleResolutionCache } = compilerHost;
 
   const { resolvedModule } = ts.resolveModuleName(
@@ -44,8 +51,8 @@ export function resolveModuleByImport(importExpr: string, filePath: string) {
   }
 }
 
-function getCompilerHost() {
-  const { options } = readTsConfig(`${appRootPath}/tsconfig.base.json`);
+function getCompilerHost(tsConfigPath: string) {
+  const { options } = readTsConfig(tsConfigPath);
   const host = ts.createCompilerHost(options, true);
   const moduleResolutionCache = ts.createModuleResolutionCache(
     appRootPath,

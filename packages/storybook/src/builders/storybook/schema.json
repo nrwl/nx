@@ -58,7 +58,7 @@
         },
         "configPath": {
           "type": "string",
-          "description": "Path to storybook config.js file."
+          "description": "Path to storybook preview.js file."
         },
         "srcRoot": {
           "type": "string",

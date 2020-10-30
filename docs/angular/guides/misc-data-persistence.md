@@ -20,9 +20,12 @@ class TodoEffects {
       optimisticUpdate({
         // provides an action
         run: (action: UpdateTodo) => {
-          return this.backend.updateTodo(action.todo.id, action.todo);
+          return this.backend.updateTodo(action.todo.id, action.todo).pipe(
+            mapTo({
+              type: 'UPDATE_TODO_SUCCESS',
+            })
+          );
         },
-
         undoAction: (action: UpdateTodo, error: any) => {
           // dispatch an undo action to undo the changes in the client state
           return {
@@ -191,4 +194,23 @@ class TodoEffects {
 
   constructor(private action$: Actions, private backend: Backend) {}
 }
+```
+
+The StoreRouterConnectingModule must be configured with an appropriate serializer. The `DefaultRouterStateSerializer` provides the full router state instead of the `MinimalRouterStateSerializer` that is used without configuration.
+
+```typescript
+import { NgModule } from '@angular/core';
+import {
+  StoreRouterConnectingModule,
+  DefaultRouterStateSerializer,
+} from '@ngrx/router-store';
+
+@NgModule({
+  imports: [
+    StoreRouterConnectingModule.forRoot({
+      serializer: DefaultRouterStateSerializer,
+    }),
+  ],
+})
+export class TodosModule {}
 ```

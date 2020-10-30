@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { execSync } from 'child_process';
-import { platform } from 'os';
+import { getPackageManagerExecuteCommand } from '../utils/detect-package-manager';
 import * as yargs from 'yargs';
 import { nxVersion } from '../utils/versions';
 import { generateGraph } from './dep-graph';
@@ -55,13 +55,13 @@ export const commandsObject = yargs
   .command(
     'affected:apps',
     'Print applications affected by changes',
-    withAffectedOptions,
+    (yargs) => withAffectedOptions(withPlainOption(yargs)),
     (args) => affected('apps', { ...args })
   )
   .command(
     'affected:libs',
     'Print libraries affected by changes',
-    withAffectedOptions,
+    (yargs) => withAffectedOptions(withPlainOption(yargs)),
     (args) =>
       affected('libs', {
         ...args,
@@ -138,12 +138,11 @@ export const commandsObject = yargs
     (args) => format('check', args)
   )
   .command(
-    'format:write',
+    ['format:write', 'format'],
     'Overwrite un-formatted files',
     withFormatOptions,
     (args) => format('write', args)
   )
-  .alias('format:write', 'format')
   .command(
     'workspace-lint [files..]',
     'Lint workspace or list of files.  Note: To exclude files from this lint rule, you can add them to the ".nxignore" file',
@@ -180,10 +179,7 @@ export const commandsObject = yargs
     `,
     (yargs) => yargs,
     () => {
-      const executable =
-        platform() === 'win32'
-          ? `.\\node_modules\\.bin\\tao`
-          : `./node_modules/.bin/tao`;
+      const executable = `${getPackageManagerExecuteCommand()} tao`;
       execSync(`${executable} migrate ${process.argv.slice(3).join(' ')}`, {
         stdio: ['inherit', 'inherit', 'inherit'],
       });
@@ -196,15 +192,29 @@ export const commandsObject = yargs
   .option('quiet', { type: 'boolean', hidden: true });
 
 function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
-  return withAffectedOptions(yargs).option('apps-and-libs', {
-    type: 'boolean',
-  });
+  return withAffectedOptions(yargs)
+    .option('libs-and-apps', {
+      type: 'boolean',
+    })
+    .option('projects', {
+      describe: 'Projects to format (comma delimited)',
+      type: 'array',
+      coerce: parseCSV,
+    })
+    .conflicts({
+      all: 'projects',
+    });
 }
 
 function withPrintAffectedOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs.option('select', { type: 'string' });
 }
 
+function withPlainOption(yargs: yargs.Argv): yargs.Argv {
+  return yargs.option('plain', {
+    describe: 'Produces a plain output for affected:apps and affected:libs',
+  });
+}
 function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
     .option('files', {
@@ -268,9 +278,6 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     })
     .option('verbose', {
       describe: 'Print additional error stack trace on failure',
-    })
-    .option('plain', {
-      describe: 'Produces a plain output for affected:apps and affected:libs',
     })
     .conflicts({
       files: ['uncommitted', 'untracked', 'base', 'head', 'all'],

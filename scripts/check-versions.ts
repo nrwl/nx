@@ -3,13 +3,13 @@
  * It uses naming conventions to transform constants to matching node module name.
  *
  * Usage:
- *   yarn checkversions [file]
+ *   yarn check-versions [file]
  *
  * Positional arg:
  *   - [file]: relative or absolute file path to the versions file.
  *
  * Example:
- *   yarn checkversions packages/react/src/utils/versions
+ *   yarn check-versions packages/react/src/utils/versions
  */
 
 import { join } from 'path';

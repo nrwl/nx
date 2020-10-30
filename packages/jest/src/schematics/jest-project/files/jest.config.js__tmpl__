@@ -1,23 +1,26 @@
 module.exports = {
-  name: '<%= project %>',
-  preset: '<%= offsetFromRoot %>jest.config.js',<% if(setupFile !== 'none') { %>
+  displayName: '<%= project %>',
+  preset: '<%= offsetFromRoot %>jest.preset.js',<% if(setupFile !== 'none') { %>
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],<% } %><% if (transformer === 'ts-jest') { %>
   globals: {
     'ts-jest': {
       tsConfig: '<rootDir>/tsconfig.spec.json',<%if (setupFile === 'angular') { %>
       stringifyContentPathRegex: '\\.(html|svg)$',
-      astTransformers: [
-        'jest-preset-angular/build/InlineFilesTransformer',
-        'jest-preset-angular/build/StripStylesTransformer'
-      ],<% } %>
+      astTransformers: {
+        before: [
+          'jest-preset-angular/build/InlineFilesTransformer',
+          'jest-preset-angular/build/StripStylesTransformer'
+        ]
+      },<% } %>
     }
   },<% } %><% if(testEnvironment) { %>
-  testEnvironment: '<%= testEnvironment %>',<% } %><% if (supportTsx) { %>
+  testEnvironment: '<%= testEnvironment %>',<% } %><% if(skipSerializers){ %>
   transform: {
-    '^.+\\.[tj]sx?$': <% if (transformer == 'babel-jest') { %>[ 'babel-jest',
+    <% if (supportTsx){ %>'^.+\\.[tj]sx?$'<% } else { %>'^.+\\.[tj]s$'<% } %>: <% if (transformer == 'babel-jest') { %>[ 'babel-jest',
     { cwd: __dirname, configFile: './babel-jest.config.json' }]<% } else { %> 'ts-jest' <% } %>
-  },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],<% } %>
+  },<% if (supportTsx) { %>
+    moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],<% } else { %>
+    moduleFileExtensions: ['ts', 'js', 'html'],<% } %><% } %>
   coverageDirectory: '<%= offsetFromRoot %>coverage/<%= projectRoot %>'<% if(!skipSerializers) { %>,
   snapshotSerializers: [
     'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',

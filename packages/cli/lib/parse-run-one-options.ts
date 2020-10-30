@@ -29,7 +29,7 @@ export function parseRunOneOptions(
   let configuration;
 
   if (parsedArgs._[0] === 'run') {
-    [project, target, configuration] = parsedArgs._[1].split(':');
+    [project, target, configuration] = (parsedArgs._[1] as any).split(':');
     parsedArgs._ = parsedArgs._.slice(2);
   } else {
     target = parsedArgs._[0];

@@ -1,5 +1,6 @@
 import { Task } from './tasks-runner';
 import { ProjectGraphNode } from '../core/project-graph';
+import * as flatten from 'flat';
 
 const commonCommands = ['build', 'test', 'lint', 'e2e', 'deploy'];
 
@@ -78,5 +79,36 @@ export function getOutputsForTargetAndConfiguration(
       default:
         return [];
     }
+  }
+}
+
+export function unparse(options: Object): string[] {
+  const unparsed = [];
+  for (const key of Object.keys(options)) {
+    const value = options[key];
+    unparseOption(key, value, unparsed);
+  }
+
+  return unparsed;
+}
+
+function unparseOption(key: string, value: any, unparsed: string[]) {
+  if (value === true) {
+    unparsed.push(`--${key}`);
+  } else if (value === false) {
+    unparsed.push(`--no-${key}`);
+  } else if (Array.isArray(value)) {
+    value.forEach((item) => unparseOption(key, item, unparsed));
+  } else if (Object.prototype.toString.call(value) === '[object Object]') {
+    const flattened = flatten(value, { safe: true });
+    for (const flattenedKey in flattened) {
+      unparseOption(
+        `${key}.${flattenedKey}`,
+        flattened[flattenedKey],
+        unparsed
+      );
+    }
+  } else if (typeof value === 'string' || value != null) {
+    unparsed.push(`--${key}=${value}`);
   }
 }

@@ -2,7 +2,9 @@ import { BuilderOutput, createBuilder } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
 import { exec, execSync } from 'child_process';
 import { Observable } from 'rxjs';
-import { TEN_MEGABYTES } from '@nrwl/workspace/src/core/file-utils';
+import * as yargsParser from 'yargs-parser';
+
+export const LARGE_BUFFER = 1024 * 1000000;
 
 function loadEnvVars(path?: string) {
   if (path) {
@@ -19,7 +21,13 @@ function loadEnvVars(path?: string) {
 
 export interface RunCommandsBuilderOptions extends JsonObject {
   command: string;
-  commands: ({ command: string } | string)[];
+  commands: (
+    | {
+        command: string;
+        forwardAllArgs?: boolean;
+      }
+    | string
+  )[];
   color?: boolean;
   parallel?: boolean;
   readyWhen?: string;
@@ -43,13 +51,25 @@ const propKeys = [
 
 export interface NormalizedRunCommandsBuilderOptions
   extends RunCommandsBuilderOptions {
-  commands: { command: string }[];
+  commands: {
+    command: string;
+    forwardAllArgs?: boolean;
+  }[];
   parsedArgs: { [k: string]: any };
 }
 
 export default createBuilder<RunCommandsBuilderOptions>(run);
 
 function run(options: RunCommandsBuilderOptions): Observable<BuilderOutput> {
+  // Special handling of extra options coming through Angular CLI
+  if (options['--']) {
+    const { _, ...overrides } = yargsParser(options['--'] as string[], {
+      configuration: { 'camel-case-expansion': false },
+    });
+    options = { ...options, ...overrides };
+    delete options['--'];
+  }
+
   loadEnvVars(options.envFile);
   const normalized = normalizeOptions(options);
 
@@ -130,7 +150,8 @@ function normalizeOptions(
   (options as NormalizedRunCommandsBuilderOptions).commands.forEach((c) => {
     c.command = transformCommand(
       c.command,
-      (options as NormalizedRunCommandsBuilderOptions).parsedArgs
+      (options as NormalizedRunCommandsBuilderOptions).parsedArgs,
+      c.forwardAllArgs ?? true
     );
   });
   return options as any;
@@ -151,7 +172,7 @@ function createProcess(
 ): Promise<boolean> {
   return new Promise((res) => {
     const childProcess = exec(command, {
-      maxBuffer: TEN_MEGABYTES,
+      maxBuffer: LARGE_BUFFER,
       env: processEnv(color),
       cwd,
     });
@@ -183,6 +204,7 @@ function createSyncProcess(command: string, color: boolean, cwd: string) {
   execSync(command, {
     env: processEnv(color),
     stdio: [0, 1, 2],
+    maxBuffer: LARGE_BUFFER,
     cwd,
   });
 }
@@ -195,11 +217,15 @@ function processEnv(color: boolean) {
   return env;
 }
 
-function transformCommand(command: string, args: { [key: string]: string }) {
+function transformCommand(
+  command: string,
+  args: { [key: string]: string },
+  forwardAllArgs: boolean
+) {
   if (command.indexOf('{args.') > -1) {
     const regex = /{args\.([^}]+)}/g;
     return command.replace(regex, (_, group: string) => args[group]);
-  } else if (Object.keys(args).length > 0) {
+  } else if (Object.keys(args).length > 0 && forwardAllArgs) {
     const stringifiedArgs = Object.keys(args)
       .map((a) => `--${a}=${args[a]}`)
       .join(' ');

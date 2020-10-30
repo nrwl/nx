@@ -13,6 +13,16 @@ Type: `array`
 
 List of static library assets.
 
+### buildableProjectDepsInPackageJsonType
+
+Default: `dependencies`
+
+Type: `string`
+
+Possible values: `dependencies`, `peerDependencies`
+
+When updateBuildableProjectDepsInPackageJson is true, this adds dependencies to either `peerDependencies` or `dependencies`
+
 ### main
 
 Type: `string`
@@ -38,6 +48,12 @@ Default: `true`
 Type: `boolean`
 
 Output sourcemaps.
+
+### srcRootForCompilationRoot
+
+Type: `string`
+
+Sets the rootDir for TypeScript compilation. When not defined, it uses the project's root property
 
 ### tsConfig
 

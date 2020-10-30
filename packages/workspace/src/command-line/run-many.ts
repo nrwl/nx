@@ -13,12 +13,16 @@ import { readEnvironment } from '../core/file-utils';
 import { DefaultReporter } from '../tasks-runner/default-reporter';
 import { projectHasTarget } from '../utils/project-graph-utils';
 import { output } from '../utils/output';
+import { promptForNxCloud } from './prompt-for-nx-cloud';
 
-export function runMany(parsedArgs: yargs.Arguments): void {
+export async function runMany(parsedArgs: yargs.Arguments) {
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     parsedArgs,
     'run-many'
   );
+
+  await promptForNxCloud(nxArgs.scan);
+
   const projectGraph = createProjectGraph();
   const projects = projectsToRun(nxArgs, projectGraph);
   const projectMap: Record<string, ProjectGraphNode> = {};

@@ -56,6 +56,7 @@ export default function (schema: Schema) {
       {
         react: reactVersion,
         'react-dom': reactDomVersion,
+        tslib: '^2.0.0',
       },
       {
         '@nrwl/react': nxVersion,

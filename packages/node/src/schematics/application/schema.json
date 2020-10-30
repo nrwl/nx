@@ -46,6 +46,11 @@
     "frontendProject": {
       "type": "string",
       "description": "Frontend project that needs to access this application. This sets up proxy configuration."
+    },
+    "babelJest": {
+      "type": "boolean",
+      "description": "Use babel instead ts-jest",
+      "default": false
     }
   },
   "required": []

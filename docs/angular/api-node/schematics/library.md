@@ -36,6 +36,14 @@ nx g lib mylib --directory=myapp
 
 ## Options
 
+### babelJest
+
+Default: `false`
+
+Type: `boolean`
+
+Use babel instead ts-jest
+
 ### buildable
 
 Default: `false`
@@ -79,6 +87,14 @@ Library name
 Type: `boolean`
 
 Create a publishable library.
+
+### rootDir
+
+Alias(es): srcRootForCompilationRoot
+
+Type: `string`
+
+Sets the rootDir for TypeScript compilation. When not defined, it uses the project's root property, or srcRootForCompilationRoot if it is defined.
 
 ### skipFormat
 

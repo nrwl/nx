@@ -25,13 +25,11 @@ function mapDefined<T, U>(
 /**
  * - Adapted from TSLint source:
  *
- * Returns a list of source file names from a TypeScript program. This includes all referenced
- * files and excludes declaration (".d.ts") files, as well as JSON files, to avoid problems with
- * `resolveJsonModule`.
+ * Returns a list of source file names from a TypeScript program.
+ * This includes all referenced files and excludes JSON files, to avoid problems with `resolveJsonModule`.
  */
 function getFileNamesFromProgram(program: ts.Program): string[] {
   return mapDefined(program.getSourceFiles(), (file) =>
-    file.fileName.endsWith('.d.ts') ||
     file.fileName.endsWith('.json') ||
     program.isSourceFileFromExternalLibrary(file)
       ? undefined

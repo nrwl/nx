@@ -3,7 +3,11 @@ import * as stripJsonComments from 'strip-json-comments';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
 import { NxJson, readJsonInTree } from '@nrwl/workspace';
-import { createApp } from '../../../../angular/src/utils/testing';
+// to break the dependency
+const createApp = require('../../../../angular/' + 'src/utils/testing')
+  .createApp;
+
+import { Schema } from './schema';
 
 describe('app', () => {
   let appTree: Tree;
@@ -54,14 +58,9 @@ describe('app', () => {
         })
       );
       expect(workspaceJson.projects['my-node-app'].architect.lint).toEqual({
-        builder: '@nrwl/linter:lint',
+        builder: '@nrwl/linter:eslint',
         options: {
-          linter: 'eslint',
-          tsConfig: [
-            'apps/my-node-app/tsconfig.app.json',
-            'apps/my-node-app/tsconfig.spec.json',
-          ],
-          exclude: ['**/node_modules/**', '!apps/my-node-app/**/*'],
+          lintFilePatterns: ['apps/my-node-app/**/*.ts'],
         },
       });
       expect(workspaceJson.projects['my-node-app-e2e']).toBeUndefined();
@@ -114,9 +113,11 @@ describe('app', () => {
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
       const eslintrc = JSON.parse(
-        stripJsonComments(getFileContent(tree, 'apps/my-node-app/.eslintrc'))
+        stripJsonComments(
+          getFileContent(tree, 'apps/my-node-app/.eslintrc.json')
+        )
       );
-      expect(eslintrc.extends).toEqual('../../.eslintrc');
+      expect(eslintrc.extends).toEqual('../../.eslintrc.json');
     });
   });
 
@@ -136,14 +137,9 @@ describe('app', () => {
       expect(
         workspaceJson.projects['my-dir-my-node-app'].architect.lint
       ).toEqual({
-        builder: '@nrwl/linter:lint',
+        builder: '@nrwl/linter:eslint',
         options: {
-          linter: 'eslint',
-          tsConfig: [
-            'apps/my-dir/my-node-app/tsconfig.app.json',
-            'apps/my-dir/my-node-app/tsconfig.spec.json',
-          ],
-          exclude: ['**/node_modules/**', '!apps/my-dir/my-node-app/**/*'],
+          lintFilePatterns: ['apps/my-dir/my-node-app/**/*.ts'],
         },
       });
 
@@ -199,9 +195,9 @@ describe('app', () => {
           expectedValue: ['node'],
         },
         {
-          path: 'apps/my-dir/my-node-app/.eslintrc',
+          path: 'apps/my-dir/my-node-app/.eslintrc.json',
           lookupFn: (json) => json.extends,
-          expectedValue: '../../../.eslintrc',
+          expectedValue: '../../../.eslintrc.json',
         },
       ].forEach(hasJsonValue);
     });
@@ -223,13 +219,21 @@ describe('app', () => {
       expect(
         workspaceJson.projects['my-node-app'].architect.test
       ).toBeUndefined();
-      expect(
-        workspaceJson.projects['my-node-app'].architect.lint.options.tsConfig
-      ).toEqual(['apps/my-node-app/tsconfig.app.json']);
+      expect(workspaceJson.projects['my-node-app'].architect.lint)
+        .toMatchInlineSnapshot(`
+        Object {
+          "builder": "@nrwl/linter:eslint",
+          "options": Object {
+            "lintFilePatterns": Array [
+              "apps/my-node-app/**/*.ts",
+            ],
+          },
+        }
+      `);
     });
   });
 
-  describe('frontendProject', () => {
+  describe('--frontendProject', () => {
     it('should configure proxy', async () => {
       appTree = createApp(appTree, 'my-frontend');
 
@@ -264,6 +268,50 @@ describe('app', () => {
       expect(serve.options.proxyConfig).toEqual(
         'apps/my-frontend/proxy.conf.json'
       );
+    });
+  });
+
+  describe('--babelJest', () => {
+    it('should use babel for jest', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myNodeApp', tags: 'one,two', babelJest: true } as Schema,
+        appTree
+      );
+
+      expect(tree.readContent(`apps/my-node-app/jest.config.js`))
+        .toMatchInlineSnapshot(`
+        "module.exports = {
+          displayName: 'my-node-app',
+          preset: '../../jest.preset.js',
+          transform: {
+            '^.+\\\\\\\\.[tj]s$': [
+              'babel-jest',
+              { cwd: __dirname, configFile: './babel-jest.config.json' },
+            ],
+          },
+          moduleFileExtensions: ['ts', 'js', 'html'],
+          coverageDirectory: '../../coverage/apps/my-node-app',
+        };
+        "
+      `);
+
+      expect(readJsonInTree(tree, 'apps/my-node-app/babel-jest.config.json'))
+        .toMatchInlineSnapshot(`
+        Object {
+          "presets": Array [
+            Array [
+              "@babel/preset-env",
+              Object {
+                "targets": Object {
+                  "node": "current",
+                },
+              },
+            ],
+            "@babel/preset-typescript",
+          ],
+        }
+      `);
     });
   });
 });

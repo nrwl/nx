@@ -32,7 +32,7 @@ export class BuildBrowserFeatures {
 
   /**
    * True, when one or more browsers requires ES5
-   * support and the scirpt target is ES2015 or greater.
+   * support and the script target is ES2015 or greater.
    */
   isDifferentialLoadingNeeded(): boolean {
     return this._es6TargetOrLater && this.isEs5SupportNeeded();

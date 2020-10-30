@@ -5,7 +5,7 @@
   "properties": {
     "project": {
       "type": "string",
-      "description": "The library project name.",
+      "description": "Library or application name",
       "$default": {
         "$source": "projectName",
         "index": 0

@@ -81,6 +81,22 @@
       "description": "Connect the workspace to the free tier of the distributed cache provided by Nx Cloud",
       "type": "boolean",
       "default": false
+    },
+    "nxWorkspaceRoot": {
+      "type": "string",
+      "description": "Root directory.",
+      "hidden": true
+    },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["tslint", "eslint"],
+      "default": "eslint"
+    },
+    "packageManager": {
+      "description": "The package manager used to install dependencies.",
+      "type": "string",
+      "enum": ["npm", "yarn", "pnpm"]
     }
   }
 }

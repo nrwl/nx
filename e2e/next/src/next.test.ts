@@ -80,31 +80,18 @@ forEachCli('nx', () => {
 
       runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
 
-      runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
+      runCLI(
+        `generate @nrwl/react:lib ${libName} --no-interactive --style=none`
+      );
 
       const mainPath = `apps/${appName}/pages/index.tsx`;
       updateFile(mainPath, `import '@proj/${libName}';\n` + readFile(mainPath));
-      updateFile(
-        `apps/${appName}/next.config.js`,
-        `
-const withCSS = require('@zeit/next-css');
-module.exports = withCSS({
-  cssModules: false,
-  generateBuildId: function () {
-    return 'fixed';
-  }
-});
-      `
-      );
 
       await checkApp(appName, {
         checkUnitTest: true,
         checkLint: true,
         checkE2E: false,
       });
-
-      // check that the configuration was consumed
-      expect(readFile(`dist/apps/${appName}/.next/BUILD_ID`)).toEqual('fixed');
     }, 120000);
 
     it('should be able to dynamically load a lib', async () => {
@@ -113,7 +100,9 @@ module.exports = withCSS({
       const libName = uniq('lib');
 
       runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
-      runCLI(`generate @nrwl/react:lib ${libName} --no-interactive`);
+      runCLI(
+        `generate @nrwl/react:lib ${libName} --no-interactive --style=none`
+      );
 
       const mainPath = `apps/${appName}/pages/index.tsx`;
       updateFile(
@@ -181,8 +170,8 @@ module.exports = withCSS({
         import { TestComponent } from '@proj/${tsxLibName}';\n\n
         ` +
           content.replace(
-            `<main>`,
-            `<main>
+            `</h2>`,
+            `</h2>
               <div>
                 {testFn()}
                 <TestComponent text="Hello Next.JS" />

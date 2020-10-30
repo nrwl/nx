@@ -4,6 +4,7 @@ import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { NxJson } from '@nrwl/workspace';
 
 import { runSchematic } from '../../utils/testing';
+import { Schema } from './schema.d';
 
 describe('lib', () => {
   let appTree: Tree;
@@ -21,14 +22,9 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(workspaceJson.projects['my-lib'].architect.build).toBeUndefined();
       expect(workspaceJson.projects['my-lib'].architect.lint).toEqual({
-        builder: '@nrwl/linter:lint',
+        builder: '@nrwl/linter:eslint',
         options: {
-          linter: 'eslint',
-          exclude: ['**/node_modules/**', '!libs/my-lib/**/*'],
-          tsConfig: [
-            'libs/my-lib/tsconfig.lib.json',
-            'libs/my-lib/tsconfig.spec.json',
-          ],
+          lintFilePatterns: ['libs/my-lib/**/*.ts'],
         },
       });
     });
@@ -103,9 +99,31 @@ describe('lib', () => {
     });
 
     it('should generate files', async () => {
-      const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib' } as Schema,
+        appTree
+      );
 
       expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
+      expect(tree.readContent(`libs/my-lib/jest.config.js`))
+        .toMatchInlineSnapshot(`
+        "module.exports = {
+          displayName: 'my-lib',
+          preset: '../../jest.preset.js',
+          globals: {
+            'ts-jest': {
+              tsConfig: '<rootDir>/tsconfig.spec.json',
+            },
+          },
+          transform: {
+            '^.+\\\\\\\\.[tj]sx?$': 'ts-jest',
+          },
+          moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+          coverageDirectory: '../../coverage/libs/my-lib',
+        };
+        "
+      `);
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/README.md')).toBeTruthy();
@@ -166,7 +184,7 @@ describe('lib', () => {
         tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.ts')
       ).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
-      expect(tree.exists(`libs/my-dir/my-lib/.eslintrc`)).toBeTruthy();
+      expect(tree.exists(`libs/my-dir/my-lib/.eslintrc.json`)).toBeTruthy();
     });
 
     it('should update workspace.json', async () => {
@@ -181,14 +199,9 @@ describe('lib', () => {
         'libs/my-dir/my-lib'
       );
       expect(workspaceJson.projects['my-dir-my-lib'].architect.lint).toEqual({
-        builder: '@nrwl/linter:lint',
+        builder: '@nrwl/linter:eslint',
         options: {
-          linter: 'eslint',
-          exclude: ['**/node_modules/**', '!libs/my-dir/my-lib/**/*'],
-          tsConfig: [
-            'libs/my-dir/my-lib/tsconfig.lib.json',
-            'libs/my-dir/my-lib/tsconfig.spec.json',
-          ],
+          lintFilePatterns: ['libs/my-dir/my-lib/**/*.ts'],
         },
       });
     });
@@ -229,15 +242,15 @@ describe('lib', () => {
       ]);
     });
 
-    it('should create a local .eslintrc', async () => {
+    it('should create a local .eslintrc.json', async () => {
       const tree = await runSchematic(
         'lib',
         { name: 'myLib', directory: 'myDir' },
         appTree
       );
 
-      const lint = readJsonInTree(tree, 'libs/my-dir/my-lib/.eslintrc');
-      expect(lint.extends).toEqual('../../../.eslintrc');
+      const lint = readJsonInTree(tree, 'libs/my-dir/my-lib/.eslintrc.json');
+      expect(lint.extends).toEqual('../../../.eslintrc.json');
     });
   });
 
@@ -252,9 +265,17 @@ describe('lib', () => {
       expect(resultTree.exists('libs/my-lib/jest.config.js')).toBeFalsy();
       const workspaceJson = readJsonInTree(resultTree, 'workspace.json');
       expect(workspaceJson.projects['my-lib'].architect.test).toBeUndefined();
-      expect(
-        workspaceJson.projects['my-lib'].architect.lint.options.tsConfig
-      ).toEqual(['libs/my-lib/tsconfig.lib.json']);
+      expect(workspaceJson.projects['my-lib'].architect.lint)
+        .toMatchInlineSnapshot(`
+        Object {
+          "builder": "@nrwl/linter:eslint",
+          "options": Object {
+            "lintFilePatterns": Array [
+              "libs/my-lib/**/*.ts",
+            ],
+          },
+        }
+      `);
     });
   });
 
@@ -300,6 +321,90 @@ describe('lib', () => {
       }
 
       expect.assertions(1);
+    });
+  });
+
+  describe('--js flag', () => {
+    it('should generate js files instead of ts files', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', js: true },
+        appTree
+      );
+      expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/index.js')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.js')).toBeTruthy();
+    });
+
+    it('should update root tsconfig.json with a js file path', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', js: true },
+        appTree
+      );
+      const tsconfigJson = readJsonInTree(tree, '/tsconfig.base.json');
+      expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
+        'libs/my-lib/src/index.js',
+      ]);
+    });
+
+    it('should generate js files for nested libs as well', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', directory: 'myDir', js: true },
+        appTree
+      );
+      expect(tree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
+      expect(tree.exists('libs/my-dir/my-lib/src/index.js')).toBeTruthy();
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.js')
+      ).toBeTruthy();
+      expect(tree.exists('libs/my-dir/my-lib/src/index.js')).toBeTruthy();
+    });
+  });
+
+  describe(`--babelJest`, () => {
+    it('should use babel for jest', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', babelJest: true } as Schema,
+        appTree
+      );
+
+      expect(tree.readContent(`libs/my-lib/jest.config.js`))
+        .toMatchInlineSnapshot(`
+        "module.exports = {
+          displayName: 'my-lib',
+          preset: '../../jest.preset.js',
+          transform: {
+            '^.+\\\\\\\\.[tj]sx?$': [
+              'babel-jest',
+              { cwd: __dirname, configFile: './babel-jest.config.json' },
+            ],
+          },
+          moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+          coverageDirectory: '../../coverage/libs/my-lib',
+        };
+        "
+      `);
+
+      expect(readJsonInTree(tree, 'libs/my-lib/babel-jest.config.json'))
+        .toMatchInlineSnapshot(`
+        Object {
+          "presets": Array [
+            Array [
+              "@babel/preset-env",
+              Object {
+                "targets": Object {
+                  "node": "current",
+                },
+              },
+            ],
+            "@babel/preset-typescript",
+            "@babel/preset-react",
+          ],
+        }
+      `);
     });
   });
 });

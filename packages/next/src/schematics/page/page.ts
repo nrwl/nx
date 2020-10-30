@@ -1,12 +1,6 @@
 import { chain, externalSchematic, Rule } from '@angular-devkit/schematics';
 import { addStyleDependencies } from '../../utils/styles';
-
-interface Schema {
-  name: string;
-  project: string;
-  style: string;
-  withTests?: boolean;
-}
+import { Schema } from './schema';
 
 /*
  * This schematic is basically the React component one, but for Next we need
@@ -17,7 +11,7 @@ export default function (options: Schema): Rule {
   return chain([
     externalSchematic('@nrwl/react', 'component', {
       ...options,
-      directory: 'pages', // This HAS to be here or Next won't work!
+      directory: options.directory ? `pages/${options.directory}` : 'pages',
       pascalCaseFiles: false,
       export: false,
       classComponent: false,

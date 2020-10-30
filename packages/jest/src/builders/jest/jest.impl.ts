@@ -8,6 +8,7 @@ import * as path from 'path';
 import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { JestBuilderOptions } from './schema';
+import { Config } from '@jest/types';
 
 try {
   require('dotenv').config();
@@ -15,7 +16,7 @@ try {
   // noop
 }
 
-if (process.env.NODE_ENV == null || process.env.NODE_ENV == undefined) {
+if (process.env.NODE_ENV === null || process.env.NODE_ENV === undefined) {
   (process.env as any).NODE_ENV = 'test';
 }
 
@@ -40,7 +41,8 @@ function run(
     );
   }
 
-  const config: any = {
+  const config: Config.Argv = {
+    $0: undefined,
     _: [],
     config: options.config,
     coverage: options.codeCoverage,
@@ -61,7 +63,6 @@ function run(
     testPathPattern: options.testPathPattern,
     colors: options.colors,
     verbose: options.verbose,
-    coverageReporters: options.coverageReporters,
     coverageDirectory: options.coverageDirectory,
     testResultsProcessor: options.testResultsProcessor,
     updateSnapshot: options.updateSnapshot,
@@ -99,10 +100,17 @@ function run(
     config.reporters = options.reporters;
   }
 
+  if (
+    Array.isArray(options.coverageReporters) &&
+    options.coverageReporters.length > 0
+  ) {
+    config.coverageReporters = options.coverageReporters;
+  }
+
   return from(runCLI(config, [options.jestConfig])).pipe(
-    map((results) => {
+    map(({ results }) => {
       return {
-        success: results.results.success,
+        success: results.success,
       };
     })
   );

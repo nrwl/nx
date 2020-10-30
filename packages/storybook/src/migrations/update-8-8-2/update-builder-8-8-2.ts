@@ -10,7 +10,7 @@ import {
 export default function update(): Rule {
   return chain([
     updateWorkspaceInTree((config) => {
-      const filteredProjects = [];
+      const filteredProjects: Array<Record<string, any>> = [];
       Object.keys(config.projects).forEach((name) => {
         if (
           config.projects[name].architect &&
@@ -33,7 +33,7 @@ export default function update(): Rule {
     }),
     (tree, context) => {
       const workspace = readWorkspace(tree);
-      const tsconfigUpdateRules = [];
+      const tsconfigUpdateRules: Rule[] = [];
       Object.keys(workspace.projects).forEach((name) => {
         if (
           workspace.projects[name].architect &&

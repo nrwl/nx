@@ -24,11 +24,7 @@ export function createApplicationFiles(options: NormalizedSchema): Rule {
         tmpl: '',
         offsetFromRoot: offsetFromRoot(options.appProjectRoot),
         appContent: createAppJsx(options.name),
-        styleContent: createStyleRules({
-          isUsingJsxBasedSolution: !!options.styledModule,
-          createHostBlock:
-            !options.styledModule || options.styledModule === 'styled-jsx',
-        }),
+        styleContent: createStyleRules(),
       }),
       options.styledModule
         ? filter((file) => !file.endsWith(`.${options.style}`))

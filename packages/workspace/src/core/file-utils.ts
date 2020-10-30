@@ -2,7 +2,7 @@ import { execSync } from 'child_process';
 import * as fs from 'fs';
 import { readFileSync } from 'fs';
 import * as path from 'path';
-import { extname } from 'path';
+import { extname, join } from 'path';
 import { NxArgs } from '../command-line/utils';
 import { WorkspaceResults } from '../command-line/workspace-results';
 import { appRootPath } from '../utils/app-root';
@@ -178,8 +178,10 @@ export function workspaceFileName() {
   }
 }
 
-export function defaultFileRead(filePath: string) {
-  return readFileSync(`${appRootPath}/${filePath}`, 'UTF-8');
+export type FileRead = (s: string) => string;
+
+export function defaultFileRead(filePath: string): string | null {
+  return readFileSync(join(appRootPath, filePath), 'UTF-8');
 }
 
 export function readPackageJson(): any {
@@ -215,12 +217,12 @@ export function rootWorkspaceFileData(): FileData[] {
 }
 
 export function readWorkspaceFiles(): FileData[] {
-  const workspaceJson = readWorkspaceJson();
   performance.mark('read workspace files:start');
 
   if (defaultFileHasher.usesGitForHashing) {
-    const r = defaultFileHasher
-      .allFiles()
+    const ignoredGlobs = getIgnoredGlobs();
+    const r = defaultFileHasher.workspaceFiles
+      .filter((f) => !ignoredGlobs.ignores(f))
       .map((f) => getFileData(`${appRootPath}/${f}`));
     performance.mark('read workspace files:end');
     performance.measure(

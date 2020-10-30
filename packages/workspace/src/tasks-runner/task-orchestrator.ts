@@ -2,11 +2,10 @@ import { Cache, TaskWithCachedResult } from './cache';
 import { cliCommand } from '../core/file-utils';
 import { ProjectGraph } from '../core/project-graph';
 import { AffectedEventType, Task } from './tasks-runner';
-import { getOutputs } from './utils';
-import { fork } from 'child_process';
+import { getOutputs, unparse } from './utils';
+import { ChildProcess, fork } from 'child_process';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { output } from '../utils/output';
-import * as path from 'path';
 import * as fs from 'fs';
 import { appRootPath } from '../utils/app-root';
 import * as dotenv from 'dotenv';
@@ -16,11 +15,15 @@ export class TaskOrchestrator {
   cache = new Cache(this.options);
   cli = cliCommand();
 
+  private processes: ChildProcess[] = [];
+
   constructor(
     private readonly initiatingProject: string | undefined,
     private readonly projectGraph: ProjectGraph,
     private readonly options: DefaultTasksRunnerOptions
-  ) {}
+  ) {
+    this.setupOnProcessExitListener();
+  }
 
   async run(tasksInStage: Task[]) {
     const { cached, rest } = await this.splitTasksIntoCachedAndNotCached(
@@ -166,7 +169,7 @@ export class TaskOrchestrator {
           stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
           env,
         });
-
+        this.processes.push(p);
         let out = [];
         let outWithErr = [];
         p.stdout.on('data', (chunk) => {
@@ -178,10 +181,9 @@ export class TaskOrchestrator {
           process.stderr.write(chunk);
           outWithErr.push(chunk.toString());
         });
-        process.addListener('SIGINT', () => {
-          p.kill('SIGINT');
-        });
+
         p.on('exit', (code) => {
+          if (code === null) code = 2;
           // we didn't print any output as we were running the command
           // print all the collected output|
           if (!forwardOutput) {
@@ -234,7 +236,9 @@ export class TaskOrchestrator {
           stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
           env,
         });
+        this.processes.push(p);
         p.on('exit', (code) => {
+          if (code === null) code = 2;
           // we didn't print any output as we were running the command
           // print all the collected output|
           if (!forwardOutput) {
@@ -282,7 +286,12 @@ export class TaskOrchestrator {
       ...parseEnv(`${task.projectRoot}/.env`),
       ...parseEnv(`${task.projectRoot}/.local.env`),
     };
-    const env = { ...envsFromFiles, FORCE_COLOR: forceColor, ...process.env };
+    const env = {
+      ...envsFromFiles,
+      FORCE_COLOR: forceColor,
+      NX_INVOKED_BY_RUNNER: 'true',
+      ...process.env,
+    };
     if (outputPath) {
       env.NX_TERMINAL_OUTPUT_PATH = outputPath;
       if (this.options.captureStderr) {
@@ -307,24 +316,14 @@ export class TaskOrchestrator {
   }
 
   private getCommand() {
-    return path.join(
-      this.workspaceRoot,
-      'node_modules',
-      '@nrwl',
-      'cli',
-      'lib',
-      'run-cli.js'
-    );
+    const cli = require.resolve(`@nrwl/cli/lib/run-cli.js`, {
+      paths: [this.workspaceRoot],
+    });
+    return `${cli}`;
   }
 
   private getCommandArgs(task: Task) {
-    const args = Object.entries(task.overrides || {}).map(([prop, value]) =>
-      typeof value === 'boolean'
-        ? value
-          ? `--${prop}`
-          : `--no-${prop}`
-        : `--${prop}=${value}`
-    );
+    const args: string[] = unparse(task.overrides || {});
 
     const config = task.target.configuration
       ? `:${task.target.configuration}`
@@ -335,6 +334,16 @@ export class TaskOrchestrator {
       `${task.target.project}:${task.target.target}${config}`,
       ...args,
     ];
+  }
+
+  private setupOnProcessExitListener() {
+    // Forward SIGINTs to all forked processes
+    process.addListener('SIGINT', () => {
+      this.processes.forEach((p) => {
+        p.kill('SIGINT');
+      });
+      process.exit();
+    });
   }
 }
 

@@ -22,6 +22,7 @@ const runOne = [
   'with-deps',
   'skipNxCache',
   'skip-nx-cache',
+  'scan',
 ];
 
 const runMany = [...runOne, 'projects', 'quiet', 'all'];
@@ -38,6 +39,10 @@ const runAffected = [
   'plain',
   'select',
 ];
+
+export interface RawNxArgs extends NxArgs {
+  prod?: boolean;
+}
 
 export interface NxArgs {
   target?: string;
@@ -66,6 +71,7 @@ export interface NxArgs {
   select?: string;
   skipNxCache?: boolean;
   'skip-nx-cache'?: boolean;
+  scan?: boolean;
 }
 
 const ignoreArgs = ['$0', '_'];
@@ -78,12 +84,12 @@ export function splitArgsIntoNxArgsAndOverrides(
   const nxSpecific =
     mode === 'run-one' ? runOne : mode === 'run-many' ? runMany : runAffected;
 
-  const nxArgs: any = {};
+  const nxArgs: RawNxArgs = {};
   const overrides = yargsParser(args._);
   delete overrides._;
 
   Object.entries(args).forEach(([key, value]) => {
-    if (nxSpecific.includes(key as any)) {
+    if (nxSpecific.includes(key)) {
       nxArgs[key] = value;
     } else if (!ignoreArgs.includes(key)) {
       overrides[key] = value;
@@ -94,7 +100,9 @@ export function splitArgsIntoNxArgsAndOverrides(
     if (!nxArgs.projects) {
       nxArgs.projects = [];
     } else {
-      nxArgs.projects = args.projects.split(',').map((p: string) => p.trim());
+      nxArgs.projects = (args.projects as string)
+        .split(',')
+        .map((p: string) => p.trim());
     }
   }
 

@@ -95,5 +95,29 @@ forEachCli(() => {
       );
       done();
     }, 45000);
+
+    it('should support multiple `coverageReporters` through CLI', async (done) => {
+      ensureProject();
+      const mylib = uniq('mylib');
+      runCLI(`generate @nrwl/workspace:lib ${mylib} --unit-test-runner jest`);
+
+      updateFile(
+        `libs/${mylib}/src/lib/${mylib}.spec.ts`,
+        `
+        test('can access jest global', () => {
+          expect(true).toBe(true);
+        });
+        `
+      );
+
+      const result = await runCLIAsync(
+        `test ${mylib} --no-watch --code-coverage --coverageReporters=text --coverageReporters=text-summary`
+      );
+      expect(result.stdout).toContain(
+        'File      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s'
+      ); // text
+      expect(result.stdout).toContain('Coverage summary'); // text-summary
+      done();
+    }, 45000);
   });
 });

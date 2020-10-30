@@ -4,6 +4,8 @@ import * as stripJsonComments from 'strip-json-comments';
 import { readJsonInTree, NxJson } from '@nrwl/workspace';
 import { runSchematic } from '../../utils/testing';
 
+import { Schema } from './schema';
+
 describe('app', () => {
   let appTree: Tree;
 
@@ -68,9 +70,9 @@ describe('app', () => {
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
       const linter = JSON.parse(
-        stripJsonComments(tree.readContent('apps/my-app/.eslintrc'))
+        stripJsonComments(tree.readContent('apps/my-app/.eslintrc.json'))
       );
-      expect(linter.extends).toEqual('../../.eslintrc');
+      expect(linter.extends).toEqual('../../.eslintrc.json');
 
       expect(tree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
       const tsconfigE2E = JSON.parse(
@@ -152,26 +154,26 @@ describe('app', () => {
           expectedValue: '../../../dist/out-tsc',
         },
         {
-          path: 'apps/my-dir/my-app/.eslintrc',
+          path: 'apps/my-dir/my-app/.eslintrc.json',
           lookupFn: (json) => json.extends,
-          expectedValue: '../../../.eslintrc',
+          expectedValue: '../../../.eslintrc.json',
         },
       ].forEach(hasJsonValue);
     });
-  });
 
-  it('should create Nx specific template', async () => {
-    const tree = await runSchematic(
-      'app',
-      { name: 'myApp', directory: 'myDir' },
-      appTree
-    );
-    expect(
-      tree.readContent('apps/my-dir/my-app/src/app/app.element.ts')
-    ).toBeTruthy();
-    expect(
-      tree.readContent('apps/my-dir/my-app/src/app/app.element.ts')
-    ).toContain('Thank you for using and showing some ♥ for Nx.');
+    it('should create Nx specific template', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', directory: 'myDir' },
+        appTree
+      );
+      expect(
+        tree.readContent('apps/my-dir/my-app/src/app/app.element.ts')
+      ).toBeTruthy();
+      expect(
+        tree.readContent('apps/my-dir/my-app/src/app/app.element.ts')
+      ).toContain('Thank you for using and showing some ♥ for Nx.');
+    });
   });
 
   describe('--style scss', () => {
@@ -266,7 +268,7 @@ describe('app', () => {
     });
   });
 
-  it('should setup the tslint builder', async () => {
+  it('should setup the eslint builder', async () => {
     const tree = await runSchematic(
       'app',
       {
@@ -277,14 +279,9 @@ describe('app', () => {
     const workspaceJson = readJsonInTree(tree, 'workspace.json');
 
     expect(workspaceJson.projects['my-app'].architect.lint).toEqual({
-      builder: '@nrwl/linter:lint',
+      builder: '@nrwl/linter:eslint',
       options: {
-        linter: 'eslint',
-        exclude: ['**/node_modules/**', '!apps/my-app/**/*'],
-        tsConfig: [
-          'apps/my-app/tsconfig.app.json',
-          'apps/my-app/tsconfig.spec.json',
-        ],
+        lintFilePatterns: ['apps/my-app/**/*.ts'],
       },
     });
   });
@@ -316,9 +313,17 @@ describe('app', () => {
       expect(tree.exists('apps/my-app/jest.config.js')).toBeFalsy();
       const workspaceJson = readJsonInTree(tree, 'workspace.json');
       expect(workspaceJson.projects['my-app'].architect.test).toBeUndefined();
-      expect(
-        workspaceJson.projects['my-app'].architect.lint.options.tsConfig
-      ).toEqual(['apps/my-app/tsconfig.app.json']);
+      expect(workspaceJson.projects['my-app'].architect.lint)
+        .toMatchInlineSnapshot(`
+        Object {
+          "builder": "@nrwl/linter:eslint",
+          "options": Object {
+            "lintFilePatterns": Array [
+              "apps/my-app/**/*.ts",
+            ],
+          },
+        }
+      `);
     });
   });
 
@@ -332,6 +337,51 @@ describe('app', () => {
       expect(tree.exists('apps/my-app-e2e')).toBeFalsy();
       const workspaceJson = readJsonInTree(tree, 'workspace.json');
       expect(workspaceJson.projects['my-app-e2e']).toBeUndefined();
+    });
+  });
+
+  describe('--babelJest', () => {
+    it('should use babel for jest', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', babelJest: true } as Schema,
+        appTree
+      );
+
+      expect(tree.readContent(`apps/my-app/jest.config.js`))
+        .toMatchInlineSnapshot(`
+        "module.exports = {
+          displayName: 'my-app',
+          preset: '../../jest.preset.js',
+          setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+          transform: {
+            '^.+\\\\\\\\.[tj]s$': [
+              'babel-jest',
+              { cwd: __dirname, configFile: './babel-jest.config.json' },
+            ],
+          },
+          moduleFileExtensions: ['ts', 'js', 'html'],
+          coverageDirectory: '../../coverage/apps/my-app',
+        };
+        "
+      `);
+
+      expect(readJsonInTree(tree, 'apps/my-app/babel-jest.config.json'))
+        .toMatchInlineSnapshot(`
+        Object {
+          "presets": Array [
+            Array [
+              "@babel/preset-env",
+              Object {
+                "targets": Object {
+                  "node": "current",
+                },
+              },
+            ],
+            "@babel/preset-typescript",
+          ],
+        }
+      `);
     });
   });
 });

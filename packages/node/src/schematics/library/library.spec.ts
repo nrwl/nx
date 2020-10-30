@@ -2,6 +2,7 @@ import { Tree } from '@angular-devkit/schematics';
 import { NxJson, readJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
+import { Schema } from './schema.d';
 
 describe('lib', () => {
   let appTree: Tree;
@@ -18,14 +19,9 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(workspaceJson.projects['my-lib'].architect.build).toBeUndefined();
       expect(workspaceJson.projects['my-lib'].architect.lint).toEqual({
-        builder: '@nrwl/linter:lint',
+        builder: '@nrwl/linter:eslint',
         options: {
-          linter: 'eslint',
-          exclude: ['**/node_modules/**', '!libs/my-lib/**/*'],
-          tsConfig: [
-            'libs/my-lib/tsconfig.lib.json',
-            'libs/my-lib/tsconfig.spec.json',
-          ],
+          lintFilePatterns: ['libs/my-lib/**/*.ts'],
         },
       });
       expect(workspaceJson.projects['my-lib'].architect.test).toEqual({
@@ -33,10 +29,22 @@ describe('lib', () => {
         outputs: ['coverage/libs/my-lib'],
         options: {
           jestConfig: 'libs/my-lib/jest.config.js',
-          tsConfig: 'libs/my-lib/tsconfig.spec.json',
           passWithNoTests: true,
         },
       });
+    });
+
+    it('adds srcRootForCompilationRoot in workspace.json', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', rootDir: './src', buildable: true },
+        appTree
+      );
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      expect(
+        workspaceJson.projects['my-lib'].architect.build.options
+          .srcRootForCompilationRoot
+      ).toEqual('./src');
     });
 
     it('should update nx.json', async () => {
@@ -161,14 +169,9 @@ describe('lib', () => {
         'libs/my-dir/my-lib'
       );
       expect(workspaceJson.projects['my-dir-my-lib'].architect.lint).toEqual({
-        builder: '@nrwl/linter:lint',
+        builder: '@nrwl/linter:eslint',
         options: {
-          linter: 'eslint',
-          exclude: ['**/node_modules/**', '!libs/my-dir/my-lib/**/*'],
-          tsConfig: [
-            'libs/my-dir/my-lib/tsconfig.lib.json',
-            'libs/my-dir/my-lib/tsconfig.spec.json',
-          ],
+          lintFilePatterns: ['libs/my-dir/my-lib/**/*.ts'],
         },
       });
     });
@@ -253,9 +256,17 @@ describe('lib', () => {
           path: './tsconfig.lib.json',
         },
       ]);
-      expect(
-        workspaceJson.projects['my-lib'].architect.lint.options.tsConfig
-      ).toEqual(['libs/my-lib/tsconfig.lib.json']);
+      expect(workspaceJson.projects['my-lib'].architect.lint)
+        .toMatchInlineSnapshot(`
+        Object {
+          "builder": "@nrwl/linter:eslint",
+          "options": Object {
+            "lintFilePatterns": Array [
+              "libs/my-lib/**/*.ts",
+            ],
+          },
+        }
+      `);
     });
   });
 
@@ -356,6 +367,51 @@ describe('lib', () => {
       }
 
       expect.assertions(1);
+    });
+  });
+
+  describe(`--babelJest`, () => {
+    it('should use babel for jest', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', babelJest: true } as Schema,
+        appTree
+      );
+
+      expect(tree.readContent(`libs/my-lib/jest.config.js`))
+        .toMatchInlineSnapshot(`
+        "module.exports = {
+          displayName: 'my-lib',
+          preset: '../../jest.preset.js',
+          transform: {
+            '^.+\\\\\\\\.[tj]sx?$': [
+              'babel-jest',
+              { cwd: __dirname, configFile: './babel-jest.config.json' },
+            ],
+          },
+          moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+          coverageDirectory: '../../coverage/libs/my-lib',
+        };
+        "
+      `);
+
+      expect(readJsonInTree(tree, 'libs/my-lib/babel-jest.config.json'))
+        .toMatchInlineSnapshot(`
+        Object {
+          "presets": Array [
+            Array [
+              "@babel/preset-env",
+              Object {
+                "targets": Object {
+                  "node": "current",
+                },
+              },
+            ],
+            "@babel/preset-typescript",
+            "@babel/preset-react",
+          ],
+        }
+      `);
     });
   });
 });

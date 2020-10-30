@@ -34,6 +34,7 @@ export function toPropertyName(s: string): string {
     .replace(/(-|_|\.|\s)+(.)?/g, (_, __, chr) =>
       chr ? chr.toUpperCase() : ''
     )
+    .replace(/[^a-zA-Z\d]/g, '')
     .replace(/^([A-Z])/, (m) => m.toLowerCase());
 }
 

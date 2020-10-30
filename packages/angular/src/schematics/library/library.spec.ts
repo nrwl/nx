@@ -1019,7 +1019,7 @@ describe('lib', () => {
       const workspaceJson = readJsonInTree(result, 'workspace.json');
 
       expect(workspaceJson.projects['my-lib'].schematics).toEqual({
-        '@nrwl/angular:component': {
+        '@schematics/angular:component': {
           style: 'scss',
         },
       });

@@ -63,7 +63,7 @@ export function calculateProjectDependencies(
         };
       } else if (depNode.type === 'npm') {
         return {
-          name: depNode.name,
+          name: depNode.data.packageName,
           outputs: [],
           node: depNode,
         };
@@ -233,7 +233,8 @@ export function updatePaths(
 export function updateBuildableProjectPackageJsonDependencies(
   context: BuilderContext,
   node: ProjectGraphNode,
-  dependencies: DependentBuildableProjectNode[]
+  dependencies: DependentBuildableProjectNode[],
+  typeOfDependency: 'dependencies' | 'peerDependencies' = 'dependencies'
 ) {
   const outputs = getOutputsForTargetAndConfiguration(
     {
@@ -257,6 +258,7 @@ export function updateBuildableProjectPackageJsonDependencies(
   }
 
   packageJson.dependencies = packageJson.dependencies || {};
+  packageJson.peerDependencies = packageJson.peerDependencies || {};
 
   let updatePackageJson = false;
   dependencies.forEach((entry) => {
@@ -286,7 +288,7 @@ export function updateBuildableProjectPackageJsonDependencies(
           );
           depVersion = readJsonFile(depPackageJsonPath).version;
 
-          packageJson.dependencies[packageName] = depVersion;
+          packageJson[typeOfDependency][packageName] = depVersion;
         } else if (entry.node.type === 'npm') {
           // If an npm dep is part of the workspace devDependencies, do not include it the library
           if (
@@ -299,7 +301,9 @@ export function updateBuildableProjectPackageJsonDependencies(
 
           depVersion = entry.node.data.version;
 
-          packageJson.dependencies[entry.node.data.packageName] = depVersion;
+          packageJson[typeOfDependency][
+            entry.node.data.packageName
+          ] = depVersion;
         }
         updatePackageJson = true;
       } catch (e) {

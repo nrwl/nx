@@ -1,8 +1,0 @@
-{
-  "extends": "<%= offsetFromRoot %>../tsconfig.base.json",
-  "compilerOptions": {
-    "emitDecoratorMetadata": true
-  },
-  "exclude": ["../**/*.spec.ts"],
-  "include": ["../src/**/*"]
-}

@@ -1,0 +1,11 @@
+{<% if (baseConfigPath) { %>
+  "extends": "<%= baseConfigPath %>",<% } %>
+  "include": ["**/*.ts"],
+  "compilerOptions": {
+    "types": [
+      <% if (usesJest) { %>"jest", <% } %>
+      <% if (usesKarma) { %>"jasmine", <% } %>
+      "node"
+    ]
+  }
+}

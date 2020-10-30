@@ -47,6 +47,35 @@ forEachCli('nx', () => {
       });
     }, 120000);
 
+    it('should support vendor sourcemaps', () => {
+      ensureProject();
+      const appName = uniq('app');
+
+      runCLI(`generate @nrwl/react:app ${appName} --no-interactive`);
+
+      // By default, vendor sourcemaps are off
+      runCLI(`build ${appName}`);
+
+      let vendorContent = readFile(`dist/apps/${appName}/vendor.js`);
+
+      expect(vendorContent).not.toMatch(/sourceMappingURL/);
+
+      // Turn vendor sourcemaps on
+      updateFile(`workspace.json`, (content) => {
+        const json = JSON.parse(content);
+        json.projects[appName].architect.build.options.sourceMap = {
+          scripts: true,
+          vendor: true,
+        };
+        return JSON.stringify(json, null, 2);
+      });
+
+      runCLI(`build ${appName}`);
+      vendorContent = readFile(`dist/apps/${appName}/vendor.js`);
+
+      expect(vendorContent).toMatch(/sourceMappingURL/);
+    }, 120000);
+
     it('should be able to generate a publishable react lib', async () => {
       ensureProject();
       const libName = uniq('lib');
@@ -156,28 +185,18 @@ forEachCli('nx', () => {
         JSON.stringify(
           {
             presets: ['@nrwl/react/babel'],
+            plugins: [
+              [
+                'styled-components',
+                { pure: true, ssr: true, displayName: true },
+              ],
+            ],
             env: {
-              development: {
-                plugins: [
-                  [
-                    'styled-components',
-                    {
-                      pure: true,
-                      ssr: true,
-                      displayName: true,
-                    },
-                  ],
-                ],
-              },
               production: {
                 plugins: [
                   [
                     'styled-components',
-                    {
-                      pure: true,
-                      ssr: true,
-                      displayName: false,
-                    },
+                    { pure: true, ssr: true, displayName: false },
                   ],
                 ],
               },
@@ -199,7 +218,7 @@ forEachCli('nx', () => {
         'app__StyledApp'
       );
       expect(
-        readFile(`dist/apps/${styledComponentsApp}/main.esm.js`)
+        readFile(`dist/apps/${styledComponentsApp}/prod/main.esm.js`)
       ).not.toContain('app__StyledApp');
 
       const styledJsxApp = uniq('app');
@@ -233,6 +252,36 @@ forEachCli('nx', () => {
       ).toThrow(/does not exist/);
       expect(readFile(`dist/apps/${noStylesApp}/index.html`)).not.toContain(
         `<link rel="stylesheet" href="styles.css">`
+      );
+    }, 120000);
+
+    it('should generate app with legacy-ie support', async () => {
+      ensureProject();
+      const appName = uniq('app');
+
+      runCLI(
+        `generate @nrwl/react:app ${appName} --style=css --no-interactive`
+      );
+
+      // changing browser suporrt of this application
+      updateFile(`apps/${appName}/.browserslistrc`, `IE 11`);
+
+      await testGeneratedApp(appName, {
+        checkStyles: false,
+        checkProdBuild: true,
+        checkLinter: false,
+        checkE2E: false,
+      });
+
+      const filesToCheck = [
+        `dist/apps/${appName}/prod/polyfills.es5.js`,
+        `dist/apps/${appName}/prod/main.es5.js`,
+      ];
+
+      checkFilesExist(...filesToCheck);
+
+      expect(readFile(`dist/apps/${appName}/prod/index.html`)).toContain(
+        `<script src="main.esm.js" type="module"></script><script src="main.es5.js" nomodule defer></script>`
       );
     }, 120000);
 
@@ -334,20 +383,23 @@ forEachCli('nx', () => {
       );
 
       if (opts.checkProdBuild) {
-        runCLI(`build ${appName} --prod --output-hashing none`);
+        const prodOutputPath = `dist/apps/${appName}/prod`;
+        runCLI(
+          `build ${appName} --prod --output-hashing none --outputPath ${prodOutputPath}`
+        );
         filesToCheck = [
-          `dist/apps/${appName}/index.html`,
-          `dist/apps/${appName}/runtime.js`,
-          `dist/apps/${appName}/polyfills.esm.js`,
-          `dist/apps/${appName}/main.esm.js`,
+          `${prodOutputPath}/index.html`,
+          `${prodOutputPath}/runtime.js`,
+          `${prodOutputPath}/polyfills.esm.js`,
+          `${prodOutputPath}/main.esm.js`,
         ];
         if (opts.checkStyles) {
-          filesToCheck.push(`dist/apps/${appName}/styles.css`);
+          filesToCheck.push(`${prodOutputPath}/styles.css`);
         }
         checkFilesExist(...filesToCheck);
 
         if (opts.checkStyles) {
-          expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
+          expect(readFile(`${prodOutputPath}/index.html`)).toContain(
             `<link rel="stylesheet" href="styles.css">`
           );
         }

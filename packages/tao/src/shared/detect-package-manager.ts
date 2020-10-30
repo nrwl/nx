@@ -1,14 +1,6 @@
-import { Path, virtualFs } from '@angular-devkit/core';
-import { HostTree } from '@angular-devkit/schematics';
 import { execSync } from 'child_process';
-import { Stats } from 'fs';
-
-function fileExists(
-  host: virtualFs.Host<Stats>,
-  fileName: string
-): Promise<boolean> {
-  return host.exists(fileName as Path).toPromise();
-}
+import { readFileSync, existsSync } from 'fs';
+import * as stripJsonComments from 'strip-json-comments';
 
 function isPackageManagerInstalled(packageManager: string) {
   try {
@@ -21,28 +13,29 @@ function isPackageManagerInstalled(packageManager: string) {
   }
 }
 
-export async function detectPackageManager(
-  host: virtualFs.Host<Stats>
-): Promise<string> {
-  const hostTree = new HostTree(host);
-  if (hostTree.get('workspace.json')) {
-    const workspaceJson: { cli: { packageManager: string } } = JSON.parse(
-      hostTree.read('workspace.json').toString()
+export function detectPackageManager() {
+  const workspaceJsonPath = [`workspace.json`, `angular.json`].find((p) =>
+    existsSync(p)
+  );
+
+  if (workspaceJsonPath) {
+    const workspaceJson = JSON.parse(
+      stripJsonComments(readFileSync(workspaceJsonPath).toString())
     );
     if (workspaceJson.cli && workspaceJson.cli.packageManager) {
       return workspaceJson.cli.packageManager;
     }
   }
 
-  if (await fileExists(host, 'yarn.lock')) {
+  if (existsSync('yarn.lock')) {
     return 'yarn';
   }
 
-  if (await fileExists(host, 'pnpm-lock.yaml')) {
+  if (existsSync('pnpm-lock.yaml')) {
     return 'pnpm';
   }
 
-  if (await fileExists(host, 'package-lock.json')) {
+  if (existsSync('package-lock.json')) {
     return 'npm';
   }
 
@@ -57,4 +50,15 @@ export async function detectPackageManager(
   }
 
   return 'npm';
+}
+
+export function getPackageManagerInstallCommand(
+  packageManager = detectPackageManager(),
+  isDevDependency = false
+) {
+  if (packageManager === 'yarn') {
+    return `yarn add${isDevDependency ? ' --dev' : ''}`;
+  }
+
+  return `${packageManager} install${isDevDependency ? ' --save-dev' : ''}`;
 }

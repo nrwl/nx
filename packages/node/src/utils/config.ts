@@ -98,7 +98,7 @@ export function getBaseWebpackPartial(
   }
 
   // process asset entries
-  if (options.assets) {
+  if (Array.isArray(options.assets) && options.assets.length > 0) {
     const copyWebpackPluginInstance = new CopyWebpackPlugin({
       patterns: options.assets.map((asset: any) => {
         return {

@@ -1,4 +1,3 @@
-import * as path from 'path';
 import * as fs from 'fs';
 import { findWorkspaceRoot } from './find-workspace-root';
 
@@ -14,29 +13,21 @@ requireCli();
 
 function requireCli() {
   process.env.NX_CLI_SET = 'true';
+  let cliPath: string;
   if (workspace.type === 'nx') {
-    require(path.join(
-      workspace.dir,
-      'node_modules',
-      '@nrwl',
-      'tao',
-      'index.js'
-    ));
+    cliPath = '@nrwl/tao/index.js';
   } else {
-    require(path.join(
-      workspace.dir,
-      'node_modules',
-      '@angular',
-      'cli',
-      'lib',
-      'init.js'
-    ));
+    cliPath = '@angular/cli/lib/init.js';
   }
-}
 
-function writeToDisk(forwardOutput: boolean, outWithErr: any[]) {
-  if (!forwardOutput) {
-    fs.writeFileSync(process.env.NX_TERMINAL_OUTPUT_PATH, outWithErr.join(''));
+  try {
+    const cli = require.resolve(cliPath, {
+      paths: [workspace.dir],
+    });
+    require(cli);
+  } catch (e) {
+    console.error(`Could not find ${cliPath} module in this workspace.`, e);
+    process.exit(1);
   }
 }
 
@@ -91,15 +82,14 @@ function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
         captureStderr ? outWithErr.join('') : out.join('')
       );
     } else {
-      writeToDisk(forwardOutput, outWithErr);
+      fs.writeFileSync(
+        process.env.NX_TERMINAL_OUTPUT_PATH,
+        outWithErr.join('')
+      );
     }
   });
 
-  process.on('SIGINT', () => {
-    writeToDisk(forwardOutput, outWithErr);
-  });
-
   process.on('SIGTERM', () => {
-    writeToDisk(forwardOutput, outWithErr);
+    process.exit(15);
   });
 }

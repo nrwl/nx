@@ -20,6 +20,7 @@ export function extractNameAndVersion(content: string): string {
 
 export class FileHasher {
   fileHashes: { [path: string]: string } = {};
+  workspaceFiles = [];
   usesGitForHashing = false;
 
   constructor(private readonly hashing: HashingImp) {
@@ -29,6 +30,7 @@ export class FileHasher {
   init() {
     performance.mark('init hashing:start');
     this.fileHashes = {};
+    this.workspaceFiles = [];
     this.getHashesFromGit();
     this.usesGitForHashing = Object.keys(this.fileHashes).length > 0;
     performance.mark('init hashing:end');
@@ -49,14 +51,15 @@ export class FileHasher {
     return this.fileHashes[relativePath];
   }
 
-  allFiles() {
-    return Object.keys(this.fileHashes);
-  }
-
   private getHashesFromGit() {
     const sliceIndex = appRootPath.length + 1;
     getFileHashes(appRootPath).forEach((hash, filename) => {
       this.fileHashes[filename.substr(sliceIndex)] = hash;
+      /**
+       * we have to store it separately because fileHashes can be modified
+       * later on and can contain files that do not exist in the workspace
+       */
+      this.workspaceFiles.push(filename.substr(sliceIndex));
     });
   }
 

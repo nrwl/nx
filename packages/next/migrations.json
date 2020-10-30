@@ -34,6 +34,19 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "10.1.0": {
+      "version": "10.1.0-beta.0",
+      "packages": {
+        "next": {
+          "version": "9.5.2",
+          "alwaysAddToPackageJson": false
+        },
+        "node-sass": {
+          "version": "4.14.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

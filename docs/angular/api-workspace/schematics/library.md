@@ -36,6 +36,14 @@ nx g lib mylib --directory=myapp
 
 ## Options
 
+### babelJest
+
+Default: `false`
+
+Type: `boolean`
+
+Use babel instead ts-jest
+
 ### directory
 
 Type: `string`
@@ -47,6 +55,14 @@ A directory where the lib is placed
 Type: `string`
 
 The library name used to import it, like @myorg/my-awesome-lib
+
+### js
+
+Default: `false`
+
+Type: `boolean`
+
+Generate JavaScript files rather than TypeScript files
 
 ### linter
 

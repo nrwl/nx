@@ -8,18 +8,21 @@
     },
     "tsconfig.base.json": "*",
     "tslint.json": "*",
-    "nx.json": "*"
+    "nx.json": "*",
+    ".eslintrc.json": "*"
   },
   "tasksRunnerOptions": {
     "default": {
       "runner": "@nrwl/nx-cloud",
       "options": {
+        "scan": true,
         "accessToken": "OTM4MGQ1NDctZGRjMy00ZDlmLThkYzQtOTU3MDhkNWZhZjcwfHJlYWQ=",
         "cacheableOperations": ["build", "build-base", "test", "lint", "e2e"],
         "canTrackAnalytics": false,
         "showUsageWarnings": true,
         "runtimeCacheInputs": ["echo $SELECTED_CLI"],
-        "cacheDirectory": "/tmp/nx-cache"
+        "cacheDirectory": "/tmp/nx-cache",
+        "nxCloudUsePrNumber": true
       }
     }
   },
@@ -51,7 +54,7 @@
     },
     "react": {
       "tags": [],
-      "implicitDependencies": ["workspace", "cypress", "jest"]
+      "implicitDependencies": ["workspace", "cypress", "jest", "web"]
     },
     "storybook": {
       "tags": [],
@@ -158,6 +161,13 @@
     "e2e-workspace": {
       "tags": [],
       "implicitDependencies": ["workspace", "create-nx-workspace"]
+    },
+    "dep-graph-client": {
+      "tags": ["core"]
+    },
+    "dep-graph-client-e2e": {
+      "tags": [],
+      "implicitDependencies": ["dep-graph-client"]
     }
   },
   "affected": {

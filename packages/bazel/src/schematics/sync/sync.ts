@@ -39,7 +39,7 @@ const testBuilders = new Set([
   '@angular-devkit/build-angular:tslint',
   '@nrwl/jest:jest',
   '@nrwl/cypress:cypress',
-  '@nrwl/linter:lint',
+  '@nrwl/linter:eslint',
 ]);
 
 function createBuildFile(

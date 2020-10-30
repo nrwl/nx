@@ -14,7 +14,7 @@ describe('<%= className %> Selectors', () => {
 
   beforeEach(() => {
     state = {
-      <%= propertyName %>: <%= propertyName %>Adapter.addAll([
+      <%= propertyName %>: <%= propertyName %>Adapter.setAll([
         create<%= className %>Entity( 'PRODUCT-AAA' ),
         create<%= className %>Entity( 'PRODUCT-BBB' ),
         create<%= className %>Entity( 'PRODUCT-CCC' )

@@ -27,8 +27,8 @@ import {
   updateJsonInTree,
   updateWorkspace,
   addLintFiles,
-  NxJson,
   Linter,
+  generateProjectLint,
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import init from '../init/init';
@@ -480,43 +480,28 @@ function updateProject(options: NormalizedSchema): Rule {
           options.appProjectRoot
         );
 
-        const angularSchematicNames = [
-          'class',
-          'component',
-          'directive',
-          'guard',
-          'module',
-          'pipe',
-          'service',
-        ];
-
-        if (fixedProject.schematics) {
-          angularSchematicNames.forEach((type) => {
-            const schematic = `@schematics/angular:${type}`;
-            if (schematic in fixedProject.schematics) {
-              fixedProject.schematics[`@nrwl/angular:${type}`] =
-                fixedProject.schematics[schematic];
-              delete fixedProject.schematics[schematic];
-            }
-          });
-        }
-
         delete fixedProject.architect.test;
 
-        fixedProject.architect.lint.options.tsConfig = fixedProject.architect.lint.options.tsConfig.filter(
-          (path) =>
-            path !==
-              join(normalize(options.appProjectRoot), 'tsconfig.spec.json') &&
-            path !==
-              join(normalize(options.appProjectRoot), 'e2e/tsconfig.json')
-        );
-        fixedProject.architect.lint.options.exclude.push(
-          '!' + join(normalize(options.appProjectRoot), '**/*')
-        );
+        if (options.linter === Linter.TsLint) {
+          fixedProject.architect.lint.options.tsConfig = fixedProject.architect.lint.options.tsConfig.filter(
+            (path) =>
+              path !==
+                join(normalize(options.appProjectRoot), 'tsconfig.spec.json') &&
+              path !==
+                join(normalize(options.appProjectRoot), 'e2e/tsconfig.json')
+          );
+          fixedProject.architect.lint.options.exclude.push(
+            '!' + join(normalize(options.appProjectRoot), '**/*')
+          );
+        }
 
         if (options.linter === Linter.EsLint) {
-          fixedProject.architect.lint.options.linter = Linter.EsLint;
-          fixedProject.architect.lint.builder = '@nrwl/linter:lint';
+          fixedProject.architect.lint.builder = '@nrwl/linter:eslint';
+          fixedProject.architect.lint.options.lintFilePatterns = [
+            `${options.appProjectRoot}/src/**/*.ts`,
+          ];
+          delete fixedProject.architect.lint.options.tsConfig;
+          delete fixedProject.architect.lint.options.exclude;
           host.delete(`${options.appProjectRoot}/tslint.json`);
         }
 
@@ -619,16 +604,12 @@ function updateE2eProject(options: NormalizedSchema): Rule {
           projectType: 'application',
           architect: {
             e2e: json.projects[options.name].architect.e2e,
-            lint: {
-              builder: '@angular-devkit/build-angular:tslint',
-              options: {
-                tsConfig: `${options.e2eProjectRoot}/tsconfig.e2e.json`,
-                exclude: [
-                  '**/node_modules/**',
-                  '!' + join(normalize(options.e2eProjectRoot), '**/*'),
-                ],
-              },
-            },
+            lint: generateProjectLint(
+              normalize(options.e2eProjectRoot),
+              join(normalize(options.e2eProjectRoot), 'tsconfig.e2e.json'),
+              options.linter,
+              [`${options.e2eProjectRoot}/**/*.ts`]
+            ),
           },
         };
 
@@ -653,6 +634,35 @@ function updateE2eProject(options: NormalizedSchema): Rule {
       ),
     ]);
   };
+}
+
+function addEditorTsConfigReference(options: NormalizedSchema): Rule {
+  // This should be the last tsconfig reference so it's not in the template.
+  return chain([
+    updateJsonInTree(
+      join(normalize(options.appProjectRoot), 'tsconfig.json'),
+      (json) => {
+        json.references.push({
+          path: './tsconfig.editor.json',
+        });
+        return json;
+      }
+    ),
+    updateWorkspace((workspace) => {
+      const projectConfig = workspace.projects.get(options.name);
+      const lintTarget = projectConfig.targets.get('lint');
+
+      const isUsingTSLint =
+        lintTarget?.builder === '@angular-devkit/build-angular:tslint';
+
+      if (isUsingTSLint) {
+        const tsConfigs = lintTarget.options.tsConfig as string[];
+        tsConfigs.push(
+          join(normalize(options.appProjectRoot), 'tsconfig.editor.json')
+        );
+      }
+    }),
+  ]);
 }
 
 function addProxyConfig(options: NormalizedSchema): Rule {
@@ -821,6 +831,7 @@ export default function (schema: Schema): Rule {
             linter: options.linter,
           })
         : noop(),
+      addEditorTsConfigReference(options),
       options.backendProject ? addProxyConfig(options) : noop(),
       options.strict ? enableStrictTypeChecking(options) : noop(),
       formatFiles(options),

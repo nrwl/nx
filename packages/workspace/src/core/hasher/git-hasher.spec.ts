@@ -78,7 +78,28 @@ describe('git-hasher', () => {
     run(`echo AAA > "a b".txt`);
     run(`git add .`);
     run(`git commit -am init`);
-    expect([...getFileHashes(dir).keys()]).toEqual([`${dir}/a b.txt`]);
+    run(`touch "x y z.txt"`); // unstaged
+    expect([...getFileHashes(dir).keys()]).toEqual([
+      `${dir}/a b.txt`,
+      `${dir}/x y z.txt`,
+    ]);
+    run(`git add .`);
+    expect([...getFileHashes(dir).keys()]).toEqual([
+      `${dir}/a b.txt`,
+      `${dir}/x y z.txt`,
+    ]);
+    run(`mv "a b.txt" "a b moved.txt"`);
+    expect([...getFileHashes(dir).keys()]).toEqual([
+      `${dir}/x y z.txt`,
+      `${dir}/a b moved.txt`,
+    ]);
+    run(`git add .`);
+    expect([...getFileHashes(dir).keys()]).toEqual([
+      `${dir}/a b moved.txt`,
+      `${dir}/x y z.txt`,
+    ]);
+    run(`rm "x y z.txt"`);
+    expect([...getFileHashes(dir).keys()]).toEqual([`${dir}/a b moved.txt`]);
   });
 
   it('should handle renames and modifications', () => {

@@ -1,11 +1,15 @@
 # Step 7: Share Code
 
+## Video of this Lesson
+
+<iframe width="560" height="600" src="https://www.youtube.com/embed/-zzw4_oT_2I" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 Awesome! The application is working end to end! However, there is a problem. Both the backend and the frontend define the `Todo` interface. The interface is in sync now, but in a real application, over time, it will diverge, and, as a result, runtime errors will creep in. You should share this interface between the backend and the frontend. In Nx, you can do this by creating a library.
 
 **Run the following generator to create a library:**
 
 ```bash
-nx g @nrwl/workspace:lib data
+npx nx g @nrwl/workspace:lib data
 ```
 
 The result should look like this:
@@ -81,7 +85,7 @@ export const App = () => {
 export default App;
 ```
 
-Every time you add a new library, you have to restart `nx serve`. **So restart both `nx serve api` and `nx serve todos` and you should see the application running.**
+Every time you add a new library, you have to restart `npx nx serve`. **So restart both `npx nx serve api` and `npx nx serve todos` and you should see the application running.**
 
 !!!!!
 Nx allows you to share code...

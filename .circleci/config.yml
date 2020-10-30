@@ -10,7 +10,6 @@ executors:
     environment:
       # install Cypress in Linux-like cache folder
       CYPRESS_CACHE_FOLDER: '~/.cache/Cypress'
-
     docker:
       - image: circleci/node:12-browsers
 
@@ -31,7 +30,7 @@ commands:
       - save_cache:
           key: nrwl-nx-node12-cypress-{{ checksum "yarn.lock" }}
           paths:
-            - ~/.cache/Cypre  ss
+            - ~/.cache/Cypress
   restore_cypress_cache:
     description: 'Restore Cypress Cache'
     steps:
@@ -79,19 +78,25 @@ jobs:
       - setup
       - run:
           name: Run Unit Tests
-          command: NX_VERBOSE_LOGGING=true yarn test
+          command: yarn test
       - run:
           name: Check Documentation
           command: yarn documentation
       - run:
           name: Check Imports
-          command: yarn checkimports
+          command: yarn check-imports
       - run:
           name: Check Formatting
-          command: yarn checkformat
+          command: yarn check-format
       - run:
           name: Check Commit Message Format
-          command: yarn checkcommit
+          command: yarn check-commit
+      - run:
+          name: Run linting
+          command: yarn lint
+      - run:
+          name: Check Package dependencies
+          command: yarn depcheck
   e2e-1:
     executor: default
     steps:
@@ -114,7 +119,7 @@ jobs:
       - setup
       - run:
           name: Tests Part 3
-          command: NX_VERBOSE_LOGGING=true yarn e2e-ci 3
+          command: yarn e2e-ci 3
           no_output_timeout: 30m
   e2e-4:
     executor: default

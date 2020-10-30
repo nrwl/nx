@@ -26,7 +26,7 @@ import {
   onlyWorkspaceProjects,
   ProjectGraph,
 } from '../core/project-graph';
-import { FileData } from '../core/file-utils';
+import { FileData, FileRead } from '../core/file-utils';
 import { extname, join, normalize, Path } from '@angular-devkit/core';
 import { NxJson, NxJsonProjectConfig } from '../core/shared-interfaces';
 import { addInstallTask } from './rules/add-install-task';
@@ -58,6 +58,17 @@ function insertAfterLastOccurrence(
   const lastItemPosition: number = lastItem ? lastItem.getEnd() : fallbackPos;
 
   return new InsertChange(file, lastItemPosition, toInsert);
+}
+
+function sortObjectByKeys(obj: unknown) {
+  return Object.keys(obj)
+    .sort()
+    .reduce((result, key) => {
+      return {
+        ...result,
+        [key]: obj[key],
+      };
+    }, {});
 }
 
 export function findNodes(
@@ -405,7 +416,13 @@ export function getFullProjectGraphFromHost(host: Tree): ProjectGraph {
   const workspaceJson = readJsonInTree(host, getWorkspacePath(host));
   const nxJson = readJsonInTree<NxJson>(host, '/nx.json');
 
-  const fileRead = (f: string) => host.read(f).toString();
+  const fileRead: FileRead = (f: string) => {
+    try {
+      return host.read(f).toString();
+    } catch (e) {
+      throw new Error(`${f} does not exist`);
+    }
+  };
 
   const workspaceFiles: FileData[] = [];
 
@@ -610,7 +627,8 @@ export function addDepsToPackageJson(
             ...devDeps,
             ...(json.devDependencies || {}),
           };
-
+          json.dependencies = sortObjectByKeys(json.dependencies);
+          json.devDependencies = sortObjectByKeys(json.devDependencies);
           return json;
         }),
         addInstallTask({
@@ -638,6 +656,8 @@ export function updatePackageJsonDependencies(
         ...(json.devDependencies || {}),
         ...devDeps,
       };
+      json.dependencies = sortObjectByKeys(json.dependencies);
+      json.devDependencies = sortObjectByKeys(json.devDependencies);
       return json;
     }),
     addInstallTask({

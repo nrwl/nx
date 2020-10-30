@@ -14,6 +14,7 @@ import {
   getSourceNodes,
   applyWithSkipExisting,
 } from '@nrwl/workspace/src/utils/ast-utils';
+import { join, normalize } from '@angular-devkit/core';
 
 export interface CreateComponentStoriesFileSchema {
   libPath: string;
@@ -35,7 +36,7 @@ export function createComponentStoriesFile({
   return (tree: Tree, context: SchematicContext): Rule => {
     const props = getInputDescriptors(
       tree,
-      libPath + '/' + componentPath + '/' + componentFileName + '.ts'
+      join(normalize(libPath), componentPath, `${componentFileName}.ts`)
     );
     return applyWithSkipExisting(url('./files'), [
       template({

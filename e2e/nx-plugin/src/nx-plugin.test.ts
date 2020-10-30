@@ -63,7 +63,7 @@ forEachCli((currentCLIName) => {
     // we should change it to point to the right collection using relative path
     it(`should run the plugin's e2e tests`, async (done) => {
       ensureProject();
-      const plugin = uniq('plugin');
+      const plugin = uniq('plugin-name');
       runCLI(
         `generate @nrwl/nx-plugin:plugin ${plugin} --linter=${linter} --importPath=@proj/${plugin}`
       );
@@ -72,7 +72,7 @@ forEachCli((currentCLIName) => {
       expectTestsPass(results);
 
       done();
-    }, 150000);
+    }, 250000);
 
     it('should be able to generate a migration', async (done) => {
       ensureProject();

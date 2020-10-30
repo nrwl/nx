@@ -130,7 +130,6 @@ describe('NxPlugin e2e-project', () => {
     const project = workspace.projects.get('my-plugin-e2e');
     expect(project.targets.get('e2e')).toMatchObject({
       options: expect.objectContaining({
-        tsSpecConfig: 'apps/my-plugin-e2e/tsconfig.spec.json',
         jestConfig: 'apps/my-plugin-e2e/jest.config.js',
       }),
     });

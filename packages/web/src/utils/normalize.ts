@@ -1,6 +1,6 @@
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { normalize } from '@angular-devkit/core';
-import { resolve, dirname, relative, basename, join } from 'path';
+import { resolve, dirname, relative, basename } from 'path';
 import { BuildBuilderOptions, PackageBuilderOptions } from './types';
 import { statSync } from 'fs';
 
@@ -25,6 +25,11 @@ export function normalizePackageOptions(
   const project = `${root}/${options.project}`;
   const projectRoot = dirname(project);
   const outputPath = `${root}/${options.outputPath}`;
+
+  if (options.buildableProjectDepsInPackageJsonType == undefined) {
+    options.buildableProjectDepsInPackageJsonType = 'peerDependencies';
+  }
+
   return {
     ...options,
     babelConfig: normalizePluginPath(options.babelConfig, root),

@@ -126,6 +126,10 @@ function addProject(options: NormalizedSchema): Rule {
           assets: [`${options.projectRoot}/*.md`],
         },
       };
+
+      if (options.rootDir) {
+        architect.build.options.srcRootForCompilationRoot = options.rootDir;
+      }
     }
     return json;
   });

@@ -3,7 +3,7 @@ import { generateGraph } from './dep-graph';
 import { output } from '../utils/output';
 import { parseFiles } from './shared';
 import { runCommand } from '../tasks-runner/run-command';
-import { NxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
+import { NxArgs, splitArgsIntoNxArgsAndOverrides, RawNxArgs } from './utils';
 import { filterAffected } from '../core/affected-project-graph';
 import {
   createProjectGraph,
@@ -16,8 +16,12 @@ import { calculateFileChanges, readEnvironment } from '../core/file-utils';
 import { printAffected } from './print-affected';
 import { projectHasTarget } from '../utils/project-graph-utils';
 import { DefaultReporter } from '../tasks-runner/default-reporter';
+import { promptForNxCloud } from './prompt-for-nx-cloud';
 
-export function affected(command: string, parsedArgs: yargs.Arguments): void {
+export async function affected(
+  command: 'apps' | 'libs' | 'dep-graph' | 'print-affected' | 'affected',
+  parsedArgs: yargs.Arguments & RawNxArgs
+) {
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     parsedArgs,
     'affected',
@@ -25,6 +29,8 @@ export function affected(command: string, parsedArgs: yargs.Arguments): void {
       printWarnings: command !== 'print-affected' && !parsedArgs.plain,
     }
   );
+
+  await promptForNxCloud(nxArgs.scan);
 
   const projectGraph = createProjectGraph();
   let affectedGraph = nxArgs.all

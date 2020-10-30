@@ -25,6 +25,7 @@ export default function (schema: StorybookConfigureSchema): Rule {
       name: schema.name,
       uiFramework: '@storybook/react',
       configureCypress: schema.configureCypress,
+      generateCypressSpecs: schema.generateCypressSpecs,
       js: schema.js,
       linter: schema.linter,
     }),

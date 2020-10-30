@@ -31,6 +31,7 @@ export function getBrowserConfig(
     styles: stylesSourceMap,
     scripts: scriptsSourceMap,
     hidden: hiddenSourceMap,
+    vendor: vendorSourceMap,
   } = buildOptions.sourceMap;
 
   // See https://webpack.js.org/configuration/devtool/ for sourcemap types.
@@ -70,7 +71,8 @@ export function getBrowserConfig(
       getSourceMapDevTool(
         !!scriptsSourceMap,
         !!stylesSourceMap,
-        hiddenSourceMap
+        hiddenSourceMap,
+        vendorSourceMap
       )
     );
   }

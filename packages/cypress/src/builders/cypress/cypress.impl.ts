@@ -14,6 +14,7 @@ import { readJsonFile } from '@nrwl/workspace';
 import { legacyCompile } from './legacy';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { installedCypressVersion } from '../../utils/cypress-version';
+import * as yargsParser from 'yargs-parser';
 
 const Cypress = require('cypress'); // @NOTE: Importing via ES6 messes the whole test dependencies.
 
@@ -35,6 +36,8 @@ export interface CypressBuilderOptions extends JsonObject {
   ciBuildId?: string;
   group?: string;
   ignoreTestFiles?: string;
+  reporter?: string;
+  reporterOptions?: string;
 }
 
 try {
@@ -52,6 +55,14 @@ export function cypressBuilderRunner(
   options: CypressBuilderOptions,
   context: BuilderContext
 ): Observable<BuilderOutput> {
+  // Special handling of extra options coming through Angular CLI
+  if (options['--']) {
+    const { _, ...overrides } = yargsParser(options['--'] as string[], {
+      configuration: { 'camel-case-expansion': false },
+    });
+    options = { ...options, ...overrides };
+  }
+
   const legacy = isLegacy(options, context);
   if (legacy) {
     showLegacyWarning(context);
@@ -85,7 +96,10 @@ export function cypressBuilderRunner(
         options.env,
         options.spec,
         options.ciBuildId,
-        options.group
+        options.group,
+        options.ignoreTestFiles,
+        options.reporter,
+        options.reporterOptions
       )
     ),
     options.watch ? tap(noop) : take(1),
@@ -134,7 +148,9 @@ function initCypress(
   spec?: string,
   ciBuildId?: string,
   group?: string,
-  ignoreTestFiles?: string
+  ignoreTestFiles?: string,
+  reporter?: string,
+  reporterOptions?: string
 ): Observable<BuilderOutput> {
   // Cypress expects the folder where a `cypress.json` is present
   const projectFolderPath = dirname(cypressConfig);
@@ -168,6 +184,8 @@ function initCypress(
   options.ciBuildId = ciBuildId;
   options.group = group;
   options.ignoreTestFiles = ignoreTestFiles;
+  options.reporter = reporter;
+  options.reporterOptions = reporterOptions;
 
   return fromPromise<any>(
     !isWatching || headless ? Cypress.run(options) : Cypress.open(options)

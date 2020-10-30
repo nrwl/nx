@@ -35,7 +35,11 @@ export function serializeJson(json: any): string {
  * @param path Path of the JSON file on the filesystem
  */
 export function readJsonFile<T = any>(path: string): T {
-  return JSON.parse(stripJsonComments(fs.readFileSync(path, 'utf-8')));
+  return parseJsonWithComments<T>(fs.readFileSync(path, 'utf-8'));
+}
+
+export function parseJsonWithComments<T = any>(content: string): T {
+  return JSON.parse(stripJsonComments(content));
 }
 
 export function writeJsonFile(path: string, json: any) {
@@ -108,5 +112,10 @@ export function renameSync(
 }
 
 export function isRelativePath(path: string): boolean {
-  return path.startsWith('./') || path.startsWith('../');
+  return (
+    path === '.' ||
+    path === '..' ||
+    path.startsWith('./') ||
+    path.startsWith('../')
+  );
 }

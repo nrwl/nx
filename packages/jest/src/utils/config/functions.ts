@@ -4,22 +4,16 @@ import { Tree } from '@angular-devkit/schematics';
 import * as stripJsonComments from 'strip-json-comments';
 import { Config } from '@jest/types';
 
-function trailingCommaNeeded(needed: boolean) {
-  return needed ? ',' : '';
-}
-
 function createInsertChange(
   path: string,
   value: unknown,
   position: number,
-  commaNeeded: boolean
+  precedingCommaNeeded: boolean
 ) {
   return new InsertChange(
     path,
     position,
-    `${trailingCommaNeeded(!commaNeeded)}${value}${trailingCommaNeeded(
-      commaNeeded
-    )}`
+    `${precedingCommaNeeded ? ',' : ''}${value}`
   );
 }
 
@@ -89,14 +83,21 @@ export function addOrUpdateProperty(
         return [];
       }
 
-      return [
-        createInsertChange(
-          path,
-          value,
-          arrayLiteral.elements.end,
-          arrayLiteral.elements.hasTrailingComma
-        ),
-      ];
+      if (arrayLiteral.elements.length === 0) {
+        return [
+          new InsertChange(path, arrayLiteral.elements.end, value as string),
+        ];
+      } else {
+        return [
+          createInsertChange(
+            path,
+            value,
+            arrayLiteral.elements.end,
+            arrayLiteral.elements.length !== 0 &&
+              !arrayLiteral.elements.hasTrailingComma
+          ),
+        ];
+      }
     } else if (
       propertyAssignment.initializer.kind ===
       ts.SyntaxKind.ObjectLiteralExpression
@@ -119,7 +120,7 @@ export function addOrUpdateProperty(
         path,
         `${JSON.stringify(propertyName)}: ${value}`,
         object.properties.end,
-        object.properties.hasTrailingComma
+        object.properties.length !== 0 && !object.properties.hasTrailingComma
       ),
     ];
   }

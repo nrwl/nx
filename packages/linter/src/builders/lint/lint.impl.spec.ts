@@ -75,7 +75,7 @@ describe('Linter Builder', () => {
     setupMocks();
     const result = runBuilder({
       linter: 'eslint',
-      config: './.eslintrc',
+      config: './.eslintrc.json',
       files: [],
     });
     await expect(result).rejects.toThrow(
@@ -88,7 +88,7 @@ describe('Linter Builder', () => {
     setupMocks();
     const result = runBuilder({
       linter: 'eslint',
-      config: './.eslintrc',
+      config: './.eslintrc.json',
       files: [],
     });
     await expect(result).resolves.not.toThrow();
@@ -97,7 +97,7 @@ describe('Linter Builder', () => {
     setupMocks();
     const result = runBuilder({
       linter: 'tslint',
-      config: './.eslintrc',
+      config: './.eslintrc.json',
       files: [],
     });
     await expect(result).rejects.toThrow(
@@ -112,7 +112,7 @@ describe('Linter Builder', () => {
       const { createProgram } = require('./utility/ts-utils');
       await runBuilder({
         linter: 'eslint',
-        config: './.eslintrc',
+        config: './.eslintrc.json',
         tsConfig: './tsconfig.json',
       });
       expect(createProgram).toHaveBeenCalledTimes(1);
@@ -120,7 +120,7 @@ describe('Linter Builder', () => {
       expect(lint).toHaveBeenCalledTimes(1);
       expect(lint).toHaveBeenCalledWith(
         '/root',
-        '/root/.eslintrc',
+        '/root/.eslintrc.json',
         expect.anything(),
         expect.any(Set),
         '/root/tsconfig.json-program',
@@ -133,7 +133,7 @@ describe('Linter Builder', () => {
       const { createProgram } = require('./utility/ts-utils');
       await runBuilder({
         linter: 'eslint',
-        config: './.eslintrc',
+        config: './.eslintrc.json',
         tsConfig: ['./tsconfig.json', './tsconfig2.json'],
       });
       expect(createProgram).toHaveBeenCalledTimes(2);
@@ -143,7 +143,7 @@ describe('Linter Builder', () => {
       expect(lint).toHaveBeenNthCalledWith(
         1,
         '/root',
-        '/root/.eslintrc',
+        '/root/.eslintrc.json',
         expect.anything(),
         expect.any(Set),
         '/root/tsconfig.json-program',
@@ -152,7 +152,7 @@ describe('Linter Builder', () => {
       expect(lint).toHaveBeenNthCalledWith(
         2,
         '/root',
-        '/root/.eslintrc',
+        '/root/.eslintrc.json',
         expect.anything(),
         expect.any(Set),
         '/root/tsconfig2.json-program',
@@ -165,14 +165,14 @@ describe('Linter Builder', () => {
       const { createProgram } = require('./utility/ts-utils');
       await runBuilder({
         linter: 'eslint',
-        config: './.eslintrc',
+        config: './.eslintrc.json',
         files: [],
       });
       expect(createProgram).not.toHaveBeenCalled();
       expect(lint).toHaveBeenCalledTimes(1);
       expect(lint).toHaveBeenCalledWith(
         '/root',
-        '/root/.eslintrc',
+        '/root/.eslintrc.json',
         expect.anything(),
         expect.any(Set)
       );
@@ -184,7 +184,7 @@ describe('Linter Builder', () => {
     const { lint } = require('./utility/eslint-utils');
     await runBuilder({
       linter: 'eslint',
-      config: './.eslintrc',
+      config: './.eslintrc.json',
       files: ['includedFile1'],
       exclude: ['excludedFile1'],
       fix: true,
@@ -195,7 +195,7 @@ describe('Linter Builder', () => {
       expect.anything(),
       expect.anything(),
       {
-        config: './.eslintrc',
+        config: './.eslintrc.json',
         files: ['includedFile1'],
         exclude: ['excludedFile1'],
         fix: true,
@@ -219,7 +219,7 @@ describe('Linter Builder', () => {
     setupMocks();
     const result = runBuilder({
       linter: 'eslint',
-      config: './.eslintrc',
+      config: './.eslintrc.json',
       files: ['includedFile1'],
     });
     await expect(result).rejects.toThrow(
@@ -230,14 +230,14 @@ describe('Linter Builder', () => {
     setupMocks();
     await runBuilder({
       linter: 'eslint',
-      config: './.eslintrc',
+      config: './.eslintrc.json',
       files: ['includedFile1'],
       format: 'json',
     });
     expect(mockGetFormatter).toHaveBeenCalledWith('json');
     await runBuilder({
       linter: 'eslint',
-      config: './.eslintrc',
+      config: './.eslintrc.json',
       files: ['includedFile1'],
       format: 'html',
     });
@@ -247,7 +247,7 @@ describe('Linter Builder', () => {
     setupMocks();
     await runBuilder({
       linter: 'eslint',
-      config: './.eslintrc',
+      config: './.eslintrc.json',
       files: ['includedFile1'],
       format: 'json',
       fix: false,
@@ -274,7 +274,7 @@ describe('Linter Builder', () => {
       setupMocks();
       await runBuilder({
         linter: 'eslint',
-        config: './.eslintrc',
+        config: './.eslintrc.json',
         files: ['includedFile1'],
         format: 'json',
         silent: false,
@@ -315,7 +315,7 @@ describe('Linter Builder', () => {
       setupMocks();
       const output = await runBuilder({
         linter: 'eslint',
-        config: './.eslintrc',
+        config: './.eslintrc.json',
         files: ['includedFile1'],
         format: 'json',
         silent: false,
@@ -353,7 +353,7 @@ describe('Linter Builder', () => {
       const { createDirectory } = require('@nrwl/workspace');
       await runBuilder({
         linter: 'eslint',
-        config: './.eslintrc',
+        config: './.eslintrc.json',
         files: ['includedFile1'],
         outputFile: 'a/b/c/outputFile1',
       });
@@ -368,7 +368,7 @@ describe('Linter Builder', () => {
       jest.spyOn(fs, 'writeFileSync').mockImplementation();
       await runBuilder({
         linter: 'eslint',
-        config: './.eslintrc',
+        config: './.eslintrc.json',
         files: ['includedFile1'],
       });
       expect(fs.writeFileSync).not.toHaveBeenCalled();
@@ -391,7 +391,7 @@ describe('Linter Builder', () => {
       setupMocks();
       const output = await runBuilder({
         linter: 'eslint',
-        config: './.eslintrc',
+        config: './.eslintrc.json',
         files: ['includedFile1'],
         format: 'json',
         silent: true,
@@ -434,7 +434,7 @@ describe('Linter Builder', () => {
     setupMocks();
     const output = await runBuilder({
       linter: 'eslint',
-      config: './.eslintrc',
+      config: './.eslintrc.json',
       files: ['includedFile1'],
       format: 'json',
       silent: true,
@@ -459,7 +459,7 @@ describe('Linter Builder', () => {
     setupMocks();
     const output = await runBuilder({
       linter: 'eslint',
-      config: './.eslintrc',
+      config: './.eslintrc.json',
       files: ['includedFile1'],
       format: 'json',
       silent: true,
@@ -485,7 +485,7 @@ describe('Linter Builder', () => {
     setupMocks();
     const output = await runBuilder({
       linter: 'eslint',
-      config: './.eslintrc',
+      config: './.eslintrc.json',
       files: ['includedFile1'],
       format: 'json',
       silent: true,
@@ -493,7 +493,7 @@ describe('Linter Builder', () => {
     });
     expect(output.success).toBeFalsy();
   });
-  it('should be a failure if there are no errors, but warnings and maxWarnings is set to 0', async () => {
+  it('should be a failure if there are no errors, but there are more warnings than allowed by maxWarnings', async () => {
     mockReports = [
       {
         errorCount: 0,
@@ -503,7 +503,7 @@ describe('Linter Builder', () => {
       },
       {
         errorCount: 0,
-        warningCount: 0,
+        warningCount: 1,
         results: [],
         usedDeprecatedRules: [],
       },
@@ -511,7 +511,7 @@ describe('Linter Builder', () => {
     setupMocks();
     const output = await runBuilder({
       linter: 'eslint',
-      config: './.eslintrc',
+      config: './.eslintrc.json',
       files: ['includedFile1'],
       format: 'json',
       silent: true,

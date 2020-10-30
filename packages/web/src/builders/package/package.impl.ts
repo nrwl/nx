@@ -11,8 +11,6 @@ import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import * as autoprefixer from 'autoprefixer';
 import * as rollup from 'rollup';
 import * as peerDepsExternal from 'rollup-plugin-peer-deps-external';
-import * as postcss from 'rollup-plugin-postcss';
-import * as filesize from 'rollup-plugin-filesize';
 import * as localResolve from 'rollup-plugin-local-resolve';
 import { toClassName } from '@nrwl/workspace/src/utils/name-utils';
 import { BuildResult } from '@angular-devkit/build-webpack';
@@ -37,13 +35,17 @@ import {
   normalizePackageOptions,
 } from '../../utils/normalize';
 import { getSourceRoot } from '../../utils/source-root';
+import { deleteOutputDir } from '../../utils/delete-output-dir';
 
 // These use require because the ES import isn't correct.
 const resolve = require('@rollup/plugin-node-resolve');
 const commonjs = require('@rollup/plugin-commonjs');
 const typescript = require('rollup-plugin-typescript2');
 const image = require('@rollup/plugin-image');
+const json = require('@rollup/plugin-json');
 const copy = require('rollup-plugin-copy');
+const postcss = require('rollup-plugin-postcss');
+const filesize = require('rollup-plugin-filesize');
 
 export default createBuilder<PackageBuilderOptions & JsonObject>(run);
 
@@ -119,7 +121,11 @@ export function run(
           return () => watcher.close();
         });
       } else {
-        context.logger.info('Bundling...');
+        context.logger.info(`Bundling...`);
+
+        // Delete output path before bundling
+        deleteOutputDir(context.workspaceRoot, options.outputPath);
+
         return from(rollupOptions).pipe(
           concatMap((opts) =>
             runRollup(opts).pipe(
@@ -184,7 +190,7 @@ export function createRollupOptions(
             allowJs: false,
             declaration: true,
             paths: compilerOptionPaths,
-            target: config.format === 'esm' ? 'esnext' : 'es5',
+            target: config.format === 'esm' ? undefined : 'es5',
           },
         },
       }),
@@ -217,6 +223,7 @@ export function createRollupOptions(
       }),
       commonjs(),
       filesize(),
+      json(),
     ];
 
     const globals = options.globals
@@ -250,7 +257,7 @@ export function createRollupOptions(
 }
 
 function updatePackageJson(
-  options,
+  options: NormalizedBundleBuilderOptions,
   context,
   target,
   dependencies,
@@ -273,7 +280,8 @@ function updatePackageJson(
     updateBuildableProjectPackageJsonDependencies(
       context,
       target,
-      dependencies
+      dependencies,
+      options.buildableProjectDepsInPackageJsonType
     );
   }
 }
@@ -289,8 +297,8 @@ function convertCopyAssetsToRollupOptions(
 ): RollupCopyAssetOption[] {
   return assets
     ? assets.map((a) => ({
-        src: join(a.input, a.glob),
-        dest: join(outputPath, a.output),
+        src: join(a.input, a.glob).replace(/\\/g, '/'),
+        dest: join(outputPath, a.output).replace(/\\/g, '/'),
       }))
     : undefined;
 }

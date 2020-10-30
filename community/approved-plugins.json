@@ -2,12 +2,12 @@
   {
     "name": "@nxtend/ionic-react",
     "description": "An Nx plugin for developing Ionic React applications and libraries",
-    "url": "https://github.com/nxtend-team/nxtend/tree/master/libs/ionic-react"
+    "url": "https://github.com/nxtend-team/nxtend/tree/master/packages/ionic-react"
   },
   {
     "name": "@nxtend/capacitor",
     "description": "An Nx plugin for developing cross-platform applications using Capacitor",
-    "url": "https://github.com/nxtend-team/nxtend/tree/master/libs/capacitor"
+    "url": "https://github.com/nxtend-team/nxtend/tree/master/packages/capacitor"
   },
   {
     "name": "@angular-architects/ddd",
@@ -35,7 +35,7 @@
     "url": "https://github.com/FabianGosebrink/nx-protractor-to-cypress"
   },
   {
-    "name": "@gperdomor/nx-docker",
+    "name": "@nx-tools/nx-docker",
     "description": "Nx plugin to build docker images of your affected apps",
     "url": "https://github.com/gperdomor/nx-tools/tree/master/libs/nx-docker"
   },
@@ -43,6 +43,11 @@
     "name": "@angular-custom-builders/lite-serve",
     "description": "Nx plugin to run the e2e test on an existing dist folder",
     "url": "https://github.com/mauriziovitale/angular-plugins/tree/master/libs/lite-serve"
+  },
+  {
+    "name": "@nx-plus/nuxt",
+    "description": "Nx plugin adding first class support for Nuxt in your Nx workspace.",
+    "url": "https://github.com/ZachJW34/nx-plus/tree/master/libs/nuxt"
   },
   {
     "name": "@nx-plus/vue",
@@ -60,9 +65,14 @@
     "url": "https://github.com/twittwer/nx-tools/tree/master/libs/compodoc#readme"
   },
   {
+    "name": "@nxext/svelte",
+    "description": "Nx plugin to use Svelte within nx workspaces",
+    "url": "https://github.com/nxext/nx-extensions/tree/master/packages/svelte"
+  },
+  {
     "name": "@nxext/stencil",
     "description": "Nx plugin to use StencilJs within nx workspaces",
-    "url": "https://github.com/DominikPieper/nx-extensions"
+    "url": "https://github.com/nxext/nx-extensions/tree/master/packages/stencil"
   },
   {
     "name": "@joelcode/gcp-function",
@@ -73,5 +83,10 @@
     "name": "@nx-go/nx-go",
     "description": "Nx plugin to use Go in a Nx workspace",
     "url": "https://github.com/nx-go/nx-go"
+  },
+  {
+    "name": "@angular-architects/module-federation",
+    "description": "Nx plugin to use webpack module federation",
+    "url": "https://github.com/angular-architects/module-federation-plugin"
   }
 ]

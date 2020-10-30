@@ -1,3 +1,3 @@
-export interface JestInitOptions {
-  babelJest: boolean;
+export interface JestInitSchema {
+  babelJest?: boolean;
 }

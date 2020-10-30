@@ -36,6 +36,12 @@
       "description": "Update buildable project dependencies in package.json",
       "default": true
     },
+    "buildableProjectDepsInPackageJsonType": {
+      "type": "string",
+      "description": "When updateBuildableProjectDepsInPackageJson is true, this adds dependencies to either `peerDependencies` or `dependencies`",
+      "enum": ["dependencies", "peerDependencies"],
+      "default": "peerDependencies"
+    },
     "rollupConfig": {
       "type": "string",
       "description": "Path to a function which takes a rollup config and returns an updated rollup config"

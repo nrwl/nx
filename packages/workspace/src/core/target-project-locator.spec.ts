@@ -1,5 +1,4 @@
 import { fs, vol } from 'memfs';
-import { join } from 'path';
 import {
   ProjectGraphContext,
   ProjectGraphNode,
@@ -163,25 +162,36 @@ describe('findTargetProjectWithImport', () => {
           files: [],
         },
       },
-      '@ng/core': {
-        name: '@ng/core',
+      'npm:@ng/core': {
+        name: 'npm:@ng/core',
         type: 'npm',
         data: {
           files: [],
+          packageName: '@ng/core',
         },
       },
-      '@ng/common': {
-        name: '@ng/common',
+      'npm:@ng/common': {
+        name: 'npm:@ng/common',
         type: 'npm',
         data: {
           files: [],
+          packageName: '@ng/common',
         },
       },
-      'npm-package': {
-        name: 'npm-package',
+      'npm:npm-package': {
+        name: 'npm:npm-package',
         type: 'npm',
         data: {
           files: [],
+          packageName: 'npm-package',
+        },
+      },
+      'npm:@proj/proj123-base': {
+        name: 'npm:@proj/proj123-base',
+        type: 'npm',
+        data: {
+          files: [],
+          packageName: '@proj/proj123-base',
         },
       },
       'proj1234-child': {
@@ -195,6 +205,34 @@ describe('findTargetProjectWithImport', () => {
     };
 
     targetProjectLocator = new TargetProjectLocator(projects);
+  });
+
+  it('should be able to resolve a module by using relative paths', () => {
+    const res1 = targetProjectLocator.findProjectWithImport(
+      './class.ts',
+      'libs/proj/index.ts',
+      ctx.nxJson.npmScope
+    );
+    const res2 = targetProjectLocator.findProjectWithImport(
+      '../index.ts',
+      'libs/proj/src/index.ts',
+      ctx.nxJson.npmScope
+    );
+    const res3 = targetProjectLocator.findProjectWithImport(
+      '../proj/../proj2/index.ts',
+      'libs/proj/index.ts',
+      ctx.nxJson.npmScope
+    );
+    const res4 = targetProjectLocator.findProjectWithImport(
+      '../proj/../index.ts',
+      'libs/proj/src/index.ts',
+      ctx.nxJson.npmScope
+    );
+
+    expect(res1).toEqual('proj');
+    expect(res2).toEqual('proj');
+    expect(res3).toEqual('proj2');
+    expect(res4).toEqual('proj');
   });
 
   it('should be able to resolve a module by using tsConfig paths', () => {
@@ -212,6 +250,23 @@ describe('findTargetProjectWithImport', () => {
     expect(proj2).toEqual('proj2');
     expect(proj3a).toEqual('proj3a');
   });
+
+  it('should be able to npm dependencies', () => {
+    const result1 = targetProjectLocator.findProjectWithImport(
+      '@ng/core',
+      'libs/proj1/index.ts',
+      ctx.nxJson.npmScope
+    );
+    const result2 = targetProjectLocator.findProjectWithImport(
+      'npm-package',
+      'libs/proj1/index.ts',
+      ctx.nxJson.npmScope
+    );
+
+    expect(result1).toEqual('npm:@ng/core');
+    expect(result2).toEqual('npm:npm-package');
+  });
+
   it('should be able to resolve a module using a normalized path', () => {
     const proj4ab = targetProjectLocator.findProjectWithImport(
       '@proj/proj4ab',
@@ -244,18 +299,19 @@ describe('findTargetProjectWithImport', () => {
     expect(parentProj).toEqual('proj1234');
   });
 
-  it('should be able to sort graph nodes', () => {
-    expect(targetProjectLocator._sortedNodeNames).toEqual([
-      'proj1234-child',
-      'proj1234',
-      'proj123',
-      'proj4ab',
-      'proj3a',
-      'proj2',
-      'proj',
-      '@ng/core',
-      '@ng/common',
-      'npm-package',
-    ]);
+  it('should be able to resolve npm projects', () => {
+    const similarImportFromNpm = targetProjectLocator.findProjectWithImport(
+      '@proj/proj123-base',
+      'libs/proj/index.ts',
+      ctx.nxJson.npmScope
+    );
+    expect(similarImportFromNpm).toEqual('npm:@proj/proj123-base');
+
+    const similarDeepImportFromNpm = targetProjectLocator.findProjectWithImport(
+      '@proj/proj123-base/deep',
+      'libs/proj/index.ts',
+      ctx.nxJson.npmScope
+    );
+    expect(similarDeepImportFromNpm).toEqual('npm:@proj/proj123-base');
   });
 });

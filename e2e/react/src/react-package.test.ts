@@ -7,6 +7,7 @@ import {
   runCLI,
   uniq,
   updateFile,
+  readFile,
 } from '@nrwl/e2e/utils';
 
 forEachCli('nx', (cli) => {
@@ -97,6 +98,57 @@ forEachCli('nx', (cli) => {
       }
     });
 
+    it('should preserve the tsconfig target set by user', () => {
+      // Setup
+      const myLib = uniq('my-lib');
+      runCLI(
+        `generate @nrwl/react:library ${myLib} --publishable=true --importPath="@mproj/${myLib}" --no-interactive`
+      );
+
+      /**
+       *
+       * Here I update my library file
+       * I am just adding this in the end:
+       *
+       * export const TestFunction = async () => {
+       *     return await Promise.resolve('Done!')
+       * }
+       *
+       * So that I can see the change in the Promise.
+       *
+       */
+
+      updateFile(`libs/${myLib}/src/lib/${myLib}.tsx`, (content) => {
+        return `
+        ${content} \n
+          export const TestFunction = async () => {
+               return await Promise.resolve('Done!')
+          }
+        `;
+      });
+
+      updateFile(`libs/${myLib}/tsconfig.json`, (content) => {
+        const json = JSON.parse(content);
+
+        /**
+         * Set target as es3!!
+         */
+
+        json.compilerOptions.target = 'es3';
+        return JSON.stringify(json, null, 2);
+      });
+      // What we're testing
+      runCLI(`build ${myLib}`);
+      // Assertion
+      const content = readFile(`dist/libs/${myLib}/${myLib}.esm.js`);
+
+      /**
+       * Then check if the result contains this "promise" polyfill?
+       */
+
+      expect(content).toContain('function __generator(thisArg, body) {');
+    });
+
     it('should build the library when it does not have any deps', () => {
       const output = runCLI(`build ${childLib}`);
       expect(output).toContain(`${childLib}.esm.js`);
@@ -128,7 +180,7 @@ forEachCli('nx', (cli) => {
       expect(parentLibOutput).toContain(`Bundle complete`);
 
       const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
-      expect(jsonFile.dependencies).toEqual(
+      expect(jsonFile.peerDependencies).toEqual(
         expect.objectContaining({
           [`@proj/${childLib}`]: '0.0.1',
           [`@proj/${childLib2}`]: '0.0.1',

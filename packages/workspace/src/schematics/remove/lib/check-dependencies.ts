@@ -53,7 +53,13 @@ export function checkDependencies(schema: Schema): Rule {
       readWorkspace(tree),
       readNxJsonInTree(tree),
       files,
-      (file) => tree.read(file).toString('utf-8'),
+      (file) => {
+        try {
+          return tree.read(file).toString('utf-8');
+        } catch (e) {
+          throw new Error(`Could not read ${file}`);
+        }
+      },
       false,
       false
     );

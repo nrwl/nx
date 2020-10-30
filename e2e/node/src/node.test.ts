@@ -277,7 +277,6 @@ forEachCli((currentCLIName) => {
           module: 'commonjs',
           outDir: '../../dist/out-tsc',
           declaration: true,
-          rootDir: './src',
           types: ['node'],
         },
         exclude: ['**/*.spec.ts'],
@@ -285,8 +284,8 @@ forEachCli((currentCLIName) => {
       });
       await runCLIAsync(`build ${nodeLib}`);
       checkFilesExist(
-        `dist/libs/${nodeLib}/index.js`,
-        `dist/libs/${nodeLib}/index.d.ts`,
+        `dist/libs/${nodeLib}/src/index.js`,
+        `dist/libs/${nodeLib}/src/index.d.ts`,
         `dist/libs/${nodeLib}/package.json`
       );
 
@@ -294,8 +293,8 @@ forEachCli((currentCLIName) => {
       expect(packageJson).toEqual({
         name: `@proj/${nodeLib}`,
         version: '0.0.1',
-        main: 'index.js',
-        typings: 'index.d.ts',
+        main: 'src/index.js',
+        typings: 'src/index.d.ts',
       });
     }, 60000);
 
@@ -328,6 +327,21 @@ forEachCli((currentCLIName) => {
       runCLI(`build ${nodelib}`);
       checkFilesExist(`./dist/libs/${nodelib}/esm2015/index.js`);
     }, 60000);
+
+    it('should fail when trying to compile typescript files that are invalid', () => {
+      ensureProject();
+      const nodeLib = uniq('nodelib');
+      runCLI(
+        `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@proj/${nodeLib}`
+      );
+      updateFile(
+        `libs/${nodeLib}/src/index.ts`,
+        stripIndents`
+        const temp: number = 'should fail'
+        `
+      );
+      expect(() => runCLI(`build ${nodeLib}`)).toThrow();
+    });
   });
 
   describe('nest libraries', function () {
@@ -341,8 +355,8 @@ forEachCli((currentCLIName) => {
 
       expect(stripIndents`${jestConfigContent}`).toEqual(
         stripIndents`module.exports = {
-                name: '${nestlib}',
-                preset: '../../jest.config.js',
+                displayName: '${nestlib}',
+                preset: '../../jest.preset.js',
                 globals: {
                   'ts-jest': {
                   tsConfig: '<rootDir>/tsconfig.spec.json',
@@ -352,7 +366,7 @@ forEachCli((currentCLIName) => {
                  transform: {
                 '^.+\\.[tj]sx?$': 'ts-jest',
                 },
-                moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+                moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
                 coverageDirectory: '../../coverage/libs/${nestlib}',
             };
             `

@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 
 const parsedArgs = yargsParser(process.argv, {
-  boolean: ['dry-run', 'nobazel', 'local'],
+  boolean: ['dry-run', 'local'],
   alias: {
     d: 'dry-run',
     h: 'help',
@@ -193,9 +193,6 @@ const options = {
   },
   requireCleanWorkingDir: false,
 };
-
-childProcess.execSync('rm -rf ./build/packages/bazel');
-childProcess.execSync('rm -rf ./build/npm/bazel');
 
 if (parsedArgs.local) {
   pkgFiles.forEach((p) => {

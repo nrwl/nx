@@ -230,9 +230,14 @@ function updateAngularCLIJson(options: Schema): Rule {
 }
 
 function updateTsConfig(options: Schema): Rule {
-  return updateJsonInTree('tsconfig.base.json', (tsConfigJson) =>
-    setUpCompilerOptions(tsConfigJson, options.npmScope, '')
-  );
+  return (host: Tree) => {
+    let tsConfigPath = host.exists('tsconfig.base.json')
+      ? 'tsconfig.base.json'
+      : 'tsconfig.json';
+    return updateJsonInTree(tsConfigPath, (tsConfigJson) =>
+      setUpCompilerOptions(tsConfigJson, options.npmScope, '')
+    );
+  };
 }
 
 function updateTsConfigsJson(options: Schema) {
@@ -477,6 +482,7 @@ function createAdditionalFiles(options: Schema): Rule {
           'package.json': '*',
           'tsconfig.base.json': '*',
           'tslint.json': '*',
+          '.eslintrc.json': '*',
           'nx.json': '*',
         },
         projects: {
@@ -584,6 +590,7 @@ const createNxJson = (host: Tree) => {
         'package.json': '*',
         'tsconfig.base.json': '*',
         'tslint.json': '*',
+        '.eslintrc.json': '*',
         'nx.json': '*',
       },
       projects: {

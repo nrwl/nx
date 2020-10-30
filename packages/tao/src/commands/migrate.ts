@@ -14,6 +14,10 @@ import * as stripJsonComments from 'strip-json-comments';
 import { dirSync } from 'tmp';
 import { getLogger } from '../shared/logger';
 import { convertToCamelCase, handleErrors } from '../shared/params';
+import {
+  detectPackageManager,
+  getPackageManagerInstallCommand,
+} from '../shared/detect-package-manager';
 
 export type MigrationsJson = {
   version: string;
@@ -208,6 +212,7 @@ export class Migrator {
         version: targetVersion,
         packages: [
           '@nrwl/angular',
+          '@nrwl/cli',
           '@nrwl/cypress',
           '@nrwl/eslint-plugin-nx',
           '@nrwl/express',
@@ -216,6 +221,7 @@ export class Migrator {
           '@nrwl/nest',
           '@nrwl/next',
           '@nrwl/node',
+          '@nrwl/nx-cloud',
           '@nrwl/nx-plugin',
           '@nrwl/react',
           '@nrwl/storybook',
@@ -224,7 +230,10 @@ export class Migrator {
         ].reduce(
           (m, c) => ({
             ...m,
-            [c]: { version: targetVersion, alwaysAddToPackageJson: false },
+            [c]: {
+              version: c === '@nrwl/nx-cloud' ? 'latest' : targetVersion,
+              alwaysAddToPackageJson: false,
+            },
           }),
           {}
         ),
@@ -388,9 +397,10 @@ function versions(root: string, from: { [p: string]: string }) {
       if (from[packageName]) {
         return from[packageName];
       }
-      const content = readFileSync(
-        join(root, `./node_modules/${packageName}/package.json`)
-      );
+      const packageJsonPath = require.resolve(`${packageName}/package.json`, {
+        paths: [root],
+      });
+      const content = readFileSync(packageJsonPath);
       return JSON.parse(stripJsonComments(content.toString()))['version'];
     } catch (e) {
       return null;
@@ -399,7 +409,7 @@ function versions(root: string, from: { [p: string]: string }) {
 }
 
 // testing-fetch-start
-function createFetcher(logger: logging.Logger) {
+function createFetcher(packageManager: string, logger: logging.Logger) {
   const cache = {};
   return async function f(
     packageName: string,
@@ -408,15 +418,15 @@ function createFetcher(logger: logging.Logger) {
     if (!cache[`${packageName}-${packageVersion}`]) {
       const dir = dirSync().name;
       logger.info(`Fetching ${packageName}@${packageVersion}`);
-      execSync(`npm install ${packageName}@${packageVersion} --prefix=${dir}`, {
+      const install = getPackageManagerInstallCommand(packageManager);
+      execSync(`${install} ${packageName}@${packageVersion} --prefix=${dir}`, {
         stdio: [],
       });
+      const packageJsonPath = require.resolve(`${packageName}/package.json`, {
+        paths: [dir],
+      });
       const json = JSON.parse(
-        stripJsonComments(
-          readFileSync(
-            join(dir, 'node_modules', packageName, 'package.json')
-          ).toString()
-        )
+        stripJsonComments(readFileSync(packageJsonPath).toString())
       );
       let migrationsFile = json['nx-migrations'] || json['ng-update'];
 
@@ -430,12 +440,13 @@ function createFetcher(logger: logging.Logger) {
 
       try {
         if (migrationsFile && typeof migrationsFile === 'string') {
+          const migrationsFilePath = require.resolve(
+            `${packageName}/${migrationsFile}`,
+            { paths: [dir] }
+          );
+
           const json = JSON.parse(
-            stripJsonComments(
-              readFileSync(
-                join(dir, 'node_modules', packageName, migrationsFile)
-              ).toString()
-            )
+            stripJsonComments(readFileSync(migrationsFilePath).toString())
           );
           cache[`${packageName}-${packageVersion}`] = {
             version: resolvedVersion,
@@ -483,9 +494,12 @@ function updatePackageJson(
   }
 ) {
   const packageJsonPath = join(root, 'package.json');
-  const json = JSON.parse(
-    stripJsonComments(readFileSync(packageJsonPath).toString())
+  const packageJsonContent = readFileSync(packageJsonPath).toString();
+  const endOfFile = packageJsonContent.substring(
+    packageJsonContent.lastIndexOf('}') + 1,
+    packageJsonContent.length
   );
+  const json = JSON.parse(stripJsonComments(packageJsonContent));
   Object.keys(updatedPackages).forEach((p) => {
     if (json.devDependencies && json.devDependencies[p]) {
       json.devDependencies[p] = updatedPackages[p].version;
@@ -496,7 +510,7 @@ function updatePackageJson(
       json.dependencies[p] = updatedPackages[p].version;
     }
   });
-  writeFileSync(packageJsonPath, JSON.stringify(json, null, 2));
+  writeFileSync(packageJsonPath, JSON.stringify(json, null, 2) + endOfFile);
 }
 
 async function generateMigrationsJsonAndUpdatePackageJson(
@@ -509,12 +523,13 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     to: { [p: string]: string };
   }
 ) {
+  const packageManager = detectPackageManager();
   try {
     logger.info(`Fetching meta data about packages.`);
     logger.info(`It may take a few minutes.`);
     const migrator = new Migrator({
       versions: versions(root, opts.from),
-      fetch: createFetcher(logger),
+      fetch: createFetcher(packageManager, logger),
       from: opts.from,
       to: opts.to,
     });
@@ -550,10 +565,11 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     }
   } catch (e) {
     const startVersion = versions(root, {})('@nrwl/workspace');
+    const installDev = getPackageManagerInstallCommand(packageManager, true);
     logger.error(
       `NX The migrate command failed. Try the following to migrate your workspace:`
     );
-    logger.error(`> npm install --save-dev @nrwl/workspace@latest`);
+    logger.error(`> ${installDev} @nrwl/workspace@latest`);
     logger.error(
       `> nx migrate ${opts.targetPackage}@${opts.targetVersion} --from="@nrwl/workspace@${startVersion}"`
     );
