@@ -67,12 +67,11 @@ function createPreset(options: Schema): Rule {
       addDepsToPackageJson(
         {},
         {
-          '@webcomponents/custom-elements': '1.3.2',
+          '@ungap/custom-elements': '0.1.6',
         }
       ),
       addPolyfills(`apps/${toFileName(options.name)}/src/polyfills.ts`, [
-        '@webcomponents/custom-elements/custom-elements.min',
-        '@webcomponents/custom-elements/src/native-shim',
+        '@ungap/custom-elements',
       ]),
       setDefaultCollection('@nrwl/web'),
     ]);
