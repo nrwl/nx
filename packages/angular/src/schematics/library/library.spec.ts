@@ -1233,7 +1233,24 @@ describe('lib', () => {
                   "libs/my-lib/tsconfig.*?.json",
                 ],
               },
-              "rules": Object {},
+              "rules": Object {
+                "@angular-eslint/component-selector": Array [
+                  "error",
+                  Object {
+                    "prefix": "proj",
+                    "style": "kebab-case",
+                    "type": "element",
+                  },
+                ],
+                "@angular-eslint/directive-selector": Array [
+                  "error",
+                  Object {
+                    "prefix": "proj",
+                    "style": "camelCase",
+                    "type": "attribute",
+                  },
+                ],
+              },
             },
             Object {
               "extends": Array [

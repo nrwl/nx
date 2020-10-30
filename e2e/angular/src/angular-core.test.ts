@@ -171,7 +171,10 @@ forEachCli(() => {
         `apps/${myapp}/src/app/inline-template.component.ts`
       );
       expect(appLintStdOut).toContain(
-        `7:18  error  Invalid binding syntax. Use [(expr)] instead  @angular-eslint/template/banana-in-box`
+        `5:21  error  The selector should be prefixed by one of the prefixes: 'proj' (https://angular.io/guide/styleguide#style-02-07)  @angular-eslint/component-selector`
+      );
+      expect(appLintStdOut).toContain(
+        `7:18  error  Invalid binding syntax. Use [(expr)] instead                                                                      @angular-eslint/template/banana-in-box`
       );
 
       const mylib = uniq('mylib');
