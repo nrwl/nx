@@ -3,6 +3,7 @@ import { chain, Rule, Tree } from '@angular-devkit/schematics';
 import {
   addDepsToPackageJson,
   formatFiles,
+  getNpmScope,
   offsetFromRoot,
   readJsonInTree,
   readWorkspace,
@@ -15,9 +16,12 @@ import { join } from 'path';
  * It was decided with Jason that we would do a simple replacement in this migration
  * because Angular + ESLint support has been experimental until this point.
  */
-function updateESLintConfigForProject(projectRoot: string): Rule {
+function updateESLintConfigForProject(
+  projectRoot: string,
+  prefix: string
+): Rule {
   return updateJsonInTree(join(normalize(projectRoot), '.eslintrc.json'), () =>
-    createAngularEslintJson(projectRoot)
+    createAngularEslintJson(projectRoot, prefix)
   );
 }
 
@@ -80,7 +84,10 @@ function updateProjectESLintConfigsAndBuilders(host: Tree): Rule {
         addedExtraDevDeps = true;
       }
 
-      rules.push(updateESLintConfigForProject(project.root));
+      // Using the npm scope as the fallback replicates the generation behavior
+      const projectPrefx = project.prefix || getNpmScope(host);
+
+      rules.push(updateESLintConfigForProject(project.root, projectPrefx));
 
       rules.push(
         addHTMLPatternToBuilderConfig(
@@ -103,7 +110,7 @@ export default function () {
  * This is effectively a duplicate of the current (at the time of writing this migration) combined
  * logic (across workspace utils/lint.ts and angular utils/lint.ts) for an Angular Project's ESLint config.
  */
-function createAngularEslintJson(projectRoot: string) {
+function createAngularEslintJson(projectRoot: string, prefix: string) {
   return {
     extends: `${offsetFromRoot(projectRoot)}.eslintrc.json`,
     ignorePatterns: ['!**/*'],
@@ -114,11 +121,16 @@ function createAngularEslintJson(projectRoot: string) {
         parserOptions: {
           project: [`${projectRoot}/tsconfig.*?.json`],
         },
-        /**
-         * Having an empty rules object present makes it more obvious to the user where they would
-         * extend things from if they needed to
-         */
-        rules: {},
+        rules: {
+          '@angular-eslint/directive-selector': [
+            'error',
+            { type: 'attribute', prefix, style: 'camelCase' },
+          ],
+          '@angular-eslint/component-selector': [
+            'error',
+            { type: 'element', prefix, style: 'kebab-case' },
+          ],
+        },
       },
       {
         files: ['*.html'],

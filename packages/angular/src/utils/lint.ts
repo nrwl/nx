@@ -9,7 +9,10 @@ export const extraEslintDependencies = {
   },
 };
 
-export const createAngularEslintJson = (projectRoot: string) => ({
+export const createAngularEslintJson = (
+  projectRoot: string,
+  prefix: string
+) => ({
   overrides: [
     {
       files: ['*.ts'],
@@ -17,11 +20,16 @@ export const createAngularEslintJson = (projectRoot: string) => ({
       parserOptions: {
         project: [`${projectRoot}/tsconfig.*?.json`],
       },
-      /**
-       * Having an empty rules object present makes it more obvious to the user where they would
-       * extend things from if they needed to
-       */
-      rules: {},
+      rules: {
+        '@angular-eslint/directive-selector': [
+          'error',
+          { type: 'attribute', prefix, style: 'camelCase' },
+        ],
+        '@angular-eslint/component-selector': [
+          'error',
+          { type: 'element', prefix, style: 'kebab-case' },
+        ],
+      },
     },
     {
       files: ['*.html'],

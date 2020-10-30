@@ -46,7 +46,7 @@ export default function (schema: Schema): Rule {
         localConfig:
           options.linter === Linter.TsLint
             ? undefined
-            : createAngularEslintJson(options.projectRoot),
+            : createAngularEslintJson(options.projectRoot, options.prefix),
         extraPackageDeps:
           options.linter === Linter.TsLint
             ? undefined

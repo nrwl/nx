@@ -49,6 +49,7 @@ import {
 } from '../../utils/lint';
 
 interface NormalizedSchema extends Schema {
+  prefix: string; // we set a default for this in normalizeOptions, so it is no longer optional
   appProjectRoot: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
@@ -816,7 +817,7 @@ export default function (schema: Schema): Rule {
         localConfig:
           options.linter === Linter.TsLint
             ? undefined
-            : createAngularEslintJson(options.appProjectRoot),
+            : createAngularEslintJson(options.appProjectRoot, options.prefix),
         extraPackageDeps:
           options.linter === Linter.TsLint
             ? undefined

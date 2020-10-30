@@ -81,6 +81,7 @@ describe('add-template-support-and-presets-to-eslint', () => {
             root: 'apps/app1',
             sourceRoot: 'apps/app1/src',
             projectType: 'application',
+            prefix: 'customprefix',
             targets: {
               lint: {
                 builder: '@nrwl/linter:eslint',
@@ -90,20 +91,37 @@ describe('add-template-support-and-presets-to-eslint', () => {
               },
             },
           });
+          // App still using TSLint, will be unaffected
           workspace.projects.add({
-            name: 'lib1',
-            root: 'libs/lib1',
-            sourceRoot: 'apps/lib1/src',
+            name: 'app2',
+            root: 'apps/app2',
+            sourceRoot: 'apps/app2/src',
             projectType: 'library',
             targets: {
               lint: {
                 builder: '@angular-devkit/build-angular:tslint',
                 options: {
                   tsConfig: [
-                    'libs/lib1/tsconfig.app.json',
-                    'libs/lib1/tsconfig.spec.json',
+                    'apps/app2/tsconfig.app.json',
+                    'apps/app2/tsconfig.spec.json',
                   ],
-                  exclude: ['**/node_modules/**', '!libs/lib1/**/*'],
+                  exclude: ['**/node_modules/**', '!apps/app2/**/*'],
+                },
+              },
+            },
+          });
+          workspace.projects.add({
+            name: 'lib1',
+            root: 'libs/lib1',
+            sourceRoot: 'libs/lib1/src',
+            projectType: 'application',
+            // No custom prefix, will fall back to npm scope in nx.json
+            prefix: undefined,
+            targets: {
+              lint: {
+                builder: '@nrwl/linter:eslint',
+                options: {
+                  lintFilePatterns: ['libs/lib1/src/**/*.ts'],
                 },
               },
             },
@@ -201,6 +219,12 @@ describe('add-template-support-and-presets-to-eslint', () => {
           rules: {},
         })
       );
+      tree.create(
+        'libs/lib1/.eslintrc.json',
+        JSON.stringify({
+          rules: {},
+        })
+      );
 
       const result = await runMigration(
         'add-template-support-and-presets-to-eslint',
@@ -228,7 +252,87 @@ describe('add-template-support-and-presets-to-eslint', () => {
                   "apps/app1/tsconfig.*?.json",
                 ],
               },
+              "rules": Object {
+                "@angular-eslint/component-selector": Array [
+                  "error",
+                  Object {
+                    "prefix": "customprefix",
+                    "style": "kebab-case",
+                    "type": "element",
+                  },
+                ],
+                "@angular-eslint/directive-selector": Array [
+                  "error",
+                  Object {
+                    "prefix": "customprefix",
+                    "style": "camelCase",
+                    "type": "attribute",
+                  },
+                ],
+              },
+            },
+            Object {
+              "extends": Array [
+                "plugin:@nrwl/nx/angular-template",
+              ],
+              "files": Array [
+                "*.html",
+              ],
               "rules": Object {},
+            },
+            Object {
+              "extends": Array [
+                "plugin:@angular-eslint/template/process-inline-templates",
+              ],
+              "files": Array [
+                "*.component.ts",
+              ],
+              "settings": Object {
+                "NX_DOCUMENTATION_NOTE": "This entry in the overrides is only here to extract inline templates from Components, you should not configure rules here",
+              },
+            },
+          ],
+        }
+      `);
+
+      expect(JSON.parse(result.read('libs/lib1/.eslintrc.json').toString()))
+        .toMatchInlineSnapshot(`
+        Object {
+          "extends": "../../.eslintrc.json",
+          "ignorePatterns": Array [
+            "!**/*",
+          ],
+          "overrides": Array [
+            Object {
+              "extends": Array [
+                "plugin:@nrwl/nx/angular-code",
+              ],
+              "files": Array [
+                "*.ts",
+              ],
+              "parserOptions": Object {
+                "project": Array [
+                  "libs/lib1/tsconfig.*?.json",
+                ],
+              },
+              "rules": Object {
+                "@angular-eslint/component-selector": Array [
+                  "error",
+                  Object {
+                    "prefix": "proj",
+                    "style": "kebab-case",
+                    "type": "element",
+                  },
+                ],
+                "@angular-eslint/directive-selector": Array [
+                  "error",
+                  Object {
+                    "prefix": "proj",
+                    "style": "camelCase",
+                    "type": "attribute",
+                  },
+                ],
+              },
             },
             Object {
               "extends": Array [
@@ -274,6 +378,12 @@ describe('add-template-support-and-presets-to-eslint', () => {
           rules: {},
         })
       );
+      tree.create(
+        'libs/lib1/.eslintrc.json',
+        JSON.stringify({
+          rules: {},
+        })
+      );
 
       const result = await runMigration(
         'add-template-support-and-presets-to-eslint',
@@ -291,6 +401,20 @@ describe('add-template-support-and-presets-to-eslint', () => {
               "lintFilePatterns": Array [
                 "apps/app1/src/**/*.ts",
                 "apps/app1/src/**/*.html",
+              ],
+            },
+          },
+        }
+      `);
+
+      expect(workspace.projects['lib1'].architect).toMatchInlineSnapshot(`
+        Object {
+          "lint": Object {
+            "builder": "@nrwl/linter:eslint",
+            "options": Object {
+              "lintFilePatterns": Array [
+                "libs/lib1/src/**/*.ts",
+                "libs/lib1/src/**/*.html",
               ],
             },
           },
