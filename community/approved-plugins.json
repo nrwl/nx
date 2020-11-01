@@ -91,7 +91,7 @@
   },
   {
     "name": "@nxrocks/nx-spring-boot",
-    "description": "Nx Plugin to generate, run, package, build (and more) [Spring Boot](https://spring.io/projects/spring-boot) projects inside your Nx workspace",
+    "description": "Nx plugin to generate, run, package, build (and more) Spring Boot projects inside your Nx workspace",
     "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-spring-boot"
   }
 ]
