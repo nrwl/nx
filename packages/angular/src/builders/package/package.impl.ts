@@ -54,43 +54,57 @@ async function initializeNgPackagr(
   return packager;
 }
 
-export function run(
-  options: BuildAngularLibraryBuilderOptions & JsonObject,
-  context: BuilderContext
-): Observable<BuilderOutput> {
-  const projGraph = createProjectGraph();
-  const { target, dependencies } = calculateProjectDependencies(
-    projGraph,
-    context
-  );
-  return of(checkDependentProjectsHaveBeenBuilt(context, dependencies)).pipe(
-    switchMap((result) => {
-      if (result) {
-        return from(initializeNgPackagr(options, context, dependencies)).pipe(
-          switchMap((packager) =>
-            options.watch ? packager.watch() : packager.build()
-          ),
-          tap(() => {
-            if (
-              dependencies.length > 0 &&
-              options.updateBuildableProjectDepsInPackageJson
-            ) {
-              updateBuildableProjectPackageJsonDependencies(
-                context,
-                target,
-                dependencies,
-                options.buildableProjectDepsInPackageJsonType
-              );
-            }
-          }),
-          mapTo({ success: true })
-        );
-      } else {
-        // just pass on the result
-        return of({ success: false });
-      }
-    })
-  );
+/**
+ * Creates a builder function that executes the library build of an Angular
+ * package using ng-packagr
+ * @param initializeNgPackagr function that returns an ngPackagr instance to use for the build
+ */
+export function createLibraryBuilder(
+  initializeNgPackagr: (
+    options: BuildAngularLibraryBuilderOptions & JsonObject,
+    context: BuilderContext,
+    projectDependencies: DependentBuildableProjectNode[]
+  ) => Promise<import('ng-packagr').NgPackagr>
+) {
+  return function run(
+    options: BuildAngularLibraryBuilderOptions & JsonObject,
+    context: BuilderContext
+  ): Observable<BuilderOutput> {
+    const projGraph = createProjectGraph();
+    const { target, dependencies } = calculateProjectDependencies(
+      projGraph,
+      context
+    );
+    return of(checkDependentProjectsHaveBeenBuilt(context, dependencies)).pipe(
+      switchMap((result) => {
+        if (result) {
+          return from(initializeNgPackagr(options, context, dependencies)).pipe(
+            switchMap((packager) =>
+              options.watch ? packager.watch() : packager.build()
+            ),
+            tap(() => {
+              if (
+                dependencies.length > 0 &&
+                options.updateBuildableProjectDepsInPackageJson
+              ) {
+                updateBuildableProjectPackageJsonDependencies(
+                  context,
+                  target,
+                  dependencies
+                );
+              }
+            }),
+            mapTo({ success: true })
+          );
+        } else {
+          // just pass on the result
+          return of({ success: false });
+        }
+      })
+    );
+  };
 }
 
-export default createBuilder<Record<string, string> & any>(run);
+export default createBuilder<Record<string, string> & any>(
+  createLibraryBuilder(initializeNgPackagr)
+);

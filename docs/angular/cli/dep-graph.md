@@ -80,6 +80,10 @@ Show help
 
 Bind the dep graph server to a specific ip address.
 
+### port
+
+Bind the dep graph server to a specific port.
+
 ### version
 
 Show version number

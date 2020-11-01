@@ -74,7 +74,15 @@ const angularCliVersion = 'ANGULAR_CLI_VERSION';
 const prettierVersion = 'PRETTIER_VERSION';
 
 const parsedArgs = yargsParser(process.argv, {
-  string: ['cli', 'preset', 'appName', 'style', 'linter', 'defaultBase'],
+  string: [
+    'cli',
+    'preset',
+    'appName',
+    'style',
+    'linter',
+    'defaultBase',
+    'packageManager',
+  ],
   alias: {
     appName: 'app-name',
     nxCloud: 'nx-cloud',
@@ -87,7 +95,7 @@ if (parsedArgs.help) {
   showHelp();
   process.exit(0);
 }
-const packageManager = determinePackageManager();
+const packageManager = determinePackageManager(parsedArgs.packageManager);
 determineWorkspaceName(parsedArgs).then((name) => {
   determinePreset(parsedArgs).then((preset) => {
     return determineAppName(preset, parsedArgs).then((appName) => {
