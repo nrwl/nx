@@ -9,10 +9,6 @@ export function fetchCorePlugins() {
       capabilities: 'schematics',
     },
     {
-      name: '@nrwl/bazel',
-      capabilities: 'schematics',
-    },
-    {
       name: '@nrwl/cypress',
       capabilities: 'builders,schematics',
     },
