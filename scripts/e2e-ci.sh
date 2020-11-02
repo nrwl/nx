@@ -9,7 +9,7 @@ elif [ "$1" == "2" ]; then
 
 elif [ "$1" == "3" ]; then
   export SELECTED_CLI=angular
-  ts-node --project scripts/tsconfig.e2e.json ./scripts/e2e.ts e2e-angular,e2e-bazel affected
+  ts-node --project scripts/tsconfig.e2e.json ./scripts/e2e.ts e2e-angular affected
 
 elif [ "$1" == "4" ]; then
   export SELECTED_CLI=nx

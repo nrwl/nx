@@ -99,10 +99,6 @@
     "cli": {
       "tags": []
     },
-    "bazel": {
-      "tags": [],
-      "implicitDependencies": ["workspace"]
-    },
     "angular": {
       "tags": [],
       "implicitDependencies": ["workspace", "cypress", "jest"]
@@ -117,10 +113,6 @@
     "e2e-angular": {
       "tags": [],
       "implicitDependencies": ["angular"]
-    },
-    "e2e-bazel": {
-      "tags": [],
-      "implicitDependencies": ["bazel"]
     },
     "e2e-cypress": {
       "tags": [],

@@ -162,7 +162,6 @@ The type must be one of the following:
 The scope must be one of the following:
 
 - angular - anything Angular specific
-- bazel - anything Bazel specific
 - core - anything Nx core specific
 - docs - anything related to docs infrastructure
 - nextjs - anything Next specific

@@ -1434,35 +1434,6 @@
         }
       }
     },
-    "bazel": {
-      "root": "packages/bazel",
-      "sourceRoot": "packages/bazel",
-      "projectType": "library",
-      "schematics": {},
-      "architect": {
-        "test": {
-          "builder": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "packages/bazel/jest.config.js",
-            "passWithNoTests": true
-          }
-        },
-        "lint": {
-          "builder": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "packages/bazel/**/*.ts",
-              "packages/bazel/**/*.spec.ts",
-              "packages/bazel/**/*_spec.ts",
-              "packages/bazel/**/*.spec.tsx",
-              "packages/bazel/**/*.spec.js",
-              "packages/bazel/**/*.spec.jsx",
-              "packages/bazel/**/*.d.ts"
-            ]
-          }
-        }
-      }
-    },
     "angular": {
       "root": "packages/angular",
       "sourceRoot": "packages/angular",
@@ -1581,22 +1552,6 @@
           "builder": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "e2e/angular/jest.config.js",
-            "passWithNoTests": true,
-            "runInBand": true
-          }
-        }
-      }
-    },
-    "e2e-bazel": {
-      "root": "e2e/bazel",
-      "sourceRoot": "e2e/bazel",
-      "projectType": "application",
-      "schematics": {},
-      "architect": {
-        "e2e": {
-          "builder": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "e2e/bazel/jest.config.js",
             "passWithNoTests": true,
             "runInBand": true
           }
