@@ -1,8 +1,7 @@
-import { Rule } from '@angular-devkit/schematics';
 import { Schema } from './schema';
 import { updateWorkspaceInTree } from '@nrwl/workspace';
 
-export default function (schema: Schema): Rule {
+export default function (schema: Schema) {
   return updateWorkspaceInTree((json) => {
     const project = json.projects[schema.project];
     if (!project) {
@@ -17,8 +16,9 @@ export default function (schema: Schema): Rule {
       options: {
         command: schema.command,
         cwd: schema.cwd,
+        envFile: schema.envFile,
       },
     };
     return json;
-  });
+  }) as any;
 }

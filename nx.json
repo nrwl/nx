@@ -34,6 +34,9 @@
     "tao": {
       "tags": []
     },
+    "devkit": {
+      "tags": []
+    },
     "workspace": {
       "tags": [],
       "implicitDependencies": ["tao", "cli"]

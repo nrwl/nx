@@ -1,6 +1,7 @@
 import { strings } from '@angular-devkit/core';
 import { ParsedArgs } from 'minimist';
-import { TargetDefinition } from './workspace';
+import { TargetDefinition, WorkspaceDefinition } from './workspace';
+import * as inquirer from 'inquirer';
 
 type Properties = {
   [p: string]: {
@@ -11,6 +12,8 @@ type Properties = {
     alias?: string;
     description?: string;
     default?: string | number | boolean | string[];
+    $default?: { $source: 'argv'; index: number };
+    'x-prompt'?: string | { message: string; type: string; items: any[] };
   };
 };
 export type Schema = {
@@ -73,17 +76,26 @@ export function convertToCamelCase(parsed: ParsedArgs): Options {
  * @param schema The schema definition with types to check against
  *
  */
-export function coerceTypes(opts: Options, schema: Schema): Options {
+export function coerceTypesInOptions(opts: Options, schema: Schema): Options {
   Object.keys(opts).forEach((k) => {
-    if (schema.properties[k] && schema.properties[k].type == 'boolean') {
-      opts[k] = opts[k] === true || opts[k] === 'true';
-    } else if (schema.properties[k] && schema.properties[k].type == 'number') {
-      opts[k] = Number(opts[k]);
-    } else if (schema.properties[k] && schema.properties[k].type == 'array') {
-      opts[k] = opts[k].toString().split(',');
-    }
+    opts[k] = coerceType(
+      schema.properties[k] ? schema.properties[k].type : 'unknown',
+      opts[k]
+    );
   });
   return opts;
+}
+
+function coerceType(type: string, value: any) {
+  if (type == 'boolean') {
+    return value === true || value == 'true';
+  } else if (type == 'number') {
+    return Number(value);
+  } else if (type == 'array') {
+    return value.toString().split(',');
+  } else {
+    return value;
+  }
 }
 
 /**
@@ -196,28 +208,37 @@ function throwInvalidSchema(propName: string, schema: any) {
   );
 }
 
-export function setDefaults(opts: { [k: string]: any }, schema: Schema) {
-  setDefaultsInObject(opts, schema.properties);
+export function setDefaults(
+  opts: { [k: string]: any },
+  schema: Schema,
+  argv: string[]
+) {
+  setDefaultsInObject(opts, schema.properties, argv);
   return opts;
 }
 
 function setDefaultsInObject(
   opts: { [k: string]: any },
-  properties: Properties
+  properties: Properties,
+  argv: string[]
 ) {
   Object.keys(properties).forEach((p) => {
-    setPropertyDefault(opts, p, properties[p]);
+    setPropertyDefault(opts, p, properties[p], argv);
   });
 }
 
 function setPropertyDefault(
   opts: { [k: string]: any },
   propName: string,
-  schema: any
+  schema: any,
+  argv: string[]
 ) {
   if (schema.type !== 'object' && schema.type !== 'array') {
     if (opts[propName] === undefined && schema.default !== undefined) {
       opts[propName] = schema.default;
+    }
+    if (opts[propName] === undefined && schema.$default !== undefined) {
+      opts[propName] = coerceType(schema.type, argv[schema.$default.index]);
     }
   } else if (schema.type === 'array') {
     const items = schema.items || {};
@@ -227,27 +248,99 @@ function setPropertyDefault(
       items.type === 'object'
     ) {
       opts[propName].forEach((valueInArray) =>
-        setDefaultsInObject(valueInArray, items.properties || {})
+        setDefaultsInObject(valueInArray, items.properties || {}, argv)
       );
     }
   } else {
-    setDefaultsInObject(opts[propName], schema.properties);
+    setDefaultsInObject(opts[propName], schema.properties, argv);
   }
 }
 
-export function combineOptions(
+export function combineOptionsForBuilder(
   commandLineOpts: Options,
   config: string,
   target: TargetDefinition,
   schema: Schema
 ) {
-  const r = convertAliases(coerceTypes(commandLineOpts, schema), schema, false);
+  const r = convertAliases(
+    coerceTypesInOptions(commandLineOpts, schema),
+    schema,
+    false
+  );
   const configOpts =
     config && target.configurations ? target.configurations[config] || {} : {};
   const combined = { ...target.options, ...configOpts, ...r };
-  setDefaults(combined, schema);
+  setDefaults(combined, schema, (commandLineOpts['_'] as string[]) || []);
   validateOptsAgainstSchema(combined, schema);
   return combined;
+}
+
+export async function combineOptionsForSchematic(
+  commandLineOpts: Options,
+  collectionName: string,
+  schematicName: string,
+  ws: WorkspaceDefinition,
+  schema: Schema,
+  isInteractive: boolean
+) {
+  const schematicDefaults =
+    ws.schematics &&
+    ws.schematics[collectionName] &&
+    ws.schematics[collectionName][schematicName]
+      ? ws.schematics[collectionName][schematicName]
+      : {};
+  let combined = convertAliases(
+    coerceTypesInOptions({ ...schematicDefaults, ...commandLineOpts }, schema),
+    schema,
+    false
+  );
+  if (isInteractive) {
+    combined = await promptForValues(combined, schema);
+  }
+  setDefaults(combined, schema, (commandLineOpts['_'] as string[]) || []);
+  validateOptsAgainstSchema(combined, schema);
+  return combined;
+}
+
+async function promptForValues(opts: Options, schema: Schema) {
+  const prompts = [];
+  Object.entries(schema.properties).forEach(([k, v]) => {
+    if (v['x-prompt'] && opts[k] === undefined) {
+      const question = {
+        name: k,
+        message: v['x-prompt'],
+        default: v.default,
+      } as any;
+
+      if (typeof v['x-prompt'] === 'string') {
+        question.type = v.type;
+      } else if (
+        v['x-prompt'].type == 'confirmation' ||
+        v['x-prompt'].type == 'confirm'
+      ) {
+        question.type = 'confirm';
+      } else {
+        question.type = 'list';
+        question.choices =
+          v['x-prompt'].items &&
+          v['x-prompt'].items.map((item) => {
+            if (typeof item == 'string') {
+              return item;
+            } else {
+              return {
+                name: item.label,
+                value: item.value,
+              };
+            }
+          });
+      }
+      prompts.push(question);
+    }
+  });
+
+  return await inquirer
+    .prompt(prompts)
+    .then((values) => ({ ...opts, ...values }));
 }
 
 /**
