@@ -150,6 +150,82 @@
         }
       }
     },
+    "devkit": {
+      "root": "packages/devkit",
+      "sourceRoot": "packages/devkit",
+      "projectType": "library",
+      "schematics": {},
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/devkit/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "build-base": {
+          "builder": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/devkit",
+            "tsConfig": "packages/devkit/tsconfig.lib.json",
+            "packageJson": "packages/devkit/package.json",
+            "main": "packages/devkit/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/devkit",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/devkit",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/devkit",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/devkit",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              "LICENSE"
+            ]
+          }
+        },
+        "build": {
+          "builder": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/devkit"],
+          "options": {
+            "commands": [
+              {
+                "command": "nx build-base devkit"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js devkit"
+              }
+            ],
+            "parallel": false
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/devkit/**/*.ts",
+              "packages/devkit/**/*.spec.ts",
+              "packages/devkit/**/*.spec.tsx",
+              "packages/devkit/**/*.spec.js",
+              "packages/devkit/**/*.spec.jsx",
+              "packages/devkit/**/*.d.ts"
+            ]
+          }
+        }
+      }
+    },
     "workspace": {
       "root": "packages/workspace",
       "sourceRoot": "packages/workspace",
