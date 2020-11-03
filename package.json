@@ -1,6 +1,6 @@
 {
   "name": "@nrwl/nx-source",
-  "version": "10.3.1",
+  "version": "10.3.2",
   "description": "Extensible Dev Tools for Monorepos",
   "homepage": "https://nx.dev",
   "main": "index.js",
