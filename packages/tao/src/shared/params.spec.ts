@@ -1,6 +1,6 @@
 import { ParsedArgs } from 'minimist';
 import {
-  coerceTypes,
+  coerceTypesInOptions,
   convertAliases,
   convertToCamelCase,
   lookupUnmatched,
@@ -12,14 +12,17 @@ import {
 describe('params', () => {
   describe('coerceTypes', () => {
     it('should handle booleans', () => {
-      const opts = coerceTypes({ a: true, b: 'true', c: false, d: 'true' }, {
-        properties: {
-          a: { type: 'boolean' },
-          b: { type: 'boolean' },
-          c: { type: 'boolean' },
-          d: { type: 'string' },
-        },
-      } as Schema);
+      const opts = coerceTypesInOptions(
+        { a: true, b: 'true', c: false, d: 'true' },
+        {
+          properties: {
+            a: { type: 'boolean' },
+            b: { type: 'boolean' },
+            c: { type: 'boolean' },
+            d: { type: 'string' },
+          },
+        } as Schema
+      );
 
       expect(opts).toEqual({
         a: true,
@@ -30,7 +33,7 @@ describe('params', () => {
     });
 
     it('should handle numbers', () => {
-      const opts = coerceTypes({ a: 1, b: '2', c: '3' }, {
+      const opts = coerceTypesInOptions({ a: 1, b: '2', c: '3' }, {
         properties: {
           a: { type: 'number' },
           b: { type: 'number' },
@@ -46,7 +49,7 @@ describe('params', () => {
     });
 
     it('should handle arrays', () => {
-      const opts = coerceTypes({ a: 'one,two', b: 'three,four' }, {
+      const opts = coerceTypesInOptions({ a: 'one,two', b: 'three,four' }, {
         properties: {
           a: { type: 'array' },
           b: { type: 'string' },
@@ -222,7 +225,8 @@ describe('params', () => {
               default: true,
             },
           },
-        }
+        },
+        []
       );
 
       expect(opts).toEqual({ b: true, c: false });
@@ -246,10 +250,31 @@ describe('params', () => {
               },
             },
           },
-        }
+        },
+        []
       );
 
       expect(opts).toEqual({ a: [{ key: 'inner' }, { key: 'inner' }] });
+    });
+
+    it('should set defaults from argv', () => {
+      const opts = setDefaults(
+        {},
+        {
+          properties: {
+            a: {
+              type: 'string',
+              $default: {
+                $source: 'argv',
+                index: 0,
+              },
+            },
+          },
+        },
+        ['argv-value']
+      );
+
+      expect(opts).toEqual({ a: 'argv-value' });
     });
   });
 

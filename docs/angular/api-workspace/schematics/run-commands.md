@@ -48,6 +48,12 @@ Type: `string`
 
 Current working directory of the command
 
+### envFile
+
+Type: `string`
+
+Env files to be loaded before executing the commands
+
 ### name
 
 Type: `string`
