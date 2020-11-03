@@ -36,6 +36,10 @@
     "outputs": {
       "description": "Allows you to specify where the build artifacts are stored. This allows Nx Cloud to pick them up correctly, in the case that the build artifacts are placed somewhere other than the top level dist folder.",
       "type": "string"
+    },
+    "envFile": {
+      "description": "Env files to be loaded before executing the commands",
+      "type": "string"
     }
   },
   "required": ["name", "command", "project"]
