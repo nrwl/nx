@@ -995,6 +995,11 @@
                 "name": "Moving from Protractor to Cypress",
                 "id": "protractor-to-cypress",
                 "file": "angular/guides/modern-angular/protractor-to-cypress"
+              },
+              {
+                "name": "Moving from Karma to Jest",
+                "id": "karma-to-jest",
+                "file": "angular/guides/modern-angular/karma-to-jest.md"
               }
             ]
           },
