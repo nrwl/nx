@@ -9,7 +9,7 @@ import { output } from '../utils/output';
 import * as fs from 'fs';
 import { appRootPath } from '../utils/app-root';
 import * as dotenv from 'dotenv';
-import { isNxBuilder } from '@nrwl/cli/lib/find-workspace-root';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 
 export class TaskOrchestrator {
   workspaceRoot = appRootPath;
@@ -359,12 +359,12 @@ export class TaskOrchestrator {
   }
 
   private getCliCommand(task: Task) {
-    const nxBuilder = isNxBuilder(
-      `${this.workspaceRoot}/${workspaceFileName()}`,
-      task.target.project,
-      task.target.target
-    );
-    return nxBuilder ? 'nx' : defaultCliCommand();
+    const ws = new Workspaces();
+    const target = ws.readWorkspaceConfiguration(this.workspaceRoot).projects[
+      task.target.project
+    ].architect[task.target.target];
+    const isNxBuilder = ws.isNxBuilder(target);
+    return isNxBuilder ? 'nx' : defaultCliCommand();
   }
 }
 
