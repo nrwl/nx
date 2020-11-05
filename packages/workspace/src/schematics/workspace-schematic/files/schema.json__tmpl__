@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "@nrwl/tao/src/schematic-schema.json",
   "id": "<%= name %>",
   "type": "object",
   "properties": {

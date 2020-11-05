@@ -250,7 +250,9 @@
     "worker-plugin": "3.2.0",
     "yargs": "15.4.1",
     "yargs-parser": "20.0.0",
-    "zone.js": "^0.10.0"
+    "zone.js": "^0.10.0",
+    "ejs": "^3.1.5",
+    "tsconfig-paths":"^3.9.0"
   },
   "author": "Victor Savkin",
   "license": "MIT",

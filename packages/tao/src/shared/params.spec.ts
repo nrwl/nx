@@ -2,6 +2,7 @@ import { ParsedArgs } from 'minimist';
 import {
   coerceTypesInOptions,
   convertAliases,
+  convertPositionParamsIntoNamedParams,
   convertToCamelCase,
   lookupUnmatched,
   Schema,
@@ -225,8 +226,7 @@ describe('params', () => {
               default: true,
             },
           },
-        },
-        []
+        }
       );
 
       expect(opts).toEqual({ b: true, c: false });
@@ -250,16 +250,18 @@ describe('params', () => {
               },
             },
           },
-        },
-        []
+        }
       );
 
       expect(opts).toEqual({ a: [{ key: 'inner' }, { key: 'inner' }] });
     });
+  });
 
+  describe('convertPositionParamsIntoNamedParams', () => {
     it('should set defaults from argv', () => {
-      const opts = setDefaults(
-        {},
+      const params = {};
+      convertPositionParamsIntoNamedParams(
+        params,
         {
           properties: {
             a: {
@@ -274,7 +276,7 @@ describe('params', () => {
         ['argv-value']
       );
 
-      expect(opts).toEqual({ a: 'argv-value' });
+      expect(params).toEqual({ a: 'argv-value' });
     });
   });
 

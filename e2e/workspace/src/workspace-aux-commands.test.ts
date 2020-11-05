@@ -340,7 +340,7 @@ forEachCli((cli) => {
       );
 
       try {
-        const err = await runCommandAsync(
+        await runCommandAsync(
           `npm run workspace-schematic -- ${failing} --no-interactive`
         );
         fail(`Should exit 1 for a workspace-schematic that throws an error`);
