@@ -135,7 +135,7 @@ export async function run(root: string, args: string[], isVerbose: boolean) {
   const ws = new Workspaces();
 
   return handleErrors(logger, isVerbose, async () => {
-    const workspaceDefinition = await ws.readWorkspaceConfiguration(root);
+    const workspaceDefinition = ws.readWorkspaceConfiguration(root);
     const opts = parseRunOpts(args, workspaceDefinition.defaultProject, logger);
     validateTargetAndConfiguration(workspaceDefinition, opts);
 

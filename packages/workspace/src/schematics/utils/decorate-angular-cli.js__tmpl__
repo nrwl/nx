@@ -48,10 +48,10 @@ function patchAngularCLI(initPath) {
     fs.writeFileSync(initPath, `
 // this env variable is set when invoked from within Nx
 if (!process.env['NX_CLI_SET']) {
-  const { isRunningNxBuilder } = require('@nrwl/cli/lib/is-nx-builder');
+  const { useNxToRunNxBuilderOrSchematic } = require('@nrwl/cli/lib/use-nx-to-run-nx-builder-or-schematic');
   const { output } = require('@nrwl/workspace');
 
-  if (isRunningNxBuilder()) {
+  if (useNxToRunNxBuilderOrSchematic()) {
     output.warn({ title: 'The command will use Nx CLI instead of Angular CLI because it uses an Nx builder. Read more at https://nx.dev/latest/angular/cli/overview' });
     require('@nrwl/tao/index.js');
   } else {

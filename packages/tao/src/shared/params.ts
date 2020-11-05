@@ -208,37 +208,28 @@ function throwInvalidSchema(propName: string, schema: any) {
   );
 }
 
-export function setDefaults(
-  opts: { [k: string]: any },
-  schema: Schema,
-  argv: string[]
-) {
-  setDefaultsInObject(opts, schema.properties, argv);
+export function setDefaults(opts: { [k: string]: any }, schema: Schema) {
+  setDefaultsInObject(opts, schema.properties);
   return opts;
 }
 
 function setDefaultsInObject(
   opts: { [k: string]: any },
-  properties: Properties,
-  argv: string[]
+  properties: Properties
 ) {
   Object.keys(properties).forEach((p) => {
-    setPropertyDefault(opts, p, properties[p], argv);
+    setPropertyDefault(opts, p, properties[p]);
   });
 }
 
 function setPropertyDefault(
   opts: { [k: string]: any },
   propName: string,
-  schema: any,
-  argv: string[]
+  schema: any
 ) {
   if (schema.type !== 'object' && schema.type !== 'array') {
     if (opts[propName] === undefined && schema.default !== undefined) {
       opts[propName] = schema.default;
-    }
-    if (opts[propName] === undefined && schema.$default !== undefined) {
-      opts[propName] = coerceType(schema.type, argv[schema.$default.index]);
     }
   } else if (schema.type === 'array') {
     const items = schema.items || {};
@@ -248,12 +239,28 @@ function setPropertyDefault(
       items.type === 'object'
     ) {
       opts[propName].forEach((valueInArray) =>
-        setDefaultsInObject(valueInArray, items.properties || {}, argv)
+        setDefaultsInObject(valueInArray, items.properties || {})
       );
     }
   } else {
-    setDefaultsInObject(opts[propName], schema.properties, argv);
+    setDefaultsInObject(opts[propName], schema.properties);
   }
+}
+
+export function convertPositionParamsIntoNamedParams(
+  opts: { [k: string]: any },
+  schema: Schema,
+  argv: string[]
+) {
+  Object.entries(schema.properties).forEach(([k, v]) => {
+    if (
+      opts[k] === undefined &&
+      v.$default !== undefined &&
+      argv[v.$default.index]
+    ) {
+      opts[k] = coerceType(v.type, argv[v.$default.index]);
+    }
+  });
 }
 
 export function combineOptionsForBuilder(
@@ -270,7 +277,12 @@ export function combineOptionsForBuilder(
   const configOpts =
     config && target.configurations ? target.configurations[config] || {} : {};
   const combined = { ...target.options, ...configOpts, ...r };
-  setDefaults(combined, schema, (commandLineOpts['_'] as string[]) || []);
+  convertPositionParamsIntoNamedParams(
+    combined,
+    schema,
+    (commandLineOpts['_'] as string[]) || []
+  );
+  setDefaults(combined, schema);
   validateOptsAgainstSchema(combined, schema);
   return combined;
 }
@@ -294,10 +306,15 @@ export async function combineOptionsForSchematic(
     schema,
     false
   );
+  convertPositionParamsIntoNamedParams(
+    combined,
+    schema,
+    (commandLineOpts['_'] as string[]) || []
+  );
   if (isInteractive) {
     combined = await promptForValues(combined, schema);
   }
-  setDefaults(combined, schema, (commandLineOpts['_'] as string[]) || []);
+  setDefaults(combined, schema);
   validateOptsAgainstSchema(combined, schema);
   return combined;
 }

@@ -25,6 +25,7 @@ import { generateProjectLint, addLintFiles } from '../../utils/lint';
 import { addProjectToNxJsonInTree, libsDir } from '../../utils/ast-utils';
 import { defaultCliCommand } from '../../core/file-utils';
 import { toJS } from '../../utils/rules/to-js';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -102,7 +103,7 @@ function updateNxJson(options: NormalizedSchema): Rule {
   return addProjectToNxJsonInTree(options.name, { tags: options.parsedTags });
 }
 
-export default function (schema: Schema): Rule {
+export default function schematic(schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
 
@@ -126,6 +127,11 @@ export default function (schema: Schema): Rule {
     ])(host, context);
   };
 }
+
+export const librarySchematic = wrapAngularDevkitSchematic(
+  '@nrwl/workspace',
+  'library'
+);
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const name = toFileName(options.name);
