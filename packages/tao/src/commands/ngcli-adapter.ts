@@ -32,6 +32,8 @@ import * as fs from 'fs';
 import * as inquirer from 'inquirer';
 import { detectPackageManager } from '../shared/detect-package-manager';
 import { GenerateOptions, printGenHelp } from './generate';
+import * as taoTree from '../shared/tree';
+import { workspaceConfigName } from '@nrwl/tao/src/shared/workspace';
 
 function normalizeOptions(opts: Options, schema: Schema): Options {
   return convertAliases(coerceTypesInOptions(opts, schema), schema, false);
@@ -40,7 +42,7 @@ function normalizeOptions(opts: Options, schema: Schema): Options {
 export async function run(logger: any, root: string, opts: RunOptions) {
   const fsHost = new NodeJsSyncHost();
   const { workspace } = await workspaces.readWorkspace(
-    'workspace.json',
+    workspaceConfigName(root),
     workspaces.createWorkspaceHost(fsHost)
   );
 
@@ -225,7 +227,7 @@ async function getSchematicDefaults(
     normalize(root) as Path,
     new NodeJsSyncHost()
   )
-    .loadWorkspaceFromHost('workspace.json' as Path)
+    .loadWorkspaceFromHost(workspaceConfigName(root) as any)
     .toPromise();
 
   let result = {};
@@ -256,15 +258,17 @@ async function runSchematic(
     FileSystemCollectionDescription,
     FileSystemSchematicDescription
   >,
-  allowAdditionalArgs = false
-): Promise<number> {
+  allowAdditionalArgs = false,
+  printDryRunMessage = true,
+  recorder: any = null
+): Promise<{ status: number; loggingQueue: string[] }> {
   const flattenedSchema = (await workflow.registry
     .flatten(schematic.description.schemaJson)
     .toPromise()) as Schema;
 
   if (opts.help) {
     printGenHelp(opts, flattenedSchema as Schema, logger as any);
-    return 0;
+    return { status: 0, loggingQueue: [] };
   }
 
   const defaults =
@@ -276,7 +280,7 @@ async function runSchematic(
           opts.schematicName
         );
   const record = { loggingQueue: [] as string[], error: false };
-  workflow.reporter.subscribe(createRecorder(record, logger));
+  workflow.reporter.subscribe(recorder || createRecorder(record, logger));
 
   const schematicOptions = normalizeOptions(
     opts.schematicOptions,
@@ -293,7 +297,7 @@ async function runSchematic(
       logger.fatal(message);
     });
 
-    return 1;
+    return { status: 1, loggingQueue: [] };
   }
 
   await workflow
@@ -310,10 +314,10 @@ async function runSchematic(
     record.loggingQueue.forEach((log) => logger.info(log));
   }
 
-  if (opts.dryRun) {
+  if (opts.dryRun && printDryRunMessage) {
     logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
   }
-  return 0;
+  return { status: 0, loggingQueue: record.loggingQueue };
 }
 
 function isTTY(): boolean {
@@ -332,13 +336,93 @@ export async function generate(
   const workflow = await createWorkflow(fsHost, root, opts);
   const collection = getCollection(workflow, opts.collectionName);
   const schematic = collection.createSchematic(opts.schematicName, true);
-  return runSchematic(
-    root,
-    workflow,
-    logger,
-    { ...opts, schematicName: schematic.description.name },
-    schematic
-  );
+  return (
+    await runSchematic(
+      root,
+      workflow,
+      logger,
+      { ...opts, schematicName: schematic.description.name },
+      schematic
+    )
+  ).status;
+}
+
+export function wrapAngularDevkitSchematic(
+  collectionName: string,
+  schematicName: string
+) {
+  return (schematicOptions: { [k: string]: any }) => {
+    return async (host: taoTree.Tree) => {
+      const emptyLogger = {
+        log: (e) => {},
+        info: (e) => {},
+        warn: (e) => {},
+        error: (e) => {},
+        fatal: (e) => {},
+      } as any;
+      emptyLogger.createChild = () => emptyLogger;
+
+      const recorder = (event: DryRunEvent) => {
+        const eventPath = event.path.startsWith('/')
+          ? event.path.substr(1)
+          : event.path;
+        if (event.kind === 'error') {
+        } else if (event.kind === 'update') {
+          host.write(eventPath, event.content);
+        } else if (event.kind === 'create') {
+          host.write(eventPath, event.content);
+        } else if (event.kind === 'delete') {
+          host.delete(eventPath);
+        } else if (event.kind === 'rename') {
+          host.rename(eventPath, event.to);
+        }
+      };
+
+      const fsHost = new virtualFs.ScopedHost(
+        new NodeJsSyncHost(),
+        normalize(host.root)
+      );
+
+      await Promise.all(
+        (host as taoTree.FsTree).listChanges().map(async (c) => {
+          if (c.type === 'CREATE' || c.type === 'UPDATE') {
+            await fsHost.write(c.path as any, c.content).toPromise();
+          } else {
+            await fsHost.delete(c.path as any).toPromise();
+          }
+        })
+      );
+
+      const options = {
+        schematicOptions: { ...schematicOptions, _: [] },
+        dryRun: true,
+        interactive: false,
+        help: false,
+        debug: false,
+        collectionName,
+        schematicName,
+        force: false,
+        defaults: false,
+      };
+      const workflow = await createWorkflow(fsHost, host.root, options);
+      const collection = getCollection(workflow, collectionName);
+      const schematic = collection.createSchematic(schematicName, true);
+      const res = await runSchematic(
+        host.root,
+        workflow,
+        emptyLogger,
+        options,
+        schematic,
+        false,
+        false,
+        recorder
+      );
+
+      if (res.status !== 0) {
+        throw new Error(res.loggingQueue.join('\n'));
+      }
+    };
+  };
 }
 
 export async function invokeNew(
@@ -357,12 +441,14 @@ export async function invokeNew(
     true
   );
   const allowAdditionalArgs = true; // we can't yet know the schema to validate against
-  return runSchematic(
-    root,
-    workflow,
-    logger,
-    { ...opts, schematicName: schematic.description.name },
-    schematic,
-    allowAdditionalArgs
-  );
+  return (
+    await runSchematic(
+      root,
+      workflow,
+      logger,
+      { ...opts, schematicName: schematic.description.name },
+      schematic,
+      allowAdditionalArgs
+    )
+  ).status;
 }

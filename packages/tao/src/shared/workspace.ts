@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import '../compat/compat';
 
 export interface WorkspaceDefinition {
   projects: { [projectName: string]: ProjectDefinition };
@@ -21,18 +22,20 @@ export interface TargetDefinition {
   builder: string;
 }
 
+export function workspaceConfigName(root: string) {
+  try {
+    fs.statSync(path.join(root, 'angular.json'));
+    return 'angular.json';
+  } catch (e) {
+    return 'workspace.json';
+  }
+}
+
 export class Workspaces {
-  readWorkspaceConfiguration(root: string): Promise<WorkspaceDefinition> {
-    try {
-      fs.statSync(path.join(root, 'angular.json'));
-      return JSON.parse(
-        fs.readFileSync(path.join(root, 'angular.json')).toString()
-      );
-    } catch (e) {
-      return JSON.parse(
-        fs.readFileSync(path.join(root, 'workspace.json')).toString()
-      );
-    }
+  readWorkspaceConfiguration(root: string): WorkspaceDefinition {
+    return JSON.parse(
+      fs.readFileSync(path.join(root, workspaceConfigName(root))).toString()
+    );
   }
 
   isNxBuilder(target: TargetDefinition) {
@@ -109,12 +112,19 @@ export class Workspaces {
   }
 
   private readSchematicsJson(collectionName: string, schematic: string) {
-    const packageJsonPath = require.resolve(`${collectionName}/package.json`);
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath).toString());
-    const schematicsFile = packageJson.schematics;
-    const schematicsFilePath = require.resolve(
-      path.join(path.dirname(packageJsonPath), schematicsFile)
-    );
+    let schematicsFilePath;
+    if (collectionName.endsWith('.json')) {
+      schematicsFilePath = require.resolve(collectionName);
+    } else {
+      const packageJsonPath = require.resolve(`${collectionName}/package.json`);
+      const packageJson = JSON.parse(
+        fs.readFileSync(packageJsonPath).toString()
+      );
+      const schematicsFile = packageJson.schematics;
+      schematicsFilePath = require.resolve(
+        path.join(path.dirname(packageJsonPath), schematicsFile)
+      );
+    }
     const schematicsJson = JSON.parse(
       fs.readFileSync(schematicsFilePath).toString()
     );

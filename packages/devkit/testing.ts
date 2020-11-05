@@ -1,1 +1,1 @@
-export * from './src/create-tree-with-empty-workspace';
+export { createTreeWithEmptyWorkspace } from './src/tests/create-tree-with-empty-workspace';

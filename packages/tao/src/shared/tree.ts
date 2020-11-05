@@ -10,6 +10,8 @@ import { mkdirpSync, rmdirSync } from 'fs-extra';
 const chalk = require('chalk');
 
 export interface Tree {
+  root: string;
+
   read(filePath: string): Buffer | null;
 
   write(filePath: string, content: Buffer | string): void;
@@ -23,6 +25,8 @@ export interface Tree {
   isFile(filePath: string): boolean;
 
   children(dirPath: string): string[];
+
+  listChanges(): FileChange[];
 }
 
 export interface FileChange {
@@ -37,7 +41,7 @@ export class FsTree implements Tree {
   } = {};
 
   constructor(
-    private readonly root: string | null,
+    readonly root: string,
     private readonly isVerbose: boolean,
     private readonly logger: Console
   ) {}

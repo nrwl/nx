@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { Workspace } from './workspace';
 import { parseRunOneOptions } from './parse-run-one-options';
-import { isRunningNxBuilder } from './is-nx-builder';
+import { useNxToRunNxBuilderOrSchematic } from './use-nx-to-run-nx-builder-or-schematic';
 
 /**
  * Nx is being run inside a workspace.
@@ -25,19 +25,18 @@ export function initLocal(workspace: Workspace) {
     require('@nrwl/workspace' + '/src/command-line/nx-commands').commandsObject
       .argv;
   } else {
-    if (runOpts === false) {
-      loadCli(workspace, false);
-    } else if (process.env.NX_SKIP_TASKS_RUNNER) {
-      loadCli(workspace, isRunningNxBuilder());
+    // not using the tasks runner
+    if (runOpts === false || process.env.NX_SKIP_TASKS_RUNNER) {
+      loadCli(workspace, useNxToRunNxBuilderOrSchematic());
     } else {
       require('@nrwl/workspace' + '/src/command-line/run-one').runOne(runOpts);
     }
   }
 }
 
-function loadCli(workspace: Workspace, isNxBuilder: boolean) {
+function loadCli(workspace: Workspace, useNxCli: boolean) {
   let cliPath: string;
-  if (workspace.type === 'nx' || isNxBuilder) {
+  if (workspace.type === 'nx' || useNxCli) {
     cliPath = '@nrwl/tao/index.js';
   } else if (workspace.type === 'angular') {
     cliPath = '@angular/cli/lib/init.js';
