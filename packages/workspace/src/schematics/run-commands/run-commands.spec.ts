@@ -13,7 +13,7 @@ describe('run-commands', () => {
     };
 
     tree.write('workspace.json', JSON.stringify({ projects: { lib: {} } }));
-    await runCommands(opts)(tree);
+    await runCommands(tree, opts);
 
     const customTarget = JSON.parse(tree.read('workspace.json').toString())
       .projects['lib'].architect['custom'];
