@@ -272,8 +272,8 @@ describe('getDevServerConfig', () => {
     });
 
     describe('liveReload option', () => {
-      it('should push the live reload entry to the main entry', () => {
-        const result = getDevServerConfig(
+      it('should set the correct value', () => {
+        const { devServer: result } = getDevServerConfig(
           root,
           sourceRoot,
           buildInput,
@@ -281,48 +281,19 @@ describe('getDevServerConfig', () => {
           logger
         );
 
-        expect(result.entry['main']).toContain(
-          `${require.resolve('webpack-dev-server/client')}?http://0.0.0.0:0`
-        );
+        expect(result.liveReload).toEqual(true);
       });
 
-      it('should push the correct entry when publicHost option is used', () => {
-        const result = getDevServerConfig(
+      it('should set the correct if false', () => {
+        const { devServer: result } = getDevServerConfig(
           root,
           sourceRoot,
           buildInput,
-          {
-            ...serveInput,
-            publicHost: 'www.example.com',
-          },
+          { ...serveInput, liveReload: false },
           logger
         );
 
-        expect(result.entry['main']).toContain(
-          `${require.resolve(
-            'webpack-dev-server/client'
-          )}?http://www.example.com/`
-        );
-      });
-
-      it('should push the correct entry when publicHost and ssl options are used', () => {
-        const result = getDevServerConfig(
-          root,
-          sourceRoot,
-          buildInput,
-          {
-            ...serveInput,
-            ssl: true,
-            publicHost: 'www.example.com',
-          },
-          logger
-        );
-
-        expect(result.entry['main']).toContain(
-          `${require.resolve(
-            'webpack-dev-server/client'
-          )}?https://www.example.com/`
-        );
+        expect(result.liveReload).toEqual(false);
       });
     });
 
