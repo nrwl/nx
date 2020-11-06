@@ -424,6 +424,11 @@
                     "name": "package",
                     "id": "package",
                     "file": "angular/api-angular/builders/package"
+                  },
+                  {
+                    "name": "ng packagr lite",
+                    "id": "ng-packagr-list",
+                    "file": "angular/api-angular/builders/ng-packagr-lite.md"
                   }
                 ]
               }
@@ -1466,6 +1471,11 @@
                     "name": "package",
                     "id": "package",
                     "file": "react/api-angular/builders/package"
+                  },
+                  {
+                    "name": "ng packagr lite",
+                    "id": "ng-packagr-list",
+                    "file": "angular/api-angular/builders/ng-packagr-lite.md"
                   }
                 ]
               }
@@ -2470,6 +2480,11 @@
                     "name": "package",
                     "id": "package",
                     "file": "node/api-angular/builders/package"
+                  },
+                  {
+                    "name": "ng packagr lite",
+                    "id": "ng-packagr-list",
+                    "file": "angular/api-angular/builders/ng-packagr-lite.md"
                   }
                 ]
               }
