@@ -3003,6 +3003,11 @@
         "id": "guides",
         "itemList": [
           {
+            "name": "Configuration",
+            "id": "configuration",
+            "file": "node/guides/configuration.md"
+          },
+          {
             "name": "CI",
             "id": "ci",
             "itemList": [
