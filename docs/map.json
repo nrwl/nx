@@ -427,8 +427,8 @@
                   },
                   {
                     "name": "ng packagr lite",
-                    "id": "ng-packagr-list",
-                    "file": "angular/api-angular/builders/ng-packagr-lite.md"
+                    "id": "ng-packagr-lite",
+                    "file": "angular/api-angular/builders/ng-packagr-lite"
                   }
                 ]
               }
@@ -1004,7 +1004,7 @@
               {
                 "name": "Moving from Karma to Jest",
                 "id": "karma-to-jest",
-                "file": "angular/guides/modern-angular/karma-to-jest.md"
+                "file": "angular/guides/modern-angular/karma-to-jest"
               }
             ]
           },
@@ -1474,8 +1474,8 @@
                   },
                   {
                     "name": "ng packagr lite",
-                    "id": "ng-packagr-list",
-                    "file": "react/api-angular/builders/ng-packagr-lite.md"
+                    "id": "ng-packagr-lite",
+                    "file": "react/api-angular/builders/ng-packagr-lite"
                   }
                 ]
               }
@@ -2483,8 +2483,8 @@
                   },
                   {
                     "name": "ng packagr lite",
-                    "id": "ng-packagr-list",
-                    "file": "node/api-angular/builders/ng-packagr-lite.md"
+                    "id": "ng-packagr-lite",
+                    "file": "node/api-angular/builders/ng-packagr-lite"
                   }
                 ]
               }
