@@ -233,7 +233,7 @@
     "webpack-merge": "4.2.1",
     "webpack-node-externals": "^1.7.2",
     "webpack-sources": "1.4.3",
-    "webpack-subresource-integrity": "1.1.0-rc.6",
+    "webpack-subresource-integrity": "^1.5.1",
     "worker-plugin": "3.2.0",
     "yargs": "15.4.1",
     "yargs-parser": "20.0.0",
