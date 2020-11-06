@@ -1475,7 +1475,7 @@
                   {
                     "name": "ng packagr lite",
                     "id": "ng-packagr-list",
-                    "file": "angular/api-angular/builders/ng-packagr-lite.md"
+                    "file": "react/api-angular/builders/ng-packagr-lite.md"
                   }
                 ]
               }
@@ -2484,7 +2484,7 @@
                   {
                     "name": "ng packagr lite",
                     "id": "ng-packagr-list",
-                    "file": "angular/api-angular/builders/ng-packagr-lite.md"
+                    "file": "node/api-angular/builders/ng-packagr-lite.md"
                   }
                 ]
               }
