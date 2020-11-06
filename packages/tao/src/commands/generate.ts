@@ -206,7 +206,7 @@ export async function generate(
         opts.interactive
       );
       const host = new FsTree(root, isVerbose, logger);
-      const task = await implementation(combinedOpts)(host);
+      const task = await implementation(host, combinedOpts);
       const changes = host.listChanges();
 
       printChanges(changes);

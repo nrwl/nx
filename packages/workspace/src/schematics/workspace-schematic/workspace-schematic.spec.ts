@@ -9,7 +9,7 @@ describe('workspace-schematic', () => {
       skipFormat: true,
     };
 
-    await workspaceSchematic(opts)(tree);
+    await workspaceSchematic(tree, opts);
 
     expect(tree.exists('tools/schematics/custom/index.ts')).toBeTruthy();
     expect(tree.exists('tools/schematics/custom/schema.json')).toBeTruthy();
