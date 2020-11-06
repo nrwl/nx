@@ -279,7 +279,7 @@ forEachCli((cli) => {
       ).toThrow();
     });
 
-    it('should support workspace-specific schematics', async () => {
+    it('vvvshould support workspace-specific schematics', async () => {
       const json = readJson(`tools/schematics/${custom}/schema.json`);
       json.properties['directory'] = {
         type: 'string',

@@ -18,7 +18,7 @@ const ejs = require('ejs');
  * Examples:
  *
  * ```typescript
- * generateFiles(path.join(__dirname , 'files'), './tools/scripts', {tmpl: '', name: 'myscript'})(host)
+ * generateFiles(host, path.join(__dirname , 'files'), './tools/scripts', {tmpl: '', name: 'myscript'})
  * ```
  *
  * This command will take all the files from the `files` directory next to the place where the command is invoked from.
@@ -29,23 +29,19 @@ const ejs = require('ejs');
  * doesn't get confused about incorrect TypeScript files.
  */
 export function generateFiles(
+  host: Tree,
   srcFolder: string,
   target: string,
   substitutions: { [k: string]: any }
 ) {
-  return (host: Tree) => {
-    allFilesInDir(srcFolder).forEach((f) => {
-      const relativeToTarget = replaceSegmentsInPath(
-        f.substring(srcFolder.length),
-        substitutions
-      );
-      const newContent = ejs.render(
-        fs.readFileSync(f).toString(),
-        substitutions
-      );
-      host.write(path.join(target, relativeToTarget), newContent);
-    });
-  };
+  allFilesInDir(srcFolder).forEach((f) => {
+    const relativeToTarget = replaceSegmentsInPath(
+      f.substring(srcFolder.length),
+      substitutions
+    );
+    const newContent = ejs.render(fs.readFileSync(f).toString(), substitutions);
+    host.write(path.join(target, relativeToTarget), newContent);
+  });
 }
 
 function replaceSegmentsInPath(
