@@ -583,6 +583,28 @@
             ]
           },
           {
+            "name": "linter",
+            "id": "linter",
+            "itemList": [
+              {
+                "id": "builders",
+                "name": "Builders",
+                "itemList": [
+                  {
+                    "name": "eslint",
+                    "id": "eslint",
+                    "file": "angular/api-linter/builders/eslint"
+                  },
+                  {
+                    "name": "lint",
+                    "id": "lint",
+                    "file": "angular/api-linter/builders/lint"
+                  }
+                ]
+              }
+            ]
+          },
+          {
             "name": "node",
             "id": "node",
             "itemList": [
@@ -1024,6 +1046,10 @@
           {
             "name": "Nx 7 => Nx 8",
             "id": "nx7-to-nx8"
+          },
+          {
+            "name": "Upgrading AngularJS Applications",
+            "id": "misc-upgrade"
           },
           {
             "name": "Configuring Browser Support",
@@ -1624,6 +1650,28 @@
                     "name": "storybook",
                     "id": "storybook",
                     "file": "react/api-storybook/builders/storybook"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "linter",
+            "id": "linter",
+            "itemList": [
+              {
+                "id": "builders",
+                "name": "Builders",
+                "itemList": [
+                  {
+                    "name": "eslint",
+                    "id": "eslint",
+                    "file": "react/api-linter/builders/eslint"
+                  },
+                  {
+                    "name": "lint",
+                    "id": "lint",
+                    "file": "react/api-linter/builders/lint"
                   }
                 ]
               }
@@ -2633,6 +2681,28 @@
                     "name": "storybook",
                     "id": "storybook",
                     "file": "node/api-storybook/builders/storybook"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "linter",
+            "id": "linter",
+            "itemList": [
+              {
+                "id": "builders",
+                "name": "Builders",
+                "itemList": [
+                  {
+                    "name": "eslint",
+                    "id": "eslint",
+                    "file": "node/api-linter/builders/eslint"
+                  },
+                  {
+                    "name": "lint",
+                    "id": "lint",
+                    "file": "node/api-linter/builders/lint"
                   }
                 ]
               }
