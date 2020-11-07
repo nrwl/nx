@@ -1,8 +1,12 @@
-import { ProjectGraph } from '../project-graph';
-import { NxJson } from '../shared-interfaces';
+import { ProjectGraph, ProjectGraphNode } from '../project-graph';
+import { NxJson, NxJsonProjectConfig } from '../shared-interfaces';
 import { Task } from '../../tasks-runner/tasks-runner';
 import { readFileSync } from 'fs';
-import { rootWorkspaceFileNames } from '../file-utils';
+import {
+  readTsConfig,
+  readWorkspaceJson,
+  workspaceFileName,
+} from '../file-utils';
 import { execSync } from 'child_process';
 import {
   defaultFileHasher,
@@ -10,6 +14,7 @@ import {
   FileHasher,
 } from './file-hasher';
 import { defaultHashing, HashingImp } from './hashing-impl';
+import { sortObject } from '../../utils/object-utils';
 
 const resolve = require('resolve');
 
@@ -20,6 +25,7 @@ export interface Hash {
     sources: { [projectName: string]: string };
     implicitDeps: { [key: string]: string };
     runtime: { [input: string]: string };
+    transitiveDeps: { [source: string]: string };
   };
 }
 
@@ -40,6 +46,11 @@ interface RuntimeHashResult {
 
 interface NodeModulesResult {
   value: string;
+}
+
+interface TransitiveDepsHashResult {
+  value: string;
+  sources: { [source: string]: string };
 }
 
 export class Hasher {
@@ -90,11 +101,13 @@ export class Hasher {
       this.implicitDepsHash(),
       this.runtimeInputsHash(),
       this.nodeModulesHash(),
+      this.transitiveClosureDepsHash(),
     ])) as [
       ProjectHashResult,
       ImplicitHashResult,
       RuntimeHashResult,
-      NodeModulesResult
+      NodeModulesResult,
+      TransitiveDepsHashResult
     ];
 
     const value = this.hashing.hashArray([
@@ -110,6 +123,7 @@ export class Hasher {
         sources: values[0].sources,
         implicitDeps: values[1].sources,
         runtime: values[2].runtime,
+        transitiveDeps: values[4].sources,
       },
     };
   }
@@ -148,12 +162,149 @@ export class Hasher {
     return this.runtimeInputs;
   }
 
+  private tsconfigDepsHash(
+    sortedTransitiveDeps: Array<[string, ProjectGraphNode]>,
+    workspaceJson: any
+  ): Array<{
+    hash: string;
+    record: string;
+  }> {
+    const npmScope = `@${this.nxJson.npmScope}/`;
+    const tsConfig = readTsConfig();
+
+    /**
+     * Parse out the paths from tsconfig so they are not accounted for
+     * in hashing tsconfig configurations since they are hashed separately
+     */
+    const { paths, ...compilerOptions } = tsConfig.compilerOptions;
+    tsConfig.compilerOptions = compilerOptions;
+
+    const hashedTsConfig: {
+      hash: string;
+      record: string;
+    } = {
+      hash: this.hashing.hashObject(sortObject(tsConfig)),
+      record: 'tsconfig.base.json',
+    };
+
+    const hashedTsConfigPaths: {
+      hash: string;
+      record: string;
+    } = {
+      hash: this.hashing.hashArray(
+        sortedTransitiveDeps.map(([name]) => {
+          const project = workspaceJson.projects[name];
+          const path = project.root.replace(
+            project.projectType === 'application' ? 'apps/' : 'libs/',
+            ''
+          );
+          return paths[`${npmScope}${path}`];
+        })
+      ),
+      record: 'tsconfig.base.json[compilerOptions][paths]',
+    };
+
+    return [hashedTsConfig, hashedTsConfigPaths];
+  }
+
+  private workspaceJsonDepsHash(
+    sortedTransitiveDeps: Array<[string, ProjectGraphNode]>,
+    workspaceJson: any,
+    workspaceJsonName: string
+  ): {
+    hash: string;
+    record: string;
+  } {
+    const hashedWorkspaceJsonRecords: string = this.hashing.hashArray(
+      sortedTransitiveDeps.map(([name]) =>
+        this.hashing.hashObject(sortObject(workspaceJson.projects[name]))
+      )
+    );
+
+    return {
+      hash: hashedWorkspaceJsonRecords,
+      record: workspaceJsonName,
+    };
+  }
+
+  /**
+   * Will selectively combine all of the transitive deps of the current
+   * project based on the project graph
+   */
+  async transitiveClosureDepsHash(): Promise<ImplicitHashResult> {
+    const nodes = Object.entries(this.projectGraph.nodes);
+
+    const sortedTransitiveDeps: Array<[
+      string,
+      ProjectGraphNode
+    ]> = nodes
+      .filter(([name, records]) => !name.startsWith('npm:'))
+      .sort(([name1, records1], [name2, records2]) =>
+        name1.localeCompare(name2)
+      );
+
+    const workspaceJsonName = workspaceFileName();
+    const workspaceJson = readWorkspaceJson();
+
+    const tsConfigTransitiveHashes = this.tsconfigDepsHash(
+      sortedTransitiveDeps,
+      workspaceJson
+    );
+
+    const workspaceJsonTransitiveHashes = this.workspaceJsonDepsHash(
+      sortedTransitiveDeps,
+      workspaceJson,
+      workspaceJsonName
+    );
+
+    /**
+     * 1: Filter out npm dependencies, they will be accounted for when calculating hash key for package.json
+     * 2: Sort by the name of the project so that reorganizing nx.json does not cause cache misses
+     * 3. Hash each nx.json project independently
+     */
+    const hashedNxJsonRecords: Array<{
+      hash: string;
+      record: string;
+    }> = sortedTransitiveDeps.map(([name]) => {
+      const nxJsonRecord = this.nxJson.projects[name];
+
+      return {
+        hash: this.hashing.hashObject(nxJsonRecord),
+        record: name,
+      };
+    });
+
+    const combinedHashRecords: Array<{
+      hash: string;
+      record: string;
+    }> = [
+      ...hashedNxJsonRecords,
+      ...tsConfigTransitiveHashes,
+      workspaceJsonTransitiveHashes,
+    ];
+
+    return Promise.resolve().then(async () => {
+      return {
+        value: this.hashing.hashArray(
+          combinedHashRecords.map((hashed) => hashed.hash)
+        ),
+        sources: combinedHashRecords.reduce(
+          (prev, cur) => ({
+            ...prev,
+            [cur.record]: cur.hash,
+          }),
+          {}
+        ),
+      };
+    });
+  }
+
   private async implicitDepsHash(): Promise<ImplicitHashResult> {
     if (this.implicitDependencies) return this.implicitDependencies;
 
     const fileNames = [
       ...Object.keys(this.nxJson.implicitDependencies || {}),
-      ...rootWorkspaceFileNames(),
+      'package.json',
       'package-lock.json',
       'yarn.lock',
     ];

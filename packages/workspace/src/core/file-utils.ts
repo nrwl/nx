@@ -255,6 +255,12 @@ export function readWorkspaceFiles(): FileData[] {
   }
 }
 
+export function readTsConfig(): any {
+  return JSON.parse(
+    readFileSync(`${appRootPath}/tsconfig.base.json`).toString()
+  );
+}
+
 export function readEnvironment(
   target: string,
   projects: Record<string, ProjectGraphNode>

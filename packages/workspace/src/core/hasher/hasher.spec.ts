@@ -4,6 +4,9 @@ import { extractNameAndVersion } from '@nrwl/workspace/src/core/hasher/file-hash
 const fs = require('fs');
 jest.mock('fs');
 
+const fileUtils = require('../file-utils');
+jest.mock('../file-utils');
+
 describe('Hasher', () => {
   let hashes = {
     'yarn.lock': 'yarn.lock.hash',
@@ -20,6 +23,265 @@ describe('Hasher', () => {
       hashFile: (path: string) => hashes[path],
     };
   }
+
+  describe.only('nxJsonTransitiveClosureDepsHas', () => {
+    beforeEach(() => {
+      fileUtils.workspaceFileName.mockReturnValue('angular.json');
+      fileUtils.readWorkspaceJson.mockReturnValue({
+        projects: {
+          proj1: {
+            root: 'libs/proj1',
+          },
+          proj2: {
+            root: 'libs/proj2',
+          },
+          proj3: {
+            root: 'libs/proj3',
+          },
+        },
+      });
+      fileUtils.readTsConfig
+        .mockReturnValueOnce({
+          compilerOptions: {
+            paths: {
+              '@scope/proj1': 'libs/proj1/src/index.ts',
+              '@scope/proj2': 'libs/proj2/src/index.ts',
+              '@scope/proj3': 'libs/proj3/src/index.ts',
+            },
+          },
+        })
+        .mockReturnValueOnce({
+          compilerOptions: {
+            paths: {
+              '@scope/proj1': 'libs/proj1/src/index.ts',
+              '@scope/proj2': 'libs/proj2/src/index.ts',
+              '@scope/proj3': 'libs/proj3/src/index.ts',
+            },
+          },
+        });
+    });
+
+    afterEach(() => jest.resetAllMocks());
+
+    it('should be the same hash regardless of order in nx.json', async () => {
+      const hasher1 = new Hasher(
+        {
+          nodes: {
+            proj1: {
+              name: 'proj1',
+              type: 'lib',
+              data: { files: [] },
+            },
+            proj2: {
+              name: 'proj2',
+              type: 'lib',
+              data: { files: [] },
+            },
+          },
+          dependencies: {},
+        },
+        {
+          npmScope: 'scope',
+          projects: {
+            proj1: {
+              tags: ['tag1', 'tag2'],
+            },
+            proj2: {
+              tags: ['tag3', 'tag4'],
+            },
+            proj3: {
+              tags: ['tag5', 'tag6'],
+            },
+          },
+        },
+        {}
+      );
+
+      const hasher2 = new Hasher(
+        {
+          nodes: {
+            proj1: {
+              name: 'proj1',
+              type: 'lib',
+              data: { files: [] },
+            },
+            proj2: {
+              name: 'proj2',
+              type: 'lib',
+              data: { files: [] },
+            },
+          },
+          dependencies: {},
+        },
+        {
+          npmScope: 'scope',
+          projects: {
+            proj1: {
+              tags: ['tag1', 'tag2'],
+            },
+            proj2: {
+              tags: ['tag3', 'tag4'],
+            },
+            proj3: {
+              tags: ['tag5', 'tag6'],
+            },
+          },
+        },
+        {}
+      );
+
+      const res1 = await hasher1.transitiveClosureDepsHash();
+      const res2 = await hasher2.transitiveClosureDepsHash();
+
+      expect(res1.value).toEqual(res2.value);
+    });
+
+    it('should be the same hash regardless of order of tags', async () => {
+      const hasher1 = new Hasher(
+        {
+          nodes: {
+            proj1: {
+              name: 'proj1',
+              type: 'lib',
+              data: { files: [] },
+            },
+            proj2: {
+              name: 'proj2',
+              type: 'lib',
+              data: { files: [] },
+            },
+          },
+          dependencies: {},
+        },
+        {
+          npmScope: 'scope',
+          projects: {
+            proj1: {
+              tags: ['tag2', 'tag1'],
+            },
+            proj2: {
+              tags: ['tag4', 'tag3'],
+            },
+            proj3: {
+              tags: ['tag5', 'tag6'],
+            },
+          },
+        } as any,
+        {}
+      );
+
+      const hasher2 = new Hasher(
+        {
+          nodes: {
+            proj1: {
+              name: 'proj1',
+              type: 'lib',
+              data: { files: [] },
+            },
+            proj2: {
+              name: 'proj2',
+              type: 'lib',
+              data: { files: [] },
+            },
+          },
+          dependencies: {},
+        },
+        {
+          npmScope: 'scope',
+          projects: {
+            proj1: {
+              tags: ['tag1', 'tag2'],
+            },
+            proj2: {
+              tags: ['tag3', 'tag4'],
+            },
+            proj3: {
+              tags: ['tag5', 'tag6'],
+            },
+          },
+        } as any,
+        {}
+      );
+
+      const res1 = await hasher1.transitiveClosureDepsHash();
+      const res2 = await hasher2.transitiveClosureDepsHash();
+
+      expect(res1.value).toEqual(res2.value);
+    });
+
+    it('should be the same hash regardless of a record changing that is not a transitive dependency', async () => {
+      const hasher1 = new Hasher(
+        {
+          nodes: {
+            proj1: {
+              name: 'proj1',
+              type: 'lib',
+              data: { files: [] },
+            },
+            proj2: {
+              name: 'proj2',
+              type: 'lib',
+              data: { files: [] },
+            },
+          },
+          dependencies: {},
+        },
+        {
+          npmScope: 'scope',
+          projects: {
+            proj1: {
+              tags: ['tag1', 'tag2'],
+            },
+            proj2: {
+              tags: ['tag3', 'tag4'],
+            },
+            proj3: {
+              tags: [],
+            },
+          },
+        } as any,
+        {}
+      );
+
+      const hasher2 = new Hasher(
+        {
+          nodes: {
+            proj1: {
+              name: 'proj1',
+              type: 'lib',
+              data: { files: [] },
+            },
+            proj2: {
+              name: 'proj2',
+              type: 'lib',
+              data: { files: [] },
+            },
+          },
+          dependencies: {},
+        },
+        {
+          npmScope: 'scope',
+          projects: {
+            proj1: {
+              tags: ['tag1', 'tag2'],
+            },
+            proj2: {
+              tags: ['tag3', 'tag4'],
+            },
+            proj3: {
+              tags: ['tag5', 'tag6'],
+            },
+          },
+        } as any,
+        {}
+      );
+
+      const res1 = await hasher1.transitiveClosureDepsHash();
+      const res2 = await hasher2.transitiveClosureDepsHash();
+
+      expect(res1.value).toEqual(res2.value);
+    });
+  });
 
   it('should create project hash', async (done) => {
     hashes['/file'] = 'file.hash';
