@@ -56,7 +56,7 @@
     "babel-plugin-const-enum": "^1.0.1",
     "babel-plugin-macros": "^2.8.0",
     "babel-plugin-transform-async-to-promises": "^0.8.15",
-    "browserslist": "4.8.7",
+    "browserslist": "^4.14.6",
     "cacache": "12.0.2",
     "caniuse-lite": "^1.0.30001030",
     "circular-dependency-plugin": "5.2.0",
