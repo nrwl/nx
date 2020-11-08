@@ -167,6 +167,9 @@ function updateTsConfig(options: NormalizedSchema): Rule {
       `${projectConfig.root}/tsconfig.lib.json`,
       (json) => {
         json.compilerOptions.target = options.target;
+        if (options.strict) {
+          json.compilerOptions.strict = options.strict;
+        }
         return json;
       }
     );

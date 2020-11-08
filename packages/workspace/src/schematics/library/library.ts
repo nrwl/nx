@@ -59,7 +59,21 @@ function addProject(options: NormalizedSchema): Rule {
   });
 }
 
-function updateTsConfig(options: NormalizedSchema): Rule {
+function updateLibTsConfig(options: NormalizedSchema): Rule {
+  return (host: Tree) =>
+    updateJsonInTree(
+      `${libsDir(host)}/${options.projectDirectory}/tsconfig.lib.json`,
+      (json) => {
+        if (options.strict) {
+          json.compilerOptions.strict = true;
+        }
+
+        return json;
+      }
+    );
+}
+
+function updateRootTsConfig(options: NormalizedSchema): Rule {
   return (host: Tree) =>
     updateJsonInTree('tsconfig.base.json', (json) => {
       const c = json.compilerOptions;
@@ -130,10 +144,11 @@ export default function (schema: Schema): Rule {
       addLintFiles(options.projectRoot, options.linter),
       createFiles(options),
       options.js ? updateTsConfigsToJs(options) : noop(),
-      !options.skipTsConfig ? updateTsConfig(options) : noop(),
+      !options.skipTsConfig ? updateRootTsConfig(options) : noop(),
       addProject(options),
       updateNxJson(options),
       addJest(options),
+      updateLibTsConfig(options),
       formatFiles(options),
     ])(host, context);
   };

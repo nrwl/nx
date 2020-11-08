@@ -14,4 +14,5 @@ export interface Schema {
   js: boolean;
   babelJest?: boolean;
   pascalCaseFiles: boolean;
+  strict: boolean;
 }

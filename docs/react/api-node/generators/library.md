@@ -130,6 +130,14 @@ Type: `boolean`
 
 Do not update tsconfig.base.json for development experience.
 
+### strict
+
+Default: `false`
+
+Type: `boolean`
+
+Whether to enable tsconfig strict mode or not.
+
 ### tags
 
 Alias(es): t
