@@ -168,7 +168,13 @@ function updateTsConfig(options: NormalizedSchema): Rule {
       (json) => {
         json.compilerOptions.target = options.target;
         if (options.strict) {
-          json.compilerOptions.strict = options.strict;
+          json.compilerOptions = {
+            ...json.compilerOptions,
+            forceConsistentCasingInFileNames: true,
+            strict: true,
+            noImplicitReturns: true,
+            noFallthroughCasesInSwitch: true,
+          };
         }
         return json;
       }

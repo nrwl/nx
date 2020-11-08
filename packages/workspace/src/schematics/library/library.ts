@@ -65,7 +65,13 @@ function updateLibTsConfig(options: NormalizedSchema): Rule {
       `${libsDir(host)}/${options.projectDirectory}/tsconfig.lib.json`,
       (json) => {
         if (options.strict) {
-          json.compilerOptions.strict = true;
+          json.compilerOptions = {
+            ...json.compilerOptions,
+            forceConsistentCasingInFileNames: true,
+            strict: true,
+            noImplicitReturns: true,
+            noFallthroughCasesInSwitch: true,
+          };
         }
 
         return json;
