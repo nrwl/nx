@@ -1,9 +1,10 @@
 import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
+import { detectPackageManager } from '@nrwl/workspace/src/utils/detect-package-manager';
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import { tmpProjPath } from './paths';
-import { cleanup, copyNodeModules } from './utils';
+import { cleanup } from './utils';
 
 function runNxNewCommand(args?: string, silent?: boolean) {
   const localTmpDir = `./tmp/nx-e2e`;
@@ -40,11 +41,12 @@ export function uniq(prefix: string) {
 }
 
 /**
- * Run yarn install in the e2e directory
+ * Run the appropriate package manager install command in the e2e directory
  * @param silent silent output from the install
  */
-export function runYarnInstall(silent: boolean = true) {
-  const install = execSync('yarn install', {
+export function runPackageManagerInstall(silent: boolean = true) {
+  const packageManager = detectPackageManager();
+  const install = execSync(`${packageManager} install`, {
     cwd: tmpProjPath(),
     ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
   });
@@ -64,7 +66,7 @@ export function newNxProject(
   cleanup();
   runNxNewCommand('', true);
   patchPackageJsonForPlugin(npmPackageName, pluginDistPath);
-  runYarnInstall();
+  runPackageManagerInstall();
 }
 
 /**
