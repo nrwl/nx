@@ -336,6 +336,13 @@ describe('lib', () => {
       );
 
       expect(tsconfigJson.compilerOptions.strict).toBeTruthy();
+      expect(
+        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
+      ).toBeTruthy();
+      expect(tsconfigJson.compilerOptions.noImplicitReturns).toBeTruthy();
+      expect(
+        tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
+      ).toBeTruthy();
     });
 
     it('should default to strict false', async () => {
@@ -352,6 +359,13 @@ describe('lib', () => {
       );
 
       expect(tsconfigJson.compilerOptions.strict).not.toBeDefined();
+      expect(
+        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
+      ).not.toBeDefined();
+      expect(tsconfigJson.compilerOptions.noImplicitReturns).not.toBeDefined();
+      expect(
+        tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
+      ).not.toBeDefined();
     });
   });
 
