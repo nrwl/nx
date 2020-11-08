@@ -30,6 +30,10 @@ export default function (schema: Schema): Rule {
       throw new Error(`routing must be set`);
     }
 
+    if (options.enableIvy === true && !options.buildable) {
+      throw new Error('enableIvy must only be used with buildable.');
+    }
+
     if (options.publishable === true && !schema.importPath) {
       throw new SchematicsException(
         `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
