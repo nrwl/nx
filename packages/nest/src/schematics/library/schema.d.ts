@@ -24,4 +24,5 @@ export interface Schema {
     | 'es2019'
     | 'es2020';
   testEnvironment: 'jsdom' | 'node';
+  strict: boolean;
 }
