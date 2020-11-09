@@ -210,6 +210,7 @@ function withPlainOption(yargs: yargs.Argv): yargs.Argv {
     describe: 'Produces a plain output for affected:apps and affected:libs',
   });
 }
+
 function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
     .option('files', {
@@ -219,9 +220,21 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       requiresArg: true,
       coerce: parseCSV,
     })
-    .option('uncommitted', { describe: 'Uncommitted changes' })
-    .option('untracked', { describe: 'Untracked changes' })
-    .option('all', { describe: 'All projects' })
+    .option('uncommitted', {
+      describe: 'Uncommitted changes',
+      type: 'boolean',
+      default: undefined,
+    })
+    .option('untracked', {
+      describe: 'Untracked changes',
+      type: 'boolean',
+      default: undefined,
+    })
+    .option('all', {
+      describe: 'All projects',
+      type: 'boolean',
+      default: undefined,
+    })
     .option('base', {
       describe: 'Base of the current branch (usually master)',
       type: 'string',
@@ -242,9 +255,6 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     )
     .group(['files', 'uncommitted', 'untracked'], 'or using:')
     .implies('head', 'base')
-    .nargs('uncommitted', 0)
-    .nargs('untracked', 0)
-    .nargs('all', 0)
     .option('exclude', {
       describe: 'Exclude certain projects from being processed',
       type: 'array',
@@ -290,8 +300,9 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
     })
     .option('all', {
       describe: 'Run the target on all projects in the workspace',
+      type: 'boolean',
+      default: undefined,
     })
-    .nargs('all', 0)
     .check(({ all, projects }) => {
       if ((all && projects) || (!all && !projects))
         throw new Error('You must provide either --all or --projects');
