@@ -1,10 +1,10 @@
 {
-  "name": "@nrwl/node",
-  "version": "0.0.1",
+  "name": "@bafsllc/node",
+  "version": "0.0.3",
   "description": "Node Plugin for Nx",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nrwl/nx.git"
+    "url": "git+https://github.com/bafsllc/nx.git"
   },
   "keywords": [
     "Monorepo",
@@ -19,7 +19,7 @@
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/nrwl/nx/issues"
+    "url": "https://github.com/bafsllc/nx/issues"
   },
   "homepage": "https://nx.dev",
   "schematics": "./collection.json",
@@ -51,5 +51,8 @@
     "webpack-merge": "4.2.1",
     "webpack-dev-server": "3.11.0",
     "webpack-node-externals": "1.7.2"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   }
 }
