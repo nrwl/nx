@@ -7,7 +7,6 @@ import {
   readJson,
   runCLI,
   runCLIAsync,
-  supportUi,
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
@@ -86,6 +85,24 @@ forEachCli('nx', () => {
 
       const mainPath = `apps/${appName}/pages/index.tsx`;
       updateFile(mainPath, `import '@proj/${libName}';\n` + readFile(mainPath));
+
+      // Update lib to use css modules
+      updateFile(
+        `libs/${libName}/src/lib/${libName}.tsx`,
+        `
+        import React from 'react';
+        import styles from './style.module.css';
+        export function Test() {
+          return <div className={styles.container}>Hello</div>;
+        }
+      `
+      );
+      updateFile(
+        `libs/${libName}/src/lib/style.module.css`,
+        `
+        .container {}
+      `
+      );
 
       await checkApp(appName, {
         checkUnitTest: true,
