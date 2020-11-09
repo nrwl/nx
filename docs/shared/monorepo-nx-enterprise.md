@@ -167,7 +167,7 @@ Read more about workspace schematics in the Workspace Schematics guide.
 
 ### Workspace Lint Checks
 
-Custom lint checks is another great way to enforce best practices. We can create custom lint checks in the `tools/lint` directory and then register them in `tslint.json`or `.eslintrc`.
+Custom lint checks is another great way to enforce best practices. We can create custom lint checks in the `tools/lint` directory and then register them in `tslint.json`or `.eslintrc.json`.
 
 ## Developer Workflow
 

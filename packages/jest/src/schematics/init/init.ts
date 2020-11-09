@@ -1,5 +1,10 @@
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { chain, Rule, Tree } from '@angular-devkit/schematics';
+import {
+  chain,
+  Rule,
+  SchematicContext,
+  Tree,
+} from '@angular-devkit/schematics';
 import {
   addDepsToPackageJson,
   readJsonInTree,
@@ -44,23 +49,25 @@ const removeNrwlJestFromDeps = (host: Tree) => {
 };
 
 const createJestConfig = (host: Tree) => {
-  if (host.exists('jest.config.js')) {
-    return;
+  if (!host.exists('jest.config.js')) {
+    host.create(
+      'jest.config.js',
+      stripIndents`
+  module.exports = {
+    projects: []
+  };`
+    );
   }
 
-  host.create(
-    'jest.config.js',
-    stripIndents`
-  module.exports = {
-    testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
-    transform: {
-      '^.+\\.(ts|js|html)$': 'ts-jest'
-    },
-    resolver: '@nrwl/jest/plugins/resolver',
-    moduleFileExtensions: ['ts', 'js', 'html'],
-    coverageReporters: ['html']
-  };`
-  );
+  if (!host.exists('jest.preset.js')) {
+    host.create(
+      'jest.preset.js',
+      `
+      const nxPreset = require('@nrwl/jest/preset');
+     
+      module.exports = { ...nxPreset }`
+    );
+  }
 };
 
 function updateDependencies(options: NormalizedSchema): Rule {
@@ -82,6 +89,21 @@ function updateDependencies(options: NormalizedSchema): Rule {
   return addDepsToPackageJson({}, devDeps);
 }
 
+function updateExtensions(host: Tree, context: SchematicContext) {
+  if (!host.exists('.vscode/extensions.json')) {
+    return;
+  }
+
+  return updateJsonInTree('.vscode/extensions.json', (json) => {
+    json.recommendations = json.recommendations || [];
+    const extension = 'firsttris.vscode-jest-runner';
+    if (!json.recommendations.includes(extension)) {
+      json.recommendations.push(extension);
+    }
+    return json;
+  })(host, context);
+}
+
 export default function (schema: JestInitSchema): Rule {
   const options = normalizeOptions(schema);
 
@@ -89,6 +111,7 @@ export default function (schema: JestInitSchema): Rule {
     createJestConfig,
     updateDependencies(options),
     removeNrwlJestFromDeps,
+    updateExtensions,
   ]);
 }
 

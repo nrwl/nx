@@ -1,6 +1,6 @@
 # lint
 
-Lint a project
+**[DEPRECATED]**: Please use the eslint builder instead, an automated migration was provided in v10.3.0
 
 Builder properties can be configured in workspace.json when defining the builder, or when invoking it.
 Read more about how to use builders and the CLI here: https://nx.dev/react/guides/cli.
@@ -105,6 +105,6 @@ Hide output text.
 
 ### tsConfig
 
-Type: `string | string[]`
+Type: `string | string[] `
 
 The name of the TypeScript configuration file.

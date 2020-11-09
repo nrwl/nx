@@ -45,6 +45,11 @@
     "url": "https://github.com/mauriziovitale/angular-plugins/tree/master/libs/lite-serve"
   },
   {
+    "name": "@nx-plus/nuxt",
+    "description": "Nx plugin adding first class support for Nuxt in your Nx workspace.",
+    "url": "https://github.com/ZachJW34/nx-plus/tree/master/libs/nuxt"
+  },
+  {
     "name": "@nx-plus/vue",
     "description": "Nx plugin adding first class support for Vue in your Nx workspace.",
     "url": "https://github.com/ZachJW34/nx-plus/tree/master/libs/vue"
@@ -60,9 +65,14 @@
     "url": "https://github.com/twittwer/nx-tools/tree/master/libs/compodoc#readme"
   },
   {
+    "name": "@nxext/svelte",
+    "description": "Nx plugin to use Svelte within nx workspaces",
+    "url": "https://github.com/nxext/nx-extensions/tree/master/packages/svelte"
+  },
+  {
     "name": "@nxext/stencil",
     "description": "Nx plugin to use StencilJs within nx workspaces",
-    "url": "https://github.com/DominikPieper/nx-extensions"
+    "url": "https://github.com/nxext/nx-extensions/tree/master/packages/stencil"
   },
   {
     "name": "@joelcode/gcp-function",
@@ -73,5 +83,15 @@
     "name": "@nx-go/nx-go",
     "description": "Nx plugin to use Go in a Nx workspace",
     "url": "https://github.com/nx-go/nx-go"
+  },
+  {
+    "name": "@angular-architects/module-federation",
+    "description": "Nx plugin to use webpack module federation",
+    "url": "https://github.com/angular-architects/module-federation-plugin"
+  },
+  {
+    "name": "@nxrocks/nx-spring-boot",
+    "description": "Nx plugin to generate, run, package, build (and more) Spring Boot projects inside your Nx workspace",
+    "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-spring-boot"
   }
 ]

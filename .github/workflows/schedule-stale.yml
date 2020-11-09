@@ -12,7 +12,7 @@ jobs:
         uses: actions/stale@v3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 30
+          days-before-stale: 21
           days-before-close: -1
           stale-issue-label: "status: stale"
           operations-per-run: 300
@@ -28,7 +28,7 @@ jobs:
         uses: actions/stale@v3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 30
+          days-before-stale: 21
           days-before-close: -1
           stale-issue-label: "status: stale"
           operations-per-run: 300
@@ -44,7 +44,7 @@ jobs:
         uses: actions/stale@v3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 30
+          days-before-stale: 21
           days-before-close: -1
           stale-issue-label: "status: stale"
           operations-per-run: 300
@@ -60,7 +60,7 @@ jobs:
         uses: actions/stale@v3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 30
+          days-before-stale: 21
           days-before-close: -1
           stale-issue-label: "status: stale"
           operations-per-run: 300
@@ -77,7 +77,7 @@ jobs:
         uses: actions/stale@v3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 250
+          days-before-stale: 180
           days-before-close: -1
           stale-issue-label: "status: stale"
           operations-per-run: 300
@@ -93,7 +93,7 @@ jobs:
         uses: actions/stale@v3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 250
+          days-before-stale: 180
           days-before-close: -1
           stale-issue-label: "status: stale"
           operations-per-run: 300
@@ -109,7 +109,7 @@ jobs:
         uses: actions/stale@v3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 250
+          days-before-stale: 180
           days-before-close: -1
           stale-issue-label: "status: stale"
           operations-per-run: 300
@@ -157,7 +157,7 @@ jobs:
         uses: actions/stale@v3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 250
+          days-before-stale: 90
           days-before-close: -1
           stale-issue-label: "status: stale"
           operations-per-run: 300

@@ -83,5 +83,24 @@ describe('Next.js webpack config builder', () => {
         })
       );
     });
+
+    it('should support nextConfig option to customize the config', () => {
+      const config = prepareConfig(
+        PHASE_PRODUCTION_BUILD,
+        {
+          root: 'apps/wibble',
+          outputPath: 'dist/apps/wibble',
+          fileReplacements: [],
+          nextConfig: require.resolve('./config.fixture'),
+          customValue: 'test',
+        },
+        { workspaceRoot: '/root' } as any
+      );
+
+      expect(config).toMatchObject({
+        myPhase: 'phase-production-build',
+        myCustomValue: 'test',
+      });
+    });
   });
 });

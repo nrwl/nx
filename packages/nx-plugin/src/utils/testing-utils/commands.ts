@@ -1,5 +1,6 @@
 import { execSync } from 'child_process';
 import { tmpProjPath } from './paths';
+import { getPackageManagerExecuteCommand } from '@nrwl/workspace/src/utils/detect-package-manager';
 
 /**
  * Run a nx command inside the e2e directory
@@ -15,7 +16,7 @@ export function runNxCommand(
   }
 ): string {
   try {
-    return execSync(`node ./node_modules/@nrwl/cli/bin/nx.js ${command}`, {
+    return execSync(`${getPackageManagerExecuteCommand()} nx ${command}`, {
       cwd: tmpProjPath(),
     })
       .toString()

@@ -2,6 +2,7 @@
 
 // we can import from '@nrwl/workspace' because it will require typescript
 import { output } from '@nrwl/workspace/src/utils/output';
+import { getPackageManagerExecuteCommand } from '@nrwl/workspace/src/utils/detect-package-manager';
 import { execSync } from 'child_process';
 import { writeFileSync } from 'fs';
 import * as inquirer from 'inquirer';
@@ -29,9 +30,20 @@ const presetOptions = [
       'empty             [an empty workspace with a layout that works best for building apps]',
   },
   {
-    value: 'oss',
-    name:
-      'oss               [an empty workspace with a layout that works best for open-source projects]',
+    value: Preset.React,
+    name: 'react             [a workspace with a single React application]',
+  },
+  {
+    value: Preset.Angular,
+    name: 'angular           [a workspace with a single Angular application]',
+  },
+  {
+    value: Preset.NextJs,
+    name: 'next.js           [a workspace with a single Next.js application]',
+  },
+  {
+    value: Preset.Nest,
+    name: 'nest              [a workspace with a single Nest application]',
   },
   {
     value: 'web-components',
@@ -39,8 +51,9 @@ const presetOptions = [
       'web components    [a workspace with a single app built using web components]',
   },
   {
-    value: Preset.Angular,
-    name: 'angular           [a workspace with a single Angular application]',
+    value: Preset.ReactWithExpress,
+    name:
+      'react-express     [a workspace with a full stack application (React + Express)]',
   },
   {
     value: Preset.AngularWithNest,
@@ -48,21 +61,9 @@ const presetOptions = [
       'angular-nest      [a workspace with a full stack application (Angular + Nest)]',
   },
   {
-    value: Preset.Nest,
-    name: 'nest              [a workspace with a single Nest application]',
-  },
-  {
-    value: Preset.React,
-    name: 'react             [a workspace with a single React application]',
-  },
-  {
-    value: Preset.ReactWithExpress,
+    value: 'oss',
     name:
-      'react-express     [a workspace with a full stack application (React + Express)]',
-  },
-  {
-    value: Preset.NextJs,
-    name: 'next.js           [a workspace with a single Next.js application]',
+      'oss               [an empty workspace with a layout that works best for open-source projects]',
   },
 ];
 
@@ -73,7 +74,15 @@ const angularCliVersion = 'ANGULAR_CLI_VERSION';
 const prettierVersion = 'PRETTIER_VERSION';
 
 const parsedArgs = yargsParser(process.argv, {
-  string: ['cli', 'preset', 'appName', 'style', 'defaultBase'],
+  string: [
+    'cli',
+    'preset',
+    'appName',
+    'style',
+    'linter',
+    'defaultBase',
+    'packageManager',
+  ],
   alias: {
     appName: 'app-name',
     nxCloud: 'nx-cloud',
@@ -86,28 +95,31 @@ if (parsedArgs.help) {
   showHelp();
   process.exit(0);
 }
-const packageManager = determinePackageManager();
+const packageManager = determinePackageManager(parsedArgs.packageManager);
 determineWorkspaceName(parsedArgs).then((name) => {
   determinePreset(parsedArgs).then((preset) => {
     return determineAppName(preset, parsedArgs).then((appName) => {
       return determineStyle(preset, parsedArgs).then((style) => {
         return determineCli(preset, parsedArgs).then((cli) => {
-          return askAboutNxCloud(parsedArgs).then((cloud) => {
-            const tmpDir = createSandbox(packageManager, cli);
-            createApp(
-              tmpDir,
-              cli,
-              parsedArgs,
-              name,
-              preset,
-              appName,
-              style,
-              cloud,
-              parsedArgs.interactive,
-              parsedArgs.defaultBase
-            );
-            showNxWarning(name);
-            pointToTutorialAndCourse(preset);
+          return determineLinter(preset, parsedArgs).then((linter) => {
+            return askAboutNxCloud(parsedArgs).then((cloud) => {
+              const tmpDir = createSandbox(packageManager);
+              createApp(
+                tmpDir,
+                cli,
+                parsedArgs,
+                name,
+                preset,
+                appName,
+                style,
+                linter,
+                cloud,
+                parsedArgs.interactive,
+                parsedArgs.defaultBase
+              );
+              showNxWarning(name);
+              pointToTutorialAndCourse(preset);
+            });
           });
         });
       });
@@ -136,7 +148,9 @@ function showHelp() {
     cli                       CLI to power the Nx workspace (options: "nx", "angular")
     
     style                     Default style option to be used when a non-empty preset is selected 
-                              options: ("css", "scss", "styl", "less") for React/Next.js also ("styled-components", "@emotion/styled")
+                              options: ("css", "scss", "styl", "less") for React/Next.js also ("styled-components", "@emotion/styled")    
+                              
+    linter                    Default linter. Options: "eslint", "tslint".
 
     interactive               Enable interactive mode when using presets (boolean)
     
@@ -375,10 +389,46 @@ function determineStyle(preset: Preset, parsedArgs: any) {
   return Promise.resolve(parsedArgs.style);
 }
 
-function createSandbox(
-  packageManager: string,
-  cli: { package: string; version: string }
-) {
+function determineLinter(preset: Preset, parsedArgs: any) {
+  if (!parsedArgs.linter) {
+    if (preset === Preset.Angular || preset === Preset.AngularWithNest) {
+      return inquirer
+        .prompt([
+          {
+            name: 'linter',
+            message: `Default linter                     `,
+            default: 'tslint',
+            type: 'list',
+            choices: [
+              {
+                value: 'tslint',
+                name: 'TSLint [ Used by Angular CLI ]',
+              },
+              {
+                value: 'eslint',
+                name: 'ESLint [ Modern linting tool ]',
+              },
+            ],
+          },
+        ])
+        .then((a) => a.linter);
+    } else {
+      return Promise.resolve('eslint');
+    }
+  } else {
+    if (parsedArgs.linter !== 'eslint' && parsedArgs.linter !== 'tslint') {
+      output.error({
+        title: 'Invalid linter',
+        bodyLines: [`It must be one of the following:`, '', 'eslint', 'tslint'],
+      });
+      process.exit(1);
+    } else {
+      return Promise.resolve(parsedArgs.linter);
+    }
+  }
+}
+
+function createSandbox(packageManager: string) {
   console.log(`Creating a sandbox with Nx...`);
   const tmpDir = dirSync().name;
   writeFileSync(
@@ -386,7 +436,7 @@ function createSandbox(
     JSON.stringify({
       dependencies: {
         '@nrwl/workspace': nxVersion,
-        [cli.package]: cli.version,
+        '@nrwl/tao': cliVersion,
         typescript: tsVersion,
         prettier: prettierVersion,
       },
@@ -410,6 +460,7 @@ function createApp(
   preset: Preset,
   appName: string,
   style: string | null,
+  linter: string,
   nxCloud: boolean,
   interactive: boolean,
   defaultBase: string
@@ -426,6 +477,7 @@ function createApp(
     'nxCloud',
     'preset',
     'style',
+    'linter',
   ];
 
   // These are the arguments that are passed to the schematic
@@ -436,33 +488,36 @@ function createApp(
 
   const appNameArg = appName ? ` --appName="${appName}"` : ``;
   const styleArg = style ? ` --style="${style}"` : ``;
+  const linterArg = ` --linter="${linter}"`;
   const nxCloudArg = nxCloud ? ` --nxCloud` : ``;
   const interactiveArg = interactive
     ? ` --interactive=true`
     : ` --interactive=false`;
   const defaultBaseArg = defaultBase ? ` --defaultBase="${defaultBase}"` : ``;
 
-  console.log(
-    `new ${name} ${args} --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg}${defaultBaseArg} --collection=@nrwl/workspace`
+  const packageExec = getPackageManagerExecuteCommand(packageManager);
+  const command = `new ${name} ${args} --preset="${preset}"${appNameArg}${styleArg}${linterArg}${nxCloudArg}${interactiveArg}${defaultBaseArg} --collection=@nrwl/workspace`;
+  console.log(command);
+
+  const collectionJsonPath = require.resolve(
+    '@nrwl/workspace/collection.json',
+    { paths: [tmpDir] }
   );
-  const executablePath = path.join(tmpDir, 'node_modules', '.bin', cli.command);
-  const collectionJsonPath = path.join(
-    tmpDir,
-    'node_modules',
-    '@nrwl',
-    'workspace',
-    'collection.json'
-  );
+
   execSync(
-    `"${executablePath}" new ${name} ${args} --preset="${preset}"${appNameArg}${styleArg}${nxCloudArg}${interactiveArg}${defaultBaseArg} --collection=${collectionJsonPath}`,
+    `${packageExec} tao ${command.replace(
+      '--collection=@nrwl/workspace',
+      `--collection=${collectionJsonPath}`
+    )} --cli=${cli.command} --nxWorkspaceRoot="${process.cwd()}"`,
     {
       stdio: [0, 1, 2],
+      cwd: tmpDir,
     }
   );
 
   if (nxCloud) {
     output.addVerticalSeparator();
-    execSync(`npx nx g @nrwl/nx-cloud:init --no-analytics`, {
+    execSync(`${packageExec} nx g @nrwl/nx-cloud:init --no-analytics`, {
       stdio: [0, 1, 2],
       cwd: path.join(process.cwd(), name),
     });

@@ -23,7 +23,8 @@ export const enum Linter {
 export function generateProjectLint(
   projectRoot: string,
   tsConfigPath: string,
-  linter: Linter
+  linter: Linter,
+  eslintFilePatterns: string[]
 ) {
   if (linter === Linter.TsLint) {
     return {
@@ -35,14 +36,9 @@ export function generateProjectLint(
     };
   } else if (linter === Linter.EsLint) {
     return {
-      builder: '@nrwl/linter:lint',
+      builder: '@nrwl/linter:eslint',
       options: {
-        // No config option here because eslint resolve them automatically.
-        // By not specifying a config option we allow eslint to support
-        // nested configurations.
-        linter: 'eslint',
-        tsConfig: [tsConfigPath],
-        exclude: ['**/node_modules/**', '!' + projectRoot + '/**/*'],
+        lintFilePatterns: eslintFilePatterns,
       },
     };
   } else {
@@ -96,9 +92,9 @@ export function addLintFiles(
     }
 
     if (linter === 'eslint') {
-      if (!host.exists('/.eslintrc')) {
+      if (!host.exists('/.eslintrc.json')) {
         chainedCommands.push((host: Tree) => {
-          host.create('/.eslintrc', globalESLint);
+          host.create('/.eslintrc.json', globalESLint);
 
           return addDepsToPackageJson(
             {
@@ -123,28 +119,43 @@ export function addLintFiles(
       if (!options.onlyGlobal) {
         chainedCommands.push((host: Tree) => {
           let configJson;
-          const rootConfig = `${offsetFromRoot(projectRoot)}.eslintrc`;
+          const rootConfig = `${offsetFromRoot(projectRoot)}.eslintrc.json`;
+
+          // Include all project files to be linted (since they are turned off in the root eslintrc file).
+          const ignorePatterns = ['!**/*'];
+
           if (options.localConfig) {
-            const extendsOption = options.localConfig.extends
-              ? Array.isArray(options.localConfig.extends)
-                ? options.localConfig.extends
-                : [options.localConfig.extends]
+            /**
+             * The end config is much easier to reason about if "extends" comes first,
+             * so as well as applying the extension from the root lint config, we also
+             * adjust the config to make extends come first.
+             */
+            const {
+              extends: extendsVal,
+              ...localConfigExceptExtends
+            } = options.localConfig;
+
+            const extendsOption = extendsVal
+              ? Array.isArray(extendsVal)
+                ? extendsVal
+                : [extendsVal]
               : [];
+
             configJson = {
-              rules: {},
-              ...options.localConfig,
               extends: [...extendsOption, rootConfig],
+              ignorePatterns,
+              ...localConfigExceptExtends,
             };
           } else {
             configJson = {
               extends: rootConfig,
+              ignorePatterns,
               rules: {},
             };
           }
-          // Include all project files to be linted (since they are turned off in the root eslintrc file).
-          configJson.ignorePatterns = ['!**/*'];
+
           host.create(
-            join(projectRoot as any, `.eslintrc`),
+            join(projectRoot as any, `.eslintrc.json`),
             JSON.stringify(configJson)
           );
         });
@@ -223,46 +234,69 @@ const globalTsLint = `
 }
 `;
 
-const globalESLint = `
-{
-  "root": true,
-  "parser": "@typescript-eslint/parser",
-  "parserOptions": {
-    "ecmaVersion": 2018,
-    "sourceType": "module",
-    "project": "./tsconfig.*?.json"
-  },
-  "ignorePatterns": ["**/*"],
-  "plugins": ["@typescript-eslint", "@nrwl/nx"],
-  "extends": [
-    'eslint:recommended',
-    'plugin:@typescript-eslint/eslint-recommended',
-    'plugin:@typescript-eslint/recommended',
-    'prettier',
-    'prettier/@typescript-eslint'
-  ],
-  "rules": {
-    "@typescript-eslint/explicit-member-accessibility": "off",
-    "@typescript-eslint/explicit-function-return-type": "off",
-    "@typescript-eslint/no-parameter-properties": "off",
-    "@nrwl/nx/enforce-module-boundaries": [
-      "error",
-      {
-        "enforceBuildableLibDependency": true,
-        "allow": [],
-        "depConstraints": [
-          { "sourceTag": "*", "onlyDependOnLibsWithTags": ["*"] }
-        ]
-      }
-    ]
-  },
-  "overrides": [
+const globalESLint = JSON.stringify({
+  root: true,
+  ignorePatterns: ['**/*'],
+  plugins: ['@nrwl/nx'],
+  /**
+   * We leverage ESLint's "overrides" capability so that we can set up a root config which will support
+   * all permutations of Nx workspaces across all frameworks, libraries and tools.
+   *
+   * The key point is that we need entirely different ESLint config to apply to different types of files,
+   * but we still want to share common config where possible.
+   */
+  overrides: [
+    /**
+     * This configuration is intended to apply to all "source code" (but not
+     * markup like HTML, or other custom file types like GraphQL)
+     */
     {
-      "files": ["*.tsx"],
-      "rules": {
-        "@typescript-eslint/no-unused-vars": "off"
-      }
-    }
-  ]
-}
-`;
+      files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+      rules: {
+        '@nrwl/nx/enforce-module-boundaries': [
+          'error',
+          {
+            enforceBuildableLibDependency: true,
+            allow: [],
+            depConstraints: [
+              { sourceTag: '*', onlyDependOnLibsWithTags: ['*'] },
+            ],
+          },
+        ],
+      },
+    },
+
+    /**
+     * This configuration is intended to apply to all TypeScript source files.
+     * See the eslint-plugin-nx package for what is in the referenced shareable config.
+     */
+    {
+      files: ['*.ts', '*.tsx'],
+      extends: ['plugin:@nrwl/nx/typescript'],
+      /**
+       * TODO: Remove this usage of project at the root in a follow up PR (and migration),
+       * it should be set in each project's config
+       */
+      parserOptions: { project: './tsconfig.*?.json' },
+      /**
+       * Having an empty rules object present makes it more obvious to the user where they would
+       * extend things from if they needed to
+       */
+      rules: {},
+    },
+
+    /**
+     * This configuration is intended to apply to all JavaScript source files.
+     * See the eslint-plugin-nx package for what is in the referenced shareable config.
+     */
+    {
+      files: ['*.js', '*.jsx'],
+      extends: ['plugin:@nrwl/nx/javascript'],
+      /**
+       * Having an empty rules object present makes it more obvious to the user where they would
+       * extend things from if they needed to
+       */
+      rules: {},
+    },
+  ],
+});

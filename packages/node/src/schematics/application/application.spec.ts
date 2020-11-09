@@ -3,7 +3,9 @@ import * as stripJsonComments from 'strip-json-comments';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
 import { NxJson, readJsonInTree } from '@nrwl/workspace';
-import { createApp } from '../../../../angular/src/utils/testing';
+// to break the dependency
+const createApp = require('../../../../angular/' + 'src/utils/testing')
+  .createApp;
 
 import { Schema } from './schema';
 
@@ -55,14 +57,9 @@ describe('app', () => {
         })
       );
       expect(workspaceJson.projects['my-node-app'].architect.lint).toEqual({
-        builder: '@nrwl/linter:lint',
+        builder: '@nrwl/linter:eslint',
         options: {
-          linter: 'eslint',
-          tsConfig: [
-            'apps/my-node-app/tsconfig.app.json',
-            'apps/my-node-app/tsconfig.spec.json',
-          ],
-          exclude: ['**/node_modules/**', '!apps/my-node-app/**/*'],
+          lintFilePatterns: ['apps/my-node-app/**/*.ts'],
         },
       });
       expect(workspaceJson.projects['my-node-app-e2e']).toBeUndefined();
@@ -115,9 +112,11 @@ describe('app', () => {
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
       const eslintrc = JSON.parse(
-        stripJsonComments(getFileContent(tree, 'apps/my-node-app/.eslintrc'))
+        stripJsonComments(
+          getFileContent(tree, 'apps/my-node-app/.eslintrc.json')
+        )
       );
-      expect(eslintrc.extends).toEqual('../../.eslintrc');
+      expect(eslintrc.extends).toEqual('../../.eslintrc.json');
     });
   });
 
@@ -137,14 +136,9 @@ describe('app', () => {
       expect(
         workspaceJson.projects['my-dir-my-node-app'].architect.lint
       ).toEqual({
-        builder: '@nrwl/linter:lint',
+        builder: '@nrwl/linter:eslint',
         options: {
-          linter: 'eslint',
-          tsConfig: [
-            'apps/my-dir/my-node-app/tsconfig.app.json',
-            'apps/my-dir/my-node-app/tsconfig.spec.json',
-          ],
-          exclude: ['**/node_modules/**', '!apps/my-dir/my-node-app/**/*'],
+          lintFilePatterns: ['apps/my-dir/my-node-app/**/*.ts'],
         },
       });
 
@@ -200,9 +194,9 @@ describe('app', () => {
           expectedValue: ['node'],
         },
         {
-          path: 'apps/my-dir/my-node-app/.eslintrc',
+          path: 'apps/my-dir/my-node-app/.eslintrc.json',
           lookupFn: (json) => json.extends,
-          expectedValue: '../../../.eslintrc',
+          expectedValue: '../../../.eslintrc.json',
         },
       ].forEach(hasJsonValue);
     });
@@ -224,9 +218,17 @@ describe('app', () => {
       expect(
         workspaceJson.projects['my-node-app'].architect.test
       ).toBeUndefined();
-      expect(
-        workspaceJson.projects['my-node-app'].architect.lint.options.tsConfig
-      ).toEqual(['apps/my-node-app/tsconfig.app.json']);
+      expect(workspaceJson.projects['my-node-app'].architect.lint)
+        .toMatchInlineSnapshot(`
+        Object {
+          "builder": "@nrwl/linter:eslint",
+          "options": Object {
+            "lintFilePatterns": Array [
+              "apps/my-node-app/**/*.ts",
+            ],
+          },
+        }
+      `);
     });
   });
 
@@ -279,14 +281,16 @@ describe('app', () => {
       expect(tree.readContent(`apps/my-node-app/jest.config.js`))
         .toMatchInlineSnapshot(`
         "module.exports = {
-          name: 'my-node-app',
-          preset: '../../jest.config.js',
+          displayName: 'my-node-app',
+          preset: '../../jest.preset.js',
           transform: {
-            '^.+\\\\\\\\.[tj]s$': [ 'babel-jest',
-            { cwd: __dirname, configFile: './babel-jest.config.json' }]
+            '^.+\\\\\\\\.[tj]s$': [
+              'babel-jest',
+              { cwd: __dirname, configFile: './babel-jest.config.json' },
+            ],
           },
-            moduleFileExtensions: ['ts', 'js', 'html'],
-          coverageDirectory: '../../coverage/apps/my-node-app'
+          moduleFileExtensions: ['ts', 'js', 'html'],
+          coverageDirectory: '../../coverage/apps/my-node-app',
         };
         "
       `);

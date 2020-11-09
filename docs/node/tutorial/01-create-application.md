@@ -1,5 +1,9 @@
 # Step 1: Create Application
 
+## Video of this Lesson
+
+<iframe width="560" height="600" src="https://www.youtube.com/embed/UcBSBQYNlhE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 In this tutorial you will use Nx to build a server application out of common libraries using modern technologies.
 
 ## Create a New Workspace

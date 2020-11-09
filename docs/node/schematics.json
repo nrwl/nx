@@ -1,6 +1,5 @@
 [
   "angular",
-  "bazel",
   "cypress",
   "express",
   "jest",

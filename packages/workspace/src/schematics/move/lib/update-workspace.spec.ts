@@ -146,6 +146,8 @@ describe('updateWorkspace Rule', () => {
     const schema: Schema = {
       projectName: 'my-source',
       destination: 'subfolder/my-destination',
+      importPath: undefined,
+      updateImportPath: true,
     };
 
     tree = (await callRule(updateWorkspace(schema), tree)) as UnitTestTree;
@@ -160,6 +162,8 @@ describe('updateWorkspace Rule', () => {
     const schema: Schema = {
       projectName: 'my-source',
       destination: 'subfolder/my-destination',
+      importPath: undefined,
+      updateImportPath: true,
     };
 
     tree = (await callRule(updateWorkspace(schema), tree)) as UnitTestTree;
@@ -173,6 +177,8 @@ describe('updateWorkspace Rule', () => {
     const schema: Schema = {
       projectName: 'my-source',
       destination: 'subfolder/my-destination',
+      importPath: undefined,
+      updateImportPath: true,
     };
 
     tree = (await callRule(updateWorkspace(schema), tree)) as UnitTestTree;
@@ -193,6 +199,8 @@ describe('updateWorkspace Rule', () => {
     const schema: Schema = {
       projectName: 'my-source',
       destination: 'subfolder/my-destination',
+      importPath: undefined,
+      updateImportPath: true,
     };
 
     tree = (await callRule(updateWorkspace(schema), tree)) as UnitTestTree;
@@ -213,6 +221,8 @@ describe('updateWorkspace Rule', () => {
     const schema: Schema = {
       projectName: 'my-source',
       destination: 'subfolder/my-destination',
+      importPath: undefined,
+      updateImportPath: true,
     };
 
     tree = (await callRule(

@@ -56,4 +56,4 @@ The tool to use for running lint checks.
 
 Type: `string`
 
-Library name
+Library or application name

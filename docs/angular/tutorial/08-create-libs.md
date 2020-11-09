@@ -1,5 +1,9 @@
 # Step 8: Create Libs
 
+## Video of this Lesson
+
+<iframe width="560" height="600" src="https://www.youtube.com/embed/szaH7fNw0zg" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 Libraries are not just a way to share code in Nx. They are also useful for factoring out code into small units with a well-defined public API.
 
 ## Public API
@@ -10,7 +14,7 @@ Every library has an `index.ts` file, which defines its public API. Other applic
 
 To illustrate how useful libraries can be, create a library of Angular components.
 
-**Run `nx g @nrwl/angular:lib ui`.**
+**Run `npx nx g @nrwl/angular:lib ui`.**
 
 You should see the following:
 
@@ -57,7 +61,7 @@ export class UiModule {}
 **Add a component to the newly created ui library by running:**
 
 ```bash
-nx g component todos --project=ui --export
+npx nx g component todos --project=ui --export
 ```
 
 ```treeview
@@ -150,7 +154,7 @@ export class AppModule {}
 <button (click)="addTodo()">Add Todo</button>
 ```
 
-**Restart both `nx serve api` and `nx serve todos` and you should see the application running.**
+**Restart both `npx nx serve api` and `npx nx serve todos` and you should see the application running.**
 
 !!!!!
 Libraries' public API is defined in...

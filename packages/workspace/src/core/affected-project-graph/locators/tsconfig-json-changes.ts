@@ -14,7 +14,8 @@ export const getTouchedProjectsFromTsConfig: TouchedProjectLocator<
   WholeFileChange | JsonChange
 > = (touchedFiles, _a, _b, _c, graph): string[] => {
   const tsConfigJsonChanges = touchedFiles.find(
-    (change) => change.file === 'tsconfig.json'
+    (change) =>
+      change.file === 'tsconfig.json' || change.file === 'tsconfig.base.json'
   );
   if (!tsConfigJsonChanges) {
     return [];

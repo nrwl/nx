@@ -1,5 +1,9 @@
 # Step 5: Add Node Application Implementing API
 
+## Video of this Lesson
+
+<iframe width="560" height="600" src="https://www.youtube.com/embed/SsCx2WErVTI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 The requests fail because the API has not been created yet. Using Nx you can develop node applications next to your Angular applications. You can use same commands to run and test them. You can share code between the backend and the frontend. Use this capability to implement the API service.
 
 ## Add NestJS Plugin to Your Workspace
@@ -17,7 +21,6 @@ Nx is an open platform with plugins for many modern tools and frameworks. **To s
 
 >  NX  Also available:
 
-  @nrwl/bazel (schematics)
   @nrwl/express (builders,schematics)
   @nrwl/linter (builders)
   @nrwl/nest (builders,schematics)
@@ -36,7 +39,7 @@ Nx is an open platform with plugins for many modern tools and frameworks. **To s
   @dev-thought/nx-deploy-it - Nx plugin to deploy applications on your favorite cloud provider
 ```
 
-**Now run `nx list @nrwl/nest`, and you will see:**
+**Now run `npx nx list @nrwl/nest`, and you will see:**
 
 ```bash
 >  NX   NOTE  @nrwl/nest is not currently installed
@@ -63,7 +66,7 @@ yarn add --dev @nrwl/nest
 **Run the following to generate a new Nest application:**
 
 ```bash
-nx g @nrwl/nest:app api --frontendProject=todos
+npx nx g @nrwl/nest:app api --frontendProject=todos
 ```
 
 Nx will ask you a few questions, and, as with the Angular application, the defaults will work well here.
@@ -107,9 +110,9 @@ The `apps` directory is where Nx places anything you can run: frontend applicati
 
 You can run:
 
-- `nx serve api` to serve the application
-- `nx build api` to build the application
-- `nx test api` to test the application
+- `npx nx serve api` to serve the application
+- `npx nx build api` to build the application
+- `npx nx test api` to test the application
 
 **Open `apps/api/src/app/app.module.ts`.**
 
@@ -180,7 +183,7 @@ export class AppController {
 ```
 
 !!!!!
-Run "nx serve api" and open http://localhost:3333/api/todos. What do you see?
+Run "npx nx serve api" and open http://localhost:3333/api/todos. What do you see?
 !!!!!
 `[{"title":"Todo 1"},{"title":"Todo 2"}]`
 Blank screen

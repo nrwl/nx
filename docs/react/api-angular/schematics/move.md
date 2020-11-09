@@ -42,6 +42,12 @@ Type: `string`
 
 The folder to move the Angular project into
 
+### importPath
+
+Type: `string`
+
+The new import path to use in the tsconfig.base.json
+
 ### projectName
 
 Alias(es): project
@@ -49,3 +55,11 @@ Alias(es): project
 Type: `string`
 
 The name of the Angular project to move
+
+### updateImportPath
+
+Default: `true`
+
+Type: `boolean`
+
+Should the schematic update the import path to reflect the new location?

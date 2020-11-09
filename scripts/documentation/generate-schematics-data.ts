@@ -1,7 +1,7 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { dedent } from 'tslint/lib/utils';
-import { Schematic } from '@angular-devkit/schematics/collection-schema';
+import { FileSystemSchematicJsonDescription } from '@angular-devkit/schematics/tools';
 import { CoreSchemaRegistry } from '@angular-devkit/core/src/json/schema';
 import {
   htmlSelectorFormat,
@@ -32,7 +32,7 @@ registry.addFormat(htmlSelectorFormat);
 function generateSchematicList(
   config: Configuration,
   registry: CoreSchemaRegistry
-): Promise<Schematic>[] {
+): Promise<FileSystemSchematicJsonDescription>[] {
   const schematicCollectionFile = path.join(config.root, 'collection.json');
   fs.removeSync(config.schematicOutput);
   const schematicCollection = fs.readJsonSync(schematicCollectionFile)
@@ -170,11 +170,11 @@ Promise.all(
         .filter((item) => item.hasSchematics)
         .map((config) => {
           return Promise.all(generateSchematicList(config, registry))
-            .then((schematicList) =>
-              schematicList
-                .filter((s) => !s.hidden)
-                .map((s) => generateTemplate(framework, s))
-            )
+            .then((schematicList) => {
+              return schematicList
+                .filter((s) => !s['hidden'])
+                .map((s) => generateTemplate(framework, s));
+            })
             .then((markdownList) =>
               Promise.all(
                 markdownList.map((template) =>

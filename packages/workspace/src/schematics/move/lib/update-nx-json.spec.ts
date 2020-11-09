@@ -20,6 +20,8 @@ describe('updateNxJson Rule', () => {
     const schema: Schema = {
       projectName: 'my-source',
       destination: 'my-destination',
+      importPath: undefined,
+      updateImportPath: true,
     };
 
     tree = (await callRule(updateNxJson(schema), tree)) as UnitTestTree;

@@ -1,10 +1,6 @@
-import {
-  Configuration as WebpackDevServerConfiguration,
-  HistoryApiFallbackConfig,
-} from 'webpack-dev-server';
+import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 import { readFileSync } from 'fs';
 import * as path from 'path';
-import * as url from 'url';
 import { getWebConfig } from './web.config';
 import { Configuration } from 'webpack';
 import { LoggerApi } from '@angular-devkit/core/src/logger';
@@ -33,30 +29,8 @@ export function getDevServerConfig(
     serveOptions,
     buildOptions
   );
-  if (serveOptions.liveReload) {
-    webpackConfig.entry['main'].unshift(getLiveReloadEntry(serveOptions));
-  }
-  return webpackConfig;
-}
 
-function getLiveReloadEntry(serveOptions: WebDevServerOptions) {
-  let clientAddress = `${serveOptions.ssl ? 'https' : 'http'}://0.0.0.0:0`;
-  if (serveOptions.publicHost) {
-    let publicHost = serveOptions.publicHost;
-    if (!/^\w+:\/\//.test(publicHost)) {
-      publicHost = `${serveOptions.ssl ? 'https' : 'http'}://${publicHost}`;
-    }
-    const clientUrl = url.parse(publicHost);
-    serveOptions.publicHost = clientUrl.host;
-    clientAddress = url.format(clientUrl);
-  }
-  let webpackDevServerPath;
-  try {
-    webpackDevServerPath = require.resolve('webpack-dev-server/client');
-  } catch {
-    throw new Error('The "webpack-dev-server" package could not be found.');
-  }
-  return `${webpackDevServerPath}?${clientAddress}`;
+  return webpackConfig;
 }
 
 function getDevServerPartial(
@@ -79,7 +53,7 @@ function getDevServerPartial(
       index: `${servePath}/${path.basename(buildOptions.index)}`,
       disableDotRule: true,
       htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
-    } as HistoryApiFallbackConfig,
+    },
     stats: false,
     compress: scriptsOptimization || stylesOptimization,
     https: options.ssl,
@@ -94,6 +68,7 @@ function getDevServerPartial(
     publicPath: servePath,
     contentBase: false,
     allowedHosts: [],
+    liveReload: options.liveReload,
   };
 
   if (options.ssl && options.sslKey && options.sslCert) {

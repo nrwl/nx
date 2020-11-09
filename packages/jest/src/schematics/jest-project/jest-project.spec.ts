@@ -4,6 +4,7 @@ import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { callRule, runSchematic } from '../../utils/testing';
 import { tags } from '@angular-devkit/core';
 import { JestProjectSchema } from './schema.d';
+import { jestConfigObject } from '../../utils/config/functions';
 
 describe('jestProject', () => {
   let appTree: Tree;
@@ -29,7 +30,7 @@ describe('jestProject', () => {
       appTree
     );
     appTree = await callRule(
-      updateJsonInTree('libs/lib1/tsconfig.json', (json) => {
+      updateJsonInTree('libs/lib1/tsconfig.json', () => {
         return {
           files: [],
           include: [],
@@ -87,21 +88,33 @@ describe('jestProject', () => {
     expect(
       tags.stripIndents`${resultTree.readContent('libs/lib1/jest.config.js')}`
     ).toBe(tags.stripIndents`module.exports = {
-  name: 'lib1',
-  preset: '../../jest.config.js',
-  globals: {
-    'ts-jest': {
-      tsConfig: '<rootDir>/tsconfig.spec.json',
-    }
-  },
-  coverageDirectory: '../../coverage/libs/lib1',
-  snapshotSerializers: [
-    'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',
-    'jest-preset-angular/build/AngularSnapshotSerializer.js',
-    'jest-preset-angular/build/HTMLCommentSerializer.js'
-  ]
-};
-`);
+      displayName: 'lib1',
+      preset: '../../jest.preset.js',
+      globals: {
+        'ts-jest': {
+          tsConfig: '<rootDir>/tsconfig.spec.json',
+        }
+      },
+      coverageDirectory: '../../coverage/libs/lib1',
+      snapshotSerializers: [
+        'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js',
+        'jest-preset-angular/build/AngularSnapshotSerializer.js',
+        'jest-preset-angular/build/HTMLCommentSerializer.js'
+      ]
+     };`);
+  });
+
+  it('should add a project reference in the root jest.config.js', async () => {
+    const resultTree = await runSchematic(
+      'jest-project',
+      {
+        project: 'lib1',
+      },
+      appTree
+    );
+    const jestConfig = jestConfigObject(resultTree, 'jest.config.js');
+
+    expect(jestConfig.projects).toEqual(['<rootDir>/libs/lib1']);
   });
 
   it('should add a reference to solution tsconfig.json', async () => {
@@ -170,7 +183,7 @@ describe('jestProject', () => {
       );
     });
 
-    it('should have setupFilesAfterEnv and globals.ts-ject in the jest.config when generated for angular', async () => {
+    it('should have setupFilesAfterEnv and globals.ts-jest in the jest.config when generated for angular', async () => {
       const resultTree = await runSchematic(
         'jest-project',
         {
@@ -189,10 +202,12 @@ describe('jestProject', () => {
     'ts-jest': {
       tsConfig: '<rootDir>/tsconfig.spec.json',
       stringifyContentPathRegex: '\\.(html|svg)$',
-      astTransformers: [
-        'jest-preset-angular/build/InlineFilesTransformer',
-        'jest-preset-angular/build/StripStylesTransformer'
-      ],`);
+      astTransformers: {
+        before: [
+          'jest-preset-angular/build/InlineFilesTransformer',
+          'jest-preset-angular/build/StripStylesTransformer'
+        ]
+      },`);
     });
 
     it('should not list the setup file in workspace.json', async () => {

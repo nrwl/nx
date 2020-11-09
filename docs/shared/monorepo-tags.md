@@ -51,7 +51,7 @@ First, use `nx.json` to annotate your projects with tags. In this example, we wi
 }
 ```
 
-Next open the top-level `.eslintrc` or `tslint.json` to add the constraints.
+Next open the top-level `.eslintrc.json` or `tslint.json` to add the constraints.
 
 ```json
 {

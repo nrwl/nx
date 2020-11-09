@@ -24,7 +24,7 @@ Read buildable libraries from source instead of building them separately.
 
 Default: `all`
 
-Type: `string | string[]`
+Type: `string | string[] `
 
 Dependencies to keep external to the bundle. ("all" (default), "none", or an array of module names)
 

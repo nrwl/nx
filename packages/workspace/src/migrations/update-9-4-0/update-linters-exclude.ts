@@ -1,6 +1,6 @@
 import { chain, SchematicContext, Tree } from '@angular-devkit/schematics';
 import { formatFiles } from '../../utils/rules/format-files';
-import { updateBuilderOptions, updateWorkspace } from '../../utils/workspace';
+import { updateBuilderConfig, updateWorkspace } from '../../utils/workspace';
 import { JsonArray } from '@angular-devkit/core';
 
 function updateExcludePattern(host: Tree, context: SchematicContext) {
@@ -8,7 +8,7 @@ function updateExcludePattern(host: Tree, context: SchematicContext) {
     '@nrwl/linter:lint',
     '@angular-devkit/build-angular:tslint',
   ];
-  return updateBuilderOptions((options, project) => {
+  return updateBuilderConfig((options, target, project) => {
     if (!options?.exclude) {
       return options;
     }

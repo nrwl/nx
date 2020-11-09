@@ -8,6 +8,22 @@ using a monorepo approach. If you are currently using an Angular CLI workspace, 
 - The major version of your `Angular CLI` must align with the version of `Nx` you are upgrading to. For example, if you're using Angular CLI version 7, you must transition using the latest version 7 release of Nx.
 - Currently, transforming an Angular CLI workspace to an Nx workspace automatically only supports a single project. If you have more than one project in your Angular CLI workspace, you can still migrate manually.
 
+## Using ng add and preserving your existing structure
+
+To add Nx to an existing Angular CLI workspace to an Nx workspace, with keeping your existing file structure in place, use the `ng add` command with the `--preserveAngularCLILayout` option:
+
+```
+ng add @nrwl/workspace --preserveAngularCLILayout
+```
+
+This installs the `@nrwl/workspace` package into your workspace and applies the following changes to your workspace:
+
+- Adds and installs the `@nrwl/workspace` package in your development dependencies.
+- Creates an nx.json file in the root of your workspace.
+- Adds a `decorate-angular-cli.js` to the root of your workspace, and a `postinstall` script in your `package.json` to run the script when your dependencies are updated. The script forwards the `ng` commands to the Nx CLI(nx) to enable features such as Computation Caching.
+
+After the process completes, you continue using the same serve/build/lint/test commands.
+
 ## Using ng add
 
 To transform a Angular CLI workspace to an Nx workspace, use the `ng add` command:

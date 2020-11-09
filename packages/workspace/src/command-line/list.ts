@@ -1,10 +1,10 @@
-import yargs = require('yargs');
+import * as yargs from 'yargs';
 import { appRootPath } from '../utils/app-root';
 import { output } from '../utils/output';
 import {
   fetchCommunityPlugins,
   fetchCorePlugins,
-  getInstalledPluginsFromNodeModules,
+  getInstalledPluginsFromPackageJson,
   listCommunityPlugins,
   listCorePlugins,
   listInstalledPlugins,
@@ -43,7 +43,7 @@ async function listHandler(args: YargsListArgs) {
   } else {
     const corePlugins = await fetchCorePlugins();
     const communityPlugins = await fetchCommunityPlugins();
-    const installedPlugins = getInstalledPluginsFromNodeModules(
+    const installedPlugins = getInstalledPluginsFromPackageJson(
       appRootPath,
       corePlugins,
       communityPlugins

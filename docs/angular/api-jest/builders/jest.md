@@ -10,7 +10,7 @@ Builder properties can be configured in angular.json when defining the builder, 
 
 Alias(es): b
 
-Type: `number | boolean`
+Type: `number | boolean `
 
 Exit the test suite immediately after `n` number of failing tests. (https://jestjs.io/docs/en/cli#bail)
 
@@ -94,7 +94,7 @@ Prints the test results in JSON. This mode will send all other test output and u
 
 Alias(es): w
 
-Type: `number | string`
+Type: `number | string `
 
 Specifies the maximum number of workers the worker-pool will spawn for running tests. This defaults to the number of the cores available on your machine. Useful for CI. (its usually best not to override this default) (https://jestjs.io/docs/en/cli#maxworkers-num)
 

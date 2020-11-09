@@ -1,7 +1,13 @@
 import { appRootPath } from '../utils/app-root';
 import { Task } from './tasks-runner';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+  lstatSync,
+} from 'fs';
+import { join, resolve } from 'path';
 import * as fsExtra from 'fs-extra';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { spawn } from 'child_process';
@@ -42,17 +48,13 @@ export class Cache {
      */
     const shouldSpawnProcess = Math.floor(Math.random() * 50) === 1;
     if (shouldSpawnProcess) {
-      const scriptPath = join(
-        this.root,
-        'node_modules',
-        '@nrwl',
-        'workspace',
-        'src',
-        'tasks-runner',
-        'remove-old-cache-records.js'
+      const scriptPath = require.resolve(
+        '@nrwl/workspace/src/tasks-runner/remove-old-cache-records.js',
+        { paths: [this.root] }
       );
+
       try {
-        const p = spawn('node', [`"${scriptPath}"`, `"${this.cachePath}"`], {
+        const p = spawn('node', [scriptPath, `"${this.cachePath}"`], {
           stdio: 'ignore',
           detached: true,
         });
@@ -80,7 +82,7 @@ export class Cache {
     }
   }
 
-  async put(task: Task, terminalOutputPath: string, folders: string[]) {
+  async put(task: Task, terminalOutputPath: string, outputs: string[]) {
     const terminalOutput = readFileSync(terminalOutputPath).toString();
     const td = join(this.cachePath, task.hash);
     const tdCommit = join(this.cachePath, `${task.hash}.commit`);
@@ -97,12 +99,16 @@ export class Cache {
     writeFileSync(join(td, 'terminalOutput'), terminalOutput);
 
     mkdirSync(join(td, 'outputs'));
-    folders.forEach((f) => {
-      const srcDir = join(this.root, f);
-      if (existsSync(srcDir)) {
-        const cachedDir = join(td, 'outputs', f);
-        fsExtra.ensureDirSync(cachedDir);
-        fsExtra.copySync(srcDir, cachedDir);
+    outputs.forEach((f) => {
+      const src = join(this.root, f);
+      if (existsSync(src)) {
+        const cached = join(td, 'outputs', f);
+        // Ensure parent directory is created if src is a file
+        const isFile = lstatSync(src).isFile();
+        const directory = isFile ? resolve(cached, '..') : cached;
+        fsExtra.ensureDirSync(directory);
+
+        fsExtra.copySync(src, cached);
       }
     });
     // we need this file to account for partial writes to the cache folder.
@@ -118,14 +124,17 @@ export class Cache {
 
   copyFilesFromCache(cachedResult: CachedResult, outputs: string[]) {
     outputs.forEach((f) => {
-      const cachedDir = join(cachedResult.outputsPath, f);
-      if (existsSync(cachedDir)) {
-        const srcDir = join(this.root, f);
-        if (existsSync(srcDir)) {
-          fsExtra.removeSync(srcDir);
+      const cached = join(cachedResult.outputsPath, f);
+      if (existsSync(cached)) {
+        const isFile = lstatSync(cached).isFile();
+        const src = join(this.root, f);
+        if (existsSync(src)) {
+          fsExtra.removeSync(src);
         }
-        fsExtra.ensureDirSync(srcDir);
-        fsExtra.copySync(cachedDir, srcDir);
+        // Ensure parent directory is created if src is a file
+        const directory = isFile ? resolve(src, '..') : src;
+        fsExtra.ensureDirSync(directory);
+        fsExtra.copySync(cached, src);
       }
     });
   }

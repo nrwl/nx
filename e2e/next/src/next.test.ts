@@ -263,7 +263,6 @@ async function checkApp(
   expect(packageJson.dependencies.next).toBeDefined();
 
   const exportResult = runCLI(`export ${appName}`);
-  expect(exportResult).toContain('Exporting (3/3)');
   checkFilesExist(`dist/apps/${appName}/exported/index.html`);
 }
 

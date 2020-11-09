@@ -43,7 +43,7 @@ function projectsToHtml(
   exclude: string[]
 ) {
   let f = readFileSync(
-    join(__dirname, '../core/dep-graph/dep-graph.html')
+    join(__dirname, '../core/dep-graph/index.html')
   ).toString();
 
   f = f
@@ -143,6 +143,7 @@ export function generateGraph(
   args: {
     file?: string;
     host?: string;
+    port?: number;
     focus?: string;
     exclude?: string[];
     groupByFolder?: boolean;
@@ -218,7 +219,7 @@ export function generateGraph(
       const assets: string[] = [];
       copySync(join(__dirname, '../core/dep-graph'), assetsFolder, {
         filter: (src, dest) => {
-          const isntHtml = !/dep-graph\.html/.test(dest);
+          const isntHtml = !/index\.html/.test(dest);
           if (isntHtml && dest.includes('.')) {
             assets.push(dest);
           }
@@ -226,10 +227,11 @@ export function generateGraph(
         },
       });
 
-      html = html.replace(
-        /<(script.*|link.*)="(.*\.(?:js|css))"(><\/script>| \/>?)/g,
-        '<$1="static/$2"$3'
-      );
+      html = html.replace(/src="/g, 'src="static/');
+      html = html.replace(/href="styles/g, 'href="static/styles');
+      html = html.replace('<base href="/">', '');
+      html = html.replace(/type="module"/g, '');
+
       writeFileSync(filename, html);
 
       output.success({
@@ -264,11 +266,11 @@ export function generateGraph(
       process.exit(1);
     }
   } else {
-    startServer(html, args.host || '127.0.0.1');
+    startServer(html, args.host || '127.0.0.1', args.port || 4211);
   }
 }
 
-function startServer(html: string, host: string) {
+function startServer(html: string, host: string, port = 4211) {
   const app = http.createServer((req, res) => {
     // parse URL
     const parsedUrl = url.parse(req.url);
@@ -315,13 +317,13 @@ function startServer(html: string, host: string) {
     });
   });
 
-  app.listen(4211, host);
+  app.listen(port, host);
 
   output.note({
-    title: `Dep graph started at http://${host}:4211`,
+    title: `Dep graph started at http://${host}:${port}`,
   });
 
-  opn(`http://${host}:4211`, {
+  opn(`http://${host}:${port}`, {
     wait: false,
   });
 }

@@ -1,5 +1,9 @@
 # Step 2: Add E2E Tests
 
+## Video of this Lesson
+
+<iframe width="560" height="600" src="https://www.youtube.com/embed/owRAO75DIR4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 By default, Nx uses [Cypress](/{{framework}}/plugins/cypress/overview) to run E2E tests.
 
 **Open `apps/todos-e2e/src/support/app.po.ts`.** It's a page object file that contains helpers for querying the page.
@@ -29,7 +33,7 @@ describe('TodoApps', () => {
 
 This is not a great example of an E2E test, but it will suffice for the purposes of this tutorial.
 
-If you have not done so already, stop the `nx serve` command and run `nx e2e todos-e2e --watch`.
+If you have not done so already, stop the `npx nx serve` command and run `npx nx e2e todos-e2e --watch`.
 
 A UI will open. Click the button in the top right corner that says "Run all specs". Keep the E2E tests running.
 

@@ -29,6 +29,10 @@
         "required": ["replace", "with"]
       },
       "default": []
+    },
+    "nextConfig": {
+      "description": "Path to a function which takes phase, config, and builder options, and returns the resulting config.",
+      "type": "string"
     }
   },
   "required": []

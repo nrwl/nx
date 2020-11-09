@@ -44,7 +44,7 @@ happynrwl/
 │   │   ├── jest.conf.js
 │   │   ├── tsconfig.json
 │   │   ├── tsconfig.spec.json
-│   │   └── .eslintrc
+│   │   └── .eslintrc.json
 │   └── tuskdesk-e2e/
 │   │   ├── src/
 │   │   │   ├── integrations/
@@ -54,14 +54,14 @@ happynrwl/
 │   │   │   └── support/
 │   │   ├── cypress.json
 │   │   ├── tsconfig.e2e.json
-│   │   └── .eslintrc
+│   │   └── .eslintrc.json
 ├── libs/
 ├── workspace.json
 ├── nx.json
 ├── package.json
 ├── tools/
 ├── tsconfig.json
-└── .eslintrc
+└── .eslintrc.json
 ```
 
 Run:

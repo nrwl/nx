@@ -83,6 +83,12 @@ function updatePackageJson() {
   });
 }
 
+function getRootTsConfigPath(host: Tree) {
+  return host.exists('tsconfig.base.json')
+    ? 'tsconfig.base.json'
+    : 'tsconfig.json';
+}
+
 function convertPath(name: string, originalPath: string) {
   return `apps/${name}/${originalPath}`;
 }
@@ -189,14 +195,14 @@ function updateAngularCLIJson(options: Schema): Rule {
     function convertAsset(asset: string | any) {
       if (typeof asset === 'string') {
         return asset.startsWith(oldSourceRoot)
-          ? convertPath(appName, asset)
+          ? convertPath(appName, asset.replace(oldSourceRoot, 'src'))
           : asset;
       } else {
         return {
           ...asset,
           input:
             asset.input && asset.input.startsWith(oldSourceRoot)
-              ? convertPath(appName, asset.input)
+              ? convertPath(appName, asset.input.replace(oldSourceRoot, 'src'))
               : asset.input,
         };
       }
@@ -230,9 +236,12 @@ function updateAngularCLIJson(options: Schema): Rule {
 }
 
 function updateTsConfig(options: Schema): Rule {
-  return updateJsonInTree('tsconfig.base.json', (tsConfigJson) =>
-    setUpCompilerOptions(tsConfigJson, options.npmScope, '')
-  );
+  return (host: Tree) => {
+    const tsConfigPath = getRootTsConfigPath(host);
+    return updateJsonInTree(tsConfigPath, (tsConfigJson) =>
+      setUpCompilerOptions(tsConfigJson, options.npmScope, '')
+    );
+  };
 }
 
 function updateTsConfigsJson(options: Schema) {
@@ -240,19 +249,21 @@ function updateTsConfigsJson(options: Schema) {
     const workspaceJson = readJsonInTree(host, 'angular.json');
     const app = workspaceJson.projects[options.name];
     const e2eProject = getE2eProject(workspaceJson);
-
+    const tsConfigPath = getRootTsConfigPath(host);
     const offset = '../../';
 
     return chain([
       updateJsonInTree(app.architect.build.options.tsConfig, (json) => {
-        json.extends = `${offset}tsconfig.base.json`;
+        json.extends = `${offset}${tsConfigPath}`;
+        json.compilerOptions = json.compilerOptions || {};
         json.compilerOptions.outDir = `${offset}dist/out-tsc`;
         return json;
       }),
 
       app.architect.test
         ? updateJsonInTree(app.architect.test.options.tsConfig, (json) => {
-            json.extends = `${offset}tsconfig.base.json`;
+            json.extends = `${offset}${tsConfigPath}`;
+            json.compilerOptions = json.compilerOptions || {};
             json.compilerOptions.outDir = `${offset}dist/out-tsc`;
             return json;
           })
@@ -260,6 +271,7 @@ function updateTsConfigsJson(options: Schema) {
 
       app.architect.server
         ? updateJsonInTree(app.architect.server.options.tsConfig, (json) => {
+            json.compilerOptions = json.compilerOptions || {};
             json.compilerOptions.outDir = `${offset}dist/out-tsc`;
             return json;
           })
@@ -271,7 +283,7 @@ function updateTsConfigsJson(options: Schema) {
             (json) => {
               json.extends = `${offsetFromRoot(
                 e2eProject.root
-              )}tsconfig.base.json`;
+              )}${tsConfigPath}`;
               json.compilerOptions = {
                 ...json.compilerOptions,
                 outDir: `${offsetFromRoot(e2eProject.root)}dist/out-tsc`,
@@ -422,11 +434,7 @@ function moveExistingFiles(options: Schema) {
       );
     }
     const oldAppSourceRoot = app.sourceRoot;
-    const newAppSourceRoot = join(
-      normalize('apps'),
-      options.name,
-      app.sourceRoot
-    );
+    const newAppSourceRoot = join(normalize('apps'), options.name, 'src');
     renameDirSyncInTree(host, oldAppSourceRoot, newAppSourceRoot, (err) => {
       if (!err) {
         context.logger.info(
@@ -439,7 +447,7 @@ function moveExistingFiles(options: Schema) {
     });
 
     if (e2eApp) {
-      const oldE2eRoot = 'e2e';
+      const oldE2eRoot = join(app.root, 'e2e');
       const newE2eRoot = join(
         normalize('apps'),
         getE2eKey(workspaceJson) + '-e2e'
@@ -465,6 +473,7 @@ function moveExistingFiles(options: Schema) {
 function createAdditionalFiles(options: Schema): Rule {
   return (host: Tree, _context: SchematicContext) => {
     const workspaceJson = readJsonInTree(host, 'angular.json');
+    const tsConfigPath = getRootTsConfigPath(host);
     host.create(
       'nx.json',
       serializeJson({
@@ -475,8 +484,9 @@ function createAdditionalFiles(options: Schema): Rule {
         implicitDependencies: {
           'angular.json': '*',
           'package.json': '*',
-          'tsconfig.base.json': '*',
+          [tsConfigPath]: '*',
           'tslint.json': '*',
+          '.eslintrc.json': '*',
           'nx.json': '*',
         },
         projects: {
@@ -539,7 +549,13 @@ function checkCanConvertToWorkspace(options: Schema) {
 
       // TODO: This restriction should be lited
       const workspaceJson = readJsonInTree(host, 'angular.json');
-      if (Object.keys(workspaceJson.projects).length > 2) {
+      const hasLibraries = Object.keys(workspaceJson.projects).find(
+        (project) =>
+          workspaceJson.projects[project].projectType &&
+          workspaceJson.projects[project].projectType !== 'application'
+      );
+
+      if (Object.keys(workspaceJson.projects).length > 2 || hasLibraries) {
         throw new Error('Can only convert projects with one app');
       }
       const e2eKey = getE2eKey(workspaceJson);
@@ -569,12 +585,20 @@ function checkCanConvertToWorkspace(options: Schema) {
 
 const createNxJson = (host: Tree) => {
   const json = JSON.parse(host.read('angular.json').toString());
-  if (Object.keys(json.projects || {}).length !== 1) {
+  const projects = json.projects || {};
+  const hasLibraries = Object.keys(projects).find(
+    (project) =>
+      projects[project].projectType &&
+      projects[project].projectType !== 'application'
+  );
+
+  if (Object.keys(projects).length !== 1 || hasLibraries) {
     throw new Error(
-      `The schematic can only be used with Angular CLI workspaces with a single project.`
+      `The schematic can only be used with Angular CLI workspaces with a single application.`
     );
   }
-  const name = Object.keys(json.projects)[0];
+  const name = Object.keys(projects)[0];
+  const tsConfigPath = getRootTsConfigPath(host);
   host.create(
     'nx.json',
     serializeJson({
@@ -582,8 +606,9 @@ const createNxJson = (host: Tree) => {
       implicitDependencies: {
         'angular.json': '*',
         'package.json': '*',
-        'tsconfig.base.json': '*',
+        [tsConfigPath]: '*',
         'tslint.json': '*',
+        '.eslintrc.json': '*',
         'nx.json': '*',
       },
       projects: {

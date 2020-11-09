@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { execSync } from 'child_process';
-import { platform } from 'os';
+import { getPackageManagerExecuteCommand } from '../utils/detect-package-manager';
 import * as yargs from 'yargs';
 import { nxVersion } from '../utils/versions';
 import { generateGraph } from './dep-graph';
@@ -138,12 +138,11 @@ export const commandsObject = yargs
     (args) => format('check', args)
   )
   .command(
-    'format:write',
+    ['format:write', 'format'],
     'Overwrite un-formatted files',
     withFormatOptions,
     (args) => format('write', args)
   )
-  .alias('format:write', 'format')
   .command(
     'workspace-lint [files..]',
     'Lint workspace or list of files.  Note: To exclude files from this lint rule, you can add them to the ".nxignore" file',
@@ -180,10 +179,7 @@ export const commandsObject = yargs
     `,
     (yargs) => yargs,
     () => {
-      const executable =
-        platform() === 'win32'
-          ? `.\\node_modules\\.bin\\tao`
-          : `./node_modules/.bin/tao`;
+      const executable = `${getPackageManagerExecuteCommand()} tao`;
       execSync(`${executable} migrate ${process.argv.slice(3).join(' ')}`, {
         stdio: ['inherit', 'inherit', 'inherit'],
       });
@@ -365,6 +361,10 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
     .option('host', {
       describe: 'Bind the dep graph server to a specific ip address.',
       type: 'string',
+    })
+    .option('port', {
+      describe: 'Bind the dep graph server to a specific port.',
+      type: 'number',
     });
 }
 

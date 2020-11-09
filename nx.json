@@ -8,7 +8,8 @@
     },
     "tsconfig.base.json": "*",
     "tslint.json": "*",
-    "nx.json": "*"
+    "nx.json": "*",
+    ".eslintrc.json": "*"
   },
   "tasksRunnerOptions": {
     "default": {
@@ -21,7 +22,7 @@
         "showUsageWarnings": true,
         "runtimeCacheInputs": ["echo $SELECTED_CLI"],
         "cacheDirectory": "/tmp/nx-cache",
-        "nxCloudUsePrId": true
+        "nxCloudUsePrNumber": true
       }
     }
   },
@@ -53,7 +54,7 @@
     },
     "react": {
       "tags": [],
-      "implicitDependencies": ["workspace", "cypress", "jest"]
+      "implicitDependencies": ["workspace", "cypress", "jest", "web"]
     },
     "storybook": {
       "tags": [],
@@ -98,10 +99,6 @@
     "cli": {
       "tags": []
     },
-    "bazel": {
-      "tags": [],
-      "implicitDependencies": ["workspace"]
-    },
     "angular": {
       "tags": [],
       "implicitDependencies": ["workspace", "cypress", "jest"]
@@ -116,10 +113,6 @@
     "e2e-angular": {
       "tags": [],
       "implicitDependencies": ["angular"]
-    },
-    "e2e-bazel": {
-      "tags": [],
-      "implicitDependencies": ["bazel"]
     },
     "e2e-cypress": {
       "tags": [],
@@ -160,6 +153,13 @@
     "e2e-workspace": {
       "tags": [],
       "implicitDependencies": ["workspace", "create-nx-workspace"]
+    },
+    "dep-graph-client": {
+      "tags": ["core"]
+    },
+    "dep-graph-client-e2e": {
+      "tags": [],
+      "implicitDependencies": ["dep-graph-client"]
     }
   },
   "affected": {

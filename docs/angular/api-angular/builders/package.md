@@ -1,10 +1,20 @@
 # package
 
-Build an Angular library
+Build and package an Angular library for publishing
 
 Builder properties can be configured in angular.json when defining the builder, or when invoking it.
 
 ## Properties
+
+### buildableProjectDepsInPackageJsonType
+
+Default: `peerDependencies`
+
+Type: `string`
+
+Possible values: `dependencies`, `peerDependencies`
+
+When updateBuildableProjectDepsInPackageJson is true, this adds dependencies to either `peerDependencies` or `dependencies`
 
 ### project
 

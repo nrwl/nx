@@ -16,7 +16,6 @@ module.exports = {
 
   scopes: [
     { name: 'angular', description: 'anything Angular specific' },
-    { name: 'bazel', description: 'anything Bazel specific' },
     { name: 'core', description: 'anything Nx core specific' },
     { name: 'docs', description: 'anything related to docs infrastructure' },
     { name: 'nextjs', description: 'anything Next specific' },

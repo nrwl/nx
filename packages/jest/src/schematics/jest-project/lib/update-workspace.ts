@@ -13,7 +13,12 @@ export function updateWorkspace(options: JestProjectSchema): Rule {
         passWithNoTests: true,
       },
     };
-    if (projectConfig.architect.lint) {
+
+    const isUsingTSLint =
+      projectConfig.architect.lint?.builder ===
+      '@angular-devkit/build-angular:tslint';
+
+    if (isUsingTSLint) {
       projectConfig.architect.lint.options.tsConfig = [
         ...projectConfig.architect.lint.options.tsConfig,
         join(normalize(projectConfig.root), 'tsconfig.spec.json'),

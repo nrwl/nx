@@ -23,11 +23,13 @@ import * as fs from 'fs';
 import { readFileSync, writeFileSync } from 'fs';
 import { copySync, removeSync } from 'fs-extra';
 import * as inquirer from 'inquirer';
-import { platform } from 'os';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
 import { appRootPath } from '../utils/app-root';
-import { detectPackageManager } from '../utils/detect-package-manager';
+import {
+  detectPackageManager,
+  getPackageManagerExecuteCommand,
+} from '../utils/detect-package-manager';
 import { fileExists, readJsonFile, writeJsonFile } from '../utils/fileutils';
 import { output } from '../utils/output';
 import { CompilerOptions } from 'typescript';
@@ -89,10 +91,8 @@ function compileToolsDir(outDir: string) {
     include: [path.join(schematicsDir(), '**/*.ts')],
   });
 
-  const tsc =
-    platform() === 'win32'
-      ? `.\\node_modules\\.bin\\tsc`
-      : `./node_modules/.bin/tsc`;
+  const packageExec = getPackageManagerExecuteCommand();
+  const tsc = `${packageExec} tsc`;
   try {
     execSync(`${tsc} -p ${tmpTsConfigPath}`, {
       stdio: 'inherit',

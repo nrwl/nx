@@ -54,6 +54,20 @@
             ],
             "parallel": false
           }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/nx/**/*.ts",
+              "packages/nx/**/*.spec.ts",
+              "packages/nx/**/*_spec.ts",
+              "packages/nx/**/*.spec.tsx",
+              "packages/nx/**/*.spec.js",
+              "packages/nx/**/*.spec.jsx",
+              "packages/nx/**/*.d.ts"
+            ]
+          }
         }
       }
     },
@@ -122,15 +136,16 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:lint",
+          "builder": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "config": "packages/tao/.eslintrc",
-            "tsConfig": [
-              "packages/tao/tsconfig.lib.json",
-              "packages/tao/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**"]
+            "lintFilePatterns": [
+              "packages/tao/**/*.ts",
+              "packages/tao/**/*.spec.ts",
+              "packages/tao/**/*.spec.tsx",
+              "packages/tao/**/*.spec.js",
+              "packages/tao/**/*.spec.jsx",
+              "packages/tao/**/*.d.ts"
+            ]
           }
         }
       }
@@ -195,10 +210,29 @@
                 "command": "nx build-base workspace"
               },
               {
+                "command": "nx build-base dep-graph-client --configuration release"
+              },
+              {
+                "command": "node ./scripts/copy-dep-graph.js"
+              },
+              {
                 "command": "node ./scripts/copy-readme.js workspace"
               }
             ],
             "parallel": false
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/workspace/**/*.ts",
+              "packages/workspace/**/*.spec.ts",
+              "packages/workspace/**/*.spec.tsx",
+              "packages/workspace/**/*.spec.js",
+              "packages/workspace/**/*.spec.jsx",
+              "packages/workspace/**/*.d.ts"
+            ]
           }
         }
       }
@@ -268,6 +302,20 @@
             ],
             "parallel": false
           }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/web/**/*.ts",
+              "packages/web/**/*.spec.ts",
+              "packages/web/**/*_spec.ts",
+              "packages/web/**/*.spec.tsx",
+              "packages/web/**/*.spec.js",
+              "packages/web/**/*.spec.jsx",
+              "packages/web/**/*.d.ts"
+            ]
+          }
         }
       }
     },
@@ -330,6 +378,19 @@
               }
             ],
             "parallel": false
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/cypress/**/*.ts",
+              "packages/cypress/**/*.spec.ts",
+              "packages/cypress/**/*.spec.tsx",
+              "packages/cypress/**/*.spec.js",
+              "packages/cypress/**/*.spec.jsx",
+              "packages/cypress/**/*.d.ts"
+            ]
           }
         }
       }
@@ -394,6 +455,19 @@
             ],
             "parallel": false
           }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/jest/**/*.ts",
+              "packages/jest/**/*.spec.ts",
+              "packages/jest/**/*.spec.tsx",
+              "packages/jest/**/*.spec.js",
+              "packages/jest/**/*.spec.jsx",
+              "packages/jest/**/*.d.ts"
+            ]
+          }
         }
       }
     },
@@ -421,12 +495,22 @@
             "assets": [
               {
                 "input": "packages/storybook",
-                "glob": "**/lib-files/.storybook/**",
+                "glob": "**/project-files/.storybook/**",
                 "output": "/"
               },
               {
                 "input": "packages/storybook",
                 "glob": "**/root-files/.storybook/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/storybook",
+                "glob": "**/project-files-5/.storybook/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/storybook",
+                "glob": "**/root-files-5/.storybook/**",
                 "output": "/"
               },
               {
@@ -456,6 +540,20 @@
               }
             ],
             "parallel": false
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/storybook/**/*.ts",
+              "packages/storybook/**/*.spec.ts",
+              "packages/storybook/**/*_spec.ts",
+              "packages/storybook/**/*.spec.tsx",
+              "packages/storybook/**/*.spec.js",
+              "packages/storybook/**/*.spec.jsx",
+              "packages/storybook/**/*.d.ts"
+            ]
           }
         }
       }
@@ -502,9 +600,21 @@
                 "glob": "**/files/**/.browserslistrc__tmpl__",
                 "output": "/"
               },
-              { "input": "packages/react", "glob": "**/*.json", "output": "/" },
-              { "input": "packages/react", "glob": "**/*.d.ts", "output": "/" },
-              { "input": "packages/react", "glob": "**/*.js", "output": "/" },
+              {
+                "input": "packages/react",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/react",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
+              {
+                "input": "packages/react",
+                "glob": "**/*.js",
+                "output": "/"
+              },
               "LICENSE"
             ]
           }
@@ -522,6 +632,20 @@
               }
             ],
             "parallel": false
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/react/**/*.ts",
+              "packages/react/**/*.spec.ts",
+              "packages/react/**/*_spec.ts",
+              "packages/react/**/*.spec.tsx",
+              "packages/react/**/*.spec.js",
+              "packages/react/**/*.spec.jsx",
+              "packages/react/**/*.d.ts"
+            ]
           }
         }
       }
@@ -586,6 +710,20 @@
             ],
             "parallel": false
           }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/nx-plugin/**/*.ts",
+              "packages/nx-plugin/**/*.spec.ts",
+              "packages/nx-plugin/**/*_spec.ts",
+              "packages/nx-plugin/**/*.spec.tsx",
+              "packages/nx-plugin/**/*.spec.js",
+              "packages/nx-plugin/**/*.spec.jsx",
+              "packages/nx-plugin/**/*.d.ts"
+            ]
+          }
         }
       }
     },
@@ -648,6 +786,20 @@
               }
             ],
             "parallel": false
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/node/**/*.ts",
+              "packages/node/**/*.spec.ts",
+              "packages/node/**/*_spec.ts",
+              "packages/node/**/*.spec.tsx",
+              "packages/node/**/*.spec.js",
+              "packages/node/**/*.spec.jsx",
+              "packages/node/**/*.d.ts"
+            ]
           }
         }
       }
@@ -717,6 +869,20 @@
             ],
             "parallel": false
           }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/next/**/*.ts",
+              "packages/next/**/*.spec.ts",
+              "packages/next/**/*_spec.ts",
+              "packages/next/**/*.spec.tsx",
+              "packages/next/**/*.spec.js",
+              "packages/next/**/*.spec.jsx",
+              "packages/next/**/*.d.ts"
+            ]
+          }
         }
       }
     },
@@ -779,6 +945,20 @@
               }
             ],
             "parallel": false
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/nest/**/*.ts",
+              "packages/nest/**/*.spec.ts",
+              "packages/nest/**/*_spec.ts",
+              "packages/nest/**/*.spec.tsx",
+              "packages/nest/**/*.spec.js",
+              "packages/nest/**/*.spec.jsx",
+              "packages/nest/**/*.d.ts"
+            ]
           }
         }
       }
@@ -843,6 +1023,20 @@
             ],
             "parallel": false
           }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/linter/**/*.ts",
+              "packages/linter/**/*.spec.ts",
+              "packages/linter/**/*_spec.ts",
+              "packages/linter/**/*.spec.tsx",
+              "packages/linter/**/*.spec.js",
+              "packages/linter/**/*.spec.jsx",
+              "packages/linter/**/*.d.ts"
+            ]
+          }
         }
       }
     },
@@ -906,6 +1100,20 @@
             ],
             "parallel": false
           }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/express/**/*.ts",
+              "packages/express/**/*.spec.ts",
+              "packages/express/**/*_spec.ts",
+              "packages/express/**/*.spec.tsx",
+              "packages/express/**/*.spec.js",
+              "packages/express/**/*.spec.jsx",
+              "packages/express/**/*.d.ts"
+            ]
+          }
         }
       }
     },
@@ -968,6 +1176,20 @@
               }
             ],
             "parallel": false
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/eslint-plugin-nx/**/*.ts",
+              "packages/eslint-plugin-nx/**/*.spec.ts",
+              "packages/eslint-plugin-nx/**/*_spec.ts",
+              "packages/eslint-plugin-nx/**/*.spec.tsx",
+              "packages/eslint-plugin-nx/**/*.spec.js",
+              "packages/eslint-plugin-nx/**/*.spec.jsx",
+              "packages/eslint-plugin-nx/**/*.d.ts"
+            ]
           }
         }
       }
@@ -1035,6 +1257,20 @@
             ],
             "parallel": false
           }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/create-nx-workspace/**/*.ts",
+              "packages/create-nx-workspace/**/*.spec.ts",
+              "packages/create-nx-workspace/**/*_spec.ts",
+              "packages/create-nx-workspace/**/*.spec.tsx",
+              "packages/create-nx-workspace/**/*.spec.js",
+              "packages/create-nx-workspace/**/*.spec.jsx",
+              "packages/create-nx-workspace/**/*.d.ts"
+            ]
+          }
         }
       }
     },
@@ -1100,6 +1336,20 @@
               }
             ],
             "parallel": false
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/create-nx-plugin/**/*.ts",
+              "packages/create-nx-plugin/**/*.spec.ts",
+              "packages/create-nx-plugin/**/*_spec.ts",
+              "packages/create-nx-plugin/**/*.spec.tsx",
+              "packages/create-nx-plugin/**/*.spec.js",
+              "packages/create-nx-plugin/**/*.spec.jsx",
+              "packages/create-nx-plugin/**/*.d.ts"
+            ]
           }
         }
       }
@@ -1167,68 +1417,19 @@
             ],
             "parallel": false
           }
-        }
-      }
-    },
-    "bazel": {
-      "root": "packages/bazel",
-      "sourceRoot": "packages/bazel",
-      "projectType": "library",
-      "schematics": {},
-      "architect": {
-        "test": {
-          "builder": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "packages/bazel/jest.config.js",
-            "passWithNoTests": true
-          }
         },
-        "build-base": {
-          "builder": "@nrwl/node:package",
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
           "options": {
-            "outputPath": "build/packages/bazel",
-            "tsConfig": "packages/bazel/tsconfig.lib.json",
-            "packageJson": "packages/bazel/package.json",
-            "main": "packages/bazel/index.ts",
-            "updateBuildableProjectDepsInPackageJson": false,
-            "assets": [
-              {
-                "input": "packages/bazel",
-                "glob": "**/files/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/bazel",
-                "glob": "**/files/**/.gitkeep",
-                "output": "/"
-              },
-              {
-                "input": "packages/bazel",
-                "glob": "**/*.json",
-                "output": "/"
-              },
-              {
-                "input": "packages/bazel",
-                "glob": "**/*.js",
-                "output": "/"
-              },
-              "LICENSE"
+            "lintFilePatterns": [
+              "packages/cli/**/*.ts",
+              "packages/cli/**/*.spec.ts",
+              "packages/cli/**/*_spec.ts",
+              "packages/cli/**/*.spec.tsx",
+              "packages/cli/**/*.spec.js",
+              "packages/cli/**/*.spec.jsx",
+              "packages/cli/**/*.d.ts"
             ]
-          }
-        },
-        "build": {
-          "builder": "@nrwl/workspace:run-commands",
-          "outputs": ["build/packages/bazel"],
-          "options": {
-            "commands": [
-              {
-                "command": "nx build-base bazel"
-              },
-              {
-                "command": "node ./scripts/copy-readme.js bazel"
-              }
-            ],
-            "parallel": false
           }
         }
       }
@@ -1301,6 +1502,20 @@
             ],
             "parallel": false
           }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/angular/**/*.ts",
+              "packages/angular/**/*.spec.ts",
+              "packages/angular/**/*_spec.ts",
+              "packages/angular/**/*.spec.tsx",
+              "packages/angular/**/*.spec.js",
+              "packages/angular/**/*.spec.jsx",
+              "packages/angular/**/*.d.ts"
+            ]
+          }
         }
       }
     },
@@ -1337,22 +1552,6 @@
           "builder": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "e2e/angular/jest.config.js",
-            "passWithNoTests": true,
-            "runInBand": true
-          }
-        }
-      }
-    },
-    "e2e-bazel": {
-      "root": "e2e/bazel",
-      "sourceRoot": "e2e/bazel",
-      "projectType": "application",
-      "schematics": {},
-      "architect": {
-        "e2e": {
-          "builder": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "e2e/bazel/jest.config.js",
             "passWithNoTests": true,
             "runInBand": true
           }
@@ -1515,6 +1714,114 @@
             "jestConfig": "e2e/nx-plugin/jest.config.js",
             "passWithNoTests": true,
             "runInBand": true
+          }
+        }
+      }
+    },
+    "dep-graph-client": {
+      "root": "apps/dep-graph-client",
+      "sourceRoot": "apps/dep-graph-client/src",
+      "projectType": "application",
+      "schematics": {},
+      "architect": {
+        "build-base": {
+          "builder": "@nrwl/web:build",
+          "options": {
+            "maxWorkers": 8,
+            "outputPath": "build/apps/dep-graph",
+            "index": "apps/dep-graph-client/src/index.html",
+            "main": "apps/dep-graph-client/src/main.ts",
+            "polyfills": "apps/dep-graph-client/src/polyfills.ts",
+            "tsConfig": "apps/dep-graph-client/tsconfig.app.json",
+            "assets": [
+              "apps/dep-graph-client/src/favicon.ico",
+              "apps/dep-graph-client/src/assets"
+            ],
+            "styles": ["apps/dep-graph-client/src/styles.scss"],
+            "scripts": []
+          },
+          "configurations": {
+            "release": {
+              "fileReplacements": [
+                {
+                  "replace": "apps/dep-graph-client/src/main.ts",
+                  "with": "apps/dep-graph-client/src/main.release.ts"
+                }
+              ],
+              "optimization": true,
+              "outputHashing": "none",
+              "sourceMap": false,
+              "extractCss": true,
+              "namedChunks": false,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                }
+              ]
+            }
+          }
+        },
+        "serve": {
+          "builder": "@nrwl/web:dev-server",
+          "options": {
+            "buildTarget": "dep-graph-client:build-base"
+          },
+          "configurations": {
+            "release": {
+              "buildTarget": "dep-graph-client:build-base:release"
+            }
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "tsConfig": [
+              "apps/dep-graph-client/tsconfig.app.json",
+              "apps/dep-graph-client/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**", "!apps/dep-graph-client/**/*"]
+          }
+        },
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "apps/dep-graph-client/jest.config.js",
+            "tsConfig": "apps/dep-graph-client/tsconfig.spec.json",
+            "passWithNoTests": true,
+            "setupFile": "apps/dep-graph-client/src/test-setup.ts"
+          }
+        }
+      }
+    },
+    "dep-graph-client-e2e": {
+      "root": "apps/dep-graph-client-e2e",
+      "sourceRoot": "apps/dep-graph-client-e2e/src",
+      "projectType": "application",
+      "architect": {
+        "e2e": {
+          "builder": "@nrwl/cypress:cypress",
+          "options": {
+            "cypressConfig": "apps/dep-graph-client-e2e/cypress.json",
+            "tsConfig": "apps/dep-graph-client-e2e/tsconfig.e2e.json",
+            "devServerTarget": "dep-graph-client:serve"
+          },
+          "configurations": {
+            "release": {
+              "devServerTarget": "dep-graph-client:serve:release"
+            }
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "tsConfig": ["apps/dep-graph-client-e2e/tsconfig.e2e.json"],
+            "exclude": ["**/node_modules/**", "!apps/dep-graph-client-e2e/**/*"]
           }
         }
       }

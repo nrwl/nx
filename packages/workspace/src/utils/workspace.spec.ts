@@ -1,7 +1,7 @@
 import { Tree } from '@angular-devkit/schematics';
 import { callRule } from '@nrwl/workspace/src/utils/testing';
 import { readWorkspace, updateWorkspace } from '@nrwl/workspace';
-import { updateBuilderOptions } from '@nrwl/workspace/src/utils/workspace';
+import { updateBuilderConfig } from '@nrwl/workspace/src/utils/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 
 describe('workspace utils', () => {
@@ -53,7 +53,7 @@ describe('workspace utils', () => {
 
     it('should update options', async () => {
       const result = await callRule(
-        updateBuilderOptions((options) => {
+        updateBuilderConfig((options) => {
           options.i = 99;
           return options;
         }, 'builder1'),
@@ -70,7 +70,7 @@ describe('workspace utils', () => {
 
     it('should not update options of other builders', async () => {
       const result = await callRule(
-        updateBuilderOptions((options) => {
+        updateBuilderConfig((options) => {
           options.i = 99;
           return options;
         }, 'builder1'),

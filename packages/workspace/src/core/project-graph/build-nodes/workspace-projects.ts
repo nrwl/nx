@@ -2,8 +2,7 @@ import { AddProjectNode, ProjectGraphContext } from '../project-graph-models';
 
 export function buildWorkspaceProjectNodes(
   ctx: ProjectGraphContext,
-  addNode: AddProjectNode,
-  fileRead: (s: string) => string
+  addNode: AddProjectNode
 ) {
   const toAdd = [];
 

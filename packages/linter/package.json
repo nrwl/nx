@@ -22,11 +22,18 @@
     "url": "https://github.com/nrwl/nx/issues"
   },
   "homepage": "https://nx.dev",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
   "builders": "./builders.json",
   "peerDependencies": {
     "@nrwl/workspace": "*"
   },
   "dependencies": {
-    "@angular-devkit/architect": "~0.1000.0"
+    "@angular-devkit/architect": "~0.1001.3",
+    "glob": "7.1.4",
+    "minimatch": "3.0.4",
+    "tslib": "^2.0.0"
   }
 }

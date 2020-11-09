@@ -33,7 +33,7 @@
     "packageGroup": [
       "@nrwl/workspace",
       "@nrwl/angular",
-      "@nrwl/bazel",
+      "@nrwl/cli",
       "@nrwl/cypress",
       "@nrwl/eslint-plugin-nx",
       "@nrwl/express",
@@ -52,23 +52,28 @@
     "prettier": "^2.0.4"
   },
   "dependencies": {
-    "@angular-devkit/core": "~10.0.0",
-    "@angular-devkit/schematics": "~10.0.0",
-    "cosmiconfig": "4.0.0",
-    "fs-extra": "6.0.0",
-    "dotenv": "8.2.0",
-    "ignore": "5.0.4",
-    "npm-run-all": "4.1.5",
+    "@angular-devkit/architect": "~0.1001.3",
+    "@angular-devkit/core": "~10.1.3",
+    "@angular-devkit/schematics": "~10.1.3",
+    "@nrwl/cli": "*",
+    "cosmiconfig": "^4.0.0",
+    "fs-extra": "7.0.1",
+    "dotenv": "6.2.0",
+    "ignore": "^5.0.4",
+    "npm-run-all": "^4.1.5",
     "opn": "^5.3.0",
     "rxjs": "^6.5.4",
-    "semver": "5.4.1",
+    "semver": "6.3.0",
     "strip-json-comments": "2.0.1",
     "tmp": "0.0.33",
     "yargs": "15.4.1",
+    "yargs-parser": "20.0.0",
     "chalk": "2.4.2",
-    "@nrwl/cli": "*",
     "axios": "0.19.2",
     "flat": "^5.0.2",
-    "minimatch": "3.0.4"
+    "minimatch": "3.0.4",
+    "inquirer": "^6.3.1",
+    "resolve": "1.17.0",
+    "tslib": "^2.0.0"
   }
 }

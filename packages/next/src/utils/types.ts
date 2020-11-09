@@ -34,6 +34,7 @@ export interface NextBuildBuilderOptions extends JsonObject {
   root: string;
   outputPath: string;
   fileReplacements: FileReplacement[];
+  nextConfig?: string;
 }
 
 export interface NextServeBuilderOptions extends JsonObject {

@@ -1,5 +1,9 @@
 # Step 6: Proxy
 
+## Video of this Lesson
+
+<iframe width="560" height="600" src="https://www.youtube.com/embed/xfvCz-yLeEw" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 You passed `--frontendProject=todos` when creating the node application. What did that argument do?
 
 It created a proxy configuration that allows the React application to talk to the API in development.
@@ -36,20 +40,20 @@ It created a proxy configuration that allows the React application to talk to th
 }
 ```
 
-This configuration tells `nx serve` to forward all requests starting with `/api` to the process listening on port 3333.
+This configuration tells `npx nx serve` to forward all requests starting with `/api` to the process listening on port 3333.
 
 ## Workspace.json, Targets, Builders
 
-You configure your workspaces in `workspace.json`. This file contains the workspace projects with their architect targets. For instance, `todos` has the `build`, `serve`, `lint`, and `test` targets. This means that you can run `nx build todos`, `nx serve todos`, etc..
+You configure your workspaces in `workspace.json`. This file contains the workspace projects with their architect targets. For instance, `todos` has the `build`, `serve`, `lint`, and `test` targets. This means that you can run `npx nx build todos`, `npx nx serve todos`, etc..
 
 Every target uses a builder which actually runs this target. So targets are analogous to typed npm scripts, and builders are analogous to typed shell scripts.
 
 **Why not use shell scripts and npm scripts directly?**
 
-There are a lot of advantages to providing additional metadata to the build tool. For instance, you can introspect targets. `nx serve todos --help` results in:
+There are a lot of advantages to providing additional metadata to the build tool. For instance, you can introspect targets. `npx nx serve todos --help` results in:
 
 ```bash
-nx run todos:serve [options,...]
+npx nx run todos:serve [options,...]
 
 Options:
   --buildTarget           Target which builds the application`
@@ -73,7 +77,7 @@ It helps with good editor integration (see [VSCode Support](https://nx.dev/react
 But, most importantly, it provides a holistic dev experience regardless of the tools used, and enables advanced build features like distributed computation caching and distributed builds).
 
 !!!!!
-Now run both "nx serve todos" and "nx serve api" in separate terminals, open http://localhost:4200. What do you see?
+Now run both "npx nx serve todos" and "npx nx serve api" in separate terminals, open http://localhost:4200. What do you see?
 !!!!!
 Todos application is working!
 404 in the console

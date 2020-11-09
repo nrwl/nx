@@ -47,7 +47,7 @@ export function forEachCli(
   const cb: any = callback ? callback : selectedCliOrFunction;
   clis.forEach((c) => {
     describe(`[${c}]`, () => {
-      beforeEach(() => {
+      beforeAll(() => {
         cli = c;
       });
       cb(c);
@@ -84,14 +84,18 @@ export function runCreateWorkspace(
     appName,
     style,
     base,
+    packageManager,
   }: {
     preset: string;
     appName?: string;
     style?: string;
     base?: string;
+    packageManager?: string;
   }
 ) {
-  let command = `npx create-nx-workspace@${process.env.PUBLISHED_VERSION} ${name} --cli=${cli} --preset=${preset} --no-nxCloud --no-interactive`;
+  const linterArg =
+    preset === 'angular' || preset === 'angular-nest' ? ' --linter=tslint' : '';
+  let command = `npx create-nx-workspace@${process.env.PUBLISHED_VERSION} ${name} --cli=${cli} --preset=${preset} ${linterArg} --no-nxCloud --no-interactive`;
   if (appName) {
     command += ` --appName=${appName}`;
   }
@@ -103,10 +107,13 @@ export function runCreateWorkspace(
     command += ` --defaultBase="${base}"`;
   }
 
+  if (packageManager) {
+    command += ` --package-manager=${packageManager}`;
+  }
+
   const create = execSync(command, {
     cwd: `./tmp/${cli}`,
     stdio: [0, 1, 2],
-    // stdio: ['pipe', 'pipe', 'pipe'],
     env: process.env,
   });
   return create ? create.toString() : '';
@@ -281,7 +288,7 @@ export function runCLI(
     if (opts.silenceError) {
       return e.stdout.toString();
     } else {
-      console.log(e.stdout.toString(), e.stderr.toString());
+      console.log(e.stdout?.toString(), e.stderr?.toString());
       throw e;
     }
   }

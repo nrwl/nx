@@ -22,14 +22,9 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(workspaceJson.projects['my-lib'].architect.build).toBeUndefined();
       expect(workspaceJson.projects['my-lib'].architect.lint).toEqual({
-        builder: '@nrwl/linter:lint',
+        builder: '@nrwl/linter:eslint',
         options: {
-          linter: 'eslint',
-          exclude: ['**/node_modules/**', '!libs/my-lib/**/*'],
-          tsConfig: [
-            'libs/my-lib/tsconfig.lib.json',
-            'libs/my-lib/tsconfig.spec.json',
-          ],
+          lintFilePatterns: ['libs/my-lib/**/*.ts'],
         },
       });
     });
@@ -114,8 +109,8 @@ describe('lib', () => {
       expect(tree.readContent(`libs/my-lib/jest.config.js`))
         .toMatchInlineSnapshot(`
         "module.exports = {
-          name: 'my-lib',
-          preset: '../../jest.config.js',
+          displayName: 'my-lib',
+          preset: '../../jest.preset.js',
           globals: {
             'ts-jest': {
               tsConfig: '<rootDir>/tsconfig.spec.json',
@@ -189,7 +184,7 @@ describe('lib', () => {
         tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.ts')
       ).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
-      expect(tree.exists(`libs/my-dir/my-lib/.eslintrc`)).toBeTruthy();
+      expect(tree.exists(`libs/my-dir/my-lib/.eslintrc.json`)).toBeTruthy();
     });
 
     it('should update workspace.json', async () => {
@@ -204,14 +199,9 @@ describe('lib', () => {
         'libs/my-dir/my-lib'
       );
       expect(workspaceJson.projects['my-dir-my-lib'].architect.lint).toEqual({
-        builder: '@nrwl/linter:lint',
+        builder: '@nrwl/linter:eslint',
         options: {
-          linter: 'eslint',
-          exclude: ['**/node_modules/**', '!libs/my-dir/my-lib/**/*'],
-          tsConfig: [
-            'libs/my-dir/my-lib/tsconfig.lib.json',
-            'libs/my-dir/my-lib/tsconfig.spec.json',
-          ],
+          lintFilePatterns: ['libs/my-dir/my-lib/**/*.ts'],
         },
       });
     });
@@ -252,15 +242,15 @@ describe('lib', () => {
       ]);
     });
 
-    it('should create a local .eslintrc', async () => {
+    it('should create a local .eslintrc.json', async () => {
       const tree = await runSchematic(
         'lib',
         { name: 'myLib', directory: 'myDir' },
         appTree
       );
 
-      const lint = readJsonInTree(tree, 'libs/my-dir/my-lib/.eslintrc');
-      expect(lint.extends).toEqual('../../../.eslintrc');
+      const lint = readJsonInTree(tree, 'libs/my-dir/my-lib/.eslintrc.json');
+      expect(lint.extends).toEqual('../../../.eslintrc.json');
     });
   });
 
@@ -275,9 +265,17 @@ describe('lib', () => {
       expect(resultTree.exists('libs/my-lib/jest.config.js')).toBeFalsy();
       const workspaceJson = readJsonInTree(resultTree, 'workspace.json');
       expect(workspaceJson.projects['my-lib'].architect.test).toBeUndefined();
-      expect(
-        workspaceJson.projects['my-lib'].architect.lint.options.tsConfig
-      ).toEqual(['libs/my-lib/tsconfig.lib.json']);
+      expect(workspaceJson.projects['my-lib'].architect.lint)
+        .toMatchInlineSnapshot(`
+        Object {
+          "builder": "@nrwl/linter:eslint",
+          "options": Object {
+            "lintFilePatterns": Array [
+              "libs/my-lib/**/*.ts",
+            ],
+          },
+        }
+      `);
     });
   });
 
@@ -376,8 +374,8 @@ describe('lib', () => {
       expect(tree.readContent(`libs/my-lib/jest.config.js`))
         .toMatchInlineSnapshot(`
         "module.exports = {
-          name: 'my-lib',
-          preset: '../../jest.config.js',
+          displayName: 'my-lib',
+          preset: '../../jest.preset.js',
           transform: {
             '^.+\\\\\\\\.[tj]sx?$': [
               'babel-jest',

@@ -1,0 +1,1 @@
+export = require('./jest-preset');

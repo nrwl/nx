@@ -55,6 +55,10 @@ export default function normalizeOptions(
 
   const relativeMainFileOutput = relative(rootDir, mainFileDir);
 
+  if (options.buildableProjectDepsInPackageJsonType == undefined) {
+    options.buildableProjectDepsInPackageJsonType = 'dependencies';
+  }
+
   return {
     ...options,
     files,

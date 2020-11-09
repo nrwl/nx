@@ -9,6 +9,7 @@ let localRegistryProcess;
 
 process.env.PUBLISHED_VERSION = `9999.0.1`;
 process.env.npm_config_registry = `http://localhost:4872/`;
+process.env.YARN_REGISTRY = process.env.npm_config_registry;
 
 export const getDirectories = (source) =>
   readdirSync(source, { withFileTypes: true })

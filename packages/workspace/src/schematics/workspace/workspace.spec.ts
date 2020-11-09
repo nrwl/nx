@@ -33,6 +33,7 @@ describe('workspace', () => {
         },
         'tsconfig.base.json': '*',
         'tslint.json': '*',
+        '.eslintrc.json': '*',
         'nx.json': '*',
       },
       tasksRunnerOptions: {

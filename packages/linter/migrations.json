@@ -1,0 +1,58 @@
+{
+  "schematics": {
+    "update-10.3.0": {
+      "version": "10.3.0-beta.1",
+      "description": "Update @typescript-eslint to v4.3",
+      "factory": "./src/migrations/update-10-3-0/update-10-3-0"
+    },
+    "update-eslint-builder-and-config": {
+      "version": "10.3.0-beta.0",
+      "description": "Migrate to the new ESLint builder and ESLint config style",
+      "factory": "./src/migrations/update-10-3-0/update-eslint-builder-and-config"
+    },
+    "add-json-ext-to-eslintrc": {
+      "version": "10.3.0-beta.2",
+      "description": "Add explicit .json file extension to .eslintrc files, not using an extension is deprecated",
+      "factory": "./src/migrations/update-10-3-0/add-json-ext-to-eslintrc"
+    },
+    "add-root-eslintrc-json-to-workspace-implicit-deps": {
+      "version": "10.3.0-beta.3",
+      "description": "Update implicitDependencies within nx.json to include root .eslintrc.json",
+      "factory": "./src/migrations/update-10-3-0/add-root-eslintrc-json-to-workspace-implicit-deps"
+    },
+    "revert-node-modules-files-in-eslint-builder-options": {
+      "version": "10.3.1-beta.1",
+      "description": "Revert any node_modules lintFilesPatterns that were accidentally included by update-eslint-builder-and-config",
+      "factory": "./src/migrations/update-10-3-1/revert-node-modules-files-in-eslint-builder-options"
+    },
+    "update-eslint-configs-to-use-nx-presets": {
+      "version": "10.4.0-beta.0",
+      "description": "Update ESLint config files to use preset configs which eslint-plugin-nx exports",
+      "factory": "./src/migrations/update-10-4-0/update-eslint-configs-to-use-nx-presets"
+    },
+    "update-root-eslint-config-to-use-overrides": {
+      "version": "10.4.0-beta.1",
+      "description": "Update root ESLint config to use overrides",
+      "factory": "./src/migrations/update-10-4-0/update-root-eslint-config-to-use-overrides"
+    }
+  },
+  "packageJsonUpdates": {
+    "10.3.0": {
+      "version": "10.3.0-beta.1",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "4.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "4.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint": {
+          "version": "7.10.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
+}
