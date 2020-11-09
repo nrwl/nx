@@ -131,7 +131,7 @@
     "core-js": "^3.6.5",
     "cosmiconfig": "^4.0.0",
     "css-loader": "3.4.2",
-    "cypress": "^4.1.0",
+    "cypress": "^5.5.0",
     "cz-conventional-changelog": "^3.0.2",
     "cz-customizable": "^6.2.0",
     "d3": "^6.1.1",
