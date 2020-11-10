@@ -10,7 +10,7 @@ import * as path from 'path';
 import { execSync } from 'child_process';
 import * as inquirer from 'inquirer';
 import yargsParser = require('yargs-parser');
-import { determinePackageManager, showNxWarning } from './shared';
+import { showNxWarning } from './shared';
 
 const tsVersion = 'TYPESCRIPT_VERSION';
 const cliVersion = 'NX_VERSION';
@@ -18,7 +18,7 @@ const nxVersion = 'NX_VERSION';
 const prettierVersion = 'PRETTIER_VERSION';
 
 const parsedArgs = yargsParser(process.argv, {
-  string: ['pluginName'],
+  string: ['pluginName', 'packageManager'],
   alias: {
     pluginName: 'plugin-name',
   },
@@ -199,7 +199,7 @@ if (parsedArgs.help) {
   process.exit(0);
 }
 
-const packageManager = determinePackageManager();
+const packageManager = parsedArgs.packageManager || 'npm';
 determineWorkspaceName(parsedArgs).then((workspaceName) => {
   return determinePluginName(parsedArgs).then((pluginName) => {
     const tmpDir = createSandbox(packageManager);

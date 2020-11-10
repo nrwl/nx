@@ -9,7 +9,7 @@ import * as inquirer from 'inquirer';
 import * as path from 'path';
 import { dirSync } from 'tmp';
 import * as yargsParser from 'yargs-parser';
-import { determinePackageManager, showNxWarning } from './shared';
+import { showNxWarning } from './shared';
 
 enum Preset {
   Empty = 'empty',
@@ -95,7 +95,7 @@ if (parsedArgs.help) {
   showHelp();
   process.exit(0);
 }
-const packageManager = determinePackageManager(parsedArgs.packageManager);
+const packageManager = parsedArgs.packageManager || 'npm';
 determineWorkspaceName(parsedArgs).then((name) => {
   determinePreset(parsedArgs).then((preset) => {
     return determineAppName(preset, parsedArgs).then((appName) => {

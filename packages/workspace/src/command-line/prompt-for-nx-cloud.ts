@@ -1,7 +1,11 @@
 import * as inquirer from 'inquirer';
 import { readNxJson } from '../core/file-utils';
 import { output } from '../utils/output';
-import { detectPackageManager } from '../utils/detect-package-manager';
+import {
+  detectPackageManager,
+  getPackageManagerExecuteCommand,
+  getPackageManagerInstallCommand,
+} from '../utils/detect-package-manager';
 import { execSync } from 'child_process';
 
 export async function promptForNxCloud(scan: boolean) {
@@ -16,14 +20,15 @@ export async function promptForNxCloud(scan: boolean) {
   const res = await askAboutNxCloud();
   if (res) {
     const pm = detectPackageManager();
-    if (pm === 'yarn') {
-      execSync('yarn add -D @nrwl/nx-cloud@latest');
-    } else {
-      execSync('npm install --save-dev @nrwl/nx-cloud@latest');
-    }
-    execSync(`npx nx g @nrwl/nx-cloud:init`, {
-      stdio: [0, 1, 2],
-    });
+    execSync(
+      `${getPackageManagerInstallCommand(pm, true)} @nrwl/nx-cloud@latest`
+    );
+    execSync(
+      `${getPackageManagerExecuteCommand(pm)} nx g @nrwl/nx-cloud:init`,
+      {
+        stdio: [0, 1, 2],
+      }
+    );
   } else {
     output.log({ title: 'Executing the command without --scan' });
   }
