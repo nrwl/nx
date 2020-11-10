@@ -10,6 +10,7 @@ describe('Hasher', () => {
     'nx.json': 'nx.json.hash',
     'package-lock.json': 'package-lock.json.hash',
     'package.json': 'package.json.hash',
+    'pnpm-lock.yaml': 'pnpm-lock.yaml.hash',
     'tsconfig.base.json': 'tsconfig.base.json.hash',
     'workspace.json': 'workspace.json.hash',
   };
@@ -70,6 +71,7 @@ describe('Hasher', () => {
       'nx.json': 'nx.json.hash',
       'package-lock.json': 'package-lock.json.hash',
       'package.json': 'package.json.hash',
+      'pnpm-lock.yaml': 'pnpm-lock.yaml.hash',
       'tsconfig.base.json': 'tsconfig.base.json.hash',
       'workspace.json': 'workspace.json.hash',
     });
