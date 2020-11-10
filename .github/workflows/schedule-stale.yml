@@ -49,7 +49,7 @@ jobs:
           stale-issue-label: "stale"
           operations-per-run: 300
           remove-stale-when-updated: true
-          only-labels: "blocked: repro needed,blocked: retry with latest"
+          only-labels: "blocked: repro needed"
           stale-issue-message: |
             This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
             If we missed this issue please reply to keep it active.
