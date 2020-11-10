@@ -156,6 +156,7 @@ export class Hasher {
       ...rootWorkspaceFileNames(),
       'package-lock.json',
       'yarn.lock',
+      'pnpm-lock.yaml',
     ];
 
     this.implicitDependencies = Promise.resolve().then(async () => {
