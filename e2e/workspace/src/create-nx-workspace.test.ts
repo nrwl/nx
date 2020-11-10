@@ -1,12 +1,4 @@
-import {
-  cli,
-  forEachCli,
-  readJson,
-  runCreateWorkspace,
-  setCurrentProjName,
-  uniq,
-  workspaceConfigName,
-} from '@nrwl/e2e/utils';
+import { cli, forEachCli, runCreateWorkspace, uniq } from '@nrwl/e2e/utils';
 import { existsSync, mkdirSync } from 'fs-extra';
 import { execSync } from 'child_process';
 
@@ -118,19 +110,6 @@ forEachCli(() => {
       });
 
       expect(existsSync(`${tmpDir}/${wsName}/package.json`)).toBeTruthy();
-    });
-
-    it('should store `packageManager` preference', () => {
-      const wsName = uniq('empty');
-      setCurrentProjName(wsName);
-
-      runCreateWorkspace(wsName, {
-        preset: 'empty',
-        packageManager: 'yarn',
-      });
-
-      const workspaceJson = readJson(`${workspaceConfigName()}`);
-      expect(workspaceJson.cli.packageManager).toEqual('yarn');
     });
   });
 });

@@ -134,7 +134,6 @@ export function sharedNew(cli: string, options: Schema): Rule {
 
     return chain([
       schematic('workspace', { ...workspaceOpts, cli }),
-      setDefaultPackageManager(options),
       setDefaultLinter(options),
       addPresetDependencies(options),
       addCloudDependencies(options),
@@ -325,20 +324,6 @@ function setTSLintDefault() {
       application: { linter: 'tslint' },
       library: { linter: 'tslint' },
     };
-    return json;
-  });
-}
-
-function setDefaultPackageManager({ packageManager }: Schema) {
-  if (!packageManager) {
-    return noop();
-  }
-
-  return updateWorkspaceInTree((json) => {
-    if (!json.cli) {
-      json.cli = {};
-    }
-    json.cli['packageManager'] = packageManager;
     return json;
   });
 }

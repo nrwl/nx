@@ -1,25 +1,13 @@
 import { terminal } from '@angular-devkit/core';
 import { appRootPath } from '../app-root';
-import { detectPackageManager } from '../detect-package-manager';
+import {
+  detectPackageManager,
+  getPackageManagerInstallCommand,
+} from '../detect-package-manager';
 import { readJsonFile } from '../fileutils';
 import { output } from '../output';
 import { PluginCapabilities } from './models';
 import { hasElements } from './shared';
-
-function getPackageManagerInstallCommand(): string {
-  let packageManager = detectPackageManager();
-  let packageManagerInstallCommand = 'npm install --save-dev';
-  switch (packageManager) {
-    case 'yarn':
-      packageManagerInstallCommand = 'yarn add --dev';
-      break;
-
-    case 'pnpm':
-      packageManagerInstallCommand = 'pnpm install --save-dev';
-      break;
-  }
-  return packageManagerInstallCommand;
-}
 
 function tryGetCollection<T>(
   workspaceRoot: string,
@@ -74,10 +62,14 @@ export function listPluginCapabilities(pluginName: string) {
   const plugin = getPluginCapabilities(appRootPath, pluginName);
 
   if (!plugin) {
+    const packageManager = detectPackageManager();
     output.note({
       title: `${pluginName} is not currently installed`,
       bodyLines: [
-        `Use "${getPackageManagerInstallCommand()} ${pluginName}" to add new capabilities`,
+        `Use "${getPackageManagerInstallCommand(
+          packageManager,
+          true
+        )} ${pluginName}" to add new capabilities`,
       ],
     });
 
