@@ -10,7 +10,7 @@
 
 {{getting-started}}
 
-```angular    [a workspace with a single Angular application]
+```angular [a workspace with a single Angular application]
 ? Workspace name (e.g., org name) happyorg ? What to create in the new workspace
 web components [a workspace with a single app built using web components] ?
 Application name myapp ? Default stylesheet format CSS

@@ -130,15 +130,10 @@ export class TaskOrchestrator {
   private pipeOutputCapture(task: Task) {
     try {
       const p = this.projectGraph.nodes[task.target.project];
-      const b = p.data.architect[task.target.target].builder;
-      // this is temporary. we simply want to assess if pipeOutputCapture
-      // works well before making it configurable
-      return (
-        this.cache.temporaryOutputPath(task) &&
-        (b === '@nrwl/workspace:run-commands' ||
-          b === '@nrwl/cypress:cypress' ||
-          b === '@nrwl/gatsby:build')
-      );
+      const t = p.data.architect[task.target.target];
+
+      const ws = new Workspaces();
+      return ws.builderOutputCapture(t) == 'pipe';
     } catch (e) {
       return false;
     }

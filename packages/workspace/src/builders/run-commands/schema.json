@@ -2,6 +2,7 @@
   "title": "Run Commands",
   "description": "Run any custom commands with Nx",
   "type": "object",
+  "outputCapture": "pipe",
   "properties": {
     "commands": {
       "type": "array",

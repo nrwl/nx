@@ -43,6 +43,11 @@ export class Workspaces {
     return buildersJson['$schema'] === '@nrwl/tao/src/builders-schema.json';
   }
 
+  builderOutputCapture(target: TargetDefinition): 'direct' | 'pipe' {
+    const { buildersJson } = this.readBuildersJson(target);
+    return buildersJson['outputCapture'] ?? 'direct';
+  }
+
   isNxSchematic(collectionName: string, schematicName: string) {
     const schema = this.readSchematic(collectionName, schematicName).schema;
     return schema['$schema'] === '@nrwl/tao/src/schematic-schema.json';
