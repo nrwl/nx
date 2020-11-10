@@ -93,5 +93,10 @@
     "name": "@nxrocks/nx-spring-boot",
     "description": "Nx plugin to generate, run, package, build (and more) Spring Boot projects inside your Nx workspace",
     "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-spring-boot"
+  },
+  {
+    "name": "@trumbitta/nx-plugin-openapi",
+    "description": "OpenAPI Plugin for Nx. Keep your API spec files in libs, and auto-generate sources.",
+    "url": "https://github.com/trumbitta/nx-trumbitta/tree/main/packages/nx-plugin-openapi"
   }
 ]
