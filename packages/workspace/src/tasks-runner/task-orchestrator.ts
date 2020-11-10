@@ -185,17 +185,22 @@ export class TaskOrchestrator {
             output.logCommand(commandLine);
             process.stdout.write(outWithErr.join(''));
           }
-          if (outputPath && code === 0) {
+          if (outputPath) {
             fs.writeFileSync(outputPath, outWithErr.join(''));
-            this.cache
-              .put(task, outputPath, taskOutputs)
-              .then(() => {
-                this.options.lifeCycle.endTask(task, code);
-                res(code);
-              })
-              .catch((e) => {
-                rej(e);
-              });
+            if (code === 0) {
+              this.cache
+                .put(task, outputPath, taskOutputs)
+                .then(() => {
+                  this.options.lifeCycle.endTask(task, code);
+                  res(code);
+                })
+                .catch((e) => {
+                  rej(e);
+                });
+            } else {
+              this.options.lifeCycle.endTask(task, code);
+              res(code);
+            }
           } else {
             this.options.lifeCycle.endTask(task, code);
             res(code);
