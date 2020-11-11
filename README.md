@@ -131,6 +131,8 @@ You are good to go!
 
 ### Talks
 
+- [Smarter & Faster Angular Development with Nx (ngconf webinar)](https://youtu.be/LEqJ1xKf_1w), Juri Strumpflohner, Isaac Mann (Oct 16, 2020)
+
 - [React Development At Scale (React Vancouver Virtual Meetup)](https://youtu.be/ZGXuzVipe1U?t=3721), Jack Hsu (May 27, 2020)
 
 - [Scalable React Development (React Summit Remote Edition)](https://www.youtube.com/watch?v=Lr-u2ALSEQg), Jason Jean (April 17, 2020)  
