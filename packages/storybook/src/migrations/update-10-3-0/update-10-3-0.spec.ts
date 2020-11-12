@@ -168,7 +168,7 @@ describe('Update 10-3-0', () => {
             \\"path\\": \\"./tsconfig.spec.json\\"
           },
           {
-            \\"path\\": \\"./.storybook/tsconfig.json\\"
+            \\"path\\": \\".storybook/tsconfig.json\\"
           }
         ]
       }
@@ -220,7 +220,7 @@ describe('Update 10-3-0', () => {
             \\"path\\": \\"./tsconfig.spec.json\\"
           },
           {
-            \\"path\\": \\"./.storybook/tsconfig.json\\"
+            \\"path\\": \\".storybook/tsconfig.json\\"
           }
         ]
       }
