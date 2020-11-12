@@ -632,6 +632,14 @@ function updateE2eProject(options: NormalizedSchema): Rule {
           };
         }
       ),
+      updateJsonInTree(`${options.e2eProjectRoot}/tsconfig.json`, (json) => {
+        return {
+          ...json,
+          extends: `${offsetFromRoot(
+            options.e2eProjectRoot
+          )}tsconfig.base.json`,
+        };
+      }),
     ]);
   };
 }
