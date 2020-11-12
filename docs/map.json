@@ -1055,6 +1055,16 @@
             "name": "Configuring Browser Support",
             "id": "browser-support",
             "file": "shared/guides/browser-support"
+          },
+          {
+            "name": "Updating Nx",
+            "id": "updating-nx",
+            "file": "angular/guides/update"
+          },
+          {
+            "name": "Running custom commands",
+            "id": "running-custom-commands",
+            "file": "angular/guides/running-custom-commands"
           }
         ]
       },
@@ -2111,6 +2121,11 @@
             "name": "Configuring Browser Support",
             "id": "browser-support",
             "file": "shared/guides/browser-support"
+          },
+          {
+            "name": "Next.js projects with Nx",
+            "id": "nextjs",
+            "file": "react/guides/nextjs"
           }
         ]
       },
@@ -2646,12 +2661,6 @@
             "name": "storybook",
             "id": "storybook",
             "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/storybook Overview",
-                "file": "node/guides/storybook-plugin"
-              },
               {
                 "id": "schematics",
                 "name": "Schematics",

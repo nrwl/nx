@@ -12,6 +12,7 @@
     "check-format": "scripts/check-format.sh",
     "check-imports": "node ./scripts/check-imports.js",
     "check-versions": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/check-versions.ts",
+    "check-documentation-map": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/map-link-checker.ts",
     "e2e": "./scripts/e2e.sh",
     "e2e-ci": "./scripts/e2e-ci.sh",
     "format": "./scripts/format.sh",
@@ -20,7 +21,7 @@
     "lint": "nx run-many --target=lint --all --parallel",
     "depcheck": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/depcheck.ts",
     "local-registry": "./scripts/local-registry.sh",
-    "documentation": "./scripts/documentation/documentation.sh && ./scripts/documentation/check-documentation.sh",
+    "documentation": "./scripts/documentation/documentation.sh && ./scripts/documentation/check-documentation.sh && npm run check-documentation-map",
     "submit-plugin": "node ./scripts/submit-plugin.js"
   },
   "devDependencies": {
