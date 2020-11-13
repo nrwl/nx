@@ -81,7 +81,7 @@ describe('Jest Builder', () => {
         reporters: ['/test/path'],
         verbose: false,
         coverageReporters: ['test'],
-        coverageDirectory: '/test/path',
+        coverageDirectory: '/test/coverage',
         watch: false,
       });
       expect(await run.result).toEqual(
@@ -101,7 +101,7 @@ describe('Jest Builder', () => {
           reporters: ['/test/path'],
           verbose: false,
           coverageReporters: ['test'],
-          coverageDirectory: '/test/path',
+          coverageDirectory: '/root/test/coverage',
           watch: false,
         },
         ['/root/jest.config.js']
@@ -160,7 +160,7 @@ describe('Jest Builder', () => {
         reporters: ['/test/path'],
         verbose: false,
         coverageReporters: ['test'],
-        coverageDirectory: '/test/path',
+        coverageDirectory: '/test/coverage',
         testResultsProcessor: 'results-processor',
         updateSnapshot: true,
         useStderr: true,
@@ -194,7 +194,7 @@ describe('Jest Builder', () => {
           verbose: false,
           reporters: ['/test/path'],
           coverageReporters: ['test'],
-          coverageDirectory: '/test/path',
+          coverageDirectory: '/root/test/coverage',
           testResultsProcessor: 'results-processor',
           updateSnapshot: true,
           useStderr: true,

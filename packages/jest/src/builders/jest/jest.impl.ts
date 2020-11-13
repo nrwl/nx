@@ -63,7 +63,6 @@ function run(
     testPathPattern: options.testPathPattern,
     colors: options.colors,
     verbose: options.verbose,
-    coverageDirectory: options.coverageDirectory,
     testResultsProcessor: options.testResultsProcessor,
     updateSnapshot: options.updateSnapshot,
     useStderr: options.useStderr,
@@ -90,6 +89,13 @@ function run(
       .map((s) => s.trim());
     config._.push(...parsedTests);
     config.findRelatedTests = true;
+  }
+
+  if (options.coverageDirectory) {
+    config.coverageDirectory = path.join(
+      context.workspaceRoot,
+      options.coverageDirectory
+    );
   }
 
   if (options.clearCache) {
