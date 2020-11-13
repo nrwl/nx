@@ -175,7 +175,7 @@ describe('component', () => {
 
       const packageJSON = readJsonInTree(tree, 'package.json');
       expect(packageJSON.dependencies['@emotion/styled']).toBeDefined();
-      expect(packageJSON.dependencies['@emotion/core']).toBeDefined();
+      expect(packageJSON.dependencies['@emotion/react']).toBeDefined();
     });
   });
 

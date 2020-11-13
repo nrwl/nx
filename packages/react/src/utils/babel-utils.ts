@@ -22,7 +22,7 @@ export function updateBabelOptions(options: any): void {
   const packageJson = readJsonFile(join(appRootPath, 'package.json'));
   const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
   const hasStyledComponents = !!deps['styled-components'];
-  const hasEmotion = !!deps['@emotion/core'];
+  const hasEmotion = !!deps['@emotion/react'];
   if (hasStyledComponents && !hasEmotion) {
     options.plugins.splice(0, 0, [
       require.resolve('babel-plugin-styled-components'),
