@@ -275,37 +275,8 @@ function determineCli(preset: Preset, parsedArgs: any) {
     case Preset.AngularWithNest: {
       return Promise.resolve(angular);
     }
-    case Preset.OSS:
-    case Preset.WebComponents:
-    case Preset.React:
-    case Preset.ReactWithExpress:
-    case Preset.NextJs:
-    case Preset.Nest: {
-      return Promise.resolve(nx);
-    }
     default: {
-      return inquirer
-        .prompt([
-          {
-            name: 'CLI',
-            message: `CLI to power the Nx workspace      `,
-            default: 'nx',
-            type: 'list',
-            choices: [
-              {
-                value: 'nx',
-                name:
-                  'Nx           [Recommended for all applications (React, Node, etc..)]',
-              },
-
-              {
-                value: 'angular',
-                name: 'Angular CLI  [Recommended for Angular only workspaces]',
-              },
-            ],
-          },
-        ])
-        .then((a: { CLI: string }) => (a.CLI === 'angular' ? angular : nx));
+      return Promise.resolve(nx);
     }
   }
 }
