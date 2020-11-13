@@ -92,9 +92,6 @@ jobs:
           name: Check Commit Message Format
           command: yarn check-commit
       - run:
-          name: Run linting
-          command: yarn lint
-      - run:
           name: Check Package dependencies
           command: yarn depcheck
   e2e-1:
