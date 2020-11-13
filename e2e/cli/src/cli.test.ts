@@ -1,7 +1,6 @@
 import { packagesWeCareAbout } from '@nrwl/workspace/src/command-line/report';
 import { renameSync } from 'fs';
 import {
-  ensureProject,
   forEachCli,
   newProject,
   readFile,
@@ -16,7 +15,7 @@ import {
 forEachCli('nx', () => {
   describe('Help', () => {
     it('should show help', async () => {
-      ensureProject();
+      newProject();
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/web:app ${myapp}`);
 
@@ -48,7 +47,7 @@ forEachCli('nx', () => {
 forEachCli('angular', () => {
   describe('help', () => {
     it('should show help', async () => {
-      ensureProject();
+      newProject();
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/web:app ${myapp}`);
 
@@ -80,7 +79,7 @@ forEachCli('angular', () => {
 forEachCli(() => {
   describe('report', () => {
     it(`should report package versions`, async () => {
-      ensureProject();
+      newProject();
 
       const reportOutput = runCommand('npm run nx report');
 

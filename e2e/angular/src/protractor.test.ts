@@ -1,4 +1,4 @@
-import { ensureProject, runCLI, uniq, forEachCli } from '@nrwl/e2e/utils';
+import { forEachCli, newProject, runCLI, uniq } from '@nrwl/e2e/utils';
 
 forEachCli(() => {
   describe('Protractor', () => {
@@ -9,7 +9,7 @@ forEachCli(() => {
 
   xdescribe('Protractor', () => {
     beforeEach(() => {
-      ensureProject();
+      newProject();
     });
 
     it('should work', async () => {

@@ -1,18 +1,18 @@
 import {
-  ensureProject,
+  forEachCli,
+  newProject,
+  patchKarmaToWorkOnWSL,
   runCLI,
+  runCommand,
   uniq,
   updateFile,
-  forEachCli,
-  patchKarmaToWorkOnWSL,
-  runCommand,
 } from '@nrwl/e2e/utils';
 
 forEachCli('angular', () => {
   // TODO: This test is super flaky, investigate and re-enable.
   describe('AngularJS Schematics', () => {
     beforeEach(() => {
-      ensureProject();
+      newProject();
     });
 
     describe('DowngradeModule', () => {

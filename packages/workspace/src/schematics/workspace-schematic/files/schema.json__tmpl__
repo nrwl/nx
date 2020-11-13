@@ -1,5 +1,5 @@
 {
-  "$schema": "@nrwl/tao/src/schematic-schema.json",
+  "cli": "nx",
   "id": "<%= name %>",
   "type": "object",
   "properties": {

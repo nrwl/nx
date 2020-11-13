@@ -1,6 +1,6 @@
 import {
-  ensureProject,
   forEachCli,
+  newProject,
   patchKarmaToWorkOnWSL,
   runCLI,
   runCLIAsync,
@@ -11,7 +11,7 @@ forEachCli(() => {
   // TODO: This test is super flaky, investigate and re-enable.
   xdescribe('Karma', () => {
     it('should be able to generate a testable library using karma', async (done) => {
-      ensureProject();
+      newProject();
 
       // run an app
       const myapp = uniq('myapp');

@@ -342,6 +342,11 @@
                     "file": "angular/api-web/builders/dev-server"
                   },
                   {
+                    "name": "file-server",
+                    "id": "file-server",
+                    "file": "angular/api-web/builders/file-server"
+                  },
+                  {
                     "name": "package",
                     "id": "package",
                     "file": "angular/api-web/builders/package"
@@ -1430,6 +1435,11 @@
                     "file": "react/api-web/builders/dev-server"
                   },
                   {
+                    "name": "file-server",
+                    "id": "file-server",
+                    "file": "react/api-web/builders/file-server"
+                  },
+                  {
                     "name": "package",
                     "id": "package",
                     "file": "react/api-web/builders/package"
@@ -2469,6 +2479,11 @@
                     "name": "dev-server",
                     "id": "dev-server",
                     "file": "node/api-web/builders/dev-server"
+                  },
+                  {
+                    "name": "file-server",
+                    "id": "file-server",
+                    "file": "node/api-web/builders/file-server"
                   },
                   {
                     "name": "package",

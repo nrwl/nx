@@ -8,7 +8,12 @@ import {
   Schema,
 } from '../shared/params';
 import { commandName, printHelp } from '../shared/print-help';
-import { WorkspaceDefinition, Workspaces } from '../shared/workspace';
+import {
+  TargetDefinition,
+  WorkspaceDefinition,
+  Workspaces,
+} from '../shared/workspace';
+
 const chalk = require('chalk');
 
 export interface RunOptions {
@@ -130,17 +135,22 @@ export function validateTargetAndConfiguration(
   }
 }
 
+export interface TargetContext {
+  root: string;
+  target: TargetDefinition;
+  workspace: WorkspaceDefinition;
+}
+
 export async function run(root: string, args: string[], isVerbose: boolean) {
   const logger = getLogger(isVerbose) as any;
   const ws = new Workspaces();
 
   return handleErrors(logger, isVerbose, async () => {
-    const workspaceDefinition = ws.readWorkspaceConfiguration(root);
-    const opts = parseRunOpts(args, workspaceDefinition.defaultProject, logger);
-    validateTargetAndConfiguration(workspaceDefinition, opts);
+    const workspace = ws.readWorkspaceConfiguration(root);
+    const opts = parseRunOpts(args, workspace.defaultProject, logger);
+    validateTargetAndConfiguration(workspace, opts);
 
-    const target =
-      workspaceDefinition.projects[opts.project].architect[opts.target];
+    const target = workspace.projects[opts.project].architect[opts.target];
     if (ws.isNxBuilder(target)) {
       const { schema, implementation } = ws.readBuilder(target);
       const combinedOptions = combineOptionsForBuilder(
@@ -153,7 +163,7 @@ export async function run(root: string, args: string[], isVerbose: boolean) {
         printRunHelp(opts, schema, logger);
         return 0;
       }
-      return await implementation(combinedOptions);
+      return await implementation(combinedOptions, { root, target, workspace });
     } else {
       return (await import('./ngcli-adapter')).run(logger, root, opts);
     }

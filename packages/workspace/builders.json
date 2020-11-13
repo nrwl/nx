@@ -1,5 +1,4 @@
 {
-  "$schema": "@nrwl/tao/src/builders-schema.json",
   "builders": {
     "run-commands": {
       "implementation": "./src/builders/run-commands/run-commands.impl",

@@ -1,34 +1,32 @@
 import {
-  forEachCli,
+  checkFilesExist,
+  newProject,
+  readFile,
   runCLI,
   supportUi,
-  uniq,
-  ensureProject,
   tmpProjPath,
-  checkFilesExist,
-  readFile,
+  uniq,
 } from '@nrwl/e2e/utils';
-import { writeFileSync, mkdirSync } from 'fs';
+import { mkdirSync, writeFileSync } from 'fs';
 
-forEachCli(() => {
-  describe('Storybook schematics', () => {
-    describe('running Storybook and Cypress', () => {
-      it('should execute e2e tests using Cypress running against Storybook', () => {
-        ensureProject();
+describe('Storybook schematics', () => {
+  describe('running Storybook and Cypress', () => {
+    it('should execute e2e tests using Cypress running against Storybook', () => {
+      newProject();
 
-        const myapp = uniq('myapp');
-        runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
+      const myapp = uniq('myapp');
+      runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
 
-        const mylib = uniq('test-ui-lib');
-        createTestUILib(mylib);
-        const mylib2 = uniq('test-ui-lib-react');
-        runCLI(`generate @nrwl/react:lib ${mylib2} --no-interactive`);
-        runCLI(
-          `generate @nrwl/react:component Button --project=${mylib2} --no-interactive`
-        );
-        writeFileSync(
-          tmpProjPath(`libs/${mylib2}/src/lib/button.tsx`),
-          `
+      const mylib = uniq('test-ui-lib');
+      createTestUILib(mylib);
+      const mylib2 = uniq('test-ui-lib-react');
+      runCLI(`generate @nrwl/react:lib ${mylib2} --no-interactive`);
+      runCLI(
+        `generate @nrwl/react:component Button --project=${mylib2} --no-interactive`
+      );
+      writeFileSync(
+        tmpProjPath(`libs/${mylib2}/src/lib/button.tsx`),
+        `
           import React from 'react';
 
             import './button.css';
@@ -52,10 +50,10 @@ forEachCli(() => {
             
             export default Button;            
             `
-        );
-        writeFileSync(
-          tmpProjPath(`libs/${mylib2}/src/lib/button.stories.tsx`),
-          `
+      );
+      writeFileSync(
+        tmpProjPath(`libs/${mylib2}/src/lib/button.stories.tsx`),
+        `
             import React from 'react';
             import { Button, ButtonStyle } from './button';
             import { text, number } from '@storybook/addon-knobs';
@@ -73,20 +71,20 @@ forEachCli(() => {
               />
             );
             `
-        );
+      );
 
-        runCLI(
-          `generate @nrwl/angular:storybook-configuration ${mylib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
-        );
-        runCLI(
-          `generate @nrwl/angular:stories ${mylib} --generateCypressSpecs --no-interactive`
-        );
+      runCLI(
+        `generate @nrwl/angular:storybook-configuration ${mylib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
+      );
+      runCLI(
+        `generate @nrwl/angular:stories ${mylib} --generateCypressSpecs --no-interactive`
+      );
 
-        writeFileSync(
-          tmpProjPath(
-            `apps/${mylib}-e2e/src/integration/test-button/test-button.component.spec.ts`
-          ),
-          `
+      writeFileSync(
+        tmpProjPath(
+          `apps/${mylib}-e2e/src/integration/test-button/test-button.component.spec.ts`
+        ),
+        `
             describe('test-ui-lib3726865', () => {
 
           it('should render the component', () => {
@@ -104,16 +102,16 @@ forEachCli(() => {
           });
         });
         `
-        );
+      );
 
-        runCLI(
-          `generate @nrwl/react:storybook-configuration ${mylib2} --configureCypress --no-interactive`
-        );
+      runCLI(
+        `generate @nrwl/react:storybook-configuration ${mylib2} --configureCypress --no-interactive`
+      );
 
-        mkdirSync(tmpProjPath(`apps/${mylib2}-e2e/src/integration`));
-        writeFileSync(
-          tmpProjPath(`apps/${mylib2}-e2e/src/integration/button.spec.ts`),
-          `
+      mkdirSync(tmpProjPath(`apps/${mylib2}-e2e/src/integration`));
+      writeFileSync(
+        tmpProjPath(`apps/${mylib2}-e2e/src/integration/button.spec.ts`),
+        `
         describe('react-ui', () => {
           it('should render the component', () => {
             cy.visit(
@@ -130,77 +128,73 @@ forEachCli(() => {
           });
         });
         `
+      );
+
+      if (supportUi()) {
+        expect(runCLI(`run ${mylib}-e2e:e2e --no-watch`)).toContain(
+          'All specs passed!'
         );
+      }
 
-        if (supportUi()) {
-          expect(runCLI(`run ${mylib}-e2e:e2e --no-watch`)).toContain(
-            'All specs passed!'
-          );
-        }
+      runCLI(`run ${mylib}:build-storybook`);
 
-        runCLI(`run ${mylib}:build-storybook`);
+      checkFilesExist(`dist/storybook/${mylib}/index.html`);
+      expect(readFile(`dist/storybook/${mylib}/index.html`)).toContain(
+        `<title>Storybook</title>`
+      );
+    }, 1000000);
+  });
 
-        checkFilesExist(`dist/storybook/${mylib}/index.html`);
-        expect(readFile(`dist/storybook/${mylib}/index.html`)).toContain(
-          `<title>Storybook</title>`
-        );
-      }, 1000000);
-    });
+  describe('build storybook', () => {
+    it('should build an Angular based storybook', () => {
+      newProject();
 
-    describe('build storybook', () => {
-      it('should build an Angular based storybook', () => {
-        ensureProject();
+      const angularStorybookLib = uniq('test-ui-lib');
+      createTestUILib(angularStorybookLib);
+      runCLI(
+        `generate @nrwl/angular:storybook-configuration ${angularStorybookLib} --generateStories --no-interactive`
+      );
 
-        const angularStorybookLib = uniq('test-ui-lib');
-        createTestUILib(angularStorybookLib);
-        runCLI(
-          `generate @nrwl/angular:storybook-configuration ${angularStorybookLib} --generateStories --no-interactive`
-        );
+      // build Angular lib
+      runCLI(`run ${angularStorybookLib}:build-storybook`);
+      checkFilesExist(`dist/storybook/${angularStorybookLib}/index.html`);
+      expect(
+        readFile(`dist/storybook/${angularStorybookLib}/index.html`)
+      ).toContain(`<title>Storybook</title>`);
+    }, 1000000);
 
-        // build Angular lib
-        runCLI(`run ${angularStorybookLib}:build-storybook`);
-        checkFilesExist(`dist/storybook/${angularStorybookLib}/index.html`);
-        expect(
-          readFile(`dist/storybook/${angularStorybookLib}/index.html`)
-        ).toContain(`<title>Storybook</title>`);
-      }, 1000000);
+    it('should build a React based storybook', () => {
+      newProject();
 
-      it('should build a React based storybook', () => {
-        ensureProject();
+      const reactStorybookLib = uniq('test-ui-lib-react');
+      runCLI(`generate @nrwl/react:lib ${reactStorybookLib} --no-interactive`);
+      runCLI(
+        `generate @nrwl/react:storybook-configuration ${reactStorybookLib} --generateStories --no-interactive`
+      );
 
-        const reactStorybookLib = uniq('test-ui-lib-react');
-        runCLI(
-          `generate @nrwl/react:lib ${reactStorybookLib} --no-interactive`
-        );
-        runCLI(
-          `generate @nrwl/react:storybook-configuration ${reactStorybookLib} --generateStories --no-interactive`
-        );
+      // build React lib
+      runCLI(`run ${reactStorybookLib}:build-storybook`);
+      checkFilesExist(`dist/storybook/${reactStorybookLib}/index.html`);
+      expect(
+        readFile(`dist/storybook/${reactStorybookLib}/index.html`)
+      ).toContain(`<title>Storybook</title>`);
+    }, 1000000);
 
-        // build React lib
-        runCLI(`run ${reactStorybookLib}:build-storybook`);
-        checkFilesExist(`dist/storybook/${reactStorybookLib}/index.html`);
-        expect(
-          readFile(`dist/storybook/${reactStorybookLib}/index.html`)
-        ).toContain(`<title>Storybook</title>`);
-      }, 1000000);
+    it('should build a React based storybook that references another lib', () => {
+      newProject();
 
-      it('should build a React based storybook that references another lib', () => {
-        ensureProject();
+      const reactStorybookLib = uniq('test-ui-lib-react');
+      runCLI(`generate @nrwl/react:lib ${reactStorybookLib} --no-interactive`);
+      runCLI(
+        `generate @nrwl/react:storybook-configuration ${reactStorybookLib} --generateStories --no-interactive`
+      );
 
-        const reactStorybookLib = uniq('test-ui-lib-react');
-        runCLI(
-          `generate @nrwl/react:lib ${reactStorybookLib} --no-interactive`
-        );
-        runCLI(
-          `generate @nrwl/react:storybook-configuration ${reactStorybookLib} --generateStories --no-interactive`
-        );
-
-        const anotherReactLib = uniq('test-another-lib-react');
-        runCLI(`generate @nrwl/react:lib ${anotherReactLib} --no-interactive`);
-        // create a React component we can reference
-        writeFileSync(
-          tmpProjPath(`libs/${anotherReactLib}/src/lib/mytestcmp.tsx`),
-          `
+      const anotherReactLib = uniq('test-another-lib-react');
+      runCLI(`generate @nrwl/react:lib ${anotherReactLib} --no-interactive`);
+      // create a React component we can reference
+      writeFileSync(
+        tmpProjPath(`libs/${anotherReactLib}/src/lib/mytestcmp.tsx`),
+        `
             import React from 'react';
             
             /* eslint-disable-next-line */
@@ -216,21 +210,21 @@ forEachCli(() => {
             
             export default MyTestCmp;
         `
-        );
-        // update index.ts and export it
-        writeFileSync(
-          tmpProjPath(`libs/${anotherReactLib}/src/index.ts`),
-          `
+      );
+      // update index.ts and export it
+      writeFileSync(
+        tmpProjPath(`libs/${anotherReactLib}/src/index.ts`),
+        `
             export * from './lib/mytestcmp';
         `
-        );
+      );
 
-        // create a story in the first lib to reference the cmp from the 2nd lib
-        writeFileSync(
-          tmpProjPath(
-            `libs/${reactStorybookLib}/src/lib/myteststory.stories.tsx`
-          ),
-          `
+      // create a story in the first lib to reference the cmp from the 2nd lib
+      writeFileSync(
+        tmpProjPath(
+          `libs/${reactStorybookLib}/src/lib/myteststory.stories.tsx`
+        ),
+        `
             import React from 'react';
             
             import { MyTestCmp, MyTestCmpProps } from '@proj/${anotherReactLib}';
@@ -247,46 +241,46 @@ forEachCli(() => {
               return <MyTestCmp />;
             };
         `
-        );
+      );
 
-        // build React lib
-        runCLI(`run ${reactStorybookLib}:build-storybook`);
-        checkFilesExist(`dist/storybook/${reactStorybookLib}/index.html`);
-        expect(
-          readFile(`dist/storybook/${reactStorybookLib}/index.html`)
-        ).toContain(`<title>Storybook</title>`);
-      }, 1000000);
+      // build React lib
+      runCLI(`run ${reactStorybookLib}:build-storybook`);
+      checkFilesExist(`dist/storybook/${reactStorybookLib}/index.html`);
+      expect(
+        readFile(`dist/storybook/${reactStorybookLib}/index.html`)
+      ).toContain(`<title>Storybook</title>`);
+    }, 1000000);
 
-      it('should build an Angular based storybook that references another lib', () => {
-        ensureProject();
+    it('should build an Angular based storybook that references another lib', () => {
+      newProject();
 
-        const angularStorybookLib = uniq('test-ui-lib');
-        createTestUILib(angularStorybookLib);
-        runCLI(
-          `generate @nrwl/angular:storybook-configuration ${angularStorybookLib} --generateStories --no-interactive`
-        );
+      const angularStorybookLib = uniq('test-ui-lib');
+      createTestUILib(angularStorybookLib);
+      runCLI(
+        `generate @nrwl/angular:storybook-configuration ${angularStorybookLib} --generateStories --no-interactive`
+      );
 
-        // create another lib with a component
-        const anotherTestLib = uniq('test-another-lib');
-        runCLI(`g @nrwl/angular:library ${anotherTestLib} --no-interactive`);
-        runCLI(
-          `g @nrwl/angular:component my-test-cmp --project=${anotherTestLib} --no-interactive`
-        );
+      // create another lib with a component
+      const anotherTestLib = uniq('test-another-lib');
+      runCLI(`g @nrwl/angular:library ${anotherTestLib} --no-interactive`);
+      runCLI(
+        `g @nrwl/angular:component my-test-cmp --project=${anotherTestLib} --no-interactive`
+      );
 
-        // update index.ts and export it
-        writeFileSync(
-          tmpProjPath(`libs/${anotherTestLib}/src/index.ts`),
-          `
+      // update index.ts and export it
+      writeFileSync(
+        tmpProjPath(`libs/${anotherTestLib}/src/index.ts`),
+        `
             export * from './lib/my-test-cmp/my-test-cmp.component';
         `
-        );
+      );
 
-        // create a story in the first lib to reference the cmp from the 2nd lib
-        writeFileSync(
-          tmpProjPath(
-            `libs/${angularStorybookLib}/src/lib/myteststory.stories.ts`
-          ),
-          `
+      // create a story in the first lib to reference the cmp from the 2nd lib
+      writeFileSync(
+        tmpProjPath(
+          `libs/${angularStorybookLib}/src/lib/myteststory.stories.ts`
+        ),
+        `
             import { MyTestCmpComponent } from '@proj/${anotherTestLib}';
 
             export default {
@@ -303,16 +297,15 @@ forEachCli(() => {
               props: {},
             });
         `
-        );
+      );
 
-        // build Angular lib
-        runCLI(`run ${angularStorybookLib}:build-storybook`);
-        checkFilesExist(`dist/storybook/${angularStorybookLib}/index.html`);
-        expect(
-          readFile(`dist/storybook/${angularStorybookLib}/index.html`)
-        ).toContain(`<title>Storybook</title>`);
-      }, 1000000);
-    });
+      // build Angular lib
+      runCLI(`run ${angularStorybookLib}:build-storybook`);
+      checkFilesExist(`dist/storybook/${angularStorybookLib}/index.html`);
+      expect(
+        readFile(`dist/storybook/${angularStorybookLib}/index.html`)
+      ).toContain(`<title>Storybook</title>`);
+    }, 1000000);
   });
 });
 
