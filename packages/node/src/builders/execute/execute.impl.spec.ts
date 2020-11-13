@@ -60,9 +60,7 @@ describe('NodeExecuteBuilder', () => {
         project: 'nodeapp',
         target: 'build',
       },
-      {
-        watch: true,
-      },
+      {},
       undefined
     );
     expect(fork).toHaveBeenCalledWith('outfile.js', [], {
