@@ -39,13 +39,13 @@ export class Workspaces {
   }
 
   isNxBuilder(target: TargetDefinition) {
-    const { buildersJson } = this.readBuildersJson(target);
-    return buildersJson['$schema'] === '@nrwl/tao/src/builders-schema.json';
+    const schema = this.readBuilder(target).schema;
+    return schema['cli'] === 'nx';
   }
 
   isNxSchematic(collectionName: string, schematicName: string) {
     const schema = this.readSchematic(collectionName, schematicName).schema;
-    return schema['$schema'] === '@nrwl/tao/src/schematic-schema.json';
+    return schema['cli'] === 'nx';
   }
 
   readBuilder(target: TargetDefinition) {

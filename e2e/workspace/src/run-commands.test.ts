@@ -1,6 +1,6 @@
 import {
-  ensureProject,
   forEachCli,
+  newProject,
   readJson,
   runCLI,
   uniq,
@@ -11,7 +11,7 @@ import {
 forEachCli(() => {
   describe('Run Commands', () => {
     it('should not override environment variables already set when setting a custom env file path', async (done) => {
-      ensureProject();
+      newProject();
       const nodeapp = uniq('nodeapp');
       updateFile(
         `.env`,
@@ -38,7 +38,7 @@ forEachCli(() => {
     }, 120000);
 
     it('should interpolate provided arguments', async (done) => {
-      ensureProject();
+      newProject();
       const myapp = uniq('myapp1');
 
       runCLI(`generate @nrwl/web:app ${myapp}`);

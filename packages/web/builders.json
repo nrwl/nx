@@ -15,6 +15,11 @@
       "implementation": "./src/builders/dev-server/dev-server.impl",
       "schema": "./src/builders/dev-server/schema.json",
       "description": "Serve a web application"
+    },
+    "file-server": {
+      "implementation": "./src/builders/file-server/file-server.impl",
+      "schema": "./src/builders/file-server/schema.json",
+      "description": "Serve a web application from a folder"
     }
   }
 }

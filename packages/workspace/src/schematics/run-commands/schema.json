@@ -3,6 +3,7 @@
   "id": "SchematicsRunCommands",
   "title": "Create a custom target to run any command",
   "type": "object",
+  "cli": "nx",
   "examples": [
     {
       "command": "g @nrwl/workspace:run-commands printhello --project my-feature-lib --command 'echo hello'",

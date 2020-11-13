@@ -1,5 +1,5 @@
 {
-  "$schema": "@nrwl/tao/src/schematic-schema.json",
+  "cli": "nx",
   "id": "SchematicsNxWorkspaceSchematic",
   "title": "Create a custom schematic",
   "type": "object",
