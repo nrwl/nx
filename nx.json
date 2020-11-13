@@ -15,14 +15,12 @@
     "default": {
       "runner": "@nrwl/nx-cloud",
       "options": {
-        "scan": true,
         "accessToken": "OTM4MGQ1NDctZGRjMy00ZDlmLThkYzQtOTU3MDhkNWZhZjcwfHJlYWQ=",
         "cacheableOperations": ["build", "build-base", "test", "lint", "e2e"],
         "canTrackAnalytics": false,
         "showUsageWarnings": true,
         "runtimeCacheInputs": ["echo $SELECTED_CLI"],
-        "cacheDirectory": "/tmp/nx-cache",
-        "nxCloudUsePrNumber": true
+        "cacheDirectory": "/tmp/nx-cache"
       }
     }
   },

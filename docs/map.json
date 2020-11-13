@@ -429,6 +429,11 @@
                     "name": "ng packagr lite",
                     "id": "ng-packagr-lite",
                     "file": "angular/api-angular/builders/ng-packagr-lite"
+                  },
+                  {
+                    "name": "webpack-browser",
+                    "id": "webpack-browser",
+                    "file": "angular/api-angular/builders/webpack-browser"
                   }
                 ]
               }
@@ -1512,6 +1517,11 @@
                     "name": "ng packagr lite",
                     "id": "ng-packagr-lite",
                     "file": "react/api-angular/builders/ng-packagr-lite"
+                  },
+                  {
+                    "name": "webpack-browser",
+                    "id": "webpack-browser",
+                    "file": "react/api-angular/builders/webpack-browser"
                   }
                 ]
               }
@@ -2548,6 +2558,11 @@
                     "name": "ng packagr lite",
                     "id": "ng-packagr-lite",
                     "file": "node/api-angular/builders/ng-packagr-lite"
+                  },
+                  {
+                    "name": "webpack-browser",
+                    "id": "webpack-browser",
+                    "file": "node/api-angular/builders/webpack-browser"
                   }
                 ]
               }
