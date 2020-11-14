@@ -14,7 +14,7 @@ import {
   Linter,
   updateJsonInTree,
 } from '@nrwl/workspace';
-import { addUnitTestRunner } from '../init/init';
+import init, { addUnitTestRunner } from '../init/init';
 import { addModule } from './lib/add-module';
 import { normalizeOptions } from './lib/normalize-options';
 import { updateLibPackageNpmScope } from './lib/update-lib-package-npm-scope';
@@ -37,6 +37,10 @@ export default function (schema: Schema): Rule {
     }
 
     return chain([
+      init({
+        ...options,
+        skipFormat: true,
+      }),
       addLintFiles(options.projectRoot, options.linter, {
         onlyGlobal: options.linter === Linter.TsLint,
       }),
