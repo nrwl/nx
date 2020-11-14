@@ -89,6 +89,9 @@ jobs:
           name: Check Formatting
           command: yarn check-format
       - run:
+          name: Run linting
+          command: yarn lint
+      - run:
           name: Check Commit Message Format
           command: yarn check-commit
       - run:

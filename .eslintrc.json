@@ -1,5 +1,6 @@
 {
   "root": true,
+  "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "project": "./tsconfig.*?.json"
   },
@@ -7,8 +8,10 @@
     "node": true
   },
   "ignorePatterns": ["**/*.ts"],
-  "plugins": ["@nrwl/nx"],
-  "extends": ["plugin:@nrwl/nx/typescript"],
-  "rules": {},
+  "plugins": ["@typescript-eslint"],
+  "extends": [],
+  "rules": {
+    "@typescript-eslint/explicit-module-boundary-types": "off"
+  },
   "overrides": []
 }
