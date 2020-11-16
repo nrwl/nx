@@ -129,6 +129,11 @@
       "type": "boolean",
       "description": "Generate JavaScript files rather than TypeScript files.",
       "default": false
+    },
+    "globalCss": {
+      "type": "boolean",
+      "description": "Default is false. When true, the component is generated with *.css/*.scss instead of *.module.css/*.module.scss",
+      "default": false
     }
   },
   "required": []

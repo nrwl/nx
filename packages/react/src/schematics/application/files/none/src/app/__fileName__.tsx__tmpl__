@@ -1,0 +1,26 @@
+<% if (classComponent) { %>
+import React, { Component } from 'react';
+<% } else { %>
+import React from 'react';
+<% } %>
+
+import { ReactComponent as Logo } from './logo.svg';
+import star from './star.svg';
+
+<% if (classComponent) { %>
+export class App extends Component {
+  render() {
+<% } else { %>
+export function App() {
+<% } %>
+  return (
+    <h1>Welcome to <%= name %>!</h1>
+  );
+<% if (classComponent) { %>
+  }
+}
+<% } else { %>
+}
+<% } %>
+
+export default App;

@@ -68,6 +68,11 @@ function createComponentFiles(options: NormalizedSchema): Rule {
       options.styledModule || !options.hasStyles
         ? filter((file) => !file.endsWith(`.${options.style}`))
         : noop(),
+      options.globalCss
+        ? filter((file) => !file.endsWith(`.module.${options.style}`))
+        : filter(
+            (file) => !file.endsWith(`${options.fileName}.${options.style}`)
+          ),
       move(componentDir),
       options.js ? toJS() : noop(),
     ])

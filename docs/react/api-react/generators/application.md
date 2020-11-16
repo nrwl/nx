@@ -76,6 +76,14 @@ Possible values: `cypress`, `none`
 
 Test runner to use for end to end (e2e) tests.
 
+### globalCss
+
+Default: `false`
+
+Type: `boolean`
+
+Default is false. When true, the component is generated with _.css/_.scss instead of _.module.css/_.module.scss
+
 ### js
 
 Default: `false`
