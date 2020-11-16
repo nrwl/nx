@@ -181,12 +181,29 @@ function listGenerators(collectionName: string, logger: logging.Logger) {
     const engineHost = new NodeModulesEngineHost();
     const engine = new SchematicEngine(engineHost);
     const collection = engine.createCollection(collectionName);
-    logger.info(engine.listSchematicNames(collection).join('\n'));
+    const bodyLines: string[] = [];
+
+    bodyLines.push(terminal.bold(terminal.green('WORKSPACE GENERATORS')));
+    bodyLines.push('');
+    bodyLines.push(
+      ...Object.entries(collection.description.schematics).map(
+        ([schematicName, schematicMeta]) => {
+          return `${terminal.bold(schematicName)} : ${
+            schematicMeta.description
+          }`;
+        }
+      )
+    );
+    bodyLines.push('');
+
+    output.log({
+      title: '',
+      bodyLines,
+    });
   } catch (error) {
     logger.fatal(error.message);
     return 1;
   }
-
   return 0;
 }
 
