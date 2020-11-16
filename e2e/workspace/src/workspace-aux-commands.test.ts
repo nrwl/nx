@@ -235,132 +235,191 @@ forEachCli((cli) => {
       );
     });
 
-    it('should compile only schematic files with dependencies', () => {
-      const workspace = uniq('workspace');
+    describe('core functionality', () => {
+      it('should compile only schematic files with dependencies', () => {
+        const workspace = uniq('workspace');
 
-      updateFile(
-        'tools/utils/utils.ts',
-        `
+        updateFile(
+          'tools/utils/utils.ts',
+          `
         export const noop = () => {}
         `
-      );
-      updateFile(
-        'tools/utils/logger.ts',
-        `
+        );
+        updateFile(
+          'tools/utils/logger.ts',
+          `
         export const log = (...args: any[]) => console.log(...args)
         `
-      );
-      updateFile(
-        `tools/schematics/utils.ts`,
-        `
+        );
+        updateFile(
+          `tools/schematics/utils.ts`,
+          `
         export const noop = ()=>{}
         `
-      );
-      updateFile(`tools/schematics/${custom}/index.ts`, (content) => {
-        return `
+        );
+        updateFile(`tools/schematics/${custom}/index.ts`, (content) => {
+          return `
           import { log } from '../../utils/logger'; \n
           ${content}
         `;
+        });
+
+        const dryRunOutput = runCommand(
+          `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive -d`
+        );
+
+        expect(() =>
+          checkFilesExist(
+            `dist/out-tsc/tools/schematics/${custom}/index.js`,
+            `dist/out-tsc/tools/schematics/utils.js`,
+            `dist/out-tsc/tools/utils/logger.js`
+          )
+        ).not.toThrow();
+        expect(() =>
+          checkFilesExist(`dist/out-tsc/tools/utils/utils.js`)
+        ).toThrow();
       });
 
-      const dryRunOutput = runCommand(
-        `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive -d`
-      );
+      it('should support workspace-specific schematics', async () => {
+        const json = readJson(`tools/schematics/${custom}/schema.json`);
+        json.properties['directory'] = {
+          type: 'string',
+          description: 'lib directory',
+        };
+        json.properties['skipTsConfig'] = {
+          type: 'boolean',
+          description: 'skip changes to tsconfig',
+        };
+        updateFile(
+          `tools/schematics/${custom}/schema.json`,
+          JSON.stringify(json)
+        );
 
-      expect(() =>
-        checkFilesExist(
-          `dist/out-tsc/tools/schematics/${custom}/index.js`,
-          `dist/out-tsc/tools/schematics/utils.js`,
-          `dist/out-tsc/tools/utils/logger.js`
-        )
-      ).not.toThrow();
-      expect(() =>
-        checkFilesExist(`dist/out-tsc/tools/utils/utils.js`)
-      ).toThrow();
-    });
+        const indexFile = readFile(`tools/schematics/${custom}/index.ts`);
+        updateFile(
+          `tools/schematics/${custom}/index.ts`,
+          indexFile.replace(
+            'name: schema.name',
+            'name: schema.name, directory: schema.directory, skipTsConfig: schema.skipTsConfig'
+          )
+        );
 
-    it('should support workspace-specific schematics', async () => {
-      const json = readJson(`tools/schematics/${custom}/schema.json`);
-      json.properties['directory'] = {
-        type: 'string',
-        description: 'lib directory',
-      };
-      json.properties['skipTsConfig'] = {
-        type: 'boolean',
-        description: 'skip changes to tsconfig',
-      };
-      updateFile(
-        `tools/schematics/${custom}/schema.json`,
-        JSON.stringify(json)
-      );
+        const workspace = uniq('workspace');
+        const dryRunOutput = runCommand(
+          `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive --directory=dir --skipTsConfig=true -d`
+        );
+        expect(exists(`libs/dir/${workspace}/src/index.ts`)).toEqual(false);
+        expect(dryRunOutput).toContain(`UPDATE ${workspaceConfigName()}`);
+        expect(dryRunOutput).toContain('UPDATE nx.json');
+        expect(dryRunOutput).not.toContain('UPDATE tsconfig.base.json');
 
-      const indexFile = readFile(`tools/schematics/${custom}/index.ts`);
-      updateFile(
-        `tools/schematics/${custom}/index.ts`,
-        indexFile.replace(
-          'name: schema.name',
-          'name: schema.name, directory: schema.directory, skipTsConfig: schema.skipTsConfig'
-        )
-      );
+        const output = runCommand(
+          `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive --directory=dir`
+        );
+        checkFilesExist(`libs/dir/${workspace}/src/index.ts`);
+        expect(output).toContain(`UPDATE ${workspaceConfigName()}`);
+        expect(output).toContain('UPDATE nx.json');
 
-      const workspace = uniq('workspace');
-      const dryRunOutput = runCommand(
-        `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive --directory=dir --skipTsConfig=true -d`
-      );
-      expect(exists(`libs/dir/${workspace}/src/index.ts`)).toEqual(false);
-      expect(dryRunOutput).toContain(`UPDATE ${workspaceConfigName()}`);
-      expect(dryRunOutput).toContain('UPDATE nx.json');
-      expect(dryRunOutput).not.toContain('UPDATE tsconfig.base.json');
+        const jsonFailing = readJson(`tools/schematics/${failing}/schema.json`);
+        jsonFailing.properties = {};
+        jsonFailing.required = [];
+        updateFile(
+          `tools/schematics/${failing}/schema.json`,
+          JSON.stringify(jsonFailing)
+        );
 
-      const output = runCommand(
-        `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive --directory=dir`
-      );
-      checkFilesExist(`libs/dir/${workspace}/src/index.ts`);
-      expect(output).toContain(`UPDATE ${workspaceConfigName()}`);
-      expect(output).toContain('UPDATE nx.json');
-
-      const another = uniq('another');
-      runCLI(`g workspace-schematic ${another} --no-interactive`);
-
-      const jsonFailing = readJson(`tools/schematics/${failing}/schema.json`);
-      jsonFailing.properties = {};
-      jsonFailing.required = [];
-      updateFile(
-        `tools/schematics/${failing}/schema.json`,
-        JSON.stringify(jsonFailing)
-      );
-
-      updateFile(
-        `tools/schematics/${failing}/index.ts`,
-        `
+        updateFile(
+          `tools/schematics/${failing}/index.ts`,
+          `
           export default function() {
             throw new Error();
           }
         `
-      );
-
-      try {
-        const err = await runCommandAsync(
-          `npm run workspace-schematic -- ${failing} --no-interactive`
         );
-        fail(`Should exit 1 for a workspace-schematic that throws an error`);
-      } catch (e) {}
 
-      const listSchematicsOutput = runCommand(
-        'npm run workspace-schematic -- --list-schematics'
-      );
-      expect(listSchematicsOutput).toContain(
-        'nx workspace-schematic "--list-schematics"'
-      );
-      expect(listSchematicsOutput).toContain(custom);
-      expect(listSchematicsOutput).toContain(failing);
-      expect(listSchematicsOutput).toContain(another);
+        try {
+          const err = await runCommandAsync(
+            `npm run workspace-schematic -- ${failing} --no-interactive`
+          );
+          fail(`Should exit 1 for a workspace-schematic that throws an error`);
+        } catch (e) {}
+      }, 1000000);
+    });
 
-      const promptOutput = runCommand(
-        `npm run workspace-schematic ${custom} mylib2 --dry-run`
-      );
-      expect(promptOutput).toContain('UPDATE nx.json');
-    }, 1000000);
+    describe('cli options', () => {
+      it('should support "-l", "--list" and "--list-schematics" to list existing custom schematics', async () => {
+        const another = uniq('another');
+        runCLI(`g workspace-schematic ${another} --no-interactive`);
+
+        let listSchematicsOutput = runCommand(
+          'npm run workspace-schematic -- --list-schematics'
+        );
+        expect(listSchematicsOutput).toContain(
+          'nx workspace-schematic "--list-schematics"'
+        );
+        expect(listSchematicsOutput).toContain(custom);
+        expect(listSchematicsOutput).toContain(failing);
+        expect(listSchematicsOutput).toContain(another);
+
+        listSchematicsOutput = runCommand(
+          'npm run workspace-schematic -- --list'
+        );
+        expect(listSchematicsOutput).toContain(
+          'nx workspace-schematic "--list"'
+        );
+        expect(listSchematicsOutput).toContain(custom);
+        expect(listSchematicsOutput).toContain(failing);
+        expect(listSchematicsOutput).toContain(another);
+
+        listSchematicsOutput = runCommand('npm run workspace-schematic -- -l');
+        expect(listSchematicsOutput).toContain('nx workspace-schematic "-l"');
+        expect(listSchematicsOutput).toContain(custom);
+        expect(listSchematicsOutput).toContain(failing);
+        expect(listSchematicsOutput).toContain(another);
+      });
+
+      it('should support "--dryRun","--dry-run","-d" to run custom schematics in dry run mode', async () => {
+        const workspace = uniq('workspace');
+
+        let dryRunOutput = runCommand(
+          `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive -d`
+        );
+        expect(exists(`libs/dir/${workspace}/src/index.ts`)).toEqual(false);
+
+        dryRunOutput = runCommand(
+          `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive --dryRun`
+        );
+        expect(exists(`libs/dir/${workspace}/src/index.ts`)).toEqual(false);
+
+        dryRunOutput = runCommand(
+          `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive --dry-run`
+        );
+        expect(exists(`libs/dir/${workspace}/src/index.ts`)).toEqual(false);
+
+        const promptOutput = runCommand(
+          `npm run workspace-schematic ${custom} mylib2 --dry-run`
+        );
+
+        expect(exists(`libs/dir/mylib2/src/index.ts`)).toEqual(false);
+        expect(promptOutput).toContain('UPDATE nx.json');
+      });
+
+      it('should support "--help" to display available options for custom schematic', async () => {
+        const output = runCommand(
+          `npm run workspace-schematic ${custom} -- --help`
+        );
+
+        expect(output).toContain(`Options:`);
+        expect(output).toContain(`--name`);
+        expect(output).toContain(`Library name`);
+        expect(output).toContain(`--dryRun`);
+        expect(output).toContain(
+          `Runs through and reports activity without writing to disk.`
+        );
+        expect(output).toContain(`--help`);
+        expect(output).toContain(`Show available options for schematic.`);
+      });
+    });
   });
 
   describe('dep-graph', () => {
