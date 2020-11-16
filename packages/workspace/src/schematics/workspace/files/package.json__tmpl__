@@ -41,6 +41,7 @@
   "dependencies": {},
   "devDependencies": {
      <% if(cli === 'angular') { %>"@angular/cli": "<%= angularCliVersion %>",<% } %>
+    "@nrwl/tao": "<%= nxVersion %>",
     "@nrwl/cli": "<%= nxVersion %>",
     "@nrwl/workspace": "<%= nxVersion %>",
     "@types/node": "~8.9.4",
