@@ -104,6 +104,6 @@ Hide output text.
 
 ### tsConfig
 
-Type: `string | string[]`
+Type: `string | string[] `
 
 The name of the TypeScript configuration file.
