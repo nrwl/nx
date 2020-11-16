@@ -1,4 +1,5 @@
 module.exports = {
+  testTimeout: 30000,
   projects: [
     '<rootDir>/packages/tao',
     '<rootDir>/packages/workspace',
