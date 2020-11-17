@@ -1,7 +1,7 @@
 import * as depcheck from 'depcheck';
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
-import chalk from 'chalk';
+import * as chalk from 'chalk';
 import { satisfies } from 'semver';
 
 const argv = require('yargs')

@@ -5,12 +5,10 @@ import {
 } from '@angular-devkit/core/src/workspace/core';
 import { NxJson } from '@nrwl/workspace/src/core/shared-interfaces';
 import { Architect, BuilderContext, Target } from '@angular-devkit/architect';
-import {
-  TestingArchitectHost,
-  TestLogger,
-} from '@angular-devkit/architect/testing';
+import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 import { json, JsonObject } from '@angular-devkit/core';
 import { ScheduleOptions } from '@angular-devkit/architect/src/api';
+import { LoggerApi, LogLevel } from '@angular-devkit/core/src/logger';
 
 export function getFileContent(tree: Tree, path: string): string {
   const fileEntry = tree.get(path);
@@ -77,6 +75,42 @@ export function createEmptyWorkspace(tree: Tree): Tree {
   return tree;
 }
 
+class NoopLogger implements LoggerApi {
+  private _log = '';
+
+  createChild(name: string) {
+    return new NoopLogger() as any;
+  }
+
+  includes(substr: string) {
+    return this._log.includes(substr);
+  }
+
+  debug(message: string, metadata?: JsonObject): void {
+    this._log += message;
+  }
+
+  error(message: string, metadata?: JsonObject): void {
+    this._log += message;
+  }
+
+  fatal(message: string, metadata?: JsonObject): void {
+    this._log += message;
+  }
+
+  info(message: string, metadata?: JsonObject): void {
+    this._log += message;
+  }
+
+  log(level: LogLevel, message: string, metadata?: JsonObject): void {
+    this._log += message;
+  }
+
+  warn(message: string, metadata?: JsonObject): void {
+    this._log += message;
+  }
+}
+
 /**
  * Mock context which makes testing builders easier
  */
@@ -91,7 +125,7 @@ export class MockBuilderContext implements BuilderContext {
     target: null,
   };
 
-  logger = new TestLogger('test');
+  logger = new NoopLogger();
 
   get currentDirectory() {
     return this.architectHost.currentDirectory;

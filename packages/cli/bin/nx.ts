@@ -4,7 +4,7 @@
 // https://twitter.com/BenLesh/status/1192478226385428483?s=20
 if (!(Symbol as any).observable)
   (Symbol as any).observable = Symbol('observable polyfill');
-import chalk from 'chalk';
+import * as chalk from 'chalk';
 import { findWorkspaceRoot } from '../lib/find-workspace-root';
 import { initLocal } from '../lib/init-local';
 import { output } from '../lib/output';

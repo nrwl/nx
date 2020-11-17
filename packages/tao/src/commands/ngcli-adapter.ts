@@ -1,18 +1,16 @@
 import { Architect } from '@angular-devkit/architect';
 import { WorkspaceNodeModulesArchitectHost } from '@angular-devkit/architect/node';
 import {
-  experimental,
   json,
   JsonObject,
   logging,
   normalize,
-  Path,
   schema,
   tags,
-  terminal,
   virtualFs,
   workspaces,
 } from '@angular-devkit/core';
+import * as chalk from 'chalk';
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import {
   coerceTypesInOptions,
@@ -198,21 +196,21 @@ function createRecorder(
       );
     } else if (event.kind === 'update') {
       record.loggingQueue.push(
-        tags.oneLine`${terminal.white('UPDATE')} ${eventPath} (${
+        tags.oneLine`${chalk.white('UPDATE')} ${eventPath} (${
           event.content.length
         } bytes)`
       );
     } else if (event.kind === 'create') {
       record.loggingQueue.push(
-        tags.oneLine`${terminal.green('CREATE')} ${eventPath} (${
+        tags.oneLine`${chalk.green('CREATE')} ${eventPath} (${
           event.content.length
         } bytes)`
       );
     } else if (event.kind === 'delete') {
-      record.loggingQueue.push(`${terminal.yellow('DELETE')} ${eventPath}`);
+      record.loggingQueue.push(`${chalk.yellow('DELETE')} ${eventPath}`);
     } else if (event.kind === 'rename') {
       record.loggingQueue.push(
-        `${terminal.blue('RENAME')} ${eventPath} => ${event.to}`
+        `${chalk.blue('RENAME')} ${eventPath} => ${event.to}`
       );
     }
   };
@@ -223,22 +221,21 @@ async function getSchematicDefaults(
   collection: string,
   schematic: string
 ) {
-  const workspace = await new experimental.workspace.Workspace(
-    normalize(root) as Path,
-    new NodeJsSyncHost()
-  )
-    .loadWorkspaceFromHost(workspaceConfigName(root) as any)
-    .toPromise();
+  const workspace = (
+    await workspaces.readWorkspace(
+      workspaceConfigName(root),
+      workspaces.createWorkspaceHost(new NodeJsSyncHost())
+    )
+  ).workspace;
 
   let result = {};
-  if (workspace.getSchematics()) {
-    const schematicObject = workspace.getSchematics()[
-      `${collection}:${schematic}`
-    ];
+  if (workspace.extensions.schematics) {
+    const schematicObject =
+      workspace.extensions.schematics[`${collection}:${schematic}`];
     if (schematicObject) {
       result = { ...result, ...(schematicObject as {}) };
     }
-    const collectionObject = workspace.getSchematics()[collection];
+    const collectionObject = workspace.extensions.schematics[collection];
     if (
       typeof collectionObject == 'object' &&
       !Array.isArray(collectionObject)

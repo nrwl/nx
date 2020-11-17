@@ -20,7 +20,6 @@ Object {
             },
           ],
           "buildOptimizer": true,
-          "extractCss": true,
           "extractLicenses": true,
           "fileReplacements": Array [
             Object {
@@ -154,7 +153,6 @@ Object {
             },
           ],
           "buildOptimizer": true,
-          "extractCss": true,
           "extractLicenses": true,
           "fileReplacements": Array [
             Object {

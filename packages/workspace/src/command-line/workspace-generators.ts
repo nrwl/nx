@@ -4,9 +4,9 @@ import {
   normalize,
   schema,
   tags,
-  terminal,
   virtualFs,
 } from '@angular-devkit/core';
+import * as chalk from 'chalk';
 import { createConsoleLogger, NodeJsSyncHost } from '@angular-devkit/core/node';
 import {
   formats,
@@ -183,14 +183,12 @@ function listGenerators(collectionName: string, logger: logging.Logger) {
     const collection = engine.createCollection(collectionName);
     const bodyLines: string[] = [];
 
-    bodyLines.push(terminal.bold(terminal.green('WORKSPACE GENERATORS')));
+    bodyLines.push(chalk.bold(chalk.green('WORKSPACE GENERATORS')));
     bodyLines.push('');
     bodyLines.push(
       ...Object.entries(collection.description.schematics).map(
         ([schematicName, schematicMeta]) => {
-          return `${terminal.bold(schematicName)} : ${
-            schematicMeta.description
-          }`;
+          return `${chalk.bold(schematicName)} : ${schematicMeta.description}`;
         }
       )
     );
@@ -283,31 +281,27 @@ async function executeAngularDevkitSchematic(
         break;
       case 'update':
         loggingQueue.push(
-          tags.oneLine`${terminal.white('UPDATE')} ${eventPath} (${
+          tags.oneLine`${chalk.white('UPDATE')} ${eventPath} (${
             event.content.length
           } bytes)`
         );
         break;
       case 'create':
         loggingQueue.push(
-          tags.oneLine`${terminal.green('CREATE')} ${eventPath} (${
+          tags.oneLine`${chalk.green('CREATE')} ${eventPath} (${
             event.content.length
           } bytes)`
         );
         break;
       case 'delete':
-        loggingQueue.push(
-          tags.oneLine`${terminal.yellow('DELETE')} ${eventPath}`
-        );
+        loggingQueue.push(tags.oneLine`${chalk.yellow('DELETE')} ${eventPath}`);
         break;
       case 'rename':
         const eventToPath = event.to.startsWith('/')
           ? event.to.substr(1)
           : event.to;
         loggingQueue.push(
-          tags.oneLine`${terminal.blue(
-            'RENAME'
-          )} ${eventPath} => ${eventToPath}`
+          tags.oneLine`${chalk.blue('RENAME')} ${eventPath} => ${eventToPath}`
         );
         break;
     }

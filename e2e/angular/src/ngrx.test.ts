@@ -31,7 +31,7 @@ describe('ngrx', () => {
       `generate @nrwl/angular:ngrx flights --module=libs/${mylib}/src/lib/${mylib}.module.ts --facade --syntax=classes`
     );
 
-    expect(runCLI(`build ${myapp}`)).toContain('chunk {main} main.js,');
+    expect(runCLI(`build ${myapp}`)).toContain('main.js');
     expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
     expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
   }, 1000000);
@@ -63,7 +63,7 @@ describe('ngrx', () => {
       `generate @nrwl/angular:ngrx flights --module=libs/${mylib}/src/lib/${mylib}.module.ts ${flags}`
     );
 
-    expect(runCLI(`build ${myapp}`)).toContain('chunk {main} main.js,');
+    expect(runCLI(`build ${myapp}`)).toContain('main.js');
     expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
     expectTestsPass(await runCLIAsync(`test ${mylib} --no-watch`));
   }, 1000000);

@@ -14,7 +14,7 @@
 
 import { join } from 'path';
 import { gt } from 'semver';
-import chalk from 'chalk';
+import * as chalk from 'chalk';
 import { dasherize } from '../packages/workspace/src/utils/strings';
 import * as shell from 'shelljs';
 import * as glob from 'glob';

@@ -1,8 +1,7 @@
-import * as chalk from 'chalk';
+import { green, red } from 'chalk';
 import * as fs from 'fs';
 import * as shell from 'shelljs';
 
-const { green, red } = chalk.default;
 const basePath = 'docs';
 const sharedFilesPattern = 'shared/cli';
 

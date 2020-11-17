@@ -14,7 +14,7 @@ import {
   Workspaces,
 } from '../shared/workspace';
 
-const chalk = require('chalk');
+import * as chalk from 'chalk';
 
 export interface RunOptions {
   project: string;
@@ -53,7 +53,7 @@ function parseRunOpts(
   ] = runOptions._[0].split(':');
   if (!project && defaultProjectName) {
     logger.debug(
-      `No project name specified. Using default project : ${chalk.default.bold(
+      `No project name specified. Using default project : ${chalk.bold(
         defaultProjectName
       )}`
     );
@@ -103,9 +103,7 @@ export function validateTargetAndConfiguration(
     throw new Error(
       `Could not find target "${opts.target}" in the ${
         opts.project
-      } project. Valid targets are: ${chalk.default.bold(
-        availableTargets.join(', ')
-      )}`
+      } project. Valid targets are: ${chalk.bold(availableTargets.join(', '))}`
     );
   }
 

@@ -1,4 +1,4 @@
-import { terminal } from '@angular-devkit/core';
+import * as chalk from 'chalk';
 import { readJsonFile } from '../fileutils';
 import { output } from '../output';
 import { CommunityPlugin, CorePlugin, PluginCapabilities } from './models';
@@ -46,7 +46,7 @@ export function listInstalledPlugins(installedPlugins: PluginCapabilities[]) {
       if (hasElements(p.generators)) {
         capabilities.push('generators');
       }
-      return `${terminal.bold(p.name)} (${capabilities.join()})`;
+      return `${chalk.bold(p.name)} (${capabilities.join()})`;
     }),
   });
 }

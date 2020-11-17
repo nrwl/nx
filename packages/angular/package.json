@@ -39,11 +39,11 @@
     "@nrwl/workspace": "*"
   },
   "dependencies": {
-    "@angular-devkit/schematics": "~10.1.3",
+    "@angular-devkit/schematics": "~11.0.1",
     "@nrwl/cypress": "*",
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
-    "@schematics/angular": "~10.1.3",
+    "@schematics/angular": "~11.0.1",
     "jasmine-marbles": "~0.6.0"
   }
 }

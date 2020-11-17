@@ -1,4 +1,4 @@
-import { terminal } from '@angular-devkit/core';
+import * as chalk from 'chalk';
 import axios from 'axios';
 import { output } from '../output';
 import { CommunityPlugin, PluginCapabilities } from './models';
@@ -30,7 +30,7 @@ export function listCommunityPlugins(
     output.log({
       title: `Community plugins:`,
       bodyLines: availableCommunityPlugins.map((p) => {
-        return `${terminal.bold(p.name)} - ${p.description}`;
+        return `${chalk.bold(p.name)} - ${p.description}`;
       }),
     });
   } catch (error) {
