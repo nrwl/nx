@@ -191,9 +191,9 @@ describe('add-template-support-and-presets-to-eslint', () => {
         Object {
           "dependencies": Object {},
           "devDependencies": Object {
-            "@angular-eslint/eslint-plugin": "0.8.0-beta.0",
-            "@angular-eslint/eslint-plugin-template": "0.8.0-beta.0",
-            "@angular-eslint/template-parser": "0.8.0-beta.0",
+            "@angular-eslint/eslint-plugin": "0.8.0-beta.1",
+            "@angular-eslint/eslint-plugin-template": "0.8.0-beta.1",
+            "@angular-eslint/template-parser": "0.8.0-beta.1",
           },
           "name": "test-name",
         }

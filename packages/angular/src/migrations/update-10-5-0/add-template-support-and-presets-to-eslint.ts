@@ -74,9 +74,9 @@ function updateProjectESLintConfigsAndBuilders(host: Tree): Rule {
           addDepsToPackageJson(
             {},
             {
-              '@angular-eslint/eslint-plugin': '0.8.0-beta.0',
-              '@angular-eslint/eslint-plugin-template': '0.8.0-beta.0',
-              '@angular-eslint/template-parser': '0.8.0-beta.0',
+              '@angular-eslint/eslint-plugin': '0.8.0-beta.1',
+              '@angular-eslint/eslint-plugin-template': '0.8.0-beta.1',
+              '@angular-eslint/template-parser': '0.8.0-beta.1',
             },
             false
           )
