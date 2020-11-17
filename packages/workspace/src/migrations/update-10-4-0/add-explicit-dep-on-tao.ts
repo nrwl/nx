@@ -4,7 +4,7 @@ import { nxVersion } from '../../../src/utils/versions';
 
 export default function update(): Rule {
   return chain([
-    addDepsToPackageJson({}, { '@nrwl/cli': nxVersion }),
+    addDepsToPackageJson({}, { '@nrwl/tao': nxVersion }),
     formatFiles(),
   ]);
 }
