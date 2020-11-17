@@ -11,4 +11,6 @@ export interface Schema {
   linter: Linter;
   frontendProject?: string;
   babelJest?: boolean;
+  js: boolean;
+  pascalCaseFiles: boolean;
 }

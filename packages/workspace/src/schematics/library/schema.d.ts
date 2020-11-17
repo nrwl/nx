@@ -11,6 +11,7 @@ export interface Schema {
   linter: Linter;
   testEnvironment: 'jsdom' | 'node';
   importPath?: string;
-  js?: boolean;
+  js: boolean;
   babelJest?: boolean;
+  pascalCaseFiles: boolean;
 }

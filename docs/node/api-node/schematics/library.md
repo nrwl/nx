@@ -66,6 +66,14 @@ Type: `string`
 
 The library name used to import it, like @myorg/my-awesome-lib. Must be a valid npm name.
 
+### js
+
+Default: `false`
+
+Type: `boolean`
+
+Generate JavaScript files rather than TypeScript files.
+
 ### linter
 
 Default: `eslint`
@@ -81,6 +89,16 @@ The tool to use for running lint checks.
 Type: `string`
 
 Library name
+
+### pascalCaseFiles
+
+Alias(es): P
+
+Default: `false`
+
+Type: `boolean`
+
+Use pascal case file names.
 
 ### publishable
 

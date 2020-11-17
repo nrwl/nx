@@ -25,6 +25,11 @@ import {
 } from '@nrwl/workspace';
 import { Schema } from './schema';
 import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
+import {
+  toJS,
+  updateTsConfigsToJs,
+  maybeJs,
+} from '@nrwl/workspace/src/utils/rules/to-js';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -51,6 +56,7 @@ export default function (schema: NormalizedSchema): Rule {
         importPath: options.importPath,
       }),
       createFiles(options),
+      options.js ? updateTsConfigsToJs(options) : noop(),
       addProject(options),
       formatFiles(options),
     ]);
@@ -103,6 +109,7 @@ function createFiles(options: NormalizedSchema): Rule {
       options.publishable || options.buildable
         ? noop()
         : filter((file) => !file.endsWith('package.json')),
+      options.js ? toJS() : noop(),
     ]),
     MergeStrategy.Overwrite
   );
@@ -122,7 +129,7 @@ function addProject(options: NormalizedSchema): Rule {
           outputPath: `dist/${libsDir(host)}/${options.projectDirectory}`,
           tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
           packageJson: `${options.projectRoot}/package.json`,
-          main: `${options.projectRoot}/src/index.ts`,
+          main: maybeJs(options, `${options.projectRoot}/src/index.ts`),
           assets: [`${options.projectRoot}/*.md`],
         },
       };
