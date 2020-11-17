@@ -4,7 +4,7 @@ import reactTmp from './configs/react-tmp';
 import reactBase from './configs/react-base';
 import reactJsx from './configs/react-jsx';
 import reactTypescript from './configs/react-typescript';
-import angularCode from './configs/angular-code';
+import angularCode from './configs/angular';
 import angularTemplate from './configs/angular-template';
 
 import enforceModuleBoundaries, {
@@ -19,7 +19,7 @@ module.exports = {
     'react-base': reactBase,
     'react-typescript': reactTypescript,
     'react-jsx': reactJsx,
-    'angular-code': angularCode,
+    angular: angularCode,
     'angular-template': angularTemplate,
   },
   rules: {

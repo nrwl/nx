@@ -191,9 +191,9 @@ describe('add-template-support-and-presets-to-eslint', () => {
         Object {
           "dependencies": Object {},
           "devDependencies": Object {
-            "@angular-eslint/eslint-plugin": "0.6.0-beta.0",
-            "@angular-eslint/eslint-plugin-template": "0.6.0-beta.0",
-            "@angular-eslint/template-parser": "0.6.0-beta.0",
+            "@angular-eslint/eslint-plugin": "0.8.0-beta.0",
+            "@angular-eslint/eslint-plugin-template": "0.8.0-beta.0",
+            "@angular-eslint/template-parser": "0.8.0-beta.0",
           },
           "name": "test-name",
         }
@@ -242,7 +242,8 @@ describe('add-template-support-and-presets-to-eslint', () => {
           "overrides": Array [
             Object {
               "extends": Array [
-                "plugin:@nrwl/nx/angular-code",
+                "plugin:@nrwl/nx/angular",
+                "plugin:@angular-eslint/template/process-inline-templates",
               ],
               "files": Array [
                 "*.ts",
@@ -280,17 +281,6 @@ describe('add-template-support-and-presets-to-eslint', () => {
               ],
               "rules": Object {},
             },
-            Object {
-              "extends": Array [
-                "plugin:@angular-eslint/template/process-inline-templates",
-              ],
-              "files": Array [
-                "*.component.ts",
-              ],
-              "settings": Object {
-                "NX_DOCUMENTATION_NOTE": "This entry in the overrides is only here to extract inline templates from Components, you should not configure rules here",
-              },
-            },
           ],
         }
       `);
@@ -305,7 +295,8 @@ describe('add-template-support-and-presets-to-eslint', () => {
           "overrides": Array [
             Object {
               "extends": Array [
-                "plugin:@nrwl/nx/angular-code",
+                "plugin:@nrwl/nx/angular",
+                "plugin:@angular-eslint/template/process-inline-templates",
               ],
               "files": Array [
                 "*.ts",
@@ -342,17 +333,6 @@ describe('add-template-support-and-presets-to-eslint', () => {
                 "*.html",
               ],
               "rules": Object {},
-            },
-            Object {
-              "extends": Array [
-                "plugin:@angular-eslint/template/process-inline-templates",
-              ],
-              "files": Array [
-                "*.component.ts",
-              ],
-              "settings": Object {
-                "NX_DOCUMENTATION_NOTE": "This entry in the overrides is only here to extract inline templates from Components, you should not configure rules here",
-              },
             },
           ],
         }

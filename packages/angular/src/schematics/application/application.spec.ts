@@ -373,7 +373,8 @@ describe('app', () => {
           Array [
             Object {
               "extends": Array [
-                "plugin:@nrwl/nx/angular-code",
+                "plugin:@nrwl/nx/angular",
+                "plugin:@angular-eslint/template/process-inline-templates",
               ],
               "files": Array [
                 "*.ts",
@@ -410,17 +411,6 @@ describe('app', () => {
                 "*.html",
               ],
               "rules": Object {},
-            },
-            Object {
-              "extends": Array [
-                "plugin:@angular-eslint/template/process-inline-templates",
-              ],
-              "files": Array [
-                "*.component.ts",
-              ],
-              "settings": Object {
-                "NX_DOCUMENTATION_NOTE": "This entry in the overrides is only here to extract inline templates from Components, you should not configure rules here",
-              },
             },
           ]
         `);

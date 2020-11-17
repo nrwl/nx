@@ -16,7 +16,10 @@ export const createAngularEslintJson = (
   overrides: [
     {
       files: ['*.ts'],
-      extends: ['plugin:@nrwl/nx/angular-code'],
+      extends: [
+        'plugin:@nrwl/nx/angular',
+        'plugin:@angular-eslint/template/process-inline-templates',
+      ],
       parserOptions: {
         project: [`${projectRoot}/tsconfig.*?.json`],
       },
@@ -39,14 +42,6 @@ export const createAngularEslintJson = (
        * extend things from if they needed to
        */
       rules: {},
-    },
-    {
-      files: ['*.component.ts'],
-      extends: ['plugin:@angular-eslint/template/process-inline-templates'],
-      settings: {
-        NX_DOCUMENTATION_NOTE:
-          'This entry in the overrides is only here to extract inline templates from Components, you should not configure rules here',
-      },
     },
   ],
 });

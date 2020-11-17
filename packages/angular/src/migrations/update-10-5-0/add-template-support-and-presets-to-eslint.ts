@@ -74,9 +74,9 @@ function updateProjectESLintConfigsAndBuilders(host: Tree): Rule {
           addDepsToPackageJson(
             {},
             {
-              '@angular-eslint/eslint-plugin': '0.6.0-beta.0',
-              '@angular-eslint/eslint-plugin-template': '0.6.0-beta.0',
-              '@angular-eslint/template-parser': '0.6.0-beta.0',
+              '@angular-eslint/eslint-plugin': '0.8.0-beta.0',
+              '@angular-eslint/eslint-plugin-template': '0.8.0-beta.0',
+              '@angular-eslint/template-parser': '0.8.0-beta.0',
             },
             false
           )
@@ -117,7 +117,10 @@ function createAngularEslintJson(projectRoot: string, prefix: string) {
     overrides: [
       {
         files: ['*.ts'],
-        extends: ['plugin:@nrwl/nx/angular-code'],
+        extends: [
+          'plugin:@nrwl/nx/angular',
+          'plugin:@angular-eslint/template/process-inline-templates',
+        ],
         parserOptions: {
           project: [`${projectRoot}/tsconfig.*?.json`],
         },
@@ -140,14 +143,6 @@ function createAngularEslintJson(projectRoot: string, prefix: string) {
          * extend things from if they needed to
          */
         rules: {},
-      },
-      {
-        files: ['*.component.ts'],
-        extends: ['plugin:@angular-eslint/template/process-inline-templates'],
-        settings: {
-          NX_DOCUMENTATION_NOTE:
-            'This entry in the overrides is only here to extract inline templates from Components, you should not configure rules here',
-        },
       },
     ],
   };
