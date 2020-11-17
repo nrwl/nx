@@ -200,24 +200,24 @@
     ora "4.0.3"
     rxjs "6.5.4"
 
-"@angular-eslint/eslint-plugin-template@0.6.0-beta.0":
-  version "0.6.0-beta.0"
-  resolved "https://registry.npmjs.org/@angular-eslint/eslint-plugin-template/-/eslint-plugin-template-0.6.0-beta.0.tgz#2627bf5782f762a52b04de43622e5c1a403fefa6"
-  integrity sha512-BU0RMnfUXIczFF72qGWIACX37d88kAzucrneORW7nlBYrWg9vbYuu0SdLrWSErTUCuCUO8S4BmEbQX+I2VAdSQ==
+"@angular-eslint/eslint-plugin-template@0.8.0-beta.0":
+  version "0.8.0-beta.0"
+  resolved "https://registry.yarnpkg.com/@angular-eslint/eslint-plugin-template/-/eslint-plugin-template-0.8.0-beta.0.tgz#cc995a8c1c3dc96f7c07fb49f5e0ffb829786ca3"
+  integrity sha512-cFE1lR4IpENHEKKujvbshNo8rzdirhp74XmC6B5QFYnxkCKRYJAHOoLXTMWeTzVB9sGa5EDnEl6FYXaMwpuyDQ==
   dependencies:
     "@typescript-eslint/experimental-utils" "4.3.0"
 
-"@angular-eslint/eslint-plugin@0.6.0-beta.0":
-  version "0.6.0-beta.0"
-  resolved "https://registry.npmjs.org/@angular-eslint/eslint-plugin/-/eslint-plugin-0.6.0-beta.0.tgz#938c3774208020bd4b3c7b2dcee2b1d8f861cad8"
-  integrity sha512-bIRe+wWWDRGSABhsy/Sh1vrJHILLl5t1LJ3c8O/MklLCooLrC42uYR2cnVJ2SAjWeMdq4pYNIcJ7b4kd3KzXtQ==
+"@angular-eslint/eslint-plugin@0.8.0-beta.0":
+  version "0.8.0-beta.0"
+  resolved "https://registry.yarnpkg.com/@angular-eslint/eslint-plugin/-/eslint-plugin-0.8.0-beta.0.tgz#277008a26d5f6d3cdd811081b8574e8db302bef2"
+  integrity sha512-QyQKp68sacztrvL/KnMOiHkItQiJABcUWK0DPDRdUU+Nemyxr/qYsZpbvcaNDcNtJBy19HY34CgkdJ3qjponqA==
   dependencies:
     "@typescript-eslint/experimental-utils" "4.3.0"
 
-"@angular-eslint/template-parser@0.6.0-beta.0":
-  version "0.6.0-beta.0"
-  resolved "https://registry.npmjs.org/@angular-eslint/template-parser/-/template-parser-0.6.0-beta.0.tgz#2f21c8bc816a76acbee429eb40fd66f5c7e3a7ed"
-  integrity sha512-1bszhoe2QEUK6R1PmuLgu1xHivmDNHZVvQDlXN2HIfE74xGLsMnEKvVmUIX2MFCJKJTRyhvxinLN+F86lRcofg==
+"@angular-eslint/template-parser@0.8.0-beta.0":
+  version "0.8.0-beta.0"
+  resolved "https://registry.yarnpkg.com/@angular-eslint/template-parser/-/template-parser-0.8.0-beta.0.tgz#5decd69b4d7800fb396f55c7103b82e11f5e81d0"
+  integrity sha512-/LBmnx7XOjaQIQFQmqmOYmKTP+e2QP5wipDPEBWbK2GSNN0xzwTDiS3jHOezCfuKz/JK5M+uS0KkLwZ/gIdqpg==
   dependencies:
     eslint-scope "^5.1.0"
 
