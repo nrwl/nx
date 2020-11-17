@@ -60,9 +60,7 @@ forEachCli('nx', () => {
       expect(workspaceJson).not.toContain('libs/');
 
       const libTestResults = await runCLIAsync(`test ${expressLib}`);
-      expect(libTestResults.stdout).toContain(
-        'No tests found, exiting with code 0'
-      );
+      expect(libTestResults.stdout).toContain(`nx run ${expressLib}:test`);
 
       const appBuildResults = await runCLIAsync(`build ${expressApp}`);
       expect(appBuildResults.stdout).toContain(`nx run ${expressApp}:build`);

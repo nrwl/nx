@@ -11,6 +11,7 @@ import { updateJsonInTree } from '@nrwl/workspace';
 import { toFileName, formatFiles } from '@nrwl/workspace';
 import init from '../init/init';
 import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
+import { maybeJs } from '@nrwl/workspace/src/utils/rules/to-js';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;
@@ -24,10 +25,10 @@ function addTypes(options: NormalizedSchema): Rule {
   });
 }
 
-function addMainFile(options: NormalizedSchema): Rule {
+function addAppFiles(options: NormalizedSchema): Rule {
   return (host: Tree) => {
     host.overwrite(
-      join(options.appProjectRoot, 'src/main.ts'),
+      maybeJs(options, join(options.appProjectRoot, 'src/main.ts')),
       `/**
  * This is not a production server yet!
  * This is only a minimal backend to get started.
@@ -57,7 +58,7 @@ export default function (schema: Schema): Rule {
     return chain([
       init({ ...options, skipFormat: true }),
       externalSchematic('@nrwl/node', 'application', schema),
-      addMainFile(options),
+      addAppFiles(options),
       addTypes(options),
       formatFiles(options),
     ])(host, context);

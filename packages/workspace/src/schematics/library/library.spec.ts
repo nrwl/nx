@@ -70,14 +70,21 @@ describe('lib', () => {
     it('should create a local tsconfig.json', async () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
       const tsconfigJson = readJsonInTree(tree, 'libs/my-lib/tsconfig.json');
-      expect(tsconfigJson.references).toEqual([
-        {
-          path: './tsconfig.lib.json',
-        },
-        {
-          path: './tsconfig.spec.json',
-        },
-      ]);
+      expect(tsconfigJson).toMatchInlineSnapshot(`
+        Object {
+          "extends": "../../tsconfig.base.json",
+          "files": Array [],
+          "include": Array [],
+          "references": Array [
+            Object {
+              "path": "./tsconfig.lib.json",
+            },
+            Object {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
+        }
+      `);
     });
 
     it('should extend the local tsconfig.json with tsconfig.spec.json', async () => {
@@ -126,6 +133,7 @@ describe('lib', () => {
       `);
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.ts')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/README.md')).toBeTruthy();
 
       const ReadmeContent = tree.readContent('libs/my-lib/README.md');
@@ -182,6 +190,9 @@ describe('lib', () => {
       expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(
         tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.ts')
+      ).toBeTruthy();
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.spec.ts')
       ).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists(`libs/my-dir/my-lib/.eslintrc.json`)).toBeTruthy();
@@ -255,14 +266,19 @@ describe('lib', () => {
   });
 
   describe('--unit-test-runner none', () => {
-    it('should not generate test configuration', async () => {
+    it('should not generate test configuration nor spec file', async () => {
       const resultTree = await runSchematic(
         'lib',
         { name: 'myLib', unitTestRunner: 'none' },
         appTree
       );
+
       expect(resultTree.exists('libs/my-lib/tsconfig.spec.json')).toBeFalsy();
       expect(resultTree.exists('libs/my-lib/jest.config.js')).toBeFalsy();
+      expect(
+        resultTree.exists('libs/my-lib/src/lib/my-lib.spec.ts')
+      ).toBeFalsy();
+
       const workspaceJson = readJsonInTree(resultTree, 'workspace.json');
       expect(workspaceJson.projects['my-lib'].architect.test).toBeUndefined();
       expect(workspaceJson.projects['my-lib'].architect.lint)
@@ -334,6 +350,31 @@ describe('lib', () => {
       expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/index.js')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.js')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.js')).toBeTruthy();
+    });
+
+    it('should update tsconfig.json with compilerOptions.allowJs: true', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', js: true },
+        appTree
+      );
+      expect(
+        readJsonInTree(tree, 'libs/my-lib/tsconfig.json').compilerOptions
+      ).toEqual({
+        allowJs: true,
+      });
+    });
+
+    it('should update tsconfig.lib.json include with **/*.js glob', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', js: true },
+        appTree
+      );
+      expect(
+        readJsonInTree(tree, 'libs/my-lib/tsconfig.lib.json').include
+      ).toEqual(['**/*.ts', '**/*.js']);
     });
 
     it('should update root tsconfig.json with a js file path', async () => {
@@ -358,6 +399,9 @@ describe('lib', () => {
       expect(tree.exists('libs/my-dir/my-lib/src/index.js')).toBeTruthy();
       expect(
         tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.js')
+      ).toBeTruthy();
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.spec.js')
       ).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.js')).toBeTruthy();
     });
@@ -405,6 +449,31 @@ describe('lib', () => {
           ],
         }
       `);
+    });
+  });
+  describe('--pascalCaseFiles', () => {
+    it('should generate files with upper case names', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', pascalCaseFiles: true },
+        appTree
+      );
+      expect(tree.exists('libs/my-lib/src/lib/MyLib.ts')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/MyLib.spec.ts')).toBeTruthy();
+    });
+
+    it('should generate files with upper case names for nested libs as well', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', directory: 'myDir', pascalCaseFiles: true },
+        appTree
+      );
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/MyDirMyLib.ts')
+      ).toBeTruthy();
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/MyDirMyLib.spec.ts')
+      ).toBeTruthy();
     });
   });
 });
