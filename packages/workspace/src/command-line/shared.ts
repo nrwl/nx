@@ -61,15 +61,6 @@ function parseGitOutput(command: string): string[] {
     .filter((a) => a.length > 0);
 }
 
-// TODO: remove it in Nx 10
-export function getProjectNodes(
-  workspaceJson: any,
-  nxJson: NxJson
-): ProjectGraphNode[] {
-  const graph = createProjectGraph(workspaceJson, nxJson);
-  return Object.values(graph.nodes);
-}
-
 export function getProjectRoots(projectNames: string[]): string[] {
   const { projects } = readWorkspaceJson();
   return projectNames.map((name) => projects[name].root);

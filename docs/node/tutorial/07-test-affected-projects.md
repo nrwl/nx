@@ -1,5 +1,9 @@
 # Step 7: Test Affected Projects
 
+## Video of this Lesson
+
+<iframe width="560" height="600" src="https://www.youtube.com/embed/TRRVLyHfN60" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 In addition to supporting computation caching, Nx can scale your development by doing code change analysis to see what apps or libraries are affected by a particular pull request.
 
 **Commit all the changes in the repo**:

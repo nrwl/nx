@@ -1,6 +1,6 @@
 import { <%= className %>Action, <%= className %>ActionTypes } from './<%= fileName %>.actions';
 
-export const <%= className.toUpperCase() %>_FEATURE_KEY = '<%= propertyName %>';
+export const <%= constantName %>_FEATURE_KEY = '<%= propertyName %>';
 
 /**
  * Interface for the '<%= className %>' data used in
@@ -21,7 +21,7 @@ export interface <%= className %>State {
 };
 
 export interface <%= className %>PartialState {
-  readonly [<%= className.toUpperCase() %>_FEATURE_KEY]: <%= className %>State;
+  readonly [<%= constantName %>_FEATURE_KEY]: <%= className %>State;
 }
 
 export const initialState: <%= className %>State = {

@@ -9,7 +9,7 @@ import * as inquirer from 'inquirer';
 import * as path from 'path';
 import { dirSync } from 'tmp';
 import * as yargsParser from 'yargs-parser';
-import { determinePackageManager, showNxWarning } from './shared';
+import { showNxWarning } from './shared';
 
 enum Preset {
   Empty = 'empty',
@@ -74,7 +74,15 @@ const angularCliVersion = 'ANGULAR_CLI_VERSION';
 const prettierVersion = 'PRETTIER_VERSION';
 
 const parsedArgs = yargsParser(process.argv, {
-  string: ['cli', 'preset', 'appName', 'style', 'linter', 'defaultBase'],
+  string: [
+    'cli',
+    'preset',
+    'appName',
+    'style',
+    'linter',
+    'defaultBase',
+    'packageManager',
+  ],
   alias: {
     appName: 'app-name',
     nxCloud: 'nx-cloud',
@@ -87,7 +95,7 @@ if (parsedArgs.help) {
   showHelp();
   process.exit(0);
 }
-const packageManager = determinePackageManager();
+const packageManager = parsedArgs.packageManager || 'npm';
 determineWorkspaceName(parsedArgs).then((name) => {
   determinePreset(parsedArgs).then((preset) => {
     return determineAppName(preset, parsedArgs).then((appName) => {
@@ -491,16 +499,10 @@ function createApp(
   const command = `new ${name} ${args} --preset="${preset}"${appNameArg}${styleArg}${linterArg}${nxCloudArg}${interactiveArg}${defaultBaseArg} --collection=@nrwl/workspace`;
   console.log(command);
 
-  const collectionJsonPath = require.resolve(
-    '@nrwl/workspace/collection.json',
-    { paths: [tmpDir] }
-  );
-
   execSync(
-    `${packageExec} tao ${command.replace(
-      '--collection=@nrwl/workspace',
-      `--collection=${collectionJsonPath}`
-    )} --cli=${cli.command} --nxWorkspaceRoot=${process.cwd()}`,
+    `${packageExec} tao ${command}/collection.json --cli=${
+      cli.command
+    } --nxWorkspaceRoot="${process.cwd()}"`,
     {
       stdio: [0, 1, 2],
       cwd: tmpDir,

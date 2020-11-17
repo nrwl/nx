@@ -52,6 +52,7 @@ export interface Schema {
   defaultBase?: string;
   nxWorkspaceRoot?: string;
   linter: 'tslint' | 'eslint';
+  packageManager?: string;
 }
 
 class RunPresetTask {

@@ -1,4 +1,5 @@
 module.exports = {
+  testTimeout: 30000,
   projects: [
     '<rootDir>/packages/tao',
     '<rootDir>/packages/workspace',
@@ -17,7 +18,6 @@ module.exports = {
     '<rootDir>/packages/create-nx-workspace',
     '<rootDir>/packages/create-nx-plugin',
     '<rootDir>/packages/cli',
-    '<rootDir>/packages/bazel',
     '<rootDir>/packages/angular',
   ],
 };

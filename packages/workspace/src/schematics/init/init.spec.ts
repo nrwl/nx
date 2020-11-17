@@ -115,6 +115,24 @@ describe('workspace', () => {
       });
     });
 
+    it('should error if the angular.json has only one library', async () => {
+      appTree.overwrite(
+        '/angular.json',
+        JSON.stringify({
+          projects: {
+            proj1: {
+              projectType: 'library',
+            },
+          },
+        })
+      );
+      try {
+        await runSchematic('ng-add', { name: 'myApp' }, appTree);
+      } catch (e) {
+        expect(e.message).toContain('Can only convert projects with one app');
+      }
+    });
+
     it('should update tsconfig.base.json if present', async () => {
       const tree = await runSchematic('ng-add', { name: 'myApp' }, appTree);
       expect(readJsonInTree(tree, 'tsconfig.base.json')).toMatchSnapshot();
@@ -181,6 +199,59 @@ describe('workspace', () => {
       );
       const tree = await runSchematic('ng-add', { name: 'myApp' }, appTree);
       expect(tree.exists('/apps/myApp/tsconfig.app.json')).toBe(true);
+    });
+
+    it('should work with initial project outside of src', async () => {
+      appTree.overwrite(
+        '/angular.json',
+        JSON.stringify({
+          version: 1,
+          defaultProject: 'myApp',
+          newProjectRoot: 'projects',
+          projects: {
+            myApp: {
+              root: 'projects/myApp',
+              sourceRoot: 'projects/myApp/src',
+              architect: {
+                build: {
+                  options: {
+                    tsConfig: 'projects/myApp/tsconfig.app.json',
+                  },
+                  configurations: {},
+                },
+                test: {
+                  options: {
+                    tsConfig: 'projects/myApp/tsconfig.spec.json',
+                  },
+                },
+                lint: {
+                  options: {
+                    tsConfig: [
+                      'projects/myApp/tslint.json',
+                      'projects/myApp/tsconfig.app.json',
+                    ],
+                  },
+                },
+                e2e: {
+                  options: {
+                    protractorConfig: 'projects/myApp/e2e/protractor.conf.js',
+                  },
+                },
+              },
+            },
+          },
+        })
+      );
+      appTree.create('/projects/myApp/tslint.json', '{"rules": {}}');
+      appTree.create('/projects/myApp/e2e/protractor.conf.js', '// content');
+      appTree.create('/projects/myApp/src/app/app.module.ts', '// content');
+
+      const tree = await runSchematic('ng-add', { name: 'myApp' }, appTree);
+
+      expect(tree.exists('/tslint.json')).toBe(true);
+      expect(tree.exists('/apps/myApp/tsconfig.app.json')).toBe(true);
+      expect(tree.exists('/apps/myApp-e2e/protractor.conf.js')).toBe(true);
+      expect(tree.exists('/apps/myApp/src/app/app.module.ts')).toBe(true);
     });
 
     it('should work with missing e2e, lint, or test targets', async () => {

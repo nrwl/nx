@@ -143,8 +143,14 @@ export function updateProject(options: NormalizedSchema): Rule {
         if (!options.publishable && !options.buildable) {
           delete fixedProject.architect.build;
         } else {
-          // adjust the builder path to our custom one
-          fixedProject.architect.build.builder = '@nrwl/angular:package';
+          if (options.publishable) {
+            // adjust the builder path to our custom one
+            fixedProject.architect.build.builder = '@nrwl/angular:package';
+          } else {
+            // adjust the builder path to our custom one
+            fixedProject.architect.build.builder =
+              '@nrwl/angular:ng-packagr-lite';
+          }
         }
 
         delete fixedProject.architect.test;

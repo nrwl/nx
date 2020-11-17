@@ -37,7 +37,7 @@ export class App extends Component {
   }
 }
 <% } else { %>
-export const App = () => {
+export function App() {
   /*
    * Replace the elements below with your own. <% if (hasStyles) { %>
    *

@@ -424,6 +424,16 @@
                     "name": "package",
                     "id": "package",
                     "file": "angular/api-angular/builders/package"
+                  },
+                  {
+                    "name": "ng packagr lite",
+                    "id": "ng-packagr-lite",
+                    "file": "angular/api-angular/builders/ng-packagr-lite"
+                  },
+                  {
+                    "name": "webpack-browser",
+                    "id": "webpack-browser",
+                    "file": "angular/api-angular/builders/webpack-browser"
                   }
                 ]
               }
@@ -572,6 +582,28 @@
                     "name": "storybook",
                     "id": "storybook",
                     "file": "angular/api-storybook/builders/storybook"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "linter",
+            "id": "linter",
+            "itemList": [
+              {
+                "id": "builders",
+                "name": "Builders",
+                "itemList": [
+                  {
+                    "name": "eslint",
+                    "id": "eslint",
+                    "file": "angular/api-linter/builders/eslint"
+                  },
+                  {
+                    "name": "lint",
+                    "id": "lint",
+                    "file": "angular/api-linter/builders/lint"
                   }
                 ]
               }
@@ -995,6 +1027,11 @@
                 "name": "Moving from Protractor to Cypress",
                 "id": "protractor-to-cypress",
                 "file": "angular/guides/modern-angular/protractor-to-cypress"
+              },
+              {
+                "name": "Moving from Karma to Jest",
+                "id": "karma-to-jest",
+                "file": "angular/guides/modern-angular/karma-to-jest"
               }
             ]
           },
@@ -1016,9 +1053,23 @@
             "id": "nx7-to-nx8"
           },
           {
+            "name": "Upgrading AngularJS Applications",
+            "id": "misc-upgrade"
+          },
+          {
             "name": "Configuring Browser Support",
             "id": "browser-support",
             "file": "shared/guides/browser-support"
+          },
+          {
+            "name": "Updating Nx",
+            "id": "updating-nx",
+            "file": "angular/guides/update"
+          },
+          {
+            "name": "Running custom commands",
+            "id": "running-custom-commands",
+            "file": "angular/guides/running-custom-commands"
           }
         ]
       },
@@ -1461,6 +1512,16 @@
                     "name": "package",
                     "id": "package",
                     "file": "react/api-angular/builders/package"
+                  },
+                  {
+                    "name": "ng packagr lite",
+                    "id": "ng-packagr-lite",
+                    "file": "react/api-angular/builders/ng-packagr-lite"
+                  },
+                  {
+                    "name": "webpack-browser",
+                    "id": "webpack-browser",
+                    "file": "react/api-angular/builders/webpack-browser"
                   }
                 ]
               }
@@ -1609,6 +1670,28 @@
                     "name": "storybook",
                     "id": "storybook",
                     "file": "react/api-storybook/builders/storybook"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "linter",
+            "id": "linter",
+            "itemList": [
+              {
+                "id": "builders",
+                "name": "Builders",
+                "itemList": [
+                  {
+                    "name": "eslint",
+                    "id": "eslint",
+                    "file": "react/api-linter/builders/eslint"
+                  },
+                  {
+                    "name": "lint",
+                    "id": "lint",
+                    "file": "react/api-linter/builders/lint"
                   }
                 ]
               }
@@ -2048,6 +2131,11 @@
             "name": "Configuring Browser Support",
             "id": "browser-support",
             "file": "shared/guides/browser-support"
+          },
+          {
+            "name": "Next.js projects with Nx",
+            "id": "nextjs",
+            "file": "react/guides/nextjs"
           }
         ]
       },
@@ -2465,6 +2553,16 @@
                     "name": "package",
                     "id": "package",
                     "file": "node/api-angular/builders/package"
+                  },
+                  {
+                    "name": "ng packagr lite",
+                    "id": "ng-packagr-lite",
+                    "file": "node/api-angular/builders/ng-packagr-lite"
+                  },
+                  {
+                    "name": "webpack-browser",
+                    "id": "webpack-browser",
+                    "file": "node/api-angular/builders/webpack-browser"
                   }
                 ]
               }
@@ -2579,12 +2677,6 @@
             "id": "storybook",
             "itemList": [
               {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/storybook Overview",
-                "file": "node/guides/storybook-plugin"
-              },
-              {
                 "id": "schematics",
                 "name": "Schematics",
                 "itemList": [
@@ -2613,6 +2705,28 @@
                     "name": "storybook",
                     "id": "storybook",
                     "file": "node/api-storybook/builders/storybook"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "linter",
+            "id": "linter",
+            "itemList": [
+              {
+                "id": "builders",
+                "name": "Builders",
+                "itemList": [
+                  {
+                    "name": "eslint",
+                    "id": "eslint",
+                    "file": "node/api-linter/builders/eslint"
+                  },
+                  {
+                    "name": "lint",
+                    "id": "lint",
+                    "file": "node/api-linter/builders/lint"
                   }
                 ]
               }

@@ -24,7 +24,6 @@ Nx is an open platform with plugins for many modern tools and frameworks. **To s
 >  NX  Also available:
 
   @nrwl/angular (schematics)
-  @nrwl/bazel (schematics)
   @nrwl/express (builders,schematics)
   @nrwl/nest (builders,schematics)
   @nrwl/next (builders,schematics)

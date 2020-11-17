@@ -12,14 +12,14 @@ export default function () {
       addDepsToPackageJson(
         {},
         {
-          karma: '~4.0.0',
-          'karma-chrome-launcher': '~2.2.0',
-          'karma-coverage-istanbul-reporter': '~2.0.1',
-          'karma-jasmine': '~1.1.2',
-          'karma-jasmine-html-reporter': '^0.2.2',
-          'jasmine-core': '~2.99.1',
-          'jasmine-spec-reporter': '~4.2.1',
-          '@types/jasmine': '~2.8.8',
+          karma: '~5.0.0',
+          'karma-chrome-launcher': '~3.1.0',
+          'karma-coverage-istanbul-reporter': '~3.0.2',
+          'karma-jasmine': '~4.0.0',
+          'karma-jasmine-html-reporter': '^1.5.0',
+          'jasmine-core': '~3.6.0',
+          'jasmine-spec-reporter': '~5.0.0',
+          '@types/jasmine': '~3.5.0',
         }
       ),
     ]);

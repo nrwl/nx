@@ -1,6 +1,6 @@
 # package
 
-Build an Angular library
+Build and package an Angular library for publishing
 
 Builder properties can be configured in angular.json when defining the builder, or when invoking it.
 

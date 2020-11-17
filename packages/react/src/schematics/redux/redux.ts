@@ -174,10 +174,13 @@ async function normalizeOptions(
     : {};
   const modulePath =
     projectType === 'application'
-      ? `./app/${extraNames.fileName}.slice`
+      ? options.directory
+        ? `./app/${options.directory}/${extraNames.fileName}.slice`
+        : `./app/${extraNames.fileName}.slice`
       : Object.keys(tsPaths).find((k) =>
           tsPaths[k].some((s) => s.includes(sourceRoot))
         );
+
   // If --project is set to an app, automatically configure store
   // for it without needing to specify --appProject.
   options.appProject =

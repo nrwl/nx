@@ -65,9 +65,14 @@
     "url": "https://github.com/twittwer/nx-tools/tree/master/libs/compodoc#readme"
   },
   {
+    "name": "@nxext/svelte",
+    "description": "Nx plugin to use Svelte within nx workspaces",
+    "url": "https://github.com/nxext/nx-extensions/tree/master/packages/svelte"
+  },
+  {
     "name": "@nxext/stencil",
     "description": "Nx plugin to use StencilJs within nx workspaces",
-    "url": "https://github.com/DominikPieper/nx-extensions"
+    "url": "https://github.com/nxext/nx-extensions/tree/master/packages/stencil"
   },
   {
     "name": "@joelcode/gcp-function",
@@ -78,5 +83,20 @@
     "name": "@nx-go/nx-go",
     "description": "Nx plugin to use Go in a Nx workspace",
     "url": "https://github.com/nx-go/nx-go"
+  },
+  {
+    "name": "@angular-architects/module-federation",
+    "description": "Nx plugin to use webpack module federation",
+    "url": "https://github.com/angular-architects/module-federation-plugin"
+  },
+  {
+    "name": "@nxrocks/nx-spring-boot",
+    "description": "Nx plugin to generate, run, package, build (and more) Spring Boot projects inside your Nx workspace",
+    "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-spring-boot"
+  },
+  {
+    "name": "@trumbitta/nx-plugin-openapi",
+    "description": "OpenAPI Plugin for Nx. Keep your API spec files in libs, and auto-generate sources.",
+    "url": "https://github.com/trumbitta/nx-trumbitta/tree/main/packages/nx-plugin-openapi"
   }
 ]

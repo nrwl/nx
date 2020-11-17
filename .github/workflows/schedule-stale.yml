@@ -9,12 +9,12 @@ jobs:
     steps:
       - name: stale-more-info-needed
         id: stale-more-info-needed
-        uses: actions/stale@v3
+        uses: actions/stale@v3.0.13
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 30
-          days-before-close: -1
-          stale-issue-label: "status: stale"
+          days-before-stale: 21
+          days-before-close: 14
+          stale-issue-label: "stale"
           operations-per-run: 300
           remove-stale-when-updated: true
           only-labels: "blocked: more info needed"
@@ -25,12 +25,12 @@ jobs:
 
       - name: stale-needs-rebase
         id: stale-needs-rebase
-        uses: actions/stale@v3
+        uses: actions/stale@v3.0.13
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 30
-          days-before-close: -1
-          stale-issue-label: "status: stale"
+          days-before-stale: 21
+          days-before-close: 14
+          stale-issue-label: "stale"
           operations-per-run: 300
           remove-stale-when-updated: true
           only-labels: "blocked: needs rebased"
@@ -41,15 +41,15 @@ jobs:
 
       - name: stale-repro-needed
         id: stale-repro-needed
-        uses: actions/stale@v3
+        uses: actions/stale@v3.0.13
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 30
-          days-before-close: -1
-          stale-issue-label: "status: stale"
+          days-before-stale: 21
+          days-before-close: 14
+          stale-issue-label: "stale"
           operations-per-run: 300
           remove-stale-when-updated: true
-          only-labels: "blocked: repro needed,blocked: retry with latest"
+          only-labels: "blocked: repro needed"
           stale-issue-message: |
             This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
             If we missed this issue please reply to keep it active.
@@ -57,12 +57,12 @@ jobs:
 
       - name: stale-retry-with-latest
         id: stale-retry-with-latest
-        uses: actions/stale@v3
+        uses: actions/stale@v3.0.13
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 30
-          days-before-close: -1
-          stale-issue-label: "status: stale"
+          days-before-stale: 21
+          days-before-close: 14
+          stale-issue-label: "stale"
           operations-per-run: 300
           remove-stale-when-updated: true
           only-labels: "blocked: retry with latest"
@@ -74,12 +74,12 @@ jobs:
 
       - name: stale-bug
         id: stale-bug
-        uses: actions/stale@v3
+        uses: actions/stale@v3.0.13
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 250
-          days-before-close: -1
-          stale-issue-label: "status: stale"
+          days-before-stale: 180
+          days-before-close: 14
+          stale-issue-label: "stale"
           operations-per-run: 300
           remove-stale-when-updated: true
           only-labels: "type: bug"
@@ -90,12 +90,12 @@ jobs:
 
       - name: stale-cleanup
         id: stale-cleanup
-        uses: actions/stale@v3
+        uses: actions/stale@v3.0.13
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 250
-          days-before-close: -1
-          stale-issue-label: "status: stale"
+          days-before-stale: 180
+          days-before-close: 14
+          stale-issue-label: "stale"
           operations-per-run: 300
           remove-stale-when-updated: true
           only-labels: "type: cleanup"
@@ -106,12 +106,12 @@ jobs:
 
       - name: stale-docs
         id: stale-docs
-        uses: actions/stale@v3
+        uses: actions/stale@v3.0.13
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 250
-          days-before-close: -1
-          stale-issue-label: "status: stale"
+          days-before-stale: 180
+          days-before-close: 14
+          stale-issue-label: "stale"
           operations-per-run: 300
           remove-stale-when-updated: true
           only-labels: "type: docs"
@@ -122,12 +122,12 @@ jobs:
 
       - name: stale-enhancement
         id: stale-enhancement
-        uses: actions/stale@v3
+        uses: actions/stale@v3.0.13
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 250
-          days-before-close: -1
-          stale-issue-label: "status: stale"
+          days-before-close: 14
+          stale-issue-label: "stale"
           operations-per-run: 300
           remove-stale-when-updated: true
           only-labels: "type: enhancement"
@@ -138,12 +138,12 @@ jobs:
 
       - name: stale-feature
         id: stale-feature
-        uses: actions/stale@v3
+        uses: actions/stale@v3.0.13
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 250
-          days-before-close: -1
-          stale-issue-label: "status: stale"
+          days-before-close: 14
+          stale-issue-label: "stale"
           operations-per-run: 300
           remove-stale-when-updated: true
           only-labels: "type: feature"
@@ -154,12 +154,12 @@ jobs:
 
       - name: stale-question
         id: stale-question
-        uses: actions/stale@v3
+        uses: actions/stale@v3.0.13
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 250
-          days-before-close: -1
-          stale-issue-label: "status: stale"
+          days-before-stale: 90
+          days-before-close: 14
+          stale-issue-label: "stale"
           operations-per-run: 300
           remove-stale-when-updated: true
           only-labels: "type: question / discussion"

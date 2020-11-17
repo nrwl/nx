@@ -41,11 +41,15 @@
       "description": "Add tsconfig.editor.json to angular apps and update jest-angular-preset",
       "factory": "./src/migrations/update-10-3-0/update-10-3-0"
     },
+    "update-10-4-0": {
+      "version": "10.4.0-beta.3",
+      "description": "Adjust karma and protractor setup",
+      "factory": "./src/migrations/update-10-4-0/update-10-4-0"
+    },
     "add-template-support-and-presets-to-eslint": {
-      "version": "10.4.0-beta.0",
+      "version": "10.5.0-beta.0",
       "description": "Update eslint config and builder to extend from new Nx Angular presets and lint templates",
       "factory": "./src/migrations/update-10-4-0/add-template-support-and-presets-to-eslint"
-    }
   },
   "packageJsonUpdates": {
     "10.0.0": {
@@ -139,6 +143,47 @@
         },
         "jest-preset-angular": {
           "version": "8.3.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "10.4.0": {
+      "version": "10.4.0-beta.3",
+      "packages": {
+        "protractor": {
+          "version": "~7.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jasmine-core": {
+          "version": "~3.6.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jasmine-spec-reporter": {
+          "version": "~5.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/jasmine": {
+          "version": "~3.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "karma": {
+          "version": "~5.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "karma-chrome-launcher": {
+          "version": "~3.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "karma-coverage-istanbul-reporter": {
+          "version": "~3.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "karma-jasmine": {
+          "version": "~4.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "karma-jasmine-html-reporter": {
+          "version": "^1.5.0",
           "alwaysAddToPackageJson": false
         }
       }

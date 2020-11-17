@@ -102,6 +102,10 @@ Default: `false`
 
 Isolate projects which previously failed
 
+### port
+
+Bind the dep graph server to a specific port.
+
 ### runner
 
 This is the name of the tasks runner configured in nx.json

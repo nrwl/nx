@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
   "title": "ng-packagr Target",
-  "description": "ng-packagr target options for Build Architect. Use to build library projects.",
+  "description": "ng-packagr target options for Build Architect. Use to build and package library projects for publishing.",
   "type": "object",
   "properties": {
     "project": {

@@ -1,22 +1,11 @@
-import { execSync } from 'child_process';
 import { fileExists } from './fileutils';
 
 export function detectPackageManager(): string {
-  try {
-    const output = execSync(`nx config cli.packageManager`, {
-      stdio: ['ignore', 'pipe', 'ignore'],
-    })
-      .toString()
-      .trim()
-      .split('\n');
-    return output[output.length - 1].trim();
-  } catch (e) {
-    return fileExists('yarn.lock')
-      ? 'yarn'
-      : fileExists('pnpm-lock.yaml')
-      ? 'pnpm'
-      : 'npm';
-  }
+  return fileExists('yarn.lock')
+    ? 'yarn'
+    : fileExists('pnpm-lock.yaml')
+    ? 'pnpm'
+    : 'npm';
 }
 
 export function getPackageManagerExecuteCommand(
@@ -31,4 +20,15 @@ export function getPackageManagerExecuteCommand(
   }
 
   return `npx`;
+}
+
+export function getPackageManagerInstallCommand(
+  packageManager = detectPackageManager(),
+  isDevDependency = false
+) {
+  if (packageManager === 'yarn') {
+    return `yarn add${isDevDependency ? ' --dev' : ''}`;
+  }
+
+  return `${packageManager} install${isDevDependency ? ' --save-dev' : ''}`;
 }

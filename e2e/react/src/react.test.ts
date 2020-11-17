@@ -379,7 +379,7 @@ forEachCli('nx', () => {
       checkFilesExist(...filesToCheck);
 
       expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
-        'const App = () =>'
+        'function App() {'
       );
 
       if (opts.checkProdBuild) {

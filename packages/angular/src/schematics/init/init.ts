@@ -91,10 +91,10 @@ export function addE2eTestRunner(options: Pick<Schema, 'e2eTestRunner'>): Rule {
         return addDepsToPackageJson(
           {},
           {
-            protractor: '~5.4.0',
-            'jasmine-core': '~2.99.1',
-            'jasmine-spec-reporter': '~4.2.1',
-            '@types/jasmine': '~2.8.6',
+            protractor: '~7.0.0',
+            'jasmine-core': '~3.6.0',
+            'jasmine-spec-reporter': '~5.0.0',
+            '@types/jasmine': '~3.5.0',
             '@types/jasminewd2': '~2.0.3',
           }
         );

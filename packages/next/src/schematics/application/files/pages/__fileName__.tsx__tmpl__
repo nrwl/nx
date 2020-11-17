@@ -12,11 +12,11 @@ import React from 'react';
 const StyledPage = styled.div`<%= styleContent %>`;
 <% }%>
 
-export const Index = () => {
+export function Index() {
   /*
    * Replace the elements below with your own.
    *
-   * Note: The corresponding styles are in the ./${fileName}.${style} file.
+   * Note: The corresponding styles are in the ./<%= fileName %>.<%= style %> file.
    */
   return (
     <<%= wrapper %><% if (!styledModule || styledModule === 'styled-jsx') {%> className={styles.page}<% } %>>

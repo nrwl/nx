@@ -1,5 +1,9 @@
 # Step 2: Display todos
 
+## Video of this Lesson
+
+<iframe width="560" height="600" src="https://www.youtube.com/embed/I4-sO2LeVbU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 Great! We now have a server application set up to show some data when going to the `/api` route.
 
 Next, we're going to add a new service, and set up some server side templates.

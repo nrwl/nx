@@ -129,6 +129,11 @@
       "version": "10.3.0-beta.0",
       "description": "Adds `buildableProjectDepsInPackageJsonType` for web and angular package builders",
       "factory": "./src/migrations/update-10-3-0/add-buildable-project-deps-in-package-json-type"
+    },
+    "add-explicit-dep-on-tao": {
+      "version": "10.4.0-beta.5",
+      "description": "Add an explicit dependency on @nrwl/tao",
+      "factory": "./src/migrations/update-10-4-0/add-explicit-dep-on-tao"
     }
   },
   "packageJsonUpdates": {
@@ -779,6 +784,15 @@
         },
         "@schematics/angular": {
           "version": "~10.1.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "10.4.0": {
+      "version": "10.4.0-beta.1",
+      "packages": {
+        "prettier": {
+          "version": "2.1.2",
           "alwaysAddToPackageJson": false
         }
       }

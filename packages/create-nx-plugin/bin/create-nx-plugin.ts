@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 // we can't import from '@nrwl/workspace' because it will require typescript
-// eslint-disable-next-line @nrwl/nx/enforce-module-boundaries
 import { output } from '@nrwl/workspace/src/utils/output';
 import { getPackageManagerExecuteCommand } from '@nrwl/workspace/src/utils/detect-package-manager';
 import { dirSync } from 'tmp';
@@ -10,7 +9,7 @@ import * as path from 'path';
 import { execSync } from 'child_process';
 import * as inquirer from 'inquirer';
 import yargsParser = require('yargs-parser');
-import { determinePackageManager, showNxWarning } from './shared';
+import { showNxWarning } from './shared';
 
 const tsVersion = 'TYPESCRIPT_VERSION';
 const cliVersion = 'NX_VERSION';
@@ -18,7 +17,7 @@ const nxVersion = 'NX_VERSION';
 const prettierVersion = 'PRETTIER_VERSION';
 
 const parsedArgs = yargsParser(process.argv, {
-  string: ['pluginName'],
+  string: ['pluginName', 'packageManager'],
   alias: {
     pluginName: 'plugin-name',
   },
@@ -73,7 +72,7 @@ function createWorkspace(
     `${packageExec} tao ${command.replace(
       '--collection=@nrwl/workspace',
       `--collection=${collectionJsonPath}`
-    )} --nxWorkspaceRoot=${process.cwd()}`,
+    )} --nxWorkspaceRoot="${process.cwd()}"`,
     {
       stdio: [0, 1, 2],
       cwd: tmpDir,
@@ -199,7 +198,7 @@ if (parsedArgs.help) {
   process.exit(0);
 }
 
-const packageManager = determinePackageManager();
+const packageManager = parsedArgs.packageManager || 'npm';
 determineWorkspaceName(parsedArgs).then((workspaceName) => {
   return determinePluginName(parsedArgs).then((pluginName) => {
     const tmpDir = createSandbox(packageManager);

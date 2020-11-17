@@ -1,8 +1,0 @@
-{
-  "$schema": "http://json-schema.org/schema",
-  "id": "NxBazelInit",
-  "title": "Bazel Init Schema",
-  "type": "object",
-  "properties": {},
-  "required": []
-}
