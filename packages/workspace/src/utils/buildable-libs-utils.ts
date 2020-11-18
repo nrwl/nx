@@ -14,6 +14,7 @@ import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { getOutputsForTargetAndConfiguration } from '@nrwl/workspace/src/tasks-runner/utils';
 import * as ts from 'typescript';
 import { unlinkSync } from 'fs';
+import { readTsConfig } from './typescript';
 
 function isBuildable(target: string, node: ProjectGraphNode): boolean {
   return (
@@ -21,6 +22,24 @@ function isBuildable(target: string, node: ProjectGraphNode): boolean {
     node.data.targets[target] &&
     node.data.targets[target].executor !== ''
   );
+}
+
+// TODO: we should unify the entry point prop names
+function resolveEntryFile(target: string, node: ProjectGraphNode) {
+  const buildArchitectNode = node.data.targets[target];
+  switch (buildArchitectNode.executor) {
+    case '@nrwl/web:package':
+      return buildArchitectNode.options.entryFile;
+
+    case '@nrwl/angular:package':
+    case '@nrwl/angular:ng-packagr-lite':
+      const ngPackagrConfig = readJsonFile(buildArchitectNode.options.project);
+      return join(node.data.root, ngPackagrConfig.lib.entryFile);
+
+    case '@nrwl/node:package':
+    case '@nrwl/angular:webpack-browser':
+      return buildArchitectNode.options.main;
+  }
 }
 
 export type DependentBuildableProjectNode = {
@@ -34,6 +53,8 @@ export function calculateProjectDependencies(
   context: BuilderContext
 ): { target: ProjectGraphNode; dependencies: DependentBuildableProjectNode[] } {
   const target = projGraph.nodes[context.target.project];
+  let tsConfigBaseCache;
+
   // gather the library dependencies
   const dependencies = recursivelyCollectDependencies(
     context.target.project,
@@ -46,12 +67,29 @@ export function calculateProjectDependencies(
         depNode.type === ProjectType.lib &&
         isBuildable(context.target.target, depNode)
       ) {
+        const entryFile = resolveEntryFile(context.target.target, depNode);
         const libPackageJson = readJsonFile(
           join(context.workspaceRoot, depNode.data.root, 'package.json')
         );
 
+        // only read this when we have a buildable target since we just need
+        // it for TS Path rewriting
+        if (!tsConfigBaseCache) {
+          const tsConfigPath =
+            target.data.targets[context.target.target].options.tsConfig;
+          tsConfigBaseCache = readTsConfig(tsConfigPath);
+        }
+
+        // find TSConfig mapping based on the sourceRoot
+        const packageImportPath = Object.keys(
+          tsConfigBaseCache?.options?.paths || {}
+        ).find((x) => {
+          const value: string[] = tsConfigBaseCache.options.paths[x];
+          return value.find((t) => t === entryFile);
+        });
+
         return {
-          name: libPackageJson.name, // i.e. @workspace/mylib
+          name: packageImportPath || libPackageJson.name, // i.e. @workspace/mylib
           outputs: getOutputsForTargetAndConfiguration(
             {
               overrides: {},

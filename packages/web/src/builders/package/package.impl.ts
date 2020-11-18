@@ -23,6 +23,7 @@ import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
   computeCompilerOptionsPaths,
+  createTmpTsConfig,
   DependentBuildableProjectNode,
   updateBuildableProjectPackageJsonDependencies,
 } from '@nrwl/workspace/src/utils/buildable-libs-utils';
@@ -83,6 +84,13 @@ export function run(
         context.workspaceRoot,
         sourceRoot
       );
+      options.tsConfig = createTmpTsConfig(
+        join(context.workspaceRoot, options.tsConfig),
+        context.workspaceRoot,
+        target.data.root,
+        dependencies
+      );
+
       const packageJson = readJsonFile(options.project);
       const rollupOptions = createRollupOptions(
         options,

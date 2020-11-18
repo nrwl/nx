@@ -269,7 +269,14 @@ describe('NodePackageBuilder', () => {
               data: {
                 files: [],
                 root: 'libs/nodelib',
-                targets: { build: { executor: 'any builder' } },
+                targets: {
+                  build: {
+                    executor: 'any builder',
+                    options: {
+                      tsConfig: 'libs/nodelib-child/tsconfig.lib.json',
+                    },
+                  },
+                },
               },
             },
             'nodelib-child': {
