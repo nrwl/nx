@@ -419,8 +419,9 @@ function createFetcher(packageManager: string, logger: logging.Logger) {
       const dir = dirSync().name;
       logger.info(`Fetching ${packageName}@${packageVersion}`);
       const install = getPackageManagerInstallCommand(packageManager);
-      execSync(`${install} ${packageName}@${packageVersion} --prefix=${dir}`, {
+      execSync(`${install} ${packageName}@${packageVersion}`, {
         stdio: [],
+        cwd: dir,
       });
       const packageJsonPath = require.resolve(`${packageName}/package.json`, {
         paths: [dir],
