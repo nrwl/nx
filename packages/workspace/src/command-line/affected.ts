@@ -47,15 +47,14 @@ export async function affected(
   const projects = parsedArgs.all ? projectGraph.nodes : affectedGraph.nodes;
   const projectsNotExcluded = Object.keys(projects)
     .filter((key) => !parsedArgs.exclude.includes(key))
-    .reduce((_p, key) => {
-      return projects[key];
-    }, {});
+    .reduce((p, key) => {
+      p[key] = projects[key];
+      return p;
+    }, {} as Record<string, ProjectGraphNode>);
   const env = readEnvironment(nxArgs.target, projectsNotExcluded);
-  const affectedProjects = Object.values(projects)
-    .filter((n) => !parsedArgs.exclude.includes(n.name))
-    .filter(
-      (n) => !parsedArgs.onlyFailed || !env.workspaceResults.getResult(n.name)
-    );
+  const affectedProjects = Object.values(projectsNotExcluded).filter(
+    (n) => !parsedArgs.onlyFailed || !env.workspaceResults.getResult(n.name)
+  );
 
   try {
     switch (command) {
