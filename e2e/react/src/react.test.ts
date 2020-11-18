@@ -65,9 +65,7 @@ describe('React Applications', () => {
     });
 
     runCLI(`build ${appName}`);
-    vendorContent = readFile(`dist/apps/${appName}/vendor.js`);
-
-    expect(vendorContent).toMatch(/sourceMappingURL/);
+    checkFilesExist(`dist/apps/${appName}/vendor.js.map`);
   }, 120000);
 
   it('should be able to generate a publishable react lib', async () => {
