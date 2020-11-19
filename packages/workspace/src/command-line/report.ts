@@ -1,7 +1,8 @@
 import { terminal } from '@angular-devkit/core';
+import { execSync } from 'child_process';
 import { readFileSync } from 'fs';
-import * as path from 'path';
 import { appRootPath } from '../utils/app-root';
+import { detectPackageManager } from '../utils/detect-package-manager';
 import { output } from '../utils/output';
 
 export const packagesWeCareAbout = [
@@ -40,7 +41,15 @@ export const report = {
  *
  */
 function reportHandler() {
-  const bodyLines = [];
+  const pm = detectPackageManager();
+  const pmVersion = execSync(`${pm} --version`).toString('utf-8').trim();
+
+  const bodyLines = [
+    `Node: ${process.versions.node}`,
+    `OS: ${process.platform} ${process.arch}`,
+    `${pm}: ${pmVersion}`,
+    ``,
+  ];
 
   packagesWeCareAbout.forEach((p) => {
     let status = 'Not Found';
