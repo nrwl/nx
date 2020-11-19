@@ -179,10 +179,14 @@ class CLIOutput {
     this.addNewline();
   }
 
-  logCommand(message: string) {
+  logCommand(message: string, isCached: boolean = false) {
     this.addNewline();
 
     this.writeToStdOut(chalk.bold(`> ${message} `));
+
+    if (isCached) {
+      this.writeToStdOut(chalk.bold.grey(`[retrieved from cache]`));
+    }
 
     this.addNewline();
   }
