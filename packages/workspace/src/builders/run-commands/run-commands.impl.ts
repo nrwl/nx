@@ -1,7 +1,4 @@
-import { BuilderOutput, createBuilder } from '@angular-devkit/architect';
-import { JsonObject } from '@angular-devkit/core';
 import { exec, execSync } from 'child_process';
-import { Observable } from 'rxjs';
 import * as yargsParser from 'yargs-parser';
 
 export const LARGE_BUFFER = 1024 * 1000000;
@@ -19,9 +16,10 @@ function loadEnvVars(path?: string) {
   }
 }
 
-export interface RunCommandsBuilderOptions extends JsonObject {
-  command: string;
-  commands: (
+export type Json = { [k: string]: any };
+export interface RunCommandsBuilderOptions extends Json {
+  command?: string;
+  commands?: (
     | {
         command: string;
         forwardAllArgs?: boolean;
@@ -58,9 +56,9 @@ export interface NormalizedRunCommandsBuilderOptions
   parsedArgs: { [k: string]: any };
 }
 
-export default createBuilder<RunCommandsBuilderOptions>(run);
-
-function run(options: RunCommandsBuilderOptions): Observable<BuilderOutput> {
+export default async function (
+  options: RunCommandsBuilderOptions
+): Promise<{ success: boolean }> {
   // Special handling of extra options coming through Angular CLI
   if (options['--']) {
     const { _, ...overrides } = yargsParser(options['--'] as string[], {
@@ -73,26 +71,22 @@ function run(options: RunCommandsBuilderOptions): Observable<BuilderOutput> {
   loadEnvVars(options.envFile);
   const normalized = normalizeOptions(options);
 
-  return Observable.create(async (observer) => {
-    if (options.readyWhen && !options.parallel) {
-      observer.error(
-        'ERROR: Bad builder config for @nrwl/run-commands - "readyWhen" can only be used when parallel=true'
-      );
-      return;
-    }
+  if (options.readyWhen && !options.parallel) {
+    throw new Error(
+      'ERROR: Bad builder config for @nrwl/run-commands - "readyWhen" can only be used when parallel=true'
+    );
+  }
 
-    try {
-      const success = options.parallel
-        ? await runInParallel(normalized)
-        : await runSerially(normalized);
-      observer.next({ success });
-      observer.complete();
-    } catch (e) {
-      observer.error(
-        `ERROR: Something went wrong in @nrwl/run-commands - ${e.message}`
-      );
-    }
-  });
+  try {
+    const success = options.parallel
+      ? await runInParallel(normalized)
+      : await runSerially(normalized);
+    return { success };
+  } catch (e) {
+    throw new Error(
+      `ERROR: Something went wrong in @nrwl/run-commands - ${e.message}`
+    );
+  }
 }
 
 async function runInParallel(options: NormalizedRunCommandsBuilderOptions) {

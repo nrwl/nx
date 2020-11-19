@@ -1,6 +1,5 @@
 import { NxJson } from '@nrwl/workspace';
 import {
-  ensureProject,
   forEachCli,
   listFiles,
   newProject,
@@ -33,7 +32,7 @@ forEachCli((cliName) => {
 
   describe('run-one', () => {
     it('should build specific project', () => {
-      ensureProject();
+      newProject();
       const myapp = uniq('myapp');
       const mylib1 = uniq('mylib1');
       const mylib2 = uniq('mylib1');
@@ -140,7 +139,7 @@ forEachCli((cliName) => {
     }, 1000000);
 
     it('should run only failed projects', () => {
-      ensureProject();
+      newProject();
       const myapp = uniq('myapp');
       const myapp2 = uniq('myapp2');
       runCLI(`generate @nrwl/angular:app ${myapp}`);
@@ -196,7 +195,7 @@ forEachCli((cliName) => {
 
   describe('affected:*', () => {
     it('should print, build, and test affected apps', () => {
-      ensureProject();
+      newProject();
       const myapp = uniq('myapp');
       const myapp2 = uniq('myapp2');
       const mylib = uniq('mylib');
@@ -356,7 +355,7 @@ forEachCli((cliName) => {
     let myapp2 = uniq('myapp');
     let mylib = uniq('mylib');
     it('should not affect other projects by generating a new project', () => {
-      ensureProject();
+      newProject();
 
       const nxJson: NxJson = readJson('nx.json');
 
@@ -487,7 +486,7 @@ forEachCli((cliName) => {
             project: myapp,
             target: 'test',
           },
-          command: `npm run ${cliCommand} -- test ${myapp}`,
+          command: `npm run nx -- test ${myapp}`,
           outputs: [],
         },
       ]);
@@ -506,7 +505,7 @@ forEachCli((cliName) => {
             project: myapp,
             target: 'build',
           },
-          command: `npm run ${cliCommand} -- build ${myapp}`,
+          command: `npm run nx -- build ${myapp}`,
           outputs: [`dist/apps/${myapp}`],
         },
         {
@@ -516,7 +515,7 @@ forEachCli((cliName) => {
             project: mypublishablelib,
             target: 'build',
           },
-          command: `npm run ${cliCommand} -- build ${mypublishablelib}`,
+          command: `npm run nx -- build ${mypublishablelib}`,
           outputs: [`dist/libs/${mypublishablelib}`],
         },
       ]);
@@ -557,7 +556,7 @@ forEachCli((cliName) => {
 
   describe('cache', () => {
     it('should cache command execution', async () => {
-      ensureProject();
+      newProject();
 
       const myapp1 = uniq('myapp1');
       const myapp2 = uniq('myapp2');
@@ -690,7 +689,7 @@ forEachCli((cliName) => {
     }, 120000);
 
     it('should only cache specific files if build outputs is configured with specific files', async () => {
-      ensureProject();
+      newProject();
 
       const mylib1 = uniq('mylib1');
       runCLI(`generate @nrwl/react:lib ${mylib1} --buildable`);
@@ -737,11 +736,14 @@ forEachCli((cliName) => {
       const cachedProjects = [];
       const lines = actualOutput.split('\n');
       lines.forEach((s, i) => {
-        if (s.startsWith(`> ${cliCommand} run`)) {
-          const projectName = s
-            .split(`> ${cliCommand} run `)[1]
-            .split(':')[0]
-            .trim();
+        if (s.startsWith(`> nx run`)) {
+          const projectName = s.split(`> nx run `)[1].split(':')[0].trim();
+          if (lines[i + 2].indexOf('Cached Output') > -1) {
+            cachedProjects.push(projectName);
+          }
+        }
+        if (s.startsWith(`> ng run`)) {
+          const projectName = s.split(`> ng run `)[1].split(':')[0].trim();
           if (lines[i + 2].indexOf('Cached Output') > -1) {
             cachedProjects.push(projectName);
           }
@@ -756,7 +758,7 @@ forEachCli((cliName) => {
 
   describe('workspace structure', () => {
     it('should have a vscode/extensions.json file created', () => {
-      ensureProject();
+      newProject();
       const extensions = readJson('.vscode/extensions.json');
       if (cliName === 'angular') {
         expect(extensions).toEqual({

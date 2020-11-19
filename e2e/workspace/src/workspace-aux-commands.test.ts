@@ -1,8 +1,8 @@
 import {
   checkFilesExist,
-  ensureProject,
   exists,
   forEachCli,
+  newProject,
   readFile,
   readJson,
   runCLI,
@@ -18,7 +18,7 @@ import { classify } from '@nrwl/workspace/src/utils/strings';
 
 forEachCli((cli) => {
   beforeAll(() => {
-    ensureProject();
+    newProject();
   });
 
   describe('lint', () => {
@@ -263,8 +263,8 @@ forEachCli((cli) => {
         `;
       });
 
-      const dryRunOutput = runCommand(
-        `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive -d`
+      runCommand(
+        `nx workspace-schematic ${custom} ${workspace} --no-interactive -d`
       );
 
       expect(() =>
@@ -304,23 +304,19 @@ forEachCli((cli) => {
       );
 
       const workspace = uniq('workspace');
-      const dryRunOutput = runCommand(
-        `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive --directory=dir --skipTsConfig=true -d`
+      const dryRunOutput = runCLI(
+        `workspace-schematic ${custom} ${workspace} --no-interactive --directory=dir --skipTsConfig=true -d`
       );
       expect(exists(`libs/dir/${workspace}/src/index.ts`)).toEqual(false);
       expect(dryRunOutput).toContain(`UPDATE ${workspaceConfigName()}`);
       expect(dryRunOutput).toContain('UPDATE nx.json');
-      expect(dryRunOutput).not.toContain('UPDATE tsconfig.base.json');
 
-      const output = runCommand(
-        `npm run workspace-schematic ${custom} ${workspace} -- --no-interactive --directory=dir`
+      const output = runCLI(
+        `workspace-schematic ${custom} ${workspace} --no-interactive --directory=dir`
       );
       checkFilesExist(`libs/dir/${workspace}/src/index.ts`);
       expect(output).toContain(`UPDATE ${workspaceConfigName()}`);
       expect(output).toContain('UPDATE nx.json');
-
-      const another = uniq('another');
-      runCLI(`g workspace-schematic ${another} --no-interactive`);
 
       const jsonFailing = readJson(`tools/schematics/${failing}/schema.json`);
       jsonFailing.properties = {};
@@ -340,26 +336,15 @@ forEachCli((cli) => {
       );
 
       try {
-        const err = await runCommandAsync(
-          `npm run workspace-schematic -- ${failing} --no-interactive`
-        );
+        await runCLI(`workspace-schematic ${failing} --no-interactive`);
         fail(`Should exit 1 for a workspace-schematic that throws an error`);
       } catch (e) {}
 
-      const listSchematicsOutput = runCommand(
-        'npm run workspace-schematic -- --list-schematics'
-      );
-      expect(listSchematicsOutput).toContain(
-        'nx workspace-schematic "--list-schematics"'
+      const listSchematicsOutput = runCLI(
+        'workspace-schematic --list-schematics'
       );
       expect(listSchematicsOutput).toContain(custom);
       expect(listSchematicsOutput).toContain(failing);
-      expect(listSchematicsOutput).toContain(another);
-
-      const promptOutput = runCommand(
-        `npm run workspace-schematic ${custom} mylib2 --dry-run`
-      );
-      expect(promptOutput).toContain('UPDATE nx.json');
     }, 1000000);
   });
 

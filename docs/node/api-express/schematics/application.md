@@ -48,6 +48,14 @@ Type: `string`
 
 Frontend project that needs to access this application. This sets up proxy configuration.
 
+### js
+
+Default: `false`
+
+Type: `boolean`
+
+Generate JavaScript files rather than TypeScript files.
+
 ### linter
 
 Default: `eslint`
@@ -63,6 +71,16 @@ The tool to use for running lint checks.
 Type: `string`
 
 The name of the application.
+
+### pascalCaseFiles
+
+Alias(es): P
+
+Default: `false`
+
+Type: `boolean`
+
+Use pascal case file names.
 
 ### skipFormat
 

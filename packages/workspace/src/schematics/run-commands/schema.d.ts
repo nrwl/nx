@@ -4,4 +4,5 @@ export interface Schema {
   project: string;
   cwd?: string;
   outputs?: string;
+  envFile?: string;
 }

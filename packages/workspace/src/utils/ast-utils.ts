@@ -513,7 +513,7 @@ export function updateJsonInTree<T = any, O = T>(
 export function updateWorkspaceInTree<T = any, O = T>(
   callback: (json: T, context: SchematicContext, host: Tree) => O
 ): Rule {
-  return (host: Tree, context: SchematicContext): Tree => {
+  return (host: Tree, context: SchematicContext = undefined): Tree => {
     const path = getWorkspacePath(host);
     host.overwrite(
       path,

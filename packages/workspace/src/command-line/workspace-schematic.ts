@@ -33,6 +33,7 @@ import {
 import { fileExists, readJsonFile, writeJsonFile } from '../utils/fileutils';
 import { output } from '../utils/output';
 import { CompilerOptions } from 'typescript';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 
 const rootDirectory = appRootPath;
 
@@ -53,18 +54,36 @@ export async function workspaceSchematic(args: string[]) {
     process.stdout,
     process.stderr
   );
+  const collectionFile = path.join(outDir, 'workspace-schematics.json');
   if (parsedArgs.listSchematics) {
-    return listSchematics(
-      path.join(outDir, 'workspace-schematics.json'),
-      logger
-    );
+    return listSchematics(collectionFile, logger);
   }
   const schematicName = args[0];
-  const workflow = createWorkflow(parsedArgs.dryRun);
-  try {
-    await executeSchematic(schematicName, parsedArgs, workflow, outDir, logger);
-  } catch (e) {
-    process.exit(1);
+  const ws = new Workspaces();
+  if (ws.isNxSchematic(collectionFile, schematicName)) {
+    try {
+      execSync(
+        `npx tao g "${collectionFile}":${schematicName} ${args
+          .slice(1)
+          .join(' ')}`,
+        { stdio: ['inherit', 'inherit', 'inherit'] }
+      );
+    } catch (e) {
+      process.exit(1);
+    }
+  } else {
+    try {
+      const workflow = createWorkflow(parsedArgs.dryRun);
+      await executeSchematic(
+        schematicName,
+        parsedArgs,
+        workflow,
+        outDir,
+        logger
+      );
+    } catch (e) {
+      process.exit(1);
+    }
   }
 }
 
@@ -140,6 +159,7 @@ function toolsDir() {
 function toolsTsConfigPath() {
   return path.join(toolsDir(), 'tsconfig.tools.json');
 }
+
 function toolsTsConfig() {
   return readJsonFile<TsConfig>(toolsTsConfigPath());
 }

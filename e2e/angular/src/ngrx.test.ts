@@ -1,17 +1,17 @@
 import {
-  runCLI,
   expectTestsPass,
+  forEachCli,
+  newProject,
+  readJson,
+  runCLI,
   runCLIAsync,
   uniq,
-  ensureProject,
-  readJson,
-  forEachCli,
 } from '@nrwl/e2e/utils';
 
 forEachCli(() => {
   describe('ngrx', () => {
     it('should work', async () => {
-      ensureProject();
+      newProject();
 
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
@@ -39,7 +39,7 @@ forEachCli(() => {
     }, 1000000);
 
     it('should work with creators', async () => {
-      ensureProject();
+      newProject();
 
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/angular:app ${myapp} --routing --no-interactive`);

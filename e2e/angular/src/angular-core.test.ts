@@ -1,23 +1,21 @@
 import {
-  ensureProject,
-  exists,
+  checkFilesExist,
   expectTestsPass,
+  forEachCli,
   getSize,
+  newProject,
   runCLI,
   runCLIAsync,
+  tmpProjPath,
   uniq,
   updateFile,
-  forEachCli,
-  checkFilesExist,
-  tmpProjPath,
-  supportUi,
 } from '@nrwl/e2e/utils';
 import { toClassName } from '@nrwl/workspace';
 
 forEachCli(() => {
   describe('Angular Package', () => {
     beforeEach(() => {
-      ensureProject();
+      newProject();
     });
 
     it('should work', async () => {

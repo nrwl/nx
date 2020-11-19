@@ -25,6 +25,11 @@ import { getProjectConfig } from '@nrwl/workspace';
 import { offsetFromRoot } from '@nrwl/workspace';
 import init from '../init/init';
 import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
+import {
+  toJS,
+  updateTsConfigsToJs,
+  maybeJs,
+} from '@nrwl/workspace/src/utils/rules/to-js';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;
@@ -48,7 +53,7 @@ function getBuildConfig(project: any, options: NormalizedSchema) {
     builder: '@nrwl/node:build',
     options: {
       outputPath: join(normalize('dist'), options.appProjectRoot),
-      main: join(project.sourceRoot, 'main.ts'),
+      main: maybeJs(options, join(project.sourceRoot, 'main.ts')),
       tsConfig: join(options.appProjectRoot, 'tsconfig.app.json'),
       assets: [join(project.sourceRoot, 'assets')],
     },
@@ -59,8 +64,14 @@ function getBuildConfig(project: any, options: NormalizedSchema) {
         inspect: false,
         fileReplacements: [
           {
-            replace: join(project.sourceRoot, 'environments/environment.ts'),
-            with: join(project.sourceRoot, 'environments/environment.prod.ts'),
+            replace: maybeJs(
+              options,
+              join(project.sourceRoot, 'environments/environment.ts')
+            ),
+            with: maybeJs(
+              options,
+              join(project.sourceRoot, 'environments/environment.prod.ts')
+            ),
           },
         ],
       },
@@ -106,17 +117,26 @@ function updateWorkspaceJson(options: NormalizedSchema): Rule {
 }
 
 function addAppFiles(options: NormalizedSchema): Rule {
-  return mergeWith(
-    apply(url(`./files/app`), [
-      template({
-        tmpl: '',
-        name: options.name,
-        root: options.appProjectRoot,
-        offset: offsetFromRoot(options.appProjectRoot),
-      }),
-      move(options.appProjectRoot),
-    ])
-  );
+  return chain([
+    mergeWith(
+      apply(url(`./files/app`), [
+        template({
+          tmpl: '',
+          name: options.name,
+          root: options.appProjectRoot,
+          offset: offsetFromRoot(options.appProjectRoot),
+        }),
+        move(options.appProjectRoot),
+        options.js ? toJS() : noop(),
+      ])
+    ),
+    options.pascalCaseFiles
+      ? (tree, context) => {
+          context.logger.warn('NOTE: --pascalCaseFiles is a noop');
+          return tree;
+        }
+      : noop(),
+  ]);
 }
 
 function addProxy(options: NormalizedSchema): Rule {
@@ -147,6 +167,18 @@ function addProxy(options: NormalizedSchema): Rule {
   };
 }
 
+function addJest(options: NormalizedSchema) {
+  return options.unitTestRunner === 'jest'
+    ? externalSchematic('@nrwl/jest', 'jest-project', {
+        project: options.name,
+        setupFile: 'none',
+        skipSerializers: true,
+        supportTsx: options.js,
+        babelJest: options.babelJest,
+      })
+    : noop();
+}
+
 export default function (schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
@@ -157,16 +189,12 @@ export default function (schema: Schema): Rule {
       }),
       addLintFiles(options.appProjectRoot, options.linter),
       addAppFiles(options),
+      options.js
+        ? updateTsConfigsToJs({ projectRoot: options.appProjectRoot })
+        : noop,
       updateWorkspaceJson(options),
       updateNxJson(options),
-      options.unitTestRunner === 'jest'
-        ? externalSchematic('@nrwl/jest', 'jest-project', {
-            project: options.name,
-            setupFile: 'none',
-            skipSerializers: true,
-            babelJest: options.babelJest,
-          })
-        : noop(),
+      addJest(options),
       options.frontendProject ? addProxy(options) : noop(),
       formatFiles(options),
     ])(host, context);

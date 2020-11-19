@@ -21,6 +21,7 @@ module.exports = {
     { name: 'nextjs', description: 'anything Next specific' },
     { name: 'nest', description: 'anything Nest specific' },
     { name: 'node', description: 'anything Node specific' },
+    { name: 'express', description: 'anything Express specific' },
     { name: 'nx-plugin', description: 'anything Nx Plugin specific' },
     { name: 'react', description: 'anything React specific' },
     { name: 'web', description: 'anything Web specific' },

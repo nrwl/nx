@@ -1,20 +1,16 @@
-import { Tree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { runSchematic } from '../../utils/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import workspaceSchematic from './workspace-schematic';
 
 describe('workspace-schematic', () => {
-  let appTree: Tree;
+  it('should generate a target', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    const opts = {
+      name: 'custom',
+      skipFormat: true,
+    };
 
-  beforeEach(() => {
-    appTree = createEmptyWorkspace(Tree.empty());
-  });
+    await workspaceSchematic(tree, opts);
 
-  it('should generate files', async () => {
-    const tree = await runSchematic(
-      'workspace-schematic',
-      { name: 'custom' },
-      appTree
-    );
     expect(tree.exists('tools/schematics/custom/index.ts')).toBeTruthy();
     expect(tree.exists('tools/schematics/custom/schema.json')).toBeTruthy();
   });

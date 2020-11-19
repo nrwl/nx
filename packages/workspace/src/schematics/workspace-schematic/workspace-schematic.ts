@@ -1,34 +1,22 @@
-import {
-  apply,
-  branchAndMerge,
-  chain,
-  mergeWith,
-  Rule,
-  template,
-  url,
-  move,
-} from '@angular-devkit/schematics';
 import { Schema } from './schema';
-import { formatFiles } from '@nrwl/workspace';
 import { toFileName } from '@nrwl/workspace';
+import { Tree, formatFiles, generateFiles } from '@nrwl/devkit';
+import * as path from 'path';
 
-export default function (schema: Schema): Rule {
+export default async function (host: Tree, schema: Schema) {
   const options = normalizeOptions(schema);
-  const templateSource = apply(url('./files'), [
-    template({
-      dot: '.',
-      tmpl: '',
-      ...(options as any),
-    }),
-    move('tools/schematics'),
-  ]);
-  return chain([
-    branchAndMerge(chain([mergeWith(templateSource)])),
-    formatFiles(options),
-  ]);
+  generateFiles(
+    host,
+    path.join(__dirname, 'files'),
+    path.join('tools/schematics', schema.name),
+    options
+  );
+  if (!schema.skipFormat) {
+    await formatFiles(host);
+  }
 }
 
-function normalizeOptions(options: Schema): Schema {
+function normalizeOptions(options: Schema): any {
   const name = toFileName(options.name);
-  return { ...options, name };
+  return { ...options, name, tmpl: '' };
 }

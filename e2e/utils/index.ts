@@ -15,7 +15,12 @@ interface RunCmdOpts {
   cwd?: string;
 }
 
-export let cli;
+let cli;
+
+export function currentCli() {
+  return cli ? cli : 'nx';
+}
+
 let projName: string;
 
 export function setCurrentProjName(name: string) {
@@ -74,7 +79,7 @@ export function patchKarmaToWorkOnWSL(): void {
 }
 
 export function workspaceConfigName() {
-  return cli === 'angular' ? 'angular.json' : 'workspace.json';
+  return currentCli() === 'angular' ? 'angular.json' : 'workspace.json';
 }
 
 export function runCreateWorkspace(
@@ -95,7 +100,9 @@ export function runCreateWorkspace(
 ) {
   const linterArg =
     preset === 'angular' || preset === 'angular-nest' ? ' --linter=tslint' : '';
-  let command = `npx create-nx-workspace@${process.env.PUBLISHED_VERSION} ${name} --cli=${cli} --preset=${preset} ${linterArg} --no-nxCloud --no-interactive`;
+  let command = `npx create-nx-workspace@${
+    process.env.PUBLISHED_VERSION
+  } ${name} --cli=${currentCli()} --preset=${preset} ${linterArg} --no-nxCloud --no-interactive`;
   if (appName) {
     command += ` --appName=${appName}`;
   }
@@ -112,7 +119,7 @@ export function runCreateWorkspace(
   }
 
   const create = execSync(command, {
-    cwd: `./tmp/${cli}`,
+    cwd: `./tmp/${currentCli()}`,
     stdio: [0, 1, 2],
     env: process.env,
   });
@@ -120,7 +127,7 @@ export function runCreateWorkspace(
 }
 
 export function yarnAdd(pkg: string, projName?: string) {
-  const cwd = projName ? `./tmp/${cli}/${projName}` : tmpProjPath();
+  const cwd = projName ? `./tmp/${currentCli()}/${projName}` : tmpProjPath();
   const install = execSync(`yarn add ${pkg}`, {
     cwd,
     // ...{ stdio: ['pipe', 'pipe', 'pipe'] },
@@ -132,7 +139,7 @@ export function yarnAdd(pkg: string, projName?: string) {
 
 export function runNgNew(): string {
   return execSync(`../../node_modules/.bin/ng new proj --no-interactive`, {
-    cwd: `./tmp/${cli}`,
+    cwd: `./tmp/${currentCli()}`,
     env: process.env,
   }).toString();
 }
@@ -162,9 +169,9 @@ export function newProject(): void {
           (f) => f !== '@nrwl/nx-plugin' && f !== `@nrwl/eslint-plugin-nx`
         )
         .forEach((p) => {
-          runCLI(`g ${p}:init`, { cwd: `./tmp/${cli}/proj` });
+          runCLI(`g ${p}:init`, { cwd: `./tmp/${currentCli()}/proj` });
         });
-      execSync(`mv ./tmp/${cli}/proj ${tmpBackupProjPath()}`);
+      execSync(`mv ./tmp/${currentCli()}/proj ${tmpBackupProjPath()}`);
     }
     execSync(`cp -a ${tmpBackupProjPath()} ${tmpProjPath()}`);
   } catch (e) {
@@ -172,19 +179,6 @@ export function newProject(): void {
     console.log(e.message);
     throw e;
   }
-}
-
-/**
- * Ensures that a project has been setup
- * in the temporary project path for the
- * currently selected CLI.
- *
- * If one is not found, it creates a new project.
- */
-export function ensureProject(): void {
-  // if (!directoryExists(tmpProjPath())) {
-  newProject();
-  // }
 }
 
 export function supportUi() {
@@ -203,7 +197,7 @@ export function runCommandAsync(
     exec(
       command,
       {
-        cwd: opts.cwd || tmpProjPath(),
+        cwd: tmpProjPath(),
         env: { ...process.env, FORCE_COLOR: 'false' },
       },
       (err, stdout, stderr) => {
@@ -213,6 +207,43 @@ export function runCommandAsync(
         resolve({ stdout, stderr, combinedOutput: `${stdout}${stderr}` });
       }
     );
+  });
+}
+
+export function runCommandUntil(
+  command: string,
+  criteria: (output: string) => boolean
+) {
+  const p = exec(`./node_modules/.bin/nx ${command}`, {
+    cwd: tmpProjPath(),
+    env: { ...process.env, FORCE_COLOR: 'false' },
+  });
+
+  return new Promise((res, rej) => {
+    let output = '';
+    let complete = false;
+    p.stdout.on('data', (c) => {
+      output += c.toString();
+      if (criteria(output)) {
+        complete = true;
+        res(true);
+        p.kill();
+      }
+    });
+    p.stderr.on('data', (c) => {
+      output += c.toString();
+      if (criteria(output)) {
+        complete = true;
+        res(true);
+        p.kill();
+      }
+    });
+    p.on('exit', (code) => {
+      if (code !== 0 && !complete) {
+        console.log(output);
+      }
+      rej(`Exited with ${code}`);
+    });
   });
 }
 
@@ -436,9 +467,13 @@ export function getSize(filePath: string): number {
 }
 
 export function tmpProjPath(path?: string) {
-  return path ? `./tmp/${cli}/${projName}/${path}` : `./tmp/${cli}/${projName}`;
+  return path
+    ? `./tmp/${currentCli()}/${projName}/${path}`
+    : `./tmp/${currentCli()}/${projName}`;
 }
 
 function tmpBackupProjPath(path?: string) {
-  return path ? `./tmp/${cli}/proj-backup/${path}` : `./tmp/${cli}/proj-backup`;
+  return path
+    ? `./tmp/${currentCli()}/proj-backup/${path}`
+    : `./tmp/${currentCli()}/proj-backup`;
 }

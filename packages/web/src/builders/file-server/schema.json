@@ -1,0 +1,53 @@
+{
+  "title": "File Server",
+  "description": "File Server",
+  "type": "object",
+  "cli": "nx",
+  "properties": {
+    "buildTarget": {
+      "type": "string",
+      "description": "Target which builds the application"
+    },
+    "withDeps": {
+      "type": "boolean",
+      "description": "Build the target and all its deps",
+      "default": true
+    },
+    "parallel": {
+      "type": "boolean",
+      "description": "Build the target in parallel",
+      "default": true
+    },
+    "maxParallel": {
+      "type": "number",
+      "description": "Max number of parallel jobs"
+    },
+    "port": {
+      "type": "number",
+      "description": "Port to listen on.",
+      "default": 4200
+    },
+    "host": {
+      "type": "string",
+      "description": "Host to listen on.",
+      "default": "localhost"
+    },
+    "ssl": {
+      "type": "boolean",
+      "description": "Serve using HTTPS.",
+      "default": false
+    },
+    "sslKey": {
+      "type": "string",
+      "description": "SSL key to use for serving HTTPS."
+    },
+    "sslCert": {
+      "type": "string",
+      "description": "SSL certificate to use for serving HTTPS."
+    },
+    "proxyUrl": {
+      "type": "string",
+      "description": "URL to proxy unhandled requests to."
+    }
+  }
+}

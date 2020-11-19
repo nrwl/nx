@@ -1,0 +1,160 @@
+import * as fs from 'fs';
+import * as path from 'path';
+import '../compat/compat';
+
+export interface WorkspaceDefinition {
+  projects: { [projectName: string]: ProjectDefinition };
+  defaultProject: string | undefined;
+  schematics: { [collectionName: string]: { [schematicName: string]: any } };
+  cli: { defaultCollection: string };
+}
+
+export interface ProjectDefinition {
+  architect: { [targetName: string]: TargetDefinition };
+  root: string;
+  prefix?: string;
+  sourceRoot?: string;
+}
+
+export interface TargetDefinition {
+  options?: any;
+  configurations?: { [config: string]: any };
+  builder: string;
+}
+
+export function workspaceConfigName(root: string) {
+  try {
+    fs.statSync(path.join(root, 'angular.json'));
+    return 'angular.json';
+  } catch (e) {
+    return 'workspace.json';
+  }
+}
+
+export class Workspaces {
+  readWorkspaceConfiguration(root: string): WorkspaceDefinition {
+    return JSON.parse(
+      fs.readFileSync(path.join(root, workspaceConfigName(root))).toString()
+    );
+  }
+
+  isNxBuilder(target: TargetDefinition) {
+    const schema = this.readBuilder(target).schema;
+    return schema['cli'] === 'nx';
+  }
+
+  isNxSchematic(collectionName: string, schematicName: string) {
+    const schema = this.readSchematic(collectionName, schematicName).schema;
+    return schema['cli'] === 'nx';
+  }
+
+  readBuilder(target: TargetDefinition) {
+    try {
+      const { builder, buildersFilePath, buildersJson } = this.readBuildersJson(
+        target
+      );
+      const builderDir = path.dirname(buildersFilePath);
+      const buildConfig = buildersJson.builders[builder];
+      const schemaPath = path.join(builderDir, buildConfig.schema || '');
+      const schema = JSON.parse(fs.readFileSync(schemaPath).toString());
+      const module = require(path.join(builderDir, buildConfig.implementation));
+      const implementation = module.default;
+      return { schema, implementation };
+    } catch (e) {
+      throw new Error(`Unable to resolve ${target.builder}.\n${e.message}`);
+    }
+  }
+
+  readSchematic(collectionName: string, schematicName: string) {
+    try {
+      const {
+        schematicsFilePath,
+        schematicsJson,
+        normalizedSchematicName,
+      } = this.readSchematicsJson(collectionName, schematicName);
+      const schematicsDir = path.dirname(schematicsFilePath);
+      const schematicConfig =
+        schematicsJson.schematics[normalizedSchematicName];
+      const schemaPath = path.join(schematicsDir, schematicConfig.schema || '');
+      const schema = JSON.parse(fs.readFileSync(schemaPath).toString());
+      const module = require(path.join(
+        schematicsDir,
+        schematicConfig.implementation
+          ? schematicConfig.implementation
+          : schematicConfig.factory
+      ));
+      const implementation = module.default;
+      return { schema, implementation };
+    } catch (e) {
+      throw new Error(
+        `Unable to resolve ${collectionName}:${schematicName}.\n${e.message}`
+      );
+    }
+  }
+
+  private readBuildersJson(target: TargetDefinition) {
+    const [nodeModule, builder] = target.builder.split(':');
+    const packageJsonPath = require.resolve(`${nodeModule}/package.json`);
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath).toString());
+    const buildersFile = packageJson.builders;
+    const buildersFilePath = require.resolve(
+      path.join(path.dirname(packageJsonPath), buildersFile)
+    );
+    const buildersJson = JSON.parse(
+      fs.readFileSync(buildersFilePath).toString()
+    );
+    if (!buildersJson.builders[builder]) {
+      throw new Error(
+        `Cannot find builder '${builder}' in ${buildersFilePath}.`
+      );
+    }
+    return { builder, buildersFilePath, buildersJson };
+  }
+
+  private readSchematicsJson(collectionName: string, schematic: string) {
+    let schematicsFilePath;
+    if (collectionName.endsWith('.json')) {
+      schematicsFilePath = require.resolve(collectionName);
+    } else {
+      const packageJsonPath = require.resolve(`${collectionName}/package.json`);
+      const packageJson = JSON.parse(
+        fs.readFileSync(packageJsonPath).toString()
+      );
+      const schematicsFile = packageJson.schematics;
+      schematicsFilePath = require.resolve(
+        path.join(path.dirname(packageJsonPath), schematicsFile)
+      );
+    }
+    const schematicsJson = JSON.parse(
+      fs.readFileSync(schematicsFilePath).toString()
+    );
+
+    let normalizedSchematicName;
+    for (let k of Object.keys(schematicsJson.schematics)) {
+      if (k === schematic) {
+        normalizedSchematicName = k;
+        break;
+      }
+      if (
+        schematicsJson.schematics[k].aliases &&
+        schematicsJson.schematics[k].aliases.indexOf(schematic) > -1
+      ) {
+        normalizedSchematicName = k;
+        break;
+      }
+    }
+
+    if (!normalizedSchematicName) {
+      for (let parent of schematicsJson.extends || []) {
+        try {
+          return this.readSchematicsJson(parent, schematic);
+        } catch (e) {}
+      }
+
+      throw new Error(
+        `Cannot find schematic '${schematic}' in ${schematicsFilePath}.`
+      );
+    }
+    return { schematicsFilePath, schematicsJson, normalizedSchematicName };
+  }
+}

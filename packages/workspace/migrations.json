@@ -129,6 +129,16 @@
       "version": "10.3.0-beta.0",
       "description": "Adds `buildableProjectDepsInPackageJsonType` for web and angular package builders",
       "factory": "./src/migrations/update-10-3-0/add-buildable-project-deps-in-package-json-type"
+    },
+    "add-explicit-dep-on-tao": {
+      "version": "10.4.0-beta.5",
+      "description": "Add an explicit dependency on @nrwl/tao",
+      "factory": "./src/migrations/update-10-4-0/add-explicit-dep-on-tao"
+    },
+    "update-decorate-angular-cli": {
+      "version": "11.0.0-beta.3",
+      "description": "Update the decoration script when using Angular CLI",
+      "factory": "./src/migrations/update-11-0-0/update-decorate-angular-cli"
     }
   },
   "packageJsonUpdates": {
