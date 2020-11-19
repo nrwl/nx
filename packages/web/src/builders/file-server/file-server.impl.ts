@@ -14,29 +14,29 @@ export interface FileServerOptions extends JsonObject {
   proxyUrl?: string;
   buildTarget: string;
   parallel: boolean;
-  maxParalel: number;
+  maxParallel: number;
   withDeps: boolean;
 }
 
 function getHttpServerArgs(opts: FileServerOptions) {
   const args = [] as any[];
   if (opts.port) {
-    args.push(`-p=${opts.port}`);
+    args.push(`-p ${opts.port}`);
   }
   if (opts.host) {
-    args.push(`-a=${opts.host}`);
+    args.push(`-a ${opts.host}`);
   }
   if (opts.ssl) {
     args.push(`-S`);
   }
   if (opts.sslCert) {
-    args.push(`-C=${opts.sslCert}`);
+    args.push(`-C ${opts.sslCert}`);
   }
   if (opts.sslKey) {
-    args.push(`-K=${opts.sslCert}`);
+    args.push(`-K ${opts.sslCert}`);
   }
   if (opts.proxyUrl) {
-    args.push(`-P=${opts.proxyUrl}`);
+    args.push(`-P ${opts.proxyUrl}`);
   }
   return args;
 }
@@ -49,8 +49,8 @@ function getBuildTargetCommand(opts: FileServerOptions) {
   if (opts.parallel) {
     cmd.push(`--parallel`);
   }
-  if (opts.maxParalel) {
-    cmd.push(`--maxParallel=${opts.maxParalel}`);
+  if (opts.maxParallel) {
+    cmd.push(`--maxParallel=${opts.maxParallel}`);
   }
   return cmd.join(' ');
 }
