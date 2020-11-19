@@ -15,10 +15,8 @@ interface RunCmdOpts {
   cwd?: string;
 }
 
-let cli;
-
 export function currentCli() {
-  return cli ? cli : 'nx';
+  return process.env.SELECTED_CLI ? process.env.SELECTED_CLI : 'nx';
 }
 
 let projName: string;
@@ -30,52 +28,6 @@ export function setCurrentProjName(name: string) {
 
 export function uniq(prefix: string) {
   return `${prefix}${Math.floor(Math.random() * 10000000)}`;
-}
-
-export function forEachCli(
-  selectedCliOrFunction: string | Function,
-  callback?: (currentCLIName) => void
-) {
-  let clis;
-  if (process.env.SELECTED_CLI && selectedCliOrFunction && callback) {
-    if (selectedCliOrFunction == process.env.SELECTED_CLI) {
-      clis = [process.env.SELECTED_CLI];
-    } else {
-      clis = [];
-    }
-  } else if (process.env.SELECTED_CLI) {
-    clis = [process.env.SELECTED_CLI];
-  } else {
-    clis = callback ? [selectedCliOrFunction] : ['nx', 'angular'];
-  }
-
-  const cb: any = callback ? callback : selectedCliOrFunction;
-  clis.forEach((c) => {
-    describe(`[${c}]`, () => {
-      beforeAll(() => {
-        cli = c;
-      });
-      cb(c);
-    });
-  });
-}
-
-export function patchKarmaToWorkOnWSL(): void {
-  try {
-    const karma = readFile('karma.conf.js');
-    if (process.env['WINDOWSTMP']) {
-      updateFile(
-        'karma.conf.js',
-        karma.replace(
-          `const { constants } = require('karma');`,
-          `
-      const { constants } = require('karma');
-      process.env['TMPDIR']="${process.env['WINDOWSTMP']}";
-    `
-        )
-      );
-    }
-  } catch (e) {}
 }
 
 export function workspaceConfigName() {

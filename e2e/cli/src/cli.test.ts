@@ -1,7 +1,6 @@
 import { packagesWeCareAbout } from '@nrwl/workspace/src/command-line/report';
 import { renameSync } from 'fs';
 import {
-  forEachCli,
   newProject,
   readFile,
   readJson,
@@ -12,209 +11,173 @@ import {
   updateFile,
 } from '@nrwl/e2e/utils';
 
-forEachCli('nx', () => {
-  describe('Help', () => {
-    it('should show help', async () => {
-      newProject();
-      // sss
-      const myapp = uniq('myapp');
-      runCLI(`generate @nrwl/web:app ${myapp}`);
+describe('Help', () => {
+  it('should show help', async () => {
+    newProject();
+    const myapp = uniq('myapp');
+    runCLI(`generate @nrwl/web:app ${myapp}`);
 
-      let mainHelp = runCLI(`--help`);
-      expect(mainHelp).toContain('Run a target for a project');
-      expect(mainHelp).toContain('Run task for affected projects');
+    let mainHelp = runCLI(`--help`);
+    expect(mainHelp).toContain('Run a target for a project');
+    expect(mainHelp).toContain('Run task for affected projects');
 
-      mainHelp = runCLI(`help`);
-      expect(mainHelp).toContain('Run a target for a project');
-      expect(mainHelp).toContain('Run task for affected projects');
+    mainHelp = runCLI(`help`);
+    expect(mainHelp).toContain('Run a target for a project');
+    expect(mainHelp).toContain('Run task for affected projects');
 
-      const genHelp = runCLI(`g @nrwl/web:app --help`);
-      expect(genHelp).toContain(
-        'The file extension to be used for style files. (default: css)'
-      );
+    const genHelp = runCLI(`g @nrwl/web:app --help`);
+    expect(genHelp).toContain(
+      'The file extension to be used for style files. (default: css)'
+    );
 
-      const buildHelp = runCLI(`build ${myapp} --help`);
-      expect(buildHelp).toContain('The name of the main entry-point file.');
+    const buildHelp = runCLI(`build ${myapp} --help`);
+    expect(buildHelp).toContain('The name of the main entry-point file.');
 
-      const affectedHelp = runCLI(`affected --help`);
-      expect(affectedHelp).toContain('Run task for affected projects');
+    const affectedHelp = runCLI(`affected --help`);
+    expect(affectedHelp).toContain('Run task for affected projects');
 
-      const version = runCLI(`--version`);
-      expect(version).toContain(process.env.PUBLISHED_VERSION); // stub value
-    }, 120000);
-  });
+    const version = runCLI(`--version`);
+    expect(version).toContain(process.env.PUBLISHED_VERSION); // stub value
+  }, 120000);
 });
 
-forEachCli('angular', () => {
-  describe('help', () => {
-    it('should show help', async () => {
-      newProject();
-      const myapp = uniq('myapp');
-      runCLI(`generate @nrwl/web:app ${myapp}`);
+describe('report', () => {
+  it(`should report package versions`, async () => {
+    newProject();
 
-      let mainHelp = runCLI(`--help`);
-      expect(mainHelp).toContain('Run a target for a project');
-      expect(mainHelp).toContain('Run task for affected projects');
+    const reportOutput = runCommand('npm run nx report');
 
-      mainHelp = runCLI(`help`);
-      expect(mainHelp).toContain('Run a target for a project');
-      expect(mainHelp).toContain('Run task for affected projects');
-
-      const genHelp = runCLI(`g @nrwl/web:app --help`);
-      expect(genHelp).toContain(
-        'The file extension to be used for style files.'
-      );
-
-      const buildHelp = runCLI(`build ${myapp} --help`);
-      expect(buildHelp).toContain('The name of the main entry-point file.');
-
-      const affectedHelp = runCLI(`affected --help`);
-      expect(affectedHelp).toContain('Run task for affected projects');
-
-      const version = runCLI(`--version`);
-      expect(version).toContain(process.env.PUBLISHED_VERSION); // stub value
-    }, 120000);
-  });
-});
-
-forEachCli(() => {
-  describe('report', () => {
-    it(`should report package versions`, async () => {
-      newProject();
-
-      const reportOutput = runCommand('npm run nx report');
-
-      packagesWeCareAbout.forEach((p) => {
-        expect(reportOutput).toContain(p);
-      });
-    }, 120000);
-  });
-
-  describe('list', () => {
-    beforeEach(() => {
-      newProject();
+    packagesWeCareAbout.forEach((p) => {
+      expect(reportOutput).toContain(p);
     });
+  }, 120000);
+});
 
-    it(`should work`, async () => {
-      let listOutput = runCommand('npm run nx -- list');
-
-      expect(listOutput).toContain('NX  Installed plugins');
-
-      // just check for some, not all
-      expect(listOutput).toContain('@nrwl/angular');
-
-      // temporarily make it look like this isn't installed
-      renameSync(
-        tmpProjPath('node_modules/@nrwl/angular'),
-        tmpProjPath('node_modules/@nrwl/angular_tmp')
-      );
-
-      listOutput = runCommand('npm run nx -- list');
-      expect(listOutput).toContain('NX  Also available');
-
-      // look for specific plugin
-      listOutput = runCommand('npm run nx -- list @nrwl/workspace');
-
-      expect(listOutput).toContain('Capabilities in @nrwl/workspace');
-
-      // check for schematics
-      expect(listOutput).toContain('workspace');
-      expect(listOutput).toContain('ng-add');
-      expect(listOutput).toContain('library');
-
-      // check for builders
-      expect(listOutput).toContain('run-commands');
-
-      // // look for uninstalled core plugin
-      listOutput = runCommand('npm run nx -- list @nrwl/angular');
-
-      expect(listOutput).toContain(
-        'NX   NOTE  @nrwl/angular is not currently installed'
-      );
-
-      // look for an unknown plugin
-      listOutput = runCommand('npm run nx -- list @wibble/fish');
-
-      expect(listOutput).toContain(
-        'NX   NOTE  @wibble/fish is not currently installed'
-      );
-
-      // put back the @nrwl/angular module (or all the other e2e tests after this will fail)
-      renameSync(
-        tmpProjPath('node_modules/@nrwl/angular_tmp'),
-        tmpProjPath('node_modules/@nrwl/angular')
-      );
-    }, 120000);
+describe('list', () => {
+  beforeEach(() => {
+    newProject();
   });
 
-  describe('migrate', () => {
-    it('should run migrations', () => {
-      newProject();
+  it(`should work`, async () => {
+    let listOutput = runCommand('npm run nx -- list');
 
-      updateFile(
-        `./node_modules/migrate-parent-package/package.json`,
-        JSON.stringify({
-          version: '1.0.0',
-          'nx-migrations': './migrations.json',
-        })
-      );
+    expect(listOutput).toContain('NX  Installed plugins');
 
-      updateFile(
-        `./node_modules/migrate-parent-package/migrations.json`,
-        JSON.stringify({
-          schematics: {
-            run11: {
-              version: '1.1.0',
-              description: '1.1.0',
-              factory: './run11',
-            },
-            run20: {
-              version: '2.0.0',
-              description: '2.0.0',
-              factory: './run20',
-            },
+    // just check for some, not all
+    expect(listOutput).toContain('@nrwl/angular');
+
+    // temporarily make it look like this isn't installed
+    renameSync(
+      tmpProjPath('node_modules/@nrwl/angular'),
+      tmpProjPath('node_modules/@nrwl/angular_tmp')
+    );
+
+    listOutput = runCommand('npm run nx -- list');
+    expect(listOutput).toContain('NX  Also available');
+
+    // look for specific plugin
+    listOutput = runCommand('npm run nx -- list @nrwl/workspace');
+
+    expect(listOutput).toContain('Capabilities in @nrwl/workspace');
+
+    // check for schematics
+    expect(listOutput).toContain('workspace');
+    expect(listOutput).toContain('ng-add');
+    expect(listOutput).toContain('library');
+
+    // check for builders
+    expect(listOutput).toContain('run-commands');
+
+    // // look for uninstalled core plugin
+    listOutput = runCommand('npm run nx -- list @nrwl/angular');
+
+    expect(listOutput).toContain(
+      'NX   NOTE  @nrwl/angular is not currently installed'
+    );
+
+    // look for an unknown plugin
+    listOutput = runCommand('npm run nx -- list @wibble/fish');
+
+    expect(listOutput).toContain(
+      'NX   NOTE  @wibble/fish is not currently installed'
+    );
+
+    // put back the @nrwl/angular module (or all the other e2e tests after this will fail)
+    renameSync(
+      tmpProjPath('node_modules/@nrwl/angular_tmp'),
+      tmpProjPath('node_modules/@nrwl/angular')
+    );
+  }, 120000);
+});
+
+describe('migrate', () => {
+  it('should run migrations', () => {
+    newProject();
+
+    updateFile(
+      `./node_modules/migrate-parent-package/package.json`,
+      JSON.stringify({
+        version: '1.0.0',
+        'nx-migrations': './migrations.json',
+      })
+    );
+
+    updateFile(
+      `./node_modules/migrate-parent-package/migrations.json`,
+      JSON.stringify({
+        schematics: {
+          run11: {
+            version: '1.1.0',
+            description: '1.1.0',
+            factory: './run11',
           },
-        })
-      );
+          run20: {
+            version: '2.0.0',
+            description: '2.0.0',
+            factory: './run20',
+          },
+        },
+      })
+    );
 
-      updateFile(
-        `./node_modules/migrate-parent-package/run11.js`,
-        `
+    updateFile(
+      `./node_modules/migrate-parent-package/run11.js`,
+      `
         exports.default = function default_1() {
           return function(host) {
             host.create('file-11', 'content11')
           }
         }
         `
-      );
+    );
 
-      updateFile(
-        `./node_modules/migrate-parent-package/run20.js`,
-        `
+    updateFile(
+      `./node_modules/migrate-parent-package/run20.js`,
+      `
         exports.default = function default_1() {
           return function(host) {
             host.create('file-20', 'content20')
           }
         }
         `
-      );
+    );
 
-      updateFile(
-        `./node_modules/migrate-child-package/package.json`,
-        JSON.stringify({
-          version: '1.0.0',
-        })
-      );
+    updateFile(
+      `./node_modules/migrate-child-package/package.json`,
+      JSON.stringify({
+        version: '1.0.0',
+      })
+    );
 
-      updateFile(
-        './node_modules/@nrwl/tao/src/commands/migrate.js',
-        (content) => {
-          const start = content.indexOf('// testing-fetch-start');
-          const end = content.indexOf('// testing-fetch-end');
+    updateFile(
+      './node_modules/@nrwl/tao/src/commands/migrate.js',
+      (content) => {
+        const start = content.indexOf('// testing-fetch-start');
+        const end = content.indexOf('// testing-fetch-end');
 
-          const before = content.substring(0, start);
-          const after = content.substring(end);
-          const newFetch = `
+        const before = content.substring(0, start);
+        const after = content.substring(end);
+        const newFetch = `
              function createFetcher(logger) {
               return function fetch(packageName) {
                 if (packageName === 'migrate-parent-package') {
@@ -239,42 +202,39 @@ forEachCli(() => {
             }
             `;
 
-          return `${before}${newFetch}${after}`;
-        }
-      );
+        return `${before}${newFetch}${after}`;
+      }
+    );
 
-      runCLI(
-        'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"'
-      );
+    runCLI(
+      'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"'
+    );
 
-      // updates package.json
-      const packageJson = readJson(`package.json`);
-      expect(packageJson.dependencies['migrate-child-package']).toEqual(
-        '9.0.0'
-      );
-      expect(readFile(`package.json`).endsWith(`}\n`)).toEqual(true);
+    // updates package.json
+    const packageJson = readJson(`package.json`);
+    expect(packageJson.dependencies['migrate-child-package']).toEqual('9.0.0');
+    expect(readFile(`package.json`).endsWith(`}\n`)).toEqual(true);
 
-      // creates migrations.json
-      const migrationsJson = readJson(`migrations.json`);
-      expect(migrationsJson).toEqual({
-        migrations: [
-          {
-            package: 'migrate-parent-package',
-            version: '1.1.0',
-            name: 'run11',
-          },
-          {
-            package: 'migrate-parent-package',
-            version: '2.0.0',
-            name: 'run20',
-          },
-        ],
-      });
-
-      // runs migrations
-      runCLI('migrate --run-migrations=migrations.json');
-      expect(readFile('file-11')).toEqual('content11');
-      expect(readFile('file-20')).toEqual('content20');
+    // creates migrations.json
+    const migrationsJson = readJson(`migrations.json`);
+    expect(migrationsJson).toEqual({
+      migrations: [
+        {
+          package: 'migrate-parent-package',
+          version: '1.1.0',
+          name: 'run11',
+        },
+        {
+          package: 'migrate-parent-package',
+          version: '2.0.0',
+          name: 'run20',
+        },
+      ],
     });
+
+    // runs migrations
+    runCLI('migrate --run-migrations=migrations.json');
+    expect(readFile('file-11')).toEqual('content11');
+    expect(readFile('file-20')).toEqual('content20');
   });
 });

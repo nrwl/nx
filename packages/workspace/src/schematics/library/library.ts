@@ -26,7 +26,6 @@ import {
   offsetFromRoot,
 } from '@nrwl/workspace';
 
-import { defaultCliCommand } from '../../core/file-utils';
 import { generateProjectLint, addLintFiles } from '../../utils/lint';
 import { addProjectToNxJsonInTree, libsDir } from '../../utils/ast-utils';
 import { toJS, updateTsConfigsToJs, maybeJs } from '../../utils/rules/to-js';
@@ -97,7 +96,7 @@ function createFiles(options: NormalizedSchema): Rule {
         className,
         name,
         propertyName,
-        cliCommand: defaultCliCommand(),
+        cliCommand: 'nx',
         tmpl: '',
         offsetFromRoot: offsetFromRoot(options.projectRoot),
         hasUnitTestRunner: options.unitTestRunner !== 'none',
