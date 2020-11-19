@@ -13,6 +13,9 @@ export interface FileServerOptions extends JsonObject {
   sslCert?: string;
   proxyUrl?: string;
   buildTarget: string;
+  parallel: boolean;
+  maxParalel: number;
+  withDeps: boolean;
 }
 
 function getHttpServerArgs(opts: FileServerOptions) {
@@ -36,6 +39,20 @@ function getHttpServerArgs(opts: FileServerOptions) {
     args.push(`-P=${opts.proxyUrl}`);
   }
   return args;
+}
+
+function getBuildTargetCommand(opts: FileServerOptions) {
+  const cmd = [`npx nx run ${opts.buildTarget}`];
+  if (opts.withDeps) {
+    cmd.push(`--with-deps`);
+  }
+  if (opts.parallel) {
+    cmd.push(`--parallel`);
+  }
+  if (opts.maxParalel) {
+    cmd.push(`--maxParallel=${opts.maxParalel}`);
+  }
+  return cmd.join(' ');
 }
 
 function getBuildTargetOutputPath(
@@ -99,7 +116,7 @@ export default async function (
       changed = false;
       running = true;
       try {
-        execSync(`npx nx run ${opts.buildTarget} --with-deps`, {
+        execSync(getBuildTargetCommand(opts), {
           stdio: [0, 1, 2],
         });
       } catch (e) {}

@@ -20,6 +20,20 @@ Type: `string`
 
 Host to listen on.
 
+### maxParallel
+
+Type: `number`
+
+Max number of parallel jobs
+
+### parallel
+
+Default: `true`
+
+Type: `boolean`
+
+Build the target in parallel
+
 ### port
 
 Default: `4200`
@@ -53,3 +67,11 @@ SSL certificate to use for serving HTTPS.
 Type: `string`
 
 SSL key to use for serving HTTPS.
+
+### withDeps
+
+Default: `true`
+
+Type: `boolean`
+
+Build the target and all its deps
