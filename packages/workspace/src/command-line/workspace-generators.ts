@@ -46,7 +46,7 @@ type TsConfig = {
   references?: Array<{ path: string }>;
 };
 
-export async function workspaceSchematic(args: string[]) {
+export async function workspaceGenerators(args: string[]) {
   const outDir = compileTools();
   const parsedArgs = parseOptions(args, outDir);
   const logger = createConsoleLogger(
@@ -54,16 +54,16 @@ export async function workspaceSchematic(args: string[]) {
     process.stdout,
     process.stderr
   );
-  const collectionFile = path.join(outDir, 'workspace-schematics.json');
-  if (parsedArgs.listSchematics) {
-    return listSchematics(collectionFile, logger);
+  const collectionFile = path.join(outDir, 'workspace-generators.json');
+  if (parsedArgs.listGenerators) {
+    return listGenerators(collectionFile, logger);
   }
-  const schematicName = args[0];
+  const generatorName = args[0];
   const ws = new Workspaces();
-  if (ws.isNxSchematic(collectionFile, schematicName)) {
+  if (ws.isNxGenerator(collectionFile, generatorName)) {
     try {
       execSync(
-        `npx tao g "${collectionFile}":${schematicName} ${args
+        `npx tao g "${collectionFile}":${generatorName} ${args
           .slice(1)
           .join(' ')}`,
         { stdio: ['inherit', 'inherit', 'inherit'] }
@@ -74,8 +74,8 @@ export async function workspaceSchematic(args: string[]) {
   } else {
     try {
       const workflow = createWorkflow(parsedArgs.dryRun);
-      await executeSchematic(
-        schematicName,
+      await executeAngularDevkitSchematic(
+        generatorName,
         parsedArgs,
         workflow,
         outDir,
@@ -93,10 +93,10 @@ function compileTools() {
   removeSync(toolsOutDir);
   compileToolsDir(toolsOutDir);
 
-  const schematicsOutDir = path.join(toolsOutDir, 'schematics');
+  const generatorsOutDir = path.join(toolsOutDir, 'generators');
   const collectionData = constructCollection();
-  saveCollection(schematicsOutDir, collectionData);
-  return schematicsOutDir;
+  saveCollection(generatorsOutDir, collectionData);
+  return generatorsOutDir;
 }
 
 function getToolsOutDir() {
@@ -104,10 +104,10 @@ function getToolsOutDir() {
 }
 
 function compileToolsDir(outDir: string) {
-  copySync(schematicsDir(), path.join(outDir, 'schematics'));
+  copySync(generatorsDir(), path.join(outDir, 'generators'));
 
   const tmpTsConfigPath = createTmpTsConfig(toolsTsConfigPath(), {
-    include: [path.join(schematicsDir(), '**/*.ts')],
+    include: [path.join(generatorsDir(), '**/*.ts')],
   });
 
   const packageExec = getPackageManagerExecuteCommand();
@@ -123,11 +123,11 @@ function compileToolsDir(outDir: string) {
 }
 
 function constructCollection() {
-  const schematics = {};
-  fs.readdirSync(schematicsDir()).forEach((c) => {
-    const childDir = path.join(schematicsDir(), c);
+  const generators = {};
+  fs.readdirSync(generatorsDir()).forEach((c) => {
+    const childDir = path.join(generatorsDir(), c);
     if (exists(path.join(childDir, 'schema.json'))) {
-      schematics[c] = {
+      generators[c] = {
         factory: `./${c}`,
         schema: `./${path.join(c, 'schema.json')}`,
         description: `Schematic ${c}`,
@@ -135,21 +135,21 @@ function constructCollection() {
     }
   });
   return {
-    name: 'workspace-schematics',
+    name: 'workspace-generators',
     version: '1.0',
-    schematics,
+    schematics: generators, // TODO vsavkin: remove this
   };
 }
 
 function saveCollection(dir: string, collection: any) {
   writeFileSync(
-    path.join(dir, 'workspace-schematics.json'),
+    path.join(dir, 'workspace-generators.json'),
     JSON.stringify(collection)
   );
 }
 
-function schematicsDir() {
-  return path.join(rootDirectory, 'tools', 'schematics');
+function generatorsDir() {
+  return path.join(rootDirectory, 'tools', 'generators');
 }
 
 function toolsDir() {
@@ -176,7 +176,7 @@ function createWorkflow(dryRun: boolean) {
   });
 }
 
-function listSchematics(collectionName: string, logger: logging.Logger) {
+function listGenerators(collectionName: string, logger: logging.Logger) {
   try {
     const engineHost = new NodeModulesEngineHost();
     const engine = new SchematicEngine(engineHost);
@@ -234,7 +234,7 @@ function createPromptProvider(): schema.PromptProvider {
 }
 
 // execute schematic
-async function executeSchematic(
+async function executeAngularDevkitSchematic(
   schematicName: string,
   options: { [p: string]: any },
   workflow: NodeWorkflow,
@@ -374,7 +374,7 @@ function parseOptions(args: string[], outDir: string): { [k: string]: any } {
     }
   }
   return yargsParser(args, {
-    boolean: ['dryRun', 'listSchematics', 'interactive', ...booleanProps],
+    boolean: ['dryRun', 'listGenerators', 'interactive', ...booleanProps],
     alias: {
       dryRun: ['d'],
       listSchematics: ['l'],

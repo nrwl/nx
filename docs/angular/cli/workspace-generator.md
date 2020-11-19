@@ -1,11 +1,11 @@
-# workspace-schematic
+# workspace-generator
 
-Runs a workspace schematic from the tools/schematics directory
+Runs a workspace generator from the tools/generators directory
 
 ## Usage
 
 ```bash
-nx workspace-schematic
+nx workspace-generator
 ```
 
 Install `nx` globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
@@ -16,13 +16,13 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npm run
 
 Show help
 
-### list-schematics
+### list-generators
 
-List the available workspace-schematics
+List the available workspace-generators
 
 ### name
 
-The name of your schematic`
+The name of your generator`
 
 ### version
 

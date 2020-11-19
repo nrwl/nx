@@ -143,7 +143,7 @@ export default function (schema: Schema): Rule {
   };
 }
 
-export const librarySchematic = wrapAngularDevkitSchematic(
+export const libraryGenerator = wrapAngularDevkitSchematic(
   '@nrwl/workspace',
   'library'
 );

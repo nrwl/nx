@@ -236,9 +236,9 @@
             "file": "angular/cli/workspace-lint"
           },
           {
-            "name": "workspace-schematic",
-            "id": "workspace-schematic",
-            "file": "angular/cli/workspace-schematic"
+            "name": "workspace-generator",
+            "id": "workspace-generator",
+            "file": "angular/cli/workspace-generator"
           }
         ]
       },
@@ -287,9 +287,9 @@
                     "file": "angular/api-workspace/schematics/run-commands"
                   },
                   {
-                    "name": "workspace-schematic",
-                    "id": "workspace-schematic",
-                    "file": "angular/api-workspace/schematics/workspace-schematic"
+                    "name": "workspace-generator",
+                    "id": "workspace-generator",
+                    "file": "angular/api-workspace/schematics/workspace-generator"
                   }
                 ]
               },
@@ -941,8 +941,8 @@
               },
               {
                 "name": "Workspace Schematics",
-                "id": "workspace-schematics",
-                "file": "shared/tools-workspace-schematics"
+                "id": "workspace-generators",
+                "file": "shared/tools-workspace-generators"
               }
             ]
           },
@@ -1329,9 +1329,9 @@
             "file": "react/cli/workspace-lint"
           },
           {
-            "name": "workspace-schematic",
-            "id": "workspace-schematic",
-            "file": "react/cli/workspace-schematic"
+            "name": "workspace-generator",
+            "id": "workspace-generator",
+            "file": "react/cli/workspace-generator"
           }
         ]
       },
@@ -1380,9 +1380,9 @@
                     "file": "react/api-workspace/schematics/run-commands"
                   },
                   {
-                    "name": "workspace-schematic",
-                    "id": "workspace-schematic",
-                    "file": "react/api-workspace/schematics/workspace-schematic"
+                    "name": "workspace-generator",
+                    "id": "workspace-generator",
+                    "file": "react/api-workspace/schematics/workspace-generator"
                   }
                 ]
               },
@@ -2034,8 +2034,8 @@
               },
               {
                 "name": "Workspace Schematics",
-                "id": "workspace-schematics",
-                "file": "shared/tools-workspace-schematics"
+                "id": "workspace-generators",
+                "file": "shared/tools-workspace-generators"
               }
             ]
           },
@@ -2375,9 +2375,9 @@
             "file": "node/cli/workspace-lint"
           },
           {
-            "name": "workspace-schematic",
-            "id": "workspace-schematic",
-            "file": "node/cli/workspace-schematic"
+            "name": "workspace-generator",
+            "id": "workspace-generator",
+            "file": "node/cli/workspace-generator"
           }
         ]
       },
@@ -2426,9 +2426,9 @@
                     "file": "node/api-workspace/schematics/run-commands"
                   },
                   {
-                    "name": "workspace-schematic",
-                    "id": "workspace-schematic",
-                    "file": "node/api-workspace/schematics/workspace-schematic"
+                    "name": "workspace-generator",
+                    "id": "workspace-generator",
+                    "file": "node/api-workspace/schematics/workspace-generator"
                   }
                 ]
               },
@@ -3074,8 +3074,8 @@
               },
               {
                 "name": "Workspace Schematics",
-                "id": "workspace-schematics",
-                "file": "shared/tools-workspace-schematics"
+                "id": "workspace-generators",
+                "file": "shared/tools-workspace-generators"
               }
             ]
           },

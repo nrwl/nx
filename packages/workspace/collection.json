@@ -58,10 +58,11 @@
       "description": "Create a library"
     },
 
-    "workspace-schematic": {
-      "factory": "./src/schematics/workspace-schematic/workspace-schematic",
-      "schema": "./src/schematics/workspace-schematic/schema.json",
-      "description": "Generates a workspace schematic"
+    "workspace-generator": {
+      "factory": "./src/schematics/workspace-generator/workspace-generator",
+      "schema": "./src/schematics/workspace-generator/schema.json",
+      "aliases": ["workspace-schematic"],
+      "description": "Generates a workspace generator"
     },
 
     "run-commands": {

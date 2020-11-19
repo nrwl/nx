@@ -88,7 +88,7 @@ forEachCli('angular', () => {
         'update:check': 'ng update',
         postinstall: 'node ./decorate-angular-cli.js',
         'dep-graph': 'nx dep-graph',
-        'workspace-schematic': 'nx workspace-schematic',
+        'workspace-generator': 'nx workspace-generator',
         help: 'nx help',
       });
       expect(

@@ -32,7 +32,7 @@ export function getInstalledPluginsFromPackageJson(
     })
     .sort()
     .map((name) => getPluginCapabilities(workspaceRoot, name))
-    .filter((x) => x && !!(x.schematics || x.builders));
+    .filter((x) => x && !!(x.generators || x.builders));
 }
 
 export function listInstalledPlugins(installedPlugins: PluginCapabilities[]) {
@@ -43,8 +43,8 @@ export function listInstalledPlugins(installedPlugins: PluginCapabilities[]) {
       if (hasElements(p.builders)) {
         capabilities.push('builders');
       }
-      if (hasElements(p.schematics)) {
-        capabilities.push('schematics');
+      if (hasElements(p.generators)) {
+        capabilities.push('generators');
       }
       return `${terminal.bold(p.name)} (${capabilities.join()})`;
     }),
