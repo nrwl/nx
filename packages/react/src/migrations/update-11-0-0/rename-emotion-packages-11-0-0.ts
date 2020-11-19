@@ -1,31 +1,12 @@
-import { chain, Rule } from '@angular-devkit/schematics';
-import {
-  formatFiles,
-  addDepsToPackageJson,
-  updateJsonInTree,
-} from '@nrwl/workspace';
+import { chain } from '@angular-devkit/schematics';
+import { formatFiles, renameNpmPackages } from '@nrwl/workspace';
 import { emotionReactVersion } from '../../utils/versions';
 
-export default function update(): Rule {
-  let hadEmotionCore = false;
-
+export default function update() {
   return chain([
-    updateJsonInTree('package.json', (json) => {
-      if (json.dependencies && '@emotion/core' in json.dependencies) {
-        delete json.dependencies['@emotion/core'];
-        hadEmotionCore = true;
-      }
-      if (json.devDependencies && '@emotion/core' in json.devDependencies) {
-        delete json.devDependencies['@emotion/core'];
-        hadEmotionCore = true;
-      }
-      return json;
+    renameNpmPackages({
+      '@emotion/core': ['@emotion/react', emotionReactVersion],
     }),
-    () =>
-      addDepsToPackageJson(
-        hadEmotionCore ? { '@emotion/react': emotionReactVersion } : {},
-        {}
-      ),
     formatFiles(),
   ]);
 }
