@@ -1,13 +1,13 @@
 import * as minimist from 'minimist';
 import { getLogger } from '../shared/logger';
 import {
-  combineOptionsForSchematic,
+  combineOptionsForGenerator,
   convertToCamelCase,
   handleErrors,
   Options,
   Schema,
 } from '../shared/params';
-import { commandName, printHelp } from '../shared/print-help';
+import { printHelp } from '../shared/print-help';
 import { WorkspaceDefinition, Workspaces } from '../shared/workspace';
 import { statSync, unlinkSync, writeFileSync } from 'fs';
 import { mkdirpSync, rmdirSync } from 'fs-extra';
@@ -18,8 +18,8 @@ const chalk = require('chalk');
 
 export interface GenerateOptions {
   collectionName: string;
-  schematicName: string;
-  schematicOptions: Options;
+  generatorName: string;
+  generatorOptions: Options;
   help: boolean;
   debug: boolean;
   dryRun: boolean;
@@ -30,7 +30,7 @@ export interface GenerateOptions {
 
 function throwInvalidInvocation() {
   throw new Error(
-    `Specify the schematic name (e.g., ${commandName} generate collection-name:schematic-name)`
+    `Specify the generator name (e.g., nx generate @nrwl/workspace:library)`
   );
 }
 
@@ -39,7 +39,7 @@ function parseGenerateOpts(
   mode: 'generate' | 'new',
   defaultCollection: string | null
 ): GenerateOptions {
-  const schematicOptions = convertToCamelCase(
+  const generatorOptions = convertToCamelCase(
     minimist(args, {
       boolean: ['help', 'dryRun', 'debug', 'force', 'interactive'],
       alias: {
@@ -55,24 +55,24 @@ function parseGenerateOpts(
   );
 
   let collectionName: string | null = null;
-  let schematicName: string | null = null;
+  let generatorName: string | null = null;
   if (mode === 'generate') {
     if (
-      !schematicOptions['_'] ||
-      (schematicOptions['_'] as string[]).length === 0
+      !generatorOptions['_'] ||
+      (generatorOptions['_'] as string[]).length === 0
     ) {
       throwInvalidInvocation();
     }
-    [collectionName, schematicName] = (schematicOptions['_'] as string[])
+    [collectionName, generatorName] = (generatorOptions['_'] as string[])
       .shift()
       .split(':');
-    if (!schematicName) {
-      schematicName = collectionName;
+    if (!generatorName) {
+      generatorName = collectionName;
       collectionName = defaultCollection;
     }
   } else {
-    collectionName = schematicOptions.collection as string;
-    schematicName = '';
+    collectionName = generatorOptions.collection as string;
+    generatorName = '';
   }
 
   if (!collectionName) {
@@ -81,24 +81,24 @@ function parseGenerateOpts(
 
   const res = {
     collectionName,
-    schematicName,
-    schematicOptions,
-    help: schematicOptions.help as boolean,
-    debug: schematicOptions.debug as boolean,
-    dryRun: schematicOptions.dryRun as boolean,
-    force: schematicOptions.force as boolean,
-    interactive: schematicOptions.interactive as boolean,
-    defaults: schematicOptions.defaults as boolean,
+    generatorName,
+    generatorOptions,
+    help: generatorOptions.help as boolean,
+    debug: generatorOptions.debug as boolean,
+    dryRun: generatorOptions.dryRun as boolean,
+    force: generatorOptions.force as boolean,
+    interactive: generatorOptions.interactive as boolean,
+    defaults: generatorOptions.defaults as boolean,
   };
 
-  delete schematicOptions.debug;
-  delete schematicOptions.d;
-  delete schematicOptions.dryRun;
-  delete schematicOptions.force;
-  delete schematicOptions.interactive;
-  delete schematicOptions.defaults;
-  delete schematicOptions.help;
-  delete schematicOptions['--'];
+  delete generatorOptions.debug;
+  delete generatorOptions.d;
+  delete generatorOptions.dryRun;
+  delete generatorOptions.force;
+  delete generatorOptions.interactive;
+  delete generatorOptions.defaults;
+  delete generatorOptions.help;
+  delete generatorOptions['--'];
 
   return res;
 }
@@ -109,7 +109,7 @@ export function printGenHelp(
   logger: Console
 ) {
   printHelp(
-    `${commandName} generate ${opts.collectionName}:${opts.schematicName}`,
+    `nx generate ${opts.collectionName}:${opts.generatorName}`,
     {
       ...schema,
       properties: {
@@ -186,10 +186,10 @@ export async function generate(
       readDefaultCollection(workspaceDefinition)
     );
 
-    if (ws.isNxSchematic(opts.collectionName, opts.schematicName)) {
-      const { schema, implementation } = ws.readSchematic(
+    if (ws.isNxGenerator(opts.collectionName, opts.generatorName)) {
+      const { schema, implementation } = ws.readGenerator(
         opts.collectionName,
-        opts.schematicName
+        opts.generatorName
       );
 
       if (opts.help) {
@@ -197,10 +197,10 @@ export async function generate(
         return 0;
       }
 
-      const combinedOpts = await combineOptionsForSchematic(
-        opts.schematicOptions,
+      const combinedOpts = await combineOptionsForGenerator(
+        opts.generatorOptions,
         opts.collectionName,
-        opts.schematicName,
+        opts.generatorName,
         workspaceDefinition,
         schema,
         opts.interactive

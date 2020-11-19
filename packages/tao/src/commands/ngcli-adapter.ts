@@ -96,8 +96,8 @@ async function createWorkflow(
     registry: new schema.CoreSchemaRegistry(formats.standardFormats),
     resolvePaths: [process.cwd(), root],
   });
-  const _params = opts.schematicOptions._;
-  delete opts.schematicOptions._;
+  const _params = opts.generatorOptions._;
+  delete opts.generatorOptions._;
   workflow.registry.addSmartDefaultProvider('argv', (schema: JsonObject) => {
     if ('index' in schema) {
       return _params[Number(schema['index'])];
@@ -272,25 +272,25 @@ async function runSchematic(
   }
 
   const defaults =
-    opts.schematicName === 'tao-new' || opts.schematicName === 'ng-new'
+    opts.generatorName === 'tao-new' || opts.generatorName === 'ng-new'
       ? {}
       : await getSchematicDefaults(
           root,
           opts.collectionName,
-          opts.schematicName
+          opts.generatorName
         );
   const record = { loggingQueue: [] as string[], error: false };
   workflow.reporter.subscribe(recorder || createRecorder(record, logger));
 
   const schematicOptions = normalizeOptions(
-    opts.schematicOptions,
+    opts.generatorOptions,
     flattenedSchema
   );
 
   if (schematicOptions['--'] && !allowAdditionalArgs) {
     schematicOptions['--'].forEach((unmatched) => {
       const message =
-        `Could not match option '${unmatched.name}' to the ${opts.collectionName}:${opts.schematicName} schema.` +
+        `Could not match option '${unmatched.name}' to the ${opts.collectionName}:${opts.generatorName} schema.` +
         (unmatched.possible.length > 0
           ? ` Possible matches : ${unmatched.possible.join()}`
           : '');
@@ -303,7 +303,7 @@ async function runSchematic(
   await workflow
     .execute({
       collection: opts.collectionName,
-      schematic: opts.schematicName,
+      schematic: opts.generatorName,
       options: { ...defaults, ...schematicOptions },
       debug: opts.debug,
       logger,
@@ -335,13 +335,13 @@ export async function generate(
   );
   const workflow = await createWorkflow(fsHost, root, opts);
   const collection = getCollection(workflow, opts.collectionName);
-  const schematic = collection.createSchematic(opts.schematicName, true);
+  const schematic = collection.createSchematic(opts.generatorName, true);
   return (
     await runSchematic(
       root,
       workflow,
       logger,
-      { ...opts, schematicName: schematic.description.name },
+      { ...opts, generatorName: schematic.description.name },
       schematic
     )
   ).status;
@@ -349,9 +349,9 @@ export async function generate(
 
 export function wrapAngularDevkitSchematic(
   collectionName: string,
-  schematicName: string
+  generatorName: string
 ) {
-  return (schematicOptions: { [k: string]: any }) => {
+  return (generatorOptions: { [k: string]: any }) => {
     return async (host: taoTree.Tree) => {
       const emptyLogger = {
         log: (e) => {},
@@ -394,19 +394,19 @@ export function wrapAngularDevkitSchematic(
       );
 
       const options = {
-        schematicOptions: { ...schematicOptions, _: [] },
+        generatorOptions: { ...generatorOptions, _: [] },
         dryRun: true,
         interactive: false,
         help: false,
         debug: false,
         collectionName,
-        schematicName,
+        generatorName,
         force: false,
         defaults: false,
       };
       const workflow = await createWorkflow(fsHost, host.root, options);
       const collection = getCollection(workflow, collectionName);
-      const schematic = collection.createSchematic(schematicName, true);
+      const schematic = collection.createSchematic(generatorName, true);
       const res = await runSchematic(
         host.root,
         workflow,
@@ -437,7 +437,7 @@ export async function invokeNew(
   const workflow = await createWorkflow(fsHost, root, opts);
   const collection = getCollection(workflow, opts.collectionName);
   const schematic = collection.createSchematic(
-    opts.schematicOptions.cli === 'ng' ? 'ng-new' : 'tao-new',
+    opts.generatorOptions.cli === 'ng' ? 'ng-new' : 'tao-new',
     true
   );
   const allowAdditionalArgs = true; // we can't yet know the schema to validate against
@@ -446,7 +446,7 @@ export async function invokeNew(
       root,
       workflow,
       logger,
-      { ...opts, schematicName: schematic.description.name },
+      { ...opts, generatorName: schematic.description.name },
       schematic,
       allowAdditionalArgs
     )

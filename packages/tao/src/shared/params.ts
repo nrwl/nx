@@ -41,7 +41,7 @@ export async function handleErrors(
     return await fn();
   } catch (err) {
     if (err.constructor.name === 'UnsuccessfulWorkflowExecution') {
-      logger.error('The Schematic workflow failed. See above.');
+      logger.error('The generator workflow failed. See above.');
     } else {
       logger.error(err.message);
     }
@@ -287,10 +287,10 @@ export function combineOptionsForBuilder(
   return combined;
 }
 
-export async function combineOptionsForSchematic(
+export async function combineOptionsForGenerator(
   commandLineOpts: Options,
   collectionName: string,
-  schematicName: string,
+  generatorName: string,
   ws: WorkspaceDefinition,
   schema: Schema,
   isInteractive: boolean
@@ -298,11 +298,20 @@ export async function combineOptionsForSchematic(
   const schematicDefaults =
     ws.schematics &&
     ws.schematics[collectionName] &&
-    ws.schematics[collectionName][schematicName]
-      ? ws.schematics[collectionName][schematicName]
+    ws.schematics[collectionName][generatorName]
+      ? ws.schematics[collectionName][generatorName]
+      : {};
+  const generatorDefaults =
+    ws.generators &&
+    ws.generators[collectionName] &&
+    ws.generators[collectionName][generatorName]
+      ? ws.generators[collectionName][generatorName]
       : {};
   let combined = convertAliases(
-    coerceTypesInOptions({ ...schematicDefaults, ...commandLineOpts }, schema),
+    coerceTypesInOptions(
+      { ...schematicDefaults, ...generatorDefaults, ...commandLineOpts },
+      schema
+    ),
     schema,
     false
   );

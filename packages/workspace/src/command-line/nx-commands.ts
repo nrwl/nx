@@ -8,7 +8,7 @@ import { format } from './format';
 import { workspaceLint } from './lint';
 import { list } from './list';
 import { report } from './report';
-import { workspaceSchematic } from './workspace-schematic';
+import { workspaceGenerators } from './workspace-generators';
 import { affected } from './affected';
 import { runMany } from './run-many';
 
@@ -34,7 +34,7 @@ export const commandsObject = yargs
     `
   )
   .command(
-    'generate [schematic-collection:][schematic] [options, ...]',
+    'generate [collection:][generator] [options, ...]',
     `
     Generate code
     (e.g., nx generate @nrwl/web:app myapp).
@@ -150,26 +150,26 @@ export const commandsObject = yargs
     (_) => workspaceLint()
   )
   .command(
-    'workspace-schematic [name]',
-    'Runs a workspace schematic from the tools/schematics directory',
+    ['workspace-generator [name]', 'workspace-schematic [name]'],
+    'Runs a workspace generator from the tools/generators directory',
     (yargs) => {
-      yargs.option('list-schematics', {
-        describe: 'List the available workspace-schematics',
+      yargs.option('list-generators', {
+        describe: 'List the available workspace-generators',
         type: 'boolean',
       });
       /**
        * Don't require `name` if only listing available
        * schematics
        */
-      if (yargs.argv.listSchematics !== true) {
+      if (yargs.argv.listGenerators !== true) {
         yargs.demandOption(['name']).positional('name', {
           type: 'string',
-          describe: 'The name of your schematic`',
+          describe: 'The name of your generator`',
         });
       }
       return yargs;
     },
-    () => workspaceSchematic(process.argv.slice(3))
+    () => workspaceGenerators(process.argv.slice(3))
   )
   .command(
     'migrate',

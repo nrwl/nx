@@ -14630,7 +14630,7 @@ export const mediumGraph = {
           },
           {
             file:
-              'apps/nx-docs-site/src/assets/content/shared/tools-workspace-schematics.md',
+              'apps/nx-docs-site/src/assets/content/shared/tools-workspace-generators.md',
             hash: '36a8e3fdd9166bebbc14220e92feb4e32f0d2f96',
             ext: '.md',
           },

@@ -6,19 +6,19 @@ export function fetchCorePlugins() {
   const corePlugins: CorePlugin[] = [
     {
       name: '@nrwl/angular',
-      capabilities: 'schematics',
+      capabilities: 'generators',
     },
     {
       name: '@nrwl/cypress',
-      capabilities: 'builders,schematics',
+      capabilities: 'builders,generators',
     },
     {
       name: '@nrwl/express',
-      capabilities: 'builders,schematics',
+      capabilities: 'builders,generators',
     },
     {
       name: '@nrwl/jest',
-      capabilities: 'builders,schematics',
+      capabilities: 'builders,generators',
     },
     {
       name: '@nrwl/linter',
@@ -26,35 +26,35 @@ export function fetchCorePlugins() {
     },
     {
       name: '@nrwl/nest',
-      capabilities: 'builders,schematics',
+      capabilities: 'builders,generators',
     },
     {
       name: '@nrwl/next',
-      capabilities: 'builders,schematics',
+      capabilities: 'builders,generators',
     },
     {
       name: '@nrwl/node',
-      capabilities: 'builders,schematics',
+      capabilities: 'builders,generators',
     },
     {
       name: '@nrwl/nx-plugin',
-      capabilities: 'builders,schematics',
+      capabilities: 'builders,generators',
     },
     {
       name: '@nrwl/react',
-      capabilities: 'builders,schematics',
+      capabilities: 'builders,generators',
     },
     {
       name: '@nrwl/storybook',
-      capabilities: 'builders,schematics',
+      capabilities: 'builders,generators',
     },
     {
       name: '@nrwl/web',
-      capabilities: 'builders,schematics',
+      capabilities: 'builders,generators',
     },
     {
       name: '@nrwl/workspace',
-      capabilities: 'builders,schematics',
+      capabilities: 'builders,generators',
     },
   ];
   return corePlugins;

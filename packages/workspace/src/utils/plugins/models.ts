@@ -1,4 +1,4 @@
-export interface PluginSchematic {
+export interface PluginGenerator {
   factory: string;
   schema: string;
   description: string;
@@ -15,12 +15,12 @@ export interface PluginBuilder {
 export interface PluginCapabilities {
   name: string;
   builders: { [name: string]: PluginBuilder };
-  schematics: { [name: string]: PluginSchematic };
+  generators: { [name: string]: PluginGenerator };
 }
 
 export interface CorePlugin {
   name: string;
-  capabilities: 'builders' | 'schematics' | 'builders,schematics';
+  capabilities: 'builders' | 'generators' | 'builders,generators';
   link?: string;
 }
 

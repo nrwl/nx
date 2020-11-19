@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { Workspace } from './workspace';
 import { parseRunOneOptions } from './parse-run-one-options';
-import { useNxToRunNxBuilderOrSchematic } from './use-nx-to-run-nx-builder-or-schematic';
+import { useNxToRunNxBuilderOrGenerator } from './use-nx-to-run-nx-builder-or-generator';
 
 /**
  * Nx is being run inside a workspace.
@@ -27,7 +27,7 @@ export function initLocal(workspace: Workspace) {
   } else {
     // not using the tasks runner
     if (runOpts === false || process.env.NX_SKIP_TASKS_RUNNER) {
-      loadCli(workspace, useNxToRunNxBuilderOrSchematic());
+      loadCli(workspace, useNxToRunNxBuilderOrGenerator());
     } else {
       require('@nrwl/workspace' + '/src/command-line/run-one').runOne(runOpts);
     }

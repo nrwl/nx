@@ -16,6 +16,7 @@ forEachCli('nx', () => {
   describe('Help', () => {
     it('should show help', async () => {
       newProject();
+      // sss
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/web:app ${myapp}`);
 

@@ -8,7 +8,7 @@ export default async function (host: Tree, schema: Schema) {
   generateFiles(
     host,
     path.join(__dirname, 'files'),
-    path.join('tools/schematics', schema.name),
+    path.join('tools/generators', schema.name),
     options
   );
   if (!schema.skipFormat) {

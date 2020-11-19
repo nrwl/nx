@@ -87,6 +87,6 @@ import * as strings from './src/utils/strings';
 export { checkAndCleanWithSemver } from './src/utils/version-utils';
 export { updatePackagesInPackageJson } from './src/utils/update-packages-in-package-json';
 
-export { librarySchematic } from './src/schematics/library/library';
+export { libraryGenerator } from './src/schematics/library/library';
 
 export const stringUtils = strings;

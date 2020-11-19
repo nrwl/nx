@@ -24,16 +24,8 @@
     "format": "nx format:write",
     "format:write": "nx format:write",
     "format:check": "nx format:check",
-
-    <% if(cli === 'angular') { %>
-    "update": "ng update @nrwl/workspace",
-    <% } %>
-
-    <% if(cli === 'nx') { %>
     "update": "nx migrate latest",
-    <% } %>
-
-    "workspace-schematic": "nx workspace-schematic",
+    "workspace-generator": "nx workspace-generator",
     "dep-graph": "nx dep-graph",
     "help": "nx help"
   },

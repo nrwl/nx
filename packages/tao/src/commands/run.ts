@@ -7,7 +7,7 @@ import {
   Options,
   Schema,
 } from '../shared/params';
-import { commandName, printHelp } from '../shared/print-help';
+import { printHelp } from '../shared/print-help';
 import {
   TargetDefinition,
   WorkspaceDefinition,
@@ -26,7 +26,7 @@ export interface RunOptions {
 
 function throwInvalidInvocation() {
   throw new Error(
-    `Specify the project name and the target (e.g., ${commandName} run proj:build)`
+    `Specify the project name and the target (e.g., nx run proj:build)`
   );
 }
 
@@ -86,11 +86,7 @@ export function printRunHelp(
   schema: Schema,
   logger: Console
 ) {
-  printHelp(
-    `${commandName} run ${opts.project}:${opts.target}`,
-    schema,
-    logger as any
-  );
+  printHelp(`nx run ${opts.project}:${opts.target}`, schema, logger as any);
 }
 
 export function validateTargetAndConfiguration(

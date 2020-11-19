@@ -215,27 +215,27 @@ forEachCli((cli) => {
     });
   });
 
-  describe('workspace-schematic', () => {
+  describe('workspace-generator', () => {
     let custom: string;
     let failing: string;
 
     beforeEach(() => {
       custom = uniq('custom');
       failing = uniq('custom-failing');
-      runCLI(`g workspace-schematic ${custom} --no-interactive`);
-      runCLI(`g workspace-schematic ${failing} --no-interactive`);
+      runCLI(`g workspace-generator ${custom} --no-interactive`);
+      runCLI(`g workspace-generator ${failing} --no-interactive`);
 
       checkFilesExist(
-        `tools/schematics/${custom}/index.ts`,
-        `tools/schematics/${custom}/schema.json`
+        `tools/generators/${custom}/index.ts`,
+        `tools/generators/${custom}/schema.json`
       );
       checkFilesExist(
-        `tools/schematics/${failing}/index.ts`,
-        `tools/schematics/${failing}/schema.json`
+        `tools/generators/${failing}/index.ts`,
+        `tools/generators/${failing}/schema.json`
       );
     });
 
-    it('should compile only schematic files with dependencies', () => {
+    it('should compile only generator files with dependencies', () => {
       const workspace = uniq('workspace');
 
       updateFile(
@@ -251,12 +251,12 @@ forEachCli((cli) => {
         `
       );
       updateFile(
-        `tools/schematics/utils.ts`,
+        `tools/generators/utils.ts`,
         `
         export const noop = ()=>{}
         `
       );
-      updateFile(`tools/schematics/${custom}/index.ts`, (content) => {
+      updateFile(`tools/generators/${custom}/index.ts`, (content) => {
         return `
           import { log } from '../../utils/logger'; \n
           ${content}
@@ -264,13 +264,13 @@ forEachCli((cli) => {
       });
 
       runCommand(
-        `nx workspace-schematic ${custom} ${workspace} --no-interactive -d`
+        `nx workspace-generator ${custom} ${workspace} --no-interactive -d`
       );
 
       expect(() =>
         checkFilesExist(
-          `dist/out-tsc/tools/schematics/${custom}/index.js`,
-          `dist/out-tsc/tools/schematics/utils.js`,
+          `dist/out-tsc/tools/generators/${custom}/index.js`,
+          `dist/out-tsc/tools/generators/utils.js`,
           `dist/out-tsc/tools/utils/logger.js`
         )
       ).not.toThrow();
@@ -279,8 +279,8 @@ forEachCli((cli) => {
       ).toThrow();
     });
 
-    it('should support workspace-specific schematics', async () => {
-      const json = readJson(`tools/schematics/${custom}/schema.json`);
+    it('should support workspace-specific generators', async () => {
+      const json = readJson(`tools/generators/${custom}/schema.json`);
       json.properties['directory'] = {
         type: 'string',
         description: 'lib directory',
@@ -290,13 +290,13 @@ forEachCli((cli) => {
         description: 'skip changes to tsconfig',
       };
       updateFile(
-        `tools/schematics/${custom}/schema.json`,
+        `tools/generators/${custom}/schema.json`,
         JSON.stringify(json)
       );
 
-      const indexFile = readFile(`tools/schematics/${custom}/index.ts`);
+      const indexFile = readFile(`tools/generators/${custom}/index.ts`);
       updateFile(
-        `tools/schematics/${custom}/index.ts`,
+        `tools/generators/${custom}/index.ts`,
         indexFile.replace(
           'name: schema.name',
           'name: schema.name, directory: schema.directory, skipTsConfig: schema.skipTsConfig'
@@ -305,29 +305,29 @@ forEachCli((cli) => {
 
       const workspace = uniq('workspace');
       const dryRunOutput = runCLI(
-        `workspace-schematic ${custom} ${workspace} --no-interactive --directory=dir --skipTsConfig=true -d`
+        `workspace-generator ${custom} ${workspace} --no-interactive --directory=dir --skipTsConfig=true -d`
       );
       expect(exists(`libs/dir/${workspace}/src/index.ts`)).toEqual(false);
       expect(dryRunOutput).toContain(`UPDATE ${workspaceConfigName()}`);
       expect(dryRunOutput).toContain('UPDATE nx.json');
 
       const output = runCLI(
-        `workspace-schematic ${custom} ${workspace} --no-interactive --directory=dir`
+        `workspace-generator ${custom} ${workspace} --no-interactive --directory=dir`
       );
       checkFilesExist(`libs/dir/${workspace}/src/index.ts`);
       expect(output).toContain(`UPDATE ${workspaceConfigName()}`);
       expect(output).toContain('UPDATE nx.json');
 
-      const jsonFailing = readJson(`tools/schematics/${failing}/schema.json`);
+      const jsonFailing = readJson(`tools/generators/${failing}/schema.json`);
       jsonFailing.properties = {};
       jsonFailing.required = [];
       updateFile(
-        `tools/schematics/${failing}/schema.json`,
+        `tools/generators/${failing}/schema.json`,
         JSON.stringify(jsonFailing)
       );
 
       updateFile(
-        `tools/schematics/${failing}/index.ts`,
+        `tools/generators/${failing}/index.ts`,
         `
           export default function() {
             throw new Error();
@@ -336,15 +336,13 @@ forEachCli((cli) => {
       );
 
       try {
-        await runCLI(`workspace-schematic ${failing} --no-interactive`);
-        fail(`Should exit 1 for a workspace-schematic that throws an error`);
+        await runCLI(`workspace-generator ${failing} --no-interactive`);
+        fail(`Should exit 1 for a workspace-generator that throws an error`);
       } catch (e) {}
 
-      const listSchematicsOutput = runCLI(
-        'workspace-schematic --list-schematics'
-      );
-      expect(listSchematicsOutput).toContain(custom);
-      expect(listSchematicsOutput).toContain(failing);
+      const listOutput = runCLI('workspace-generator --list-generators');
+      expect(listOutput).toContain(custom);
+      expect(listOutput).toContain(failing);
     }, 1000000);
   });
 

@@ -6,6 +6,7 @@ export interface WorkspaceDefinition {
   projects: { [projectName: string]: ProjectDefinition };
   defaultProject: string | undefined;
   schematics: { [collectionName: string]: { [schematicName: string]: any } };
+  generators: { [collectionName: string]: { [generatorName: string]: any } };
   cli: { defaultCollection: string };
 }
 
@@ -43,8 +44,8 @@ export class Workspaces {
     return schema['cli'] === 'nx';
   }
 
-  isNxSchematic(collectionName: string, schematicName: string) {
-    const schema = this.readSchematic(collectionName, schematicName).schema;
+  isNxGenerator(collectionName: string, generatorName: string) {
+    const schema = this.readGenerator(collectionName, generatorName).schema;
     return schema['cli'] === 'nx';
   }
 
@@ -65,29 +66,29 @@ export class Workspaces {
     }
   }
 
-  readSchematic(collectionName: string, schematicName: string) {
+  readGenerator(collectionName: string, generatorName: string) {
     try {
       const {
-        schematicsFilePath,
-        schematicsJson,
-        normalizedSchematicName,
-      } = this.readSchematicsJson(collectionName, schematicName);
-      const schematicsDir = path.dirname(schematicsFilePath);
-      const schematicConfig =
-        schematicsJson.schematics[normalizedSchematicName];
-      const schemaPath = path.join(schematicsDir, schematicConfig.schema || '');
+        generatorsFilePath,
+        generatorsJson,
+        normalizedGeneratorName,
+      } = this.readGeneratorsJson(collectionName, generatorName);
+      const generatorsDir = path.dirname(generatorsFilePath);
+      const generatorConfig = (generatorsJson.generators ||
+        generatorsJson.schematics)[normalizedGeneratorName];
+      const schemaPath = path.join(generatorsDir, generatorConfig.schema || '');
       const schema = JSON.parse(fs.readFileSync(schemaPath).toString());
       const module = require(path.join(
-        schematicsDir,
-        schematicConfig.implementation
-          ? schematicConfig.implementation
-          : schematicConfig.factory
+        generatorsDir,
+        generatorConfig.implementation
+          ? generatorConfig.implementation
+          : generatorConfig.factory
       ));
       const implementation = module.default;
       return { schema, implementation };
     } catch (e) {
       throw new Error(
-        `Unable to resolve ${collectionName}:${schematicName}.\n${e.message}`
+        `Unable to resolve ${collectionName}:${generatorName}.\n${e.message}`
       );
     }
   }
@@ -111,50 +112,50 @@ export class Workspaces {
     return { builder, buildersFilePath, buildersJson };
   }
 
-  private readSchematicsJson(collectionName: string, schematic: string) {
-    let schematicsFilePath;
+  private readGeneratorsJson(collectionName: string, generator: string) {
+    let generatorsFilePath;
     if (collectionName.endsWith('.json')) {
-      schematicsFilePath = require.resolve(collectionName);
+      generatorsFilePath = require.resolve(collectionName);
     } else {
       const packageJsonPath = require.resolve(`${collectionName}/package.json`);
       const packageJson = JSON.parse(
         fs.readFileSync(packageJsonPath).toString()
       );
-      const schematicsFile = packageJson.schematics;
-      schematicsFilePath = require.resolve(
-        path.join(path.dirname(packageJsonPath), schematicsFile)
+      const generatorsFile = packageJson.generators
+        ? packageJson.generators
+        : packageJson.schematics;
+      generatorsFilePath = require.resolve(
+        path.join(path.dirname(packageJsonPath), generatorsFile)
       );
     }
-    const schematicsJson = JSON.parse(
-      fs.readFileSync(schematicsFilePath).toString()
+    const generatorsJson = JSON.parse(
+      fs.readFileSync(generatorsFilePath).toString()
     );
 
-    let normalizedSchematicName;
-    for (let k of Object.keys(schematicsJson.schematics)) {
-      if (k === schematic) {
-        normalizedSchematicName = k;
+    let normalizedGeneratorName;
+    const gens = generatorsJson.generators || generatorsJson.schematics;
+    for (let k of Object.keys(gens)) {
+      if (k === generator) {
+        normalizedGeneratorName = k;
         break;
       }
-      if (
-        schematicsJson.schematics[k].aliases &&
-        schematicsJson.schematics[k].aliases.indexOf(schematic) > -1
-      ) {
-        normalizedSchematicName = k;
+      if (gens[k].aliases && gens[k].aliases.indexOf(generator) > -1) {
+        normalizedGeneratorName = k;
         break;
       }
     }
 
-    if (!normalizedSchematicName) {
-      for (let parent of schematicsJson.extends || []) {
+    if (!normalizedGeneratorName) {
+      for (let parent of generatorsJson.extends || []) {
         try {
-          return this.readSchematicsJson(parent, schematic);
+          return this.readGeneratorsJson(parent, generator);
         } catch (e) {}
       }
 
       throw new Error(
-        `Cannot find schematic '${schematic}' in ${schematicsFilePath}.`
+        `Cannot find generator '${generator}' in ${generatorsFilePath}.`
       );
     }
-    return { schematicsFilePath, schematicsJson, normalizedSchematicName };
+    return { generatorsFilePath, generatorsJson, normalizedGeneratorName };
   }
 }
