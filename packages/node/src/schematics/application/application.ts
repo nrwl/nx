@@ -50,6 +50,7 @@ function updateNxJson(options: NormalizedSchema): Rule {
 function getBuildConfig(project: any, options: NormalizedSchema) {
   return {
     builder: '@nrwl/node:build',
+    outputs: ['{options.outputPath}'],
     options: {
       outputPath: join(normalize('dist'), options.appProjectRoot),
       main: maybeJs(options, join(project.sourceRoot, 'main.ts')),

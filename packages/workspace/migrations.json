@@ -150,6 +150,11 @@
       "version": "11.0.0-beta.3",
       "description": "Rename tools/schematics into tools/generators",
       "factory": "./src/migrations/update-11-0-0/rename-workspace-schematics"
+    },
+    "add-outputs-in-workspace": {
+      "version": "11.0.0-beta.7",
+      "description": "Adds `outputs` based on builders",
+      "factory": "./src/migrations/update-11-0-0/add-outputs-in-workspace"
     }
   },
   "packageJsonUpdates": {

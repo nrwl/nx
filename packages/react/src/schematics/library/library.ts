@@ -157,6 +157,7 @@ function addProject(options: NormalizedSchema): Rule {
       }
       architect.build = {
         builder: '@nrwl/web:package',
+        outputs: ['{options.outputPath}'],
         options: {
           outputPath: `dist/${libsDir(host)}/${options.projectDirectory}`,
           tsConfig: `${options.projectRoot}/tsconfig.lib.json`,

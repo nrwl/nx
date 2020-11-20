@@ -312,6 +312,7 @@ function addStorybookTask(projectName: string, uiFramework: string): Rule {
     });
     projectConfig.targets.set('build-storybook', {
       builder: '@nrwl/storybook:build',
+      outputs: ['{options.outputPath}'],
       options: {
         uiFramework,
         outputPath: join(
@@ -328,7 +329,7 @@ function addStorybookTask(projectName: string, uiFramework: string): Rule {
           quiet: true,
         },
       },
-    });
+    } as any);
   });
 }
 

@@ -404,6 +404,7 @@ describe('lib', () => {
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         builder: '@nrwl/web:package',
+        outputs: ['{options.outputPath}'],
         options: {
           external: ['react', 'react-dom'],
           entryFile: 'libs/my-lib/src/index.ts',
