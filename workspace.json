@@ -56,7 +56,7 @@
           }
         },
         "lint": {
-          "builder": "@nrwl/linter:eslint",
+          "builder": "@bafsllc/linter:eslint",
           "options": {
             "lintFilePatterns": [
               "packages/nx/**/*.ts",
