@@ -833,7 +833,7 @@ function renameFile(tree: Tree, from: string, to: string) {
   if (!buffer) {
     return;
   }
-  tree.create(to, buffer.toString());
+  tree.create(to, buffer);
   tree.delete(from);
 }
 
