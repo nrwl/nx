@@ -6,12 +6,19 @@ import {
   noop,
   Rule,
   template,
+  Tree,
   url,
 } from '@angular-devkit/schematics';
 import { names } from '@nrwl/workspace';
 import { NormalizedSchema } from '../schema';
 
-export function addFiles(options: NormalizedSchema): Rule {
+export function addFiles(host: Tree, options: NormalizedSchema): Rule {
+  const indexPath = `${options.projectSourceRoot}/schematics/${options.fileName}/files/src/index.ts__template__`;
+
+  if (!host.exists(indexPath)) {
+    host.create(indexPath, options.fileTemplate);
+  }
+
   return mergeWith(
     apply(url(`./files/schematic`), [
       template({

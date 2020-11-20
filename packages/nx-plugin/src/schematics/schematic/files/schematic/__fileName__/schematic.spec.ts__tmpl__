@@ -1,29 +1,39 @@
-import { Tree } from '@angular-devkit/schematics';
-import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { join } from 'path'
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { Tree } from '@nrwl/devkit';
 
+import schematic from './schematic';
 import { <%= className %>SchematicSchema } from './schema';
 
 describe('<%= name %> schematic', () => {
   let appTree: Tree;
   const options: <%= className %>SchematicSchema = { name: 'test' };
 
-  const testRunner = new SchematicTestRunner(
-    '@<%= npmScope %>/<%= name %>',
-    join(__dirname, '../../../collection.json')
-  );
-
   beforeEach(() => {
-    appTree = createEmptyWorkspace(Tree.empty());
+    appTree = createTreeWithEmptyWorkspace();
   });
 
   it('should run successfully', async () => {
-    await expect(testRunner.runSchematicAsync(
-        '<%= fileName %>',
-        options,
-        appTree
-      ).toPromise()
-    ).resolves.not.toThrowError();
+    schematic(appTree, options);
+    const workspace = JSON.parse(appTree.read('workspace.json').toString());
+    expect(workspace.projects['test']).toMatchInlineSnapshot(`
+      Object {
+        "architect": Object {
+          "build": Object {
+            "builder": "<%= npmPackageName %>:build",
+          },
+        },
+        "root": "libs/test",
+        "sourceRoot": "libs/test/src",
+      }
+    `);
+
+    const nxjson = JSON.parse(appTree.read('nx.json').toString());
+    expect(nxjson.projects).toMatchInlineSnapshot(`
+      Object {
+        "test": Object {
+          "tags": Array [],
+        },
+      }
+    `);
   })
 });

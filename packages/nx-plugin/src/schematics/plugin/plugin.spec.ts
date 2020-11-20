@@ -102,12 +102,12 @@ describe('NxPlugin plugin', () => {
     ).toBeTruthy();
     expect(
       tree.exists(
-        'libs/my-plugin/src/schematics/my-plugin/files/src/index.ts.template'
+        'libs/my-plugin/src/schematics/my-plugin/files/src/index.ts__template__'
       )
     ).toBeTruthy();
     expect(
       tree.readContent(
-        'libs/my-plugin/src/schematics/my-plugin/files/src/index.ts.template'
+        'libs/my-plugin/src/schematics/my-plugin/files/src/index.ts__template__'
       )
     ).toContain('const variable = "<%= projectName %>";');
     expect(

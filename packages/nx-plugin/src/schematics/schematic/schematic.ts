@@ -8,6 +8,6 @@ export default function (schema: NormalizedSchema): Rule {
   return (host: Tree) => {
     const options = normalizeOptions(host, schema);
 
-    return chain([addFiles(options), updateCollectionJson(options)]);
+    return chain([addFiles(host, options), updateCollectionJson(options)]);
   };
 }

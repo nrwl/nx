@@ -1,12 +1,4 @@
-import {
-  apply,
-  applyTemplates,
-  chain,
-  mergeWith,
-  move,
-  Rule,
-  url
-} from '@angular-devkit/schematics';
+import { generateFiles, Tree, wrapRule } from '@nrwl/devkit';
 import {
   addProjectToNxJsonInTree,
   names,
@@ -14,8 +6,9 @@ import {
   projectRootDir,
   ProjectType,
   toFileName,
-  updateWorkspace
+  updateWorkspaceInTree
 } from '@nrwl/workspace';
+import * as path from 'path';
 import { <%= className %>SchematicSchema } from './schema';
 
 /**
@@ -50,34 +43,35 @@ function normalizeOptions(options: <%= className %>SchematicSchema): NormalizedS
   };
 }
 
-function addFiles(options: NormalizedSchema): Rule {
-  return mergeWith(
-      apply(url(`./files`), [
-        applyTemplates({
-          ...options,
-          ...names(options.name),
-          offsetFromRoot: offsetFromRoot(options.projectRoot)
-        }),
-        move(options.projectRoot)
-      ])
-    )
+function addFiles(host: Tree, options: NormalizedSchema) {
+    const templateOptions = {
+      ...options,
+      ...names(options.name),
+      offsetFromRoot: offsetFromRoot(options.projectRoot),
+      template: ''
+    };
+    generateFiles(host, path.join(__dirname, 'files'), options.projectRoot, templateOptions);
 }
 
-export default function(options: <%= className %>SchematicSchema): Rule {
- const normalizedOptions = normalizeOptions(options);
-  return chain([
-    updateWorkspace(workspace => {
-      workspace.projects.add({
-        name: normalizedOptions.projectName,
-        root: normalizedOptions.projectRoot,
-        sourceRoot: `${normalizedOptions.projectRoot}/src`,
-        projectType
-      }).targets.add({
-        name: 'build',
-        builder: '<%= npmPackageName %>:build'
-      })
-    }),
-    addProjectToNxJsonInTree(normalizedOptions.projectName, { tags: normalizedOptions.parsedTags }),
-    addFiles(normalizedOptions)
-  ]);
+export default function(host: Tree, options: <%= className %>SchematicSchema) {
+    const normalizedOptions = normalizeOptions(options);
+
+    wrapRule(updateWorkspaceInTree((json) => {
+        json.projects[normalizedOptions.projectName] = {
+          root: normalizedOptions.projectRoot,
+          sourceRoot: `${normalizedOptions.projectRoot}/src`,
+          architect: {
+            'build': {
+              builder: '<%= npmPackageName %>:build'
+            }
+          }
+        }
+        return json;
+    }))(host);
+
+    wrapRule(addProjectToNxJsonInTree(normalizedOptions.projectName, {
+     tags: normalizedOptions.parsedTags,
+   }))(host);
+
+   addFiles(host, normalizedOptions);
 }
