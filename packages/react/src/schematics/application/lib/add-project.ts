@@ -9,6 +9,7 @@ export function addProject(options: NormalizedSchema): Rule {
 
     architect.build = {
       builder: '@nrwl/web:build',
+      outputs: ['{options.outputPath}'],
       options: {
         outputPath: join(normalize('dist'), options.appProjectRoot),
         index: join(options.appProjectRoot, 'src/index.html'),

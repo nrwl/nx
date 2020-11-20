@@ -88,6 +88,9 @@ Object {
         "jestConfig": "apps/my-dir/my-app/jest.config.js",
         "passWithNoTests": true,
       },
+      "outputs": Array [
+        "coverage/apps/my-dir/my-app",
+      ],
     },
   },
   "prefix": "proj",
@@ -221,6 +224,9 @@ Object {
         "jestConfig": "apps/my-app/jest.config.js",
         "passWithNoTests": true,
       },
+      "outputs": Array [
+        "coverage/apps/my-app",
+      ],
     },
   },
   "prefix": "proj",

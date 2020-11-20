@@ -479,7 +479,7 @@ describe('print-affected', () => {
           target: 'test',
         },
         command: `npm run nx -- test ${myapp}`,
-        outputs: [],
+        outputs: [`coverage/apps/${myapp}`],
       },
     ]);
     compareTwoArrays(resWithTarget.projects, [`${myapp}-e2e`, myapp]);

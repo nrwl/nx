@@ -20,6 +20,7 @@ describe('NxPlugin plugin', () => {
     expect(project.root).toEqual('libs/my-plugin');
     expect(project.architect.build).toEqual({
       builder: '@nrwl/node:package',
+      outputs: ['{options.outputPath}'],
       options: {
         outputPath: 'dist/libs/my-plugin',
         tsConfig: 'libs/my-plugin/tsconfig.lib.json',
@@ -53,6 +54,7 @@ describe('NxPlugin plugin', () => {
     });
     expect(project.architect.test).toEqual({
       builder: '@nrwl/jest:jest',
+      outputs: ['coverage/libs/my-plugin'],
       options: {
         jestConfig: 'libs/my-plugin/jest.config.js',
         passWithNoTests: true,
