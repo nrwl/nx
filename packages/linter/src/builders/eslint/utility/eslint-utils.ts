@@ -35,8 +35,9 @@ export async function lint(
   });
 
   if (options.quiet) {
-    return await eslint.lintFiles(options.lintFilePatterns)
-      .then((results) => (projectESLint.ESLint.getErrorResults(results)));
+    return await eslint
+      .lintFiles(options.lintFilePatterns)
+      .then((results) => projectESLint.ESLint.getErrorResults(results));
   }
 
   return await eslint.lintFiles(options.lintFilePatterns);
