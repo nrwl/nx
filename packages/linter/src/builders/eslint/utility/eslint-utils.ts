@@ -34,5 +34,10 @@ export async function lint(
     errorOnUnmatchedPattern: false,
   });
 
+  if (options.quiet) {
+    return await eslint.lintFiles(options.lintFilePatterns)
+      .then((results) => (projectESLint.ESLint.getErrorResults(results)));
+  }
+
   return await eslint.lintFiles(options.lintFilePatterns);
 }
