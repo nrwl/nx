@@ -924,10 +924,10 @@ describe('Enforce Module Boundaries', () => {
                 root: 'libs/buildableLib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {
+                targets: {
                   build: {
                     // defines a buildable lib
-                    builder: '@angular-devkit/build-ng-packagr:build',
+                    executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
                 files: [createFile(`libs/buildableLib/src/main.ts`)],
@@ -940,7 +940,7 @@ describe('Enforce Module Boundaries', () => {
                 root: 'libs/nonBuildableLib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {},
+                targets: {},
                 files: [createFile(`libs/nonBuildableLib/src/main.ts`)],
               },
             },

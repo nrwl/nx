@@ -53,12 +53,19 @@ export function getPluginCapabilities(
           packageJson.schematics,
           'schematics'
         ),
-      builders: tryGetCollection(
-        workspaceRoot,
-        pluginName,
-        packageJson.builders,
-        'builders'
-      ),
+      executors:
+        tryGetCollection(
+          workspaceRoot,
+          pluginName,
+          packageJson.executors,
+          'executors'
+        ) ||
+        tryGetCollection(
+          workspaceRoot,
+          pluginName,
+          packageJson.builders,
+          'builders'
+        ),
     };
   } catch {
     return null;
@@ -83,7 +90,7 @@ export function listPluginCapabilities(pluginName: string) {
     return;
   }
 
-  const hasBuilders = hasElements(plugin.builders);
+  const hasBuilders = hasElements(plugin.executors);
   const hasGenerators = hasElements(plugin.generators);
 
   if (!hasBuilders && !hasGenerators) {
@@ -108,12 +115,12 @@ export function listPluginCapabilities(pluginName: string) {
   }
 
   if (hasBuilders) {
-    bodyLines.push(terminal.bold(terminal.green('BUILDERS')));
+    bodyLines.push(terminal.bold(terminal.green('EXECUTORS/BUILDERS')));
     bodyLines.push('');
     bodyLines.push(
-      ...Object.keys(plugin.builders).map(
+      ...Object.keys(plugin.executors).map(
         (name) =>
-          `${terminal.bold(name)} : ${plugin.builders[name].description}`
+          `${terminal.bold(name)} : ${plugin.executors[name].description}`
       )
     );
   }

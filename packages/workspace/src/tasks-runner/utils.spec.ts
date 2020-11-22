@@ -20,8 +20,9 @@ describe('utils', () => {
             name: 'myapp',
             type: 'application',
             data: {
-              architect: {
+              targets: {
                 build: {
+                  executor: '',
                   outputs: ['one', 'two'],
                 },
               },
@@ -47,8 +48,9 @@ describe('utils', () => {
             name: 'myapp',
             type: 'application',
             data: {
-              architect: {
+              targets: {
                 build: {
+                  executor: '',
                   options: {
                     outputPath: 'one',
                   },
@@ -81,8 +83,9 @@ describe('utils', () => {
             name: 'myapp',
             type: 'application',
             data: {
-              architect: {
+              targets: {
                 build: {
+                  executor: '',
                   options: {
                     outputPath: 'one',
                   },
@@ -113,8 +116,9 @@ describe('utils', () => {
             name: 'myapp',
             type: 'application',
             data: {
-              architect: {
+              targets: {
                 build: {
+                  executor: '',
                   options: {
                     outputPath: 'one',
                   },
@@ -144,8 +148,9 @@ describe('utils', () => {
             name: 'myapp',
             type: 'application',
             data: {
-              architect: {
+              targets: {
                 build: {
+                  executor: '',
                   options: {
                     outputPath: 'one',
                   },
@@ -174,8 +179,10 @@ describe('utils', () => {
             type: 'application',
             data: {
               root: 'root-myapp',
-              architect: {
-                build: {},
+              targets: {
+                build: {
+                  executor: '',
+                },
               },
               files: [],
             },

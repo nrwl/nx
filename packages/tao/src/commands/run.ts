@@ -1,7 +1,7 @@
 import * as minimist from 'minimist';
 import { getLogger } from '../shared/logger';
 import {
-  combineOptionsForBuilder,
+  combineOptionsForExecutor,
   convertToCamelCase,
   handleErrors,
   Options,
@@ -97,8 +97,8 @@ export function validateTargetAndConfiguration(
   if (!project) {
     throw new Error(`Could not find project "${opts.project}"`);
   }
-  const target = project.architect[opts.target];
-  const availableTargets = Object.keys(project.architect);
+  const target = project.targets[opts.target];
+  const availableTargets = Object.keys(project.targets);
   if (!target) {
     throw new Error(
       `Could not find target "${opts.target}" in the ${
@@ -146,10 +146,11 @@ export async function run(root: string, args: string[], isVerbose: boolean) {
     const opts = parseRunOpts(args, workspace.defaultProject, logger);
     validateTargetAndConfiguration(workspace, opts);
 
-    const target = workspace.projects[opts.project].architect[opts.target];
-    if (ws.isNxBuilder(target)) {
-      const { schema, implementation } = ws.readBuilder(target);
-      const combinedOptions = combineOptionsForBuilder(
+    const target = workspace.projects[opts.project].targets[opts.target];
+    const [nodeModule, executor] = target.executor.split(':');
+    if (ws.isNxExecutor(nodeModule, executor)) {
+      const { schema, implementation } = ws.readExecutor(nodeModule, executor);
+      const combinedOptions = combineOptionsForExecutor(
         opts.runOptions,
         opts.configuration,
         target,

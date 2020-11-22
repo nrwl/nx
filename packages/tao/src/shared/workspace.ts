@@ -4,23 +4,24 @@ import '../compat/compat';
 
 export interface WorkspaceDefinition {
   projects: { [projectName: string]: ProjectDefinition };
-  defaultProject: string | undefined;
-  schematics: { [collectionName: string]: { [schematicName: string]: any } };
-  generators: { [collectionName: string]: { [generatorName: string]: any } };
-  cli: { defaultCollection: string };
+  defaultProject?: string;
+  generators?: { [collectionName: string]: { [generatorName: string]: any } };
+  cli?: { defaultCollection: string };
 }
 
 export interface ProjectDefinition {
-  architect: { [targetName: string]: TargetDefinition };
+  targets: { [targetName: string]: TargetDefinition };
   root: string;
+  generators?: { [collectionName: string]: { [generatorName: string]: any } };
   prefix?: string;
   sourceRoot?: string;
 }
 
 export interface TargetDefinition {
   options?: any;
+  outputs?: string[];
   configurations?: { [config: string]: any };
-  builder: string;
+  executor: string;
 }
 
 export function workspaceConfigName(root: string) {
@@ -34,13 +35,39 @@ export function workspaceConfigName(root: string) {
 
 export class Workspaces {
   readWorkspaceConfiguration(root: string): WorkspaceDefinition {
-    return JSON.parse(
+    const w = JSON.parse(
       fs.readFileSync(path.join(root, workspaceConfigName(root))).toString()
     );
+
+    Object.values(w.projects || {}).forEach((project: any) => {
+      if (!project.targets && project.architect) {
+        project.targets = project.architect;
+        project.architect = undefined;
+      }
+
+      Object.values(project.targets || {}).forEach((target: any) => {
+        if (!target.executor && target.builder) {
+          target.executor = target.builder;
+          target.builder = undefined;
+        }
+      });
+
+      if (!project.generators && project.schematics) {
+        project.generators = project.schematics;
+        project.schematics = undefined;
+      }
+    });
+
+    if (!w.generators && w.schematics) {
+      w.generators = w.schematics;
+      w.schematics = undefined;
+    }
+
+    return w;
   }
 
-  isNxBuilder(target: TargetDefinition) {
-    const schema = this.readBuilder(target).schema;
+  isNxExecutor(nodeModule: string, executor: string) {
+    const schema = this.readExecutor(nodeModule, executor).schema;
     return schema['cli'] === 'nx';
   }
 
@@ -49,20 +76,25 @@ export class Workspaces {
     return schema['cli'] === 'nx';
   }
 
-  readBuilder(target: TargetDefinition) {
+  readExecutor(nodeModule: string, executor: string) {
     try {
-      const { builder, buildersFilePath, buildersJson } = this.readBuildersJson(
-        target
+      const { executorsFilePath, executorConfig } = this.readExecutorsJson(
+        nodeModule,
+        executor
       );
-      const builderDir = path.dirname(buildersFilePath);
-      const buildConfig = buildersJson.builders[builder];
-      const schemaPath = path.join(builderDir, buildConfig.schema || '');
+      const executorsDir = path.dirname(executorsFilePath);
+      const schemaPath = path.join(executorsDir, executorConfig.schema || '');
       const schema = JSON.parse(fs.readFileSync(schemaPath).toString());
-      const module = require(path.join(builderDir, buildConfig.implementation));
+      const module = require(path.join(
+        executorsDir,
+        executorConfig.implementation
+      ));
       const implementation = module.default;
       return { schema, implementation };
     } catch (e) {
-      throw new Error(`Unable to resolve ${target.builder}.\n${e.message}`);
+      throw new Error(
+        `Unable to resolve ${nodeModule}:${executor}.\n${e.message}`
+      );
     }
   }
 
@@ -93,23 +125,28 @@ export class Workspaces {
     }
   }
 
-  private readBuildersJson(target: TargetDefinition) {
-    const [nodeModule, builder] = target.builder.split(':');
+  private readExecutorsJson(nodeModule: string, executor: string) {
     const packageJsonPath = require.resolve(`${nodeModule}/package.json`);
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath).toString());
-    const buildersFile = packageJson.builders;
-    const buildersFilePath = require.resolve(
-      path.join(path.dirname(packageJsonPath), buildersFile)
+    const executorsFile = packageJson.executors
+      ? packageJson.executors
+      : packageJson.builders;
+    const executorsFilePath = require.resolve(
+      path.join(path.dirname(packageJsonPath), executorsFile)
     );
-    const buildersJson = JSON.parse(
-      fs.readFileSync(buildersFilePath).toString()
+    const executorsJson = JSON.parse(
+      fs.readFileSync(executorsFilePath).toString()
     );
-    if (!buildersJson.builders[builder]) {
+    const mapOfExecutors = executorsJson.executors
+      ? executorsJson.executors
+      : executorsJson.builders;
+    const executorConfig = mapOfExecutors[executor];
+    if (!executorConfig) {
       throw new Error(
-        `Cannot find builder '${builder}' in ${buildersFilePath}.`
+        `Cannot find executor '${executor}' in ${executorsFilePath}.`
       );
     }
-    return { builder, buildersFilePath, buildersJson };
+    return { executorsFilePath, executorConfig };
   }
 
   private readGeneratorsJson(collectionName: string, generator: string) {

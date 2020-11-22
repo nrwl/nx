@@ -63,7 +63,7 @@ function getBuildTargetOutputPath(
   try {
     const [project, target, config] = opts.buildTarget.split(':');
 
-    const buildTarget = context.workspace.projects[project].architect[target];
+    const buildTarget = context.workspace.projects[project].targets[target];
     buildOpts = config
       ? { ...buildTarget.options, ...buildTarget.configurations[config] }
       : buildTarget.options;

@@ -32,7 +32,7 @@ export function getInstalledPluginsFromPackageJson(
     })
     .sort()
     .map((name) => getPluginCapabilities(workspaceRoot, name))
-    .filter((x) => x && !!(x.generators || x.builders));
+    .filter((x) => x && !!(x.generators || x.executors));
 }
 
 export function listInstalledPlugins(installedPlugins: PluginCapabilities[]) {
@@ -40,7 +40,7 @@ export function listInstalledPlugins(installedPlugins: PluginCapabilities[]) {
     title: `Installed plugins:`,
     bodyLines: installedPlugins.map((p) => {
       const capabilities = [];
-      if (hasElements(p.builders)) {
+      if (hasElements(p.executors)) {
         capabilities.push('builders');
       }
       if (hasElements(p.generators)) {

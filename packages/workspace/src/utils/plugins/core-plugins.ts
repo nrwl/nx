@@ -10,51 +10,51 @@ export function fetchCorePlugins() {
     },
     {
       name: '@nrwl/cypress',
-      capabilities: 'builders,generators',
+      capabilities: 'executors,generators',
     },
     {
       name: '@nrwl/express',
-      capabilities: 'builders,generators',
+      capabilities: 'executors,generators',
     },
     {
       name: '@nrwl/jest',
-      capabilities: 'builders,generators',
+      capabilities: 'executors,generators',
     },
     {
       name: '@nrwl/linter',
-      capabilities: 'builders',
+      capabilities: 'executors',
     },
     {
       name: '@nrwl/nest',
-      capabilities: 'builders,generators',
+      capabilities: 'executors,generators',
     },
     {
       name: '@nrwl/next',
-      capabilities: 'builders,generators',
+      capabilities: 'executors,generators',
     },
     {
       name: '@nrwl/node',
-      capabilities: 'builders,generators',
+      capabilities: 'executors,generators',
     },
     {
       name: '@nrwl/nx-plugin',
-      capabilities: 'builders,generators',
+      capabilities: 'executors,generators',
     },
     {
       name: '@nrwl/react',
-      capabilities: 'builders,generators',
+      capabilities: 'executors,generators',
     },
     {
       name: '@nrwl/storybook',
-      capabilities: 'builders,generators',
+      capabilities: 'executors,generators',
     },
     {
       name: '@nrwl/web',
-      capabilities: 'builders,generators',
+      capabilities: 'executors,generators',
     },
     {
       name: '@nrwl/workspace',
-      capabilities: 'builders,generators',
+      capabilities: 'executors,generators',
     },
   ];
   return corePlugins;
