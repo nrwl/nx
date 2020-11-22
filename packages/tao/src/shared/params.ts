@@ -263,7 +263,7 @@ export function convertPositionParamsIntoNamedParams(
   });
 }
 
-export function combineOptionsForBuilder(
+export function combineOptionsForExecutor(
   commandLineOpts: Options,
   config: string,
   target: TargetDefinition,
@@ -295,12 +295,6 @@ export async function combineOptionsForGenerator(
   schema: Schema,
   isInteractive: boolean
 ) {
-  const schematicDefaults =
-    ws.schematics &&
-    ws.schematics[collectionName] &&
-    ws.schematics[collectionName][generatorName]
-      ? ws.schematics[collectionName][generatorName]
-      : {};
   const generatorDefaults =
     ws.generators &&
     ws.generators[collectionName] &&
@@ -308,10 +302,7 @@ export async function combineOptionsForGenerator(
       ? ws.generators[collectionName][generatorName]
       : {};
   let combined = convertAliases(
-    coerceTypesInOptions(
-      { ...schematicDefaults, ...generatorDefaults, ...commandLineOpts },
-      schema
-    ),
+    coerceTypesInOptions({ ...generatorDefaults, ...commandLineOpts }, schema),
     schema,
     false
   );

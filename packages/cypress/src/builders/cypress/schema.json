@@ -2,6 +2,7 @@
   "title": "Cypress Target",
   "description": "Cypress target option for Build Facade",
   "type": "object",
+  "outputCapture": "pipe",
   "properties": {
     "cypressConfig": {
       "type": "string",

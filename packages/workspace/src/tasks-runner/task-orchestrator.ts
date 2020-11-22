@@ -8,6 +8,7 @@ import { output } from '../utils/output';
 import * as fs from 'fs';
 import { appRootPath } from '../utils/app-root';
 import * as dotenv from 'dotenv';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 
 export class TaskOrchestrator {
   workspaceRoot = appRootPath;
@@ -127,15 +128,12 @@ export class TaskOrchestrator {
   private pipeOutputCapture(task: Task) {
     try {
       const p = this.projectGraph.nodes[task.target.project];
-      const b = p.data.architect[task.target.target].builder;
-      // this is temporary. we simply want to assess if pipeOutputCapture
-      // works well before making it configurable
-      return (
-        this.cache.temporaryOutputPath(task) &&
-        (b === '@nrwl/workspace:run-commands' ||
-          b === '@nrwl/cypress:cypress' ||
-          b === '@nrwl/gatsby:build')
-      );
+      const b = p.data.targets[task.target.target].executor;
+      const [nodeModule, executor] = b.split(':');
+
+      const w = new Workspaces();
+      const x = w.readExecutor(nodeModule, executor);
+      return x.schema.outputCapture === 'pipe';
     } catch (e) {
       return false;
     }

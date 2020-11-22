@@ -6,7 +6,7 @@ export interface PluginGenerator {
   hidden: boolean;
 }
 
-export interface PluginBuilder {
+export interface PluginExecutor {
   implementation: string;
   schema: string;
   description: string;
@@ -14,13 +14,13 @@ export interface PluginBuilder {
 
 export interface PluginCapabilities {
   name: string;
-  builders: { [name: string]: PluginBuilder };
+  executors: { [name: string]: PluginExecutor };
   generators: { [name: string]: PluginGenerator };
 }
 
 export interface CorePlugin {
   name: string;
-  capabilities: 'builders' | 'generators' | 'builders,generators';
+  capabilities: 'executors' | 'generators' | 'executors,generators';
   link?: string;
 }
 

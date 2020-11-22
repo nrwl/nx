@@ -46,14 +46,6 @@ export function writeJsonFile(path: string, json: any) {
   writeToFile(path, serializeJson(json));
 }
 
-export function readWorkspaceConfigPath(): any {
-  if (fileExists('workspace.json')) {
-    return readJsonFile('workspace.json');
-  } else {
-    return readJsonFile('angular.json');
-  }
-}
-
 export function copyFile(file: string, target: string) {
   const f = path.basename(file);
   const source = fs.createReadStream(file);

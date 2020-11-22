@@ -19,7 +19,6 @@ export function runNodePackageBuilder(
 ) {
   const projGraph = createProjectGraph();
   const libRoot = projGraph.nodes[context.target.project].data.root;
-
   const normalizedOptions = normalizeOptions(options, context, libRoot);
   const { target, dependencies } = calculateProjectDependencies(
     projGraph,

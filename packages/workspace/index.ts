@@ -12,7 +12,6 @@ export {
   renameSync,
   updateJsonFile,
   readJsonFile,
-  readWorkspaceConfigPath,
   copyFile,
   createDirectory,
 } from './src/utils/fileutils';
