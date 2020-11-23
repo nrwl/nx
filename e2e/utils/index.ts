@@ -21,7 +21,7 @@ export function currentCli() {
 
 let projName: string;
 
-export function setCurrentProjName(name: string) {
+function setCurrentProjName(name: string) {
   projName = name;
   return name;
 }
@@ -42,19 +42,25 @@ export function runCreateWorkspace(
     style,
     base,
     packageManager,
+    cli,
   }: {
     preset: string;
     appName?: string;
     style?: string;
     base?: string;
     packageManager?: string;
+    cli?: string;
   }
 ) {
+  setCurrentProjName(name);
+
   const linterArg =
     preset === 'angular' || preset === 'angular-nest' ? ' --linter=tslint' : '';
   let command = `npx create-nx-workspace@${
     process.env.PUBLISHED_VERSION
-  } ${name} --cli=${currentCli()} --preset=${preset} ${linterArg} --no-nxCloud --no-interactive`;
+  } ${name} --cli=${
+    cli || currentCli()
+  } --preset=${preset} ${linterArg} --no-nxCloud --no-interactive`;
   if (appName) {
     command += ` --appName=${appName}`;
   }
