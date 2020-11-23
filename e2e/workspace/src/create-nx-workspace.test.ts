@@ -1,4 +1,10 @@
-import { runCreateWorkspace, uniq } from '@nrwl/e2e/utils';
+import {
+  checkFilesDoNotExist,
+  checkFilesExist,
+  readJson,
+  runCreateWorkspace,
+  uniq,
+} from '@nrwl/e2e/utils';
 import { existsSync, mkdirSync } from 'fs-extra';
 import { execSync } from 'child_process';
 
@@ -8,6 +14,15 @@ describe('create-nx-workspace', () => {
     runCreateWorkspace(wsName, {
       preset: 'empty',
     });
+
+    checkFilesExist(
+      'workspace.json',
+      'package.json',
+      'package-lock.json',
+      'apps/.gitkeep',
+      'libs/.gitkeep'
+    );
+    checkFilesDoNotExist('yarn.lock');
   });
 
   it('should be able to create an oss workspace', () => {
@@ -109,5 +124,36 @@ describe('create-nx-workspace', () => {
     });
 
     expect(existsSync(`${tmpDir}/${wsName}/package.json`)).toBeTruthy();
+  });
+
+  it('should respect package manager preference', () => {
+    const wsName = uniq('pm');
+    const appName = uniq('app');
+    runCreateWorkspace(wsName, {
+      preset: 'react',
+      style: 'css',
+      appName,
+      packageManager: 'yarn',
+    });
+
+    checkFilesExist('yarn.lock');
+    checkFilesDoNotExist('package-lock.json');
+  });
+
+  it('should store package manager preference for angular cli', () => {
+    const wsName = uniq('pm');
+    const appName = uniq('app');
+    runCreateWorkspace(wsName, {
+      preset: 'angular',
+      appName,
+      style: 'css',
+      packageManager: 'yarn',
+      cli: 'angular',
+    });
+
+    const workspaceJson = readJson('angular.json');
+    expect(workspaceJson.cli.packageManager).toEqual('yarn');
+    checkFilesExist('yarn.lock');
+    checkFilesDoNotExist('package-lock.json');
   });
 });

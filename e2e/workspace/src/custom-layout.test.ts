@@ -5,14 +5,13 @@ import {
   runCLI,
   runCLIAsync,
   runCreateWorkspace,
-  setCurrentProjName,
   uniq,
   yarnAdd,
 } from '@nrwl/e2e/utils';
 
 describe('custom workspace layout', () => {
   it('should work', async () => {
-    const proj = setCurrentProjName(uniq('custom-layout-proj'));
+    const proj = uniq('custom-layout-proj');
     runCreateWorkspace(proj, { preset: 'oss' });
     yarnAdd('@nrwl/react @nrwl/angular @nrwl/express');
 
