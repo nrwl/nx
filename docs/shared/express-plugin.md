@@ -1,6 +1,6 @@
 # Express Plugin
 
-The Express plugin contains schematics to add a new Express application to an Nx workspace.
+The Express plugin contains generators to add a new Express application to an Nx workspace.
 
 ## Adding the Express plugin
 
