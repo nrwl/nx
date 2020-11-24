@@ -20,95 +20,95 @@ describe('NxPlugin schematic', () => {
 
   it('should generate files', async () => {
     const tree = await runSchematic(
-      'schematic',
+      'generator',
       {
         project: projectName,
-        name: 'my-schematic',
+        name: 'my-generator',
       },
       appTree
     );
 
     expect(
-      tree.exists('libs/my-plugin/src/schematics/my-schematic/schema.d.ts')
+      tree.exists('libs/my-plugin/src/generators/my-generator/schema.d.ts')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/schematics/my-schematic/schema.json')
+      tree.exists('libs/my-plugin/src/generators/my-generator/schema.json')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/schematics/my-schematic/schematic.ts')
+      tree.exists('libs/my-plugin/src/generators/my-generator/generator.ts')
     ).toBeTruthy();
     expect(
       tree.exists(
-        'libs/my-plugin/src/schematics/my-schematic/schematic.spec.ts'
+        'libs/my-plugin/src/generators/my-generator/generator.spec.ts'
       )
     ).toBeTruthy();
   });
 
   it('should update collection.json', async () => {
     const tree = await runSchematic(
-      'schematic',
+      'generator',
       {
         project: projectName,
-        name: 'my-schematic',
-        description: 'my-schematic description',
+        name: 'my-generator',
+        description: 'my-generator description',
       },
       appTree
     );
 
-    const collectionJson = readJsonInTree(
+    const generatorJson = readJsonInTree(
       tree,
-      'libs/my-plugin/collection.json'
+      'libs/my-plugin/generators.json'
     );
 
-    expect(collectionJson.schematics['my-schematic'].factory).toEqual(
-      './src/schematics/my-schematic/schematic'
+    expect(generatorJson.generators['my-generator'].factory).toEqual(
+      './src/generators/my-generator/generator'
     );
-    expect(collectionJson.schematics['my-schematic'].schema).toEqual(
-      './src/schematics/my-schematic/schema.json'
+    expect(generatorJson.generators['my-generator'].schema).toEqual(
+      './src/generators/my-generator/schema.json'
     );
-    expect(collectionJson.schematics['my-schematic'].description).toEqual(
-      'my-schematic description'
+    expect(generatorJson.generators['my-generator'].description).toEqual(
+      'my-generator description'
     );
   });
 
   it('should generate default description', async () => {
     const tree = await runSchematic(
-      'schematic',
+      'generator',
       {
         project: projectName,
-        name: 'my-schematic',
+        name: 'my-generator',
       },
       appTree
     );
 
-    const collectionJson = readJsonInTree(
+    const generatorJson = readJsonInTree(
       tree,
-      'libs/my-plugin/collection.json'
+      'libs/my-plugin/generators.json'
     );
 
-    expect(collectionJson.schematics['my-schematic'].description).toEqual(
-      'my-schematic schematic'
+    expect(generatorJson.generators['my-generator'].description).toEqual(
+      'my-generator generator'
     );
   });
 
   it('should generate custom description', async () => {
     const tree = await runSchematic(
-      'schematic',
+      'generator',
       {
         project: projectName,
-        name: 'my-schematic',
-        description: 'my-schematic custom description',
+        name: 'my-generator',
+        description: 'my-generator custom description',
       },
       appTree
     );
 
-    const collectionJson = readJsonInTree(
+    const generatorJson = readJsonInTree(
       tree,
-      'libs/my-plugin/collection.json'
+      'libs/my-plugin/generators.json'
     );
 
-    expect(collectionJson.schematics['my-schematic'].description).toEqual(
-      'my-schematic custom description'
+    expect(generatorJson.generators['my-generator'].description).toEqual(
+      'my-generator custom description'
     );
   });
 
@@ -116,21 +116,21 @@ describe('NxPlugin schematic', () => {
     describe('none', () => {
       it('should not generate files', async () => {
         const tree = await runSchematic(
-          'schematic',
+          'generator',
           {
             project: projectName,
-            name: 'my-schematic',
+            name: 'my-generator',
             unitTestRunner: 'none',
           },
           appTree
         );
 
         expect(
-          tree.exists('libs/my-plugin/src/schematics/my-schematic/schematic.ts')
+          tree.exists('libs/my-plugin/src/generators/my-generator/generator.ts')
         ).toBeTruthy();
         expect(
           tree.exists(
-            'libs/my-plugin/src/schematics/my-schematic/schematic.spec.ts'
+            'libs/my-plugin/src/generators/my-generator/generator.spec.ts'
           )
         ).toBeFalsy();
       });

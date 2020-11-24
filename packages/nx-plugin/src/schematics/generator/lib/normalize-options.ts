@@ -28,10 +28,10 @@ export function normalizeOptions(
   if (options.description) {
     description = options.description;
   } else {
-    description = `${options.name} schematic`;
+    description = `${options.name} generator`;
   }
 
-  const normalized: NormalizedSchema = {
+  return {
     ...options,
     fileName,
     description,
@@ -41,6 +41,4 @@ export function normalizeOptions(
     npmPackageName,
     fileTemplate,
   };
-
-  return normalized;
 }

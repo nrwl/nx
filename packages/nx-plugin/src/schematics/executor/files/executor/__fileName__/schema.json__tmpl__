@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft-07/schema",
   "cli": "nx",
   "$id": "https://json-schema.org/draft-07/schema",
-  "title": "<%= className %> builder",
+  "title": "<%= className %> executor",
   "description": "",
   "type": "object",
   "properties": {},

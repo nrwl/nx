@@ -26,7 +26,7 @@ export function normalizeOptions(
     description = `${options.name} builder`;
   }
 
-  const normalized: NormalizedSchema = {
+  return {
     ...options,
     fileName,
     description,
@@ -34,6 +34,4 @@ export function normalizeOptions(
     projectSourceRoot,
     npmScope,
   };
-
-  return normalized;
 }

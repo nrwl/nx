@@ -4,7 +4,7 @@ import { readJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
 
-describe('NxPlugin builder', () => {
+describe('NxPlugin executor', () => {
   let appTree: Tree;
   let projectName: string;
 
@@ -20,84 +20,84 @@ describe('NxPlugin builder', () => {
 
   it('should generate files', async () => {
     const tree = await runSchematic(
-      'builder',
+      'executor',
       {
         project: projectName,
-        name: 'my-builder',
+        name: 'my-executor',
       },
       appTree
     );
 
     expect(
-      tree.exists('libs/my-plugin/src/builders/my-builder/schema.d.ts')
+      tree.exists('libs/my-plugin/src/executors/my-executor/schema.d.ts')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/builders/my-builder/schema.json')
+      tree.exists('libs/my-plugin/src/executors/my-executor/schema.json')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/builders/my-builder/builder.ts')
+      tree.exists('libs/my-plugin/src/executors/my-executor/executor.ts')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/builders/my-builder/builder.spec.ts')
+      tree.exists('libs/my-plugin/src/executors/my-executor/executor.spec.ts')
     ).toBeTruthy();
   });
 
-  it('should update builders.json', async () => {
+  it('should update executors.json', async () => {
     const tree = await runSchematic(
-      'builder',
+      'executor',
       {
         project: projectName,
-        name: 'my-builder',
-        description: 'my-builder description',
+        name: 'my-executor',
+        description: 'my-executor description',
       },
       appTree
     );
 
-    const buildersJson = readJsonInTree(tree, 'libs/my-plugin/builders.json');
+    const executorJson = readJsonInTree(tree, 'libs/my-plugin/executors.json');
 
-    expect(buildersJson.builders['my-builder'].implementation).toEqual(
-      './src/builders/my-builder/builder'
+    expect(executorJson.executors['my-executor'].implementation).toEqual(
+      './src/executors/my-executor/executor'
     );
-    expect(buildersJson.builders['my-builder'].schema).toEqual(
-      './src/builders/my-builder/schema.json'
+    expect(executorJson.executors['my-executor'].schema).toEqual(
+      './src/executors/my-executor/schema.json'
     );
-    expect(buildersJson.builders['my-builder'].description).toEqual(
-      'my-builder description'
+    expect(executorJson.executors['my-executor'].description).toEqual(
+      'my-executor description'
     );
   });
 
   it('should generate default description', async () => {
     const tree = await runSchematic(
-      'builder',
+      'executor',
       {
         project: projectName,
-        name: 'my-builder',
+        name: 'my-executor',
       },
       appTree
     );
 
-    const buildersJson = readJsonInTree(tree, 'libs/my-plugin/builders.json');
+    const executorsJson = readJsonInTree(tree, 'libs/my-plugin/executors.json');
 
-    expect(buildersJson.builders['my-builder'].description).toEqual(
-      'my-builder builder'
+    expect(executorsJson.executors['my-executor'].description).toEqual(
+      'my-executor builder'
     );
   });
 
   it('should generate custom description', async () => {
     const tree = await runSchematic(
-      'builder',
+      'executor',
       {
         project: projectName,
-        name: 'my-builder',
-        description: 'my-builder custom description',
+        name: 'my-executor',
+        description: 'my-executor custom description',
       },
       appTree
     );
 
-    const buildersJson = readJsonInTree(tree, 'libs/my-plugin/builders.json');
+    const executorsJson = readJsonInTree(tree, 'libs/my-plugin/executors.json');
 
-    expect(buildersJson.builders['my-builder'].description).toEqual(
-      'my-builder custom description'
+    expect(executorsJson.executors['my-executor'].description).toEqual(
+      'my-executor custom description'
     );
   });
 
@@ -105,17 +105,19 @@ describe('NxPlugin builder', () => {
     describe('none', () => {
       it('should not generate unit test files', async () => {
         const tree = await runSchematic(
-          'builder',
+          'executor',
           {
             project: projectName,
-            name: 'my-builder',
+            name: 'my-executor',
             unitTestRunner: 'none',
           },
           appTree
         );
 
         expect(
-          tree.exists('libs/my-plugin/src/builders/my-builder/builder.spec.ts')
+          tree.exists(
+            'libs/my-plugin/src/executors/my-executor/executor.spec.ts'
+          )
         ).toBeFalsy();
       });
     });

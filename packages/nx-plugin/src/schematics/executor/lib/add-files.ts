@@ -6,21 +6,14 @@ import {
   noop,
   Rule,
   template,
-  Tree,
   url,
 } from '@angular-devkit/schematics';
 import { names } from '@nrwl/workspace';
 import { NormalizedSchema } from '../schema';
 
-export function addFiles(host: Tree, options: NormalizedSchema): Rule {
-  const indexPath = `${options.projectSourceRoot}/schematics/${options.fileName}/files/src/index.ts__template__`;
-
-  if (!host.exists(indexPath)) {
-    host.create(indexPath, options.fileTemplate);
-  }
-
+export function addFiles(options: NormalizedSchema): Rule {
   return mergeWith(
-    apply(url(`./files/schematic`), [
+    apply(url(`./files/executor`), [
       template({
         ...options,
         ...names(options.name),
@@ -29,7 +22,7 @@ export function addFiles(host: Tree, options: NormalizedSchema): Rule {
       options.unitTestRunner === 'none'
         ? filter((file) => !file.endsWith('.spec.ts'))
         : noop(),
-      move(`${options.projectSourceRoot}/schematics`),
+      move(`${options.projectSourceRoot}/executors`),
     ])
   );
 }
