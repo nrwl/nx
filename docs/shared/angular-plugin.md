@@ -1,6 +1,6 @@
 # Angular Plugin
 
-The Nx Plugin for Angular contains builders, schematics, and utilities for managing Angular applications, and libraries within an Nx workspace. It provides:
+The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications, and libraries within an Nx workspace. It provides:
 
 - Integration with libraries such as Jest, Cypress, Karma, Protractor, and Storybook.
 - Helper services, and functions to use along with NgRx libraries.
@@ -26,8 +26,8 @@ npm install -D @nrwl/angular
 
 Building Angular applications within an Nx workspace is similar to building within a vanilla Angular CLI workspace, with a few differences.
 
-- Jest is used as the default unit test runner, configurable in the schematics section of the workspace configuration file.
-- Cypress is used as the default E2E test runner, configurable in the schematics section of the workspace configuration.
+- Jest is used as the default unit test runner, configurable in the generators section of the workspace configuration file.
+- Cypress is used as the default E2E test runner, configurable in the generators section of the workspace configuration.
 - E2E tests are included in a separate project from the Angular application itself.
 - The Nx CLI delegates common commands such as build, serve, test, lint, and e2e to the Angular CLI.
 
@@ -85,22 +85,22 @@ myorg/
 - [Using NgRx](/{{framework}}/guides/misc-ngrx)
 - [Upgrading an AngularJS application to Angular](/{{framework}}/guides/misc-angular)
 
-## Builders
+## Executors / Builders
 
-- [package](/{{framework}}/plugins/angular/builders/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
+- [package](/{{framework}}/plugins/angular/executors/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
 
-## Schematics
+## Generators
 
-- [application](/{{framework}}/plugins/angular/schematics/application) - Create an Angular application
-- [downgrade-module](/{{framework}}/plugins/angular/schematics/downgrade-module) - Setup Downgrade Module
-- [karma](/{{framework}}/plugins/angular/schematics/karma) - Add karma configuration to a workspace
-- [karma-project](/{{framework}}/plugins/angular/schematics/karma-project) - Add karma testing to a project
-- [library](/{{framework}}/plugins/angular/schematics/library) - Create an Angular library
-- [move](/{{framework}}/plugins/angular/schematics/move) - Move an Angular application or library to another folder within the workspace
-- [ngrx](/{{framework}}/plugins/angular/schematics/ngrx) - Add and use NgRx for state management
-- [stories](/{{framework}}/plugins/angular/schematics/stories) - Create stories/specs for all components declared in a library
-- [storybook-configuration](/{{framework}}/plugins/angular/schematics/storybook-configuration) - Setup configuration for Storybook
-- [upgrade-module](/{{framework}}/plugins/angular/schematics/upgrade-module) - Add an upgrade module
+- [application](/{{framework}}/plugins/angular/generators/application) - Create an Angular application
+- [downgrade-module](/{{framework}}/plugins/angular/generators/downgrade-module) - Setup Downgrade Module
+- [karma](/{{framework}}/plugins/angular/generators/karma) - Add karma configuration to a workspace
+- [karma-project](/{{framework}}/plugins/angular/generators/karma-project) - Add karma testing to a project
+- [library](/{{framework}}/plugins/angular/generators/library) - Create an Angular library
+- [move](/{{framework}}/plugins/angular/generators/move) - Move an Angular application or library to another folder within the workspace
+- [ngrx](/{{framework}}/plugins/angular/generators/ngrx) - Add and use NgRx for state management
+- [stories](/{{framework}}/plugins/angular/generators/stories) - Create stories/specs for all components declared in a library
+- [storybook-configuration](/{{framework}}/plugins/angular/generators/storybook-configuration) - Setup configuration for Storybook
+- [upgrade-module](/{{framework}}/plugins/angular/generators/upgrade-module) - Add an upgrade module
 
 ## Public API
 

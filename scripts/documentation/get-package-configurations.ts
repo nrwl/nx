@@ -42,8 +42,8 @@ export function getPackageConfigurations(
         source: path.join(packagesDir, `${folderName}/src`),
         output,
         framework,
-        builderOutput: path.join(output, 'builders'),
-        schematicOutput: path.join(output, 'schematics'),
+        builderOutput: path.join(output, 'executors'),
+        schematicOutput: path.join(output, 'generators'),
         hasBuilders: itemList.includes('builders.json'),
         hasSchematics: itemList.includes('collection.json'),
       };

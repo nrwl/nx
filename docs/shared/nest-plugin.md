@@ -192,8 +192,8 @@ Buildable Nest libraries use TypeScript to compile the source. The tsconfig file
 nx build <nest-lib>
 ```
 
-## Nest Schematics
+## Nest Generators
 
-The Nest plugin for Nx extends the schematics provided by Nest. Any commands that can be used with the Nest CLI can also be used with the `nx` command. The `--sourceRoot` flag should be used for all Nest schematics.
+The Nest plugin for Nx extends the generators provided by Nest. Any commands that can be used with the Nest CLI can also be used with the `nx` command. The `--sourceRoot` flag should be used for all Nest generators.
 
 > The `--sourceRoot` command should point to the source directory of a Nest library or application within an Nx workspace.
