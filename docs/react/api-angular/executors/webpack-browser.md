@@ -159,7 +159,7 @@ List of additional NgModule files that will be lazy loaded. Lazy router modules 
 
 ### localize
 
-Type: `boolean | boolean[] `
+Type: `boolean | boolean[]`
 
 ### main
 
