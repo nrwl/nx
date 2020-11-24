@@ -1,19 +1,11 @@
-import {
-  BuilderContext,
-  BuilderOutput,
-  createBuilder
-} from '@angular-devkit/architect';
-import { Observable, of } from 'rxjs';
-import { tap } from 'rxjs/operators';
-import { <%= className %>BuilderSchema } from './schema';
+import { BuildBuilderSchema } from './schema';
 
-export function runBuilder(
+export default async function runBuilder(
   options: <%= className %>BuilderSchema,
-  context: BuilderContext
-): Observable<BuilderOutput> {
-  return of({ success: true }).pipe(tap(() => {
-      context.logger.info("Builder ran for <%= name %>");
-  }));
+) {
+  console.log('Builder ran for <%= className %>', options)
+  return {
+    success: true
+  }
 }
 
-export default createBuilder(runBuilder);

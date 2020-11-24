@@ -29,11 +29,11 @@ export function addProjectToWorkspace(
 function addProjectToWorkspaceJson(
   host: Tree,
   projectName: string,
-  projectConfiguation: ProjectDefinition
+  projectConfiguration: ProjectDefinition
 ) {
-  const path = getWorkspacePath(host as any);
-  const workspaceJson = readJson<WorkspaceDefinition>(host as any, path);
-  workspaceJson.projects[projectName] = projectConfiguation;
+  const path = getWorkspacePath(host);
+  const workspaceJson = readJson<WorkspaceDefinition>(host, path);
+  workspaceJson.projects[projectName] = projectConfiguration;
   host.write(path, JSON.stringify(workspaceJson));
 }
 

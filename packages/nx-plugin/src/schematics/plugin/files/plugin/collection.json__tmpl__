@@ -1,5 +1,5 @@
 {
-  "$schema": "<%= offsetFromRoot %>node_modules/@angular-devkit/schematics/collection-schema.json",
+  "$schema": "http://json-schema.org/schema",
   "name": "<%= name %>",
   "version": "0.0.1",
   "schematics": {}

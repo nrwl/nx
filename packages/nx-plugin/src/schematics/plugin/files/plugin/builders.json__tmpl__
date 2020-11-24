@@ -1,4 +1,4 @@
 {
-  "$schema": "<%= offsetFromRoot %>node_modules/@angular-devkit/architect/src/builders-schema.json",
+  "$schema": "http://json-schema.org/schema",
   "builders": {}
 }

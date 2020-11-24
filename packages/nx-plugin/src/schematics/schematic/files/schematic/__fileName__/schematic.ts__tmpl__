@@ -1,4 +1,6 @@
 import {
+  addProjectToWorkspace,
+  formatFiles,
   generateFiles,
   getWorkspaceLayout,
   names,
@@ -45,7 +47,7 @@ function addFiles(host: Tree, options: NormalizedSchema) {
     generateFiles(host, path.join(__dirname, 'files'), options.projectRoot, templateOptions);
 }
 
-export default function (host: Tree, options: <%= className %>SchematicSchema) {
+export default async function (host: Tree, options: <%= className %>SchematicSchema) {
   const normalizedOptions = normalizeOptions(host, options);
   addProjectToWorkspace(
     host,
@@ -63,6 +65,6 @@ export default function (host: Tree, options: <%= className %>SchematicSchema) {
       tags: normalizedOptions.parsedTags,
     }
   );
-
   addFiles(host, normalizedOptions);
+  await formatFiles(host);
 }
