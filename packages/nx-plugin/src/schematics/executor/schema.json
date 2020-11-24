@@ -1,12 +1,12 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "NxPluginBuilder",
-  "title": "Create a Builder for an Nx Plugin",
+  "id": "NxPluginExecutor",
+  "title": "Create a Executor for an Nx Plugin",
   "type": "object",
   "examples": [
     {
-      "command": "g builder my-builder --project=my-plugin",
-      "description": "Generate libs/my-plugin/src/builders/my-builder"
+      "command": "g executor my-executor --project=my-plugin",
+      "description": "Generate libs/my-plugin/src/executors/my-executor"
     }
   ],
   "properties": {
@@ -17,20 +17,20 @@
       "$default": {
         "$source": "projectName"
       },
-      "x-prompt": "What is the name of the project for the builder?"
+      "x-prompt": "What is the name of the project for the executor?"
     },
     "name": {
       "type": "string",
-      "description": "Builder name",
+      "description": "Executor name",
       "$default": {
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the builder?"
+      "x-prompt": "What name would you like to use for the executor?"
     },
     "description": {
       "type": "string",
-      "description": "Builder description",
+      "description": "Executor description",
       "alias": "d"
     },
     "unitTestRunner": {

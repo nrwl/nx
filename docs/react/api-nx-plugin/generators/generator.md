@@ -1,33 +1,33 @@
-# builder
+# generator
 
-Create a builder for an Nx Plugin
+Create a generator for an Nx Plugin
 
 ## Usage
 
 ```bash
-nx generate builder ...
+nx generate generator ...
 ```
 
-By default, Nx will search for `builder` in the default collection provisioned in `angular.json`.
+By default, Nx will search for `generator` in the default collection provisioned in `workspace.json`.
 
 You can specify the collection explicitly as follows:
 
 ```bash
-nx g @nrwl/nx-plugin:builder ...
+nx g @nrwl/nx-plugin:generator ...
 ```
 
 Show what will be generated without writing to disk:
 
 ```bash
-nx g builder ... --dry-run
+nx g generator ... --dry-run
 ```
 
 ### Examples
 
-Generate libs/my-plugin/src/builders/my-builder:
+Generate libs/my-plugin/src/generators/my-generator:
 
 ```bash
-nx g builder my-builder --project=my-plugin
+nx g generator my-generator --project=my-plugin
 ```
 
 ## Options
@@ -38,13 +38,13 @@ Alias(es): d
 
 Type: `string`
 
-Builder description
+Schematic description
 
 ### name
 
 Type: `string`
 
-Builder name
+Schematic name
 
 ### project
 

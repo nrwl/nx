@@ -1,12 +1,12 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "NxPluginSchematic",
-  "title": "Create a Schematic for an Nx Plugin",
+  "id": "NxPluginGenerator",
+  "title": "Create a Generator for an Nx Plugin",
   "type": "object",
   "examples": [
     {
-      "command": "g schematic my-schematic --project=my-plugin",
-      "description": "Generate libs/my-plugin/src/schematics/my-schematic"
+      "command": "g generator my-generator --project=my-plugin",
+      "description": "Generate libs/my-plugin/src/generators/my-generator"
     }
   ],
   "properties": {
@@ -17,7 +17,7 @@
       "$default": {
         "$source": "projectName"
       },
-      "x-prompt": "What is the name of the project for the schematic?"
+      "x-prompt": "What is the name of the project for the generator?"
     },
     "name": {
       "type": "string",
@@ -26,7 +26,7 @@
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the schematic?"
+      "x-prompt": "What name would you like to use for the generator?"
     },
     "description": {
       "type": "string",

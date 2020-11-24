@@ -1,33 +1,33 @@
-# schematic
+# executor
 
-Create a schematic for an Nx Plugin
+Create a executor for an Nx Plugin
 
 ## Usage
 
 ```bash
-nx generate schematic ...
+nx generate executor ...
 ```
 
-By default, Nx will search for `schematic` in the default collection provisioned in `workspace.json`.
+By default, Nx will search for `executor` in the default collection provisioned in `angular.json`.
 
 You can specify the collection explicitly as follows:
 
 ```bash
-nx g @nrwl/nx-plugin:schematic ...
+nx g @nrwl/nx-plugin:executor ...
 ```
 
 Show what will be generated without writing to disk:
 
 ```bash
-nx g schematic ... --dry-run
+nx g executor ... --dry-run
 ```
 
 ### Examples
 
-Generate libs/my-plugin/src/schematics/my-schematic:
+Generate libs/my-plugin/src/executors/my-executor:
 
 ```bash
-nx g schematic my-schematic --project=my-plugin
+nx g executor my-executor --project=my-plugin
 ```
 
 ## Options
@@ -38,13 +38,13 @@ Alias(es): d
 
 Type: `string`
 
-Schematic description
+Executor description
 
 ### name
 
 Type: `string`
 
-Schematic name
+Executor name
 
 ### project
 
