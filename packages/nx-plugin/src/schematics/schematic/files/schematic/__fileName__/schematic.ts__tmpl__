@@ -54,10 +54,11 @@ export default async function (host: Tree, options: <%= className %>SchematicSch
     normalizedOptions.projectName,
     {
       root: normalizedOptions.projectRoot,
+      projectType: 'library',
       sourceRoot: `${normalizedOptions.projectRoot}/src`,
-      architect: {
+      targets: {
         build: {
-          builder: "<%= npmPackageName %>:build",
+          executor: "<%= npmPackageName %>:build",
         },
       },
     },
