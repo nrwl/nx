@@ -1,20 +1,12 @@
-import { generateFiles, Tree, wrapRule } from '@nrwl/devkit';
 import {
-  addProjectToNxJsonInTree,
+  generateFiles,
+  getWorkspaceLayout,
   names,
   offsetFromRoot,
-  projectRootDir,
-  ProjectType,
-  toFileName,
-  updateWorkspaceInTree
-} from '@nrwl/workspace';
+  Tree,
+} from '@nrwl/devkit';
 import * as path from 'path';
 import { <%= className %>SchematicSchema } from './schema';
-
-/**
- * Depending on your needs, you can change this to either `Library` or `Application`
- */
-const projectType = ProjectType.Library
 
 interface NormalizedSchema extends <%= className %>SchematicSchema { 
   projectName: string;
@@ -23,15 +15,15 @@ interface NormalizedSchema extends <%= className %>SchematicSchema {
   parsedTags: string[]
 }
 
-function normalizeOptions(options: <%= className %>SchematicSchema): NormalizedSchema {
-  const name = toFileName(options.name);
+function normalizeOptions(host: Tree, options: <%= className %>SchematicSchema): NormalizedSchema {
+  const name = names(options.name).fileName;
   const projectDirectory = options.directory
-    ? `${toFileName(options.directory)}/${name}`
+    ? `${names(options.directory).fileName}/${name}`
     : name;
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
-  const projectRoot = `${projectRootDir(projectType)}/${projectDirectory}`;
+  const projectRoot = `${getWorkspaceLayout(host).libsDir}/${projectDirectory}`;
   const parsedTags = options.tags
-    ? options.tags.split(',').map(s => s.trim())
+    ? options.tags.split(',').map((s) => s.trim())
     : [];
 
   return {
@@ -39,7 +31,7 @@ function normalizeOptions(options: <%= className %>SchematicSchema): NormalizedS
     projectName,
     projectRoot,
     projectDirectory,
-    parsedTags
+    parsedTags,
   };
 }
 
@@ -53,25 +45,24 @@ function addFiles(host: Tree, options: NormalizedSchema) {
     generateFiles(host, path.join(__dirname, 'files'), options.projectRoot, templateOptions);
 }
 
-export default function(host: Tree, options: <%= className %>SchematicSchema) {
-    const normalizedOptions = normalizeOptions(options);
+export default function (host: Tree, options: <%= className %>SchematicSchema) {
+  const normalizedOptions = normalizeOptions(host, options);
+  addProjectToWorkspace(
+    host,
+    normalizedOptions.projectName,
+    {
+      root: normalizedOptions.projectRoot,
+      sourceRoot: `${normalizedOptions.projectRoot}/src`,
+      architect: {
+        build: {
+          builder: "<%= npmPackageName %>:build",
+        },
+      },
+    },
+    {
+      tags: normalizedOptions.parsedTags,
+    }
+  );
 
-    wrapRule(updateWorkspaceInTree((json) => {
-        json.projects[normalizedOptions.projectName] = {
-          root: normalizedOptions.projectRoot,
-          sourceRoot: `${normalizedOptions.projectRoot}/src`,
-          architect: {
-            'build': {
-              builder: '<%= npmPackageName %>:build'
-            }
-          }
-        }
-        return json;
-    }))(host);
-
-    wrapRule(addProjectToNxJsonInTree(normalizedOptions.projectName, {
-     tags: normalizedOptions.parsedTags,
-   }))(host);
-
-   addFiles(host, normalizedOptions);
+  addFiles(host, normalizedOptions);
 }
