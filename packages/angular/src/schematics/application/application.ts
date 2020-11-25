@@ -43,8 +43,13 @@ import {
   updateWorkspaceInTree,
   appsDir,
 } from '@nrwl/workspace/src/utils/ast-utils';
+import {
+  createAngularEslintJson,
+  extraEslintDependencies,
+} from '../../utils/lint';
 
 interface NormalizedSchema extends Schema {
+  prefix: string; // we set a default for this in normalizeOptions, so it is no longer optional
   appProjectRoot: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
@@ -499,6 +504,7 @@ function updateProject(options: NormalizedSchema): Rule {
           fixedProject.architect.lint.builder = '@nrwl/linter:eslint';
           fixedProject.architect.lint.options.lintFilePatterns = [
             `${options.appProjectRoot}/src/**/*.ts`,
+            `${options.appProjectRoot}/src/**/*.html`,
           ];
           delete fixedProject.architect.lint.options.tsConfig;
           delete fixedProject.architect.lint.options.exclude;
@@ -816,6 +822,14 @@ export default function (schema: Schema): Rule {
       options.routing ? addRouterRootConfiguration(options) : noop(),
       addLintFiles(options.appProjectRoot, options.linter, {
         onlyGlobal: options.linter === Linter.TsLint, // local lint files are added differently when tslint
+        localConfig:
+          options.linter === Linter.TsLint
+            ? undefined
+            : createAngularEslintJson(options.appProjectRoot, options.prefix),
+        extraPackageDeps:
+          options.linter === Linter.TsLint
+            ? undefined
+            : extraEslintDependencies,
       }),
       options.linter === 'tslint' ? updateTsLintConfig(options) : noop(),
       options.unitTestRunner === 'jest'

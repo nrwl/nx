@@ -200,6 +200,27 @@
     ora "4.0.3"
     rxjs "6.5.4"
 
+"@angular-eslint/eslint-plugin-template@0.8.0-beta.1":
+  version "0.8.0-beta.1"
+  resolved "https://registry.yarnpkg.com/@angular-eslint/eslint-plugin-template/-/eslint-plugin-template-0.8.0-beta.1.tgz#750675884e161d162afb4e314fc5621275e383a7"
+  integrity sha512-nyy93m+2WBe5Fpc2IKzWPH1bGqNZYd+BU6nYhNssiYXPRcDWBqIsIhEM74dRK/0AN37tUguJ2weZ6xF6fVN8hw==
+  dependencies:
+    "@typescript-eslint/experimental-utils" "4.3.0"
+
+"@angular-eslint/eslint-plugin@0.8.0-beta.1":
+  version "0.8.0-beta.1"
+  resolved "https://registry.yarnpkg.com/@angular-eslint/eslint-plugin/-/eslint-plugin-0.8.0-beta.1.tgz#154824ba3fe8589605c71762c793a42936b27f74"
+  integrity sha512-+vCkUpM81qjb0UwxlUUwGML0lLzmnhqf5HHsRzzfwhd0s5g3DPw8w4Z/CDNBagJmTzSUSnH1GF9uEdtyJCEprA==
+  dependencies:
+    "@typescript-eslint/experimental-utils" "4.3.0"
+
+"@angular-eslint/template-parser@0.8.0-beta.1":
+  version "0.8.0-beta.1"
+  resolved "https://registry.yarnpkg.com/@angular-eslint/template-parser/-/template-parser-0.8.0-beta.1.tgz#a9a9eaccc4536b5edd6c3483b7ff81fc906874e3"
+  integrity sha512-fiLfwlWWwYz657SxcNfPKsl4HiItqj7mNZuMPlxsiKSyT/+pwTNzMttCafy2v0144SNmHEslZS1nQfc1Nq715g==
+  dependencies:
+    eslint-scope "^5.1.0"
+
 "@angular/cli@~10.1.3":
   version "10.1.3"
   resolved "https://registry.yarnpkg.com/@angular/cli/-/cli-10.1.3.tgz#188f99583814e97727787869065d228c1b1f4407"
@@ -10806,7 +10827,7 @@ eslint-scope@^5.0.0:
     esrecurse "^4.1.0"
     estraverse "^4.1.1"
 
-eslint-scope@^5.1.1:
+eslint-scope@^5.1.0, eslint-scope@^5.1.1:
   version "5.1.1"
   resolved "https://registry.yarnpkg.com/eslint-scope/-/eslint-scope-5.1.1.tgz#e786e59a66cb92b3f6c1fb0d508aab174848f48c"
   integrity sha512-2NxwbF/hZ0KpepYN0cNbo+FN6XoK7GaHlQhgx/hIZl6Va0bF45RQOOwhLIy8lQDbuCiadSLCBnH2CFYquit5bw==

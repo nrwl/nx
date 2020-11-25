@@ -22,6 +22,10 @@ import { updateProject } from './lib/update-project';
 import { updateTsConfig } from './lib/update-tsconfig';
 import { Schema } from './schema';
 import { enableStrictTypeChecking } from './lib/enable-strict-type-checking';
+import {
+  createAngularEslintJson,
+  extraEslintDependencies,
+} from '../../utils/lint';
 
 export default function (schema: Schema): Rule {
   return (host: Tree): Rule => {
@@ -47,6 +51,14 @@ export default function (schema: Schema): Rule {
       }),
       addLintFiles(options.projectRoot, options.linter, {
         onlyGlobal: options.linter === Linter.TsLint,
+        localConfig:
+          options.linter === Linter.TsLint
+            ? undefined
+            : createAngularEslintJson(options.projectRoot, options.prefix),
+        extraPackageDeps:
+          options.linter === Linter.TsLint
+            ? undefined
+            : extraEslintDependencies,
       }),
       addUnitTestRunner(options),
       // TODO: Remove this after Angular 10.1.0

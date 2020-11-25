@@ -1,27 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`app --linter eslint should add an architect target for lint 1`] = `
-Object {
-  "builder": "@nrwl/linter:eslint",
-  "options": Object {
-    "lintFilePatterns": Array [
-      "apps/my-app/src/**/*.ts",
-    ],
-  },
-}
-`;
-
-exports[`app --linter eslint should add an architect target for lint 2`] = `
-Object {
-  "builder": "@nrwl/linter:eslint",
-  "options": Object {
-    "lintFilePatterns": Array [
-      "apps/my-app-e2e/**/*.{js,ts}",
-    ],
-  },
-}
-`;
-
 exports[`app nested should update workspace.json 1`] = `
 Object {
   "architect": Object {

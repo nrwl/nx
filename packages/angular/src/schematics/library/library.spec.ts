@@ -1204,4 +1204,85 @@ describe('lib', () => {
       );
     });
   });
+
+  describe('--linter', () => {
+    describe('eslint', () => {
+      it('should add an architect target for lint', async () => {
+        const tree = await runSchematic(
+          'lib',
+          { name: 'myLib', linter: 'eslint' },
+          appTree
+        );
+        const workspaceJson = readJsonInTree(tree, 'workspace.json');
+        expect(workspaceJson.projects['my-lib'].architect.lint)
+          .toMatchInlineSnapshot(`
+          Object {
+            "builder": "@nrwl/linter:eslint",
+            "options": Object {
+              "lintFilePatterns": Array [
+                "libs/my-lib/src/**/*.ts",
+                "libs/my-lib/src/**/*.html",
+              ],
+            },
+          }
+        `);
+      });
+
+      it('should add valid eslint JSON configuration which extends from Nx presets', async () => {
+        const tree = await runSchematic(
+          'lib',
+          { name: 'myLib', linter: 'eslint' },
+          appTree
+        );
+
+        const eslintConfig = readJsonInTree(tree, 'libs/my-lib/.eslintrc.json');
+
+        expect(eslintConfig.overrides).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "extends": Array [
+                "plugin:@nrwl/nx/angular",
+                "plugin:@angular-eslint/template/process-inline-templates",
+              ],
+              "files": Array [
+                "*.ts",
+              ],
+              "parserOptions": Object {
+                "project": Array [
+                  "libs/my-lib/tsconfig.*?.json",
+                ],
+              },
+              "rules": Object {
+                "@angular-eslint/component-selector": Array [
+                  "error",
+                  Object {
+                    "prefix": "proj",
+                    "style": "kebab-case",
+                    "type": "element",
+                  },
+                ],
+                "@angular-eslint/directive-selector": Array [
+                  "error",
+                  Object {
+                    "prefix": "proj",
+                    "style": "camelCase",
+                    "type": "attribute",
+                  },
+                ],
+              },
+            },
+            Object {
+              "extends": Array [
+                "plugin:@nrwl/nx/angular-template",
+              ],
+              "files": Array [
+                "*.html",
+              ],
+              "rules": Object {},
+            },
+          ]
+        `);
+      });
+    });
+  });
 });
