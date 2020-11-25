@@ -78,7 +78,7 @@ describe('NodePackageBuilder', () => {
               data: {
                 files: [],
                 root: 'libs/nodelib',
-                architect: { build: { builder: 'any builder' } },
+                targets: { build: { executor: 'any builder' } },
               },
             },
             'nodelib-child': {
@@ -88,9 +88,9 @@ describe('NodePackageBuilder', () => {
                 files: [],
                 root: 'libs/nodelib-child',
                 prefix: 'proj',
-                architect: {
+                targets: {
                   build: {
-                    builder: 'any builder',
+                    executor: 'any builder',
                     options: {
                       assets: [],
                       main: 'libs/nodelib-child/src/index.ts',
@@ -269,7 +269,7 @@ describe('NodePackageBuilder', () => {
               data: {
                 files: [],
                 root: 'libs/nodelib',
-                architect: { build: { builder: 'any builder' } },
+                targets: { build: { executor: 'any builder' } },
               },
             },
             'nodelib-child': {
@@ -279,9 +279,9 @@ describe('NodePackageBuilder', () => {
                 files: [],
                 root: 'libs/nodelib-child',
                 prefix: 'proj',
-                architect: {
+                targets: {
                   build: {
-                    builder: 'any builder',
+                    executor: 'any builder',
                     options: {
                       assets: [],
                       main: 'libs/nodelib-child/src/index.ts',

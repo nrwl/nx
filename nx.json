@@ -34,9 +34,13 @@
     "tao": {
       "tags": []
     },
+    "devkit": {
+      "tags": ["tao"],
+      "implicitDependencies": ["tao"]
+    },
     "workspace": {
       "tags": [],
-      "implicitDependencies": ["tao", "cli"]
+      "implicitDependencies": ["tao", "cli", "devkit"]
     },
     "web": {
       "tags": [],
@@ -95,7 +99,8 @@
       "implicitDependencies": ["nx-plugin"]
     },
     "cli": {
-      "tags": []
+      "tags": [],
+      "implicitDependencies": ["tao"]
     },
     "angular": {
       "tags": [],

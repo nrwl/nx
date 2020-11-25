@@ -40,18 +40,32 @@ export function getPluginCapabilities(
     const packageJson = readJsonFile(packageJsonPath);
     return {
       name: pluginName,
-      schematics: tryGetCollection(
-        workspaceRoot,
-        pluginName,
-        packageJson.schematics,
-        'schematics'
-      ),
-      builders: tryGetCollection(
-        workspaceRoot,
-        pluginName,
-        packageJson.builders,
-        'builders'
-      ),
+      generators:
+        tryGetCollection(
+          workspaceRoot,
+          pluginName,
+          packageJson.generators,
+          'generators'
+        ) ||
+        tryGetCollection(
+          workspaceRoot,
+          pluginName,
+          packageJson.schematics,
+          'schematics'
+        ),
+      executors:
+        tryGetCollection(
+          workspaceRoot,
+          pluginName,
+          packageJson.executors,
+          'executors'
+        ) ||
+        tryGetCollection(
+          workspaceRoot,
+          pluginName,
+          packageJson.builders,
+          'builders'
+        ),
     };
   } catch {
     return null;
@@ -76,23 +90,23 @@ export function listPluginCapabilities(pluginName: string) {
     return;
   }
 
-  const hasBuilders = hasElements(plugin.builders);
-  const hasSchematics = hasElements(plugin.schematics);
+  const hasBuilders = hasElements(plugin.executors);
+  const hasGenerators = hasElements(plugin.generators);
 
-  if (!hasBuilders && !hasSchematics) {
+  if (!hasBuilders && !hasGenerators) {
     output.warn({ title: `No capabilities found in ${pluginName}` });
     return;
   }
 
   const bodyLines = [];
 
-  if (hasSchematics) {
-    bodyLines.push(terminal.bold(terminal.green('SCHEMATICS')));
+  if (hasGenerators) {
+    bodyLines.push(terminal.bold(terminal.green('GENERATORS')));
     bodyLines.push('');
     bodyLines.push(
-      ...Object.keys(plugin.schematics).map(
+      ...Object.keys(plugin.generators).map(
         (name) =>
-          `${terminal.bold(name)} : ${plugin.schematics[name].description}`
+          `${terminal.bold(name)} : ${plugin.generators[name].description}`
       )
     );
     if (hasBuilders) {
@@ -101,12 +115,12 @@ export function listPluginCapabilities(pluginName: string) {
   }
 
   if (hasBuilders) {
-    bodyLines.push(terminal.bold(terminal.green('BUILDERS')));
+    bodyLines.push(terminal.bold(terminal.green('EXECUTORS/BUILDERS')));
     bodyLines.push('');
     bodyLines.push(
-      ...Object.keys(plugin.builders).map(
+      ...Object.keys(plugin.executors).map(
         (name) =>
-          `${terminal.bold(name)} : ${plugin.builders[name].description}`
+          `${terminal.bold(name)} : ${plugin.executors[name].description}`
       )
     );
   }

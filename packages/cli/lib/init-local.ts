@@ -9,39 +9,35 @@ import { parseRunOneOptions } from './parse-run-one-options';
  * @param workspace Relevant local workspace properties
  */
 process.env.NX_CLI_SET = 'true';
+
 export function initLocal(workspace: Workspace) {
   require('@nrwl/workspace/' + 'src/utils/perf-logging');
+  require('@nrwl/tao/src/compat/compat.js');
+
   const supportedNxCommands = require('@nrwl/workspace/' +
     'src/command-line/supported-nx-commands').supportedNxCommands;
+
   const runOpts = runOneOptions(workspace);
+  const running = runOpts !== false;
 
   if (supportedNxCommands.includes(process.argv[2])) {
     // required to make sure nrwl/workspace import works
-    if (workspace.type === 'nx') {
-      require('@nrwl/tao/src/compat/compat.js');
-    }
     require('@nrwl/workspace' + '/src/command-line/nx-commands').commandsObject
       .argv;
+  } else if (running) {
+    require('@nrwl/workspace' + '/src/command-line/run-one').runOne(runOpts);
+  } else if (generating()) {
+    loadCli(workspace, '@nrwl/tao/index.js');
   } else {
-    if (runOpts === false || process.env.NX_SKIP_TASKS_RUNNER) {
-      loadCli(workspace);
+    if (workspace.type === 'nx') {
+      loadCli(workspace, '@nrwl/tao/index.js');
     } else {
-      require('@nrwl/workspace' + '/src/command-line/run-one').runOne(runOpts);
+      loadCli(workspace, '@angular/cli/lib/init.js');
     }
   }
 }
 
-function loadCli(workspace: Workspace) {
-  let cliPath: string;
-  if (workspace.type === 'nx') {
-    cliPath = '@nrwl/tao/index.js';
-  } else if (workspace.type === 'angular') {
-    cliPath = '@angular/cli/lib/init.js';
-  } else {
-    console.error(`Cannot recognize the workspace type.`);
-    process.exit(1);
-  }
-
+function loadCli(workspace: Workspace, cliPath: string) {
   try {
     const cli = require.resolve(cliPath, { paths: [workspace.dir] });
     require(cli);
@@ -55,10 +51,6 @@ function runOneOptions(
   workspace: Workspace
 ): false | { project; target; configuration; parsedArgs } {
   try {
-    const nxJson = JSON.parse(
-      fs.readFileSync(path.join(workspace.dir, 'nx.json')).toString()
-    );
-
     const workspaceConfigJson = JSON.parse(
       fs
         .readFileSync(
@@ -70,12 +62,13 @@ function runOneOptions(
         .toString()
     );
 
-    return parseRunOneOptions(
-      nxJson,
-      workspaceConfigJson,
-      process.argv.slice(2)
-    );
+    return parseRunOneOptions(workspaceConfigJson, process.argv.slice(2));
   } catch (e) {
     return false;
   }
+}
+
+function generating(): boolean {
+  const command = process.argv.slice(2)[0];
+  return command === 'g' || command === 'generate';
 }

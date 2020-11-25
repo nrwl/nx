@@ -419,8 +419,9 @@ function createFetcher(packageManager: string, logger: logging.Logger) {
       const dir = dirSync().name;
       logger.info(`Fetching ${packageName}@${packageVersion}`);
       const install = getPackageManagerInstallCommand(packageManager);
-      execSync(`${install} ${packageName}@${packageVersion} --prefix=${dir}`, {
+      execSync(`${install} ${packageName}@${packageVersion}`, {
         stdio: [],
+        cwd: dir,
       });
       const packageJsonPath = require.resolve(`${packageName}/package.json`, {
         paths: [dir],
@@ -564,14 +565,11 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       );
     }
   } catch (e) {
-    const startVersion = versions(root, {})('@nrwl/workspace');
-    const installDev = getPackageManagerInstallCommand(packageManager, true);
     logger.error(
       `NX The migrate command failed. Try the following to migrate your workspace:`
     );
-    logger.error(`> ${installDev} @nrwl/workspace@latest`);
     logger.error(
-      `> nx migrate ${opts.targetPackage}@${opts.targetVersion} --from="@nrwl/workspace@${startVersion}"`
+      `> npx @nrwl/tao@latest migrate ${opts.targetPackage}@${opts.targetVersion}`
     );
     logger.error(
       `This will use the newest version of the migrate functionality, which might have your issue resolved.`

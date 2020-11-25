@@ -2,6 +2,8 @@
   "title": "Run Commands",
   "description": "Run any custom commands with Nx",
   "type": "object",
+  "cli": "nx",
+  "outputCapture": "pipe",
   "properties": {
     "commands": {
       "type": "array",
@@ -16,8 +18,7 @@
               },
               "forwardAllArgs": {
                 "type": "boolean",
-                "description": "Whether arguments should be forwarded when interpolation is not present",
-                "default": true
+                "description": "Whether arguments should be forwarded when interpolation is not present"
               }
             },
             "additionalProperties": false,

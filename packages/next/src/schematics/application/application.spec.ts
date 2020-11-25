@@ -44,6 +44,7 @@ describe('app', () => {
     it('should generate files', async () => {
       const tree = await runSchematic('app', { name: 'myApp' }, appTree);
       expect(tree.exists('apps/my-app/tsconfig.json')).toBeTruthy();
+      expect(tree.exists('apps/my-app/tsconfig.app.json')).toBeTruthy();
       expect(tree.exists('apps/my-app/pages/index.tsx')).toBeTruthy();
       expect(tree.exists('apps/my-app/specs/index.spec.tsx')).toBeTruthy();
     });

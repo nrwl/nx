@@ -12,7 +12,6 @@ export {
   renameSync,
   updateJsonFile,
   readJsonFile,
-  readWorkspaceConfigPath,
   copyFile,
   createDirectory,
 } from './src/utils/fileutils';
@@ -86,5 +85,7 @@ export { setDefaultCollection } from './src/utils/rules/workspace';
 import * as strings from './src/utils/strings';
 export { checkAndCleanWithSemver } from './src/utils/version-utils';
 export { updatePackagesInPackageJson } from './src/utils/update-packages-in-package-json';
+
+export { libraryGenerator } from './src/schematics/library/library';
 
 export const stringUtils = strings;

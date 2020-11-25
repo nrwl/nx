@@ -513,7 +513,7 @@ export function updateJsonInTree<T = any, O = T>(
 export function updateWorkspaceInTree<T = any, O = T>(
   callback: (json: T, context: SchematicContext, host: Tree) => O
 ): Rule {
-  return (host: Tree, context: SchematicContext): Tree => {
+  return (host: Tree, context: SchematicContext = undefined): Tree => {
     const path = getWorkspacePath(host);
     host.overwrite(
       path,
@@ -833,7 +833,7 @@ function renameFile(tree: Tree, from: string, to: string) {
   if (!buffer) {
     return;
   }
-  tree.create(to, buffer.toString());
+  tree.create(to, buffer);
   tree.delete(from);
 }
 

@@ -75,6 +75,24 @@ describe('lib', () => {
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
     });
 
+    it('should update tsconfig.lib.prod.json when enableIvy', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          framework: 'angular',
+          buildable: true,
+          enableIvy: true,
+        },
+        appTree
+      );
+      const tsConfig = readJsonInTree(
+        tree,
+        '/libs/my-lib/tsconfig.lib.prod.json'
+      );
+      expect(tsConfig.angularCompilerOptions['enableIvy']).toBe(true);
+    });
+
     it('should update workspace.json', async () => {
       const tree = await runSchematic(
         'lib',

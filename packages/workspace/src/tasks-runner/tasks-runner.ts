@@ -1,12 +1,11 @@
 import { Observable } from 'rxjs';
-import { Target } from '@angular-devkit/architect';
 
 import { ProjectGraph } from '../core/project-graph';
 import { NxJson } from '../core/shared-interfaces';
 
 export interface Task {
   id: string;
-  target: Target;
+  target: { target: string; project: string; configuration?: string };
   overrides: any;
   hash?: string;
   projectRoot?: string;

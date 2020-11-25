@@ -236,9 +236,9 @@
             "file": "angular/cli/workspace-lint"
           },
           {
-            "name": "workspace-schematic",
-            "id": "workspace-schematic",
-            "file": "angular/cli/workspace-schematic"
+            "name": "workspace-generator",
+            "id": "workspace-generator",
+            "file": "angular/cli/workspace-generator"
           }
         ]
       },
@@ -263,44 +263,44 @@
                 "file": "shared/workspace-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "library",
                     "id": "library",
-                    "file": "angular/api-workspace/schematics/library"
+                    "file": "angular/api-workspace/generators/library"
                   },
                   {
                     "name": "move",
                     "id": "move",
-                    "file": "angular/api-workspace/schematics/move"
+                    "file": "angular/api-workspace/generators/move"
                   },
                   {
                     "name": "remove",
                     "id": "remove",
-                    "file": "angular/api-workspace/schematics/remove"
+                    "file": "angular/api-workspace/generators/remove"
                   },
                   {
                     "name": "run-commands",
                     "id": "run-commands",
-                    "file": "angular/api-workspace/schematics/run-commands"
+                    "file": "angular/api-workspace/generators/run-commands"
                   },
                   {
-                    "name": "workspace-schematic",
-                    "id": "workspace-schematic",
-                    "file": "angular/api-workspace/schematics/workspace-schematic"
+                    "name": "workspace-generator",
+                    "id": "workspace-generator",
+                    "file": "angular/api-workspace/generators/workspace-generator"
                   }
                 ]
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "run-commands",
                     "id": "run-commands",
-                    "file": "angular/api-workspace/builders/run-commands"
+                    "file": "angular/api-workspace/executors/run-commands"
                   }
                 ]
               }
@@ -317,34 +317,39 @@
                 "file": "shared/web-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "angular/api-web/schematics/application"
+                    "file": "angular/api-web/generators/application"
                   }
                 ]
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "build",
                     "id": "build",
-                    "file": "angular/api-web/builders/build"
+                    "file": "angular/api-web/executors/build"
                   },
                   {
                     "name": "dev-server",
                     "id": "dev-server",
-                    "file": "angular/api-web/builders/dev-server"
+                    "file": "angular/api-web/executors/dev-server"
+                  },
+                  {
+                    "name": "file-server",
+                    "id": "file-server",
+                    "file": "angular/api-web/executors/file-server"
                   },
                   {
                     "name": "package",
                     "id": "package",
-                    "file": "angular/api-web/builders/package"
+                    "file": "angular/api-web/executors/package"
                   }
                 ]
               }
@@ -361,79 +366,79 @@
                 "file": "shared/angular-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "angular/api-angular/schematics/application"
+                    "file": "angular/api-angular/generators/application"
                   },
                   {
                     "name": "downgrade-module",
                     "id": "downgrade-module",
-                    "file": "angular/api-angular/schematics/downgrade-module"
+                    "file": "angular/api-angular/generators/downgrade-module"
                   },
                   {
                     "name": "karma-project",
                     "id": "karma-project",
-                    "file": "angular/api-angular/schematics/karma-project"
+                    "file": "angular/api-angular/generators/karma-project"
                   },
                   {
                     "name": "karma",
                     "id": "karma",
-                    "file": "angular/api-angular/schematics/karma"
+                    "file": "angular/api-angular/generators/karma"
                   },
                   {
                     "name": "library",
                     "id": "library",
-                    "file": "angular/api-angular/schematics/library"
+                    "file": "angular/api-angular/generators/library"
                   },
                   {
                     "name": "move",
                     "id": "move",
-                    "file": "angular/api-angular/schematics/move"
+                    "file": "angular/api-angular/generators/move"
                   },
                   {
                     "name": "ngrx",
                     "id": "ngrx",
-                    "file": "angular/api-angular/schematics/ngrx"
+                    "file": "angular/api-angular/generators/ngrx"
                   },
                   {
                     "name": "stories",
                     "id": "stories",
-                    "file": "angular/api-angular/schematics/stories"
+                    "file": "angular/api-angular/generators/stories"
                   },
                   {
                     "name": "storybook-configuration",
                     "id": "storybook-configuration",
-                    "file": "angular/api-angular/schematics/storybook-configuration"
+                    "file": "angular/api-angular/generators/storybook-configuration"
                   },
                   {
                     "name": "upgrade-module",
                     "id": "upgrade-module",
-                    "file": "angular/api-angular/schematics/upgrade-module"
+                    "file": "angular/api-angular/generators/upgrade-module"
                   }
                 ]
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "package",
                     "id": "package",
-                    "file": "angular/api-angular/builders/package"
+                    "file": "angular/api-angular/executors/package"
                   },
                   {
                     "name": "ng packagr lite",
                     "id": "ng-packagr-lite",
-                    "file": "angular/api-angular/builders/ng-packagr-lite"
+                    "file": "angular/api-angular/executors/ng-packagr-lite"
                   },
                   {
                     "name": "webpack-browser",
                     "id": "webpack-browser",
-                    "file": "angular/api-angular/builders/webpack-browser"
+                    "file": "angular/api-angular/executors/webpack-browser"
                   }
                 ]
               }
@@ -450,48 +455,48 @@
                 "file": "shared/react-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "angular/api-react/schematics/application"
+                    "file": "angular/api-react/generators/application"
                   },
                   {
                     "name": "component",
                     "id": "component",
-                    "file": "angular/api-react/schematics/component"
+                    "file": "angular/api-react/generators/component"
                   },
                   {
                     "name": "component-cypress-spec",
                     "id": "component-cypress-spec",
-                    "file": "angular/api-react/schematics/component-cypress-spec"
+                    "file": "angular/api-react/generators/component-cypress-spec"
                   },
                   {
                     "name": "component-story",
                     "id": "component-story",
-                    "file": "angular/api-react/schematics/component-story"
+                    "file": "angular/api-react/generators/component-story"
                   },
                   {
                     "name": "library",
                     "id": "library",
-                    "file": "angular/api-react/schematics/library"
+                    "file": "angular/api-react/generators/library"
                   },
                   {
                     "name": "redux",
                     "id": "redux",
-                    "file": "angular/api-react/schematics/redux"
+                    "file": "angular/api-react/generators/redux"
                   },
                   {
                     "name": "stories",
                     "id": "stories",
-                    "file": "angular/api-react/schematics/stories"
+                    "file": "angular/api-react/generators/stories"
                   },
                   {
                     "name": "storybook-configuration",
                     "id": "storybook-configuration",
-                    "file": "angular/api-react/schematics/storybook-configuration"
+                    "file": "angular/api-react/generators/storybook-configuration"
                   }
                 ]
               }
@@ -508,13 +513,13 @@
                 "file": "shared/jest-plugin"
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "jest",
                     "id": "jest",
-                    "file": "angular/api-jest/builders/jest"
+                    "file": "angular/api-jest/executors/jest"
                   }
                 ]
               }
@@ -531,13 +536,13 @@
                 "file": "shared/cypress-plugin"
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "cypress",
                     "id": "cypress",
-                    "file": "angular/api-cypress/builders/cypress"
+                    "file": "angular/api-cypress/executors/cypress"
                   }
                 ]
               }
@@ -554,34 +559,34 @@
                 "file": "angular/guides/storybook-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "configuration",
                     "id": "configuration",
-                    "file": "angular/api-storybook/schematics/configuration"
+                    "file": "angular/api-storybook/generators/configuration"
                   },
                   {
                     "name": "cypress-project",
                     "id": "cypress-project",
-                    "file": "angular/api-storybook/schematics/cypress-project"
+                    "file": "angular/api-storybook/generators/cypress-project"
                   }
                 ]
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "build",
                     "id": "build",
-                    "file": "angular/api-storybook/builders/build"
+                    "file": "angular/api-storybook/executors/build"
                   },
                   {
                     "name": "storybook",
                     "id": "storybook",
-                    "file": "angular/api-storybook/builders/storybook"
+                    "file": "angular/api-storybook/executors/storybook"
                   }
                 ]
               }
@@ -592,18 +597,18 @@
             "id": "linter",
             "itemList": [
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "eslint",
                     "id": "eslint",
-                    "file": "angular/api-linter/builders/eslint"
+                    "file": "angular/api-linter/executors/eslint"
                   },
                   {
                     "name": "lint",
                     "id": "lint",
-                    "file": "angular/api-linter/builders/lint"
+                    "file": "angular/api-linter/executors/lint"
                   }
                 ]
               }
@@ -620,39 +625,39 @@
                 "file": "shared/node-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "angular/api-node/schematics/application"
+                    "file": "angular/api-node/generators/application"
                   },
                   {
                     "name": "library",
                     "id": "library",
-                    "file": "angular/api-node/schematics/library"
+                    "file": "angular/api-node/generators/library"
                   }
                 ]
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "build",
                     "id": "build",
-                    "file": "angular/api-node/builders/build"
+                    "file": "angular/api-node/executors/build"
                   },
                   {
                     "name": "execute",
                     "id": "execute",
-                    "file": "angular/api-node/builders/execute"
+                    "file": "angular/api-node/executors/execute"
                   },
                   {
                     "name": "package",
                     "id": "package",
-                    "file": "angular/api-node/builders/package"
+                    "file": "angular/api-node/executors/package"
                   }
                 ]
               }
@@ -669,13 +674,13 @@
                 "file": "shared/express-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "angular/api-express/schematics/application"
+                    "file": "angular/api-express/generators/application"
                   }
                 ]
               }
@@ -692,88 +697,88 @@
                 "file": "shared/nest-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "angular/api-nest/schematics/application"
+                    "file": "angular/api-nest/generators/application"
                   },
                   {
                     "name": "class",
                     "id": "class",
-                    "file": "angular/api-nest/schematics/class"
+                    "file": "angular/api-nest/generators/class"
                   },
                   {
                     "name": "controller",
                     "id": "controller",
-                    "file": "angular/api-nest/schematics/controller"
+                    "file": "angular/api-nest/generators/controller"
                   },
                   {
                     "name": "decorator",
                     "id": "decorator",
-                    "file": "angular/api-nest/schematics/decorator"
+                    "file": "angular/api-nest/generators/decorator"
                   },
                   {
                     "name": "filter",
                     "id": "filter",
-                    "file": "angular/api-nest/schematics/filter"
+                    "file": "angular/api-nest/generators/filter"
                   },
                   {
                     "name": "gateway",
                     "id": "gateway",
-                    "file": "angular/api-nest/schematics/gateway"
+                    "file": "angular/api-nest/generators/gateway"
                   },
                   {
                     "name": "guard",
                     "id": "guard",
-                    "file": "angular/api-nest/schematics/guard"
+                    "file": "angular/api-nest/generators/guard"
                   },
                   {
                     "name": "interceptor",
                     "id": "interceptor",
-                    "file": "angular/api-nest/schematics/interceptor"
+                    "file": "angular/api-nest/generators/interceptor"
                   },
                   {
                     "name": "interface",
                     "id": "interface",
-                    "file": "angular/api-nest/schematics/interface"
+                    "file": "angular/api-nest/generators/interface"
                   },
                   {
                     "name": "library",
                     "id": "library",
-                    "file": "angular/api-nest/schematics/library"
+                    "file": "angular/api-nest/generators/library"
                   },
                   {
                     "name": "middleware",
                     "id": "middleware",
-                    "file": "angular/api-nest/schematics/middleware"
+                    "file": "angular/api-nest/generators/middleware"
                   },
                   {
                     "name": "module",
                     "id": "module",
-                    "file": "angular/api-nest/schematics/module"
+                    "file": "angular/api-nest/generators/module"
                   },
                   {
                     "name": "pipe",
                     "id": "pipe",
-                    "file": "angular/api-nest/schematics/pipe"
+                    "file": "angular/api-nest/generators/pipe"
                   },
                   {
                     "name": "provider",
                     "id": "provider",
-                    "file": "angular/api-nest/schematics/provider"
+                    "file": "angular/api-nest/generators/provider"
                   },
                   {
                     "name": "resolver",
                     "id": "resolver",
-                    "file": "angular/api-nest/schematics/resolver"
+                    "file": "angular/api-nest/generators/resolver"
                   },
                   {
                     "name": "service",
                     "id": "service",
-                    "file": "angular/api-nest/schematics/service"
+                    "file": "angular/api-nest/generators/service"
                   }
                 ]
               }
@@ -790,44 +795,44 @@
                 "file": "shared/next-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "angular/api-next/schematics/application"
+                    "file": "angular/api-next/generators/application"
                   },
                   {
                     "name": "component",
                     "id": "component",
-                    "file": "angular/api-next/schematics/component"
+                    "file": "angular/api-next/generators/component"
                   },
                   {
                     "name": "page",
                     "id": "page",
-                    "file": "angular/api-next/schematics/page"
+                    "file": "angular/api-next/generators/page"
                   }
                 ]
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "build",
                     "id": "build",
-                    "file": "angular/api-next/builders/build"
+                    "file": "angular/api-next/executors/build"
                   },
                   {
                     "name": "server",
                     "id": "server",
-                    "file": "angular/api-next/builders/server"
+                    "file": "angular/api-next/executors/server"
                   },
                   {
                     "name": "export",
                     "id": "export",
-                    "file": "angular/api-next/builders/export"
+                    "file": "angular/api-next/executors/export"
                   }
                 ]
               }
@@ -844,39 +849,39 @@
                 "file": "shared/nx-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "builder",
                     "id": "builder",
-                    "file": "angular/api-nx-plugin/schematics/builder"
+                    "file": "angular/api-nx-plugin/generators/builder"
                   },
                   {
                     "name": "migration",
                     "id": "migration",
-                    "file": "angular/api-nx-plugin/schematics/migration"
+                    "file": "angular/api-nx-plugin/generators/migration"
                   },
                   {
                     "name": "plugin",
                     "id": "plugin",
-                    "file": "angular/api-nx-plugin/schematics/plugin"
+                    "file": "angular/api-nx-plugin/generators/plugin"
                   },
                   {
                     "name": "schematic",
                     "id": "schematic",
-                    "file": "angular/api-nx-plugin/schematics/schematic"
+                    "file": "angular/api-nx-plugin/generators/schematic"
                   }
                 ]
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "e2e",
                     "id": "e2e",
-                    "file": "angular/api-nx-plugin/builders/e2e"
+                    "file": "angular/api-nx-plugin/executors/e2e"
                   }
                 ]
               }
@@ -900,8 +905,8 @@
             "file": "angular/guides/configuration"
           },
           {
-            "name": "Builders",
-            "id": "builders",
+            "name": "Executors / Builders",
+            "id": "executors",
             "itemList": [
               {
                 "name": "Using Builders",
@@ -926,8 +931,8 @@
             "file": "shared/computation-caching"
           },
           {
-            "name": "Schematics",
-            "id": "schematics",
+            "name": "Generators",
+            "id": "generators",
             "itemList": [
               {
                 "name": "Using Schematics",
@@ -936,8 +941,8 @@
               },
               {
                 "name": "Workspace Schematics",
-                "id": "workspace-schematics",
-                "file": "shared/tools-workspace-schematics"
+                "id": "workspace-generators",
+                "file": "shared/tools-workspace-generators"
               }
             ]
           },
@@ -1324,9 +1329,9 @@
             "file": "react/cli/workspace-lint"
           },
           {
-            "name": "workspace-schematic",
-            "id": "workspace-schematic",
-            "file": "react/cli/workspace-schematic"
+            "name": "workspace-generator",
+            "id": "workspace-generator",
+            "file": "react/cli/workspace-generator"
           }
         ]
       },
@@ -1351,44 +1356,44 @@
                 "file": "shared/workspace-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "library",
                     "id": "library",
-                    "file": "react/api-workspace/schematics/library"
+                    "file": "react/api-workspace/generators/library"
                   },
                   {
                     "name": "move",
                     "id": "move",
-                    "file": "react/api-workspace/schematics/move"
+                    "file": "react/api-workspace/generators/move"
                   },
                   {
                     "name": "remove",
                     "id": "remove",
-                    "file": "react/api-workspace/schematics/remove"
+                    "file": "react/api-workspace/generators/remove"
                   },
                   {
                     "name": "run-commands",
                     "id": "run-commands",
-                    "file": "react/api-workspace/schematics/run-commands"
+                    "file": "react/api-workspace/generators/run-commands"
                   },
                   {
-                    "name": "workspace-schematic",
-                    "id": "workspace-schematic",
-                    "file": "react/api-workspace/schematics/workspace-schematic"
+                    "name": "workspace-generator",
+                    "id": "workspace-generator",
+                    "file": "react/api-workspace/generators/workspace-generator"
                   }
                 ]
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "run-commands",
                     "id": "run-commands",
-                    "file": "react/api-workspace/builders/run-commands"
+                    "file": "react/api-workspace/executors/run-commands"
                   }
                 ]
               }
@@ -1405,34 +1410,39 @@
                 "file": "shared/web-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "react/api-web/schematics/application"
+                    "file": "react/api-web/generators/application"
                   }
                 ]
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "build",
                     "id": "build",
-                    "file": "react/api-web/builders/build"
+                    "file": "react/api-web/executors/build"
                   },
                   {
                     "name": "dev-server",
                     "id": "dev-server",
-                    "file": "react/api-web/builders/dev-server"
+                    "file": "react/api-web/executors/dev-server"
+                  },
+                  {
+                    "name": "file-server",
+                    "id": "file-server",
+                    "file": "react/api-web/executors/file-server"
                   },
                   {
                     "name": "package",
                     "id": "package",
-                    "file": "react/api-web/builders/package"
+                    "file": "react/api-web/executors/package"
                   }
                 ]
               }
@@ -1449,79 +1459,79 @@
                 "file": "shared/angular-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "react/api-angular/schematics/application"
+                    "file": "react/api-angular/generators/application"
                   },
                   {
                     "name": "downgrade-module",
                     "id": "downgrade-module",
-                    "file": "react/api-angular/schematics/downgrade-module"
+                    "file": "react/api-angular/generators/downgrade-module"
                   },
                   {
                     "name": "karma-project",
                     "id": "karma-project",
-                    "file": "react/api-angular/schematics/karma-project"
+                    "file": "react/api-angular/generators/karma-project"
                   },
                   {
                     "name": "karma",
                     "id": "karma",
-                    "file": "react/api-angular/schematics/karma"
+                    "file": "react/api-angular/generators/karma"
                   },
                   {
                     "name": "library",
                     "id": "library",
-                    "file": "react/api-angular/schematics/library"
+                    "file": "react/api-angular/generators/library"
                   },
                   {
                     "name": "move",
                     "id": "move",
-                    "file": "react/api-angular/schematics/move"
+                    "file": "react/api-angular/generators/move"
                   },
                   {
                     "name": "ngrx",
                     "id": "ngrx",
-                    "file": "react/api-angular/schematics/ngrx"
+                    "file": "react/api-angular/generators/ngrx"
                   },
                   {
                     "name": "stories",
                     "id": "stories",
-                    "file": "react/api-angular/schematics/stories"
+                    "file": "react/api-angular/generators/stories"
                   },
                   {
                     "name": "storybook-configuration",
                     "id": "storybook-configuration",
-                    "file": "react/api-angular/schematics/storybook-configuration"
+                    "file": "react/api-angular/generators/storybook-configuration"
                   },
                   {
                     "name": "upgrade-module",
                     "id": "upgrade-module",
-                    "file": "react/api-angular/schematics/upgrade-module"
+                    "file": "react/api-angular/generators/upgrade-module"
                   }
                 ]
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "package",
                     "id": "package",
-                    "file": "react/api-angular/builders/package"
+                    "file": "react/api-angular/executors/package"
                   },
                   {
                     "name": "ng packagr lite",
                     "id": "ng-packagr-lite",
-                    "file": "react/api-angular/builders/ng-packagr-lite"
+                    "file": "react/api-angular/executors/ng-packagr-lite"
                   },
                   {
                     "name": "webpack-browser",
                     "id": "webpack-browser",
-                    "file": "react/api-angular/builders/webpack-browser"
+                    "file": "react/api-angular/executors/webpack-browser"
                   }
                 ]
               }
@@ -1538,48 +1548,48 @@
                 "file": "shared/react-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "react/api-react/schematics/application"
+                    "file": "react/api-react/generators/application"
                   },
                   {
                     "name": "component",
                     "id": "component",
-                    "file": "react/api-react/schematics/component"
+                    "file": "react/api-react/generators/component"
                   },
                   {
                     "name": "component-cypress-spec",
                     "id": "component-cypress-spec",
-                    "file": "react/api-react/schematics/component-cypress-spec"
+                    "file": "react/api-react/generators/component-cypress-spec"
                   },
                   {
                     "name": "component-story",
                     "id": "component-story",
-                    "file": "react/api-react/schematics/component-story"
+                    "file": "react/api-react/generators/component-story"
                   },
                   {
                     "name": "library",
                     "id": "library",
-                    "file": "react/api-react/schematics/library"
+                    "file": "react/api-react/generators/library"
                   },
                   {
                     "name": "redux",
                     "id": "redux",
-                    "file": "react/api-react/schematics/redux"
+                    "file": "react/api-react/generators/redux"
                   },
                   {
                     "name": "stories",
                     "id": "stories",
-                    "file": "react/api-react/schematics/stories"
+                    "file": "react/api-react/generators/stories"
                   },
                   {
                     "name": "storybook-configuration",
                     "id": "storybook-configuration",
-                    "file": "react/api-react/schematics/storybook-configuration"
+                    "file": "react/api-react/generators/storybook-configuration"
                   }
                 ]
               }
@@ -1596,13 +1606,13 @@
                 "file": "shared/jest-plugin"
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "jest",
                     "id": "jest",
-                    "file": "react/api-jest/builders/jest"
+                    "file": "react/api-jest/executors/jest"
                   }
                 ]
               }
@@ -1619,13 +1629,13 @@
                 "file": "shared/cypress-plugin"
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "cypress",
                     "id": "cypress",
-                    "file": "react/api-cypress/builders/cypress"
+                    "file": "react/api-cypress/executors/cypress"
                   }
                 ]
               }
@@ -1642,34 +1652,34 @@
                 "file": "react/guides/storybook-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "configuration",
                     "id": "configuration",
-                    "file": "react/api-storybook/schematics/configuration"
+                    "file": "react/api-storybook/generators/configuration"
                   },
                   {
                     "name": "cypress-project",
                     "id": "cypress-project",
-                    "file": "react/api-storybook/schematics/cypress-project"
+                    "file": "react/api-storybook/generators/cypress-project"
                   }
                 ]
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "build",
                     "id": "build",
-                    "file": "react/api-storybook/builders/build"
+                    "file": "react/api-storybook/executors/build"
                   },
                   {
                     "name": "storybook",
                     "id": "storybook",
-                    "file": "react/api-storybook/builders/storybook"
+                    "file": "react/api-storybook/executors/storybook"
                   }
                 ]
               }
@@ -1680,18 +1690,18 @@
             "id": "linter",
             "itemList": [
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "eslint",
                     "id": "eslint",
-                    "file": "react/api-linter/builders/eslint"
+                    "file": "react/api-linter/executors/eslint"
                   },
                   {
                     "name": "lint",
                     "id": "lint",
-                    "file": "react/api-linter/builders/lint"
+                    "file": "react/api-linter/executors/lint"
                   }
                 ]
               }
@@ -1708,39 +1718,39 @@
                 "file": "shared/node-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "react/api-node/schematics/application"
+                    "file": "react/api-node/generators/application"
                   },
                   {
                     "name": "library",
                     "id": "library",
-                    "file": "react/api-node/schematics/library"
+                    "file": "react/api-node/generators/library"
                   }
                 ]
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "build",
                     "id": "build",
-                    "file": "react/api-node/builders/build"
+                    "file": "react/api-node/executors/build"
                   },
                   {
                     "name": "execute",
                     "id": "execute",
-                    "file": "react/api-node/builders/execute"
+                    "file": "react/api-node/executors/execute"
                   },
                   {
                     "name": "package",
                     "id": "package",
-                    "file": "react/api-node/builders/package"
+                    "file": "react/api-node/executors/package"
                   }
                 ]
               }
@@ -1757,13 +1767,13 @@
                 "file": "shared/express-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "react/api-express/schematics/application"
+                    "file": "react/api-express/generators/application"
                   }
                 ]
               }
@@ -1780,88 +1790,88 @@
                 "file": "shared/nest-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "react/api-nest/schematics/application"
+                    "file": "react/api-nest/generators/application"
                   },
                   {
                     "name": "class",
                     "id": "class",
-                    "file": "react/api-nest/schematics/class"
+                    "file": "react/api-nest/generators/class"
                   },
                   {
                     "name": "controller",
                     "id": "controller",
-                    "file": "react/api-nest/schematics/controller"
+                    "file": "react/api-nest/generators/controller"
                   },
                   {
                     "name": "decorator",
                     "id": "decorator",
-                    "file": "react/api-nest/schematics/decorator"
+                    "file": "react/api-nest/generators/decorator"
                   },
                   {
                     "name": "filter",
                     "id": "filter",
-                    "file": "react/api-nest/schematics/filter"
+                    "file": "react/api-nest/generators/filter"
                   },
                   {
                     "name": "gateway",
                     "id": "gateway",
-                    "file": "react/api-nest/schematics/gateway"
+                    "file": "react/api-nest/generators/gateway"
                   },
                   {
                     "name": "guard",
                     "id": "guard",
-                    "file": "react/api-nest/schematics/guard"
+                    "file": "react/api-nest/generators/guard"
                   },
                   {
                     "name": "interceptor",
                     "id": "interceptor",
-                    "file": "react/api-nest/schematics/interceptor"
+                    "file": "react/api-nest/generators/interceptor"
                   },
                   {
                     "name": "interface",
                     "id": "interface",
-                    "file": "react/api-nest/schematics/interface"
+                    "file": "react/api-nest/generators/interface"
                   },
                   {
                     "name": "library",
                     "id": "library",
-                    "file": "react/api-nest/schematics/library"
+                    "file": "react/api-nest/generators/library"
                   },
                   {
                     "name": "middleware",
                     "id": "middleware",
-                    "file": "react/api-nest/schematics/middleware"
+                    "file": "react/api-nest/generators/middleware"
                   },
                   {
                     "name": "module",
                     "id": "module",
-                    "file": "react/api-nest/schematics/module"
+                    "file": "react/api-nest/generators/module"
                   },
                   {
                     "name": "pipe",
                     "id": "pipe",
-                    "file": "react/api-nest/schematics/pipe"
+                    "file": "react/api-nest/generators/pipe"
                   },
                   {
                     "name": "provider",
                     "id": "provider",
-                    "file": "react/api-nest/schematics/provider"
+                    "file": "react/api-nest/generators/provider"
                   },
                   {
                     "name": "resolver",
                     "id": "resolver",
-                    "file": "react/api-nest/schematics/resolver"
+                    "file": "react/api-nest/generators/resolver"
                   },
                   {
                     "name": "service",
                     "id": "service",
-                    "file": "react/api-nest/schematics/service"
+                    "file": "react/api-nest/generators/service"
                   }
                 ]
               }
@@ -1878,44 +1888,44 @@
                 "file": "shared/next-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "react/api-next/schematics/application"
+                    "file": "react/api-next/generators/application"
                   },
                   {
                     "name": "component",
                     "id": "component",
-                    "file": "react/api-next/schematics/component"
+                    "file": "react/api-next/generators/component"
                   },
                   {
                     "name": "page",
                     "id": "page",
-                    "file": "react/api-next/schematics/page"
+                    "file": "react/api-next/generators/page"
                   }
                 ]
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "build",
                     "id": "build",
-                    "file": "react/api-next/builders/build"
+                    "file": "react/api-next/executors/build"
                   },
                   {
                     "name": "server",
                     "id": "server",
-                    "file": "react/api-next/builders/server"
+                    "file": "react/api-next/executors/server"
                   },
                   {
                     "name": "export",
                     "id": "export",
-                    "file": "react/api-next/builders/export"
+                    "file": "react/api-next/executors/export"
                   }
                 ]
               }
@@ -1932,39 +1942,39 @@
                 "file": "shared/nx-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "builder",
                     "id": "builder",
-                    "file": "react/api-nx-plugin/schematics/builder"
+                    "file": "react/api-nx-plugin/generators/builder"
                   },
                   {
                     "name": "migration",
                     "id": "migration",
-                    "file": "react/api-nx-plugin/schematics/migration"
+                    "file": "react/api-nx-plugin/generators/migration"
                   },
                   {
                     "name": "plugin",
                     "id": "plugin",
-                    "file": "react/api-nx-plugin/schematics/plugin"
+                    "file": "react/api-nx-plugin/generators/plugin"
                   },
                   {
                     "name": "schematic",
                     "id": "schematic",
-                    "file": "react/api-nx-plugin/schematics/schematic"
+                    "file": "react/api-nx-plugin/generators/schematic"
                   }
                 ]
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "e2e",
                     "id": "e2e",
-                    "file": "react/api-nx-plugin/builders/e2e"
+                    "file": "react/api-nx-plugin/executors/e2e"
                   }
                 ]
               }
@@ -1988,8 +1998,8 @@
             "file": "react/guides/configuration"
           },
           {
-            "name": "Builders",
-            "id": "builders",
+            "name": "Executors / Builders",
+            "id": "executors",
             "itemList": [
               {
                 "name": "Using Builders",
@@ -2014,8 +2024,8 @@
             "file": "shared/computation-caching"
           },
           {
-            "name": "Schematics",
-            "id": "schematics",
+            "name": "Generators",
+            "id": "generators",
             "itemList": [
               {
                 "name": "Using Schematics",
@@ -2024,8 +2034,8 @@
               },
               {
                 "name": "Workspace Schematics",
-                "id": "workspace-schematics",
-                "file": "shared/tools-workspace-schematics"
+                "id": "workspace-generators",
+                "file": "shared/tools-workspace-generators"
               }
             ]
           },
@@ -2365,9 +2375,9 @@
             "file": "node/cli/workspace-lint"
           },
           {
-            "name": "workspace-schematic",
-            "id": "workspace-schematic",
-            "file": "node/cli/workspace-schematic"
+            "name": "workspace-generator",
+            "id": "workspace-generator",
+            "file": "node/cli/workspace-generator"
           }
         ]
       },
@@ -2392,44 +2402,44 @@
                 "file": "shared/workspace-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "library",
                     "id": "library",
-                    "file": "node/api-workspace/schematics/library"
+                    "file": "node/api-workspace/generators/library"
                   },
                   {
                     "name": "move",
                     "id": "move",
-                    "file": "node/api-workspace/schematics/move"
+                    "file": "node/api-workspace/generators/move"
                   },
                   {
                     "name": "remove",
                     "id": "remove",
-                    "file": "node/api-workspace/schematics/remove"
+                    "file": "node/api-workspace/generators/remove"
                   },
                   {
                     "name": "run-commands",
                     "id": "run-commands",
-                    "file": "node/api-workspace/schematics/run-commands"
+                    "file": "node/api-workspace/generators/run-commands"
                   },
                   {
-                    "name": "workspace-schematic",
-                    "id": "workspace-schematic",
-                    "file": "node/api-workspace/schematics/workspace-schematic"
+                    "name": "workspace-generator",
+                    "id": "workspace-generator",
+                    "file": "node/api-workspace/generators/workspace-generator"
                   }
                 ]
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "run-commands",
                     "id": "run-commands",
-                    "file": "node/api-workspace/builders/run-commands"
+                    "file": "node/api-workspace/executors/run-commands"
                   }
                 ]
               }
@@ -2446,34 +2456,39 @@
                 "file": "shared/web-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "node/api-web/schematics/application"
+                    "file": "node/api-web/generators/application"
                   }
                 ]
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "build",
                     "id": "build",
-                    "file": "node/api-web/builders/build"
+                    "file": "node/api-web/executors/build"
                   },
                   {
                     "name": "dev-server",
                     "id": "dev-server",
-                    "file": "node/api-web/builders/dev-server"
+                    "file": "node/api-web/executors/dev-server"
+                  },
+                  {
+                    "name": "file-server",
+                    "id": "file-server",
+                    "file": "node/api-web/executors/file-server"
                   },
                   {
                     "name": "package",
                     "id": "package",
-                    "file": "node/api-web/builders/package"
+                    "file": "node/api-web/executors/package"
                   }
                 ]
               }
@@ -2490,79 +2505,79 @@
                 "file": "shared/angular-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "node/api-angular/schematics/application"
+                    "file": "node/api-angular/generators/application"
                   },
                   {
                     "name": "downgrade-module",
                     "id": "downgrade-module",
-                    "file": "node/api-angular/schematics/downgrade-module"
+                    "file": "node/api-angular/generators/downgrade-module"
                   },
                   {
                     "name": "karma-project",
                     "id": "karma-project",
-                    "file": "node/api-angular/schematics/karma-project"
+                    "file": "node/api-angular/generators/karma-project"
                   },
                   {
                     "name": "karma",
                     "id": "karma",
-                    "file": "node/api-angular/schematics/karma"
+                    "file": "node/api-angular/generators/karma"
                   },
                   {
                     "name": "library",
                     "id": "library",
-                    "file": "node/api-angular/schematics/library"
+                    "file": "node/api-angular/generators/library"
                   },
                   {
                     "name": "move",
                     "id": "move",
-                    "file": "node/api-angular/schematics/move"
+                    "file": "node/api-angular/generators/move"
                   },
                   {
                     "name": "ngrx",
                     "id": "ngrx",
-                    "file": "node/api-angular/schematics/ngrx"
+                    "file": "node/api-angular/generators/ngrx"
                   },
                   {
                     "name": "stories",
                     "id": "stories",
-                    "file": "node/api-angular/schematics/stories"
+                    "file": "node/api-angular/generators/stories"
                   },
                   {
                     "name": "storybook-configuration",
                     "id": "storybook-configuration",
-                    "file": "node/api-angular/schematics/storybook-configuration"
+                    "file": "node/api-angular/generators/storybook-configuration"
                   },
                   {
                     "name": "upgrade-module",
                     "id": "upgrade-module",
-                    "file": "node/api-angular/schematics/upgrade-module"
+                    "file": "node/api-angular/generators/upgrade-module"
                   }
                 ]
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "package",
                     "id": "package",
-                    "file": "node/api-angular/builders/package"
+                    "file": "node/api-angular/executors/package"
                   },
                   {
                     "name": "ng packagr lite",
                     "id": "ng-packagr-lite",
-                    "file": "node/api-angular/builders/ng-packagr-lite"
+                    "file": "node/api-angular/executors/ng-packagr-lite"
                   },
                   {
                     "name": "webpack-browser",
                     "id": "webpack-browser",
-                    "file": "node/api-angular/builders/webpack-browser"
+                    "file": "node/api-angular/executors/webpack-browser"
                   }
                 ]
               }
@@ -2579,48 +2594,48 @@
                 "file": "shared/react-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "node/api-react/schematics/application"
+                    "file": "node/api-react/generators/application"
                   },
                   {
                     "name": "component",
                     "id": "component",
-                    "file": "node/api-react/schematics/component"
+                    "file": "node/api-react/generators/component"
                   },
                   {
                     "name": "component-cypress-spec",
                     "id": "component-cypress-spec",
-                    "file": "node/api-react/schematics/component-cypress-spec"
+                    "file": "node/api-react/generators/component-cypress-spec"
                   },
                   {
                     "name": "component-story",
                     "id": "component-story",
-                    "file": "node/api-react/schematics/component-story"
+                    "file": "node/api-react/generators/component-story"
                   },
                   {
                     "name": "library",
                     "id": "library",
-                    "file": "node/api-react/schematics/library"
+                    "file": "node/api-react/generators/library"
                   },
                   {
                     "name": "redux",
                     "id": "redux",
-                    "file": "node/api-react/schematics/redux"
+                    "file": "node/api-react/generators/redux"
                   },
                   {
                     "name": "stories",
                     "id": "stories",
-                    "file": "node/api-react/schematics/stories"
+                    "file": "node/api-react/generators/stories"
                   },
                   {
                     "name": "storybook-configuration",
                     "id": "storybook-configuration",
-                    "file": "node/api-react/schematics/storybook-configuration"
+                    "file": "node/api-react/generators/storybook-configuration"
                   }
                 ]
               }
@@ -2637,13 +2652,13 @@
                 "file": "shared/jest-plugin"
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "jest",
                     "id": "jest",
-                    "file": "node/api-jest/builders/jest"
+                    "file": "node/api-jest/executors/jest"
                   }
                 ]
               }
@@ -2660,13 +2675,13 @@
                 "file": "shared/cypress-plugin"
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "cypress",
                     "id": "cypress",
-                    "file": "node/api-cypress/builders/cypress"
+                    "file": "node/api-cypress/executors/cypress"
                   }
                 ]
               }
@@ -2677,34 +2692,34 @@
             "id": "storybook",
             "itemList": [
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "configuration",
                     "id": "configuration",
-                    "file": "node/api-storybook/schematics/configuration"
+                    "file": "node/api-storybook/generators/configuration"
                   },
                   {
                     "name": "cypress-project",
                     "id": "cypress-project",
-                    "file": "node/api-storybook/schematics/cypress-project"
+                    "file": "node/api-storybook/generators/cypress-project"
                   }
                 ]
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "build",
                     "id": "build",
-                    "file": "node/api-storybook/builders/build"
+                    "file": "node/api-storybook/executors/build"
                   },
                   {
                     "name": "storybook",
                     "id": "storybook",
-                    "file": "node/api-storybook/builders/storybook"
+                    "file": "node/api-storybook/executors/storybook"
                   }
                 ]
               }
@@ -2715,18 +2730,18 @@
             "id": "linter",
             "itemList": [
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "eslint",
                     "id": "eslint",
-                    "file": "node/api-linter/builders/eslint"
+                    "file": "node/api-linter/executors/eslint"
                   },
                   {
                     "name": "lint",
                     "id": "lint",
-                    "file": "node/api-linter/builders/lint"
+                    "file": "node/api-linter/executors/lint"
                   }
                 ]
               }
@@ -2743,39 +2758,39 @@
                 "file": "shared/node-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "node/api-node/schematics/application"
+                    "file": "node/api-node/generators/application"
                   },
                   {
                     "name": "library",
                     "id": "library",
-                    "file": "node/api-node/schematics/library"
+                    "file": "node/api-node/generators/library"
                   }
                 ]
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "build",
                     "id": "build",
-                    "file": "node/api-node/builders/build"
+                    "file": "node/api-node/executors/build"
                   },
                   {
                     "name": "execute",
                     "id": "execute",
-                    "file": "node/api-node/builders/execute"
+                    "file": "node/api-node/executors/execute"
                   },
                   {
                     "name": "package",
                     "id": "package",
-                    "file": "node/api-node/builders/package"
+                    "file": "node/api-node/executors/package"
                   }
                 ]
               }
@@ -2792,13 +2807,13 @@
                 "file": "shared/express-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "node/api-express/schematics/application"
+                    "file": "node/api-express/generators/application"
                   }
                 ]
               }
@@ -2815,88 +2830,88 @@
                 "file": "shared/nest-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "node/api-nest/schematics/application"
+                    "file": "node/api-nest/generators/application"
                   },
                   {
                     "name": "class",
                     "id": "class",
-                    "file": "node/api-nest/schematics/class"
+                    "file": "node/api-nest/generators/class"
                   },
                   {
                     "name": "controller",
                     "id": "controller",
-                    "file": "node/api-nest/schematics/controller"
+                    "file": "node/api-nest/generators/controller"
                   },
                   {
                     "name": "decorator",
                     "id": "decorator",
-                    "file": "node/api-nest/schematics/decorator"
+                    "file": "node/api-nest/generators/decorator"
                   },
                   {
                     "name": "filter",
                     "id": "filter",
-                    "file": "node/api-nest/schematics/filter"
+                    "file": "node/api-nest/generators/filter"
                   },
                   {
                     "name": "gateway",
                     "id": "gateway",
-                    "file": "node/api-nest/schematics/gateway"
+                    "file": "node/api-nest/generators/gateway"
                   },
                   {
                     "name": "guard",
                     "id": "guard",
-                    "file": "node/api-nest/schematics/guard"
+                    "file": "node/api-nest/generators/guard"
                   },
                   {
                     "name": "interceptor",
                     "id": "interceptor",
-                    "file": "node/api-nest/schematics/interceptor"
+                    "file": "node/api-nest/generators/interceptor"
                   },
                   {
                     "name": "interface",
                     "id": "interface",
-                    "file": "node/api-nest/schematics/interface"
+                    "file": "node/api-nest/generators/interface"
                   },
                   {
                     "name": "library",
                     "id": "library",
-                    "file": "node/api-nest/schematics/library"
+                    "file": "node/api-nest/generators/library"
                   },
                   {
                     "name": "middleware",
                     "id": "middleware",
-                    "file": "node/api-nest/schematics/middleware"
+                    "file": "node/api-nest/generators/middleware"
                   },
                   {
                     "name": "module",
                     "id": "module",
-                    "file": "node/api-nest/schematics/module"
+                    "file": "node/api-nest/generators/module"
                   },
                   {
                     "name": "pipe",
                     "id": "pipe",
-                    "file": "node/api-nest/schematics/pipe"
+                    "file": "node/api-nest/generators/pipe"
                   },
                   {
                     "name": "provider",
                     "id": "provider",
-                    "file": "node/api-nest/schematics/provider"
+                    "file": "node/api-nest/generators/provider"
                   },
                   {
                     "name": "resolver",
                     "id": "resolver",
-                    "file": "node/api-nest/schematics/resolver"
+                    "file": "node/api-nest/generators/resolver"
                   },
                   {
                     "name": "service",
                     "id": "service",
-                    "file": "node/api-nest/schematics/service"
+                    "file": "node/api-nest/generators/service"
                   }
                 ]
               }
@@ -2913,44 +2928,44 @@
                 "file": "shared/next-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "application",
                     "id": "application",
-                    "file": "node/api-next/schematics/application"
+                    "file": "node/api-next/generators/application"
                   },
                   {
                     "name": "component",
                     "id": "component",
-                    "file": "node/api-next/schematics/component"
+                    "file": "node/api-next/generators/component"
                   },
                   {
                     "name": "page",
                     "id": "page",
-                    "file": "node/api-next/schematics/page"
+                    "file": "node/api-next/generators/page"
                   }
                 ]
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "build",
                     "id": "build",
-                    "file": "node/api-next/builders/build"
+                    "file": "node/api-next/executors/build"
                   },
                   {
                     "name": "server",
                     "id": "server",
-                    "file": "node/api-next/builders/server"
+                    "file": "node/api-next/executors/server"
                   },
                   {
                     "name": "export",
                     "id": "export",
-                    "file": "node/api-next/builders/export"
+                    "file": "node/api-next/executors/export"
                   }
                 ]
               }
@@ -2967,39 +2982,39 @@
                 "file": "shared/nx-plugin"
               },
               {
-                "id": "schematics",
-                "name": "Schematics",
+                "id": "generators",
+                "name": "Generators",
                 "itemList": [
                   {
                     "name": "builder",
                     "id": "builder",
-                    "file": "node/api-nx-plugin/schematics/builder"
+                    "file": "node/api-nx-plugin/generators/builder"
                   },
                   {
                     "name": "migration",
                     "id": "migration",
-                    "file": "node/api-nx-plugin/schematics/migration"
+                    "file": "node/api-nx-plugin/generators/migration"
                   },
                   {
                     "name": "plugin",
                     "id": "plugin",
-                    "file": "node/api-nx-plugin/schematics/plugin"
+                    "file": "node/api-nx-plugin/generators/plugin"
                   },
                   {
                     "name": "schematic",
                     "id": "schematic",
-                    "file": "node/api-nx-plugin/schematics/schematic"
+                    "file": "node/api-nx-plugin/generators/schematic"
                   }
                 ]
               },
               {
-                "id": "builders",
-                "name": "Builders",
+                "id": "executors",
+                "name": "Executors / Builders",
                 "itemList": [
                   {
                     "name": "e2e",
                     "id": "e2e",
-                    "file": "node/api-nx-plugin/builders/e2e"
+                    "file": "node/api-nx-plugin/executors/e2e"
                   }
                 ]
               }
@@ -3023,8 +3038,8 @@
             "file": "node/guides/configuration"
           },
           {
-            "name": "Builders",
-            "id": "builders",
+            "name": "Executors / Builders",
+            "id": "executors",
             "itemList": [
               {
                 "name": "Using Builders",
@@ -3049,8 +3064,8 @@
             "file": "shared/computation-caching"
           },
           {
-            "name": "Schematics",
-            "id": "schematics",
+            "name": "Generators",
+            "id": "generators",
             "itemList": [
               {
                 "name": "Using Schematics",
@@ -3059,8 +3074,8 @@
               },
               {
                 "name": "Workspace Schematics",
-                "id": "workspace-schematics",
-                "file": "shared/tools-workspace-schematics"
+                "id": "workspace-generators",
+                "file": "shared/tools-workspace-generators"
               }
             ]
           },

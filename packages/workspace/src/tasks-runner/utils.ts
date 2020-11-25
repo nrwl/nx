@@ -57,14 +57,14 @@ export function getOutputsForTargetAndConfiguration(
     return [task.overrides?.outputPath];
   }
   const { target, configuration } = task.target;
-  const architect = node.data.architect[target];
-  if (architect && architect.outputs) return architect.outputs;
+  const targets = node.data.targets[target];
+  if (targets && targets.outputs) return targets.outputs;
 
-  let opts = architect.options || {};
-  if (architect.configurations && architect.configurations[configuration]) {
+  let opts = targets.options || {};
+  if (targets.configurations && targets.configurations[configuration]) {
     opts = {
       ...opts,
-      ...architect.configurations[configuration],
+      ...targets.configurations[configuration],
     };
   }
 

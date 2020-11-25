@@ -28,8 +28,8 @@ import {
 
 import { generateProjectLint, addLintFiles } from '../../utils/lint';
 import { addProjectToNxJsonInTree, libsDir } from '../../utils/ast-utils';
-import { cliCommand } from '../../core/file-utils';
 import { toJS, updateTsConfigsToJs, maybeJs } from '../../utils/rules/to-js';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -96,7 +96,7 @@ function createFiles(options: NormalizedSchema): Rule {
         className,
         name,
         propertyName,
-        cliCommand: cliCommand(),
+        cliCommand: 'nx',
         tmpl: '',
         offsetFromRoot: offsetFromRoot(options.projectRoot),
         hasUnitTestRunner: options.unitTestRunner !== 'none',
@@ -141,6 +141,11 @@ export default function (schema: Schema): Rule {
     ])(host, context);
   };
 }
+
+export const libraryGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/workspace',
+  'library'
+);
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const name = toFileName(options.name);
