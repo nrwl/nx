@@ -8,16 +8,16 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import * as path from 'path';
-import { <%= className %>SchematicSchema } from './schema';
+import { <%= className %>GeneratorSchema } from './schema';
 
-interface NormalizedSchema extends <%= className %>SchematicSchema { 
+interface NormalizedSchema extends <%= className %>GeneratorSchema {
   projectName: string;
   projectRoot: string;
   projectDirectory: string;
   parsedTags: string[]
 }
 
-function normalizeOptions(host: Tree, options: <%= className %>SchematicSchema): NormalizedSchema {
+function normalizeOptions(host: Tree, options: <%= className %>GeneratorSchema): NormalizedSchema {
   const name = names(options.name).fileName;
   const projectDirectory = options.directory
     ? `${names(options.directory).fileName}/${name}`
@@ -47,7 +47,7 @@ function addFiles(host: Tree, options: NormalizedSchema) {
     generateFiles(host, path.join(__dirname, 'files'), options.projectRoot, templateOptions);
 }
 
-export default async function (host: Tree, options: <%= className %>SchematicSchema) {
+export default async function (host: Tree, options: <%= className %>GeneratorSchema) {
   const normalizedOptions = normalizeOptions(host, options);
   addProjectToWorkspace(
     host,

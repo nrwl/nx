@@ -12,7 +12,7 @@ describe('<%= pluginName %> e2e', () => {
         await runNxCommandAsync(`generate <%=npmPackageName%>:<%= pluginName %> ${plugin}`);
 
         const result = await runNxCommandAsync(`build ${plugin}`);
-        expect(result.stdout).toContain('Builder ran');
+        expect(result.stdout).toContain('Executor ran');
 
         done();
     })

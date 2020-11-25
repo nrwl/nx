@@ -97,7 +97,7 @@ describe('Nx Plugin', () => {
     );
     const migrationsJson = readJson(`libs/${plugin}/migrations.json`);
     expect(migrationsJson).toMatchObject({
-      generators: expect.objectContaining({
+      schematics: expect.objectContaining({
         [`update-${version}`]: {
           version: version,
           description: `update-${version}`,
@@ -137,8 +137,8 @@ describe('Nx Plugin', () => {
       `dist/libs/${plugin}/src/generators/${generator}/generator.js`,
       `dist/libs/${plugin}/src/generators/${generator}/generator.spec.ts`
     );
-    const collectionJson = readJson(`libs/${plugin}/collection.json`);
-    expect(collectionJson).toMatchObject({
+    const generatorJson = readJson(`libs/${plugin}/generators.json`);
+    expect(generatorJson).toMatchObject({
       generators: expect.objectContaining({
         [generator]: {
           factory: `./src/generators/${generator}/generator`,

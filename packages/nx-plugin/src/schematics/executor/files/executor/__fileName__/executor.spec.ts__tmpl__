@@ -1,5 +1,5 @@
 import { <%= className %>ExecutorSchema } from './schema';
-import generator from './executor';
+import executor from './executor';
 
 const options: <%= className %>ExecutorSchema = {};
 

@@ -23,7 +23,7 @@ export function normalizeOptions(
   if (options.description) {
     description = options.description;
   } else {
-    description = `${options.name} builder`;
+    description = `${options.name} executor`;
   }
 
   return {

@@ -1,29 +1,30 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Tree } from '@nrwl/devkit';
 
-import schematic from './schematic';
-import { <%= className %>SchematicSchema } from './schema';
+import generator from './generator';
+import { <%= className %>GeneratorSchema } from './schema';
 
-describe('<%= name %> schematic', () => {
+describe('<%= name %> generator', () => {
   let appTree: Tree;
-  const options: <%= className %>SchematicSchema = { name: 'test' };
+  const options: <%= className %>GeneratorSchema = { name: 'test' };
 
   beforeEach(() => {
     appTree = createTreeWithEmptyWorkspace();
   });
 
   it('should run successfully', async () => {
-    schematic(appTree, options);
+    generator(appTree, options);
     const workspace = JSON.parse(appTree.read('workspace.json').toString());
     expect(workspace.projects['test']).toMatchInlineSnapshot(`
       Object {
-        "architect": Object {
-          "build": Object {
-            "builder": "<%= npmPackageName %>:build",
-          },
-        },
+        "projectType": "library",
         "root": "libs/test",
         "sourceRoot": "libs/test/src",
+        "targets": Object {
+          "build": Object {
+            "executor": "<%= npmPackageName %>:build",
+          },
+        },
       }
     `);
 

@@ -79,7 +79,7 @@ describe('NxPlugin executor', () => {
     const executorsJson = readJsonInTree(tree, 'libs/my-plugin/executors.json');
 
     expect(executorsJson.executors['my-executor'].description).toEqual(
-      'my-executor builder'
+      'my-executor executor'
     );
   });
 
