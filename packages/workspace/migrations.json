@@ -139,6 +139,11 @@
       "version": "11.0.0-beta.3",
       "description": "Update the decoration script when using Angular CLI",
       "factory": "./src/migrations/update-11-0-0/update-decorate-angular-cli"
+    },
+    "update-node-types": {
+      "version": "11.0.0-beta.3",
+      "description": "Update the @types/node package",
+      "factory": "./src/migrations/update-11-0-0/update-node-types"
     }
   },
   "packageJsonUpdates": {
@@ -798,6 +803,15 @@
       "packages": {
         "prettier": {
           "version": "2.1.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "11.0.0": {
+      "version": "11.0.0-beta.3",
+      "packages": {
+        "@types/node": {
+          "version": "12.12.38",
           "alwaysAddToPackageJson": false
         }
       }
