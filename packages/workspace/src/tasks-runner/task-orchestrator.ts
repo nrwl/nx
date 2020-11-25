@@ -291,6 +291,7 @@ export class TaskOrchestrator {
       ...envsFromFiles,
       FORCE_COLOR: forceColor,
       ...process.env,
+      NX_TASK_HASH: task.hash,
       NX_INVOKED_BY_RUNNER: 'true',
       NX_WORKSPACE_ROOT: this.workspaceRoot,
     };
