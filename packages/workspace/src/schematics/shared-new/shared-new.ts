@@ -17,8 +17,6 @@ import {
   updateWorkspaceInTree,
 } from '../../utils/ast-utils';
 
-import { toFileName } from '../../utils/name-utils';
-
 import { formatFiles } from '../../utils/rules/format-files';
 
 import { nxVersion } from '../../utils/versions';
@@ -28,6 +26,7 @@ import { spawn } from 'child_process';
 import { getPackageManagerExecuteCommand } from '../../utils/detect-package-manager';
 // @ts-ignore
 import yargsParser = require('yargs-parser');
+import { names } from '@nrwl/devkit';
 
 export interface Schema {
   directory: string;
@@ -257,7 +256,7 @@ function addTasks(options: Schema) {
 }
 
 function normalizeOptions(options: Schema): Schema {
-  options.name = toFileName(options.name);
+  options.name = names(options.name).fileName;
   if (!options.directory) {
     options.directory = options.name;
   }

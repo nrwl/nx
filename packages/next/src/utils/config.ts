@@ -1,4 +1,3 @@
-import { offsetFromRoot } from '@nrwl/workspace';
 import {
   PHASE_DEVELOPMENT_SERVER,
   PHASE_EXPORT,
@@ -12,6 +11,7 @@ import { Configuration } from 'webpack';
 import { FileReplacement, NextBuildBuilderOptions } from './types';
 import { BuilderContext } from '@angular-devkit/architect';
 import { createCopyPlugin } from '@nrwl/web/src/utils/config';
+import { offsetFromRoot } from '@nrwl/devkit';
 
 export function createWebpackConfig(
   workspaceRoot: string,

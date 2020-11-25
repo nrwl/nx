@@ -9,29 +9,73 @@ import {
 import { mkdirpSync, rmdirSync } from 'fs-extra';
 const chalk = require('chalk');
 
+/**
+ * Virtual file system tree.
+ */
 export interface Tree {
+  /**
+   * Root of the workspace. All paths are relative to this.
+   */
   root: string;
 
+  /**
+   * Read the contents of a file.
+   */
   read(filePath: string): Buffer | null;
 
+  /**
+   * Update the contents of a file or create a new file.
+   */
   write(filePath: string, content: Buffer | string): void;
 
+  /**
+   * Check if a file exists.
+   */
   exists(filePath: string): boolean;
 
+  /**
+   * Delete the file.
+   */
   delete(filePath: string): void;
 
+  /**
+   * Rename the file or the folder.
+   */
   rename(from: string, to: string): void;
 
+  /**
+   * Check if this is a file or not.
+   */
   isFile(filePath: string): boolean;
 
+  /**
+   * Returns the list of children of a folder.
+   */
   children(dirPath: string): string[];
 
+  /**
+   * Returns the list of currently recorded changes.
+   */
   listChanges(): FileChange[];
 }
 
+/**
+ * Description of a file change in the Nx virtual file system/
+ */
 export interface FileChange {
+  /**
+   * Path relative to the workspace root
+   */
   path: string;
+
+  /**
+   * Type of change: 'CREATE' | 'DELETE' | 'UPDATE'
+   */
   type: 'CREATE' | 'DELETE' | 'UPDATE';
+
+  /**
+   * The content of the file or null in case of delete.
+   */
   content: Buffer | null;
 }
 

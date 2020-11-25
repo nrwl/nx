@@ -23,12 +23,8 @@ import {
   getNpmScope,
   getProjectConfig,
   insert,
-  names,
   NxJson,
-  offsetFromRoot,
   readJsonInTree,
-  toClassName,
-  toFileName,
   updateJsonInTree,
   updateWorkspaceInTree,
 } from '@nrwl/workspace';
@@ -52,6 +48,7 @@ import { Schema } from './schema';
 import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
 import { initRootBabelConfig } from '@nrwl/web/src/utils/rules';
 import { updateBabelJestConfig } from '../../rules/update-babel-jest-config';
+import { names, offsetFromRoot } from '@nrwl/devkit';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -303,7 +300,7 @@ function updateAppRoutes(
             componentSource,
             {
               routePath: options.routePath,
-              componentName: toClassName(options.name),
+              componentName: names(options.name).className,
               moduleName: `@${npmScope}/${options.projectDirectory}`,
             },
             context
@@ -336,9 +333,9 @@ function readComponent(
 }
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
-  const name = toFileName(options.name);
+  const name = names(options.name).fileName;
   const projectDirectory = options.directory
-    ? `${toFileName(options.directory)}/${name}`
+    ? `${names(options.directory).fileName}/${name}`
     : name;
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');

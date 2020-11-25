@@ -6,8 +6,8 @@ import {
   template,
   url,
 } from '@angular-devkit/schematics';
-import { offsetFromRoot } from '@nrwl/workspace';
 import { NxPluginE2ESchema } from '../schema';
+import { offsetFromRoot } from '@nrwl/devkit';
 
 export function addFiles(options: NxPluginE2ESchema): Rule {
   return mergeWith(

@@ -20,7 +20,7 @@ import {
 import { formatFiles } from '../../utils/rules/format-files';
 
 import * as ts from 'typescript';
-import { toFileName } from '../../utils/name-utils';
+import { names } from '@nrwl/devkit';
 
 export default function (options: Schema): Rule {
   options = normalizeOptions(options);
@@ -70,7 +70,7 @@ function createPreset(options: Schema): Rule {
           '@ungap/custom-elements': '0.1.6',
         }
       ),
-      addPolyfills(`apps/${toFileName(options.name)}/src/polyfills.ts`, [
+      addPolyfills(`apps/${names(options.name).fileName}/src/polyfills.ts`, [
         '@ungap/custom-elements',
       ]),
       setDefaultCollection('@nrwl/web'),
@@ -358,6 +358,6 @@ function addPolyfills(polyfillsPath: string, polyfills: string[]): Rule {
 }
 
 function normalizeOptions(options: Schema): Schema {
-  options.name = toFileName(options.name);
+  options.name = names(options.name).fileName;
   return options;
 }

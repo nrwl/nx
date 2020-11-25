@@ -1,27 +1,23 @@
 import { Tree } from '@nrwl/tao/src/shared/tree';
 import { readJson } from './read-json';
-import { NxJson } from '@nrwl/tao/src/shared/nx';
+import { NxJsonConfiguration } from '@nrwl/tao/src/shared/nx';
 
 /**
- * Gets the configured workspace layout.
+ * Returns workspace defaults. It includes defaults folders for apps and libs,
+ * and the default scope.
  *
- * Defaults to `{ appsDir: 'apps', libsDir: 'libs' }`
- * @param host
+ * Example:
+ *
+ * `{ appsDir: 'apps', libsDir: 'libs', npmScope: 'myorg' }`
+ * @param host - file system tree
  */
 export function getWorkspaceLayout(
   host: Tree
-): { appsDir?: string; libsDir?: string } {
-  const nxJson = readJson<NxJson>(host, 'nx.json');
-  return nxJson.workspaceLayout
+): { appsDir: string; libsDir: string; npmScope: string } {
+  const nxJson = readJson<NxJsonConfiguration>(host, 'nx.json');
+  const layout = nxJson.workspaceLayout
     ? nxJson.workspaceLayout
     : { appsDir: 'apps', libsDir: 'libs' };
-}
-
-/**
- * Returns the path to the workspace.json
- * @param host
- */
-export function getWorkspacePath(host: Tree) {
-  const possibleFiles = ['/workspace.json', '/angular.json', '/.angular.json'];
-  return possibleFiles.filter((path) => host.exists(path))[0];
+  const npmScope = nxJson.npmScope;
+  return { ...layout, npmScope };
 }

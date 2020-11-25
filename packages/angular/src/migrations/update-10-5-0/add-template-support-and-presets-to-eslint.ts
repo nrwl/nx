@@ -4,13 +4,13 @@ import {
   addDepsToPackageJson,
   formatFiles,
   getNpmScope,
-  offsetFromRoot,
   readJsonInTree,
   readWorkspace,
   updateJsonInTree,
   updateWorkspaceInTree,
 } from '@nrwl/workspace';
 import { join } from 'path';
+import { offsetFromRoot } from '@nrwl/devkit';
 
 /**
  * It was decided with Jason that we would do a simple replacement in this migration

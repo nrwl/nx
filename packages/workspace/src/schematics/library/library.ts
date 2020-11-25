@@ -19,17 +19,15 @@ import { Schema } from './schema';
 import {
   updateWorkspaceInTree,
   getNpmScope,
-  toFileName,
-  names,
   updateJsonInTree,
   formatFiles,
-  offsetFromRoot,
 } from '@nrwl/workspace';
 
 import { generateProjectLint, addLintFiles } from '../../utils/lint';
 import { addProjectToNxJsonInTree, libsDir } from '../../utils/ast-utils';
 import { toJS, updateTsConfigsToJs, maybeJs } from '../../utils/rules/to-js';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import { names, offsetFromRoot } from '@nrwl/devkit';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -148,9 +146,9 @@ export const libraryGenerator = wrapAngularDevkitSchematic(
 );
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
-  const name = toFileName(options.name);
+  const name = names(options.name).fileName;
   const projectDirectory = options.directory
-    ? `${toFileName(options.directory)}/${name}`
+    ? `${names(options.directory).fileName}/${name}`
     : name;
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');

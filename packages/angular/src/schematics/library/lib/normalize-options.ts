@@ -1,23 +1,24 @@
 import { Tree } from '@angular-devkit/schematics';
-import { getNpmScope, toClassName, toFileName, NxJson } from '@nrwl/workspace';
-import { libsDir, readJsonInTree } from '@nrwl/workspace/src/utils/ast-utils';
+import { getNpmScope } from '@nrwl/workspace';
+import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
 import { Schema } from '../schema';
 import { NormalizedSchema } from './normalized-schema';
+import { names } from '@nrwl/devkit';
 
 export function normalizeOptions(
   host: Tree,
   options: Schema
 ): NormalizedSchema {
-  const name = toFileName(options.name);
+  const name = names(options.name).fileName;
   const projectDirectory = options.directory
-    ? `${toFileName(options.directory)}/${name}`
+    ? `${names(options.directory).fileName}/${name}`
     : name;
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = options.simpleModuleName ? name : projectName;
   const projectRoot = `${libsDir(host)}/${projectDirectory}`;
 
-  const moduleName = `${toClassName(fileName)}Module`;
+  const moduleName = `${names(fileName).className}Module`;
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];

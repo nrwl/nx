@@ -3,10 +3,10 @@ import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 import { schema } from '@angular-devkit/core';
 import { Rule, Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import { names } from '@nrwl/workspace/src/utils/name-utils';
 import { updateWorkspace } from '@nrwl/workspace/src/utils/workspace';
 import { MockBuilderContext } from '@nrwl/workspace/testing';
 import { join } from 'path';
+import { names } from '@nrwl/devkit';
 
 const testRunner = new SchematicTestRunner(
   '@nrwl/next',

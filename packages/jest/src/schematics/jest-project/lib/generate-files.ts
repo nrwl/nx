@@ -10,8 +10,9 @@ import {
   Tree,
   url,
 } from '@angular-devkit/schematics';
-import { getProjectConfig, offsetFromRoot } from '@nrwl/workspace';
+import { getProjectConfig } from '@nrwl/workspace';
 import { JestProjectSchema } from '../schema';
+import { offsetFromRoot } from '@nrwl/devkit';
 
 export function generateFiles(options: JestProjectSchema): Rule {
   return (tree: Tree, _context: SchematicContext): Rule => {

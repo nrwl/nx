@@ -9,7 +9,7 @@ import {
   Tree,
   url,
 } from '@angular-devkit/schematics';
-import { names } from '@nrwl/workspace';
+import { names } from '@nrwl/devkit';
 import { NormalizedSchema } from '../schema';
 
 export function addFiles(host: Tree, options: NormalizedSchema): Rule {

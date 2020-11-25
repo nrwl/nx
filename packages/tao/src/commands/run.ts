@@ -9,8 +9,8 @@ import {
 } from '../shared/params';
 import { printHelp } from '../shared/print-help';
 import {
-  TargetDefinition,
-  WorkspaceDefinition,
+  TargetConfiguration,
+  WorkspaceConfiguration,
   Workspaces,
 } from '../shared/workspace';
 
@@ -90,7 +90,7 @@ export function printRunHelp(
 }
 
 export function validateTargetAndConfiguration(
-  workspace: WorkspaceDefinition,
+  workspace: WorkspaceConfiguration,
   opts: RunOptions
 ) {
   const project = workspace.projects[opts.project];
@@ -133,8 +133,8 @@ export function validateTargetAndConfiguration(
 
 export interface TargetContext {
   root: string;
-  target: TargetDefinition;
-  workspace: WorkspaceDefinition;
+  target: TargetConfiguration;
+  workspace: WorkspaceConfiguration;
 }
 
 export async function run(root: string, args: string[], isVerbose: boolean) {

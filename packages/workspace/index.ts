@@ -1,11 +1,4 @@
 export { readTsConfig } from './src/utils/typescript';
-export {
-  toPropertyName,
-  toClassName,
-  toFileName,
-  names,
-  findModuleParent,
-} from './src/utils/name-utils';
 export { ProjectType, projectRootDir } from './src/utils/project-type';
 export {
   serializeJson,
@@ -16,7 +9,6 @@ export {
   createDirectory,
 } from './src/utils/fileutils';
 export {
-  offsetFromRoot,
   ExistingPrettierConfig,
   resolveUserExistingPrettierConfig,
 } from './src/utils/common';

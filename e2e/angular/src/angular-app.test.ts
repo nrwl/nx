@@ -1,4 +1,3 @@
-import { toClassName } from '@nrwl/workspace';
 import {
   newProject,
   readFile,
@@ -7,6 +6,7 @@ import {
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
+import { names } from '@nrwl/devkit';
 
 describe('Angular Nrwl app builder', () => {
   let app;
@@ -29,15 +29,15 @@ describe('Angular Nrwl app builder', () => {
       `
         import { BrowserModule } from '@angular/platform-browser';
         import { NgModule } from '@angular/core';
-        import {${toClassName(
-          buildableLib
-        )}Module} from '@proj/${buildableLib}';
+        import {${
+          names(buildableLib).className
+        }Module} from '@proj/${buildableLib}';
         
         import { AppComponent } from './app.component';
         
         @NgModule({
           declarations: [AppComponent],
-          imports: [BrowserModule, ${toClassName(buildableLib)}Module],
+          imports: [BrowserModule, ${names(buildableLib).className}Module],
           providers: [],
           bootstrap: [AppComponent],
         })
