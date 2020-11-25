@@ -144,6 +144,11 @@
       "version": "11.0.0-beta.3",
       "description": "Update the @types/node package",
       "factory": "./src/migrations/update-11-0-0/update-node-types"
+    },
+    "rename-workspace-schematics": {
+      "version": "11.0.0-beta.3",
+      "description": "Rename tools/schematics into tools/generators",
+      "factory": "./src/migrations/update-11-0-0/rename-workspace-schematics"
     }
   },
   "packageJsonUpdates": {
@@ -803,15 +808,6 @@
       "packages": {
         "prettier": {
           "version": "2.1.2",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "11.0.0": {
-      "version": "11.0.0-beta.3",
-      "packages": {
-        "@types/node": {
-          "version": "12.12.38",
           "alwaysAddToPackageJson": false
         }
       }
