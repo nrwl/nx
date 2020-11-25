@@ -1,7 +1,8 @@
 import { Tree } from '@nrwl/tao/src/shared/tree';
 import * as path from 'path';
+import type * as Prettier from 'prettier';
 
-let prettier;
+let prettier: typeof Prettier;
 try {
   prettier = require('prettier');
 } catch (e) {}
@@ -13,9 +14,11 @@ try {
 export async function formatFiles(host: Tree) {
   if (!prettier) return;
 
-  const files = [] as { path: string; content: string }[];
+  const files = new Set(
+    host.listChanges().filter((file) => file.type !== 'DELETE')
+  );
   await Promise.all(
-    files.map(async (file) => {
+    Array.from(files).map(async (file) => {
       const systemPath = path.join(host.root, file.path);
       let options: any = {
         filepath: systemPath,
@@ -33,7 +36,10 @@ export async function formatFiles(host: Tree) {
       }
 
       try {
-        host.write(file.path, prettier.format(file.content, options));
+        host.write(
+          file.path,
+          prettier.format(file.content.toString(), options)
+        );
       } catch (e) {
         console.warn(`Could not format ${file.path} because ${e.message}`);
       }
