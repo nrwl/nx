@@ -12,7 +12,6 @@ import * as autoprefixer from 'autoprefixer';
 import * as rollup from 'rollup';
 import * as peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import * as localResolve from 'rollup-plugin-local-resolve';
-import { toClassName } from '@nrwl/workspace/src/utils/name-utils';
 import { BuildResult } from '@angular-devkit/build-webpack';
 import {
   readJsonFile,
@@ -36,6 +35,7 @@ import {
 } from '../../utils/normalize';
 import { getSourceRoot } from '../../utils/source-root';
 import { deleteOutputDir } from '../../utils/delete-output-dir';
+import { names } from '@nrwl/devkit';
 
 // These use require because the ES import isn't correct.
 const resolve = require('@rollup/plugin-node-resolve');
@@ -244,7 +244,7 @@ export function createRollupOptions(
         globals,
         format: config.format,
         file: `${options.outputPath}/${context.target.project}.${config.extension}.js`,
-        name: options.umdName || toClassName(context.target.project),
+        name: options.umdName || names(context.target.project).className,
       },
       external: (id) => externalPackages.includes(id),
       plugins,

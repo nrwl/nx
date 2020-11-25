@@ -20,9 +20,7 @@ import {
   addLintFiles,
   formatFiles,
 } from '@nrwl/workspace';
-import { toFileName } from '@nrwl/workspace';
 import { getProjectConfig } from '@nrwl/workspace';
-import { offsetFromRoot } from '@nrwl/workspace';
 import init from '../init/init';
 import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
 import {
@@ -30,6 +28,7 @@ import {
   updateTsConfigsToJs,
   maybeJs,
 } from '@nrwl/workspace/src/utils/rules/to-js';
+import { names, offsetFromRoot } from '@nrwl/devkit';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;
@@ -203,8 +202,8 @@ export default function (schema: Schema): Rule {
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const appDirectory = options.directory
-    ? `${toFileName(options.directory)}/${toFileName(options.name)}`
-    : toFileName(options.name);
+    ? `${names(options.directory).fileName}/${names(options.name).fileName}`
+    : names(options.name).fileName;
 
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
 
@@ -216,9 +215,9 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
   return {
     ...options,
-    name: toFileName(appProjectName),
+    name: names(appProjectName).fileName,
     frontendProject: options.frontendProject
-      ? toFileName(options.frontendProject)
+      ? names(options.frontendProject).fileName
       : undefined,
     appProjectRoot,
     parsedTags,

@@ -8,8 +8,8 @@ import {
   template,
   url,
 } from '@angular-devkit/schematics';
-import { names } from '@nrwl/workspace';
 import { NormalizedSchema } from '../schema';
+import { names } from '@nrwl/devkit';
 
 export function addFiles(options: NormalizedSchema): Rule {
   return mergeWith(

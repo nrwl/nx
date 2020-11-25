@@ -1,23 +1,20 @@
 import {
-  Rule,
-  Tree,
-  mergeWith,
-  chain,
-  url,
   apply,
-  SchematicContext,
+  chain,
+  mergeWith,
   move,
+  Rule,
   template,
-  schematic,
+  Tree,
+  url,
 } from '@angular-devkit/schematics';
 import {
-  readJsonInTree,
+  getProjectConfig,
   updateJsonInTree,
-  offsetFromRoot,
   updateWorkspaceInTree,
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
-import { getProjectConfig } from '@nrwl/workspace';
+import { offsetFromRoot } from '@nrwl/devkit';
 
 export interface KarmaProjectSchema {
   project: string;

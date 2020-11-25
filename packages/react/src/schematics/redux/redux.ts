@@ -12,7 +12,7 @@ import {
   url,
 } from '@angular-devkit/schematics';
 import '@nrwl/tao/src/compat/compat';
-import { formatFiles, getWorkspace, names, toFileName } from '@nrwl/workspace';
+import { formatFiles, getWorkspace } from '@nrwl/workspace';
 import {
   addDepsToPackageJson,
   addGlobal,
@@ -30,6 +30,7 @@ import {
   typesReactReduxVersion,
 } from '../../utils/versions';
 import { NormalizedSchema, Schema } from './schema';
+import { names } from '@nrwl/devkit';
 
 export default function (schema: any): Rule {
   return async (host: Tree, context: SchematicContext) => {
@@ -208,7 +209,7 @@ async function normalizeOptions(
     ...options,
     ...extraNames,
     constantName: strings.underscore(options.name).toUpperCase(),
-    directory: toFileName(options.directory),
+    directory: names(options.directory).fileName,
     projectType,
     projectSourcePath: sourceRoot,
     projectModulePath: modulePath,

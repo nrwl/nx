@@ -1,5 +1,5 @@
 import {
-  addProjectToWorkspace,
+  addProjectConfiguration,
   formatFiles,
   generateFiles,
   getWorkspaceLayout,
@@ -49,7 +49,7 @@ function addFiles(host: Tree, options: NormalizedSchema) {
 
 export default async function (host: Tree, options: <%= className %>GeneratorSchema) {
   const normalizedOptions = normalizeOptions(host, options);
-  addProjectToWorkspace(
+  addProjectConfiguration(
     host,
     normalizedOptions.projectName,
     {
@@ -61,8 +61,6 @@ export default async function (host: Tree, options: <%= className %>GeneratorSch
           executor: "<%= npmPackageName %>:build",
         },
       },
-    },
-    {
       tags: normalizedOptions.parsedTags,
     }
   );

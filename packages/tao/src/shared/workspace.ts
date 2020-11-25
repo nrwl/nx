@@ -2,27 +2,116 @@ import * as fs from 'fs';
 import * as path from 'path';
 import '../compat/compat';
 
-export interface WorkspaceDefinition {
-  projects: { [projectName: string]: ProjectDefinition };
+/**
+ * Workspace configuration
+ */
+export interface WorkspaceConfiguration {
+  /**
+   * Projects' configurations
+   */
+  projects: { [projectName: string]: ProjectConfiguration };
+
+  /**
+   * Default project. When project isn't provided, the default project
+   * will be used. Convenient for small workspaces with one main application.
+   */
   defaultProject?: string;
+
+  /**
+   * List of default values used by generators.
+   *
+   * These defaults are global. They are used when no other defaults are configured.
+   *
+   * Example:
+   *
+   * ```
+   * {
+   *   "@nrwl/react": {
+   *     "library": {
+   *       "style": "scss"
+   *     }
+   *   }
+   * }
+   * ```
+   */
   generators?: { [collectionName: string]: { [generatorName: string]: any } };
+
+  /**
+   * Default generator collection. It is used when no collection is provided.
+   */
   cli?: { defaultCollection: string };
 }
 
-export interface ProjectDefinition {
-  targets: { [targetName: string]: TargetDefinition };
+/**
+ * Project configuration
+ */
+export interface ProjectConfiguration {
+  /**
+   * Project's targets
+   */
+  targets: { [targetName: string]: TargetConfiguration };
+
+  /**
+   * Project's location relative to the root of the workspace
+   */
   root: string;
-  projectType?: 'library' | 'application';
-  generators?: { [collectionName: string]: { [generatorName: string]: any } };
-  prefix?: string;
+
+  /**
+   * The location of project's sources relative to the root of the workspace
+   */
   sourceRoot?: string;
+
+  /**
+   * Project type
+   */
+  projectType?: 'library' | 'application';
+
+  /**
+   * List of default values used by generators.
+   *
+   * These defaults are scoped to a project. They override global defaults.
+   *
+   * Example:
+   *
+   * ```
+   * {
+   *   "@nrwl/react": {
+   *     "library": {
+   *       "style": "scss"
+   *     }
+   *   }
+   * }
+   * ```
+   */
+  generators?: { [collectionName: string]: { [generatorName: string]: any } };
 }
 
-export interface TargetDefinition {
-  options?: any;
-  outputs?: string[];
-  configurations?: { [config: string]: any };
+/**
+ * Target's configuration
+ */
+export interface TargetConfiguration {
+  /**
+   * The executor/builder used to implement the target.
+   *
+   * Example: '@nrwl/web:package'
+   */
   executor: string;
+
+  /**
+   * Target's options. They are passed in to the executor.
+   */
+  options?: any;
+
+  /**
+   * Sets of options
+   */
+  configurations?: { [config: string]: any };
+
+  /**
+   * List of the target's outputs. The outputs will be cached by the Nx computation
+   * caching engine.
+   */
+  outputs?: string[];
 }
 
 export function workspaceConfigName(root: string) {
@@ -35,7 +124,7 @@ export function workspaceConfigName(root: string) {
 }
 
 export class Workspaces {
-  readWorkspaceConfiguration(root: string): WorkspaceDefinition {
+  readWorkspaceConfiguration(root: string): WorkspaceConfiguration {
     const w = JSON.parse(
       fs.readFileSync(path.join(root, workspaceConfigName(root))).toString()
     );

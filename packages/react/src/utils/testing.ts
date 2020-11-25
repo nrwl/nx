@@ -1,9 +1,9 @@
 import { join } from 'path';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { Rule, Tree } from '@angular-devkit/schematics';
-import { names } from '@nrwl/workspace/src/utils/name-utils';
 import { updateWorkspace } from '@nrwl/workspace/src/utils/workspace';
 import { readJsonInTree } from '@nrwl/workspace';
+import { names } from '@nrwl/devkit';
 
 const testRunner = new SchematicTestRunner(
   '@nrwl/react',

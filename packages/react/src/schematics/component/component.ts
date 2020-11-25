@@ -14,7 +14,7 @@ import {
   url,
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
-import { formatFiles, getWorkspace, names, toFileName } from '@nrwl/workspace';
+import { formatFiles, getWorkspace } from '@nrwl/workspace';
 import {
   addDepsToPackageJson,
   addGlobal,
@@ -28,6 +28,7 @@ import {
 import { assertValidStyle } from '../../utils/assertion';
 import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
+import { names } from '@nrwl/devkit';
 
 interface NormalizedSchema extends Schema {
   projectSourceRoot: Path;
@@ -149,7 +150,7 @@ async function normalizeOptions(
 }
 
 async function getDirectory(host: Tree, options: Schema) {
-  const fileName = toFileName(options.name);
+  const fileName = names(options.name).fileName;
   const workspace = await getWorkspace(host);
   let baseDir: string;
   if (options.directory) {

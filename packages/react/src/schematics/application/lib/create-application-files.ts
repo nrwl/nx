@@ -8,13 +8,13 @@ import {
   template,
   url,
 } from '@angular-devkit/schematics';
-import { names, offsetFromRoot } from '@nrwl/workspace';
 import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 import { NormalizedSchema } from '../schema';
 import {
   createAppJsx,
   createStyleRules,
 } from './create-application-files.helpers';
+import { names, offsetFromRoot } from '@nrwl/devkit';
 
 export function createApplicationFiles(options: NormalizedSchema): Rule {
   return mergeWith(

@@ -19,11 +19,9 @@ import {
   getNpmScope,
   getWorkspacePath,
   insert,
-  offsetFromRoot,
   readJsonInTree,
   replaceAppNameWithPath,
   replaceNodeValue,
-  toFileName,
   updateJsonInTree,
   updateWorkspace,
   addLintFiles,
@@ -47,6 +45,7 @@ import {
   createAngularEslintJson,
   extraEslintDependencies,
 } from '../../utils/lint';
+import { names, offsetFromRoot } from '@nrwl/devkit';
 
 interface NormalizedSchema extends Schema {
   prefix: string; // we set a default for this in normalizeOptions, so it is no longer optional
@@ -863,10 +862,10 @@ export default function (schema: Schema): Rule {
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const appDirectory = options.directory
-    ? `${toFileName(options.directory)}/${toFileName(options.name)}`
-    : toFileName(options.name);
+    ? `${names(options.directory).fileName}/${names(options.name).fileName}`
+    : names(options.name).fileName;
 
-  let e2eProjectName = `${toFileName(options.name)}-e2e`;
+  let e2eProjectName = `${names(options.name).fileName}-e2e`;
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
   if (options.e2eTestRunner !== 'cypress') {
     e2eProjectName = `${appProjectName}-e2e`;

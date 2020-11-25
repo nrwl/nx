@@ -1,12 +1,12 @@
 import { join } from 'path';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { Rule, Tree } from '@angular-devkit/schematics';
-import { names } from './name-utils';
 import { updateWorkspace } from './workspace';
 import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 import { schema } from '@angular-devkit/core';
 import { Architect } from '@angular-devkit/architect';
 import { MockBuilderContext } from '@nrwl/workspace/testing';
+import { names } from '@nrwl/devkit';
 
 const testRunner = new SchematicTestRunner(
   '@nrwl/workspace',
@@ -41,6 +41,11 @@ testRunner.registerCollection(
 testRunner.registerCollection(
   '@nrwl/next',
   join(__dirname, '../../../next/collection.json')
+);
+
+testRunner.registerCollection(
+  '@nrwl/node',
+  join(__dirname, '../../../node/collection.json')
 );
 
 testRunner.registerCollection(

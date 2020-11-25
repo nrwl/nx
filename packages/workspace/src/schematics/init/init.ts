@@ -20,11 +20,9 @@ import {
 import { from } from 'rxjs';
 import { mapTo, tap } from 'rxjs/operators';
 import {
-  offsetFromRoot,
   readJsonInTree,
   resolveUserExistingPrettierConfig,
   serializeJson,
-  toFileName,
   updateJsonInTree,
   getWorkspacePath,
   renameSyncInTree,
@@ -37,6 +35,7 @@ import { JsonArray } from '@angular-devkit/core';
 import { updateWorkspace } from '../../utils/workspace';
 import { basename, join as pathJoin } from 'path';
 import { readFileSync } from 'fs';
+import { names, offsetFromRoot } from '@nrwl/devkit';
 
 function updatePackageJson() {
   return updateJsonInTree('package.json', (packageJson) => {
@@ -676,7 +675,7 @@ export default function (schema: Schema): Rule {
   } else {
     const options = {
       ...schema,
-      npmScope: toFileName(schema.npmScope || schema.name),
+      npmScope: names(schema.npmScope || schema.name).fileName,
     };
 
     return chain([

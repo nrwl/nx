@@ -1,21 +1,5 @@
-import { Rule } from '@angular-devkit/schematics';
 import { Options } from 'prettier';
 import * as cosmiconfig from 'cosmiconfig';
-
-import { normalize } from '@angular-devkit/core';
-
-export function offsetFromRoot(fullPathToSourceDir: string): string {
-  const parts = normalize(fullPathToSourceDir).split('/');
-  let offset = '';
-  for (let i = 0; i < parts.length; ++i) {
-    offset += '../';
-  }
-  return offset;
-}
-
-export const DEFAULT_NRWL_PRETTIER_CONFIG = {
-  singleQuote: true,
-};
 
 export interface ExistingPrettierConfig {
   sourceFilepath: string;

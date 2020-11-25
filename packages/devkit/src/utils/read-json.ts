@@ -1,6 +1,12 @@
 import { Tree } from '@nrwl/tao/src/shared/tree';
 import * as stripJsonComments from 'strip-json-comments';
 
+/**
+ * Reads a document for host, removes all comments and parses JSON.
+ *
+ * @param host - file system tree
+ * @param path - file path
+ */
 export function readJson<T = any>(host: Tree, path: string) {
   if (!host.exists(path)) {
     throw new Error(`Cannot find ${path}`);

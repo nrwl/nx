@@ -1,6 +1,5 @@
 import { Schema } from './schema';
-import { toFileName } from '@nrwl/workspace';
-import { Tree, formatFiles, generateFiles } from '@nrwl/devkit';
+import { Tree, formatFiles, generateFiles, names } from '@nrwl/devkit';
 import * as path from 'path';
 
 export default async function (host: Tree, schema: Schema) {
@@ -17,6 +16,6 @@ export default async function (host: Tree, schema: Schema) {
 }
 
 function normalizeOptions(options: Schema): any {
-  const name = toFileName(options.name);
+  const name = names(options.name).fileName;
   return { ...options, name, tmpl: '' };
 }

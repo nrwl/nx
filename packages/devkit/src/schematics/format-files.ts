@@ -8,7 +8,7 @@ try {
 
 /**
  * Formats all the created or updated files using Prettier
- * @param host
+ * @param host - the file system tree
  */
 export async function formatFiles(host: Tree) {
   if (!prettier) return;

@@ -2,7 +2,8 @@ import { chain, noop, Rule } from '@angular-devkit/schematics';
 import { updateBabelJestConfig } from '../../../rules/update-babel-jest-config';
 import { updateJestConfigContent } from '../../../utils/jest-utils';
 import { NormalizedSchema } from '../schema';
-import { offsetFromRoot, updateJsonInTree } from '@nrwl/workspace';
+import { updateJsonInTree } from '@nrwl/workspace';
+import { offsetFromRoot } from '@nrwl/devkit';
 
 export function updateJestConfig(options: NormalizedSchema): Rule {
   return options.unitTestRunner === 'none'

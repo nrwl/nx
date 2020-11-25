@@ -1,11 +1,8 @@
 import { Tree } from '@angular-devkit/schematics';
-import {
-  getProjectConfig,
-  readNxJsonInTree,
-  toFileName,
-} from '@nrwl/workspace';
+import { getProjectConfig, readNxJsonInTree } from '@nrwl/workspace';
 import { getFileTemplate } from '../../../utils/get-file-template';
 import { NormalizedSchema, Schema } from '../schema';
+import { names } from '@nrwl/devkit';
 
 export function normalizeOptions(
   host: Tree,
@@ -13,7 +10,7 @@ export function normalizeOptions(
 ): NormalizedSchema {
   const nxJson = readNxJsonInTree(host);
   const npmScope = nxJson.npmScope;
-  const fileName = toFileName(options.name);
+  const fileName = names(options.name).fileName;
 
   const { root: projectRoot, sourceRoot: projectSourceRoot } = getProjectConfig(
     host,

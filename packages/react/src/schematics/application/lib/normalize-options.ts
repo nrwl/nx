@@ -1,17 +1,17 @@
 import { Tree } from '@angular-devkit/schematics';
 import { normalize } from '@angular-devkit/core';
-import { toFileName } from '@nrwl/workspace';
 import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
 import { NormalizedSchema, Schema } from '../schema';
 import { assertValidStyle } from '../../../utils/assertion';
+import { names } from '@nrwl/devkit';
 
 export function normalizeOptions(
   host: Tree,
   options: Schema
 ): NormalizedSchema {
   const appDirectory = options.directory
-    ? `${toFileName(options.directory)}/${toFileName(options.name)}`
-    : toFileName(options.name);
+    ? `${names(options.directory).fileName}/${names(options.name).fileName}`
+    : names(options.name).fileName;
 
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
   const e2eProjectName = `${appProjectName}-e2e`;
@@ -32,7 +32,7 @@ export function normalizeOptions(
 
   return {
     ...options,
-    name: toFileName(options.name),
+    name: names(options.name).fileName,
     projectName: appProjectName,
     appProjectRoot,
     e2eProjectName,

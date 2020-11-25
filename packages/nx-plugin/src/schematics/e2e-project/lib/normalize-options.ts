@@ -1,9 +1,10 @@
 import { normalize } from '@angular-devkit/core';
 import { Tree } from '@angular-devkit/schematics';
-import { readNxJsonInTree, toPropertyName } from '@nrwl/workspace';
+import { readNxJsonInTree } from '@nrwl/workspace';
 import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
 import { join } from 'path';
 import { NxPluginE2ESchema, Schema } from '../schema';
+import { names } from '@nrwl/devkit';
 
 function normalizeProjectRoot(
   host: Tree,
@@ -24,7 +25,7 @@ export function normalizeOptions(
   const projectName = `${options.pluginName}-e2e`;
   const projectRoot = normalizeProjectRoot(host, options, projectName);
   const npmScope = readNxJsonInTree(host).npmScope;
-  const pluginPropertyName = toPropertyName(options.pluginName);
+  const pluginPropertyName = names(options.pluginName).propertyName;
   return {
     ...options,
     projectName,

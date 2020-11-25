@@ -7,19 +7,25 @@ export interface ImplicitJsonSubsetDependency<T = '*' | string[]> {
 }
 
 export interface NxAffectedConfig {
+  /**
+   * Default based branch used by affected commands.
+   */
   defaultBase?: string;
 }
 
-export interface NxJson<T = '*' | string[]> {
+/**
+ * Nx.json configuration
+ */
+export interface NxJsonConfiguration<T = '*' | string[]> {
   implicitDependencies?: ImplicitDependencyEntry<T>;
   npmScope: string;
   affected?: NxAffectedConfig;
   projects: {
-    [projectName: string]: NxJsonProjectConfig;
+    [projectName: string]: NxJsonProjectConfiguration;
   };
   workspaceLayout?: {
-    libsDir?: string;
-    appsDir?: string;
+    libsDir: string;
+    appsDir: string;
   };
   tasksRunnerOptions?: {
     [tasksRunnerName: string]: {
@@ -29,7 +35,7 @@ export interface NxJson<T = '*' | string[]> {
   };
 }
 
-export interface NxJsonProjectConfig {
+export interface NxJsonProjectConfiguration {
   implicitDependencies?: string[];
   tags?: string[];
 }

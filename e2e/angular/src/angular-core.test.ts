@@ -9,7 +9,7 @@ import {
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
-import { toClassName } from '@nrwl/workspace';
+import { names } from '@nrwl/devkit';
 
 describe('Angular Package', () => {
   beforeEach(() => {
@@ -31,13 +31,13 @@ describe('Angular Package', () => {
       `
         import { NgModule } from '@angular/core';
         import { BrowserModule } from '@angular/platform-browser';
-        import { MyDir${toClassName(
-          mylib
-        )}Module } from '@proj/my-dir/${mylib}';
+        import { MyDir${
+          names(mylib).className
+        }Module } from '@proj/my-dir/${mylib}';
         import { AppComponent } from './app.component';
 
         @NgModule({
-          imports: [BrowserModule, MyDir${toClassName(mylib)}Module],
+          imports: [BrowserModule, MyDir${names(mylib).className}Module],
           declarations: [AppComponent],
           bootstrap: [AppComponent]
         })

@@ -15,13 +15,13 @@ import {
 import {
   getWorkspacePath,
   Linter,
-  offsetFromRoot,
   replaceAppNameWithPath,
   updateJsonInTree,
 } from '@nrwl/workspace';
 import * as path from 'path';
 import { NormalizedSchema } from './normalized-schema';
 import { updateNgPackage } from './update-ng-package';
+import { offsetFromRoot } from '@nrwl/devkit';
 
 // TODO - refactor this into separate rules with better names
 export function updateProject(options: NormalizedSchema): Rule {

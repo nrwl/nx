@@ -1,4 +1,3 @@
-import { toClassName } from '@nrwl/workspace';
 import {
   newProject,
   readJson,
@@ -6,6 +5,7 @@ import {
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
+import { names } from '@nrwl/devkit';
 
 ['publishable', 'buildable'].forEach((testConfig) => {
   describe('Build Angular library', () => {
@@ -99,9 +99,9 @@ import {
               ${children
                 .map(
                   (entry) =>
-                    `import { ${toClassName(
-                      entry
-                    )}Module } from '@proj/${entry}';`
+                    `import { ${
+                      names(entry).className
+                    }Module } from '@proj/${entry}';`
                 )
                 .join('\n')}
             `;
@@ -112,10 +112,10 @@ import {
 
               @NgModule({
                 imports: [CommonModule, ${children
-                  .map((entry) => `${toClassName(entry)}Module`)
+                  .map((entry) => `${names(entry).className}Module`)
                   .join(',')}, SubModule]
               })
-              export class ${toClassName(parent)}Module {}`;
+              export class ${names(parent).className}Module {}`;
         }
 
         updateFile(`libs/${parent}/src/lib/${parent}.module.ts`, moduleContent);

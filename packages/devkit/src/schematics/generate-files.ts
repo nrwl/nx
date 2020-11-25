@@ -11,6 +11,7 @@ const ejs = require('ejs');
  * - Substitutes segments of file names surrounded by __
  * - Uses ejs to substitute values in templates
  *
+ * @param host - the file system tree
  * @param srcFolder - the source folder of files (absolute path)
  * @param target - the target folder (relative to the host root)
  * @param substitutions - an object of key-value pairs

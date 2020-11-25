@@ -17,9 +17,6 @@ import { Schema } from './schema';
 import {
   updateJsonInTree,
   NxJson,
-  toFileName,
-  names,
-  offsetFromRoot,
   getNpmScope,
   formatFiles,
   updateWorkspaceInTree,
@@ -28,6 +25,7 @@ import {
 } from '@nrwl/workspace';
 import init from '../init/init';
 import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
+import { names, offsetFromRoot } from '@nrwl/devkit';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -186,8 +184,8 @@ export default function (schema: Schema): Rule {
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const appDirectory = options.directory
-    ? `${toFileName(options.directory)}/${toFileName(options.name)}`
-    : toFileName(options.name);
+    ? `${names(options.directory).fileName}/${names(options.name).fileName}`
+    : names(options.name).fileName;
 
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
   const e2eProjectName = `${appProjectName}-e2e`;
@@ -203,7 +201,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   return {
     ...options,
     prefix: options.prefix ? options.prefix : defaultPrefix,
-    name: toFileName(options.name),
+    name: names(options.name).fileName,
     projectName: appProjectName,
     appProjectRoot,
     e2eProjectRoot,

@@ -1,11 +1,24 @@
 import { normalize } from 'path';
 
-export function offsetFromRoot(fullPathToSourceDir: string): string {
-  // original offsetFromRoot used @angular-devkit/core's normalize.
-  const parts = normalize(fullPathToSourceDir).split('/');
+/**
+ * Calculates an offset from the root of the workspace, which is useful for
+ * constructing relative URLs.
+ *
+ * Examples:
+ *
+ * ```typescript
+ * offsetFromRoot("apps/mydir/myapp/") // returns "../../../"
+ * ```
+ *
+ * @param fullPathToDir - directory path
+ */
+export function offsetFromRoot(fullPathToDir: string): string {
+  const parts = normalize(fullPathToDir).split('/');
   let offset = '';
   for (let i = 0; i < parts.length; ++i) {
-    offset += '../';
+    if (parts[i].length > 0) {
+      offset += '../';
+    }
   }
   return offset;
 }

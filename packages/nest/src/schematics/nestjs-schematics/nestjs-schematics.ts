@@ -4,8 +4,9 @@ import {
   Rule,
   Tree,
 } from '@angular-devkit/schematics';
-import { getProjectConfig, toFileName } from '@nrwl/workspace';
+import { getProjectConfig } from '@nrwl/workspace';
 import { NestSchematicsSchema } from './schema';
+import { names } from '@nrwl/devkit';
 
 interface NormalizedSchema extends NestSchematicsSchema {
   name: string;
@@ -21,7 +22,7 @@ function normalizeOptions(
   }
 
   const { sourceRoot } = getProjectConfig(host, options.project);
-  const name = toFileName(options.name);
+  const name = names(options.name).fileName;
 
   return {
     ...options,

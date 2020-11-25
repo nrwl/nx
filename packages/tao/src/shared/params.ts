@@ -1,6 +1,6 @@
 import { strings } from '@angular-devkit/core';
 import { ParsedArgs } from 'minimist';
-import { TargetDefinition, WorkspaceDefinition } from './workspace';
+import { TargetConfiguration, WorkspaceConfiguration } from './workspace';
 import * as inquirer from 'inquirer';
 
 type Properties = {
@@ -266,7 +266,7 @@ export function convertPositionParamsIntoNamedParams(
 export function combineOptionsForExecutor(
   commandLineOpts: Options,
   config: string,
-  target: TargetDefinition,
+  target: TargetConfiguration,
   schema: Schema
 ) {
   const r = convertAliases(
@@ -291,7 +291,7 @@ export async function combineOptionsForGenerator(
   commandLineOpts: Options,
   collectionName: string,
   generatorName: string,
-  ws: WorkspaceDefinition,
+  ws: WorkspaceConfiguration,
   schema: Schema,
   isInteractive: boolean
 ) {
