@@ -38,12 +38,12 @@ export function addFiles(options: NormalizedSchema): Rule {
       ]),
       MergeStrategy.Overwrite
     ),
-    schematic('schematic', {
+    schematic('generator', {
       project: options.name,
       name: options.name,
       unitTestRunner: options.unitTestRunner,
     }),
-    schematic('builder', {
+    schematic('executor', {
       project: options.name,
       name: 'build',
       unitTestRunner: options.unitTestRunner,

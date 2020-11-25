@@ -12,6 +12,7 @@ export interface WorkspaceDefinition {
 export interface ProjectDefinition {
   targets: { [targetName: string]: TargetDefinition };
   root: string;
+  projectType?: 'library' | 'application';
   generators?: { [collectionName: string]: { [generatorName: string]: any } };
   prefix?: string;
   sourceRoot?: string;

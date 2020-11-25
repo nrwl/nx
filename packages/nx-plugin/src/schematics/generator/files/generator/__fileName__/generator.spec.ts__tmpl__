@@ -1,0 +1,40 @@
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { Tree } from '@nrwl/devkit';
+
+import generator from './generator';
+import { <%= className %>GeneratorSchema } from './schema';
+
+describe('<%= name %> generator', () => {
+  let appTree: Tree;
+  const options: <%= className %>GeneratorSchema = { name: 'test' };
+
+  beforeEach(() => {
+    appTree = createTreeWithEmptyWorkspace();
+  });
+
+  it('should run successfully', async () => {
+    generator(appTree, options);
+    const workspace = JSON.parse(appTree.read('workspace.json').toString());
+    expect(workspace.projects['test']).toMatchInlineSnapshot(`
+      Object {
+        "projectType": "library",
+        "root": "libs/test",
+        "sourceRoot": "libs/test/src",
+        "targets": Object {
+          "build": Object {
+            "executor": "<%= npmPackageName %>:build",
+          },
+        },
+      }
+    `);
+
+    const nxjson = JSON.parse(appTree.read('nx.json').toString());
+    expect(nxjson.projects).toMatchInlineSnapshot(`
+      Object {
+        "test": Object {
+          "tags": Array [],
+        },
+      }
+    `);
+  })
+});

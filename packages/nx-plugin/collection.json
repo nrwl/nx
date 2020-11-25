@@ -19,15 +19,15 @@
       "schema": "./src/schematics/migration/schema.json",
       "description": "Create a migration for an Nx Plugin"
     },
-    "schematic": {
-      "factory": "./src/schematics/schematic/schematic",
-      "schema": "./src/schematics/schematic/schema.json",
-      "description": "Create a schematic for an Nx Plugin"
+    "generator": {
+      "factory": "./src/schematics/generator/generator",
+      "schema": "./src/schematics/generator/schema.json",
+      "description": "Create a generator for an Nx Plugin"
     },
-    "builder": {
-      "factory": "./src/schematics/builder/builder",
-      "schema": "./src/schematics/builder/schema.json",
-      "description": "Create a builder for an Nx Plugin"
+    "executor": {
+      "factory": "./src/schematics/executor/executor",
+      "schema": "./src/schematics/executor/schema.json",
+      "description": "Create a executor for an Nx Plugin"
     }
   }
 }

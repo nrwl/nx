@@ -67,10 +67,12 @@ async function publishPackage(packagePath) {
       ------------------
     `);
   }
-  await asyncExec(`npm publish`, {
-    cwd: packagePath,
-    env: process.env,
-  });
+  try {
+    await asyncExec(`npm publish`, {
+      cwd: packagePath,
+      env: process.env,
+    });
+  } catch (e) {}
 }
 
 export async function setup() {

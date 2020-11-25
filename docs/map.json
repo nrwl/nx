@@ -853,9 +853,9 @@
                 "name": "Generators",
                 "itemList": [
                   {
-                    "name": "builder",
-                    "id": "builder",
-                    "file": "angular/api-nx-plugin/generators/builder"
+                    "name": "executor",
+                    "id": "executor",
+                    "file": "angular/api-nx-plugin/generators/executor"
                   },
                   {
                     "name": "migration",
@@ -870,7 +870,7 @@
                   {
                     "name": "schematic",
                     "id": "schematic",
-                    "file": "angular/api-nx-plugin/generators/schematic"
+                    "file": "angular/api-nx-plugin/generators/generator"
                   }
                 ]
               },
@@ -1946,9 +1946,9 @@
                 "name": "Generators",
                 "itemList": [
                   {
-                    "name": "builder",
-                    "id": "builder",
-                    "file": "react/api-nx-plugin/generators/builder"
+                    "name": "executor",
+                    "id": "executor",
+                    "file": "react/api-nx-plugin/generators/executor"
                   },
                   {
                     "name": "migration",
@@ -1963,7 +1963,7 @@
                   {
                     "name": "schematic",
                     "id": "schematic",
-                    "file": "react/api-nx-plugin/generators/schematic"
+                    "file": "react/api-nx-plugin/generators/generator"
                   }
                 ]
               },
@@ -2986,9 +2986,9 @@
                 "name": "Generators",
                 "itemList": [
                   {
-                    "name": "builder",
-                    "id": "builder",
-                    "file": "node/api-nx-plugin/generators/builder"
+                    "name": "executor",
+                    "id": "executor",
+                    "file": "node/api-nx-plugin/generators/executor"
                   },
                   {
                     "name": "migration",
@@ -3003,7 +3003,7 @@
                   {
                     "name": "schematic",
                     "id": "schematic",
-                    "file": "node/api-nx-plugin/generators/schematic"
+                    "file": "node/api-nx-plugin/generators/generator"
                   }
                 ]
               },
