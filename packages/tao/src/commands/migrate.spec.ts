@@ -542,5 +542,27 @@ describe('Migration', () => {
         parseMigrationsOptions(['8.12.0', '--to', 'myscope'])
       ).toThrowError(`Incorrect 'to' section. Use --to="package@version"`);
     });
+
+    it('should handle backslashes in package names', () => {
+      const r = parseMigrationsOptions([
+        '@nrwl\\workspace@8.12.0',
+        '--from',
+        '@myscope\\a@12.3,@myscope\\b@1.1.1',
+        '--to',
+        '@myscope\\c@12.3.1',
+      ]);
+      expect(r).toEqual({
+        type: 'generateMigrations',
+        targetPackage: '@nrwl/workspace',
+        targetVersion: '8.12.0',
+        from: {
+          '@myscope/a': '12.3.0',
+          '@myscope/b': '1.1.1',
+        },
+        to: {
+          '@myscope/c': '12.3.1',
+        },
+      });
+    });
   });
 });

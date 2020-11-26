@@ -69,6 +69,10 @@ export function normalizeVersion(version: string) {
   }
 }
 
+function slash(packageName) {
+  return packageName.replace(/\\/g, '/');
+}
+
 export class Migrator {
   private readonly versions: (p: string) => string;
   private readonly fetch: (p: string, v: string) => Promise<MigrationsJson>;
@@ -304,7 +308,7 @@ function versionOverrides(overrides: string, param: string) {
         `Incorrect '${param}' section. Use --${param}="package@version"`
       );
     }
-    res[selectedPackage] = normalizeVersionWithTagCheck(selectedVersion);
+    res[slash(selectedPackage)] = normalizeVersionWithTagCheck(selectedVersion);
   });
   return res;
 }
@@ -378,7 +382,7 @@ export function parseMigrationsOptions(
     );
     return {
       type: 'generateMigrations',
-      targetPackage,
+      targetPackage: slash(targetPackage),
       targetVersion,
       from,
       to,
