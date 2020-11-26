@@ -7,13 +7,13 @@ import { NodePackageName } from '@angular-devkit/schematics/tasks/package-manage
 import { NodeModulesEngineHost } from '@angular-devkit/schematics/tools';
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
-import * as minimist from 'minimist';
+import * as yargsParser from 'yargs-parser';
 import { dirname, extname, join, resolve } from 'path';
 import { gt, lte } from 'semver';
 import * as stripJsonComments from 'strip-json-comments';
 import { dirSync } from 'tmp';
 import { getLogger } from '../shared/logger';
-import { convertToCamelCase, handleErrors } from '../shared/params';
+import { handleErrors } from '../shared/params';
 import {
   detectPackageManager,
   getPackageManagerInstallCommand,
@@ -360,14 +360,13 @@ type RunMigrations = { type: 'runMigrations'; runMigrations: string };
 export function parseMigrationsOptions(
   args: string[]
 ): GenerateMigrations | RunMigrations {
-  const options = convertToCamelCase(
-    minimist(args, {
-      string: ['runMigrations', 'from', 'to'],
-      alias: {
-        runMigrations: 'run-migrations',
-      },
-    })
-  );
+  const options = yargsParser(args, {
+    string: ['runMigrations', 'from', 'to'],
+    configuration: {
+      'strip-dashed': true,
+    },
+  });
+
   if (!options.runMigrations) {
     const from = options.from
       ? versionOverrides(options.from as string, 'from')

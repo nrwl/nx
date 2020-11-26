@@ -1,5 +1,4 @@
 import { strings } from '@angular-devkit/core';
-import { ParsedArgs } from 'minimist';
 import { TargetDefinition, WorkspaceDefinition } from './workspace';
 import * as inquirer from 'inquirer';
 
@@ -60,13 +59,6 @@ function camelCase(input: string): string {
   } else {
     return input;
   }
-}
-
-export function convertToCamelCase(parsed: ParsedArgs): Options {
-  return Object.keys(parsed).reduce(
-    (m, c) => ({ ...m, [camelCase(c)]: parsed[c] }),
-    {}
-  );
 }
 
 /**

@@ -1,9 +1,7 @@
-import { ParsedArgs } from 'minimist';
 import {
   coerceTypesInOptions,
   convertAliases,
   convertPositionParamsIntoNamedParams,
-  convertToCamelCase,
   lookupUnmatched,
   Schema,
   setDefaults,
@@ -60,41 +58,6 @@ describe('params', () => {
       expect(opts).toEqual({
         a: ['one', 'two'],
         b: 'three,four',
-      });
-    });
-  });
-
-  describe('convertToCamelCase', () => {
-    it('should convert dash case to camel case', () => {
-      expect(
-        convertToCamelCase({
-          _: undefined,
-          'one-two': 1,
-        } as ParsedArgs)
-      ).toEqual({
-        oneTwo: 1,
-      });
-    });
-
-    it('should not convert camel case', () => {
-      expect(
-        convertToCamelCase({
-          _: undefined,
-          oneTwo: 1,
-        })
-      ).toEqual({
-        oneTwo: 1,
-      });
-    });
-
-    it('should handle mixed case', () => {
-      expect(
-        convertToCamelCase({
-          _: undefined,
-          'one-Two': 1,
-        })
-      ).toEqual({
-        oneTwo: 1,
       });
     });
   });

@@ -17,6 +17,9 @@ export function parseRunOneOptions(
   const parsedArgs = yargsParser(args, {
     boolean: ['prod', 'help'],
     string: ['configuration', 'project'],
+    configuration: {
+      'strip-dashed': true,
+    },
   });
 
   if (parsedArgs['help']) {

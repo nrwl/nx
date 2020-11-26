@@ -1,8 +1,7 @@
-import * as minimist from 'minimist';
+import * as yargsParser from 'yargs-parser';
 import { getLogger } from '../shared/logger';
 import {
   combineOptionsForExecutor,
-  convertToCamelCase,
   handleErrors,
   Options,
   Schema,
@@ -35,22 +34,20 @@ function parseRunOpts(
   defaultProjectName: string | null,
   logger: Console
 ): RunOptions {
-  const runOptions = convertToCamelCase(
-    minimist(args, {
-      boolean: ['help', 'prod'],
-      string: ['configuration', 'project'],
-    })
-  );
+  const runOptions = yargsParser(args, {
+    boolean: ['help', 'prod'],
+    string: ['configuration', 'project'],
+    configuration: {
+      'strip-dashed': true,
+    },
+  });
   const help = runOptions.help as boolean;
   if (!runOptions._ || !runOptions._[0]) {
     throwInvalidInvocation();
   }
+
   // eslint-disable-next-line prefer-const
-  let [project, target, configuration]: [
-    string,
-    string,
-    string
-  ] = runOptions._[0].split(':');
+  let [project, target, configuration] = runOptions._[0].split(':');
   if (!project && defaultProjectName) {
     logger.debug(
       `No project name specified. Using default project : ${chalk.default.bold(

@@ -1,8 +1,7 @@
-import * as minimist from 'minimist';
+import * as yargsParser from 'yargs-parser';
 import { getLogger } from '../shared/logger';
 import {
   combineOptionsForGenerator,
-  convertToCamelCase,
   handleErrors,
   Options,
   Schema,
@@ -39,20 +38,21 @@ function parseGenerateOpts(
   mode: 'generate' | 'new',
   defaultCollection: string | null
 ): GenerateOptions {
-  const generatorOptions = convertToCamelCase(
-    minimist(args, {
-      boolean: ['help', 'dryRun', 'debug', 'force', 'interactive'],
-      alias: {
-        dryRun: 'dry-run',
-        d: 'dryRun',
-      },
-      default: {
-        debug: false,
-        dryRun: false,
-        interactive: true,
-      },
-    })
-  );
+  const generatorOptions = yargsParser(args, {
+    boolean: ['help', 'dryRun', 'debug', 'force', 'interactive'],
+    alias: {
+      dryRun: 'd',
+    },
+    default: {
+      debug: false,
+      dryRun: false,
+      interactive: true,
+    },
+    configuration: {
+      'strip-aliased': true,
+      'strip-dashed': true,
+    },
+  });
 
   let collectionName: string | null = null;
   let generatorName: string | null = null;

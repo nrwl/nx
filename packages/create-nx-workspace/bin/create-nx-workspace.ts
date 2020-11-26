@@ -83,12 +83,11 @@ const parsedArgs = yargsParser(process.argv, {
     'defaultBase',
     'packageManager',
   ],
-  alias: {
-    appName: 'app-name',
-    nxCloud: 'nx-cloud',
-    defaultBase: 'default-base',
-  },
   boolean: ['help', 'interactive', 'nxCloud'],
+  configuration: {
+    'strip-aliased': true,
+    'strip-dashed': true,
+  },
 });
 
 if (parsedArgs.help) {
