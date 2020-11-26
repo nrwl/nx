@@ -107,7 +107,6 @@ export function runNgNew(): string {
  * for the currently selected CLI.
  */
 export function newProject(): void {
-  projName = uniq('proj');
   try {
     if (!directoryExists(tmpBackupProjPath())) {
       runCreateWorkspace('proj', { preset: 'empty' });
@@ -129,8 +128,10 @@ export function newProject(): void {
         .forEach((p) => {
           runCLI(`g ${p}:init`, { cwd: `./tmp/${currentCli()}/proj` });
         });
+
       execSync(`mv ./tmp/${currentCli()}/proj ${tmpBackupProjPath()}`);
     }
+    projName = uniq('proj');
     execSync(`cp -a ${tmpBackupProjPath()} ${tmpProjPath()}`);
   } catch (e) {
     console.log(`Failed to set up project for e2e tests.`);

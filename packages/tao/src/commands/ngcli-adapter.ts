@@ -24,16 +24,28 @@ import { printRunHelp, RunOptions } from './run';
 import {
   FileSystemCollectionDescription,
   FileSystemSchematicDescription,
+  NodeModulesEngineHost,
   NodeWorkflow,
   validateOptionsWithSchema,
 } from '@angular-devkit/schematics/tools';
-import { DryRunEvent, formats, Schematic } from '@angular-devkit/schematics';
+import {
+  DryRunEvent,
+  formats,
+  Schematic,
+  TaskExecutor,
+} from '@angular-devkit/schematics';
 import * as fs from 'fs';
 import * as inquirer from 'inquirer';
 import { detectPackageManager } from '../shared/detect-package-manager';
 import { GenerateOptions, printGenHelp } from './generate';
 import * as taoTree from '../shared/tree';
 import { workspaceConfigName } from '@nrwl/tao/src/shared/workspace';
+import { BaseWorkflow } from '@angular-devkit/schematics/src/workflow';
+import { NodePackageName } from '@angular-devkit/schematics/tasks/package-manager/options';
+import { BuiltinTaskExecutor } from '@angular-devkit/schematics/tasks/node';
+import { dirname, extname, join, resolve } from 'path';
+import { readFileSync } from 'fs';
+import * as stripJsonComments from 'strip-json-comments';
 
 function normalizeOptions(opts: Options, schema: Schema): Options {
   return convertAliases(coerceTypesInOptions(opts, schema), schema, false);
@@ -324,6 +336,84 @@ function isTTY(): boolean {
   return !!process.stdout.isTTY && process.env['CI'] !== 'true';
 }
 
+class MigrationEngineHost extends NodeModulesEngineHost {
+  private nodeInstallLogPrinted = false;
+
+  constructor(logger: logging.Logger) {
+    super();
+
+    // Overwrite the original CLI node package executor with a new one that does basically nothing
+    // since nx migrate doesn't do npm installs by itself
+    // (https://github.com/angular/angular-cli/blob/5df776780deadb6be5048b3ab006a5d3383650dc/packages/angular_devkit/schematics/tools/workflow/node-workflow.ts#L41)
+    this.registerTaskExecutor({
+      name: NodePackageName,
+      create: () =>
+        Promise.resolve<TaskExecutor>(() => {
+          return new Promise((res) => {
+            if (!this.nodeInstallLogPrinted) {
+              logger.warn(
+                `An installation of node_modules has been required. Make sure to run it after the migration`
+              );
+              this.nodeInstallLogPrinted = true;
+            }
+
+            res();
+          });
+        }),
+    });
+
+    this.registerTaskExecutor(BuiltinTaskExecutor.RunSchematic);
+  }
+
+  protected _resolveCollectionPath(name: string): string {
+    let collectionPath: string | undefined = undefined;
+
+    if (name.startsWith('.') || name.startsWith('/')) {
+      name = resolve(name);
+    }
+
+    if (extname(name)) {
+      collectionPath = require.resolve(name);
+    } else {
+      const packageJsonPath = require.resolve(join(name, 'package.json'));
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const packageJson = require(packageJsonPath);
+      let pkgJsonSchematics = packageJson['nx-migrations'];
+      if (!pkgJsonSchematics) {
+        pkgJsonSchematics = packageJson['ng-update'];
+        if (!pkgJsonSchematics) {
+          throw new Error(`Could not find migrations in package: "${name}"`);
+        }
+      }
+      if (typeof pkgJsonSchematics != 'string') {
+        pkgJsonSchematics = pkgJsonSchematics.migrations;
+      }
+      collectionPath = resolve(dirname(packageJsonPath), pkgJsonSchematics);
+    }
+
+    try {
+      if (collectionPath) {
+        JSON.parse(stripJsonComments(readFileSync(collectionPath).toString()));
+        return collectionPath;
+      }
+    } catch (e) {
+      throw new Error(`Invalid migration file in package: "${name}"`);
+    }
+    throw new Error(`Collection cannot be resolved: "${name}"`);
+  }
+}
+
+class MigrationsWorkflow extends BaseWorkflow {
+  constructor(host: virtualFs.Host, logger: logging.Logger) {
+    super({
+      host,
+      engineHost: new MigrationEngineHost(logger),
+      force: true,
+      dryRun: false,
+    });
+  }
+}
+
 export async function generate(
   logger: logging.Logger,
   root: string,
@@ -345,6 +435,25 @@ export async function generate(
       schematic
     )
   ).status;
+}
+
+export async function runMigration(
+  logger: logging.Logger,
+  root: string,
+  collection: string,
+  schematic: string
+) {
+  const host = new virtualFs.ScopedHost(new NodeJsSyncHost(), normalize(root));
+  const workflow = new MigrationsWorkflow(host, logger);
+  return workflow
+    .execute({
+      collection,
+      schematic,
+      options: {},
+      debug: false,
+      logger,
+    })
+    .toPromise();
 }
 
 export function wrapAngularDevkitSchematic(

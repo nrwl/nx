@@ -17,9 +17,6 @@ export function addFiles(options: NormalizedSchema): Rule {
         ...options,
         tmpl: '',
       }),
-      options.unitTestRunner === 'none'
-        ? filter((file) => !file.endsWith('.spec.ts'))
-        : noop(),
       move(`${options.projectSourceRoot}/migrations`),
     ])
   );

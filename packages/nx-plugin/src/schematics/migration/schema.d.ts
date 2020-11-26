@@ -4,7 +4,6 @@ export interface Schema {
   description: string;
   version: string;
   packageJsonUpdates: boolean;
-  unitTestRunner: 'jest' | 'none';
 }
 
 export interface NormalizedSchema extends Schema {

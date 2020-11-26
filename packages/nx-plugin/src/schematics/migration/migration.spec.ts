@@ -58,22 +58,17 @@ describe('NxPlugin migration', () => {
     expect(
       tree.exists('libs/my-plugin/src/migrations/my-migration/my-migration.ts')
     ).toBeTruthy();
-    expect(
-      tree.exists(
-        'libs/my-plugin/src/migrations/my-migration/my-migration.spec.ts'
-      )
-    ).toBeTruthy();
 
-    expect(migrationsJson.schematics['my-migration'].version).toEqual('1.0.0');
-    expect(migrationsJson.schematics['my-migration'].description).toEqual(
+    expect(migrationsJson.generators['my-migration'].version).toEqual('1.0.0');
+    expect(migrationsJson.generators['my-migration'].description).toEqual(
       'my-migration description'
     );
-    expect(migrationsJson.schematics['my-migration'].factory).toEqual(
+    expect(migrationsJson.generators['my-migration'].implementation).toEqual(
       './src/migrations/my-migration/my-migration'
     );
     expect(migrationsJson.packageJsonUpdates).toBeFalsy();
 
-    expect(packageJson['ng-update'].migrations).toEqual('./migrations.json');
+    expect(packageJson['nx-migrate'].migrations).toEqual('./migrations.json');
   });
 
   it('should generate files with default name', async () => {
@@ -96,7 +91,7 @@ describe('NxPlugin migration', () => {
       tree.exists('libs/my-plugin/src/migrations/update-1.0.0/update-1.0.0.ts')
     ).toBeTruthy();
 
-    expect(migrationsJson.schematics['update-1.0.0'].factory).toEqual(
+    expect(migrationsJson.generators['update-1.0.0'].implementation).toEqual(
       './src/migrations/update-1.0.0/update-1.0.0'
     );
   });
@@ -117,7 +112,7 @@ describe('NxPlugin migration', () => {
       'libs/my-plugin/migrations.json'
     );
 
-    expect(migrationsJson.schematics['my-migration'].description).toEqual(
+    expect(migrationsJson.generators['my-migration'].description).toEqual(
       'my-migration'
     );
   });
@@ -144,34 +139,6 @@ describe('NxPlugin migration', () => {
         version: '1.0.0',
         packages: {},
       },
-    });
-  });
-
-  describe('--unitTestRunner', () => {
-    describe('none', () => {
-      it('should not generate test files', async () => {
-        const tree = await runSchematic(
-          'migration',
-          {
-            project: projectName,
-            name: 'my-migration',
-            version: '1.0.0',
-            unitTestRunner: 'none',
-          },
-          appTree
-        );
-
-        expect(
-          tree.exists(
-            'libs/my-plugin/src/migrations/my-migration/my-migration.ts'
-          )
-        ).toBeTruthy();
-        expect(
-          tree.exists(
-            'libs/my-plugin/src/migrations/my-migration/my-migration.spec.ts'
-          )
-        ).toBeFalsy();
-      });
     });
   });
 });

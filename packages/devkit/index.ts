@@ -10,6 +10,7 @@ export {
 } from '@nrwl/tao/src/shared/nx';
 export { TargetContext } from '@nrwl/tao/src/commands/run';
 export { formatFiles } from './src/schematics/format-files';
+export { readJson } from './src/utils/read-json';
 export { generateFiles } from './src/schematics/generate-files';
 export { installPackagesTask } from './src/tasks/install-packages-task';
 export { addProjectConfiguration } from './src/schematics/add-project-configuration';

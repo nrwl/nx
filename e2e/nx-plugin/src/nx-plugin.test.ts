@@ -91,17 +91,16 @@ describe('Nx Plugin', () => {
     checkFilesExist(
       `dist/libs/${plugin}/src/migrations/update-${version}/update-${version}.js`,
       `dist/libs/${plugin}/src/migrations/update-${version}/update-${version}.ts`,
-      `dist/libs/${plugin}/src/migrations/update-${version}/update-${version}.spec.ts`,
-      `libs/${plugin}/src/migrations/update-${version}/update-${version}.ts`,
-      `libs/${plugin}/src/migrations/update-${version}/update-${version}.spec.ts`
+      `libs/${plugin}/src/migrations/update-${version}/update-${version}.ts`
     );
     const migrationsJson = readJson(`libs/${plugin}/migrations.json`);
     expect(migrationsJson).toMatchObject({
-      schematics: expect.objectContaining({
+      generators: expect.objectContaining({
         [`update-${version}`]: {
           version: version,
           description: `update-${version}`,
-          factory: `./src/migrations/update-${version}/update-${version}`,
+          cli: `nx`,
+          implementation: `./src/migrations/update-${version}/update-${version}`,
         },
       }),
     });
