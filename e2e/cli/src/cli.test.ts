@@ -134,7 +134,7 @@ describe('migrate', () => {
           run20: {
             version: '2.0.0',
             description: '2.0.0',
-            factory: './run20',
+            implementation: './run20',
           },
         },
       })
@@ -154,10 +154,8 @@ describe('migrate', () => {
     updateFile(
       `./node_modules/migrate-parent-package/run20.js`,
       `
-        exports.default = function default_1() {
-          return function(host) {
-            host.create('file-20', 'content20')
-          }
+        exports.default = function (host) {
+           host.write('file-20', 'content20')
         }
         `
     );
@@ -183,12 +181,13 @@ describe('migrate', () => {
                 if (packageName === 'migrate-parent-package') {
                   return Promise.resolve({
                     version: '2.0.0',
-                    schematics: {
+                    generators: {
                       'run11': {
                         version: '1.1.0'
                       },
                       'run20': {
-                        version: '2.0.0'
+                        version: '2.0.0',
+                        cli: 'nx'
                       }
                     },
                     packageJsonUpdates: {
@@ -228,6 +227,7 @@ describe('migrate', () => {
           package: 'migrate-parent-package',
           version: '2.0.0',
           name: 'run20',
+          cli: 'nx',
         },
       ],
     });

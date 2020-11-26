@@ -38,6 +38,7 @@
     "semver": "6.3.0",
     "tmp": "0.0.33",
     "tslib": "^2.0.0",
-    "yargs-parser": "20.0.0"
+    "yargs-parser": "20.0.0",
+    "fs-extra": "7.0.1"
   }
 }

@@ -388,30 +388,30 @@ describe('Migration', () => {
                   },
                 },
               },
-              schematics: {
+              generators: {
                 version2: {
                   version: '2.0.0',
-                  factory: 'parent-factory',
+                  description: 'parent-desc',
                 },
               },
             });
           } else if (p === 'child') {
             return Promise.resolve({
               version: '2.0.0',
-              schematics: {
+              generators: {
                 version2: {
                   version: '2.0.0',
-                  factory: 'child-factory',
+                  description: 'child-desc',
                 },
               },
             });
           } else if (p === 'newChild') {
             return Promise.resolve({
               version: '3.0.0',
-              schematics: {
+              generators: {
                 version2: {
                   version: '2.0.0',
-                  factory: 'new-child-factory',
+                  description: 'new-child-desc',
                 },
               },
             });
@@ -425,16 +425,16 @@ describe('Migration', () => {
       expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
         migrations: [
           {
-            package: 'parent',
             version: '2.0.0',
             name: 'version2',
-            factory: 'parent-factory',
+            package: 'parent',
+            description: 'parent-desc',
           },
           {
             package: 'child',
             version: '2.0.0',
             name: 'version2',
-            factory: 'child-factory',
+            description: 'child-desc',
           },
         ],
         packageJson: {

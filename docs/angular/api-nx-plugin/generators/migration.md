@@ -64,16 +64,6 @@ Type: `string`
 
 The name of the project.
 
-### unitTestRunner
-
-Default: `jest`
-
-Type: `string`
-
-Possible values: `jest`, `none`
-
-Test runner to use for unit tests
-
 ### version
 
 Alias(es): v
