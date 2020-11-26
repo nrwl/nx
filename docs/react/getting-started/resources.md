@@ -8,6 +8,10 @@
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/E188J7E_MDU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
+## Egghead: Scale React Development with Nx (free)
+
+[![Egghead course: Scale React Development with Nx](./EGH_ScalingReactNx.png)](https://egghead.io/playlists/scale-react-development-with-nx-4038)
+
 ## Nx Workspace (free)
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/2mYLe9Kp9VM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
