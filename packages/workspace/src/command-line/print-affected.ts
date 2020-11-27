@@ -1,24 +1,34 @@
 import { ProjectGraph, ProjectGraphNode } from '../core/project-graph';
+import { Environment, NxJson } from '../core/shared-interfaces';
 import { Task } from '../tasks-runner/tasks-runner';
-import { createTask } from '../tasks-runner/run-command';
+import { createTask, getRunner } from '../tasks-runner/run-command';
 import { basename } from 'path';
 import { getCommandAsString, getOutputs } from '../tasks-runner/utils';
 import * as yargs from 'yargs';
 import { NxArgs } from './utils';
+import { Hasher } from '../core/hasher/hasher';
 
-export function printAffected(
+export async function printAffected(
   affectedProjectsWithTargetAndConfig: ProjectGraphNode[],
   affectedProjects: ProjectGraphNode[],
   projectGraph: ProjectGraph,
+  { nxJson }: Environment,
   nxArgs: NxArgs,
   overrides: yargs.Arguments
 ) {
+  const { tasksOptions } = getRunner(nxArgs, nxJson, {
+    ...nxArgs,
+    ...overrides,
+  });
+
   const projectNames = affectedProjects.map((p) => p.name);
-  const tasksJson = createTasks(
+  const hasher = new Hasher(projectGraph, nxJson, tasksOptions);
+  const tasksJson = await createTasks(
     affectedProjectsWithTargetAndConfig,
     projectGraph,
     nxArgs,
-    overrides
+    overrides,
+    hasher
   );
   const result = {
     tasks: tasksJson,
@@ -32,11 +42,12 @@ export function printAffected(
   }
 }
 
-function createTasks(
+async function createTasks(
   affectedProjectsWithTargetAndConfig: ProjectGraphNode[],
   projectGraph: ProjectGraph,
   nxArgs: NxArgs,
-  overrides: yargs.Arguments
+  overrides: yargs.Arguments,
+  hasher: Hasher
 ) {
   const tasks: Task[] = affectedProjectsWithTargetAndConfig.map(
     (affectedProject) =>
@@ -47,8 +58,10 @@ function createTasks(
         overrides: overrides,
       })
   );
+
+  const taskHashes = await hasher.hashTasks(tasks);
   const isYarn = basename(process.env.npm_execpath || 'npm').startsWith('yarn');
-  return tasks.map((task) => ({
+  return tasks.map((task, index) => ({
     id: task.id,
     overrides: overrides,
     target: task.target,
@@ -58,6 +71,7 @@ function createTasks(
       task
     )}`,
     outputs: getOutputs(projectGraph.nodes, task),
+    hash: taskHashes[index].value,
   }));
 }
 
