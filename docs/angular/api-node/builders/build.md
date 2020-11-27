@@ -54,6 +54,14 @@ Type: `string`
 
 undefined
 
+### generatePackageJson
+
+Default: `false`
+
+Type: `boolean`
+
+Generates a package.json file with the project's node_module dependencies populated for installing in a container. If a package.json exists in the project's directory, it will be reused with dependencies populated.
+
 ### main
 
 Type: `string`

@@ -1,4 +1,4 @@
-import { Path, normalize } from '@angular-devkit/core';
+import { normalize } from '@angular-devkit/core';
 import { resolve, dirname, relative, basename } from 'path';
 import { BuildBuilderOptions } from './types';
 import { statSync } from 'fs';
@@ -11,12 +11,14 @@ export interface FileReplacement {
 export function normalizeBuildOptions<T extends BuildBuilderOptions>(
   options: T,
   root: string,
-  sourceRoot: string
+  sourceRoot: string,
+  projectRoot: string
 ): T {
   return {
     ...options,
-    root: root,
-    sourceRoot: sourceRoot,
+    root,
+    sourceRoot,
+    projectRoot,
     main: resolve(root, options.main),
     outputPath: resolve(root, options.outputPath),
     tsConfig: resolve(root, options.tsConfig),
