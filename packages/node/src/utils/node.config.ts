@@ -1,9 +1,9 @@
-import { Configuration, BannerPlugin } from 'webpack';
+import { Configuration } from 'webpack';
 import * as mergeWebpack from 'webpack-merge';
 import * as nodeExternals from 'webpack-node-externals';
 
-import { BuildNodeBuilderOptions } from '../builders/build/build.impl';
 import { getBaseWebpackPartial } from './config';
+import { BuildNodeBuilderOptions } from './types';
 
 function getNodePartial(options: BuildNodeBuilderOptions) {
   const webpackConfig: Configuration = {
