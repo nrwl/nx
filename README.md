@@ -116,11 +116,11 @@ You are good to go!
 
 <table>
   <tr>
-    <tr>
-      <td><strong>Scale React Development with Nx</strong></td>
-      <td><strong>Nx Workspaces</strong></td>
-      <td><strong>Advanced Nx Workspaces</strong></td>
-    </tr>
+    <td><strong>Scale React Development with Nx</strong></td>
+    <td><strong>Nx Workspaces</strong></td>
+    <td><strong>Advanced Nx Workspaces</strong></td>
+  </tr>
+  <tr>
     <td>
       <a href="https://egghead.io/playlists/scale-react-development-with-nx-4038" target="_blank">
       <p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/EGH_ScalingReactNx.png" height="150px"></p>
