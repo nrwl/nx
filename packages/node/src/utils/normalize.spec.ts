@@ -8,6 +8,7 @@ describe('normalizeBuildOptions', () => {
   let testOptions: BuildBuilderOptions;
   let root: string;
   let sourceRoot: Path;
+  let projectRoot: string;
 
   beforeEach(() => {
     testOptions = {
@@ -29,24 +30,45 @@ describe('normalizeBuildOptions', () => {
     };
     root = '/root';
     sourceRoot = normalize('apps/nodeapp/src');
+    projectRoot = 'apps/nodeapp';
   });
   it('should add the root', () => {
-    const result = normalizeBuildOptions(testOptions, root, sourceRoot);
+    const result = normalizeBuildOptions(
+      testOptions,
+      root,
+      sourceRoot,
+      projectRoot
+    );
     expect(result.root).toEqual('/root');
   });
 
   it('should resolve main from root', () => {
-    const result = normalizeBuildOptions(testOptions, root, sourceRoot);
+    const result = normalizeBuildOptions(
+      testOptions,
+      root,
+      sourceRoot,
+      projectRoot
+    );
     expect(result.main).toEqual('/root/apps/nodeapp/src/main.ts');
   });
 
   it('should resolve the output path', () => {
-    const result = normalizeBuildOptions(testOptions, root, sourceRoot);
+    const result = normalizeBuildOptions(
+      testOptions,
+      root,
+      sourceRoot,
+      projectRoot
+    );
     expect(result.outputPath).toEqual('/root/dist/apps/nodeapp');
   });
 
   it('should resolve the tsConfig path', () => {
-    const result = normalizeBuildOptions(testOptions, root, sourceRoot);
+    const result = normalizeBuildOptions(
+      testOptions,
+      root,
+      sourceRoot,
+      projectRoot
+    );
     expect(result.tsConfig).toEqual('/root/apps/nodeapp/tsconfig.app.json');
   });
 
@@ -69,7 +91,8 @@ describe('normalizeBuildOptions', () => {
         ],
       },
       root,
-      sourceRoot
+      sourceRoot,
+      projectRoot
     );
     expect(result.assets).toEqual([
       {
@@ -87,7 +110,12 @@ describe('normalizeBuildOptions', () => {
   });
 
   it('should resolve the file replacement paths', () => {
-    const result = normalizeBuildOptions(testOptions, root, sourceRoot);
+    const result = normalizeBuildOptions(
+      testOptions,
+      root,
+      sourceRoot,
+      projectRoot
+    );
     expect(result.fileReplacements).toEqual([
       {
         replace: '/root/apps/environment/environment.ts',
