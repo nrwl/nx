@@ -11,9 +11,9 @@ export const typesStyledComponentsVersion = '5.1.4';
 export const reactIsVersion = '17.0.1';
 export const typesReactIsVersion = '16.7.1';
 
-export const emotionStyledVersion = '10.0.27';
-export const emotionCoreVersion = '10.0.28';
-export const emotionBabelPresetCssPropVersion = '10.0.27';
+export const emotionStyledVersion = '11.0.0';
+export const emotionReactVersion = '11.0.0';
+export const emotionBabelPresetCssPropVersion = '11.0.0';
 
 export const styledJsxVersion = '3.3.1';
 export const typesStyledJsxVersion = '2.2.8';

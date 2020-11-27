@@ -3,4 +3,4 @@ export {
   getFileContent,
   MockBuilderContext,
 } from './src/utils/testing-utils';
-export { callRule } from './src/utils/testing';
+export { callRule, runSchematic } from './src/utils/testing';

@@ -20,7 +20,7 @@ export const NEXT_SPECIFIC_STYLE_DEPENDENCIES = {
   '@emotion/styled': {
     dependencies: {
       ...CSS_IN_JS_DEPENDENCIES['@emotion/styled'].dependencies,
-      'emotion-server': emotionServerVersion,
+      '@emotion/server': emotionServerVersion,
     },
     devDependencies: CSS_IN_JS_DEPENDENCIES['@emotion/styled'].devDependencies,
   },

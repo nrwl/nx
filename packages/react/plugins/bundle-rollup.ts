@@ -5,7 +5,7 @@ function getRollupOptions(options: rollup.RollupOptions) {
     react: 'React',
     'react-dom': 'ReactDOM',
     'styled-components': 'styled',
-    '@emotion/core': 'emotionCore',
+    '@emotion/react': 'emotionReact',
     '@emotion/styled': 'emotionStyled',
   };
   if (Array.isArray(options.output)) {

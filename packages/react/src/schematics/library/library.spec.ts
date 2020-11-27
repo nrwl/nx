@@ -455,7 +455,7 @@ describe('lib', () => {
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
-          external: ['react', 'react-dom', '@emotion/styled', '@emotion/core'],
+          external: ['react', 'react-dom', '@emotion/styled', '@emotion/react'],
         },
       });
     });
