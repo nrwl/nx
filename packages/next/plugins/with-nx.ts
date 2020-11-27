@@ -83,7 +83,7 @@ function withNx(nextConfig = {} as any) {
         nextErrorCssModuleLoader.exclude = includes;
       }
 
-      return userWebpack(config);
+      return userWebpack(config, { defaultLoaders });
     },
   };
 }
