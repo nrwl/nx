@@ -34,7 +34,7 @@ import {
 } from '@angular-devkit/schematics';
 import * as fs from 'fs';
 import * as inquirer from 'inquirer';
-import { detectPackageManager } from '../shared/detect-package-manager';
+import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 import { GenerateOptions, printGenHelp } from './generate';
 import * as taoTree from '../shared/tree';
 import { workspaceConfigName } from '@nrwl/tao/src/shared/workspace';

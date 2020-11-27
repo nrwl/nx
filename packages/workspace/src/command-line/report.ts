@@ -2,7 +2,7 @@ import * as chalk from 'chalk';
 import { execSync } from 'child_process';
 import { readFileSync } from 'fs';
 import { appRootPath } from '../utils/app-root';
-import { detectPackageManager } from '../utils/detect-package-manager';
+import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 import { output } from '../utils/output';
 
 export const packagesWeCareAbout = [

@@ -28,8 +28,8 @@ import * as yargsParser from 'yargs-parser';
 import { appRootPath } from '../utils/app-root';
 import {
   detectPackageManager,
-  getPackageManagerExecuteCommand,
-} from '../utils/detect-package-manager';
+  getPackageManagerCommand,
+} from '@nrwl/tao/src/shared/package-manager';
 import { fileExists, readJsonFile, writeJsonFile } from '../utils/fileutils';
 import { output } from '../utils/output';
 import { CompilerOptions } from 'typescript';
@@ -110,8 +110,8 @@ function compileToolsDir(outDir: string) {
     include: [path.join(generatorsDir(), '**/*.ts')],
   });
 
-  const packageExec = getPackageManagerExecuteCommand();
-  const tsc = `${packageExec} tsc`;
+  const pmc = getPackageManagerCommand();
+  const tsc = `${pmc.exec} tsc`;
   try {
     execSync(`${tsc} -p ${tmpTsConfigPath}`, {
       stdio: 'inherit',

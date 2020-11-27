@@ -1,9 +1,6 @@
 import * as chalk from 'chalk';
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { appRootPath } from '../app-root';
-import {
-  detectPackageManager,
-  getPackageManagerInstallCommand,
-} from '../detect-package-manager';
 import { readJsonFile } from '../fileutils';
 import { output } from '../output';
 import { PluginCapabilities } from './models';
@@ -76,15 +73,10 @@ export function listPluginCapabilities(pluginName: string) {
   const plugin = getPluginCapabilities(appRootPath, pluginName);
 
   if (!plugin) {
-    const packageManager = detectPackageManager();
+    const pmc = getPackageManagerCommand();
     output.note({
       title: `${pluginName} is not currently installed`,
-      bodyLines: [
-        `Use "${getPackageManagerInstallCommand(
-          packageManager,
-          true
-        )} ${pluginName}" to add new capabilities`,
-      ],
+      bodyLines: [`Use "${pmc.addDev} ${pluginName}" to add new capabilities`],
     });
 
     return;

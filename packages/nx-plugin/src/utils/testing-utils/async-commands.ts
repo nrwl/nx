@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 import { tmpProjPath } from './paths';
-import { getPackageManagerExecuteCommand } from '@nrwl/workspace/src/utils/detect-package-manager';
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 
 /**
  * Run a command asynchronously inside the e2e directory.
@@ -41,8 +41,6 @@ export function runNxCommandAsync(
     silenceError: false,
   }
 ): Promise<{ stdout: string; stderr: string }> {
-  return runCommandAsync(
-    `${getPackageManagerExecuteCommand()} nx ${command}`,
-    opts
-  );
+  const pmc = getPackageManagerCommand();
+  return runCommandAsync(`${pmc.exec} nx ${command}`, opts);
 }
