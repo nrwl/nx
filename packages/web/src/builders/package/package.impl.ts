@@ -105,7 +105,7 @@ export function run(
           const watcher = rollup.watch(rollupOptions);
           watcher.on('event', (data) => {
             if (data.code === 'START') {
-              context.logger.info('Bundling...');
+              context.logger.info(`Bundling ${context.target.project}...`);
             } else if (data.code === 'END') {
               updatePackageJson(
                 options,
@@ -129,7 +129,7 @@ export function run(
           return () => watcher.close();
         });
       } else {
-        context.logger.info(`Bundling...`);
+        context.logger.info(`Bundling ${context.target.project}...`);
 
         // Delete output path before bundling
         deleteOutputDir(context.workspaceRoot, options.outputPath);
@@ -152,7 +152,9 @@ export function run(
                       dependencies,
                       packageJson
                     );
-                    context.logger.info('Bundle complete.');
+                    context.logger.info(
+                      `${context.target.project} bundled successfully.`
+                    );
                   } else {
                     context.logger.error('Bundle failed.');
                   }
