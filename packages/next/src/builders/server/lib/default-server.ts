@@ -16,6 +16,7 @@ export async function defaultServer(
   await app.prepare();
 
   const server: express.Express = express();
+  server.disable('x-powered-by');
 
   // Set up the proxy.
   if (proxyConfig) {
