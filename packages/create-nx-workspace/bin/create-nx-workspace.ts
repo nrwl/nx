@@ -2,7 +2,7 @@
 
 // we can import from '@nrwl/workspace' because it will require typescript
 import { output } from '@nrwl/workspace/src/utils/output';
-import { getPackageManagerExecuteCommand } from '@nrwl/workspace/src/utils/detect-package-manager';
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { execSync } from 'child_process';
 import { writeFileSync } from 'fs';
 import * as inquirer from 'inquirer';
@@ -457,12 +457,14 @@ function createApp(
     : ` --interactive=false`;
   const defaultBaseArg = defaultBase ? ` --defaultBase="${defaultBase}"` : ``;
 
-  const packageExec = getPackageManagerExecuteCommand(packageManager);
+  const pmc = getPackageManagerCommand(packageManager);
   const command = `new ${name} ${args} --preset="${preset}"${appNameArg}${styleArg}${linterArg}${nxCloudArg}${interactiveArg}${defaultBaseArg} --collection=@nrwl/workspace`;
   console.log(command);
 
   execSync(
-    `${packageExec} tao ${command}/collection.json --cli=${cli} --nxWorkspaceRoot="${process.cwd()}"`,
+    `${
+      pmc.exec
+    } tao ${command}/collection.json --cli=${cli} --nxWorkspaceRoot="${process.cwd()}"`,
     {
       stdio: [0, 1, 2],
       cwd: tmpDir,
@@ -471,7 +473,7 @@ function createApp(
 
   if (nxCloud) {
     output.addVerticalSeparator();
-    execSync(`${packageExec} nx g @nrwl/nx-cloud:init --no-analytics`, {
+    execSync(`${pmc.exec} nx g @nrwl/nx-cloud:init --no-analytics`, {
       stdio: [0, 1, 2],
       cwd: path.join(process.cwd(), name),
     });

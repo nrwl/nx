@@ -11,8 +11,8 @@ import { getLogger } from '../shared/logger';
 import { convertToCamelCase, handleErrors } from '../shared/params';
 import {
   detectPackageManager,
-  getPackageManagerInstallCommand,
-} from '../shared/detect-package-manager';
+  getPackageManagerCommand,
+} from '@nrwl/tao/src/shared/package-manager';
 import { FsTree } from '@nrwl/tao/src/shared/tree';
 import { flushChanges } from '@nrwl/tao/src/commands/generate';
 
@@ -423,8 +423,8 @@ function createFetcher(packageManager: string, logger: logging.Logger) {
     if (!cache[`${packageName}-${packageVersion}`]) {
       const dir = dirSync().name;
       logger.info(`Fetching ${packageName}@${packageVersion}`);
-      const install = getPackageManagerInstallCommand(packageManager);
-      execSync(`${install} ${packageName}@${packageVersion}`, {
+      const pmc = getPackageManagerCommand(packageManager);
+      execSync(`${pmc.add} ${packageName}@${packageVersion}`, {
         stdio: [],
         cwd: dir,
       });
@@ -546,6 +546,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
   }
 ) {
   const packageManager = detectPackageManager();
+  const pmc = getPackageManagerCommand(packageManager);
   try {
     logger.info(`Fetching meta data about packages.`);
     logger.info(`It may take a few minutes.`);
@@ -570,7 +571,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 
       logger.info(`NX Next steps:`);
       logger.info(
-        `- Make sure package.json changes make sense and then run 'npm install' or 'yarn'`
+        `- Make sure package.json changes make sense and then run '${pmc.install}'`
       );
       logger.info(`- Run 'nx migrate --run-migrations=migrations.json'`);
     } else {
@@ -582,7 +583,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 
       logger.info(`NX Next steps:`);
       logger.info(
-        `- Make sure package.json changes make sense and then run 'npm install' or 'yarn'`
+        `- Make sure package.json changes make sense and then run '${pmc.install}'`
       );
     }
   } catch (e) {

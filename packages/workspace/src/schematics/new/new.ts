@@ -23,7 +23,7 @@ import { nxVersion } from '../../utils/versions';
 import * as path from 'path';
 import { Observable } from 'rxjs';
 import { spawn } from 'child_process';
-import { getPackageManagerExecuteCommand } from '../../utils/detect-package-manager';
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 // @ts-ignore
 import yargsParser = require('yargs-parser');
 import { names } from '@nrwl/devkit';
@@ -78,7 +78,8 @@ function createPresetTaskExecutor(opts: Schema) {
           shell: true,
           cwd: path.join(opts.nxWorkspaceRoot || process.cwd(), opts.directory),
         };
-        const executable = `${getPackageManagerExecuteCommand()} ${cliCommand}`;
+        const pmc = getPackageManagerCommand();
+        const executable = `${pmc.exec} ${cliCommand}`;
         const args = [
           `g`,
           `@nrwl/workspace:preset`,
