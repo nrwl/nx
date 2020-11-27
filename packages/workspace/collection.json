@@ -37,16 +37,9 @@
       "description": "Remove an application or library"
     },
 
-    "ng-new": {
-      "factory": "./src/schematics/ng-new/ng-new",
-      "schema": "./src/schematics/ng-new/schema.json",
-      "description": "Create a workspace",
-      "hidden": true
-    },
-
-    "tao-new": {
-      "factory": "./src/schematics/tao-new/tao-new",
-      "schema": "./src/schematics/tao-new/schema.json",
+    "new": {
+      "factory": "./src/schematics/new/new",
+      "schema": "./src/schematics/new/schema.json",
       "description": "Create a workspace",
       "hidden": true
     },

@@ -29,6 +29,7 @@ import yargsParser = require('yargs-parser');
 import { names } from '@nrwl/devkit';
 
 export interface Schema {
+  cli: 'nx' | 'angular';
   directory: string;
   name: string;
   appName: string;
@@ -62,8 +63,8 @@ class RunPresetTask {
   }
 }
 
-function createPresetTaskExecutor(cli: string, opts: Schema) {
-  const cliCommand = cli === 'angular' ? 'ng' : 'nx';
+function createPresetTaskExecutor(opts: Schema) {
+  const cliCommand = opts.cli === 'angular' ? 'ng' : 'nx';
   const parsedArgs = yargsParser(process.argv, {
     boolean: ['interactive'],
   });
@@ -106,7 +107,7 @@ function createPresetTaskExecutor(cli: string, opts: Schema) {
   };
 }
 
-export function sharedNew(cli: string, options: Schema): Rule {
+export default function (options: Schema): Rule {
   if (
     options.skipInstall &&
     options.preset !== 'empty' &&
@@ -129,11 +130,11 @@ export function sharedNew(cli: string, options: Schema): Rule {
   };
   return (host: Tree, context: SchematicContext) => {
     const engineHost = (context.engine.workflow as any).engineHost;
-    engineHost.registerTaskExecutor(createPresetTaskExecutor(cli, options));
+    engineHost.registerTaskExecutor(createPresetTaskExecutor(options));
 
     return chain([
-      schematic('workspace', { ...workspaceOpts, cli }),
-      cli === 'angular' ? setDefaultPackageManager(options) : noop(),
+      schematic('workspace', workspaceOpts),
+      options.cli === 'angular' ? setDefaultPackageManager(options) : noop(),
       setDefaultLinter(options),
       addPresetDependencies(options),
       addCloudDependencies(options),
