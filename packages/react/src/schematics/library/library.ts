@@ -113,7 +113,9 @@ export default function (schema: Schema): Rule {
             pascalCaseFiles: options.pascalCaseFiles,
           })
         : noop(),
-      options.publishable ? updateLibPackageNpmScope(options) : noop(),
+      options.publishable || options.buildable
+        ? updateLibPackageNpmScope(options)
+        : noop(),
       addDepsToPackageJson(
         {
           react: reactVersion,
