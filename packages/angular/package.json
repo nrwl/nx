@@ -41,6 +41,7 @@
   "dependencies": {
     "@angular-devkit/schematics": "~11.0.1",
     "@nrwl/cypress": "*",
+    "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
     "@schematics/angular": "~11.0.1",

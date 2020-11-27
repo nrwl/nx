@@ -62,17 +62,11 @@ function createWorkspace(
   const command = `new ${args} --preset=empty --collection=@nrwl/workspace`;
   console.log(command);
 
-  const collectionJsonPath = require.resolve(
-    '@nrwl/workspace/collection.json',
-    { paths: [tmpDir] }
-  );
-
   const pmc = getPackageManagerCommand(packageManager);
   execSync(
-    `${pmc.exec} tao ${command.replace(
-      '--collection=@nrwl/workspace',
-      `--collection=${collectionJsonPath}`
-    )} --nxWorkspaceRoot="${process.cwd()}"`,
+    `${
+      pmc.exec
+    } tao ${command}/collection.json --nxWorkspaceRoot="${process.cwd()}"`,
     {
       stdio: [0, 1, 2],
       cwd: tmpDir,
