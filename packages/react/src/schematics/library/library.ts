@@ -14,7 +14,7 @@ import {
   Tree,
   url,
 } from '@angular-devkit/schematics';
-import { CSS_IN_JS_DEPENDENCIES } from '@nrwl/react';
+import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
 import {
   addDepsToPackageJson,
   addLintFiles,

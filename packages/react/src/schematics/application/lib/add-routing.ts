@@ -13,7 +13,7 @@ import { NormalizedSchema } from '../schema';
 import {
   reactRouterDomVersion,
   typesReactRouterDomVersion,
-} from '@nrwl/react/src/utils/versions';
+} from '../../../../src/utils/versions';
 
 export function addRouting(
   options: NormalizedSchema,
