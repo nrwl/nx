@@ -105,11 +105,19 @@ export async function affected(
             projectsWithTarget,
             affectedProjects,
             projectGraph,
+            env,
             nxArgs,
             overrides
           );
         } else {
-          printAffected([], affectedProjects, projectGraph, nxArgs, overrides);
+          printAffected(
+            [],
+            affectedProjects,
+            projectGraph,
+            env,
+            nxArgs,
+            overrides
+          );
         }
         break;
 
