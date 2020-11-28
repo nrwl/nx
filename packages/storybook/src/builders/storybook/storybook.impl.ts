@@ -96,6 +96,7 @@ async function findOrCreateConfig(
   config: StorybookConfig,
   context: BuilderContext
 ): Promise<string> {
+  process.env.STORYBOOK_ANGULAR_PROJECT = context.target.project;
   const host = new NodeJsSyncHost();
   const sourceRoot = await getRoot(context, host);
 
