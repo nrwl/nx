@@ -1,4 +1,4 @@
-import { terminal } from '@angular-devkit/core';
+import * as chalk from 'chalk';
 import { output } from '../output';
 import { CorePlugin, PluginCapabilities } from './models';
 
@@ -76,7 +76,7 @@ export function listCorePlugins(
     output.log({
       title: `Also available:`,
       bodyLines: alsoAvailable.map((p) => {
-        return `${terminal.bold(p.name)} (${p.capabilities})`;
+        return `${chalk.bold(p.name)} (${p.capabilities})`;
       }),
     });
   }

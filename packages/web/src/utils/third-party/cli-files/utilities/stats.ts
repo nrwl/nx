@@ -7,10 +7,9 @@
  */
 // tslint:disable
 // TODO: cleanup this file, it's copied as is from Angular CLI.
-import { tags, terminal } from '@angular-devkit/core';
+import { tags } from '@angular-devkit/core';
+import { bold, green, red, reset, white, yellow } from 'chalk';
 import * as path from 'path';
-
-const { bold, green, red, reset, white, yellow } = terminal;
 
 export function formatSize(size: number): string {
   if (size <= 0) {

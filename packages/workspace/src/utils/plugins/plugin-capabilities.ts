@@ -1,4 +1,4 @@
-import { terminal } from '@angular-devkit/core';
+import * as chalk from 'chalk';
 import { appRootPath } from '../app-root';
 import {
   detectPackageManager,
@@ -101,12 +101,11 @@ export function listPluginCapabilities(pluginName: string) {
   const bodyLines = [];
 
   if (hasGenerators) {
-    bodyLines.push(terminal.bold(terminal.green('GENERATORS')));
+    bodyLines.push(chalk.bold(chalk.green('GENERATORS')));
     bodyLines.push('');
     bodyLines.push(
       ...Object.keys(plugin.generators).map(
-        (name) =>
-          `${terminal.bold(name)} : ${plugin.generators[name].description}`
+        (name) => `${chalk.bold(name)} : ${plugin.generators[name].description}`
       )
     );
     if (hasBuilders) {
@@ -115,12 +114,11 @@ export function listPluginCapabilities(pluginName: string) {
   }
 
   if (hasBuilders) {
-    bodyLines.push(terminal.bold(terminal.green('EXECUTORS/BUILDERS')));
+    bodyLines.push(chalk.bold(chalk.green('EXECUTORS/BUILDERS')));
     bodyLines.push('');
     bodyLines.push(
       ...Object.keys(plugin.executors).map(
-        (name) =>
-          `${terminal.bold(name)} : ${plugin.executors[name].description}`
+        (name) => `${chalk.bold(name)} : ${plugin.executors[name].description}`
       )
     );
   }

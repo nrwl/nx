@@ -1,4 +1,5 @@
 import {
+  checkFilesExist,
   newProject,
   readJson,
   runCLI,
@@ -138,18 +139,21 @@ import { names } from '@nrwl/devkit';
     });
 
     it('should build the library when it does not have any deps', () => {
-      const libOutput = runCLI(`build ${childLib}`);
-      expect(libOutput).toContain(`Built @proj/${childLib}`);
+      runCLI(`build ${childLib}`);
+
+      checkFilesExist(`dist/libs/${childLib}/package.json`);
     });
 
     it('should properly add references to any dependency into the parent package.json', () => {
-      const childLibOutput = runCLI(`build ${childLib}`);
-      const childLib2Output = runCLI(`build ${childLib2}`);
-      const parentLibOutput = runCLI(`build ${parentLib}`);
+      runCLI(`build ${childLib}`);
+      runCLI(`build ${childLib2}`);
+      runCLI(`build ${parentLib}`);
 
-      expect(childLibOutput).toContain(`Built @proj/${childLib}`);
-      expect(childLib2Output).toContain(`Built @proj/${childLib2}`);
-      expect(parentLibOutput).toContain(`Built @proj/${parentLib}`);
+      checkFilesExist(
+        `dist/libs/${childLib}/package.json`,
+        `dist/libs/${childLib2}/package.json`,
+        `dist/libs/${parentLib}/package.json`
+      );
 
       const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
       // expect(jsonFile.dependencies).toEqual({ tslib: '^2.0.0' });

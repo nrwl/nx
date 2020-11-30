@@ -1,4 +1,4 @@
-import { terminal } from '@angular-devkit/core';
+import * as chalk from 'chalk';
 import { execSync } from 'child_process';
 import { readFileSync } from 'fs';
 import { appRootPath } from '../utils/app-root';
@@ -60,7 +60,7 @@ function reportHandler() {
       const packageJson = JSON.parse(readFileSync(packageJsonPath).toString());
       status = packageJson.version;
     } catch {}
-    bodyLines.push(`${terminal.green(p)} : ${terminal.bold(status)}`);
+    bodyLines.push(`${chalk.green(p)} : ${chalk.bold(status)}`);
   });
 
   output.log({

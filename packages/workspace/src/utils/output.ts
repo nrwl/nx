@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import * as chalk from 'chalk';
 
 export interface CLIErrorMessageConfig {
   title: string;
@@ -26,7 +26,7 @@ export interface CLISuccessMessageConfig {
  * Automatically disable styling applied by chalk if CI=true
  */
 if (process.env.CI === 'true') {
-  chalk.level = 0;
+  (chalk as any).level = 0;
 }
 
 class CLIOutput {

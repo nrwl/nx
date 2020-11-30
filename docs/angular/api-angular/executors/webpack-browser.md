@@ -230,14 +230,6 @@ Type: `boolean`
 
 Log progress to the console while building.
 
-### rebaseRootRelativeCssUrls
-
-Default: `false`
-
-Type: `boolean`
-
-Change root relative URLs in stylesheets to include base HREF and deploy URL. Use only for compatibility and transition. The behavior of this option is non-standard and will be removed in the next major release.
-
 ### resourcesOutputPath
 
 Type: `string`

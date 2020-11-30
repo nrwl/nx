@@ -1,8 +1,9 @@
-import { logging, tags, terminal } from '@angular-devkit/core';
+import { logging, tags } from '@angular-devkit/core';
 import { Schema } from './params';
+import * as chalk from 'chalk';
 
 function formatOption(name: string, description: string) {
-  return `  --${(name + '                     ').substr(0, 22)}${terminal.grey(
+  return `  --${(name + '                     ').substr(0, 22)}${chalk.grey(
     description
   )}`;
 }
@@ -26,9 +27,9 @@ export function printHelp(
     .join('\n');
 
   logger.info(tags.stripIndent`
-${terminal.bold(header + positional + ' [options,...]')}
+${chalk.bold(header + positional + ' [options,...]')}
 
-${terminal.bold('Options')}:
+${chalk.bold('Options')}:
 ${args}
 ${formatOption('help', 'Show available options for project target.')}
   `);

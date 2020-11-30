@@ -1,30 +1,31 @@
-import { logging, terminal } from '@angular-devkit/core';
+import { logging } from '@angular-devkit/core';
+import * as chalk from 'chalk';
 import { createConsoleLogger } from '@angular-devkit/core/node';
 
-const NX_PREFIX = `${terminal.cyan('>')} ${terminal.inverse(
-  terminal.bold(terminal.cyan(' NX '))
+const NX_PREFIX = `${chalk.cyan('>')} ${chalk.inverse(
+  chalk.bold(chalk.cyan(' NX '))
 )}`;
 
-const NX_ERROR = terminal.inverse(terminal.bold(terminal.red(' ERROR ')));
+const NX_ERROR = chalk.inverse(chalk.bold(chalk.red(' ERROR ')));
 
 let logger: logging.Logger;
 export const getLogger = (isVerbose = false): any => {
   if (!logger) {
     logger = createConsoleLogger(isVerbose, process.stdout, process.stderr, {
-      warn: (s) => terminal.bold(terminal.yellow(s)),
+      warn: (s) => chalk.bold(chalk.yellow(s)),
       error: (s) => {
         if (s.startsWith('NX ')) {
-          return `\n${NX_ERROR} ${terminal.bold(terminal.red(s.substr(3)))}\n`;
+          return `\n${NX_ERROR} ${chalk.bold(chalk.red(s.substr(3)))}\n`;
         }
 
-        return terminal.bold(terminal.red(s));
+        return chalk.bold(chalk.red(s));
       },
       info: (s) => {
         if (s.startsWith('NX ')) {
-          return `\n${NX_PREFIX} ${terminal.bold(s.substr(3))}\n`;
+          return `\n${NX_PREFIX} ${chalk.bold(s.substr(3))}\n`;
         }
 
-        return terminal.white(s);
+        return chalk.white(s);
       },
     });
   }
