@@ -74,6 +74,14 @@ Type: `string`
 
 A directory where the lib is placed.
 
+### globalCss
+
+Default: `false`
+
+Type: `boolean`
+
+When true, the stylesheet is generated using global CSS instead of CSS modules (e.g. file is '_.css' rather than '_.module.css').
+
 ### importPath
 
 Type: `string`

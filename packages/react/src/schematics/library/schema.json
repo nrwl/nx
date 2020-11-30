@@ -134,6 +134,11 @@
       "type": "boolean",
       "description": "Generate JavaScript files rather than TypeScript files.",
       "default": false
+    },
+    "globalCss": {
+      "type": "boolean",
+      "description": "When true, the stylesheet is generated using global CSS instead of CSS modules (e.g. file is '*.css' rather than '*.module.css').",
+      "default": false
     }
   },
   "required": ["name"]

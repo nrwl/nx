@@ -27,7 +27,7 @@ describe('component', () => {
       tree.exists('apps/my-app/src/components/hello/hello.spec.tsx')
     ).toBeTruthy();
     expect(
-      tree.exists('apps/my-app/src/components/hello/hello.css')
+      tree.exists('apps/my-app/src/components/hello/hello.module.css')
     ).toBeTruthy();
   });
 
@@ -42,6 +42,8 @@ describe('component', () => {
     expect(
       tree.exists('apps/my-app/src/lib/hello/hello.spec.tsx')
     ).toBeTruthy();
-    expect(tree.exists('apps/my-app/src/lib/hello/hello.css')).toBeTruthy();
+    expect(
+      tree.exists('apps/my-app/src/lib/hello/hello.module.css')
+    ).toBeTruthy();
   });
 });
