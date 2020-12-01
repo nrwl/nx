@@ -388,7 +388,7 @@ async function promptForValues(opts: Options, schema: Schema) {
 
       if (typeof v['x-prompt'] === 'string') {
         question.message = v['x-prompt'];
-        question.type = v.type;
+        question.type = v.type === 'boolean' ? 'confirm' : 'string';
       } else if (
         v['x-prompt'].type == 'confirmation' ||
         v['x-prompt'].type == 'confirm'
