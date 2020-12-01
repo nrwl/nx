@@ -2,9 +2,9 @@ import { Architect } from '@angular-devkit/architect';
 import { WorkspaceNodeModulesArchitectHost } from '@angular-devkit/architect/node';
 import {
   json,
-  JsonObject,
   logging,
   normalize,
+  Path,
   schema,
   tags,
   virtualFs,
@@ -12,13 +12,7 @@ import {
 } from '@angular-devkit/core';
 import * as chalk from 'chalk';
 import { NodeJsSyncHost } from '@angular-devkit/core/node';
-import {
-  coerceTypesInOptions,
-  convertAliases,
-  Options,
-  Schema,
-} from '../shared/params';
-import { printRunHelp, RunOptions } from './run';
+import { RunOptions } from './run';
 import {
   FileSystemCollectionDescription,
   FileSystemSchematicDescription,
@@ -33,24 +27,25 @@ import {
   TaskExecutor,
 } from '@angular-devkit/schematics';
 import * as fs from 'fs';
-import * as inquirer from 'inquirer';
+import { readFileSync } from 'fs';
 import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
-import { GenerateOptions, printGenHelp } from './generate';
+import { GenerateOptions } from './generate';
 import * as taoTree from '../shared/tree';
-import { workspaceConfigName } from '@nrwl/tao/src/shared/workspace';
+import {
+  workspaceConfigName,
+  Workspaces,
+} from '@nrwl/tao/src/shared/workspace';
 import { BaseWorkflow } from '@angular-devkit/schematics/src/workflow';
 import { NodePackageName } from '@angular-devkit/schematics/tasks/package-manager/options';
 import { BuiltinTaskExecutor } from '@angular-devkit/schematics/tasks/node';
 import { dirname, extname, join, resolve } from 'path';
-import { readFileSync } from 'fs';
 import * as stripJsonComments from 'strip-json-comments';
-
-function normalizeOptions(opts: Options, schema: Schema): Options {
-  return convertAliases(coerceTypesInOptions(opts, schema), schema, false);
-}
+import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
+import { Observable } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 
 export async function run(logger: any, root: string, opts: RunOptions) {
-  const fsHost = new NodeJsSyncHost();
+  const fsHost = new NxScopedHost(normalize(root));
   const { workspace } = await workspaces.readWorkspace(
     workspaceConfigName(root),
     workspaces.createWorkspaceHost(fsHost)
@@ -60,32 +55,13 @@ export async function run(logger: any, root: string, opts: RunOptions) {
   registry.addPostTransform(schema.transforms.addUndefinedDefaults);
   const architectHost = new WorkspaceNodeModulesArchitectHost(workspace, root);
   const architect = new Architect(architectHost, registry);
-
-  const builderConf = await architectHost.getBuilderNameForTarget({
-    project: opts.project,
-    target: opts.target,
-  });
-  const builderDesc = await architectHost.resolveBuilder(builderConf);
-  const flattenedSchema = await registry
-    .flatten(builderDesc.optionSchema as json.JsonObject)
-    .toPromise();
-
-  if (opts.help) {
-    printRunHelp(opts, flattenedSchema as Schema, logger);
-    return 0;
-  }
-
-  const runOptions = normalizeOptions(
-    opts.runOptions,
-    flattenedSchema as Schema
-  );
   const run = await architect.scheduleTarget(
     {
       project: opts.project,
       target: opts.target,
       configuration: opts.configuration,
     },
-    runOptions as JsonObject,
+    opts.runOptions,
     { logger }
   );
   const result = await run.output.toPromise();
@@ -93,7 +69,7 @@ export async function run(logger: any, root: string, opts: RunOptions) {
   return result.success ? 0 : 1;
 }
 
-async function createWorkflow(
+function createWorkflow(
   fsHost: virtualFs.Host<fs.Stats>,
   root: string,
   opts: any
@@ -106,77 +82,10 @@ async function createWorkflow(
     registry: new schema.CoreSchemaRegistry(formats.standardFormats),
     resolvePaths: [process.cwd(), root],
   });
-  const _params = opts.generatorOptions._;
-  delete opts.generatorOptions._;
-  workflow.registry.addSmartDefaultProvider('argv', (schema: JsonObject) => {
-    if ('index' in schema) {
-      return _params[Number(schema['index'])];
-    } else {
-      return _params;
-    }
-  });
-
-  if (opts.defaults) {
-    workflow.registry.addPreTransform(schema.transforms.addUndefinedDefaults);
-  } else {
-    workflow.registry.addPostTransform(schema.transforms.addUndefinedDefaults);
-  }
-
+  workflow.registry.addPostTransform(schema.transforms.addUndefinedDefaults);
   workflow.engineHost.registerOptionsTransform(
     validateOptionsWithSchema(workflow.registry)
   );
-
-  if (opts.interactive !== false && isTTY()) {
-    workflow.registry.usePromptProvider(
-      (definitions: schema.PromptDefinition[]) => {
-        const questions: inquirer.QuestionCollection = definitions.map(
-          (definition) => {
-            const question = {
-              name: definition.id,
-              message: definition.message,
-              default: definition.default as
-                | string
-                | number
-                | boolean
-                | string[],
-            } as inquirer.Question;
-
-            const validator = definition.validator;
-            if (validator) {
-              question.validate = (input) => validator(input);
-            }
-
-            switch (definition.type) {
-              case 'confirmation':
-                question.type = 'confirm';
-                break;
-              case 'list':
-                question.type = definition.multiselect ? 'checkbox' : 'list';
-                question.choices =
-                  definition.items &&
-                  definition.items.map((item) => {
-                    if (typeof item == 'string') {
-                      return item;
-                    } else {
-                      return {
-                        name: item.label,
-                        value: item.value,
-                      };
-                    }
-                  });
-                break;
-              default:
-                question.type = definition.type;
-                break;
-            }
-            return question;
-          }
-        );
-
-        return inquirer.prompt(questions);
-      }
-    );
-  }
   return workflow;
 }
 
@@ -228,36 +137,6 @@ function createRecorder(
   };
 }
 
-async function getSchematicDefaults(
-  root: string,
-  collection: string,
-  schematic: string
-) {
-  const workspace = (
-    await workspaces.readWorkspace(
-      workspaceConfigName(root),
-      workspaces.createWorkspaceHost(new NodeJsSyncHost())
-    )
-  ).workspace;
-
-  let result = {};
-  if (workspace.extensions.schematics) {
-    const schematicObject =
-      workspace.extensions.schematics[`${collection}:${schematic}`];
-    if (schematicObject) {
-      result = { ...result, ...(schematicObject as {}) };
-    }
-    const collectionObject = workspace.extensions.schematics[collection];
-    if (
-      typeof collectionObject == 'object' &&
-      !Array.isArray(collectionObject)
-    ) {
-      result = { ...result, ...(collectionObject[schematic] as {}) };
-    }
-  }
-  return result;
-}
-
 async function runSchematic(
   root: string,
   workflow: NodeWorkflow,
@@ -267,70 +146,33 @@ async function runSchematic(
     FileSystemCollectionDescription,
     FileSystemSchematicDescription
   >,
-  allowAdditionalArgs = false,
   printDryRunMessage = true,
   recorder: any = null
 ): Promise<{ status: number; loggingQueue: string[] }> {
-  const flattenedSchema = (await workflow.registry
-    .flatten(schematic.description.schemaJson)
-    .toPromise()) as Schema;
-
-  if (opts.help) {
-    printGenHelp(opts, flattenedSchema as Schema, logger as any);
-    return { status: 0, loggingQueue: [] };
-  }
-
-  const defaults =
-    opts.generatorName === 'new'
-      ? {}
-      : await getSchematicDefaults(
-          root,
-          opts.collectionName,
-          opts.generatorName
-        );
   const record = { loggingQueue: [] as string[], error: false };
   workflow.reporter.subscribe(recorder || createRecorder(record, logger));
 
-  const schematicOptions = normalizeOptions(
-    opts.generatorOptions,
-    flattenedSchema
-  );
-
-  if (schematicOptions['--'] && !allowAdditionalArgs) {
-    schematicOptions['--'].forEach((unmatched) => {
-      const message =
-        `Could not match option '${unmatched.name}' to the ${opts.collectionName}:${opts.generatorName} schema.` +
-        (unmatched.possible.length > 0
-          ? ` Possible matches : ${unmatched.possible.join()}`
-          : '');
-      logger.fatal(message);
-    });
-
-    return { status: 1, loggingQueue: [] };
+  try {
+    await workflow
+      .execute({
+        collection: opts.collectionName,
+        schematic: opts.generatorName,
+        options: opts.generatorOptions,
+        debug: opts.debug,
+        logger,
+      })
+      .toPromise();
+  } catch (e) {
+    console.log(e);
+    throw e;
   }
-
-  await workflow
-    .execute({
-      collection: opts.collectionName,
-      schematic: opts.generatorName,
-      options: { ...defaults, ...schematicOptions },
-      debug: opts.debug,
-      logger,
-    })
-    .toPromise();
-
   if (!record.error) {
     record.loggingQueue.forEach((log) => logger.info(log));
   }
-
   if (opts.dryRun && printDryRunMessage) {
     logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
   }
   return { status: 0, loggingQueue: record.loggingQueue };
-}
-
-function isTTY(): boolean {
-  return !!process.stdout.isTTY && process.env['CI'] !== 'true';
 }
 
 class MigrationEngineHost extends NodeModulesEngineHost {
@@ -411,16 +253,100 @@ class MigrationsWorkflow extends BaseWorkflow {
   }
 }
 
+class NxScopedHost extends virtualFs.ScopedHost<any> {
+  constructor(root: Path) {
+    super(new NodeJsSyncHost(), root);
+  }
+
+  read(path: Path): Observable<FileBuffer> {
+    if (this.isWorkspaceConfig(path)) {
+      return this.isNewFormat().pipe(
+        switchMap((newFormat) => {
+          if (newFormat) {
+            return super.read(path).pipe(
+              map((r) => {
+                try {
+                  const w = JSON.parse(Buffer.from(r).toString());
+                  return Buffer.from(
+                    JSON.stringify(
+                      new Workspaces().fromNewToOldFormat(w),
+                      null,
+                      2
+                    )
+                  );
+                } catch (e) {
+                  return r;
+                }
+              })
+            );
+          } else {
+            return super.read(path);
+          }
+        })
+      );
+    } else {
+      return super.read(path);
+    }
+  }
+
+  write(path: Path, content: FileBuffer): Observable<void> {
+    if (this.isWorkspaceConfig(path)) {
+      return this.isNewFormat().pipe(
+        switchMap((newFormat) => {
+          if (newFormat) {
+            try {
+              const w = JSON.parse(Buffer.from(content).toString());
+              return super.write(
+                path,
+                Buffer.from(
+                  JSON.stringify(
+                    new Workspaces().fromOldToNewFormat(w),
+                    null,
+                    2
+                  )
+                )
+              );
+            } catch (e) {
+              return super.write(path, content);
+            }
+          } else {
+            return super.write(path, content);
+          }
+        })
+      );
+    } else {
+      return super.write(path, content);
+    }
+  }
+
+  private isWorkspaceConfig(path: Path) {
+    const p = path.toString();
+    return (
+      p === 'angular.json' ||
+      p === '/angular.json' ||
+      p === 'workspace.json' ||
+      p === '/workspace.json'
+    );
+  }
+
+  private isNewFormat() {
+    return super.exists('/angular.json' as any).pipe(
+      switchMap((isAngularJson) => {
+        return super
+          .read((isAngularJson ? '/angular.json' : '/workspace.json') as any)
+          .pipe(map((r) => !!JSON.parse(Buffer.from(r).toString()).generators));
+      })
+    );
+  }
+}
+
 export async function generate(
   logger: logging.Logger,
   root: string,
   opts: GenerateOptions
 ) {
-  const fsHost = new virtualFs.ScopedHost(
-    new NodeJsSyncHost(),
-    normalize(root)
-  );
-  const workflow = await createWorkflow(fsHost, root, opts);
+  const fsHost = new NxScopedHost(normalize(root));
+  const workflow = createWorkflow(fsHost, root, opts);
   const collection = getCollection(workflow, opts.collectionName);
   const schematic = collection.createSchematic(opts.generatorName, true);
   return (
@@ -440,7 +366,7 @@ export async function runMigration(
   collection: string,
   schematic: string
 ) {
-  const host = new virtualFs.ScopedHost(new NodeJsSyncHost(), normalize(root));
+  const host = new NxScopedHost(normalize(root));
   const workflow = new MigrationsWorkflow(host, logger);
   return workflow
     .execute({
@@ -484,10 +410,7 @@ export function wrapAngularDevkitSchematic(
         }
       };
 
-      const fsHost = new virtualFs.ScopedHost(
-        new NodeJsSyncHost(),
-        normalize(host.root)
-      );
+      const fsHost = new NxScopedHost(normalize(host.root));
 
       await Promise.all(
         (host as taoTree.FsTree).listChanges().map(async (c) => {
@@ -510,7 +433,7 @@ export function wrapAngularDevkitSchematic(
         force: false,
         defaults: false,
       };
-      const workflow = await createWorkflow(fsHost, host.root, options);
+      const workflow = createWorkflow(fsHost, host.root, options);
       const collection = getCollection(workflow, collectionName);
       const schematic = collection.createSchematic(generatorName, true);
       const res = await runSchematic(
@@ -519,7 +442,6 @@ export function wrapAngularDevkitSchematic(
         emptyLogger,
         options,
         schematic,
-        false,
         false,
         recorder
       );
@@ -536,22 +458,17 @@ export async function invokeNew(
   root: string,
   opts: GenerateOptions
 ) {
-  const fsHost = new virtualFs.ScopedHost(
-    new NodeJsSyncHost(),
-    normalize(root)
-  );
-  const workflow = await createWorkflow(fsHost, root, opts);
+  const fsHost = new NxScopedHost(normalize(root));
+  const workflow = createWorkflow(fsHost, root, opts);
   const collection = getCollection(workflow, opts.collectionName);
   const schematic = collection.createSchematic('new', true);
-  const allowAdditionalArgs = true; // we can't yet know the schema to validate against
   return (
     await runSchematic(
       root,
       workflow,
       logger,
       { ...opts, generatorName: schematic.description.name },
-      schematic,
-      allowAdditionalArgs
+      schematic
     )
   ).status;
 }

@@ -57,7 +57,10 @@ export function parseRunOneOptions(
   // we need both to be able to run a target, no tasks runner
   const p =
     workspaceConfigJson.projects && workspaceConfigJson.projects[project];
-  if (!p || !p.architect || !p.architect[target]) return false;
+  if (!p) return false;
+
+  const targets = p.architect ? p.architect : p.targets;
+  if (!targets || !targets[target]) return false;
 
   const res = { project, target, configuration, parsedArgs };
   delete parsedArgs['configuration'];

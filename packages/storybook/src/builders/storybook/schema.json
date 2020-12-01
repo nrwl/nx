@@ -64,19 +64,7 @@
           "type": "string",
           "description": "Project source path."
         }
-      },
-      "oneOf": [
-        {
-          "anyOf": [
-            {
-              "required": ["configFolder"]
-            },
-            {
-              "required": ["pluginPath", "configPath", "srcRoot"]
-            }
-          ]
-        }
-      ]
+      }
     },
     "docsMode": {
       "type": "boolean",

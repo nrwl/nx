@@ -146,21 +146,25 @@ export async function run(root: string, args: string[], isVerbose: boolean) {
 
     const target = workspace.projects[opts.project].targets[opts.target];
     const [nodeModule, executor] = target.executor.split(':');
+    const { schema, implementation } = ws.readExecutor(nodeModule, executor);
+    const combinedOptions = combineOptionsForExecutor(
+      opts.runOptions,
+      opts.configuration,
+      target,
+      schema
+    );
+    if (opts.help) {
+      printRunHelp(opts, schema, logger);
+      return 0;
+    }
+
     if (ws.isNxExecutor(nodeModule, executor)) {
-      const { schema, implementation } = ws.readExecutor(nodeModule, executor);
-      const combinedOptions = combineOptionsForExecutor(
-        opts.runOptions,
-        opts.configuration,
-        target,
-        schema
-      );
-      if (opts.help) {
-        printRunHelp(opts, schema, logger);
-        return 0;
-      }
       return await implementation(combinedOptions, { root, target, workspace });
     } else {
-      return (await import('./ngcli-adapter')).run(logger, root, opts);
+      return (await import('./ngcli-adapter')).run(logger, root, {
+        ...opts,
+        runOptions: combinedOptions,
+      });
     }
   });
 }
