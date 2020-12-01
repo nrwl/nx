@@ -9,41 +9,13 @@
       "type": "string",
       "enum": ["karma", "jest", "none"],
       "description": "Test runner to use for unit tests",
-      "default": "jest",
-      "x-prompt": {
-        "message": "Which Unit Test Runner would you like to use for the application?",
-        "type": "list",
-        "items": [
-          {
-            "value": "jest",
-            "label": "Jest  [ https://jestjs.io ]"
-          },
-          {
-            "value": "karma",
-            "label": "Karma [ https://karma-runner.github.io ]"
-          }
-        ]
-      }
+      "default": "jest"
     },
     "e2eTestRunner": {
       "type": "string",
       "enum": ["protractor", "cypress", "none"],
       "description": "Test runner to use for end to end (e2e) tests",
-      "default": "cypress",
-      "x-prompt": {
-        "message": "Which E2E Test Runner would you like to use?",
-        "type": "list",
-        "items": [
-          {
-            "value": "cypress",
-            "label": "Cypress    [ https://www.cypress.io ]"
-          },
-          {
-            "value": "protractor",
-            "label": "Protractor [ https://www.protractortest.org ]"
-          }
-        ]
-      }
+      "default": "cypress"
     },
     "skipInstall": {
       "type": "boolean",

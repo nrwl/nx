@@ -15,7 +15,7 @@ describe('Next.js Applications', () => {
     newProject();
     const appName = uniq('app');
 
-    runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
+    runCLI(`generate @nrwl/next:app ${appName}`);
 
     const proxyConf = {
       '/external-api': {

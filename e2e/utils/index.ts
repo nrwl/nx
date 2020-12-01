@@ -126,7 +126,9 @@ export function newProject(): void {
           (f) => f !== '@nrwl/nx-plugin' && f !== `@nrwl/eslint-plugin-nx`
         )
         .forEach((p) => {
-          runCLI(`g ${p}:init`, { cwd: `./tmp/${currentCli()}/proj` });
+          runCLI(`g ${p}:init --no-interactive`, {
+            cwd: `./tmp/${currentCli()}/proj`,
+          });
         });
 
       execSync(`mv ./tmp/${currentCli()}/proj ${tmpBackupProjPath()}`);

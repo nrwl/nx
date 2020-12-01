@@ -128,31 +128,60 @@ export class Workspaces {
     const w = JSON.parse(
       fs.readFileSync(path.join(root, workspaceConfigName(root))).toString()
     );
+    return this.fromOldToNewFormat(w);
+  }
 
+  fromOldToNewFormat(w: any) {
     Object.values(w.projects || {}).forEach((project: any) => {
-      if (!project.targets && project.architect) {
+      if (project.architect) {
         project.targets = project.architect;
-        project.architect = undefined;
+        delete project.architect;
       }
 
       Object.values(project.targets || {}).forEach((target: any) => {
-        if (!target.executor && target.builder) {
+        if (target.builder) {
           target.executor = target.builder;
-          target.builder = undefined;
+          delete target.builder;
         }
       });
 
-      if (!project.generators && project.schematics) {
+      if (project.schematics) {
         project.generators = project.schematics;
-        project.schematics = undefined;
+        delete project.schematics;
       }
     });
 
-    if (!w.generators && w.schematics) {
+    if (w.schematics) {
       w.generators = w.schematics;
-      w.schematics = undefined;
+      delete w.schematics;
     }
+    return w;
+  }
 
+  fromNewToOldFormat(w: any) {
+    Object.values(w.projects || {}).forEach((project: any) => {
+      if (project.targets) {
+        project.architect = project.targets;
+        delete project.targets;
+      }
+
+      Object.values(project.architect || {}).forEach((target: any) => {
+        if (target.executor) {
+          target.builder = target.executor;
+          delete target.execuctor;
+        }
+      });
+
+      if (project.generators) {
+        project.schematics = project.generators;
+        delete project.generators;
+      }
+    });
+
+    if (w.generators) {
+      w.schematics = w.generators;
+      delete w.generators;
+    }
     return w;
   }
 

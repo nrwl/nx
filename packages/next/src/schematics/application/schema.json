@@ -64,8 +64,7 @@
     },
     "server": {
       "description": "The server script path to be used with next.",
-      "type": "string",
-      "default": null
+      "type": "string"
     },
     "linter": {
       "description": "The tool to use for running lint checks.",

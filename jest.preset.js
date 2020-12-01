@@ -9,5 +9,5 @@ module.exports = {
   resolver: '../../scripts/patched-jest-resolver.js',
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageReporters: ['html'],
-  maxWorkers: 2,
+  maxWorkers: 1,
 };
