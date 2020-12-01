@@ -33,7 +33,7 @@
   },
   "peerDependencies": {
     "@nrwl/workspace": "*",
-    "cypress": ">= 3 < 6"
+    "cypress": ">= 3 < 7"
   },
   "dependencies": {
     "@nrwl/devkit": "*",
