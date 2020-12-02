@@ -304,6 +304,7 @@ export function convertPositionParamsIntoNamedParams(
       opts[k] = coerceType(v.type, argv[v.$default.index]);
     }
   });
+  delete opts['_'];
 }
 
 export function combineOptionsForExecutor(
