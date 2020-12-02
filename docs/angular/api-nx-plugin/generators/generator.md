@@ -38,13 +38,13 @@ Alias(es): d
 
 Type: `string`
 
-Schematic description
+Generator description
 
 ### name
 
 Type: `string`
 
-Schematic name
+Generator name
 
 ### project
 

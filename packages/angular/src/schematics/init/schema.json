@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "id": "SchematicsAngularModuleInit",
-  "title": "Add Nx Schematics to Project and Convert Workspace",
+  "title": "Init Angular Plugin",
   "description": "NOTE: Does not work in the --dry-run mode",
   "type": "object",
   "properties": {

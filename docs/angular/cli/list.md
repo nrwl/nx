@@ -18,7 +18,7 @@ List the plugins installed in the current workspace:
 nx list
 ```
 
-List the schematics and builders available in the `@nrwl/web` plugin if it is installed (If the plugin is not installed `nx` will show advice on how to add it to your workspace):
+List the generators and executors available in the `@nrwl/web` plugin if it is installed (If the plugin is not installed `nx` will show advice on how to add it to your workspace):
 
 ```bash
 nx list @nrwl/web

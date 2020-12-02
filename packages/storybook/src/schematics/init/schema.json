@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "Nx Storybook Project Schematics Schema",
+  "id": "Init Storybook Plugin",
   "title": "Add Storybook Configuration to the workspace",
   "type": "object",
   "properties": {

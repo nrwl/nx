@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "id": "NxNextNgInit",
-  "title": "Add Nx Next Schematics",
+  "title": "Init Next Plugin",
   "type": "object",
   "properties": {
     "unitTestRunner": {

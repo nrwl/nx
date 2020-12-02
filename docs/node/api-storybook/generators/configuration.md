@@ -28,7 +28,7 @@ nx g configuration ... --dry-run
 
 Type: `boolean`
 
-Run the cypress-configure schematic
+Run the cypress-configure generator
 
 ### js
 

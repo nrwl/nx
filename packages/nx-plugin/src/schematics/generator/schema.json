@@ -21,7 +21,7 @@
     },
     "name": {
       "type": "string",
-      "description": "Schematic name",
+      "description": "Generator name",
       "$default": {
         "$source": "argv",
         "index": 0
@@ -30,7 +30,7 @@
     },
     "description": {
       "type": "string",
-      "description": "Schematic description",
+      "description": "Generator description",
       "alias": "d"
     },
     "unitTestRunner": {
