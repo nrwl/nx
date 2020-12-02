@@ -65,25 +65,6 @@ export interface ProjectConfiguration {
    * Project type
    */
   projectType?: 'library' | 'application';
-
-  /**
-   * List of default values used by generators.
-   *
-   * These defaults are scoped to a project. They override global defaults.
-   *
-   * Example:
-   *
-   * ```
-   * {
-   *   "@nrwl/react": {
-   *     "library": {
-   *       "style": "scss"
-   *     }
-   *   }
-   * }
-   * ```
-   */
-  generators?: { [collectionName: string]: { [generatorName: string]: any } };
 }
 
 /**
@@ -144,11 +125,6 @@ export class Workspaces {
           delete target.builder;
         }
       });
-
-      if (project.schematics) {
-        project.generators = project.schematics;
-        delete project.schematics;
-      }
     });
 
     if (w.schematics) {
@@ -171,11 +147,6 @@ export class Workspaces {
           delete target.execuctor;
         }
       });
-
-      if (project.generators) {
-        project.schematics = project.generators;
-        delete project.generators;
-      }
     });
 
     if (w.generators) {
