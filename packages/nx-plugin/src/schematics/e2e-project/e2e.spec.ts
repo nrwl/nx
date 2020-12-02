@@ -51,7 +51,7 @@ describe('NxPlugin e2e-project', () => {
     );
     expect(tree.exists('apps/my-plugin-e2e/tsconfig.json')).toBeTruthy();
     expect(
-      tree.exists('apps/my-plugin-e2e/tests/my-plugin.test.ts')
+      tree.exists('apps/my-plugin-e2e/tests/my-plugin.spec.ts')
     ).toBeTruthy();
   });
 
