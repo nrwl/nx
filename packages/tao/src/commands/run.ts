@@ -1,5 +1,4 @@
 import * as minimist from 'minimist';
-import { getLogger } from '../shared/logger';
 import {
   combineOptionsForExecutor,
   convertToCamelCase,
@@ -15,6 +14,7 @@ import {
 } from '../shared/workspace';
 
 import * as chalk from 'chalk';
+import { logger } from '../shared/logger';
 
 export interface RunOptions {
   project: string;
@@ -32,8 +32,7 @@ function throwInvalidInvocation() {
 
 function parseRunOpts(
   args: string[],
-  defaultProjectName: string | null,
-  logger: Console
+  defaultProjectName: string | null
 ): RunOptions {
   const runOptions = convertToCamelCase(
     minimist(args, {
@@ -81,12 +80,8 @@ function parseRunOpts(
   return res;
 }
 
-export function printRunHelp(
-  opts: RunOptions,
-  schema: Schema,
-  logger: Console
-) {
-  printHelp(`nx run ${opts.project}:${opts.target}`, schema, logger as any);
+export function printRunHelp(opts: RunOptions, schema: Schema) {
+  printHelp(`nx run ${opts.project}:${opts.target}`, schema);
 }
 
 export function validateTargetAndConfiguration(
@@ -136,12 +131,11 @@ export interface TargetContext {
 }
 
 export async function run(root: string, args: string[], isVerbose: boolean) {
-  const logger = getLogger(isVerbose) as any;
   const ws = new Workspaces();
 
-  return handleErrors(logger, isVerbose, async () => {
+  return handleErrors(isVerbose, async () => {
     const workspace = ws.readWorkspaceConfiguration(root);
-    const opts = parseRunOpts(args, workspace.defaultProject, logger);
+    const opts = parseRunOpts(args, workspace.defaultProject);
     validateTargetAndConfiguration(workspace, opts);
 
     const target = workspace.projects[opts.project].targets[opts.target];
@@ -154,17 +148,21 @@ export async function run(root: string, args: string[], isVerbose: boolean) {
       schema
     );
     if (opts.help) {
-      printRunHelp(opts, schema, logger);
+      printRunHelp(opts, schema);
       return 0;
     }
 
     if (ws.isNxExecutor(nodeModule, executor)) {
       return await implementation(combinedOptions, { root, target, workspace });
     } else {
-      return (await import('./ngcli-adapter')).run(logger, root, {
-        ...opts,
-        runOptions: combinedOptions,
-      });
+      return (await import('./ngcli-adapter')).run(
+        root,
+        {
+          ...opts,
+          runOptions: combinedOptions,
+        },
+        isVerbose
+      );
     }
   });
 }

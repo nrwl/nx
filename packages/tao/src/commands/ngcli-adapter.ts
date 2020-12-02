@@ -11,7 +11,7 @@ import {
   workspaces,
 } from '@angular-devkit/core';
 import * as chalk from 'chalk';
-import { NodeJsSyncHost } from '@angular-devkit/core/node';
+import { createConsoleLogger, NodeJsSyncHost } from '@angular-devkit/core/node';
 import { RunOptions } from './run';
 import {
   FileSystemCollectionDescription,
@@ -43,8 +43,10 @@ import * as stripJsonComments from 'strip-json-comments';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 import { Observable } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
+import { NX_ERROR, NX_PREFIX } from '../shared/logger';
 
-export async function run(logger: any, root: string, opts: RunOptions) {
+export async function run(root: string, opts: RunOptions, verbose: boolean) {
+  const logger = getLogger(verbose);
   const fsHost = new NxScopedHost(normalize(root));
   const { workspace } = await workspaces.readWorkspace(
     workspaceConfigName(root),
@@ -341,10 +343,11 @@ class NxScopedHost extends virtualFs.ScopedHost<any> {
 }
 
 export async function generate(
-  logger: logging.Logger,
   root: string,
-  opts: GenerateOptions
+  opts: GenerateOptions,
+  verbose: boolean
 ) {
+  const logger = getLogger(verbose);
   const fsHost = new NxScopedHost(normalize(root));
   const workflow = createWorkflow(fsHost, root, opts);
   const collection = getCollection(workflow, opts.collectionName);
@@ -353,7 +356,7 @@ export async function generate(
     await runSchematic(
       root,
       workflow,
-      logger,
+      logger as any,
       { ...opts, generatorName: schematic.description.name },
       schematic
     )
@@ -361,20 +364,19 @@ export async function generate(
 }
 
 export async function runMigration(
-  logger: logging.Logger,
   root: string,
   collection: string,
   schematic: string
 ) {
   const host = new NxScopedHost(normalize(root));
-  const workflow = new MigrationsWorkflow(host, logger);
+  const workflow = new MigrationsWorkflow(host, logger as any);
   return workflow
     .execute({
       collection,
       schematic,
       options: {},
       debug: false,
-      logger,
+      logger: logger as any,
     })
     .toPromise();
 }
@@ -452,10 +454,11 @@ export function wrapAngularDevkitSchematic(
 }
 
 export async function invokeNew(
-  logger: logging.Logger,
   root: string,
-  opts: GenerateOptions
+  opts: GenerateOptions,
+  verbose: boolean
 ) {
+  const logger = getLogger(verbose);
   const fsHost = new NxScopedHost(normalize(root));
   const workflow = createWorkflow(fsHost, root, opts);
   const collection = getCollection(workflow, opts.collectionName);
@@ -464,9 +467,33 @@ export async function invokeNew(
     await runSchematic(
       root,
       workflow,
-      logger,
+      logger as any,
       { ...opts, generatorName: schematic.description.name },
       schematic
     )
   ).status;
 }
+
+let logger: logging.Logger;
+export const getLogger = (isVerbose = false): any => {
+  if (!logger) {
+    logger = createConsoleLogger(isVerbose, process.stdout, process.stderr, {
+      warn: (s) => chalk.bold(chalk.yellow(s)),
+      error: (s) => {
+        if (s.startsWith('NX ')) {
+          return `\n${NX_ERROR} ${chalk.bold(chalk.red(s.substr(3)))}\n`;
+        }
+
+        return chalk.bold(chalk.red(s));
+      },
+      info: (s) => {
+        if (s.startsWith('NX ')) {
+          return `\n${NX_PREFIX} ${chalk.bold(s.substr(3))}\n`;
+        }
+
+        return chalk.white(s);
+      },
+    });
+  }
+  return logger;
+};
