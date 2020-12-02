@@ -32,7 +32,7 @@ nx g workspace-generator ... --dry-run
 
 Type: `string`
 
-Schematic name
+Generator name
 
 ### skipFormat
 

@@ -6,7 +6,7 @@
   "properties": {
     "name": {
       "type": "string",
-      "description": "The name of generated schematic",
+      "description": "The name of generated generator",
       "$default": {
         "$source": "argv",
         "index": 0

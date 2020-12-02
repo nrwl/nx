@@ -44,7 +44,7 @@ Flag to indicate if a directory is created.
 
 Type: `string`
 
-The name of generated schematic
+The name of generated generator
 
 ### project
 

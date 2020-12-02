@@ -19,7 +19,7 @@
     },
     "configureCypress": {
       "type": "boolean",
-      "description": "Run the cypress-configure schematic",
+      "description": "Run the cypress-configure generator",
       "x-prompt": "Configure a cypress e2e app to run against the storybook instance?"
     },
     "linter": {
