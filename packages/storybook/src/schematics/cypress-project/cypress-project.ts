@@ -8,6 +8,7 @@ import {
 import { getProjectConfig, updateWorkspaceInTree } from '@nrwl/workspace';
 import { parseJsonAtPath, safeFileDelete } from '../../utils/utils';
 import { Linter } from '@nrwl/workspace';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export interface CypressConfigureSchema {
   name: string;
@@ -92,3 +93,8 @@ function updateAngularJsonBuilder(
     return workspace;
   });
 }
+
+export const cypressProjectGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/storybook',
+  'cypress-project'
+);

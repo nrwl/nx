@@ -26,6 +26,7 @@ import {
   createAngularEslintJson,
   extraEslintDependencies,
 } from '../../utils/lint';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export default function (schema: Schema): Rule {
   return (host: Tree): Rule => {
@@ -104,3 +105,7 @@ export default function (schema: Schema): Rule {
     ]);
   };
 }
+export const libraryGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/angular',
+  'library'
+);

@@ -1,6 +1,7 @@
 import { chain, externalSchematic, Rule } from '@angular-devkit/schematics';
 import { addStyleDependencies } from '../../utils/styles';
 import { Schema } from './schema';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 /*
  * This schematic is basically the React component one, but for Next we need
@@ -22,3 +23,4 @@ export default function (options: Schema): Rule {
     addStyleDependencies(options.style),
   ]);
 }
+export const pageGenerator = wrapAngularDevkitSchematic('@nrwl/next', 'page');

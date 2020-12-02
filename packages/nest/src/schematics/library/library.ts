@@ -28,6 +28,7 @@ import { Schema } from './schema';
 import * as ts from 'typescript';
 import { libsDir, RemoveChange } from '@nrwl/workspace/src/utils/ast-utils';
 import { names, offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -197,3 +198,8 @@ function addProject(options: NormalizedSchema): Rule {
     }
   );
 }
+
+export const libraryGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/nest',
+  'library'
+);

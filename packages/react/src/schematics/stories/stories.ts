@@ -14,6 +14,7 @@ import { CreateComponentSpecFileSchema } from '../component-cypress-spec/compone
 import { getComponentName } from '../../utils/ast-utils';
 import * as ts from 'typescript';
 import { projectRootPath } from '@nrwl/workspace/src/utils/project-type';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export interface StorybookStoriesSchema {
   project: string;
@@ -97,3 +98,8 @@ export default function (schema: StorybookStoriesSchema): Rule {
     createAllStories(schema.project, schema.generateCypressSpecs, schema.js),
   ]);
 }
+
+export const storiesGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/react',
+  'stories'
+);

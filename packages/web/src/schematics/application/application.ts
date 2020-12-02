@@ -26,6 +26,7 @@ import {
 import init from '../init/init';
 import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
 import { names, offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -210,3 +211,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     parsedTags,
   };
 }
+
+export const applicationGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/web',
+  'application'
+);

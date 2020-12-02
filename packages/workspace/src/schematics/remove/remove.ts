@@ -8,6 +8,7 @@ import { updateNxJson } from './lib/update-nx-json';
 import { updateTsconfig } from './lib/update-tsconfig';
 import { updateWorkspace } from './lib/update-workspace';
 import { Schema } from './schema';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export default function (schema: Schema): Rule {
   return chain([
@@ -21,3 +22,8 @@ export default function (schema: Schema): Rule {
     formatFiles(schema),
   ]);
 }
+
+export const removeGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/workspace',
+  'remove'
+);
