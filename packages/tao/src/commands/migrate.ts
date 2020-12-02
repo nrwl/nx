@@ -1,4 +1,3 @@
-import { logging } from '@angular-devkit/core';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 import { readFileSync, writeFileSync } from 'fs';
@@ -7,14 +6,15 @@ import { dirname, join } from 'path';
 import { gt, lte } from 'semver';
 import * as stripJsonComments from 'strip-json-comments';
 import { dirSync } from 'tmp';
-import { getLogger } from '../shared/logger';
+import { logger } from '../shared/logger';
 import { convertToCamelCase, handleErrors } from '../shared/params';
 import {
   detectPackageManager,
   getPackageManagerCommand,
-} from '@nrwl/tao/src/shared/package-manager';
-import { FsTree } from '@nrwl/tao/src/shared/tree';
-import { flushChanges } from '@nrwl/tao/src/commands/generate';
+} from '../shared/package-manager';
+import { FsTree } from '../shared/tree';
+import { flushChanges } from './generate';
+import * as fsExtra from 'fs-extra';
 
 export type MigrationsJson = {
   version: string;
@@ -414,7 +414,7 @@ function versions(root: string, from: { [p: string]: string }) {
 }
 
 // testing-fetch-start
-function createFetcher(packageManager: string, logger: logging.Logger) {
+function createFetcher(packageManager: string) {
   const cache = {};
   return async function f(
     packageName: string,
@@ -429,11 +429,7 @@ function createFetcher(packageManager: string, logger: logging.Logger) {
         cwd: dir,
       });
 
-      const migrationsFilePath = packageToMigrationsFilePath(
-        logger,
-        packageName,
-        dir
-      );
+      const migrationsFilePath = packageToMigrationsFilePath(packageName, dir);
       const packageJsonPath = require.resolve(`${packageName}/package.json`, {
         paths: [dir],
       });
@@ -463,11 +459,7 @@ function createFetcher(packageManager: string, logger: logging.Logger) {
 }
 // testing-fetch-end
 
-function packageToMigrationsFilePath(
-  logger: logging.Logger,
-  packageName: string,
-  dir: string
-) {
+function packageToMigrationsFilePath(packageName: string, dir: string) {
   const packageJsonPath = require.resolve(`${packageName}/package.json`, {
     paths: [dir],
   });
@@ -536,7 +528,6 @@ function updatePackageJson(
 }
 
 async function generateMigrationsJsonAndUpdatePackageJson(
-  logger: logging.Logger,
   root: string,
   opts: {
     targetPackage: string;
@@ -552,7 +543,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     logger.info(`It may take a few minutes.`);
     const migrator = new Migrator({
       versions: versions(root, opts.from),
-      fetch: createFetcher(packageManager, logger),
+      fetch: createFetcher(packageManager),
       from: opts.from,
       to: opts.to,
     });
@@ -603,11 +594,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
   }
 }
 
-async function runMigrations(
-  logger: logging.Logger,
-  root: string,
-  opts: { runMigrations: string }
-) {
+async function runMigrations(root: string, opts: { runMigrations: string }) {
   const migrations: {
     package: string;
     name: string;
@@ -620,10 +607,9 @@ async function runMigrations(
   for (let m of migrations) {
     logger.info(`Running migration ${m.name}`);
     if (m.cli === 'nx') {
-      await runNxMigration(logger, root, m.package, m.name);
+      await runNxMigration(root, m.package, m.name);
     } else {
       await (await import('./ngcli-adapter')).runMigration(
-        logger,
         root,
         m.package,
         m.name
@@ -634,13 +620,8 @@ async function runMigrations(
   }
 }
 
-async function runNxMigration(
-  logger: logging.Logger,
-  root: string,
-  packageName: string,
-  name: string
-) {
-  const collectionPath = packageToMigrationsFilePath(logger, packageName, root);
+async function runNxMigration(root: string, packageName: string, name: string) {
+  const collectionPath = packageToMigrationsFilePath(packageName, root);
   const collection = JSON.parse(fs.readFileSync(collectionPath).toString());
   const g = collection.generators || collection.schematics;
   const implRelativePath = g[name].implementation || g[name].factory;
@@ -648,21 +629,28 @@ async function runNxMigration(
     paths: [dirname(collectionPath)],
   });
   const fn = require(implPath).default;
-  const host = new FsTree(root, false, logger as any);
+  const host = new FsTree(root, false);
   await fn(host, {});
   const changes = host.listChanges();
   flushChanges(root, changes);
 }
 
-export async function migrate(root: string, args: string[], isVerbose = false) {
-  const logger = getLogger(isVerbose);
+function removeNxDepsIfCaseItsFormatChanged(root: string) {
+  try {
+    fsExtra.unlinkSync(
+      join(root, 'node_modules', '.cache', 'nx', 'nxdeps.json')
+    );
+  } catch (e) {}
+}
 
-  return handleErrors(logger, isVerbose, async () => {
+export async function migrate(root: string, args: string[], isVerbose = false) {
+  return handleErrors(isVerbose, async () => {
+    removeNxDepsIfCaseItsFormatChanged(root);
     const opts = parseMigrationsOptions(args);
     if (opts.type === 'generateMigrations') {
-      await generateMigrationsJsonAndUpdatePackageJson(logger, root, opts);
+      await generateMigrationsJsonAndUpdatePackageJson(root, opts);
     } else {
-      await runMigrations(logger, root, opts);
+      await runMigrations(root, opts);
     }
   });
 }

@@ -1,5 +1,4 @@
 import * as minimist from 'minimist';
-import { getLogger } from '../shared/logger';
 import {
   combineOptionsForGenerator,
   convertToCamelCase,
@@ -13,6 +12,7 @@ import { statSync, unlinkSync, writeFileSync } from 'fs';
 import { mkdirpSync, rmdirSync } from 'fs-extra';
 import * as path from 'path';
 import { FileChange, FsTree } from '../shared/tree';
+import { logger } from '../shared/logger';
 
 const chalk = require('chalk');
 
@@ -103,26 +103,18 @@ function parseGenerateOpts(
   return res;
 }
 
-export function printGenHelp(
-  opts: GenerateOptions,
-  schema: Schema,
-  logger: Console
-) {
-  printHelp(
-    `nx generate ${opts.collectionName}:${opts.generatorName}`,
-    {
-      ...schema,
-      properties: {
-        ...schema.properties,
-        dryRun: {
-          type: 'boolean',
-          default: false,
-          description: `Runs through and reports activity without writing to disk.`,
-        },
+export function printGenHelp(opts: GenerateOptions, schema: Schema) {
+  printHelp(`nx generate ${opts.collectionName}:${opts.generatorName}`, {
+    ...schema,
+    properties: {
+      ...schema.properties,
+      dryRun: {
+        type: 'boolean',
+        default: false,
+        description: `Runs through and reports activity without writing to disk.`,
       },
     },
-    logger as any
-  );
+  });
 }
 
 function readDefaultCollection(workspace: WorkspaceConfiguration) {
@@ -163,9 +155,8 @@ function printChanges(fileChanges: FileChange[]) {
 }
 
 export async function taoNew(root: string, args: string[], isVerbose = false) {
-  const logger = getLogger(isVerbose);
   const ws = new Workspaces();
-  return handleErrors(logger, isVerbose, async () => {
+  return handleErrors(isVerbose, async () => {
     const opts = parseGenerateOpts(args, 'new', null);
 
     const { schema, implementation } = ws.readGenerator(
@@ -181,10 +172,14 @@ export async function taoNew(root: string, args: string[], isVerbose = false) {
       schema,
       opts.interactive
     );
-    return (await import('./ngcli-adapter')).invokeNew(logger, root, {
-      ...opts,
-      generatorOptions: combinedOpts,
-    });
+    return (await import('./ngcli-adapter')).invokeNew(
+      root,
+      {
+        ...opts,
+        generatorOptions: combinedOpts,
+      },
+      isVerbose
+    );
   });
 }
 
@@ -193,10 +188,9 @@ export async function generate(
   args: string[],
   isVerbose = false
 ) {
-  const logger = getLogger(isVerbose);
   const ws = new Workspaces();
 
-  return handleErrors(logger, isVerbose, async () => {
+  return handleErrors(isVerbose, async () => {
     const workspaceDefinition = ws.readWorkspaceConfiguration(root);
     const opts = parseGenerateOpts(
       args,
@@ -210,7 +204,7 @@ export async function generate(
     );
 
     if (opts.help) {
-      printGenHelp(opts, schema, logger as any);
+      printGenHelp(opts, schema);
       return 0;
     }
     const combinedOpts = await combineOptionsForGenerator(
@@ -223,7 +217,7 @@ export async function generate(
     );
 
     if (ws.isNxGenerator(opts.collectionName, opts.generatorName)) {
-      const host = new FsTree(root, isVerbose, logger);
+      const host = new FsTree(root, isVerbose);
       const task = await implementation(host, combinedOpts);
       const changes = host.listChanges();
 
@@ -237,10 +231,14 @@ export async function generate(
         logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
       }
     } else {
-      return (await import('./ngcli-adapter')).generate(logger, root, {
-        ...opts,
-        generatorOptions: combinedOpts,
-      });
+      return (await import('./ngcli-adapter')).generate(
+        root,
+        {
+          ...opts,
+          generatorOptions: combinedOpts,
+        },
+        isVerbose
+      );
     }
   });
 }

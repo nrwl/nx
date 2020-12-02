@@ -1,11 +1,9 @@
-import { tags } from '@angular-devkit/core';
 import * as chalk from 'chalk';
-import { getLogger } from '../shared/logger';
+import { logger, stripIndent } from '../shared/logger';
 
 export function help() {
-  const logger = getLogger(true);
-
-  logger.info(tags.stripIndent`
+  logger.info(
+    stripIndent(`
     ${chalk.bold('Nx - Extensible Dev Tools for Monorepos.')}
   
     ${chalk.bold('Create a new project.')}
@@ -30,6 +28,7 @@ export function help() {
     ${chalk.bold('Run migrations.')}
      nx migrate ${chalk.grey('--run-migrations=[filename]')}
 
-  `);
+  `)
+  );
   return 0;
 }
