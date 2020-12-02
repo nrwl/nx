@@ -13,5 +13,7 @@ export default function update(host: Tree) {
       'decorate-angular-cli.js__tmpl__'
     )
   ).toString();
-  host.write('/decorate-angular-cli.js', decorateCli);
+  if (host.exists('/decorate-angular-cli.js')) {
+    host.write('/decorate-angular-cli.js', decorateCli);
+  }
 }
