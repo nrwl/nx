@@ -7,6 +7,7 @@ import {
 } from '@angular-devkit/schematics';
 import { StorybookStoriesSchema } from '../stories/stories';
 import { StorybookConfigureSchema } from './schema';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export default function (schema: StorybookConfigureSchema): Rule {
   if (schema.generateCypressSpecs && !schema.generateStories) {
@@ -35,3 +36,7 @@ function generateStories(schema: StorybookConfigureSchema): Rule {
     });
   };
 }
+export const storybookConfigurationGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/angular',
+  'storybook-configuration'
+);

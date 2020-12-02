@@ -383,73 +383,71 @@ export function wrapAngularDevkitSchematic(
   collectionName: string,
   generatorName: string
 ) {
-  return (generatorOptions: { [k: string]: any }) => {
-    return async (host: taoTree.Tree) => {
-      const emptyLogger = {
-        log: (e) => {},
-        info: (e) => {},
-        warn: (e) => {},
-        error: (e) => {},
-        fatal: (e) => {},
-      } as any;
-      emptyLogger.createChild = () => emptyLogger;
+  return async (host: taoTree.Tree, generatorOptions: { [k: string]: any }) => {
+    const emptyLogger = {
+      log: (e) => {},
+      info: (e) => {},
+      warn: (e) => {},
+      error: (e) => {},
+      fatal: (e) => {},
+    } as any;
+    emptyLogger.createChild = () => emptyLogger;
 
-      const recorder = (event: DryRunEvent) => {
-        const eventPath = event.path.startsWith('/')
-          ? event.path.substr(1)
-          : event.path;
-        if (event.kind === 'error') {
-        } else if (event.kind === 'update') {
-          host.write(eventPath, event.content);
-        } else if (event.kind === 'create') {
-          host.write(eventPath, event.content);
-        } else if (event.kind === 'delete') {
-          host.delete(eventPath);
-        } else if (event.kind === 'rename') {
-          host.rename(eventPath, event.to);
-        }
-      };
-
-      const fsHost = new NxScopedHost(normalize(host.root));
-
-      await Promise.all(
-        (host as taoTree.FsTree).listChanges().map(async (c) => {
-          if (c.type === 'CREATE' || c.type === 'UPDATE') {
-            await fsHost.write(c.path as any, c.content).toPromise();
-          } else {
-            await fsHost.delete(c.path as any).toPromise();
-          }
-        })
-      );
-
-      const options = {
-        generatorOptions: { ...generatorOptions, _: [] },
-        dryRun: true,
-        interactive: false,
-        help: false,
-        debug: false,
-        collectionName,
-        generatorName,
-        force: false,
-        defaults: false,
-      };
-      const workflow = createWorkflow(fsHost, host.root, options);
-      const collection = getCollection(workflow, collectionName);
-      const schematic = collection.createSchematic(generatorName, true);
-      const res = await runSchematic(
-        host.root,
-        workflow,
-        emptyLogger,
-        options,
-        schematic,
-        false,
-        recorder
-      );
-
-      if (res.status !== 0) {
-        throw new Error(res.loggingQueue.join('\n'));
+    const recorder = (event: DryRunEvent) => {
+      const eventPath = event.path.startsWith('/')
+        ? event.path.substr(1)
+        : event.path;
+      if (event.kind === 'error') {
+      } else if (event.kind === 'update') {
+        host.write(eventPath, event.content);
+      } else if (event.kind === 'create') {
+        host.write(eventPath, event.content);
+      } else if (event.kind === 'delete') {
+        host.delete(eventPath);
+      } else if (event.kind === 'rename') {
+        host.rename(eventPath, event.to);
       }
     };
+
+    const fsHost = new NxScopedHost(normalize(host.root));
+
+    await Promise.all(
+      (host as taoTree.FsTree).listChanges().map(async (c) => {
+        if (c.type === 'CREATE' || c.type === 'UPDATE') {
+          await fsHost.write(c.path as any, c.content).toPromise();
+        } else {
+          await fsHost.delete(c.path as any).toPromise();
+        }
+      })
+    );
+
+    const options = {
+      generatorOptions: { ...generatorOptions, _: [] },
+      dryRun: true,
+      interactive: false,
+      help: false,
+      debug: false,
+      collectionName,
+      generatorName,
+      force: false,
+      defaults: false,
+    };
+    const workflow = createWorkflow(fsHost, host.root, options);
+    const collection = getCollection(workflow, collectionName);
+    const schematic = collection.createSchematic(generatorName, true);
+    const res = await runSchematic(
+      host.root,
+      workflow,
+      emptyLogger,
+      options,
+      schematic,
+      false,
+      recorder
+    );
+
+    if (res.status !== 0) {
+      throw new Error(res.loggingQueue.join('\n'));
+    }
   };
 }
 

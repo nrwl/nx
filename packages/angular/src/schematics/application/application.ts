@@ -46,6 +46,7 @@ import {
   extraEslintDependencies,
 } from '../../utils/lint';
 import { names, offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 interface NormalizedSchema extends Schema {
   prefix: string; // we set a default for this in normalizeOptions, so it is no longer optional
@@ -889,3 +890,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     parsedTags,
   };
 }
+
+export const applicationGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/angular',
+  'application'
+);

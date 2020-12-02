@@ -29,6 +29,7 @@ import { assertValidStyle } from '../../utils/assertion';
 import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
 import { names } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 interface NormalizedSchema extends Schema {
   projectSourceRoot: Path;
@@ -187,3 +188,8 @@ function assertValidOptions(options: Schema) {
     }
   });
 }
+
+export const componentGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/react',
+  'component'
+);

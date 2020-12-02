@@ -49,6 +49,7 @@ import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
 import { initRootBabelConfig } from '@nrwl/web/src/utils/rules';
 import { updateBabelJestConfig } from '../../rules/update-babel-jest-config';
 import { names, offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -399,3 +400,8 @@ function maybeJs(options: NormalizedSchema, path: string): string {
     ? path.replace(/\.tsx?$/, '.js')
     : path;
 }
+
+export const libraryGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/react',
+  'library'
+);

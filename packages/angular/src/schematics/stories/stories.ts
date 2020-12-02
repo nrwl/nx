@@ -1,21 +1,20 @@
 import {
   chain,
+  noop,
   Rule,
   schematic,
   SchematicContext,
   SchematicsException,
   Tree,
-  noop,
 } from '@angular-devkit/schematics';
-import { getProjectConfig } from '@nrwl/workspace';
 import { SyntaxKind } from 'typescript';
-import { getTsSourceFile, getDecoratorMetadata } from '../../utils/ast-utils';
+import { getDecoratorMetadata, getTsSourceFile } from '../../utils/ast-utils';
 import { projectRootPath } from '@nrwl/workspace/src/utils/project-type';
 import { CreateComponentSpecFileSchema } from '../component-cypress-spec/component-cypress-spec';
 import { CreateComponentStoriesFileSchema } from '../component-story/component-story';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { directoryExists } from '@nrwl/workspace/src/utils/fileutils';
 import { join, normalize } from '@angular-devkit/core';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export interface StorybookStoriesSchema {
   name: string;
@@ -209,3 +208,7 @@ export function createAllStories(
     );
   };
 }
+export const storiesGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/angular',
+  'stories'
+);

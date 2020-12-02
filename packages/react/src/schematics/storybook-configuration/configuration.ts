@@ -7,6 +7,7 @@ import {
 } from '@angular-devkit/schematics';
 import { StorybookConfigureSchema } from './schema';
 import { StorybookStoriesSchema } from '../stories/stories';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 function generateStories(schema: StorybookConfigureSchema): Rule {
   return (tree, context) => {
@@ -32,3 +33,8 @@ export default function (schema: StorybookConfigureSchema): Rule {
     schema.generateStories ? generateStories(schema) : noop(),
   ]);
 }
+
+export const storybookConfigurationGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/react',
+  'storybook-configuration'
+);

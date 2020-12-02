@@ -9,6 +9,7 @@ import { updateNxJson } from './lib/update-nx-json';
 import { updateProjectRootFiles } from './lib/update-project-root-files';
 import { updateWorkspace } from './lib/update-workspace';
 import { Schema } from './schema';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export default function (schema: Schema): Rule {
   return chain([
@@ -23,3 +24,8 @@ export default function (schema: Schema): Rule {
     updateWorkspace(schema), // Have to do this last because all previous rules need the information in here
   ]);
 }
+
+export const moveGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/workspace',
+  'move'
+);

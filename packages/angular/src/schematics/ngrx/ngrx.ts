@@ -23,6 +23,7 @@ import {
 } from './rules';
 import { formatFiles } from '@nrwl/workspace';
 import { names } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 /**
  * Rule to generate the Nx 'ngrx' Collection
@@ -111,3 +112,8 @@ function normalizeOptions(options: Schema): Schema {
     directory: names(options.directory).fileName,
   };
 }
+
+export const ngrxGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/angular',
+  'ngrx'
+);

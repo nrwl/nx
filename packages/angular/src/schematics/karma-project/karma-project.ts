@@ -15,6 +15,7 @@ import {
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import { offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export interface KarmaProjectSchema {
   project: string;
@@ -128,3 +129,8 @@ export default function (options: KarmaProjectSchema): Rule {
     updateworkspaceJson(options),
   ]);
 }
+
+export const karmaProjectGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/angular',
+  'karma-project'
+);

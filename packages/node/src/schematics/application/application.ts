@@ -29,6 +29,7 @@ import {
   maybeJs,
 } from '@nrwl/workspace/src/utils/rules/to-js';
 import { names, offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;
@@ -224,3 +225,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     parsedTags,
   };
 }
+
+export const applicationGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/node',
+  'application'
+);

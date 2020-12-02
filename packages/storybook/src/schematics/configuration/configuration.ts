@@ -31,6 +31,7 @@ import { readPackageJson } from '@nrwl/workspace/src/core/file-utils';
 import { storybookVersion } from '../../utils/versions';
 import { projectDir } from '@nrwl/workspace/src/utils/project-type';
 import { offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export default function (rawSchema: StorybookConfigureSchema): Rule {
   const schema = normalizeSchema(rawSchema);
@@ -372,3 +373,8 @@ function readCurrentWorkspaceStorybookVersion(): string {
   }
   return workspaceStorybookVersion;
 }
+
+export const configurationGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/storybook',
+  'configuration'
+);

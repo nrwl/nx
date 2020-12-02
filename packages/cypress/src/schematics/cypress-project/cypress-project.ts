@@ -26,6 +26,7 @@ import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
 import { eslintPluginCypressVersion } from '../../utils/versions';
 import { names, offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export interface CypressProjectSchema extends Schema {
   projectName: string;
@@ -161,3 +162,8 @@ function normalizeOptions(
     projectRoot,
   };
 }
+
+export const cypressProjectGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/cypress',
+  'cypress-project'
+);

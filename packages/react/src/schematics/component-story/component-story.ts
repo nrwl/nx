@@ -1,26 +1,22 @@
 import {
-  Rule,
-  chain,
-  SchematicContext,
-  Tree,
-  template,
-  move,
-  url,
-  SchematicsException,
   applyTemplates,
+  chain,
+  move,
+  Rule,
+  SchematicContext,
+  SchematicsException,
+  Tree,
+  url,
 } from '@angular-devkit/schematics';
-import { normalize, join } from '@angular-devkit/core';
-import { getProjectConfig, formatFiles } from '@nrwl/workspace';
-import {
-  applyWithSkipExisting,
-  findNodes,
-} from '@nrwl/workspace/src/utils/ast-utils';
+import { join, normalize } from '@angular-devkit/core';
+import { formatFiles, getProjectConfig } from '@nrwl/workspace';
+import { applyWithSkipExisting } from '@nrwl/workspace/src/utils/ast-utils';
 import * as ts from 'typescript';
 import {
-  findDefaultExport,
   getComponentName,
   getComponentPropsInterface,
 } from '../../utils/ast-utils';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export interface CreateComponentStoriesFileSchema {
   project: string;
@@ -146,3 +142,8 @@ export function createComponentStoriesFile({
 export default function (schema: CreateComponentStoriesFileSchema): Rule {
   return chain([createComponentStoriesFile(schema), formatFiles()]);
 }
+
+export const componentStoryGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/react',
+  'component-story'
+);
