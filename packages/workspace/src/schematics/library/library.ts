@@ -53,7 +53,6 @@ function addProject(options: NormalizedSchema): Rule {
       root: options.projectRoot,
       sourceRoot: join(normalize(options.projectRoot), 'src'),
       projectType: 'library',
-      schematics: {},
       architect,
     };
     return json;

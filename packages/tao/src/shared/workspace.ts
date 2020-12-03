@@ -112,17 +112,31 @@ export class Workspaces {
     return this.toNewFormat(w);
   }
 
+  reformattedWorkspaceJsonOrNull(w: any) {
+    return w.version === 2
+      ? this.toNewFormatOrNull(w)
+      : this.toOldFormatOrNull(w);
+  }
+
   toNewFormat(w: any) {
+    const f = this.toNewFormatOrNull(w);
+    return f ? f : w;
+  }
+
+  toNewFormatOrNull(w: any) {
+    let formatted = false;
     Object.values(w.projects || {}).forEach((project: any) => {
       if (project.architect) {
         project.targets = project.architect;
         delete project.architect;
+        formatted = true;
       }
 
       Object.values(project.targets || {}).forEach((target: any) => {
         if (target.builder) {
           target.executor = target.builder;
           delete target.builder;
+          formatted = true;
         }
       });
     });
@@ -130,21 +144,28 @@ export class Workspaces {
     if (w.schematics) {
       w.generators = w.schematics;
       delete w.schematics;
+      formatted = true;
     }
-    return w;
+    if (formatted) {
+      w.version = 2;
+    }
+    return formatted ? w : null;
   }
 
-  toOldFormat(w: any) {
+  toOldFormatOrNull(w: any) {
+    let formatted = false;
     Object.values(w.projects || {}).forEach((project: any) => {
       if (project.targets) {
         project.architect = project.targets;
         delete project.targets;
+        formatted = true;
       }
 
       Object.values(project.architect || {}).forEach((target: any) => {
         if (target.executor) {
           target.builder = target.executor;
-          delete target.execuctor;
+          delete target.executor;
+          formatted = true;
         }
       });
     });
@@ -152,8 +173,12 @@ export class Workspaces {
     if (w.generators) {
       w.schematics = w.generators;
       delete w.generators;
+      formatted = true;
     }
-    return w;
+    if (formatted) {
+      w.version = 1;
+    }
+    return formatted ? w : null;
   }
 
   isNxExecutor(nodeModule: string, executor: string) {

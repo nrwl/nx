@@ -141,7 +141,7 @@ export default function (options: Schema): Rule {
       addCloudDependencies(options),
       move('/', options.directory),
       addTasks(options),
-      formatFiles(),
+      formatFiles({ skipFormat: false }, options.directory),
     ])(Tree.empty(), context);
   };
 }

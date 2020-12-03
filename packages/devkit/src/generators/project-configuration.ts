@@ -9,6 +9,7 @@ import {
   NxJsonConfiguration,
   NxJsonProjectConfiguration,
 } from '@nrwl/tao/src/shared/nx';
+import { getWorkspacePath } from '../utils/get-workspace-layout';
 
 /**
  * Adds project configuration to the Nx workspace.
@@ -139,9 +140,4 @@ function addProjectToNxJson(
     ...(config || {}),
   };
   host.write('nx.json', JSON.stringify(nxJson));
-}
-
-function getWorkspacePath(host: Tree) {
-  const possibleFiles = ['/workspace.json', '/angular.json', '/.angular.json'];
-  return possibleFiles.filter((path) => host.exists(path))[0];
 }

@@ -1026,24 +1026,6 @@ describe('lib', () => {
     });
   });
 
-  describe('--style scss', () => {
-    it('should set it as default', async () => {
-      const result = await runSchematic(
-        'lib',
-        { name: 'myLib', style: 'scss' },
-        appTree
-      );
-
-      const workspaceJson = readJsonInTree(result, 'workspace.json');
-
-      expect(workspaceJson.projects['my-lib'].schematics).toEqual({
-        '@schematics/angular:component': {
-          style: 'scss',
-        },
-      });
-    });
-  });
-
   describe('--unit-test-runner karma', () => {
     it('should generate karma configuration', async () => {
       const resultTree = await runSchematic(

@@ -159,7 +159,10 @@ describe('addDepsToPackageJson', () => {
       })
     );
 
-    const testRunner = new SchematicTestRunner('@nrwl/jest', null);
+    const testRunner = new SchematicTestRunner(
+      '@nrwl/jest',
+      join(__dirname, '../../../jest/collection.json')
+    );
 
     await testRunner
       .callRule(() => {
@@ -188,7 +191,10 @@ describe('addDepsToPackageJson', () => {
       })
     );
 
-    const testRunner = new SchematicTestRunner('@nrwl/jest', null);
+    const testRunner = new SchematicTestRunner(
+      '@nrwl/jest',
+      join(__dirname, '../../../jest/collection.json')
+    );
 
     await testRunner
       .callRule(() => {
