@@ -309,21 +309,6 @@ describe('app', () => {
         true
       );
     });
-
-    it('should set it as default', async () => {
-      const result = await runSchematic(
-        'app',
-        { name: 'myApp', style: 'scss' },
-        appTree
-      );
-      const workspaceJson = readJsonInTree(result, 'workspace.json');
-
-      expect(workspaceJson.projects['my-app'].schematics).toEqual({
-        '@schematics/angular:component': {
-          style: 'scss',
-        },
-      });
-    });
   });
 
   describe('--linter', () => {

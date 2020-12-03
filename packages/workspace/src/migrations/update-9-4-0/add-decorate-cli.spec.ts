@@ -5,7 +5,7 @@ import { runMigration } from '../../utils/testing';
 function createAngularCLIPoweredWorkspace() {
   const tree = createEmptyWorkspace(Tree.empty());
   tree.delete('workspace.json');
-  tree.create('angular.json', '');
+  tree.create('angular.json', '{}');
   return tree;
 }
 

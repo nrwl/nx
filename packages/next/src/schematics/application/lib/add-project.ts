@@ -62,7 +62,6 @@ export function addProject(options: NormalizedSchema): Rule {
       root: options.appProjectRoot,
       sourceRoot: options.appProjectRoot,
       projectType: 'application',
-      schematics: {},
       architect,
     };
 

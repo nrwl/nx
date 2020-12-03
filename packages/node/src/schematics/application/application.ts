@@ -96,7 +96,6 @@ function updateWorkspaceJson(options: NormalizedSchema): Rule {
       sourceRoot: join(options.appProjectRoot, 'src'),
       projectType: 'application',
       prefix: options.name,
-      schematics: {},
       architect: <any>{},
     };
 

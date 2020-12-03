@@ -140,7 +140,6 @@ function addProject(options: NormalizedSchema): Rule {
       root: options.appProjectRoot,
       sourceRoot: join(normalize(options.appProjectRoot), 'src'),
       projectType: 'application',
-      schematics: {},
       architect,
     };
 

@@ -130,15 +130,7 @@ export function updateProject(options: NormalizedSchema): Rule {
           options.projectRoot
         );
 
-        fixedProject.schematics = fixedProject.schematics || {};
-        if (options.style !== 'css') {
-          fixedProject.schematics = {
-            ...fixedProject.schematics,
-            '@schematics/angular:component': {
-              style: options.style,
-            },
-          };
-        }
+        delete fixedProject.schematics;
 
         if (!options.publishable && !options.buildable) {
           delete fixedProject.architect.build;

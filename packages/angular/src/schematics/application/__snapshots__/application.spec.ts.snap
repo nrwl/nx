@@ -96,7 +96,6 @@ Object {
   "prefix": "proj",
   "projectType": "application",
   "root": "apps/my-dir/my-app",
-  "schematics": Object {},
   "sourceRoot": "apps/my-dir/my-app/src",
 }
 `;
@@ -232,7 +231,6 @@ Object {
   "prefix": "proj",
   "projectType": "application",
   "root": "apps/my-app",
-  "schematics": Object {},
   "sourceRoot": "apps/my-app/src",
 }
 `;

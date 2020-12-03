@@ -269,9 +269,10 @@ class NxScopedHost extends virtualFs.ScopedHost<any> {
               map((r) => {
                 try {
                   const w = JSON.parse(Buffer.from(r).toString());
-                  return Buffer.from(
-                    JSON.stringify(new Workspaces().toOldFormat(w), null, 2)
-                  );
+                  const formatted = new Workspaces().toOldFormatOrNull(w);
+                  return formatted
+                    ? Buffer.from(JSON.stringify(formatted, null, 2))
+                    : r;
                 } catch (e) {
                   return r;
                 }
@@ -294,12 +295,15 @@ class NxScopedHost extends virtualFs.ScopedHost<any> {
           if (newFormat) {
             try {
               const w = JSON.parse(Buffer.from(content).toString());
-              return super.write(
-                path,
-                Buffer.from(
-                  JSON.stringify(new Workspaces().toNewFormat(w), null, 2)
-                )
-              );
+              const formatted = new Workspaces().toNewFormatOrNull(w);
+              if (formatted) {
+                return super.write(
+                  path,
+                  Buffer.from(JSON.stringify(formatted, null, 2))
+                );
+              } else {
+                return super.write(path, content);
+              }
             } catch (e) {
               return super.write(path, content);
             }
@@ -328,7 +332,9 @@ class NxScopedHost extends virtualFs.ScopedHost<any> {
       switchMap((isAngularJson) => {
         return super
           .read((isAngularJson ? '/angular.json' : '/workspace.json') as any)
-          .pipe(map((r) => !!JSON.parse(Buffer.from(r).toString()).generators));
+          .pipe(
+            map((r) => JSON.parse(Buffer.from(r).toString()).version === 2)
+          );
       })
     );
   }

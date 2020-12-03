@@ -484,6 +484,7 @@ function updateProject(options: NormalizedSchema): Rule {
           options.name,
           options.appProjectRoot
         );
+        delete fixedProject.schematics;
 
         delete fixedProject.architect.test;
 
@@ -803,10 +804,6 @@ export default function (schema: Schema): Rule {
         skipInstall: true,
         skipPackageJson: false,
       }),
-      // TODO: Remove this after Angular 10.1.0
-      (host) => {
-        host.delete('tsconfig.json');
-      },
       addSchematicFiles(appProjectRoot, options),
       options.e2eTestRunner === 'protractor'
         ? move(e2eProjectRoot, options.e2eProjectRoot)

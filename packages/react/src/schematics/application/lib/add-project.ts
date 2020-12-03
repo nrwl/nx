@@ -85,7 +85,6 @@ export function addProject(options: NormalizedSchema): Rule {
       root: options.appProjectRoot,
       sourceRoot: join(options.appProjectRoot, 'src'),
       projectType: 'application',
-      schematics: {},
       architect,
     };
 

@@ -21,3 +21,8 @@ export function getWorkspaceLayout(
   const npmScope = nxJson.npmScope;
   return { ...layout, npmScope };
 }
+
+export function getWorkspacePath(host: Tree) {
+  const possibleFiles = ['/workspace.json', '/angular.json'];
+  return possibleFiles.filter((path) => host.exists(path))[0];
+}
