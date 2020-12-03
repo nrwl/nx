@@ -17,6 +17,7 @@ function updateDependencies(): Rule {
     delete json.dependencies['@nrwl/web'];
     json.dependencies = {
       ...json.dependencies,
+      'core-js': '^3.6.5',
       'document-register-element': documentRegisterElementVersion,
       tslib: '^2.0.0',
     };
