@@ -5,8 +5,10 @@ import {
   schematic,
   Tree,
 } from '@angular-devkit/schematics';
+import { addDepsToPackageJson } from '@nrwl/workspace';
 import { formatFiles } from '@nrwl/workspace';
 import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
+import { nxVersion } from '@nrwl/workspace/src/utils/versions';
 import { addFiles } from './lib/add-files';
 import { normalizeOptions } from './lib/normalize-options';
 import { updateWorkspaceJson } from './lib/update-workspace-json';
@@ -23,6 +25,13 @@ export default function (schema: Schema): Rule {
         importPath: schema.importPath,
         unitTestRunner: options.unitTestRunner,
       }),
+      addDepsToPackageJson(
+        {},
+        {
+          '@nrwl/devkit': nxVersion,
+          tslib: '^2.0.0',
+        }
+      ),
       addFiles(options),
       updateWorkspaceJson(options),
       schematic('e2e-project', {
