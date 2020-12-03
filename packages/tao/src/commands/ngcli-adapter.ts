@@ -270,11 +270,7 @@ class NxScopedHost extends virtualFs.ScopedHost<any> {
                 try {
                   const w = JSON.parse(Buffer.from(r).toString());
                   return Buffer.from(
-                    JSON.stringify(
-                      new Workspaces().fromNewToOldFormat(w),
-                      null,
-                      2
-                    )
+                    JSON.stringify(new Workspaces().toOldFormat(w), null, 2)
                   );
                 } catch (e) {
                   return r;
@@ -301,11 +297,7 @@ class NxScopedHost extends virtualFs.ScopedHost<any> {
               return super.write(
                 path,
                 Buffer.from(
-                  JSON.stringify(
-                    new Workspaces().fromOldToNewFormat(w),
-                    null,
-                    2
-                  )
+                  JSON.stringify(new Workspaces().toNewFormat(w), null, 2)
                 )
               );
             } catch (e) {

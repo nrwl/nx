@@ -319,18 +319,20 @@ function setMaxWorkers() {
     const workspace = readJson(workspaceFile);
 
     Object.keys(workspace.projects).forEach((appName) => {
-      const {
-        architect: { build },
-      } = workspace.projects[appName];
+      const targets = workspace.projects[appName].targets
+        ? workspace.projects[appName].targets
+        : workspace.projects[appName].architect;
+      const build = targets.build;
 
       if (!build) {
         return;
       }
 
+      const executor = build.builder ? build.builder : build.executor;
       if (
-        build.builder.startsWith('@nrwl/node') ||
-        build.builder.startsWith('@nrwl/web') ||
-        build.builder.startsWith('@nrwl/jest')
+        executor.startsWith('@nrwl/node') ||
+        executor.startsWith('@nrwl/web') ||
+        executor.startsWith('@nrwl/jest')
       ) {
         build.options.maxWorkers = 4;
       }
