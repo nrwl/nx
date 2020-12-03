@@ -109,10 +109,10 @@ export class Workspaces {
     const w = JSON.parse(
       fs.readFileSync(path.join(root, workspaceConfigName(root))).toString()
     );
-    return this.fromOldToNewFormat(w);
+    return this.toNewFormat(w);
   }
 
-  fromOldToNewFormat(w: any) {
+  toNewFormat(w: any) {
     Object.values(w.projects || {}).forEach((project: any) => {
       if (project.architect) {
         project.targets = project.architect;
@@ -134,7 +134,7 @@ export class Workspaces {
     return w;
   }
 
-  fromNewToOldFormat(w: any) {
+  toOldFormat(w: any) {
     Object.values(w.projects || {}).forEach((project: any) => {
       if (project.targets) {
         project.architect = project.targets;

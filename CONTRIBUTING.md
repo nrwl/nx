@@ -174,6 +174,7 @@ The scope must be one of the following:
 - testing - anything testing specific (e.g., jest or cypress)
 - repo - anything related to managing the repo itself
 - misc - misc stuff
+- devkit - devkit-related changes
 
 ##### Subject and Body
 

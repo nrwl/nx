@@ -13,7 +13,11 @@ export { formatFiles } from './src/schematics/format-files';
 export { readJson } from './src/utils/read-json';
 export { generateFiles } from './src/schematics/generate-files';
 export { installPackagesTask } from './src/tasks/install-packages-task';
-export { addProjectConfiguration } from './src/schematics/add-project-configuration';
+export {
+  addProjectConfiguration,
+  readProjectConfiguration,
+  updateProjectConfiguration,
+} from './src/schematics/project-configuration';
 export { names } from './src/utils/names';
 export { getWorkspaceLayout } from './src/utils/get-workspace-layout';
 export { offsetFromRoot } from './src/utils/offset-from-root';
