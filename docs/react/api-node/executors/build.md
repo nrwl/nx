@@ -15,7 +15,7 @@ List of static application assets.
 
 ### buildLibsFromSource
 
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 
