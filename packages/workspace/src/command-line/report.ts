@@ -10,6 +10,7 @@ export const packagesWeCareAbout = [
   '@nrwl/angular',
   '@nrwl/cli',
   '@nrwl/cypress',
+  '@nrwl/devkit',
   '@nrwl/eslint-plugin-nx',
   '@nrwl/express',
   '@nrwl/jest',
@@ -45,9 +46,9 @@ function reportHandler() {
   const pmVersion = execSync(`${pm} --version`).toString('utf-8').trim();
 
   const bodyLines = [
-    `Node: ${process.versions.node}`,
-    `OS: ${process.platform} ${process.arch}`,
-    `${pm}: ${pmVersion}`,
+    `Node : ${process.versions.node}`,
+    `OS   : ${process.platform} ${process.arch}`,
+    `${pm.padEnd(5)}: ${pmVersion}`,
     ``,
   ];
 
