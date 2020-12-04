@@ -96,8 +96,7 @@ async function findOrCreateConfig(
   config: StorybookConfig,
   context: BuilderContext
 ): Promise<string> {
-  const host = new NodeJsSyncHost();
-  const sourceRoot = await getRoot(context, host);
+  const sourceRoot = await getRoot(context);
 
   if (config.configFolder && statSync(config.configFolder).isDirectory()) {
     return config.configFolder;

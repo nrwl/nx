@@ -110,8 +110,7 @@ async function findOrCreateConfig(
       config.srcRoot
     );
   } else {
-    const host = new NodeJsSyncHost();
-    const sourceRoot = await getRoot(context, host);
+    const sourceRoot = await getRoot(context);
     if (
       statSync(
         join(context.workspaceRoot, sourceRoot, '.storybook')

@@ -17,6 +17,7 @@ describe('new config format', () => {
 
     // update the angular.json
     const workspaceJson = readJson(`angular.json`);
+    workspaceJson.version = 2;
     workspaceJson.projects[myapp].targets = updateConfig(
       workspaceJson.projects[myapp].architect
     );
@@ -34,9 +35,7 @@ function updateConfig(targets: any) {
   const res = {};
   Object.entries(targets).forEach(([name, t]: any) => {
     t.executor = t.builder;
-    t.generators = t.schematics;
     delete t.builder;
-    delete t.schematics;
     res[name] = t;
   });
   return res;

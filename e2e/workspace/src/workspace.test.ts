@@ -685,11 +685,11 @@ describe('cache', () => {
     // Update outputs in workspace.json to just be a particular file
     const workspaceJson = readJson(workspaceConfigName());
 
-    workspaceJson.projects[mylib1].architect['build-base'] = {
-      ...workspaceJson.projects[mylib1].architect.build,
+    workspaceJson.projects[mylib1].targets['build-base'] = {
+      ...workspaceJson.projects[mylib1].targets.build,
     };
-    workspaceJson.projects[mylib1].architect.build = {
-      builder: '@nrwl/workspace:run-commands',
+    workspaceJson.projects[mylib1].targets.build = {
+      executor: '@nrwl/workspace:run-commands',
       outputs: [`dist/libs/${mylib1}/${mylib1}.esm.js`],
       options: {
         commands: [

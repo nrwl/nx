@@ -282,7 +282,7 @@ describe('Node Libraries', () => {
       `generate @nrwl/angular:lib ${nglib} --publishable --importPath=@proj/${nglib}`
     );
     const workspace = readJson(workspaceConfigName());
-    workspace.projects[nodelib].architect.build.options.assets.push({
+    workspace.projects[nodelib].targets.build.options.assets.push({
       input: `./dist/libs/${nglib}`,
       glob: '**/*',
       output: '.',

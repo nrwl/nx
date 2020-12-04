@@ -1,13 +1,12 @@
 import { BuilderContext } from '@angular-devkit/architect';
-import { workspaces } from '@angular-devkit/core';
-import { Host } from '@angular-devkit/core/src/virtual-fs/host';
+import { normalize, workspaces } from '@angular-devkit/core';
+import { NxScopedHost } from '@nrwl/devkit/ngcli-adapter';
 
-export async function getRoot(context: BuilderContext, host: Host<{}>) {
-  const workspaceHost = workspaces.createWorkspaceHost(host);
-  const { workspace } = await workspaces.readWorkspace(
-    context.workspaceRoot,
-    workspaceHost
+export async function getRoot(context: BuilderContext) {
+  const workspaceHost = workspaces.createWorkspaceHost(
+    new NxScopedHost(normalize(context.workspaceRoot))
   );
+  const { workspace } = await workspaces.readWorkspace('', workspaceHost);
   if (workspace.projects.get(context.target.project).root) {
     return workspace.projects.get(context.target.project).root;
   } else {

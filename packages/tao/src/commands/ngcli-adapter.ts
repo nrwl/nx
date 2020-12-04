@@ -255,7 +255,7 @@ class MigrationsWorkflow extends BaseWorkflow {
   }
 }
 
-class NxScopedHost extends virtualFs.ScopedHost<any> {
+export class NxScopedHost extends virtualFs.ScopedHost<any> {
   constructor(root: Path) {
     super(new NodeJsSyncHost(), root);
   }

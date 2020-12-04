@@ -12,7 +12,7 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Help', () => {
-  it('should show help', async () => {
+  it('gggshould show help', async () => {
     newProject();
     const myapp = uniq('myapp');
     runCLI(`generate @nrwl/web:app ${myapp}`);
