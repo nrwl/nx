@@ -1,21 +1,21 @@
 import { BuilderContext, createBuilder } from '@angular-devkit/architect';
-import { JsonObject, workspaces } from '@angular-devkit/core';
-import { runWebpack, BuildResult } from '@angular-devkit/build-webpack';
+import { JsonObject, normalize, workspaces } from '@angular-devkit/core';
+import { BuildResult, runWebpack } from '@angular-devkit/build-webpack';
 
-import { Observable, from, of } from 'rxjs';
+import { from, Observable } from 'rxjs';
 import { join, resolve } from 'path';
 import { concatMap, map, tap } from 'rxjs/operators';
 import { getNodeWebpackConfig } from '../../utils/node.config';
 import { OUT_FILENAME } from '../../utils/config';
 import { BuildNodeBuilderOptions } from '../../utils/types';
 import { normalizeBuildOptions } from '../../utils/normalize';
-import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utils/buildable-libs-utils';
+import { NxScopedHost } from '@nrwl/devkit/ngcli-adapter';
 import { generatePackageJson } from '../../utils/generate-package-json';
 
 try {
@@ -100,11 +100,10 @@ function run(
 async function getRoots(
   context: BuilderContext
 ): Promise<{ sourceRoot: string; projectRoot: string }> {
-  const workspaceHost = workspaces.createWorkspaceHost(new NodeJsSyncHost());
-  const { workspace } = await workspaces.readWorkspace(
-    context.workspaceRoot,
-    workspaceHost
+  const workspaceHost = workspaces.createWorkspaceHost(
+    new NxScopedHost(normalize(context.workspaceRoot))
   );
+  const { workspace } = await workspaces.readWorkspace('', workspaceHost);
   const project = workspace.projects.get(context.target.project);
   if (project.sourceRoot && project.root) {
     return { sourceRoot: project.sourceRoot, projectRoot: project.root };

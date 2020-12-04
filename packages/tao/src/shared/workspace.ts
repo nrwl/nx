@@ -127,27 +127,25 @@ export class Workspaces {
     let formatted = false;
     Object.values(w.projects || {}).forEach((project: any) => {
       if (project.architect) {
-        project.targets = project.architect;
-        delete project.architect;
+        renameProperty(project, 'architect', 'targets');
         formatted = true;
       }
 
       Object.values(project.targets || {}).forEach((target: any) => {
         if (target.builder) {
-          target.executor = target.builder;
-          delete target.builder;
+          renameProperty(target, 'builder', 'executor');
           formatted = true;
         }
       });
     });
 
     if (w.schematics) {
-      w.generators = w.schematics;
-      delete w.schematics;
+      renameProperty(w, 'schematics', 'generators');
       formatted = true;
     }
-    if (formatted) {
+    if (w.version !== 2) {
       w.version = 2;
+      formatted = true;
     }
     return formatted ? w : null;
   }
@@ -156,27 +154,25 @@ export class Workspaces {
     let formatted = false;
     Object.values(w.projects || {}).forEach((project: any) => {
       if (project.targets) {
-        project.architect = project.targets;
-        delete project.targets;
+        renameProperty(project, 'targets', 'architect');
         formatted = true;
       }
 
       Object.values(project.architect || {}).forEach((target: any) => {
         if (target.executor) {
-          target.builder = target.executor;
-          delete target.executor;
+          renameProperty(target, 'executor', 'builder');
           formatted = true;
         }
       });
     });
 
     if (w.generators) {
-      w.schematics = w.generators;
-      delete w.generators;
+      renameProperty(w, 'generators', 'schematics');
       formatted = true;
     }
-    if (formatted) {
+    if (w.version !== 1) {
       w.version = 1;
+      formatted = true;
     }
     return formatted ? w : null;
   }
@@ -310,4 +306,20 @@ export class Workspaces {
     }
     return { generatorsFilePath, generatorsJson, normalizedGeneratorName };
   }
+}
+
+// we have to do it this way to preserve the order of properties
+// not to screw up the formatting
+function renameProperty(obj: any, from: string, to: string) {
+  const copy = { ...obj };
+  Object.keys(obj).forEach((k) => {
+    delete obj[k];
+  });
+  Object.keys(copy).forEach((k) => {
+    if (k === from) {
+      obj[to] = copy[k];
+    } else {
+      obj[k] = copy[k];
+    }
+  });
 }

@@ -42,8 +42,8 @@ describe('Run Commands', () => {
     runCLI(`generate @nrwl/web:app ${myapp}`);
 
     const config = readJson(workspaceConfigName());
-    config.projects[myapp].architect.echo = {
-      builder: '@nrwl/workspace:run-commands',
+    config.projects[myapp].targets.echo = {
+      executor: '@nrwl/workspace:run-commands',
       options: {
         commands: [`echo 'print: {args.var1}'`, `echo 'print: {args.var2}'`],
       },

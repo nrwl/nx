@@ -10,7 +10,7 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('custom workspace layout', () => {
-  it('should work', async () => {
+  it('vvvshould work', async () => {
     const proj = uniq('custom-layout-proj');
     runCreateWorkspace(proj, { preset: 'oss' });
     yarnAdd('@nrwl/react @nrwl/angular @nrwl/express');

@@ -88,7 +88,7 @@ describe('Build React libraries and apps', () => {
     // Add assets to child lib
     updateFile('workspace.json', (c) => {
       const json = JSON.parse(c);
-      json.projects[childLib].architect.build.options.assets = [
+      json.projects[childLib].targets.build.options.assets = [
         `libs/${childLib}/src/assets`,
       ];
       return JSON.stringify(json, null, 2);

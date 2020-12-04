@@ -16,7 +16,7 @@ describe('file-server', () => {
 
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
     const workspaceJson = readJson(workspaceConfigName());
-    workspaceJson.projects[appName].architect['serve'].builder =
+    workspaceJson.projects[appName].targets['serve'].executor =
       '@nrwl/web:file-server';
     updateFile(workspaceConfigName(), serializeJson(workspaceJson));
 

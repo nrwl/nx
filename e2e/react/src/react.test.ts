@@ -53,7 +53,7 @@ describe('React Applications', () => {
     // Turn vendor sourcemaps on
     updateFile(`workspace.json`, (content) => {
       const json = JSON.parse(content);
-      json.projects[appName].architect.build.options.sourceMap = {
+      json.projects[appName].targets.build.options.sourceMap = {
         scripts: true,
         vendor: true,
       };
@@ -314,10 +314,10 @@ describe('React Applications', () => {
 
     angularJson.projects[
       appName
-    ].architect.build.options.main = `apps/${appName}/src/main.jsx`;
+    ].targets.build.options.main = `apps/${appName}/src/main.jsx`;
     angularJson.projects[
       appName
-    ].architect.build.options.polyfills = `apps/${appName}/src/polyfills.js`;
+    ].targets.build.options.polyfills = `apps/${appName}/src/polyfills.js`;
     updateFile(workspaceConfigName(), serializeJson(angularJson));
 
     const mainPath = `apps/${appName}/src/main.jsx`;
