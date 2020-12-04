@@ -13,7 +13,7 @@ describe('<%= name %> generator', () => {
   });
 
   it('should run successfully', async () => {
-    generator(appTree, options);
+    await generator(appTree, options);
     const config = readProjectConfiguration(appTree, 'test');
     expect(config).toBeDefined();
   })
