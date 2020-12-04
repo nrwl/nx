@@ -1,24 +1,24 @@
-# Workspace Schematics
+# Workspace Generators
 
-Workspace schematics provide a way to automate many tasks you regularly perform as part of your development workflow. Whether it is scaffolding out components, features, or ensuring libraries are generated and structured in a certain way, schematics help you standardize these tasks in a consistent, and predictable manner. Nx provides tooling around creating, and running custom schematics from within your workspace. This guide shows you how to create, run, and customize workspace schematics within your Nx workspace.
+Workspace generators provide a way to automate many tasks you regularly perform as part of your development workflow. Whether it is scaffolding out components, features, or ensuring libraries are generated and structured in a certain way, generators help you standardize these tasks in a consistent, and predictable manner. Nx provides tooling around creating, and running custom generators from within your workspace. This guide shows you how to create, run, and customize workspace generators within your Nx workspace.
 
-## Creating a workspace schematic
+## Creating a workspace generator using @angular/devkit
 
-Use the Nx CLI to generate the initial files needed for your workspace schematic.
+Use the Nx CLI to generate the initial files needed for your workspace generator.
 
 ```sh
-nx generate @nrwl/workspace:workspace-schematic my-schematic
+nx generate @nrwl/workspace:workspace-generator my-generator
 ```
 
-After the command is finished, the workspace schematic is created under the `tools/schematics` folder.
+After the command is finished, the workspace generator is created under the `tools/generators` folder.
 
 ```treeview
 happynrwl/
 ├── apps/
 ├── libs/
 ├── tools/
-│   ├── schematics
-│   |   └── my-schematic/
+│   ├── generators
+│   |   └── my-generator/
 │   |   |    ├── index.ts
 │   |   |    └── schema.json
 ├── nx.json
@@ -78,7 +78,7 @@ nx workspace-schematic my-schematic mylib
 
 ## Creating custom rules
 
-Schematics provide an API for managing files within your workspace. You can use schematics to do things such as create, update, move, and delete files. Files with static or dynamic content can also be created.
+Generators provide an API for managing files within your workspace. You can use schematics to do things such as create, update, move, and delete files. Files with static or dynamic content can also be created.
 
 The schematic below shows you how to generate a library, and then scaffold out additional files with the newly created library.
 

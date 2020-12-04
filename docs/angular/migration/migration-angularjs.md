@@ -500,7 +500,7 @@ This change loads the HTML code directly and sets it to the template attribute o
 
 Now, go through each component of the application and make this change. To make sure that you’ve really modified every component correctly, delete the template cache file (`config/app.templates.js`) that gulp generated earlier.
 
-> In an example like this, it’s easy enough to make this kind of change by hand. In a larger codebase, doing this manually could be very time-intensive. You’ll want to look into an automated tool to do this for you, such as js-codemod or schematics.
+> In an example like this, it’s easy enough to make this kind of change by hand. In a larger codebase, doing this manually could be very time-intensive. You’ll want to look into an automated tool to do this for you, such as js-codemod or generators.
 
 Run the application the same way as before:
 

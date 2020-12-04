@@ -24,7 +24,7 @@ Source code and documentation are included in the top-level folders listed below
 
 - `docs` - Markdown and configuration files for documentation including tutorials, guides for each supported platform, and API docs.
 - `e2e` - E2E tests.
-- `packages` - Source code for Nx packages such as Angular, React, Web, NestJS, Next and others including schematics and builders.
+- `packages` - Source code for Nx packages such as Angular, React, Web, NestJS, Next and others including generators and executors (or builders).
 - `scripts` - Miscellaneous scripts for project tasks such as building documentation, testing, and code formatting.
 - `tmp` - Folder used by e2e tests. If you are a WebStorm user, make sure to mark this folder as excluded.
 
@@ -185,7 +185,7 @@ Including the issue number that the PR relates to also helps with tracking.
 #### Example
 
 ```
-feat(schematics): add an option to generate lazy-loadable modules
+feat(generators): add an option to generate lazy-loadable modules
 
 `nx generate lib mylib --lazy` provisions the mylib project in tslint.json
 

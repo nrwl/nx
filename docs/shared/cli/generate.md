@@ -1,15 +1,15 @@
 # generate
 
-Runs a schematic that generates and/or modifies files based on a schematic from a collection.
+Runs a generator that creates and/or modifies files based on a generator from a collection.
 
 ## Usage
 
 ```bash
-nx generate <collection:schematic>
+nx generate <collection:generator>
 ```
 
 ```bash
-nx g <schematic>
+nx g <generator>
 ```
 
 Install the `nx` package globally to invoke the command directly using `nx`, or use `npm run nx` or `yarn nx`.
@@ -86,7 +86,7 @@ When false, disables interactive input prompts.
 
 ### help
 
-Show help and display available schematics in the default collection.
+Show help and display available generators in the default collection.
 
 ### version
 

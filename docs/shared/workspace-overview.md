@@ -21,9 +21,9 @@ Nx makes it easy to split up your code into separate projects. Projects come in 
 
 `/libs/` contains the library projects. There are many different kinds of libraries, and each library defines its own external api so that boundaries between libraries remain clear.
 
-`/tools/` contains scripts that act on your code base. This could be database scripts, custom builders or workspace schematics.
+`/tools/` contains scripts that act on your code base. This could be database scripts, custom executors (or builders) or workspace generators.
 
-`/workspace.json` defines each project in your workspace and the builder commands that can be run on those projects.
+`/workspace.json` defines each project in your workspace and the executors that can be run on those projects.
 
 `/nx.json` adds extra information about projects, including manually defined dependencies and tags that can be used to restrict the ways projects are allowed to depend on each other.
 

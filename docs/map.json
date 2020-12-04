@@ -868,7 +868,7 @@
                     "file": "angular/api-nx-plugin/generators/plugin"
                   },
                   {
-                    "name": "schematic",
+                    "name": "generator",
                     "id": "schematic",
                     "file": "angular/api-nx-plugin/generators/generator"
                   }
@@ -909,12 +909,12 @@
             "id": "executors",
             "itemList": [
               {
-                "name": "Using Builders",
+                "name": "Using Executors / Builders",
                 "id": "using-builders",
                 "file": "shared/using-builders"
               },
               {
-                "name": "Run Commands Builder",
+                "name": "Running Custom Commands",
                 "id": "run-commands-builder",
                 "file": "shared/running-custom-commands"
               },
@@ -935,12 +935,12 @@
             "id": "generators",
             "itemList": [
               {
-                "name": "Using Schematics",
+                "name": "Using Generators",
                 "id": "using-schematics",
                 "file": "shared/using-schematics"
               },
               {
-                "name": "Workspace Schematics",
+                "name": "Workspace Generators",
                 "id": "workspace-generators",
                 "file": "shared/tools-workspace-generators"
               }
@@ -1961,7 +1961,7 @@
                     "file": "react/api-nx-plugin/generators/plugin"
                   },
                   {
-                    "name": "schematic",
+                    "name": "generator",
                     "id": "schematic",
                     "file": "react/api-nx-plugin/generators/generator"
                   }
@@ -2002,12 +2002,12 @@
             "id": "executors",
             "itemList": [
               {
-                "name": "Using Builders",
+                "name": "Using Executors / Builders",
                 "id": "using-builders",
                 "file": "shared/using-builders"
               },
               {
-                "name": "Run Commands Builder",
+                "name": "Running Custom Commands",
                 "id": "run-commands-builder",
                 "file": "shared/running-custom-commands"
               },
@@ -2028,12 +2028,12 @@
             "id": "generators",
             "itemList": [
               {
-                "name": "Using Schematics",
+                "name": "Using Generators",
                 "id": "using-schematics",
                 "file": "shared/using-schematics"
               },
               {
-                "name": "Workspace Schematics",
+                "name": "Workspace Generators",
                 "id": "workspace-generators",
                 "file": "shared/tools-workspace-generators"
               }
@@ -3001,7 +3001,7 @@
                     "file": "node/api-nx-plugin/generators/plugin"
                   },
                   {
-                    "name": "schematic",
+                    "name": "generator",
                     "id": "schematic",
                     "file": "node/api-nx-plugin/generators/generator"
                   }
@@ -3042,12 +3042,12 @@
             "id": "executors",
             "itemList": [
               {
-                "name": "Using Builders",
+                "name": "Using Executors / Builders",
                 "id": "using-builders",
                 "file": "shared/using-builders"
               },
               {
-                "name": "Run Commands Builder",
+                "name": "Running Custom Commands",
                 "id": "run-commands-builder",
                 "file": "shared/running-custom-commands"
               },
@@ -3068,12 +3068,12 @@
             "id": "generators",
             "itemList": [
               {
-                "name": "Using Schematics",
+                "name": "Using Generators",
                 "id": "using-schematics",
                 "file": "shared/using-schematics"
               },
               {
-                "name": "Workspace Schematics",
+                "name": "Workspace Generators",
                 "id": "workspace-generators",
                 "file": "shared/tools-workspace-generators"
               }

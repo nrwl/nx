@@ -10,7 +10,7 @@
 
 ## What is It?
 
-Builders and schematics adding Cypress tests for frontend applications.
+Executors and generators adding Cypress tests for frontend applications.
 
 ## How to Use
 

@@ -1,13 +1,13 @@
 # Publishable and Buildable Nx Libraries
 
-The `--buildable` and `--publishable` options are available on the Nx library generation schematics for the following plugins:
+The `--buildable` and `--publishable` options are available on the Nx library generators for the following plugins:
 
 - Angular
 - React
 - NestJs
 - Node
 
-This document will look to explain the motivations for why you would use either the `--buildable` or `--publishable` option, as well as the mechanics of how they adjust the result when you add them to your schematic.
+This document will look to explain the motivations for why you would use either the `--buildable` or `--publishable` option, as well as the mechanics of how they adjust the result when you add them to your generator.
 
 ## Publishable libraries
 
@@ -23,7 +23,7 @@ One particularity when generating a library with `--publishable` is that it requ
 
 To publish the library (for example to npm) you can run the CLI command: `npm publish` from the artifact located in the `dist` directory. Setting up some automated script in Nx’s `tools` folder may also come in handy.
 
-For more details on the mechanics, remember that Nx is an open source project, so you can see the actual impact of the schematic by looking at the source code (the best starting point is probably `packages/<framework>/src/generators/library/library.ts`).
+For more details on the mechanics, remember that Nx is an open source project, so you can see the actual impact of the generator by looking at the source code (the best starting point is probably `packages/<framework>/src/generators/library/library.ts`).
 
 ## Buildable libraries
 
@@ -31,4 +31,4 @@ Buildable libraries are similar to "publishable libraries" described above. Thei
 
 Buildable libraries are mostly used for producing some pre-compiled output that can be directly referenced from an Nx workspace application without the need to again compile it. A typical scenario is to leverage Nx’s [incremental building](https://nx.dev/latest/angular/guides/ci/incremental-builds) capabilities.
 
-For more details on the mechanics, remember that Nx is an open source project, so you can see the actual impact of the schematic by looking at the source code (the best starting point is probably `packages/<framework>/src/generators/library/library.ts`).
+For more details on the mechanics, remember that Nx is an open source project, so you can see the actual impact of the generator by looking at the source code (the best starting point is probably `packages/<framework>/src/generators/library/library.ts`).

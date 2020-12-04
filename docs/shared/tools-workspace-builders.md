@@ -1,19 +1,21 @@
-# Creating Builders in Your Nx Workspace
+# Creating Executors in Your Nx Workspace
 
-Creating builders for your workspace is a way to standardize scripts that you may run during your development/building/deploying tasks to enable Nx's `affected` command and caching capabilities.
+Creating executors for your workspace standardizes scripts that are run during your development/building/deploying tasks in order to enable Nx's `affected` command and caching capabilities.
 
-This guide will show you how to create, run, and customize builders within your Nx workspace. In the examples, we'll use the trivial use-case of an `echo` command.
+This guide will show you how to create, run, and customize executors within your Nx workspace. In the examples, we'll use the trivial use-case of an `echo` command.
 
-## Creating a Builder
+## Creating an Executor with @angular/devkit
 
-Your builder should be created within the `tools` directory of your Nx workspace like so:
+Note: Executors that use the `@angular/devkit` are called builders.
+
+Your executor should be created within the `tools` directory of your Nx workspace like so:
 
 ```treeview
 happynrwl/
 ├── apps/
 ├── libs/
 ├── tools/
-│   └── builders/
+│   └── executors/
 │       └── echo/
 │           ├── builder.json
 │           ├── impl.ts
