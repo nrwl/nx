@@ -28,7 +28,7 @@ Budget thresholds to ensure parts of your application stay within boundaries whi
 
 ### buildLibsFromSource
 
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 

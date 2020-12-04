@@ -222,7 +222,9 @@ describe('Build React libraries and apps', () => {
     });
 
     it('should build an app composed out of publishable libs', () => {
-      const buildWithDeps = runCLI(`build ${app} --with-deps`);
+      const buildWithDeps = runCLI(
+        `build ${app} --with-deps --buildLibsFromSource=false`
+      );
       expect(buildWithDeps).toContain(`Running target "build" succeeded`);
       checkFilesDoNotExist(`apps/${app}/tsconfig/tsconfig.nx-tmp`);
 
