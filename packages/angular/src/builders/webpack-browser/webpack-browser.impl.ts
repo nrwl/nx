@@ -4,9 +4,10 @@ import {
   createBuilder,
 } from '@angular-devkit/architect';
 import { JsonObject } from '@angular-devkit/core';
-import { from, Observable } from 'rxjs';
+import { from, Observable, of } from 'rxjs';
 import {
   calculateProjectDependencies,
+  checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utils/buildable-libs-utils';
 import { join } from 'path';
@@ -19,10 +20,12 @@ function run(
   context: BuilderContext
 ): Observable<BuilderOutput> {
   const projGraph = createProjectGraph();
+
   const { target, dependencies } = calculateProjectDependencies(
     projGraph,
     context
   );
+
   options.tsConfig = createTmpTsConfig(
     join(context.workspaceRoot, options.tsConfig),
     context.workspaceRoot,
@@ -30,12 +33,25 @@ function run(
     dependencies
   );
 
-  return from(
-    context.scheduleBuilder('@angular-devkit/build-angular:browser', options, {
-      target: context.target,
-      logger: context.logger as any,
+  return of(checkDependentProjectsHaveBeenBuilt(context, dependencies)).pipe(
+    switchMap((result) => {
+      if (result) {
+        return from(
+          context.scheduleBuilder(
+            '@angular-devkit/build-angular:browser',
+            options,
+            {
+              target: context.target,
+              logger: context.logger as any,
+            }
+          )
+        ).pipe(switchMap((x) => x.result));
+      } else {
+        // just pass on the result
+        return of({ success: false });
+      }
     })
-  ).pipe(switchMap((x) => x.result));
+  );
 }
 
 export default createBuilder<JsonObject & BrowserBuilderSchema>(run);
