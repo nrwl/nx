@@ -174,6 +174,42 @@ function getStylesPartial(
             { loader: require.resolve('sass-loader') },
           ],
         },
+        {
+          test: /\.module\.less$/,
+          use: [
+            {
+              loader: options.extractCss
+                ? MiniCssExtractPlugin.loader
+                : require.resolve('style-loader'),
+            },
+            {
+              loader: require.resolve('css-loader'),
+              options: {
+                modules: true,
+                importLoaders: 1,
+              },
+            },
+            { loader: require.resolve('less-loader') },
+          ],
+        },
+        {
+          test: /\.module\.styl$/,
+          use: [
+            {
+              loader: options.extractCss
+                ? MiniCssExtractPlugin.loader
+                : require.resolve('style-loader'),
+            },
+            {
+              loader: require.resolve('css-loader'),
+              options: {
+                modules: true,
+                importLoaders: 1,
+              },
+            },
+            { loader: require.resolve('stylus-loader') },
+          ],
+        },
         ...rules,
       ],
     },
