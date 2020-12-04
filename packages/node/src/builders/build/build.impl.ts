@@ -2,7 +2,7 @@ import { BuilderContext, createBuilder } from '@angular-devkit/architect';
 import { JsonObject, workspaces } from '@angular-devkit/core';
 import { runWebpack, BuildResult } from '@angular-devkit/build-webpack';
 
-import { Observable, from } from 'rxjs';
+import { Observable, from, of } from 'rxjs';
 import { join, resolve } from 'path';
 import { concatMap, map, tap } from 'rxjs/operators';
 import { getNodeWebpackConfig } from '../../utils/node.config';
@@ -13,6 +13,7 @@ import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
+  checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utils/buildable-libs-utils';
 import { generatePackageJson } from '../../utils/generate-package-json';
@@ -43,6 +44,10 @@ function run(
       target.data.root,
       dependencies
     );
+
+    if (!checkDependentProjectsHaveBeenBuilt(context, dependencies)) {
+      return { success: false } as any;
+    }
   }
 
   return from(getRoots(context)).pipe(
