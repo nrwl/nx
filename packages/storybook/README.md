@@ -10,7 +10,7 @@
 
 ## What is It?
 
-Builders and schematics adding Storybook support for frontend applications.
+Executors and generators adding Storybook support for frontend applications.
 
 ## How to Use
 

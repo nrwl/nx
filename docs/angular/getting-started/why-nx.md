@@ -42,7 +42,7 @@ Nx provides tools to give you the benefits of a monorepo without the drawbacks o
 ### Scaling Your Organization
 
 - **Controlled Code Sharing** - You can define libraries with specific enforced APIs and put rules in place to define how those libraries can depend on each other. A CODEOWNERS file can be used to restrict who is allowed to change files in each project.
-- **Consistent Code Generation** - Schematics allow you to automate code creation and modification tasks. Instead of writing a 7 step guide in a readme file, you can create a schematic to prompt the developer for inputs and then modify the code directly. Nrwl provides plugins which contain useful builders and schematics for a lot of popular tools. Also, there is a growing number of community provided plugins.
+- **Consistent Code Generation** - Generators allow you to automate code creation and modification tasks. Instead of writing a 7 step guide in a readme file, you can create a generator to prompt the developer for inputs and then modify the code directly. Nrwl provides plugins which contain useful executors and generators for a lot of popular tools. Also, there is a growing number of community provided plugins.
 - **Accurate Architecture Diagram** - Most architecture diagrams are wrong the moment they are written down. And every diagram becomes out of date as soon as the code changes. Since Nx understands your code, it can generate an up-to-date and accurate diagram of how projects depend on each other. And for cases where dependencies are not explicit in the code, you can manually tell Nx about project dependencies.
 
 ## Next Steps

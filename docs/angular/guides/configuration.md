@@ -4,7 +4,7 @@ There are three top-level configuration files every Nx workspace has: `angular.j
 
 ## angular.json
 
-The `angular.json` configuration file contains information about the targets and schematics. Let's look at the following example:
+The `angular.json` configuration file contains information about the targets and generators. Let's look at the following example:
 
 ```json
 {
@@ -172,9 +172,9 @@ require(`@nrwl/jest`).builders['jest']({...options, ...selectedConfiguration, ..
 
 The selected configuration adds/overrides the default options, and the provided command line args add/override the configuration options.
 
-### Schematics
+### Generators
 
-You can configure default schematic options in `angular.json` as well. For instance, the following will tell Nx to always pass `--style=scss` when creating new libraries.
+You can configure default generator options in `angular.json` as well. For instance, the following will tell Nx to always pass `--style=scss` when creating new libraries.
 
 ```json
 {

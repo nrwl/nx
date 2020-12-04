@@ -155,15 +155,15 @@ Since Nx allows us to group apps and libs in directories, those directories can 
 
 When we have 10 people working on an app in the same room, we can agree on best practices over lunch. We can also make sure the team follows them by reviewing each other's PRs. For a team of a hundred located in different cities, this no longer works.
 
-With Nx, we can help teams adopt best practices by using workspace schematics and workspace lint checks.
+With Nx, we can help teams adopt best practices by using workspace generators and workspace lint checks.
 
-### Workspace Schematics
+### Workspace Generators
 
-Schematics is a library used by Nx to do code generation. `nx g lib mylib` invokes the lib schematic from the default collection. Schematics are a great way to codify conventions and best practices. Unfortunately, creating a custom schematics collection is not very straightforward, so few do it.
+Generators is a library used by Nx to do code generation. `nx g lib mylib` invokes the lib generator from the default collection. Generators are a great way to codify conventions and best practices. Unfortunately, creating a custom generators collection is not very straightforward, so few do it.
 
-Nx simplifies it. With Nx, we can create custom schematics in the `tools/schematics` and invoke them without having to do compile, build, deploy anything.
+Nx simplifies it. With Nx, we can create custom generators in the `tools/generators` folder and invoke them without having to do compile, build, deploy anything.
 
-Read more about workspace schematics in the Workspace Schematics guide.
+Read more about workspace generators in the Workspace Generators guide.
 
 ### Workspace Lint Checks
 

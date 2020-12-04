@@ -7,7 +7,7 @@ The workspace plugin contains executors and generators that are useful for any N
 - [library](/angular/plugins/workspace/generators/library) - Create a plain typescript library
 - [move](/angular/plugins/workspace/generators/move) - Move a project to another directory and update all references
 - [remove](/angular/plugins/workspace/generators/remove) - Remove a project from the workspace
-- [workspace-schematic](/angular/plugins/workspace/generators/workspace-schematic) - Scaffold a custom schematic for use within your workspace
+- [workspace-generator](/angular/plugins/workspace/generators/workspace-schematic) - Scaffold a custom generator for use within your workspace
 
 ## Executors / Builders
 

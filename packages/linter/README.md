@@ -10,7 +10,7 @@
 
 ## What is It?
 
-Builders and schematics adding TS and JS lint checks to applications and libraries.
+Executors and generators adding TS and JS lint checks to applications and libraries.
 
 ## How to Use
 

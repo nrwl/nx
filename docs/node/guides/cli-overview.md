@@ -39,26 +39,26 @@ If you don't have the Nx CLI installed globally, you can invoke `nx` using `yarn
 
 The Nx CLI has an advanced code generator. With it, you can generate new applications, libraries, components, state management utilities. You can change existing applications. And, because the Nx CLI comes with an implementation of a virtual file system, you can preview the changes without affecting anything on disk.
 
-The code generation recipes are called schematics. Schematics provide the underlying APIs for scaffolding, and utilities to automate changes to your filesystem. The example below is the command to generate a new application.
+The code generation recipes are called generators. Generators provide the underlying APIs for scaffolding, and utilities to automate changes to your filesystem. The example below is the command to generate a new application.
 
 ```sh
 nx generate @nrwl/node:application myapp
 ```
 
-The `@nrwl/node` package contains a collection of schematics, with `application` being the one used in this example. The Nx CLI applies the schematic to your workspace, verifying that the provided options are valid, and the destination files don't already exist. Once the validations are passed, the new files are generated, or existing files are updated. You can also customize the output of the generated application, by passing options to the schematic.
+The `@nrwl/node` package contains a collection of generators, with `application` being the one used in this example. The Nx CLI applies the generator to your workspace, verifying that the provided options are valid, and the destination files don't already exist. Once the validations are passed, the new files are generated, or existing files are updated. You can also customize the output of the generated application, by passing options to the generator.
 
 ```sh
 nx generate @nrwl/node:application myapp --style=scss
 ```
 
-You can preview the changes a schematic makes by using the `--dry-run` option. It will output the potential files created, and/or updated during the execution of the schematic.
+You can preview the changes a generator makes by using the `--dry-run` option. It will output the potential files created, and/or updated during the execution of the generator.
 
 **Generate command:**
 
-`nx generate` runs schematics to create or modify code given some inputs from the developer.
+`nx generate` runs generators to create or modify code given some inputs from the developer.
 
 - [nx generate](/{{framework}}/cli/generate)  
-  Syntax: `nx generate [plugin]:[schematic-name] [options]`  
+  Syntax: `nx generate [plugin]:[generator-name] [options]`  
   Example: `nx generate @nrwl/node:library my-node-lib`
 
 ## Running Tasks
