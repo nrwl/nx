@@ -50,6 +50,11 @@
       "version": "10.5.0-beta.0",
       "description": "Update eslint config and builder to extend from new Nx Angular presets and lint templates",
       "factory": "./src/migrations/update-10-5-0/add-template-support-and-presets-to-eslint"
+    },
+    "update-11-0-0": {
+      "version": "11.0.0-beta.13",
+      "description": "Update builder configurations and dependencies",
+      "factory": "./src/migrations/update-11-0-0/update-builders-config"
     }
   },
   "packageJsonUpdates": {
@@ -185,6 +190,27 @@
         },
         "karma-jasmine-html-reporter": {
           "version": "^1.5.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "11.0.0": {
+      "version": "11.0.0-beta.13",
+      "packages": {
+        "@angular/cli": {
+          "version": "~11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~0.1100.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/jasmine": {
+          "version": "~3.6.0",
+          "alwaysAddToPackageJson": false
+        },
+        "codelyzer": {
+          "version": "^6.0.0",
           "alwaysAddToPackageJson": false
         }
       }

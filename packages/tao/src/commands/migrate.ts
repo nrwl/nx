@@ -594,7 +594,11 @@ async function generateMigrationsJsonAndUpdatePackageJson(
   }
 }
 
-async function runMigrations(root: string, opts: { runMigrations: string }) {
+async function runMigrations(
+  root: string,
+  opts: { runMigrations: string },
+  isVerbose: boolean
+) {
   const migrations: {
     package: string;
     name: string;
@@ -612,7 +616,8 @@ async function runMigrations(root: string, opts: { runMigrations: string }) {
       await (await import('./ngcli-adapter')).runMigration(
         root,
         m.package,
-        m.name
+        m.name,
+        isVerbose
       );
     }
     logger.info(`Successfully finished ${m.name}`);
@@ -650,7 +655,7 @@ export async function migrate(root: string, args: string[], isVerbose = false) {
     if (opts.type === 'generateMigrations') {
       await generateMigrationsJsonAndUpdatePackageJson(root, opts);
     } else {
-      await runMigrations(root, opts);
+      await runMigrations(root, opts, isVerbose);
     }
   });
 }

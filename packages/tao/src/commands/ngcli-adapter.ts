@@ -364,8 +364,10 @@ export async function generate(
 export async function runMigration(
   root: string,
   collection: string,
-  schematic: string
+  schematic: string,
+  isVerbose: boolean
 ) {
+  const logger = getLogger(isVerbose);
   const host = new NxScopedHost(normalize(root));
   const workflow = new MigrationsWorkflow(host, logger as any);
   return workflow
