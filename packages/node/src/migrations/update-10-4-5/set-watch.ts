@@ -13,7 +13,8 @@ export default function update(): Rule {
           Object.entries<any>(project.architect).forEach(
             ([targetName, targetConfig]) => {
               if (targetConfig.builder === '@nrwl/node:execute') {
-                const architect = workspaceJson.projects[projectName].architect[targetName];
+                const architect =
+                  workspaceJson.projects[projectName].architect[targetName];
                 if (architect && architect.options) {
                   architect.options.watch = true;
                 }
