@@ -43,6 +43,7 @@ export function runCreateWorkspace(
     base,
     packageManager,
     cli,
+    extraArgs,
   }: {
     preset: string;
     appName?: string;
@@ -50,6 +51,7 @@ export function runCreateWorkspace(
     base?: string;
     packageManager?: string;
     cli?: string;
+    extraArgs?: string;
   }
 ) {
   setCurrentProjName(name);
@@ -74,6 +76,10 @@ export function runCreateWorkspace(
 
   if (packageManager) {
     command += ` --package-manager=${packageManager}`;
+  }
+
+  if (extraArgs) {
+    command += ` ${extraArgs}`;
   }
 
   const create = execSync(command, {

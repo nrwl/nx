@@ -236,5 +236,19 @@ describe('utils', () => {
         '--foo.z=4',
       ]);
     });
+
+    it('should quote string values with space(s)', () => {
+      const options = {
+        string1: 'one',
+        string2: 'one two',
+        string3: 'one two three',
+      };
+
+      expect(unparse(options)).toEqual([
+        '--string1=one',
+        '--string2="one two"',
+        '--string3="one two three"',
+      ]);
+    });
   });
 });

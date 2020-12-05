@@ -59,6 +59,8 @@ export {
   serializeTarget,
 } from './src/utils/cli-config-utils';
 
+export { unparse } from './src/tasks-runner/utils';
+
 export {
   getWorkspace,
   updateWorkspace,

@@ -24,9 +24,20 @@ import * as path from 'path';
 import { Observable } from 'rxjs';
 import { spawn } from 'child_process';
 import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
-// @ts-ignore
-import yargsParser = require('yargs-parser');
+import * as yargsParser from 'yargs-parser';
 import { names } from '@nrwl/devkit';
+
+export enum Preset {
+  Empty = 'empty',
+  OSS = 'oss',
+  WebComponents = 'web-components',
+  Angular = 'angular',
+  AngularWithNest = 'angular-nest',
+  React = 'react',
+  ReactWithExpress = 'react-express',
+  NextJs = 'next',
+  Nest = 'nest',
+}
 
 export interface Schema {
   cli: 'nx' | 'angular';
@@ -38,16 +49,7 @@ export interface Schema {
   skipGit?: boolean;
   style?: string;
   nxCloud?: boolean;
-  preset:
-    | 'empty'
-    | 'oss'
-    | 'angular'
-    | 'react'
-    | 'web-components'
-    | 'angular-nest'
-    | 'react-express'
-    | 'next'
-    | 'nest';
+  preset: Preset;
   commit?: { name: string; email: string; message?: string };
   defaultBase?: string;
   nxWorkspaceRoot?: string;
