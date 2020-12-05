@@ -100,7 +100,7 @@ const argv = require('yargs')
     }
   });
 
-  if (total.discrepancies > 0) {
+  if (total.discrepancies > 0 || total.missing > 0) {
     process.exit(1);
   }
 
