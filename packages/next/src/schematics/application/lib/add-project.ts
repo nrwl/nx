@@ -11,6 +11,7 @@ export function addProject(options: NormalizedSchema): Rule {
 
     architect.build = {
       builder: '@nrwl/next:build',
+      outputs: ['{options.outputPath}'],
       options: {
         root: options.appProjectRoot,
         outputPath: join(normalize('dist'), options.appProjectRoot),
@@ -61,7 +62,6 @@ export function addProject(options: NormalizedSchema): Rule {
       root: options.appProjectRoot,
       sourceRoot: options.appProjectRoot,
       projectType: 'application',
-      schematics: {},
       architect,
     };
 

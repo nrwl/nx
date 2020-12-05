@@ -9,7 +9,6 @@ import {
   getWorkspace,
   insert,
   InsertChange,
-  offsetFromRoot,
   serializeJson,
 } from '@nrwl/workspace';
 import {
@@ -17,6 +16,7 @@ import {
   removePropertyFromJestConfig,
 } from '../../utils/config/update-config';
 import { jestConfigObjectAst } from '../../utils/config/functions';
+import { offsetFromRoot } from '@nrwl/devkit';
 
 function updateRootJestConfig(): Rule {
   return async (host: Tree, context: SchematicContext) => {

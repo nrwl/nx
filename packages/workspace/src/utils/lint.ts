@@ -6,13 +6,13 @@ import {
   SchematicContext,
 } from '@angular-devkit/schematics';
 import { addDepsToPackageJson } from './ast-utils';
-import { offsetFromRoot } from './common';
 import {
   eslintVersion,
   typescriptESLintVersion,
   eslintConfigPrettierVersion,
   nxVersion,
 } from './versions';
+import { offsetFromRoot } from '@nrwl/devkit';
 
 export const enum Linter {
   TsLint = 'tslint',

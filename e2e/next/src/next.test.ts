@@ -15,7 +15,7 @@ describe('Next.js Applications', () => {
     newProject();
     const appName = uniq('app');
 
-    runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
+    runCLI(`generate @nrwl/next:app ${appName}`);
 
     const proxyConf = {
       '/external-api': {
@@ -238,6 +238,23 @@ describe('Next.js Applications', () => {
     runCLI(`build ${appName}`);
 
     checkFilesExist(`dist/apps/${appName}/public/a/b.txt`);
+  }, 120000);
+
+  it('should build with a next.config.js file in the dist folder', async () => {
+    const appName = uniq('app');
+
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
+
+    updateFile(
+      `apps/${appName}/next.config.js`,
+      `
+    module.exports = {}
+    `
+    );
+
+    runCLI(`build ${appName}`);
+
+    checkFilesExist(`dist/apps/${appName}/next.config.js`);
   }, 120000);
 });
 

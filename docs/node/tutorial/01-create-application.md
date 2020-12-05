@@ -12,7 +12,11 @@ In this tutorial you will use Nx to build a server application out of common lib
 
 ```shell script
 yarn create nx-workspace
+```
 
+You will then receive the following prompts in your command line:
+
+```
 ? Workspace name (e.g., org name)         myorg
 ? What to create in the new workspace     nest
 ? Application name                        todos

@@ -1,5 +1,5 @@
 import { Tree } from '@nrwl/tao/src/shared/tree';
-import { detectPackageManager } from '@nrwl/tao/src/shared/detect-package-manager';
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { execSync } from 'child_process';
 
 let storedPackageJsonValue;
@@ -8,7 +8,7 @@ let storedPackageJsonValue;
  * Runs `npm install` or `yarn install`. It will skip running the install if
  * `package.json` hasn't changed at all or it hasn't changed since the last invocation.
  *
- * @param host - file tree
+ * @param host - the file system tree
  * @param alwaysRun - always run the command even if `package.json` hasn't changed.
  */
 export function installPackagesTask(host: Tree, alwaysRun: boolean = false) {
@@ -16,7 +16,8 @@ export function installPackagesTask(host: Tree, alwaysRun: boolean = false) {
   if (host.listChanges().find((f) => f.path === 'package.json') || alwaysRun) {
     if (storedPackageJsonValue != packageJsonValue || alwaysRun) {
       storedPackageJsonValue = host.read('package.json').toString();
-      execSync(`${detectPackageManager()} install`, {
+      const pmc = getPackageManagerCommand();
+      execSync(pmc.install, {
         cwd: host.root,
         stdio: [0, 1, 2],
       });

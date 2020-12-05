@@ -22,7 +22,7 @@ describe('tree', () => {
         'child content'
       );
 
-      tree = new FsTree(dir, false, console);
+      tree = new FsTree(dir, false);
     });
 
     afterEach(() => {

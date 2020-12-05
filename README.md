@@ -116,12 +116,22 @@ You are good to go!
 
 <table>
   <tr>
+    <td><strong>Scale React Development with Nx</strong></td>
+    <td><strong>Nx Workspaces</strong></td>
+    <td><strong>Advanced Nx Workspaces</strong></td>
+  </tr>
+  <tr>
+    <td>
+      <a href="https://egghead.io/playlists/scale-react-development-with-nx-4038" target="_blank">
+      <p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/EGH_ScalingReactNx.png" height="150px"></p>
+      </a>
+    </td>
     <td>
       <a href="https://www.youtube.com/watch?v=2mYLe9Kp9VM&list=PLakNactNC1dH38AfqmwabvOszDmKriGco" target="_blank">
         <p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-workspace-course.png" width="350"></p>
       </a>
     </td>
-    <td>    
+    <td>  
       <a href="https://nxplaybook.com/p/advanced-nx-workspaces" target="_blank">
       <p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/advanced-nx-workspace-course.png" width="350"></p>
       </a>

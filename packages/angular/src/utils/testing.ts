@@ -1,11 +1,11 @@
 import { join } from 'path';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { Rule, Tree } from '@angular-devkit/schematics';
-import { names, toFileName } from '@nrwl/workspace/src/utils/name-utils';
 import { MockBuilderContext } from '@nrwl/workspace/testing';
 import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 import { schema } from '@angular-devkit/core';
 import { Architect } from '@angular-devkit/architect';
+import { names } from '@nrwl/devkit';
 
 const testRunner = new SchematicTestRunner(
   '@nrwl/angular',
@@ -95,7 +95,7 @@ export function createApp(
   appName: string,
   routing: boolean = true
 ): Tree {
-  appName = toFileName(appName);
+  appName = names(appName).fileName;
   // save for getAppDir() lookup by external *.spec.ts tests
   appConfig = {
     appName,
@@ -203,24 +203,4 @@ export function createLib(tree: Tree, libName: string): Tree {
   `
   );
   return tree;
-}
-
-export async function getTestArchitect() {
-  const architectHost = new TestingArchitectHost('/root', '/root');
-  const registry = new schema.CoreSchemaRegistry();
-  registry.addPostTransform(schema.transforms.addUndefinedDefaults);
-
-  const architect = new Architect(architectHost, registry);
-
-  await architectHost.addBuilderFromPackage(join(__dirname, '../..'));
-
-  return [architect, architectHost] as [Architect, TestingArchitectHost];
-}
-
-export async function getMockContext() {
-  const [architect, architectHost] = await getTestArchitect();
-
-  const context = new MockBuilderContext(architect, architectHost);
-  await context.addBuilderFromPackage(join(__dirname, '../..'));
-  return context;
 }

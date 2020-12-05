@@ -26,7 +26,26 @@ describe('component', () => {
     expect(
       tree.exists('libs/my-lib/src/lib/hello/hello.spec.tsx')
     ).toBeTruthy();
+    expect(
+      tree.exists('libs/my-lib/src/lib/hello/hello.module.css')
+    ).toBeTruthy();
+  });
+
+  it('should generate files with global CSS', async () => {
+    const tree = await runSchematic(
+      'component',
+      { name: 'hello', project: projectName, globalCss: true },
+      appTree
+    );
+
+    expect(tree.exists('libs/my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
+    expect(
+      tree.exists('libs/my-lib/src/lib/hello/hello.spec.tsx')
+    ).toBeTruthy();
     expect(tree.exists('libs/my-lib/src/lib/hello/hello.css')).toBeTruthy();
+    expect(
+      tree.exists('libs/my-lib/src/lib/hello/hello.module.css')
+    ).toBeFalsy();
   });
 
   it('should generate files for an app', async () => {
@@ -40,7 +59,26 @@ describe('component', () => {
     expect(
       tree.exists('apps/my-app/src/app/hello/hello.spec.tsx')
     ).toBeTruthy();
+    expect(
+      tree.exists('apps/my-app/src/app/hello/hello.module.css')
+    ).toBeTruthy();
+  });
+
+  it('should generate files for an app with global CSS', async () => {
+    const tree = await runSchematic(
+      'component',
+      { name: 'hello', project: 'my-app', globalCss: true },
+      appTree
+    );
+
+    expect(tree.exists('apps/my-app/src/app/hello/hello.tsx')).toBeTruthy();
+    expect(
+      tree.exists('apps/my-app/src/app/hello/hello.spec.tsx')
+    ).toBeTruthy();
     expect(tree.exists('apps/my-app/src/app/hello/hello.css')).toBeTruthy();
+    expect(
+      tree.exists('apps/my-app/src/app/hello/hello.module.css')
+    ).toBeFalsy();
   });
 
   describe('--export', () => {
@@ -80,7 +118,9 @@ describe('component', () => {
       expect(
         tree.exists('libs/my-lib/src/lib/hello/Hello.spec.tsx')
       ).toBeTruthy();
-      expect(tree.exists('libs/my-lib/src/lib/hello/Hello.css')).toBeTruthy();
+      expect(
+        tree.exists('libs/my-lib/src/lib/hello/Hello.module.css')
+      ).toBeTruthy();
     });
   });
 
@@ -98,6 +138,15 @@ describe('component', () => {
       expect(tree.exists('libs/my-lib/src/lib/hello/hello.css')).toBeFalsy();
       expect(tree.exists('libs/my-lib/src/lib/hello/hello.scss')).toBeFalsy();
       expect(tree.exists('libs/my-lib/src/lib/hello/hello.styl')).toBeFalsy();
+      expect(
+        tree.exists('libs/my-lib/src/lib/hello/hello.module.css')
+      ).toBeFalsy();
+      expect(
+        tree.exists('libs/my-lib/src/lib/hello/hello.module.scss')
+      ).toBeFalsy();
+      expect(
+        tree.exists('libs/my-lib/src/lib/hello/hello.module.styl')
+      ).toBeFalsy();
 
       const content = tree
         .read('libs/my-lib/src/lib/hello/hello.tsx')
@@ -111,6 +160,9 @@ describe('component', () => {
       expect(content).not.toContain('hello.styl');
       expect(content).not.toContain('hello.css');
       expect(content).not.toContain('hello.scss');
+      expect(content).not.toContain('hello.module.styl');
+      expect(content).not.toContain('hello.module.css');
+      expect(content).not.toContain('hello.module.scss');
     });
   });
 
@@ -175,7 +227,7 @@ describe('component', () => {
 
       const packageJSON = readJsonInTree(tree, 'package.json');
       expect(packageJSON.dependencies['@emotion/styled']).toBeDefined();
-      expect(packageJSON.dependencies['@emotion/core']).toBeDefined();
+      expect(packageJSON.dependencies['@emotion/react']).toBeDefined();
     });
   });
 

@@ -67,10 +67,12 @@ async function publishPackage(packagePath) {
       ------------------
     `);
   }
-  await asyncExec(`npm publish`, {
-    cwd: packagePath,
-    env: process.env,
-  });
+  try {
+    await asyncExec(`npm publish`, {
+      cwd: packagePath,
+      env: process.env,
+    });
+  } catch (e) {}
 }
 
 export async function setup() {
@@ -112,9 +114,12 @@ async function runTest() {
   execSync(`./scripts/package.sh 9999.0.2 "~10.0.0" "3.9.3" "2.0.4"`, {
     stdio: [0, 1, 2],
   });
-  execSync(`rm -rf tmp`);
-  execSync(`mkdir -p tmp/angular`);
-  execSync(`mkdir -p tmp/nx`);
+
+  if (process.argv[5] != '--rerun') {
+    execSync(`rm -rf tmp`);
+    execSync(`mkdir -p tmp/angular`);
+    execSync(`mkdir -p tmp/nx`);
+  }
 
   try {
     await setup();

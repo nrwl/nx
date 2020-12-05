@@ -50,7 +50,7 @@ Nx provides tools to give you the benefits of a monorepo without the drawbacks o
 **Learn Nx Fundamentals:**
 
 - [Interactive Nx Tutorial](/{{framework}}/tutorial/01-create-application)
-- [Free Nx Course on YouTube](https://www.youtube.com/watch?time_continue=49&v=2mYLe9Kp9VM&feature=emb_logo)
+- [Free Nx Course on Egghead: Scale React Development with Nx](https://egghead.io/playlists/scale-react-development-with-nx-4038)
 - [45-Minute Walkthrough](https://www.youtube.com/watch?v=jCf92IyR-GE)
 
 **Dive Deep:**

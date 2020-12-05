@@ -6,22 +6,32 @@ import {
   SchematicContext,
   Tree,
 } from '@angular-devkit/schematics';
-let prettier;
-try {
-  prettier = require('prettier');
-} catch (e) {}
 import { from } from 'rxjs';
 import { filter, map, mergeMap } from 'rxjs/operators';
 import * as path from 'path';
 import { appRootPath } from '../app-root';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
+
+let prettier;
+try {
+  prettier = require('prettier');
+} catch (e) {}
 
 export function formatFiles(
-  options: { skipFormat: boolean } = { skipFormat: false }
+  options: { skipFormat: boolean } = { skipFormat: false },
+  directory: string = ''
 ): Rule {
-  if (options.skipFormat || !prettier) {
+  if (options.skipFormat) {
     return noop();
   }
+
   return (host: Tree, context: SchematicContext) => {
+    updateWorkspaceJsonToMatchFormatVersion(host, directory);
+
+    if (!prettier) {
+      return host;
+    }
+
     const files = new Set(
       host.actions
         .filter((action) => action.kind !== 'd' && action.kind !== 'r')
@@ -63,4 +73,28 @@ export function formatFiles(
       map(() => host)
     );
   };
+}
+
+function updateWorkspaceJsonToMatchFormatVersion(
+  host: Tree,
+  directory: string
+) {
+  const ws = new Workspaces();
+  const possibleFiles = [
+    `${directory}/workspace.json`,
+    `${directory}/angular.json`,
+  ];
+  const path = possibleFiles.filter((path) => host.exists(path))[0];
+  try {
+    if (path) {
+      const workspaceJson = JSON.parse(host.read(path).toString());
+      const reformatted = ws.reformattedWorkspaceJsonOrNull(workspaceJson);
+      if (reformatted) {
+        host.overwrite(path, JSON.stringify(reformatted, null, 2));
+      }
+    }
+  } catch (e) {
+    console.error(`Failed to format: ${path}`);
+    console.error(e);
+  }
 }

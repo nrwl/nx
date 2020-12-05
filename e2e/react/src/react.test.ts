@@ -50,10 +50,6 @@ describe('React Applications', () => {
     // By default, vendor sourcemaps are off
     runCLI(`build ${appName}`);
 
-    let vendorContent = readFile(`dist/apps/${appName}/vendor.js`);
-
-    expect(vendorContent).not.toMatch(/sourceMappingURL/);
-
     // Turn vendor sourcemaps on
     updateFile(`workspace.json`, (content) => {
       const json = JSON.parse(content);
@@ -79,7 +75,7 @@ describe('React Applications', () => {
     const libTestResults = await runCLIAsync(
       `build ${libName} --no-extract-css`
     );
-    expect(libTestResults.stdout).toContain('Bundle complete.');
+    expect(libTestResults.stdout).toContain(`Bundle complete: ${libName}`);
 
     checkFilesExist(
       `dist/libs/${libName}/package.json`,

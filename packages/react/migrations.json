@@ -59,6 +59,16 @@
       "version": "10.4.0-beta.1",
       "description": "Update libraries",
       "factory": "./src/migrations/update-10-4-0/update-10-4-0"
+    },
+    "rename-emotion-packages-11.0.0": {
+      "version": "11.0.0-beta.0",
+      "description": "Rename emotion packages to match new 11.0.0 package names",
+      "factory": "./src/migrations/update-11-0-0/rename-emotion-packages-11-0-0"
+    },
+    "update-11.0.0": {
+      "version": "11.0.0-beta.0",
+      "description": "Update libraries",
+      "factory": "./src/migrations/update-11-0-0/update-11-0-0"
     }
   },
   "packageJsonUpdates": {
@@ -377,6 +387,27 @@
         },
         "eslint-plugin-react-hooks": {
           "version": "4.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "11.0.0": {
+      "version": "11.0.0-beta.0",
+      "packages": {
+        "@emotion/react": {
+          "version": "11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/styled": {
+          "version": "11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/babel-preset-css-prop": {
+          "version": "11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/server": {
+          "version": "11.0.0",
           "alwaysAddToPackageJson": false
         }
       }

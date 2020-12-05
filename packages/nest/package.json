@@ -32,9 +32,11 @@
     "@nrwl/workspace": "*"
   },
   "dependencies": {
+    "@nrwl/devkit": "*",
     "@nrwl/node": "*",
     "@nrwl/jest": "*",
-    "@angular-devkit/schematics": "~10.1.3",
+    "@angular-devkit/core": "~11.0.1",
+    "@angular-devkit/schematics": "~11.0.1",
     "@nestjs/schematics": "^7.0.0"
   }
 }

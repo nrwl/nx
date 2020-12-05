@@ -49,7 +49,7 @@ describe('app', () => {
       expect(tree.exists('apps/my-app/src/main.tsx')).toBeTruthy();
       expect(tree.exists('apps/my-app/src/app/app.tsx')).toBeTruthy();
       expect(tree.exists('apps/my-app/src/app/app.spec.tsx')).toBeTruthy();
-      expect(tree.exists('apps/my-app/src/app/app.css')).toBeTruthy();
+      expect(tree.exists('apps/my-app/src/app/app.module.css')).toBeTruthy();
 
       const jestConfig = tree.readContent('apps/my-app/jest.config.js');
       expect(jestConfig).toContain('@nrwl/react/plugins/jest');
@@ -140,7 +140,7 @@ describe('app', () => {
         'apps/my-dir/my-app/src/main.tsx',
         'apps/my-dir/my-app/src/app/app.tsx',
         'apps/my-dir/my-app/src/app/app.spec.tsx',
-        'apps/my-dir/my-app/src/app/app.css',
+        'apps/my-dir/my-app/src/app/app.module.css',
       ].forEach((path) => {
         expect(tree.exists(path)).toBeTruthy();
       });
@@ -185,7 +185,9 @@ describe('app', () => {
         { name: 'myApp', style: 'scss' },
         appTree
       );
-      expect(result.exists('apps/my-app/src/app/app.scss')).toEqual(true);
+      expect(result.exists('apps/my-app/src/app/app.module.scss')).toEqual(
+        true
+      );
     });
   });
 
@@ -228,6 +230,7 @@ describe('app', () => {
     const workspaceJson = readJsonInTree(tree, 'workspace.json');
     const architectConfig = workspaceJson.projects['my-app'].architect;
     expect(architectConfig.build.builder).toEqual('@nrwl/web:build');
+    expect(architectConfig.build.outputs).toEqual(['{options.outputPath}']);
     expect(architectConfig.build.options).toEqual({
       assets: ['apps/my-app/src/favicon.ico', 'apps/my-app/src/assets'],
       index: 'apps/my-app/src/index.html',
@@ -349,7 +352,7 @@ describe('app', () => {
 
       expect(tree.exists('apps/my-app/src/app/App.tsx')).toBeTruthy();
       expect(tree.exists('apps/my-app/src/app/App.spec.tsx')).toBeTruthy();
-      expect(tree.exists('apps/my-app/src/app/App.css')).toBeTruthy();
+      expect(tree.exists('apps/my-app/src/app/App.module.css')).toBeTruthy();
     });
   });
 
@@ -409,6 +412,9 @@ describe('app', () => {
       expect(tree.exists('apps/my-app/src/app/app.css')).toBeFalsy();
       expect(tree.exists('apps/my-app/src/app/app.scss')).toBeFalsy();
       expect(tree.exists('apps/my-app/src/app/app.styl')).toBeFalsy();
+      expect(tree.exists('apps/my-app/src/app/app.module.css')).toBeFalsy();
+      expect(tree.exists('apps/my-app/src/app/app.module.scss')).toBeFalsy();
+      expect(tree.exists('apps/my-app/src/app/app.module.styl')).toBeFalsy();
 
       const content = tree.read('apps/my-app/src/app/app.tsx').toString();
       expect(content).not.toContain('styled-components');
@@ -420,6 +426,9 @@ describe('app', () => {
       expect(content).not.toContain('app.styl');
       expect(content).not.toContain('app.css');
       expect(content).not.toContain('app.scss');
+      expect(content).not.toContain('app.module.styl');
+      expect(content).not.toContain('app.module.css');
+      expect(content).not.toContain('app.module.scss');
     });
 
     it('should set defaults when style: none', async () => {
@@ -531,7 +540,7 @@ describe('app', () => {
       );
 
       const packageJSON = readJsonInTree(tree, 'package.json');
-      expect(packageJSON.dependencies['@emotion/core']).toBeDefined();
+      expect(packageJSON.dependencies['@emotion/react']).toBeDefined();
       expect(packageJSON.dependencies['@emotion/styled']).toBeDefined();
     });
   });

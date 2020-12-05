@@ -14,6 +14,16 @@
       "version": "9.3.1-beta.1",
       "description": "Rename @nrwl/next:dev-server to @nrwl/next:server",
       "factory": "./src/migrations/update-9-3-1/update-9-3-1"
+    },
+    "rename-emotion-packages-11.0.0": {
+      "version": "11.0.0-beta.0",
+      "description": "Rename emotion packages to match new 11.0.0 package names",
+      "factory": "./src/migrations/update-11-0-0/rename-emotion-packages-11-0-0"
+    },
+    "update-11.0.0": {
+      "version": "11.0.0-beta.0",
+      "description": "Update libraries",
+      "factory": "./src/migrations/update-11-0-0/update-11-0-0"
     }
   },
   "packageJsonUpdates": {
@@ -44,6 +54,23 @@
         },
         "node-sass": {
           "version": "4.14.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "11.0.0": {
+      "version": "11.0.0-beta.0",
+      "packages": {
+        "next": {
+          "version": "10.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/server": {
+          "version": "11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/styled": {
+          "version": "11.0.0",
           "alwaysAddToPackageJson": false
         }
       }

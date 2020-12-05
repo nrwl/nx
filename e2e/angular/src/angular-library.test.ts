@@ -1,176 +1,168 @@
-import { toClassName } from '@nrwl/workspace';
 import {
-  forEachCli,
+  checkFilesExist,
   newProject,
   readJson,
   runCLI,
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
+import { names } from '@nrwl/devkit';
 
-forEachCli('angular', (cli) => {
-  ['publishable', 'buildable'].forEach((testConfig) => {
-    describe('Build Angular library', () => {
-      /**
-       * Graph:
-       *
-       *                 childLib
-       *               /
-       * parentLib =>
-       *               \
-       *                \
-       *                 childLib2
-       *
-       */
-      let parentLib: string;
-      let childLib: string;
-      let childLib2: string;
+['publishable', 'buildable'].forEach((testConfig) => {
+  describe('Build Angular library', () => {
+    /**
+     * Graph:
+     *
+     *                 childLib
+     *               /
+     * parentLib =>
+     *               \
+     *                \
+     *                 childLib2
+     *
+     */
+    let parentLib: string;
+    let childLib: string;
+    let childLib2: string;
 
-      beforeEach(() => {
-        parentLib = uniq('parentlib');
-        childLib = uniq('childlib');
-        childLib2 = uniq('childlib2');
+    beforeEach(() => {
+      parentLib = uniq('parentlib');
+      childLib = uniq('childlib');
+      childLib2 = uniq('childlib2');
 
-        newProject();
+      newProject();
 
-        if (testConfig === 'buildable') {
-          runCLI(
-            `generate @nrwl/angular:library ${parentLib} --buildable=true --no-interactive`
-          );
-          runCLI(
-            `generate @nrwl/angular:library ${childLib} --buildable=true --no-interactive`
-          );
-          runCLI(
-            `generate @nrwl/angular:library ${childLib2} --buildable=true --no-interactive`
-          );
-        } else {
-          runCLI(
-            `generate @nrwl/angular:library ${parentLib} --publishable=true --importPath=@proj/${parentLib} --no-interactive`
-          );
-          runCLI(
-            `generate @nrwl/angular:library ${childLib} --publishable=true --importPath=@proj/${childLib} --no-interactive`
-          );
-          runCLI(
-            `generate @nrwl/angular:library ${childLib2} --publishable=true --importPath=@proj/${childLib2} --no-interactive`
-          );
+      if (testConfig === 'buildable') {
+        runCLI(
+          `generate @nrwl/angular:library ${parentLib} --buildable=true --no-interactive`
+        );
+        runCLI(
+          `generate @nrwl/angular:library ${childLib} --buildable=true --no-interactive`
+        );
+        runCLI(
+          `generate @nrwl/angular:library ${childLib2} --buildable=true --no-interactive`
+        );
+      } else {
+        runCLI(
+          `generate @nrwl/angular:library ${parentLib} --publishable=true --importPath=@proj/${parentLib} --no-interactive`
+        );
+        runCLI(
+          `generate @nrwl/angular:library ${childLib} --publishable=true --importPath=@proj/${childLib} --no-interactive`
+        );
+        runCLI(
+          `generate @nrwl/angular:library ${childLib2} --publishable=true --importPath=@proj/${childLib2} --no-interactive`
+        );
 
-          // create secondary entrypoint
-          updateFile(
-            `libs/${childLib}/sub/package.json`,
-            `
+        // create secondary entrypoint
+        updateFile(
+          `libs/${childLib}/sub/package.json`,
+          `
           {
             "ngPackage": {}
           }
         `
-          );
-          updateFile(
-            `libs/${childLib}/sub/src/lib/sub.module.ts`,
-            `
+        );
+        updateFile(
+          `libs/${childLib}/sub/src/lib/sub.module.ts`,
+          `
           import { NgModule } from '@angular/core';
           import { CommonModule } from '@angular/common';
           @NgModule({ imports: [CommonModule] })
           export class SubModule {}
         `
-          );
+        );
 
-          updateFile(
-            `libs/${childLib}/sub/src/public_api.ts`,
-            `export * from './lib/sub.module';`
-          );
+        updateFile(
+          `libs/${childLib}/sub/src/public_api.ts`,
+          `export * from './lib/sub.module';`
+        );
 
-          updateFile(
-            `libs/${childLib}/sub/src/index.ts`,
-            `export * from './public_api';`
-          );
+        updateFile(
+          `libs/${childLib}/sub/src/index.ts`,
+          `export * from './public_api';`
+        );
 
-          updateFile(`tsconfig.base.json`, (s) => {
-            return s.replace(
-              `"@proj/${childLib}": ["libs/${childLib}/src/index.ts"],`,
-              `"@proj/${childLib}": ["libs/${childLib}/src/index.ts"],
+        updateFile(`tsconfig.base.json`, (s) => {
+          return s.replace(
+            `"@proj/${childLib}": ["libs/${childLib}/src/index.ts"],`,
+            `"@proj/${childLib}": ["libs/${childLib}/src/index.ts"],
       "@proj/${childLib}/sub": ["libs/${childLib}/sub/src/index.ts"],
         `
-            );
-          });
-        }
+          );
+        });
+      }
 
-        // create dependencies by importing
-        const createDep = (parent, children: string[]) => {
-          let moduleContent = `
+      // create dependencies by importing
+      const createDep = (parent, children: string[]) => {
+        let moduleContent = `
               import { NgModule } from '@angular/core';
               import { CommonModule } from '@angular/common';
               ${children
                 .map(
                   (entry) =>
-                    `import { ${toClassName(
-                      entry
-                    )}Module } from '@proj/${entry}';`
+                    `import { ${
+                      names(entry).className
+                    }Module } from '@proj/${entry}';`
                 )
                 .join('\n')}
             `;
 
-          if (testConfig === 'publishable') {
-            moduleContent += `
+        if (testConfig === 'publishable') {
+          moduleContent += `
               import { SubModule } from '@proj/${childLib}/sub';
 
               @NgModule({
                 imports: [CommonModule, ${children
-                  .map((entry) => `${toClassName(entry)}Module`)
+                  .map((entry) => `${names(entry).className}Module`)
                   .join(',')}, SubModule]
               })
-              export class ${toClassName(parent)}Module {}`;
-          }
-
-          updateFile(
-            `libs/${parent}/src/lib/${parent}.module.ts`,
-            moduleContent
-          );
-        };
-
-        createDep(parentLib, [childLib, childLib2]);
-      });
-
-      it('should throw an error if the dependent library has not been built before building the parent lib', () => {
-        expect.assertions(2);
-
-        try {
-          runCLI(`build ${parentLib}`);
-        } catch (e) {
-          expect(e.stderr.toString()).toContain(
-            `Some of the project ${parentLib}'s dependencies have not been built yet. Please build these libraries before:`
-          );
-          expect(e.stderr.toString()).toContain(`${childLib}`);
+              export class ${names(parent).className}Module {}`;
         }
-      });
 
-      it('should build the library when it does not have any deps', () => {
-        const libOutput = runCLI(`build ${childLib}`);
-        expect(libOutput).toContain(`Built @proj/${childLib}`);
-      });
+        updateFile(`libs/${parent}/src/lib/${parent}.module.ts`, moduleContent);
+      };
 
-      it('should properly add references to any dependency into the parent package.json', () => {
-        const childLibOutput = runCLI(`build ${childLib}`);
-        const childLib2Output = runCLI(`build ${childLib2}`);
-        const parentLibOutput = runCLI(`build ${parentLib}`);
-
-        expect(childLibOutput).toContain(`Built @proj/${childLib}`);
-        expect(childLib2Output).toContain(`Built @proj/${childLib2}`);
-        expect(parentLibOutput).toContain(`Built @proj/${parentLib}`);
-
-        const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
-        // expect(jsonFile.dependencies).toEqual({ tslib: '^2.0.0' });
-
-        expect(jsonFile.dependencies['tslib']).toEqual('^2.0.0');
-        expect(jsonFile.dependencies[`@proj/${childLib}`]).toBeDefined();
-        expect(jsonFile.dependencies[`@proj/${childLib2}`]).toBeDefined();
-        expect(jsonFile.peerDependencies['@angular/common']).toBeDefined();
-        expect(jsonFile.peerDependencies['@angular/core']).toBeDefined();
-      });
+      createDep(parentLib, [childLib, childLib2]);
     });
-  });
-});
 
-forEachCli('nx', () => {
-  describe('Build Angular library', () => {
-    it('should work', async () => {}, 1000000);
+    it('should throw an error if the dependent library has not been built before building the parent lib', () => {
+      expect.assertions(2);
+
+      try {
+        runCLI(`build ${parentLib}`);
+      } catch (e) {
+        expect(e.stderr.toString()).toContain(
+          `Some of the project ${parentLib}'s dependencies have not been built yet. Please build these libraries before:`
+        );
+        expect(e.stderr.toString()).toContain(`${childLib}`);
+      }
+    });
+
+    it('should build the library when it does not have any deps', () => {
+      runCLI(`build ${childLib}`);
+
+      checkFilesExist(`dist/libs/${childLib}/package.json`);
+    });
+
+    it('should properly add references to any dependency into the parent package.json', () => {
+      runCLI(`build ${childLib}`);
+      runCLI(`build ${childLib2}`);
+      runCLI(`build ${parentLib}`);
+
+      checkFilesExist(
+        `dist/libs/${childLib}/package.json`,
+        `dist/libs/${childLib2}/package.json`,
+        `dist/libs/${parentLib}/package.json`
+      );
+
+      const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
+      // expect(jsonFile.dependencies).toEqual({ tslib: '^2.0.0' });
+
+      expect(jsonFile.dependencies['tslib']).toEqual('^2.0.0');
+      expect(jsonFile.dependencies[`@proj/${childLib}`]).toBeDefined();
+      expect(jsonFile.dependencies[`@proj/${childLib2}`]).toBeDefined();
+      expect(jsonFile.peerDependencies['@angular/common']).toBeDefined();
+      expect(jsonFile.peerDependencies['@angular/core']).toBeDefined();
+    });
   });
 });

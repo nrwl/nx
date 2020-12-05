@@ -2,24 +2,97 @@ import * as fs from 'fs';
 import * as path from 'path';
 import '../compat/compat';
 
-export interface WorkspaceDefinition {
-  projects: { [projectName: string]: ProjectDefinition };
-  defaultProject: string | undefined;
-  schematics: { [collectionName: string]: { [schematicName: string]: any } };
-  cli: { defaultCollection: string };
+/**
+ * Workspace configuration
+ */
+export interface WorkspaceConfiguration {
+  /**
+   * Projects' configurations
+   */
+  projects: { [projectName: string]: ProjectConfiguration };
+
+  /**
+   * Default project. When project isn't provided, the default project
+   * will be used. Convenient for small workspaces with one main application.
+   */
+  defaultProject?: string;
+
+  /**
+   * List of default values used by generators.
+   *
+   * These defaults are global. They are used when no other defaults are configured.
+   *
+   * Example:
+   *
+   * ```
+   * {
+   *   "@nrwl/react": {
+   *     "library": {
+   *       "style": "scss"
+   *     }
+   *   }
+   * }
+   * ```
+   */
+  generators?: { [collectionName: string]: { [generatorName: string]: any } };
+
+  /**
+   * Default generator collection. It is used when no collection is provided.
+   */
+  cli?: { defaultCollection: string };
 }
 
-export interface ProjectDefinition {
-  architect: { [targetName: string]: TargetDefinition };
+/**
+ * Project configuration
+ */
+export interface ProjectConfiguration {
+  /**
+   * Project's targets
+   */
+  targets: { [targetName: string]: TargetConfiguration };
+
+  /**
+   * Project's location relative to the root of the workspace
+   */
   root: string;
-  prefix?: string;
+
+  /**
+   * The location of project's sources relative to the root of the workspace
+   */
   sourceRoot?: string;
+
+  /**
+   * Project type
+   */
+  projectType?: 'library' | 'application';
 }
 
-export interface TargetDefinition {
+/**
+ * Target's configuration
+ */
+export interface TargetConfiguration {
+  /**
+   * The executor/builder used to implement the target.
+   *
+   * Example: '@nrwl/web:package'
+   */
+  executor: string;
+
+  /**
+   * Target's options. They are passed in to the executor.
+   */
   options?: any;
+
+  /**
+   * Sets of options
+   */
   configurations?: { [config: string]: any };
-  builder: string;
+
+  /**
+   * List of the target's outputs. The outputs will be cached by the Nx computation
+   * caching engine.
+   */
+  outputs?: string[];
 }
 
 export function workspaceConfigName(root: string) {
@@ -32,129 +105,209 @@ export function workspaceConfigName(root: string) {
 }
 
 export class Workspaces {
-  readWorkspaceConfiguration(root: string): WorkspaceDefinition {
-    return JSON.parse(
+  readWorkspaceConfiguration(root: string): WorkspaceConfiguration {
+    const w = JSON.parse(
       fs.readFileSync(path.join(root, workspaceConfigName(root))).toString()
     );
+    return this.toNewFormat(w);
   }
 
-  isNxBuilder(target: TargetDefinition) {
-    const schema = this.readBuilder(target).schema;
-    return schema['cli'] === 'nx';
+  reformattedWorkspaceJsonOrNull(w: any) {
+    return w.version === 2
+      ? this.toNewFormatOrNull(w)
+      : this.toOldFormatOrNull(w);
   }
 
-  isNxSchematic(collectionName: string, schematicName: string) {
-    const schema = this.readSchematic(collectionName, schematicName).schema;
-    return schema['cli'] === 'nx';
+  toNewFormat(w: any) {
+    const f = this.toNewFormatOrNull(w);
+    return f ? f : w;
   }
 
-  readBuilder(target: TargetDefinition) {
-    try {
-      const { builder, buildersFilePath, buildersJson } = this.readBuildersJson(
-        target
-      );
-      const builderDir = path.dirname(buildersFilePath);
-      const buildConfig = buildersJson.builders[builder];
-      const schemaPath = path.join(builderDir, buildConfig.schema || '');
-      const schema = JSON.parse(fs.readFileSync(schemaPath).toString());
-      const module = require(path.join(builderDir, buildConfig.implementation));
-      const implementation = module.default;
-      return { schema, implementation };
-    } catch (e) {
-      throw new Error(`Unable to resolve ${target.builder}.\n${e.message}`);
+  toNewFormatOrNull(w: any) {
+    let formatted = false;
+    Object.values(w.projects || {}).forEach((project: any) => {
+      if (project.architect) {
+        project.targets = project.architect;
+        delete project.architect;
+        formatted = true;
+      }
+
+      Object.values(project.targets || {}).forEach((target: any) => {
+        if (target.builder) {
+          target.executor = target.builder;
+          delete target.builder;
+          formatted = true;
+        }
+      });
+    });
+
+    if (w.schematics) {
+      w.generators = w.schematics;
+      delete w.schematics;
+      formatted = true;
     }
+    if (formatted) {
+      w.version = 2;
+    }
+    return formatted ? w : null;
   }
 
-  readSchematic(collectionName: string, schematicName: string) {
+  toOldFormatOrNull(w: any) {
+    let formatted = false;
+    Object.values(w.projects || {}).forEach((project: any) => {
+      if (project.targets) {
+        project.architect = project.targets;
+        delete project.targets;
+        formatted = true;
+      }
+
+      Object.values(project.architect || {}).forEach((target: any) => {
+        if (target.executor) {
+          target.builder = target.executor;
+          delete target.executor;
+          formatted = true;
+        }
+      });
+    });
+
+    if (w.generators) {
+      w.schematics = w.generators;
+      delete w.generators;
+      formatted = true;
+    }
+    if (formatted) {
+      w.version = 1;
+    }
+    return formatted ? w : null;
+  }
+
+  isNxExecutor(nodeModule: string, executor: string) {
+    const schema = this.readExecutor(nodeModule, executor).schema;
+    return schema['cli'] === 'nx';
+  }
+
+  isNxGenerator(collectionName: string, generatorName: string) {
+    const schema = this.readGenerator(collectionName, generatorName).schema;
+    return schema['cli'] === 'nx';
+  }
+
+  readExecutor(nodeModule: string, executor: string) {
     try {
-      const {
-        schematicsFilePath,
-        schematicsJson,
-        normalizedSchematicName,
-      } = this.readSchematicsJson(collectionName, schematicName);
-      const schematicsDir = path.dirname(schematicsFilePath);
-      const schematicConfig =
-        schematicsJson.schematics[normalizedSchematicName];
-      const schemaPath = path.join(schematicsDir, schematicConfig.schema || '');
+      const { executorsFilePath, executorConfig } = this.readExecutorsJson(
+        nodeModule,
+        executor
+      );
+      const executorsDir = path.dirname(executorsFilePath);
+      const schemaPath = path.join(executorsDir, executorConfig.schema || '');
       const schema = JSON.parse(fs.readFileSync(schemaPath).toString());
       const module = require(path.join(
-        schematicsDir,
-        schematicConfig.implementation
-          ? schematicConfig.implementation
-          : schematicConfig.factory
+        executorsDir,
+        executorConfig.implementation
       ));
       const implementation = module.default;
       return { schema, implementation };
     } catch (e) {
       throw new Error(
-        `Unable to resolve ${collectionName}:${schematicName}.\n${e.message}`
+        `Unable to resolve ${nodeModule}:${executor}.\n${e.message}`
       );
     }
   }
 
-  private readBuildersJson(target: TargetDefinition) {
-    const [nodeModule, builder] = target.builder.split(':');
+  readGenerator(collectionName: string, generatorName: string) {
+    try {
+      const {
+        generatorsFilePath,
+        generatorsJson,
+        normalizedGeneratorName,
+      } = this.readGeneratorsJson(collectionName, generatorName);
+      const generatorsDir = path.dirname(generatorsFilePath);
+      const generatorConfig = (generatorsJson.generators ||
+        generatorsJson.schematics)[normalizedGeneratorName];
+      const schemaPath = path.join(generatorsDir, generatorConfig.schema || '');
+      const schema = JSON.parse(fs.readFileSync(schemaPath).toString());
+      const module = require(path.join(
+        generatorsDir,
+        generatorConfig.implementation
+          ? generatorConfig.implementation
+          : generatorConfig.factory
+      ));
+      const implementation = module.default;
+      return { schema, implementation };
+    } catch (e) {
+      throw new Error(
+        `Unable to resolve ${collectionName}:${generatorName}.\n${e.message}`
+      );
+    }
+  }
+
+  private readExecutorsJson(nodeModule: string, executor: string) {
     const packageJsonPath = require.resolve(`${nodeModule}/package.json`);
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath).toString());
-    const buildersFile = packageJson.builders;
-    const buildersFilePath = require.resolve(
-      path.join(path.dirname(packageJsonPath), buildersFile)
+    const executorsFile = packageJson.executors
+      ? packageJson.executors
+      : packageJson.builders;
+    const executorsFilePath = require.resolve(
+      path.join(path.dirname(packageJsonPath), executorsFile)
     );
-    const buildersJson = JSON.parse(
-      fs.readFileSync(buildersFilePath).toString()
+    const executorsJson = JSON.parse(
+      fs.readFileSync(executorsFilePath).toString()
     );
-    if (!buildersJson.builders[builder]) {
+    const mapOfExecutors = executorsJson.executors
+      ? executorsJson.executors
+      : executorsJson.builders;
+    const executorConfig = mapOfExecutors[executor];
+    if (!executorConfig) {
       throw new Error(
-        `Cannot find builder '${builder}' in ${buildersFilePath}.`
+        `Cannot find executor '${executor}' in ${executorsFilePath}.`
       );
     }
-    return { builder, buildersFilePath, buildersJson };
+    return { executorsFilePath, executorConfig };
   }
 
-  private readSchematicsJson(collectionName: string, schematic: string) {
-    let schematicsFilePath;
+  private readGeneratorsJson(collectionName: string, generator: string) {
+    let generatorsFilePath;
     if (collectionName.endsWith('.json')) {
-      schematicsFilePath = require.resolve(collectionName);
+      generatorsFilePath = require.resolve(collectionName);
     } else {
       const packageJsonPath = require.resolve(`${collectionName}/package.json`);
       const packageJson = JSON.parse(
         fs.readFileSync(packageJsonPath).toString()
       );
-      const schematicsFile = packageJson.schematics;
-      schematicsFilePath = require.resolve(
-        path.join(path.dirname(packageJsonPath), schematicsFile)
+      const generatorsFile = packageJson.generators
+        ? packageJson.generators
+        : packageJson.schematics;
+      generatorsFilePath = require.resolve(
+        path.join(path.dirname(packageJsonPath), generatorsFile)
       );
     }
-    const schematicsJson = JSON.parse(
-      fs.readFileSync(schematicsFilePath).toString()
+    const generatorsJson = JSON.parse(
+      fs.readFileSync(generatorsFilePath).toString()
     );
 
-    let normalizedSchematicName;
-    for (let k of Object.keys(schematicsJson.schematics)) {
-      if (k === schematic) {
-        normalizedSchematicName = k;
+    let normalizedGeneratorName;
+    const gens = generatorsJson.generators || generatorsJson.schematics;
+    for (let k of Object.keys(gens)) {
+      if (k === generator) {
+        normalizedGeneratorName = k;
         break;
       }
-      if (
-        schematicsJson.schematics[k].aliases &&
-        schematicsJson.schematics[k].aliases.indexOf(schematic) > -1
-      ) {
-        normalizedSchematicName = k;
+      if (gens[k].aliases && gens[k].aliases.indexOf(generator) > -1) {
+        normalizedGeneratorName = k;
         break;
       }
     }
 
-    if (!normalizedSchematicName) {
-      for (let parent of schematicsJson.extends || []) {
+    if (!normalizedGeneratorName) {
+      for (let parent of generatorsJson.extends || []) {
         try {
-          return this.readSchematicsJson(parent, schematic);
+          return this.readGeneratorsJson(parent, generator);
         } catch (e) {}
       }
 
       throw new Error(
-        `Cannot find schematic '${schematic}' in ${schematicsFilePath}.`
+        `Cannot find generator '${generator}' in ${generatorsFilePath}.`
       );
     }
-    return { schematicsFilePath, schematicsJson, normalizedSchematicName };
+    return { generatorsFilePath, generatorsJson, normalizedGeneratorName };
   }
 }

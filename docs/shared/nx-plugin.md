@@ -1,6 +1,6 @@
 # Nx Plugins
 
-Nx plugins are npm packages that contain schematics and builders to extend a Nx workspace. Schematics are blueprints to create new files from templates, and builders execute those files. These plugins also update the `nx.json` when generating new libs or apps.
+Nx plugins are npm packages that contain generators and executors to extend a Nx workspace. Generators are blueprints to create new files from templates, and executors execute those files. These plugins also update the `nx.json` when generating new libs or apps.
 
 > A list of plugins that is maintained by Nrwl is found in the [Nrwl/nx repo](https://github.com/nrwl/nx/tree/master/packages). \
 > A list of custom plugins created by the community is found in the [Community](/nx-community) section.
@@ -33,19 +33,19 @@ my-org/
 ├── packages/
 │   └── my-plugin/
 │       ├── README.md
-│       ├── builders.json
+│       ├── executors.json
 │       ├── collection.json
 │       ├── jest.config.js
 │       ├── package.json
 │       ├── src/
-│       │   ├── builders/
+│       │   ├── executors/
 │       │   │   └── my-plugin/
 │       │   │       ├── builder.spec.ts
 │       │   │       ├── builder.ts
 │       │   │       ├── schema.d.ts
 │       │   │       └── schema.json
 │       │   ├── index.ts
-│       │   └── schematics/
+│       │   └── generators/
 │       │       └── my-plugin/
 │       │           ├── files/
 │       │           │   └── src/
@@ -58,7 +58,7 @@ my-org/
 │       ├── tsconfig.lib.json
 │       └── tsconfig.spec.json
 ├── tools
-│   ├── schematics/
+│   ├── generators/
 │   └── tsconfig.tools.json
 ├── jest.config.js
 ├── nx.json
@@ -95,32 +95,32 @@ The `schema.d.ts` file contains all the options that the schematic supports. By 
 
 > Note: The `schema.d.ts` file is used for type checking inside the implementation file. It should match the properties in `schema.json`.
 
-### Adding more schematics
+### Adding more generators
 
-To add more schematics to the plugin, create a new folder that contains a implementation file, a `schema.json` file, and a `schema.d.ts` file. After, edit the `collection.json` file and add the new schematic there.
+To add more generators to the plugin, create a new folder that contains a implementation file, a `schema.json` file, and a `schema.d.ts` file. After, edit the `collection.json` file and add the new schematic there.
 
 ```json
 {
-  "$schema": "../../node_modules/@angular-devkit/schematics/collection-schema.json",
+  "$schema": "../../node_modules/@angular-devkit/generators/collection-schema.json",
   "name": "my-plugin",
   "version": "0.0.1",
-  "schematics": {
+  "generators": {
     "myPlugin": {
-      "factory": "./src/schematics/my-plugin/schematic",
-      "schema": "./src/schematics/my-plugin/schema.json",
+      "factory": "./src/generators/my-plugin/schematic",
+      "schema": "./src/generators/my-plugin/schema.json",
       "description": "my-plugin schematic"
     },
     // new schematic
     "added-schematic": {
-      "factory": "./src/schematics/added-schematic/schematic",
-      "schema": "./src/schematics/added-schematic/schema.json",
+      "factory": "./src/generators/added-schematic/schematic",
+      "schema": "./src/generators/added-schematic/schema.json",
       "description": "added-schematic schematic"
     }
   }
 }
 ```
 
-For more information on how schematics work, see [angular.io/guide/schematics-authoring](https://angular.io/guide/schematics-authoring)
+For more information on how generators work, see [angular.io/guide/generators-authoring](https://angular.io/guide/generators-authoring)
 
 ### Schematic Testing
 
@@ -138,38 +138,38 @@ The default builder is set up to just emit a console log. Some examples of what 
 - Publish to NPM
 - and many more!
 
-### Adding more builders
+### Adding more executors
 
-Adding more builders to the plugin is exactly the same as adding more schematics. Create a new folder and add a implementation, `schema.json` and `schema.d.ts` files. Then edit the `builders.json` file in the root of the plugin project.
+Adding more executors to the plugin is exactly the same as adding more generators. Create a new folder and add a implementation, `schema.json` and `schema.d.ts` files. Then edit the `executors.json` file in the root of the plugin project.
 
 ```json
 {
-  "$schema": "../../node_modules/@angular-devkit/architect/src/builders-schema.json",
-  "builders": {
+  "$schema": "../../node_modules/@angular-devkit/architect/src/executors-schema.json",
+  "executors": {
     "build": {
-      "implementation": "./src/builders/my-plugin/builder",
-      "schema": "./src/builders/my-plugin/schema.json",
+      "implementation": "./src/executors/my-plugin/builder",
+      "schema": "./src/executors/my-plugin/schema.json",
       "description": "my-plugin builder"
     },
     // new builder
     "newBuilder": {
-      "implementation": "./src/builders/new-builder/builder",
-      "schema": "./src/builders/new-builder/schema.json",
+      "implementation": "./src/executors/new-builder/builder",
+      "schema": "./src/executors/new-builder/schema.json",
       "description": "new-builder builder"
     }
   }
 }
 ```
 
-> Note: to use builders in any target (inside the `workspace.json` or `angular.json`), use the following syntax `@my-org/my-plugin:newBuilder`
+> Note: to use executors in any target (inside the `workspace.json` or `angular.json`), use the following syntax `@my-org/my-plugin:newBuilder`
 
-For more information on how builders work, see [angular.io/guide/cli-builder](https://angular.io/guide/cli-builder)
+For more information on how executors work, see [angular.io/guide/cli-builder](https://angular.io/guide/cli-builder)
 
 ### Builder testing
 
 The builder spec file contains boilerplate to set up the `CoreSchemaRegistry`, `TestingArchitectHost` and adds the builder from a package.json.
 
-There are some additional comments to help with these tests. For more information about testing builders, see [angular.io/guide/cli-builder#testing-a-builder](https://angular.io/guide/cli-builder#testing-a-builder).
+There are some additional comments to help with these tests. For more information about testing executors, see [angular.io/guide/cli-builder#testing-a-builder](https://angular.io/guide/cli-builder#testing-a-builder).
 
 Full E2Es are supported (and recommended) and will run everything on the file system like a user would.
 
@@ -208,7 +208,7 @@ There are additional functions that the `@nrwl/nx-plugin/testing` package export
 
 Sometimes you might want to include some assets with the plugin. This might be a image or some additional binaries.
 
-To make sure that assets are copied to the dist folder, open the `workspace.json` (or `angular.json`) file, and find the plugin's project. Inside the `build` property, add additional assets. By default, all `.md` files in the root, all non-ts files in folders, and the `collection.json` and `builders.json` files are included.
+To make sure that assets are copied to the dist folder, open the `workspace.json` (or `angular.json`) file, and find the plugin's project. Inside the `build` property, add additional assets. By default, all `.md` files in the root, all non-ts files in folders, and the `collection.json` and `executors.json` files are included.
 
 ```json
 "build": {
@@ -229,7 +229,7 @@ To make sure that assets are copied to the dist folder, open the `workspace.json
       },
       {
         "input": "./packages/my-plugin",
-        "glob": "builders.json",
+        "glob": "executors.json",
         "output": "."
       }
     ]

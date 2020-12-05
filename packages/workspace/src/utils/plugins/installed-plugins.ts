@@ -1,4 +1,4 @@
-import { terminal } from '@angular-devkit/core';
+import * as chalk from 'chalk';
 import { readJsonFile } from '../fileutils';
 import { output } from '../output';
 import { CommunityPlugin, CorePlugin, PluginCapabilities } from './models';
@@ -32,7 +32,7 @@ export function getInstalledPluginsFromPackageJson(
     })
     .sort()
     .map((name) => getPluginCapabilities(workspaceRoot, name))
-    .filter((x) => x && !!(x.schematics || x.builders));
+    .filter((x) => x && !!(x.generators || x.executors));
 }
 
 export function listInstalledPlugins(installedPlugins: PluginCapabilities[]) {
@@ -40,13 +40,13 @@ export function listInstalledPlugins(installedPlugins: PluginCapabilities[]) {
     title: `Installed plugins:`,
     bodyLines: installedPlugins.map((p) => {
       const capabilities = [];
-      if (hasElements(p.builders)) {
+      if (hasElements(p.executors)) {
         capabilities.push('builders');
       }
-      if (hasElements(p.schematics)) {
-        capabilities.push('schematics');
+      if (hasElements(p.generators)) {
+        capabilities.push('generators');
       }
-      return `${terminal.bold(p.name)} (${capabilities.join()})`;
+      return `${chalk.bold(p.name)} (${capabilities.join()})`;
     }),
   });
 }

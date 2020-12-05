@@ -17,9 +17,6 @@ import { Schema } from './schema';
 import {
   updateJsonInTree,
   NxJson,
-  toFileName,
-  names,
-  offsetFromRoot,
   getNpmScope,
   formatFiles,
   updateWorkspaceInTree,
@@ -28,6 +25,8 @@ import {
 } from '@nrwl/workspace';
 import init from '../init/init';
 import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
+import { names, offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -67,6 +66,7 @@ function addProject(options: NormalizedSchema): Rule {
 
     architect.build = {
       builder: '@nrwl/web:build',
+      outputs: ['{options.outputPath}'],
       options: {
         outputPath: join(normalize('dist'), options.appProjectRoot),
         index: join(normalize(options.appProjectRoot), 'src/index.html'),
@@ -140,7 +140,6 @@ function addProject(options: NormalizedSchema): Rule {
       root: options.appProjectRoot,
       sourceRoot: join(normalize(options.appProjectRoot), 'src'),
       projectType: 'application',
-      schematics: {},
       architect,
     };
 
@@ -186,8 +185,8 @@ export default function (schema: Schema): Rule {
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const appDirectory = options.directory
-    ? `${toFileName(options.directory)}/${toFileName(options.name)}`
-    : toFileName(options.name);
+    ? `${names(options.directory).fileName}/${names(options.name).fileName}`
+    : names(options.name).fileName;
 
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
   const e2eProjectName = `${appProjectName}-e2e`;
@@ -203,7 +202,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   return {
     ...options,
     prefix: options.prefix ? options.prefix : defaultPrefix,
-    name: toFileName(options.name),
+    name: names(options.name).fileName,
     projectName: appProjectName,
     appProjectRoot,
     e2eProjectRoot,
@@ -211,3 +210,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     parsedTags,
   };
 }
+
+export const applicationGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/web',
+  'application'
+);

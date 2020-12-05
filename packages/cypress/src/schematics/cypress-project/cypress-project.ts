@@ -18,8 +18,6 @@ import {
   addDepsToPackageJson,
   addLintFiles,
   generateProjectLint,
-  offsetFromRoot,
-  toFileName,
   updateJsonInTree,
   updateWorkspaceInTree,
 } from '@nrwl/workspace';
@@ -27,6 +25,8 @@ import { Schema } from './schema';
 import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
 import { eslintPluginCypressVersion } from '../../utils/versions';
+import { names, offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export interface CypressProjectSchema extends Schema {
   projectName: string;
@@ -147,12 +147,12 @@ function normalizeOptions(
   options: CypressProjectSchema
 ): CypressProjectSchema {
   const projectName = options.directory
-    ? toFileName(options.directory) + '-' + options.name
+    ? names(options.directory).fileName + '-' + options.name
     : options.name;
   const projectRoot = options.directory
     ? join(
         normalize(appsDir(host)),
-        toFileName(options.directory),
+        names(options.directory).fileName,
         options.name
       )
     : join(normalize(appsDir(host)), options.name);
@@ -162,3 +162,8 @@ function normalizeOptions(
     projectRoot,
   };
 }
+
+export const cypressProjectGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/cypress',
+  'cypress-project'
+);

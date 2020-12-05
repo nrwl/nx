@@ -14,7 +14,7 @@ import {
   url,
 } from '@angular-devkit/schematics';
 import { Schema } from './schema';
-import { formatFiles, getWorkspace, names, toFileName } from '@nrwl/workspace';
+import { formatFiles, getWorkspace } from '@nrwl/workspace';
 import {
   addDepsToPackageJson,
   addGlobal,
@@ -28,6 +28,8 @@ import {
 import { assertValidStyle } from '../../utils/assertion';
 import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
+import { names } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 interface NormalizedSchema extends Schema {
   projectSourceRoot: Path;
@@ -67,6 +69,11 @@ function createComponentFiles(options: NormalizedSchema): Rule {
       options.styledModule || !options.hasStyles
         ? filter((file) => !file.endsWith(`.${options.style}`))
         : noop(),
+      options.globalCss
+        ? filter((file) => !file.endsWith(`.module.${options.style}`))
+        : filter(
+            (file) => !file.endsWith(`${options.fileName}.${options.style}`)
+          ),
       move(componentDir),
       options.js ? toJS() : noop(),
     ])
@@ -149,7 +156,7 @@ async function normalizeOptions(
 }
 
 async function getDirectory(host: Tree, options: Schema) {
-  const fileName = toFileName(options.name);
+  const fileName = names(options.name).fileName;
   const workspace = await getWorkspace(host);
   let baseDir: string;
   if (options.directory) {
@@ -181,3 +188,8 @@ function assertValidOptions(options: Schema) {
     }
   });
 }
+
+export const componentGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/react',
+  'component'
+);

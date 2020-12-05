@@ -15,6 +15,7 @@ import {
   applyWithSkipExisting,
 } from '@nrwl/workspace/src/utils/ast-utils';
 import { join, normalize } from '@angular-devkit/core';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export interface CreateComponentStoriesFileSchema {
   libPath: string;
@@ -134,3 +135,8 @@ export function getKnobDefaultValue(property: PropertyDeclaration): string {
     ? typeNameToDefault[property.type.getText()]
     : "''";
 }
+
+export const componentStoryGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/angular',
+  'component-story'
+);

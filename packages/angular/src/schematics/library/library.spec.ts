@@ -75,6 +75,24 @@ describe('lib', () => {
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
     });
 
+    it('should update tsconfig.lib.prod.json when enableIvy', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          framework: 'angular',
+          buildable: true,
+          enableIvy: true,
+        },
+        appTree
+      );
+      const tsConfig = readJsonInTree(
+        tree,
+        '/libs/my-lib/tsconfig.lib.prod.json'
+      );
+      expect(tsConfig.angularCompilerOptions['enableIvy']).toBe(true);
+    });
+
     it('should update workspace.json', async () => {
       const tree = await runSchematic(
         'lib',
@@ -1008,24 +1026,6 @@ describe('lib', () => {
     });
   });
 
-  describe('--style scss', () => {
-    it('should set it as default', async () => {
-      const result = await runSchematic(
-        'lib',
-        { name: 'myLib', style: 'scss' },
-        appTree
-      );
-
-      const workspaceJson = readJsonInTree(result, 'workspace.json');
-
-      expect(workspaceJson.projects['my-lib'].schematics).toEqual({
-        '@schematics/angular:component': {
-          style: 'scss',
-        },
-      });
-    });
-  });
-
   describe('--unit-test-runner karma', () => {
     it('should generate karma configuration', async () => {
       const resultTree = await runSchematic(
@@ -1184,6 +1184,87 @@ describe('lib', () => {
       expect(workspaceJson.schematics['@nrwl/angular:library'].strict).toBe(
         true
       );
+    });
+  });
+
+  describe('--linter', () => {
+    describe('eslint', () => {
+      it('should add an architect target for lint', async () => {
+        const tree = await runSchematic(
+          'lib',
+          { name: 'myLib', linter: 'eslint' },
+          appTree
+        );
+        const workspaceJson = readJsonInTree(tree, 'workspace.json');
+        expect(workspaceJson.projects['my-lib'].architect.lint)
+          .toMatchInlineSnapshot(`
+          Object {
+            "builder": "@nrwl/linter:eslint",
+            "options": Object {
+              "lintFilePatterns": Array [
+                "libs/my-lib/src/**/*.ts",
+                "libs/my-lib/src/**/*.html",
+              ],
+            },
+          }
+        `);
+      });
+
+      it('should add valid eslint JSON configuration which extends from Nx presets', async () => {
+        const tree = await runSchematic(
+          'lib',
+          { name: 'myLib', linter: 'eslint' },
+          appTree
+        );
+
+        const eslintConfig = readJsonInTree(tree, 'libs/my-lib/.eslintrc.json');
+
+        expect(eslintConfig.overrides).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "extends": Array [
+                "plugin:@nrwl/nx/angular",
+                "plugin:@angular-eslint/template/process-inline-templates",
+              ],
+              "files": Array [
+                "*.ts",
+              ],
+              "parserOptions": Object {
+                "project": Array [
+                  "libs/my-lib/tsconfig.*?.json",
+                ],
+              },
+              "rules": Object {
+                "@angular-eslint/component-selector": Array [
+                  "error",
+                  Object {
+                    "prefix": "proj",
+                    "style": "kebab-case",
+                    "type": "element",
+                  },
+                ],
+                "@angular-eslint/directive-selector": Array [
+                  "error",
+                  Object {
+                    "prefix": "proj",
+                    "style": "camelCase",
+                    "type": "attribute",
+                  },
+                ],
+              },
+            },
+            Object {
+              "extends": Array [
+                "plugin:@nrwl/nx/angular-template",
+              ],
+              "files": Array [
+                "*.html",
+              ],
+              "rules": Object {},
+            },
+          ]
+        `);
+      });
     });
   });
 });

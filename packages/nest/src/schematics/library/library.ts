@@ -21,15 +21,14 @@ import {
   getNpmScope,
   getProjectConfig,
   insert,
-  names,
-  offsetFromRoot,
-  toFileName,
   updateJsonInTree,
   updateWorkspaceInTree,
 } from '@nrwl/workspace';
 import { Schema } from './schema';
 import * as ts from 'typescript';
 import { libsDir, RemoveChange } from '@nrwl/workspace/src/utils/ast-utils';
+import { names, offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -59,9 +58,9 @@ export default function (schema: NormalizedSchema): Rule {
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const defaultPrefix = getNpmScope(host);
-  const name = toFileName(options.name);
+  const name = names(options.name).fileName;
   const projectDirectory = options.directory
-    ? `${toFileName(options.directory)}/${name}`
+    ? `${names(options.directory).fileName}/${name}`
     : name;
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
@@ -185,6 +184,7 @@ function addProject(options: NormalizedSchema): Rule {
       if (architect) {
         architect.build = {
           builder: '@nrwl/node:package',
+          outputs: ['{options.outputPath}'],
           options: {
             outputPath: `dist/${libsDir(host)}/${options.projectDirectory}`,
             tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
@@ -198,3 +198,8 @@ function addProject(options: NormalizedSchema): Rule {
     }
   );
 }
+
+export const libraryGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/nest',
+  'library'
+);

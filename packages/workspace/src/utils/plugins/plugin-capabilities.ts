@@ -1,9 +1,6 @@
-import { terminal } from '@angular-devkit/core';
+import * as chalk from 'chalk';
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { appRootPath } from '../app-root';
-import {
-  detectPackageManager,
-  getPackageManagerInstallCommand,
-} from '../detect-package-manager';
 import { readJsonFile } from '../fileutils';
 import { output } from '../output';
 import { PluginCapabilities } from './models';
@@ -40,18 +37,32 @@ export function getPluginCapabilities(
     const packageJson = readJsonFile(packageJsonPath);
     return {
       name: pluginName,
-      schematics: tryGetCollection(
-        workspaceRoot,
-        pluginName,
-        packageJson.schematics,
-        'schematics'
-      ),
-      builders: tryGetCollection(
-        workspaceRoot,
-        pluginName,
-        packageJson.builders,
-        'builders'
-      ),
+      generators:
+        tryGetCollection(
+          workspaceRoot,
+          pluginName,
+          packageJson.generators,
+          'generators'
+        ) ||
+        tryGetCollection(
+          workspaceRoot,
+          pluginName,
+          packageJson.schematics,
+          'schematics'
+        ),
+      executors:
+        tryGetCollection(
+          workspaceRoot,
+          pluginName,
+          packageJson.executors,
+          'executors'
+        ) ||
+        tryGetCollection(
+          workspaceRoot,
+          pluginName,
+          packageJson.builders,
+          'builders'
+        ),
     };
   } catch {
     return null;
@@ -62,37 +73,31 @@ export function listPluginCapabilities(pluginName: string) {
   const plugin = getPluginCapabilities(appRootPath, pluginName);
 
   if (!plugin) {
-    const packageManager = detectPackageManager();
+    const pmc = getPackageManagerCommand();
     output.note({
       title: `${pluginName} is not currently installed`,
-      bodyLines: [
-        `Use "${getPackageManagerInstallCommand(
-          packageManager,
-          true
-        )} ${pluginName}" to add new capabilities`,
-      ],
+      bodyLines: [`Use "${pmc.addDev} ${pluginName}" to add new capabilities`],
     });
 
     return;
   }
 
-  const hasBuilders = hasElements(plugin.builders);
-  const hasSchematics = hasElements(plugin.schematics);
+  const hasBuilders = hasElements(plugin.executors);
+  const hasGenerators = hasElements(plugin.generators);
 
-  if (!hasBuilders && !hasSchematics) {
+  if (!hasBuilders && !hasGenerators) {
     output.warn({ title: `No capabilities found in ${pluginName}` });
     return;
   }
 
   const bodyLines = [];
 
-  if (hasSchematics) {
-    bodyLines.push(terminal.bold(terminal.green('SCHEMATICS')));
+  if (hasGenerators) {
+    bodyLines.push(chalk.bold(chalk.green('GENERATORS')));
     bodyLines.push('');
     bodyLines.push(
-      ...Object.keys(plugin.schematics).map(
-        (name) =>
-          `${terminal.bold(name)} : ${plugin.schematics[name].description}`
+      ...Object.keys(plugin.generators).map(
+        (name) => `${chalk.bold(name)} : ${plugin.generators[name].description}`
       )
     );
     if (hasBuilders) {
@@ -101,12 +106,11 @@ export function listPluginCapabilities(pluginName: string) {
   }
 
   if (hasBuilders) {
-    bodyLines.push(terminal.bold(terminal.green('BUILDERS')));
+    bodyLines.push(chalk.bold(chalk.green('EXECUTORS/BUILDERS')));
     bodyLines.push('');
     bodyLines.push(
-      ...Object.keys(plugin.builders).map(
-        (name) =>
-          `${terminal.bold(name)} : ${plugin.builders[name].description}`
+      ...Object.keys(plugin.executors).map(
+        (name) => `${chalk.bold(name)} : ${plugin.executors[name].description}`
       )
     );
   }

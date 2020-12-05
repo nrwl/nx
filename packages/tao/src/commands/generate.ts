@@ -1,25 +1,25 @@
 import * as minimist from 'minimist';
-import { getLogger } from '../shared/logger';
 import {
-  combineOptionsForSchematic,
+  combineOptionsForGenerator,
   convertToCamelCase,
   handleErrors,
   Options,
   Schema,
 } from '../shared/params';
-import { commandName, printHelp } from '../shared/print-help';
-import { WorkspaceDefinition, Workspaces } from '../shared/workspace';
+import { printHelp } from '../shared/print-help';
+import { WorkspaceConfiguration, Workspaces } from '../shared/workspace';
 import { statSync, unlinkSync, writeFileSync } from 'fs';
 import { mkdirpSync, rmdirSync } from 'fs-extra';
 import * as path from 'path';
 import { FileChange, FsTree } from '../shared/tree';
+import { logger } from '../shared/logger';
 
 const chalk = require('chalk');
 
 export interface GenerateOptions {
   collectionName: string;
-  schematicName: string;
-  schematicOptions: Options;
+  generatorName: string;
+  generatorOptions: Options;
   help: boolean;
   debug: boolean;
   dryRun: boolean;
@@ -30,7 +30,7 @@ export interface GenerateOptions {
 
 function throwInvalidInvocation() {
   throw new Error(
-    `Specify the schematic name (e.g., ${commandName} generate collection-name:schematic-name)`
+    `Specify the generator name (e.g., nx generate @nrwl/workspace:library)`
   );
 }
 
@@ -39,7 +39,7 @@ function parseGenerateOpts(
   mode: 'generate' | 'new',
   defaultCollection: string | null
 ): GenerateOptions {
-  const schematicOptions = convertToCamelCase(
+  const generatorOptions = convertToCamelCase(
     minimist(args, {
       boolean: ['help', 'dryRun', 'debug', 'force', 'interactive'],
       alias: {
@@ -55,24 +55,24 @@ function parseGenerateOpts(
   );
 
   let collectionName: string | null = null;
-  let schematicName: string | null = null;
+  let generatorName: string | null = null;
   if (mode === 'generate') {
     if (
-      !schematicOptions['_'] ||
-      (schematicOptions['_'] as string[]).length === 0
+      !generatorOptions['_'] ||
+      (generatorOptions['_'] as string[]).length === 0
     ) {
       throwInvalidInvocation();
     }
-    [collectionName, schematicName] = (schematicOptions['_'] as string[])
+    [collectionName, generatorName] = (generatorOptions['_'] as string[])
       .shift()
       .split(':');
-    if (!schematicName) {
-      schematicName = collectionName;
+    if (!generatorName) {
+      generatorName = collectionName;
       collectionName = defaultCollection;
     }
   } else {
-    collectionName = schematicOptions.collection as string;
-    schematicName = '';
+    collectionName = generatorOptions.collection as string;
+    generatorName = 'new';
   }
 
   if (!collectionName) {
@@ -81,51 +81,43 @@ function parseGenerateOpts(
 
   const res = {
     collectionName,
-    schematicName,
-    schematicOptions,
-    help: schematicOptions.help as boolean,
-    debug: schematicOptions.debug as boolean,
-    dryRun: schematicOptions.dryRun as boolean,
-    force: schematicOptions.force as boolean,
-    interactive: schematicOptions.interactive as boolean,
-    defaults: schematicOptions.defaults as boolean,
+    generatorName,
+    generatorOptions,
+    help: generatorOptions.help as boolean,
+    debug: generatorOptions.debug as boolean,
+    dryRun: generatorOptions.dryRun as boolean,
+    force: generatorOptions.force as boolean,
+    interactive: generatorOptions.interactive as boolean,
+    defaults: generatorOptions.defaults as boolean,
   };
 
-  delete schematicOptions.debug;
-  delete schematicOptions.d;
-  delete schematicOptions.dryRun;
-  delete schematicOptions.force;
-  delete schematicOptions.interactive;
-  delete schematicOptions.defaults;
-  delete schematicOptions.help;
-  delete schematicOptions['--'];
+  delete generatorOptions.debug;
+  delete generatorOptions.d;
+  delete generatorOptions.dryRun;
+  delete generatorOptions.force;
+  delete generatorOptions.interactive;
+  delete generatorOptions.defaults;
+  delete generatorOptions.help;
+  delete generatorOptions['--'];
 
   return res;
 }
 
-export function printGenHelp(
-  opts: GenerateOptions,
-  schema: Schema,
-  logger: Console
-) {
-  printHelp(
-    `${commandName} generate ${opts.collectionName}:${opts.schematicName}`,
-    {
-      ...schema,
-      properties: {
-        ...schema.properties,
-        dryRun: {
-          type: 'boolean',
-          default: false,
-          description: `Runs through and reports activity without writing to disk.`,
-        },
+export function printGenHelp(opts: GenerateOptions, schema: Schema) {
+  printHelp(`nx generate ${opts.collectionName}:${opts.generatorName}`, {
+    ...schema,
+    properties: {
+      ...schema.properties,
+      dryRun: {
+        type: 'boolean',
+        default: false,
+        description: `Runs through and reports activity without writing to disk.`,
       },
     },
-    logger as any
-  );
+  });
 }
 
-function readDefaultCollection(workspace: WorkspaceDefinition) {
+function readDefaultCollection(workspace: WorkspaceConfiguration) {
   return workspace.cli ? workspace.cli.defaultCollection : null;
 }
 
@@ -163,10 +155,31 @@ function printChanges(fileChanges: FileChange[]) {
 }
 
 export async function taoNew(root: string, args: string[], isVerbose = false) {
-  const logger = getLogger(isVerbose);
-  return handleErrors(logger, isVerbose, async () => {
+  const ws = new Workspaces();
+  return handleErrors(isVerbose, async () => {
     const opts = parseGenerateOpts(args, 'new', null);
-    return (await import('./ngcli-adapter')).invokeNew(logger, root, opts);
+
+    const { schema, implementation } = ws.readGenerator(
+      opts.collectionName,
+      opts.generatorName
+    );
+
+    const combinedOpts = await combineOptionsForGenerator(
+      opts.generatorOptions,
+      opts.collectionName,
+      opts.generatorName,
+      null,
+      schema,
+      opts.interactive
+    );
+    return (await import('./ngcli-adapter')).invokeNew(
+      root,
+      {
+        ...opts,
+        generatorOptions: combinedOpts,
+      },
+      isVerbose
+    );
   });
 }
 
@@ -175,10 +188,9 @@ export async function generate(
   args: string[],
   isVerbose = false
 ) {
-  const logger = getLogger(isVerbose);
   const ws = new Workspaces();
 
-  return handleErrors(logger, isVerbose, async () => {
+  return handleErrors(isVerbose, async () => {
     const workspaceDefinition = ws.readWorkspaceConfiguration(root);
     const opts = parseGenerateOpts(
       args,
@@ -186,26 +198,26 @@ export async function generate(
       readDefaultCollection(workspaceDefinition)
     );
 
-    if (ws.isNxSchematic(opts.collectionName, opts.schematicName)) {
-      const { schema, implementation } = ws.readSchematic(
-        opts.collectionName,
-        opts.schematicName
-      );
+    const { schema, implementation } = ws.readGenerator(
+      opts.collectionName,
+      opts.generatorName
+    );
 
-      if (opts.help) {
-        printGenHelp(opts, schema, logger as any);
-        return 0;
-      }
+    if (opts.help) {
+      printGenHelp(opts, schema);
+      return 0;
+    }
+    const combinedOpts = await combineOptionsForGenerator(
+      opts.generatorOptions,
+      opts.collectionName,
+      opts.generatorName,
+      workspaceDefinition,
+      schema,
+      opts.interactive
+    );
 
-      const combinedOpts = await combineOptionsForSchematic(
-        opts.schematicOptions,
-        opts.collectionName,
-        opts.schematicName,
-        workspaceDefinition,
-        schema,
-        opts.interactive
-      );
-      const host = new FsTree(root, isVerbose, logger);
+    if (ws.isNxGenerator(opts.collectionName, opts.generatorName)) {
+      const host = new FsTree(root, isVerbose);
       const task = await implementation(host, combinedOpts);
       const changes = host.listChanges();
 
@@ -219,7 +231,14 @@ export async function generate(
         logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
       }
     } else {
-      return (await import('./ngcli-adapter')).generate(logger, root, opts);
+      return (await import('./ngcli-adapter')).generate(
+        root,
+        {
+          ...opts,
+          generatorOptions: combinedOpts,
+        },
+        isVerbose
+      );
     }
   });
 }

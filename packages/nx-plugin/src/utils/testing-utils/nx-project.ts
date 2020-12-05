@@ -1,5 +1,5 @@
 import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
-import { detectPackageManager } from '@nrwl/workspace/src/utils/detect-package-manager';
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
@@ -45,8 +45,8 @@ export function uniq(prefix: string) {
  * @param silent silent output from the install
  */
 export function runPackageManagerInstall(silent: boolean = true) {
-  const packageManager = detectPackageManager();
-  const install = execSync(`${packageManager} install`, {
+  const pmc = getPackageManagerCommand();
+  const install = execSync(pmc.install, {
     cwd: tmpProjPath(),
     ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
   });

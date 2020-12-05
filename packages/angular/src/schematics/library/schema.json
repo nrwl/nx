@@ -124,6 +124,11 @@
       "type": "string",
       "enum": ["tslint", "eslint"],
       "default": "tslint"
+    },
+    "enableIvy": {
+      "description": "Enable Ivy for library in tsconfig.lib.prod.json. Should not be used with publishable libraries.",
+      "type": "boolean",
+      "default": false
     }
   },
   "required": []

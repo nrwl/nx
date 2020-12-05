@@ -35,9 +35,13 @@
     "@nrwl/workspace": "*"
   },
   "dependencies": {
-    "@angular-devkit/architect": "~0.1001.3",
-    "@angular-devkit/core": "~10.1.3",
-    "@angular-devkit/schematics": "~10.1.3",
-    "rxjs": "^6.5.4"
+    "@nrwl/devkit": "*",
+    "@angular-devkit/architect": "~0.1100.1",
+    "@angular-devkit/core": "~11.0.1",
+    "@angular-devkit/schematics": "~11.0.1",
+    "jest-resolve": "^26.6.2",
+    "rxjs": "^6.5.4",
+    "strip-json-comments": "2.0.1",
+    "tslib": "^2.0.0"
   }
 }

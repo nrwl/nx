@@ -4,7 +4,7 @@ import { join, resolve } from 'path';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import * as TerserWebpackPlugin from 'terser-webpack-plugin';
-import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
+import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 
 import { AssetGlobPattern, BuildBuilderOptions } from './types';
 import { getOutputHashFormat } from './hash-format';
@@ -67,7 +67,7 @@ export function getBaseWebpackPartial(
       extensions,
       alias: getAliases(options),
       plugins: [
-        new TsConfigPathsPlugin({
+        new TsconfigPathsPlugin({
           configFile: options.tsConfig,
           extensions,
           mainFields,

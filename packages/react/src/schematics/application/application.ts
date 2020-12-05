@@ -18,6 +18,7 @@ import { addRouting } from './lib/add-routing';
 import { setDefaults } from './lib/set-defaults';
 import { updateNxJson } from './lib/update-nx-json';
 import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export default function (schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
@@ -44,3 +45,8 @@ export default function (schema: Schema): Rule {
     ]);
   };
 }
+
+export const applicationGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/react',
+  'application'
+);

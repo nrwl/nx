@@ -27,6 +27,8 @@
   "homepage": "https://nx.dev",
   "dependencies": {
     "@nrwl/tao": "*",
-    "ejs": "^3.1.5"
+    "ejs": "^3.1.5",
+    "strip-json-comments": "2.0.1",
+    "tslib": "^2.0.0"
   }
 }

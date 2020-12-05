@@ -64,8 +64,7 @@
     },
     "server": {
       "description": "The server script path to be used with next.",
-      "type": "string",
-      "default": null
+      "type": "string"
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
@@ -79,7 +78,7 @@
       "default": false
     },
     "skipWorkspaceJson": {
-      "description": "Skip updating workspace.json with default schematic options based on values provided to this app (e.g. babel, style)",
+      "description": "Skip updating workspace.json with default options based on values provided to this app (e.g. babel, style)",
       "type": "boolean",
       "default": false
     },

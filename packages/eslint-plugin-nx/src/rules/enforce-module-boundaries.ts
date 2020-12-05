@@ -5,7 +5,7 @@ import {
   findProjectUsingImport,
   findSourceProject,
   getSourceFilePath,
-  hasArchitectBuildBuilder,
+  hasBuildExecutor,
   hasNoneOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
   checkCircularPath,
@@ -222,8 +222,8 @@ export default createESLintRule<Options, MessageIds>({
           targetProject.type === ProjectType.lib
         ) {
           if (
-            hasArchitectBuildBuilder(sourceProject) &&
-            !hasArchitectBuildBuilder(targetProject)
+            hasBuildExecutor(sourceProject) &&
+            !hasBuildExecutor(targetProject)
           ) {
             context.report({
               node,

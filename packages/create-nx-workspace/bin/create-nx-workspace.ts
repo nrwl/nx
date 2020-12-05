@@ -2,7 +2,7 @@
 
 // we can import from '@nrwl/workspace' because it will require typescript
 import { output } from '@nrwl/workspace/src/utils/output';
-import { getPackageManagerExecuteCommand } from '@nrwl/workspace/src/utils/detect-package-manager';
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { execSync } from 'child_process';
 import { writeFileSync } from 'fs';
 import * as inquirer from 'inquirer';
@@ -246,19 +246,10 @@ function determineAppName(preset: Preset, parsedArgs: any): Promise<string> {
     });
 }
 
-function determineCli(preset: Preset, parsedArgs: any) {
-  const angular = {
-    package: '@angular/cli',
-    version: angularCliVersion,
-    command: 'ng',
-  };
-
-  const nx = {
-    package: '@nrwl/tao',
-    version: cliVersion,
-    command: 'tao',
-  };
-
+function determineCli(
+  preset: Preset,
+  parsedArgs: any
+): Promise<'nx' | 'angular'> {
   if (parsedArgs.cli) {
     if (['nx', 'angular'].indexOf(parsedArgs.cli) === -1) {
       output.error({
@@ -267,16 +258,16 @@ function determineCli(preset: Preset, parsedArgs: any) {
       });
       process.exit(1);
     }
-    return Promise.resolve(parsedArgs.cli === 'angular' ? angular : nx);
+    return Promise.resolve(parsedArgs.cli);
   }
 
   switch (preset) {
     case Preset.Angular:
     case Preset.AngularWithNest: {
-      return Promise.resolve(angular);
+      return Promise.resolve('angular');
     }
     default: {
-      return Promise.resolve(nx);
+      return Promise.resolve('nx');
     }
   }
 }
@@ -425,7 +416,7 @@ function createSandbox(packageManager: string) {
 
 function createApp(
   tmpDir: string,
-  cli: { command: string },
+  cli: 'nx' | 'angular',
   parsedArgs: any,
   name: string,
   preset: Preset,
@@ -466,14 +457,14 @@ function createApp(
     : ` --interactive=false`;
   const defaultBaseArg = defaultBase ? ` --defaultBase="${defaultBase}"` : ``;
 
-  const packageExec = getPackageManagerExecuteCommand(packageManager);
+  const pmc = getPackageManagerCommand(packageManager);
   const command = `new ${name} ${args} --preset="${preset}"${appNameArg}${styleArg}${linterArg}${nxCloudArg}${interactiveArg}${defaultBaseArg} --collection=@nrwl/workspace`;
   console.log(command);
 
   execSync(
-    `${packageExec} tao ${command}/collection.json --cli=${
-      cli.command
-    } --nxWorkspaceRoot="${process.cwd()}"`,
+    `${
+      pmc.exec
+    } tao ${command}/collection.json --cli=${cli} --nxWorkspaceRoot="${process.cwd()}"`,
     {
       stdio: [0, 1, 2],
       cwd: tmpDir,
@@ -482,7 +473,7 @@ function createApp(
 
   if (nxCloud) {
     output.addVerticalSeparator();
-    execSync(`${packageExec} nx g @nrwl/nx-cloud:init --no-analytics`, {
+    execSync(`${pmc.exec} nx g @nrwl/nx-cloud:init --no-analytics`, {
       stdio: [0, 1, 2],
       cwd: path.join(process.cwd(), name),
     });

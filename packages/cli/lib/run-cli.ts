@@ -7,7 +7,7 @@ if (process.env.NX_TERMINAL_OUTPUT_PATH) {
   );
 }
 
-if (!process.env.NX_WORKSPACE_ROOT || !process.env.NX_CLI_PATH) {
+if (!process.env.NX_WORKSPACE_ROOT) {
   console.error('Invalid Nx command invocation');
   process.exit(1);
 }
@@ -16,15 +16,12 @@ requireCli();
 function requireCli() {
   process.env.NX_CLI_SET = 'true';
   try {
-    const cli = require.resolve(process.env.NX_CLI_PATH, {
+    const cli = require.resolve('@nrwl/tao/index.js', {
       paths: [process.env.NX_WORKSPACE_ROOT],
     });
     require(cli);
   } catch (e) {
-    console.error(
-      `Could not find ${process.env.NX_CLI_PATH} module in this workspace.`,
-      e
-    );
+    console.error(`Could not find @nrwl/tao module in this workspace.`, e);
     process.exit(1);
   }
 }

@@ -1,23 +1,14 @@
 export { readTsConfig } from './src/utils/typescript';
-export {
-  toPropertyName,
-  toClassName,
-  toFileName,
-  names,
-  findModuleParent,
-} from './src/utils/name-utils';
 export { ProjectType, projectRootDir } from './src/utils/project-type';
 export {
   serializeJson,
   renameSync,
   updateJsonFile,
   readJsonFile,
-  readWorkspaceConfigPath,
   copyFile,
   createDirectory,
 } from './src/utils/fileutils';
 export {
-  offsetFromRoot,
   ExistingPrettierConfig,
   resolveUserExistingPrettierConfig,
 } from './src/utils/common';
@@ -83,10 +74,16 @@ export * from './src/utils/rules/ng-add';
 export { updateKarmaConf } from './src/utils/rules/update-karma-conf';
 export { visitNotIgnoredFiles } from './src/utils/rules/visit-not-ignored-files';
 export { setDefaultCollection } from './src/utils/rules/workspace';
+export { renamePackageImports } from './src/utils/rules/rename-package-imports';
+export { renameNpmPackages } from './src/utils/rules/rename-npm-packages';
 import * as strings from './src/utils/strings';
 export { checkAndCleanWithSemver } from './src/utils/version-utils';
 export { updatePackagesInPackageJson } from './src/utils/update-packages-in-package-json';
 
-export { librarySchematic } from './src/schematics/library/library';
+export { libraryGenerator } from './src/schematics/library/library';
+export { moveGenerator } from './src/schematics/move/move';
+export { removeGenerator } from './src/schematics/remove/remove';
+export { runCommandsGenerator } from './src/schematics/run-commands/run-commands';
+export { workspaceGeneratorGenerator } from './src/schematics/workspace-generator/workspace-generator';
 
 export const stringUtils = strings;

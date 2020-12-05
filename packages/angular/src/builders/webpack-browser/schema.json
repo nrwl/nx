@@ -322,12 +322,6 @@
       },
       "default": []
     },
-    "rebaseRootRelativeCssUrls": {
-      "description": "Change root relative URLs in stylesheets to include base HREF and deploy URL. Use only for compatibility and transition. The behavior of this option is non-standard and will be removed in the next major release.",
-      "type": "boolean",
-      "default": false,
-      "x-deprecated": true
-    },
     "webWorkerTsConfig": {
       "type": "string",
       "description": "TypeScript configuration for Web Worker modules."

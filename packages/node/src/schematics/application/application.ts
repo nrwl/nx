@@ -20,9 +20,7 @@ import {
   addLintFiles,
   formatFiles,
 } from '@nrwl/workspace';
-import { toFileName } from '@nrwl/workspace';
 import { getProjectConfig } from '@nrwl/workspace';
-import { offsetFromRoot } from '@nrwl/workspace';
 import init from '../init/init';
 import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
 import {
@@ -30,6 +28,8 @@ import {
   updateTsConfigsToJs,
   maybeJs,
 } from '@nrwl/workspace/src/utils/rules/to-js';
+import { names, offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;
@@ -51,6 +51,7 @@ function updateNxJson(options: NormalizedSchema): Rule {
 function getBuildConfig(project: any, options: NormalizedSchema) {
   return {
     builder: '@nrwl/node:build',
+    outputs: ['{options.outputPath}'],
     options: {
       outputPath: join(normalize('dist'), options.appProjectRoot),
       main: maybeJs(options, join(project.sourceRoot, 'main.ts')),
@@ -95,7 +96,6 @@ function updateWorkspaceJson(options: NormalizedSchema): Rule {
       sourceRoot: join(options.appProjectRoot, 'src'),
       projectType: 'application',
       prefix: options.name,
-      schematics: {},
       architect: <any>{},
     };
 
@@ -203,8 +203,8 @@ export default function (schema: Schema): Rule {
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const appDirectory = options.directory
-    ? `${toFileName(options.directory)}/${toFileName(options.name)}`
-    : toFileName(options.name);
+    ? `${names(options.directory).fileName}/${names(options.name).fileName}`
+    : names(options.name).fileName;
 
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
 
@@ -216,11 +216,16 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
   return {
     ...options,
-    name: toFileName(appProjectName),
+    name: names(appProjectName).fileName,
     frontendProject: options.frontendProject
-      ? toFileName(options.frontendProject)
+      ? names(options.frontendProject).fileName
       : undefined,
     appProjectRoot,
     parsedTags,
   };
 }
+
+export const applicationGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/node',
+  'application'
+);

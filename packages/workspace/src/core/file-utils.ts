@@ -12,6 +12,7 @@ import { ProjectGraphNode } from './project-graph';
 import { Environment, NxJson } from './shared-interfaces';
 import { defaultFileHasher } from './hasher/file-hasher';
 import { performance } from 'perf_hooks';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 
 const ignore = require('ignore');
 
@@ -163,11 +164,8 @@ function readFileIfExisting(path: string) {
 }
 
 export function readWorkspaceJson(): any {
-  return readJsonFile(`${appRootPath}/${workspaceFileName()}`);
-}
-
-export function defaultCliCommand() {
-  return workspaceFileName() === 'angular.json' ? 'ng' : 'nx';
+  const ws = new Workspaces();
+  return ws.readWorkspaceConfiguration(appRootPath);
 }
 
 export function workspaceFileName() {

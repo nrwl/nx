@@ -67,6 +67,7 @@ describe('jestProject', () => {
     const workspaceJson = readJsonInTree(resultTree, 'workspace.json');
     expect(workspaceJson.projects.lib1.architect.test).toEqual({
       builder: '@nrwl/jest:jest',
+      outputs: ['coverage/libs/lib1'],
       options: {
         jestConfig: 'libs/lib1/jest.config.js',
         passWithNoTests: true,

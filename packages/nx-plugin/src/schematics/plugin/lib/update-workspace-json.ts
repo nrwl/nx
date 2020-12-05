@@ -17,12 +17,12 @@ export function updateWorkspaceJson(options: NormalizedSchema): Rule {
           },
           {
             input: `./${options.projectRoot}`,
-            glob: 'collection.json',
+            glob: 'generators.json',
             output: '.',
           },
           {
             input: `./${options.projectRoot}`,
-            glob: 'builders.json',
+            glob: 'executors.json',
             output: '.',
           },
         ]

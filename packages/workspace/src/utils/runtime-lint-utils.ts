@@ -292,13 +292,11 @@ export function getSourceFilePath(sourceFileName: string, projectPath: string) {
  * Verifies whether the given node has an architect builder attached
  * @param projectGraph the node to verify
  */
-export function hasArchitectBuildBuilder(
-  projectGraph: ProjectGraphNode
-): boolean {
+export function hasBuildExecutor(projectGraph: ProjectGraphNode): boolean {
   return (
     // can the architect not be defined? real use case?
-    projectGraph.data.architect &&
-    projectGraph.data.architect.build &&
-    projectGraph.data.architect.build.builder !== ''
+    projectGraph.data.targets &&
+    projectGraph.data.targets.build &&
+    projectGraph.data.targets.build.executor !== ''
   );
 }

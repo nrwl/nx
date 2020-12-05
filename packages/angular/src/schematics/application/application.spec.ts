@@ -309,21 +309,6 @@ describe('app', () => {
         true
       );
     });
-
-    it('should set it as default', async () => {
-      const result = await runSchematic(
-        'app',
-        { name: 'myApp', style: 'scss' },
-        appTree
-      );
-      const workspaceJson = readJsonInTree(result, 'workspace.json');
-
-      expect(workspaceJson.projects['my-app'].schematics).toEqual({
-        '@schematics/angular:component': {
-          style: 'scss',
-        },
-      });
-    });
   });
 
   describe('--linter', () => {
@@ -335,12 +320,85 @@ describe('app', () => {
           appTree
         );
         const workspaceJson = readJsonInTree(tree, 'workspace.json');
-        expect(
-          workspaceJson.projects['my-app'].architect.lint
-        ).toMatchSnapshot();
-        expect(
-          workspaceJson.projects['my-app-e2e'].architect.lint
-        ).toMatchSnapshot();
+        expect(workspaceJson.projects['my-app'].architect.lint)
+          .toMatchInlineSnapshot(`
+          Object {
+            "builder": "@nrwl/linter:eslint",
+            "options": Object {
+              "lintFilePatterns": Array [
+                "apps/my-app/src/**/*.ts",
+                "apps/my-app/src/**/*.html",
+              ],
+            },
+          }
+        `);
+        expect(workspaceJson.projects['my-app-e2e'].architect.lint)
+          .toMatchInlineSnapshot(`
+          Object {
+            "builder": "@nrwl/linter:eslint",
+            "options": Object {
+              "lintFilePatterns": Array [
+                "apps/my-app-e2e/**/*.{js,ts}",
+              ],
+            },
+          }
+        `);
+      });
+
+      it('should add valid eslint JSON configuration which extends from Nx presets', async () => {
+        const tree = await runSchematic(
+          'app',
+          { name: 'myApp', linter: 'eslint' },
+          appTree
+        );
+
+        const eslintConfig = readJsonInTree(tree, 'apps/my-app/.eslintrc.json');
+
+        expect(eslintConfig.overrides).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "extends": Array [
+                "plugin:@nrwl/nx/angular",
+                "plugin:@angular-eslint/template/process-inline-templates",
+              ],
+              "files": Array [
+                "*.ts",
+              ],
+              "parserOptions": Object {
+                "project": Array [
+                  "apps/my-app/tsconfig.*?.json",
+                ],
+              },
+              "rules": Object {
+                "@angular-eslint/component-selector": Array [
+                  "error",
+                  Object {
+                    "prefix": "proj",
+                    "style": "kebab-case",
+                    "type": "element",
+                  },
+                ],
+                "@angular-eslint/directive-selector": Array [
+                  "error",
+                  Object {
+                    "prefix": "proj",
+                    "style": "camelCase",
+                    "type": "attribute",
+                  },
+                ],
+              },
+            },
+            Object {
+              "extends": Array [
+                "plugin:@nrwl/nx/angular-template",
+              ],
+              "files": Array [
+                "*.html",
+              ],
+              "rules": Object {},
+            },
+          ]
+        `);
       });
     });
   });

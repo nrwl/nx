@@ -255,6 +255,52 @@ describe('params', () => {
 
       expect(opts).toEqual({ a: [{ key: 'inner' }, { key: 'inner' }] });
     });
+
+    it('should set the default array value', () => {
+      const opts = setDefaults(
+        {},
+        {
+          properties: {
+            a: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  key: {
+                    type: 'string',
+                    default: 'inner',
+                  },
+                },
+              },
+              default: [],
+            },
+          },
+        }
+      );
+
+      expect(opts).toEqual({ a: [] });
+    });
+
+    it('should resolve types using refs', () => {
+      const opts = setDefaults(
+        {},
+        {
+          properties: {
+            a: {
+              $ref: '#/definitions/a',
+            },
+          },
+          definitions: {
+            a: {
+              type: 'boolean',
+              default: true,
+            },
+          },
+        }
+      );
+
+      expect(opts).toEqual({ a: true });
+    });
   });
 
   describe('convertPositionParamsIntoNamedParams', () => {
@@ -369,6 +415,28 @@ describe('params', () => {
                     type: 'boolean',
                   },
                 },
+              },
+            },
+          }
+        )
+      ).toThrow(
+        "Property 'key' does not match the schema. 'string' should be a 'boolean'."
+      );
+    });
+
+    it('should resolve types using refs', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { key: 'string' },
+          {
+            properties: {
+              key: {
+                $ref: '#/definitions/key',
+              },
+            },
+            definitions: {
+              key: {
+                type: 'boolean',
               },
             },
           }

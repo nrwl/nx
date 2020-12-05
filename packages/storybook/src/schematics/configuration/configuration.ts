@@ -11,7 +11,6 @@ import {
 } from '@angular-devkit/schematics';
 import {
   getProjectConfig,
-  offsetFromRoot,
   updateWorkspace,
   updateWorkspaceInTree,
   serializeJson,
@@ -31,6 +30,8 @@ import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 import { readPackageJson } from '@nrwl/workspace/src/core/file-utils';
 import { storybookVersion } from '../../utils/versions';
 import { projectDir } from '@nrwl/workspace/src/utils/project-type';
+import { offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export default function (rawSchema: StorybookConfigureSchema): Rule {
   const schema = normalizeSchema(rawSchema);
@@ -312,6 +313,7 @@ function addStorybookTask(projectName: string, uiFramework: string): Rule {
     });
     projectConfig.targets.set('build-storybook', {
       builder: '@nrwl/storybook:build',
+      outputs: ['{options.outputPath}'],
       options: {
         uiFramework,
         outputPath: join(
@@ -328,7 +330,7 @@ function addStorybookTask(projectName: string, uiFramework: string): Rule {
           quiet: true,
         },
       },
-    });
+    } as any);
   });
 }
 
@@ -371,3 +373,8 @@ function readCurrentWorkspaceStorybookVersion(): string {
   }
   return workspaceStorybookVersion;
 }
+
+export const configurationGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/storybook',
+  'configuration'
+);

@@ -12,7 +12,11 @@ In this tutorial you will use Nx to build a full-stack application out of common
 
 ```bash
 npx create-nx-workspace@latest
+```
 
+You will then receive the following prompts in your command line:
+
+```
 ? Workspace name (e.g., org name)     myorg
 ? What to create in the new workspace angular
 ? Application name                    todos

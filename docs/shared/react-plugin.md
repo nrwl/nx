@@ -1,6 +1,6 @@
 # Nx Plugin for React
 
-The Nx Plugin for React contains schematics for managing React applications and libraries within an Nx workspace. It provides:
+The Nx Plugin for React contains generators for managing React applications and libraries within an Nx workspace. It provides:
 
 - Integration with libraries such as Jest, Cypress, and Storybook.
 - Scaffolding for state management with Redux Toolkit libraries.
@@ -73,18 +73,18 @@ myorg/
 - [Using Jest](/{{framework}}/plugins/jest/overview)
 - [Using Storybook](/{{framework}}/plugins/storybook/overview)
 
-## Builders
+## Executors / Builders
 
-React applications are built using the builders from the `@nrwl/web` plugin.
+React applications are built using the executors from the `@nrwl/web` plugin.
 
-- [build](/{{framework}}/plugins/web/builders/build) - Builds a web components application
-- [dev-server](/{{framework}}/plugins/web/builders/package) - Builds and serves a web application
-- [package](/{{framework}}/plugins/web/builders/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
+- [build](/{{framework}}/plugins/web/executors/build) - Builds a web components application
+- [dev-server](/{{framework}}/plugins/web/executors/package) - Builds and serves a web application
+- [package](/{{framework}}/plugins/web/executors/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
 
-## Schematics
+## Generators
 
-- [application](/{{framework}}/plugins/react/schematics/application) - Create an React application
-- [component](/{{framework}}/plugins/react/schematics/component) - Create an React library
-- [library](/{{framework}}/plugins/react/schematics/library) - Create an React library
-- [redux](/{{framework}}/plugins/react/schematics/redux) - Generate a Redux slice for a project
-- [storybook-configuration](/{{framework}}/plugins/react/schematics/storybook-configuration) - Set up Storybook for a react library
+- [application](/{{framework}}/plugins/react/generators/application) - Create an React application
+- [component](/{{framework}}/plugins/react/generators/component) - Create an React library
+- [library](/{{framework}}/plugins/react/generators/library) - Create an React library
+- [redux](/{{framework}}/plugins/react/generators/redux) - Generate a Redux slice for a project
+- [storybook-configuration](/{{framework}}/plugins/react/generators/storybook-configuration) - Set up Storybook for a react library

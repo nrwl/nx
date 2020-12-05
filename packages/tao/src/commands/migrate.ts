@@ -1,27 +1,27 @@
-import { logging, normalize, virtualFs } from '@angular-devkit/core';
-import { NodeJsSyncHost } from '@angular-devkit/core/node';
-import { TaskExecutor } from '@angular-devkit/schematics';
-import { BaseWorkflow } from '@angular-devkit/schematics/src/workflow';
-import { BuiltinTaskExecutor } from '@angular-devkit/schematics/tasks/node';
-import { NodePackageName } from '@angular-devkit/schematics/tasks/package-manager/options';
-import { NodeModulesEngineHost } from '@angular-devkit/schematics/tools';
 import { execSync } from 'child_process';
+import * as fs from 'fs';
 import { readFileSync, writeFileSync } from 'fs';
 import * as minimist from 'minimist';
-import { dirname, extname, join, resolve } from 'path';
+import { dirname, join } from 'path';
 import { gt, lte } from 'semver';
 import * as stripJsonComments from 'strip-json-comments';
 import { dirSync } from 'tmp';
-import { getLogger } from '../shared/logger';
+import { logger } from '../shared/logger';
 import { convertToCamelCase, handleErrors } from '../shared/params';
 import {
   detectPackageManager,
-  getPackageManagerInstallCommand,
-} from '../shared/detect-package-manager';
+  getPackageManagerCommand,
+} from '../shared/package-manager';
+import { FsTree } from '../shared/tree';
+import { flushChanges } from './generate';
+import * as fsExtra from 'fs-extra';
 
 export type MigrationsJson = {
   version: string;
-  schematics?: { [name: string]: { version: string } };
+  collection?: string;
+  generators?: {
+    [name: string]: { version: string; description?: string; cli?: string };
+  };
   packageJsonUpdates?: {
     [name: string]: {
       version: string;
@@ -69,6 +69,10 @@ export function normalizeVersion(version: string) {
   }
 }
 
+function slash(packageName) {
+  return packageName.replace(/\\/g, '/');
+}
+
 export class Migrator {
   private readonly versions: (p: string) => string;
   private readonly fetch: (p: string, v: string) => Promise<MigrationsJson>;
@@ -107,15 +111,16 @@ export class Migrator {
 
         const target = versions[c];
         const migrationsJson = await this.fetch(c, target.version);
-        if (!migrationsJson.schematics) return [];
-        return Object.keys(migrationsJson.schematics)
+        const generators = migrationsJson.generators;
+        if (!generators) return [];
+        return Object.keys(generators)
           .filter(
             (r) =>
-              this.gt(migrationsJson.schematics[r].version, currentVersion) &
-              this.lte(migrationsJson.schematics[r].version, target.version)
+              this.gt(generators[r].version, currentVersion) &
+              this.lte(generators[r].version, target.version)
           )
           .map((r) => ({
-            ...migrationsJson.schematics[r],
+            ...migrationsJson.generators[r],
             package: c,
             name: r,
           }));
@@ -304,7 +309,7 @@ function versionOverrides(overrides: string, param: string) {
         `Incorrect '${param}' section. Use --${param}="package@version"`
       );
     }
-    res[selectedPackage] = normalizeVersionWithTagCheck(selectedVersion);
+    res[slash(selectedPackage)] = normalizeVersionWithTagCheck(selectedVersion);
   });
   return res;
 }
@@ -378,7 +383,7 @@ export function parseMigrationsOptions(
     );
     return {
       type: 'generateMigrations',
-      targetPackage,
+      targetPackage: slash(targetPackage),
       targetVersion,
       from,
       to,
@@ -409,7 +414,7 @@ function versions(root: string, from: { [p: string]: string }) {
 }
 
 // testing-fetch-start
-function createFetcher(packageManager: string, logger: logging.Logger) {
+function createFetcher(packageManager: string) {
   const cache = {};
   return async function f(
     packageName: string,
@@ -418,51 +423,32 @@ function createFetcher(packageManager: string, logger: logging.Logger) {
     if (!cache[`${packageName}-${packageVersion}`]) {
       const dir = dirSync().name;
       logger.info(`Fetching ${packageName}@${packageVersion}`);
-      const install = getPackageManagerInstallCommand(packageManager);
-      execSync(`${install} ${packageName}@${packageVersion}`, {
+      const pmc = getPackageManagerCommand(packageManager);
+      execSync(`${pmc.add} ${packageName}@${packageVersion}`, {
         stdio: [],
         cwd: dir,
       });
+
+      const migrationsFilePath = packageToMigrationsFilePath(packageName, dir);
       const packageJsonPath = require.resolve(`${packageName}/package.json`, {
         paths: [dir],
       });
       const json = JSON.parse(
         stripJsonComments(readFileSync(packageJsonPath).toString())
       );
-      let migrationsFile = json['nx-migrations'] || json['ng-update'];
-
-      // migrationsFile is an object
-      if (migrationsFile && migrationsFile.migrations) {
-        migrationsFile = migrationsFile.migrations;
-      }
-
       // packageVersion can be a tag, resolvedVersion works with semver
       const resolvedVersion = json.version;
 
-      try {
-        if (migrationsFile && typeof migrationsFile === 'string') {
-          const migrationsFilePath = require.resolve(
-            `${packageName}/${migrationsFile}`,
-            { paths: [dir] }
-          );
-
-          const json = JSON.parse(
-            stripJsonComments(readFileSync(migrationsFilePath).toString())
-          );
-          cache[`${packageName}-${packageVersion}`] = {
-            version: resolvedVersion,
-            schematics: json.schematics,
-            packageJsonUpdates: json.packageJsonUpdates,
-          };
-        } else {
-          cache[`${packageName}-${packageVersion}`] = {
-            version: resolvedVersion,
-          };
-        }
-      } catch (e) {
-        logger.warn(
-          `Could not find '${migrationsFile}' in '${packageName}'. Skipping it`
+      if (migrationsFilePath) {
+        const json = JSON.parse(
+          stripJsonComments(readFileSync(migrationsFilePath).toString())
         );
+        cache[`${packageName}-${packageVersion}`] = {
+          version: resolvedVersion,
+          generators: json.generators || json.schematics,
+          packageJsonUpdates: json.packageJsonUpdates,
+        };
+      } else {
         cache[`${packageName}-${packageVersion}`] = {
           version: resolvedVersion,
         };
@@ -471,15 +457,42 @@ function createFetcher(packageManager: string, logger: logging.Logger) {
     return cache[`${packageName}-${packageVersion}`];
   };
 }
-
 // testing-fetch-end
+
+function packageToMigrationsFilePath(packageName: string, dir: string) {
+  const packageJsonPath = require.resolve(`${packageName}/package.json`, {
+    paths: [dir],
+  });
+  const json = JSON.parse(
+    stripJsonComments(readFileSync(packageJsonPath).toString())
+  );
+  let migrationsFile = json['nx-migrations'] || json['ng-update'];
+
+  // migrationsFile is an object
+  if (migrationsFile && migrationsFile.migrations) {
+    migrationsFile = migrationsFile.migrations;
+  }
+  try {
+    if (migrationsFile && typeof migrationsFile === 'string') {
+      return require.resolve(`${packageName}/${migrationsFile}`, {
+        paths: [dir],
+      });
+    } else {
+      return null;
+    }
+  } catch (e) {
+    logger.warn(
+      `Could not find '${migrationsFile}' in '${packageName}'. Skipping it`
+    );
+    return null;
+  }
+}
 
 function createMigrationsFile(
   root: string,
   migrations: {
     package: string;
     name: string;
-    version: string;
   }[]
 ) {
   writeFileSync(
@@ -515,7 +528,6 @@ function updatePackageJson(
 }
 
 async function generateMigrationsJsonAndUpdatePackageJson(
-  logger: logging.Logger,
   root: string,
   opts: {
     targetPackage: string;
@@ -525,12 +537,13 @@ async function generateMigrationsJsonAndUpdatePackageJson(
   }
 ) {
   const packageManager = detectPackageManager();
+  const pmc = getPackageManagerCommand(packageManager);
   try {
     logger.info(`Fetching meta data about packages.`);
     logger.info(`It may take a few minutes.`);
     const migrator = new Migrator({
       versions: versions(root, opts.from),
-      fetch: createFetcher(packageManager, logger),
+      fetch: createFetcher(packageManager),
       from: opts.from,
       to: opts.to,
     });
@@ -549,7 +562,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 
       logger.info(`NX Next steps:`);
       logger.info(
-        `- Make sure package.json changes make sense and then run 'npm install' or 'yarn'`
+        `- Make sure package.json changes make sense and then run '${pmc.install}'`
       );
       logger.info(`- Run 'nx migrate --run-migrations=migrations.json'`);
     } else {
@@ -561,7 +574,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 
       logger.info(`NX Next steps:`);
       logger.info(
-        `- Make sure package.json changes make sense and then run 'npm install' or 'yarn'`
+        `- Make sure package.json changes make sense and then run '${pmc.install}'`
       );
     }
   } catch (e) {
@@ -581,129 +594,63 @@ async function generateMigrationsJsonAndUpdatePackageJson(
   }
 }
 
-class MigrationEngineHost extends NodeModulesEngineHost {
-  private nodeInstallLogPrinted = false;
-
-  constructor(logger: logging.Logger) {
-    super();
-
-    // Overwrite the original CLI node package executor with a new one that does basically nothing
-    // since nx migrate doesn't do npm installs by itself
-    // (https://github.com/angular/angular-cli/blob/5df776780deadb6be5048b3ab006a5d3383650dc/packages/angular_devkit/schematics/tools/workflow/node-workflow.ts#L41)
-    this.registerTaskExecutor({
-      name: NodePackageName,
-      create: () =>
-        Promise.resolve<TaskExecutor>(() => {
-          return new Promise((res) => {
-            if (!this.nodeInstallLogPrinted) {
-              logger.warn(
-                `An installation of node_modules has been required. Make sure to run it after the migration`
-              );
-              this.nodeInstallLogPrinted = true;
-            }
-
-            res();
-          });
-        }),
-    });
-
-    this.registerTaskExecutor(BuiltinTaskExecutor.RunSchematic);
-  }
-
-  protected _resolveCollectionPath(name: string): string {
-    let collectionPath: string | undefined = undefined;
-
-    if (name.startsWith('.') || name.startsWith('/')) {
-      name = resolve(name);
-    }
-
-    if (extname(name)) {
-      collectionPath = require.resolve(name);
-    } else {
-      const packageJsonPath = require.resolve(join(name, 'package.json'));
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const packageJson = require(packageJsonPath);
-      let pkgJsonSchematics = packageJson['nx-migrations'];
-      if (!pkgJsonSchematics) {
-        pkgJsonSchematics = packageJson['ng-update'];
-        if (!pkgJsonSchematics) {
-          throw new Error(`Could not find migrations in package: "${name}"`);
-        }
-      }
-      if (typeof pkgJsonSchematics != 'string') {
-        pkgJsonSchematics = pkgJsonSchematics.migrations;
-      }
-      collectionPath = resolve(dirname(packageJsonPath), pkgJsonSchematics);
-    }
-
-    try {
-      if (collectionPath) {
-        JSON.parse(stripJsonComments(readFileSync(collectionPath).toString()));
-        return collectionPath;
-      }
-    } catch (e) {
-      throw new Error(`Invalid migration file in package: "${name}"`);
-    }
-    throw new Error(`Collection cannot be resolved: "${name}"`);
-  }
-}
-
-class MigrationsWorkflow extends BaseWorkflow {
-  constructor(host: virtualFs.Host, logger: logging.Logger) {
-    super({
-      host,
-      engineHost: new MigrationEngineHost(logger),
-      force: true,
-      dryRun: false,
-    });
-  }
-}
-
-async function runMigrations(
-  logger: logging.Logger,
-  root: string,
-  opts: { runMigrations: string }
-) {
-  const migrationsFile = JSON.parse(
+async function runMigrations(root: string, opts: { runMigrations: string }) {
+  const migrations: {
+    package: string;
+    name: string;
+    version: string;
+    cli?: 'nx' | 'angular';
+  }[] = JSON.parse(
     stripJsonComments(readFileSync(join(root, opts.runMigrations)).toString())
-  );
+  ).migrations;
 
-  const host = new virtualFs.ScopedHost(new NodeJsSyncHost(), normalize(root));
-  const workflow = new MigrationsWorkflow(host, logger);
-  let p = Promise.resolve(null);
-  migrationsFile.migrations.forEach((m) => {
-    p = p.then(() => {
-      logger.info(`Running migration ${m.package}:${m.name}`);
-      return workflow
-        .execute({
-          collection: m.package,
-          schematic: m.name,
-          options: {},
-          debug: false,
-          logger,
-        })
-        .toPromise()
-        .then(() => {
-          logger.info(`Successfully finished ${m.package}:${m.name}`);
-          logger.info(
-            `---------------------------------------------------------`
-          );
-        });
-    });
+  for (let m of migrations) {
+    logger.info(`Running migration ${m.name}`);
+    if (m.cli === 'nx') {
+      await runNxMigration(root, m.package, m.name);
+    } else {
+      await (await import('./ngcli-adapter')).runMigration(
+        root,
+        m.package,
+        m.name
+      );
+    }
+    logger.info(`Successfully finished ${m.name}`);
+    logger.info(`---------------------------------------------------------`);
+  }
+}
+
+async function runNxMigration(root: string, packageName: string, name: string) {
+  const collectionPath = packageToMigrationsFilePath(packageName, root);
+  const collection = JSON.parse(fs.readFileSync(collectionPath).toString());
+  const g = collection.generators || collection.schematics;
+  const implRelativePath = g[name].implementation || g[name].factory;
+  const implPath = require.resolve(implRelativePath, {
+    paths: [dirname(collectionPath)],
   });
+  const fn = require(implPath).default;
+  const host = new FsTree(root, false);
+  await fn(host, {});
+  const changes = host.listChanges();
+  flushChanges(root, changes);
+}
 
-  await p;
+function removeNxDepsIfCaseItsFormatChanged(root: string) {
+  try {
+    fsExtra.unlinkSync(
+      join(root, 'node_modules', '.cache', 'nx', 'nxdeps.json')
+    );
+  } catch (e) {}
 }
 
 export async function migrate(root: string, args: string[], isVerbose = false) {
-  const logger = getLogger(isVerbose);
-
-  return handleErrors(logger, isVerbose, async () => {
+  return handleErrors(isVerbose, async () => {
+    removeNxDepsIfCaseItsFormatChanged(root);
     const opts = parseMigrationsOptions(args);
     if (opts.type === 'generateMigrations') {
-      await generateMigrationsJsonAndUpdatePackageJson(logger, root, opts);
+      await generateMigrationsJsonAndUpdatePackageJson(root, opts);
     } else {
-      await runMigrations(logger, root, opts);
+      await runMigrations(root, opts);
     }
   });
 }

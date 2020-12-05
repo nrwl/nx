@@ -16,7 +16,7 @@ import { Route, Link } from 'react-router-dom';
   <% } else {
     var wrapper = 'div';
   %>
-  <%= style !== 'styled-jsx' ? `import './${fileName}.${style}';` : '' %>
+  <%= style !== 'styled-jsx' ? globalCss ? `import './${fileName}.${style}';` : `import './${fileName}.module.${style}';`: '' %>
   <% }
 } else { var wrapper = 'div'; } %>
 

@@ -19,18 +19,15 @@ import { Schema } from './schema';
 import {
   updateWorkspaceInTree,
   getNpmScope,
-  toFileName,
-  names,
   updateJsonInTree,
   formatFiles,
-  offsetFromRoot,
 } from '@nrwl/workspace';
 
-import { defaultCliCommand } from '../../core/file-utils';
 import { generateProjectLint, addLintFiles } from '../../utils/lint';
 import { addProjectToNxJsonInTree, libsDir } from '../../utils/ast-utils';
 import { toJS, updateTsConfigsToJs, maybeJs } from '../../utils/rules/to-js';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import { names, offsetFromRoot } from '@nrwl/devkit';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -56,7 +53,6 @@ function addProject(options: NormalizedSchema): Rule {
       root: options.projectRoot,
       sourceRoot: join(normalize(options.projectRoot), 'src'),
       projectType: 'library',
-      schematics: {},
       architect,
     };
     return json;
@@ -97,7 +93,7 @@ function createFiles(options: NormalizedSchema): Rule {
         className,
         name,
         propertyName,
-        cliCommand: defaultCliCommand(),
+        cliCommand: 'nx',
         tmpl: '',
         offsetFromRoot: offsetFromRoot(options.projectRoot),
         hasUnitTestRunner: options.unitTestRunner !== 'none',
@@ -143,15 +139,15 @@ export default function (schema: Schema): Rule {
   };
 }
 
-export const librarySchematic = wrapAngularDevkitSchematic(
+export const libraryGenerator = wrapAngularDevkitSchematic(
   '@nrwl/workspace',
   'library'
 );
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
-  const name = toFileName(options.name);
+  const name = names(options.name).fileName;
   const projectDirectory = options.directory
-    ? `${toFileName(options.directory)}/${name}`
+    ? `${names(options.directory).fileName}/${name}`
     : name;
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');

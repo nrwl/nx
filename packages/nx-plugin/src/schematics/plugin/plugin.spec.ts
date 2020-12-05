@@ -20,6 +20,7 @@ describe('NxPlugin plugin', () => {
     expect(project.root).toEqual('libs/my-plugin');
     expect(project.architect.build).toEqual({
       builder: '@nrwl/node:package',
+      outputs: ['{options.outputPath}'],
       options: {
         outputPath: 'dist/libs/my-plugin',
         tsConfig: 'libs/my-plugin/tsconfig.lib.json',
@@ -34,12 +35,12 @@ describe('NxPlugin plugin', () => {
           },
           {
             input: './libs/my-plugin',
-            glob: 'collection.json',
+            glob: 'generators.json',
             output: '.',
           },
           {
             input: './libs/my-plugin',
-            glob: 'builders.json',
+            glob: 'executors.json',
             output: '.',
           },
         ],
@@ -53,6 +54,7 @@ describe('NxPlugin plugin', () => {
     });
     expect(project.architect.test).toEqual({
       builder: '@nrwl/jest:jest',
+      outputs: ['coverage/libs/my-plugin'],
       options: {
         jestConfig: 'libs/my-plugin/jest.config.js',
         passWithNoTests: true,
@@ -83,44 +85,44 @@ describe('NxPlugin plugin', () => {
       { name: 'myPlugin', importPath: '@proj/my-plugin' },
       appTree
     );
-    expect(tree.exists('libs/my-plugin/collection.json')).toBeTruthy();
-    expect(tree.exists('libs/my-plugin/builders.json')).toBeTruthy();
+    expect(tree.exists('libs/my-plugin/generators.json')).toBeTruthy();
+    expect(tree.exists('libs/my-plugin/executors.json')).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/schematics/my-plugin/schema.d.ts')
+      tree.exists('libs/my-plugin/src/generators/my-plugin/schema.d.ts')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/schematics/my-plugin/schematic.ts')
+      tree.exists('libs/my-plugin/src/generators/my-plugin/generator.ts')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/schematics/my-plugin/schematic.spec.ts')
+      tree.exists('libs/my-plugin/src/generators/my-plugin/generator.spec.ts')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/schematics/my-plugin/schema.json')
+      tree.exists('libs/my-plugin/src/generators/my-plugin/schema.json')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/schematics/my-plugin/schema.d.ts')
+      tree.exists('libs/my-plugin/src/generators/my-plugin/schema.d.ts')
     ).toBeTruthy();
     expect(
       tree.exists(
-        'libs/my-plugin/src/schematics/my-plugin/files/src/index.ts.template'
+        'libs/my-plugin/src/generators/my-plugin/files/src/index.ts__template__'
       )
     ).toBeTruthy();
     expect(
       tree.readContent(
-        'libs/my-plugin/src/schematics/my-plugin/files/src/index.ts.template'
+        'libs/my-plugin/src/generators/my-plugin/files/src/index.ts__template__'
       )
     ).toContain('const variable = "<%= projectName %>";');
     expect(
-      tree.exists('libs/my-plugin/src/builders/build/builder.ts')
+      tree.exists('libs/my-plugin/src/executors/build/executor.ts')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/builders/build/builder.spec.ts')
+      tree.exists('libs/my-plugin/src/executors/build/executor.spec.ts')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/builders/build/schema.json')
+      tree.exists('libs/my-plugin/src/executors/build/schema.json')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/builders/build/schema.d.ts')
+      tree.exists('libs/my-plugin/src/executors/build/schema.d.ts')
     ).toBeTruthy();
   });
 
@@ -138,19 +140,19 @@ describe('NxPlugin plugin', () => {
         );
 
         expect(
-          tree.exists('libs/my-plugin/src/schematics/my-plugin/schematic.ts')
+          tree.exists('libs/my-plugin/src/generators/my-plugin/generator.ts')
         ).toBeTruthy();
         expect(
           tree.exists(
-            'libs/my-plugin/src/schematics/my-plugin/schematic.spec.ts'
+            'libs/my-plugin/src/generators/my-plugin/generator.spec.ts'
           )
         ).toBeFalsy();
 
         expect(
-          tree.exists('libs/my-plugin/src/builders/build/builder.ts')
+          tree.exists('libs/my-plugin/src/executors/build/executor.ts')
         ).toBeTruthy();
         expect(
-          tree.exists('libs/my-plugin/src/builders/build/builder.spec.ts')
+          tree.exists('libs/my-plugin/src/executors/build/executor.spec.ts')
         ).toBeFalsy();
       });
     });

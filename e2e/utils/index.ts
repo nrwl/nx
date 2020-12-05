@@ -15,67 +15,19 @@ interface RunCmdOpts {
   cwd?: string;
 }
 
-let cli;
-
 export function currentCli() {
-  return cli ? cli : 'nx';
+  return process.env.SELECTED_CLI ? process.env.SELECTED_CLI : 'nx';
 }
 
 let projName: string;
 
-export function setCurrentProjName(name: string) {
+function setCurrentProjName(name: string) {
   projName = name;
   return name;
 }
 
 export function uniq(prefix: string) {
   return `${prefix}${Math.floor(Math.random() * 10000000)}`;
-}
-
-export function forEachCli(
-  selectedCliOrFunction: string | Function,
-  callback?: (currentCLIName) => void
-) {
-  let clis;
-  if (process.env.SELECTED_CLI && selectedCliOrFunction && callback) {
-    if (selectedCliOrFunction == process.env.SELECTED_CLI) {
-      clis = [process.env.SELECTED_CLI];
-    } else {
-      clis = [];
-    }
-  } else if (process.env.SELECTED_CLI) {
-    clis = [process.env.SELECTED_CLI];
-  } else {
-    clis = callback ? [selectedCliOrFunction] : ['nx', 'angular'];
-  }
-
-  const cb: any = callback ? callback : selectedCliOrFunction;
-  clis.forEach((c) => {
-    describe(`[${c}]`, () => {
-      beforeAll(() => {
-        cli = c;
-      });
-      cb(c);
-    });
-  });
-}
-
-export function patchKarmaToWorkOnWSL(): void {
-  try {
-    const karma = readFile('karma.conf.js');
-    if (process.env['WINDOWSTMP']) {
-      updateFile(
-        'karma.conf.js',
-        karma.replace(
-          `const { constants } = require('karma');`,
-          `
-      const { constants } = require('karma');
-      process.env['TMPDIR']="${process.env['WINDOWSTMP']}";
-    `
-        )
-      );
-    }
-  } catch (e) {}
 }
 
 export function workspaceConfigName() {
@@ -90,19 +42,25 @@ export function runCreateWorkspace(
     style,
     base,
     packageManager,
+    cli,
   }: {
     preset: string;
     appName?: string;
     style?: string;
     base?: string;
     packageManager?: string;
+    cli?: string;
   }
 ) {
+  setCurrentProjName(name);
+
   const linterArg =
     preset === 'angular' || preset === 'angular-nest' ? ' --linter=tslint' : '';
   let command = `npx create-nx-workspace@${
     process.env.PUBLISHED_VERSION
-  } ${name} --cli=${currentCli()} --preset=${preset} ${linterArg} --no-nxCloud --no-interactive`;
+  } ${name} --cli=${
+    cli || currentCli()
+  } --preset=${preset} ${linterArg} --no-nxCloud --no-interactive`;
   if (appName) {
     command += ` --appName=${appName}`;
   }
@@ -149,7 +107,6 @@ export function runNgNew(): string {
  * for the currently selected CLI.
  */
 export function newProject(): void {
-  projName = uniq('proj');
   try {
     if (!directoryExists(tmpBackupProjPath())) {
       runCreateWorkspace('proj', { preset: 'empty' });
@@ -169,10 +126,14 @@ export function newProject(): void {
           (f) => f !== '@nrwl/nx-plugin' && f !== `@nrwl/eslint-plugin-nx`
         )
         .forEach((p) => {
-          runCLI(`g ${p}:init`, { cwd: `./tmp/${currentCli()}/proj` });
+          runCLI(`g ${p}:init --no-interactive`, {
+            cwd: `./tmp/${currentCli()}/proj`,
+          });
         });
+
       execSync(`mv ./tmp/${currentCli()}/proj ${tmpBackupProjPath()}`);
     }
+    projName = uniq('proj');
     execSync(`cp -a ${tmpBackupProjPath()} ${tmpProjPath()}`);
   } catch (e) {
     console.log(`Failed to set up project for e2e tests.`);
@@ -358,18 +319,20 @@ function setMaxWorkers() {
     const workspace = readJson(workspaceFile);
 
     Object.keys(workspace.projects).forEach((appName) => {
-      const {
-        architect: { build },
-      } = workspace.projects[appName];
+      const targets = workspace.projects[appName].targets
+        ? workspace.projects[appName].targets
+        : workspace.projects[appName].architect;
+      const build = targets.build;
 
       if (!build) {
         return;
       }
 
+      const executor = build.builder ? build.builder : build.executor;
       if (
-        build.builder.startsWith('@nrwl/node') ||
-        build.builder.startsWith('@nrwl/web') ||
-        build.builder.startsWith('@nrwl/jest')
+        executor.startsWith('@nrwl/node') ||
+        executor.startsWith('@nrwl/web') ||
+        executor.startsWith('@nrwl/jest')
       ) {
         build.options.maxWorkers = 4;
       }

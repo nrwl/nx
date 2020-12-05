@@ -36,6 +36,7 @@ module.exports = {
       description: 'anything related to managing the repo itself',
     },
     { name: 'misc', description: 'misc stuff' },
+    { name: 'devkit', description: 'devkit-related changes' },
   ],
 
   allowTicketNumber: true,

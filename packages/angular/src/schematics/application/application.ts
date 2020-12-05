@@ -19,11 +19,9 @@ import {
   getNpmScope,
   getWorkspacePath,
   insert,
-  offsetFromRoot,
   readJsonInTree,
   replaceAppNameWithPath,
   replaceNodeValue,
-  toFileName,
   updateJsonInTree,
   updateWorkspace,
   addLintFiles,
@@ -43,8 +41,15 @@ import {
   updateWorkspaceInTree,
   appsDir,
 } from '@nrwl/workspace/src/utils/ast-utils';
+import {
+  createAngularEslintJson,
+  extraEslintDependencies,
+} from '../../utils/lint';
+import { names, offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 interface NormalizedSchema extends Schema {
+  prefix: string; // we set a default for this in normalizeOptions, so it is no longer optional
   appProjectRoot: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
@@ -479,6 +484,7 @@ function updateProject(options: NormalizedSchema): Rule {
           options.name,
           options.appProjectRoot
         );
+        delete fixedProject.schematics;
 
         delete fixedProject.architect.test;
 
@@ -499,6 +505,7 @@ function updateProject(options: NormalizedSchema): Rule {
           fixedProject.architect.lint.builder = '@nrwl/linter:eslint';
           fixedProject.architect.lint.options.lintFilePatterns = [
             `${options.appProjectRoot}/src/**/*.ts`,
+            `${options.appProjectRoot}/src/**/*.html`,
           ];
           delete fixedProject.architect.lint.options.tsConfig;
           delete fixedProject.architect.lint.options.exclude;
@@ -797,10 +804,6 @@ export default function (schema: Schema): Rule {
         skipInstall: true,
         skipPackageJson: false,
       }),
-      // TODO: Remove this after Angular 10.1.0
-      (host) => {
-        host.delete('tsconfig.json');
-      },
       addSchematicFiles(appProjectRoot, options),
       options.e2eTestRunner === 'protractor'
         ? move(e2eProjectRoot, options.e2eProjectRoot)
@@ -816,6 +819,14 @@ export default function (schema: Schema): Rule {
       options.routing ? addRouterRootConfiguration(options) : noop(),
       addLintFiles(options.appProjectRoot, options.linter, {
         onlyGlobal: options.linter === Linter.TsLint, // local lint files are added differently when tslint
+        localConfig:
+          options.linter === Linter.TsLint
+            ? undefined
+            : createAngularEslintJson(options.appProjectRoot, options.prefix),
+        extraPackageDeps:
+          options.linter === Linter.TsLint
+            ? undefined
+            : extraEslintDependencies,
       }),
       options.linter === 'tslint' ? updateTsLintConfig(options) : noop(),
       options.unitTestRunner === 'jest'
@@ -849,10 +860,10 @@ export default function (schema: Schema): Rule {
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const appDirectory = options.directory
-    ? `${toFileName(options.directory)}/${toFileName(options.name)}`
-    : toFileName(options.name);
+    ? `${names(options.directory).fileName}/${names(options.name).fileName}`
+    : names(options.name).fileName;
 
-  let e2eProjectName = `${toFileName(options.name)}-e2e`;
+  let e2eProjectName = `${names(options.name).fileName}-e2e`;
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
   if (options.e2eTestRunner !== 'cypress') {
     e2eProjectName = `${appProjectName}-e2e`;
@@ -876,3 +887,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     parsedTags,
   };
 }
+
+export const applicationGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/angular',
+  'application'
+);

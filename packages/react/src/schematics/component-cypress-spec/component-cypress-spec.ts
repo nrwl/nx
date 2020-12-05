@@ -1,22 +1,22 @@
-import { normalize, schema } from '@angular-devkit/core';
+import { join, normalize } from '@angular-devkit/core';
 import {
+  applyTemplates,
   chain,
   move,
   Rule,
   SchematicContext,
   SchematicsException,
-  applyTemplates,
   Tree,
   url,
 } from '@angular-devkit/schematics';
-import { join } from '@angular-devkit/core';
-import { findNodes, getProjectConfig } from '@nrwl/workspace';
+import { getProjectConfig } from '@nrwl/workspace';
 import { applyWithSkipExisting } from '@nrwl/workspace/src/utils/ast-utils';
-import ts = require('typescript');
 import {
   getComponentName,
   getComponentPropsInterface,
 } from '../../utils/ast-utils';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import ts = require('typescript');
 
 export interface CreateComponentSpecFileSchema {
   project: string;
@@ -108,3 +108,8 @@ export function createComponentSpecFile({
     ]);
   };
 }
+
+export const componentCypressGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/react',
+  'component-cypress-spec'
+);

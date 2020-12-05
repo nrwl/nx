@@ -1,20 +1,20 @@
 import * as minimist from 'minimist';
-import { getLogger } from '../shared/logger';
 import {
-  combineOptionsForBuilder,
+  combineOptionsForExecutor,
   convertToCamelCase,
   handleErrors,
   Options,
   Schema,
 } from '../shared/params';
-import { commandName, printHelp } from '../shared/print-help';
+import { printHelp } from '../shared/print-help';
 import {
-  TargetDefinition,
-  WorkspaceDefinition,
+  TargetConfiguration,
+  WorkspaceConfiguration,
   Workspaces,
 } from '../shared/workspace';
 
-const chalk = require('chalk');
+import * as chalk from 'chalk';
+import { logger } from '../shared/logger';
 
 export interface RunOptions {
   project: string;
@@ -26,14 +26,13 @@ export interface RunOptions {
 
 function throwInvalidInvocation() {
   throw new Error(
-    `Specify the project name and the target (e.g., ${commandName} run proj:build)`
+    `Specify the project name and the target (e.g., nx run proj:build)`
   );
 }
 
 function parseRunOpts(
   args: string[],
-  defaultProjectName: string | null,
-  logger: Console
+  defaultProjectName: string | null
 ): RunOptions {
   const runOptions = convertToCamelCase(
     minimist(args, {
@@ -53,7 +52,7 @@ function parseRunOpts(
   ] = runOptions._[0].split(':');
   if (!project && defaultProjectName) {
     logger.debug(
-      `No project name specified. Using default project : ${chalk.default.bold(
+      `No project name specified. Using default project : ${chalk.bold(
         defaultProjectName
       )}`
     );
@@ -81,35 +80,25 @@ function parseRunOpts(
   return res;
 }
 
-export function printRunHelp(
-  opts: RunOptions,
-  schema: Schema,
-  logger: Console
-) {
-  printHelp(
-    `${commandName} run ${opts.project}:${opts.target}`,
-    schema,
-    logger as any
-  );
+export function printRunHelp(opts: RunOptions, schema: Schema) {
+  printHelp(`nx run ${opts.project}:${opts.target}`, schema);
 }
 
 export function validateTargetAndConfiguration(
-  workspace: WorkspaceDefinition,
+  workspace: WorkspaceConfiguration,
   opts: RunOptions
 ) {
   const project = workspace.projects[opts.project];
   if (!project) {
     throw new Error(`Could not find project "${opts.project}"`);
   }
-  const target = project.architect[opts.target];
-  const availableTargets = Object.keys(project.architect);
+  const target = project.targets[opts.target];
+  const availableTargets = Object.keys(project.targets);
   if (!target) {
     throw new Error(
       `Could not find target "${opts.target}" in the ${
         opts.project
-      } project. Valid targets are: ${chalk.default.bold(
-        availableTargets.join(', ')
-      )}`
+      } project. Valid targets are: ${chalk.bold(availableTargets.join(', '))}`
     );
   }
 
@@ -137,35 +126,43 @@ export function validateTargetAndConfiguration(
 
 export interface TargetContext {
   root: string;
-  target: TargetDefinition;
-  workspace: WorkspaceDefinition;
+  target: TargetConfiguration;
+  workspace: WorkspaceConfiguration;
 }
 
 export async function run(root: string, args: string[], isVerbose: boolean) {
-  const logger = getLogger(isVerbose) as any;
   const ws = new Workspaces();
 
-  return handleErrors(logger, isVerbose, async () => {
+  return handleErrors(isVerbose, async () => {
     const workspace = ws.readWorkspaceConfiguration(root);
-    const opts = parseRunOpts(args, workspace.defaultProject, logger);
+    const opts = parseRunOpts(args, workspace.defaultProject);
     validateTargetAndConfiguration(workspace, opts);
 
-    const target = workspace.projects[opts.project].architect[opts.target];
-    if (ws.isNxBuilder(target)) {
-      const { schema, implementation } = ws.readBuilder(target);
-      const combinedOptions = combineOptionsForBuilder(
-        opts.runOptions,
-        opts.configuration,
-        target,
-        schema
-      );
-      if (opts.help) {
-        printRunHelp(opts, schema, logger);
-        return 0;
-      }
+    const target = workspace.projects[opts.project].targets[opts.target];
+    const [nodeModule, executor] = target.executor.split(':');
+    const { schema, implementation } = ws.readExecutor(nodeModule, executor);
+    const combinedOptions = combineOptionsForExecutor(
+      opts.runOptions,
+      opts.configuration,
+      target,
+      schema
+    );
+    if (opts.help) {
+      printRunHelp(opts, schema);
+      return 0;
+    }
+
+    if (ws.isNxExecutor(nodeModule, executor)) {
       return await implementation(combinedOptions, { root, target, workspace });
     } else {
-      return (await import('./ngcli-adapter')).run(logger, root, opts);
+      return (await import('./ngcli-adapter')).run(
+        root,
+        {
+          ...opts,
+          runOptions: combinedOptions,
+        },
+        isVerbose
+      );
     }
   });
 }

@@ -238,7 +238,7 @@
     "buildLibsFromSource": {
       "type": "boolean",
       "description": "Read buildable libraries from source instead of building them separately.",
-      "default": false
+      "default": true
     }
   },
   "required": ["tsConfig", "main", "index"],

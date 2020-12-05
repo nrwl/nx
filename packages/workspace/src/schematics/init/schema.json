@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "id": "SchematicsNxNgAdd",
-  "title": "Add Nx Schematics to Project and Convert Workspace",
+  "title": "Init Workspace",
   "description": "NOTE: Does not work in the --dry-run mode",
   "type": "object",
   "properties": {
