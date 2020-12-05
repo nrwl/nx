@@ -45,6 +45,7 @@
       "@nrwl/nx-plugin",
       "@nrwl/react",
       "@nrwl/storybook",
+      "@nrwl/tao",
       "@nrwl/web"
     ]
   },
