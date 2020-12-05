@@ -108,7 +108,9 @@ function unparseOption(key: string, value: any, unparsed: string[]) {
         unparsed
       );
     }
-  } else if (typeof value === 'string' || value != null) {
+  } else if (typeof value === 'string' && value.includes(' ')) {
+    unparsed.push(`--${key}="${value}"`);
+  } else if (value != null) {
     unparsed.push(`--${key}=${value}`);
   }
 }
