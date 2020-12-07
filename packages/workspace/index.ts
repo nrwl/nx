@@ -86,6 +86,5 @@ export { libraryGenerator } from './src/schematics/library/library';
 export { moveGenerator } from './src/schematics/move/move';
 export { removeGenerator } from './src/schematics/remove/remove';
 export { runCommandsGenerator } from './src/schematics/run-commands/run-commands';
-export { workspaceGeneratorGenerator } from './src/schematics/workspace-generator/workspace-generator';
 
 export const stringUtils = strings;
