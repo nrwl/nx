@@ -13,7 +13,7 @@
   grid-column: span 2;
 }
 
-.app :global(.flex){
+.app :global(.flex) {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -65,7 +65,7 @@
   text-decoration: none;
 }
 
-.app :global(.resource):hover {
+.app :global(.resource:hover) {
   background-color: rgba(68, 138, 255, 0.04);
 }
 

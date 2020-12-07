@@ -170,23 +170,15 @@ export function App() {
         <li className="col-span-2">
           <a
             className="resource flex"
-            href="https://connect.nrwl.io/app/courses/nx-workspaces/intro"
+            href="https://egghead.io/playlists/scale-react-development-with-nx-4038"
           >
-            Nx video course
+            Scale React Development with Nx (Course)
           </a>
         </li>
         <li className="col-span-2">
           <a
             className="resource flex"
-            href="https://nx.dev/react/getting-started/what-is-nx"
-          >
-            Nx video tutorial
-          </a>
-        </li>
-        <li className="col-span-2">
-          <a
-            className="resource flex"
-            href="https://nx.dev/react/tutorial/01-create-application"
+            href="https://nx.dev/latest/react/tutorial/01-create-application"
           >
             Interactive tutorial
           </a>
