@@ -25,6 +25,10 @@ export function createApplicationFiles(options: NormalizedSchema): Rule {
         offsetFromRoot: offsetFromRoot(options.appProjectRoot),
         appContent: createAppJsx(options.name),
         styleContent: createStyleRules(),
+        stylesExt:
+          options.style === 'less' || options.style === 'styl'
+            ? options.style
+            : 'css',
       }),
       options.styledModule
         ? filter((file) => !file.endsWith(`.${options.style}`))
