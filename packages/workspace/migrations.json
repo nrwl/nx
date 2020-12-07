@@ -152,7 +152,7 @@
       "factory": "./src/migrations/update-11-0-0/rename-workspace-schematics"
     },
     "add-outputs-in-workspace": {
-      "version": "11.0.0-beta.7",
+      "version": "11.0.0-beta.15",
       "description": "Adds `outputs` based on builders",
       "factory": "./src/migrations/update-11-0-0/add-outputs-in-workspace"
     }

@@ -4,7 +4,7 @@ import { updateWorkspaceInTree } from '@nrwl/workspace';
 const addOutputs = () =>
   updateWorkspaceInTree((workspace) => {
     for (const [, project] of Object.entries<any>(workspace.projects)) {
-      for (const [, target] of Object.entries<any>(project.architect)) {
+      for (const [, target] of Object.entries<any>(project.architect || {})) {
         const builder = target?.builder;
 
         if (!builder || target.outputs) {
