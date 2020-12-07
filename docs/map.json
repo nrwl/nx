@@ -1075,6 +1075,16 @@
             "name": "Running custom commands",
             "id": "running-custom-commands",
             "file": "angular/guides/running-custom-commands"
+          },
+          {
+            "name": "Nx Devkit",
+            "id": "nx-devkit",
+            "file": "shared/devkit"
+          },
+          {
+            "name": "Nx Devkit and Angular Devkit",
+            "id": "nx-devkit-angular-devkit",
+            "file": "angular/guides/nx-devkit-angular-devkit"
           }
         ]
       },
@@ -2146,6 +2156,11 @@
             "name": "Next.js projects with Nx",
             "id": "nextjs",
             "file": "react/guides/nextjs"
+          },
+          {
+            "name": "Nx Devkit",
+            "id": "nx-devkit",
+            "file": "shared/devkit"
           }
         ]
       },
@@ -3161,6 +3176,11 @@
             "name": "Using Nx at Enterprises",
             "id": "monorepo-nx-enterprise",
             "file": "shared/monorepo-nx-enterprise"
+          },
+          {
+            "name": "Nx Devkit",
+            "id": "nx-devkit",
+            "file": "shared/devkit"
           }
         ]
       }
