@@ -46,6 +46,9 @@ describe('add `outputs` in workspace', () => {
               },
             },
           },
+          noArchitect: {
+            projectType: 'library',
+          },
         },
       })
     );
@@ -55,7 +58,7 @@ describe('add `outputs` in workspace', () => {
       .toPromise();
 
     const config = readWorkspace(tree);
-    const { products, cart } = config.projects;
+    const { products, cart, noArchitect } = config.projects;
     expect(products.architect.build.outputs).toEqual([
       'coverage/apps/products',
     ]);
@@ -65,5 +68,9 @@ describe('add `outputs` in workspace', () => {
     expect(cart.architect.buildWithOutputsDefined.outputs).toEqual([
       'test/dir',
     ]);
+
+    expect(noArchitect).toEqual({
+      projectType: 'library',
+    });
   });
 });
