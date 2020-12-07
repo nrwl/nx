@@ -198,6 +198,30 @@ describe('Next.js Applications', () => {
     });
   }, 120000);
 
+  it('should support Less', async () => {
+    const appName = uniq('app');
+
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=less`);
+
+    await checkApp(appName, {
+      checkUnitTest: true,
+      checkLint: false,
+      checkE2E: false,
+    });
+  }, 120000);
+
+  it('should support Stylus', async () => {
+    const appName = uniq('app');
+
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=styl`);
+
+    await checkApp(appName, {
+      checkUnitTest: true,
+      checkLint: false,
+      checkE2E: false,
+    });
+  }, 120000);
+
   it('should support --style=styled-components', async () => {
     const appName = uniq('app');
 
