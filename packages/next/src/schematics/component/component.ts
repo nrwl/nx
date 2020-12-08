@@ -24,7 +24,7 @@ export default function (options: Schema): Rule {
       classComponent: false,
       routing: false,
     }),
-    addStyleDependencies(options.style),
+    ...addStyleDependencies(options.style),
   ]);
 }
 export const componentGenerator = wrapAngularDevkitSchematic(
