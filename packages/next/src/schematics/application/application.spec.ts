@@ -47,6 +47,7 @@ describe('app', () => {
       expect(tree.exists('apps/my-app/tsconfig.app.json')).toBeTruthy();
       expect(tree.exists('apps/my-app/pages/index.tsx')).toBeTruthy();
       expect(tree.exists('apps/my-app/specs/index.spec.tsx')).toBeTruthy();
+      expect(tree.exists('apps/my-app/pages/index.module.css')).toBeTruthy();
     });
   });
 
@@ -57,9 +58,93 @@ describe('app', () => {
         { name: 'myApp', style: 'scss' },
         appTree
       );
-      expect(result.exists('apps/my-app/pages/index.module.scss')).toEqual(
-        true
+      expect(result.exists('apps/my-app/pages/index.module.scss')).toBeTruthy();
+      expect(result.exists('apps/my-app/pages/styles.css')).toBeTruthy();
+
+      const indexContent = result
+        .read('apps/my-app/pages/index.tsx')
+        .toString();
+      expect(indexContent).toContain(
+        `import styles from './index.module.scss'`
       );
+    });
+  });
+
+  describe('--style less', () => {
+    it('should generate scss styles', async () => {
+      const result = await runSchematic(
+        'app',
+        { name: 'myApp', style: 'less' },
+        appTree
+      );
+      expect(result.exists('apps/my-app/pages/index.module.less')).toBeTruthy();
+      expect(result.exists('apps/my-app/pages/styles.less')).toBeTruthy();
+
+      const indexContent = result
+        .read('apps/my-app/pages/index.tsx')
+        .toString();
+      expect(indexContent).toContain(
+        `import styles from './index.module.less'`
+      );
+    });
+  });
+
+  describe('--style styl', () => {
+    it('should generate scss styles', async () => {
+      const result = await runSchematic(
+        'app',
+        { name: 'myApp', style: 'styl' },
+        appTree
+      );
+      expect(result.exists('apps/my-app/pages/index.module.styl')).toBeTruthy();
+      expect(result.exists('apps/my-app/pages/styles.styl')).toBeTruthy();
+
+      const indexContent = result
+        .read('apps/my-app/pages/index.tsx')
+        .toString();
+      expect(indexContent).toContain(
+        `import styles from './index.module.styl'`
+      );
+    });
+  });
+
+  describe('--style styled-components', () => {
+    it('should generate scss styles', async () => {
+      const result = await runSchematic(
+        'app',
+        { name: 'myApp', style: 'styled-components' },
+        appTree
+      );
+      expect(
+        result.exists('apps/my-app/pages/index.module.styled-components')
+      ).toBeFalsy();
+      expect(result.exists('apps/my-app/pages/styles.css')).toBeTruthy();
+
+      const indexContent = result
+        .read('apps/my-app/pages/index.tsx')
+        .toString();
+      expect(indexContent).not.toContain(`import styles from './index.module`);
+      expect(indexContent).toContain(`import styled from 'styled-components'`);
+    });
+  });
+
+  describe('--style @emotion/styled', () => {
+    it('should generate scss styles', async () => {
+      const result = await runSchematic(
+        'app',
+        { name: 'myApp', style: '@emotion/styled' },
+        appTree
+      );
+      expect(
+        result.exists('apps/my-app/pages/index.module.styled-components')
+      ).toBeFalsy();
+      expect(result.exists('apps/my-app/pages/styles.css')).toBeTruthy();
+
+      const indexContent = result
+        .read('apps/my-app/pages/index.tsx')
+        .toString();
+      expect(indexContent).not.toContain(`import styles from './index.module`);
+      expect(indexContent).toContain(`import styled from '@emotion/styled'`);
     });
   });
 
@@ -71,15 +156,26 @@ describe('app', () => {
         appTree
       );
 
-      const content = result.read('apps/my-app/pages/index.tsx').toString();
+      const indexContent = result
+        .read('apps/my-app/pages/index.tsx')
+        .toString();
 
       const babelJestConfig = readJsonInTree(
         result,
         'apps/my-app/babel-jest.config.json'
       );
 
-      expect(content).toMatch(/<style jsx>/);
+      expect(indexContent).toMatch(/<style jsx>/);
       expect(babelJestConfig.plugins).toContain('styled-jsx/babel');
+      expect(
+        result.exists('apps/my-app/pages/index.module.styled-jsx')
+      ).toBeFalsy();
+      expect(result.exists('apps/my-app/pages/styles.css')).toBeTruthy();
+
+      expect(indexContent).not.toContain(`import styles from './index.module`);
+      expect(indexContent).not.toContain(
+        `import styled from 'styled-components'`
+      );
     });
   });
 

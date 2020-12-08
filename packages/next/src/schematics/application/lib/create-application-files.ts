@@ -25,6 +25,7 @@ export function createApplicationFiles(options: NormalizedSchema): Rule {
         offsetFromRoot: offsetFromRoot(options.appProjectRoot),
         appContent: createAppJsx(options.name),
         styleContent: createStyleRules(),
+        pageStyleContent: `.page {}`,
         stylesExt:
           options.style === 'less' || options.style === 'styl'
             ? options.style

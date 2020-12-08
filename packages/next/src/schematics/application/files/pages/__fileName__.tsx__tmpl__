@@ -9,7 +9,7 @@ import React from 'react';
 %>
 
 <% if (styledModule && styledModule !== 'styled-jsx') { %>
-const StyledPage = styled.div`<%= styleContent %>`;
+const StyledPage = styled.div`<%= pageStyleContent %>`;
 <% }%>
 
 export function Index() {
@@ -19,8 +19,8 @@ export function Index() {
    * Note: The corresponding styles are in the ./<%= fileName %>.<%= style %> file.
    */
   return (
-    <<%= wrapper %><% if (!styledModule || styledModule === 'styled-jsx') {%> className={styles.page}<% } %>>
-      <%= styledModule === 'styled-jsx' ? `<style jsx>{\`${styleContent}\`}</style>` : `` %>
+    <<%= wrapper %><% if (!styledModule) {%> className={styles.page}<% } %>>
+      <%= styledModule === 'styled-jsx' ? `<style jsx>{\`${pageStyleContent}\`}</style>` : `` %>
       <%= appContent %>
     </<%= wrapper %>>
   );
