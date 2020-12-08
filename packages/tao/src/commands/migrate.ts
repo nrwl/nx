@@ -630,9 +630,20 @@ async function runNxMigration(root: string, packageName: string, name: string) {
   const collection = JSON.parse(fs.readFileSync(collectionPath).toString());
   const g = collection.generators || collection.schematics;
   const implRelativePath = g[name].implementation || g[name].factory;
-  const implPath = require.resolve(implRelativePath, {
-    paths: [dirname(collectionPath)],
-  });
+
+  let implPath;
+
+  try {
+    implPath = require.resolve(implRelativePath, {
+      paths: [dirname(collectionPath)],
+    });
+  } catch (e) {
+    // workaround for a bug in node 12
+    implPath = require.resolve(
+      dirname(collectionPath) + '/' + implRelativePath
+    );
+  }
+
   const fn = require(implPath).default;
   const host = new FsTree(root, false);
   await fn(host, {});
