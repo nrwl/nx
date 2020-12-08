@@ -39,6 +39,29 @@ export function updateJestConfig(schema: Schema): Rule {
           .replace(findDir, destination);
         tree.overwrite(jestConfigPath, newContent);
 
+        // update root jest.config.js
+        const rootJestConfigPath = '/jest.config.js';
+
+        if (!tree.exists(rootJestConfigPath)) {
+          return tree;
+        }
+
+        const oldRootJestConfigContent = tree
+          .read(rootJestConfigPath)
+          .toString('utf-8');
+
+        const findProject = new RegExp(
+          `'<rootDir>\/(libs|apps)\/${schema.projectName}'`,
+          'g'
+        );
+
+        const newRootJestConfigContent = oldRootJestConfigContent.replace(
+          findProject,
+          `<rootDir>/${destination}`
+        );
+
+        tree.overwrite(rootJestConfigPath, newRootJestConfigContent);
+
         return tree;
       })
     );
