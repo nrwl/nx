@@ -85,7 +85,11 @@ function createPreset(options: Schema): Rule {
         name: 'api',
         frontendProject: options.name,
       }),
-      schematic('library', { name: 'api-interfaces' }, { interactive: false }),
+      schematic(
+        'library',
+        { name: 'api-interfaces', unitTestRunner: 'none' },
+        { interactive: false }
+      ),
       setDefaultCollection('@nrwl/angular'),
       connectAngularAndNest(options),
     ]);
@@ -99,7 +103,11 @@ function createPreset(options: Schema): Rule {
         name: 'api',
         frontendProject: options.name,
       }),
-      schematic('library', { name: 'api-interfaces' }, { interactive: false }),
+      schematic(
+        'library',
+        { name: 'api-interfaces', unitTestRunner: 'none' },
+        { interactive: false }
+      ),
       setDefaultCollection('@nrwl/react'),
       connectReactAndExpress(options),
     ]);
@@ -280,7 +288,7 @@ export default App;
 
     host.overwrite(
       `apps/${options.name}/src/app/app.spec.tsx`,
-      `import { cleanup, getByText, render, wait } from '@testing-library/react';
+      `import { cleanup, getByText, render, waitFor } from '@testing-library/react';
 import React from 'react';
 import App from './app';
 
@@ -298,7 +306,7 @@ describe('App', () => {
     });
 
     const { baseElement } = render(<App />);
-    await wait(() => getByText(baseElement, 'my message'));
+    await waitFor(() => getByText(baseElement, 'my message'));
   });
 });
     `
