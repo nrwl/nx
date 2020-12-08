@@ -40,6 +40,8 @@ describe('updateJestConfig Rule', () => {
     };`;
     const jestConfigPath = '/libs/my-destination/jest.config.js';
 
+    const rootJestConfigPath = '/jest.config.js';
+
     tree = await runSchematic('lib', { name: 'my-source' }, tree);
     tree.create(jestConfigPath, jestConfig);
 
@@ -53,9 +55,13 @@ describe('updateJestConfig Rule', () => {
     tree = (await callRule(updateJestConfig(schema), tree)) as UnitTestTree;
 
     const jestConfigAfter = tree.read(jestConfigPath).toString();
+    const rootJestConfigAfter = tree.read(rootJestConfigPath).toString();
     expect(jestConfigAfter).toContain(`name: 'my-destination'`);
     expect(jestConfigAfter).toContain(
       `coverageDirectory: '../../coverage/libs/my-destination'`
     );
+
+    expect(rootJestConfigAfter).not.toContain('<rootDir>/libs/my-source');
+    expect(rootJestConfigAfter).toContain('<rootDir>/libs/my-destination');
   });
 });
