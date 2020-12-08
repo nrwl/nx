@@ -20,7 +20,7 @@ export default function (options: Schema): Rule {
       skipTests: !options.withTests,
       flat: true,
     }),
-    addStyleDependencies(options.style),
+    ...addStyleDependencies(options.style),
   ]);
 }
 export const pageGenerator = wrapAngularDevkitSchematic('@nrwl/next', 'page');

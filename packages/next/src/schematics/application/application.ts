@@ -40,7 +40,7 @@ export default function (schema: Schema): Rule {
       addCypress(options),
       addJest(options),
       updateJestConfig(options),
-      addStyleDependencies(options.style),
+      ...addStyleDependencies(options.style),
       setDefaults(options),
       formatFiles(options),
     ]);
