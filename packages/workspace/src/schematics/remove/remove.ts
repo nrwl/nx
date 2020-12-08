@@ -9,6 +9,7 @@ import { updateTsconfig } from './lib/update-tsconfig';
 import { updateWorkspace } from './lib/update-workspace';
 import { Schema } from './schema';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import { updateJestConfig } from './lib/update-jest-config';
 
 export default function (schema: Schema): Rule {
   return chain([
@@ -19,6 +20,7 @@ export default function (schema: Schema): Rule {
     updateNxJson(schema),
     updateTsconfig(schema),
     updateWorkspace(schema),
+    updateJestConfig(schema),
     formatFiles(schema),
   ]);
 }
