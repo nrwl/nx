@@ -1,6 +1,6 @@
 # pipe
 
-Run the 'pipe' NestJs Schematic with Nx project support
+Run the 'pipe' NestJs generator with Nx project support
 
 ## Usage
 

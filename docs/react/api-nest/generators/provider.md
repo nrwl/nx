@@ -1,6 +1,6 @@
 # provider
 
-Run the 'provider' NestJs Schematic with Nx project support
+Run the 'provider' NestJs generator with Nx project support
 
 ## Usage
 

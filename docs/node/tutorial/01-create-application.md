@@ -44,7 +44,7 @@ myorg/
 │       ├── tsconfig.json
 │       └── tsconfig.spec.json
 ├── tools/
-│   ├── schematics
+│   ├── generators
 │   └── tsconfig.tools.json
 ├── jest.config.js
 ├── libs

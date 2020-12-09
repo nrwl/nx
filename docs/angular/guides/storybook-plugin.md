@@ -60,7 +60,7 @@ nx run project-name:storybook
 
 ### Auto-generate Stories
 
-The `@nrwl/angular:storybook-configuration` schematic has the option to automatically generate `*.stories.ts` files for each component declared in the library.
+The `@nrwl/angular:storybook-configuration` generator has the option to automatically generate `*.stories.ts` files for each component declared in the library.
 
 ```treeview
 <some-folder>/
@@ -70,7 +70,7 @@ The `@nrwl/angular:storybook-configuration` schematic has the option to automati
 
 ### Run Cypress Tests Against a Storybook Instance
 
-Both `storybook-configuration` schematic gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.
+Both `storybook-configuration` generator gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.
 
 To launch Storybook and run the Cypress tests against the iframe inside of Storybook:
 
@@ -214,7 +214,7 @@ Quoting from the [official Storybook migration guide](https://github.com/storybo
 
 Please follow the [official Storybook version 5.2.x to 5.3.x migration guide](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#from-version-52x-to-53x) to change your files accordingly.
 
-If you are using Storybook using only the generated files after running the `storybook-configuration` schematic, things might be easier for you. Please check the [sample files for a manual upgrade](#sample-files-for-manual-upgrade).
+If you are using Storybook using only the generated files after running the `storybook-configuration` generator, things might be easier for you. Please check the [sample files for a manual upgrade](#sample-files-for-manual-upgrade).
 
 #### Step 2: Going from version 5.3 to 6.0
 
@@ -239,7 +239,7 @@ Check that everything works as expected. If you are still having trouble, you ca
 
 ### Sample files for manual upgrade
 
-If you have not changed the content of the files which the `storybook-configuration` schematic produced, you can use the following samples to migrate to Storybook `6`:
+If you have not changed the content of the files which the `storybook-configuration` generator produced, you can use the following samples to migrate to Storybook `6`:
 
 #### Configuring the root `./storybook` directory
 

@@ -174,7 +174,7 @@ The selected configuration adds/overrides the default options, and the provided 
 
 ### Generators
 
-You can configure default generator options in `angular.json` as well. For instance, the following will tell Nx to always pass `--style=scss` when creating new libraries.
+Generators that are created using `@angular/devkit` are called schematics. You can configure default generator options in `angular.json` as well. For instance, the following will tell Nx to always pass `--style=scss` when creating new libraries.
 
 ```json
 {
@@ -197,6 +197,10 @@ The following command will generate a new library: `nx g @nrwl/angular:lib mylib
   }
 }
 ```
+
+### workspace.json
+
+Your `angular.json` file can be renamed to `workspace.json` and Nx will process it in the same way. The `workspace.json` has one additional top level property `version`. Setting `version` to 1 means the `workspace.json` file syntax is identical to `angular.json` When the `version` of `workspace.json` is set to 2, `targets`, `generators` and `executor` properties are used instead of the version 1 properties `architect`, `schematics` and `builder`.
 
 ## nx.json
 

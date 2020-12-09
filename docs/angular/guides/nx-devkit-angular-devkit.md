@@ -12,7 +12,7 @@ The following is a generator written using Nx Devkit:
 import { Tree, formatFiles, generateFiles } from '@nrwl/devkit';
 import * as path from 'path';
 
-interface Shema {
+interface Schema {
   name: string;
   skipFormat: boolean;
 }
@@ -46,7 +46,7 @@ import {
 import { formatFiles } from '@nrwl/workspace';
 import { toFileName } from '@nrwl/workspace';
 
-interface Shema {
+interface Schema {
   name: string;
   skipFormat: boolean;
 }

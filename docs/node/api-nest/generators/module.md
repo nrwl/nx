@@ -1,6 +1,6 @@
 # module
 
-Run the 'module' NestJs Schematic with Nx project support
+Run the 'module' NestJs generator with Nx project support
 
 ## Usage
 
