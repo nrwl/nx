@@ -28,7 +28,7 @@ happynrwl/
 
 ### schema.json
 
-This file will describe the options being sent to the builder (very similar to the `schema.json` file of schematics).
+This file will describe the options being sent to the builder (very similar to the `schema.json` file of generators).
 
 ```json
 {

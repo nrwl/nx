@@ -1,6 +1,6 @@
 # controller
 
-Run the 'controller' NestJs Schematic with Nx project support
+Run the 'controller' NestJs generator with Nx project support
 
 ## Usage
 

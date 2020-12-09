@@ -1,6 +1,6 @@
 # gateway
 
-Run the 'gateway' NestJs Schematic with Nx project support
+Run the 'gateway' NestJs generator with Nx project support
 
 ## Usage
 

@@ -1,6 +1,6 @@
 # middleware
 
-Run the 'middleware' NestJs Schematic with Nx project support
+Run the 'middleware' NestJs generator with Nx project support
 
 ## Usage
 

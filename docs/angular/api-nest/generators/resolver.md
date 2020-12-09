@@ -1,6 +1,6 @@
 # resolver
 
-Run the 'resolver' NestJs Schematic with Nx project support
+Run the 'resolver' NestJs generator with Nx project support
 
 ## Usage
 

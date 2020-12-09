@@ -1,6 +1,6 @@
 # interface
 
-Run the 'interface' NestJs Schematic with Nx project support
+Run the 'interface' NestJs generator with Nx project support
 
 ## Usage
 

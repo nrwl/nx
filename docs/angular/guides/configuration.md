@@ -178,7 +178,7 @@ You can configure default generator options in `angular.json` as well. For insta
 
 ```json
 {
-  "schematics": {
+  "generators": {
     "@nrwl/angular:library": {
       "style": "scss"
     }

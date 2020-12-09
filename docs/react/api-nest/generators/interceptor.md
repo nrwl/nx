@@ -1,6 +1,6 @@
 # interceptor
 
-Run the 'interceptor' NestJs Schematic with Nx project support
+Run the 'interceptor' NestJs generator with Nx project support
 
 ## Usage
 

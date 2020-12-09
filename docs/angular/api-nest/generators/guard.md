@@ -1,6 +1,6 @@
 # guard
 
-Run the 'guard' NestJs Schematic with Nx project support
+Run the 'guard' NestJs generator with Nx project support
 
 ## Usage
 

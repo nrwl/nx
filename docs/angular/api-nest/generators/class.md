@@ -1,6 +1,6 @@
 # class
 
-Run the 'class' NestJs Schematic with Nx project support
+Run the 'class' NestJs generator with Nx project support
 
 ## Usage
 

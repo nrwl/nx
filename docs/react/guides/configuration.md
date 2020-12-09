@@ -61,7 +61,7 @@ The `workspace.json` configuration file contains information about the targets a
   "cli": {
     "defaultCollection": "@nrwl/react"
   },
-  "schematics": {
+  "generators": {
     "@nrwl/react:library": {
       "js": true
     }
@@ -183,7 +183,7 @@ You can configure default generator options in `workspace.json` as well. For ins
 
 ```json
 {
-  "schematics": {
+  "generators": {
     "@nrwl/react:library": {
       "js": true
     }
@@ -199,7 +199,7 @@ You can also do it on the project level:
     "root": "libs/mylib/",
     "sourceRoot": "libs/mylib/src",
     "projectType": "library",
-    "schematics": {
+    "generators": {
       "@nrwl/react:component": {
         "classComponent": true
       }

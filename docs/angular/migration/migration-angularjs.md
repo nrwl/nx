@@ -98,7 +98,7 @@ Your `package.json` should now look like this:
     "format:write": "nx format:write",
     "format:check": "nx format:check",
     "update": "ng update @nrwl/workspace",
-    "workspace-schematic": "nx workspace-schematic",
+    "workspace-generator": "nx workspace-generator",
     "dep-graph": "nx dep-graph",
     "help": "nx help",
     "postinstall": "ngcc --properties es2015 browser module main --first-only --create-ivy-entry-points"

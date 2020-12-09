@@ -1,6 +1,6 @@
 # service
 
-Run the 'service' NestJs Schematic with Nx project support
+Run the 'service' NestJs generator with Nx project support
 
 ## Usage
 

@@ -9,7 +9,7 @@ nx generate workspace-generator ...
 ```
 
 ```bash
-nx g workspace-schematic ... # same
+nx g workspace-generator ... # same
 ```
 
 By default, Nx will search for `workspace-generator` in the default collection provisioned in `angular.json`.

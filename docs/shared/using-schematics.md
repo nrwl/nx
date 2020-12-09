@@ -4,7 +4,7 @@
 
 Generators provide a way to automate many tasks you regularly perform as part of your development workflow. Whether it is scaffolding out components, features, ensuring libraries are generated and structured in a certain way, or updating your configuration files, generators help you standardize these tasks in a consistent, and predictable manner.
 
-Generators can be written using `@nx/devkit` or `@angular/devkit`. Generators written with the `@angular/devkit` are called schematics. To read more about the concepts of `@angular/devkit` schematics, and building an example schematic, see the [Schematics Authoring Guide](https://angular.io/guide/generators-authoring).
+Generators can be written using `@nx/devkit` or `@angular/devkit`. Generators written with the `@angular/devkit` are called schematics. To read more about the concepts of `@angular/devkit` schematics, and building an example schematic, see the [Schematics Authoring Guide](https://angular.io/guide/schematics-authoring).
 
 The [Workspace Generators](/{{framework}}/workspace/generators/workspace-generators) guide shows you how to create, run, and customize workspace generators within your Nx workspace.
 

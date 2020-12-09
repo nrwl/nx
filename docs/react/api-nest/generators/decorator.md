@@ -1,6 +1,6 @@
 # decorator
 
-Run the 'decorator' NestJs Schematic with Nx project support
+Run the 'decorator' NestJs generator with Nx project support
 
 ## Usage
 

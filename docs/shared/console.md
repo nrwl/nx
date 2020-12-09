@@ -19,7 +19,7 @@ Nx is a command-line tool, which works great when you want to serve an applicati
 
 For instance:
 
-- Exploring custom schematic collections is hard in the terminal, but it's easy using Nx Console.
+- Exploring custom generator collections is hard in the terminal, but it's easy using Nx Console.
 - Using rarely-used flags is challenging. Do you pass absolute or relative paths? You don't have to remember any flags, names, or paths -- Nx Console will help you by providing autocompletion and validating your inputs.
 - Finding the right Nx extension can take a long time. When using Nx Console, you can find and install an extension in minutes.
 
@@ -31,7 +31,7 @@ For VSCode users, you can install the [Nx Console VSCode Plugin](https://marketp
 
 ## True UI for Nx
 
-Nx Console is the UI for Nx. It will work for any schematic or any architect commands. Nx Console does not have a specific UI for, say, generating a component. Instead, Nx Console does what the command-line version of Nx does--it analyzes the same meta information to create the needed UI. This means that anything you can do with Nx, you can do with Nx Console. After all, Nx Console is the UI for Nx.
+Nx Console is the UI for Nx. It will work for any generator or any architect commands. Nx Console does not have a specific UI for, say, generating a component. Instead, Nx Console does what the command-line version of Nx does--it analyzes the same meta information to create the needed UI. This means that anything you can do with Nx, you can do with Nx Console. After all, Nx Console is the UI for Nx.
 
 ## Useful for Both Experts and Beginners
 
@@ -41,7 +41,7 @@ Even though we started building Nx Console as a tool for experts, we also aimed 
 
 ### Generate
 
-The `Generate` action allows you to choose a schematic and then opens a form listing out all the options for that schematic. As you make changes to the form, the schematic is executed in `--dry-run` mode in a terminal so you can preview the results of running the schematic in real time.
+The `Generate` action allows you to choose a generator and then opens a form listing out all the options for that generator. As you make changes to the form, the generator is executed in `--dry-run` mode in a terminal so you can preview the results of running the generator in real time.
 
 <iframe width="560" height="420" src="https://www.youtube.com/embed/-nUr66MWRiE?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
@@ -51,7 +51,7 @@ You can also launch the `Generate` action from the Command Palette (`⇧⌘P`) b
 
 <iframe width="560" height="420" src="https://www.youtube.com/embed/Sk2XjFwF8Zo?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-You can even construct the schematic options while staying entirely within the Command Palette. Use `⇧⌘P` to open the Command Palette, then select `nx: generate`. After choosing a schematic, select any of the listed options to modify the schematic command. When you're satified with the constructed command, choose the `Execute` command at the top of the list.
+You can even construct the generator options while staying entirely within the Command Palette. Use `⇧⌘P` to open the Command Palette, then select `nx: generate`. After choosing a generator, select any of the listed options to modify the generator command. When you're satified with the constructed command, choose the `Execute` command at the top of the list.
 
 <iframe width="560" height="420" src="https://www.youtube.com/embed/q5NTTqRYq9c?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 

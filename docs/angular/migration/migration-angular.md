@@ -32,14 +32,14 @@ To transform a Angular CLI workspace to an Nx workspace, use the `ng add` comman
 ng add @nrwl/workspace
 ```
 
-This installs the `@nrwl/workspace` package into your workspace and runs a schematic to transform your workspace. The schematic applies the following changes to your workspace:
+This installs the `@nrwl/workspace` package into your workspace and runs a generator to transform your workspace. The generator applies the following changes to your workspace:
 
 - Installs the packages for the `Nx` plugin `@nrwl/angular` in your package.json.
 - Creates an nx.json file in the root of your workspace.
 - Creates configuration files for Prettier.
 - Creates an `apps` folder for generating applications.
 - Creates a `libs` folder for generating libraries.
-- Creates a `tools` folder that includes files for custom workspace tooling, such as workspace-specific schematics and scripts.
+- Creates a `tools` folder that includes files for custom workspace tooling, such as workspace-specific generators and scripts.
 - Moves your application into the `apps` folder, and updates the relevant file paths in your configuration files.
 - Moves your e2e suite into the `apps/{{app name}}-e2e` folder, and updates the relevant file paths in your configuration files.
 - Updates your `package.json` with scripts to run various `Nx` workspace commands.
@@ -201,7 +201,7 @@ If you are using `Karma` for unit testing:
   "projects": {
     "<app name>": {
       "projectType": "application",
-      "schematics": {},
+      "generators": {},
       "root": "apps/<app name>",
       "sourceRoot": "apps/<app name>/src",
       "prefix": "myapp",
@@ -227,7 +227,7 @@ If you are using `Karma` for unit testing:
   "cli": {
     "defaultCollection": "@nrwl/angular"
   },
-  "schematics": {
+  "generators": {
     "@nrwl/angular:application": {
       "unitTestRunner": "jest",
       "e2eTestRunner": "cypress"
@@ -240,7 +240,7 @@ If you are using `Karma` for unit testing:
 }
 ```
 
-> Jest will be used by default when generating new applications. If you want to continue using `Karma`, set the `unitTestRunner` to `karma` in the `schematics` section of the `angular.json` file.
+> Jest will be used by default when generating new applications. If you want to continue using `Karma`, set the `unitTestRunner` to `karma` in the `generators` section of the `angular.json` file.
 
 - Update `test-setup.ts` to `test.ts` in the `files` array of the `apps/<app name>/tsconfig.spec.json` file.
 
@@ -311,7 +311,7 @@ If you are using `Protractor` for E2E testing:
   "cli": {
     "defaultCollection": "@nrwl/angular"
   },
-  "schematics": {
+  "generators": {
     "@nrwl/angular:application": {
       "unitTestRunner": "jest",
       "e2eTestRunner": "cypress"
@@ -355,7 +355,7 @@ Verify your E2E tests run correctly by running:
 ng e2e <app name>-e2e
 ```
 
-> Cypress will be used by default when generating new applications. If you want to continue using `Protractor`, set the `e2eTestRunner` to `protractor` in the `schematics` section of the `angular.json` file.
+> Cypress will be used by default when generating new applications. If you want to continue using `Protractor`, set the `e2eTestRunner` to `protractor` in the `generators` section of the `angular.json` file.
 
 ### Updating your linting configuration
 
