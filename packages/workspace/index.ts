@@ -8,10 +8,15 @@ export {
   copyFile,
   createDirectory,
 } from './src/utils/fileutils';
+
+// TODO: vsavkin delete after Nx 12
+export * from './src/devkit-reexport';
+
 export {
   ExistingPrettierConfig,
   resolveUserExistingPrettierConfig,
 } from './src/utils/common';
+
 export { output } from './src/utils/output';
 export { commandsObject } from './src/command-line/nx-commands';
 export { supportedNxCommands } from './src/command-line/supported-nx-commands';
