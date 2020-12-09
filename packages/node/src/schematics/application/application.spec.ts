@@ -244,6 +244,29 @@ describe('app', () => {
       );
     });
 
+    it('should configure proxies for multiple node projects with the same frontend app', async () => {
+      appTree = createApp(appTree, 'my-frontend');
+
+      appTree = await runSchematic(
+        'app',
+        { name: 'cart', frontendProject: 'my-frontend' },
+        appTree
+      );
+
+      const tree = await runSchematic(
+        'app',
+        { name: 'billing', frontendProject: 'my-frontend' },
+        appTree
+      );
+
+      expect(tree.exists('apps/my-frontend/proxy.conf.json')).toBeTruthy();
+
+      expect(readJsonInTree(tree, 'apps/my-frontend/proxy.conf.json')).toEqual({
+        '/api': { target: 'http://localhost:3333', secure: false },
+        '/billing-api': { target: 'http://localhost:3333', secure: false },
+      });
+    });
+
     it('should work with unnormalized project names', async () => {
       appTree = createApp(appTree, 'myFrontend');
 
