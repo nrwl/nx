@@ -9,6 +9,7 @@ import { parseRunOneOptions } from './parse-run-one-options';
  * @param workspace Relevant local workspace properties
  */
 process.env.NX_CLI_SET = 'true';
+
 export function initLocal(workspace: Workspace) {
   require('@nrwl/workspace/' + 'src/utils/perf-logging');
   const supportedNxCommands = require('@nrwl/workspace/' +
@@ -24,7 +25,25 @@ export function initLocal(workspace: Workspace) {
       .argv;
   } else {
     if (runOpts === false || process.env.NX_SKIP_TASKS_RUNNER) {
-      loadCli(workspace);
+      if (workspace.type === 'angular' && process.argv[2] === 'update') {
+        console.log(
+          `Nx provides a much improved version of "ng update". It runs same migrations, but allows you to:`
+        );
+        console.log(`- rerun the same migration multiple times`);
+        console.log(`- reorder migrations`);
+        console.log(`- skip migrations`);
+        console.log(`- fix migrations that "almost work"`);
+        console.log(`- commit a partially migrated state`);
+        console.log(`- change versions of packages to match org requirements`);
+        console.log(
+          `And, in general, it is lot more reliable for non-trivial workspaces. Read more at: https://nx.dev/latest/angular/workspace/update`
+        );
+        console.log(
+          `Run "nx migrate latest" to update to the latest version of Nx.`
+        );
+      } else {
+        loadCli(workspace);
+      }
     } else {
       require('@nrwl/workspace' + '/src/command-line/run-one').runOne(runOpts);
     }
