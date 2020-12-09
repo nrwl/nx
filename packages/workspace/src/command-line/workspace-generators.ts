@@ -20,7 +20,7 @@ import {
 } from '@angular-devkit/schematics/tools';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
-import { readFileSync, writeFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 import { copySync, removeSync } from 'fs-extra';
 import * as inquirer from 'inquirer';
 import * as path from 'path';
@@ -346,7 +346,7 @@ async function executeAngularDevkitSchematic(
   try {
     await workflow
       .execute({
-        collection: path.join(outDir, 'workspace-schematics.json'),
+        collection: path.join(outDir, 'workspace-generators.json'),
         schematic: schematicName,
         options: options,
         logger: logger,
