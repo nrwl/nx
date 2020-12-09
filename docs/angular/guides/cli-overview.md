@@ -11,17 +11,13 @@ The Nx CLI is a command-line interface tool that helps you setup, develop, build
 
 ## Nx CLI and Angular CLI
 
-Nx **is not** a replacement for Angular CLI. Under the hood, Nx uses the Angular CLI to generate code and run tasks.
+The Nx CLI supports different types of generators and executors. When running Angular Devkit schematics (e.g., generating an Angular component), the Nx CLI will use Angular Devkit under the hood. So the result will be exactly the same as if you used the Angular CLI. When running Angular Devkit builders, the Nx CLI once again will use the same Angular Devkit under the hood.
 
-When you run `nx build myapp`, Nx will invoke `ng build myapp` under the hood. When you run `nx g component mycmp`, Nx will invoke `ng g component mycmp` under the hood.
+In other words, anything the Angular CLI can run, the Nx CLI can run as well because it uses the same Angular Devkit written by the Angular team under the hood. Except that using the Nx CLI is often a lot faster because of its powerful computation caching and code change analysis.
 
-When it comes to generating code and running tasks, since `nx` delegates to `ng`, both CLIs will always produce the same result, except that running `nx` will often be a lot faster.
+The `Nx CLI` also supports a lot more commands than the Angular CLI. It can run a target against many projects in parallel, run a target against a project and its dependencies, visualize the dependency graph etc..
 
-How?
-
-Nx CLI uses advanced code analysis and computation caching to reuse previous computation results when possible. The Angular CLI doesn't do it. In other words, use `nx` instead of `ng`: everything will work just the same but often much faster.
-
-The `Nx CLI` also supports a lot more commands than the Angular CLI. It can run a target against many projects in parallel, run a target against a project and its dependencies, etc..
+Nx will create the `decorate-angular-cli.js` file in a new Nx workspace. This file essentially "wraps" the Angular CLI to give you computation caching and other powerful feature, so running `nx build myapp` and `ng build myapp` will produce the same result.
 
 ## Installing the CLI
 
