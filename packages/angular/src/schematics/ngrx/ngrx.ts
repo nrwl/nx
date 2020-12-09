@@ -27,7 +27,7 @@ import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 /**
  * Rule to generate the Nx 'ngrx' Collection
- * Note: see https://nx.dev/angular/guides/misc-ngrx for guide to generated files
+ * Note: see https://nx.dev/latest/angular/guides/misc-ngrx for guide to generated files
  */
 export default function generateNgrxCollection(_options: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {

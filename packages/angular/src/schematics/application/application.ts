@@ -82,7 +82,7 @@ const nrwlHomeTemplate = {
         <li class="col-span-2">
             <a
                     class="resource flex"
-                    href="https://connect.nrwl.io/app/courses/nx-workspaces/intro"
+                    href="https://nxplaybook.com/p/nx-workspaces"
             >
                 Nx video course
             </a>
@@ -90,7 +90,7 @@ const nrwlHomeTemplate = {
         <li class="col-span-2">
             <a
                     class="resource flex"
-                    href="https://nx.dev/angular/getting-started/what-is-nx"
+                    href="https://nx.dev/latest/angular/getting-started/why-nx"
             >
                 Nx video tutorial
             </a>
@@ -98,7 +98,7 @@ const nrwlHomeTemplate = {
         <li class="col-span-2">
             <a
                     class="resource flex"
-                    href="https://nx.dev/angular/tutorial/01-create-application"
+                    href="https://nx.dev/latest/angular/tutorial/01-create-application"
             >
                 Interactive tutorial
             </a>
