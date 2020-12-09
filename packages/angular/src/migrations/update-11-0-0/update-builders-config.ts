@@ -1,12 +1,5 @@
-import {
-  addInstallTask,
-  addUpdateTask,
-  updateBuilderConfig,
-  updateJsonInTree,
-  updatePackagesInPackageJson,
-} from '@nrwl/workspace';
+import { updateBuilderConfig, updateJsonInTree } from '@nrwl/workspace';
 import { chain } from '@angular-devkit/schematics';
-import { join as pathJoin } from 'path';
 
 function updateNgPackagrBuilder() {
   let skipInstall = true;
@@ -32,7 +25,6 @@ function updateNgPackagrBuilder() {
       }
       return json;
     }),
-    addInstallTask({ skipInstall }),
   ]);
 }
 
@@ -71,13 +63,5 @@ const removeDeprecatedOptions = updateBuilderConfig((options) => {
 }, '@angular-devkit/build-angular:browser');
 
 export default () => {
-  return chain([
-    updatePackagesInPackageJson(
-      pathJoin(__dirname, '../../../migrations.json'),
-      '11.0.0'
-    ),
-    removeDeprecatedOptions,
-    updateNgPackagrBuilder(),
-    addUpdateTask('@angular/core', '11.0.0'),
-  ]);
+  return chain([removeDeprecatedOptions, updateNgPackagrBuilder()]);
 };

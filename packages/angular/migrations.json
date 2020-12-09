@@ -212,6 +212,54 @@
         "codelyzer": {
           "version": "^6.0.0",
           "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/common": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/forms": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/compiler": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/compiler-cli": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-browser": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-browser-dynamic": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/router": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/upgrade": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/language-service": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/animations": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/service-worker": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
         }
       }
     }
