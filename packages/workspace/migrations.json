@@ -135,6 +135,11 @@
       "description": "Add an explicit dependency on @nrwl/tao",
       "factory": "./src/migrations/update-10-4-0/add-explicit-dep-on-tao"
     },
+    "update-script-to-invoke-nx-migrate": {
+      "version": "10.4.5",
+      "description": "Update the 'update' npm script to invoke nx migrate",
+      "factory": "./src/migrations/update-10-4-0/update-script-to-invoke-nx-migrate"
+    },
     "update-decorate-angular-cli": {
       "version": "11.0.0-beta.3",
       "description": "Update the decoration script when using Angular CLI",
