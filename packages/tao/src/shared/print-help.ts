@@ -28,6 +28,7 @@ ${chalk.bold(header + positional + ' [options,...]')}
 
 ${chalk.bold('Options')}:
 ${args}
+${formatOption('skip-nx-cache', 'Skip the use of Nx cache.')}
 ${formatOption('help', 'Show available options for project target.')}
   `)
   );

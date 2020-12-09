@@ -31,6 +31,8 @@ export const commandsObject = yargs
 
     You can also use the infix notation to run a target:
     (e.g., nx serve myapp --configuration=production)
+
+    You can skip the use of Nx cache by using the --skip-nx-cache option.
     `
   )
   .command(
