@@ -384,8 +384,8 @@ export async function runMigration(
 export function wrapAngularDevkitSchematic(
   collectionName: string,
   generatorName: string
-) {
-  return async (host: taoTree.Tree, generatorOptions: { [k: string]: any }) => {
+): any {
+  return async (host: any, generatorOptions: { [k: string]: any }) => {
     const emptyLogger = {
       log: (e) => {},
       info: (e) => {},

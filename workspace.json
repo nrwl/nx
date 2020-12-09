@@ -36,6 +36,11 @@
                 "glob": "**/*.js",
                 "output": "/"
               },
+              {
+                "input": "packages/nx",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
               "LICENSE"
             ]
           },
@@ -113,6 +118,11 @@
               {
                 "input": "packages/tao",
                 "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/tao",
+                "glob": "**/*.d.ts",
                 "output": "/"
               },
               "LICENSE"
@@ -196,6 +206,11 @@
                 "glob": "**/*.js",
                 "output": "/"
               },
+              {
+                "input": "packages/devkit",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
               "LICENSE"
             ]
           },
@@ -277,6 +292,11 @@
               {
                 "input": "packages/workspace",
                 "glob": "**/*.{js,css,html,svg}",
+                "output": "/"
+              },
+              {
+                "input": "packages/workspace",
+                "glob": "**/*.d.ts",
                 "output": "/"
               },
               "LICENSE"
@@ -368,6 +388,11 @@
                 "glob": "**/*.js",
                 "output": "/"
               },
+              {
+                "input": "packages/web",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
               "LICENSE"
             ]
           },
@@ -447,6 +472,11 @@
                 "glob": "**/*.js",
                 "output": "/"
               },
+              {
+                "input": "packages/cypress",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
               "LICENSE"
             ]
           },
@@ -523,6 +553,11 @@
               {
                 "input": "packages/jest",
                 "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/jest",
+                "glob": "**/*.d.ts",
                 "output": "/"
               },
               "LICENSE"
@@ -611,6 +646,11 @@
               {
                 "input": "packages/storybook",
                 "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/storybook",
+                "glob": "**/*.d.ts",
                 "output": "/"
               },
               "LICENSE"
@@ -786,6 +826,11 @@
                 "glob": "**/*.js",
                 "output": "/"
               },
+              {
+                "input": "packages/nx-plugin",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
               "LICENSE"
             ]
           },
@@ -863,6 +908,11 @@
               {
                 "input": "packages/node",
                 "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/node",
+                "glob": "**/*.d.ts",
                 "output": "/"
               },
               "LICENSE"
@@ -949,6 +999,11 @@
                 "glob": "**/*.js",
                 "output": "/"
               },
+              {
+                "input": "packages/next",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
               "LICENSE"
             ]
           },
@@ -1026,6 +1081,11 @@
               {
                 "input": "packages/nest",
                 "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/nest",
+                "glob": "**/*.d.ts",
                 "output": "/"
               },
               "LICENSE"
@@ -1107,6 +1167,11 @@
                 "glob": "**/*.js",
                 "output": "/"
               },
+              {
+                "input": "packages/linter",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
               "LICENSE"
             ]
           },
@@ -1184,6 +1249,11 @@
               {
                 "input": "packages/express",
                 "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/express",
+                "glob": "**/*.d.ts",
                 "output": "/"
               },
               "LICENSE"
@@ -1265,6 +1335,11 @@
                 "glob": "**/*.js",
                 "output": "/"
               },
+              {
+                "input": "packages/eslint-plugin-nx",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
               "LICENSE"
             ]
           },
@@ -1342,6 +1417,11 @@
               {
                 "input": "packages/create-nx-workspace",
                 "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/create-nx-workspace",
+                "glob": "**/*.d.ts",
                 "output": "/"
               },
               "LICENSE"
@@ -1426,6 +1506,11 @@
                 "glob": "**/*.js",
                 "output": "/"
               },
+              {
+                "input": "packages/create-nx-plugin",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
               "LICENSE"
             ]
           },
@@ -1506,6 +1591,11 @@
               {
                 "input": "packages/cli",
                 "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/cli",
+                "glob": "**/*.d.ts",
                 "output": "/"
               },
               "LICENSE"
@@ -1593,6 +1683,11 @@
               {
                 "input": "packages/angular",
                 "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/angular",
+                "glob": "**/*.d.ts",
                 "output": "/"
               },
               "LICENSE"
