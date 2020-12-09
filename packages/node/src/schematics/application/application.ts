@@ -144,19 +144,35 @@ function addProxy(options: NormalizedSchema): Rule {
     const projectConfig = getProjectConfig(host, options.frontendProject);
     if (projectConfig.architect && projectConfig.architect.serve) {
       const pathToProxyFile = `${projectConfig.root}/proxy.conf.json`;
-      host.create(
-        pathToProxyFile,
-        JSON.stringify(
-          {
-            '/api': {
-              target: 'http://localhost:3333',
-              secure: false,
+
+      if (!host.exists(pathToProxyFile)) {
+        host.create(
+          pathToProxyFile,
+          JSON.stringify(
+            {
+              '/api': {
+                target: 'http://localhost:3333',
+                secure: false,
+              },
             },
+            null,
+            2
+          )
+        );
+      } else {
+        //add new entry to existing config
+        const proxyFileContent = host.get(pathToProxyFile).content.toString();
+
+        const proxyModified = {
+          ...JSON.parse(proxyFileContent),
+          [`/${options.name}-api`]: {
+            target: 'http://localhost:3333',
+            secure: false,
           },
-          null,
-          2
-        )
-      );
+        };
+
+        host.overwrite(pathToProxyFile, JSON.stringify(proxyModified, null, 2));
+      }
 
       updateWorkspaceInTree((json) => {
         projectConfig.architect.serve.options.proxyConfig = pathToProxyFile;
