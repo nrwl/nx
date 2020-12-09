@@ -74,7 +74,7 @@ describe('<%= className %>Facade', () => {
         expect(list.length).toBe(0);
         expect(isLoaded).toBe(false);
 
-        facade.dispatch(<%= className %>Actions.load<%= className %>());
+        facade.init();
 
         list = await readFirst(facade.all<%= className %>$);
         isLoaded = await readFirst(facade.loaded$);
@@ -99,7 +99,7 @@ describe('<%= className %>Facade', () => {
         expect(list.length).toBe(0);
         expect(isLoaded).toBe(false);
 
-        facade.dispatch(<%= className %>Actions.load<%= className %>Success({
+        store.dispatch(<%= className %>Actions.load<%= className %>Success({
           <%= propertyName %>: [
             create<%= className %>Entity('AAA'),
             create<%= className %>Entity('BBB')
