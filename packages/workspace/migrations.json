@@ -143,8 +143,7 @@
     "update-decorate-angular-cli": {
       "version": "11.0.0-beta.3",
       "description": "Update the decoration script when using Angular CLI",
-      "implementation": "./src/migrations/update-11-0-0/update-decorate-angular-cli",
-      "cli": "nx"
+      "factory": "./src/migrations/update-11-0-0/update-decorate-angular-cli"
     },
     "update-node-types": {
       "version": "11.0.0-beta.3",
