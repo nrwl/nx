@@ -139,6 +139,11 @@
       "version": "10.4.5",
       "description": "Update the 'update' npm script to invoke nx migrate",
       "factory": "./src/migrations/update-10-4-0/update-script-to-invoke-nx-migrate"
+    },
+    "update-decorate-angular-cli": {
+      "version": "10.4.6",
+      "description": "Update the decoration script when using Angular CLI",
+      "factory": "./src/migrations/update-10-4-0/update-decorate-angular-cli"
     }
   },
   "packageJsonUpdates": {

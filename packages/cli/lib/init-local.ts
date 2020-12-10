@@ -27,7 +27,7 @@ export function initLocal(workspace: Workspace) {
     if (runOpts === false || process.env.NX_SKIP_TASKS_RUNNER) {
       if (workspace.type === 'angular' && process.argv[2] === 'update') {
         console.log(
-          `Nx provides a much improved version of "ng update". It runs same migrations, but allows you to:`
+          `Nx provides a much improved version of "ng update". It runs the same migrations, but allows you to:`
         );
         console.log(`- rerun the same migration multiple times`);
         console.log(`- reorder migrations`);
