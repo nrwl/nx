@@ -60,7 +60,7 @@ function insertAfterLastOccurrence(
   return new InsertChange(file, lastItemPosition, toInsert);
 }
 
-function sortObjectByKeys(obj: unknown) {
+export function sortObjectByKeys(obj: unknown) {
   return Object.keys(obj)
     .sort()
     .reduce((result, key) => {
