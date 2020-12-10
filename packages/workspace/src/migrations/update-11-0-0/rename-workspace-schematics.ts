@@ -1,5 +1,8 @@
-import { move, Rule } from '@angular-devkit/schematics';
+import { Rule } from '@angular-devkit/schematics';
+import * as fs from 'fs-extra';
 
 export default function update(): Rule {
-  return move('tools/schematics', 'tools/generators');
+  return () => {
+    fs.moveSync('tools/schematics', 'tools/generators');
+  };
 }

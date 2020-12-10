@@ -481,9 +481,6 @@ function packageToMigrationsFilePath(packageName: string, dir: string) {
       return null;
     }
   } catch (e) {
-    logger.warn(
-      `Could not find '${migrationsFile}' in '${packageName}'. Skipping it`
-    );
     return null;
   }
 }
