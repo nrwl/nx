@@ -63,12 +63,15 @@ function parseGenerateOpts(
     ) {
       throwInvalidInvocation();
     }
-    [collectionName, generatorName] = (generatorOptions['_'] as string[])
-      .shift()
-      .split(':');
-    if (!generatorName) {
-      generatorName = collectionName;
+    const generatorDescriptor = (generatorOptions['_'] as string[]).shift();
+    const separatorIndex = generatorDescriptor.lastIndexOf(':');
+
+    if (separatorIndex > 0) {
+      collectionName = generatorDescriptor.substr(0, separatorIndex);
+      generatorName = generatorDescriptor.substr(separatorIndex + 1);
+    } else {
       collectionName = defaultCollection;
+      generatorName = generatorDescriptor;
     }
   } else {
     collectionName = generatorOptions.collection as string;
