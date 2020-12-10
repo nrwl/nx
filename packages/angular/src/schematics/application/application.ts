@@ -785,12 +785,6 @@ export default function (schema: Schema): Rule {
         ...options,
         skipFormat: true,
       }),
-      // TODO: Remove this after Angular 10.1.0
-      updateJsonInTree('tsconfig.json', () => ({
-        files: [],
-        include: [],
-        references: [],
-      })),
       externalSchematic('@schematics/angular', 'application', {
         name: options.name,
         inlineStyle: options.inlineStyle,
