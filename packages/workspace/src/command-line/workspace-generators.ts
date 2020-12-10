@@ -129,7 +129,7 @@ function constructCollection() {
     if (exists(path.join(childDir, 'schema.json'))) {
       generators[c] = {
         factory: `./${c}`,
-        schema: `./${path.join(c, 'schema.json')}`,
+        schema: `./${normalize(path.join(c, 'schema.json'))}`,
         description: `Schematic ${c}`,
       };
     }
