@@ -354,7 +354,7 @@ Verify your E2E tests run correctly by running:
 ng e2e <app name>-e2e
 ```
 
-> Cypress will be used by default when generating new applications. If you want to continue using `Protractor`, set the `e2eTestRunner` to `protractor` in the `generators` section of the `angular.json` file.
+> Cypress will be used by default when generating new applications. If you want to continue using `Protractor`, set the `e2eTestRunner` to `protractor` in the `schematics` section of the `angular.json` file.
 
 ### Updating your linting configuration
 
