@@ -20,7 +20,7 @@ The generator's schema describe the inputs--what you can pass into it.
 ```json
 {
   "cli": "nx",
-  "id": "generatorsNxWorkspacegenerator",
+  "id": "SchematicsNxWorkspaceSchematic",
   "title": "Create a custom generator",
   "type": "object",
   "properties": {

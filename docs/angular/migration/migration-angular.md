@@ -32,7 +32,7 @@ To transform a Angular CLI workspace to an Nx workspace, use the `ng add` comman
 ng add @nrwl/workspace
 ```
 
-This installs the `@nrwl/workspace` package into your workspace and runs a generator to transform your workspace. The generator applies the following changes to your workspace:
+This installs the `@nrwl/workspace` package into your workspace and runs a generator (or schematic) to transform your workspace. The generator applies the following changes to your workspace:
 
 - Installs the packages for the `Nx` plugin `@nrwl/angular` in your package.json.
 - Creates an nx.json file in the root of your workspace.
@@ -197,11 +197,10 @@ If you are using `Karma` for unit testing:
 
 ```json
 {
-  "version": 1,
   "projects": {
     "<app name>": {
       "projectType": "application",
-      "generators": {},
+      "schematics": {},
       "root": "apps/<app name>",
       "sourceRoot": "apps/<app name>/src",
       "prefix": "myapp",
@@ -227,7 +226,7 @@ If you are using `Karma` for unit testing:
   "cli": {
     "defaultCollection": "@nrwl/angular"
   },
-  "generators": {
+  "schematics": {
     "@nrwl/angular:application": {
       "unitTestRunner": "jest",
       "e2eTestRunner": "cypress"
@@ -240,7 +239,7 @@ If you are using `Karma` for unit testing:
 }
 ```
 
-> Jest will be used by default when generating new applications. If you want to continue using `Karma`, set the `unitTestRunner` to `karma` in the `generators` section of the `angular.json` file.
+> Jest will be used by default when generating new applications. If you want to continue using `Karma`, set the `unitTestRunner` to `karma` in the `schematics` section of the `angular.json` file.
 
 - Update `test-setup.ts` to `test.ts` in the `files` array of the `apps/<app name>/tsconfig.spec.json` file.
 
@@ -311,7 +310,7 @@ If you are using `Protractor` for E2E testing:
   "cli": {
     "defaultCollection": "@nrwl/angular"
   },
-  "generators": {
+  "schematics": {
     "@nrwl/angular:application": {
       "unitTestRunner": "jest",
       "e2eTestRunner": "cypress"
