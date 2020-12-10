@@ -67,12 +67,12 @@ const normalizeToMoveDescriptors = (
 /**
  * Move packages to deps or devDeps adjusting the package.json appropriately.
  *
- * @param packageMoveMapping The packageMoveMapping provided to the schematic
+ * @param packageMoveOptions The PackageMoveOptions provided to the schematic
  */
-export function moveNpmPackages(packageMoveMapping: PackageMoveOptions) {
+export function moveNpmPackages(packageMoveOptions: PackageMoveOptions) {
   return (tree: Tree, context: SchematicContext): Rule => {
     const pkg = readJsonInTree(tree, 'package.json');
-    const { toDeps = [], toDevDeps = [] } = packageMoveMapping;
+    const { toDeps = [], toDevDeps = [] } = packageMoveOptions;
 
     const moveDescriptors = normalizeToMoveDescriptors(
       pkg,

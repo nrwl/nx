@@ -4,7 +4,7 @@ import { readJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import * as path from 'path';
 
-describe('Move @types/react-redux Package 11.0.0', () => {
+describe('Move @types/react-redux Package 11.2.0', () => {
   let tree: Tree;
   let schematicRunner: SchematicTestRunner;
 
@@ -27,7 +27,7 @@ describe('Move @types/react-redux Package 11.0.0', () => {
 
   it(`should move @types/react-redux, if in deps, to the devDeps in package.json`, async () => {
     tree = await schematicRunner
-      .runSchematicAsync('move-react-redux-types-package-11.0.0', {}, tree)
+      .runSchematicAsync('move-react-redux-types-package-11.2.0', {}, tree)
       .toPromise();
 
     const packageJson = readJsonInTree(tree, '/package.json');
