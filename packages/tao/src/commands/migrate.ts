@@ -116,7 +116,8 @@ export class Migrator {
         return Object.keys(generators)
           .filter(
             (r) =>
-              this.gt(generators[r].version, currentVersion) &
+              generators[r].version &&
+              this.gt(generators[r].version, currentVersion) &&
               this.lte(generators[r].version, target.version)
           )
           .map((r) => ({
