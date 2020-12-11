@@ -1,7 +1,7 @@
 import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
-import { readJsonInTree } from '@nrwl/workspace';
+import { Linter, readJsonInTree } from '@nrwl/workspace';
 
 describe('karmaProject', () => {
   let appTree: Tree;
@@ -200,6 +200,42 @@ module.exports = function(config) {
       );
       const testTs = resultTree.read('apps/app1/src/test.ts').toString();
       expect(testTs).not.toContain("import 'zone.js/dist/zone';");
+    });
+  });
+
+  describe('linter', () => {
+    it('should work with eslint as linter', async () => {
+      const resultTree = await runSchematic(
+        'lib',
+        {
+          name: 'lib-with-eslint-and-karma',
+          unitTestRunner: 'karma',
+          linter: Linter.EsLint,
+        },
+        appTree
+      );
+      const workspaceJson = readJsonInTree(resultTree, 'workspace.json');
+
+      expect(
+        workspaceJson.projects['lib-with-eslint-and-karma'].architect.lint
+          .options.tsConfig
+      ).toBeUndefined();
+
+      expect(
+        workspaceJson.projects['lib-with-eslint-and-karma'].architect.lint
+          .builder
+      ).toBe('@nrwl/linter:eslint');
+
+      expect(
+        workspaceJson.projects['lib-with-eslint-and-karma'].architect.test
+      ).toEqual({
+        builder: '@angular-devkit/build-angular:karma',
+        options: {
+          main: 'libs/lib-with-eslint-and-karma/src/test.ts',
+          tsConfig: 'libs/lib-with-eslint-and-karma/tsconfig.spec.json',
+          karmaConfig: 'libs/lib-with-eslint-and-karma/karma.conf.js',
+        },
+      });
     });
   });
 });
