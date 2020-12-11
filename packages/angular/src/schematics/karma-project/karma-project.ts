@@ -99,7 +99,12 @@ function updateworkspaceJson(options: KarmaProjectSchema): Rule {
         assets: [],
       };
     }
-    if (projectConfig.architect.lint) {
+
+    if (
+      projectConfig.architect.lint &&
+      projectConfig.architect.lint.builder ===
+        '@angular-devkit/build-angular:tslint'
+    ) {
       projectConfig.architect.lint.options.tsConfig = [
         ...projectConfig.architect.lint.options.tsConfig,
         join(normalize(projectConfig.root), 'tsconfig.spec.json'),
