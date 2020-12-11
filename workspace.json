@@ -1,11 +1,10 @@
 {
-  "version": 1,
+  "version": 2,
   "projects": {
     "nx": {
       "root": "packages/nx",
       "sourceRoot": "packages/nx",
       "projectType": "library",
-
       "targets": {
         "build-base": {
           "executor": "@nrwl/node:package",
@@ -81,7 +80,6 @@
       "root": "packages/tao",
       "sourceRoot": "packages/tao",
       "projectType": "library",
-
       "targets": {
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -167,7 +165,6 @@
       "root": "packages/devkit",
       "sourceRoot": "packages/devkit",
       "projectType": "library",
-
       "targets": {
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -250,7 +247,6 @@
       "root": "packages/workspace",
       "sourceRoot": "packages/workspace",
       "projectType": "library",
-
       "targets": {
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -344,7 +340,6 @@
       "root": "packages/web",
       "sourceRoot": "packages/web",
       "projectType": "library",
-
       "targets": {
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -433,7 +428,6 @@
       "root": "packages/cypress",
       "sourceRoot": "packages/cypress",
       "projectType": "library",
-
       "targets": {
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -516,7 +510,6 @@
       "root": "packages/jest",
       "sourceRoot": "packages/jest",
       "projectType": "library",
-
       "targets": {
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -599,7 +592,6 @@
       "root": "packages/storybook",
       "sourceRoot": "packages/storybook",
       "projectType": "library",
-
       "targets": {
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -693,7 +685,6 @@
       "root": "packages/react",
       "sourceRoot": "packages/react",
       "projectType": "library",
-
       "targets": {
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -787,7 +778,6 @@
       "root": "packages/nx-plugin",
       "sourceRoot": "packages/nx-plugin",
       "projectType": "library",
-
       "targets": {
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -871,7 +861,6 @@
       "root": "packages/node",
       "sourceRoot": "packages/node",
       "projectType": "library",
-
       "targets": {
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -955,7 +944,6 @@
       "root": "packages/next",
       "sourceRoot": "packages/next",
       "projectType": "library",
-
       "targets": {
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -1044,7 +1032,6 @@
       "root": "packages/nest",
       "sourceRoot": "packages/nest",
       "projectType": "library",
-
       "targets": {
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -1128,7 +1115,6 @@
       "root": "packages/linter",
       "sourceRoot": "packages/linter",
       "projectType": "library",
-
       "targets": {
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -1212,7 +1198,6 @@
       "root": "packages/express",
       "sourceRoot": "packages/express",
       "projectType": "library",
-
       "targets": {
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -1296,7 +1281,6 @@
       "root": "packages/eslint-plugin-nx",
       "sourceRoot": "packages/eslint-plugin-nx",
       "projectType": "library",
-
       "targets": {
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -1380,7 +1364,6 @@
       "root": "packages/create-nx-workspace",
       "sourceRoot": "packages/create-nx-workspace",
       "projectType": "library",
-
       "targets": {
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -1467,7 +1450,6 @@
       "root": "packages/create-nx-plugin",
       "sourceRoot": "packages/create-nx-plugin",
       "projectType": "library",
-
       "targets": {
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -1554,7 +1536,6 @@
       "root": "packages/cli",
       "sourceRoot": "packages/cli",
       "projectType": "library",
-
       "targets": {
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -1641,7 +1622,6 @@
       "root": "packages/angular",
       "sourceRoot": "packages/angular",
       "projectType": "library",
-
       "targets": {
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -1733,14 +1713,12 @@
       "root": "e2e/utils",
       "sourceRoot": "e2e/utils",
       "projectType": "library",
-
       "targets": {}
     },
     "e2e-cli": {
       "root": "e2e/cli",
       "sourceRoot": "e2e/cli",
       "projectType": "application",
-
       "targets": {
         "e2e": {
           "executor": "@nrwl/jest:jest",
@@ -1757,7 +1735,6 @@
       "root": "e2e/angular",
       "sourceRoot": "e2e/angular",
       "projectType": "application",
-
       "targets": {
         "e2e": {
           "executor": "@nrwl/jest:jest",
@@ -1774,7 +1751,6 @@
       "root": "e2e/cypress",
       "sourceRoot": "e2e/cypress",
       "projectType": "application",
-
       "targets": {
         "e2e": {
           "executor": "@nrwl/jest:jest",
@@ -1791,7 +1767,6 @@
       "root": "e2e/jest",
       "sourceRoot": "e2e/jest",
       "projectType": "application",
-
       "targets": {
         "e2e": {
           "executor": "@nrwl/jest:jest",
@@ -1808,7 +1783,6 @@
       "root": "e2e/linter",
       "sourceRoot": "e2e/linter",
       "projectType": "application",
-
       "targets": {
         "e2e": {
           "executor": "@nrwl/jest:jest",
@@ -1825,7 +1799,6 @@
       "root": "e2e/next",
       "sourceRoot": "e2e/next",
       "projectType": "application",
-
       "targets": {
         "e2e": {
           "executor": "@nrwl/jest:jest",
@@ -1842,7 +1815,6 @@
       "root": "e2e/node",
       "sourceRoot": "e2e/node",
       "projectType": "application",
-
       "targets": {
         "e2e": {
           "executor": "@nrwl/jest:jest",
@@ -1859,7 +1831,6 @@
       "root": "e2e/react",
       "sourceRoot": "e2e/react",
       "projectType": "application",
-
       "targets": {
         "e2e": {
           "executor": "@nrwl/jest:jest",
@@ -1876,7 +1847,6 @@
       "root": "e2e/storybook",
       "sourceRoot": "e2e/storybook",
       "projectType": "application",
-
       "targets": {
         "e2e": {
           "executor": "@nrwl/jest:jest",
@@ -1893,7 +1863,6 @@
       "root": "e2e/web",
       "sourceRoot": "e2e/web",
       "projectType": "application",
-
       "targets": {
         "e2e": {
           "executor": "@nrwl/jest:jest",
@@ -1910,7 +1879,6 @@
       "root": "e2e/workspace",
       "sourceRoot": "e2e/workspace",
       "projectType": "application",
-
       "targets": {
         "e2e": {
           "executor": "@nrwl/jest:jest",
@@ -1927,7 +1895,6 @@
       "root": "e2e/nx-plugin",
       "sourceRoot": "e2e/nx-plugin",
       "projectType": "application",
-
       "targets": {
         "e2e": {
           "executor": "@nrwl/jest:jest",
@@ -1944,7 +1911,6 @@
       "root": "apps/dep-graph-client",
       "sourceRoot": "apps/dep-graph-client/src",
       "projectType": "application",
-
       "targets": {
         "build-base": {
           "executor": "@nrwl/web:build",
