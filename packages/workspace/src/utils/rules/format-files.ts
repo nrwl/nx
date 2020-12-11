@@ -65,7 +65,6 @@ export function formatFiles(
         try {
           host.overwrite(file.path, prettier.format(file.content, options));
         } catch (e) {
-          console.log(context.logger);
           context.logger.warn(
             `Could not format ${file.path} because ${e.message}`
           );
