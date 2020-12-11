@@ -45,7 +45,7 @@
     "fs-extra": "7.0.1",
     "glob": "7.1.4",
     "license-webpack-plugin": "2.1.2",
-    "rxjs": "^6.5.4",
+    "rxjs": "~6.6.0",
     "source-map-support": "0.5.16",
     "tree-kill": "1.2.2",
     "ts-loader": "5.4.5",

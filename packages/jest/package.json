@@ -40,7 +40,7 @@
     "@angular-devkit/core": "~11.0.1",
     "@angular-devkit/schematics": "~11.0.1",
     "jest-resolve": "^26.6.2",
-    "rxjs": "^6.5.4",
+    "rxjs": "~6.6.0",
     "strip-json-comments": "2.0.1",
     "tslib": "^2.0.0"
   }
