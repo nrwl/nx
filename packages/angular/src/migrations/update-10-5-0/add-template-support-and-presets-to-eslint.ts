@@ -11,6 +11,7 @@ import {
 } from '@nrwl/workspace';
 import { join } from 'path';
 import { offsetFromRoot } from '@nrwl/devkit';
+import { getFullProjectGraphFromHost } from '@nrwl/workspace/src/utils/ast-utils';
 
 /**
  * It was decided with Jason that we would do a simple replacement in this migration
@@ -39,6 +40,8 @@ function addHTMLPatternToBuilderConfig(
 }
 
 function updateProjectESLintConfigsAndBuilders(host: Tree): Rule {
+  const graph = getFullProjectGraphFromHost(host);
+
   /**
    * Make sure user is already using ESLint and is up to date with
    * previous migrations
@@ -58,6 +61,15 @@ function updateProjectESLintConfigsAndBuilders(host: Tree): Rule {
   Object.keys(workspace.projects).forEach((projectName) => {
     const project = workspace.projects[projectName];
 
+    if (
+      !graph.dependencies[projectName].some(
+        (dependency) =>
+          dependency.target.startsWith('npm:@angular/') &&
+          graph.nodes[dependency.target].type === 'npm'
+      )
+    ) {
+      return;
+    }
     Object.keys(project.architect).forEach((targetName) => {
       const target = project.architect[targetName];
       if (target.builder !== '@nrwl/linter:eslint') {
