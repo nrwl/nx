@@ -33,9 +33,6 @@
     "migrations": "./migrations.json"
   },
   "peerDependencies": {
-    "@angular-eslint/eslint-plugin": "*",
-    "@angular-eslint/eslint-plugin-template": "*",
-    "@angular-eslint/template-parser": "*",
     "@nrwl/workspace": "*"
   },
   "dependencies": {
