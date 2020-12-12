@@ -5,6 +5,7 @@ import { moveProject } from './lib/move-project';
 import { updateCypressJson } from './lib/update-cypress-json';
 import { updateImports } from './lib/update-imports';
 import { updateJestConfig } from './lib/update-jest-config';
+import { updateStorybookConfig } from './lib/update-storybook-config';
 import { updateNxJson } from './lib/update-nx-json';
 import { updateProjectRootFiles } from './lib/update-project-root-files';
 import { updateWorkspace } from './lib/update-workspace';
@@ -19,6 +20,7 @@ export default function (schema: Schema): Rule {
     updateProjectRootFiles(schema),
     updateCypressJson(schema),
     updateJestConfig(schema),
+    updateStorybookConfig(schema),
     updateNxJson(schema),
     updateImports(schema),
     updateWorkspace(schema), // Have to do this last because all previous rules need the information in here
