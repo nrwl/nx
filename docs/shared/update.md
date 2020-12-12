@@ -96,25 +96,3 @@ If an update fails for any reason, you can revert it as you do any other set of 
 git reset --hard # Reset any changes
 git clean -fd # Delete newly added files and directories
 ```
-
-## `nx migrate` and `ng upgrade`
-
-`nx migrate` is a much improved version of `ng update`. It runs same migrations, but allows you to:
-
-- rerun the same migration multiple times
-- reorder migrations
-- skip migrations
-- fix migrations that "almost work"
-- commit a partially migrated state
-- change versions of packages to match org requirements
-
-And, in general, it is lot more reliable for non-trivial workspaces. Why?
-
-`ng update` tries to perform migration in a single go, automatically. This doesn't work for most non-trivial workspaces.
-
-- `ng update` doesn't separate updating `package.json` from updating the source code of the repo. It all happens in a single go. This often fails for non-trivial workspaces or for organizations that have a custom npm registry, where you might want to use a different version of a package.
-- `ng update` relies on `peerDependencies` to figure out what needs to be updated. Many third-party plugin don't have `peerDependencies` set correctly.
-- When using `ng update` it is difficult to execute one migration at a time. Sometimes you want to patch things up after executing a migration.
-- When using `ng update` it's not possible to fix almost-working migrations. We do our best but sometimes we don't account for the specifics of a particular workspace.
-- When using `ng update` it's not possible to commit partially-migrated repo. Migration can take days for a large repo.
-- When using `ng update` it's not possible to rerun some of the migrations multiple times. This is required because you can rebase the branch multiple times while migrating.

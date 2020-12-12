@@ -985,7 +985,7 @@
           {
             "name": "Updating Nx",
             "id": "update",
-            "file": "shared/update"
+            "file": "angular/guides/update"
           }
         ]
       },
