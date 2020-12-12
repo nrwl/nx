@@ -32,9 +32,12 @@ export function initLocal(workspace: Workspace) {
     if (workspace.type === 'nx') {
       loadCli(workspace, '@nrwl/tao/index.js');
     } else {
-      if (process.argv[2] === 'update') {
+      if (
+        process.argv[2] === 'update' &&
+        process.env.FORCE_NG_UPDATE != 'true'
+      ) {
         console.log(
-          `Nx provides a much improved version of "ng update". It runs same migrations, but allows you to:`
+          `Nx provides a much improved version of "ng update". It runs the same migrations, but allows you to:`
         );
         console.log(`- rerun the same migration multiple times`);
         console.log(`- reorder migrations`);
@@ -47,6 +50,9 @@ export function initLocal(workspace: Workspace) {
         );
         console.log(
           `Run "nx migrate latest" to update to the latest version of Nx.`
+        );
+        console.log(
+          `If you still want to use "ng update", run "FORCE_NG_UPDATE=true ng update".`
         );
       } else {
         loadCli(workspace, '@angular/cli/lib/init.js');

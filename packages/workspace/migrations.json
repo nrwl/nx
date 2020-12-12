@@ -159,6 +159,16 @@
       "version": "11.0.0-beta.15",
       "description": "Adds `outputs` based on builders",
       "factory": "./src/migrations/update-11-0-0/add-outputs-in-workspace"
+    },
+    "update-command-check": {
+      "version": "11.0.0",
+      "description": "Check that the right update command is used",
+      "factory": "./src/migrations/update-11-0-0/update-command-check"
+    },
+    "rename-workspace-schematic-script": {
+      "version": "11.0.2",
+      "description": "Rename the workspace-schematic script into workspace-generator script",
+      "factory": "./src/migrations/update-11-0-0/rename-workspace-schematic-script"
     }
   },
   "packageJsonUpdates": {
