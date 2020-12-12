@@ -34,6 +34,16 @@ The Nx core team have gained a lot of experience migrating large workspaces over
 
 **Starting with Nx 11, you can migrate workspaces only using `nx migrate`**. To reiterate: `nx migrate` runs the migrations written by the Angular CLI team the same way `ng update` runs them. So everything should still work. You just get more control over how it works.
 
+If you ran `ng update` and saw the error telling you to use `nx migrate`, do the following:
+
+- `git checkout .`
+- `git clean -f .
+- `rm -rf node_modules`
+- `npm install` (or `yarn install`)
+- `nx migrate latest`
+- `npm install` (or `yarn install`)
+- `nx migrate --run-migrations=migrations.json`
+
 ## How to Migrate
 
 Migration happens in two steps:
