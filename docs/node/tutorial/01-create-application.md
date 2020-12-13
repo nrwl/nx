@@ -10,8 +10,8 @@ In this tutorial you will use Nx to build a server application out of common lib
 
 **Start by creating a new workspace.**
 
-```shell script
-yarn create nx-workspace
+```bash
+npx create-nx-workspace@latest
 ```
 
 You will then receive the following prompts in your command line:
