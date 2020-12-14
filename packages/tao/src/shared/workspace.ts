@@ -196,11 +196,9 @@ export class Workspaces {
       const executorsDir = path.dirname(executorsFilePath);
       const schemaPath = path.join(executorsDir, executorConfig.schema || '');
       const schema = JSON.parse(fs.readFileSync(schemaPath).toString());
-      const module = require(path.join(
-        executorsDir,
-        executorConfig.implementation
-      ));
-      const implementation = module.default;
+      const [modulePath, exportName] = executorConfig.implementation.split('#');
+      const module = require(path.join(executorsDir, modulePath));
+      const implementation = module[exportName || 'default'];
       return { schema, implementation };
     } catch (e) {
       throw new Error(
@@ -221,13 +219,13 @@ export class Workspaces {
         generatorsJson.schematics)[normalizedGeneratorName];
       const schemaPath = path.join(generatorsDir, generatorConfig.schema || '');
       const schema = JSON.parse(fs.readFileSync(schemaPath).toString());
-      const module = require(path.join(
-        generatorsDir,
-        generatorConfig.implementation
-          ? generatorConfig.implementation
-          : generatorConfig.factory
-      ));
-      const implementation = module.default;
+      generatorConfig.implementation =
+        generatorConfig.implementation || generatorConfig.factory;
+      const [modulePath, exportName] = generatorConfig.implementation.split(
+        '#'
+      );
+      const module = require(path.join(generatorsDir, modulePath));
+      const implementation = module[exportName || 'default'];
       return { schema, implementation };
     } catch (e) {
       throw new Error(
