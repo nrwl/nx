@@ -166,7 +166,7 @@ Next, run the schematic:
 > Use the `-d` or `--dry-run` flag to see your changes without applying them.
 
 ```sh
-nx workspace-schematic my-schematic mylib
+nx workspace-generator my-schematic mylib
 ```
 
 The following information will be displayed.
