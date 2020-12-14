@@ -139,6 +139,11 @@ export function setDefaults(options: Schema): Rule {
     workspace.extensions.schematics['@nrwl/angular:library'].unitTestRunner =
       workspace.extensions.schematics['@nrwl/angular:library'].unitTestRunner ||
       options.unitTestRunner;
+
+    workspace.extensions.schematics['@nrwl/angular:component'] = workspace
+      .extensions.schematics['@nrwl/angular:component'] || {
+      style: options.style,
+    };
   });
 
   return chain([setDefaultCollection('@nrwl/angular'), updateAngularWorkspace]);
