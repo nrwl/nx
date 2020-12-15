@@ -61,6 +61,33 @@ describe('params', () => {
         a: ['one', 'two'],
         b: 'three,four',
       });
+
+      const opts2 = coerceTypesInOptions({ a: '1,2', b: 'true,false' }, {
+        properties: {
+          a: { type: 'array', items: { type: 'number' } },
+          b: { type: 'array', items: { type: 'boolean' } },
+        },
+      } as Schema);
+
+      expect(opts2).toEqual({
+        a: [1, 2],
+        b: [true, false],
+      });
+    });
+
+    it('should handle oneOf', () => {
+      const opts = coerceTypesInOptions(
+        { a: 'false' } as any,
+        {
+          properties: {
+            a: { oneOf: [{ type: 'object' }, { type: 'boolean' }] },
+          },
+        } as Schema
+      );
+
+      expect(opts).toEqual({
+        a: false,
+      });
     });
   });
 

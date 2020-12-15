@@ -3,19 +3,21 @@ import { TargetConfiguration, WorkspaceConfiguration } from './workspace';
 import * as inquirer from 'inquirer';
 import { logger } from './logger';
 
+type PropertyDescription = {
+  type?: string;
+  properties?: any;
+  oneOf?: any;
+  items?: any;
+  alias?: string;
+  description?: string;
+  default?: string | number | boolean | string[];
+  $ref?: string;
+  $default?: { $source: 'argv'; index: number };
+  'x-prompt'?: string | { message: string; type: string; items: any[] };
+};
+
 type Properties = {
-  [p: string]: {
-    type?: string;
-    properties?: any;
-    oneOf?: any;
-    items?: any;
-    alias?: string;
-    description?: string;
-    default?: string | number | boolean | string[];
-    $ref?: string;
-    $default?: { $source: 'argv'; index: number };
-    'x-prompt'?: string | { message: string; type: string; items: any[] };
-  };
+  [p: string]: PropertyDescription;
 };
 export type Schema = {
   properties: Properties;
@@ -76,21 +78,30 @@ export function convertToCamelCase(parsed: ParsedArgs): Options {
  */
 export function coerceTypesInOptions(opts: Options, schema: Schema): Options {
   Object.keys(opts).forEach((k) => {
-    opts[k] = coerceType(
-      schema.properties[k] ? schema.properties[k].type : 'unknown',
-      opts[k]
-    );
+    opts[k] = coerceType(schema.properties[k], opts[k]);
   });
   return opts;
 }
 
-function coerceType(type: string, value: any) {
-  if (type == 'boolean') {
+function coerceType(prop: PropertyDescription | undefined, value: any) {
+  if (!prop) return value;
+  if (prop.oneOf) {
+    for (let i = 0; i < prop.oneOf.length; ++i) {
+      const coerced = coerceType(prop.oneOf[i], value);
+      if (coerced !== value) {
+        return coerced;
+      }
+    }
+    return value;
+  } else if (prop.type == 'boolean') {
     return value === true || value == 'true';
-  } else if (type == 'number') {
+  } else if (prop.type == 'number') {
     return Number(value);
-  } else if (type == 'array') {
-    return value.toString().split(',');
+  } else if (prop.type == 'array') {
+    return value
+      .toString()
+      .split(',')
+      .map((v) => coerceType(prop.items, v));
   } else {
     return value;
   }
@@ -297,7 +308,7 @@ export function convertPositionParamsIntoNamedParams(
       v.$default !== undefined &&
       argv[v.$default.index]
     ) {
-      opts[k] = coerceType(v.type, argv[v.$default.index]);
+      opts[k] = coerceType(v, argv[v.$default.index]);
     }
   });
   delete opts['_'];
