@@ -45,6 +45,7 @@ function createTasks(
         target: nxArgs.target,
         configuration: nxArgs.configuration,
         overrides: overrides,
+        errorIfCannotFindConfiguration: false,
       })
   );
   const isYarn = basename(process.env.npm_execpath || 'npm').startsWith('yarn');

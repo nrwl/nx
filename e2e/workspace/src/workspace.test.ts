@@ -44,6 +44,10 @@ describe('run-one', () => {
         `
     );
 
+    // configuration has to be valid for the initiating project
+    expect(() => runCLI(`build ${myapp} -c=invalid`)).toThrow();
+
+    // configuration doesn't have to exists for deps (here only the app has production)
     const buildWithDeps = runCLI(`build ${myapp} --with-deps --prod`);
     expect(buildWithDeps).toContain(`Running target "build" succeeded`);
     expect(buildWithDeps).toContain(`nx run ${myapp}:build:production`);
