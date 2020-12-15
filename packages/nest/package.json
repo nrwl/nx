@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@nrwl/devkit": "*",
+    "@nrwl/linter": "*",
     "@nrwl/node": "*",
     "@nrwl/jest": "*",
     "@angular-devkit/core": "~11.2.0",

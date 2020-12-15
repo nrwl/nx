@@ -14,7 +14,6 @@ import {
 } from '@angular-devkit/schematics';
 import {
   getWorkspacePath,
-  Linter,
   replaceAppNameWithPath,
   updateJsonInTree,
 } from '@nrwl/workspace';
@@ -147,28 +146,6 @@ export function updateProject(options: NormalizedSchema): Rule {
 
         delete fixedProject.architect.test;
 
-        if (options.linter === Linter.TsLint) {
-          fixedProject.architect.lint.options.tsConfig = fixedProject.architect.lint.options.tsConfig.filter(
-            (path) =>
-              path !==
-              join(normalize(options.projectRoot), 'tsconfig.spec.json')
-          );
-          fixedProject.architect.lint.options.exclude.push(
-            '!' + join(normalize(options.projectRoot), '**/*')
-          );
-        }
-
-        if (options.linter === Linter.EsLint) {
-          fixedProject.architect.lint.builder = '@nrwl/linter:eslint';
-          fixedProject.architect.lint.options.lintFilePatterns = [
-            `${options.projectRoot}/src/**/*.ts`,
-            `${options.projectRoot}/src/**/*.html`,
-          ];
-          delete fixedProject.architect.lint.options.tsConfig;
-          delete fixedProject.architect.lint.options.exclude;
-          host.delete(`${options.projectRoot}/tslint.json`);
-        }
-
         json.projects[options.name] = fixedProject;
         return json;
       });
@@ -191,17 +168,6 @@ export function updateProject(options: NormalizedSchema): Rule {
         },
       };
     }),
-    options.linter === Linter.TsLint
-      ? updateJsonInTree(`${options.projectRoot}/tslint.json`, (json) => {
-          return {
-            ...json,
-            extends: `${offsetFromRoot(options.projectRoot)}tslint.json`,
-            linterOptions: {
-              exclude: ['!**/*'],
-            },
-          };
-        })
-      : noop(),
     updateJsonInTree(`/nx.json`, (json) => {
       return {
         ...json,

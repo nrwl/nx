@@ -1,3 +1,4 @@
+import { join, normalize, Path } from '@angular-devkit/core';
 import {
   apply,
   chain,
@@ -6,30 +7,28 @@ import {
   move,
   noop,
   Rule,
+  schematic,
   SchematicContext,
   template,
   Tree,
   url,
 } from '@angular-devkit/schematics';
-import { join, normalize, Path } from '@angular-devkit/core';
-import { Schema } from './schema';
-import {
-  updateJsonInTree,
-  updateWorkspaceInTree,
-  generateProjectLint,
-  addLintFiles,
-  formatFiles,
-} from '@nrwl/workspace';
-import { getProjectConfig } from '@nrwl/workspace';
-import init from '../init/init';
-import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
-import {
-  toJS,
-  updateTsConfigsToJs,
-  maybeJs,
-} from '@nrwl/workspace/src/utils/rules/to-js';
 import { names, offsetFromRoot } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import {
+  formatFiles,
+  getProjectConfig,
+  updateJsonInTree,
+  updateWorkspaceInTree,
+} from '@nrwl/workspace';
+import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
+import {
+  maybeJs,
+  toJS,
+  updateTsConfigsToJs,
+} from '@nrwl/workspace/src/utils/rules/to-js';
+import init from '../init/init';
+import { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;
@@ -101,12 +100,6 @@ function updateWorkspaceJson(options: NormalizedSchema): Rule {
 
     project.architect.build = getBuildConfig(project, options);
     project.architect.serve = getServeConfig(options);
-    project.architect.lint = generateProjectLint(
-      normalize(project.root),
-      join(normalize(project.root), 'tsconfig.app.json'),
-      options.linter,
-      [`${options.appProjectRoot}/**/*.${options.js ? 'js' : 'ts'}`]
-    );
 
     workspaceJson.projects[options.name] = project;
 
@@ -203,7 +196,6 @@ export default function (schema: Schema): Rule {
         ...options,
         skipFormat: true,
       }),
-      addLintFiles(options.appProjectRoot, options.linter),
       addAppFiles(options),
       options.js
         ? updateTsConfigsToJs({ projectRoot: options.appProjectRoot })
@@ -212,6 +204,14 @@ export default function (schema: Schema): Rule {
       updateNxJson(options),
       addJest(options),
       options.frontendProject ? addProxy(options) : noop(),
+
+      schematic('add-linting-to-application', {
+        linter: options.linter,
+        projectName: options.name,
+        projectRoot: options.appProjectRoot,
+        js: options.js,
+      }),
+
       formatFiles(options),
     ])(host, context);
   };

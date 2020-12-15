@@ -1,4 +1,19 @@
+import type { TargetDefinition } from '@angular-devkit/core/src/workspace';
 import { angularEslintVersion } from './versions';
+
+export function createAngularProjectESLintLintTarget(
+  projectRoot: string
+): TargetDefinition {
+  return {
+    builder: '@nrwl/linter:eslint',
+    options: {
+      lintFilePatterns: [
+        `${projectRoot}/src/**/*.ts`,
+        `${projectRoot}/src/**/*.html`,
+      ],
+    },
+  };
+}
 
 export const extraEslintDependencies = {
   dependencies: {},

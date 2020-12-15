@@ -21,6 +21,12 @@
       "schema": "./src/schematics/library/schema.json",
       "aliases": ["lib"],
       "description": "Create a library"
+    },
+    "add-linting-to-application": {
+      "factory": "./src/schematics/add-linting-to-application/add-linting-to-application",
+      "schema": "./src/schematics/add-linting-to-application/schema.json",
+      "description": "Add linting configuration to a node project",
+      "hidden": true
     }
   }
 }

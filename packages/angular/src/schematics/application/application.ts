@@ -24,9 +24,8 @@ import {
   replaceNodeValue,
   updateJsonInTree,
   updateWorkspace,
-  addLintFiles,
-  Linter,
   generateProjectLint,
+  Linter,
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import init from '../init/init';
@@ -41,10 +40,6 @@ import {
   updateWorkspaceInTree,
   appsDir,
 } from '@nrwl/workspace/src/utils/ast-utils';
-import {
-  createAngularEslintJson,
-  extraEslintDependencies,
-} from '../../utils/lint';
 import { names, offsetFromRoot } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
@@ -417,45 +412,6 @@ function updateComponentSpec(options: NormalizedSchema) {
   };
 }
 
-function updateTsLintConfig(options: NormalizedSchema): Rule {
-  return chain([
-    updateJsonInTree('tslint.json', (json) => {
-      if (
-        json.rulesDirectory &&
-        json.rulesDirectory.indexOf('node_modules/codelyzer') === -1
-      ) {
-        json.rulesDirectory.push('node_modules/codelyzer');
-        json.rules = {
-          ...json.rules,
-
-          'directive-selector': [true, 'attribute', 'app', 'camelCase'],
-          'component-selector': [true, 'element', 'app', 'kebab-case'],
-          'no-conflicting-lifecycle': true,
-          'no-host-metadata-property': true,
-          'no-input-rename': true,
-          'no-inputs-metadata-property': true,
-          'no-output-native': true,
-          'no-output-on-prefix': true,
-          'no-output-rename': true,
-          'no-outputs-metadata-property': true,
-          'template-banana-in-box': true,
-          'template-no-negated-async': true,
-          'use-lifecycle-interface': true,
-          'use-pipe-transform-interface': true,
-        };
-      }
-      return json;
-    }),
-    updateJsonInTree(`${options.appProjectRoot}/tslint.json`, (json) => {
-      json.extends = `${offsetFromRoot(options.appProjectRoot)}tslint.json`;
-      json.linterOptions = {
-        exclude: ['!**/*'],
-      };
-      return json;
-    }),
-  ]);
-}
-
 function addSchematicFiles(
   appProjectRoot: string,
   options: NormalizedSchema
@@ -487,30 +443,6 @@ function updateProject(options: NormalizedSchema): Rule {
         delete fixedProject.schematics;
 
         delete fixedProject.architect.test;
-
-        if (options.linter === Linter.TsLint) {
-          fixedProject.architect.lint.options.tsConfig = fixedProject.architect.lint.options.tsConfig.filter(
-            (path) =>
-              path !==
-                join(normalize(options.appProjectRoot), 'tsconfig.spec.json') &&
-              path !==
-                join(normalize(options.appProjectRoot), 'e2e/tsconfig.json')
-          );
-          fixedProject.architect.lint.options.exclude.push(
-            '!' + join(normalize(options.appProjectRoot), '**/*')
-          );
-        }
-
-        if (options.linter === Linter.EsLint) {
-          fixedProject.architect.lint.builder = '@nrwl/linter:eslint';
-          fixedProject.architect.lint.options.lintFilePatterns = [
-            `${options.appProjectRoot}/src/**/*.ts`,
-            `${options.appProjectRoot}/src/**/*.html`,
-          ];
-          delete fixedProject.architect.lint.options.tsConfig;
-          delete fixedProject.architect.lint.options.exclude;
-          host.delete(`${options.appProjectRoot}/tslint.json`);
-        }
 
         if (options.unitTestRunner === 'none') {
           host.delete(
@@ -817,18 +749,7 @@ export default function (schema: Schema): Rule {
       updateComponentStyles(options),
       options.unitTestRunner !== 'none' ? updateComponentSpec(options) : noop(),
       options.routing ? addRouterRootConfiguration(options) : noop(),
-      addLintFiles(options.appProjectRoot, options.linter, {
-        onlyGlobal: options.linter === Linter.TsLint, // local lint files are added differently when tslint
-        localConfig:
-          options.linter === Linter.TsLint
-            ? undefined
-            : createAngularEslintJson(options.appProjectRoot, options.prefix),
-        extraPackageDeps:
-          options.linter === Linter.TsLint
-            ? undefined
-            : extraEslintDependencies,
-      }),
-      options.linter === 'tslint' ? updateTsLintConfig(options) : noop(),
+      addLinting(options),
       options.unitTestRunner === 'jest'
         ? externalSchematic('@nrwl/jest', 'jest-project', {
             project: options.name,
@@ -859,6 +780,31 @@ export default function (schema: Schema): Rule {
     ])(host, context);
   };
 }
+
+const addLinting = (options: NormalizedSchema) => () => {
+  return chain([
+    schematic('add-linting', {
+      linter: options.linter,
+      projectType: 'application',
+      projectName: options.name,
+      projectRoot: options.appProjectRoot,
+      prefix: options.prefix,
+    }),
+    /**
+     * I cannot explain why this extra rule is needed, the add-linting
+     * schematic applies the exact same host.delete() call but the main
+     * chain of this schematic still preserves it...
+     */
+    (host) => {
+      if (
+        options.linter === Linter.EsLint &&
+        host.exists(`${options.appProjectRoot}/tslint.json`)
+      ) {
+        host.delete(`${options.appProjectRoot}/tslint.json`);
+      }
+    },
+  ]);
+};
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const appDirectory = options.directory

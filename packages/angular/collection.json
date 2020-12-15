@@ -95,6 +95,26 @@
       "schema": "./src/schematics/move/schema.json",
       "aliases": ["mv"],
       "description": "Move an Angular application or library to another folder"
+    },
+
+    "add-linting": {
+      "factory": "./src/schematics/add-linting/add-linting",
+      "schema": "./src/schematics/add-linting/schema.json",
+      "description": "Add linting configuration to an Angular project",
+      "hidden": true
+    },
+
+    "convert-tslint-to-eslint": {
+      "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionSchematic",
+      "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
+      "description": "Convert a project from TSLint to ESLint"
+    }
+  },
+  "generators": {
+    "convert-tslint-to-eslint": {
+      "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionGenerator",
+      "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
+      "description": "Convert a project from TSLint to ESLint"
     }
   }
 }
