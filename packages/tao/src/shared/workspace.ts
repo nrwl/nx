@@ -226,7 +226,7 @@ export class Workspaces {
       );
       const module = require(path.join(generatorsDir, modulePath));
       const implementation = module[exportName || 'default'];
-      return { schema, implementation };
+      return { normalizedGeneratorName, schema, implementation };
     } catch (e) {
       throw new Error(
         `Unable to resolve ${collectionName}:${generatorName}.\n${e.message}`

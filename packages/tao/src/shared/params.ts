@@ -373,16 +373,21 @@ function getGeneratorDefaults(
   generatorName: string
 ) {
   if (!ws.generators) return {};
+
+  let defaults = {};
   if (
     ws.generators[collectionName] &&
     ws.generators[collectionName][generatorName]
   ) {
-    return ws.generators[collectionName][generatorName];
-  } else if (ws.generators[`${collectionName}:${generatorName}`]) {
-    return ws.generators[`${collectionName}:${generatorName}`];
-  } else {
-    return {};
+    defaults = { ...defaults, ...ws.generators[collectionName][generatorName] };
   }
+  if (ws.generators[`${collectionName}:${generatorName}`]) {
+    defaults = {
+      ...defaults,
+      ...ws.generators[`${collectionName}:${generatorName}`],
+    };
+  }
+  return defaults;
 }
 
 async function promptForValues(opts: Options, schema: Schema) {

@@ -162,15 +162,16 @@ export async function taoNew(root: string, args: string[], isVerbose = false) {
   return handleErrors(isVerbose, async () => {
     const opts = parseGenerateOpts(args, 'new', null);
 
-    const { schema, implementation } = ws.readGenerator(
-      opts.collectionName,
-      opts.generatorName
-    );
+    const {
+      normalizedGeneratorName,
+      schema,
+      implementation,
+    } = ws.readGenerator(opts.collectionName, opts.generatorName);
 
     const combinedOpts = await combineOptionsForGenerator(
       opts.generatorOptions,
       opts.collectionName,
-      opts.generatorName,
+      normalizedGeneratorName,
       null,
       schema,
       opts.interactive
@@ -201,10 +202,11 @@ export async function generate(
       readDefaultCollection(workspaceDefinition)
     );
 
-    const { schema, implementation } = ws.readGenerator(
-      opts.collectionName,
-      opts.generatorName
-    );
+    const {
+      normalizedGeneratorName,
+      schema,
+      implementation,
+    } = ws.readGenerator(opts.collectionName, opts.generatorName);
 
     if (opts.help) {
       printGenHelp(opts, schema);
@@ -213,13 +215,13 @@ export async function generate(
     const combinedOpts = await combineOptionsForGenerator(
       opts.generatorOptions,
       opts.collectionName,
-      opts.generatorName,
+      normalizedGeneratorName,
       workspaceDefinition,
       schema,
       opts.interactive
     );
 
-    if (ws.isNxGenerator(opts.collectionName, opts.generatorName)) {
+    if (ws.isNxGenerator(opts.collectionName, normalizedGeneratorName)) {
       const host = new FsTree(root, isVerbose);
       const task = await implementation(host, combinedOpts);
       const changes = host.listChanges();
