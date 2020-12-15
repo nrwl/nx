@@ -417,6 +417,11 @@
                     "file": "angular/api-angular/generators/application"
                   },
                   {
+                    "name": "convert-tslint-to-eslint",
+                    "id": "convert-tslint-to-eslint",
+                    "file": "angular/api-linter/generators/convert-tslint-to-eslint"
+                  },
+                  {
                     "name": "downgrade-module",
                     "id": "downgrade-module",
                     "file": "angular/api-angular/generators/downgrade-module"
@@ -638,6 +643,17 @@
             "name": "linter",
             "id": "linter",
             "itemList": [
+              {
+                "id": "generators",
+                "name": "Generators",
+                "itemList": [
+                  {
+                    "name": "convert-tslint-to-eslint",
+                    "id": "convert-tslint-to-eslint",
+                    "file": "angular/api-linter/generators/convert-tslint-to-eslint"
+                  }
+                ]
+              },
               {
                 "id": "executors",
                 "name": "Executors / Builders",
@@ -1529,6 +1545,11 @@
                     "name": "application",
                     "id": "application",
                     "file": "react/api-angular/generators/application"
+                  },
+                  {
+                    "name": "convert-tslint-to-eslint",
+                    "id": "convert-tslint-to-eslint",
+                    "file": "react/api-linter/generators/convert-tslint-to-eslint"
                   },
                   {
                     "name": "downgrade-module",
@@ -2591,6 +2612,11 @@
                     "name": "application",
                     "id": "application",
                     "file": "node/api-angular/generators/application"
+                  },
+                  {
+                    "name": "convert-tslint-to-eslint",
+                    "id": "convert-tslint-to-eslint",
+                    "file": "node/api-linter/generators/convert-tslint-to-eslint"
                   },
                   {
                     "name": "downgrade-module",

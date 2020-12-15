@@ -3,6 +3,7 @@
   "cypress",
   "express",
   "jest",
+  "linter",
   "nest",
   "next",
   "node",

@@ -12,6 +12,7 @@ import {
   Tree,
   url,
 } from '@angular-devkit/schematics';
+import { createAngularProjectESLintLintTarget } from '../../../utils/lint';
 import {
   getWorkspacePath,
   Linter,
@@ -159,13 +160,9 @@ export function updateProject(options: NormalizedSchema): Rule {
         }
 
         if (options.linter === Linter.EsLint) {
-          fixedProject.architect.lint.builder = '@nrwl/linter:eslint';
-          fixedProject.architect.lint.options.lintFilePatterns = [
-            `${options.projectRoot}/src/**/*.ts`,
-            `${options.projectRoot}/src/**/*.html`,
-          ];
-          delete fixedProject.architect.lint.options.tsConfig;
-          delete fixedProject.architect.lint.options.exclude;
+          fixedProject.architect.lint = createAngularProjectESLintLintTarget(
+            options.projectRoot
+          );
           host.delete(`${options.projectRoot}/tslint.json`);
         }
 

@@ -42,6 +42,7 @@
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
     "@schematics/angular": "~11.0.1",
-    "jasmine-marbles": "~0.6.0"
+    "jasmine-marbles": "~0.6.0",
+    "tslint-to-eslint-config": "2.0.1"
   }
 }

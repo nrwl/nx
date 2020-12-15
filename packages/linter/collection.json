@@ -1,0 +1,12 @@
+{
+  "name": "Nx Linter",
+  "version": "0.1",
+  "schematics": {
+    "convert-tslint-to-eslint": {
+      "factory": "./src/schematics/convert-tslint-to-eslint/convert",
+      "schema": "./src/schematics/convert-tslint-to-eslint/schema.json",
+      "description": "Convert the given project's TSLint setup to an equivalent ESLint one",
+      "hidden": false
+    }
+  }
+}

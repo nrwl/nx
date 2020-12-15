@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "convert-tslint-to-eslint",
+  "title": "Convert an Nx Angular project from TSLint to ESLint",
+  "description": "NOTE: Does not work in the --dry-run mode",
+  "examples": [
+    {
+      "command": "g convert-tslint-to-eslint myapp",
+      "description": "Convert the Nx Angular project `myapp` from TSLint to ESLint"
+    }
+  ],
+  "type": "object",
+  "properties": {
+    "project": {
+      "description": "The name of the project to convert.",
+      "type": "string",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "Which project would you like to convert from TSLint to ESLint?"
+    },
+    "removeTSLintIfNoMoreTSLintTargets": {
+      "type": "boolean",
+      "description": "If this conversion leaves no more TSLint usage in the workspace, it will remove TSLint and related dependencies and configuration",
+      "default": true,
+      "x-prompt": "Would you like to remove TSLint and its related config if there are no TSLint targets remaining after this conversion?"
+    }
+  },
+  "required": ["project"]
+}

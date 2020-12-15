@@ -47,6 +47,7 @@ import {
 } from '../../utils/lint';
 import { names, offsetFromRoot } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import { createAngularProjectESLintLintTarget } from '../../utils/lint';
 
 interface NormalizedSchema extends Schema {
   prefix: string; // we set a default for this in normalizeOptions, so it is no longer optional
@@ -502,13 +503,9 @@ function updateProject(options: NormalizedSchema): Rule {
         }
 
         if (options.linter === Linter.EsLint) {
-          fixedProject.architect.lint.builder = '@nrwl/linter:eslint';
-          fixedProject.architect.lint.options.lintFilePatterns = [
-            `${options.appProjectRoot}/src/**/*.ts`,
-            `${options.appProjectRoot}/src/**/*.html`,
-          ];
-          delete fixedProject.architect.lint.options.tsConfig;
-          delete fixedProject.architect.lint.options.exclude;
+          fixedProject.architect.lint = createAngularProjectESLintLintTarget(
+            options.appProjectRoot
+          );
           host.delete(`${options.appProjectRoot}/tslint.json`);
         }
 

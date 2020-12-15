@@ -1,0 +1,494 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`convert-tslint-to-eslint should create a .eslintrc.json and delete the tslint.json for the given project 1`] = `
+Array [
+  "/workspace.json",
+  "/package.json",
+  "/nx.json",
+  "/tsconfig.base.json",
+  "/tslint.json",
+  "/apps/app2-e2e/protractor.conf.js",
+  "/apps/app1/tslint.json",
+  "/apps/app1-e2e/tslint.json",
+  "/apps/app2/tslint.json",
+  "/libs/lib1/karma.conf.js",
+  "/libs/lib1/tslint.json",
+  "/libs/lib1/foo.ts",
+  "/libs/lib1/bar.ts",
+]
+`;
+
+exports[`convert-tslint-to-eslint should create a .eslintrc.json and delete the tslint.json for the given project 2`] = `
+Object {
+  "extends": "../../.eslintrc.json",
+  "ignorePatterns": Array [
+    "!**/*",
+  ],
+  "overrides": Array [
+    Object {
+      "extends": Array [
+        "plugin:@nrwl/nx/angular",
+        "plugin:@angular-eslint/template/process-inline-templates",
+      ],
+      "files": Array [
+        "*.ts",
+      ],
+      "parserOptions": Object {
+        "project": Array [
+          "apps/app1/tsconfig.*?.json",
+        ],
+      },
+      "rules": Object {
+        "@angular-eslint/component-selector": Array [
+          "error",
+          Object {
+            "prefix": "foo",
+            "style": "kebab-case",
+            "type": "element",
+          },
+        ],
+        "@angular-eslint/directive-selector": Array [
+          "error",
+          Object {
+            "prefix": "foo",
+            "style": "camelCase",
+            "type": "attribute",
+          },
+        ],
+      },
+    },
+    Object {
+      "extends": Array [
+        "plugin:@nrwl/nx/angular-template",
+      ],
+      "files": Array [
+        "*.html",
+      ],
+      "rules": Object {},
+    },
+  ],
+}
+`;
+
+exports[`convert-tslint-to-eslint should create a .eslintrc.json and delete the tslint.json for the given project 3`] = `
+Object {
+  "ignorePatterns": Array [
+    "**/*",
+  ],
+  "overrides": Array [
+    Object {
+      "files": Array [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx",
+      ],
+      "rules": Object {
+        "@nrwl/nx/enforce-module-boundaries": Array [
+          "error",
+          Object {
+            "allow": Array [
+              "@nx-example/shared/product/data/testing",
+            ],
+            "depConstraints": Array [
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "type:feature",
+                  "type:ui",
+                ],
+                "sourceTag": "type:app",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "type:ui",
+                  "type:data",
+                  "type:types",
+                  "type:state",
+                ],
+                "sourceTag": "type:feature",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "type:types",
+                ],
+                "sourceTag": "type:types",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "type:state",
+                  "type:types",
+                  "type:data",
+                ],
+                "sourceTag": "type:state",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "type:types",
+                ],
+                "sourceTag": "type:data",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "type:e2e-utils",
+                ],
+                "sourceTag": "type:e2e",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "type:types",
+                  "type:ui",
+                ],
+                "sourceTag": "type:ui",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "scope:products",
+                  "scope:shared",
+                ],
+                "sourceTag": "scope:products",
+              },
+              Object {
+                "onlyDependOnLibsWithTags": Array [
+                  "scope:cart",
+                  "scope:shared",
+                ],
+                "sourceTag": "scope:cart",
+              },
+            ],
+            "enforceBuildableLibDependency": true,
+          },
+        ],
+      },
+    },
+    Object {
+      "extends": Array [
+        "plugin:@nrwl/nx/typescript",
+      ],
+      "files": Array [
+        "*.ts",
+        "*.tsx",
+      ],
+      "parserOptions": Object {
+        "project": "./tsconfig.*?.json",
+      },
+      "rules": Object {},
+    },
+    Object {
+      "extends": Array [
+        "plugin:@nrwl/nx/javascript",
+      ],
+      "files": Array [
+        "*.js",
+        "*.jsx",
+      ],
+      "rules": Object {},
+    },
+  ],
+  "plugins": Array [
+    "@nrwl/nx",
+  ],
+  "root": true,
+}
+`;
+
+exports[`convert-tslint-to-eslint should create a .eslintrc.json and delete the tslint.json for the given project 4`] = `
+Object {
+  "extends": Array [
+    "plugin:cypress/recommended",
+    "../../.eslintrc.json",
+  ],
+  "ignorePatterns": Array [
+    "!**/*",
+  ],
+  "overrides": Array [
+    Object {
+      "files": Array [
+        "src/plugins/index.js",
+      ],
+      "rules": Object {
+        "@typescript-eslint/no-var-requires": "off",
+        "no-undef": "off",
+      },
+    },
+    Object {
+      "files": Array [
+        "*.ts",
+      ],
+      "parserOptions": Object {
+        "project": Array [
+          "apps/app1-e2e/tsconfig.*?.json",
+        ],
+      },
+      "rules": Object {
+        "@typescript-eslint/no-namespace": "off",
+        "@typescript-eslint/no-unused-vars": "off",
+      },
+    },
+  ],
+}
+`;
+
+exports[`convert-tslint-to-eslint should create a .eslintrc.json and delete the tslint.json for the given project 5`] = `
+Object {
+  "extends": "../../.eslintrc.json",
+  "ignorePatterns": Array [
+    "!**/*",
+  ],
+  "overrides": Array [
+    Object {
+      "extends": Array [
+        "plugin:@nrwl/nx/angular",
+        "plugin:@angular-eslint/template/process-inline-templates",
+      ],
+      "files": Array [
+        "*.ts",
+      ],
+      "parserOptions": Object {
+        "project": Array [
+          "libs/lib1/tsconfig.*?.json",
+        ],
+      },
+      "rules": Object {
+        "@angular-eslint/component-selector": Array [
+          "error",
+          Object {
+            "prefix": "foo",
+            "style": "kebab-case",
+            "type": "element",
+          },
+        ],
+        "@angular-eslint/directive-selector": Array [
+          "error",
+          Object {
+            "prefix": "foo",
+            "style": "camelCase",
+            "type": "attribute",
+          },
+        ],
+      },
+    },
+    Object {
+      "extends": Array [
+        "plugin:@nrwl/nx/angular-template",
+      ],
+      "files": Array [
+        "*.html",
+      ],
+      "rules": Object {},
+    },
+  ],
+}
+`;
+
+exports[`convert-tslint-to-eslint should create a .eslintrc.json and delete the tslint.json for the given project 6`] = `
+Object {
+  "extends": "../../.eslintrc.json",
+  "ignorePatterns": Array [
+    "!**/*",
+  ],
+  "overrides": Array [
+    Object {
+      "files": Array [
+        "*.ts",
+      ],
+      "parserOptions": Object {
+        "project": Array [
+          "apps/app2/tsconfig.*?.json",
+        ],
+      },
+      "rules": Object {},
+    },
+  ],
+}
+`;
+
+exports[`convert-tslint-to-eslint should create a .eslintrc.json and delete the tslint.json for the given project 7`] = `
+Array [
+  "/workspace.json",
+  "/package.json",
+  "/nx.json",
+  "/tsconfig.base.json",
+  "/tslint.json",
+  "/.eslintrc.json",
+  "/apps/app2-e2e/protractor.conf.js",
+  "/apps/app1/.eslintrc.json",
+  "/apps/app1-e2e/.eslintrc.json",
+  "/apps/app2/.eslintrc.json",
+  "/libs/lib1/karma.conf.js",
+  "/libs/lib1/foo.ts",
+  "/libs/lib1/bar.ts",
+  "/libs/lib1/.eslintrc.json",
+]
+`;
+
+exports[`convert-tslint-to-eslint should update the lint target for the given project in the angular.json 1`] = `
+Object {
+  "architect": Object {
+    "lint": Object {
+      "builder": "@nrwl/linter:eslint",
+      "options": Object {
+        "lintFilePatterns": Array [
+          "apps/app1/src/**/*.ts",
+          "apps/app1/src/**/*.html",
+        ],
+      },
+    },
+    "serve": Object {
+      "builder": "@angular-devkit/build-angular:dev-server",
+      "configurations": Object {
+        "production": Object {
+          "browserTarget": "app1:build:production",
+        },
+      },
+      "options": Object {
+        "browserTarget": "app1:build",
+      },
+    },
+  },
+  "projectType": "application",
+  "root": "apps/app1",
+  "sourceRoot": "apps/app1/src",
+}
+`;
+
+exports[`convert-tslint-to-eslint should update the lint target for the given project in the angular.json 2`] = `
+Object {
+  "architect": Object {
+    "e2e": Object {
+      "builder": "@nrwl/cypress:cypress",
+      "configurations": Object {
+        "production": Object {
+          "devServerTarget": "app1:serve:production",
+        },
+      },
+      "options": Object {
+        "cypressConfig": "apps/app1-e2e/cypress.json",
+        "devServerTarget": "app1:serve",
+        "tsConfig": "apps/app1-e2e/tsconfig.e2e.json",
+      },
+    },
+    "lint": Object {
+      "builder": "@nrwl/linter:eslint",
+      "options": Object {
+        "lintFilePatterns": Array [
+          "apps/app1-e2e/**/*.ts",
+        ],
+      },
+    },
+  },
+  "projectType": "application",
+  "root": "apps/app1-e2e",
+  "sourceRoot": "apps/app1-e2e/src",
+}
+`;
+
+exports[`convert-tslint-to-eslint should update the lint target for the given project in the angular.json 3`] = `
+Object {
+  "architect": Object {
+    "lint": Object {
+      "builder": "@nrwl/linter:eslint",
+      "options": Object {
+        "lintFilePatterns": Array [
+          "libs/lib1/src/**/*.ts",
+          "libs/lib1/src/**/*.html",
+        ],
+      },
+    },
+  },
+  "projectType": "library",
+  "root": "libs/lib1",
+  "sourceRoot": "libs/lib1/src",
+}
+`;
+
+exports[`convert-tslint-to-eslint should update the lint target for the given project in the angular.json 4`] = `
+Object {
+  "architect": Object {
+    "build": Object {
+      "builder": "@nrwl/node:build",
+      "configurations": Object {
+        "production": Object {
+          "extractLicenses": true,
+          "fileReplacements": Array [
+            Object {
+              "replace": "apps/app2/src/environments/environment.ts",
+              "with": "apps/app2/src/environments/environment.prod.ts",
+            },
+          ],
+          "inspect": false,
+          "optimization": true,
+        },
+      },
+      "options": Object {
+        "assets": Array [
+          "apps/app2/src/assets",
+        ],
+        "main": "apps/app2/src/main.ts",
+        "outputPath": "dist/apps/app2",
+        "tsConfig": "apps/app2/tsconfig.app.json",
+      },
+      "outputs": Array [
+        "{options.outputPath}",
+      ],
+    },
+    "lint": Object {
+      "builder": "@nrwl/linter:eslint",
+      "options": Object {
+        "lintFilePatterns": Array [
+          "apps/app2/**/*.ts",
+        ],
+      },
+    },
+    "serve": Object {
+      "builder": "@nrwl/node:execute",
+      "options": Object {
+        "buildTarget": "app2:build",
+      },
+    },
+    "test": Object {
+      "builder": "@nrwl/jest:jest",
+      "options": Object {
+        "jestConfig": "apps/app2/jest.config.js",
+        "passWithNoTests": true,
+      },
+      "outputs": Array [
+        "coverage/apps/app2",
+      ],
+    },
+  },
+  "prefix": "app2",
+  "projectType": "application",
+  "root": "apps/app2",
+  "sourceRoot": "apps/app2/src",
+}
+`;
+
+exports[`convert-tslint-to-eslint should update the lint target for the given project in the angular.json 5`] = `
+Object {
+  "architect": Object {
+    "e2e": Object {
+      "builder": "@angular-devkit/build-angular:protractor",
+      "configurations": Object {
+        "production": Object {
+          "devServerTarget": "app2:serve:production",
+        },
+      },
+      "options": Object {
+        "devServerTarget": "app2:serve",
+        "protractorConfig": "apps/app2-e2e/protractor.conf.js",
+      },
+    },
+    "lint": Object {
+      "builder": "@nrwl/linter:eslint",
+      "options": Object {
+        "lintFilePatterns": Array [
+          "apps/app2-e2e/**/*.ts",
+        ],
+      },
+    },
+  },
+  "projectType": "application",
+  "root": "apps/app2-e2e",
+  "sourceRoot": "apps/app2-e2e/src",
+}
+`;

@@ -1,0 +1,47 @@
+# convert-tslint-to-eslint
+
+Convert the given project's TSLint setup to an equivalent ESLint one
+
+## Usage
+
+```bash
+nx generate convert-tslint-to-eslint ...
+```
+
+By default, Nx will search for `convert-tslint-to-eslint` in the default collection provisioned in `angular.json`.
+
+You can specify the collection explicitly as follows:
+
+```bash
+nx g @nrwl/linter:convert-tslint-to-eslint ...
+```
+
+Show what will be generated without writing to disk:
+
+```bash
+nx g convert-tslint-to-eslint ... --dry-run
+```
+
+### Examples
+
+Convert the Nx Angular project `myapp` from TSLint to ESLint:
+
+```bash
+nx g convert-tslint-to-eslint myapp
+```
+
+## Options
+
+### project
+
+Type: `string`
+
+The name of the project to convert.
+
+### removeTSLintIfNoMoreTSLintTargets
+
+Default: `true`
+
+Type: `boolean`
+
+If this conversion leaves no more TSLint usage in the workspace, it will remove TSLint and related dependencies and configuration
