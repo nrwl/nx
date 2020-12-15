@@ -26,9 +26,9 @@ describe('Cypress builder', () => {
   let fork: jasmine.Spy;
   let cypressConfig: any;
   let mockedBuilderContext: MockBuilderContext;
-  let mockedInstalledCypressVersion: jest.Mock<ReturnType<
-    typeof installedCypressVersion
-  >> = installedCypressVersion as any;
+  let mockedInstalledCypressVersion: jest.Mock<
+    ReturnType<typeof installedCypressVersion>
+  > = installedCypressVersion as any;
   const cypressBuilderOptions: CypressBuilderOptions = {
     cypressConfig: 'apps/my-app-e2e/cypress.json',
     parallel: false,
