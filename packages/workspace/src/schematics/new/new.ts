@@ -292,14 +292,15 @@ function setDefaultLinter({ linter, preset }: Schema): Rule {
  */
 function setESLintDefault() {
   return updateWorkspaceInTree((json) => {
-    if (!json.schematics) {
-      json.schematics = {};
-    }
-    json.schematics['@nrwl/angular'] = {
-      application: { linter: 'eslint' },
-      library: { linter: 'eslint' },
-      'storybook-configuration': { linter: 'eslint' },
-    };
+    setDefault(json, '@nrwl/angular', 'application', 'linter', 'eslint');
+    setDefault(json, '@nrwl/angular', 'library', 'linter', 'eslint');
+    setDefault(
+      json,
+      '@nrwl/angular',
+      'storybook-configuration',
+      'linter',
+      'eslint'
+    );
     return json;
   });
 }
@@ -309,25 +310,16 @@ function setESLintDefault() {
  */
 function setTSLintDefault() {
   return updateWorkspaceInTree((json) => {
-    if (!json.schematics) {
-      json.schematics = {};
-    }
-    json.schematics['@nrwl/workspace'] = { library: { linter: 'tslint' } };
-    json.schematics['@nrwl/cypress'] = {
-      'cypress-project': { linter: 'tslint' },
-    };
-    json.schematics['@nrwl/node'] = {
-      application: { linter: 'tslint' },
-      library: { linter: 'tslint' },
-    };
-    json.schematics['@nrwl/nest'] = {
-      application: { linter: 'tslint' },
-      library: { linter: 'tslint' },
-    };
-    json.schematics['@nrwl/express'] = {
-      application: { linter: 'tslint' },
-      library: { linter: 'tslint' },
-    };
+    setDefault(json, '@nrwl/workspace', 'library', 'linter', 'tslint');
+    setDefault(json, '@nrwl/cypress', 'cypress-project', 'linter', 'tslint');
+    setDefault(json, '@nrwl/cypress', 'cypress-project', 'linter', 'tslint');
+    setDefault(json, '@nrwl/node', 'application', 'linter', 'tslint');
+    setDefault(json, '@nrwl/node', 'library', 'linter', 'tslint');
+    setDefault(json, '@nrwl/nest', 'application', 'linter', 'tslint');
+    setDefault(json, '@nrwl/nest', 'library', 'linter', 'tslint');
+    setDefault(json, '@nrwl/express', 'application', 'linter', 'tslint');
+    setDefault(json, '@nrwl/express', 'library', 'linter', 'tslint');
+
     return json;
   });
 }
@@ -344,4 +336,25 @@ function setDefaultPackageManager({ packageManager }: Schema) {
     json.cli['packageManager'] = packageManager;
     return json;
   });
+}
+
+function setDefault(
+  json: any,
+  collectionName: string,
+  generatorName: string,
+  key: string,
+  value: any
+) {
+  if (!json.schematics) json.schematics = {};
+  if (
+    json.schematics[collectionName] &&
+    json.schematics[collectionName][generatorName]
+  ) {
+    json.schematics[collectionName][generatorName][key] = value;
+  } else if (json.schematics[`${collectionName}:${generatorName}`]) {
+    json.schematics[`${collectionName}:${generatorName}`][key] = value;
+  } else {
+    json.schematics[collectionName] = json.schematics[collectionName] || {};
+    json.schematics[collectionName][generatorName] = { [key]: value };
+  }
 }

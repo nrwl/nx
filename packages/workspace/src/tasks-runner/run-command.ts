@@ -112,7 +112,7 @@ export function createTask({
     ? configuration
     : undefined;
 
-  if (errorIfCannotFindConfiguration) {
+  if (errorIfCannotFindConfiguration && configuration && !config) {
     output.error({
       title: `Cannot find configuration '${configuration}' for project '${project.name}'`,
     });
