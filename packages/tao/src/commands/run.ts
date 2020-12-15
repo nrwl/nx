@@ -38,6 +38,9 @@ function parseRunOpts(
     minimist(args, {
       boolean: ['help', 'prod'],
       string: ['configuration', 'project'],
+      alias: {
+        c: 'configuration',
+      },
     })
   );
   const help = runOptions.help as boolean;
@@ -73,6 +76,7 @@ function parseRunOpts(
   const res = { project, target, configuration, help, runOptions };
   delete runOptions['help'];
   delete runOptions['_'];
+  delete runOptions['c'];
   delete runOptions['configuration'];
   delete runOptions['prod'];
   delete runOptions['project'];
