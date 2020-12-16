@@ -175,7 +175,7 @@ export class Workspaces {
 
   private readExecutorsJson(nodeModule: string, executor: string) {
     const packageJsonPath = require.resolve(`${nodeModule}/package.json`, {
-      paths: [this.root],
+      paths: [this.root, __dirname],
     });
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath).toString());
     const executorsFile = packageJson.executors
@@ -203,13 +203,13 @@ export class Workspaces {
     let generatorsFilePath;
     if (collectionName.endsWith('.json')) {
       generatorsFilePath = require.resolve(collectionName, {
-        paths: [this.root],
+        paths: [this.root, __dirname],
       });
     } else {
       const packageJsonPath = require.resolve(
         `${collectionName}/package.json`,
         {
-          paths: [this.root],
+          paths: [this.root, __dirname],
         }
       );
       const packageJson = JSON.parse(
