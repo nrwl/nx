@@ -43,7 +43,7 @@ import { dirname, extname, join, resolve } from 'path';
 import * as stripJsonComments from 'strip-json-comments';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 import { Observable } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { concatMap, map, switchMap } from 'rxjs/operators';
 import { NX_ERROR, NX_PREFIX } from '../shared/logger';
 
 export async function run(root: string, opts: RunOptions, verbose: boolean) {
@@ -318,7 +318,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     }
   }
 
-  private isWorkspaceConfig(path: Path) {
+  protected isWorkspaceConfig(path: Path) {
     const p = path.toString();
     return (
       p === 'angular.json' ||
@@ -338,6 +338,105 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
           );
       })
     );
+  }
+}
+
+/**
+ * This host contains the workaround needed to run Angular migrations
+ */
+export class NxScopedHostForMigrations extends NxScopedHost {
+  constructor(root: Path) {
+    super(root);
+  }
+
+  read(path: Path): Observable<FileBuffer> {
+    return this.hasWorkspaceJson().pipe(
+      concatMap((hasWorkspace) => {
+        if (this.isWorkspaceConfig(path)) {
+          if (
+            hasWorkspace &&
+            (path == '/angular.json' || path == 'angular.json')
+          ) {
+            return super
+              .read('/workspace.json' as any)
+              .pipe(map(processConfig));
+          } else {
+            return super.read(path).pipe(map(processConfig));
+          }
+        } else {
+          return super.read(path);
+        }
+      })
+    );
+  }
+
+  isFile(path: Path): Observable<boolean> {
+    return this.hasWorkspaceJson().pipe(
+      concatMap((hasWorkspace) => {
+        if (this.isWorkspaceConfig(path)) {
+          return hasWorkspace
+            ? super.isFile('/workspace.json' as any)
+            : super.isFile('/angular.json' as any);
+        } else {
+          return super.isFile(path);
+        }
+      })
+    );
+  }
+
+  exists(path: Path): Observable<boolean> {
+    return this.hasWorkspaceJson().pipe(
+      concatMap((hasWorkspace) => {
+        if (this.isWorkspaceConfig(path)) {
+          return hasWorkspace
+            ? super.exists('/workspace.json' as any)
+            : super.exists('/angular.json' as any);
+        } else {
+          return super.exists(path);
+        }
+      })
+    );
+  }
+
+  write(path: Path, content: FileBuffer): Observable<void> {
+    return this.hasWorkspaceJson().pipe(
+      concatMap((hasWorkspace) => {
+        if (
+          hasWorkspace &&
+          (path == '/angular.json' || path == 'angular.json')
+        ) {
+          return super.write('/workspace.json' as any, content);
+        } else {
+          return super.write(path as any, content);
+        }
+      })
+    );
+  }
+
+  private hasWorkspaceJson() {
+    return super.exists('/workspace.json' as any);
+  }
+}
+
+function processConfig(content: ArrayBuffer) {
+  try {
+    const json = JSON.parse(Buffer.from(content).toString());
+    Object.values(json.projects).forEach((p: any) => {
+      try {
+        Object.values(p.architect || p.targets).forEach((e: any) => {
+          if (
+            (e.builder === '@nrwl/jest:jest' ||
+              e.executor === '@nrwl/jest:jest') &&
+            !e.options.tsConfig
+          ) {
+            e.options.tsConfig = `${p.root}/tsconfig.spec.json`;
+          }
+        });
+      } catch (e) {}
+    });
+    return Buffer.from(JSON.stringify(json, null, 2));
+  } catch (e) {
+    return content;
   }
 }
 
@@ -369,7 +468,7 @@ export async function runMigration(
   isVerbose: boolean
 ) {
   const logger = getLogger(isVerbose);
-  const host = new NxScopedHost(normalize(root));
+  const host = new NxScopedHostForMigrations(normalize(root));
   const workflow = new MigrationsWorkflow(host, logger as any);
   return workflow
     .execute({
