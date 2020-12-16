@@ -10,6 +10,7 @@ import {
 import { SyntaxKind } from 'typescript';
 import { getDecoratorMetadata, getTsSourceFile } from '../../utils/ast-utils';
 import { projectRootPath } from '@nrwl/workspace/src/utils/project-type';
+import { findNodes } from '@nrwl/workspace/src/utils/ast-utils';
 import { CreateComponentSpecFileSchema } from '../component-cypress-spec/component-cypress-spec';
 import { CreateComponentStoriesFileSchema } from '../component-story/component-story';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
@@ -73,9 +74,37 @@ export function createAllStories(
           );
           return noop();
         }
-        const declaredComponents = declarationsPropertyAssignment
+        let declarationArray = declarationsPropertyAssignment
           .getChildren()
-          .find((node) => node.kind === SyntaxKind.ArrayLiteralExpression)
+          .find((node) => node.kind === SyntaxKind.ArrayLiteralExpression);
+        if (!declarationArray) {
+          // Attempt to follow a variable instead of the literal
+          const declarationVariable = declarationsPropertyAssignment
+            .getChildren()
+            .filter((node) => node.kind === SyntaxKind.Identifier)[1];
+          const variableName = declarationVariable.getText();
+          const variableDeclaration = findNodes(
+            file,
+            SyntaxKind.VariableDeclaration
+          ).find((variableDeclaration) => {
+            const identifier = variableDeclaration
+              .getChildren()
+              .find((node) => node.kind === SyntaxKind.Identifier);
+            return identifier.getText() === variableName;
+          });
+
+          if (variableDeclaration) {
+            declarationArray = variableDeclaration
+              .getChildren()
+              .find((node) => node.kind === SyntaxKind.ArrayLiteralExpression);
+          } else {
+            context.logger.warn(
+              stripIndents`No stories generated because the declaration in ${moduleFilePath} is not an array literal or the variable could not be found. Hint: you can always generate stories later with the 'nx generate @nrwl/angular:stories --name=${projectName}' command`
+            );
+            return noop();
+          }
+        }
+        const declaredComponents = declarationArray
           .getChildren()
           .find((node) => node.kind === SyntaxKind.SyntaxList)
           .getChildren()
