@@ -1,6 +1,6 @@
-import { JsonObject } from '@angular-devkit/core';
+import { json } from '@angular-devkit/core';
 
-export interface Schema extends JsonObject {
+export interface Schema extends json.JsonObject {
   projectName: string;
   skipFormat: boolean;
   forceRemove: boolean;
