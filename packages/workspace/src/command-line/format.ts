@@ -8,12 +8,12 @@ import {
   onlyWorkspaceProjects,
 } from '../core/project-graph';
 import { filterAffected } from '../core/affected-project-graph';
-import { calculateFileChanges, readWorkspaceJson } from '../core/file-utils';
+import { calculateFileChanges } from '../core/file-utils';
 import * as yargs from 'yargs';
 import { NxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
 import {
+  reformattedWorkspaceJsonOrNull,
   workspaceConfigName,
-  Workspaces,
 } from '@nrwl/tao/src/shared/workspace';
 import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
 import { readFileSync, writeFileSync } from 'fs-extra';
@@ -133,12 +133,11 @@ function prettierPath() {
 }
 
 function updateWorkspaceJsonToMatchFormatVersion() {
-  const ws = new Workspaces();
   try {
     const workspaceJson = JSON.parse(
       readFileSync(workspaceConfigName(appRootPath)).toString()
     );
-    const reformatted = ws.reformattedWorkspaceJsonOrNull(workspaceJson);
+    const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
     if (reformatted) {
       writeFileSync(
         workspaceConfigName(appRootPath),

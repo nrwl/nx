@@ -158,7 +158,7 @@ function printChanges(fileChanges: FileChange[]) {
 }
 
 export async function taoNew(root: string, args: string[], isVerbose = false) {
-  const ws = new Workspaces();
+  const ws = new Workspaces(root);
   return handleErrors(isVerbose, async () => {
     const opts = parseGenerateOpts(args, 'new', null);
 
@@ -191,10 +191,10 @@ export async function generate(
   args: string[],
   isVerbose = false
 ) {
-  const ws = new Workspaces();
+  const ws = new Workspaces(root);
 
   return handleErrors(isVerbose, async () => {
-    const workspaceDefinition = ws.readWorkspaceConfiguration(root);
+    const workspaceDefinition = ws.readWorkspaceConfiguration();
     const opts = parseGenerateOpts(
       args,
       'generate',

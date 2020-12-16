@@ -105,76 +105,15 @@ export function workspaceConfigName(root: string) {
 }
 
 export class Workspaces {
-  readWorkspaceConfiguration(root: string): WorkspaceConfiguration {
+  constructor(private root: string) {}
+
+  readWorkspaceConfiguration(): WorkspaceConfiguration {
     const w = JSON.parse(
-      fs.readFileSync(path.join(root, workspaceConfigName(root))).toString()
+      fs
+        .readFileSync(path.join(this.root, workspaceConfigName(this.root)))
+        .toString()
     );
-    return this.toNewFormat(w);
-  }
-
-  reformattedWorkspaceJsonOrNull(w: any) {
-    return w.version === 2
-      ? this.toNewFormatOrNull(w)
-      : this.toOldFormatOrNull(w);
-  }
-
-  toNewFormat(w: any) {
-    const f = this.toNewFormatOrNull(w);
-    return f ? f : w;
-  }
-
-  toNewFormatOrNull(w: any) {
-    let formatted = false;
-    Object.values(w.projects || {}).forEach((project: any) => {
-      if (project.architect) {
-        renameProperty(project, 'architect', 'targets');
-        formatted = true;
-      }
-
-      Object.values(project.targets || {}).forEach((target: any) => {
-        if (target.builder) {
-          renameProperty(target, 'builder', 'executor');
-          formatted = true;
-        }
-      });
-    });
-
-    if (w.schematics) {
-      renameProperty(w, 'schematics', 'generators');
-      formatted = true;
-    }
-    if (w.version !== 2) {
-      w.version = 2;
-      formatted = true;
-    }
-    return formatted ? w : null;
-  }
-
-  toOldFormatOrNull(w: any) {
-    let formatted = false;
-    Object.values(w.projects || {}).forEach((project: any) => {
-      if (project.targets) {
-        renameProperty(project, 'targets', 'architect');
-        formatted = true;
-      }
-
-      Object.values(project.architect || {}).forEach((target: any) => {
-        if (target.executor) {
-          renameProperty(target, 'executor', 'builder');
-          formatted = true;
-        }
-      });
-    });
-
-    if (w.generators) {
-      renameProperty(w, 'generators', 'schematics');
-      formatted = true;
-    }
-    if (w.version !== 1) {
-      w.version = 1;
-      formatted = true;
-    }
-    return formatted ? w : null;
+    return toNewFormat(w);
   }
 
   isNxExecutor(nodeModule: string, executor: string) {
@@ -235,7 +174,9 @@ export class Workspaces {
   }
 
   private readExecutorsJson(nodeModule: string, executor: string) {
-    const packageJsonPath = require.resolve(`${nodeModule}/package.json`);
+    const packageJsonPath = require.resolve(`${nodeModule}/package.json`, {
+      paths: [this.root],
+    });
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath).toString());
     const executorsFile = packageJson.executors
       ? packageJson.executors
@@ -261,9 +202,16 @@ export class Workspaces {
   private readGeneratorsJson(collectionName: string, generator: string) {
     let generatorsFilePath;
     if (collectionName.endsWith('.json')) {
-      generatorsFilePath = require.resolve(collectionName);
+      generatorsFilePath = require.resolve(collectionName, {
+        paths: [this.root],
+      });
     } else {
-      const packageJsonPath = require.resolve(`${collectionName}/package.json`);
+      const packageJsonPath = require.resolve(
+        `${collectionName}/package.json`,
+        {
+          paths: [this.root],
+        }
+      );
       const packageJson = JSON.parse(
         fs.readFileSync(packageJsonPath).toString()
       );
@@ -304,6 +252,69 @@ export class Workspaces {
     }
     return { generatorsFilePath, generatorsJson, normalizedGeneratorName };
   }
+}
+
+export function reformattedWorkspaceJsonOrNull(w: any) {
+  return w.version === 2 ? toNewFormatOrNull(w) : toOldFormatOrNull(w);
+}
+
+export function toNewFormat(w: any) {
+  const f = toNewFormatOrNull(w);
+  return f ? f : w;
+}
+
+export function toNewFormatOrNull(w: any) {
+  let formatted = false;
+  Object.values(w.projects || {}).forEach((project: any) => {
+    if (project.architect) {
+      renameProperty(project, 'architect', 'targets');
+      formatted = true;
+    }
+
+    Object.values(project.targets || {}).forEach((target: any) => {
+      if (target.builder) {
+        renameProperty(target, 'builder', 'executor');
+        formatted = true;
+      }
+    });
+  });
+
+  if (w.schematics) {
+    renameProperty(w, 'schematics', 'generators');
+    formatted = true;
+  }
+  if (w.version !== 2) {
+    w.version = 2;
+    formatted = true;
+  }
+  return formatted ? w : null;
+}
+
+export function toOldFormatOrNull(w: any) {
+  let formatted = false;
+  Object.values(w.projects || {}).forEach((project: any) => {
+    if (project.targets) {
+      renameProperty(project, 'targets', 'architect');
+      formatted = true;
+    }
+
+    Object.values(project.architect || {}).forEach((target: any) => {
+      if (target.executor) {
+        renameProperty(target, 'executor', 'builder');
+        formatted = true;
+      }
+    });
+  });
+
+  if (w.generators) {
+    renameProperty(w, 'generators', 'schematics');
+    formatted = true;
+  }
+  if (w.version !== 1) {
+    w.version = 1;
+    formatted = true;
+  }
+  return formatted ? w : null;
 }
 
 // we have to do it this way to preserve the order of properties

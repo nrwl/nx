@@ -59,7 +59,7 @@ export async function workspaceGenerators(args: string[]) {
     return listGenerators(collectionFile, logger);
   }
   const generatorName = args[0];
-  const ws = new Workspaces();
+  const ws = new Workspaces(rootDirectory);
   if (ws.isNxGenerator(collectionFile, generatorName)) {
     try {
       execSync(

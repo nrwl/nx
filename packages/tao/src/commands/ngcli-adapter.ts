@@ -32,8 +32,9 @@ import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 import { GenerateOptions } from './generate';
 import * as taoTree from '../shared/tree';
 import {
+  toNewFormatOrNull,
+  toOldFormatOrNull,
   workspaceConfigName,
-  Workspaces,
 } from '@nrwl/tao/src/shared/workspace';
 import { BaseWorkflow } from '@angular-devkit/schematics/src/workflow';
 import { NodePackageName } from '@angular-devkit/schematics/tasks/package-manager/options';
@@ -269,7 +270,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
               map((r) => {
                 try {
                   const w = JSON.parse(Buffer.from(r).toString());
-                  const formatted = new Workspaces().toOldFormatOrNull(w);
+                  const formatted = toOldFormatOrNull(w);
                   return formatted
                     ? Buffer.from(JSON.stringify(formatted, null, 2))
                     : r;
@@ -295,7 +296,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
           if (newFormat) {
             try {
               const w = JSON.parse(Buffer.from(content).toString());
-              const formatted = new Workspaces().toNewFormatOrNull(w);
+              const formatted = toNewFormatOrNull(w);
               if (formatted) {
                 return super.write(
                   path,

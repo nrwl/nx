@@ -1,8 +1,8 @@
 import { Tree } from '@nrwl/tao/src/shared/tree';
 import {
   ProjectConfiguration,
+  toNewFormat,
   WorkspaceConfiguration,
-  Workspaces,
 } from '@nrwl/tao/src/shared/workspace';
 import { readJson } from '../utils/read-json';
 import {
@@ -67,10 +67,9 @@ export function readProjectConfiguration(
 }
 
 function readWorkspaceSection(host: Tree, projectName: string) {
-  const ws = new Workspaces();
   const path = getWorkspacePath(host);
   const workspaceJson = readJson<WorkspaceConfiguration>(host, path);
-  const newFormat = ws.toNewFormat(workspaceJson);
+  const newFormat = toNewFormat(workspaceJson);
 
   if (!newFormat.projects[projectName]) {
     throw new Error(`Cannot find Project '${projectName}'`);

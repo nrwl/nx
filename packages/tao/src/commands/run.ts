@@ -135,10 +135,10 @@ export interface TargetContext {
 }
 
 export async function run(root: string, args: string[], isVerbose: boolean) {
-  const ws = new Workspaces();
+  const ws = new Workspaces(root);
 
   return handleErrors(isVerbose, async () => {
-    const workspace = ws.readWorkspaceConfiguration(root);
+    const workspace = ws.readWorkspaceConfiguration();
     const opts = parseRunOpts(args, workspace.defaultProject);
     validateTargetAndConfiguration(workspace, opts);
 
