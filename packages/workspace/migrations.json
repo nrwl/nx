@@ -840,6 +840,19 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "11.0.9": {
+      "version": "11.0.9",
+      "packages": {
+        "tslint": {
+          "version": "~6.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ts-node": {
+          "version": "~9.1.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
