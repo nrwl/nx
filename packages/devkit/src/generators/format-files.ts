@@ -2,7 +2,7 @@ import { Tree } from '@nrwl/tao/src/shared/tree';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
 import { getWorkspacePath } from '../utils/get-workspace-layout';
-import { Workspaces } from '@nrwl/tao/src/shared/workspace';
+import { reformattedWorkspaceJsonOrNull } from '@nrwl/tao/src/shared/workspace';
 
 let prettier: typeof Prettier;
 try {
@@ -52,11 +52,10 @@ export async function formatFiles(host: Tree) {
 }
 
 function updateWorkspaceJsonToMatchFormatVersion(host: Tree) {
-  const ws = new Workspaces();
   const path = getWorkspacePath(host);
   try {
     const workspaceJson = JSON.parse(host.read(path).toString());
-    const reformatted = ws.reformattedWorkspaceJsonOrNull(workspaceJson);
+    const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
     if (reformatted) {
       host.write(path, JSON.stringify(reformatted, null, 2));
     }

@@ -131,7 +131,7 @@ export class TaskOrchestrator {
       const b = p.data.targets[task.target.target].executor;
       const [nodeModule, executor] = b.split(':');
 
-      const w = new Workspaces();
+      const w = new Workspaces(this.workspaceRoot);
       const x = w.readExecutor(nodeModule, executor);
       return x.schema.outputCapture === 'pipe';
     } catch (e) {
