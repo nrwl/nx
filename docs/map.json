@@ -1021,6 +1021,11 @@
                 "name": "Incremental Builds",
                 "id": "incremental-builds",
                 "file": "shared/incremental-builds"
+              },
+              {
+                "name": "Setup incremental builds for Angular applications",
+                "id": "setup-incremental-builds-angular",
+                "file": "angular/guides/setup-incremental-builds"
               }
             ]
           },
