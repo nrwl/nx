@@ -1,6 +1,6 @@
 # export
 
-Export a Next.js app. The exported application is located at dist/\$outputPath/exported.
+Export a Next.js app. The exported application is located at dist/$outputPath/exported.
 
 Properties can be configured in workspace.json when defining the executor, or when invoking it.
 Read more about how to use executors and the CLI here: https://nx.dev/node/guides/cli.
