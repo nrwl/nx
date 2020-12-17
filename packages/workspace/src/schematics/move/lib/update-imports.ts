@@ -1,5 +1,10 @@
-import { SchematicContext, Tree } from '@angular-devkit/schematics';
 import {
+  SchematicContext,
+  Tree,
+  UpdateRecorder,
+} from '@angular-devkit/schematics';
+import {
+  findNodes,
   getWorkspace,
   NxJson,
   readJsonInTree,
@@ -7,6 +12,7 @@ import {
 } from '@nrwl/workspace';
 import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import * as ts from 'typescript';
 import { Schema } from '../schema';
 import { normalizeSlashes } from './utils';
 
@@ -70,11 +76,13 @@ export function updateImports(schema: Schema) {
                 return;
               }
 
-              const updatedFile = tree
-                .read(file)
-                .toString()
-                .replace(replaceProjectRef, projectRef.to);
-              tree.overwrite(file, updatedFile);
+              updateImportPaths(
+                tree,
+                file,
+                contents,
+                projectRef.from,
+                projectRef.to
+              );
             });
           }
         }
@@ -114,4 +122,112 @@ export function updateImports(schema: Schema) {
       })
     );
   };
+}
+
+function updateImportPaths(
+  tree: Tree,
+  path: string,
+  contents: string,
+  from: string,
+  to: string
+) {
+  const sourceFile = ts.createSourceFile(
+    path,
+    contents,
+    ts.ScriptTarget.Latest,
+    true
+  );
+
+  const recorder = tree.beginUpdate(path);
+
+  // perform transformations on the various types of imports
+  updateImportDeclarations(recorder, sourceFile, from, to);
+  updateDynamicImports(recorder, sourceFile, from, to);
+
+  tree.commitUpdate(recorder);
+}
+
+/**
+ * Update the module specifiers on static imports
+ */
+function updateImportDeclarations(
+  recorder: UpdateRecorder,
+  sourceFile: ts.SourceFile,
+  from: string,
+  to: string
+) {
+  const importDecls = findNodes(
+    sourceFile,
+    ts.SyntaxKind.ImportDeclaration
+  ) as ts.ImportDeclaration[];
+
+  for (const { moduleSpecifier } of importDecls) {
+    if (ts.isStringLiteral(moduleSpecifier)) {
+      updateModuleSpecifier(recorder, moduleSpecifier, from, to);
+    }
+  }
+}
+
+/**
+ * Update the module specifiers on dynamic imports and require statements
+ */
+function updateDynamicImports(
+  recorder: UpdateRecorder,
+  sourceFile: ts.SourceFile,
+  from: string,
+  to: string
+) {
+  const expressions = findNodes(
+    sourceFile,
+    ts.SyntaxKind.CallExpression
+  ) as ts.CallExpression[];
+
+  for (const { expression, arguments: args } of expressions) {
+    const moduleSpecifier = args[0];
+
+    // handle dynamic import statements
+    if (
+      expression.kind === ts.SyntaxKind.ImportKeyword &&
+      moduleSpecifier &&
+      ts.isStringLiteral(moduleSpecifier)
+    ) {
+      updateModuleSpecifier(recorder, moduleSpecifier, from, to);
+    }
+
+    // handle require statements
+    if (
+      ts.isIdentifier(expression) &&
+      expression.text === 'require' &&
+      moduleSpecifier &&
+      ts.isStringLiteral(moduleSpecifier)
+    ) {
+      updateModuleSpecifier(recorder, moduleSpecifier, from, to);
+    }
+  }
+}
+
+/**
+ * Replace the old module specifier with a the new path
+ */
+function updateModuleSpecifier(
+  recorder: UpdateRecorder,
+  moduleSpecifier: ts.StringLiteral,
+  from: string,
+  to: string
+) {
+  if (
+    moduleSpecifier.text === from ||
+    moduleSpecifier.text.startsWith(from + '/')
+  ) {
+    recorder.remove(
+      moduleSpecifier.getStart() + 1,
+      moduleSpecifier.text.length
+    );
+
+    // insert the new module specifier
+    recorder.insertLeft(
+      moduleSpecifier.getStart() + 1,
+      moduleSpecifier.text.replace(new RegExp(from, 'g'), to)
+    );
+  }
 }
