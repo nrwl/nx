@@ -19,6 +19,11 @@
       "version": "10.3.1-beta.1",
       "description": "Add missing storybook config to lint target",
       "factory": "./src/migrations/update-10-3-0/update-10-3-0"
+    },
+    "update-11-0-12": {
+      "version": "11.0.12",
+      "description": "Update storybook if installed and above 6",
+      "factory": "./src/migrations/update-11-0-12/update-storybook"
     }
   },
   "packageJsonUpdates": {
