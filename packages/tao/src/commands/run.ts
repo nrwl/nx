@@ -30,9 +30,32 @@ function throwInvalidInvocation() {
   );
 }
 
+function calculateDefaultProjectName(
+  cwd: string,
+  root: string,
+  wc: WorkspaceConfiguration
+) {
+  let relativeCwd = cwd.split(root)[1];
+  if (relativeCwd) {
+    relativeCwd = relativeCwd.startsWith('/')
+      ? relativeCwd.substring(1)
+      : relativeCwd;
+    const matchingProject = Object.keys(wc.projects).find((p) => {
+      const projectRoot = wc.projects[p].root;
+      return (
+        relativeCwd == projectRoot || relativeCwd.startsWith(`${projectRoot}/`)
+      );
+    });
+    if (matchingProject) return matchingProject;
+  }
+  return wc.defaultProject;
+}
+
 function parseRunOpts(
+  cwd: string,
+  root: string,
   args: string[],
-  defaultProjectName: string | null
+  wc: WorkspaceConfiguration
 ): RunOptions {
   const runOptions = convertToCamelCase(
     minimist(args, {
@@ -47,6 +70,7 @@ function parseRunOpts(
   if (!runOptions._ || !runOptions._[0]) {
     throwInvalidInvocation();
   }
+  const defaultProjectName = calculateDefaultProjectName(cwd, root, wc);
   // eslint-disable-next-line prefer-const
   let [project, target, configuration]: [
     string,
@@ -134,12 +158,17 @@ export interface TargetContext {
   workspace: WorkspaceConfiguration;
 }
 
-export async function run(root: string, args: string[], isVerbose: boolean) {
+export async function run(
+  cwd: string,
+  root: string,
+  args: string[],
+  isVerbose: boolean
+) {
   const ws = new Workspaces(root);
 
   return handleErrors(isVerbose, async () => {
     const workspace = ws.readWorkspaceConfiguration();
-    const opts = parseRunOpts(args, workspace.defaultProject);
+    const opts = parseRunOpts(cwd, root, args, workspace);
     validateTargetAndConfiguration(workspace, opts);
 
     const target = workspace.projects[opts.project].targets[opts.target];

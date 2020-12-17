@@ -2,16 +2,17 @@ import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
 import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
+import { dirname } from 'path';
 import { ensureDirSync } from 'fs-extra';
 import { tmpProjPath } from './paths';
 import { cleanup } from './utils';
 
 function runNxNewCommand(args?: string, silent?: boolean) {
-  const localTmpDir = `./tmp/nx-e2e`;
+  const localTmpDir = dirname(tmpProjPath());
   return execSync(
     `node ${require.resolve(
       '@nrwl/tao'
-    )} new proj --no-interactive --skip-install --collection=@nrwl/workspace --npmScope=proj --preset=empty ${
+    )} new proj --nx-workspace-root=${localTmpDir} --no-interactive --skip-install --collection=@nrwl/workspace --npmScope=proj --preset=empty ${
       args || ''
     }`,
     {

@@ -1,18 +1,41 @@
 import yargsParser = require('yargs-parser');
 
-export function parseRunOneOptions(
-  workspaceConfigJson: any,
-  args: string[]
-): false | { project; target; configuration; parsedArgs } {
+function calculateDefaultProjectName(cwd: string, root: string, wc: any) {
+  let relativeCwd = cwd.split(root)[1];
+  if (relativeCwd) {
+    relativeCwd = relativeCwd.startsWith('/')
+      ? relativeCwd.substring(1)
+      : relativeCwd;
+    const matchingProject = Object.keys(wc.projects).find((p) => {
+      const projectRoot = wc.projects[p].root;
+      return (
+        relativeCwd == projectRoot || relativeCwd.startsWith(`${projectRoot}/`)
+      );
+    });
+    if (matchingProject) return matchingProject;
+  }
   let defaultProjectName = null;
   try {
-    defaultProjectName = workspaceConfigJson.cli.defaultProjectName;
+    defaultProjectName = wc.cli.defaultProjectName;
   } catch (e) {}
   try {
     if (!defaultProjectName) {
-      defaultProjectName = workspaceConfigJson.defaultProject;
+      defaultProjectName = wc.defaultProject;
     }
   } catch (e) {}
+  return defaultProjectName;
+}
+
+export function parseRunOneOptions(
+  root: string,
+  workspaceConfigJson: any,
+  args: string[]
+): false | { project; target; configuration; parsedArgs } {
+  const defaultProjectName = calculateDefaultProjectName(
+    process.cwd(),
+    root,
+    workspaceConfigJson
+  );
 
   const parsedArgs = yargsParser(args, {
     boolean: ['prod', 'help'],

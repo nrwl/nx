@@ -46,6 +46,11 @@ describe('run-one', () => {
 
     // configuration has to be valid for the initiating project
     expect(() => runCLI(`build ${myapp} -c=invalid`)).toThrow();
+    expect(
+      runCommand(
+        `cd apps/${myapp}-e2e/src && ../../../node_modules/.bin/nx lint`
+      )
+    ).toContain(`nx run ${myapp}-e2e:lint`);
 
     // configuration doesn't have to exists for deps (here only the app has production)
     const buildWithDeps = runCLI(`build ${myapp} --with-deps --prod`);
