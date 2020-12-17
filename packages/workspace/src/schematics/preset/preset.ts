@@ -39,6 +39,7 @@ function createPreset(options: Schema): Rule {
       externalSchematic('@nrwl/angular', 'application', {
         name: options.name,
         style: options.style,
+        linter: options.linter,
       }),
       setDefaultCollection('@nrwl/angular'),
     ]);
@@ -47,6 +48,7 @@ function createPreset(options: Schema): Rule {
       externalSchematic('@nrwl/react', 'application', {
         name: options.name,
         style: options.style,
+        linter: options.linter,
       }),
       setDefaultCollection('@nrwl/react'),
     ]);
@@ -55,6 +57,7 @@ function createPreset(options: Schema): Rule {
       externalSchematic('@nrwl/next', 'application', {
         name: options.name,
         style: options.style,
+        linter: options.linter,
       }),
       setDefaultCollection('@nrwl/next'),
     ]);
@@ -63,6 +66,7 @@ function createPreset(options: Schema): Rule {
       externalSchematic('@nrwl/web', 'application', {
         name: options.name,
         style: options.style,
+        linter: options.linter,
       }),
       addDepsToPackageJson(
         {},
@@ -80,14 +84,20 @@ function createPreset(options: Schema): Rule {
       externalSchematic('@nrwl/angular', 'application', {
         name: options.name,
         style: options.style,
+        linter: options.linter,
       }),
       externalSchematic('@nrwl/nest', 'application', {
         name: 'api',
         frontendProject: options.name,
+        linter: options.linter,
       }),
       schematic(
         'library',
-        { name: 'api-interfaces', unitTestRunner: 'none' },
+        {
+          name: 'api-interfaces',
+          unitTestRunner: 'none',
+          linter: options.linter,
+        },
         { interactive: false }
       ),
       setDefaultCollection('@nrwl/angular'),
@@ -98,14 +108,20 @@ function createPreset(options: Schema): Rule {
       externalSchematic('@nrwl/react', 'application', {
         name: options.name,
         style: options.style,
+        linter: options.linter,
       }),
       externalSchematic('@nrwl/express', 'application', {
         name: 'api',
         frontendProject: options.name,
+        linter: options.linter,
       }),
       schematic(
         'library',
-        { name: 'api-interfaces', unitTestRunner: 'none' },
+        {
+          name: 'api-interfaces',
+          unitTestRunner: 'none',
+          linter: options.linter,
+        },
         { interactive: false }
       ),
       setDefaultCollection('@nrwl/react'),
@@ -115,6 +131,7 @@ function createPreset(options: Schema): Rule {
     return chain([
       externalSchematic('@nrwl/nest', 'application', {
         name: options.name,
+        linter: options.linter,
       }),
       setDefaultCollection('@nrwl/nest'),
     ]);

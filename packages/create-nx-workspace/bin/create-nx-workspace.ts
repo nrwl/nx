@@ -477,7 +477,7 @@ function pointToTutorialAndCourse(preset: Preset) {
         title: title,
         bodyLines: [
           `https://nx.dev/react/tutorial/01-create-application`,
-          ...pointToCourse(),
+          ...pointToFreeCourseOnEgghead(),
         ],
       });
       break;
@@ -488,28 +488,35 @@ function pointToTutorialAndCourse(preset: Preset) {
         title: title,
         bodyLines: [
           `https://nx.dev/angular/tutorial/01-create-application`,
-          ...pointToCourse(),
+          ...pointToFreeCourseOnYoutube(),
         ],
       });
       break;
-    // TODO(Cammisuli): include this after the nx.dev site is updated with the node flavour
-    // case Preset.Nest:
-    //   output.addVerticalSeparator();
-    //   output.note({
-    //     title,
-    //     bodyLines: [
-    //       `https://nx.dev/node/tutorial/01-create-application`,
-    //       ...pointToCourse(),
-    //     ],
-    //   });
-    //   break;
+    case Preset.Nest:
+      output.addVerticalSeparator();
+      output.note({
+        title,
+        bodyLines: [
+          `https://nx.dev/node/tutorial/01-create-application`,
+          ...pointToFreeCourseOnYoutube(),
+        ],
+      });
+      break;
   }
 }
 
-function pointToCourse(): string[] {
+function pointToFreeCourseOnYoutube(): string[] {
   return [
     ``,
     `Prefer watching videos? Check out this free Nx course on YouTube.`,
     `https://www.youtube.com/watch?v=2mYLe9Kp9VM&list=PLakNactNC1dH38AfqmwabvOszDmKriGco`,
+  ];
+}
+
+function pointToFreeCourseOnEgghead(): string[] {
+  return [
+    ``,
+    `Prefer watching videos? Check out this free Nx course on Egghead.io.`,
+    `https://egghead.io/playlists/scale-react-development-with-nx-4038`,
   ];
 }

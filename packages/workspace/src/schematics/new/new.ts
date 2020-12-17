@@ -87,6 +87,7 @@ function createPresetTaskExecutor(opts: Schema) {
           `@nrwl/workspace:preset`,
           `--name=${opts.appName}`,
           opts.style ? `--style=${opts.style}` : null,
+          opts.linter ? `--linter=${opts.linter}` : null,
           opts.npmScope
             ? `--npmScope=${opts.npmScope}`
             : `--npmScope=${opts.name}`,
