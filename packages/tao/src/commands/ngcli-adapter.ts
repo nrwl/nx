@@ -373,10 +373,11 @@ export class NxScopedHostForMigrations extends NxScopedHost {
   isFile(path: Path): Observable<boolean> {
     return this.hasWorkspaceJson().pipe(
       concatMap((hasWorkspace) => {
-        if (this.isWorkspaceConfig(path)) {
-          return hasWorkspace
-            ? super.isFile('/workspace.json' as any)
-            : super.isFile('/angular.json' as any);
+        if (
+          hasWorkspace &&
+          (path == '/angular.json' || path == 'angular.json')
+        ) {
+          return super.isFile('/workspace.json' as any);
         } else {
           return super.isFile(path);
         }
@@ -387,10 +388,11 @@ export class NxScopedHostForMigrations extends NxScopedHost {
   exists(path: Path): Observable<boolean> {
     return this.hasWorkspaceJson().pipe(
       concatMap((hasWorkspace) => {
-        if (this.isWorkspaceConfig(path)) {
-          return hasWorkspace
-            ? super.exists('/workspace.json' as any)
-            : super.exists('/angular.json' as any);
+        if (
+          hasWorkspace &&
+          (path == '/angular.json' || path == 'angular.json')
+        ) {
+          return super.exists('/workspace.json' as any);
         } else {
           return super.exists(path);
         }
