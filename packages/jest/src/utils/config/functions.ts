@@ -160,10 +160,6 @@ export function jestConfigObjectAst(
   host: Tree,
   path: string
 ): ts.ObjectLiteralExpression {
-  if (!host.exists(path)) {
-    throw new Error(`Cannot find '${path}' in your workspace.`);
-  }
-
   const fileContent = host.read(path).toString('utf-8');
 
   const sourceFile = ts.createSourceFile(
@@ -181,8 +177,7 @@ export function jestConfigObjectAst(
   const moduleExports = expressions.find(
     (node) =>
       node.left.getText() === 'module.exports' &&
-      node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
-      ts.isObjectLiteralExpression(node.right)
+      node.operatorToken.kind === ts.SyntaxKind.EqualsToken
   );
 
   if (!moduleExports) {
@@ -190,6 +185,12 @@ export function jestConfigObjectAst(
       `
        The provided jest config file does not have the expected 'module.exports' expression. 
        See https://jestjs.io/docs/en/configuration for more details.`
+    );
+  }
+
+  if (!ts.isObjectLiteralExpression(moduleExports.right)) {
+    throw new Error(
+      `The 'module.exports' expression is not an object literal.`
     );
   }
 
