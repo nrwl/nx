@@ -36,7 +36,7 @@ describe('updateImports Rule', () => {
       `
         import { MyClass } from '@proj/my-source';
   
-        export MyExtendedClass extends MyClass {};
+        export class MyExtendedClass extends MyClass {};
       `
     );
 
@@ -44,6 +44,169 @@ describe('updateImports Rule', () => {
 
     expect(tree.read(importerFilePath).toString()).toContain(
       `import { MyClass } from '@proj/my-destination';`
+    );
+  });
+
+  /**
+   * Ensure that import paths are only updated if they are an exact match.
+   * For example '@proj/table' contains '@proj/tab', however it should not
+   * be updated.
+   */
+  it('should not update import paths when they contain a partial match', async () => {
+    tree = await runSchematic('lib', { name: 'table' }, tree);
+    tree = await runSchematic('lib', { name: 'tab' }, tree);
+
+    tree = await runSchematic('lib', { name: 'my-importer' }, tree);
+    const importerFilePath = 'libs/my-importer/src/importer.ts';
+    tree.create(
+      importerFilePath,
+      `
+        import { Table } from '@proj/table';
+        import { Tab } from '@proj/tab';
+  
+        export class MyTable extends Table {};
+        export class MyTab extends Tab {};
+      `
+    );
+
+    tree = (await callRule(
+      updateImports({
+        projectName: 'tab',
+        destination: 'tabs',
+        importPath: undefined,
+        updateImportPath: true,
+      }),
+      tree
+    )) as UnitTestTree;
+
+    expect(tree.read(importerFilePath).toString()).toContain(
+      `import { Table } from '@proj/table';`
+    );
+
+    expect(tree.read(importerFilePath).toString()).toContain(
+      `import { Tab } from '@proj/tabs';`
+    );
+  });
+
+  it('should correctly update deep imports', async () => {
+    tree = await runSchematic('lib', { name: 'table' }, tree);
+    tree = await runSchematic('lib', { name: 'tab' }, tree);
+
+    tree = await runSchematic('lib', { name: 'my-importer' }, tree);
+    const importerFilePath = 'libs/my-importer/src/importer.ts';
+    tree.create(
+      importerFilePath,
+      `
+        import { Table } from '@proj/table/components';
+        import { Tab } from '@proj/tab/components';
+  
+        export class MyTable extends Table {};
+        export class MyTab extends Tab {};
+      `
+    );
+
+    tree = (await callRule(
+      updateImports({
+        projectName: 'tab',
+        destination: 'tabs',
+        importPath: undefined,
+        updateImportPath: true,
+      }),
+      tree
+    )) as UnitTestTree;
+
+    expect(tree.read(importerFilePath).toString()).toContain(
+      `import { Table } from '@proj/table/components';`
+    );
+
+    expect(tree.read(importerFilePath).toString()).toContain(
+      `import { Tab } from '@proj/tabs/components';`
+    );
+  });
+
+  it('should update dynamic imports', async () => {
+    tree = await runSchematic('lib', { name: 'table' }, tree);
+    tree = await runSchematic('lib', { name: 'tab' }, tree);
+
+    tree = await runSchematic('lib', { name: 'my-importer' }, tree);
+    const importerFilePath = 'libs/my-importer/src/importer.ts';
+    tree.create(
+      importerFilePath,
+      `
+      import('@proj/table').then(m => m.Table);
+      import('@proj/table/components').then(m => m.Table);
+      import('@proj/tab').then(m => m.Tab);
+      import('@proj/tab/components').then(m => m.Tab);
+      `
+    );
+
+    tree = (await callRule(
+      updateImports({
+        projectName: 'tab',
+        destination: 'tabs',
+        importPath: undefined,
+        updateImportPath: true,
+      }),
+      tree
+    )) as UnitTestTree;
+
+    expect(tree.read(importerFilePath).toString()).toContain(
+      `import('@proj/table').then(m => m.Table);`
+    );
+
+    expect(tree.read(importerFilePath).toString()).toContain(
+      `import('@proj/table/components').then(m => m.Table);`
+    );
+
+    expect(tree.read(importerFilePath).toString()).toContain(
+      `import('@proj/tabs').then(m => m.Tab);`
+    );
+
+    expect(tree.read(importerFilePath).toString()).toContain(
+      `import('@proj/tabs/components').then(m => m.Tab);`
+    );
+  });
+
+  it('should update require imports', async () => {
+    tree = await runSchematic('lib', { name: 'table' }, tree);
+    tree = await runSchematic('lib', { name: 'tab' }, tree);
+
+    tree = await runSchematic('lib', { name: 'my-importer' }, tree);
+    const importerFilePath = 'libs/my-importer/src/importer.ts';
+    tree.create(
+      importerFilePath,
+      `
+      require('@proj/table');
+      require('@proj/table/components');
+      require('@proj/tab');
+      require('@proj/tab/components');
+      `
+    );
+
+    tree = (await callRule(
+      updateImports({
+        projectName: 'tab',
+        destination: 'tabs',
+        importPath: undefined,
+        updateImportPath: true,
+      }),
+      tree
+    )) as UnitTestTree;
+
+    expect(tree.read(importerFilePath).toString()).toContain(
+      `require('@proj/table');`
+    );
+
+    expect(tree.read(importerFilePath).toString()).toContain(
+      `require('@proj/table/components');`
+    );
+
+    expect(tree.read(importerFilePath).toString()).toContain(
+      `require('@proj/tabs');`
+    );
+
+    expect(tree.read(importerFilePath).toString()).toContain(
+      `require('@proj/tabs/components');`
     );
   });
 
@@ -87,7 +250,7 @@ describe('updateImports Rule', () => {
       `
         import { MyClass } from '@proj/my-source';
   
-        export MyExtendedClass extends MyClass {};
+        export class MyExtendedClass extends MyClass {};
       `
     );
 
