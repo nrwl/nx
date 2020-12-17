@@ -86,7 +86,11 @@ function runOneOptions(
         .toString()
     );
 
-    return parseRunOneOptions(workspaceConfigJson, process.argv.slice(2));
+    return parseRunOneOptions(
+      workspace.dir,
+      workspaceConfigJson,
+      process.argv.slice(2)
+    );
   } catch (e) {
     return false;
   }

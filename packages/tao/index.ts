@@ -1,6 +1,9 @@
 #!/usr/bin/env node
+import { dirname, join } from 'path';
+
 const argv = require('yargs-parser')(process.argv.slice(2));
 import './src/compat/compat';
+import { existsSync } from 'fs-extra';
 
 export async function invokeCommand(
   command: string,
@@ -37,6 +40,7 @@ export async function invokeCommand(
     case 'run':
     case 'r':
       return (await import('./src/commands/run')).run(
+        process.cwd(),
         root,
         commandArgs,
         isVerbose
@@ -57,6 +61,7 @@ export async function invokeCommand(
       const projectName = projectNameIncluded ? commandArgs[0] : '';
       // this is to make `tao test mylib` same as `tao run mylib:test`
       return (await import('./src/commands/run')).run(
+        process.cwd(),
         root,
         [
           `${projectName}:${command}`,
@@ -68,9 +73,25 @@ export async function invokeCommand(
   }
 }
 
+function findWorkspaceRoot(dir: string): string {
+  if (dirname(dir) === dir) {
+    throw new Error(`The cwd isn't part of an Nx workspace`);
+  }
+  if (
+    existsSync(join(dir, 'angular.json')) ||
+    existsSync(join(dir, 'workspace.json'))
+  ) {
+    return dir;
+  }
+  return findWorkspaceRoot(dirname(dir));
+}
+
 export async function invokeCli(root: string, args: string[]) {
   const [command, ...commandArgs] = args;
   process.exit(await invokeCommand(command, root, commandArgs));
 }
 
-invokeCli(argv.nxWorkspaceRoot || process.cwd(), process.argv.slice(2));
+invokeCli(
+  argv.nxWorkspaceRoot || findWorkspaceRoot(process.cwd()),
+  process.argv.slice(2)
+);

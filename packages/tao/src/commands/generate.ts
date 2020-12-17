@@ -157,8 +157,8 @@ function printChanges(fileChanges: FileChange[]) {
   });
 }
 
-export async function taoNew(root: string, args: string[], isVerbose = false) {
-  const ws = new Workspaces(root);
+export async function taoNew(cwd: string, args: string[], isVerbose = false) {
+  const ws = new Workspaces(cwd);
   return handleErrors(isVerbose, async () => {
     const opts = parseGenerateOpts(args, 'new', null);
 
@@ -177,7 +177,7 @@ export async function taoNew(root: string, args: string[], isVerbose = false) {
       opts.interactive
     );
     return (await import('./ngcli-adapter')).invokeNew(
-      root,
+      cwd,
       {
         ...opts,
         generatorOptions: combinedOpts,
