@@ -85,7 +85,7 @@ export function splitArgsIntoNxArgsAndOverrides(
     mode === 'run-one' ? runOne : mode === 'run-many' ? runMany : runAffected;
 
   const nxArgs: RawNxArgs = {};
-  const overrides = yargsParser(args._);
+  const overrides = yargsParser(args._ as string[]);
   delete overrides._;
 
   Object.entries(args).forEach(([key, value]) => {
@@ -124,8 +124,8 @@ export function splitArgsIntoNxArgsAndOverrides(
       !nxArgs.all &&
       args._.length >= 2
     ) {
-      nxArgs.base = args._[0];
-      nxArgs.head = args._[1];
+      nxArgs.base = args._[0] as string;
+      nxArgs.head = args._[1] as string;
     } else if (!nxArgs.base) {
       const affectedConfig = getAffectedConfig();
 
