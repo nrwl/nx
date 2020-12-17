@@ -8,10 +8,10 @@ export async function promptForNxCloud(scan: boolean) {
   if (!scan) return;
 
   const nxJson = readNxJson();
-  const nxCloudRunnerIsUsed = Object.values(nxJson.tasksRunnerOptions).find(
-    (r) => r.runner == '@nrwl/nx-cloud'
+  const defaultRunnerIsUsed = Object.values(nxJson.tasksRunnerOptions).find(
+    (r) => r.runner == '@nrwl/workspace/tasks-runners/default'
   );
-  if (nxCloudRunnerIsUsed) return;
+  if (!defaultRunnerIsUsed) return;
 
   const res = await askAboutNxCloud();
   if (res) {
