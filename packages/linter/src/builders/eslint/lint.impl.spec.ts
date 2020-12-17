@@ -285,6 +285,124 @@ describe('Linter Builder', () => {
       );
     });
 
+    it('should not log warnings if the quiet flag was passed', async () => {
+      mockReports = [
+        {
+          errorCount: 1,
+          warningCount: 4,
+          results: [],
+          usedDeprecatedRules: [],
+          messages: [
+            {
+              ruleId: 'mock',
+              severity: 2,
+              message: 'Mock error 1.',
+            },
+            {
+              ruleId: 'mock',
+              severity: 1,
+              message: 'Mock warning 1.',
+            },
+            {
+              ruleId: 'mock',
+              severity: 1,
+              message: 'Mock warning 2.',
+            },
+            {
+              ruleId: 'mock',
+              severity: 1,
+              message: 'Mock warning 3.',
+            },
+            {
+              ruleId: 'mock',
+              severity: 1,
+              message: 'Mock warning 4.',
+            },
+          ],
+        },
+        {
+          errorCount: 3,
+          warningCount: 6,
+          results: [],
+          usedDeprecatedRules: [],
+          messages: [
+            {
+              ruleId: 'mock',
+              severity: 2,
+              message: 'Mock error 1.',
+            },
+            {
+              ruleId: 'mock',
+              severity: 2,
+              message: 'Mock error 2.',
+            },
+            {
+              ruleId: 'mock',
+              severity: 2,
+              message: 'Mock error 3.',
+            },
+            {
+              ruleId: 'mock',
+              severity: 1,
+              message: 'Mock warning 1.',
+            },
+            {
+              ruleId: 'mock',
+              severity: 1,
+              message: 'Mock warning 2.',
+            },
+            {
+              ruleId: 'mock',
+              severity: 1,
+              message: 'Mock warning 3.',
+            },
+            {
+              ruleId: 'mock',
+              severity: 1,
+              message: 'Mock warning 4.',
+            },
+            {
+              ruleId: 'mock',
+              severity: 1,
+              message: 'Mock warning 5.',
+            },
+            {
+              ruleId: 'mock',
+              severity: 1,
+              message: 'Mock warning 6.',
+            },
+          ],
+        },
+      ];
+      setupMocks();
+      await runBuilder(
+        createValidRunBuilderOptions({
+          eslintConfig: './.eslintrc.json',
+          lintFilePatterns: ['includedFile1'],
+          format: 'json',
+          silent: false,
+          quiet: true,
+        })
+      );
+      console.log('FPPP', loggerSpy.mock.calls);
+      const flattenedCalls = loggerSpy.mock.calls.reduce((logs, call) => {
+        return [...logs, call[0]];
+      }, []);
+      expect(flattenedCalls).toContainEqual(
+        expect.objectContaining({
+          message: expect.stringContaining(
+            'Lint errors found in the listed files.'
+          ),
+        })
+      );
+      expect(flattenedCalls).not.toContainEqual(
+        expect.objectContaining({
+          message: expect.stringContaining(
+            'Lint warnings found in the listed files.'
+          ),
+        })
+      );
+    });
     it('should not log if the silent flag was passed', async () => {
       mockReports = [
         {
