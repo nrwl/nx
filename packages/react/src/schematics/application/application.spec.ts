@@ -482,6 +482,9 @@ describe('app', () => {
         tree.exists('apps/my-app/src/app/app.styled-components')
       ).toBeFalsy();
       expect(tree.exists('apps/my-app/src/app/app.tsx')).toBeTruthy();
+      expect(
+        tree.exists('apps/my-app/src/styles.styled-components')
+      ).toBeFalsy();
 
       const content = tree.read('apps/my-app/src/app/app.tsx').toString();
       expect(content).toContain('styled-component');
