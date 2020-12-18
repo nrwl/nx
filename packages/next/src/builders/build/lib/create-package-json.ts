@@ -15,8 +15,12 @@ function getProjectDeps(context: BuilderContext, rootPackageJson: any) {
   const depNames = deps
     .map((d) => d.node)
     .filter((node) => node.type === 'npm')
-    .map((node) => node.data.packageName);
-  const dependencies = depNames
+    .map((node) => node.data.packageName)
+    // Need to make sure @nrwl/workspace is installed
+    // It is only a peer dependency of @nrwl/next so does not get installed automatically
+    // See: https://github.com/nrwl/nx/issues/4336
+    .concat('@nrwl/workspace');
+  const dependencies: string[] = depNames
     .filter((packageName) => packageName in rootPackageJson.dependencies)
     .reduce((deps, pkgName) => {
       return { ...deps, [pkgName]: rootPackageJson.dependencies[pkgName] };
