@@ -12,7 +12,7 @@ type PropertyDescription = {
   description?: string;
   default?: string | number | boolean | string[];
   $ref?: string;
-  $default?: { $source: 'argv'; index: number };
+  $default?: { $source: 'argv'; index: number } | { $source: 'projectName' };
   'x-prompt'?: string | { message: string; type: string; items: any[] };
 };
 
@@ -261,6 +261,7 @@ function setPropertyDefault(
   if (schema.$ref) {
     schema = resolveDefinition(schema.$ref, definitions);
   }
+
   if (schema.type !== 'object' && schema.type !== 'array') {
     if (opts[propName] === undefined && schema.default !== undefined) {
       opts[propName] = schema.default;
@@ -297,28 +298,12 @@ function resolveDefinition(ref: string, definitions: Properties) {
   return definitions[definition];
 }
 
-export function convertPositionParamsIntoNamedParams(
-  opts: { [k: string]: any },
-  schema: Schema,
-  argv: string[]
-) {
-  Object.entries(schema.properties).forEach(([k, v]) => {
-    if (
-      opts[k] === undefined &&
-      v.$default !== undefined &&
-      argv[v.$default.index]
-    ) {
-      opts[k] = coerceType(v, argv[v.$default.index]);
-    }
-  });
-  delete opts['_'];
-}
-
 export function combineOptionsForExecutor(
   commandLineOpts: Options,
   config: string,
   target: TargetConfiguration,
-  schema: Schema
+  schema: Schema,
+  defaultProjectName: string | null
 ) {
   const r = convertAliases(
     coerceTypesInOptions(commandLineOpts, schema),
@@ -328,10 +313,11 @@ export function combineOptionsForExecutor(
   const configOpts =
     config && target.configurations ? target.configurations[config] || {} : {};
   const combined = { ...target.options, ...configOpts, ...r };
-  convertPositionParamsIntoNamedParams(
+  convertSmartDefaultsIntoNamedParams(
     combined,
     schema,
-    (commandLineOpts['_'] as string[]) || []
+    (commandLineOpts['_'] as string[]) || [],
+    defaultProjectName
   );
   setDefaults(combined, schema);
   validateOptsAgainstSchema(combined, schema);
@@ -342,50 +328,105 @@ export async function combineOptionsForGenerator(
   commandLineOpts: Options,
   collectionName: string,
   generatorName: string,
-  ws: WorkspaceConfiguration | null,
+  wc: WorkspaceConfiguration | null,
   schema: Schema,
-  isInteractive: boolean
+  isInteractive: boolean,
+  defaultProjectName: string | null
 ) {
-  const generatorDefaults = ws
-    ? getGeneratorDefaults(ws, collectionName, generatorName)
+  const generatorDefaults = wc
+    ? getGeneratorDefaults(
+        defaultProjectName,
+        wc,
+        collectionName,
+        generatorName
+      )
     : {};
   let combined = convertAliases(
     coerceTypesInOptions({ ...generatorDefaults, ...commandLineOpts }, schema),
     schema,
     false
   );
-  convertPositionParamsIntoNamedParams(
+  convertSmartDefaultsIntoNamedParams(
     combined,
     schema,
-    (commandLineOpts['_'] as string[]) || []
+    (commandLineOpts['_'] as string[]) || [],
+    defaultProjectName
   );
+
   if (isInteractive && isTTY()) {
     combined = await promptForValues(combined, schema);
   }
+
   setDefaults(combined, schema);
+
   validateOptsAgainstSchema(combined, schema);
   return combined;
 }
 
+export function convertSmartDefaultsIntoNamedParams(
+  opts: { [k: string]: any },
+  schema: Schema,
+  argv: string[],
+  defaultProjectName: string | null
+) {
+  Object.entries(schema.properties).forEach(([k, v]) => {
+    if (
+      opts[k] === undefined &&
+      v.$default !== undefined &&
+      v.$default.$source === 'argv' &&
+      argv[v.$default.index]
+    ) {
+      opts[k] = coerceType(v, argv[v.$default.index]);
+    } else if (
+      opts[k] === undefined &&
+      v.$default !== undefined &&
+      v.$default.$source === 'projectName' &&
+      defaultProjectName
+    ) {
+      opts[k] = defaultProjectName;
+    }
+  });
+}
+
 function getGeneratorDefaults(
-  ws: WorkspaceConfiguration,
+  projectName: string | null,
+  wc: WorkspaceConfiguration,
   collectionName: string,
   generatorName: string
 ) {
-  if (!ws.generators) return {};
-
   let defaults = {};
-  if (
-    ws.generators[collectionName] &&
-    ws.generators[collectionName][generatorName]
-  ) {
-    defaults = { ...defaults, ...ws.generators[collectionName][generatorName] };
+  if (wc.generators) {
+    if (
+      wc.generators[collectionName] &&
+      wc.generators[collectionName][generatorName]
+    ) {
+      defaults = {
+        ...defaults,
+        ...wc.generators[collectionName][generatorName],
+      };
+    }
+    if (wc.generators[`${collectionName}:${generatorName}`]) {
+      defaults = {
+        ...defaults,
+        ...wc.generators[`${collectionName}:${generatorName}`],
+      };
+    }
   }
-  if (ws.generators[`${collectionName}:${generatorName}`]) {
-    defaults = {
-      ...defaults,
-      ...ws.generators[`${collectionName}:${generatorName}`],
-    };
+  if (
+    projectName &&
+    wc.projects[projectName] &&
+    wc.projects[projectName].generators
+  ) {
+    const g = wc.projects[projectName].generators;
+    if (g[collectionName] && g[collectionName][generatorName]) {
+      defaults = { ...defaults, ...g[collectionName][generatorName] };
+    }
+    if (g[`${collectionName}:${generatorName}`]) {
+      defaults = {
+        ...defaults,
+        ...g[`${collectionName}:${generatorName}`],
+      };
+    }
   }
   return defaults;
 }

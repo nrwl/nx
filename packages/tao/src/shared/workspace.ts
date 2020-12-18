@@ -65,6 +65,25 @@ export interface ProjectConfiguration {
    * Project type
    */
   projectType?: 'library' | 'application';
+
+  /**
+   * List of default values used by generators.
+   *
+   * These defaults are project specific.
+   *
+   * Example:
+   *
+   * ```
+   * {
+   *   "@nrwl/react": {
+   *     "library": {
+   *       "style": "scss"
+   *     }
+   *   }
+   * }
+   * ```
+   */
+  generators?: { [collectionName: string]: { [generatorName: string]: any } };
 }
 
 /**
@@ -106,6 +125,24 @@ export function workspaceConfigName(root: string) {
 
 export class Workspaces {
   constructor(private root: string) {}
+
+  calculateDefaultProjectName(cwd: string, wc: WorkspaceConfiguration) {
+    let relativeCwd = cwd.split(this.root)[1];
+    if (relativeCwd) {
+      relativeCwd = relativeCwd.startsWith('/')
+        ? relativeCwd.substring(1)
+        : relativeCwd;
+      const matchingProject = Object.keys(wc.projects).find((p) => {
+        const projectRoot = wc.projects[p].root;
+        return (
+          relativeCwd == projectRoot ||
+          relativeCwd.startsWith(`${projectRoot}/`)
+        );
+      });
+      if (matchingProject) return matchingProject;
+    }
+    return wc.defaultProject;
+  }
 
   readWorkspaceConfiguration(): WorkspaceConfiguration {
     const w = JSON.parse(
@@ -270,7 +307,10 @@ export function toNewFormatOrNull(w: any) {
       renameProperty(project, 'architect', 'targets');
       formatted = true;
     }
-
+    if (project.schematics) {
+      renameProperty(project, 'schematics', 'generators');
+      formatted = true;
+    }
     Object.values(project.targets || {}).forEach((target: any) => {
       if (target.builder) {
         renameProperty(target, 'builder', 'executor');
@@ -297,7 +337,10 @@ export function toOldFormatOrNull(w: any) {
       renameProperty(project, 'targets', 'architect');
       formatted = true;
     }
-
+    if (project.generators) {
+      renameProperty(project, 'generators', 'schematics');
+      formatted = true;
+    }
     Object.values(project.architect || {}).forEach((target: any) => {
       if (target.executor) {
         renameProperty(target, 'executor', 'builder');

@@ -2,7 +2,7 @@ import { ParsedArgs } from 'minimist';
 import {
   coerceTypesInOptions,
   convertAliases,
-  convertPositionParamsIntoNamedParams,
+  convertSmartDefaultsIntoNamedParams,
   convertToCamelCase,
   lookupUnmatched,
   Schema,
@@ -330,10 +330,10 @@ describe('params', () => {
     });
   });
 
-  describe('convertPositionParamsIntoNamedParams', () => {
-    it('should set defaults from argv', () => {
+  describe('convertSmartDefaultsIntoNamedParams', () => {
+    it('should use argv', () => {
       const params = {};
-      convertPositionParamsIntoNamedParams(
+      convertSmartDefaultsIntoNamedParams(
         params,
         {
           properties: {
@@ -346,10 +346,32 @@ describe('params', () => {
             },
           },
         },
-        ['argv-value']
+        ['argv-value'],
+        null
       );
 
       expect(params).toEqual({ a: 'argv-value' });
+    });
+
+    it('should use projectName', () => {
+      const params = {};
+      convertSmartDefaultsIntoNamedParams(
+        params,
+        {
+          properties: {
+            a: {
+              type: 'string',
+              $default: {
+                $source: 'projectName',
+              },
+            },
+          },
+        },
+        [],
+        'myProject'
+      );
+
+      expect(params).toEqual({ a: 'myProject' });
     });
   });
 
