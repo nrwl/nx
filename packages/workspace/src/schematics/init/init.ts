@@ -10,7 +10,7 @@ import {
   noop,
   filter,
 } from '@angular-devkit/schematics';
-import { join, normalize } from '@angular-devkit/core';
+import { join, JsonObject, normalize, relative } from '@angular-devkit/core';
 import { Schema } from './schema';
 import {
   angularCliVersion,
@@ -231,16 +231,34 @@ function updateAngularCLIJson(options: Schema): Rule {
       );
       defaultProject.targets.delete('e2e');
     }
+
+    workspace.extensions.cli = (workspace.extensions.cli || {}) as JsonObject;
+    if (!workspace.extensions.cli.defaultCollection) {
+      workspace.extensions.cli.defaultCollection = '@nrwl/angular';
+    }
   });
 }
 
 function updateTsConfig(options: Schema): Rule {
-  return (host: Tree) => {
-    const tsConfigPath = getRootTsConfigPath(host);
-    return updateJsonInTree(tsConfigPath, (tsConfigJson) =>
-      setUpCompilerOptions(tsConfigJson, options.npmScope, '')
-    );
-  };
+  return (host) =>
+    chain([
+      updateJsonInTree('nx.json', (json) => {
+        json.implicitDependencies['tsconfig.base.json'] = '*';
+        return json;
+      }),
+      updateJsonInTree('tsconfig.base.json', () =>
+        setUpCompilerOptions(
+          readJsonInTree(host, getRootTsConfigPath(host)),
+          options.npmScope,
+          ''
+        )
+      ),
+      (host) => {
+        if (host.exists('tsconfig.json')) {
+          host.delete('tsconfig.json');
+        }
+      },
+    ]);
 }
 
 function updateTsConfigsJson(options: Schema) {
@@ -249,29 +267,30 @@ function updateTsConfigsJson(options: Schema) {
     const app = workspaceJson.projects[options.name];
     const e2eProject = getE2eProject(workspaceJson);
     const tsConfigPath = getRootTsConfigPath(host);
-    const offset = '../../';
+    const appOffset = offsetFromRoot(app.root);
 
     return chain([
       updateJsonInTree(app.architect.build.options.tsConfig, (json) => {
-        json.extends = `${offset}${tsConfigPath}`;
+        json.extends = `${appOffset}${tsConfigPath}`;
         json.compilerOptions = json.compilerOptions || {};
-        json.compilerOptions.outDir = `${offset}dist/out-tsc`;
+        json.compilerOptions.outDir = `${appOffset}dist/out-tsc`;
         return json;
       }),
 
       app.architect.test
         ? updateJsonInTree(app.architect.test.options.tsConfig, (json) => {
-            json.extends = `${offset}${tsConfigPath}`;
+            json.extends = `${appOffset}${tsConfigPath}`;
             json.compilerOptions = json.compilerOptions || {};
-            json.compilerOptions.outDir = `${offset}dist/out-tsc`;
+            json.compilerOptions.outDir = `${appOffset}dist/out-tsc`;
             return json;
           })
         : noop(),
 
       app.architect.server
         ? updateJsonInTree(app.architect.server.options.tsConfig, (json) => {
+            json.extends = `${appOffset}${tsConfigPath}`;
             json.compilerOptions = json.compilerOptions || {};
-            json.compilerOptions.outDir = `${offset}dist/out-tsc`;
+            json.compilerOptions.outDir = `${appOffset}dist/out-tsc`;
             return json;
           })
         : noop(),
@@ -472,7 +491,6 @@ function moveExistingFiles(options: Schema) {
 function createAdditionalFiles(options: Schema): Rule {
   return (host: Tree, _context: SchematicContext) => {
     const workspaceJson = readJsonInTree(host, 'angular.json');
-    const tsConfigPath = getRootTsConfigPath(host);
     host.create(
       'nx.json',
       serializeJson({
@@ -483,7 +501,6 @@ function createAdditionalFiles(options: Schema): Rule {
         implicitDependencies: {
           'angular.json': '*',
           'package.json': '*',
-          [tsConfigPath]: '*',
           'tslint.json': '*',
           '.eslintrc.json': '*',
           'nx.json': '*',
