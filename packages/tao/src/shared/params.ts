@@ -386,6 +386,7 @@ export function convertSmartDefaultsIntoNamedParams(
       opts[k] = defaultProjectName;
     }
   });
+  delete opts['_'];
 }
 
 function getGeneratorDefaults(
