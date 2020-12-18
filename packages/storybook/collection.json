@@ -1,5 +1,5 @@
 {
-  "name": "Nx Cypress",
+  "name": "Nx Storybook",
   "version": "0.1",
   "schematics": {
     "init": {
@@ -12,7 +12,7 @@
     "configuration": {
       "factory": "./src/schematics/configuration/configuration",
       "schema": "./src/schematics/configuration/schema.json",
-      "description": "Add storybook configuration to a ui library",
+      "description": "Add storybook configuration to a ui library or an application",
       "hidden": false
     },
     "cypress-project": {
