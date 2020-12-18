@@ -37,7 +37,7 @@ The Nx core team have gained a lot of experience migrating large workspaces over
 If you ran `ng update` and saw the error telling you to use `nx migrate`, do the following:
 
 - `git checkout .`
-- `git clean -f .
+- `git clean -f .`
 - `rm -rf node_modules`
 - `npm install` (or `yarn install`)
 - `nx migrate latest`
