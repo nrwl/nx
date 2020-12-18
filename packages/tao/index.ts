@@ -33,6 +33,7 @@ export async function invokeCommand(
     case 'generate':
     case 'g':
       return (await import('./src/commands/generate')).generate(
+        process.cwd(),
         root,
         commandArgs,
         isVerbose

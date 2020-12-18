@@ -174,7 +174,8 @@ export async function taoNew(cwd: string, args: string[], isVerbose = false) {
       normalizedGeneratorName,
       null,
       schema,
-      opts.interactive
+      opts.interactive,
+      null
     );
     return (await import('./ngcli-adapter')).invokeNew(
       cwd,
@@ -188,6 +189,7 @@ export async function taoNew(cwd: string, args: string[], isVerbose = false) {
 }
 
 export async function generate(
+  cwd: string,
   root: string,
   args: string[],
   isVerbose = false
@@ -218,7 +220,8 @@ export async function generate(
       normalizedGeneratorName,
       workspaceDefinition,
       schema,
-      opts.interactive
+      opts.interactive,
+      ws.calculateDefaultProjectName(cwd, workspaceDefinition)
     );
 
     if (ws.isNxGenerator(opts.collectionName, normalizedGeneratorName)) {
