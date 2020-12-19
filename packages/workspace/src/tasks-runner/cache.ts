@@ -11,6 +11,7 @@ import { join, resolve } from 'path';
 import * as fsExtra from 'fs-extra';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { spawn } from 'child_process';
+import { cacheDirectory } from '../utils/cache-directory';
 
 export type CachedResult = { terminalOutput: string; outputsPath: string };
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
@@ -162,16 +163,7 @@ export class Cache {
   }
 
   private createCacheDir() {
-    let dir;
-    if (this.options.cacheDirectory) {
-      if (this.options.cacheDirectory.startsWith('./')) {
-        dir = join(this.root, this.options.cacheDirectory);
-      } else {
-        dir = this.options.cacheDirectory;
-      }
-    } else {
-      dir = join(this.root, 'node_modules', '.cache', 'nx');
-    }
+    const dir = cacheDirectory(this.root, this.options.cacheDirectory);
     if (!existsSync(dir)) {
       fsExtra.ensureDirSync(dir);
     }
