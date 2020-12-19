@@ -280,6 +280,20 @@ describe('Next.js Applications', () => {
 
     checkFilesExist(`dist/apps/${appName}/next.config.js`);
   }, 120000);
+
+  it('should support --js flag', async () => {
+    const appName = uniq('app');
+
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --js`);
+
+    checkFilesExist(`apps/${appName}/pages/index.js`);
+
+    await checkApp(appName, {
+      checkUnitTest: true,
+      checkLint: true,
+      checkE2E: true,
+    });
+  }, 120000);
 });
 
 async function checkApp(

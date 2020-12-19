@@ -98,6 +98,11 @@
       "type": "string",
       "description": "Add tags to the application (used for linting)",
       "alias": "t"
+    },
+    "js": {
+      "type": "boolean",
+      "description": "Generate JavaScript files rather than TypeScript files.",
+      "default": false
     }
   },
   "required": []
