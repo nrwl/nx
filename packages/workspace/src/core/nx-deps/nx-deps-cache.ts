@@ -16,6 +16,10 @@ import {
 } from '../../utils/fileutils';
 import { FileMap } from '@nrwl/workspace/src/core/file-graph';
 import { performance } from 'perf_hooks';
+import {
+  cacheDirectory,
+  readCacheDirectoryProperty,
+} from '../../utils/cache-directory';
 
 export interface ProjectGraphCache {
   version: string;
@@ -24,7 +28,10 @@ export interface ProjectGraphCache {
   dependencies: Record<string, ProjectGraphDependency[]>;
 }
 
-const nxDepsDir = join(appRootPath, 'node_modules', '.cache', 'nx');
+const nxDepsDir = cacheDirectory(
+  appRootPath,
+  readCacheDirectoryProperty(appRootPath)
+);
 const nxDepsPath = join(nxDepsDir, 'nxdeps.json');
 export function readCache(): false | ProjectGraphCache {
   performance.mark('read cache:start');
