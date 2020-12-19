@@ -315,4 +315,26 @@ describe('app', () => {
       });
     });
   });
+
+  describe('--js', () => {
+    it('generates JS files', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myApp', js: true },
+        appTree
+      );
+
+      expect(tree.exists('apps/my-app/pages/index.js')).toBeTruthy();
+      expect(tree.exists('apps/my-app/specs/index.spec.js')).toBeTruthy();
+      expect(tree.exists('apps/my-app/index.d.js')).toBeFalsy();
+      expect(tree.exists('apps/my-app/index.d.ts')).toBeFalsy();
+
+      const tsConfig = readJsonInTree(tree, 'apps/my-app/tsconfig.json');
+      expect(tsConfig.compilerOptions.allowJs).toEqual(true);
+
+      const tsConfigApp = readJsonInTree(tree, 'apps/my-app/tsconfig.app.json');
+      expect(tsConfigApp.include).toContain('**/*.js');
+      expect(tsConfigApp.exclude).toContain('**/*.spec.js');
+    });
+  });
 });

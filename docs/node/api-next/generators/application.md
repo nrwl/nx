@@ -54,6 +54,14 @@ Possible values: `cypress`, `none`
 
 Test runner to use for end to end (e2e) tests
 
+### js
+
+Default: `false`
+
+Type: `boolean`
+
+Generate JavaScript files rather than TypeScript files.
+
 ### linter
 
 Default: `eslint`

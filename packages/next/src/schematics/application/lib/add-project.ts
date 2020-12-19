@@ -55,7 +55,7 @@ export function addProject(options: NormalizedSchema): Rule {
       normalize(options.appProjectRoot),
       join(normalize(options.appProjectRoot), 'tsconfig.json'),
       options.linter,
-      [`${options.appProjectRoot}/**/*.{ts,tsx}`]
+      [`${options.appProjectRoot}/**/*.{ts,tsx,js,jsx}`]
     );
 
     json.projects[options.projectName] = {

@@ -13,6 +13,7 @@ export interface NormalizedSchema extends Schema {
   parsedTags: string[];
   fileName: string;
   styledModule: null | string;
+  js?: boolean;
 }
 
 export function normalizeOptions(
