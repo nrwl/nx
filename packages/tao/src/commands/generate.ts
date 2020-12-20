@@ -158,7 +158,7 @@ function printChanges(fileChanges: FileChange[]) {
 }
 
 export async function taoNew(cwd: string, args: string[], isVerbose = false) {
-  const ws = new Workspaces(cwd);
+  const ws = new Workspaces(null);
   return handleErrors(isVerbose, async () => {
     const opts = parseGenerateOpts(args, 'new', null);
 
