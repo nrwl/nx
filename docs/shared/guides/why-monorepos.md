@@ -1,15 +1,3 @@
-# Why Nx?
-
-Nx is the preeminent toolkit for Monorepo development, which helps you to build software smarter and faster. With Nx you can build full-stack applications with your preferred framework, integrate with modern tools you’re probably already using, and reinforce best practices for your entire development team or enterprise. Use Nx to build software at scale, the better way.
-
-- Out of the box integration with Cypress, Jest, Typescript, Prettier + more
-- Has a growing ecosystem, and a community plugin market
-- Many leading enterprises are already using Nx to build the software you know and love
-
-## 10-Minute Nx Overview
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/mVKMse-gFBI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
 ## Why Monorepos?
 
 A monorepo is a single git repository that holds the source code for multiple applications and libraries, along with the tooling for them.
@@ -37,25 +25,10 @@ Nx provides tools to give you the benefits of a monorepo without the drawbacks o
 
 ### Scaling Your Repo
 
-- **Faster Command Execution** - Builders allow for consistent commands to test, serve, build, lint, etc, each project. [Nx’s affected command]() helps run commands only on code that is affected by the current change. Nx provides local and distributed caching of builder commands so when someone on your team runs a command, everyone else will use their artifacts to speed up their own command executions, often bringing them down from minutes to seconds. This, in combination with support for distributed and incremental builds helps you scale your development to massive applications and repositories.
+- **Faster Command Execution** - Executors (or builders) allow for consistent commands to test, serve, build, lint, etc, each project. [Nx’s affected command]() helps run commands only on code that is affected by the current change. Nx provides local and distributed caching of executors so when someone on your team runs a command, everyone else will use their artifacts to speed up their own command executions, often bringing them down from minutes to seconds. This, in combination with support for distributed and incremental builds helps you scale your development to massive applications and repositories.
 
 ### Scaling Your Organization
 
 - **Controlled Code Sharing** - You can define libraries with specific enforced APIs and put rules in place to define how those libraries can depend on each other. A CODEOWNERS file can be used to restrict who is allowed to change files in each project.
 - **Consistent Code Generation** - Generators allow you to automate code creation and modification tasks. Instead of writing a 7 step guide in a readme file, you can create a generator to prompt the developer for inputs and then modify the code directly. Nrwl provides plugins which contain useful executors and generators for a lot of popular tools. Also, there is a growing number of community provided plugins.
 - **Accurate Architecture Diagram** - Most architecture diagrams are wrong the moment they are written down. And every diagram becomes out of date as soon as the code changes. Since Nx understands your code, it can generate an up-to-date and accurate diagram of how projects depend on each other. And for cases where dependencies are not explicit in the code, you can manually tell Nx about project dependencies.
-
-## Next Steps
-
-**Learn Nx Fundamentals:**
-
-- [Interactive Nx Tutorial](/{{framework}}/tutorial/01-create-application)
-- [Free Nx Course on YouTube](https://www.youtube.com/watch?time_continue=49&v=2mYLe9Kp9VM&feature=emb_logo)
-- [45-Minute Walkthrough on YouTube](https://www.youtube.com/watch?v=h5FIGDn5YM0)
-
-**Dive Deep:**
-
-- [Nx CLI](/{{framework}}/cli/overview)
-- [Configuration Files](/{{framework}}/workspace/configuration)
-- [Computation Caching](/{{framework}}/workspace/computation-caching)
-- [Rebuilding What is Affected](/{{framework}}/guides/ci/monorepo-affected)
