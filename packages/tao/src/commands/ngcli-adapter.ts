@@ -42,7 +42,7 @@ import { BuiltinTaskExecutor } from '@angular-devkit/schematics/tasks/node';
 import { dirname, extname, join, resolve } from 'path';
 import * as stripJsonComments from 'strip-json-comments';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { concatMap, map, switchMap } from 'rxjs/operators';
 import { NX_ERROR, NX_PREFIX } from '../shared/logger';
 
@@ -98,7 +98,43 @@ function getCollection(workflow: any, name: string) {
   return collection;
 }
 
+function convertEventTypeToHandleMultipleConfigNames(
+  host: any,
+  eventPath: string,
+  content: Buffer | never
+) {
+  const actualConfigName = host.exists('/workspace.json')
+    ? 'workspace.json'
+    : 'angular.json';
+  const isWorkspaceConfig =
+    eventPath === 'angular.json' || eventPath === 'workspace.json';
+  if (isWorkspaceConfig) {
+    let isNewFormat = true;
+    try {
+      isNewFormat =
+        JSON.parse(host.read(actualConfigName).toString()).version === 2;
+    } catch (e) {}
+
+    if (content && isNewFormat) {
+      const formatted = toNewFormatOrNull(JSON.parse(content.toString()));
+      if (formatted) {
+        return {
+          eventPath: actualConfigName,
+          content: Buffer.from(JSON.stringify(formatted, null, 2)),
+        };
+      } else {
+        return { eventPath: actualConfigName, content: content };
+      }
+    } else {
+      return { eventPath: actualConfigName, content: content };
+    }
+  } else {
+    return { eventPath, content };
+  }
+}
+
 function createRecorder(
+  host: any,
   record: {
     loggingQueue: string[];
     error: boolean;
@@ -109,10 +145,17 @@ function createRecorder(
     const eventPath = event.path.startsWith('/')
       ? event.path.substr(1)
       : event.path;
+
+    const r = convertEventTypeToHandleMultipleConfigNames(
+      host,
+      eventPath,
+      (event as any).content
+    );
+
     if (event.kind === 'error') {
       record.error = true;
       logger.warn(
-        `ERROR! ${eventPath} ${
+        `ERROR! ${r.eventPath} ${
           event.description == 'alreadyExist'
             ? 'already exists'
             : 'does not exist.'
@@ -120,27 +163,24 @@ function createRecorder(
       );
     } else if (event.kind === 'update') {
       record.loggingQueue.push(
-        tags.oneLine`${chalk.white('UPDATE')} ${eventPath} (${
-          event.content.length
-        } bytes)`
+        tags.oneLine`${chalk.white('UPDATE')} ${r.eventPath}`
       );
     } else if (event.kind === 'create') {
       record.loggingQueue.push(
-        tags.oneLine`${chalk.green('CREATE')} ${eventPath} (${
-          event.content.length
-        } bytes)`
+        tags.oneLine`${chalk.green('CREATE')} ${r.eventPath}`
       );
     } else if (event.kind === 'delete') {
-      record.loggingQueue.push(`${chalk.yellow('DELETE')} ${eventPath}`);
+      record.loggingQueue.push(`${chalk.yellow('DELETE')} ${r.eventPath}`);
     } else if (event.kind === 'rename') {
       record.loggingQueue.push(
-        `${chalk.blue('RENAME')} ${eventPath} => ${event.to}`
+        `${chalk.blue('RENAME')} ${r.eventPath} => ${event.to}`
       );
     }
   };
 }
 
 async function runSchematic(
+  host: any,
   root: string,
   workflow: NodeWorkflow,
   logger: logging.Logger,
@@ -153,7 +193,7 @@ async function runSchematic(
   recorder: any = null
 ): Promise<{ status: number; loggingQueue: string[] }> {
   const record = { loggingQueue: [] as string[], error: false };
-  workflow.reporter.subscribe(recorder || createRecorder(record, logger));
+  workflow.reporter.subscribe(recorder || createRecorder(host, record, logger));
 
   try {
     await workflow
@@ -262,11 +302,11 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
   }
 
   read(path: Path): Observable<FileBuffer> {
-    if (this.isWorkspaceConfig(path)) {
-      return this.isNewFormat().pipe(
-        switchMap((newFormat) => {
-          if (newFormat) {
-            return super.read(path).pipe(
+    return this.context(path).pipe(
+      switchMap((r) => {
+        if (r.isWorkspaceConfig) {
+          if (r.isNewFormat) {
+            return super.read(r.actualConfigFileName).pipe(
               map((r) => {
                 try {
                   const w = JSON.parse(Buffer.from(r).toString());
@@ -280,39 +320,136 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
               })
             );
           } else {
-            return super.read(path);
+            return super.read(r.actualConfigFileName);
           }
-        })
-      );
-    } else {
-      return super.read(path);
-    }
+        } else {
+          return super.read(path);
+        }
+      })
+    );
   }
 
   write(path: Path, content: FileBuffer): Observable<void> {
-    if (this.isWorkspaceConfig(path)) {
-      return this.isNewFormat().pipe(
-        switchMap((newFormat) => {
-          if (newFormat) {
+    return this.context(path).pipe(
+      switchMap((r) => {
+        if (r.isWorkspaceConfig) {
+          if (r.isNewFormat) {
             try {
               const w = JSON.parse(Buffer.from(content).toString());
               const formatted = toNewFormatOrNull(w);
               if (formatted) {
                 return super.write(
-                  path,
+                  r.actualConfigFileName,
                   Buffer.from(JSON.stringify(formatted, null, 2))
                 );
               } else {
-                return super.write(path, content);
+                return super.write(r.actualConfigFileName, content);
               }
             } catch (e) {
-              return super.write(path, content);
+              return super.write(r.actualConfigFileName, content);
             }
           } else {
-            return super.write(path, content);
+            return super.write(r.actualConfigFileName, content);
           }
+        } else {
+          return super.write(path, content);
+        }
+      })
+    );
+  }
+
+  isFile(path: Path): Observable<boolean> {
+    return this.context(path).pipe(
+      switchMap((r) => {
+        if (r.isWorkspaceConfig) {
+          return super.isFile(r.actualConfigFileName);
+        } else {
+          return super.isFile(path);
+        }
+      })
+    );
+  }
+
+  exists(path: Path): Observable<boolean> {
+    return this.context(path).pipe(
+      switchMap((r) => {
+        if (r.isWorkspaceConfig) {
+          return super.exists(r.actualConfigFileName);
+        } else {
+          return super.exists(path);
+        }
+      })
+    );
+  }
+
+  private context(
+    path: string
+  ): Observable<{
+    isWorkspaceConfig: boolean;
+    actualConfigFileName: any;
+    isNewFormat: boolean;
+  }> {
+    const p = path.toString();
+    if (
+      p === 'angular.json' ||
+      p === '/angular.json' ||
+      p === 'workspace.json' ||
+      p === '/workspace.json'
+    ) {
+      return super.exists('/angular.json' as any).pipe(
+        switchMap((isAngularJson) => {
+          const actualConfigFileName = isAngularJson
+            ? '/angular.json'
+            : '/workspace.json';
+          return super.read(actualConfigFileName as any).pipe(
+            map((r) => {
+              try {
+                const w = JSON.parse(Buffer.from(r).toString());
+                return {
+                  isWorkspaceConfig: true,
+                  actualConfigFileName,
+                  isNewFormat: w.version === 2,
+                };
+              } catch (e) {
+                return {
+                  isWorkspaceConfig: true,
+                  actualConfigFileName,
+                  isNewFormat: false,
+                };
+              }
+            })
+          );
         })
       );
+    } else {
+      return of({
+        isWorkspaceConfig: false,
+        actualConfigFileName: null,
+        isNewFormat: false,
+      });
+    }
+  }
+}
+
+/**
+ * This host contains the workaround needed to run Angular migrations
+ */
+export class NxScopedHostForMigrations extends NxScopedHost {
+  constructor(root: Path) {
+    super(root);
+  }
+
+  read(path: Path): Observable<FileBuffer> {
+    if (this.isWorkspaceConfig(path)) {
+      return super.read(path).pipe(map(processConfigWhenReading));
+    } else {
+      return super.read(path);
+    }
+  }
+
+  write(path: Path, content: FileBuffer) {
+    if (this.isWorkspaceConfig(path)) {
+      return super.write(path, processConfigWhenWriting(content));
     } else {
       return super.write(path, content);
     }
@@ -326,104 +463,6 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
       p === 'workspace.json' ||
       p === '/workspace.json'
     );
-  }
-
-  private isNewFormat() {
-    return super.exists('/angular.json' as any).pipe(
-      switchMap((isAngularJson) => {
-        return super
-          .read((isAngularJson ? '/angular.json' : '/workspace.json') as any)
-          .pipe(
-            map((r) => JSON.parse(Buffer.from(r).toString()).version === 2)
-          );
-      })
-    );
-  }
-}
-
-/**
- * This host contains the workaround needed to run Angular migrations
- */
-export class NxScopedHostForMigrations extends NxScopedHost {
-  constructor(root: Path) {
-    super(root);
-  }
-
-  read(path: Path): Observable<FileBuffer> {
-    return this.hasWorkspaceJson().pipe(
-      concatMap((hasWorkspace) => {
-        if (this.isWorkspaceConfig(path)) {
-          if (
-            hasWorkspace &&
-            (path == '/angular.json' || path == 'angular.json')
-          ) {
-            return super
-              .read('/workspace.json' as any)
-              .pipe(map(processConfigWhenReading));
-          } else {
-            return super.read(path).pipe(map(processConfigWhenReading));
-          }
-        } else {
-          return super.read(path);
-        }
-      })
-    );
-  }
-
-  isFile(path: Path): Observable<boolean> {
-    return this.hasWorkspaceJson().pipe(
-      concatMap((hasWorkspace) => {
-        if (
-          hasWorkspace &&
-          (path == '/angular.json' || path == 'angular.json')
-        ) {
-          return super.isFile('/workspace.json' as any);
-        } else {
-          return super.isFile(path);
-        }
-      })
-    );
-  }
-
-  exists(path: Path): Observable<boolean> {
-    return this.hasWorkspaceJson().pipe(
-      concatMap((hasWorkspace) => {
-        if (
-          hasWorkspace &&
-          (path == '/angular.json' || path == 'angular.json')
-        ) {
-          return super.exists('/workspace.json' as any);
-        } else {
-          return super.exists(path);
-        }
-      })
-    );
-  }
-
-  write(path: Path, content: FileBuffer): Observable<void> {
-    return this.hasWorkspaceJson().pipe(
-      concatMap((hasWorkspace) => {
-        if (this.isWorkspaceConfig(path)) {
-          if (
-            hasWorkspace &&
-            (path == '/angular.json' || path == 'angular.json')
-          ) {
-            return super.write(
-              '/workspace.json' as any,
-              processConfigWhenWriting(content)
-            );
-          } else {
-            return super.write(path as any, processConfigWhenWriting(content));
-          }
-        } else {
-          return super.write(path as any, content);
-        }
-      })
-    );
-  }
-
-  private hasWorkspaceJson() {
-    return super.exists('/workspace.json' as any);
   }
 }
 
@@ -483,6 +522,7 @@ export async function generate(
   const schematic = collection.createSchematic(opts.generatorName, true);
   return (
     await runSchematic(
+      fsHost,
       root,
       workflow,
       logger as any,
@@ -527,18 +567,25 @@ export function wrapAngularDevkitSchematic(
     emptyLogger.createChild = () => emptyLogger;
 
     const recorder = (event: DryRunEvent) => {
-      const eventPath = event.path.startsWith('/')
+      let eventPath = event.path.startsWith('/')
         ? event.path.substr(1)
         : event.path;
+
+      const r = convertEventTypeToHandleMultipleConfigNames(
+        host,
+        eventPath,
+        (event as any).content
+      );
+
       if (event.kind === 'error') {
       } else if (event.kind === 'update') {
-        host.write(eventPath, event.content);
+        host.write(r.eventPath, r.content);
       } else if (event.kind === 'create') {
-        host.write(eventPath, event.content);
+        host.write(r.eventPath, r.content);
       } else if (event.kind === 'delete') {
-        host.delete(eventPath);
+        host.delete(r.eventPath);
       } else if (event.kind === 'rename') {
-        host.rename(eventPath, event.to);
+        host.rename(r.eventPath, event.to);
       }
     };
 
@@ -569,6 +616,7 @@ export function wrapAngularDevkitSchematic(
     const collection = getCollection(workflow, collectionName);
     const schematic = collection.createSchematic(generatorName, true);
     const res = await runSchematic(
+      fsHost,
       host.root,
       workflow,
       emptyLogger,
@@ -596,6 +644,7 @@ export async function invokeNew(
   const schematic = collection.createSchematic('new', true);
   return (
     await runSchematic(
+      fsHost,
       root,
       workflow,
       logger as any,
