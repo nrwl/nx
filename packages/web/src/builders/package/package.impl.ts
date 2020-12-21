@@ -222,7 +222,7 @@ export function createRollupOptions(
         plugins: [
           config.format === 'esm'
             ? undefined
-            : 'babel-plugin-transform-async-to-promises',
+            : require.resolve('babel-plugin-transform-async-to-promises'),
         ].filter(Boolean),
       }),
       commonjs(),
