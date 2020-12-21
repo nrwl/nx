@@ -359,9 +359,9 @@ export class NxScopedHostForMigrations extends NxScopedHost {
           ) {
             return super
               .read('/workspace.json' as any)
-              .pipe(map(processConfig));
+              .pipe(map(processConfigWhenReading));
           } else {
-            return super.read(path).pipe(map(processConfig));
+            return super.read(path).pipe(map(processConfigWhenReading));
           }
         } else {
           return super.read(path);
@@ -407,7 +407,10 @@ export class NxScopedHostForMigrations extends NxScopedHost {
           hasWorkspace &&
           (path == '/angular.json' || path == 'angular.json')
         ) {
-          return super.write('/workspace.json' as any, content);
+          return super.write(
+            '/workspace.json' as any,
+            processConfigWhenWriting(content)
+          );
         } else {
           return super.write(path as any, content);
         }
@@ -420,7 +423,7 @@ export class NxScopedHostForMigrations extends NxScopedHost {
   }
 }
 
-function processConfig(content: ArrayBuffer) {
+function processConfigWhenReading(content: ArrayBuffer) {
   try {
     const json = JSON.parse(Buffer.from(content).toString());
     Object.values(json.projects).forEach((p: any) => {
@@ -432,6 +435,28 @@ function processConfig(content: ArrayBuffer) {
             !e.options.tsConfig
           ) {
             e.options.tsConfig = `${p.root}/tsconfig.spec.json`;
+          }
+        });
+      } catch (e) {}
+    });
+    return Buffer.from(JSON.stringify(json, null, 2));
+  } catch (e) {
+    return content;
+  }
+}
+
+function processConfigWhenWriting(content: ArrayBuffer) {
+  try {
+    const json = JSON.parse(Buffer.from(content).toString());
+    Object.values(json.projects).forEach((p: any) => {
+      try {
+        Object.values(p.architect || p.targets).forEach((e: any) => {
+          if (
+            (e.builder === '@nrwl/jest:jest' ||
+              e.executor === '@nrwl/jest:jest') &&
+            e.options.tsConfig
+          ) {
+            delete e.options.tsConfig;
           }
         });
       } catch (e) {}
