@@ -93,9 +93,9 @@ function coerceType(prop: PropertyDescription | undefined, value: any) {
       }
     }
     return value;
-  } else if (prop.type == 'boolean') {
+  } else if (normalizedPrimitiveType(prop.type) == 'boolean') {
     return value === true || value == 'true';
-  } else if (prop.type == 'number') {
+  } else if (normalizedPrimitiveType(prop.type) == 'number') {
     return Number(value);
   } else if (prop.type == 'array') {
     return value
@@ -206,7 +206,7 @@ function validateProperty(
 
   const isPrimitive = typeof value !== 'object';
   if (isPrimitive) {
-    if (typeof value !== schema.type) {
+    if (typeof value !== normalizedPrimitiveType(schema.type)) {
       throw new SchemaError(
         `Property '${propName}' does not match the schema. '${value}' should be a '${schema.type}'.`
       );
@@ -225,6 +225,15 @@ function validateProperty(
       definitions
     );
   }
+}
+
+/**
+ * Unfortunately, due to use supporting Angular Devkit, we have to do the following
+ * conversions.
+ */
+function normalizedPrimitiveType(type: string) {
+  if (type === 'integer') return 'number';
+  return type;
 }
 
 function throwInvalidSchema(propName: string, schema: any) {
