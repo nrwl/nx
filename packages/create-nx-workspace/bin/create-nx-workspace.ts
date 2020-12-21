@@ -418,10 +418,9 @@ function createApp(tmpDir: string, name: string, parsedArgs: WorkspaceArgs) {
   const command = `new ${name} ${args} --collection=@nrwl/workspace`;
   console.log(command);
 
+  const nxWorkspaceRoot = process.cwd().replace(/\\/g, '/');
   execSync(
-    `${
-      pmc.exec
-    } tao ${command}/collection.json --cli=${cli} --nxWorkspaceRoot="${process.cwd()}"`,
+    `${pmc.exec} tao ${command}/collection.json --cli=${cli} --nxWorkspaceRoot="${nxWorkspaceRoot}"`,
     {
       stdio: [0, 1, 2],
       cwd: tmpDir,
