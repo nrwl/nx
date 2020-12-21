@@ -1,12 +1,12 @@
 # Resources
 
+## Quick Introductions (10 Minutes)
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/cXOkmOy-8dk" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 ## 45-Minute Walkthrough
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/h5FIGDn5YM0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
-## Quick Introductions (10 Minutes)
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/mVKMse-gFBI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ## Nx Console Overview
 
@@ -23,6 +23,16 @@
 [![Advanced Nx Workspace](./advanced-nx-workspace-course.png)](https://nxplaybook.com/p/advanced-nx-workspaces)
 
 ## Resources
+
+### Highlights
+
+- [Nrwl Talks, Presentations, and Podcasts playlist on YouTube](https://www.youtube.com/playlist?list=PLakNactNC1dHHWx4JIORwfnEajRv6FG5m)
+
+- [Nx Blog Posts](https://blog.nrwl.io/nx/home)
+
+- [nx-examples](https://github.com/nrwl/nx-examples) repo has branches for different nx comments to display expected behavior and example app and libraries. Check out the branch (workspace, ngrx...) to see what gets created for you. More info on readme.
+
+- [Nx Office Hours playlist on YouTube](https://www.youtube.com/playlist?list=PLakNactNC1dE8KLQ5zd3fQwu_yQHjTmR5)
 
 ### Nx Demo & Tutorial Videos
 
@@ -52,8 +62,6 @@
 
 ### Books and Blogs
 
-- [Nx blog posts](https://blog.nrwl.io/nx/home)
-
 - [Angular Enterprise Monorepo Patterns Book (free)](https://go.nrwl.io/angular-enterprise-monorepo-patterns-new-book?utm_campaign=Book%3A%20Monorepo%20Patterns%2C%20Jan%202019&utm_source=Github&utm_medium=Banner%20Ad)
 
 - [High Quality React apps with Nx & Cypress](https://cypress.io/blog/2020/04/14/high-quality-react-apps-with-nx-cypress/) (April 2020)
@@ -64,9 +72,4 @@
 
 ### Additional Resources
 
-- [nx-examples](https://github.com/nrwl/nx-examples) repo has branches for different nx comments to display expected behavior and example app and libraries. Check out the branch (workspace, ngrx...) to see what gets created for you. More info on readme.
-
 - [xplat - Cross-platform tools for Nx workspaces](https://nstudio.io/xplat/)
-- [Nrwl Talks, Presentations, and Podcasts playlist on YouTube](https://www.youtube.com/playlist?list=PLakNactNC1dHHWx4JIORwfnEajRv6FG5m)
-
-- [Nx Office Hours playlist on YouTube](https://www.youtube.com/playlist?list=PLakNactNC1dE8KLQ5zd3fQwu_yQHjTmR5)

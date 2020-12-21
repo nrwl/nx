@@ -7,9 +7,9 @@
         "id": "getting-started",
         "itemList": [
           {
-            "name": "Why Nx?",
-            "id": "why-nx",
-            "file": "angular/getting-started/why-nx"
+            "name": "Getting Started",
+            "id": "getting-started",
+            "file": "angular/getting-started/getting-started"
           },
           {
             "name": "Resources",
@@ -1085,6 +1085,11 @@
             "name": "Nx Devkit and Angular Devkit",
             "id": "nx-devkit-angular-devkit",
             "file": "angular/guides/nx-devkit-angular-devkit"
+          },
+          {
+            "name": "Why Monorepos",
+            "id": "why-monorepos",
+            "file": "shared/guides/why-monorepos"
           }
         ]
       },
@@ -1119,9 +1124,9 @@
         "id": "getting-started",
         "itemList": [
           {
-            "name": "Why Nx?",
-            "id": "why-nx",
-            "file": "react/getting-started/why-nx"
+            "name": "Getting Started",
+            "id": "getting-started",
+            "file": "react/getting-started/getting-started"
           },
           {
             "name": "Resources",
@@ -2161,6 +2166,11 @@
             "name": "Nx Devkit",
             "id": "nx-devkit",
             "file": "shared/devkit"
+          },
+          {
+            "name": "Why Monorepos",
+            "id": "why-monorepos",
+            "file": "shared/guides/why-monorepos"
           }
         ]
       },
@@ -2195,9 +2205,9 @@
         "id": "getting-started",
         "itemList": [
           {
-            "name": "Why Nx?",
-            "id": "why-nx",
-            "file": "node/getting-started/why-nx"
+            "name": "Getting Started",
+            "id": "getting-started",
+            "file": "node/getting-started/getting-started"
           },
           {
             "name": "Resources",
@@ -3181,6 +3191,11 @@
             "name": "Nx Devkit",
             "id": "nx-devkit",
             "file": "shared/devkit"
+          },
+          {
+            "name": "Why Monorepos",
+            "id": "why-monorepos",
+            "file": "shared/guides/why-monorepos"
           }
         ]
       }
