@@ -48,7 +48,7 @@ There are a lot of options when creating your application. If you want to follow
 - [Angular](/{{framework}}/plugins/angular/generators/application)
 - [React](/{{framework}}/plugins/react/generators/application)
 
-You may also find it useful to use the [Nx Console](/{{framework}}/cli/console) in Visual Studio Code. This will give you a visual way to generate your application with all of the options laid out in front of you.
+You may also find it useful to use the [Nx Console](/{{framework}}/getting-started/console) in Visual Studio Code. This will give you a visual way to generate your application with all of the options laid out in front of you.
 
 ### Configuration files
 

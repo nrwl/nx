@@ -19,6 +19,28 @@
             "name": "Nx and Angular CLI",
             "id": "nx-and-cli",
             "file": "angular/getting-started/nx-and-cli"
+          },
+          {
+            "name": "CLI Overview",
+            "searchResultsName": "CLI Overview",
+            "id": "cli-overview",
+            "file": "angular/guides/cli-overview"
+          },
+          {
+            "name": "VS Code Plugin",
+            "id": "console",
+            "file": "shared/console"
+          },
+          {
+            "name": "File Structure",
+            "searchResultsName": "File Structure",
+            "id": "file-structure",
+            "file": "shared/file-structure"
+          },
+          {
+            "name": "Configuration",
+            "id": "configuration",
+            "file": "angular/guides/configuration"
           }
         ]
       },
@@ -104,17 +126,6 @@
         "name": "CLI",
         "id": "cli",
         "itemList": [
-          {
-            "name": "Overview",
-            "searchResultsName": "CLI Overview",
-            "id": "overview",
-            "file": "angular/guides/cli-overview"
-          },
-          {
-            "name": "Console",
-            "id": "console",
-            "file": "shared/console"
-          },
           {
             "name": "generate",
             "id": "generate",
@@ -894,17 +905,6 @@
         "id": "workspace",
         "itemList": [
           {
-            "name": "Overview",
-            "searchResultsName": "Workspace Overview",
-            "id": "workspace-overview",
-            "file": "shared/workspace-overview"
-          },
-          {
-            "name": "Configuration",
-            "id": "configuration",
-            "file": "angular/guides/configuration"
-          },
-          {
             "name": "Executors / Builders",
             "id": "executors",
             "itemList": [
@@ -1136,6 +1136,28 @@
           {
             "name": "Resources",
             "id": "resources"
+          },
+          {
+            "name": "CLI Overview",
+            "searchResultsName": "CLI Overview",
+            "id": "cli-overview",
+            "file": "react/guides/cli-overview"
+          },
+          {
+            "name": "VS Code Plugin",
+            "id": "console",
+            "file": "shared/console"
+          },
+          {
+            "name": "File Structure",
+            "searchResultsName": "File Structure",
+            "id": "file-structure",
+            "file": "shared/file-structure"
+          },
+          {
+            "name": "Configuration",
+            "id": "configuration",
+            "file": "react/guides/configuration"
           }
         ]
       },
@@ -1217,17 +1239,6 @@
         "name": "CLI",
         "id": "cli",
         "itemList": [
-          {
-            "name": "Overview",
-            "searchResultsName": "CLI Overview",
-            "id": "overview",
-            "file": "react/guides/cli-overview"
-          },
-          {
-            "name": "Console",
-            "id": "console",
-            "file": "shared/console"
-          },
           {
             "name": "generate",
             "id": "generate",
@@ -2007,17 +2018,6 @@
         "id": "workspace",
         "itemList": [
           {
-            "name": "Overview",
-            "searchResultsName": "Workspace Overview",
-            "id": "workspace-overview",
-            "file": "shared/workspace-overview"
-          },
-          {
-            "name": "Configuration",
-            "id": "configuration",
-            "file": "react/guides/configuration"
-          },
-          {
             "name": "Executors / Builders",
             "id": "executors",
             "itemList": [
@@ -2217,6 +2217,28 @@
           {
             "name": "Resources",
             "id": "resources"
+          },
+          {
+            "name": "CLI Overview",
+            "searchResultsName": "CLI Overview",
+            "id": "cli-overview",
+            "file": "node/guides/cli-overview"
+          },
+          {
+            "name": "VS Code Plugin",
+            "id": "console",
+            "file": "shared/console"
+          },
+          {
+            "name": "File Structure",
+            "searchResultsName": "File Structure",
+            "id": "file-structure",
+            "file": "shared/file-structure"
+          },
+          {
+            "name": "Configuration",
+            "id": "configuration",
+            "file": "node/guides/configuration"
           }
         ]
       },
@@ -2273,17 +2295,6 @@
         "name": "CLI",
         "id": "cli",
         "itemList": [
-          {
-            "name": "Overview",
-            "searchResultsName": "CLI Overview",
-            "id": "overview",
-            "file": "node/guides/cli-overview"
-          },
-          {
-            "name": "Console",
-            "id": "console",
-            "file": "shared/console"
-          },
           {
             "name": "generate",
             "id": "generate",
@@ -3056,17 +3067,6 @@
         "name": "Workspace",
         "id": "workspace",
         "itemList": [
-          {
-            "name": "Overview",
-            "searchResultsName": "Workspace Overview",
-            "id": "workspace-overview",
-            "file": "shared/workspace-overview"
-          },
-          {
-            "name": "Configuration",
-            "id": "configuration",
-            "file": "node/guides/configuration"
-          },
           {
             "name": "Executors / Builders",
             "id": "executors",

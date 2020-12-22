@@ -22,7 +22,7 @@ npx create-nx-workspace --preset=react
 
 ## Dive Deep
 
-- [Nx CLI](/{{framework}}/cli/overview)
-- [Configuration Files](/{{framework}}/workspace/configuration)
+- [Nx CLI](/{{framework}}/getting-started/cli-overview)
+- [Configuration Files](/{{framework}}/getting-started/configuration)
 - [Computation Caching](/{{framework}}/workspace/computation-caching)
 - [Rebuilding What is Affected](/{{framework}}/guides/ci/monorepo-affected)
