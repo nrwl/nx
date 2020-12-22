@@ -92,8 +92,8 @@ Learn more about the advantages of Nx in the following guides:
 
 - [Using Cypress for e2e tests](/angular/plugins/cypress/overview)
 - [Using Jest for unit tests](/angular/plugins/jest/overview)
-- [Computation Caching](/angular/workspace/computation-caching)
-- [Rebuilding and Retesting What is Affected](/angular/guides/ci/monorepo-affected)
+- [Computation Caching](/angular/core-concepts/computation-caching)
+- [Rebuilding and Retesting What is Affected](/angular/core-concepts/affected)
 
 ## Transitioning Manually
 
@@ -376,4 +376,4 @@ Learn more about the advantages of Nx in the following guides:
 
 [Using Cypress for e2e tests](/angular/plugins/cypress/overview) \
 [Using Jest for unit tests](/angular/plugins/jest/overview) \
-[Rebuilding and Retesting What is Affected](/angular/guides/ci/monorepo-affected)
+[Rebuilding and Retesting What is Affected](/angular/core-concepts/affected)

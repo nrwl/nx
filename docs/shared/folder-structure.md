@@ -1,4 +1,4 @@
-# Nx Workspace
+# Folder Structure
 
 ## Files
 

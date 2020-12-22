@@ -126,7 +126,7 @@ A target can have multiple configuration. In the example above the serve target 
 
 ```bash
 nx run todos:serve # default configuration
-nx run todos:serve:production # producttion configuration
+nx run todos:serve:production # production configuration
 ```
 
 Because running target is such a common operation, you can also use the following syntax to do it:
@@ -259,7 +259,7 @@ For example:
 2. `workspaceRoot/apps/my-app/.env` contains `AUTH_URL=https://prod-url.com/auth`
 3. Nx will first load the variables from `apps/my-app/.local.env` into the process. When it tries to load the variables from `apps/my-app/.env`, it will notice that `AUTH_URL` already exists, so it will ignore it.
 
-We recommend nesting your **app** specific `env` files in `apps/your-app`, and creating workspace/root level `env` files for workspace-specific settings (like the [Nx Cloud token](https://nx.dev/angular/workspace/computation-caching#nx-cloud-and-distributed-computation-memoization)).
+We recommend nesting your **app** specific `env` files in `apps/your-app`, and creating workspace/root level `env` files for workspace-specific settings (like the [Nx Cloud token](https://nx.dev/angular/core-concepts/computation-caching#nx-cloud-and-distributed-computation-memoization)).
 
 ### Pointing to custom env files
 

@@ -32,10 +32,10 @@
             "file": "shared/console"
           },
           {
-            "name": "File Structure",
-            "searchResultsName": "File Structure",
-            "id": "file-structure",
-            "file": "shared/file-structure"
+            "name": "Folder Structure",
+            "searchResultsName": "Folder Structure",
+            "id": "folder-structure",
+            "file": "shared/folder-structure"
           },
           {
             "name": "Configuration",
@@ -95,6 +95,37 @@
           {
             "name": "12 - Summary",
             "id": "12-summary"
+          }
+        ]
+      },
+      {
+        "name": "Core Concepts",
+        "id": "core-concepts",
+        "itemList": [
+          {
+            "name": "Computation Caching",
+            "id": "computation-caching",
+            "file": "shared/computation-caching"
+          },
+          {
+            "name": "Rebuild Only What is Affected",
+            "id": "affected",
+            "file": "shared/affected"
+          },
+          {
+            "name": "Why Monorepos",
+            "id": "why-monorepos",
+            "file": "shared/guides/why-monorepos"
+          },
+          {
+            "name": "Updating Nx",
+            "id": "updating-nx",
+            "file": "angular/guides/update"
+          },
+          {
+            "name": "Nx Devkit",
+            "id": "nx-devkit",
+            "file": "shared/devkit"
           }
         ]
       },
@@ -926,11 +957,6 @@
             ]
           },
           {
-            "name": "Computation Caching",
-            "id": "computation-caching",
-            "file": "shared/computation-caching"
-          },
-          {
             "name": "Generators",
             "id": "generators",
             "itemList": [
@@ -997,11 +1023,6 @@
             "name": "CI",
             "id": "ci",
             "itemList": [
-              {
-                "name": "Rebuild Only What is Affected",
-                "id": "monorepo-affected",
-                "file": "shared/monorepo-affected"
-              },
               {
                 "name": "Distributed CI: Overview",
                 "id": "distributed-builds",
@@ -1072,29 +1093,14 @@
             "file": "shared/guides/browser-support"
           },
           {
-            "name": "Updating Nx",
-            "id": "updating-nx",
-            "file": "angular/guides/update"
-          },
-          {
             "name": "Running custom commands",
             "id": "running-custom-commands",
             "file": "angular/guides/running-custom-commands"
           },
           {
-            "name": "Nx Devkit",
-            "id": "nx-devkit",
-            "file": "shared/devkit"
-          },
-          {
             "name": "Nx Devkit and Angular Devkit",
             "id": "nx-devkit-angular-devkit",
             "file": "angular/guides/nx-devkit-angular-devkit"
-          },
-          {
-            "name": "Why Monorepos",
-            "id": "why-monorepos",
-            "file": "shared/guides/why-monorepos"
           }
         ]
       },
@@ -1149,10 +1155,10 @@
             "file": "shared/console"
           },
           {
-            "name": "File Structure",
-            "searchResultsName": "File Structure",
-            "id": "file-structure",
-            "file": "shared/file-structure"
+            "name": "Folder Structure",
+            "searchResultsName": "Folder Structure",
+            "id": "folder-structure",
+            "file": "shared/folder-structure"
           },
           {
             "name": "Configuration",
@@ -1212,6 +1218,37 @@
           {
             "name": "12 - Summary",
             "id": "12-summary"
+          }
+        ]
+      },
+      {
+        "name": "Core Concepts",
+        "id": "core-concepts",
+        "itemList": [
+          {
+            "name": "Computation Caching",
+            "id": "computation-caching",
+            "file": "shared/computation-caching"
+          },
+          {
+            "name": "Rebuild Only What is Affected",
+            "id": "affected",
+            "file": "shared/affected"
+          },
+          {
+            "name": "Why Monorepos",
+            "id": "why-monorepos",
+            "file": "shared/guides/why-monorepos"
+          },
+          {
+            "name": "Updating Nx",
+            "id": "updating-nx",
+            "file": "shared/update"
+          },
+          {
+            "name": "Nx Devkit",
+            "id": "nx-devkit",
+            "file": "shared/devkit"
           }
         ]
       },
@@ -2039,11 +2076,6 @@
             ]
           },
           {
-            "name": "Computation Caching",
-            "id": "computation-caching",
-            "file": "shared/computation-caching"
-          },
-          {
             "name": "Generators",
             "id": "generators",
             "itemList": [
@@ -2094,11 +2126,6 @@
                 "file": "shared/workspace/structure/dependency-graph"
               }
             ]
-          },
-          {
-            "name": "Updating Nx",
-            "id": "update",
-            "file": "shared/update"
           }
         ]
       },
@@ -2110,11 +2137,6 @@
             "name": "CI",
             "id": "ci",
             "itemList": [
-              {
-                "name": "Rebuild Only What is Affected",
-                "id": "monorepo-affected",
-                "file": "shared/monorepo-affected"
-              },
               {
                 "name": "Distributed CI: Overview",
                 "id": "distributed-builds",
@@ -2166,16 +2188,6 @@
             "name": "Next.js projects with Nx",
             "id": "nextjs",
             "file": "react/guides/nextjs"
-          },
-          {
-            "name": "Nx Devkit",
-            "id": "nx-devkit",
-            "file": "shared/devkit"
-          },
-          {
-            "name": "Why Monorepos",
-            "id": "why-monorepos",
-            "file": "shared/guides/why-monorepos"
           }
         ]
       },
@@ -2230,10 +2242,10 @@
             "file": "shared/console"
           },
           {
-            "name": "File Structure",
-            "searchResultsName": "File Structure",
-            "id": "file-structure",
-            "file": "shared/file-structure"
+            "name": "Folder Structure",
+            "searchResultsName": "Folder Structure",
+            "id": "folder-structure",
+            "file": "shared/folder-structure"
           },
           {
             "name": "Configuration",
@@ -2277,6 +2289,37 @@
           {
             "name": "8 - Summary",
             "id": "08-summary"
+          }
+        ]
+      },
+      {
+        "name": "Core Concepts",
+        "id": "core-concepts",
+        "itemList": [
+          {
+            "name": "Computation Caching",
+            "id": "computation-caching",
+            "file": "shared/computation-caching"
+          },
+          {
+            "name": "Rebuild Only What is Affected",
+            "id": "affected",
+            "file": "shared/affected"
+          },
+          {
+            "name": "Why Monorepos",
+            "id": "why-monorepos",
+            "file": "shared/guides/why-monorepos"
+          },
+          {
+            "name": "Updating Nx",
+            "id": "updating-nx",
+            "file": "shared/update"
+          },
+          {
+            "name": "Nx Devkit",
+            "id": "nx-devkit",
+            "file": "shared/devkit"
           }
         ]
       },
@@ -3089,11 +3132,6 @@
             ]
           },
           {
-            "name": "Computation Caching",
-            "id": "computation-caching",
-            "file": "shared/computation-caching"
-          },
-          {
             "name": "Generators",
             "id": "generators",
             "itemList": [
@@ -3144,11 +3182,6 @@
                 "file": "shared/workspace/structure/dependency-graph"
               }
             ]
-          },
-          {
-            "name": "Updating Nx",
-            "id": "update",
-            "file": "shared/update"
           }
         ]
       },
@@ -3160,11 +3193,6 @@
             "name": "CI",
             "id": "ci",
             "itemList": [
-              {
-                "name": "Rebuild Only What is Affected",
-                "id": "monorepo-affected",
-                "file": "shared/monorepo-affected"
-              },
               {
                 "name": "Distributed CI: Overview",
                 "id": "distributed-builds",
@@ -3191,16 +3219,6 @@
             "name": "Using Nx at Enterprises",
             "id": "monorepo-nx-enterprise",
             "file": "shared/monorepo-nx-enterprise"
-          },
-          {
-            "name": "Nx Devkit",
-            "id": "nx-devkit",
-            "file": "shared/devkit"
-          },
-          {
-            "name": "Why Monorepos",
-            "id": "why-monorepos",
-            "file": "shared/guides/why-monorepos"
           }
         ]
       }

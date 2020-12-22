@@ -14,5 +14,5 @@ In this tutorial you:
 **Dive Deep:**
 
 - [Nx CLI](/{{framework}}/getting-started/cli-overview)
-- [Computation Caching](/{{framework}}/workspace/computation-caching)
-- [Rebuilding What is Affected](/{{framework}}/guides/ci/monorepo-affected)
+- [Computation Caching](/{{framework}}/core-concepts/computation-caching)
+- [Rebuilding What is Affected](/{{framework}}/core-concepts/affected)

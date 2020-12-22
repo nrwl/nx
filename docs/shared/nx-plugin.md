@@ -106,7 +106,7 @@ Full E2Es are supported (and recommended) and will run everything on the file sy
 
 ## Executor
 
-The default executor is set up to just emit a console log. Some examples of what a executor can do are:
+The default executor is set up to just emit a console log. Some examples of what an executor can do are:
 
 - Support different languages, (Java, Go, Python, C#)
 - Compile new UI framework components
