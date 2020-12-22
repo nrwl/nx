@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import * as stripJsonComments from 'strip-json-comments';
 import '../compat/compat';
 
 /**
@@ -145,11 +146,11 @@ export class Workspaces {
   }
 
   readWorkspaceConfiguration(): WorkspaceConfiguration {
-    const w = JSON.parse(
+    const w = JSON.parse(stripJsonComments(
       fs
         .readFileSync(path.join(this.root, workspaceConfigName(this.root)))
         .toString()
-    );
+    ));
     return toNewFormat(w);
   }
 
@@ -171,7 +172,7 @@ export class Workspaces {
       );
       const executorsDir = path.dirname(executorsFilePath);
       const schemaPath = path.join(executorsDir, executorConfig.schema || '');
-      const schema = JSON.parse(fs.readFileSync(schemaPath).toString());
+      const schema = JSON.parse(stripJsonComments(fs.readFileSync(schemaPath).toString()));
       const [modulePath, exportName] = executorConfig.implementation.split('#');
       const module = require(path.join(executorsDir, modulePath));
       const implementation = module[exportName || 'default'];
@@ -194,7 +195,7 @@ export class Workspaces {
       const generatorConfig = (generatorsJson.generators ||
         generatorsJson.schematics)[normalizedGeneratorName];
       const schemaPath = path.join(generatorsDir, generatorConfig.schema || '');
-      const schema = JSON.parse(fs.readFileSync(schemaPath).toString());
+      const schema = JSON.parse(stripJsonComments(fs.readFileSync(schemaPath).toString()));
       generatorConfig.implementation =
         generatorConfig.implementation || generatorConfig.factory;
       const [modulePath, exportName] = generatorConfig.implementation.split(
@@ -214,16 +215,16 @@ export class Workspaces {
     const packageJsonPath = require.resolve(`${nodeModule}/package.json`, {
       paths: this.resolvePaths(),
     });
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath).toString());
+    const packageJson = JSON.parse(stripJsonComments(fs.readFileSync(packageJsonPath).toString()));
     const executorsFile = packageJson.executors
       ? packageJson.executors
       : packageJson.builders;
     const executorsFilePath = require.resolve(
       path.join(path.dirname(packageJsonPath), executorsFile)
     );
-    const executorsJson = JSON.parse(
+    const executorsJson = JSON.parse(stripJsonComments(
       fs.readFileSync(executorsFilePath).toString()
-    );
+    ));
     const mapOfExecutors = executorsJson.executors
       ? executorsJson.executors
       : executorsJson.builders;
@@ -249,9 +250,9 @@ export class Workspaces {
           paths: this.resolvePaths(),
         }
       );
-      const packageJson = JSON.parse(
+      const packageJson = JSON.parse(stripJsonComments(
         fs.readFileSync(packageJsonPath).toString()
-      );
+      ));
       const generatorsFile = packageJson.generators
         ? packageJson.generators
         : packageJson.schematics;
@@ -259,9 +260,9 @@ export class Workspaces {
         path.join(path.dirname(packageJsonPath), generatorsFile)
       );
     }
-    const generatorsJson = JSON.parse(
+    const generatorsJson = JSON.parse(stripJsonComments(
       fs.readFileSync(generatorsFilePath).toString()
-    );
+    ));
 
     let normalizedGeneratorName;
     const gens = generatorsJson.generators || generatorsJson.schematics;
