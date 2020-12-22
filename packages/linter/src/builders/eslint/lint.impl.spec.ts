@@ -384,7 +384,6 @@ describe('Linter Builder', () => {
           quiet: true,
         })
       );
-      console.log('FPPP', loggerSpy.mock.calls);
       const flattenedCalls = loggerSpy.mock.calls.reduce((logs, call) => {
         return [...logs, call[0]];
       }, []);
