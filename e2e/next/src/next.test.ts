@@ -282,6 +282,7 @@ describe('Next.js Applications', () => {
   }, 120000);
 
   it('should support --js flag', async () => {
+    newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive --js`);

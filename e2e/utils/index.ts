@@ -286,6 +286,7 @@ export function runCLI(
     if (opts.silenceError) {
       return e.stdout.toString();
     } else {
+      console.log('original command', command);
       console.log(e.stdout?.toString(), e.stderr?.toString());
       throw e;
     }
