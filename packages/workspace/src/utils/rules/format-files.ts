@@ -11,6 +11,7 @@ import { filter, map, mergeMap } from 'rxjs/operators';
 import * as path from 'path';
 import { appRootPath } from '../app-root';
 import { reformattedWorkspaceJsonOrNull } from '@nrwl/tao/src/shared/workspace';
+import * as stripJsonComments from 'strip-json-comments';
 
 let prettier;
 try {
@@ -86,7 +87,9 @@ function updateWorkspaceJsonToMatchFormatVersion(
   const path = possibleFiles.filter((path) => host.exists(path))[0];
   try {
     if (path) {
-      const workspaceJson = JSON.parse(host.read(path).toString());
+      const workspaceJson = JSON.parse(
+        stripJsonComments(host.read(path).toString())
+      );
       const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
       if (reformatted) {
         host.overwrite(path, JSON.stringify(reformatted, null, 2));

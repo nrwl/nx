@@ -17,6 +17,7 @@ import {
 } from '@nrwl/tao/src/shared/workspace';
 import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
 import { readFileSync, writeFileSync } from 'fs-extra';
+import * as stripJsonComments from 'strip-json-comments';
 
 const PRETTIER_EXTENSIONS = [
   'ts',
@@ -135,7 +136,9 @@ function prettierPath() {
 function updateWorkspaceJsonToMatchFormatVersion() {
   try {
     const workspaceJson = JSON.parse(
-      readFileSync(workspaceConfigName(appRootPath)).toString()
+      stripJsonComments(
+        readFileSync(workspaceConfigName(appRootPath)).toString()
+      )
     );
     const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
     if (reformatted) {
