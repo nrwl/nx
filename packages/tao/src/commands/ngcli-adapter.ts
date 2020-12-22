@@ -403,14 +403,18 @@ export class NxScopedHostForMigrations extends NxScopedHost {
   write(path: Path, content: FileBuffer): Observable<void> {
     return this.hasWorkspaceJson().pipe(
       concatMap((hasWorkspace) => {
-        if (
-          hasWorkspace &&
-          (path == '/angular.json' || path == 'angular.json')
-        ) {
-          return super.write(
-            '/workspace.json' as any,
-            processConfigWhenWriting(content)
-          );
+        if (this.isWorkspaceConfig(path)) {
+          if (
+            hasWorkspace &&
+            (path == '/angular.json' || path == 'angular.json')
+          ) {
+            return super.write(
+              '/workspace.json' as any,
+              processConfigWhenWriting(content)
+            );
+          } else {
+            return super.write(path as any, processConfigWhenWriting(content));
+          }
         } else {
           return super.write(path as any, content);
         }
