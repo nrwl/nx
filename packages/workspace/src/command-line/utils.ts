@@ -176,7 +176,7 @@ function printArgsWarning(options: NxArgs) {
         '',
         output.colors.gray(
           'Learn more about checking only what is affected: '
-        ) + 'https://nx.dev/guides/monorepo-affected.',
+        ) + 'https://nx.dev/latest/angular/cli/affected#affected.',
       ],
     });
   }
