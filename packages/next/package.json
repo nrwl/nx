@@ -39,6 +39,8 @@
     "@angular-devkit/schematics": "~11.0.1",
     "@svgr/webpack": "^5.4.0",
     "chalk": "4.1.0",
+    "copy-webpack-plugin": "6.0.3",
+    "fs-extra": "7.0.1",
     "url-loader": "^3.0.0"
   }
 }
