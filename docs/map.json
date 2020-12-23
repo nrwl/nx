@@ -1007,11 +1007,6 @@
                 "file": "shared/workspace/structure/dependency-graph"
               }
             ]
-          },
-          {
-            "name": "Updating Nx",
-            "id": "update",
-            "file": "angular/guides/update"
           }
         ]
       },
