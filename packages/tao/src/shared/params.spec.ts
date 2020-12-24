@@ -376,7 +376,7 @@ describe('params', () => {
   });
 
   describe('validateOptsAgainstSchema', () => {
-    it('should throw if missing the required field', () => {
+    it('should throw if missing the required property', () => {
       expect(() =>
         validateOptsAgainstSchema(
           {},
@@ -390,6 +390,25 @@ describe('params', () => {
           }
         )
       ).toThrow("Required property 'a' is missing");
+    });
+
+    it('should throw if found an unknown property', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          {
+            a: true,
+            b: false,
+          },
+          {
+            properties: {
+              a: {
+                type: 'boolean',
+              },
+            },
+            additionalProperties: false,
+          }
+        )
+      ).toThrow("'b' is not found in schema");
     });
 
     it("should throw if the type doesn't match (primitive types)", () => {

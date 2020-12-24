@@ -24,6 +24,7 @@ export type Schema = {
   required?: string[];
   description?: string;
   definitions?: Properties;
+  additionalProperties?: boolean;
 };
 
 export type Unmatched = {
@@ -156,6 +157,7 @@ export function validateOptsAgainstSchema(
     opts,
     schema.properties || {},
     schema.required || [],
+    schema.additionalProperties,
     schema.definitions || {}
   );
 }
@@ -164,6 +166,7 @@ export function validateObject(
   opts: { [k: string]: any },
   properties: Properties,
   required: string[],
+  additionalProperties: boolean | undefined,
   definitions: Properties
 ) {
   required.forEach((p) => {
@@ -171,6 +174,14 @@ export function validateObject(
       throw new SchemaError(`Required property '${p}' is missing`);
     }
   });
+
+  if (additionalProperties === false) {
+    Object.keys(opts).find((p) => {
+      if (Object.keys(properties).indexOf(p) === -1) {
+        throw new SchemaError(`'${p}' is not found in schema`);
+      }
+    });
+  }
 
   Object.keys(opts).forEach((p) => {
     validateProperty(p, opts[p], properties[p], definitions);
@@ -222,6 +233,7 @@ function validateProperty(
       value,
       schema.properties || {},
       schema.required || [],
+      schema.additionalProperties,
       definitions
     );
   }
