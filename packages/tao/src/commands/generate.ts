@@ -101,6 +101,7 @@ function parseGenerateOpts(
   delete generatorOptions.interactive;
   delete generatorOptions.defaults;
   delete generatorOptions.help;
+  delete generatorOptions.collection;
   delete generatorOptions['--'];
 
   return res;
