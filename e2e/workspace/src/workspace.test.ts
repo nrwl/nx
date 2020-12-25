@@ -755,7 +755,6 @@ describe('workspace structure', () => {
       recommendations: [
         'ms-vscode.vscode-typescript-tslint-plugin',
         'esbenp.prettier-vscode',
-        'firsttris.vscode-jest-runner',
       ],
     });
   });

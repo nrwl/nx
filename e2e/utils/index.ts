@@ -127,16 +127,6 @@ export function newProject(): void {
         `@nrwl/eslint-plugin-nx`,
       ];
       yarnAdd(packages.join(` `), 'proj');
-      packages
-        .filter(
-          (f) => f !== '@nrwl/nx-plugin' && f !== `@nrwl/eslint-plugin-nx`
-        )
-        .forEach((p) => {
-          runCLI(`g ${p}:init --no-interactive`, {
-            cwd: `./tmp/${currentCli()}/proj`,
-          });
-        });
-
       execSync(`mv ./tmp/${currentCli()}/proj ${tmpBackupProjPath()}`);
     }
     projName = uniq('proj');
