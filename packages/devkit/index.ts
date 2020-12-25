@@ -8,6 +8,7 @@ export {
   NxJsonConfiguration,
   NxJsonProjectConfiguration,
 } from '@nrwl/tao/src/shared/nx';
+export { logger } from '@nrwl/tao/src/shared/logger';
 export { TargetContext } from '@nrwl/tao/src/commands/run';
 export { formatFiles } from './src/generators/format-files';
 export { readJson } from './src/utils/read-json';
