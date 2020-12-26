@@ -1,7 +1,6 @@
 # Getting Started
 
 Nx is a suite of powerful, extensible dev tools that help you develop, test, build, and scale Node applications.
-s
 
 ## Create Nx Workspace
 
