@@ -133,6 +133,7 @@ export interface TargetContext {
   root: string;
   target: TargetConfiguration;
   workspace: WorkspaceConfiguration;
+  projectName: string;
 }
 
 export async function run(
@@ -166,7 +167,12 @@ export async function run(
     }
 
     if (ws.isNxExecutor(nodeModule, executor)) {
-      return await implementation(combinedOptions, { root, target, workspace });
+      return await implementation(combinedOptions, {
+        root,
+        target,
+        workspace,
+        projectName: opts.project,
+      });
     } else {
       return (await import('./ngcli-adapter')).run(
         root,
