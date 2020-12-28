@@ -44,6 +44,15 @@ describe('run-one', () => {
         `
     );
 
+    // configuration has to be valid for the initiating project
+    expect(() => runCLI(`build ${myapp} -c=invalid`)).toThrow();
+    expect(
+      runCommand(
+        `cd apps/${myapp}-e2e/src && ../../../node_modules/.bin/nx lint`
+      )
+    ).toContain(`nx run ${myapp}-e2e:lint`);
+
+    // configuration doesn't have to exists for deps (here only the app has production)
     const buildWithDeps = runCLI(`build ${myapp} --with-deps --prod`);
     expect(buildWithDeps).toContain(`Running target "build" succeeded`);
     expect(buildWithDeps).toContain(`nx run ${myapp}:build:production`);
@@ -479,7 +488,7 @@ describe('print-affected', () => {
           target: 'test',
         },
         command: `npm run nx -- test ${myapp}`,
-        outputs: [],
+        outputs: [`coverage/apps/${myapp}`],
       },
     ]);
     compareTwoArrays(resWithTarget.projects, [`${myapp}-e2e`, myapp]);
@@ -685,11 +694,11 @@ describe('cache', () => {
     // Update outputs in workspace.json to just be a particular file
     const workspaceJson = readJson(workspaceConfigName());
 
-    workspaceJson.projects[mylib1].architect['build-base'] = {
-      ...workspaceJson.projects[mylib1].architect.build,
+    workspaceJson.projects[mylib1].targets['build-base'] = {
+      ...workspaceJson.projects[mylib1].targets.build,
     };
-    workspaceJson.projects[mylib1].architect.build = {
-      builder: '@nrwl/workspace:run-commands',
+    workspaceJson.projects[mylib1].targets.build = {
+      executor: '@nrwl/workspace:run-commands',
       outputs: [`dist/libs/${mylib1}/${mylib1}.esm.js`],
       options: {
         commands: [

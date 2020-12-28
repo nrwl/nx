@@ -9,8 +9,15 @@ import { ProjectGraphNode } from '../core/project-graph';
 import { join } from 'path';
 import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
 import * as fsExtra from 'fs-extra';
+import {
+  cacheDirectory,
+  readCacheDirectoryProperty,
+} from '../utils/cache-directory';
 
-const resultsDir = join(appRootPath, 'node_modules', '.cache', 'nx');
+const resultsDir = cacheDirectory(
+  appRootPath,
+  readCacheDirectoryProperty(appRootPath)
+);
 const resultsFile = join(resultsDir, 'results.json');
 
 interface NxResults {

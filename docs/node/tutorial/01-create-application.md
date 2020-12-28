@@ -12,7 +12,11 @@ In this tutorial you will use Nx to build a server application out of common lib
 
 ```shell script
 yarn create nx-workspace
+```
 
+You will then receive the following prompts in your command line:
+
+```
 ? Workspace name (e.g., org name)         myorg
 ? What to create in the new workspace     nest
 ? Application name                        todos
@@ -40,7 +44,7 @@ myorg/
 │       ├── tsconfig.json
 │       └── tsconfig.spec.json
 ├── tools/
-│   ├── schematics
+│   ├── generators
 │   └── tsconfig.tools.json
 ├── jest.config.js
 ├── libs
@@ -107,7 +111,7 @@ Options:
   --help                  Show available options for project target.
 ```
 
-It helps with good editor integration (see [VSCode Support](https://nx.dev/node/cli/console)).
+It helps with good editor integration (see [VSCode Support](https://nx.dev/node/getting-started/console)).
 
 But, most importantly, it provides a holistic dev experience regardless of the tools used, and enables advanced build features like distributed computation caching and distributed builds).
 

@@ -10,7 +10,7 @@
 
 ## What is It?
 
-Builders and schematics adding basic functionality for building, testing and linting node applications and libraries.
+Executors and generators adding basic functionality for building, testing and linting node applications and libraries.
 
 ## How to Use
 

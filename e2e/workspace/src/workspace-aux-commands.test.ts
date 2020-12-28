@@ -532,6 +532,7 @@ describe('Move Angular Project', () => {
   let newPath: string;
 
   beforeEach(() => {
+    newProject();
     app1 = uniq('app1');
     app2 = uniq('app2');
     newPath = `subfolder/${app2}`;
@@ -659,6 +660,7 @@ describe('Move Project', () => {
    * Tries moving a library from ${lib}/data-access -> shared/${lib}/data-access
    */
   it('should work for libraries', () => {
+    newProject();
     const lib1 = uniq('mylib');
     const lib2 = uniq('mylib');
     const lib3 = uniq('mylib');
@@ -778,7 +780,7 @@ describe('Move Project', () => {
     expect(project).toBeTruthy();
     expect(project.root).toBe(newPath);
     expect(project.sourceRoot).toBe(`${newPath}/src`);
-    expect(project.architect.lint.options.lintFilePatterns).toEqual([
+    expect(project.targets.lint.options.lintFilePatterns).toEqual([
       `libs/shared/${lib1}/data-access/**/*.ts`,
     ]);
 
@@ -793,6 +795,7 @@ describe('Move Project', () => {
   });
 
   it('should work for libs created with --importPath', () => {
+    newProject();
     const importPath = '@wibble/fish';
     const lib1 = uniq('mylib');
     const lib2 = uniq('mylib');
@@ -915,7 +918,8 @@ describe('Move Project', () => {
     expect(project).toBeTruthy();
     expect(project.root).toBe(newPath);
     expect(project.sourceRoot).toBe(`${newPath}/src`);
-    expect(project.architect.lint.options.lintFilePatterns).toEqual([
+
+    expect(project.targets.lint.options.lintFilePatterns).toEqual([
       `libs/shared/${lib1}/data-access/**/*.ts`,
     ]);
 
@@ -930,6 +934,7 @@ describe('Move Project', () => {
   });
 
   it('should work for custom workspace layouts', () => {
+    newProject();
     const lib1 = uniq('mylib');
     const lib2 = uniq('mylib');
     const lib3 = uniq('mylib');
@@ -1054,7 +1059,7 @@ describe('Move Project', () => {
     expect(project).toBeTruthy();
     expect(project.root).toBe(newPath);
     expect(project.sourceRoot).toBe(`${newPath}/src`);
-    expect(project.architect.lint.options.lintFilePatterns).toEqual([
+    expect(project.targets.lint.options.lintFilePatterns).toEqual([
       `packages/shared/${lib1}/data-access/**/*.ts`,
     ]);
 
@@ -1078,6 +1083,7 @@ describe('Remove Project', () => {
    * Tries creating then deleting a lib
    */
   it('should work', () => {
+    newProject();
     const lib1 = uniq('mylib');
     const lib2 = uniq('mylib');
 

@@ -38,6 +38,7 @@ describe('addProject Rule', () => {
     const project = workspaceJson.projects[schema.name];
     expect(project.architect.build).toEqual({
       builder: '@nrwl/next:build',
+      outputs: ['{options.outputPath}'],
       configurations: {
         production: {},
       },

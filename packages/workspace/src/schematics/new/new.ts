@@ -23,10 +23,21 @@ import { nxVersion } from '../../utils/versions';
 import * as path from 'path';
 import { Observable } from 'rxjs';
 import { spawn } from 'child_process';
-import { getPackageManagerExecuteCommand } from '../../utils/detect-package-manager';
-// @ts-ignore
-import yargsParser = require('yargs-parser');
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
+import * as yargsParser from 'yargs-parser';
 import { names } from '@nrwl/devkit';
+
+export enum Preset {
+  Empty = 'empty',
+  OSS = 'oss',
+  WebComponents = 'web-components',
+  Angular = 'angular',
+  AngularWithNest = 'angular-nest',
+  React = 'react',
+  ReactWithExpress = 'react-express',
+  NextJs = 'next',
+  Nest = 'nest',
+}
 
 export interface Schema {
   cli: 'nx' | 'angular';
@@ -38,16 +49,7 @@ export interface Schema {
   skipGit?: boolean;
   style?: string;
   nxCloud?: boolean;
-  preset:
-    | 'empty'
-    | 'oss'
-    | 'angular'
-    | 'react'
-    | 'web-components'
-    | 'angular-nest'
-    | 'react-express'
-    | 'next'
-    | 'nest';
+  preset: Preset;
   commit?: { name: string; email: string; message?: string };
   defaultBase?: string;
   nxWorkspaceRoot?: string;
@@ -78,12 +80,14 @@ function createPresetTaskExecutor(opts: Schema) {
           shell: true,
           cwd: path.join(opts.nxWorkspaceRoot || process.cwd(), opts.directory),
         };
-        const executable = `${getPackageManagerExecuteCommand()} ${cliCommand}`;
+        const pmc = getPackageManagerCommand();
+        const executable = `${pmc.exec} ${cliCommand}`;
         const args = [
           `g`,
           `@nrwl/workspace:preset`,
           `--name=${opts.appName}`,
           opts.style ? `--style=${opts.style}` : null,
+          opts.linter ? `--linter=${opts.linter}` : null,
           opts.npmScope
             ? `--npmScope=${opts.npmScope}`
             : `--npmScope=${opts.name}`,
@@ -140,7 +144,7 @@ export default function (options: Schema): Rule {
       addCloudDependencies(options),
       move('/', options.directory),
       addTasks(options),
-      formatFiles(),
+      formatFiles({ skipFormat: false }, options.directory),
     ])(Tree.empty(), context);
   };
 }
@@ -289,14 +293,15 @@ function setDefaultLinter({ linter, preset }: Schema): Rule {
  */
 function setESLintDefault() {
   return updateWorkspaceInTree((json) => {
-    if (!json.schematics) {
-      json.schematics = {};
-    }
-    json.schematics['@nrwl/angular'] = {
-      application: { linter: 'eslint' },
-      library: { linter: 'eslint' },
-      'storybook-configuration': { linter: 'eslint' },
-    };
+    setDefault(json, '@nrwl/angular', 'application', 'linter', 'eslint');
+    setDefault(json, '@nrwl/angular', 'library', 'linter', 'eslint');
+    setDefault(
+      json,
+      '@nrwl/angular',
+      'storybook-configuration',
+      'linter',
+      'eslint'
+    );
     return json;
   });
 }
@@ -306,25 +311,16 @@ function setESLintDefault() {
  */
 function setTSLintDefault() {
   return updateWorkspaceInTree((json) => {
-    if (!json.schematics) {
-      json.schematics = {};
-    }
-    json.schematics['@nrwl/workspace'] = { library: { linter: 'tslint' } };
-    json.schematics['@nrwl/cypress'] = {
-      'cypress-project': { linter: 'tslint' },
-    };
-    json.schematics['@nrwl/node'] = {
-      application: { linter: 'tslint' },
-      library: { linter: 'tslint' },
-    };
-    json.schematics['@nrwl/nest'] = {
-      application: { linter: 'tslint' },
-      library: { linter: 'tslint' },
-    };
-    json.schematics['@nrwl/express'] = {
-      application: { linter: 'tslint' },
-      library: { linter: 'tslint' },
-    };
+    setDefault(json, '@nrwl/workspace', 'library', 'linter', 'tslint');
+    setDefault(json, '@nrwl/cypress', 'cypress-project', 'linter', 'tslint');
+    setDefault(json, '@nrwl/cypress', 'cypress-project', 'linter', 'tslint');
+    setDefault(json, '@nrwl/node', 'application', 'linter', 'tslint');
+    setDefault(json, '@nrwl/node', 'library', 'linter', 'tslint');
+    setDefault(json, '@nrwl/nest', 'application', 'linter', 'tslint');
+    setDefault(json, '@nrwl/nest', 'library', 'linter', 'tslint');
+    setDefault(json, '@nrwl/express', 'application', 'linter', 'tslint');
+    setDefault(json, '@nrwl/express', 'library', 'linter', 'tslint');
+
     return json;
   });
 }
@@ -341,4 +337,25 @@ function setDefaultPackageManager({ packageManager }: Schema) {
     json.cli['packageManager'] = packageManager;
     return json;
   });
+}
+
+function setDefault(
+  json: any,
+  collectionName: string,
+  generatorName: string,
+  key: string,
+  value: any
+) {
+  if (!json.schematics) json.schematics = {};
+  if (
+    json.schematics[collectionName] &&
+    json.schematics[collectionName][generatorName]
+  ) {
+    json.schematics[collectionName][generatorName][key] = value;
+  } else if (json.schematics[`${collectionName}:${generatorName}`]) {
+    json.schematics[`${collectionName}:${generatorName}`][key] = value;
+  } else {
+    json.schematics[collectionName] = json.schematics[collectionName] || {};
+    json.schematics[collectionName][generatorName] = { [key]: value };
+  }
 }

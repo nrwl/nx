@@ -20,7 +20,7 @@ import {
 } from '@angular-devkit/schematics/tools';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
-import { readFileSync, writeFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 import { copySync, removeSync } from 'fs-extra';
 import * as inquirer from 'inquirer';
 import * as path from 'path';
@@ -28,8 +28,8 @@ import * as yargsParser from 'yargs-parser';
 import { appRootPath } from '../utils/app-root';
 import {
   detectPackageManager,
-  getPackageManagerExecuteCommand,
-} from '../utils/detect-package-manager';
+  getPackageManagerCommand,
+} from '@nrwl/tao/src/shared/package-manager';
 import { fileExists, readJsonFile, writeJsonFile } from '../utils/fileutils';
 import { output } from '../utils/output';
 import { CompilerOptions } from 'typescript';
@@ -59,7 +59,7 @@ export async function workspaceGenerators(args: string[]) {
     return listGenerators(collectionFile, logger);
   }
   const generatorName = args[0];
-  const ws = new Workspaces();
+  const ws = new Workspaces(rootDirectory);
   if (ws.isNxGenerator(collectionFile, generatorName)) {
     try {
       execSync(
@@ -110,8 +110,8 @@ function compileToolsDir(outDir: string) {
     include: [path.join(generatorsDir(), '**/*.ts')],
   });
 
-  const packageExec = getPackageManagerExecuteCommand();
-  const tsc = `${packageExec} tsc`;
+  const pmc = getPackageManagerCommand();
+  const tsc = `${pmc.exec} tsc`;
   try {
     execSync(`${tsc} -p ${tmpTsConfigPath}`, {
       stdio: 'inherit',
@@ -129,7 +129,7 @@ function constructCollection() {
     if (exists(path.join(childDir, 'schema.json'))) {
       generators[c] = {
         factory: `./${c}`,
-        schema: `./${path.join(c, 'schema.json')}`,
+        schema: `./${normalize(path.join(c, 'schema.json'))}`,
         description: `Schematic ${c}`,
       };
     }
@@ -346,7 +346,7 @@ async function executeAngularDevkitSchematic(
   try {
     await workflow
       .execute({
-        collection: path.join(outDir, 'workspace-schematics.json'),
+        collection: path.join(outDir, 'workspace-generators.json'),
         schematic: schematicName,
         options: options,
         logger: logger,

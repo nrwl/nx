@@ -1,25 +1,30 @@
-import { strings } from '@angular-devkit/core';
 import { ParsedArgs } from 'minimist';
 import { TargetConfiguration, WorkspaceConfiguration } from './workspace';
 import * as inquirer from 'inquirer';
+import { logger } from './logger';
+
+type PropertyDescription = {
+  type?: string;
+  properties?: any;
+  oneOf?: any;
+  items?: any;
+  alias?: string;
+  description?: string;
+  default?: string | number | boolean | string[];
+  $ref?: string;
+  $default?: { $source: 'argv'; index: number } | { $source: 'projectName' };
+  'x-prompt'?: string | { message: string; type: string; items: any[] };
+};
 
 type Properties = {
-  [p: string]: {
-    type?: string;
-    properties?: any;
-    oneOf?: any;
-    items?: any;
-    alias?: string;
-    description?: string;
-    default?: string | number | boolean | string[];
-    $default?: { $source: 'argv'; index: number };
-    'x-prompt'?: string | { message: string; type: string; items: any[] };
-  };
+  [p: string]: PropertyDescription;
 };
 export type Schema = {
   properties: Properties;
   required?: string[];
   description?: string;
+  definitions?: Properties;
+  additionalProperties?: boolean;
 };
 
 export type Unmatched = {
@@ -32,11 +37,7 @@ export type Options = {
   [k: string]: string | number | boolean | string[] | Unmatched[];
 };
 
-export async function handleErrors(
-  logger: Console,
-  isVerbose: boolean,
-  fn: Function
-) {
+export async function handleErrors(isVerbose: boolean, fn: Function) {
   try {
     return await fn();
   } catch (err) {
@@ -78,21 +79,30 @@ export function convertToCamelCase(parsed: ParsedArgs): Options {
  */
 export function coerceTypesInOptions(opts: Options, schema: Schema): Options {
   Object.keys(opts).forEach((k) => {
-    opts[k] = coerceType(
-      schema.properties[k] ? schema.properties[k].type : 'unknown',
-      opts[k]
-    );
+    opts[k] = coerceType(schema.properties[k], opts[k]);
   });
   return opts;
 }
 
-function coerceType(type: string, value: any) {
-  if (type == 'boolean') {
+function coerceType(prop: PropertyDescription | undefined, value: any) {
+  if (!prop) return value;
+  if (prop.oneOf) {
+    for (let i = 0; i < prop.oneOf.length; ++i) {
+      const coerced = coerceType(prop.oneOf[i], value);
+      if (coerced !== value) {
+        return coerced;
+      }
+    }
+    return value;
+  } else if (normalizedPrimitiveType(prop.type) == 'boolean') {
     return value === true || value == 'true';
-  } else if (type == 'number') {
+  } else if (normalizedPrimitiveType(prop.type) == 'number') {
     return Number(value);
-  } else if (type == 'array') {
-    return value.toString().split(',');
+  } else if (prop.type == 'array') {
+    return value
+      .toString()
+      .split(',')
+      .map((v) => coerceType(prop.items, v));
   } else {
     return value;
   }
@@ -143,13 +153,21 @@ export function validateOptsAgainstSchema(
   opts: { [k: string]: any },
   schema: Schema
 ) {
-  validateObject(opts, schema.properties || {}, schema.required || []);
+  validateObject(
+    opts,
+    schema.properties || {},
+    schema.required || [],
+    schema.additionalProperties,
+    schema.definitions || {}
+  );
 }
 
 export function validateObject(
   opts: { [k: string]: any },
   properties: Properties,
-  required: string[]
+  required: string[],
+  additionalProperties: boolean | undefined,
+  definitions: Properties
 ) {
   required.forEach((p) => {
     if (opts[p] === undefined) {
@@ -157,13 +175,30 @@ export function validateObject(
     }
   });
 
+  if (additionalProperties === false) {
+    Object.keys(opts).find((p) => {
+      if (Object.keys(properties).indexOf(p) === -1) {
+        throw new SchemaError(`'${p}' is not found in schema`);
+      }
+    });
+  }
+
   Object.keys(opts).forEach((p) => {
-    validateProperty(p, opts[p], properties[p]);
+    validateProperty(p, opts[p], properties[p], definitions);
   });
 }
 
-function validateProperty(propName: string, value: any, schema: any) {
+function validateProperty(
+  propName: string,
+  value: any,
+  schema: any,
+  definitions: Properties
+) {
   if (!schema) return;
+
+  if (schema.$ref) {
+    schema = resolveDefinition(schema.$ref, definitions);
+  }
 
   if (schema.oneOf) {
     if (!Array.isArray(schema.oneOf))
@@ -172,7 +207,7 @@ function validateProperty(propName: string, value: any, schema: any) {
     let passes = false;
     schema.oneOf.forEach((r) => {
       try {
-        validateProperty(propName, value, r);
+        validateProperty(propName, value, r, definitions);
         passes = true;
       } catch (e) {}
     });
@@ -182,7 +217,7 @@ function validateProperty(propName: string, value: any, schema: any) {
 
   const isPrimitive = typeof value !== 'object';
   if (isPrimitive) {
-    if (typeof value !== schema.type) {
+    if (typeof value !== normalizedPrimitiveType(schema.type)) {
       throw new SchemaError(
         `Property '${propName}' does not match the schema. '${value}' should be a '${schema.type}'.`
       );
@@ -190,12 +225,27 @@ function validateProperty(propName: string, value: any, schema: any) {
   } else if (Array.isArray(value)) {
     if (schema.type !== 'array') throwInvalidSchema(propName, schema);
     value.forEach((valueInArray) =>
-      validateProperty(propName, valueInArray, schema.items || {})
+      validateProperty(propName, valueInArray, schema.items || {}, definitions)
     );
   } else {
     if (schema.type !== 'object') throwInvalidSchema(propName, schema);
-    validateObject(value, schema.properties || {}, schema.required || []);
+    validateObject(
+      value,
+      schema.properties || {},
+      schema.required || [],
+      schema.additionalProperties,
+      definitions
+    );
   }
+}
+
+/**
+ * Unfortunately, due to use supporting Angular Devkit, we have to do the following
+ * conversions.
+ */
+function normalizedPrimitiveType(type: string) {
+  if (type === 'integer') return 'number';
+  return type;
 }
 
 function throwInvalidSchema(propName: string, schema: any) {
@@ -209,24 +259,30 @@ function throwInvalidSchema(propName: string, schema: any) {
 }
 
 export function setDefaults(opts: { [k: string]: any }, schema: Schema) {
-  setDefaultsInObject(opts, schema.properties);
+  setDefaultsInObject(opts, schema.properties || {}, schema.definitions || {});
   return opts;
 }
 
 function setDefaultsInObject(
   opts: { [k: string]: any },
-  properties: Properties
+  properties: Properties,
+  definitions: Properties
 ) {
   Object.keys(properties).forEach((p) => {
-    setPropertyDefault(opts, p, properties[p]);
+    setPropertyDefault(opts, p, properties[p], definitions);
   });
 }
 
 function setPropertyDefault(
   opts: { [k: string]: any },
   propName: string,
-  schema: any
+  schema: any,
+  definitions: Properties
 ) {
+  if (schema.$ref) {
+    schema = resolveDefinition(schema.$ref, definitions);
+  }
+
   if (schema.type !== 'object' && schema.type !== 'array') {
     if (opts[propName] === undefined && schema.default !== undefined) {
       opts[propName] = schema.default;
@@ -239,35 +295,36 @@ function setPropertyDefault(
       items.type === 'object'
     ) {
       opts[propName].forEach((valueInArray) =>
-        setDefaultsInObject(valueInArray, items.properties || {})
+        setDefaultsInObject(valueInArray, items.properties || {}, definitions)
       );
+    } else if (!opts[propName] && schema.default) {
+      opts[propName] = schema.default;
     }
   } else {
-    setDefaultsInObject(opts[propName], schema.properties);
+    if (!opts[propName]) {
+      opts[propName] = {};
+    }
+    setDefaultsInObject(opts[propName], schema.properties || {}, definitions);
   }
 }
 
-export function convertPositionParamsIntoNamedParams(
-  opts: { [k: string]: any },
-  schema: Schema,
-  argv: string[]
-) {
-  Object.entries(schema.properties).forEach(([k, v]) => {
-    if (
-      opts[k] === undefined &&
-      v.$default !== undefined &&
-      argv[v.$default.index]
-    ) {
-      opts[k] = coerceType(v.type, argv[v.$default.index]);
-    }
-  });
+function resolveDefinition(ref: string, definitions: Properties) {
+  if (!ref.startsWith('#/definitions/')) {
+    throw new Error(`$ref should start with "#/definitions/"`);
+  }
+  const definition = ref.split('#/definitions/')[1];
+  if (!definitions[definition]) {
+    throw new Error(`Cannot resolve ${ref}`);
+  }
+  return definitions[definition];
 }
 
 export function combineOptionsForExecutor(
   commandLineOpts: Options,
   config: string,
   target: TargetConfiguration,
-  schema: Schema
+  schema: Schema,
+  defaultProjectName: string | null
 ) {
   const r = convertAliases(
     coerceTypesInOptions(commandLineOpts, schema),
@@ -277,10 +334,11 @@ export function combineOptionsForExecutor(
   const configOpts =
     config && target.configurations ? target.configurations[config] || {} : {};
   const combined = { ...target.options, ...configOpts, ...r };
-  convertPositionParamsIntoNamedParams(
+  convertSmartDefaultsIntoNamedParams(
     combined,
     schema,
-    (commandLineOpts['_'] as string[]) || []
+    (commandLineOpts['_'] as string[]) || [],
+    defaultProjectName
   );
   setDefaults(combined, schema);
   validateOptsAgainstSchema(combined, schema);
@@ -291,32 +349,108 @@ export async function combineOptionsForGenerator(
   commandLineOpts: Options,
   collectionName: string,
   generatorName: string,
-  ws: WorkspaceConfiguration,
+  wc: WorkspaceConfiguration | null,
   schema: Schema,
-  isInteractive: boolean
+  isInteractive: boolean,
+  defaultProjectName: string | null
 ) {
-  const generatorDefaults =
-    ws.generators &&
-    ws.generators[collectionName] &&
-    ws.generators[collectionName][generatorName]
-      ? ws.generators[collectionName][generatorName]
-      : {};
+  const generatorDefaults = wc
+    ? getGeneratorDefaults(
+        defaultProjectName,
+        wc,
+        collectionName,
+        generatorName
+      )
+    : {};
   let combined = convertAliases(
     coerceTypesInOptions({ ...generatorDefaults, ...commandLineOpts }, schema),
     schema,
     false
   );
-  convertPositionParamsIntoNamedParams(
+  convertSmartDefaultsIntoNamedParams(
     combined,
     schema,
-    (commandLineOpts['_'] as string[]) || []
+    (commandLineOpts['_'] as string[]) || [],
+    defaultProjectName
   );
-  if (isInteractive) {
+
+  if (isInteractive && isTTY()) {
     combined = await promptForValues(combined, schema);
   }
+
   setDefaults(combined, schema);
+
   validateOptsAgainstSchema(combined, schema);
   return combined;
+}
+
+export function convertSmartDefaultsIntoNamedParams(
+  opts: { [k: string]: any },
+  schema: Schema,
+  argv: string[],
+  defaultProjectName: string | null
+) {
+  Object.entries(schema.properties).forEach(([k, v]) => {
+    if (
+      opts[k] === undefined &&
+      v.$default !== undefined &&
+      v.$default.$source === 'argv' &&
+      argv[v.$default.index]
+    ) {
+      opts[k] = coerceType(v, argv[v.$default.index]);
+    } else if (
+      opts[k] === undefined &&
+      v.$default !== undefined &&
+      v.$default.$source === 'projectName' &&
+      defaultProjectName
+    ) {
+      opts[k] = defaultProjectName;
+    }
+  });
+  delete opts['_'];
+}
+
+function getGeneratorDefaults(
+  projectName: string | null,
+  wc: WorkspaceConfiguration,
+  collectionName: string,
+  generatorName: string
+) {
+  let defaults = {};
+  if (wc.generators) {
+    if (
+      wc.generators[collectionName] &&
+      wc.generators[collectionName][generatorName]
+    ) {
+      defaults = {
+        ...defaults,
+        ...wc.generators[collectionName][generatorName],
+      };
+    }
+    if (wc.generators[`${collectionName}:${generatorName}`]) {
+      defaults = {
+        ...defaults,
+        ...wc.generators[`${collectionName}:${generatorName}`],
+      };
+    }
+  }
+  if (
+    projectName &&
+    wc.projects[projectName] &&
+    wc.projects[projectName].generators
+  ) {
+    const g = wc.projects[projectName].generators;
+    if (g[collectionName] && g[collectionName][generatorName]) {
+      defaults = { ...defaults, ...g[collectionName][generatorName] };
+    }
+    if (g[`${collectionName}:${generatorName}`]) {
+      defaults = {
+        ...defaults,
+        ...g[`${collectionName}:${generatorName}`],
+      };
+    }
+  }
+  return defaults;
 }
 
 async function promptForValues(opts: Options, schema: Schema) {
@@ -325,18 +459,20 @@ async function promptForValues(opts: Options, schema: Schema) {
     if (v['x-prompt'] && opts[k] === undefined) {
       const question = {
         name: k,
-        message: v['x-prompt'],
         default: v.default,
       } as any;
 
       if (typeof v['x-prompt'] === 'string') {
-        question.type = v.type;
+        question.message = v['x-prompt'];
+        question.type = v.type === 'boolean' ? 'confirm' : 'string';
       } else if (
         v['x-prompt'].type == 'confirmation' ||
         v['x-prompt'].type == 'confirm'
       ) {
+        question.message = v['x-prompt'].message;
         question.type = 'confirm';
       } else {
+        question.message = v['x-prompt'].message;
         question.type = 'list';
         question.choices =
           v['x-prompt'].items &&
@@ -373,9 +509,44 @@ export function lookupUnmatched(opts: Options, schema: Schema): Options {
 
     opts['--'].forEach((unmatched) => {
       unmatched.possible = props.filter(
-        (p) => strings.levenshtein(p, unmatched.name) < 3
+        (p) => levenshtein(p, unmatched.name) < 3
       );
     });
   }
   return opts;
+}
+
+function levenshtein(a: string, b: string) {
+  if (a.length == 0) {
+    return b.length;
+  }
+  if (b.length == 0) {
+    return a.length;
+  }
+  const matrix = [];
+
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) == a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+  return matrix[b.length][a.length];
+}
+
+function isTTY(): boolean {
+  return !!process.stdout.isTTY && process.env['CI'] !== 'true';
 }

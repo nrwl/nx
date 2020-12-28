@@ -50,14 +50,10 @@ describe('React Applications', () => {
     // By default, vendor sourcemaps are off
     runCLI(`build ${appName}`);
 
-    let vendorContent = readFile(`dist/apps/${appName}/vendor.js`);
-
-    expect(vendorContent).not.toMatch(/sourceMappingURL/);
-
     // Turn vendor sourcemaps on
     updateFile(`workspace.json`, (content) => {
       const json = JSON.parse(content);
-      json.projects[appName].architect.build.options.sourceMap = {
+      json.projects[appName].targets.build.options.sourceMap = {
         scripts: true,
         vendor: true,
       };
@@ -79,7 +75,7 @@ describe('React Applications', () => {
     const libTestResults = await runCLIAsync(
       `build ${libName} --no-extract-css`
     );
-    expect(libTestResults.stdout).toContain('Bundle complete.');
+    expect(libTestResults.stdout).toContain(`Bundle complete: ${libName}`);
 
     checkFilesExist(
       `dist/libs/${libName}/package.json`,
@@ -318,10 +314,10 @@ describe('React Applications', () => {
 
     angularJson.projects[
       appName
-    ].architect.build.options.main = `apps/${appName}/src/main.jsx`;
+    ].targets.build.options.main = `apps/${appName}/src/main.jsx`;
     angularJson.projects[
       appName
-    ].architect.build.options.polyfills = `apps/${appName}/src/polyfills.js`;
+    ].targets.build.options.polyfills = `apps/${appName}/src/polyfills.js`;
     updateFile(workspaceConfigName(), serializeJson(angularJson));
 
     const mainPath = `apps/${appName}/src/main.jsx`;

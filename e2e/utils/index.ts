@@ -43,6 +43,7 @@ export function runCreateWorkspace(
     base,
     packageManager,
     cli,
+    extraArgs,
   }: {
     preset: string;
     appName?: string;
@@ -50,6 +51,7 @@ export function runCreateWorkspace(
     base?: string;
     packageManager?: string;
     cli?: string;
+    extraArgs?: string;
   }
 ) {
   setCurrentProjName(name);
@@ -74,6 +76,10 @@ export function runCreateWorkspace(
 
   if (packageManager) {
     command += ` --package-manager=${packageManager}`;
+  }
+
+  if (extraArgs) {
+    command += ` ${extraArgs}`;
   }
 
   const create = execSync(command, {
@@ -126,7 +132,9 @@ export function newProject(): void {
           (f) => f !== '@nrwl/nx-plugin' && f !== `@nrwl/eslint-plugin-nx`
         )
         .forEach((p) => {
-          runCLI(`g ${p}:init`, { cwd: `./tmp/${currentCli()}/proj` });
+          runCLI(`g ${p}:init --no-interactive`, {
+            cwd: `./tmp/${currentCli()}/proj`,
+          });
         });
 
       execSync(`mv ./tmp/${currentCli()}/proj ${tmpBackupProjPath()}`);
@@ -278,6 +286,7 @@ export function runCLI(
     if (opts.silenceError) {
       return e.stdout.toString();
     } else {
+      console.log('original command', command);
       console.log(e.stdout?.toString(), e.stderr?.toString());
       throw e;
     }
@@ -317,18 +326,20 @@ function setMaxWorkers() {
     const workspace = readJson(workspaceFile);
 
     Object.keys(workspace.projects).forEach((appName) => {
-      const {
-        architect: { build },
-      } = workspace.projects[appName];
+      const targets = workspace.projects[appName].targets
+        ? workspace.projects[appName].targets
+        : workspace.projects[appName].architect;
+      const build = targets.build;
 
       if (!build) {
         return;
       }
 
+      const executor = build.builder ? build.builder : build.executor;
       if (
-        build.builder.startsWith('@nrwl/node') ||
-        build.builder.startsWith('@nrwl/web') ||
-        build.builder.startsWith('@nrwl/jest')
+        executor.startsWith('@nrwl/node') ||
+        executor.startsWith('@nrwl/web') ||
+        executor.startsWith('@nrwl/jest')
       ) {
         build.options.maxWorkers = 4;
       }

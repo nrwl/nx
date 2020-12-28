@@ -33,14 +33,12 @@
     "migrations": "./migrations.json"
   },
   "peerDependencies": {
-    "@angular-eslint/eslint-plugin": "*",
-    "@angular-eslint/eslint-plugin-template": "*",
-    "@angular-eslint/template-parser": "*",
     "@nrwl/workspace": "*"
   },
   "dependencies": {
     "@angular-devkit/schematics": "~11.0.1",
     "@nrwl/cypress": "*",
+    "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
     "@schematics/angular": "~11.0.1",

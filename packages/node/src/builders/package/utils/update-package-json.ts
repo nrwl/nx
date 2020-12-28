@@ -1,7 +1,8 @@
 import { BuilderContext } from '@angular-devkit/architect';
+import { normalize } from '@angular-devkit/core';
 import { readJsonFile } from '@nrwl/workspace';
 import { writeJsonFile } from '@nrwl/workspace/src/utils/fileutils';
-import { basename, join, normalize } from 'path';
+import { basename, join } from 'path';
 import { NormalizedBuilderOptions } from './models';
 
 export default function updatePackageJson(

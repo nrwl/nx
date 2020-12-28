@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import * as stripJsonComments from 'strip-json-comments';
 import '../compat/compat';
 
 /**
@@ -69,7 +70,7 @@ export interface ProjectConfiguration {
   /**
    * List of default values used by generators.
    *
-   * These defaults are scoped to a project. They override global defaults.
+   * These defaults are project specific.
    *
    * Example:
    *
@@ -124,36 +125,35 @@ export function workspaceConfigName(root: string) {
 }
 
 export class Workspaces {
-  readWorkspaceConfiguration(root: string): WorkspaceConfiguration {
-    const w = JSON.parse(
-      fs.readFileSync(path.join(root, workspaceConfigName(root))).toString()
-    );
+  constructor(private root: string) {}
 
-    Object.values(w.projects || {}).forEach((project: any) => {
-      if (!project.targets && project.architect) {
-        project.targets = project.architect;
-        project.architect = undefined;
-      }
-
-      Object.values(project.targets || {}).forEach((target: any) => {
-        if (!target.executor && target.builder) {
-          target.executor = target.builder;
-          target.builder = undefined;
-        }
+  calculateDefaultProjectName(cwd: string, wc: WorkspaceConfiguration) {
+    let relativeCwd = cwd.split(this.root)[1];
+    if (relativeCwd) {
+      relativeCwd = relativeCwd.startsWith('/')
+        ? relativeCwd.substring(1)
+        : relativeCwd;
+      const matchingProject = Object.keys(wc.projects).find((p) => {
+        const projectRoot = wc.projects[p].root;
+        return (
+          relativeCwd == projectRoot ||
+          relativeCwd.startsWith(`${projectRoot}/`)
+        );
       });
-
-      if (!project.generators && project.schematics) {
-        project.generators = project.schematics;
-        project.schematics = undefined;
-      }
-    });
-
-    if (!w.generators && w.schematics) {
-      w.generators = w.schematics;
-      w.schematics = undefined;
+      if (matchingProject) return matchingProject;
     }
+    return wc.defaultProject;
+  }
 
-    return w;
+  readWorkspaceConfiguration(): WorkspaceConfiguration {
+    const w = JSON.parse(
+      stripJsonComments(
+        fs
+          .readFileSync(path.join(this.root, workspaceConfigName(this.root)))
+          .toString()
+      )
+    );
+    return toNewFormat(w);
   }
 
   isNxExecutor(nodeModule: string, executor: string) {
@@ -174,12 +174,12 @@ export class Workspaces {
       );
       const executorsDir = path.dirname(executorsFilePath);
       const schemaPath = path.join(executorsDir, executorConfig.schema || '');
-      const schema = JSON.parse(fs.readFileSync(schemaPath).toString());
-      const module = require(path.join(
-        executorsDir,
-        executorConfig.implementation
-      ));
-      const implementation = module.default;
+      const schema = JSON.parse(
+        stripJsonComments(fs.readFileSync(schemaPath).toString())
+      );
+      const [modulePath, exportName] = executorConfig.implementation.split('#');
+      const module = require(path.join(executorsDir, modulePath));
+      const implementation = module[exportName || 'default'];
       return { schema, implementation };
     } catch (e) {
       throw new Error(
@@ -199,15 +199,17 @@ export class Workspaces {
       const generatorConfig = (generatorsJson.generators ||
         generatorsJson.schematics)[normalizedGeneratorName];
       const schemaPath = path.join(generatorsDir, generatorConfig.schema || '');
-      const schema = JSON.parse(fs.readFileSync(schemaPath).toString());
-      const module = require(path.join(
-        generatorsDir,
-        generatorConfig.implementation
-          ? generatorConfig.implementation
-          : generatorConfig.factory
-      ));
-      const implementation = module.default;
-      return { schema, implementation };
+      const schema = JSON.parse(
+        stripJsonComments(fs.readFileSync(schemaPath).toString())
+      );
+      generatorConfig.implementation =
+        generatorConfig.implementation || generatorConfig.factory;
+      const [modulePath, exportName] = generatorConfig.implementation.split(
+        '#'
+      );
+      const module = require(path.join(generatorsDir, modulePath));
+      const implementation = module[exportName || 'default'];
+      return { normalizedGeneratorName, schema, implementation };
     } catch (e) {
       throw new Error(
         `Unable to resolve ${collectionName}:${generatorName}.\n${e.message}`
@@ -216,8 +218,12 @@ export class Workspaces {
   }
 
   private readExecutorsJson(nodeModule: string, executor: string) {
-    const packageJsonPath = require.resolve(`${nodeModule}/package.json`);
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath).toString());
+    const packageJsonPath = require.resolve(`${nodeModule}/package.json`, {
+      paths: this.resolvePaths(),
+    });
+    const packageJson = JSON.parse(
+      stripJsonComments(fs.readFileSync(packageJsonPath).toString())
+    );
     const executorsFile = packageJson.executors
       ? packageJson.executors
       : packageJson.builders;
@@ -225,7 +231,7 @@ export class Workspaces {
       path.join(path.dirname(packageJsonPath), executorsFile)
     );
     const executorsJson = JSON.parse(
-      fs.readFileSync(executorsFilePath).toString()
+      stripJsonComments(fs.readFileSync(executorsFilePath).toString())
     );
     const mapOfExecutors = executorsJson.executors
       ? executorsJson.executors
@@ -242,11 +248,18 @@ export class Workspaces {
   private readGeneratorsJson(collectionName: string, generator: string) {
     let generatorsFilePath;
     if (collectionName.endsWith('.json')) {
-      generatorsFilePath = require.resolve(collectionName);
+      generatorsFilePath = require.resolve(collectionName, {
+        paths: this.resolvePaths(),
+      });
     } else {
-      const packageJsonPath = require.resolve(`${collectionName}/package.json`);
+      const packageJsonPath = require.resolve(
+        `${collectionName}/package.json`,
+        {
+          paths: this.resolvePaths(),
+        }
+      );
       const packageJson = JSON.parse(
-        fs.readFileSync(packageJsonPath).toString()
+        stripJsonComments(fs.readFileSync(packageJsonPath).toString())
       );
       const generatorsFile = packageJson.generators
         ? packageJson.generators
@@ -256,7 +269,7 @@ export class Workspaces {
       );
     }
     const generatorsJson = JSON.parse(
-      fs.readFileSync(generatorsFilePath).toString()
+      stripJsonComments(fs.readFileSync(generatorsFilePath).toString())
     );
 
     let normalizedGeneratorName;
@@ -285,4 +298,93 @@ export class Workspaces {
     }
     return { generatorsFilePath, generatorsJson, normalizedGeneratorName };
   }
+
+  private resolvePaths() {
+    return this.root ? [this.root, __dirname] : [__dirname];
+  }
+}
+
+export function reformattedWorkspaceJsonOrNull(w: any) {
+  return w.version === 2 ? toNewFormatOrNull(w) : toOldFormatOrNull(w);
+}
+
+export function toNewFormat(w: any) {
+  const f = toNewFormatOrNull(w);
+  return f ? f : w;
+}
+
+export function toNewFormatOrNull(w: any) {
+  let formatted = false;
+  Object.values(w.projects || {}).forEach((project: any) => {
+    if (project.architect) {
+      renameProperty(project, 'architect', 'targets');
+      formatted = true;
+    }
+    if (project.schematics) {
+      renameProperty(project, 'schematics', 'generators');
+      formatted = true;
+    }
+    Object.values(project.targets || {}).forEach((target: any) => {
+      if (target.builder) {
+        renameProperty(target, 'builder', 'executor');
+        formatted = true;
+      }
+    });
+  });
+
+  if (w.schematics) {
+    renameProperty(w, 'schematics', 'generators');
+    formatted = true;
+  }
+  if (w.version !== 2) {
+    w.version = 2;
+    formatted = true;
+  }
+  return formatted ? w : null;
+}
+
+export function toOldFormatOrNull(w: any) {
+  let formatted = false;
+  Object.values(w.projects || {}).forEach((project: any) => {
+    if (project.targets) {
+      renameProperty(project, 'targets', 'architect');
+      formatted = true;
+    }
+    if (project.generators) {
+      renameProperty(project, 'generators', 'schematics');
+      formatted = true;
+    }
+    Object.values(project.architect || {}).forEach((target: any) => {
+      if (target.executor) {
+        renameProperty(target, 'executor', 'builder');
+        formatted = true;
+      }
+    });
+  });
+
+  if (w.generators) {
+    renameProperty(w, 'generators', 'schematics');
+    formatted = true;
+  }
+  if (w.version !== 1) {
+    w.version = 1;
+    formatted = true;
+  }
+  return formatted ? w : null;
+}
+
+// we have to do it this way to preserve the order of properties
+// not to screw up the formatting
+function renameProperty(obj: any, from: string, to: string) {
+  const copy = { ...obj };
+  Object.keys(obj).forEach((k) => {
+    delete obj[k];
+  });
+  Object.keys(copy).forEach((k) => {
+    if (k === from) {
+      obj[to] = copy[k];
+    } else {
+      obj[k] = copy[k];
+    }
+  });
 }

@@ -1,8 +1,8 @@
-import * as depcheck from 'depcheck';
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 import * as chalk from 'chalk';
-import { satisfies } from 'semver';
+import getDiscrepancies from './discrepancies';
+import getMissingDependencies from './missing';
 
 const argv = require('yargs')
   .usage('Check projects for dependency discrepancies.')
@@ -14,7 +14,7 @@ const argv = require('yargs')
   .option('missing', {
     alias: 'm',
     type: 'boolean',
-    default: false,
+    default: true,
     description: 'Check for missing dependencies',
   })
   .option('discrepancies', {
@@ -34,7 +34,7 @@ const argv = require('yargs')
     readFileSync(`./package.json`).toString()
   );
 
-  const packagesDirectory = join(__dirname, '..', 'packages');
+  const packagesDirectory = join(__dirname, '../..', 'packages');
 
   const projects =
     argv.projects ||
@@ -56,7 +56,8 @@ const argv = require('yargs')
           ? await getMissingDependencies(
               project.name,
               projectPath,
-              dependencies
+              dependencies,
+              argv.verbose
             )
           : [];
 
@@ -99,44 +100,9 @@ const argv = require('yargs')
     }
   });
 
-  if (total.discrepancies > 0) {
+  if (total.discrepancies > 0 || total.missing > 0) {
     process.exit(1);
   }
 
   process.exit(0);
 })().catch((err) => console.log(err));
-
-async function getMissingDependencies(
-  name: string,
-  path: string,
-  dependencies: JSON
-) {
-  const options: any = {
-    skipMissing: false, // skip calculation of missing dependencies
-    ignorePatterns: ['*.spec*'],
-  };
-  const { missing } = await depcheck(path, {
-    ...options,
-    package: { dependencies },
-  });
-
-  if (argv.verbose) {
-    console.log(name, missing);
-  }
-
-  return Object.keys(missing).filter((p) => !p.startsWith('@nrwl/'));
-}
-
-function getDiscrepancies(projectDependencies: JSON, devDependencies: JSON) {
-  return Object.keys(projectDependencies)
-    .filter((p) => !p.startsWith('@nrwl/'))
-    .filter(
-      (p) =>
-        devDependencies[p] &&
-        projectDependencies[p] !== devDependencies[p] &&
-        !satisfies(devDependencies[p], projectDependencies[p])
-    )
-    .map(
-      (p) => `${p}@${devDependencies[p]} ${chalk.dim(projectDependencies[p])}`
-    );
-}

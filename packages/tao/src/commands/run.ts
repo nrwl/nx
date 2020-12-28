@@ -1,5 +1,4 @@
 import * as minimist from 'minimist';
-import { getLogger } from '../shared/logger';
 import {
   combineOptionsForExecutor,
   convertToCamelCase,
@@ -15,6 +14,7 @@ import {
 } from '../shared/workspace';
 
 import * as chalk from 'chalk';
+import { logger } from '../shared/logger';
 
 export interface RunOptions {
   project: string;
@@ -31,14 +31,17 @@ function throwInvalidInvocation() {
 }
 
 function parseRunOpts(
+  cwd: string,
   args: string[],
-  defaultProjectName: string | null,
-  logger: Console
+  defaultProjectName: string | null
 ): RunOptions {
   const runOptions = convertToCamelCase(
     minimist(args, {
       boolean: ['help', 'prod'],
       string: ['configuration', 'project'],
+      alias: {
+        c: 'configuration',
+      },
     })
   );
   const help = runOptions.help as boolean;
@@ -74,6 +77,7 @@ function parseRunOpts(
   const res = { project, target, configuration, help, runOptions };
   delete runOptions['help'];
   delete runOptions['_'];
+  delete runOptions['c'];
   delete runOptions['configuration'];
   delete runOptions['prod'];
   delete runOptions['project'];
@@ -81,12 +85,8 @@ function parseRunOpts(
   return res;
 }
 
-export function printRunHelp(
-  opts: RunOptions,
-  schema: Schema,
-  logger: Console
-) {
-  printHelp(`nx run ${opts.project}:${opts.target}`, schema, logger as any);
+export function printRunHelp(opts: RunOptions, schema: Schema) {
+  printHelp(`nx run ${opts.project}:${opts.target}`, schema);
 }
 
 export function validateTargetAndConfiguration(
@@ -135,32 +135,46 @@ export interface TargetContext {
   workspace: WorkspaceConfiguration;
 }
 
-export async function run(root: string, args: string[], isVerbose: boolean) {
-  const logger = getLogger(isVerbose) as any;
-  const ws = new Workspaces();
+export async function run(
+  cwd: string,
+  root: string,
+  args: string[],
+  isVerbose: boolean
+) {
+  const ws = new Workspaces(root);
 
-  return handleErrors(logger, isVerbose, async () => {
-    const workspace = ws.readWorkspaceConfiguration(root);
-    const opts = parseRunOpts(args, workspace.defaultProject, logger);
+  return handleErrors(isVerbose, async () => {
+    const workspace = ws.readWorkspaceConfiguration();
+    const defaultProjectName = ws.calculateDefaultProjectName(cwd, workspace);
+    const opts = parseRunOpts(cwd, args, defaultProjectName);
     validateTargetAndConfiguration(workspace, opts);
 
     const target = workspace.projects[opts.project].targets[opts.target];
     const [nodeModule, executor] = target.executor.split(':');
+    const { schema, implementation } = ws.readExecutor(nodeModule, executor);
+    const combinedOptions = combineOptionsForExecutor(
+      opts.runOptions,
+      opts.configuration,
+      target,
+      schema,
+      defaultProjectName
+    );
+    if (opts.help) {
+      printRunHelp(opts, schema);
+      return 0;
+    }
+
     if (ws.isNxExecutor(nodeModule, executor)) {
-      const { schema, implementation } = ws.readExecutor(nodeModule, executor);
-      const combinedOptions = combineOptionsForExecutor(
-        opts.runOptions,
-        opts.configuration,
-        target,
-        schema
-      );
-      if (opts.help) {
-        printRunHelp(opts, schema, logger);
-        return 0;
-      }
       return await implementation(combinedOptions, { root, target, workspace });
     } else {
-      return (await import('./ngcli-adapter')).run(logger, root, opts);
+      return (await import('./ngcli-adapter')).run(
+        root,
+        {
+          ...opts,
+          runOptions: combinedOptions,
+        },
+        isVerbose
+      );
     }
   });
 }

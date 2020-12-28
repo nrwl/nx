@@ -29,6 +29,7 @@ import { assertValidStyle } from '../../utils/assertion';
 import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
 import { names } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 interface NormalizedSchema extends Schema {
   projectSourceRoot: Path;
@@ -68,6 +69,11 @@ function createComponentFiles(options: NormalizedSchema): Rule {
       options.styledModule || !options.hasStyles
         ? filter((file) => !file.endsWith(`.${options.style}`))
         : noop(),
+      options.globalCss
+        ? filter((file) => !file.endsWith(`.module.${options.style}`))
+        : filter(
+            (file) => !file.endsWith(`${options.fileName}.${options.style}`)
+          ),
       move(componentDir),
       options.js ? toJS() : noop(),
     ])
@@ -182,3 +188,8 @@ function assertValidOptions(options: Schema) {
     }
   });
 }
+
+export const componentGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/react',
+  'component'
+);

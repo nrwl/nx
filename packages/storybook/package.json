@@ -32,6 +32,7 @@
   },
   "dependencies": {
     "@nrwl/cypress": "*",
+    "@nrwl/devkit": "*",
     "core-js": "^3.6.5",
     "tree-kill": "1.2.2",
     "ts-loader": "5.4.5",

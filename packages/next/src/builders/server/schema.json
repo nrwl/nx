@@ -29,18 +29,15 @@
     },
     "customServerPath": {
       "type": "string",
-      "description": "Use a custom server script",
-      "default": null
+      "description": "Use a custom server script"
     },
     "hostname": {
       "type": "string",
-      "description": "Hostname on which the application is served.",
-      "default": null
+      "description": "Hostname on which the application is served."
     },
     "proxyConfig": {
       "type": "string",
-      "description": "Path to the proxy configuration file.",
-      "default": null
+      "description": "Path to the proxy configuration file."
     }
   },
   "required": []

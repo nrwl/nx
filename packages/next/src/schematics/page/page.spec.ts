@@ -21,7 +21,7 @@ describe('component', () => {
     );
 
     expect(tree.exists('apps/my-app/src/pages/hello.tsx')).toBeTruthy();
-    expect(tree.exists('apps/my-app/src/pages/hello.css')).toBeTruthy();
+    expect(tree.exists('apps/my-app/src/pages/hello.module.css')).toBeTruthy();
   });
 
   it('should support dynamic routes and directories', async () => {
@@ -35,7 +35,7 @@ describe('component', () => {
       tree.exists('apps/my-app/src/pages/posts/[dynamic].tsx')
     ).toBeTruthy();
     expect(
-      tree.exists('apps/my-app/src/pages/posts/[dynamic].css')
+      tree.exists('apps/my-app/src/pages/posts/[dynamic].module.css')
     ).toBeTruthy();
 
     const content = tree

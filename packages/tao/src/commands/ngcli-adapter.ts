@@ -2,23 +2,17 @@ import { Architect } from '@angular-devkit/architect';
 import { WorkspaceNodeModulesArchitectHost } from '@angular-devkit/architect/node';
 import {
   json,
-  JsonObject,
   logging,
   normalize,
+  Path,
   schema,
   tags,
   virtualFs,
   workspaces,
 } from '@angular-devkit/core';
 import * as chalk from 'chalk';
-import { NodeJsSyncHost } from '@angular-devkit/core/node';
-import {
-  coerceTypesInOptions,
-  convertAliases,
-  Options,
-  Schema,
-} from '../shared/params';
-import { printRunHelp, RunOptions } from './run';
+import { createConsoleLogger, NodeJsSyncHost } from '@angular-devkit/core/node';
+import { RunOptions } from './run';
 import {
   FileSystemCollectionDescription,
   FileSystemSchematicDescription,
@@ -33,24 +27,28 @@ import {
   TaskExecutor,
 } from '@angular-devkit/schematics';
 import * as fs from 'fs';
-import * as inquirer from 'inquirer';
-import { detectPackageManager } from '../shared/detect-package-manager';
-import { GenerateOptions, printGenHelp } from './generate';
+import { readFileSync } from 'fs';
+import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
+import { GenerateOptions } from './generate';
 import * as taoTree from '../shared/tree';
-import { workspaceConfigName } from '@nrwl/tao/src/shared/workspace';
+import {
+  toNewFormatOrNull,
+  toOldFormatOrNull,
+  workspaceConfigName,
+} from '@nrwl/tao/src/shared/workspace';
 import { BaseWorkflow } from '@angular-devkit/schematics/src/workflow';
 import { NodePackageName } from '@angular-devkit/schematics/tasks/package-manager/options';
 import { BuiltinTaskExecutor } from '@angular-devkit/schematics/tasks/node';
 import { dirname, extname, join, resolve } from 'path';
-import { readFileSync } from 'fs';
 import * as stripJsonComments from 'strip-json-comments';
+import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
+import { Observable } from 'rxjs';
+import { concatMap, map, switchMap } from 'rxjs/operators';
+import { NX_ERROR, NX_PREFIX } from '../shared/logger';
 
-function normalizeOptions(opts: Options, schema: Schema): Options {
-  return convertAliases(coerceTypesInOptions(opts, schema), schema, false);
-}
-
-export async function run(logger: any, root: string, opts: RunOptions) {
-  const fsHost = new NodeJsSyncHost();
+export async function run(root: string, opts: RunOptions, verbose: boolean) {
+  const logger = getLogger(verbose);
+  const fsHost = new NxScopedHost(normalize(root));
   const { workspace } = await workspaces.readWorkspace(
     workspaceConfigName(root),
     workspaces.createWorkspaceHost(fsHost)
@@ -60,32 +58,13 @@ export async function run(logger: any, root: string, opts: RunOptions) {
   registry.addPostTransform(schema.transforms.addUndefinedDefaults);
   const architectHost = new WorkspaceNodeModulesArchitectHost(workspace, root);
   const architect = new Architect(architectHost, registry);
-
-  const builderConf = await architectHost.getBuilderNameForTarget({
-    project: opts.project,
-    target: opts.target,
-  });
-  const builderDesc = await architectHost.resolveBuilder(builderConf);
-  const flattenedSchema = await registry
-    .flatten(builderDesc.optionSchema as json.JsonObject)
-    .toPromise();
-
-  if (opts.help) {
-    printRunHelp(opts, flattenedSchema as Schema, logger);
-    return 0;
-  }
-
-  const runOptions = normalizeOptions(
-    opts.runOptions,
-    flattenedSchema as Schema
-  );
   const run = await architect.scheduleTarget(
     {
       project: opts.project,
       target: opts.target,
       configuration: opts.configuration,
     },
-    runOptions as JsonObject,
+    opts.runOptions,
     { logger }
   );
   const result = await run.output.toPromise();
@@ -93,7 +72,7 @@ export async function run(logger: any, root: string, opts: RunOptions) {
   return result.success ? 0 : 1;
 }
 
-async function createWorkflow(
+function createWorkflow(
   fsHost: virtualFs.Host<fs.Stats>,
   root: string,
   opts: any
@@ -106,77 +85,10 @@ async function createWorkflow(
     registry: new schema.CoreSchemaRegistry(formats.standardFormats),
     resolvePaths: [process.cwd(), root],
   });
-  const _params = opts.generatorOptions._;
-  delete opts.generatorOptions._;
-  workflow.registry.addSmartDefaultProvider('argv', (schema: JsonObject) => {
-    if ('index' in schema) {
-      return _params[Number(schema['index'])];
-    } else {
-      return _params;
-    }
-  });
-
-  if (opts.defaults) {
-    workflow.registry.addPreTransform(schema.transforms.addUndefinedDefaults);
-  } else {
-    workflow.registry.addPostTransform(schema.transforms.addUndefinedDefaults);
-  }
-
+  workflow.registry.addPostTransform(schema.transforms.addUndefinedDefaults);
   workflow.engineHost.registerOptionsTransform(
     validateOptionsWithSchema(workflow.registry)
   );
-
-  if (opts.interactive !== false && isTTY()) {
-    workflow.registry.usePromptProvider(
-      (definitions: schema.PromptDefinition[]) => {
-        const questions: inquirer.QuestionCollection = definitions.map(
-          (definition) => {
-            const question = {
-              name: definition.id,
-              message: definition.message,
-              default: definition.default as
-                | string
-                | number
-                | boolean
-                | string[],
-            } as inquirer.Question;
-
-            const validator = definition.validator;
-            if (validator) {
-              question.validate = (input) => validator(input);
-            }
-
-            switch (definition.type) {
-              case 'confirmation':
-                question.type = 'confirm';
-                break;
-              case 'list':
-                question.type = definition.multiselect ? 'checkbox' : 'list';
-                question.choices =
-                  definition.items &&
-                  definition.items.map((item) => {
-                    if (typeof item == 'string') {
-                      return item;
-                    } else {
-                      return {
-                        name: item.label,
-                        value: item.value,
-                      };
-                    }
-                  });
-                break;
-              default:
-                question.type = definition.type;
-                break;
-            }
-            return question;
-          }
-        );
-
-        return inquirer.prompt(questions);
-      }
-    );
-  }
   return workflow;
 }
 
@@ -228,36 +140,6 @@ function createRecorder(
   };
 }
 
-async function getSchematicDefaults(
-  root: string,
-  collection: string,
-  schematic: string
-) {
-  const workspace = (
-    await workspaces.readWorkspace(
-      workspaceConfigName(root),
-      workspaces.createWorkspaceHost(new NodeJsSyncHost())
-    )
-  ).workspace;
-
-  let result = {};
-  if (workspace.extensions.schematics) {
-    const schematicObject =
-      workspace.extensions.schematics[`${collection}:${schematic}`];
-    if (schematicObject) {
-      result = { ...result, ...(schematicObject as {}) };
-    }
-    const collectionObject = workspace.extensions.schematics[collection];
-    if (
-      typeof collectionObject == 'object' &&
-      !Array.isArray(collectionObject)
-    ) {
-      result = { ...result, ...(collectionObject[schematic] as {}) };
-    }
-  }
-  return result;
-}
-
 async function runSchematic(
   root: string,
   workflow: NodeWorkflow,
@@ -267,70 +149,33 @@ async function runSchematic(
     FileSystemCollectionDescription,
     FileSystemSchematicDescription
   >,
-  allowAdditionalArgs = false,
   printDryRunMessage = true,
   recorder: any = null
 ): Promise<{ status: number; loggingQueue: string[] }> {
-  const flattenedSchema = (await workflow.registry
-    .flatten(schematic.description.schemaJson)
-    .toPromise()) as Schema;
-
-  if (opts.help) {
-    printGenHelp(opts, flattenedSchema as Schema, logger as any);
-    return { status: 0, loggingQueue: [] };
-  }
-
-  const defaults =
-    opts.generatorName === 'new'
-      ? {}
-      : await getSchematicDefaults(
-          root,
-          opts.collectionName,
-          opts.generatorName
-        );
   const record = { loggingQueue: [] as string[], error: false };
   workflow.reporter.subscribe(recorder || createRecorder(record, logger));
 
-  const schematicOptions = normalizeOptions(
-    opts.generatorOptions,
-    flattenedSchema
-  );
-
-  if (schematicOptions['--'] && !allowAdditionalArgs) {
-    schematicOptions['--'].forEach((unmatched) => {
-      const message =
-        `Could not match option '${unmatched.name}' to the ${opts.collectionName}:${opts.generatorName} schema.` +
-        (unmatched.possible.length > 0
-          ? ` Possible matches : ${unmatched.possible.join()}`
-          : '');
-      logger.fatal(message);
-    });
-
-    return { status: 1, loggingQueue: [] };
+  try {
+    await workflow
+      .execute({
+        collection: opts.collectionName,
+        schematic: opts.generatorName,
+        options: opts.generatorOptions,
+        debug: opts.debug,
+        logger,
+      })
+      .toPromise();
+  } catch (e) {
+    console.log(e);
+    throw e;
   }
-
-  await workflow
-    .execute({
-      collection: opts.collectionName,
-      schematic: opts.generatorName,
-      options: { ...defaults, ...schematicOptions },
-      debug: opts.debug,
-      logger,
-    })
-    .toPromise();
-
   if (!record.error) {
     record.loggingQueue.forEach((log) => logger.info(log));
   }
-
   if (opts.dryRun && printDryRunMessage) {
     logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
   }
   return { status: 0, loggingQueue: record.loggingQueue };
-}
-
-function isTTY(): boolean {
-  return !!process.stdout.isTTY && process.env['CI'] !== 'true';
 }
 
 class MigrationEngineHost extends NodeModulesEngineHost {
@@ -411,23 +256,236 @@ class MigrationsWorkflow extends BaseWorkflow {
   }
 }
 
+export class NxScopedHost extends virtualFs.ScopedHost<any> {
+  constructor(root: Path) {
+    super(new NodeJsSyncHost(), root);
+  }
+
+  read(path: Path): Observable<FileBuffer> {
+    if (this.isWorkspaceConfig(path)) {
+      return this.isNewFormat().pipe(
+        switchMap((newFormat) => {
+          if (newFormat) {
+            return super.read(path).pipe(
+              map((r) => {
+                try {
+                  const w = JSON.parse(Buffer.from(r).toString());
+                  const formatted = toOldFormatOrNull(w);
+                  return formatted
+                    ? Buffer.from(JSON.stringify(formatted, null, 2))
+                    : r;
+                } catch (e) {
+                  return r;
+                }
+              })
+            );
+          } else {
+            return super.read(path);
+          }
+        })
+      );
+    } else {
+      return super.read(path);
+    }
+  }
+
+  write(path: Path, content: FileBuffer): Observable<void> {
+    if (this.isWorkspaceConfig(path)) {
+      return this.isNewFormat().pipe(
+        switchMap((newFormat) => {
+          if (newFormat) {
+            try {
+              const w = JSON.parse(Buffer.from(content).toString());
+              const formatted = toNewFormatOrNull(w);
+              if (formatted) {
+                return super.write(
+                  path,
+                  Buffer.from(JSON.stringify(formatted, null, 2))
+                );
+              } else {
+                return super.write(path, content);
+              }
+            } catch (e) {
+              return super.write(path, content);
+            }
+          } else {
+            return super.write(path, content);
+          }
+        })
+      );
+    } else {
+      return super.write(path, content);
+    }
+  }
+
+  protected isWorkspaceConfig(path: Path) {
+    const p = path.toString();
+    return (
+      p === 'angular.json' ||
+      p === '/angular.json' ||
+      p === 'workspace.json' ||
+      p === '/workspace.json'
+    );
+  }
+
+  private isNewFormat() {
+    return super.exists('/angular.json' as any).pipe(
+      switchMap((isAngularJson) => {
+        return super
+          .read((isAngularJson ? '/angular.json' : '/workspace.json') as any)
+          .pipe(
+            map((r) => JSON.parse(Buffer.from(r).toString()).version === 2)
+          );
+      })
+    );
+  }
+}
+
+/**
+ * This host contains the workaround needed to run Angular migrations
+ */
+export class NxScopedHostForMigrations extends NxScopedHost {
+  constructor(root: Path) {
+    super(root);
+  }
+
+  read(path: Path): Observable<FileBuffer> {
+    return this.hasWorkspaceJson().pipe(
+      concatMap((hasWorkspace) => {
+        if (this.isWorkspaceConfig(path)) {
+          if (
+            hasWorkspace &&
+            (path == '/angular.json' || path == 'angular.json')
+          ) {
+            return super
+              .read('/workspace.json' as any)
+              .pipe(map(processConfigWhenReading));
+          } else {
+            return super.read(path).pipe(map(processConfigWhenReading));
+          }
+        } else {
+          return super.read(path);
+        }
+      })
+    );
+  }
+
+  isFile(path: Path): Observable<boolean> {
+    return this.hasWorkspaceJson().pipe(
+      concatMap((hasWorkspace) => {
+        if (
+          hasWorkspace &&
+          (path == '/angular.json' || path == 'angular.json')
+        ) {
+          return super.isFile('/workspace.json' as any);
+        } else {
+          return super.isFile(path);
+        }
+      })
+    );
+  }
+
+  exists(path: Path): Observable<boolean> {
+    return this.hasWorkspaceJson().pipe(
+      concatMap((hasWorkspace) => {
+        if (
+          hasWorkspace &&
+          (path == '/angular.json' || path == 'angular.json')
+        ) {
+          return super.exists('/workspace.json' as any);
+        } else {
+          return super.exists(path);
+        }
+      })
+    );
+  }
+
+  write(path: Path, content: FileBuffer): Observable<void> {
+    return this.hasWorkspaceJson().pipe(
+      concatMap((hasWorkspace) => {
+        if (this.isWorkspaceConfig(path)) {
+          if (
+            hasWorkspace &&
+            (path == '/angular.json' || path == 'angular.json')
+          ) {
+            return super.write(
+              '/workspace.json' as any,
+              processConfigWhenWriting(content)
+            );
+          } else {
+            return super.write(path as any, processConfigWhenWriting(content));
+          }
+        } else {
+          return super.write(path as any, content);
+        }
+      })
+    );
+  }
+
+  private hasWorkspaceJson() {
+    return super.exists('/workspace.json' as any);
+  }
+}
+
+function processConfigWhenReading(content: ArrayBuffer) {
+  try {
+    const json = JSON.parse(Buffer.from(content).toString());
+    Object.values(json.projects).forEach((p: any) => {
+      try {
+        Object.values(p.architect || p.targets).forEach((e: any) => {
+          if (
+            (e.builder === '@nrwl/jest:jest' ||
+              e.executor === '@nrwl/jest:jest') &&
+            !e.options.tsConfig
+          ) {
+            e.options.tsConfig = `${p.root}/tsconfig.spec.json`;
+          }
+        });
+      } catch (e) {}
+    });
+    return Buffer.from(JSON.stringify(json, null, 2));
+  } catch (e) {
+    return content;
+  }
+}
+
+function processConfigWhenWriting(content: ArrayBuffer) {
+  try {
+    const json = JSON.parse(Buffer.from(content).toString());
+    Object.values(json.projects).forEach((p: any) => {
+      try {
+        Object.values(p.architect || p.targets).forEach((e: any) => {
+          if (
+            (e.builder === '@nrwl/jest:jest' ||
+              e.executor === '@nrwl/jest:jest') &&
+            e.options.tsConfig
+          ) {
+            delete e.options.tsConfig;
+          }
+        });
+      } catch (e) {}
+    });
+    return Buffer.from(JSON.stringify(json, null, 2));
+  } catch (e) {
+    return content;
+  }
+}
+
 export async function generate(
-  logger: logging.Logger,
   root: string,
-  opts: GenerateOptions
+  opts: GenerateOptions,
+  verbose: boolean
 ) {
-  const fsHost = new virtualFs.ScopedHost(
-    new NodeJsSyncHost(),
-    normalize(root)
-  );
-  const workflow = await createWorkflow(fsHost, root, opts);
+  const logger = getLogger(verbose);
+  const fsHost = new NxScopedHost(normalize(root));
+  const workflow = createWorkflow(fsHost, root, opts);
   const collection = getCollection(workflow, opts.collectionName);
   const schematic = collection.createSchematic(opts.generatorName, true);
   return (
     await runSchematic(
       root,
       workflow,
-      logger,
+      logger as any,
       { ...opts, generatorName: schematic.description.name },
       schematic
     )
@@ -435,20 +493,21 @@ export async function generate(
 }
 
 export async function runMigration(
-  logger: logging.Logger,
   root: string,
   collection: string,
-  schematic: string
+  schematic: string,
+  isVerbose: boolean
 ) {
-  const host = new virtualFs.ScopedHost(new NodeJsSyncHost(), normalize(root));
-  const workflow = new MigrationsWorkflow(host, logger);
+  const logger = getLogger(isVerbose);
+  const host = new NxScopedHostForMigrations(normalize(root));
+  const workflow = new MigrationsWorkflow(host, logger as any);
   return workflow
     .execute({
       collection,
       schematic,
       options: {},
       debug: false,
-      logger,
+      logger: logger as any,
     })
     .toPromise();
 }
@@ -456,102 +515,116 @@ export async function runMigration(
 export function wrapAngularDevkitSchematic(
   collectionName: string,
   generatorName: string
-) {
-  return (generatorOptions: { [k: string]: any }) => {
-    return async (host: taoTree.Tree) => {
-      const emptyLogger = {
-        log: (e) => {},
-        info: (e) => {},
-        warn: (e) => {},
-        error: (e) => {},
-        fatal: (e) => {},
-      } as any;
-      emptyLogger.createChild = () => emptyLogger;
+): any {
+  return async (host: any, generatorOptions: { [k: string]: any }) => {
+    const emptyLogger = {
+      log: (e) => {},
+      info: (e) => {},
+      warn: (e) => {},
+      error: (e) => {},
+      fatal: (e) => {},
+    } as any;
+    emptyLogger.createChild = () => emptyLogger;
 
-      const recorder = (event: DryRunEvent) => {
-        const eventPath = event.path.startsWith('/')
-          ? event.path.substr(1)
-          : event.path;
-        if (event.kind === 'error') {
-        } else if (event.kind === 'update') {
-          host.write(eventPath, event.content);
-        } else if (event.kind === 'create') {
-          host.write(eventPath, event.content);
-        } else if (event.kind === 'delete') {
-          host.delete(eventPath);
-        } else if (event.kind === 'rename') {
-          host.rename(eventPath, event.to);
-        }
-      };
-
-      const fsHost = new virtualFs.ScopedHost(
-        new NodeJsSyncHost(),
-        normalize(host.root)
-      );
-
-      await Promise.all(
-        (host as taoTree.FsTree).listChanges().map(async (c) => {
-          if (c.type === 'CREATE' || c.type === 'UPDATE') {
-            await fsHost.write(c.path as any, c.content).toPromise();
-          } else {
-            await fsHost.delete(c.path as any).toPromise();
-          }
-        })
-      );
-
-      const options = {
-        generatorOptions: { ...generatorOptions, _: [] },
-        dryRun: true,
-        interactive: false,
-        help: false,
-        debug: false,
-        collectionName,
-        generatorName,
-        force: false,
-        defaults: false,
-      };
-      const workflow = await createWorkflow(fsHost, host.root, options);
-      const collection = getCollection(workflow, collectionName);
-      const schematic = collection.createSchematic(generatorName, true);
-      const res = await runSchematic(
-        host.root,
-        workflow,
-        emptyLogger,
-        options,
-        schematic,
-        false,
-        false,
-        recorder
-      );
-
-      if (res.status !== 0) {
-        throw new Error(res.loggingQueue.join('\n'));
+    const recorder = (event: DryRunEvent) => {
+      const eventPath = event.path.startsWith('/')
+        ? event.path.substr(1)
+        : event.path;
+      if (event.kind === 'error') {
+      } else if (event.kind === 'update') {
+        host.write(eventPath, event.content);
+      } else if (event.kind === 'create') {
+        host.write(eventPath, event.content);
+      } else if (event.kind === 'delete') {
+        host.delete(eventPath);
+      } else if (event.kind === 'rename') {
+        host.rename(eventPath, event.to);
       }
     };
+
+    const fsHost = new NxScopedHost(normalize(host.root));
+
+    await Promise.all(
+      (host as taoTree.FsTree).listChanges().map(async (c) => {
+        if (c.type === 'CREATE' || c.type === 'UPDATE') {
+          await fsHost.write(c.path as any, c.content).toPromise();
+        } else {
+          await fsHost.delete(c.path as any).toPromise();
+        }
+      })
+    );
+
+    const options = {
+      generatorOptions: { ...generatorOptions, _: [] },
+      dryRun: true,
+      interactive: false,
+      help: false,
+      debug: false,
+      collectionName,
+      generatorName,
+      force: false,
+      defaults: false,
+    };
+    const workflow = createWorkflow(fsHost, host.root, options);
+    const collection = getCollection(workflow, collectionName);
+    const schematic = collection.createSchematic(generatorName, true);
+    const res = await runSchematic(
+      host.root,
+      workflow,
+      emptyLogger,
+      options,
+      schematic,
+      false,
+      recorder
+    );
+
+    if (res.status !== 0) {
+      throw new Error(res.loggingQueue.join('\n'));
+    }
   };
 }
 
 export async function invokeNew(
-  logger: logging.Logger,
   root: string,
-  opts: GenerateOptions
+  opts: GenerateOptions,
+  verbose: boolean
 ) {
-  const fsHost = new virtualFs.ScopedHost(
-    new NodeJsSyncHost(),
-    normalize(root)
-  );
-  const workflow = await createWorkflow(fsHost, root, opts);
+  const logger = getLogger(verbose);
+  const fsHost = new NxScopedHost(normalize(root));
+  const workflow = createWorkflow(fsHost, root, opts);
   const collection = getCollection(workflow, opts.collectionName);
   const schematic = collection.createSchematic('new', true);
-  const allowAdditionalArgs = true; // we can't yet know the schema to validate against
   return (
     await runSchematic(
       root,
       workflow,
-      logger,
+      logger as any,
       { ...opts, generatorName: schematic.description.name },
-      schematic,
-      allowAdditionalArgs
+      schematic
     )
   ).status;
 }
+
+let logger: logging.Logger;
+export const getLogger = (isVerbose = false): any => {
+  if (!logger) {
+    logger = createConsoleLogger(isVerbose, process.stdout, process.stderr, {
+      warn: (s) => chalk.bold(chalk.yellow(s)),
+      error: (s) => {
+        if (s.startsWith('NX ')) {
+          return `\n${NX_ERROR} ${chalk.bold(chalk.red(s.substr(3)))}\n`;
+        }
+
+        return chalk.bold(chalk.red(s));
+      },
+      info: (s) => {
+        if (s.startsWith('NX ')) {
+          return `\n${NX_PREFIX} ${chalk.bold(s.substr(3))}\n`;
+        }
+
+        return chalk.white(s);
+      },
+    });
+  }
+  return logger;
+};

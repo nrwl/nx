@@ -13,6 +13,7 @@ import init from '../init/init';
 import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
 import { maybeJs } from '@nrwl/workspace/src/utils/rules/to-js';
 import { names } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;
@@ -77,3 +78,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     appProjectRoot,
   };
 }
+
+export const applicationGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/express',
+  'application'
+);

@@ -2,7 +2,7 @@ import { ParsedArgs } from 'minimist';
 import {
   coerceTypesInOptions,
   convertAliases,
-  convertPositionParamsIntoNamedParams,
+  convertSmartDefaultsIntoNamedParams,
   convertToCamelCase,
   lookupUnmatched,
   Schema,
@@ -60,6 +60,33 @@ describe('params', () => {
       expect(opts).toEqual({
         a: ['one', 'two'],
         b: 'three,four',
+      });
+
+      const opts2 = coerceTypesInOptions({ a: '1,2', b: 'true,false' }, {
+        properties: {
+          a: { type: 'array', items: { type: 'number' } },
+          b: { type: 'array', items: { type: 'boolean' } },
+        },
+      } as Schema);
+
+      expect(opts2).toEqual({
+        a: [1, 2],
+        b: [true, false],
+      });
+    });
+
+    it('should handle oneOf', () => {
+      const opts = coerceTypesInOptions(
+        { a: 'false' } as any,
+        {
+          properties: {
+            a: { oneOf: [{ type: 'object' }, { type: 'boolean' }] },
+          },
+        } as Schema
+      );
+
+      expect(opts).toEqual({
+        a: false,
       });
     });
   });
@@ -255,12 +282,58 @@ describe('params', () => {
 
       expect(opts).toEqual({ a: [{ key: 'inner' }, { key: 'inner' }] });
     });
+
+    it('should set the default array value', () => {
+      const opts = setDefaults(
+        {},
+        {
+          properties: {
+            a: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  key: {
+                    type: 'string',
+                    default: 'inner',
+                  },
+                },
+              },
+              default: [],
+            },
+          },
+        }
+      );
+
+      expect(opts).toEqual({ a: [] });
+    });
+
+    it('should resolve types using refs', () => {
+      const opts = setDefaults(
+        {},
+        {
+          properties: {
+            a: {
+              $ref: '#/definitions/a',
+            },
+          },
+          definitions: {
+            a: {
+              type: 'boolean',
+              default: true,
+            },
+          },
+        }
+      );
+
+      expect(opts).toEqual({ a: true });
+    });
   });
 
-  describe('convertPositionParamsIntoNamedParams', () => {
-    it('should set defaults from argv', () => {
+  describe('convertSmartDefaultsIntoNamedParams', () => {
+    it('should use argv', () => {
       const params = {};
-      convertPositionParamsIntoNamedParams(
+      convertSmartDefaultsIntoNamedParams(
         params,
         {
           properties: {
@@ -273,15 +346,37 @@ describe('params', () => {
             },
           },
         },
-        ['argv-value']
+        ['argv-value'],
+        null
       );
 
       expect(params).toEqual({ a: 'argv-value' });
     });
+
+    it('should use projectName', () => {
+      const params = {};
+      convertSmartDefaultsIntoNamedParams(
+        params,
+        {
+          properties: {
+            a: {
+              type: 'string',
+              $default: {
+                $source: 'projectName',
+              },
+            },
+          },
+        },
+        [],
+        'myProject'
+      );
+
+      expect(params).toEqual({ a: 'myProject' });
+    });
   });
 
   describe('validateOptsAgainstSchema', () => {
-    it('should throw if missing the required field', () => {
+    it('should throw if missing the required property', () => {
       expect(() =>
         validateOptsAgainstSchema(
           {},
@@ -295,6 +390,25 @@ describe('params', () => {
           }
         )
       ).toThrow("Required property 'a' is missing");
+    });
+
+    it('should throw if found an unknown property', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          {
+            a: true,
+            b: false,
+          },
+          {
+            properties: {
+              a: {
+                type: 'boolean',
+              },
+            },
+            additionalProperties: false,
+          }
+        )
+      ).toThrow("'b' is not found in schema");
     });
 
     it("should throw if the type doesn't match (primitive types)", () => {
@@ -369,6 +483,28 @@ describe('params', () => {
                     type: 'boolean',
                   },
                 },
+              },
+            },
+          }
+        )
+      ).toThrow(
+        "Property 'key' does not match the schema. 'string' should be a 'boolean'."
+      );
+    });
+
+    it('should resolve types using refs', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { key: 'string' },
+          {
+            properties: {
+              key: {
+                $ref: '#/definitions/key',
+              },
+            },
+            definitions: {
+              key: {
+                type: 'boolean',
               },
             },
           }

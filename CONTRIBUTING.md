@@ -24,7 +24,7 @@ Source code and documentation are included in the top-level folders listed below
 
 - `docs` - Markdown and configuration files for documentation including tutorials, guides for each supported platform, and API docs.
 - `e2e` - E2E tests.
-- `packages` - Source code for Nx packages such as Angular, React, Web, NestJS, Next and others including schematics and builders.
+- `packages` - Source code for Nx packages such as Angular, React, Web, NestJS, Next and others including generators and executors (or builders).
 - `scripts` - Miscellaneous scripts for project tasks such as building documentation, testing, and code formatting.
 - `tmp` - Folder used by e2e tests. If you are a WebStorm user, make sure to mark this folder as excluded.
 
@@ -127,7 +127,9 @@ You can file new issues by filling out our [issue form](https://github.com/nrwl/
 Please follow the following guidelines:
 
 - Make sure unit tests pass (`yarn test`)
-  - Target a specific unit test (i.e. `/build/packages/angular/src/utils/ast-utils.spec.js`) with `yarn test angular/src/utils/ast-utils`
+  - Target a specific project with: `nx run proj:test` (i.e. `nx run angular:test` to target `packages/angular`)
+  - Target a specific unit test file (i.e. `packages/angular/src/utils/ast-utils.spec.ts`) with `npx jest angular/src/utils/ast-utils` or `npx jest packages/angular/src/utils/ast-utils`
+  - For more options on running tests - check `npx jest --help` or visit [jestjs.io](https://jestjs.io/)
   - Debug with `node --inspect-brk ./node_modules/jest/bin/jest.js build/packages/angular/src/utils/ast-utils.spec.js`
 - Make sure e2e tests pass (this can take a while, so you can always let CI check those) (`yarn e2e`)
   - Target a specific e2e test (i.e. `/build/e2e/cypress.test.js`) with `yarn e2e cypress`
@@ -174,6 +176,7 @@ The scope must be one of the following:
 - testing - anything testing specific (e.g., jest or cypress)
 - repo - anything related to managing the repo itself
 - misc - misc stuff
+- devkit - devkit-related changes
 
 ##### Subject and Body
 
@@ -184,7 +187,7 @@ Including the issue number that the PR relates to also helps with tracking.
 #### Example
 
 ```
-feat(schematics): add an option to generate lazy-loadable modules
+feat(generators): add an option to generate lazy-loadable modules
 
 `nx generate lib mylib --lazy` provisions the mylib project in tslint.json
 

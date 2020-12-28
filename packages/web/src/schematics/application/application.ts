@@ -26,6 +26,7 @@ import {
 import init from '../init/init';
 import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
 import { names, offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -65,6 +66,7 @@ function addProject(options: NormalizedSchema): Rule {
 
     architect.build = {
       builder: '@nrwl/web:build',
+      outputs: ['{options.outputPath}'],
       options: {
         outputPath: join(normalize('dist'), options.appProjectRoot),
         index: join(normalize(options.appProjectRoot), 'src/index.html'),
@@ -138,7 +140,6 @@ function addProject(options: NormalizedSchema): Rule {
       root: options.appProjectRoot,
       sourceRoot: join(normalize(options.appProjectRoot), 'src'),
       projectType: 'application',
-      schematics: {},
       architect,
     };
 
@@ -209,3 +210,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     parsedTags,
   };
 }
+
+export const applicationGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/web',
+  'application'
+);

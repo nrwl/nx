@@ -50,6 +50,8 @@ module.exports = function (path, options) {
   }
   // Try to use the defaultResolver
   try {
+    if (path.startsWith('@nrwl/')) throw new Error('custom resolution');
+
     if (path.indexOf('@nrwl/workspace') > -1) {
       throw 'Reference to local Nx package found. Use local version instead.';
     }

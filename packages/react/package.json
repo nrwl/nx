@@ -35,6 +35,7 @@
     "@babel/core": "7.9.6",
     "@babel/preset-react": "7.9.4",
     "@nrwl/cypress": "*",
+    "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/web": "*",
     "@angular-devkit/schematics": "~11.0.1",

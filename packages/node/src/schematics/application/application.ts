@@ -29,6 +29,7 @@ import {
   maybeJs,
 } from '@nrwl/workspace/src/utils/rules/to-js';
 import { names, offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;
@@ -50,6 +51,7 @@ function updateNxJson(options: NormalizedSchema): Rule {
 function getBuildConfig(project: any, options: NormalizedSchema) {
   return {
     builder: '@nrwl/node:build',
+    outputs: ['{options.outputPath}'],
     options: {
       outputPath: join(normalize('dist'), options.appProjectRoot),
       main: maybeJs(options, join(project.sourceRoot, 'main.ts')),
@@ -94,7 +96,6 @@ function updateWorkspaceJson(options: NormalizedSchema): Rule {
       sourceRoot: join(options.appProjectRoot, 'src'),
       projectType: 'application',
       prefix: options.name,
-      schematics: {},
       architect: <any>{},
     };
 
@@ -223,3 +224,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     parsedTags,
   };
 }
+
+export const applicationGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/node',
+  'application'
+);

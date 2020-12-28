@@ -20,7 +20,6 @@ import {
   isStringLiteral,
   ScriptTarget,
 } from 'typescript';
-import { getLogger } from '@nrwl/tao/src/shared/logger';
 const ignore = require('ignore');
 
 export default function update(): Rule {
@@ -33,8 +32,7 @@ export default function update(): Rule {
     updateImports,
     removeObsoletePackages,
     (_, context: SchematicContext) => {
-      const logger = getLogger();
-      logger.info(
+      console.info(
         'NX We upgraded Nest.js to v7. Make sure to read the migration guide: https://docs.nestjs.com/migration-guide'
       );
     },

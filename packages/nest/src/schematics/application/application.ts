@@ -16,6 +16,7 @@ import { formatFiles, updateJsonInTree } from '@nrwl/workspace';
 import init from '../init/init';
 import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
 import { names } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;
@@ -99,3 +100,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     appProjectRoot,
   };
 }
+
+export const applicationGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/nest',
+  'application'
+);

@@ -2,7 +2,7 @@
 
 // we can't import from '@nrwl/workspace' because it will require typescript
 import { output } from '@nrwl/workspace/src/utils/output';
-import { getPackageManagerExecuteCommand } from '@nrwl/workspace/src/utils/detect-package-manager';
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { dirSync } from 'tmp';
 import { writeFileSync, readFileSync, removeSync } from 'fs-extra';
 import * as path from 'path';
@@ -62,17 +62,11 @@ function createWorkspace(
   const command = `new ${args} --preset=empty --collection=@nrwl/workspace`;
   console.log(command);
 
-  const collectionJsonPath = require.resolve(
-    '@nrwl/workspace/collection.json',
-    { paths: [tmpDir] }
-  );
-
-  const packageExec = getPackageManagerExecuteCommand(packageManager);
+  const pmc = getPackageManagerCommand(packageManager);
   execSync(
-    `${packageExec} tao ${command.replace(
-      '--collection=@nrwl/workspace',
-      `--collection=${collectionJsonPath}`
-    )} --nxWorkspaceRoot="${process.cwd()}"`,
+    `${
+      pmc.exec
+    } tao ${command}/collection.json --nxWorkspaceRoot="${process.cwd()}"`,
     {
       stdio: [0, 1, 2],
       cwd: tmpDir,
@@ -88,9 +82,9 @@ function createNxPlugin(workspaceName, pluginName, packageManager) {
   console.log(
     `nx generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${workspaceName}/${pluginName}`
   );
-  const packageExec = getPackageManagerExecuteCommand(packageManager);
+  const pmc = getPackageManagerCommand(packageManager);
   execSync(
-    `${packageExec} nx generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${workspaceName}/${pluginName}`,
+    `${pmc.exec} nx generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${workspaceName}/${pluginName}`,
     {
       cwd: workspaceName,
       stdio: [0, 1, 2],

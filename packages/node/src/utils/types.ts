@@ -41,4 +41,13 @@ export interface BuildBuilderOptions {
 
   root?: string;
   sourceRoot?: Path;
+  projectRoot?: string;
+}
+
+export interface BuildNodeBuilderOptions extends BuildBuilderOptions {
+  optimization?: boolean;
+  sourceMap?: boolean;
+  externalDependencies: 'all' | 'none' | string[];
+  buildLibsFromSource?: boolean;
+  generatePackageJson?: boolean;
 }

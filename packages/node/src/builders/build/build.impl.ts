@@ -1,31 +1,26 @@
 import { BuilderContext, createBuilder } from '@angular-devkit/architect';
-import { JsonObject, workspaces } from '@angular-devkit/core';
-import { runWebpack, BuildResult } from '@angular-devkit/build-webpack';
+import { JsonObject, normalize, workspaces } from '@angular-devkit/core';
+import { BuildResult, runWebpack } from '@angular-devkit/build-webpack';
 
-import { Observable, from } from 'rxjs';
+import { from, Observable } from 'rxjs';
 import { join, resolve } from 'path';
-import { map, concatMap } from 'rxjs/operators';
+import { concatMap, map, tap } from 'rxjs/operators';
 import { getNodeWebpackConfig } from '../../utils/node.config';
 import { OUT_FILENAME } from '../../utils/config';
-import { BuildBuilderOptions } from '../../utils/types';
+import { BuildNodeBuilderOptions } from '../../utils/types';
 import { normalizeBuildOptions } from '../../utils/normalize';
-import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
+  checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utils/buildable-libs-utils';
+import { NxScopedHost } from '@nrwl/devkit/ngcli-adapter';
+import { generatePackageJson } from '../../utils/generate-package-json';
 
 try {
   require('dotenv').config();
 } catch (e) {}
-
-export interface BuildNodeBuilderOptions extends BuildBuilderOptions {
-  optimization?: boolean;
-  sourceMap?: boolean;
-  externalDependencies: 'all' | 'none' | string[];
-  buildLibsFromSource?: boolean;
-}
 
 export type NodeBuildEvent = BuildResult & {
   outfile: string;
@@ -37,8 +32,8 @@ function run(
   options: JsonObject & BuildNodeBuilderOptions,
   context: BuilderContext
 ): Observable<NodeBuildEvent> {
+  const projGraph = createProjectGraph();
   if (!options.buildLibsFromSource) {
-    const projGraph = createProjectGraph();
     const { target, dependencies } = calculateProjectDependencies(
       projGraph,
       context
@@ -49,12 +44,30 @@ function run(
       target.data.root,
       dependencies
     );
+
+    if (!checkDependentProjectsHaveBeenBuilt(context, dependencies)) {
+      return { success: false } as any;
+    }
   }
 
-  return from(getSourceRoot(context)).pipe(
-    map((sourceRoot) =>
-      normalizeBuildOptions(options, context.workspaceRoot, sourceRoot)
+  return from(getRoots(context)).pipe(
+    map(({ sourceRoot, projectRoot }) =>
+      normalizeBuildOptions(
+        options,
+        context.workspaceRoot,
+        sourceRoot,
+        projectRoot
+      )
     ),
+    tap((normalizedOptions) => {
+      if (normalizedOptions.generatePackageJson) {
+        generatePackageJson(
+          context.target.project,
+          projGraph,
+          normalizedOptions
+        );
+      }
+    }),
     map((options) => {
       let config = getNodeWebpackConfig(options);
       if (options.webpackConfig) {
@@ -84,17 +97,19 @@ function run(
   );
 }
 
-async function getSourceRoot(context: BuilderContext) {
-  const workspaceHost = workspaces.createWorkspaceHost(new NodeJsSyncHost());
-  const { workspace } = await workspaces.readWorkspace(
-    context.workspaceRoot,
-    workspaceHost
+async function getRoots(
+  context: BuilderContext
+): Promise<{ sourceRoot: string; projectRoot: string }> {
+  const workspaceHost = workspaces.createWorkspaceHost(
+    new NxScopedHost(normalize(context.workspaceRoot))
   );
-  if (workspace.projects.get(context.target.project).sourceRoot) {
-    return workspace.projects.get(context.target.project).sourceRoot;
+  const { workspace } = await workspaces.readWorkspace('', workspaceHost);
+  const project = workspace.projects.get(context.target.project);
+  if (project.sourceRoot && project.root) {
+    return { sourceRoot: project.sourceRoot, projectRoot: project.root };
   } else {
     context.reportStatus('Error');
-    const message = `${context.target.project} does not have a sourceRoot. Please define one.`;
+    const message = `${context.target.project} does not have a sourceRoot or root. Please define one.`;
     context.logger.error(message);
     throw new Error(message);
   }

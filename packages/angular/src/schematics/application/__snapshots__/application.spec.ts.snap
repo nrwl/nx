@@ -88,12 +88,14 @@ Object {
         "jestConfig": "apps/my-dir/my-app/jest.config.js",
         "passWithNoTests": true,
       },
+      "outputs": Array [
+        "coverage/apps/my-dir/my-app",
+      ],
     },
   },
   "prefix": "proj",
   "projectType": "application",
   "root": "apps/my-dir/my-app",
-  "schematics": Object {},
   "sourceRoot": "apps/my-dir/my-app/src",
 }
 `;
@@ -221,12 +223,14 @@ Object {
         "jestConfig": "apps/my-app/jest.config.js",
         "passWithNoTests": true,
       },
+      "outputs": Array [
+        "coverage/apps/my-app",
+      ],
     },
   },
   "prefix": "proj",
   "projectType": "application",
   "root": "apps/my-app",
-  "schematics": Object {},
   "sourceRoot": "apps/my-app/src",
 }
 `;

@@ -1,6 +1,6 @@
 # configuration
 
-Add storybook configuration to a ui library
+Add storybook configuration to a ui library or an application
 
 ## Usage
 
@@ -28,7 +28,7 @@ nx g configuration ... --dry-run
 
 Type: `boolean`
 
-Run the cypress-configure schematic
+Run the cypress-configure generator
 
 ### js
 
@@ -52,7 +52,7 @@ The tool to use for running lint checks.
 
 Type: `string`
 
-Library name
+Library or application name
 
 ### uiFramework
 

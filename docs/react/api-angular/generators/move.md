@@ -62,4 +62,4 @@ Default: `true`
 
 Type: `boolean`
 
-Should the schematic update the import path to reflect the new location?
+Should the generator update the import path to reflect the new location?

@@ -1,6 +1,7 @@
 import { Schema } from './schema';
 import { updateWorkspaceInTree } from '@nrwl/workspace';
 import { Tree } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export default function (host: Tree, schema: Schema) {
   const fn = updateWorkspaceInTree((json) => {
@@ -24,3 +25,8 @@ export default function (host: Tree, schema: Schema) {
   }) as any;
   fn(host);
 }
+
+export const runCommandsGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/workspace',
+  'run-commands'
+);

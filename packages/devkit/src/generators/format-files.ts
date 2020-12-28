@@ -1,6 +1,9 @@
 import { Tree } from '@nrwl/tao/src/shared/tree';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
+import { getWorkspacePath } from '../utils/get-workspace-layout';
+import { reformattedWorkspaceJsonOrNull } from '@nrwl/tao/src/shared/workspace';
+import * as stripJsonComments from 'strip-json-comments';
 
 let prettier: typeof Prettier;
 try {
@@ -12,6 +15,8 @@ try {
  * @param host - the file system tree
  */
 export async function formatFiles(host: Tree) {
+  updateWorkspaceJsonToMatchFormatVersion(host);
+
   if (!prettier) return;
 
   const files = new Set(
@@ -41,8 +46,24 @@ export async function formatFiles(host: Tree) {
           prettier.format(file.content.toString(), options)
         );
       } catch (e) {
-        console.warn(`Could not format ${file.path} because ${e.message}`);
+        console.warn(`Could not format ${file.path}. Error: "${e.message}"`);
       }
     })
   );
+}
+
+function updateWorkspaceJsonToMatchFormatVersion(host: Tree) {
+  const path = getWorkspacePath(host);
+  try {
+    const workspaceJson = JSON.parse(
+      stripJsonComments(host.read(path).toString())
+    );
+    const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
+    if (reformatted) {
+      host.write(path, JSON.stringify(reformatted, null, 2));
+    }
+  } catch (e) {
+    console.error(`Failed to format: ${path}`);
+    console.error(e);
+  }
 }

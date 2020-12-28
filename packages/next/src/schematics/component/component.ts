@@ -1,5 +1,6 @@
 import { chain, externalSchematic, Rule } from '@angular-devkit/schematics';
 import { addStyleDependencies } from '../../utils/styles';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 interface Schema {
   name: string;
@@ -23,6 +24,10 @@ export default function (options: Schema): Rule {
       classComponent: false,
       routing: false,
     }),
-    addStyleDependencies(options.style),
+    ...addStyleDependencies(options.style),
   ]);
 }
+export const componentGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/next',
+  'component'
+);

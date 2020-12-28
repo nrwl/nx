@@ -115,6 +115,11 @@
     "routing": {
       "type": "boolean",
       "description": "Generate a library with routes."
+    },
+    "globalCss": {
+      "type": "boolean",
+      "description": "Default is false. When true, the component is generated with *.css/*.scss instead of *.module.css/*.module.scss",
+      "default": false
     }
   },
   "required": ["name", "project"]

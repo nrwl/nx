@@ -1,19 +1,21 @@
-# Creating Builders in Your Nx Workspace
+# Creating Nx Executors or Angular Devkit Builders in Your Nx Workspace
 
-Creating builders for your workspace is a way to standardize scripts that you may run during your development/building/deploying tasks to enable Nx's `affected` command and caching capabilities.
+Creating Nx Executors/Angular Devkit Builders for your workspace standardizes scripts that are run during your development/building/deploying tasks in order to enable Nx's `affected` command and caching capabilities.
 
-This guide will show you how to create, run, and customize builders within your Nx workspace. In the examples, we'll use the trivial use-case of an `echo` command.
+This guide will show you how to create, run, and customize executors/builders within your Nx workspace. In the examples, we'll use the trivial use-case of an `echo` command.
 
-## Creating a Builder
+## Creating a Builder with @angular/devkit
 
-Your builder should be created within the `tools` directory of your Nx workspace like so:
+Note: In this article, we'll refer to executors that use the `@angular/devkit` as Angular Devkit Builders.
+
+Your executor should be created within the `tools` directory of your Nx workspace like so:
 
 ```treeview
 happynrwl/
 ├── apps/
 ├── libs/
 ├── tools/
-│   └── builders/
+│   └── executors/
 │       └── echo/
 │           ├── builder.json
 │           ├── impl.ts
@@ -26,7 +28,7 @@ happynrwl/
 
 ### schema.json
 
-This file will describe the options being sent to the builder (very similar to the `schema.json` file of schematics).
+This file will describe the options being sent to the builder (very similar to the `schema.json` file of generators).
 
 ```json
 {
@@ -120,7 +122,7 @@ export default createBuilder((_options: Options, context: BuilderContext) => {
 
 For other ideas on how to create your own builders, you can always check out Nx's own open-source builders as well!
 
-(e.g. our [cypress builder](https://github.com/nrwl/nx/blob/master/packages/cypress/src/builders/cypress/cypress.impl.ts)
+(e.g. our [cypress builder](https://github.com/nrwl/nx/blob/master/packages/cypress/src/builders/cypress/cypress.impl.ts))
 
 ### builder.json
 
@@ -147,6 +149,51 @@ This is all that’s required from the `package.json` file:
 ```json
 {
   "builders": "./builder.json"
+}
+```
+
+## Creating an Nx Executor
+
+Creating an Nx Executor is in principle nearly identical to the Angular Devkit Builder example in the section above, we'll explain in this section the few differences involved.
+
+### Marking the Executor as an Nx Executor
+
+The first difference to adjust is to mark the executor as an Nx Executor in the schema. To do this, we'll need to add the `cli` property to the builder's schema, and give it the value `"nx"`:
+
+```json
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "cli": "nx",
+  "properties": {
+    "textToEcho": {
+      "type": "string",
+      "description": "Text To Echo"
+    }
+  }
+}
+```
+
+### Implementing an Executor Without the Angular Devkit
+
+Your executor's implementation must consist of a function that takes an options object and returns a `Promise<{ success: boolean }>`. Given the echo implementation provided in the Angular Devkit Builder section above, our Nx executor would look like this:
+
+```ts
+import * as childProcess from 'child_process';
+
+interface Options {
+  textToEcho: string;
+}
+
+export default async function (
+  _options: Options
+): Promise<{ success: boolean }> {
+  const child = childProcess.spawn('echo', [_options.textToEcho]);
+  return new Promise<{ success: boolean }>((res) => {
+    child.on('close', (code) => {
+      res({ success: code === 0 });
+    });
+  });
 }
 ```
 
@@ -179,7 +226,7 @@ Our last step is to add this builder to a given project’s `architect` object i
           // ,,,
         },
         "echo": {
-          "builder": "./tools/builders/echo:echo",
+          "executor": "./tools/builders/echo:echo",
           "options": {
             "textToEcho": "Hello World"
           }
@@ -190,7 +237,7 @@ Our last step is to add this builder to a given project’s `architect` object i
 }
 ```
 
-Note that the format of the `builder` string here is: `${Path to directory containing the builder's package.json}:${builder name}`.
+Note that the format of the `executor` string here is: `${Path to directory containing the builder's package.json}:${builder name}`.
 
 Finally, we may run our builder via the CLI as follows:
 
@@ -210,11 +257,11 @@ Done.
 
 ## Debugging Builders
 
-As part of Nx's computation cache process, Nx forks the node process, which can make it difficult to debug a builder command. Follow these steps to debug a builder:
+As part of Nx's computation cache process, Nx forks the node process, which can make it difficult to debug a builder command. Follow these steps to debug an executor:
 
 1. Make sure VSCode's `debug.node.autoAttach` setting is set to `On`.
-2. Find the builder code and set a breakpoint.
-3. Use node in debug to execute your builder command, replacing `nx` with the internal `tao` script.
+2. Find the executor code and set a breakpoint.
+3. Use node in debug to execute your executor command, replacing `nx` with the internal `tao` script.
 
 ```bash
 node --inspect-brk node_modules/.bin/tao build best-app

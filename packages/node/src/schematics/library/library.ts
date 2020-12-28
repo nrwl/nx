@@ -28,6 +28,7 @@ import {
   updateTsConfigsToJs,
 } from '@nrwl/workspace/src/utils/rules/to-js';
 import { names, offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -123,6 +124,7 @@ function addProject(options: NormalizedSchema): Rule {
     if (architect) {
       architect.build = {
         builder: '@nrwl/node:package',
+        outputs: ['{options.outputPath}'],
         options: {
           outputPath: `dist/${libsDir(host)}/${options.projectDirectory}`,
           tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
@@ -139,3 +141,8 @@ function addProject(options: NormalizedSchema): Rule {
     return json;
   });
 }
+
+export const libraryGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/node',
+  'library'
+);

@@ -1,22 +1,48 @@
 import yargsParser = require('yargs-parser');
 
-export function parseRunOneOptions(
-  workspaceConfigJson: any,
-  args: string[]
-): false | { project; target; configuration; parsedArgs } {
+function calculateDefaultProjectName(cwd: string, root: string, wc: any) {
+  let relativeCwd = cwd.split(root)[1];
+  if (relativeCwd) {
+    relativeCwd = relativeCwd.startsWith('/')
+      ? relativeCwd.substring(1)
+      : relativeCwd;
+    const matchingProject = Object.keys(wc.projects).find((p) => {
+      const projectRoot = wc.projects[p].root;
+      return (
+        relativeCwd == projectRoot || relativeCwd.startsWith(`${projectRoot}/`)
+      );
+    });
+    if (matchingProject) return matchingProject;
+  }
   let defaultProjectName = null;
   try {
-    defaultProjectName = workspaceConfigJson.cli.defaultProjectName;
+    defaultProjectName = wc.cli.defaultProjectName;
   } catch (e) {}
   try {
     if (!defaultProjectName) {
-      defaultProjectName = workspaceConfigJson.defaultProject;
+      defaultProjectName = wc.defaultProject;
     }
   } catch (e) {}
+  return defaultProjectName;
+}
+
+export function parseRunOneOptions(
+  root: string,
+  workspaceConfigJson: any,
+  args: string[]
+): false | { project; target; configuration; parsedArgs } {
+  const defaultProjectName = calculateDefaultProjectName(
+    process.cwd(),
+    root,
+    workspaceConfigJson
+  );
 
   const parsedArgs = yargsParser(args, {
     boolean: ['prod', 'help'],
     string: ['configuration', 'project'],
+    alias: {
+      c: 'configuration',
+    },
   });
 
   if (parsedArgs['help']) {
@@ -57,9 +83,13 @@ export function parseRunOneOptions(
   // we need both to be able to run a target, no tasks runner
   const p =
     workspaceConfigJson.projects && workspaceConfigJson.projects[project];
-  if (!p || !p.architect || !p.architect[target]) return false;
+  if (!p) return false;
+
+  const targets = p.architect ? p.architect : p.targets;
+  if (!targets || !targets[target]) return false;
 
   const res = { project, target, configuration, parsedArgs };
+  delete parsedArgs['c'];
   delete parsedArgs['configuration'];
   delete parsedArgs['prod'];
   delete parsedArgs['project'];

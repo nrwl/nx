@@ -92,7 +92,7 @@
       "default": false
     },
     "skipWorkspaceJson": {
-      "description": "Skip updating workspace.json with default schematic options based on values provided to this app (e.g. babel, style).",
+      "description": "Skip updating workspace.json with default options based on values provided to this app (e.g. babel, style).",
       "type": "boolean",
       "default": false
     },
@@ -128,6 +128,11 @@
     "js": {
       "type": "boolean",
       "description": "Generate JavaScript files rather than TypeScript files.",
+      "default": false
+    },
+    "globalCss": {
+      "type": "boolean",
+      "description": "Default is false. When true, the component is generated with *.css/*.scss instead of *.module.css/*.module.scss",
       "default": false
     }
   },

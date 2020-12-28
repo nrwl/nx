@@ -7,6 +7,7 @@ import {
   writeFileSync,
 } from 'fs';
 import { mkdirpSync, rmdirSync } from 'fs-extra';
+import { logger } from './logger';
 const chalk = require('chalk');
 
 /**
@@ -84,11 +85,7 @@ export class FsTree implements Tree {
     [path: string]: { content: Buffer | null; isDeleted: boolean };
   } = {};
 
-  constructor(
-    readonly root: string,
-    private readonly isVerbose: boolean,
-    private readonly logger: Console
-  ) {}
+  constructor(readonly root: string, private readonly isVerbose: boolean) {}
 
   read(filePath: string): Buffer | null {
     try {
@@ -99,7 +96,7 @@ export class FsTree implements Tree {
       }
     } catch (e) {
       if (this.isVerbose) {
-        this.logger.error(e);
+        logger.error(e);
       }
       return null;
     }
@@ -113,7 +110,7 @@ export class FsTree implements Tree {
       };
     } catch (e) {
       if (this.isVerbose) {
-        this.logger.error(e);
+        logger.error(e);
       }
     }
   }

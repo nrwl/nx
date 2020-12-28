@@ -8,10 +8,15 @@ export {
   copyFile,
   createDirectory,
 } from './src/utils/fileutils';
+
+// TODO: vsavkin delete after Nx 12
+export * from './src/devkit-reexport';
+
 export {
   ExistingPrettierConfig,
   resolveUserExistingPrettierConfig,
 } from './src/utils/common';
+
 export { output } from './src/utils/output';
 export { commandsObject } from './src/command-line/nx-commands';
 export { supportedNxCommands } from './src/command-line/supported-nx-commands';
@@ -59,6 +64,8 @@ export {
   serializeTarget,
 } from './src/utils/cli-config-utils';
 
+export { unparse } from './src/tasks-runner/utils';
+
 export {
   getWorkspace,
   updateWorkspace,
@@ -81,5 +88,8 @@ export { checkAndCleanWithSemver } from './src/utils/version-utils';
 export { updatePackagesInPackageJson } from './src/utils/update-packages-in-package-json';
 
 export { libraryGenerator } from './src/schematics/library/library';
+export { moveGenerator } from './src/schematics/move/move';
+export { removeGenerator } from './src/schematics/remove/remove';
+export { runCommandsGenerator } from './src/schematics/run-commands/run-commands';
 
 export const stringUtils = strings;

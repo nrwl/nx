@@ -164,8 +164,8 @@ function readFileIfExisting(path: string) {
 }
 
 export function readWorkspaceJson(): any {
-  const ws = new Workspaces();
-  return ws.readWorkspaceConfiguration(appRootPath);
+  const ws = new Workspaces(appRootPath);
+  return ws.readWorkspaceConfiguration();
 }
 
 export function workspaceFileName() {

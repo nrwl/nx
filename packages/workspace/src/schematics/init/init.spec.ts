@@ -57,7 +57,7 @@ describe('workspace', () => {
         '/tsconfig.spec.json',
         '{"extends": "../tsconfig.json", "compilerOptions": {}}'
       );
-      appTree.create('/tsconfig.base.json', '{"compilerOptions": {}}');
+      appTree.create('/tsconfig.json', '{"compilerOptions": {}}');
       appTree.create('/tslint.json', '{"rules": {}}');
       appTree.create('/e2e/protractor.conf.js', '// content');
       appTree.create('/src/app/app.module.ts', '// content');
@@ -133,18 +133,28 @@ describe('workspace', () => {
       }
     });
 
-    it('should update tsconfig.base.json if present', async () => {
+    it('should set the default collection to @nrwl/angular', async () => {
+      const tree = await runSchematic('ng-add', { name: 'myApp' }, appTree);
+      expect(readJsonInTree(tree, 'angular.json').cli.defaultCollection).toBe(
+        '@nrwl/angular'
+      );
+    });
+
+    it('should create nx.json', async () => {
+      const tree = await runSchematic('ng-add', { name: 'myApp' }, appTree);
+      expect(readJsonInTree(tree, 'nx.json')).toMatchSnapshot();
+    });
+
+    it('should work if angular-cli workspace had tsconfig.base.json', async () => {
+      appTree.rename('tsconfig.json', 'tsconfig.base.json');
       const tree = await runSchematic('ng-add', { name: 'myApp' }, appTree);
       expect(readJsonInTree(tree, 'tsconfig.base.json')).toMatchSnapshot();
     });
 
-    it('should update tsconfig.json if tsconfig.base.json if present', async () => {
-      appTree.rename('tsconfig.base.json', 'tsconfig.json');
+    it('should update tsconfig.base.json if present', async () => {
       const tree = await runSchematic('ng-add', { name: 'myApp' }, appTree);
-      expect(readJsonInTree(tree, 'tsconfig.json')).toMatchSnapshot();
+      expect(readJsonInTree(tree, 'tsconfig.base.json')).toMatchSnapshot();
     });
-
-    it('should add paths to the tsconfig.base.json if present', () => {});
 
     it('should work without nested tsconfig files', async () => {
       const tree = await runSchematic('ng-add', { name: 'myApp' }, appTree);
@@ -286,6 +296,14 @@ describe('workspace', () => {
     });
 
     it('should work with existing .prettierignore file', async () => {
+      appTree.create('/.prettierignore', '# existing ignore rules');
+      const tree = await runSchematic('ng-add', { name: 'myApp' }, appTree);
+
+      const prettierIgnore = tree.read('/.prettierignore').toString();
+      expect(prettierIgnore).toBe('# existing ignore rules');
+    });
+
+    it('should update tsconfigs', async () => {
       appTree.create('/.prettierignore', '# existing ignore rules');
       const tree = await runSchematic('ng-add', { name: 'myApp' }, appTree);
 

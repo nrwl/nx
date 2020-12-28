@@ -10,7 +10,7 @@
 
 ## What is It?
 
-Builders and schematics adding Jest tests to applications and libraries.
+Executors and generators adding Jest tests to applications and libraries.
 
 ## How to Use
 

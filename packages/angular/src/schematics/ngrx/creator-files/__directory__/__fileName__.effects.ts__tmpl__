@@ -2,24 +2,24 @@ import { Injectable } from '@angular/core';
 import { createEffect, Actions, ofType } from '@ngrx/effects';
 import { <% if (useDataPersistence) { %>DataPersistence<% } %><% if (!useDataPersistence) { %>fetch<% } %> } from '@nrwl/angular';
 
-import * as from<%= className %> from './<%= fileName %>.reducer';
+import * as <%= className %>Feature from './<%= fileName %>.reducer';
 import * as <%= className %>Actions from './<%= fileName %>.actions';
 
 @Injectable()
 export class <%= className %>Effects {
-<% if (useDataPersistence) { %>  load<%= className %>$ = createEffect(() => this.dataPersistence.fetch(<%= className %>Actions.load<%= className %>, {
-    run: (action: ReturnType<typeof <%= className %>Actions.load<%= className %>>, state: from<%= className %>.<%= className %>PartialState) => {
+<% if (useDataPersistence) { %> init$ = createEffect(() => this.dataPersistence.fetch(<%= className %>Actions.init, {
+    run: (action: ReturnType<typeof <%= className %>Actions.init, state: <%= className %>Feature.<%= className %>PartialState) => {
       // Your custom service 'load' logic goes here. For now just return a success action...
       return <%= className %>Actions.load<%= className %>Success({ <%= propertyName %>: [] });
     },
 
-    onError: (action: ReturnType<typeof <%= className %>Actions.load<%= className %>>, error) => {
+    onError: (action: ReturnType<typeof <%= className %>Actions.init>>, error) => {
       console.error('Error', error);
       return <%= className %>Actions.load<%= className %>Failure({ error });
     }
   }));
-<% } else { %>  load<%= className %>$ = createEffect(() => this.actions$.pipe(
-  ofType(<%= className %>Actions.load<%= className %>),
+<% } else { %> init$ = createEffect(() => this.actions$.pipe(
+  ofType(<%= className %>Actions.init),
   fetch({
     run: action => {
       // Your custom service 'load' logic goes here. For now just return a success action...
@@ -36,6 +36,6 @@ export class <%= className %>Effects {
 
  constructor(
    private actions$: Actions,
-<% if (useDataPersistence) { %>   private dataPersistence: DataPersistence<from<%= className %>.<%= className %>PartialState>, <% } %>
+<% if (useDataPersistence) { %>   private dataPersistence: DataPersistence<<%= className %>Feature.<%= className %>PartialState>, <% } %>
   ) { }
 }

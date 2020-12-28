@@ -26,6 +26,7 @@ describe('app', () => {
         expect.objectContaining({
           build: {
             builder: '@nrwl/node:build',
+            outputs: ['{options.outputPath}'],
             options: {
               outputPath: 'dist/apps/my-node-app',
               main: 'apps/my-node-app/src/main.ts',

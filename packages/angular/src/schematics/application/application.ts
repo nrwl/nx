@@ -46,6 +46,7 @@ import {
   extraEslintDependencies,
 } from '../../utils/lint';
 import { names, offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 interface NormalizedSchema extends Schema {
   prefix: string; // we set a default for this in normalizeOptions, so it is no longer optional
@@ -81,7 +82,7 @@ const nrwlHomeTemplate = {
         <li class="col-span-2">
             <a
                     class="resource flex"
-                    href="https://connect.nrwl.io/app/courses/nx-workspaces/intro"
+                    href="https://nxplaybook.com/p/nx-workspaces"
             >
                 Nx video course
             </a>
@@ -89,7 +90,7 @@ const nrwlHomeTemplate = {
         <li class="col-span-2">
             <a
                     class="resource flex"
-                    href="https://nx.dev/angular/getting-started/what-is-nx"
+                    href="https://nx.dev/latest/angular/getting-started/why-nx"
             >
                 Nx video tutorial
             </a>
@@ -97,7 +98,7 @@ const nrwlHomeTemplate = {
         <li class="col-span-2">
             <a
                     class="resource flex"
-                    href="https://nx.dev/angular/tutorial/01-create-application"
+                    href="https://nx.dev/latest/angular/tutorial/01-create-application"
             >
                 Interactive tutorial
             </a>
@@ -483,6 +484,7 @@ function updateProject(options: NormalizedSchema): Rule {
           options.name,
           options.appProjectRoot
         );
+        delete fixedProject.schematics;
 
         delete fixedProject.architect.test;
 
@@ -783,12 +785,6 @@ export default function (schema: Schema): Rule {
         ...options,
         skipFormat: true,
       }),
-      // TODO: Remove this after Angular 10.1.0
-      updateJsonInTree('tsconfig.json', () => ({
-        files: [],
-        include: [],
-        references: [],
-      })),
       externalSchematic('@schematics/angular', 'application', {
         name: options.name,
         inlineStyle: options.inlineStyle,
@@ -802,10 +798,6 @@ export default function (schema: Schema): Rule {
         skipInstall: true,
         skipPackageJson: false,
       }),
-      // TODO: Remove this after Angular 10.1.0
-      (host) => {
-        host.delete('tsconfig.json');
-      },
       addSchematicFiles(appProjectRoot, options),
       options.e2eTestRunner === 'protractor'
         ? move(e2eProjectRoot, options.e2eProjectRoot)
@@ -889,3 +881,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     parsedTags,
   };
 }
+
+export const applicationGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/angular',
+  'application'
+);

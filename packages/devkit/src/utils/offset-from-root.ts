@@ -1,4 +1,4 @@
-import { normalize } from 'path';
+import { normalize, sep } from 'path';
 
 /**
  * Calculates an offset from the root of the workspace, which is useful for
@@ -13,7 +13,7 @@ import { normalize } from 'path';
  * @param fullPathToDir - directory path
  */
 export function offsetFromRoot(fullPathToDir: string): string {
-  const parts = normalize(fullPathToDir).split('/');
+  const parts = normalize(fullPathToDir).split(sep);
   let offset = '';
   for (let i = 0; i < parts.length; ++i) {
     if (parts[i].length > 0) {

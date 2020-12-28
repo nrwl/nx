@@ -20,6 +20,12 @@
       "description": "CLI powering the workspace.",
       "type": "string"
     },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["tslint", "eslint"],
+      "default": "eslint"
+    },
     "style": {
       "description": "The file extension to be used for style files.",
       "type": "string",

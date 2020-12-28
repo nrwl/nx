@@ -9,6 +9,7 @@ import { NxArgs } from '@nrwl/workspace/src/command-line/utils';
 import { isRelativePath } from '../utils/fileutils';
 import { Hasher } from '../core/hasher/hasher';
 import { projectHasTargetAndConfiguration } from '../utils/project-graph-utils';
+import { output } from '../utils/output';
 
 type RunArgs = yargs.Arguments & ReporterArgs;
 
@@ -38,6 +39,7 @@ export async function runCommand<T extends RunArgs>(
       target: nxArgs.target,
       configuration: nxArgs.configuration,
       overrides: overrides,
+      errorIfCannotFindConfiguration: project.name === initiatingProject,
     });
   });
 
@@ -87,11 +89,12 @@ export async function runCommand<T extends RunArgs>(
   });
 }
 
-export interface TaskParams {
+interface TaskParams {
   project: ProjectGraphNode;
   target: string;
   configuration: string;
   overrides: Object;
+  errorIfCannotFindConfiguration: boolean;
 }
 
 export function createTask({
@@ -99,6 +102,7 @@ export function createTask({
   target,
   configuration,
   overrides,
+  errorIfCannotFindConfiguration,
 }: TaskParams): Task {
   const config = projectHasTargetAndConfiguration(
     project,
@@ -107,6 +111,14 @@ export function createTask({
   )
     ? configuration
     : undefined;
+
+  if (errorIfCannotFindConfiguration && configuration && !config) {
+    output.error({
+      title: `Cannot find configuration '${configuration}' for project '${project.name}'`,
+    });
+    process.exit(1);
+  }
+
   const qualifiedTarget = {
     project: project.name,
     target,
@@ -190,7 +202,10 @@ export function getRunner(
       },
     };
   } else {
-    throw new Error(`Could not find runner configuration for ${runner}`);
+    output.error({
+      title: `Could not find runner configuration for ${runner}`,
+    });
+    process.exit(1);
   }
 }
 

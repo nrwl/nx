@@ -1,5 +1,4 @@
 import * as minimist from 'minimist';
-import { getLogger } from '../shared/logger';
 import {
   combineOptionsForGenerator,
   convertToCamelCase,
@@ -13,6 +12,7 @@ import { statSync, unlinkSync, writeFileSync } from 'fs';
 import { mkdirpSync, rmdirSync } from 'fs-extra';
 import * as path from 'path';
 import { FileChange, FsTree } from '../shared/tree';
+import { logger } from '../shared/logger';
 
 const chalk = require('chalk');
 
@@ -63,16 +63,19 @@ function parseGenerateOpts(
     ) {
       throwInvalidInvocation();
     }
-    [collectionName, generatorName] = (generatorOptions['_'] as string[])
-      .shift()
-      .split(':');
-    if (!generatorName) {
-      generatorName = collectionName;
+    const generatorDescriptor = (generatorOptions['_'] as string[]).shift();
+    const separatorIndex = generatorDescriptor.lastIndexOf(':');
+
+    if (separatorIndex > 0) {
+      collectionName = generatorDescriptor.substr(0, separatorIndex);
+      generatorName = generatorDescriptor.substr(separatorIndex + 1);
+    } else {
       collectionName = defaultCollection;
+      generatorName = generatorDescriptor;
     }
   } else {
     collectionName = generatorOptions.collection as string;
-    generatorName = '';
+    generatorName = 'new';
   }
 
   if (!collectionName) {
@@ -98,31 +101,24 @@ function parseGenerateOpts(
   delete generatorOptions.interactive;
   delete generatorOptions.defaults;
   delete generatorOptions.help;
+  delete generatorOptions.collection;
   delete generatorOptions['--'];
 
   return res;
 }
 
-export function printGenHelp(
-  opts: GenerateOptions,
-  schema: Schema,
-  logger: Console
-) {
-  printHelp(
-    `nx generate ${opts.collectionName}:${opts.generatorName}`,
-    {
-      ...schema,
-      properties: {
-        ...schema.properties,
-        dryRun: {
-          type: 'boolean',
-          default: false,
-          description: `Runs through and reports activity without writing to disk.`,
-        },
+export function printGenHelp(opts: GenerateOptions, schema: Schema) {
+  printHelp(`nx generate ${opts.collectionName}:${opts.generatorName}`, {
+    ...schema,
+    properties: {
+      ...schema.properties,
+      dryRun: {
+        type: 'boolean',
+        default: false,
+        description: `Runs through and reports activity without writing to disk.`,
       },
     },
-    logger as any
-  );
+  });
 }
 
 function readDefaultCollection(workspace: WorkspaceConfiguration) {
@@ -162,50 +158,75 @@ function printChanges(fileChanges: FileChange[]) {
   });
 }
 
-export async function taoNew(root: string, args: string[], isVerbose = false) {
-  const logger = getLogger(isVerbose);
-  return handleErrors(logger, isVerbose, async () => {
+export async function taoNew(cwd: string, args: string[], isVerbose = false) {
+  const ws = new Workspaces(null);
+  return handleErrors(isVerbose, async () => {
     const opts = parseGenerateOpts(args, 'new', null);
-    return (await import('./ngcli-adapter')).invokeNew(logger, root, opts);
+
+    const {
+      normalizedGeneratorName,
+      schema,
+      implementation,
+    } = ws.readGenerator(opts.collectionName, opts.generatorName);
+
+    const combinedOpts = await combineOptionsForGenerator(
+      opts.generatorOptions,
+      opts.collectionName,
+      normalizedGeneratorName,
+      null,
+      schema,
+      opts.interactive,
+      null
+    );
+    return (await import('./ngcli-adapter')).invokeNew(
+      cwd,
+      {
+        ...opts,
+        generatorOptions: combinedOpts,
+      },
+      isVerbose
+    );
   });
 }
 
 export async function generate(
+  cwd: string,
   root: string,
   args: string[],
   isVerbose = false
 ) {
-  const logger = getLogger(isVerbose);
-  const ws = new Workspaces();
+  const ws = new Workspaces(root);
 
-  return handleErrors(logger, isVerbose, async () => {
-    const workspaceDefinition = ws.readWorkspaceConfiguration(root);
+  return handleErrors(isVerbose, async () => {
+    const workspaceDefinition = ws.readWorkspaceConfiguration();
     const opts = parseGenerateOpts(
       args,
       'generate',
       readDefaultCollection(workspaceDefinition)
     );
 
-    if (ws.isNxGenerator(opts.collectionName, opts.generatorName)) {
-      const { schema, implementation } = ws.readGenerator(
-        opts.collectionName,
-        opts.generatorName
-      );
+    const {
+      normalizedGeneratorName,
+      schema,
+      implementation,
+    } = ws.readGenerator(opts.collectionName, opts.generatorName);
 
-      if (opts.help) {
-        printGenHelp(opts, schema, logger as any);
-        return 0;
-      }
+    if (opts.help) {
+      printGenHelp(opts, schema);
+      return 0;
+    }
+    const combinedOpts = await combineOptionsForGenerator(
+      opts.generatorOptions,
+      opts.collectionName,
+      normalizedGeneratorName,
+      workspaceDefinition,
+      schema,
+      opts.interactive,
+      ws.calculateDefaultProjectName(cwd, workspaceDefinition)
+    );
 
-      const combinedOpts = await combineOptionsForGenerator(
-        opts.generatorOptions,
-        opts.collectionName,
-        opts.generatorName,
-        workspaceDefinition,
-        schema,
-        opts.interactive
-      );
-      const host = new FsTree(root, isVerbose, logger);
+    if (ws.isNxGenerator(opts.collectionName, normalizedGeneratorName)) {
+      const host = new FsTree(root, isVerbose);
       const task = await implementation(host, combinedOpts);
       const changes = host.listChanges();
 
@@ -219,7 +240,14 @@ export async function generate(
         logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
       }
     } else {
-      return (await import('./ngcli-adapter')).generate(logger, root, opts);
+      return (await import('./ngcli-adapter')).generate(
+        root,
+        {
+          ...opts,
+          generatorOptions: combinedOpts,
+        },
+        isVerbose
+      );
     }
   });
 }

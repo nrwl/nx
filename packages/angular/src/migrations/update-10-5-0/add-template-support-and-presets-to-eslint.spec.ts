@@ -1,5 +1,9 @@
 import { Tree } from '@angular-devkit/schematics';
-import { readJsonInTree, updateWorkspace } from '@nrwl/workspace';
+import {
+  readJsonInTree,
+  updateJsonInTree,
+  updateWorkspace,
+} from '@nrwl/workspace';
 import { callRule, createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runMigration } from '../../utils/testing';
 
@@ -47,6 +51,23 @@ describe('add-template-support-and-presets-to-eslint', () => {
               },
             },
           });
+        }),
+        tree
+      );
+      tree = await callRule(
+        updateJsonInTree('nx.json', (json) => {
+          json.projects['app1'] = {};
+          json.projects['lib1'] = {};
+
+          return json;
+        }),
+        tree
+      );
+      tree = await callRule(
+        updateJsonInTree('package.json', (json) => {
+          json.dependencies['@angular/core'] = '11.0.0';
+
+          return json;
         }),
         tree
       );
@@ -129,6 +150,26 @@ describe('add-template-support-and-presets-to-eslint', () => {
         }),
         tree
       );
+      tree = await callRule(
+        updateJsonInTree('nx.json', (json) => {
+          json.projects['app1'] = {};
+          json.projects['app2'] = {};
+          json.projects['lib1'] = {};
+
+          return json;
+        }),
+        tree
+      );
+      tree = await callRule(
+        updateJsonInTree('package.json', (json) => {
+          json.dependencies['@angular/core'] = '11.0.0';
+
+          return json;
+        }),
+        tree
+      );
+      tree.create('apps/app1/src/main.ts', `import '@angular/core';`);
+      tree.create('libs/lib1/src/index.ts', `import '@angular/core';`);
     });
 
     it('should do nothing if the root eslint config has not been updated to use overrides by the latest migrations', async () => {
@@ -180,7 +221,9 @@ describe('add-template-support-and-presets-to-eslint', () => {
 
       expect(packageJsonBefore).toMatchInlineSnapshot(`
         Object {
-          "dependencies": Object {},
+          "dependencies": Object {
+            "@angular/core": "11.0.0",
+          },
           "devDependencies": Object {},
           "name": "test-name",
         }
@@ -189,7 +232,9 @@ describe('add-template-support-and-presets-to-eslint', () => {
       expect(JSON.parse(result.read('package.json').toString()))
         .toMatchInlineSnapshot(`
         Object {
-          "dependencies": Object {},
+          "dependencies": Object {
+            "@angular/core": "11.0.0",
+          },
           "devDependencies": Object {
             "@angular-eslint/eslint-plugin": "0.8.0-beta.1",
             "@angular-eslint/eslint-plugin-template": "0.8.0-beta.1",

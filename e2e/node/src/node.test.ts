@@ -188,7 +188,31 @@ describe('Node Applications', () => {
     });
   }, 120000);
 });
+describe('Build Node apps', () => {
+  it('should generate a package.json with the `--generatePackageJson` flag', async () => {
+    newProject();
+    const nestapp = uniq('nestapp');
+    runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
 
+    await runCLIAsync(`build ${nestapp} --generatePackageJson`);
+
+    checkFilesExist(`dist/apps/${nestapp}/package.json`);
+    const packageJson = JSON.parse(
+      readFile(`dist/apps/${nestapp}/package.json`)
+    );
+    expect(packageJson).toEqual(
+      expect.objectContaining({
+        dependencies: {
+          '@nestjs/common': '^7.0.0',
+          '@nestjs/core': '^7.0.0',
+        },
+        main: 'main.js',
+        name: expect.any(String),
+        version: '0.0.1',
+      })
+    );
+  });
+});
 describe('Node Libraries', () => {
   it('should be able to generate a node library', async () => {
     newProject();
@@ -258,7 +282,7 @@ describe('Node Libraries', () => {
       `generate @nrwl/angular:lib ${nglib} --publishable --importPath=@proj/${nglib}`
     );
     const workspace = readJson(workspaceConfigName());
-    workspace.projects[nodelib].architect.build.options.assets.push({
+    workspace.projects[nodelib].targets.build.options.assets.push({
       input: `./dist/libs/${nglib}`,
       glob: '**/*',
       output: '.',
@@ -483,7 +507,9 @@ describe('with dependencies', () => {
   });
 
   it('should build an app composed out of buildable libs', () => {
-    const buildWithDeps = runCLI(`build ${app} --with-deps`);
+    const buildWithDeps = runCLI(
+      `build ${app} --with-deps --buildLibsFromSource=false`
+    );
     expect(buildWithDeps).toContain(`Running target "build" succeeded`);
     checkFilesDoNotExist(`apps/${app}/tsconfig/tsconfig.nx-tmp`);
 

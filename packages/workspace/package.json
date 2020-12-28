@@ -45,6 +45,7 @@
       "@nrwl/nx-plugin",
       "@nrwl/react",
       "@nrwl/storybook",
+      "@nrwl/tao",
       "@nrwl/web"
     ]
   },
@@ -72,6 +73,7 @@
     "chalk": "4.1.0",
     "axios": "0.19.2",
     "flat": "^5.0.2",
+    "lodash": "^4.17.20",
     "minimatch": "3.0.4",
     "inquirer": "^6.3.1",
     "resolve": "1.17.0",

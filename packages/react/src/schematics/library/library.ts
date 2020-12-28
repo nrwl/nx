@@ -14,7 +14,7 @@ import {
   Tree,
   url,
 } from '@angular-devkit/schematics';
-import { CSS_IN_JS_DEPENDENCIES } from '@nrwl/react';
+import { CSS_IN_JS_DEPENDENCIES } from '../../utils/styled';
 import {
   addDepsToPackageJson,
   addLintFiles,
@@ -49,6 +49,7 @@ import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
 import { initRootBabelConfig } from '@nrwl/web/src/utils/rules';
 import { updateBabelJestConfig } from '../../rules/update-babel-jest-config';
 import { names, offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -113,7 +114,9 @@ export default function (schema: Schema): Rule {
             pascalCaseFiles: options.pascalCaseFiles,
           })
         : noop(),
-      options.publishable ? updateLibPackageNpmScope(options) : noop(),
+      options.publishable || options.buildable
+        ? updateLibPackageNpmScope(options)
+        : noop(),
       addDepsToPackageJson(
         {
           react: reactVersion,
@@ -155,6 +158,7 @@ function addProject(options: NormalizedSchema): Rule {
       }
       architect.build = {
         builder: '@nrwl/web:package',
+        outputs: ['{options.outputPath}'],
         options: {
           outputPath: `dist/${libsDir(host)}/${options.projectDirectory}`,
           tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
@@ -178,7 +182,6 @@ function addProject(options: NormalizedSchema): Rule {
       root: options.projectRoot,
       sourceRoot: join(normalize(options.projectRoot), 'src'),
       projectType: 'library',
-      schematics: {},
       architect,
     };
     return json;
@@ -396,3 +399,8 @@ function maybeJs(options: NormalizedSchema, path: string): string {
     ? path.replace(/\.tsx?$/, '.js')
     : path;
 }
+
+export const libraryGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/react',
+  'library'
+);

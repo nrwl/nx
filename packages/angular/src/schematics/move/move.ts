@@ -1,6 +1,7 @@
 import { chain, externalSchematic } from '@angular-devkit/schematics';
 import { updateModuleName } from './lib/update-module-name';
 import { Schema } from './schema';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 /**
  * Moves an Angular lib/app to another folder (and renames it in the process)
@@ -15,3 +16,7 @@ export default function (schema: Schema) {
     updateModuleName(schema),
   ]);
 }
+export const moveGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/angular',
+  'move'
+);

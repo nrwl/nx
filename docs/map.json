@@ -7,9 +7,9 @@
         "id": "getting-started",
         "itemList": [
           {
-            "name": "Why Nx?",
-            "id": "why-nx",
-            "file": "angular/getting-started/why-nx"
+            "name": "Getting Started",
+            "id": "getting-started",
+            "file": "angular/getting-started/getting-started"
           },
           {
             "name": "Resources",
@@ -19,6 +19,28 @@
             "name": "Nx and Angular CLI",
             "id": "nx-and-cli",
             "file": "angular/getting-started/nx-and-cli"
+          },
+          {
+            "name": "CLI Overview",
+            "searchResultsName": "CLI Overview",
+            "id": "cli-overview",
+            "file": "angular/guides/cli-overview"
+          },
+          {
+            "name": "VS Code Plugin",
+            "id": "console",
+            "file": "shared/console"
+          },
+          {
+            "name": "Folder Structure",
+            "searchResultsName": "Folder Structure",
+            "id": "folder-structure",
+            "file": "shared/folder-structure"
+          },
+          {
+            "name": "Configuration",
+            "id": "configuration",
+            "file": "angular/guides/configuration"
           }
         ]
       },
@@ -77,6 +99,37 @@
         ]
       },
       {
+        "name": "Core Concepts",
+        "id": "core-concepts",
+        "itemList": [
+          {
+            "name": "Computation Caching",
+            "id": "computation-caching",
+            "file": "shared/computation-caching"
+          },
+          {
+            "name": "Rebuild Only What is Affected",
+            "id": "affected",
+            "file": "shared/affected"
+          },
+          {
+            "name": "Why Monorepos",
+            "id": "why-monorepos",
+            "file": "shared/guides/why-monorepos"
+          },
+          {
+            "name": "Updating Nx",
+            "id": "updating-nx",
+            "file": "angular/guides/update"
+          },
+          {
+            "name": "Nx Devkit",
+            "id": "nx-devkit",
+            "file": "shared/devkit"
+          }
+        ]
+      },
+      {
         "name": "Migration",
         "id": "migration",
         "itemList": [
@@ -104,17 +157,6 @@
         "name": "CLI",
         "id": "cli",
         "itemList": [
-          {
-            "name": "Overview",
-            "searchResultsName": "CLI Overview",
-            "id": "overview",
-            "file": "angular/guides/cli-overview"
-          },
-          {
-            "name": "Console",
-            "id": "console",
-            "file": "shared/console"
-          },
           {
             "name": "generate",
             "id": "generate",
@@ -868,7 +910,7 @@
                     "file": "angular/api-nx-plugin/generators/plugin"
                   },
                   {
-                    "name": "schematic",
+                    "name": "generator",
                     "id": "schematic",
                     "file": "angular/api-nx-plugin/generators/generator"
                   }
@@ -894,27 +936,16 @@
         "id": "workspace",
         "itemList": [
           {
-            "name": "Overview",
-            "searchResultsName": "Workspace Overview",
-            "id": "workspace-overview",
-            "file": "shared/workspace-overview"
-          },
-          {
-            "name": "Configuration",
-            "id": "configuration",
-            "file": "angular/guides/configuration"
-          },
-          {
             "name": "Executors / Builders",
             "id": "executors",
             "itemList": [
               {
-                "name": "Using Builders",
+                "name": "Using Executors / Builders",
                 "id": "using-builders",
                 "file": "shared/using-builders"
               },
               {
-                "name": "Run Commands Builder",
+                "name": "Running Custom Commands",
                 "id": "run-commands-builder",
                 "file": "shared/running-custom-commands"
               },
@@ -926,21 +957,16 @@
             ]
           },
           {
-            "name": "Computation Caching",
-            "id": "computation-caching",
-            "file": "shared/computation-caching"
-          },
-          {
             "name": "Generators",
             "id": "generators",
             "itemList": [
               {
-                "name": "Using Schematics",
+                "name": "Using Generators",
                 "id": "using-schematics",
                 "file": "shared/using-schematics"
               },
               {
-                "name": "Workspace Schematics",
+                "name": "Workspace Generators",
                 "id": "workspace-generators",
                 "file": "shared/tools-workspace-generators"
               }
@@ -981,11 +1007,6 @@
                 "file": "shared/workspace/structure/dependency-graph"
               }
             ]
-          },
-          {
-            "name": "Updating Nx",
-            "id": "update",
-            "file": "shared/update"
           }
         ]
       },
@@ -997,11 +1018,6 @@
             "name": "CI",
             "id": "ci",
             "itemList": [
-              {
-                "name": "Rebuild Only What is Affected",
-                "id": "monorepo-affected",
-                "file": "shared/monorepo-affected"
-              },
               {
                 "name": "Distributed CI: Overview",
                 "id": "distributed-builds",
@@ -1021,6 +1037,11 @@
                 "name": "Incremental Builds",
                 "id": "incremental-builds",
                 "file": "shared/incremental-builds"
+              },
+              {
+                "name": "Setup incremental builds for Angular applications",
+                "id": "setup-incremental-builds-angular",
+                "file": "angular/guides/setup-incremental-builds"
               }
             ]
           },
@@ -1067,14 +1088,14 @@
             "file": "shared/guides/browser-support"
           },
           {
-            "name": "Updating Nx",
-            "id": "updating-nx",
-            "file": "angular/guides/update"
-          },
-          {
             "name": "Running custom commands",
             "id": "running-custom-commands",
             "file": "angular/guides/running-custom-commands"
+          },
+          {
+            "name": "Nx Devkit and Angular Devkit",
+            "id": "nx-devkit-angular-devkit",
+            "file": "angular/guides/nx-devkit-angular-devkit"
           }
         ]
       },
@@ -1109,13 +1130,35 @@
         "id": "getting-started",
         "itemList": [
           {
-            "name": "Why Nx?",
-            "id": "why-nx",
-            "file": "react/getting-started/why-nx"
+            "name": "Getting Started",
+            "id": "getting-started",
+            "file": "react/getting-started/getting-started"
           },
           {
             "name": "Resources",
             "id": "resources"
+          },
+          {
+            "name": "CLI Overview",
+            "searchResultsName": "CLI Overview",
+            "id": "cli-overview",
+            "file": "react/guides/cli-overview"
+          },
+          {
+            "name": "VS Code Plugin",
+            "id": "console",
+            "file": "shared/console"
+          },
+          {
+            "name": "Folder Structure",
+            "searchResultsName": "Folder Structure",
+            "id": "folder-structure",
+            "file": "shared/folder-structure"
+          },
+          {
+            "name": "Configuration",
+            "id": "configuration",
+            "file": "react/guides/configuration"
           }
         ]
       },
@@ -1174,6 +1217,37 @@
         ]
       },
       {
+        "name": "Core Concepts",
+        "id": "core-concepts",
+        "itemList": [
+          {
+            "name": "Computation Caching",
+            "id": "computation-caching",
+            "file": "shared/computation-caching"
+          },
+          {
+            "name": "Rebuild Only What is Affected",
+            "id": "affected",
+            "file": "shared/affected"
+          },
+          {
+            "name": "Why Monorepos",
+            "id": "why-monorepos",
+            "file": "shared/guides/why-monorepos"
+          },
+          {
+            "name": "Updating Nx",
+            "id": "updating-nx",
+            "file": "shared/update"
+          },
+          {
+            "name": "Nx Devkit",
+            "id": "nx-devkit",
+            "file": "shared/devkit"
+          }
+        ]
+      },
+      {
         "name": "Migration",
         "id": "migration",
         "itemList": [
@@ -1197,17 +1271,6 @@
         "name": "CLI",
         "id": "cli",
         "itemList": [
-          {
-            "name": "Overview",
-            "searchResultsName": "CLI Overview",
-            "id": "overview",
-            "file": "react/guides/cli-overview"
-          },
-          {
-            "name": "Console",
-            "id": "console",
-            "file": "shared/console"
-          },
           {
             "name": "generate",
             "id": "generate",
@@ -1961,7 +2024,7 @@
                     "file": "react/api-nx-plugin/generators/plugin"
                   },
                   {
-                    "name": "schematic",
+                    "name": "generator",
                     "id": "schematic",
                     "file": "react/api-nx-plugin/generators/generator"
                   }
@@ -1987,27 +2050,16 @@
         "id": "workspace",
         "itemList": [
           {
-            "name": "Overview",
-            "searchResultsName": "Workspace Overview",
-            "id": "workspace-overview",
-            "file": "shared/workspace-overview"
-          },
-          {
-            "name": "Configuration",
-            "id": "configuration",
-            "file": "react/guides/configuration"
-          },
-          {
             "name": "Executors / Builders",
             "id": "executors",
             "itemList": [
               {
-                "name": "Using Builders",
+                "name": "Using Executors / Builders",
                 "id": "using-builders",
                 "file": "shared/using-builders"
               },
               {
-                "name": "Run Commands Builder",
+                "name": "Running Custom Commands",
                 "id": "run-commands-builder",
                 "file": "shared/running-custom-commands"
               },
@@ -2019,21 +2071,16 @@
             ]
           },
           {
-            "name": "Computation Caching",
-            "id": "computation-caching",
-            "file": "shared/computation-caching"
-          },
-          {
             "name": "Generators",
             "id": "generators",
             "itemList": [
               {
-                "name": "Using Schematics",
+                "name": "Using Generators",
                 "id": "using-schematics",
                 "file": "shared/using-schematics"
               },
               {
-                "name": "Workspace Schematics",
+                "name": "Workspace Generators",
                 "id": "workspace-generators",
                 "file": "shared/tools-workspace-generators"
               }
@@ -2074,11 +2121,6 @@
                 "file": "shared/workspace/structure/dependency-graph"
               }
             ]
-          },
-          {
-            "name": "Updating Nx",
-            "id": "update",
-            "file": "shared/update"
           }
         ]
       },
@@ -2090,11 +2132,6 @@
             "name": "CI",
             "id": "ci",
             "itemList": [
-              {
-                "name": "Rebuild Only What is Affected",
-                "id": "monorepo-affected",
-                "file": "shared/monorepo-affected"
-              },
               {
                 "name": "Distributed CI: Overview",
                 "id": "distributed-builds",
@@ -2180,13 +2217,35 @@
         "id": "getting-started",
         "itemList": [
           {
-            "name": "Why Nx?",
-            "id": "why-nx",
-            "file": "node/getting-started/why-nx"
+            "name": "Getting Started",
+            "id": "getting-started",
+            "file": "node/getting-started/getting-started"
           },
           {
             "name": "Resources",
             "id": "resources"
+          },
+          {
+            "name": "CLI Overview",
+            "searchResultsName": "CLI Overview",
+            "id": "cli-overview",
+            "file": "node/guides/cli-overview"
+          },
+          {
+            "name": "VS Code Plugin",
+            "id": "console",
+            "file": "shared/console"
+          },
+          {
+            "name": "Folder Structure",
+            "searchResultsName": "Folder Structure",
+            "id": "folder-structure",
+            "file": "shared/folder-structure"
+          },
+          {
+            "name": "Configuration",
+            "id": "configuration",
+            "file": "node/guides/configuration"
           }
         ]
       },
@@ -2229,6 +2288,37 @@
         ]
       },
       {
+        "name": "Core Concepts",
+        "id": "core-concepts",
+        "itemList": [
+          {
+            "name": "Computation Caching",
+            "id": "computation-caching",
+            "file": "shared/computation-caching"
+          },
+          {
+            "name": "Rebuild Only What is Affected",
+            "id": "affected",
+            "file": "shared/affected"
+          },
+          {
+            "name": "Why Monorepos",
+            "id": "why-monorepos",
+            "file": "shared/guides/why-monorepos"
+          },
+          {
+            "name": "Updating Nx",
+            "id": "updating-nx",
+            "file": "shared/update"
+          },
+          {
+            "name": "Nx Devkit",
+            "id": "nx-devkit",
+            "file": "shared/devkit"
+          }
+        ]
+      },
+      {
         "name": "Migration",
         "id": "migration",
         "itemList": [
@@ -2243,17 +2333,6 @@
         "name": "CLI",
         "id": "cli",
         "itemList": [
-          {
-            "name": "Overview",
-            "searchResultsName": "CLI Overview",
-            "id": "overview",
-            "file": "node/guides/cli-overview"
-          },
-          {
-            "name": "Console",
-            "id": "console",
-            "file": "shared/console"
-          },
           {
             "name": "generate",
             "id": "generate",
@@ -3001,7 +3080,7 @@
                     "file": "node/api-nx-plugin/generators/plugin"
                   },
                   {
-                    "name": "schematic",
+                    "name": "generator",
                     "id": "schematic",
                     "file": "node/api-nx-plugin/generators/generator"
                   }
@@ -3027,27 +3106,16 @@
         "id": "workspace",
         "itemList": [
           {
-            "name": "Overview",
-            "searchResultsName": "Workspace Overview",
-            "id": "workspace-overview",
-            "file": "shared/workspace-overview"
-          },
-          {
-            "name": "Configuration",
-            "id": "configuration",
-            "file": "node/guides/configuration"
-          },
-          {
             "name": "Executors / Builders",
             "id": "executors",
             "itemList": [
               {
-                "name": "Using Builders",
+                "name": "Using Executors / Builders",
                 "id": "using-builders",
                 "file": "shared/using-builders"
               },
               {
-                "name": "Run Commands Builder",
+                "name": "Running Custom Commands",
                 "id": "run-commands-builder",
                 "file": "shared/running-custom-commands"
               },
@@ -3059,21 +3127,16 @@
             ]
           },
           {
-            "name": "Computation Caching",
-            "id": "computation-caching",
-            "file": "shared/computation-caching"
-          },
-          {
             "name": "Generators",
             "id": "generators",
             "itemList": [
               {
-                "name": "Using Schematics",
+                "name": "Using Generators",
                 "id": "using-schematics",
                 "file": "shared/using-schematics"
               },
               {
-                "name": "Workspace Schematics",
+                "name": "Workspace Generators",
                 "id": "workspace-generators",
                 "file": "shared/tools-workspace-generators"
               }
@@ -3114,11 +3177,6 @@
                 "file": "shared/workspace/structure/dependency-graph"
               }
             ]
-          },
-          {
-            "name": "Updating Nx",
-            "id": "update",
-            "file": "shared/update"
           }
         ]
       },
@@ -3130,11 +3188,6 @@
             "name": "CI",
             "id": "ci",
             "itemList": [
-              {
-                "name": "Rebuild Only What is Affected",
-                "id": "monorepo-affected",
-                "file": "shared/monorepo-affected"
-              },
               {
                 "name": "Distributed CI: Overview",
                 "id": "distributed-builds",

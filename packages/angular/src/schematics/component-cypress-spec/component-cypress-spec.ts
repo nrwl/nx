@@ -1,7 +1,5 @@
 import {
-  apply,
   chain,
-  mergeWith,
   move,
   Rule,
   SchematicContext,
@@ -16,13 +14,14 @@ import {
   PropertyDeclaration,
   SyntaxKind,
 } from 'typescript';
-import { getTsSourceFile, getDecoratorMetadata } from '../../utils/ast-utils';
+import { getDecoratorMetadata, getTsSourceFile } from '../../utils/ast-utils';
 import {
   getInputPropertyDeclarations,
   getKnobType,
 } from '../component-story/component-story';
 import { applyWithSkipExisting } from '@nrwl/workspace/src/utils/ast-utils';
 import { join, normalize } from '@angular-devkit/core';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export default function (schema: CreateComponentSpecFileSchema): Rule {
   return chain([createComponentSpecFile(schema)]);
@@ -129,3 +128,7 @@ export function getKnobDefaultValue(
       return undefined;
   }
 }
+export const componentCypressSpecGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/angular',
+  'component-cypress-spec'
+);

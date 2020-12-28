@@ -14,6 +14,10 @@ import {
   createStyleRules,
 } from './create-application-files.helpers';
 import { names, offsetFromRoot } from '@nrwl/devkit';
+import {
+  toJS,
+  updateTsConfigsToJs,
+} from '@nrwl/workspace/src/utils/rules/to-js';
 
 export function createApplicationFiles(options: NormalizedSchema): Rule {
   return mergeWith(
@@ -25,6 +29,11 @@ export function createApplicationFiles(options: NormalizedSchema): Rule {
         offsetFromRoot: offsetFromRoot(options.appProjectRoot),
         appContent: createAppJsx(options.name),
         styleContent: createStyleRules(),
+        pageStyleContent: `.page {}`,
+        stylesExt:
+          options.style === 'less' || options.style === 'styl'
+            ? options.style
+            : 'css',
       }),
       options.styledModule
         ? filter((file) => !file.endsWith(`.${options.style}`))
@@ -36,7 +45,12 @@ export function createApplicationFiles(options: NormalizedSchema): Rule {
       options.unitTestRunner === 'none'
         ? filter((file) => file !== `/specs/index.spec.tsx`)
         : noop(),
+      options.js ? filter((file) => file !== `/index.d.ts`) : noop(),
+      options.js ? toJS() : noop(),
       move(options.appProjectRoot),
+      options.js
+        ? updateTsConfigsToJs({ projectRoot: options.appProjectRoot })
+        : noop(),
     ])
   );
 }

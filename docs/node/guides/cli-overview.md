@@ -39,35 +39,33 @@ If you don't have the Nx CLI installed globally, you can invoke `nx` using `yarn
 
 The Nx CLI has an advanced code generator. With it, you can generate new applications, libraries, components, state management utilities. You can change existing applications. And, because the Nx CLI comes with an implementation of a virtual file system, you can preview the changes without affecting anything on disk.
 
-The code generation recipes are called schematics. Schematics provide the underlying APIs for scaffolding, and utilities to automate changes to your filesystem. The example below is the command to generate a new application.
+The code generation recipes are called generators. Generators provide the underlying APIs for scaffolding, and utilities to automate changes to your filesystem. The example below is the command to generate a new application.
 
 ```sh
 nx generate @nrwl/node:application myapp
 ```
 
-The `@nrwl/node` package contains a collection of schematics, with `application` being the one used in this example. The Nx CLI applies the schematic to your workspace, verifying that the provided options are valid, and the destination files don't already exist. Once the validations are passed, the new files are generated, or existing files are updated. You can also customize the output of the generated application, by passing options to the schematic.
+The `@nrwl/node` package contains a collection of generators, with `application` being the one used in this example. The Nx CLI applies the generator to your workspace, verifying that the provided options are valid, and the destination files don't already exist. Once the validations are passed, the new files are generated, or existing files are updated. You can also customize the output of the generated application, by passing options to the generator.
 
 ```sh
 nx generate @nrwl/node:application myapp --style=scss
 ```
 
-You can preview the changes a schematic makes by using the `--dry-run` option. It will output the potential files created, and/or updated during the execution of the schematic.
+You can preview the changes a generator makes by using the `--dry-run` option. It will output the potential files created, and/or updated during the execution of the generator.
 
 **Generate command:**
 
-`nx generate` runs schematics to create or modify code given some inputs from the developer.
+`nx generate` runs generators to create or modify code given some inputs from the developer.
 
 - [nx generate](/{{framework}}/cli/generate)  
-  Syntax: `nx generate [plugin]:[schematic-name] [options]`  
+  Syntax: `nx generate [plugin]:[generator-name] [options]`  
   Example: `nx generate @nrwl/node:library my-node-lib`
 
 ## Running Tasks
 
-The Nx CLI uses builders to perform tasks, such as building and bundling your application, running unit tests, or running E2E tests against a specific target, whether that be an application or workspace.
+The Nx CLI uses executors to perform tasks, such as building and bundling your application, running unit tests, or running E2E tests against a specific target, whether that be an application or workspace.
 
-A builder is a function that uses the Architect API to perform a complex process such as "build", "test", or "lint".
-
-You can configure the builders in `workspace.json`.
+You can configure the executors in `workspace.json`.
 
 ```json
 {
@@ -76,9 +74,9 @@ You can configure the builders in `workspace.json`.
       "root": "apps/todos/",
       "sourceRoot": "apps/todos/src",
       "projectType": "application",
-      "architect": {
+      "targets": {
         "serve": {
-          "builder": "@nrwl/web:dev-server",
+          "executor": "@nrwl/web:dev-server",
           "options": {
             "buildTarget": "todos:build",
             "proxyConfig": "apps/todos/proxy.conf.json"
@@ -90,7 +88,7 @@ You can configure the builders in `workspace.json`.
           }
         },
         "test": {
-          "builder": "@nrwl/jest:jest",
+          "executor": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "apps/todos/jest.config.js",
             "tsConfig": "apps/todos/tsconfig.spec.json",
@@ -103,7 +101,7 @@ You can configure the builders in `workspace.json`.
 }
 ```
 
-In the example above, the `todos` application has two targets: `serve` and `test`. The `serve` target uses the `@nrwl/web:dev-server` builder, and the `test` target uses `@nrwl/jest:jest`. Every target uses a builder which actually runs this target. So targets are analogous to typed npm scripts, and builders are analogous to typed shell scripts.
+In the example above, the `todos` application has two targets: `serve` and `test`. The `serve` target uses the `@nrwl/web:dev-server` executor, and the `test` target uses `@nrwl/jest:jest`. Every target uses an executor which actually runs this target. So targets are analogous to typed npm scripts, and executors are analogous to typed shell scripts.
 
 You can run the target as follows:
 
@@ -116,7 +114,7 @@ A target can have multiple configuration. In the example above the serve target 
 
 ```bash
 nx run todos:serve # default configuration
-nx run todos:serve:production # producttion configuration
+nx run todos:serve:production # production configuration
 ```
 
 Because running target is such a common operation, you can also use the following syntax to do it:
@@ -127,7 +125,7 @@ nx serve todos --configuration=production
 nx serve todos --prod
 ```
 
-You can name your targets any way you want, define as many of them as you want, and use any builders you want to implement them.
+You can name your targets any way you want, define as many of them as you want, and use any executors you want to implement them.
 
 **These are some common targets:**
 
@@ -188,7 +186,7 @@ Run the same target for the projects that failed last time.
 nx run-many --target=build --all --only-failed
 ```
 
-Any flags you pass to `run-many` that aren't Nx specific will be passed down to the builder.
+Any flags you pass to `run-many` that aren't Nx specific will be passed down to the executor.
 
 ```sh
 nx run-many --target=build --all --prod
@@ -223,7 +221,7 @@ nx affected:lint
 nx affected:e2e
 ```
 
-Any flags you pass to `run-many` that aren't Nx specific will be passed down to the builder.
+Any flags you pass to `run-many` that aren't Nx specific will be passed down to the executor.
 
 ```sh
 nx affected --target=build --prod

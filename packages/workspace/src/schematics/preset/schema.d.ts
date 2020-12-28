@@ -3,6 +3,7 @@ export interface Schema {
   npmScope?: string;
   style?: string;
   cli: string;
+  linter?: string;
   preset:
     | 'empty'
     | 'oss'

@@ -54,6 +54,7 @@ export default function (schema: Schema) {
     addPackageWithInit('@nrwl/web', schema),
     addDepsToPackageJson(
       {
+        'core-js': '^3.6.5',
         react: reactVersion,
         'react-dom': reactDomVersion,
         tslib: '^2.0.0',

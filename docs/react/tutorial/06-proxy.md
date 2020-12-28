@@ -72,7 +72,7 @@ Options:
   --help                  Show available options for project target.
 ```
 
-It helps with good editor integration (see [VSCode Support](https://nx.dev/react/cli/console)).
+It helps with good editor integration (see [VSCode Support](https://nx.dev/react/getting-started/console)).
 
 But, most importantly, it provides a holistic dev experience regardless of the tools used, and enables advanced build features like distributed computation caching and distributed builds).
 

@@ -6,6 +6,7 @@ import { updateTsConfig } from './lib/update-tsconfig';
 import { updateWorkspace } from './lib/update-workspace';
 import { updateJestConfig } from './lib/update-jestconfig';
 import { JestProjectSchema } from './schema';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 const schemaDefaults = {
   setupFile: 'none',
@@ -49,3 +50,8 @@ export default function (schema: JestProjectSchema): Rule {
     updateJestConfig(options),
   ]);
 }
+
+export const jestProjectGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/jest',
+  'jest-project'
+);

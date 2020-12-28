@@ -100,6 +100,15 @@ describe('create-nx-workspace', () => {
     });
   });
 
+  it('should be able to create a workspace with custom commit information', () => {
+    const wsName = uniq('branch');
+    runCreateWorkspace(wsName, {
+      preset: 'empty',
+      extraArgs:
+        '--commit.name="John Doe" --commit.email="myemail@test.com" --commit.message="Custom commit message!"',
+    });
+  });
+
   it('should be able to create a nest workspace', () => {
     const wsName = uniq('nest');
     const appName = uniq('app');

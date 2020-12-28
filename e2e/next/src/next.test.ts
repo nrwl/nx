@@ -15,7 +15,7 @@ describe('Next.js Applications', () => {
     newProject();
     const appName = uniq('app');
 
-    runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
+    runCLI(`generate @nrwl/next:app ${appName}`);
 
     const proxyConf = {
       '/external-api': {
@@ -198,6 +198,30 @@ describe('Next.js Applications', () => {
     });
   }, 120000);
 
+  it('should support Less', async () => {
+    const appName = uniq('app');
+
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=less`);
+
+    await checkApp(appName, {
+      checkUnitTest: true,
+      checkLint: false,
+      checkE2E: false,
+    });
+  }, 120000);
+
+  it('should support Stylus', async () => {
+    const appName = uniq('app');
+
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=styl`);
+
+    await checkApp(appName, {
+      checkUnitTest: true,
+      checkLint: false,
+      checkE2E: false,
+    });
+  }, 120000);
+
   it('should support --style=styled-components', async () => {
     const appName = uniq('app');
 
@@ -238,6 +262,38 @@ describe('Next.js Applications', () => {
     runCLI(`build ${appName}`);
 
     checkFilesExist(`dist/apps/${appName}/public/a/b.txt`);
+  }, 120000);
+
+  it('should build with a next.config.js file in the dist folder', async () => {
+    const appName = uniq('app');
+
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
+
+    updateFile(
+      `apps/${appName}/next.config.js`,
+      `
+    module.exports = {}
+    `
+    );
+
+    runCLI(`build ${appName}`);
+
+    checkFilesExist(`dist/apps/${appName}/next.config.js`);
+  }, 120000);
+
+  it('should support --js flag', async () => {
+    newProject();
+    const appName = uniq('app');
+
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive --js`);
+
+    checkFilesExist(`apps/${appName}/pages/index.js`);
+
+    await checkApp(appName, {
+      checkUnitTest: true,
+      checkLint: true,
+      checkE2E: true,
+    });
   }, 120000);
 });
 

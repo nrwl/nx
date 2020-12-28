@@ -10,7 +10,7 @@ import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration } from 'webpack';
 import { FileReplacement, NextBuildBuilderOptions } from './types';
 import { BuilderContext } from '@angular-devkit/architect';
-import { createCopyPlugin } from '@nrwl/web/src/utils/config';
+import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import { offsetFromRoot } from '@nrwl/devkit';
 
 export function createWebpackConfig(
@@ -80,18 +80,6 @@ export function createWebpackConfig(
           },
         ],
       }
-    );
-
-    config.plugins.push(
-      createCopyPlugin([
-        {
-          input: 'public',
-          // distDir is `dist/apps/[name]/.next` and we want public to be copied
-          // to `dist/apps/[name]/public` thus the `..` here.
-          output: '../public',
-          glob: '**/*',
-        },
-      ])
     );
 
     return config;

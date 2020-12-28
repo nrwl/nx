@@ -1,6 +1,6 @@
 # gateway
 
-Run the 'gateway' NestJs Schematic with Nx project support
+Run the 'gateway' NestJs generator with Nx project support
 
 ## Usage
 
@@ -44,7 +44,7 @@ Flag to indicate if a directory is created.
 
 Type: `string`
 
-The name of generated schematic
+The name of generated generator
 
 ### project
 

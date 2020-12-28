@@ -572,10 +572,10 @@ import {
       const content = tree.readContent(`${statePath}/users.actions.ts`);
 
       [
-        '[Users] Load Users',
-        '[Users] Load Users Success',
+        '[Users Page] Init',
+        '[Users/API] Load Users Success',
         'props<{ users: UsersEntity[] }>()',
-        '[Users] Load Users Failure',
+        '[Users/API] Load Users Failure',
         'props<{ error: any }>()',
       ].forEach((text) => {
         expect(content).toContain(text);
@@ -662,7 +662,7 @@ import {
       );
       const content = tree.readContent(`${statePath}/users.effects.ts`);
 
-      [`{ fetch }`, `, ofType`, `ofType(UsersActions.loadUsers),`].forEach(
+      [`{ fetch }`, `, ofType`, `ofType(UsersActions.init),`].forEach(
         (text) => {
           expect(content).toContain(text);
         }

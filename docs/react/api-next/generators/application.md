@@ -54,6 +54,14 @@ Possible values: `cypress`, `none`
 
 Test runner to use for end to end (e2e) tests
 
+### js
+
+Default: `false`
+
+Type: `boolean`
+
+Generate JavaScript files rather than TypeScript files.
+
 ### linter
 
 Default: `eslint`
@@ -90,7 +98,7 @@ Default: `false`
 
 Type: `boolean`
 
-Skip updating workspace.json with default schematic options based on values provided to this app (e.g. babel, style)
+Skip updating workspace.json with default options based on values provided to this app (e.g. babel, style)
 
 ### style
 

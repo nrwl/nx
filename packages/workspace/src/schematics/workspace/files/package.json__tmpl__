@@ -38,8 +38,8 @@
     "@nrwl/workspace": "<%= nxVersion %>",
     "@types/node": "12.12.38",
     "dotenv": "6.2.0",
-    "ts-node": "~7.0.0",
-    "tslint": "~6.0.0",
+    "ts-node": "~9.1.1",
+    "tslint": "~6.1.0",
     "eslint": "<%= eslintVersion %>",
     "typescript": "<%= typescriptVersion %>",
     "prettier": "<%= prettierVersion %>"

@@ -53,7 +53,6 @@ function addProject(options: NormalizedSchema): Rule {
       root: options.projectRoot,
       sourceRoot: join(normalize(options.projectRoot), 'src'),
       projectType: 'library',
-      schematics: {},
       architect,
     };
     return json;
@@ -188,6 +187,6 @@ function getCaseAwareFileName(options: {
 
 function addTestFiles(options: Pick<Schema, 'unitTestRunner'>) {
   return options.unitTestRunner === 'none'
-    ? filter((path) => !(path.endsWith('.ts') || path.endsWith('.tsx')))
+    ? filter((path) => !(path.endsWith('spec.ts') || path.endsWith('spec.tsx')))
     : noop();
 }

@@ -32,7 +32,31 @@ export function initLocal(workspace: Workspace) {
     if (workspace.type === 'nx') {
       loadCli(workspace, '@nrwl/tao/index.js');
     } else {
-      loadCli(workspace, '@angular/cli/lib/init.js');
+      if (
+        process.argv[2] === 'update' &&
+        process.env.FORCE_NG_UPDATE != 'true'
+      ) {
+        console.log(
+          `Nx provides a much improved version of "ng update". It runs the same migrations, but allows you to:`
+        );
+        console.log(`- rerun the same migration multiple times`);
+        console.log(`- reorder migrations`);
+        console.log(`- skip migrations`);
+        console.log(`- fix migrations that "almost work"`);
+        console.log(`- commit a partially migrated state`);
+        console.log(`- change versions of packages to match org requirements`);
+        console.log(
+          `And, in general, it is lot more reliable for non-trivial workspaces. Read more at: https://nx.dev/latest/angular/workspace/update`
+        );
+        console.log(
+          `Run "nx migrate latest" to update to the latest version of Nx.`
+        );
+        console.log(
+          `If you still want to use "ng update", run "FORCE_NG_UPDATE=true ng update".`
+        );
+      } else {
+        loadCli(workspace, '@angular/cli/lib/init.js');
+      }
     }
   }
 }
@@ -62,7 +86,11 @@ function runOneOptions(
         .toString()
     );
 
-    return parseRunOneOptions(workspaceConfigJson, process.argv.slice(2));
+    return parseRunOneOptions(
+      workspace.dir,
+      workspaceConfigJson,
+      process.argv.slice(2)
+    );
   } catch (e) {
     return false;
   }

@@ -11,6 +11,7 @@ export function addProject(options: NormalizedSchema): Rule {
 
     architect.build = {
       builder: '@nrwl/next:build',
+      outputs: ['{options.outputPath}'],
       options: {
         root: options.appProjectRoot,
         outputPath: join(normalize('dist'), options.appProjectRoot),
@@ -54,14 +55,13 @@ export function addProject(options: NormalizedSchema): Rule {
       normalize(options.appProjectRoot),
       join(normalize(options.appProjectRoot), 'tsconfig.json'),
       options.linter,
-      [`${options.appProjectRoot}/**/*.{ts,tsx}`]
+      [`${options.appProjectRoot}/**/*.{ts,tsx,js,jsx}`]
     );
 
     json.projects[options.projectName] = {
       root: options.appProjectRoot,
       sourceRoot: options.appProjectRoot,
       projectType: 'application',
-      schematics: {},
       architect,
     };
 

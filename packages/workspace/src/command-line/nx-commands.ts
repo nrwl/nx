@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { execSync } from 'child_process';
-import { getPackageManagerExecuteCommand } from '../utils/detect-package-manager';
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import * as yargs from 'yargs';
 import { nxVersion } from '../utils/versions';
 import { generateGraph } from './dep-graph';
@@ -31,6 +31,8 @@ export const commandsObject = yargs
 
     You can also use the infix notation to run a target:
     (e.g., nx serve myapp --configuration=production)
+
+    You can skip the use of Nx cache by using the --skip-nx-cache option.
     `
   )
   .command(
@@ -179,8 +181,8 @@ export const commandsObject = yargs
     `,
     (yargs) => yargs,
     () => {
-      const executable = `${getPackageManagerExecuteCommand()} tao`;
-      execSync(`${executable} migrate ${process.argv.slice(3).join(' ')}`, {
+      const pmc = getPackageManagerCommand();
+      execSync(`${pmc.exec} tao migrate ${process.argv.slice(3).join(' ')}`, {
         stdio: ['inherit', 'inherit', 'inherit'],
       });
     }

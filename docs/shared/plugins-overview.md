@@ -1,6 +1,6 @@
 # Plugins
 
-Nx plugins are npm packages that contain schematics and builders to extend a Nx workspace. Schematics are blueprints to create or modify code, and builders perform actions on the code.
+Nx plugins are npm packages that contain generators and executors (or builders) to extend a Nx workspace. Generators are blueprints to create or modify code, and executors perform actions on the code.
 
 ## nx list
 

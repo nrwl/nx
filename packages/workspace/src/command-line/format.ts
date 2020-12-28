@@ -11,6 +11,13 @@ import { filterAffected } from '../core/affected-project-graph';
 import { calculateFileChanges } from '../core/file-utils';
 import * as yargs from 'yargs';
 import { NxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
+import {
+  reformattedWorkspaceJsonOrNull,
+  workspaceConfigName,
+} from '@nrwl/tao/src/shared/workspace';
+import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
+import { readFileSync, writeFileSync } from 'fs-extra';
+import * as stripJsonComments from 'strip-json-comments';
 
 const PRETTIER_EXTENSIONS = [
   'ts',
@@ -40,6 +47,7 @@ export function format(command: 'check' | 'write', args: yargs.Arguments) {
 
   switch (command) {
     case 'write':
+      updateWorkspaceJsonToMatchFormatVersion();
       chunkList.forEach((chunk) => write(chunk));
       break;
     case 'check':
@@ -123,4 +131,24 @@ function prettierPath() {
     resolve.sync('prettier', { basedir: __dirname })
   );
   return path.join(basePath, 'bin-prettier.js');
+}
+
+function updateWorkspaceJsonToMatchFormatVersion() {
+  try {
+    const workspaceJson = JSON.parse(
+      stripJsonComments(
+        readFileSync(workspaceConfigName(appRootPath)).toString()
+      )
+    );
+    const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
+    if (reformatted) {
+      writeFileSync(
+        workspaceConfigName(appRootPath),
+        JSON.stringify(reformatted, null, 2)
+      );
+    }
+  } catch (e) {
+    console.error(`Failed to format: ${path}`);
+    console.error(e);
+  }
 }
