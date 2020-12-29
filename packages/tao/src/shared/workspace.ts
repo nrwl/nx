@@ -127,12 +127,20 @@ export function workspaceConfigName(root: string) {
 export class Workspaces {
   constructor(private root: string) {}
 
-  calculateDefaultProjectName(cwd: string, wc: WorkspaceConfiguration) {
+  relativeCwd(cwd: string) {
     let relativeCwd = cwd.split(this.root)[1];
     if (relativeCwd) {
-      relativeCwd = relativeCwd.startsWith('/')
+      return relativeCwd.startsWith('/')
         ? relativeCwd.substring(1)
         : relativeCwd;
+    } else {
+      return null;
+    }
+  }
+
+  calculateDefaultProjectName(cwd: string, wc: WorkspaceConfiguration) {
+    const relativeCwd = this.relativeCwd(cwd);
+    if (relativeCwd) {
       const matchingProject = Object.keys(wc.projects).find((p) => {
         const projectRoot = wc.projects[p].root;
         return (

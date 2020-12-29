@@ -10,6 +10,8 @@ type PropertyDescription = {
   items?: any;
   alias?: string;
   description?: string;
+  format?: string;
+  visible?: boolean;
   default?: string | number | boolean | string[];
   $ref?: string;
   $default?: { $source: 'argv'; index: number } | { $source: 'projectName' };
@@ -324,7 +326,8 @@ export function combineOptionsForExecutor(
   config: string,
   target: TargetConfiguration,
   schema: Schema,
-  defaultProjectName: string | null
+  defaultProjectName: string | null,
+  relativeCwd: string | null
 ) {
   const r = convertAliases(
     coerceTypesInOptions(commandLineOpts, schema),
@@ -338,7 +341,8 @@ export function combineOptionsForExecutor(
     combined,
     schema,
     (commandLineOpts['_'] as string[]) || [],
-    defaultProjectName
+    defaultProjectName,
+    relativeCwd
   );
   setDefaults(combined, schema);
   validateOptsAgainstSchema(combined, schema);
@@ -352,7 +356,8 @@ export async function combineOptionsForGenerator(
   wc: WorkspaceConfiguration | null,
   schema: Schema,
   isInteractive: boolean,
-  defaultProjectName: string | null
+  defaultProjectName: string | null,
+  relativeCwd: string | null
 ) {
   const generatorDefaults = wc
     ? getGeneratorDefaults(
@@ -371,7 +376,8 @@ export async function combineOptionsForGenerator(
     combined,
     schema,
     (commandLineOpts['_'] as string[]) || [],
-    defaultProjectName
+    defaultProjectName,
+    relativeCwd
   );
 
   if (isInteractive && isTTY()) {
@@ -388,7 +394,8 @@ export function convertSmartDefaultsIntoNamedParams(
   opts: { [k: string]: any },
   schema: Schema,
   argv: string[],
-  defaultProjectName: string | null
+  defaultProjectName: string | null,
+  relativeCwd: string | null
 ) {
   Object.entries(schema.properties).forEach(([k, v]) => {
     if (
@@ -405,6 +412,13 @@ export function convertSmartDefaultsIntoNamedParams(
       defaultProjectName
     ) {
       opts[k] = defaultProjectName;
+    } else if (
+      opts[k] === undefined &&
+      v.format === 'path' &&
+      v.visible === false &&
+      relativeCwd
+    ) {
+      opts[k] = relativeCwd;
     }
   });
   delete opts['_'];

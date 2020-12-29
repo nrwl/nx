@@ -347,6 +347,7 @@ describe('params', () => {
           },
         },
         ['argv-value'],
+        null,
         null
       );
 
@@ -368,10 +369,32 @@ describe('params', () => {
           },
         },
         [],
-        'myProject'
+        'myProject',
+        null
       );
 
       expect(params).toEqual({ a: 'myProject' });
+    });
+
+    it('should use relativeCwd to set path', () => {
+      const params = {};
+      convertSmartDefaultsIntoNamedParams(
+        params,
+        {
+          properties: {
+            a: {
+              type: 'string',
+              format: 'path',
+              visible: false,
+            },
+          },
+        },
+        [],
+        null,
+        './somepath'
+      );
+
+      expect(params).toEqual({ a: './somepath' });
     });
   });
 
