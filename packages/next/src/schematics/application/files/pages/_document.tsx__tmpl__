@@ -1,5 +1,5 @@
 import React, { ReactElement } from 'react';
-import Document, { Head, Main, NextScript } from 'next/document';
+import Document, { Html, Head, Main, NextScript } from 'next/document';
 import { ServerStyleSheet } from 'styled-components';
 
 export default class CustomDocument extends Document<{ styleTags: ReactElement[] }> {
@@ -17,7 +17,7 @@ export default class CustomDocument extends Document<{ styleTags: ReactElement[]
 
   render() {
     return (
-      <html>
+      <Html>
         <Head>
           {this.props.styleTags}
         </Head>
@@ -25,7 +25,7 @@ export default class CustomDocument extends Document<{ styleTags: ReactElement[]
           <Main />
           <NextScript />
         </body>
-      </html>
+      </Html>
     );
   }
 }
