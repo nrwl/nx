@@ -157,7 +157,8 @@ export async function run(
       opts.configuration,
       target,
       schema,
-      defaultProjectName
+      defaultProjectName,
+      ws.relativeCwd(cwd)
     );
     if (opts.help) {
       printRunHelp(opts, schema);
