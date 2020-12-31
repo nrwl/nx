@@ -463,6 +463,9 @@ describe('app', () => {
         expect(tree.exists('apps/my-app/tsconfig.spec.json')).toBeFalsy();
         expect(tree.exists('apps/my-app/jest.config.js')).toBeFalsy();
         expect(tree.exists('apps/my-app/karma.config.js')).toBeFalsy();
+        expect(
+          tree.exists('apps/my-app/src/app/app.component.spec.ts')
+        ).toBeFalsy();
         const workspaceJson = readJsonInTree(tree, 'workspace.json');
         expect(workspaceJson.projects['my-app'].architect.test).toBeUndefined();
         expect(
