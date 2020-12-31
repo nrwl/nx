@@ -512,6 +512,12 @@ function updateProject(options: NormalizedSchema): Rule {
           host.delete(`${options.appProjectRoot}/tslint.json`);
         }
 
+        if (options.unitTestRunner === 'none') {
+          host.delete(
+            `${options.appProjectRoot}/src/app/app.component.spec.ts`
+          );
+        }
+
         if (options.e2eTestRunner === 'none') {
           delete json.projects[options.e2eProjectName];
         }
@@ -809,7 +815,7 @@ export default function (schema: Schema): Rule {
       updateProject(options),
       updateComponentTemplate(options),
       updateComponentStyles(options),
-      updateComponentSpec(options),
+      options.unitTestRunner !== 'none' ? updateComponentSpec(options) : noop(),
       options.routing ? addRouterRootConfiguration(options) : noop(),
       addLintFiles(options.appProjectRoot, options.linter, {
         onlyGlobal: options.linter === Linter.TsLint, // local lint files are added differently when tslint
