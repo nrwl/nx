@@ -280,12 +280,22 @@ export class TaskOrchestrator {
     forwardOutput: boolean,
     forceColor: string
   ) {
-    const envsFromFiles = {
-      ...parseEnv('.env'),
-      ...parseEnv('.local.env'),
-      ...parseEnv(`${task.projectRoot}/.env`),
-      ...parseEnv(`${task.projectRoot}/.local.env`),
-    };
+    let envsFromFiles;
+    
+    // Check if the current task requires a production configuration, and load the appropriate environment variables
+    if(task.target.configuration && task.target.configuration === 'production') {
+      envsFromFiles = {
+        ...parseEnv('.env'),
+        ...parseEnv(`${task.projectRoot}/.env`),
+      };
+    } else {
+      envsFromFiles = {
+        ...parseEnv('.env'),
+        ...parseEnv('.local.env'),
+        ...parseEnv(`${task.projectRoot}/.env`),
+        ...parseEnv(`${task.projectRoot}/.local.env`),
+      };
+    }
 
     const env = {
       ...envsFromFiles,
