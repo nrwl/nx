@@ -66,7 +66,7 @@ async function runBuilder(options: Schema) {
   registry.addPostTransform(schema.transforms.addUndefinedDefaults);
 
   const testArchitectHost = new TestingArchitectHost('/root', '/root');
-  const builderName = '@angular-eslint/builder:lint';
+  const builderName = '@nrwl/linter:eslint';
 
   /**
    * Require in the implementation from src so that we don't need
