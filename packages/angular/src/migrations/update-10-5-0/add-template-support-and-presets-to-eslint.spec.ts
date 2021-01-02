@@ -236,9 +236,9 @@ describe('add-template-support-and-presets-to-eslint', () => {
             "@angular/core": "11.0.0",
           },
           "devDependencies": Object {
-            "@angular-eslint/eslint-plugin": "0.8.0-beta.1",
-            "@angular-eslint/eslint-plugin-template": "0.8.0-beta.1",
-            "@angular-eslint/template-parser": "0.8.0-beta.1",
+            "@angular-eslint/eslint-plugin": "~1.0.0",
+            "@angular-eslint/eslint-plugin-template": "~1.0.0",
+            "@angular-eslint/template-parser": "~1.0.0",
           },
           "name": "test-name",
         }
