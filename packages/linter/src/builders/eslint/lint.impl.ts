@@ -46,13 +46,16 @@ async function run(
     ? path.resolve(systemRoot, options.eslintConfig)
     : undefined;
 
-  const lintResults: ESLint.LintResult[] = await lint(
-    eslintConfigPath,
-    options
-  );
+  let lintResults: ESLint.LintResult[] = await lint(eslintConfigPath, options);
 
   if (lintResults.length === 0) {
     throw new Error('Invalid lint configuration. Nothing to lint.');
+  }
+
+  // if quiet, only show errors
+  if (options.quiet) {
+    context.logger.debug('Quiet mode enabled - filtering out warnings\n');
+    lintResults = ESLint.getErrorResults(lintResults);
   }
 
   const formatter = await eslint.loadFormatter(options.format);
