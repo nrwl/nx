@@ -105,7 +105,7 @@ function updateWorkspaceJson(options: NormalizedSchema): Rule {
       normalize(project.root),
       join(normalize(project.root), 'tsconfig.app.json'),
       options.linter,
-      [`${options.appProjectRoot}/**/*.ts`]
+      [`${options.appProjectRoot}/**/*.${options.js ? 'js' : 'ts'}`]
     );
 
     workspaceJson.projects[options.name] = project;

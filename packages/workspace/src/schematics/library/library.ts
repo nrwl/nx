@@ -46,7 +46,7 @@ function addProject(options: NormalizedSchema): Rule {
       normalize(options.projectRoot),
       join(normalize(options.projectRoot), 'tsconfig.lib.json'),
       options.linter,
-      [`${options.projectRoot}/**/*.ts`]
+      [`${options.projectRoot}/**/*.${options.js ? 'js' : 'ts'}`]
     );
 
     json.projects[options.name] = {
