@@ -45,7 +45,7 @@ describe('Build storybook', () => {
 
     expect(storybookSpy).toHaveBeenCalled();
     expect(
-      context.logger.includes(`Storybook files availble in ${outputPath}`)
+      context.logger.includes(`Storybook files available in ${outputPath}`)
     ).toBeTruthy();
     expect(
       context.logger.includes(`ui framework: ${uiFramework}`)

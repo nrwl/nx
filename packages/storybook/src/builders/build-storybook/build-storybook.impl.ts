@@ -60,7 +60,7 @@ export function run(
     }),
     map((loaded) => {
       context.logger.info(`Storybook builder finished ...`);
-      context.logger.info(`Storybook files availble in ${options.outputPath}`);
+      context.logger.info(`Storybook files available in ${options.outputPath}`);
       const builder: BuilderOutput = { success: true } as BuilderOutput;
       return builder;
     })
