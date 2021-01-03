@@ -103,5 +103,10 @@
     "name": "@trumbitta/nx-plugin-openapi",
     "description": "OpenAPI Plugin for Nx. Keep your API spec files in libs, and auto-generate sources.",
     "url": "https://github.com/trumbitta/nx-trumbitta/tree/main/packages/nx-plugin-openapi"
+  },
+  {
+    "name": "@nxrocks/nx-flutter",
+    "description": "Nx Plugin adding first class support for Flutter in your Nx workspace",
+    "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-flutter"
   }
 ]
