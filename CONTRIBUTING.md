@@ -165,7 +165,7 @@ The scope must be one of the following:
 
 - angular - anything Angular specific
 - core - anything Nx core specific
-- docs - anything related to docs infrastructure
+- nxdev - anything related to docs infrastructure
 - nextjs - anything Next specific
 - nest - anything Nest specific
 - node - anything Node specific
