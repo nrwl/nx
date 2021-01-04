@@ -4,10 +4,23 @@ Nx is a suite of powerful, extensible dev tools that help you develop, test, bui
 
 ## Create Nx Workspace
 
-Creating an Nx workspace is easy. Run the following command to set up an Nx workspace with an Angular app in it.
+Creating an Nx workspace is easy. Run the following command to set up an Nx workspace with an NestJS app in it.
 
 ```bash
-npx create-nx-workspace --preset=express
+npx create-nx-workspace --preset=nest
+```
+
+To create an Nx workspace with an Express app run:
+
+```bash
+npx create-nx-workspace --preset=empty
+```
+
+cd into the folder and run:
+
+```
+npm i @nrwl/express
+npx nx g @nrwl/express:app myapp
 ```
 
 ## Learn Nx Fundamentals
