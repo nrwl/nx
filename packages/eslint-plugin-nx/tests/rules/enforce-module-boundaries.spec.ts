@@ -605,51 +605,64 @@ describe('Enforce Module Boundaries', () => {
     expect(failures.length).toEqual(0);
   });
 
-  it('should error on importing a lazy-loaded library', () => {
-    const failures = runRule(
-      {},
-      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
-      'import "@mycompany/other";',
-      {
-        nodes: {
-          mylibName: {
-            name: 'mylibName',
-            type: ProjectType.lib,
-            data: {
-              root: 'libs/mylib',
-              tags: [],
-              implicitDependencies: [],
-              architect: {},
-              files: [createFile(`libs/mylib/src/main.ts`)],
+  it.each`
+    importKind | shouldError | importStatement
+    ${'value'} | ${true}     | ${'import { someValue } from "@mycompany/other";'}
+    ${'type'}  | ${false}    | ${'import type { someType } from "@mycompany/other";'}
+  `(
+    `when importing a lazy-loaded library:
+    \t importKind: $importKind
+    \t shouldError: $shouldError`,
+    ({ importKind, importStatement }) => {
+      const failures = runRule(
+        {},
+        `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+        importStatement,
+        {
+          nodes: {
+            mylibName: {
+              name: 'mylibName',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/mylib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {},
+                files: [createFile(`libs/mylib/src/main.ts`)],
+              },
+            },
+            otherName: {
+              name: 'otherName',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/other',
+                tags: [],
+                implicitDependencies: [],
+                architect: {},
+                files: [createFile(`libs/other/index.ts`)],
+              },
             },
           },
-          otherName: {
-            name: 'otherName',
-            type: ProjectType.lib,
-            data: {
-              root: 'libs/other',
-              tags: [],
-              implicitDependencies: [],
-              architect: {},
-              files: [createFile(`libs/other/index.ts`)],
-            },
+          dependencies: {
+            mylibName: [
+              {
+                source: 'mylibName',
+                target: 'otherName',
+                type: DependencyType.dynamic,
+              },
+            ],
           },
-        },
-        dependencies: {
-          mylibName: [
-            {
-              source: 'mylibName',
-              target: 'otherName',
-              type: DependencyType.dynamic,
-            },
-          ],
-        },
+        }
+      );
+      if (importKind === 'type') {
+        expect(failures.length).toEqual(0);
+      } else {
+        expect(failures[0].message).toEqual(
+          'Imports of lazy-loaded libraries are forbidden'
+        );
       }
-    );
-    expect(failures[0].message).toEqual(
-      'Imports of lazy-loaded libraries are forbidden'
-    );
-  });
+    }
+  );
 
   it('should error on importing an app', () => {
     const failures = runRule(

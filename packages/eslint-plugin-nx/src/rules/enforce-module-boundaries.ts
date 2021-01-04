@@ -235,6 +235,7 @@ export default createESLintRule<Options, MessageIds>({
 
         // if we import a library using loadChildren, we should not import it using es6imports
         if (
+          node.importKind !== 'type' &&
           onlyLoadChildren(
             projectGraph,
             sourceProject.name,
