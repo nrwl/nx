@@ -355,16 +355,16 @@ function determineLinter(preset: Preset, parsedArgs: WorkspaceArgs) {
           {
             name: 'linter',
             message: `Default linter                     `,
-            default: 'tslint',
+            default: 'eslint',
             type: 'list',
             choices: [
               {
-                value: 'tslint',
-                name: 'TSLint [ Used by Angular CLI ]',
-              },
-              {
                 value: 'eslint',
                 name: 'ESLint [ Modern linting tool ]',
+              },
+              {
+                value: 'tslint',
+                name: 'TSLint [ Used by Angular CLI. Deprecated. ]',
               },
             ],
           },
