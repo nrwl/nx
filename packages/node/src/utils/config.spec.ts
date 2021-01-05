@@ -119,6 +119,17 @@ describe('getBaseWebpackPartial', () => {
     });
   });
 
+  describe('the additionalEntries option', () => {
+    it ('should have multiple entries', () => {
+      const result = getBaseWebpackPartial({...input, additionalEntries: {test: 'some/test/path.ts'}});
+      expect(result.entry).toEqual({
+        main: ['main.ts'],
+        test: 'some/test/path.ts'
+      })
+      expect(result.output.filename).toEqual('[name].js')
+    })
+  })
+
   describe('the output option', () => {
     it('should set the correct output options', () => {
       const result = getBaseWebpackPartial(input);

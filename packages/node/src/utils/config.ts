@@ -12,6 +12,7 @@ import { readTsConfig } from '@nrwl/workspace';
 import { BuildBuilderOptions } from './types';
 
 export const OUT_FILENAME = 'main.js';
+const OUT_FILENAME_TEMPLATE = '[name].js'
 
 export function getBaseWebpackPartial(
   options: BuildBuilderOptions
@@ -25,12 +26,13 @@ export function getBaseWebpackPartial(
   const webpackConfig: Configuration = {
     entry: {
       main: [options.main],
+      ...options.additionalEntries
     },
     devtool: options.sourceMap ? 'source-map' : false,
     mode: options.optimization ? 'production' : 'development',
     output: {
       path: options.outputPath,
-      filename: OUT_FILENAME,
+      filename: options.additionalEntries ? OUT_FILENAME_TEMPLATE : OUT_FILENAME,
     },
     module: {
       rules: [

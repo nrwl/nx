@@ -27,6 +27,7 @@ export function normalizeBuildOptions<T extends BuildBuilderOptions>(
     webpackConfig: options.webpackConfig
       ? resolve(root, options.webpackConfig)
       : options.webpackConfig,
+    additionalEntries: normalizeAddtionalEntries(root, options.additionalEntries), 
   };
 }
 
@@ -85,4 +86,15 @@ function normalizeFileReplacements(
     replace: resolve(root, fileReplacement.replace),
     with: resolve(root, fileReplacement.with),
   }));
+}
+
+function normalizeAddtionalEntries(
+  root: string,
+  additionalEntries: { [name: string]: string },
+) {
+  const normalizedEntries = {}
+  for (const property in additionalEntries) {
+    normalizedEntries[property] = resolve(root, additionalEntries[property])
+  }
+  return normalizedEntries
 }
