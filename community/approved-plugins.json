@@ -1,5 +1,10 @@
 [
   {
+    "name": "nx-electron",
+    "description": "An Nx plugin for developing Electron applications",
+    "url": "https://github.com/bennymeg/nx-electron"
+  },
+  {
     "name": "@nxtend/ionic-react",
     "description": "An Nx plugin for developing Ionic React applications and libraries",
     "url": "https://github.com/nxtend-team/nxtend/tree/main/packages/ionic-react"
