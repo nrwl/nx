@@ -43,7 +43,7 @@ export interface BuildBuilderOptions {
   sourceRoot?: Path;
   projectRoot?: string;
 
-  additionalEntries?: { [name: string]: string }
+  additionalEntries?: { [name: string]: string };
 }
 
 export interface BuildNodeBuilderOptions extends BuildBuilderOptions {
