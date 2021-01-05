@@ -118,5 +118,10 @@
     "name": "@srleecode/domain",
     "description": "Nx Plugin for allowing operations to occur at the domain level instead of the default library level",
     "url": "https://github.com/srlee309/domain"
+  },
+  {
+    "name": "@jscutlery/semver",
+    "description": "Nx plugin to automate semantic versioning and CHANGELOG generation.",
+    "url": "https://github.com/jscutlery/semver"
   }
 ]
