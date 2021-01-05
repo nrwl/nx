@@ -22,7 +22,7 @@ function withNx(nextConfig = {} as any) {
      *
      * Note: This would be easier if Next.js exposes css-loader and sass-loader on `defaultLoaders`.
      */
-    webpack: (config, { defaultLoaders }) => {
+    webpack: (config, options) => {
       // Include workspace libs in css/sass loaders
       const includes = [join(appRootPath, workspaceLayout().libsDir)];
 
@@ -83,7 +83,7 @@ function withNx(nextConfig = {} as any) {
         nextErrorCssModuleLoader.exclude = includes;
       }
 
-      return userWebpack(config, { defaultLoaders });
+      return userWebpack(config, options);
     },
   };
 }
