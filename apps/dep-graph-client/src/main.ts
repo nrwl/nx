@@ -1,4 +1,4 @@
-import { main } from './dep-graph/dep-graph';
+import { AppComponent } from './app/app';
 import { mediumGraph } from './graphs/medium';
 
 const currentGraph = mediumGraph;
@@ -12,4 +12,4 @@ window.graph = currentGraph;
 window.affected = [];
 window.exclude = [];
 
-setTimeout(() => main());
+setTimeout(() => new AppComponent());

@@ -10,11 +10,27 @@ export declare global {
     focusedProject: string;
     groupByFolder: boolean;
     focusProject: Function;
-    unfocusProject: Function;
     excludeProject: Function;
-    selectAffectedProjects: Function;
-    filterProjects: Function;
-    selectAllProjects: Function;
-    deselectAllProjects: Function;
+  }
+}
+
+declare module 'cytoscape' {
+  interface Core {
+    anywherePanning: Function;
+  }
+
+  interface ElementDefinition {
+    pannable?: boolean;
+  }
+
+  interface NodeSingular {
+    popperRef: Function;
+    pannable: () => boolean;
+  }
+
+  namespace Css {
+    interface EdgeLine {
+      'edge-text-rotation'?: string;
+    }
   }
 }

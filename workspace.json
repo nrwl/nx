@@ -1999,11 +1999,6 @@
             "cypressConfig": "apps/dep-graph-client-e2e/cypress.json",
             "tsConfig": "apps/dep-graph-client-e2e/tsconfig.e2e.json",
             "devServerTarget": "dep-graph-client:serve"
-          },
-          "configurations": {
-            "release": {
-              "devServerTarget": "dep-graph-client:serve:release"
-            }
           }
         },
         "lint": {

@@ -1,3 +1,3 @@
-import { main } from './dep-graph/dep-graph';
+import { AppComponent } from './app/app';
 
-setTimeout(() => main());
+setTimeout(() => new AppComponent());
