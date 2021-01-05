@@ -113,5 +113,10 @@
     "name": "@nxrocks/nx-flutter",
     "description": "Nx Plugin adding first class support for Flutter in your Nx workspace",
     "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-flutter"
+  },
+  {
+    "name": "@jscutlery/semver",
+    "description": "Nx plugin to automate semantic versioning and CHANGELOG generation.",
+    "url": "https://github.com/jscutlery/semver"
   }
 ]
