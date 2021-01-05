@@ -185,6 +185,9 @@ export class Workspaces {
       const schema = JSON.parse(
         stripJsonComments(fs.readFileSync(schemaPath).toString())
       );
+      if (!schema.properties || typeof schema.properties !== 'object') {
+        schema.properties = {};
+      }
       const [modulePath, exportName] = executorConfig.implementation.split('#');
       const module = require(path.join(executorsDir, modulePath));
       const implementation = module[exportName || 'default'];
@@ -210,6 +213,9 @@ export class Workspaces {
       const schema = JSON.parse(
         stripJsonComments(fs.readFileSync(schemaPath).toString())
       );
+      if (!schema.properties || typeof schema.properties !== 'object') {
+        schema.properties = {};
+      }
       generatorConfig.implementation =
         generatorConfig.implementation || generatorConfig.factory;
       const [modulePath, exportName] = generatorConfig.implementation.split(
