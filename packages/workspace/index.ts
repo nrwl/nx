@@ -20,7 +20,11 @@ export {
 export { output } from './src/utils/output';
 export { commandsObject } from './src/command-line/nx-commands';
 export { supportedNxCommands } from './src/command-line/supported-nx-commands';
-export { readWorkspaceJson, readNxJson } from './src/core/file-utils';
+export {
+  readWorkspaceJson,
+  readNxJson,
+  readWorkspaceConfig,
+} from './src/core/file-utils';
 export { NxJson } from './src/core/shared-interfaces';
 export {
   ProjectGraphNode,
