@@ -31,6 +31,7 @@ import { readFileSync } from 'fs';
 import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 import { GenerateOptions } from './generate';
 import * as taoTree from '../shared/tree';
+import { Tree } from '../shared/tree';
 import {
   toNewFormatOrNull,
   toOldFormatOrNull,
@@ -43,7 +44,7 @@ import { dirname, extname, join, resolve } from 'path';
 import * as stripJsonComments from 'strip-json-comments';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 import { Observable, of } from 'rxjs';
-import { concatMap, map, switchMap } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
 import { NX_ERROR, NX_PREFIX } from '../shared/logger';
 
 export async function run(root: string, opts: RunOptions, verbose: boolean) {
@@ -98,64 +99,28 @@ function getCollection(workflow: any, name: string) {
   return collection;
 }
 
-function convertEventTypeToHandleMultipleConfigNames(
-  host: any,
-  eventPath: string,
-  content: Buffer | never
-) {
-  const actualConfigName = host.exists('/workspace.json')
-    ? 'workspace.json'
-    : 'angular.json';
-  const isWorkspaceConfig =
-    eventPath === 'angular.json' || eventPath === 'workspace.json';
-  if (isWorkspaceConfig) {
-    let isNewFormat = true;
-    try {
-      isNewFormat =
-        JSON.parse(host.read(actualConfigName).toString()).version === 2;
-    } catch (e) {}
-
-    if (content && isNewFormat) {
-      const formatted = toNewFormatOrNull(JSON.parse(content.toString()));
-      if (formatted) {
-        return {
-          eventPath: actualConfigName,
-          content: Buffer.from(JSON.stringify(formatted, null, 2)),
-        };
-      } else {
-        return { eventPath: actualConfigName, content: content };
-      }
-    } else {
-      return { eventPath: actualConfigName, content: content };
-    }
-  } else {
-    return { eventPath, content };
-  }
-}
-
-function createRecorder(
-  host: any,
+async function createRecorder(
+  host: NxScopedHost,
   record: {
     loggingQueue: string[];
     error: boolean;
   },
   logger: logging.Logger
 ) {
+  const actualConfigName = await host.workspaceConfigName();
   return (event: DryRunEvent) => {
-    const eventPath = event.path.startsWith('/')
+    let eventPath = event.path.startsWith('/')
       ? event.path.substr(1)
       : event.path;
 
-    const r = convertEventTypeToHandleMultipleConfigNames(
-      host,
-      eventPath,
-      (event as any).content
-    );
+    if (eventPath === 'workspace.json' || eventPath === 'angular.json') {
+      eventPath = actualConfigName;
+    }
 
     if (event.kind === 'error') {
       record.error = true;
       logger.warn(
-        `ERROR! ${r.eventPath} ${
+        `ERROR! ${eventPath} ${
           event.description == 'alreadyExist'
             ? 'already exists'
             : 'does not exist.'
@@ -163,24 +128,24 @@ function createRecorder(
       );
     } else if (event.kind === 'update') {
       record.loggingQueue.push(
-        tags.oneLine`${chalk.white('UPDATE')} ${r.eventPath}`
+        tags.oneLine`${chalk.white('UPDATE')} ${eventPath}`
       );
     } else if (event.kind === 'create') {
       record.loggingQueue.push(
-        tags.oneLine`${chalk.green('CREATE')} ${r.eventPath}`
+        tags.oneLine`${chalk.green('CREATE')} ${eventPath}`
       );
     } else if (event.kind === 'delete') {
-      record.loggingQueue.push(`${chalk.yellow('DELETE')} ${r.eventPath}`);
+      record.loggingQueue.push(`${chalk.yellow('DELETE')} ${eventPath}`);
     } else if (event.kind === 'rename') {
       record.loggingQueue.push(
-        `${chalk.blue('RENAME')} ${r.eventPath} => ${event.to}`
+        `${chalk.blue('RENAME')} ${eventPath} => ${event.to}`
       );
     }
   };
 }
 
 async function runSchematic(
-  host: any,
+  host: NxScopedHost,
   root: string,
   workflow: NodeWorkflow,
   logger: logging.Logger,
@@ -193,7 +158,9 @@ async function runSchematic(
   recorder: any = null
 ): Promise<{ status: number; loggingQueue: string[] }> {
   const record = { loggingQueue: [] as string[], error: false };
-  workflow.reporter.subscribe(recorder || createRecorder(host, record, logger));
+  workflow.reporter.subscribe(
+    recorder || (await createRecorder(host, record, logger))
+  );
 
   try {
     await workflow
@@ -382,6 +349,17 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     );
   }
 
+  workspaceConfigName(): Promise<string> {
+    return super
+      .exists('/angular.json' as any)
+      .pipe(
+        map((hasAngularJson) =>
+          hasAngularJson ? 'angular.json' : 'workspace.json'
+        )
+      )
+      .toPromise();
+  }
+
   private context(
     path: string
   ): Observable<{
@@ -552,11 +530,46 @@ export async function runMigration(
     .toPromise();
 }
 
+function convertEventTypeToHandleMultipleConfigNames(
+  host: Tree,
+  eventPath: string,
+  content: Buffer | never
+) {
+  const actualConfigName = host.exists('/workspace.json')
+    ? 'workspace.json'
+    : 'angular.json';
+  const isWorkspaceConfig =
+    eventPath === 'angular.json' || eventPath === 'workspace.json';
+  if (isWorkspaceConfig) {
+    let isNewFormat = true;
+    try {
+      isNewFormat =
+        JSON.parse(host.read(actualConfigName).toString()).version === 2;
+    } catch (e) {}
+
+    if (content && isNewFormat) {
+      const formatted = toNewFormatOrNull(JSON.parse(content.toString()));
+      if (formatted) {
+        return {
+          eventPath: actualConfigName,
+          content: Buffer.from(JSON.stringify(formatted, null, 2)),
+        };
+      } else {
+        return { eventPath: actualConfigName, content: content };
+      }
+    } else {
+      return { eventPath: actualConfigName, content: content };
+    }
+  } else {
+    return { eventPath, content };
+  }
+}
+
 export function wrapAngularDevkitSchematic(
   collectionName: string,
   generatorName: string
 ): any {
-  return async (host: any, generatorOptions: { [k: string]: any }) => {
+  return async (host: Tree, generatorOptions: { [k: string]: any }) => {
     const emptyLogger = {
       log: (e) => {},
       info: (e) => {},
