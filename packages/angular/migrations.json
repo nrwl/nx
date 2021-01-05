@@ -55,11 +55,6 @@
       "version": "11.0.0-beta.13",
       "description": "Update builder configurations and dependencies",
       "factory": "./src/migrations/update-11-0-0/update-builders-config"
-    },
-    "update-11-1-0": {
-      "version": "11.1.0-beta.0",
-      "description": "Update @angular-eslint dependencies to v1",
-      "factory": "./src/migrations/update-11-1-0/update-11-1-0"
     }
   },
   "packageJsonUpdates": {
