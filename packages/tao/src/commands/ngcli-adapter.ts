@@ -30,8 +30,7 @@ import * as fs from 'fs';
 import { readFileSync } from 'fs';
 import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 import { GenerateOptions } from './generate';
-import * as taoTree from '../shared/tree';
-import { Tree } from '../shared/tree';
+import { FsTree, Tree } from '../shared/tree';
 import {
   toNewFormatOrNull,
   toOldFormatOrNull,
@@ -605,7 +604,7 @@ export function wrapAngularDevkitSchematic(
     const fsHost = new NxScopedHost(normalize(host.root));
 
     await Promise.all(
-      (host as taoTree.FsTree).listChanges().map(async (c) => {
+      (host as FsTree).listChanges().map(async (c) => {
         if (c.type === 'CREATE' || c.type === 'UPDATE') {
           await fsHost.write(c.path as any, c.content).toPromise();
         } else {

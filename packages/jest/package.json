@@ -31,9 +31,6 @@
     "requirements": {},
     "migrations": "./migrations.json"
   },
-  "peerDependencies": {
-    "@nrwl/workspace": "*"
-  },
   "dependencies": {
     "@nrwl/devkit": "*",
     "@angular-devkit/architect": "~0.1100.1",

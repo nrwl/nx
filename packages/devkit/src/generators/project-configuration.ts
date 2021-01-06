@@ -4,7 +4,7 @@ import {
   toNewFormat,
   WorkspaceConfiguration,
 } from '@nrwl/tao/src/shared/workspace';
-import { readJson } from '../utils/read-json';
+import { readJson } from '../utils/json';
 import {
   NxJsonConfiguration,
   NxJsonProjectConfiguration,
@@ -62,7 +62,7 @@ export function readProjectConfiguration(
 ): ProjectConfiguration & NxJsonProjectConfiguration {
   return {
     ...readWorkspaceSection(host, projectName),
-    nxJsonSection: readNxJsonSection(host, projectName),
+    ...readNxJsonSection(host, projectName),
   };
 }
 
@@ -72,13 +72,20 @@ function readWorkspaceSection(host: Tree, projectName: string) {
   const newFormat = toNewFormat(workspaceJson);
 
   if (!newFormat.projects[projectName]) {
-    throw new Error(`Cannot find Project '${projectName}'`);
+    throw new Error(
+      `Cannot find configuration for '${projectName}' in ${path}.`
+    );
   }
-  return newFormat.projects[projectName];
+  return newFormat.projects[projectName] as ProjectConfiguration;
 }
 
 function readNxJsonSection(host: Tree, projectName: string) {
   const nxJson = readJson<NxJsonConfiguration>(host, 'nx.json');
+  if (!nxJson.projects[projectName]) {
+    throw new Error(
+      `Cannot find configuration for '${projectName}' in nx.json`
+    );
+  }
   return nxJson.projects[projectName];
 }
 
@@ -88,19 +95,15 @@ function setProjectConfiguration(
   projectConfiguration: ProjectConfiguration & NxJsonProjectConfiguration,
   mode: 'create' | 'update'
 ) {
-  addProjectToWorkspaceJson(
-    host,
-    projectName,
-    {
-      ...projectConfiguration,
-      tags: undefined,
-      implicitDependencies: undefined,
-    } as any,
-    mode
-  );
+  const {
+    tags,
+    implicitDependencies,
+    ...workspaceConfiguration
+  } = projectConfiguration;
+  addProjectToWorkspaceJson(host, projectName, workspaceConfiguration, mode);
   addProjectToNxJson(host, projectName, {
-    tags: projectConfiguration.tags,
-    implicitDependencies: projectConfiguration.implicitDependencies,
+    tags,
+    implicitDependencies,
   });
 }
 

@@ -236,7 +236,7 @@ export async function generate(
       if (!opts.dryRun) {
         flushChanges(root, changes);
         if (task) {
-          await task(host);
+          await task();
         }
       } else {
         logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);

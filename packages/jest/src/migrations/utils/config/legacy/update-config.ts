@@ -1,4 +1,5 @@
-import { Tree, applyChangesToString, ChangeType } from '@nrwl/devkit';
+import { Tree } from '@angular-devkit/schematics';
+import { insert, RemoveChange } from '@nrwl/workspace';
 import {
   addOrUpdateProperty,
   jestConfigObjectAst,
@@ -22,15 +23,15 @@ export function addPropertyToJestConfig(
     throw new Error(`Cannot find '${path}' in your workspace.`);
   }
   try {
-    const configObject = jestConfigObjectAst(host.read(path).toString('utf-8'));
+    const configObject = jestConfigObjectAst(host, path);
     const properties = propertyName.split('.');
-    addOrUpdateProperty(
-      host,
+    const changes = addOrUpdateProperty(
       configObject,
       properties,
       JSON.stringify(value),
       path
     );
+    insert(host, path, changes);
   } catch (e) {
     console.warn(
       `Could not automatically add the following property to ${path}:`
@@ -56,7 +57,7 @@ export function removePropertyFromJestConfig(
     throw new Error(`Cannot find '${path}' in your workspace.`);
   }
   try {
-    const configObject = jestConfigObjectAst(host.read(path).toString('utf-8'));
+    const configObject = jestConfigObjectAst(host, path);
     const propertyAssignment = removeProperty(
       configObject,
       propertyName.split('.')
@@ -65,16 +66,13 @@ export function removePropertyFromJestConfig(
     if (propertyAssignment) {
       const file = host.read(path).toString('utf-8');
       const commaNeeded = file[propertyAssignment.end] === ',';
-      const updatedFile = applyChangesToString(file, [
-        {
-          type: ChangeType.Delete,
-          start: propertyAssignment.getStart(),
-          length: `${propertyAssignment.getText()}${commaNeeded ? ',' : ''}`
-            .length,
-        },
+      insert(host, path, [
+        new RemoveChange(
+          path,
+          propertyAssignment.getStart(),
+          `${propertyAssignment.getText()}${commaNeeded ? ',' : ''}`
+        ),
       ]);
-      host.write(path, updatedFile);
-      return;
     }
   } catch (e) {
     console.warn(

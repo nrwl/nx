@@ -14,8 +14,8 @@ import {
 import {
   addPropertyToJestConfig,
   removePropertyFromJestConfig,
-} from '../../utils/config/update-config';
-import { jestConfigObjectAst } from '../../utils/config/functions';
+} from '../utils/config/legacy/update-config';
+import { jestConfigObjectAst } from '../utils/config/legacy/functions';
 import { offsetFromRoot } from '@nrwl/devkit';
 
 function updateRootJestConfig(): Rule {

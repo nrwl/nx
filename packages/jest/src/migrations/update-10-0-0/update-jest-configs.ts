@@ -11,7 +11,7 @@ import {
   serializeJson,
   updateWorkspace,
 } from '@nrwl/workspace';
-import { addPropertyToJestConfig } from '../../utils/config/update-config';
+import { addPropertyToJestConfig } from '../utils/config/legacy/update-config';
 import { getJestObject } from './require-jest-config';
 import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
 

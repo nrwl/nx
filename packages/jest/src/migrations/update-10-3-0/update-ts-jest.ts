@@ -13,7 +13,7 @@ import { join } from 'path';
 import {
   addPropertyToJestConfig,
   removePropertyFromJestConfig,
-} from '../../..';
+} from '../utils/config/legacy/update-config';
 import { getJestObject } from '../update-10-0-0/require-jest-config';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { appRootPath } from '@nrwl/workspace/src/utils/app-root';

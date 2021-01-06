@@ -1,23 +1,19 @@
-import { Tree } from '@angular-devkit/schematics';
-import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { callRule, runSchematic } from '../../utils/testing';
-
-import { JestInitSchema } from './schema';
+import { readJson, writeJson, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { jestInitGenerator } from './init';
 
 describe('jest', () => {
-  let appTree: Tree;
+  let tree: Tree;
 
   beforeEach(() => {
-    appTree = Tree.empty();
-    appTree = createEmptyWorkspace(appTree);
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should generate files', async () => {
-    const resultTree = await runSchematic<JestInitSchema>('init', {}, appTree);
+    jestInitGenerator(tree, {});
 
-    expect(resultTree.exists('jest.config.js')).toBeTruthy();
-    expect(resultTree.readContent('jest.config.js')).toMatchInlineSnapshot(`
+    expect(tree.exists('jest.config.js')).toBeTruthy();
+    expect(tree.read('jest.config.js').toString()).toMatchInlineSnapshot(`
       "module.exports = {
       projects: []
       };"
@@ -25,14 +21,14 @@ describe('jest', () => {
   });
 
   it('should not override existing files', async () => {
-    appTree.create('jest.config.js', `test`);
-    const resultTree = await runSchematic('ng-add', {}, appTree);
-    expect(resultTree.read('jest.config.js').toString()).toEqual('test');
+    tree.write('jest.config.js', `test`);
+    jestInitGenerator(tree, {});
+    expect(tree.read('jest.config.js').toString()).toEqual('test');
   });
 
   it('should add dependencies', async () => {
-    const resultTree = await runSchematic<JestInitSchema>('init', {}, appTree);
-    const packageJson = readJsonInTree(resultTree, 'package.json');
+    jestInitGenerator(tree, {});
+    const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies.jest).toBeDefined();
     expect(packageJson.devDependencies['@nrwl/jest']).toBeDefined();
     expect(packageJson.devDependencies['@types/jest']).toBeDefined();
@@ -41,12 +37,8 @@ describe('jest', () => {
 
   describe('--babelJest', () => {
     it('should add babel dependencies', async () => {
-      const resultTree = await runSchematic<JestInitSchema>(
-        'init',
-        { babelJest: true },
-        appTree
-      );
-      const packageJson = readJsonInTree(resultTree, 'package.json');
+      jestInitGenerator(tree, { babelJest: true });
+      const packageJson = readJson(tree, 'package.json');
       expect(packageJson.devDependencies['@babel/core']).toBeDefined();
       expect(packageJson.devDependencies['@babel/preset-env']).toBeDefined();
       expect(
@@ -59,29 +51,19 @@ describe('jest', () => {
 
   describe('adds jest extension', () => {
     beforeEach(async () => {
-      appTree = await callRule(
-        updateJsonInTree('.vscode/extensions.json', () => ({
-          recommendations: [
-            'nrwl.angular-console',
-            'angular.ng-template',
-            'ms-vscode.vscode-typescript-tslint-plugin',
-            'esbenp.prettier-vscode',
-          ],
-        })),
-        appTree
-      );
+      writeJson(tree, '.vscode/extensions.json', {
+        recommendations: [
+          'nrwl.angular-console',
+          'angular.ng-template',
+          'ms-vscode.vscode-typescript-tslint-plugin',
+          'esbenp.prettier-vscode',
+        ],
+      });
     });
 
     it('should add the jest extension to the recommended property', async () => {
-      const resultTree = await runSchematic<JestInitSchema>(
-        'init',
-        {},
-        appTree
-      );
-      const extensionsJson = readJsonInTree(
-        resultTree,
-        '.vscode/extensions.json'
-      );
+      jestInitGenerator(tree, {});
+      const extensionsJson = readJson(tree, '.vscode/extensions.json');
       expect(extensionsJson).toMatchInlineSnapshot(`
         Object {
           "recommendations": Array [
