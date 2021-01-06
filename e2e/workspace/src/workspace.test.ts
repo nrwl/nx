@@ -479,18 +479,17 @@ describe('print-affected', () => {
       ).trim()
     );
 
-    expect(resWithTarget.tasks).toEqual([
-      {
-        id: `${myapp}:test`,
-        overrides: {},
-        target: {
-          project: myapp,
-          target: 'test',
-        },
-        command: `npm run nx -- test ${myapp}`,
-        outputs: [`coverage/apps/${myapp}`],
+    expect(resWithTarget.tasks[0]).toMatchObject({
+      id: `${myapp}:test`,
+      overrides: {},
+      target: {
+        project: myapp,
+        target: 'test',
       },
-    ]);
+      command: `npm run nx -- test ${myapp}`,
+      outputs: [`coverage/apps/${myapp}`],
+    });
+    expect(resWithTarget.tasks[0].hash).toBeDefined();
     compareTwoArrays(resWithTarget.projects, [`${myapp}-e2e`, myapp]);
 
     const resWithDeps = JSON.parse(
@@ -498,28 +497,31 @@ describe('print-affected', () => {
         `npm run nx print-affected --silent -- --files=apps/${myapp}/src/main.tsx --target=build --with-deps`
       )
     );
-    expect(resWithDeps.tasks).toEqual([
-      {
-        id: `${myapp}:build`,
-        overrides: {},
-        target: {
-          project: myapp,
-          target: 'build',
-        },
-        command: `npm run nx -- build ${myapp}`,
-        outputs: [`dist/apps/${myapp}`],
+
+    expect(resWithDeps.tasks[0]).toMatchObject({
+      id: `${myapp}:build`,
+      overrides: {},
+      target: {
+        project: myapp,
+        target: 'build',
       },
-      {
-        id: `${mypublishablelib}:build`,
-        overrides: {},
-        target: {
-          project: mypublishablelib,
-          target: 'build',
-        },
-        command: `npm run nx -- build ${mypublishablelib}`,
-        outputs: [`dist/libs/${mypublishablelib}`],
+      command: `npm run nx -- build ${myapp}`,
+      outputs: [`dist/apps/${myapp}`],
+    });
+    expect(resWithDeps.tasks[0].hash).toBeDefined();
+
+    expect(resWithDeps.tasks[1]).toMatchObject({
+      id: `${mypublishablelib}:build`,
+      overrides: {},
+      target: {
+        project: mypublishablelib,
+        target: 'build',
       },
-    ]);
+      command: `npm run nx -- build ${mypublishablelib}`,
+      outputs: [`dist/libs/${mypublishablelib}`],
+    });
+    expect(resWithDeps.tasks[1].hash).toBeDefined();
+
     compareTwoArrays(resWithDeps.projects, [
       mylib,
       mypublishablelib,
