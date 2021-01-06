@@ -71,7 +71,7 @@
     "yargs": "15.4.1",
     "yargs-parser": "20.0.0",
     "chalk": "4.1.0",
-    "axios": "0.19.2",
+    "axios": "0.21.1",
     "flat": "^5.0.2",
     "lodash": "^4.17.20",
     "minimatch": "3.0.4",
