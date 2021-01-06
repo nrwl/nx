@@ -137,7 +137,7 @@
     "core-js": "^3.6.5",
     "cosmiconfig": "^4.0.0",
     "css-loader": "3.4.2",
-    "cypress": "^5.5.0",
+    "cypress": "^6.0.1",
     "cytoscape": "^3.15.2",
     "cytoscape-anywhere-panning": "^0.5.5",
     "cytoscape-dagre": "^2.2.2",
