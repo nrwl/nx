@@ -5,8 +5,12 @@ import {
   renameSync,
   statSync,
   writeFileSync,
-} from 'fs';
-import { ensureDirSync, createFileSync } from 'fs-extra';
+  ensureDirSync,
+  createFileSync,
+  moveSync,
+  copySync,
+  removeSync,
+} from 'fs-extra';
 import * as path from 'path';
 
 interface RunCmdOpts {
@@ -90,9 +94,9 @@ export function runCreateWorkspace(
   return create ? create.toString() : '';
 }
 
-export function yarnAdd(pkg: string, projName?: string) {
+export function packageInstall(pkg: string, projName?: string) {
   const cwd = projName ? `./tmp/${currentCli()}/${projName}` : tmpProjPath();
-  const install = execSync(`yarn add ${pkg}`, {
+  const install = execSync(`npm i ${pkg}`, {
     cwd,
     // ...{ stdio: ['pipe', 'pipe', 'pipe'] },
     ...{ stdio: [0, 1, 2] },
@@ -126,11 +130,11 @@ export function newProject(): void {
         `@nrwl/nx-plugin`,
         `@nrwl/eslint-plugin-nx`,
       ];
-      yarnAdd(packages.join(` `), 'proj');
-      execSync(`mv ./tmp/${currentCli()}/proj ${tmpBackupProjPath()}`);
+      packageInstall(packages.join(` `), 'proj');
+      moveSync(`./tmp/${currentCli()}/proj`, `${tmpBackupProjPath()}`);
     }
     projName = uniq('proj');
-    execSync(`cp -a ${tmpBackupProjPath()} ${tmpProjPath()}`);
+    copySync(`${tmpBackupProjPath()}`, `${tmpProjPath()}`);
   } catch (e) {
     console.log(`Failed to set up project for e2e tests.`);
     console.log(e.message);
@@ -171,7 +175,7 @@ export function runCommandUntil(
   command: string,
   criteria: (output: string) => boolean
 ) {
-  const p = exec(`./node_modules/.bin/nx ${command}`, {
+  const p = exec(`npm run nx --scripts-prepend-node-path -- ${command}`, {
     cwd: tmpProjPath(),
     env: { ...process.env, FORCE_COLOR: 'false' },
   });
@@ -211,7 +215,10 @@ export function runCLIAsync(
     env: process.env,
   }
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
-  return runCommandAsync(`./node_modules/.bin/nx ${command}`, opts);
+  return runCommandAsync(
+    `npm run nx --scripts-prepend-node-path -- ${command}`,
+    opts
+  );
 }
 
 export function runNgAdd(
@@ -223,7 +230,7 @@ export function runNgAdd(
   }
 ): string {
   try {
-    yarnAdd('@nrwl/workspace');
+    packageInstall('@nrwl/workspace');
     return execSync(
       `./node_modules/.bin/ng g @nrwl/workspace:ng-add ${command}`,
       {
@@ -254,7 +261,7 @@ export function runCLI(
   }
 ): string {
   try {
-    let r = execSync(`./node_modules/.bin/nx ${command}`, {
+    let r = execSync(`npm run nx --scripts-prepend-node-path -- ${command}`, {
       cwd: opts.cwd || tmpProjPath(),
       env: opts.env as any,
     }).toString();
@@ -399,7 +406,7 @@ export function readFile(f: string) {
 }
 
 export function rmDist() {
-  execSync(`rm -rf ${tmpProjPath()}/dist`);
+  removeSync(`${tmpProjPath()}/dist`);
 }
 
 export function directoryExists(filePath: string): boolean {

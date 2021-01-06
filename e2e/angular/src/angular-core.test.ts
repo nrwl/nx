@@ -1,3 +1,4 @@
+import * as path from 'path';
 import {
   checkFilesExist,
   expectTestsPass,
@@ -157,12 +158,14 @@ describe('Angular Package', () => {
 
     const appLintStdOut = runCLI(`lint ${myapp}`, { silenceError: true });
 
-    expect(appLintStdOut).toContain(`apps/${myapp}/src/app/app.component.html`);
+    expect(appLintStdOut).toContain(
+      path.normalize(`apps/${myapp}/src/app/app.component.html`)
+    );
     expect(appLintStdOut).toContain(
       `1:6  error  Invalid binding syntax. Use [(expr)] instead  @angular-eslint/template/banana-in-box`
     );
     expect(appLintStdOut).toContain(
-      `apps/${myapp}/src/app/inline-template.component.ts`
+      path.normalize(`apps/${myapp}/src/app/inline-template.component.ts`)
     );
     expect(appLintStdOut).toContain(
       `5:21  error  The selector should be prefixed by one of the prefixes: 'proj' (https://angular.io/guide/styleguide#style-02-07)  @angular-eslint/component-selector`
@@ -189,13 +192,13 @@ describe('Angular Package', () => {
     const libLintStdOut = runCLI(`lint ${mylib}`, { silenceError: true });
 
     expect(libLintStdOut).toContain(
-      `libs/${mylib}/src/lib/some.component.html`
+      path.normalize(`libs/${mylib}/src/lib/some.component.html`)
     );
     expect(libLintStdOut).toContain(
       `1:6  error  Invalid binding syntax. Use [(expr)] instead  @angular-eslint/template/banana-in-box`
     );
     expect(libLintStdOut).toContain(
-      `libs/${mylib}/src/lib/inline-template.component.ts`
+      path.normalize(`libs/${mylib}/src/lib/inline-template.component.ts`)
     );
     expect(libLintStdOut).toContain(
       `5:21  error  The selector should be prefixed by one of the prefixes: 'proj' (https://angular.io/guide/styleguide#style-02-07)  @angular-eslint/component-selector`

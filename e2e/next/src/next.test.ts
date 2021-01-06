@@ -11,8 +11,9 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Next.js Applications', () => {
+  beforeEach(() => newProject());
+
   it('should be able to serve with a proxy configuration', async () => {
-    newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/next:app ${appName}`);
@@ -71,7 +72,6 @@ describe('Next.js Applications', () => {
   }, 120000);
 
   it('should be able to consume a react lib', async () => {
-    newProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -108,7 +108,6 @@ describe('Next.js Applications', () => {
   }, 120000);
 
   it('should be able to dynamically load a lib', async () => {
-    newProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -136,7 +135,6 @@ describe('Next.js Applications', () => {
   }, 120000);
 
   it('should compile when using a workspace and react lib written in TypeScript', async () => {
-    newProject();
     const appName = uniq('app');
     const tsLibName = uniq('tslib');
     const tsxLibName = uniq('tsxlib');
@@ -282,7 +280,6 @@ describe('Next.js Applications', () => {
   }, 120000);
 
   it('should support --js flag', async () => {
-    newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive --js`);
@@ -294,7 +291,7 @@ describe('Next.js Applications', () => {
       checkLint: true,
       checkE2E: true,
     });
-  }, 120000);
+  }, 180000);
 });
 
 async function checkApp(

@@ -12,7 +12,6 @@ import { mkdtempSync, statSync, copyFileSync, constants } from 'fs';
 
 import { buildDevStandalone } from '@storybook/core/dist/server/build-dev';
 
-import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { getRoot } from '../../utils/root';
 
 export interface StorybookConfig extends JsonObject {
@@ -31,7 +30,7 @@ export interface StorybookBuilderOptions extends JsonObject {
   ssl?: boolean;
   sslCert?: string;
   sslKey?: string;
-  staticDir?: number[];
+  staticDir?: string[];
   watch?: boolean;
   docsMode?: boolean;
 }

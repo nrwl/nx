@@ -35,4 +35,4 @@ packages:
 
 # log settings
 logs:
-  - { type: stdout, format: pretty, level: http }
+  - { type: stdout, format: pretty, level: error }

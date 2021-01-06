@@ -128,7 +128,7 @@ export class Workspaces {
   constructor(private root: string) {}
 
   relativeCwd(cwd: string) {
-    let relativeCwd = cwd.split(this.root)[1];
+    let relativeCwd = cwd.replace(/\\/g, '/').split(this.root)[1];
     if (relativeCwd) {
       return relativeCwd.startsWith('/')
         ? relativeCwd.substring(1)

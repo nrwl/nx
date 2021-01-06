@@ -418,9 +418,15 @@ function createApp(tmpDir: string, name: string, parsedArgs: WorkspaceArgs) {
   const command = `new ${name} ${args} --collection=@nrwl/workspace`;
   console.log(command);
 
-  const nxWorkspaceRoot = process.cwd().replace(/\\/g, '/');
+  let nxWorkspaceRoot = process.cwd().replace(/\\/g, '/');
+  if (process.platform === 'win32') {
+    nxWorkspaceRoot = `\\"${nxWorkspaceRoot}\\"`;
+  } else {
+    nxWorkspaceRoot = `"${nxWorkspaceRoot}"`;
+  }
+
   execSync(
-    `${pmc.exec} tao ${command}/collection.json --cli=${cli} --nxWorkspaceRoot="${nxWorkspaceRoot}"`,
+    `${pmc.exec} tao ${command}/collection.json --cli=${cli} --nxWorkspaceRoot=${nxWorkspaceRoot}`,
     {
       stdio: [0, 1, 2],
       cwd: tmpDir,
