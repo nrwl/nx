@@ -1,84 +1,52 @@
-# Javascript Node CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-javascript/ for more details
-#
 version: 2.1
 
+# Variables
+var_1: &working_directory ~/repo
+
 executors:
-  default:
-    working_directory: ~/repo
-    environment:
-      # install Cypress in Linux-like cache folder
-      CYPRESS_CACHE_FOLDER: '~/.cache/Cypress'
+  linux:
+    working_directory: *working_directory
     docker:
-      - image: circleci/node:12-browsers
+      - image: cimg/node:12.20-browsers
+
+  windows:
+    working_directory: *working_directory
+    resource_class: windows.medium
+    machine:
+      image: windows-server-2019-vs2019:stable
+    shell: cmd.exe
 
 commands:
-  install_rsync:
-    description: 'Install Rsync'
+  setup:
+    parameters:
+      os:
+        type: string
     steps:
-      - run: sudo apt install rsync
-  yarn_install:
-    description: 'Install Dependencies'
-    steps:
-      - run: yarn install --frozen-lockfile --non-interactive
-      - run: ./node_modules/.bin/cypress verify
+      - checkout
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - nrwl-nx-yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}
+      - run:
+          name: Install dependencies
+          command: yarn install --frozen-lockfile --non-interactive --cache-folder ~/.cache/yarn
       - save_cache:
-          key: nrwl-nx-node12-yarn-key-{{ checksum "yarn.lock" }}
+          name: Save Yarn Package Cache
+          # Windows needs its own cache key because binaries in node_modules are different.
+          key: nrwl-nx-yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
-      - save_cache:
-          key: nrwl-nx-node12-cypress-{{ checksum "yarn.lock" }}
-          paths:
-            - ~/.cache/Cypress
-  restore_cypress_cache:
-    description: 'Restore Cypress Cache'
-    steps:
-      - restore_cache:
-          keys:
-            - nrwl-nx-node12-cypress-{{ checksum "yarn.lock" }}
-            # fallback to using the latest cache if no exact match is found
-            - nrwl-nx-node12-cypress-
-  restore_yarn_cache:
-    description: 'Restore Cached Dependencies'
-    steps:
-      - restore_cache:
-          keys:
-            - nrwl-nx-node12-yarn-key-{{ checksum "yarn.lock" }}
-            # fallback to using the latest cache if no exact match is found
-            - nrwl-nx-node12-yarn-key-
-  setup:
-    description: 'Setup Executor'
-    steps:
-      - checkout
-      - install_rsync
-      - attach_workspace:
-          # Must be absolute path or relative path from working_directory
-          at: ..
 
 jobs:
-  install:
-    executor: default
-    steps:
-      - checkout
-      - restore_yarn_cache
-      - restore_cypress_cache
-      - yarn_install
-      - persist_to_workspace:
-          # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is
-          # taken to be the root directory of the workspace.
-          root: ..
-          # Must be relative path from root
-          paths:
-            - repo/node_modules
-            - .cache/Cypress
   checks-and-unit-tests:
-    executor: default
+    parameters:
+      os:
+        type: string
+        default: 'linux'
+    executor: << parameters.os >>
     steps:
-      - setup
-      - run:
-          name: Run Unit Tests
-          command: yarn test
+      - setup:
+          os: << parameters.os >>
       - run:
           name: Check Documentation
           command: yarn documentation
@@ -97,99 +65,47 @@ jobs:
       - run:
           name: Check Package dependencies
           command: yarn depcheck
-  e2e-1:
-    executor: default
+  e2e:
+    parameters:
+      os:
+        type: string
+      packages:
+        type: string
+      cli:
+        type: string
+        default: ''
+    executor: << parameters.os >>
     steps:
-      - setup
+      - setup:
+          os: << parameters.os >>
       - run:
-          name: Tests Part 1
-          command: yarn e2e-ci 1
+          name: Run E2E tests - << parameters.packages >>
+          command: yarn e2e << parameters.packages >> affected
           no_output_timeout: 30m
-  e2e-2:
-    executor: default
-    steps:
-      - setup
-      - run:
-          name: Tests Part 2
-          command: yarn e2e-ci 2
-          no_output_timeout: 30m
-  e2e-3:
-    executor: default
-    steps:
-      - setup
-      - run:
-          name: Tests Part 3
-          command: yarn e2e-ci 3
-          no_output_timeout: 30m
-  e2e-4:
-    executor: default
-    steps:
-      - setup
-      - run:
-          name: Tests Part 4
-          command: yarn e2e-ci 4
-          no_output_timeout: 30m
-  e2e-5:
-    executor: default
-    steps:
-      - setup
-      - run:
-          name: Tests Part 5
-          command: yarn e2e-ci 5
-          no_output_timeout: 30m
-  e2e-6:
-    executor: default
-    steps:
-      - setup
-      - run:
-          name: Tests Part 6
-          command: yarn e2e-ci 6
-          no_output_timeout: 30m
-  e2e-7:
-    executor: default
-    steps:
-      - setup
-      - run:
-          name: Tests Part 7
-          command: yarn e2e-ci 7
-          no_output_timeout: 30m
-  e2e-8:
-    executor: default
-    steps:
-      - setup
-      - run:
-          name: Tests Part 8
-          command: yarn e2e-ci 8
-          no_output_timeout: 30m
+    environment:
+      SELECTED_CLI: << parameters.cli >>
+
 workflows:
-  version: 2.1
-  default_workflow:
+  build:
     jobs:
-      - install
-      - checks-and-unit-tests:
-          requires:
-            - install
-      - e2e-1:
-          requires:
-            - install
-      - e2e-2:
-          requires:
-            - install
-      - e2e-3:
-          requires:
-            - install
-      - e2e-4:
-          requires:
-            - install
-      - e2e-5:
-          requires:
-            - install
-      - e2e-6:
-          requires:
-            - install
-      - e2e-7:
-          requires:
-            - install
-      - e2e-8:
-          requires:
-            - install
+      - checks-and-unit-tests
+      - e2e:
+          matrix:
+            parameters:
+              os: ['linux', 'windows']
+              packages:
+                [
+                  'e2e-workspace',
+                  'e2e-cli,e2e-nx-plugin,dep-graph-client-e2e',
+                  'e2e-cypress,e2e-jest',
+                  'e2e-react',
+                  'e2e-next',
+                  'e2e-node',
+                  'e2e-web,e2e-linter,e2e-storybook',
+                ]
+      - e2e:
+          matrix:
+            parameters:
+              os: ['linux', 'windows']
+              packages: ['e2e-angular']
+          cli: 'angular'

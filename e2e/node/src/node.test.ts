@@ -1,8 +1,7 @@
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { execSync, fork, spawn } from 'child_process';
+import { exec, execSync } from 'child_process';
 import * as http from 'http';
 import * as treeKill from 'tree-kill';
-import * as ts from 'typescript';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
@@ -84,34 +83,29 @@ describe('Node Applications', () => {
       `dist/apps/${nodeapp}/main.js.map`
     );
 
-    const server = fork(`./dist/apps/${nodeapp}/main.js`, [], {
+    const server = exec(`node ./dist/apps/${nodeapp}/main.js`, {
       cwd: tmpProjPath(),
-      silent: true,
     });
-    expect(server).toBeTruthy();
     await new Promise((resolve) => {
-      server.stdout.once('data', async (data) => {
+      server.stdout.on('data', async (data) => {
         expect(data.toString()).toContain('Listening at http://localhost:3333');
         const result = await getData();
 
         expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
         treeKill(server.pid, 'SIGTERM', (err) => {
           expect(err).toBeFalsy();
-          resolve();
+          resolve(true);
         });
       });
     });
-    const process = spawn(
-      'node',
-      ['./node_modules/.bin/nx', 'serve', nodeapp],
-      {
-        cwd: tmpProjPath(),
-      }
-    );
+
+    const process = exec(`npm run nx serve ${nodeapp}`, {
+      cwd: tmpProjPath(),
+    });
     let collectedOutput = '';
     process.stdout.on('data', async (data: Buffer) => {
       collectedOutput += data.toString();
-      if (!data.toString().includes('Listening at http://localhost:3333')) {
+      if (!collectedOutput.includes('Listening at http://localhost:3333')) {
         return;
       }
 
@@ -146,9 +140,8 @@ describe('Node Applications', () => {
       `dist/apps/${nestapp}/main.js.map`
     );
 
-    const server = fork(`./dist/apps/${nestapp}/main.js`, [], {
+    const server = exec(`node ./dist/apps/${nestapp}/main.js`, {
       cwd: tmpProjPath(),
-      silent: true,
     });
     expect(server).toBeTruthy();
 
@@ -161,19 +154,15 @@ describe('Node Applications', () => {
           expect(result.message).toEqual(`Welcome to ${nestapp}!`);
           treeKill(server.pid, 'SIGTERM', (err) => {
             expect(err).toBeFalsy();
-            resolve();
+            resolve(true);
           });
         }
       });
     });
 
-    const process = spawn(
-      'node',
-      ['./node_modules/@nrwl/cli/bin/nx', 'serve', nestapp],
-      {
-        cwd: tmpProjPath(),
-      }
-    );
+    const process = exec(`npm run nx serve ${nestapp}`, {
+      cwd: tmpProjPath(),
+    });
 
     process.stdout.on('data', async (data: Buffer) => {
       if (!data.toString().includes('Listening at http://localhost:3333')) {

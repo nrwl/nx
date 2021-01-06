@@ -21,10 +21,13 @@ describe('Run Commands', () => {
       'SHARED_VAR=shared-nested-value\nNESTED_ONLY=nested-only-value'
     );
 
-    const command = `echo "$SHARED_VAR $ROOT_ONLY $NESTED_ONLY"`;
+    const command =
+      process.platform === 'win32'
+        ? `"echo %SHARED_VAR% %ROOT_ONLY% %NESTED_ONLY%"`
+        : `'echo "\\$SHARED_VAR \\$ROOT_ONLY \\$NESTED_ONLY"'`;
     const envFile = `apps/${nodeapp}/.custom.env`;
     runCLI(
-      `generate @nrwl/workspace:run-commands echoEnvVariables --command='${command}' --envFile='${envFile}' --project=${nodeapp}`
+      `generate @nrwl/workspace:run-commands echoEnvVariables --command=${command} --envFile=${envFile} --project=${nodeapp}`
     );
 
     const result = runCLI('echoEnvVariables');

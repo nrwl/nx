@@ -1,7 +1,7 @@
 import yargsParser = require('yargs-parser');
 
 function calculateDefaultProjectName(cwd: string, root: string, wc: any) {
-  let relativeCwd = cwd.split(root)[1];
+  let relativeCwd = cwd.replace(/\\/g, '/').split(root.replace(/\\/g, '/'))[1];
   if (relativeCwd) {
     relativeCwd = relativeCwd.startsWith('/')
       ? relativeCwd.substring(1)

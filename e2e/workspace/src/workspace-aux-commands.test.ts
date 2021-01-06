@@ -1,9 +1,11 @@
+import * as path from 'path';
 import {
   checkFilesExist,
   exists,
   newProject,
   readFile,
   readJson,
+  renameFile,
   runCLI,
   runCommand,
   tmpProjPath,
@@ -87,9 +89,9 @@ describe('lint', () => {
       const appAfter = uniq('after');
 
       runCLI(`generate @nrwl/angular:app ${appBefore}`);
-      runCommand(`mv apps/${appBefore} apps/${appAfter}`);
+      renameFile(`apps/${appBefore}`, `apps/${appAfter}`);
 
-      const stdout = runCommand('./node_modules/.bin/nx workspace-lint');
+      const stdout = runCommand('npm run nx workspace-lint');
       expect(stdout).toContain(
         `- Cannot find project '${appBefore}' in 'apps/${appBefore}'`
       );
@@ -157,32 +159,50 @@ describe('format', () => {
     let stdout = runCommand(
       `npm run -s format:check -- --files="libs/${mylib}/index.ts,package.json" --libs-and-apps`
     );
-    expect(stdout).toContain(`libs/${mylib}/index.ts`);
-    expect(stdout).toContain(`libs/${mylib}/src/${mylib}.module.ts`);
-    expect(stdout).not.toContain(`README.md`); // It will be contained only in case of exception, that we fallback to all
+    expect(stdout).toContain(path.normalize(`libs/${mylib}/index.ts`));
+    expect(stdout).toContain(
+      path.normalize(`libs/${mylib}/src/${mylib}.module.ts`)
+    );
+    expect(stdout).not.toContain(path.normalize(`README.md`)); // It will be contained only in case of exception, that we fallback to all
 
     stdout = runCommand(`npm run -s format:check -- --all`);
-    expect(stdout).toContain(`apps/${myapp}/src/main.ts`);
-    expect(stdout).toContain(`apps/${myapp}/src/app/app.module.ts`);
-    expect(stdout).toContain(`apps/${myapp}/src/app/app.component.ts`);
+    expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
+    expect(stdout).toContain(
+      path.normalize(`apps/${myapp}/src/app/app.module.ts`)
+    );
+    expect(stdout).toContain(
+      path.normalize(`apps/${myapp}/src/app/app.component.ts`)
+    );
 
     stdout = runCommand(`npm run -s format:check -- --projects=${myapp}`);
-    expect(stdout).toContain(`apps/${myapp}/src/main.ts`);
-    expect(stdout).toContain(`apps/${myapp}/src/app/app.module.ts`);
-    expect(stdout).toContain(`apps/${myapp}/src/app/app.component.ts`);
-    expect(stdout).not.toContain(`libs/${mylib}/index.ts`);
-    expect(stdout).not.toContain(`libs/${mylib}/src/${mylib}.module.ts`);
-    expect(stdout).not.toContain(`README.md`);
+    expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
+    expect(stdout).toContain(
+      path.normalize(`apps/${myapp}/src/app/app.module.ts`)
+    );
+    expect(stdout).toContain(
+      path.normalize(`apps/${myapp}/src/app/app.component.ts`)
+    );
+    expect(stdout).not.toContain(path.normalize(`libs/${mylib}/index.ts`));
+    expect(stdout).not.toContain(
+      path.normalize(`libs/${mylib}/src/${mylib}.module.ts`)
+    );
+    expect(stdout).not.toContain(path.normalize(`README.md`));
 
     stdout = runCommand(
       `npm run -s format:check -- --projects=${myapp},${mylib}`
     );
-    expect(stdout).toContain(`apps/${myapp}/src/main.ts`);
-    expect(stdout).toContain(`apps/${myapp}/src/app/app.module.ts`);
-    expect(stdout).toContain(`apps/${myapp}/src/app/app.component.ts`);
-    expect(stdout).toContain(`libs/${mylib}/index.ts`);
-    expect(stdout).toContain(`libs/${mylib}/src/${mylib}.module.ts`);
-    expect(stdout).not.toContain(`README.md`);
+    expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
+    expect(stdout).toContain(
+      path.normalize(`apps/${myapp}/src/app/app.module.ts`)
+    );
+    expect(stdout).toContain(
+      path.normalize(`apps/${myapp}/src/app/app.component.ts`)
+    );
+    expect(stdout).toContain(path.normalize(`libs/${mylib}/index.ts`));
+    expect(stdout).toContain(
+      path.normalize(`libs/${mylib}/src/${mylib}.module.ts`)
+    );
+    expect(stdout).not.toContain(path.normalize(`README.md`));
 
     stdout = runCommand(
       `npm run -s format:check -- --projects=${myapp},${mylib} --all`
@@ -197,13 +217,17 @@ describe('format', () => {
 
     stdout = runCommand('npm run -s format:check -- --all');
 
-    expect(stdout).toContain(`apps/${myapp}/src/main.ts`);
-    expect(stdout).not.toContain(`apps/${myapp}/src/app/app.module.ts`);
-    expect(stdout).not.toContain(`apps/${myapp}/src/app/app.component.ts`);
+    expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
+    expect(stdout).not.toContain(
+      path.normalize(`apps/${myapp}/src/app/app.module.ts`)
+    );
+    expect(stdout).not.toContain(
+      path.normalize(`apps/${myapp}/src/app/app.component.ts`)
+    );
 
     runCommand('npm run format:write -- --all');
     expect(runCommand('npm run -s format:check -- --all')).not.toContain(
-      `apps/${myapp}/src/main.ts`
+      path.normalize(`apps/${myapp}/src/main.ts`)
     );
   });
 });

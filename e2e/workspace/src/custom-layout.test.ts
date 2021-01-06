@@ -6,14 +6,14 @@ import {
   runCLIAsync,
   runCreateWorkspace,
   uniq,
-  yarnAdd,
+  packageInstall,
 } from '@nrwl/e2e/utils';
 
 describe('custom workspace layout', () => {
   it('should work', async () => {
     const proj = uniq('custom-layout-proj');
     runCreateWorkspace(proj, { preset: 'oss' });
-    yarnAdd('@nrwl/react @nrwl/angular @nrwl/express');
+    packageInstall('@nrwl/react @nrwl/angular @nrwl/express');
 
     const nxJson = readJson('nx.json');
     expect(nxJson.workspaceLayout).toEqual({

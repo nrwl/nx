@@ -1,3 +1,4 @@
+import * as path from 'path';
 import {
   checkFilesExist,
   newProject,
@@ -108,33 +109,46 @@ describe('Linter', () => {
     );
   }, 1000000);
 
-  it('linting should generate a default cache file', () => {
-    newProject();
-    const myapp = uniq('myapp');
+  describe('linting with --cache', () => {
+    function readCacheFile(cacheFile = '.eslintcache') {
+      const cacheInfo = readFile(cacheFile);
+      return process.platform === 'win32'
+        ? cacheInfo.replace(/\\\\/g, '\\')
+        : cacheInfo;
+    }
 
-    runCLI(`generate @nrwl/react:app ${myapp}`);
+    it('should generate a default cache file', () => {
+      newProject();
+      const myapp = uniq('myapp');
 
-    expect(() => checkFilesExist(`.eslintcache`)).toThrow();
-    runCLI(`lint ${myapp} --cache`, { silenceError: true });
-    expect(() => checkFilesExist(`.eslintcache`)).not.toThrow();
-    const cacheInfo = readFile('.eslintcache');
-    expect(cacheInfo).toContain(`${myapp}/src/app/app.spec.tsx`);
-  }, 1000000);
+      runCLI(`generate @nrwl/react:app ${myapp}`);
 
-  it('linting should let you specify a cache file location', () => {
-    newProject();
-    const myapp = uniq('myapp');
+      expect(() => checkFilesExist(`.eslintcache`)).toThrow();
+      runCLI(`lint ${myapp} --cache`, { silenceError: true });
+      expect(() => checkFilesExist(`.eslintcache`)).not.toThrow();
+      const cacheInfo = readCacheFile();
+      expect(cacheInfo).toContain(
+        path.normalize(`${myapp}/src/app/app.spec.tsx`)
+      );
+    }, 1000000);
 
-    runCLI(`generate @nrwl/react:app ${myapp}`);
+    it('should let you specify a cache file location', () => {
+      newProject();
+      const myapp = uniq('myapp');
 
-    expect(() => checkFilesExist(`my-cache`)).toThrow();
-    runCLI(`lint ${myapp} --cache --cache-location="my-cache"`, {
-      silenceError: true,
-    });
-    expect(() => checkFilesExist(`my-cache`)).not.toThrow();
-    const cacheInfo = readFile('my-cache');
-    expect(cacheInfo).toContain(`${myapp}/src/app/app.spec.tsx`);
-  }, 1000000);
+      runCLI(`generate @nrwl/react:app ${myapp}`);
+
+      expect(() => checkFilesExist(`my-cache`)).toThrow();
+      runCLI(`lint ${myapp} --cache --cache-location="my-cache"`, {
+        silenceError: true,
+      });
+      expect(() => checkFilesExist(`my-cache`)).not.toThrow();
+      const cacheInfo = readCacheFile('my-cache');
+      expect(cacheInfo).toContain(
+        path.normalize(`${myapp}/src/app/app.spec.tsx`)
+      );
+    }, 1000000);
+  });
 
   it('linting should generate an output file with a specific format', () => {
     newProject();
@@ -167,7 +181,7 @@ describe('Linter', () => {
     const outputForApp: any = Object.values(
       outputContents
     ).filter((result: any) =>
-      result.filePath.includes(`${myapp}/src/main.ts`)
+      result.filePath.includes(path.normalize(`${myapp}/src/main.ts`))
     )[0];
     expect(outputForApp.errorCount).toBe(1);
     expect(outputForApp.messages[0].ruleId).toBe('no-console');

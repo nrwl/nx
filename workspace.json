@@ -137,7 +137,7 @@
                 "command": "nx build-base tao"
               },
               {
-                "command": "chmod +x build/packages/tao/index.js"
+                "command": "node ./scripts/chmod build/packages/tao/index.js"
               },
               {
                 "command": "node ./scripts/copy-readme.js tao"
@@ -1421,7 +1421,7 @@
                 "command": "nx build-base create-nx-workspace"
               },
               {
-                "command": "chmod +x build/packages/create-nx-workspace/bin/create-nx-workspace.js"
+                "command": "node ./scripts/chmod build/packages/create-nx-workspace/bin/create-nx-workspace.js"
               },
               {
                 "command": "node ./scripts/copy-readme.js create-nx-workspace"
@@ -1507,7 +1507,7 @@
                 "command": "nx build-base create-nx-plugin"
               },
               {
-                "command": "chmod +x build/packages/create-nx-plugin/bin/create-nx-plugin.js"
+                "command": "node ./scripts/chmod build/packages/create-nx-plugin/bin/create-nx-plugin.js"
               },
               {
                 "command": "node ./scripts/copy-readme.js create-nx-workspace"
@@ -1593,7 +1593,7 @@
                 "command": "nx build-base cli"
               },
               {
-                "command": "chmod +x build/packages/cli/bin/nx.js"
+                "command": "node ./scripts/chmod build/packages/cli/bin/nx.js"
               },
               {
                 "command": "node ./scripts/copy-readme.js cli"
@@ -1684,7 +1684,7 @@
                 "command": "nx build-base angular"
               },
               {
-                "command": "./scripts/build-angular.sh"
+                "command": "node ./scripts/build-angular"
               },
               {
                 "command": "node ./scripts/copy-readme.js angular"
