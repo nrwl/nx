@@ -56,6 +56,8 @@ export interface WebBuildBuilderOptions extends BuildBuilderOptions {
 
   verbose?: boolean;
   buildLibsFromSource?: boolean;
+
+  deleteOutputPath?: boolean;
 }
 
 export default createBuilder<WebBuildBuilderOptions & JsonObject>(run);
@@ -98,7 +100,9 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
   }
 
   // Delete output path before bundling
-  deleteOutputDir(context.workspaceRoot, options.outputPath);
+  if (options.deleteOutputPath) {
+    deleteOutputDir(context.workspaceRoot, options.outputPath);
+  }
 
   return from(getSourceRoot(context))
     .pipe(

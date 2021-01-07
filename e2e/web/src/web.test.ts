@@ -74,6 +74,15 @@ describe('Web Components Applications', () => {
       `dist/libs/${libName}/_should_remove.txt`
     );
     checkFilesExist(`dist/apps/_should_not_remove.txt`);
+
+    // `delete-output-path`
+    createFile(`dist/apps/${appName}/_should_keep.txt`);
+    runCLI(`build ${appName} --delete-output-path=false`);
+    checkFilesExist(`dist/apps/${appName}/_should_keep.txt`);
+
+    createFile(`dist/libs/${libName}/_should_keep.txt`);
+    runCLI(`build ${libName} --delete-output-path=false`);
+    checkFilesExist(`dist/libs/${libName}/_should_keep.txt`);
   }, 120000);
 
   it('should do another build if differential loading is needed', async () => {

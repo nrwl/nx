@@ -124,7 +124,9 @@ export function run(
         context.logger.info(`Bundling ${context.target.project}...`);
 
         // Delete output path before bundling
-        deleteOutputDir(context.workspaceRoot, options.outputPath);
+        if (options.deleteOutputPath) {
+          deleteOutputDir(context.workspaceRoot, options.outputPath);
+        }
 
         return from(rollupOptions).pipe(
           concatMap((opts) =>

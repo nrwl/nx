@@ -60,6 +60,7 @@ export interface PackageBuilderOptions {
   updateBuildableProjectDepsInPackageJson?: boolean;
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
   umdName?: string;
+  deleteOutputPath?: boolean;
 }
 
 export interface AssetGlobPattern extends JsonObject {

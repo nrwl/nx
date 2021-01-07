@@ -48,6 +48,14 @@ Type: `string`
 
 The crossorigin attribute to use for generated javascript script tags. One of 'none' | 'anonymous' | 'use-credentials'
 
+### deleteOutputPath
+
+Default: `true`
+
+Type: `boolean`
+
+Delete the output path before building.
+
 ### deployUrl
 
 Type: `string`

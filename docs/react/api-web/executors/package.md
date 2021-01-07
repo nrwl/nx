@@ -29,6 +29,14 @@ Possible values: `dependencies`, `peerDependencies`
 
 When updateBuildableProjectDepsInPackageJson is true, this adds dependencies to either `peerDependencies` or `dependencies`
 
+### deleteOutputPath
+
+Default: `true`
+
+Type: `boolean`
+
+Delete the output path before building.
+
 ### entryFile
 
 Type: `string`
