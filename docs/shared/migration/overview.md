@@ -34,10 +34,22 @@ The `apps` directory is the place where your top-level applications will be stor
 For Angular applications:
 
 ```bash
+npm install --save-dev @nrwl/angular
+```
+
+and
+
+```bash
 nx generate @nrwl/angular:application my-application
 ```
 
 For React applications:
+
+```bash
+npm install --save-dev @nrwl/react
+```
+
+and
 
 ```bash
 nx generate @nrwl/react:application my-application
