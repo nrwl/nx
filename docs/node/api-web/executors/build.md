@@ -163,6 +163,14 @@ Type: `boolean`
 
 Log progress to the console while building.
 
+### runtimeChunk
+
+Default: `true`
+
+Type: `boolean`
+
+Use a separate bundle containing the runtime.
+
 ### scripts
 
 Type: `array`

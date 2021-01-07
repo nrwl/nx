@@ -32,6 +32,7 @@ export interface BuildOptions {
   evalSourceMap?: boolean;
   vendorChunk?: boolean;
   commonChunk?: boolean;
+  runtimeChunk?: boolean;
   baseHref?: string;
   deployUrl?: string;
   verbose?: boolean;
