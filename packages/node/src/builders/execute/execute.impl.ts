@@ -8,8 +8,16 @@ import {
 import { ChildProcess, fork } from 'child_process';
 import * as treeKill from 'tree-kill';
 
-import { Observable, bindCallback, of, zip, from, iif } from 'rxjs';
-import { concatMap, tap, mapTo, first, map, filter } from 'rxjs/operators';
+import { Observable, bindCallback, of, zip, from, iif, EMPTY } from 'rxjs';
+import {
+  concatMap,
+  tap,
+  mapTo,
+  first,
+  map,
+  filter,
+  mergeMap,
+} from 'rxjs/operators';
 
 import { NodeBuildEvent } from '../build/build.impl';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
@@ -54,7 +62,7 @@ export function nodeExecuteBuilderHandler(
         return of({ success: false });
       }
       return startBuild(options, context).pipe(
-        concatMap((event: NodeBuildEvent) => {
+        mergeMap((event: NodeBuildEvent) => {
           if (!event.success) {
             context.logger.error(
               'There was an error with the build. See above.'
@@ -70,10 +78,22 @@ export function nodeExecuteBuilderHandler(
 }
 
 function runProcess(event: NodeBuildEvent, options: NodeExecuteBuilderOptions) {
-  if (subProcess || !event.success) return;
+  if (subProcess || !event.success) {
+    return EMPTY;
+  }
 
-  subProcess = fork(event.outfile, options.args, {
-    execArgv: getExecArgv(options),
+  return new Observable<void>((subscriber) => {
+    subProcess = fork(event.outfile, options.args, {
+      execArgv: getExecArgv(options),
+    });
+
+    subProcess.on('exit', () => {
+      subscriber.next();
+    });
+
+    subProcess.on('error', () => {
+      subscriber.error();
+    });
   });
 }
 
@@ -100,7 +120,7 @@ function handleBuildEvent(
     () => !event.success || options.watch,
     killProcess(context),
     of(undefined)
-  ).pipe(tap(() => runProcess(event, options)));
+  ).pipe(concatMap(() => runProcess(event, options)));
 }
 
 function killProcess(context: BuilderContext): Observable<void | Error> {
@@ -133,12 +153,12 @@ function startBuild(
     Promise.all([
       context.getTargetOptions(target),
       context.getBuilderNameForTarget(target),
-    ]).then(([options, builderName]) =>
-      context.validateOptions(options, builderName)
+    ]).then(([targetOptions, builderName]) =>
+      context.validateOptions(targetOptions, builderName)
     )
   ).pipe(
-    tap((options) => {
-      if (options.optimization) {
+    tap((targetOptions) => {
+      if (targetOptions.optimization) {
         context.logger.warn(stripIndents`
             ************************************************
             This is a simple process manager for use in
@@ -150,9 +170,10 @@ function startBuild(
       }
     }),
     concatMap(
-      (options) =>
+      (targetOptions) =>
         scheduleTargetAndForget(context, target, {
-          ...options,
+          ...targetOptions,
+          watch: options.watch,
         }) as Observable<NodeBuildEvent>
     )
   );
