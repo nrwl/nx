@@ -32,7 +32,6 @@
     "migrations": "./migrations.json"
   },
   "peerDependencies": {
-    "@nrwl/workspace": "*",
     "cypress": ">= 3 < 7"
   },
   "dependencies": {

@@ -29,7 +29,6 @@
     "migrations": "./migrations.json"
   },
   "peerDependencies": {
-    "@nrwl/workspace": "*",
     "next": "^10.0.1"
   },
   "dependencies": {

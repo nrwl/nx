@@ -27,9 +27,6 @@
     "requirements": {},
     "migrations": "./migrations.json"
   },
-  "peerDependencies": {
-    "@nrwl/workspace": "*"
-  },
   "dependencies": {
     "@nrwl/cypress": "*",
     "@nrwl/devkit": "*",

@@ -32,9 +32,6 @@
     "requirements": {},
     "migrations": "./migrations.json"
   },
-  "peerDependencies": {
-    "@nrwl/workspace": "*"
-  },
   "dependencies": {
     "@angular-devkit/schematics": "~11.0.1",
     "@nrwl/cypress": "*",

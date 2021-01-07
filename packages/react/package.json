@@ -27,9 +27,6 @@
     "requirements": {},
     "migrations": "./migrations.json"
   },
-  "peerDependencies": {
-    "@nrwl/workspace": "*"
-  },
   "dependencies": {
     "@angular-devkit/core": "~11.0.1",
     "@babel/core": "7.9.6",
