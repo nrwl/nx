@@ -48,6 +48,11 @@
       "description": "Use a separate bundle containing code used across multiple bundles.",
       "default": true
     },
+    "runtimeChunk": {
+      "type": "boolean",
+      "description": "Use a separate bundle containing the runtime.",
+      "default": true
+    },
     "sourceMap": {
       "description": "Output sourcemaps.",
       "default": true,
