@@ -8,6 +8,7 @@ import { of, from } from 'rxjs';
 import { MockBuilderContext } from '@nrwl/workspace/testing';
 
 import { getMockContext } from '../../utils/testing';
+import { bufferCount, first } from 'rxjs/operators';
 
 jest.mock('child_process');
 let { fork } = require('child_process');
@@ -19,9 +20,16 @@ describe('NodeExecuteBuilder', () => {
   let context: MockBuilderContext;
 
   beforeEach(async () => {
-    fork.mockReturnValue({
-      pid: 123,
+    fork.mockImplementation(() => {
+      return {
+        on: (eventName, cb) => {
+          if (eventName === 'exit') {
+            cb();
+          }
+        },
+      };
     });
+
     treeKill.mockImplementation((pid, signal, callback) => {
       callback();
     });
@@ -53,7 +61,9 @@ describe('NodeExecuteBuilder', () => {
       })
     );
 
-    await nodeExecuteBuilderHandler(testOptions, context).toPromise();
+    await nodeExecuteBuilderHandler(testOptions, context)
+      .pipe(first())
+      .toPromise();
 
     expect(context.scheduleTarget).toHaveBeenCalledWith(
       {
@@ -92,7 +102,10 @@ describe('NodeExecuteBuilder', () => {
             inspect: InspectType.Inspect,
           },
           context
-        ).toPromise();
+        )
+          .pipe(first())
+          .toPromise();
+
         expect(fork).toHaveBeenCalledWith('outfile.js', [], {
           execArgv: [
             '-r',
@@ -118,7 +131,9 @@ describe('NodeExecuteBuilder', () => {
             inspect: InspectType.InspectBrk,
           },
           context
-        ).toPromise();
+        )
+          .pipe(first())
+          .toPromise();
         expect(fork).toHaveBeenCalledWith('outfile.js', [], {
           execArgv: [
             '-r',
@@ -146,7 +161,9 @@ describe('NodeExecuteBuilder', () => {
             host: '0.0.0.0',
           },
           context
-        ).toPromise();
+        )
+          .pipe(first())
+          .toPromise();
         expect(fork).toHaveBeenCalledWith('outfile.js', [], {
           execArgv: [
             '-r',
@@ -174,7 +191,9 @@ describe('NodeExecuteBuilder', () => {
             port: 1234,
           },
           context
-        ).toPromise();
+        )
+          .pipe(first())
+          .toPromise();
         expect(fork).toHaveBeenCalledWith('outfile.js', [], {
           execArgv: [
             '-r',
@@ -201,7 +220,9 @@ describe('NodeExecuteBuilder', () => {
           runtimeArgs: ['-r', 'node-register'],
         },
         context
-      ).toPromise();
+      )
+        .pipe(first())
+        .toPromise();
       expect(fork).toHaveBeenCalledWith('outfile.js', [], {
         execArgv: [
           '-r',
@@ -228,15 +249,15 @@ describe('NodeExecuteBuilder', () => {
         stop: () => Promise.resolve(),
       })
     );
-    nodeExecuteBuilderHandler(testOptions, context).subscribe({
-      complete: () => {
-        expect(loggerError.calls.argsFor(1)).toEqual(['Error Message']);
+    nodeExecuteBuilderHandler(testOptions, context)
+      .pipe(bufferCount(2))
+      .subscribe(() => {
+        expect(loggerError.calls.argsFor(0)).toEqual(['Error Message']);
         done();
-      },
-    });
+      });
   });
 
-  it('should log errors from killing the process on windows', async () => {
+  it('should log errors from killing the process on windows', (done) => {
     treeKill.mockImplementation((pid, signal, callback) => {
       callback([new Error('error'), '', 'Error Message']);
     });
@@ -250,8 +271,12 @@ describe('NodeExecuteBuilder', () => {
         stop: () => Promise.resolve(),
       })
     );
-    await nodeExecuteBuilderHandler(testOptions, context).toPromise();
-    expect(loggerError.calls.argsFor(1)).toEqual(['Error Message']);
+    nodeExecuteBuilderHandler(testOptions, context)
+      .pipe(bufferCount(2))
+      .subscribe(() => {
+        expect(loggerError.calls.argsFor(0)).toEqual(['Error Message']);
+        done();
+      });
   });
 
   it('should build the application and start the built file with options', async () => {
@@ -269,7 +294,9 @@ describe('NodeExecuteBuilder', () => {
         args: ['arg1', 'arg2'],
       },
       context
-    ).toPromise();
+    )
+      .pipe(first())
+      .toPromise();
     expect(fork).toHaveBeenCalledWith('outfile.js', ['arg1', 'arg2'], {
       execArgv: ['-r', 'source-map-support/register'],
     });
@@ -289,7 +316,9 @@ describe('NodeExecuteBuilder', () => {
       })
     );
     spyOn(context.logger, 'warn');
-    await nodeExecuteBuilderHandler(testOptions, context).toPromise();
+    await nodeExecuteBuilderHandler(testOptions, context)
+      .pipe(first())
+      .toPromise();
     expect(context.logger.warn).toHaveBeenCalled();
   });
 
@@ -307,7 +336,9 @@ describe('NodeExecuteBuilder', () => {
           waitUntilTargets: ['project1:target1', 'project2:target2'],
         },
         context
-      ).toPromise();
+      )
+        .pipe(first())
+        .toPromise();
 
       expect(context.scheduleTarget).toHaveBeenCalledTimes(3);
       expect(context.scheduleTarget).toHaveBeenCalledWith(
@@ -343,7 +374,9 @@ describe('NodeExecuteBuilder', () => {
           waitUntilTargets: ['project1:target1', 'project2:target2'],
         },
         context
-      ).toPromise();
+      )
+        .pipe(first())
+        .toPromise();
       expect(output).toEqual(
         jasmine.objectContaining({
           success: false,
