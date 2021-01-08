@@ -7,7 +7,7 @@
     "uiFramework": {
       "type": "string",
       "description": "Storybook UI Framework to use",
-      "enum": ["@storybook/angular", "@storybook/react"],
+      "enum": ["@storybook/angular", "@storybook/react", "@storybook/html"],
       "x-prompt": "What UI framework plugin should storybook use?"
     }
   }

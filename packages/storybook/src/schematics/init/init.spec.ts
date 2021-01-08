@@ -53,6 +53,9 @@ describe('init', () => {
       expect(packageJson.devDependencies['@storybook/react']).not.toBeDefined();
       expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
       expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
+
+      // generic html specific
+      expect(packageJson.devDependencies['@storybook/html']).not.toBeDefined();
     });
 
     it('should add react related dependencies when using React as uiFramework', async () => {
@@ -94,7 +97,50 @@ describe('init', () => {
         packageJson.devDependencies['@storybook/angular']
       ).not.toBeDefined();
       expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
+
+      // generic html specific
+      expect(packageJson.devDependencies['@storybook/html']).not.toBeDefined();
     });
+  });
+
+  it('should add html related dependencies when using html as uiFramework', async () => {
+    const existing = 'existing';
+    const existingVersion = '1.0.0';
+    await callRule(
+      addDepsToPackageJson(
+        { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
+        { [existing]: existingVersion },
+        false
+      ),
+      appTree
+    );
+    const tree = await runSchematic(
+      'init',
+      {
+        uiFramework: '@storybook/html',
+      },
+      appTree
+    );
+    const packageJson = readJsonInTree(tree, 'package.json');
+
+    // general deps
+    expect(packageJson.devDependencies['@nrwl/storybook']).toBeDefined();
+    expect(packageJson.dependencies['@nrwl/storybook']).toBeUndefined();
+    expect(packageJson.dependencies[existing]).toBeDefined();
+    expect(packageJson.devDependencies[existing]).toBeDefined();
+    expect(packageJson.devDependencies['@storybook/addon-knobs']).toBeDefined();
+
+    // react specific
+    expect(packageJson.devDependencies['@storybook/react']).not.toBeDefined();
+    expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
+    expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
+
+    // angular specific
+    expect(packageJson.devDependencies['@storybook/angular']).not.toBeDefined();
+    expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
+
+    // generic html specific
+    expect(packageJson.devDependencies['@storybook/html']).toBeDefined();
   });
 
   it('should add build-storybook to cacheable operations', async () => {
