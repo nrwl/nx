@@ -16,7 +16,6 @@ import {
 } from '@angular-devkit/schematics';
 import {
   addGlobal,
-  deleteFile,
   formatFiles,
   getNpmScope,
   getProjectConfig,
@@ -50,8 +49,7 @@ export default function (schema: NormalizedSchema): Rule {
       updateTsConfig(options),
       addProject(options),
       formatFiles(options),
-      deleteFile(`/${options.projectRoot}/src/lib/${options.fileName}.spec.ts`),
-      deleteFile(`/${options.projectRoot}/src/lib/${options.fileName}.ts`),
+      deleteFiles(options),
     ]);
   };
 }
@@ -158,6 +156,13 @@ function createFiles(options: NormalizedSchema): Rule {
     ]),
     MergeStrategy.Overwrite
   );
+}
+
+function deleteFiles(options: NormalizedSchema): Rule {
+  return (host: Tree) => {
+    host.delete(`${options.projectRoot}/src/lib/${options.fileName}.spec.ts`);
+    host.delete(`${options.projectRoot}/src/lib/${options.fileName}.ts`);
+  };
 }
 
 function updateTsConfig(options: NormalizedSchema): Rule {
