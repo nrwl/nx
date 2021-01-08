@@ -1,4 +1,4 @@
-import { exec, execSync } from 'child_process';
+import { ChildProcess, exec, execSync } from 'child_process';
 import {
   readdirSync,
   readFileSync,
@@ -17,6 +17,7 @@ interface RunCmdOpts {
   silenceError?: boolean;
   env?: Record<string, string>;
   cwd?: string;
+  silent?: boolean;
 }
 
 export function currentCli() {
@@ -173,8 +174,9 @@ export function runCommandAsync(
 
 export function runCommandUntil(
   command: string,
-  criteria: (output: string) => boolean
-) {
+  criteria: (output: string) => boolean,
+  { kill = true } = {}
+): Promise<{ process: ChildProcess }> {
   const p = exec(`npm run nx --scripts-prepend-node-path -- ${command}`, {
     cwd: tmpProjPath(),
     env: { ...process.env, FORCE_COLOR: 'false' },
@@ -183,22 +185,20 @@ export function runCommandUntil(
   return new Promise((res, rej) => {
     let output = '';
     let complete = false;
-    p.stdout.on('data', (c) => {
+
+    function checkCriteria(c) {
       output += c.toString();
       if (criteria(output)) {
         complete = true;
-        res(true);
-        p.kill();
+        res({ process: p });
+        if (kill) {
+          p.kill();
+        }
       }
-    });
-    p.stderr.on('data', (c) => {
-      output += c.toString();
-      if (criteria(output)) {
-        complete = true;
-        res(true);
-        p.kill();
-      }
-    });
+    }
+
+    p.stdout.on('data', checkCriteria);
+    p.stderr.on('data', checkCriteria);
     p.on('exit', (code) => {
       if (code !== 0 && !complete) {
         console.log(output);
@@ -213,10 +213,13 @@ export function runCLIAsync(
   opts: RunCmdOpts = {
     silenceError: false,
     env: process.env,
+    silent: false,
   }
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
   return runCommandAsync(
-    `npm run nx --scripts-prepend-node-path -- ${command}`,
+    `npm run nx ${
+      opts.silent ? '--silent' : ''
+    } --scripts-prepend-node-path -- ${command}`,
     opts
   );
 }

@@ -10,6 +10,7 @@ import {
   readJson,
   runCLI,
   runCLIAsync,
+  runCommandUntil,
   tmpProjPath,
   uniq,
   updateFile,
@@ -99,22 +100,16 @@ describe('Node Applications', () => {
       });
     });
 
-    const process = exec(`npm run nx serve ${nodeapp}`, {
-      cwd: tmpProjPath(),
-    });
-    let collectedOutput = '';
-    process.stdout.on('data', async (data: Buffer) => {
-      collectedOutput += data.toString();
-      if (!collectedOutput.includes('Listening at http://localhost:3333')) {
-        return;
-      }
-
-      const result = await getData();
-      expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
-      treeKill(process.pid, 'SIGTERM', (err) => {
-        expect(err).toBeFalsy();
-        done();
-      });
+    const { process } = await runCommandUntil(
+      `serve ${nodeapp}`,
+      (output) => output.includes('Listening at http://localhost:3333'),
+      { kill: false }
+    );
+    const result = await getData();
+    expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
+    treeKill(process.pid, 'SIGTERM', (err) => {
+      expect(err).toBeFalsy();
+      done();
     });
   }, 120000);
 
@@ -160,20 +155,16 @@ describe('Node Applications', () => {
       });
     });
 
-    const process = exec(`npm run nx serve ${nestapp}`, {
-      cwd: tmpProjPath(),
-    });
-
-    process.stdout.on('data', async (data: Buffer) => {
-      if (!data.toString().includes('Listening at http://localhost:3333')) {
-        return;
-      }
-      const result = await getData();
-      expect(result.message).toEqual(`Welcome to ${nestapp}!`);
-      treeKill(process.pid, 'SIGTERM', (err) => {
-        expect(err).toBeFalsy();
-        done();
-      });
+    const { process } = await runCommandUntil(
+      `serve ${nestapp}`,
+      (output) => output.includes('Listening at http://localhost:3333'),
+      { kill: false }
+    );
+    const result = await getData();
+    expect(result.message).toEqual(`Welcome to ${nestapp}!`);
+    treeKill(process.pid, 'SIGTERM', (err) => {
+      expect(err).toBeFalsy();
+      done();
     });
   }, 120000);
 });

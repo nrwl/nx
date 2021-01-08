@@ -6,6 +6,7 @@ import {
   readJson,
   rmDist,
   runCLI,
+  runCLIAsync,
   runCommand,
   uniq,
   updateFile,
@@ -231,60 +232,56 @@ describe('affected:*', () => {
             `
     );
     expect(
-      runCommand(
-        `npm run affected:apps -- --files="libs/${mylib}/src/index.ts" --plain`
+      runCLI(
+        `affected:apps --files="libs/${mylib}/src/index.ts" --plain`
       ).split('\n')[4]
     ).toEqual(myapp);
 
-    const affectedApps = runCommand(
-      `npm run affected:apps -- --files="libs/${mylib}/src/index.ts"`
+    const affectedApps = runCLI(
+      `affected:apps --files="libs/${mylib}/src/index.ts"`
     );
     expect(affectedApps).toContain(myapp);
     expect(affectedApps).not.toContain(myapp2);
     expect(affectedApps).not.toContain(`${myapp}-e2e`);
 
-    const implicitlyAffectedApps = runCommand(
-      'npm run affected:apps -- --files="tsconfig.base.json"'
+    const implicitlyAffectedApps = runCLI(
+      'affected:apps --files="tsconfig.base.json"'
     );
     expect(implicitlyAffectedApps).toContain(myapp);
     expect(implicitlyAffectedApps).toContain(myapp2);
 
-    const noAffectedApps = runCommand(
-      'npm run affected:apps -- --files="README.md"'
-    );
+    const noAffectedApps = runCLI('affected:apps --files="README.md"');
     expect(noAffectedApps).not.toContain(myapp);
     expect(noAffectedApps).not.toContain(myapp2);
 
     expect(
-      runCommand(
-        `npm run affected:libs -- --files="libs/${mylib}/src/index.ts" --plain`
+      runCLI(
+        `affected:libs --files="libs/${mylib}/src/index.ts" --plain`
       ).split('\n')[4]
     ).toEqual(`${mylib} ${mypublishablelib}`);
 
-    const affectedLibs = runCommand(
-      `npm run affected:libs -- --files="libs/${mylib}/src/index.ts"`
+    const affectedLibs = runCLI(
+      `affected:libs --files="libs/${mylib}/src/index.ts"`
     );
     expect(affectedLibs).toContain(mypublishablelib);
     expect(affectedLibs).toContain(mylib);
     expect(affectedLibs).not.toContain(mylib2);
 
-    const implicitlyAffectedLibs = runCommand(
-      'npm run affected:libs -- --files="tsconfig.json"'
+    const implicitlyAffectedLibs = runCLI(
+      'affected:libs --files="tsconfig.json"'
     );
     expect(implicitlyAffectedLibs).toContain(mypublishablelib);
     expect(implicitlyAffectedLibs).toContain(mylib);
     expect(implicitlyAffectedLibs).toContain(mylib2);
 
-    const noAffectedLibs = runCommand(
-      'npm run affected:libs -- --files="README.md"'
-    );
+    const noAffectedLibs = runCLI('affected:libs --files="README.md"');
     expect(noAffectedLibs).not.toContain(mypublishablelib);
     expect(noAffectedLibs).not.toContain(mylib);
     expect(noAffectedLibs).not.toContain(mylib2);
 
     // build
-    const build = runCommand(
-      `npm run affected:build -- --files="libs/${mylib}/src/index.ts" --parallel`
+    const build = runCLI(
+      `affected:build --files="libs/${mylib}/src/index.ts" --parallel`
     );
     expect(build).toContain(`Running target build for projects:`);
     expect(build).toContain(`- ${myapp}`);
@@ -292,8 +289,8 @@ describe('affected:*', () => {
     expect(build).not.toContain('is not registered with the build command');
     expect(build).toContain('Running target "build" succeeded');
 
-    const buildExcluded = runCommand(
-      `npm run affected:build -- --files="libs/${mylib}/src/index.ts" --exclude ${myapp}`
+    const buildExcluded = runCLI(
+      `affected:build --files="libs/${mylib}/src/index.ts" --exclude ${myapp}`
     );
     expect(buildExcluded).toContain(`Running target build for projects:`);
     expect(buildExcluded).toContain(`- ${mypublishablelib}`);
@@ -307,8 +304,9 @@ describe('affected:*', () => {
       )
     );
 
-    const failedTests = runCommand(
-      `npm run affected:test -- --files="libs/${mylib}/src/index.ts"`
+    const failedTests = runCLI(
+      `affected:test --files="libs/${mylib}/src/index.ts"`,
+      { silenceError: true }
     );
     expect(failedTests).toContain(`Running target test for projects:`);
     expect(failedTests).toContain(`- ${mylib}`);
@@ -336,14 +334,14 @@ describe('affected:*', () => {
       )
     );
 
-    const isolatedTests = runCommand(
-      `npm run affected:test -- --files="libs/${mylib}/src/index.ts" --only-failed`
+    const isolatedTests = runCLI(
+      `affected:test --files="libs/${mylib}/src/index.ts" --only-failed`
     );
     expect(isolatedTests).toContain(`Running target test for projects`);
     expect(isolatedTests).toContain(`- ${myapp}`);
 
-    const interpolatedTests = runCommand(
-      `npm run affected -- --target test --files="libs/${mylib}/src/index.ts" -- --jest-config {project.root}/jest.config.js`
+    const interpolatedTests = runCLI(
+      `affected --target test --files="libs/${mylib}/src/index.ts" -- --jest-config {project.root}/jest.config.js`
     );
     expect(interpolatedTests).toContain(`Running target \"test\" succeeded`);
   }, 1000000);
@@ -368,18 +366,18 @@ describe('affected (with git)', () => {
       `git add . && git commit -am "initial commit" && git checkout -b master`
     );
     runCLI(`generate @nrwl/angular:app ${myapp}`);
-    expect(runCommand('yarn affected:apps')).toContain(myapp);
+    expect(runCLI('affected:apps')).toContain(myapp);
     runCommand(`git add . && git commit -am "add ${myapp}"`);
 
     runCLI(`generate @nrwl/angular:app ${myapp2}`);
-    expect(runCommand('yarn affected:apps')).not.toContain(myapp);
-    expect(runCommand('yarn affected:apps')).toContain(myapp2);
+    expect(runCLI('affected:apps')).not.toContain(myapp);
+    expect(runCLI('affected:apps')).toContain(myapp2);
     runCommand(`git add . && git commit -am "add ${myapp2}"`);
 
     runCLI(`generate @nrwl/angular:lib ${mylib}`);
-    expect(runCommand('yarn affected:apps')).not.toContain(myapp);
-    expect(runCommand('yarn affected:apps')).not.toContain(myapp2);
-    expect(runCommand('yarn affected:libs')).toContain(mylib);
+    expect(runCLI('affected:apps')).not.toContain(myapp);
+    expect(runCLI('affected:apps')).not.toContain(myapp2);
+    expect(runCLI('affected:libs')).toContain(mylib);
     runCommand(`git add . && git commit -am "add ${mylib}"`);
   }, 1000000);
 
@@ -388,9 +386,9 @@ describe('affected (with git)', () => {
 
     nxJson.projects[myapp].tags = ['tag'];
     updateFile('nx.json', JSON.stringify(nxJson));
-    expect(runCommand('yarn affected:apps')).toContain(myapp);
-    expect(runCommand('yarn affected:apps')).not.toContain(myapp2);
-    expect(runCommand('yarn affected:libs')).not.toContain(mylib);
+    expect(runCLI('affected:apps')).toContain(myapp);
+    expect(runCLI('affected:apps')).not.toContain(myapp2);
+    expect(runCLI('affected:libs')).not.toContain(mylib);
     runCommand(`git add . && git commit -am "add tag to ${myapp}"`);
   });
 
@@ -399,9 +397,9 @@ describe('affected (with git)', () => {
 
     workspaceJson.projects[myapp].prefix = 'my-app';
     updateFile(workspaceConfigName(), JSON.stringify(workspaceJson));
-    expect(runCommand('yarn affected:apps')).toContain(myapp);
-    expect(runCommand('yarn affected:apps')).not.toContain(myapp2);
-    expect(runCommand('yarn affected:libs')).not.toContain(mylib);
+    expect(runCLI('affected:apps')).toContain(myapp);
+    expect(runCLI('affected:apps')).not.toContain(myapp2);
+    expect(runCLI('affected:libs')).not.toContain(mylib);
     runCommand(`git add . && git commit -am "change prefix for ${myapp}"`);
   });
 
@@ -414,15 +412,15 @@ describe('affected (with git)', () => {
     delete nxJson.projects[mylib];
     updateFile('nx.json', JSON.stringify(nxJson));
 
-    expect(runCommand('yarn affected:apps')).toContain(myapp);
-    expect(runCommand('yarn affected:apps')).toContain(myapp2);
-    expect(runCommand('yarn affected:libs')).not.toContain(mylib);
+    expect(runCLI('affected:apps')).toContain(myapp);
+    expect(runCLI('affected:apps')).toContain(myapp2);
+    expect(runCLI('affected:libs')).not.toContain(mylib);
     runCommand(`git add . && git commit -am "remove ${mylib}"`);
   });
 });
 
 describe('print-affected', () => {
-  it('should print information about affected projects', () => {
+  it('should print information about affected projects', async () => {
     newProject();
     const myapp = uniq('myapp-a');
     const myapp2 = uniq('myapp-b');
@@ -464,17 +462,22 @@ describe('print-affected', () => {
     );
 
     const resWithoutTarget = JSON.parse(
-      runCommand(
-        `npm run nx print-affected --silent -- --files=apps/${myapp}/src/main.tsx`
-      )
+      (
+        await runCLIAsync(`print-affected --files=apps/${myapp}/src/main.tsx`, {
+          silent: true,
+        })
+      ).stdout
     );
     expect(resWithoutTarget.tasks).toEqual([]);
     compareTwoArrays(resWithoutTarget.projects, [`${myapp}-e2e`, myapp]);
 
     const resWithTarget = JSON.parse(
-      runCommand(
-        `npm run nx print-affected --silent -- --files=apps/${myapp}/src/main.tsx --target=test`
-      ).trim()
+      (
+        await runCLIAsync(
+          `print-affected --files=apps/${myapp}/src/main.tsx --target=test`,
+          { silent: true }
+        )
+      ).stdout.trim()
     );
 
     expect(resWithTarget.tasks[0]).toMatchObject({
@@ -491,9 +494,12 @@ describe('print-affected', () => {
     compareTwoArrays(resWithTarget.projects, [`${myapp}-e2e`, myapp]);
 
     const resWithDeps = JSON.parse(
-      runCommand(
-        `npm run nx print-affected --silent -- --files=apps/${myapp}/src/main.tsx --target=build --with-deps`
-      )
+      (
+        await runCLIAsync(
+          `print-affected --files=apps/${myapp}/src/main.tsx --target=build --with-deps`,
+          { silent: true }
+        )
+      ).stdout
     );
 
     expect(resWithDeps.tasks[0]).toMatchObject({
@@ -527,17 +533,23 @@ describe('print-affected', () => {
       `${myapp}-e2e`,
     ]);
 
-    const resWithTargetWithSelect1 = runCommand(
-      `npm run nx print-affected --silent -- --files=apps/${myapp}/src/main.tsx --target=test --select=projects`
-    ).trim();
+    const resWithTargetWithSelect1 = (
+      await runCLIAsync(
+        `print-affected --files=apps/${myapp}/src/main.tsx --target=test --select=projects`,
+        { silent: true }
+      )
+    ).stdout.trim();
     compareTwoSerializedArrays(
       resWithTargetWithSelect1,
       `${myapp}-e2e, ${myapp}`
     );
 
-    const resWithTargetWithSelect2 = runCommand(
-      `npm run nx print-affected --silent -- --files=apps/${myapp}/src/main.tsx --target=test --select="tasks.target.project"`
-    ).trim();
+    const resWithTargetWithSelect2 = (
+      await runCLIAsync(
+        `print-affected --files=apps/${myapp}/src/main.tsx --target=test --select="tasks.target.project"`,
+        { silent: true }
+      )
+    ).stdout.trim();
     compareTwoSerializedArrays(resWithTargetWithSelect2, `${myapp}`);
   }, 120000);
 
@@ -567,9 +579,7 @@ describe('cache', () => {
 
     // run build with caching
     // --------------------------------------------
-    const outputThatPutsDataIntoCache = runCommand(
-      `npm run affected:build -- ${files}`
-    );
+    const outputThatPutsDataIntoCache = runCLI(`affected:build ${files}`);
     const filesApp1 = listFiles(`dist/apps/${myapp1}`);
     const filesApp2 = listFiles(`dist/apps/${myapp2}`);
     // now the data is in cache
@@ -579,9 +589,7 @@ describe('cache', () => {
 
     rmDist();
 
-    const outputWithBothBuildTasksCached = runCommand(
-      `npm run affected:build -- ${files}`
-    );
+    const outputWithBothBuildTasksCached = runCLI(`affected:build ${files}`);
     expect(outputWithBothBuildTasksCached).toContain(
       'read the output from cache'
     );
@@ -590,8 +598,8 @@ describe('cache', () => {
     expect(listFiles(`dist/apps/${myapp2}`)).toEqual(filesApp2);
 
     // run with skipping cache
-    const outputWithBothBuildTasksCachedButSkipped = runCommand(
-      `npm run affected:build -- ${files} --skip-nx-cache`
+    const outputWithBothBuildTasksCachedButSkipped = runCLI(
+      `affected:build ${files} --skip-nx-cache`
     );
     expect(outputWithBothBuildTasksCachedButSkipped).not.toContain(
       `read the output from cache`
@@ -602,9 +610,7 @@ describe('cache', () => {
     updateFile(`apps/${myapp1}/src/main.ts`, (c) => {
       return `${c}\n//some comment`;
     });
-    const outputWithBuildApp2Cached = runCommand(
-      `npm run affected:build -- ${files}`
-    );
+    const outputWithBuildApp2Cached = runCLI(`affected:build ${files}`);
     expect(outputWithBuildApp2Cached).toContain('read the output from cache');
     expectCached(outputWithBuildApp2Cached, [myapp2]);
 
@@ -615,33 +621,25 @@ describe('cache', () => {
       r.description = 'different';
       return JSON.stringify(r);
     });
-    const outputWithNoBuildCached = runCommand(
-      `npm run affected:build -- ${files}`
-    );
+    const outputWithNoBuildCached = runCLI(`affected:build ${files}`);
     expect(outputWithNoBuildCached).not.toContain('read the output from cache');
 
     // build individual project with caching
-    const individualBuildWithCache = runCommand(
-      `npm run nx -- build ${myapp1}`
-    );
+    const individualBuildWithCache = runCLI(`build ${myapp1}`);
     expect(individualBuildWithCache).toContain('from cache');
 
     // skip caching when building individual projects
-    const individualBuildWithSkippedCache = runCommand(
-      `npm run nx -- build ${myapp1} --skip-nx-cache`
+    const individualBuildWithSkippedCache = runCLI(
+      `build ${myapp1} --skip-nx-cache`
     );
     expect(individualBuildWithSkippedCache).not.toContain('from cache');
 
     // run lint with caching
     // --------------------------------------------
-    const outputWithNoLintCached = runCommand(
-      `npm run affected:lint -- ${files}`
-    );
+    const outputWithNoLintCached = runCLI(`affected:lint ${files}`);
     expect(outputWithNoLintCached).not.toContain('read the output from cache');
 
-    const outputWithBothLintTasksCached = runCommand(
-      `npm run affected:lint -- ${files}`
-    );
+    const outputWithBothLintTasksCached = runCLI(`affected:lint ${files}`);
     expect(outputWithBothLintTasksCached).toContain(
       'read the output from cache'
     );
@@ -669,17 +667,13 @@ describe('cache', () => {
       return JSON.stringify(nxJson, null, 2);
     });
 
-    const outputWithoutCachingEnabled1 = runCommand(
-      `npm run affected:build -- ${files}`
-    );
+    const outputWithoutCachingEnabled1 = runCLI(`affected:build ${files}`);
 
     expect(outputWithoutCachingEnabled1).not.toContain(
       'read the output from cache'
     );
 
-    const outputWithoutCachingEnabled2 = runCommand(
-      `npm run affected:build -- ${files}`
-    );
+    const outputWithoutCachingEnabled2 = runCLI(`affected:build ${files}`);
     expect(outputWithoutCachingEnabled2).not.toContain(
       'read the output from cache'
     );
