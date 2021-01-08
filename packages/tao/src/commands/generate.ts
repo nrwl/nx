@@ -179,14 +179,31 @@ export async function taoNew(cwd: string, args: string[], isVerbose = false) {
       null,
       null
     );
-    return (await import('./ngcli-adapter')).invokeNew(
-      cwd,
-      {
-        ...opts,
-        generatorOptions: combinedOpts,
-      },
-      isVerbose
-    );
+
+    if (ws.isNxGenerator(opts.collectionName, normalizedGeneratorName)) {
+      const host = new FsTree(cwd, isVerbose);
+      const task = await implementation(host, combinedOpts);
+      const changes = host.listChanges();
+
+      printChanges(changes);
+      if (!opts.dryRun) {
+        flushChanges(cwd, changes);
+        if (task) {
+          await task();
+        }
+      } else {
+        logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
+      }
+    } else {
+      return (await import('./ngcli-adapter')).generate(
+        cwd,
+        {
+          ...opts,
+          generatorOptions: combinedOpts,
+        },
+        isVerbose
+      );
+    }
   });
 }
 

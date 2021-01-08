@@ -1,31 +1,21 @@
 import {
-  chain,
-  move,
-  noop,
-  Rule,
-  schematic,
-  SchematicContext,
   Tree,
-} from '@angular-devkit/schematics';
-import {
-  NodePackageInstallTask,
-  RepositoryInitializerTask,
-} from '@angular-devkit/schematics/tasks';
+  formatFiles,
+  updateJson,
+  addDependenciesToPackageJson,
+  installPackagesTask,
+  getWorkspacePath,
+  convertNxGenerator,
+  names,
+  getPackageManagerCommand,
+} from '@nrwl/devkit';
 
-import {
-  addDepsToPackageJson,
-  updateWorkspaceInTree,
-} from '../../utils/ast-utils';
-
-import { formatFiles } from '../../utils/rules/format-files';
-
-import { nxVersion } from '../../utils/versions';
-import * as path from 'path';
-import { Observable } from 'rxjs';
-import { spawn } from 'child_process';
-import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
+import { join } from 'path';
 import * as yargsParser from 'yargs-parser';
-import { names } from '@nrwl/devkit';
+import { spawn, SpawnOptions } from 'child_process';
+
+import { workspaceGenerator } from '../workspace/workspace';
+import { nxVersion } from '../../utils/versions';
 
 export enum Preset {
   Empty = 'empty',
@@ -51,67 +41,114 @@ export interface Schema {
   nxCloud?: boolean;
   preset: Preset;
   commit?: { name: string; email: string; message?: string };
-  defaultBase?: string;
-  nxWorkspaceRoot?: string;
+  defaultBase: string;
   linter: 'tslint' | 'eslint';
   packageManager?: string;
 }
 
-class RunPresetTask {
-  toConfiguration() {
-    return {
-      name: 'RunPreset',
-    };
-  }
-}
-
-function createPresetTaskExecutor(opts: Schema) {
+function generatePreset(host: Tree, opts: Schema) {
   const cliCommand = opts.cli === 'angular' ? 'ng' : 'nx';
   const parsedArgs = yargsParser(process.argv, {
     boolean: ['interactive'],
   });
-
-  return {
-    name: 'RunPreset',
-    create: () => {
-      return Promise.resolve(() => {
-        const spawnOptions = {
-          stdio: [process.stdin, process.stdout, process.stderr],
-          shell: true,
-          cwd: path.join(opts.nxWorkspaceRoot || process.cwd(), opts.directory),
-        };
-        const pmc = getPackageManagerCommand();
-        const executable = `${pmc.exec} ${cliCommand}`;
-        const args = [
-          `g`,
-          `@nrwl/workspace:preset`,
-          `--name=${opts.appName}`,
-          opts.style ? `--style=${opts.style}` : null,
-          opts.linter ? `--linter=${opts.linter}` : null,
-          opts.npmScope
-            ? `--npmScope=${opts.npmScope}`
-            : `--npmScope=${opts.name}`,
-          opts.preset ? `--preset=${opts.preset}` : null,
-          `--cli=${cliCommand}`,
-          parsedArgs.interactive ? '--interactive=true' : '--interactive=false',
-        ].filter((e) => !!e);
-        return new Observable((obs) => {
-          spawn(executable, args, spawnOptions).on('close', (code: number) => {
-            if (code === 0) {
-              obs.next();
-              obs.complete();
-            } else {
-              const message = 'Workspace creation failed, see above.';
-              obs.error(new Error(message));
-            }
-          });
-        });
-      });
-    },
+  const spawnOptions = {
+    stdio: [process.stdin, process.stdout, process.stderr],
+    shell: true,
+    cwd: join(host.root, opts.directory),
   };
+  const pmc = getPackageManagerCommand();
+  const executable = `${pmc.exec} ${cliCommand}`;
+  const args = [
+    `g`,
+    `@nrwl/workspace:preset`,
+    `--name=${opts.appName}`,
+    opts.style ? `--style=${opts.style}` : null,
+    opts.linter ? `--linter=${opts.linter}` : null,
+    opts.npmScope ? `--npmScope=${opts.npmScope}` : `--npmScope=${opts.name}`,
+    opts.preset ? `--preset=${opts.preset}` : null,
+    `--cli=${cliCommand}`,
+    parsedArgs.interactive ? '--interactive=true' : '--interactive=false',
+  ].filter((e) => !!e);
+  return new Promise((resolve, reject) => {
+    spawn(executable, args, spawnOptions).on('close', (code: number) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        const message = 'Workspace creation failed, see above.';
+        reject(new Error(message));
+      }
+    });
+  });
 }
 
-export default function (options: Schema): Rule {
+async function initializeGitRepo(
+  host: Tree,
+  rootDirectory: string,
+  options: Schema
+) {
+  const execute = (args: ReadonlyArray<string>, ignoreErrorStream = false) => {
+    const outputStream = 'ignore';
+    const errorStream = ignoreErrorStream ? 'ignore' : process.stderr;
+    const spawnOptions: SpawnOptions = {
+      stdio: [process.stdin, outputStream, errorStream],
+      shell: true,
+      cwd: join(host.root, rootDirectory),
+      env: {
+        ...process.env,
+        ...(options.commit.name
+          ? {
+              GIT_AUTHOR_NAME: options.commit.name,
+              GIT_COMMITTER_NAME: options.commit.name,
+            }
+          : {}),
+        ...(options.commit.email
+          ? {
+              GIT_AUTHOR_EMAIL: options.commit.email,
+              GIT_COMMITTER_EMAIL: options.commit.email,
+            }
+          : {}),
+      },
+    };
+    return new Promise((resolve, reject) => {
+      spawn('git', args, spawnOptions).on('close', (code) => {
+        if (code === 0) {
+          resolve();
+        } else {
+          reject(code);
+        }
+      });
+    });
+  };
+  const hasCommand = await execute(['--version']).then(
+    () => true,
+    () => false
+  );
+  if (!hasCommand) {
+    return;
+  }
+  const insideRepo = await execute(
+    ['rev-parse', '--is-inside-work-tree'],
+    true
+  ).then(
+    () => true,
+    () => false
+  );
+  if (insideRepo) {
+    console.info(
+      `Directory is already under version control. Skipping initialization of git.`
+    );
+    return;
+  }
+  await execute(['init']);
+  await execute(['add', '.']);
+  if (options.commit) {
+    const message = options.commit.message || 'initial commit';
+    await execute(['commit', `-m "${message}"`]);
+  }
+  console.info('Successfully initialized git.');
+}
+
+export async function newGenerator(host: Tree, options: Schema) {
   if (
     options.skipInstall &&
     options.preset !== 'empty' &&
@@ -125,139 +162,97 @@ export default function (options: Schema): Rule {
 
   options = normalizeOptions(options);
 
-  const layout = options.preset === 'oss' ? 'packages' : 'apps-and-libs';
+  const layout: 'packages' | 'apps-and-libs' =
+    options.preset === 'oss' ? 'packages' : 'apps-and-libs';
   const workspaceOpts = {
     ...options,
     layout,
     preset: undefined,
     nxCloud: undefined,
   };
-  return (host: Tree, context: SchematicContext) => {
-    const engineHost = (context.engine.workflow as any).engineHost;
-    engineHost.registerTaskExecutor(createPresetTaskExecutor(options));
+  workspaceGenerator(host, workspaceOpts);
 
-    return chain([
-      schematic('workspace', workspaceOpts),
-      options.cli === 'angular' ? setDefaultPackageManager(options) : noop(),
-      setDefaultLinter(options),
-      addPresetDependencies(options),
-      addCloudDependencies(options),
-      move('/', options.directory),
-      addTasks(options),
-      formatFiles({ skipFormat: false }, options.directory),
-    ])(Tree.empty(), context);
+  if (options.cli === 'angular') {
+    setDefaultPackageManager(host, options);
+  }
+  setDefaultLinter(host, options);
+  addPresetDependencies(host, options);
+  addCloudDependencies(host, options);
+
+  await formatFiles(host);
+  host.listChanges().forEach((change) => {
+    if (change.type !== 'DELETE') {
+      host.rename(change.path, join(options.directory, change.path));
+    }
+  });
+  return async () => {
+    installPackagesTask(host, false, options.directory);
+    await generatePreset(host, options);
+    if (!options.skipGit) {
+      await initializeGitRepo(host, options.directory, options);
+    }
   };
 }
 
-function addCloudDependencies(options: Schema) {
-  return options.nxCloud
-    ? addDepsToPackageJson({}, { '@nrwl/nx-cloud': 'latest' }, false)
-    : noop();
-}
+export default newGenerator;
+export const newSchematic = convertNxGenerator(newGenerator);
 
-function addPresetDependencies(options: Schema) {
-  if (options.preset === 'empty') {
-    return noop();
-  } else if (options.preset === 'web-components') {
-    return addDepsToPackageJson(
+function addCloudDependencies(host: Tree, options: Schema) {
+  if (options.nxCloud) {
+    return addDependenciesToPackageJson(
+      host,
       {},
-      {
-        '@nrwl/web': nxVersion,
-      },
-      false
+      { '@nrwl/nx-cloud': 'latest' }
     );
-  } else if (options.preset === 'angular') {
-    return addDepsToPackageJson(
-      {
-        '@nrwl/angular': nxVersion,
-      },
-      {},
-      false
-    );
-  } else if (options.preset === 'angular-nest') {
-    return addDepsToPackageJson(
-      {
-        '@nrwl/angular': nxVersion,
-      },
-      {
-        '@nrwl/nest': nxVersion,
-      },
-      false
-    );
-  } else if (options.preset === 'react') {
-    return addDepsToPackageJson(
-      {},
-      {
-        '@nrwl/react': nxVersion,
-      },
-      false
-    );
-  } else if (options.preset === 'react-express') {
-    return addDepsToPackageJson(
-      {},
-      {
-        '@nrwl/react': nxVersion,
-        '@nrwl/express': nxVersion,
-      },
-      false
-    );
-  } else if (options.preset === 'next') {
-    return addDepsToPackageJson(
-      {},
-      {
-        '@nrwl/next': nxVersion,
-      },
-      false
-    );
-  } else if (options.preset === 'nest') {
-    return addDepsToPackageJson(
-      {},
-      {
-        '@nrwl/nest': nxVersion,
-      },
-      false
-    );
-  } else {
-    return noop();
   }
 }
 
-function addTasks(options: Schema) {
-  return (host: Tree, context: SchematicContext) => {
-    let packageTask;
-    let presetInstallTask;
-    if (!options.skipInstall) {
-      packageTask = context.addTask(
-        new NodePackageInstallTask(options.directory)
-      );
-    }
-    if (options.preset !== 'empty') {
-      const createPresetTask = context.addTask(new RunPresetTask(), [
-        packageTask,
-      ]);
+const presetDependencies: Omit<
+  Record<
+    Preset,
+    { dependencies: Record<string, string>; dev: Record<string, string> }
+  >,
+  Preset.Empty | Preset.OSS
+> = {
+  [Preset.WebComponents]: { dependencies: {}, dev: { '@nrwl/web': nxVersion } },
+  [Preset.Angular]: { dependencies: { '@nrwl/angular': nxVersion }, dev: {} },
+  [Preset.AngularWithNest]: {
+    dependencies: { '@nrwl/angular': nxVersion },
+    dev: { '@nrwl/nest': nxVersion },
+  },
+  [Preset.React]: {
+    dependencies: {},
+    dev: {
+      '@nrwl/react': nxVersion,
+    },
+  },
+  [Preset.ReactWithExpress]: {
+    dependencies: {},
+    dev: {
+      '@nrwl/react': nxVersion,
+      '@nrwl/express': nxVersion,
+    },
+  },
+  [Preset.Nest]: {
+    dependencies: {},
+    dev: {
+      '@nrwl/nest': nxVersion,
+    },
+  },
+  [Preset.NextJs]: {
+    dependencies: {},
+    dev: {
+      '@nrwl/next': nxVersion,
+    },
+  },
+};
 
-      presetInstallTask = context.addTask(
-        new NodePackageInstallTask(options.directory),
-        [createPresetTask]
-      );
-    }
-    if (!options.skipGit) {
-      const commit =
-        typeof options.commit == 'object'
-          ? options.commit
-          : !!options.commit
-          ? {}
-          : false;
-      context.addTask(
-        new RepositoryInitializerTask(options.directory, commit),
-        presetInstallTask
-          ? [presetInstallTask]
-          : packageTask
-          ? [packageTask]
-          : []
-      );
-    }
-  };
+function addPresetDependencies(host: Tree, options: Schema) {
+  if (options.preset === Preset.Empty || options.preset === Preset.OSS) {
+    return;
+  }
+  const { dependencies, dev } = presetDependencies[options.preset];
+  return addDependenciesToPackageJson(host, dependencies, dev);
 }
 
 function normalizeOptions(options: Schema): Schema {
@@ -269,30 +264,29 @@ function normalizeOptions(options: Schema): Schema {
   return options;
 }
 
-function setDefaultLinter({ linter, preset }: Schema): Rule {
+function setDefaultLinter(host: Tree, { linter, preset }: Schema) {
   // Don't do anything if someone doesn't pick angular
-  if (preset === 'angular' || preset === 'angular-nest') {
-    switch (linter) {
-      case 'eslint': {
-        return setESLintDefault();
-      }
-      case 'tslint': {
-        return setTSLintDefault();
-      }
-      default: {
-        return noop();
-      }
+  if (preset !== 'angular' && preset !== 'angular-nest') {
+    return;
+  }
+
+  switch (linter) {
+    case 'eslint': {
+      setESLintDefault(host);
+      break;
     }
-  } else {
-    return noop();
+    case 'tslint': {
+      setTSLintDefault(host);
+      break;
+    }
   }
 }
 
 /**
  * This sets ESLint as the default for any schematics that default to TSLint
  */
-function setESLintDefault() {
-  return updateWorkspaceInTree((json) => {
+function setESLintDefault(host: Tree) {
+  updateJson(host, getWorkspacePath(host), (json) => {
     setDefault(json, '@nrwl/angular', 'application', 'linter', 'eslint');
     setDefault(json, '@nrwl/angular', 'library', 'linter', 'eslint');
     setDefault(
@@ -309,8 +303,8 @@ function setESLintDefault() {
 /**
  * This sets TSLint as the default for any schematics that default to ESLint
  */
-function setTSLintDefault() {
-  return updateWorkspaceInTree((json) => {
+function setTSLintDefault(host: Tree) {
+  updateJson(host, getWorkspacePath(host), (json) => {
     setDefault(json, '@nrwl/workspace', 'library', 'linter', 'tslint');
     setDefault(json, '@nrwl/cypress', 'cypress-project', 'linter', 'tslint');
     setDefault(json, '@nrwl/cypress', 'cypress-project', 'linter', 'tslint');
@@ -325,12 +319,12 @@ function setTSLintDefault() {
   });
 }
 
-function setDefaultPackageManager({ packageManager }: Schema) {
+function setDefaultPackageManager(host: Tree, { packageManager }: Schema) {
   if (!packageManager) {
-    return noop();
+    return;
   }
 
-  return updateWorkspaceInTree((json) => {
+  updateJson(host, getWorkspacePath(host), (json) => {
     if (!json.cli) {
       json.cli = {};
     }

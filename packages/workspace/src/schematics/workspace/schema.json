@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "id": "SchematicsNxNgNew",
+  "cli": "nx",
   "title": "Create an empty workspace",
   "type": "object",
   "properties": {
@@ -41,6 +42,7 @@
       "type": "string",
       "format": "path",
       "description": "The directory name to create the workspace in.",
+      "x-deprecated": "This option is no longer used.",
       "default": ""
     },
     "layout": {

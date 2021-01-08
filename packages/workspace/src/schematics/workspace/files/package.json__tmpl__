@@ -1,5 +1,5 @@
 {
-  "name": "<%= utils.dasherize(name) %>",
+  "name": "<%= formattedNames.fileName %>",
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {

@@ -3,7 +3,7 @@
   "version": "0.1",
   "schematics": {
     "workspace": {
-      "factory": "./src/schematics/workspace/workspace",
+      "factory": "./src/schematics/workspace/workspace#workspaceSchematic",
       "schema": "./src/schematics/workspace/schema.json",
       "description": "Create an empty workspace",
       "hidden": true
@@ -38,7 +38,71 @@
     },
 
     "new": {
-      "factory": "./src/schematics/new/new",
+      "factory": "./src/schematics/new/new#newSchematic",
+      "schema": "./src/schematics/new/schema.json",
+      "description": "Create a workspace",
+      "hidden": true
+    },
+
+    "library": {
+      "factory": "./src/schematics/library/library",
+      "schema": "./src/schematics/library/schema.json",
+      "aliases": ["lib"],
+      "description": "Create a library"
+    },
+
+    "workspace-generator": {
+      "factory": "./src/schematics/workspace-generator/workspace-generator",
+      "schema": "./src/schematics/workspace-generator/schema.json",
+      "aliases": ["workspace-schematic"],
+      "description": "Generates a workspace generator"
+    },
+
+    "run-commands": {
+      "factory": "./src/schematics/run-commands/run-commands",
+      "schema": "./src/schematics/run-commands/schema.json",
+      "aliases": ["run-command", "target"],
+      "description": "Generates a target to run any command in the terminal"
+    }
+  },
+  "generators": {
+    "workspace": {
+      "factory": "./src/schematics/workspace/workspace#workspaceGenerator",
+      "schema": "./src/schematics/workspace/schema.json",
+      "description": "Create an empty workspace",
+      "hidden": true
+    },
+
+    "ng-add": {
+      "factory": "./src/schematics/init/init",
+      "schema": "./src/schematics/init/schema.json",
+      "description": "Convert an existing CLI project into an Nx Workspace",
+      "hidden": true
+    },
+
+    "preset": {
+      "factory": "./src/schematics/preset/preset",
+      "schema": "./src/schematics/preset/schema.json",
+      "description": "Create application in an empty workspace",
+      "hidden": true
+    },
+
+    "move": {
+      "factory": "./src/schematics/move/move",
+      "schema": "./src/schematics/move/schema.json",
+      "aliases": ["mv"],
+      "description": "Move an application or library to another folder"
+    },
+
+    "remove": {
+      "factory": "./src/schematics/remove/remove",
+      "schema": "./src/schematics/remove/schema.json",
+      "aliases": ["rm"],
+      "description": "Remove an application or library"
+    },
+
+    "new": {
+      "factory": "./src/schematics/new/new#newGenerator",
       "schema": "./src/schematics/new/schema.json",
       "description": "Create a workspace",
       "hidden": true

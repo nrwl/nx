@@ -95,6 +95,42 @@ describe('tree', () => {
       ).toEqual('new child content');
     });
 
+    it('should normalize paths', () => {
+      tree.write('dir/file1', 'File 1 Contents');
+      tree.write('/dir/file2', 'File 2 Contents');
+      tree.write('./dir/file3', 'File 3 Contents');
+
+      expect(tree.read('dir/file1').toString()).toEqual('File 1 Contents');
+      expect(tree.read('/dir/file1').toString()).toEqual('File 1 Contents');
+      expect(tree.read('./dir/file1').toString()).toEqual('File 1 Contents');
+
+      expect(tree.read('dir/file2').toString()).toEqual('File 2 Contents');
+      expect(tree.read('/dir/file2').toString()).toEqual('File 2 Contents');
+      expect(tree.read('./dir/file2').toString()).toEqual('File 2 Contents');
+
+      expect(tree.read('dir/file3').toString()).toEqual('File 3 Contents');
+      expect(tree.read('/dir/file3').toString()).toEqual('File 3 Contents');
+      expect(tree.read('./dir/file3').toString()).toEqual('File 3 Contents');
+
+      tree.rename('dir/file1', 'dir/file-a');
+
+      expect(tree.read('dir/file-a').toString()).toEqual('File 1 Contents');
+      expect(tree.read('/dir/file-a').toString()).toEqual('File 1 Contents');
+      expect(tree.read('./dir/file-a').toString()).toEqual('File 1 Contents');
+
+      tree.rename('/dir/file2', '/dir/file-b');
+
+      expect(tree.read('dir/file-b').toString()).toEqual('File 2 Contents');
+      expect(tree.read('/dir/file-b').toString()).toEqual('File 2 Contents');
+      expect(tree.read('./dir/file-b').toString()).toEqual('File 2 Contents');
+
+      tree.rename('./dir/file3', './dir/file-c');
+
+      expect(tree.read('dir/file-c').toString()).toEqual('File 3 Contents');
+      expect(tree.read('/dir/file-c').toString()).toEqual('File 3 Contents');
+      expect(tree.read('./dir/file-c').toString()).toEqual('File 3 Contents');
+    });
+
     it('should be able to delete files', () => {
       tree.delete('parent/parent-file.txt');
       tree.write('parent/new-child/new-child-file.txt', 'new child content');

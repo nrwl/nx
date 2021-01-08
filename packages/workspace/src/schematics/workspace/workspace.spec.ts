@@ -1,16 +1,22 @@
-import { Tree } from '@angular-devkit/schematics';
-import { NxJson, readJsonInTree } from '@nrwl/workspace';
-import { runSchematic } from '../../utils/testing';
+import { readJson, Tree } from '@nrwl/devkit';
+import { workspaceGenerator } from './workspace';
+import { createTree } from '@nrwl/devkit/testing';
+import { NxJson } from '../../core/shared-interfaces';
 
-describe('workspace', () => {
-  let projectTree: Tree;
+describe('@nrwl/workspace:workspace', () => {
+  let tree: Tree;
 
   beforeEach(() => {
-    projectTree = Tree.empty();
+    tree = createTree();
   });
 
   it('should create files', async () => {
-    const tree = await runSchematic('workspace', { name: 'proj' }, projectTree);
+    workspaceGenerator(tree, {
+      name: 'proj',
+      cli: 'nx',
+      layout: 'apps-and-libs',
+      defaultBase: 'main',
+    });
     expect(tree.exists('/nx.json')).toBe(true);
     expect(tree.exists('/workspace.json')).toBe(true);
     expect(tree.exists('/.prettierrc')).toBe(true);
@@ -18,8 +24,13 @@ describe('workspace', () => {
   });
 
   it('should create nx.json', async () => {
-    const tree = await runSchematic('workspace', { name: 'proj' }, projectTree);
-    const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
+    workspaceGenerator(tree, {
+      name: 'proj',
+      cli: 'nx',
+      layout: 'apps-and-libs',
+      defaultBase: 'master',
+    });
+    const nxJson = readJson<NxJson>(tree, '/nx.json');
     expect(nxJson).toEqual({
       npmScope: 'proj',
       affected: {
@@ -48,9 +59,24 @@ describe('workspace', () => {
     });
   });
 
+  it('should create a prettierrc file', async () => {
+    workspaceGenerator(tree, {
+      name: 'proj',
+      cli: 'nx',
+      layout: 'apps-and-libs',
+      defaultBase: 'main',
+    });
+    expect(tree.read('.prettierrc').toString()).toMatchSnapshot();
+  });
+
   it('should recommend vscode extensions', async () => {
-    const tree = await runSchematic('workspace', { name: 'proj' }, projectTree);
-    const recommendations = readJsonInTree<{ recommendations: string[] }>(
+    workspaceGenerator(tree, {
+      name: 'proj',
+      cli: 'nx',
+      layout: 'apps-and-libs',
+      defaultBase: 'main',
+    });
+    const recommendations = readJson<{ recommendations: string[] }>(
       tree,
       '/.vscode/extensions.json'
     ).recommendations;
@@ -62,12 +88,13 @@ describe('workspace', () => {
   });
 
   it('should recommend vscode extensions (angular)', async () => {
-    const tree = await runSchematic(
-      'workspace',
-      { name: 'proj', cli: 'angular' },
-      projectTree
-    );
-    const recommendations = readJsonInTree<{ recommendations: string[] }>(
+    workspaceGenerator(tree, {
+      name: 'proj',
+      cli: 'angular',
+      layout: 'apps-and-libs',
+      defaultBase: 'main',
+    });
+    const recommendations = readJson<{ recommendations: string[] }>(
       tree,
       '/.vscode/extensions.json'
     ).recommendations;
@@ -81,39 +108,42 @@ describe('workspace', () => {
   });
 
   it('should add decorate-angular-cli when used with angular cli', async () => {
-    const tree = await runSchematic(
-      'workspace',
-      { name: 'proj', cli: 'angular' },
-      projectTree
-    );
+    workspaceGenerator(tree, {
+      name: 'proj',
+      cli: 'angular',
+      layout: 'apps-and-libs',
+      defaultBase: 'main',
+    });
     expect(tree.exists('/decorate-angular-cli.js')).toBe(true);
-    const packageJson = readJsonInTree(tree, '/package.json');
+    const packageJson = readJson(tree, '/package.json');
     expect(packageJson.scripts.postinstall).toEqual(
       'node ./decorate-angular-cli.js'
     );
   });
 
   it('should not add decorate-angular-cli when used with nx cli', async () => {
-    const tree = await runSchematic(
-      'workspace',
-      { name: 'proj', cli: 'nx' },
-      projectTree
-    );
+    workspaceGenerator(tree, {
+      name: 'proj',
+      cli: 'nx',
+      layout: 'apps-and-libs',
+      defaultBase: 'main',
+    });
     expect(tree.exists('/decorate-angular-cli.js')).toBe(false);
-    const packageJson = readJsonInTree(tree, '/package.json');
+    const packageJson = readJson(tree, '/package.json');
     expect(packageJson.scripts.postinstall).toBeUndefined();
   });
 
   it('should create a workspace using package layout', async () => {
-    const tree = await runSchematic(
-      'workspace',
-      { name: 'proj', cli: 'nx', layout: 'packages' },
-      projectTree
-    );
+    workspaceGenerator(tree, {
+      name: 'proj',
+      cli: 'nx',
+      layout: 'packages',
+      defaultBase: 'main',
+    });
     expect(tree.exists('/packages/.gitkeep')).toBe(true);
     expect(tree.exists('/apps/.gitkeep')).toBe(false);
     expect(tree.exists('/libs/.gitkeep')).toBe(false);
-    const nx = readJsonInTree(tree, '/nx.json');
+    const nx = readJson(tree, '/nx.json');
     expect(nx.workspaceLayout).toEqual({
       appsDir: 'packages',
       libsDir: 'packages',

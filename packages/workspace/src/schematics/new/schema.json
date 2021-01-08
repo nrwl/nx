@@ -3,6 +3,7 @@
   "id": "NxWorkspaceNew",
   "title": "Create an empty workspace",
   "type": "object",
+  "cli": "nx",
   "properties": {
     "name": {
       "description": "The name of the workspace.",
@@ -13,16 +14,16 @@
       },
       "x-prompt": "What name would you like to use for the workspace?"
     },
+    "cli": {
+      "description": "CLI used for generating code and running tasks",
+      "type": "string",
+      "enum": ["nx", "angular"],
+      "default": "nx"
+    },
     "style": {
       "description": "The file extension to be used for style files.",
       "type": "string",
       "default": "css"
-    },
-    "directory": {
-      "type": "string",
-      "format": "path",
-      "description": "The directory name to create the workspace in.",
-      "default": ""
     },
     "npmScope": {
       "type": "string",
@@ -81,11 +82,6 @@
       "description": "Connect the workspace to the free tier of the distributed cache provided by Nx Cloud",
       "type": "boolean",
       "default": false
-    },
-    "nxWorkspaceRoot": {
-      "type": "string",
-      "description": "Root directory.",
-      "hidden": true
     },
     "linter": {
       "description": "The tool to use for running lint checks.",

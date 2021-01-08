@@ -1,4 +1,3 @@
-import * as path from 'path';
 import {
   readdirSync,
   readFileSync,
@@ -8,6 +7,7 @@ import {
 } from 'fs';
 import { mkdirpSync, rmdirSync } from 'fs-extra';
 import { logger } from './logger';
+import { dirname, join, relative } from 'path';
 const chalk = require('chalk');
 
 /**
@@ -88,6 +88,7 @@ export class FsTree implements Tree {
   constructor(readonly root: string, private readonly isVerbose: boolean) {}
 
   read(filePath: string): Buffer | null {
+    filePath = this.normalize(filePath);
     try {
       if (this.recordedChanges[this.rp(filePath)]) {
         return this.recordedChanges[this.rp(filePath)].content;
@@ -103,6 +104,7 @@ export class FsTree implements Tree {
   }
 
   write(filePath: string, content: Buffer | string): void {
+    filePath = this.normalize(filePath);
     try {
       this.recordedChanges[this.rp(filePath)] = {
         content: Buffer.from(content),
@@ -116,10 +118,12 @@ export class FsTree implements Tree {
   }
 
   overwrite(filePath: string, content: Buffer | string): void {
+    filePath = this.normalize(filePath);
     this.write(filePath, content);
   }
 
   exists(filePath: string): boolean {
+    filePath = this.normalize(filePath);
     try {
       if (this.recordedChanges[this.rp(filePath)]) {
         return !this.recordedChanges[this.rp(filePath)].isDeleted;
@@ -134,6 +138,7 @@ export class FsTree implements Tree {
   }
 
   delete(filePath: string): void {
+    filePath = this.normalize(filePath);
     if (this.filesForDir(this.rp(filePath)).length > 0) {
       this.filesForDir(this.rp(filePath)).forEach(
         (f) => (this.recordedChanges[f] = { content: null, isDeleted: true })
@@ -146,12 +151,15 @@ export class FsTree implements Tree {
   }
 
   rename(from: string, to: string): void {
+    from = this.normalize(from);
+    to = this.normalize(to);
     const content = this.read(this.rp(from));
     this.recordedChanges[this.rp(from)] = { content: null, isDeleted: true };
     this.recordedChanges[this.rp(to)] = { content: content, isDeleted: false };
   }
 
   isFile(filePath: string): boolean {
+    filePath = this.normalize(filePath);
     try {
       if (this.recordedChanges[this.rp(filePath)]) {
         return !this.recordedChanges[this.rp(filePath)].isDeleted;
@@ -164,11 +172,12 @@ export class FsTree implements Tree {
   }
 
   children(dirPath: string): string[] {
+    dirPath = this.normalize(dirPath);
     let res = this.fsReadDir(dirPath);
 
     res = [...res, ...this.directChildrenOfDir(this.rp(dirPath))];
     return res.filter((q) => {
-      const r = this.recordedChanges[path.join(this.rp(dirPath), q)];
+      const r = this.recordedChanges[join(this.rp(dirPath), q)];
       if (r && r.isDeleted) return false;
       return true;
     });
@@ -200,10 +209,14 @@ export class FsTree implements Tree {
     return res;
   }
 
+  private normalize(path: string) {
+    return relative(this.root, join(this.root, path));
+  }
+
   private fsReadDir(dirPath: string) {
     if (!this.delegateToFs) return [];
     try {
-      return readdirSync(path.join(this.root, dirPath));
+      return readdirSync(join(this.root, dirPath));
     } catch (e) {
       return [];
     }
@@ -211,19 +224,19 @@ export class FsTree implements Tree {
 
   private fsIsFile(filePath: string) {
     if (!this.delegateToFs) return false;
-    const stat = statSync(path.join(this.root, filePath));
+    const stat = statSync(join(this.root, filePath));
     return stat.isFile();
   }
 
   private fsReadFile(filePath: string) {
     if (!this.delegateToFs) return null;
-    return readFileSync(path.join(this.root, filePath));
+    return readFileSync(join(this.root, filePath));
   }
 
   private fsExists(filePath: string): boolean {
     if (!this.delegateToFs) return false;
     try {
-      const stat = statSync(path.join(this.root, filePath));
+      const stat = statSync(join(this.root, filePath));
       return stat.isFile() || stat.isDirectory();
     } catch (e) {
       return false;
@@ -258,9 +271,9 @@ export class FsTree implements Tree {
 
 export function flushChanges(root: string, fileChanges: FileChange[]) {
   fileChanges.forEach((f) => {
-    const fpath = path.join(root, f.path);
+    const fpath = join(root, f.path);
     if (f.type === 'CREATE') {
-      mkdirpSync(path.dirname(fpath));
+      mkdirpSync(dirname(fpath));
       writeFileSync(fpath, f.content);
     } else if (f.type === 'UPDATE') {
       writeFileSync(fpath, f.content);
