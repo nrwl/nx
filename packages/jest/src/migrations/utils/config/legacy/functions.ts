@@ -1,20 +1,20 @@
 import * as ts from 'typescript';
-import {
-  BinaryExpression,
-  ExpressionStatement,
-  isBinaryExpression,
-  isExpressionStatement,
-  SyntaxKind,
-} from 'typescript';
-import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
+import { findNodes, InsertChange, ReplaceChange } from '@nrwl/workspace';
+import { Tree } from '@angular-devkit/schematics';
 import * as stripJsonComments from 'strip-json-comments';
 import { Config } from '@jest/types';
 
-function makeTextToInsert(
+function createInsertChange(
+  path: string,
   value: unknown,
+  position: number,
   precedingCommaNeeded: boolean
-): string {
-  return `${precedingCommaNeeded ? ',' : ''}${value}`;
+) {
+  return new InsertChange(
+    path,
+    position,
+    `${precedingCommaNeeded ? ',' : ''}${value}`
+  );
 }
 
 function findPropertyAssignment(
@@ -44,7 +44,6 @@ export function getJsonObject(object: string) {
 }
 
 export function addOrUpdateProperty(
-  tree: Tree,
   object: ts.ObjectLiteralExpression,
   properties: string[],
   value: unknown,
@@ -53,8 +52,6 @@ export function addOrUpdateProperty(
   const propertyName = properties.shift();
   const propertyAssignment = findPropertyAssignment(object, propertyName);
 
-  const originalContents = tree.read(path).toString();
-
   if (propertyAssignment) {
     if (
       propertyAssignment.initializer.kind === ts.SyntaxKind.StringLiteral ||
@@ -62,21 +59,14 @@ export function addOrUpdateProperty(
       propertyAssignment.initializer.kind === ts.SyntaxKind.FalseKeyword ||
       propertyAssignment.initializer.kind === ts.SyntaxKind.TrueKeyword
     ) {
-      const updatedContents = applyChangesToString(originalContents, [
-        {
-          type: ChangeType.Delete,
-          start: propertyAssignment.initializer.pos,
-          length: propertyAssignment.initializer.getFullText().length,
-        },
-        {
-          type: ChangeType.Insert,
-          index: propertyAssignment.initializer.pos,
-          text: value as string,
-        },
-      ]);
-
-      tree.write(path, updatedContents);
-      return;
+      return [
+        new ReplaceChange(
+          path,
+          propertyAssignment.initializer.pos,
+          propertyAssignment.initializer.getFullText(),
+          value as string
+        ),
+      ];
     }
 
     if (
@@ -94,37 +84,25 @@ export function addOrUpdateProperty(
       }
 
       if (arrayLiteral.elements.length === 0) {
-        const updatedContents = applyChangesToString(originalContents, [
-          {
-            type: ChangeType.Insert,
-            index: arrayLiteral.elements.end,
-            text: value as string,
-          },
-        ]);
-        tree.write(path, updatedContents);
-        return;
+        return [
+          new InsertChange(path, arrayLiteral.elements.end, value as string),
+        ];
       } else {
-        const text = makeTextToInsert(
-          value,
-          arrayLiteral.elements.length !== 0 &&
-            !arrayLiteral.elements.hasTrailingComma
-        );
-        const updatedContents = applyChangesToString(originalContents, [
-          {
-            type: ChangeType.Insert,
-            index: arrayLiteral.elements.end,
-            text: text,
-          },
-        ]);
-        tree.write(path, updatedContents);
-        return;
+        return [
+          createInsertChange(
+            path,
+            value,
+            arrayLiteral.elements.end,
+            arrayLiteral.elements.length !== 0 &&
+              !arrayLiteral.elements.hasTrailingComma
+          ),
+        ];
       }
     } else if (
       propertyAssignment.initializer.kind ===
       ts.SyntaxKind.ObjectLiteralExpression
     ) {
       return addOrUpdateProperty(
-        tree,
         propertyAssignment.initializer as ts.ObjectLiteralExpression,
         properties,
         value,
@@ -137,19 +115,14 @@ export function addOrUpdateProperty(
         `Please use dot delimited paths to update an existing object. Eg. object.property `
       );
     }
-    const text = makeTextToInsert(
-      `${JSON.stringify(propertyName)}: ${value}`,
-      object.properties.length !== 0 && !object.properties.hasTrailingComma
-    );
-    const updatedContents = applyChangesToString(originalContents, [
-      {
-        type: ChangeType.Insert,
-        index: object.properties.end,
-        text: text,
-      },
-    ]);
-    tree.write(path, updatedContents);
-    return;
+    return [
+      createInsertChange(
+        path,
+        `${JSON.stringify(propertyName)}: ${value}`,
+        object.properties.end,
+        object.properties.length !== 0 && !object.properties.hasTrailingComma
+      ),
+    ];
   }
 }
 
@@ -184,8 +157,11 @@ export function removeProperty(
  * @param path
  */
 export function jestConfigObjectAst(
-  fileContent: string
+  host: Tree,
+  path: string
 ): ts.ObjectLiteralExpression {
+  const fileContent = host.read(path).toString('utf-8');
+
   const sourceFile = ts.createSourceFile(
     'jest.config.js',
     fileContent,
@@ -193,16 +169,16 @@ export function jestConfigObjectAst(
     true
   );
 
-  const moduleExportsStatement = sourceFile.statements.find(
-    (statement) =>
-      isExpressionStatement(statement) &&
-      isBinaryExpression(statement.expression) &&
-      statement.expression.left.getText() === 'module.exports' &&
-      statement.expression.operatorToken.kind === SyntaxKind.EqualsToken
-  );
+  const expressions = findNodes(
+    sourceFile,
+    ts.SyntaxKind.BinaryExpression
+  ) as ts.BinaryExpression[];
 
-  const moduleExports = (moduleExportsStatement as ExpressionStatement)
-    .expression as BinaryExpression;
+  const moduleExports = expressions.find(
+    (node) =>
+      node.left.getText() === 'module.exports' &&
+      node.operatorToken.kind === ts.SyntaxKind.EqualsToken
+  );
 
   if (!moduleExports) {
     throw new Error(
@@ -230,6 +206,6 @@ export function jestConfigObject(
   host: Tree,
   path: string
 ): Partial<Config.InitialOptions> & { [index: string]: any } {
-  const jestConfigAst = jestConfigObjectAst(host.read(path).toString('utf-8'));
+  const jestConfigAst = jestConfigObjectAst(host, path);
   return getJsonObject(jestConfigAst.getText());
 }

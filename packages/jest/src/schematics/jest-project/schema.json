@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "id": "NxJestProject",
+  "cli": "nx",
   "title": "Add Jest Configuration to a project",
   "type": "object",
   "properties": {
@@ -43,6 +44,11 @@
       "type": "boolean",
       "alias": "babel-jest",
       "description": "Use babel-jest instead of ts-jest",
+      "default": false
+    },
+    "skipFormat": {
+      "description": "Skip formatting files",
+      "type": "boolean",
       "default": false
     }
   },

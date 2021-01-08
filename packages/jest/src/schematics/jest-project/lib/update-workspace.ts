@@ -1,30 +1,31 @@
 import { join, normalize } from '@angular-devkit/core';
-import { Rule } from '@angular-devkit/schematics';
-import { updateWorkspaceInTree } from '@nrwl/workspace';
 import { JestProjectSchema } from '../schema';
+import {
+  readProjectConfiguration,
+  Tree,
+  updateProjectConfiguration,
+} from '@nrwl/devkit';
 
-export function updateWorkspace(options: JestProjectSchema): Rule {
-  return updateWorkspaceInTree((json) => {
-    const projectConfig = json.projects[options.project];
-    projectConfig.architect.test = {
-      builder: '@nrwl/jest:jest',
-      outputs: [join(normalize('coverage'), normalize(projectConfig.root))],
-      options: {
-        jestConfig: join(normalize(projectConfig.root), 'jest.config.js'),
-        passWithNoTests: true,
-      },
-    };
+export function updateWorkspace(tree: Tree, options: JestProjectSchema) {
+  const projectConfig = readProjectConfiguration(tree, options.project);
+  projectConfig.targets.test = {
+    executor: '@nrwl/jest:jest',
+    outputs: [join(normalize('coverage'), normalize(projectConfig.root))],
+    options: {
+      jestConfig: join(normalize(projectConfig.root), 'jest.config.js'),
+      passWithNoTests: true,
+    },
+  };
 
-    const isUsingTSLint =
-      projectConfig.architect.lint?.builder ===
-      '@angular-devkit/build-angular:tslint';
+  const isUsingTSLint =
+    projectConfig.targets.lint?.executor ===
+    '@angular-devkit/build-angular:tslint';
 
-    if (isUsingTSLint) {
-      projectConfig.architect.lint.options.tsConfig = [
-        ...projectConfig.architect.lint.options.tsConfig,
-        join(normalize(projectConfig.root), 'tsconfig.spec.json'),
-      ];
-    }
-    return json;
-  });
+  if (isUsingTSLint) {
+    projectConfig.targets.lint.options.tsConfig = [
+      ...projectConfig.targets.lint.options.tsConfig,
+      join(normalize(projectConfig.root), 'tsconfig.spec.json'),
+    ];
+  }
+  updateProjectConfiguration(tree, options.project, projectConfig);
 }

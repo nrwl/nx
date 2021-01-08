@@ -28,13 +28,16 @@ export async function formatFiles(host: Tree) {
       let options: any = {
         filepath: systemPath,
       };
+
       const resolvedOptions = await prettier.resolveConfig(systemPath);
-      if (resolvedOptions) {
-        options = {
-          ...options,
-          ...resolvedOptions,
-        };
+      if (!resolvedOptions) {
+        return;
       }
+      options = {
+        ...options,
+        ...resolvedOptions,
+      };
+
       const support = await prettier.getFileInfo(systemPath, options);
       if (support.ignored || !support.inferredParser) {
         return;

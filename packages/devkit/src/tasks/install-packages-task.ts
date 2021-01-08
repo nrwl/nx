@@ -1,6 +1,6 @@
 import { Tree } from '@nrwl/tao/src/shared/tree';
-import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { execSync } from 'child_process';
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 
 let storedPackageJsonValue;
 

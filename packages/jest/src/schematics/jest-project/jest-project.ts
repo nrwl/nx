@@ -1,12 +1,11 @@
-import { chain, Rule } from '@angular-devkit/schematics';
 import init from '../init/init';
 import { checkForTestTarget } from './lib/check-for-test-target';
-import { generateFiles } from './lib/generate-files';
+import { createFiles } from './lib/create-files';
 import { updateTsConfig } from './lib/update-tsconfig';
 import { updateWorkspace } from './lib/update-workspace';
 import { updateJestConfig } from './lib/update-jestconfig';
 import { JestProjectSchema } from './schema';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import { formatFiles, Tree, convertNxGenerator } from '@nrwl/devkit';
 
 const schemaDefaults = {
   setupFile: 'none',
@@ -39,19 +38,20 @@ function normalizeOptions(options: JestProjectSchema) {
   };
 }
 
-export default function (schema: JestProjectSchema): Rule {
+export async function jestProjectGenerator(
+  tree: Tree,
+  schema: JestProjectSchema
+) {
   const options = normalizeOptions(schema);
-  return chain([
-    init(options),
-    checkForTestTarget(options),
-    generateFiles(options),
-    updateTsConfig(options),
-    updateWorkspace(options),
-    updateJestConfig(options),
-  ]);
+  init(tree, options);
+  checkForTestTarget(tree, options);
+  createFiles(tree, options);
+  updateTsConfig(tree, options);
+  updateWorkspace(tree, options);
+  updateJestConfig(tree, options);
+  if (!schema.skipFormat) {
+    await formatFiles(tree);
+  }
 }
 
-export const jestProjectGenerator = wrapAngularDevkitSchematic(
-  '@nrwl/jest',
-  'jest-project'
-);
+export const jestProjectSchematic = convertNxGenerator(jestProjectGenerator);

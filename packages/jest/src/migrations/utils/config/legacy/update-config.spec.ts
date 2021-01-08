@@ -1,18 +1,17 @@
+import { Tree } from '@angular-devkit/schematics';
 import {
   addPropertyToJestConfig,
   removePropertyFromJestConfig,
 } from './update-config';
 import { jestConfigObject } from './functions';
-import { Tree } from '@nrwl/devkit';
-import { createTree } from '@nrwl/devkit/testing';
 
 describe('Update jest.config.js', () => {
   let host: Tree;
 
   beforeEach(() => {
-    host = createTree();
+    host = Tree.empty();
     // create
-    host.write(
+    host.create(
       'jest.config.js',
       String.raw`
       module.exports = {
@@ -181,7 +180,7 @@ describe('Update jest.config.js', () => {
       });
 
       it('should warn if the jest.config doesnt match module.exports = {} style', () => {
-        host.write(
+        host.create(
           'jest.unconventional.js',
           String.raw`
           jestObject = {

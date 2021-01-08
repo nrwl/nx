@@ -1,5 +1,5 @@
 import { Tree } from '@nrwl/tao/src/shared/tree';
-import { readJson } from './read-json';
+import { readJson } from './json';
 import { NxJsonConfiguration } from '@nrwl/tao/src/shared/nx';
 
 /**

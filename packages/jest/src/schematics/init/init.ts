@@ -1,17 +1,5 @@
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
-  chain,
-  Rule,
-  SchematicContext,
-  Tree,
-} from '@angular-devkit/schematics';
-import {
-  addDepsToPackageJson,
-  readJsonInTree,
-  updateJsonInTree,
-} from '@nrwl/workspace';
-import { noop } from 'rxjs';
-import {
   babelCoreVersion,
   babelJestVersion,
   babelPresetEnvVersion,
@@ -23,6 +11,12 @@ import {
   tsJestVersion,
 } from '../../utils/versions';
 import { JestInitSchema } from './schema';
+import {
+  Tree,
+  updateJson,
+  addDependenciesToPackageJson,
+  convertNxGenerator,
+} from '@nrwl/devkit';
 
 interface NormalizedSchema extends ReturnType<typeof normalizeOptions> {}
 
@@ -30,27 +24,19 @@ const schemaDefaults = {
   babelJest: false,
 } as const;
 
-const removeNrwlJestFromDeps = (host: Tree) => {
-  // check whether updating the package.json is necessary
-  const currentPackageJson = readJsonInTree(host, 'package.json');
-
-  if (
-    currentPackageJson.dependencies &&
-    currentPackageJson.dependencies['@nrwl/jest']
-  ) {
-    return updateJsonInTree('package.json', (json) => {
-      json.dependencies = json.dependencies || {};
+function removeNrwlJestFromDeps(host: Tree) {
+  updateJson(host, 'package.json', (json) => {
+    // check whether updating the package.json is necessary
+    if (json.dependencies && json.dependencies['@nrwl/jest']) {
       delete json.dependencies['@nrwl/jest'];
-      return json;
-    });
-  } else {
-    return noop();
-  }
-};
+    }
+    return json;
+  });
+}
 
-const createJestConfig = (host: Tree) => {
+function createJestConfig(host: Tree) {
   if (!host.exists('jest.config.js')) {
-    host.create(
+    host.write(
       'jest.config.js',
       stripIndents`
   module.exports = {
@@ -60,7 +46,7 @@ const createJestConfig = (host: Tree) => {
   }
 
   if (!host.exists('jest.preset.js')) {
-    host.create(
+    host.write(
       'jest.preset.js',
       `
       const nxPreset = require('@nrwl/jest/preset');
@@ -68,9 +54,9 @@ const createJestConfig = (host: Tree) => {
       module.exports = { ...nxPreset }`
     );
   }
-};
+}
 
-function updateDependencies(options: NormalizedSchema): Rule {
+function updateDependencies(tree: Tree, options: NormalizedSchema) {
   const devDeps = {
     '@nrwl/jest': nxVersion,
     jest: jestVersion,
@@ -86,33 +72,31 @@ function updateDependencies(options: NormalizedSchema): Rule {
     devDeps['babel-jest'] = babelJestVersion;
   }
 
-  return addDepsToPackageJson({}, devDeps);
+  return addDependenciesToPackageJson(tree, {}, devDeps);
 }
 
-function updateExtensions(host: Tree, context: SchematicContext) {
+function updateExtensions(host: Tree) {
   if (!host.exists('.vscode/extensions.json')) {
     return;
   }
 
-  return updateJsonInTree('.vscode/extensions.json', (json) => {
+  updateJson(host, '.vscode/extensions.json', (json) => {
     json.recommendations = json.recommendations || [];
     const extension = 'firsttris.vscode-jest-runner';
     if (!json.recommendations.includes(extension)) {
       json.recommendations.push(extension);
     }
     return json;
-  })(host, context);
+  });
 }
 
-export default function (schema: JestInitSchema): Rule {
+export function jestInitGenerator(tree: Tree, schema: JestInitSchema) {
   const options = normalizeOptions(schema);
-
-  return chain([
-    createJestConfig,
-    updateDependencies(options),
-    removeNrwlJestFromDeps,
-    updateExtensions,
-  ]);
+  createJestConfig(tree);
+  const installTask = updateDependencies(tree, options);
+  removeNrwlJestFromDeps(tree);
+  updateExtensions(tree);
+  return installTask;
 }
 
 function normalizeOptions(options: JestInitSchema) {
@@ -121,3 +105,7 @@ function normalizeOptions(options: JestInitSchema) {
     ...options,
   };
 }
+
+export default jestInitGenerator;
+
+export const jestInitSchematic = convertNxGenerator(jestInitGenerator);

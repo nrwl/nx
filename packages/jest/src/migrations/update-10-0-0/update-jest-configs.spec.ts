@@ -3,7 +3,7 @@ import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import * as path from 'path';
 import { serializeJson } from '@nrwl/workspace';
-import { jestConfigObject } from '../../utils/config/functions';
+import { jestConfigObject } from '../utils/config/legacy/functions';
 
 import { getJestObject } from './require-jest-config';
 jest.mock('./require-jest-config');

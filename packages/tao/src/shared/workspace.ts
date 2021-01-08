@@ -124,6 +124,19 @@ export function workspaceConfigName(root: string) {
   }
 }
 
+/**
+ * A callback function that is executed after changes are made to the file system
+ */
+export type GeneratorCallback = () => void | Promise<void>;
+
+/**
+ * A function that schedules updates to the filesystem to be done atomically
+ */
+export type Generator<T = unknown> = (
+  tree,
+  schema: T
+) => void | GeneratorCallback | Promise<void | GeneratorCallback>;
+
 export class Workspaces {
   constructor(private root: string) {}
 
@@ -222,7 +235,7 @@ export class Workspaces {
         '#'
       );
       const module = require(path.join(generatorsDir, modulePath));
-      const implementation = module[exportName || 'default'];
+      const implementation = module[exportName || 'default'] as Generator;
       return { normalizedGeneratorName, schema, implementation };
     } catch (e) {
       throw new Error(

@@ -1,12 +1,13 @@
 export interface JestProjectSchema {
   project: string;
-  supportTsx?: boolean;
+  supportTsx: boolean;
   /**
    * @deprecated
    */
-  skipSetupFile?: boolean;
-  setupFile?: 'angular' | 'web-components' | 'none';
-  skipSerializers?: boolean;
-  testEnvironment?: 'node' | 'jsdom' | '';
-  babelJest?: boolean;
+  skipSetupFile: boolean;
+  setupFile: 'angular' | 'web-components' | 'none';
+  skipSerializers: boolean;
+  testEnvironment: 'node' | 'jsdom' | '';
+  babelJest: boolean;
+  skipFormat: boolean;
 }
