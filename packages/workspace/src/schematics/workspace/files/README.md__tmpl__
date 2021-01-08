@@ -1,6 +1,6 @@
 <% if(cli === 'angular') { %>
 
-# <%= utils.classify(name) %>
+# <%= formattedNames.className %>
 
 This project was generated using [Nx](https://nx.dev).
 
@@ -92,7 +92,7 @@ Visit the [Nx Documentation](https://nx.dev/angular) to learn more.
 
 <% } else { %>
 
-# <%= utils.classify(name) %>
+# <%= formattedNames.className %>
 
 This project was generated using [Nx](https://nx.dev).
 

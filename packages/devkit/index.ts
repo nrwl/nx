@@ -11,6 +11,7 @@ export {
   NxJsonProjectConfiguration,
 } from '@nrwl/tao/src/shared/nx';
 export { logger } from '@nrwl/tao/src/shared/logger';
+export { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 export { TargetContext } from '@nrwl/tao/src/commands/run';
 
 export { formatFiles } from './src/generators/format-files';
@@ -25,7 +26,10 @@ export { readJson, writeJson, updateJson } from './src/utils/json';
 export { addDependenciesToPackageJson } from './src/utils/package-json';
 export { installPackagesTask } from './src/tasks/install-packages-task';
 export { names } from './src/utils/names';
-export { getWorkspaceLayout } from './src/utils/get-workspace-layout';
+export {
+  getWorkspaceLayout,
+  getWorkspacePath,
+} from './src/utils/get-workspace-layout';
 export {
   applyChangesToString,
   ChangeType,
