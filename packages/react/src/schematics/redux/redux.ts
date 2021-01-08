@@ -63,9 +63,10 @@ function addReduxPackageDependencies(): Rule {
     {
       '@reduxjs/toolkit': reduxjsToolkitVersion,
       'react-redux': reactReduxVersion,
-      '@types/react-redux': typesReactReduxVersion,
     },
-    {}
+    {
+      '@types/react-redux': typesReactReduxVersion,
+    }
   );
 }
 
