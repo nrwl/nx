@@ -42,6 +42,7 @@ export const Constants = {
   uiFrameworks: {
     angular: '@storybook/angular',
     react: '@storybook/react',
+    html: '@storybook/html',
   } as const,
 };
 type Constants = typeof Constants;
@@ -58,6 +59,9 @@ export function isFramework(
     return true;
   }
   if (type === 'react' && schema.uiFramework === '@storybook/react') {
+    return true;
+  }
+  if (type === 'html' && schema.uiFramework === '@storybook/html') {
     return true;
   }
 
