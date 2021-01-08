@@ -5,7 +5,6 @@ import {
   readFile,
   readJson,
   runCLI,
-  runCommand,
   tmpProjPath,
   uniq,
   updateFile,
@@ -45,7 +44,7 @@ describe('report', () => {
   it(`should report package versions`, async () => {
     newProject();
 
-    const reportOutput = runCommand('npm run nx report');
+    const reportOutput = runCLI('report');
 
     packagesWeCareAbout.forEach((p) => {
       expect(reportOutput).toContain(p);
@@ -59,7 +58,7 @@ describe('list', () => {
   });
 
   it(`should work`, async () => {
-    let listOutput = runCommand('npm run nx -- list');
+    let listOutput = runCLI('list');
 
     expect(listOutput).toContain('NX  Installed plugins');
 
@@ -72,11 +71,11 @@ describe('list', () => {
       tmpProjPath('node_modules/@nrwl/angular_tmp')
     );
 
-    listOutput = runCommand('npm run nx -- list');
+    listOutput = runCLI('list');
     expect(listOutput).toContain('NX  Also available');
 
     // look for specific plugin
-    listOutput = runCommand('npm run nx -- list @nrwl/workspace');
+    listOutput = runCLI('list @nrwl/workspace');
 
     expect(listOutput).toContain('Capabilities in @nrwl/workspace');
 
@@ -89,14 +88,14 @@ describe('list', () => {
     expect(listOutput).toContain('run-commands');
 
     // // look for uninstalled core plugin
-    listOutput = runCommand('npm run nx -- list @nrwl/angular');
+    listOutput = runCLI('list @nrwl/angular');
 
     expect(listOutput).toContain(
       'NX   NOTE  @nrwl/angular is not currently installed'
     );
 
     // look for an unknown plugin
-    listOutput = runCommand('npm run nx -- list @wibble/fish');
+    listOutput = runCLI('list @wibble/fish');
 
     expect(listOutput).toContain(
       'NX   NOTE  @wibble/fish is not currently installed'

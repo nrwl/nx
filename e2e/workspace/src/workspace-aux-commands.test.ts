@@ -7,7 +7,7 @@ import {
   readJson,
   renameFile,
   runCLI,
-  runCommand,
+  runCLIAsync,
   tmpProjPath,
   uniq,
   updateFile,
@@ -91,7 +91,7 @@ describe('lint', () => {
       runCLI(`generate @nrwl/angular:app ${appBefore}`);
       renameFile(`apps/${appBefore}`, `apps/${appAfter}`);
 
-      const stdout = runCommand('npm run nx workspace-lint');
+      const stdout = runCLI('workspace-lint', { silenceError: true });
       expect(stdout).toContain(
         `- Cannot find project '${appBefore}' in 'apps/${appBefore}'`
       );
@@ -109,7 +109,7 @@ describe('lint', () => {
 });
 
 describe('format', () => {
-  it('format should check and reformat the code', () => {
+  it('should check and reformat the code', async () => {
     const myapp = uniq('myapp');
     const mylib = uniq('mylib');
 
@@ -156,8 +156,9 @@ describe('format', () => {
     `
     );
 
-    let stdout = runCommand(
-      `npm run -s format:check -- --files="libs/${mylib}/index.ts,package.json" --libs-and-apps`
+    let stdout = runCLI(
+      `format:check --files="libs/${mylib}/index.ts,package.json" --libs-and-apps`,
+      { silenceError: true }
     );
     expect(stdout).toContain(path.normalize(`libs/${mylib}/index.ts`));
     expect(stdout).toContain(
@@ -165,7 +166,7 @@ describe('format', () => {
     );
     expect(stdout).not.toContain(path.normalize(`README.md`)); // It will be contained only in case of exception, that we fallback to all
 
-    stdout = runCommand(`npm run -s format:check -- --all`);
+    stdout = runCLI(`format:check --all`, { silenceError: true });
     expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
     expect(stdout).toContain(
       path.normalize(`apps/${myapp}/src/app/app.module.ts`)
@@ -174,7 +175,7 @@ describe('format', () => {
       path.normalize(`apps/${myapp}/src/app/app.component.ts`)
     );
 
-    stdout = runCommand(`npm run -s format:check -- --projects=${myapp}`);
+    stdout = runCLI(`format:check --projects=${myapp}`, { silenceError: true });
     expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
     expect(stdout).toContain(
       path.normalize(`apps/${myapp}/src/app/app.module.ts`)
@@ -188,9 +189,9 @@ describe('format', () => {
     );
     expect(stdout).not.toContain(path.normalize(`README.md`));
 
-    stdout = runCommand(
-      `npm run -s format:check -- --projects=${myapp},${mylib}`
-    );
+    stdout = runCLI(`format:check --projects=${myapp},${mylib}`, {
+      silenceError: true,
+    });
     expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
     expect(stdout).toContain(
       path.normalize(`apps/${myapp}/src/app/app.module.ts`)
@@ -204,19 +205,21 @@ describe('format', () => {
     );
     expect(stdout).not.toContain(path.normalize(`README.md`));
 
-    stdout = runCommand(
-      `npm run -s format:check -- --projects=${myapp},${mylib} --all`
+    const { stderr } = await runCLIAsync(
+      `format:check --projects=${myapp},${mylib} --all`,
+      {
+        silenceError: true,
+      }
     );
-    expect(stdout).toContain(
+    expect(stderr).toContain(
       'Arguments all and projects are mutually exclusive'
     );
 
-    runCommand(
-      `npm run format:write -- --files="apps/${myapp}/src/app/app.module.ts,apps/${myapp}/src/app/app.component.ts"`
+    runCLI(
+      `format:write --files="apps/${myapp}/src/app/app.module.ts,apps/${myapp}/src/app/app.component.ts"`
     );
 
-    stdout = runCommand('npm run -s format:check -- --all');
-
+    stdout = runCLI('format:check --all', { silenceError: true });
     expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
     expect(stdout).not.toContain(
       path.normalize(`apps/${myapp}/src/app/app.module.ts`)
@@ -225,8 +228,8 @@ describe('format', () => {
       path.normalize(`apps/${myapp}/src/app/app.component.ts`)
     );
 
-    runCommand('npm run format:write -- --all');
-    expect(runCommand('npm run -s format:check -- --all')).not.toContain(
+    runCLI('format:write --all');
+    expect(runCLI('format:check --all')).not.toContain(
       path.normalize(`apps/${myapp}/src/main.ts`)
     );
   });
@@ -280,9 +283,7 @@ describe('workspace-generator', () => {
         `;
     });
 
-    runCommand(
-      `nx workspace-generator ${custom} ${workspace} --no-interactive -d`
-    );
+    runCLI(`workspace-generator ${custom} ${workspace} --no-interactive -d`);
 
     expect(() =>
       checkFilesExist(
@@ -406,7 +407,7 @@ describe('dep-graph', () => {
   });
 
   it('dep-graph should output json to file', () => {
-    runCommand(`npm run dep-graph -- --file=project-graph.json`);
+    runCLI(`dep-graph --file=project-graph.json`);
 
     expect(() => checkFilesExist('project-graph.json')).not.toThrow();
 
@@ -462,8 +463,8 @@ describe('dep-graph', () => {
       })
     );
 
-    runCommand(
-      `npm run affected:dep-graph -- --files="libs/${mylib}/src/index.ts" --file="project-graph.json"`
+    runCLI(
+      `affected:dep-graph --files="libs/${mylib}/src/index.ts" --file="project-graph.json"`
     );
 
     expect(() => checkFilesExist('project-graph.json')).not.toThrow();
@@ -477,9 +478,7 @@ describe('dep-graph', () => {
   }, 1000000);
 
   it('dep-graph should focus requested project', () => {
-    runCommand(
-      `npm run dep-graph -- --focus=${myapp} --file=project-graph.json`
-    );
+    runCLI(`dep-graph --focus=${myapp} --file=project-graph.json`);
 
     expect(() => checkFilesExist('project-graph.json')).not.toThrow();
 
@@ -498,8 +497,8 @@ describe('dep-graph', () => {
   }, 1000000);
 
   it('dep-graph should exclude requested projects', () => {
-    runCommand(
-      `npm run dep-graph -- --exclude=${myappE2e},${myapp2E2e},${myapp3E2e} --file=project-graph.json`
+    runCLI(
+      `dep-graph --exclude=${myappE2e},${myapp2E2e},${myapp3E2e} --file=project-graph.json`
     );
 
     expect(() => checkFilesExist('project-graph.json')).not.toThrow();
@@ -519,8 +518,8 @@ describe('dep-graph', () => {
   }, 1000000);
 
   it('dep-graph should exclude requested projects that were included by a focus', () => {
-    runCommand(
-      `npm run dep-graph -- --focus=${myapp} --exclude=${myappE2e} --file=project-graph.json`
+    runCLI(
+      `dep-graph --focus=${myapp} --exclude=${myappE2e} --file=project-graph.json`
     );
 
     expect(() => checkFilesExist('project-graph.json')).not.toThrow();
@@ -540,7 +539,7 @@ describe('dep-graph', () => {
   }, 1000000);
 
   it('dep-graph should output a deployable static website in an html file accompanied by a folder with static assets', () => {
-    runCommand(`npm run dep-graph -- --file=project-graph.html`);
+    runCLI(`dep-graph --file=project-graph.html`);
 
     expect(() => checkFilesExist('project-graph.html')).not.toThrow();
     expect(() => checkFilesExist('static/styles.css')).not.toThrow();
