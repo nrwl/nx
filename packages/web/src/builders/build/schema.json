@@ -104,14 +104,14 @@
       "type": "array",
       "description": "External Scripts which will be included before the main application entry",
       "items": {
-        "type": "string"
+        "$ref": "#/definitions/extraEntryPoint"
       }
     },
     "styles": {
       "type": "array",
       "description": "External Styles which will be included with the application",
       "items": {
-        "type": "string"
+        "$ref": "#/definitions/extraEntryPoint"
       }
     },
     "budgets": {
@@ -325,6 +325,34 @@
       },
       "additionalProperties": false,
       "required": ["type"]
+    },
+    "extraEntryPoint": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "input": {
+              "type": "string",
+              "description": "The file to include."
+            },
+            "bundleName": {
+              "type": "string",
+              "description": "The bundle name for this extra entry point."
+            },
+            "inject": {
+              "type": "boolean",
+              "description": "If the bundle will be referenced in the HTML file.",
+              "default": true
+            }
+          },
+          "additionalProperties": false,
+          "required": ["input"]
+        },
+        {
+          "type": "string",
+          "description": "The file to include."
+        }
+      ]
     }
   }
 }

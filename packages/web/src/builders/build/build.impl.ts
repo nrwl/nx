@@ -32,6 +32,7 @@ import { CrossOriginValue } from '../../utils/third-party/cli-files/utilities/in
 import { readTsConfig } from '@nrwl/workspace';
 import { BuildBrowserFeatures } from '../../utils/third-party/utils/build-browser-features';
 import { deleteOutputDir } from '../../utils/delete-output-dir';
+import { ExtraEntryPoint } from '../../utils/third-party/browser/schema';
 
 export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   index: string;
@@ -45,8 +46,8 @@ export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   polyfills?: string;
   es2015Polyfills?: string;
 
-  scripts: string[];
-  styles: string[];
+  scripts: ExtraEntryPoint[];
+  styles: ExtraEntryPoint[];
 
   vendorChunk?: boolean;
   commonChunk?: boolean;
