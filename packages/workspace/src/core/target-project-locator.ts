@@ -64,11 +64,6 @@ export class TargetProjectLocator {
       return this.findProjectOfResolvedModule(resolvedModule);
     }
 
-    const npmProject = this.findNpmPackage(importExpr);
-    if (npmProject) {
-      return npmProject;
-    }
-
     if (this.paths && this.paths[normalizedImportExpr]) {
       for (let p of this.paths[normalizedImportExpr]) {
         const maybeResolvedProject = this.findProjectOfResolvedModule(p);
@@ -95,6 +90,11 @@ export class TargetProjectLocator {
       if (resolvedProject) {
         return resolvedProject;
       }
+    }
+
+    const npmProject = this.findNpmPackage(importExpr);
+    if (npmProject) {
+      return npmProject;
     }
 
     const importedProject = this.sortedWorkspaceProjects.find((p) => {
