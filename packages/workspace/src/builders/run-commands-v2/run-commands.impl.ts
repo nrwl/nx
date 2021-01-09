@@ -152,9 +152,9 @@ function normalizeOptions(
 }
 
 async function runSerially(options: NormalizedRunCommandsBuilderOptions) {
-  options.commands.forEach((c) => {
+  for (const c of options.commands) {
     createSyncProcess(c.command, options.color, options.cwd);
-  });
+  }
   return true;
 }
 

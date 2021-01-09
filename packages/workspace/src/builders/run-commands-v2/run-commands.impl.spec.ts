@@ -177,7 +177,7 @@ describe('Command Runner Builder', () => {
     });
   });
 
-  it('should stop execution when a command fails', async () => {
+  it('should stop execution and fail when a command fails', async () => {
     const f = fileSync().name;
 
     try {
@@ -185,6 +185,7 @@ describe('Command Runner Builder', () => {
         commands: [`echo 1 >> ${f} && exit 1`, `echo 2 >> ${f}`],
         parallel: false,
       });
+      fail('should fail when a command fails');
     } catch (e) {}
     expect(readFile(f)).toEqual('1');
   });

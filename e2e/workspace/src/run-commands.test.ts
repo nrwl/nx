@@ -58,4 +58,25 @@ describe('Run Commands', () => {
     expect(result).toContain('print: y');
     done();
   }, 120000);
+
+  it('should fail when a process exits non-zero', () => {
+    newProject();
+    const myapp = uniq('myapp1');
+
+    runCLI(`generate @nrwl/web:app ${myapp}`);
+
+    const config = readJson(workspaceConfigName());
+    config.projects[myapp].targets.error = {
+      executor: '@nrwl/workspace:run-commands',
+      options: {
+        command: `exit 1`,
+      },
+    };
+    updateFile(workspaceConfigName(), JSON.stringify(config));
+
+    try {
+      runCLI('error');
+      fail('Should error if process errors');
+    } catch (e) {}
+  });
 });
