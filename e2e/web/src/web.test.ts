@@ -4,6 +4,7 @@ import {
   createFile,
   newProject,
   readFile,
+  readJson,
   runCLI,
   runCLIAsync,
   uniq,
@@ -170,5 +171,85 @@ describe('CLI - Environment Variables', () => {
     expect(readFile(`dist/apps/${appName2}/main.js`)).toContain(
       'const envVars = ["test", "52", "QA", "ws-base", "ws-local", "app2-base", "app2-local", "shared2-in-app-local"];'
     );
+  });
+});
+
+describe('Build Options', () => {
+  it('should inject/bundle external scripts and styles', () => {
+    newProject();
+
+    const appName = uniq('app');
+
+    runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+
+    const srcPath = `apps/${appName}/src`;
+    const fooCss = `${srcPath}/foo.css`;
+    const barCss = `${srcPath}/bar.css`;
+    const fooJs = `${srcPath}/foo.js`;
+    const barJs = `${srcPath}/bar.js`;
+    const fooCssContent = `/* ${uniq('foo')} */`;
+    const barCssContent = `/* ${uniq('bar')} */`;
+    const fooJsContent = `/* ${uniq('foo')} */`;
+    const barJsContent = `/* ${uniq('bar')} */`;
+
+    createFile(fooCss);
+    createFile(barCss);
+    createFile(fooJs);
+    createFile(barJs);
+
+    // createFile could not create a file with content
+    updateFile(fooCss, fooCssContent);
+    updateFile(barCss, barCssContent);
+    updateFile(fooJs, fooJsContent);
+    updateFile(barJs, barJsContent);
+
+    const workspacePath = `workspace.json`;
+    const workspaceConfig = readJson(workspacePath);
+    const buildOptions =
+      workspaceConfig.projects[appName].targets.build.options;
+
+    const barScriptsBundleName = 'bar-scripts';
+    buildOptions.scripts = [
+      {
+        input: fooJs,
+        inject: true,
+      },
+      {
+        input: barJs,
+        inject: false,
+        bundleName: barScriptsBundleName,
+      },
+    ];
+
+    const barStylesBundleName = 'bar-styles';
+    buildOptions.styles = [
+      {
+        input: fooCss,
+        inject: true,
+      },
+      {
+        input: barCss,
+        inject: false,
+        bundleName: barStylesBundleName,
+      },
+    ];
+
+    updateFile(workspacePath, JSON.stringify(workspaceConfig));
+
+    runCLI(`build ${appName}`);
+
+    const distPath = `dist/apps/${appName}`;
+    const scripts = readFile(`${distPath}/scripts.js`);
+    const styles = readFile(`${distPath}/styles.js`);
+    const barScripts = readFile(`${distPath}/${barScriptsBundleName}.js`);
+    const barStyles = readFile(`${distPath}/${barStylesBundleName}.js`);
+
+    expect(scripts).toContain(fooJsContent);
+    expect(scripts).not.toContain(barJsContent);
+    expect(barScripts).toContain(barJsContent);
+
+    expect(styles).toContain(fooCssContent);
+    expect(styles).not.toContain(barCssContent);
+    expect(barStyles).toContain(barCssContent);
   });
 });
