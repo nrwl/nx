@@ -473,6 +473,38 @@ describe('params', () => {
       ).not.toThrow();
     });
 
+    it('should handle oneOf with factorized type', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: 10 },
+          {
+            properties: {
+              a: {
+                type: 'number',
+                oneOf: [{ multipleOf: 5 }, { multipleOf: 3 }],
+              },
+            },
+          }
+        )
+      ).not.toThrow();
+    });
+
+    it('should handle oneOf properties explicit types', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: true },
+          {
+            properties: {
+              a: {
+                type: 'number',
+                oneOf: [{ type: 'string' }, { type: 'boolean' }],
+              },
+            },
+          }
+        )
+      ).not.toThrow();
+    });
+
     it("should throw if the type doesn't match (arrays)", () => {
       expect(() =>
         validateOptsAgainstSchema(

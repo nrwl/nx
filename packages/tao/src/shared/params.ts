@@ -209,7 +209,8 @@ function validateProperty(
     let passes = false;
     schema.oneOf.forEach((r) => {
       try {
-        validateProperty(propName, value, r, definitions);
+        const rule = { type: schema.type, ...r };
+        validateProperty(propName, value, rule, definitions);
         passes = true;
       } catch (e) {}
     });
