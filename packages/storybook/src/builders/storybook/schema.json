@@ -44,6 +44,10 @@
         "type": "string"
       }
     },
+    "projectBuildConfig": {
+      "type": "string",
+      "description": "Workspace project where Storybook reads the Webpack config from"
+    },
     "config": {
       "type": "object",
       "description": ".storybook configuration",

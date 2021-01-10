@@ -13,8 +13,8 @@ import { mkdtempSync, statSync, copyFileSync, constants } from 'fs';
 //import { buildStaticStandalone } from '@storybook/core/dist/server/build-static';
 import * as build from '@storybook/core/standalone';
 
-import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { getRoot } from '../../utils/root';
+import { setStorybookAppProject } from '../../utils/utils';
 
 export interface StorybookConfig extends JsonObject {
   configFolder?: string;
@@ -25,6 +25,7 @@ export interface StorybookConfig extends JsonObject {
 
 export interface StorybookBuilderOptions extends JsonObject {
   uiFramework: string;
+  projectBuildConfig?: string;
   config: StorybookConfig;
   quiet?: boolean;
   outputPath?: string;
@@ -76,6 +77,8 @@ async function storybookOptionMapper(
   frameworkOptions: any,
   context: BuilderContext
 ) {
+  setStorybookAppProject(context, builderOptions.projectBuildConfig);
+
   const storybookConfig = await findOrCreateConfig(
     builderOptions.config,
     context
@@ -97,7 +100,6 @@ async function findOrCreateConfig(
   config: StorybookConfig,
   context: BuilderContext
 ): Promise<string> {
-  process.env.STORYBOOK_ANGULAR_PROJECT = context.target.project;
   if (config.configFolder && statSync(config.configFolder).isDirectory()) {
     return config.configFolder;
   } else if (
