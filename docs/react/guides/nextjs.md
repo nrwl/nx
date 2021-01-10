@@ -160,7 +160,7 @@ const withNx = require('@nrwl/next/plugins/with-nx');
 module.exports = withNx({});
 ```
 
-If you have a config which looks like that, leveraging the `withNx()` config plugin, **no further action is needed** in your config.
+If you have a config which looks like that (leveraging the `withNx()` config plugin) **AND** the version of Nx you are using is `11.1.0` or later, **no further action is needed** in your config.
 
 If, however, you created the application using an older version of Nx, you may just see an empty object:
 
