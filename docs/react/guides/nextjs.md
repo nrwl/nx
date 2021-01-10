@@ -168,13 +168,25 @@ If, however, you created the application using an older version of Nx, you may j
 module.exports = {};
 ```
 
-If this is the case, then you must do one of the following:
+If this is the case, or if you are using a version of Nx older than `11.1.0`, then you must do one of the following:
 
-[Option 1] We would naturally highly recommend upgrading to the latest Nx (for many reasons), and updating the next.config.js to match the first example which leverages the `withNx()` config plugin.
+[Option 1] We would naturally highly recommend upgrading to the latest Nx (for many reasons), and updating the next.config.js to match the first example which leverages the `withNx()` config plugin (which as of `11.1.0` sets target to `'experimental-serverless-trace'` behind the scenes for Vercel builds).
 
-[Option 2] If for some reason you cannot upgrade to a version of Nx which provides the `withNx()` config plugin, you can manually add a `target` property to your exported config with a value of `'experimental-serverless-trace'`.
+[Option 2] If for some reason you cannot upgrade to a version of Nx which provides the updated `withNx()` config plugin, you can manually add a `target` property to your exported config with a value of `'experimental-serverless-trace'`.
 
 E.g.
+
+```js
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const withNx = require('@nrwl/next/plugins/with-nx');
+
+module.exports = withNx({
+  target: 'experimental-serverless-trace',
+  // ...You can of course have other Next.js config options specified here too, but the "target" is critical for Vercel deployments...
+});
+```
+
+OR
 
 ```js
 module.exports = {
