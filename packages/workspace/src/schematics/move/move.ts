@@ -11,6 +11,7 @@ import { updateProjectRootFiles } from './lib/update-project-root-files';
 import { updateWorkspace } from './lib/update-workspace';
 import { Schema } from './schema';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import { updateEslintrcJson } from './lib/update-eslintrc-json';
 
 export default function (schema: Schema): Rule {
   return chain([
@@ -23,6 +24,7 @@ export default function (schema: Schema): Rule {
     updateStorybookConfig(schema),
     updateNxJson(schema),
     updateImports(schema),
+    updateEslintrcJson(schema),
     updateWorkspace(schema), // Have to do this last because all previous rules need the information in here
   ]);
 }
