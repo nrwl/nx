@@ -113,5 +113,10 @@
     "name": "@nxrocks/nx-flutter",
     "description": "Nx Plugin adding first class support for Flutter in your Nx workspace",
     "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-flutter"
+  },
+  {
+    "name": "@srleecode/domain",
+    "description": "Nx Plugin for allowing operations to occur at the domain level instead of the default library level",
+    "url": "https://github.com/srlee309/domain"
   }
 ]
