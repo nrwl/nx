@@ -142,3 +142,75 @@ export default Index;
 Without Nx, creating a new shared library can take from several hours or even weeks: a new repo needs to be provisioned, CI needs to be set up, etc.. In an Nx Workspace, it only takes minutes.
 
 You can share React components between multiple Next.js applications. You can also share web components between Next.js and plain React applications. You can even share code between the backend and the frontend. All can be done without any unnecessary ceremony.
+
+## Deploying to Vercel
+
+You may know that the company behind Next.js, Vercel, has a great hosting platform offering that is developed in tandem with Next.js itself to offer a great overall developer and user experience.
+
+In order to deploy your Next.js application from your Nx workspace you should do the following:
+
+### Verify the project's next.config.js
+
+Let's continue to use our `tuskdesk` example from above, and so we need to check out our config at `apps/tuskdesk/next.config.js`. If you created the application using a recent (at the time of writing) version of Nx, such as Nx 11, then you will likely see the following in that config by default:
+
+```js
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const withNx = require('@nrwl/next/plugins/with-nx');
+
+module.exports = withNx({});
+```
+
+If you have a config which looks like that, leveraging the `withNx()` config plugin, **no further action is needed** in your config.
+
+If, however, you created the application using an older version of Nx, you may just see an empty object:
+
+```js
+module.exports = {};
+```
+
+If this is the case, then you must do one of the following:
+
+[Option 1] We would naturally highly recommend upgrading to the latest Nx (for many reasons), and updating the next.config.js to match the first example which leverages the `withNx()` config plugin.
+
+[Option 2] If for some reason you cannot upgrade to a version of Nx which provides the `withNx()` config plugin, you can manually add a `target` property to your exported config with a value of `'experimental-serverless-trace'`.
+
+E.g.
+
+```js
+module.exports = {
+  target: 'experimental-serverless-trace',
+  // ...You can of course have other Next.js config options specified here too, but the "target" is critical for Vercel deployments...
+};
+```
+
+> Vercel themselves have informed us that this target will not be required in future versions of Next.js and their platform, but that even when that is the case this option will not cause any issues, so we do not need to worry too much about the name containing "experimental".
+
+### Configure your Vercel project's settings appropriately
+
+#### New Vercel project
+
+1. If you are "importing" your Nx workspace's repository for the first time, make sure you do _not_ choose a root directory as part of the repo selection process (therefore leaving it to be the root of the full repo/workspace)
+2. Ensure the Next.js "Framework Preset" is selected
+3. Expand the "Build and Output Settings" and toggle the override switch for the build command. For our `tuskdesk` project the value will look like this:
+
+```sh
+npx nx build tuskdesk --prod --outputPath=.
+```
+
+4. Leave the "Output Directory" option untouched (i.e. do not toggle the override)
+
+> You may be thinking, why don't we just override the Output Directory on Vercel and not set the custom `--outputPath` on the build command? At the time of writing these two things are not equivalent to the Vercel build executor that runs behind the scenes, so setting the `--outputPath` is the most appropriate option.
+
+Therefore, our full configuration (based on a repo called "nx-workspace" and a project called "tuskdesk") will look like this:
+
+![image](https://user-images.githubusercontent.com/900523/104120015-1253c880-534d-11eb-860f-17e756904448.png)
+
+#### Existing Vercel project
+
+If you have an existing project on Vercel then the exact same guidance applies as for the section above, it's just that you will need to update the project's existing settings.
+
+When everything is updated appropriately, for our `tuskdesk` example we would see the following in our "General" settings UI:
+
+![image](https://user-images.githubusercontent.com/900523/104119928-72963a80-534c-11eb-9f0d-e7b4311a22e5.png)
+
+Naturally, you can continue on and set any additional Environment Variables etc that may be appropriate for your projects, but we have now covered the key points needed to deploy Next.js projects from Nx workspaces on Vercel!
