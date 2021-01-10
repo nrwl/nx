@@ -1,4 +1,4 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "generators": {}
+  "executors": {}
 }
