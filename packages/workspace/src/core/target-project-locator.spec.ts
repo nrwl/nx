@@ -37,7 +37,6 @@ describe('findTargetProjectWithImport', () => {
           '@proj/proj123': ['libs/proj123/index.ts'],
           '@proj/proj1234': ['libs/proj1234/index.ts'],
           '@proj/proj1234-child': ['libs/proj1234-child/index.ts'],
-          express: ['libs/express/index.ts'],
         },
       },
     };
@@ -55,7 +54,6 @@ describe('findTargetProjectWithImport', () => {
       './libs/proj123/index.ts': 'export const a = 5',
       './libs/proj1234/index.ts': 'export const a = 6',
       './libs/proj1234-child/index.ts': 'export const a = 7',
-      './libs/express/index.ts': 'export const a = 8',
     };
     vol.fromJSON(fsJson, '/root');
 
@@ -204,22 +202,6 @@ describe('findTargetProjectWithImport', () => {
           files: [],
         },
       },
-      express: {
-        name: 'express',
-        type: 'lib',
-        data: {
-          root: 'libs/express',
-          files: [],
-        },
-      },
-      'npm:express': {
-        name: 'npm:express',
-        type: 'npm',
-        data: {
-          files: [],
-          packageName: 'express',
-        },
-      },
     };
 
     targetProjectLocator = new TargetProjectLocator(projects);
@@ -269,7 +251,7 @@ describe('findTargetProjectWithImport', () => {
     expect(proj3a).toEqual('proj3a');
   });
 
-  it('should be able to resolve npm dependencies', () => {
+  it('should be able to npm dependencies', () => {
     const result1 = targetProjectLocator.findProjectWithImport(
       '@ng/core',
       'libs/proj1/index.ts',
@@ -283,16 +265,6 @@ describe('findTargetProjectWithImport', () => {
 
     expect(result1).toEqual('npm:@ng/core');
     expect(result2).toEqual('npm:npm-package');
-  });
-
-  it('should be able to prioritize local projects over dependencies', () => {
-    const result = targetProjectLocator.findProjectWithImport(
-      'express',
-      'libs/proj1/index.ts',
-      ctx.nxJson.npmScope
-    );
-
-    expect(result).toEqual('express');
   });
 
   it('should be able to resolve a module using a normalized path', () => {
