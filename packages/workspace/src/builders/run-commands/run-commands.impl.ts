@@ -158,9 +158,16 @@ function normalizeOptions(
 }
 
 async function runSerially(options: NormalizedRunCommandsBuilderOptions) {
-  options.commands.forEach((c) => {
-    createSyncProcess(c.command, options.color, options.cwd);
-  });
+  for (const c of options.commands) {
+    try {
+      createSyncProcess(c.command, options.color, options.cwd);
+    } catch (e) {
+      process.stderr.write(
+        `Warning: @nrwl/run-commands command "${c.command}" exited with non-zero status code`
+      );
+      return false;
+    }
+  }
   return true;
 }
 
