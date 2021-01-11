@@ -23,11 +23,11 @@ import {
   formatFiles,
 } from '@nrwl/workspace';
 
-import { generateProjectLint, addLintFiles } from '../../utils/lint';
 import { addProjectToNxJsonInTree, libsDir } from '../../utils/ast-utils';
 import { toJS, updateTsConfigsToJs, maybeJs } from '../../utils/rules/to-js';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-import { names, offsetFromRoot } from '@nrwl/devkit';
+import { convertNxGenerator, names, offsetFromRoot } from '@nrwl/devkit';
+const { lintProjectGenerator } = require('@nrwl/linter');
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -39,24 +39,26 @@ export interface NormalizedSchema extends Schema {
 }
 
 function addProject(options: NormalizedSchema): Rule {
-  return updateWorkspaceInTree((json) => {
-    const architect: { [key: string]: any } = {};
+  return chain([
+    updateWorkspaceInTree((json) => {
+      const architect: { [key: string]: any } = {};
 
-    architect.lint = generateProjectLint(
-      normalize(options.projectRoot),
-      join(normalize(options.projectRoot), 'tsconfig.lib.json'),
-      options.linter,
-      [`${options.projectRoot}/**/*.${options.js ? 'js' : 'ts'}`]
-    );
-
-    json.projects[options.name] = {
-      root: options.projectRoot,
-      sourceRoot: join(normalize(options.projectRoot), 'src'),
-      projectType: 'library',
-      architect,
-    };
-    return json;
-  });
+      json.projects[options.name] = {
+        root: options.projectRoot,
+        sourceRoot: join(normalize(options.projectRoot), 'src'),
+        projectType: 'library',
+        architect,
+      };
+      return json;
+    }),
+    convertNxGenerator(lintProjectGenerator)({
+      project: options.name,
+      linter: options.linter,
+      eslintFilePatterns: [
+        `${options.projectRoot}/**/*.${options.js ? 'js' : 'ts'}`,
+      ],
+    }),
+  ]);
 }
 
 function updateLibTsConfig(options: NormalizedSchema): Rule {
@@ -147,12 +149,11 @@ export default function (schema: Schema): Rule {
     const options = normalizeOptions(host, schema);
 
     return chain([
-      addLintFiles(options.projectRoot, options.linter),
       createFiles(options),
       options.js ? updateTsConfigsToJs(options) : noop(),
       !options.skipTsConfig ? updateRootTsConfig(options) : noop(),
-      addProject(options),
       updateNxJson(options),
+      addProject(options),
       addJest(options),
       updateLibTsConfig(options),
       formatFiles(options),

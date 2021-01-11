@@ -261,7 +261,7 @@ describe('lib', () => {
       );
 
       const lint = readJsonInTree(tree, 'libs/my-dir/my-lib/.eslintrc.json');
-      expect(lint.extends).toEqual('../../../.eslintrc.json');
+      expect(lint.extends).toEqual(['../../../.eslintrc.json']);
     });
   });
 
@@ -453,6 +453,30 @@ describe('lib', () => {
         tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.spec.js')
       ).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.js')).toBeTruthy();
+    });
+
+    it('should configure the project for linting js files', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', directory: 'myDir', js: true },
+        appTree
+      );
+      expect(
+        readJsonInTree(tree, 'workspace.json').projects['my-dir-my-lib']
+          .architect.lint.options.lintFilePatterns
+      ).toEqual(['libs/my-dir/my-lib/**/*.js']);
+      expect(readJsonInTree(tree, 'libs/my-dir/my-lib/.eslintrc.json'))
+        .toMatchInlineSnapshot(`
+        Object {
+          "extends": Array [
+            "../../../.eslintrc.json",
+          ],
+          "ignorePatterns": Array [
+            "!**/*",
+          ],
+          "rules": Object {},
+        }
+      `);
     });
   });
 

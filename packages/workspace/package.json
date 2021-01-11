@@ -58,6 +58,7 @@
     "@angular-devkit/schematics": "~11.0.1",
     "@nrwl/cli": "*",
     "@nrwl/devkit": "*",
+    "@nrwl/linter": "*",
     "cosmiconfig": "^4.0.0",
     "fs-extra": "7.0.1",
     "dotenv": "6.2.0",

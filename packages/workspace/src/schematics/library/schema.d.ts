@@ -1,4 +1,4 @@
-import { Linter } from '@nrwl/workspace/src/utils/lint';
+const { Linter } = require('@nrwl/linter');
 
 export interface Schema {
   name: string;

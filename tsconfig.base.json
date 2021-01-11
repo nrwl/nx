@@ -24,6 +24,7 @@
       "@nrwl/workspace/*": ["./packages/workspace/*"],
       "@nrwl/cli": ["./packages/cli"],
       "@nrwl/cli/*": ["./packages/cli/*"],
+      "@nrwl/linter": ["./packages/linter"],
       "@nrwl/workspace/testing": ["./packages/workspace/testing"],
       "@nrwl/react": ["./packages/react"],
       "@nrwl/react/*": ["./packages/react/*"],

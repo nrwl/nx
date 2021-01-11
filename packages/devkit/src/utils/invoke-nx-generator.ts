@@ -1,4 +1,4 @@
-import { join } from 'path';
+import { join, relative } from 'path';
 import { FileChange } from '@nrwl/tao/src/shared/tree';
 import { Generator, GeneratorCallback } from '@nrwl/tao/src/shared/workspace';
 
@@ -44,7 +44,11 @@ function invokeNxGenerator<T = any>(generator: Generator<T>, options: T) {
       engineHost.registerTaskExecutor(createRunCallbackTask());
     }
 
-    const adapterTree = new DevkitTreeFromAngularDevkitTree(tree);
+    const root = context.engine.workflow
+      ? context.engine.workflow.engineHost.paths[1]
+      : tree.root.path;
+
+    const adapterTree = new DevkitTreeFromAngularDevkitTree(tree, root);
     const result = generator(adapterTree, options);
 
     if (!result) {
@@ -65,10 +69,10 @@ const actionToFileChangeMap = {
 };
 
 class DevkitTreeFromAngularDevkitTree {
-  constructor(private tree) {}
+  constructor(private tree, private _root: string) {}
 
   get root(): string {
-    return this.tree.root.path;
+    return this._root;
   }
 
   children(dirPath: string): string[] {
@@ -96,30 +100,34 @@ class DevkitTreeFromAngularDevkitTree {
     for (const action of this.tree.actions) {
       if (action.kind === 'r') {
         fileChanges.push({
-          path: action.path,
+          path: this.normalize(action.path),
           type: 'CREATE',
           content: this.read(action.path),
         });
         fileChanges.push({
-          path: action.to,
+          path: this.normalize(action.to),
           type: 'DELETE',
           content: null,
         });
       } else if (action.kind === 'c' || action.kind === 'o') {
         fileChanges.push({
-          path: action.path,
+          path: this.normalize(action.path),
           type: actionToFileChangeMap[action.kind],
           content: action.content,
         });
       } else {
         fileChanges.push({
-          path: action.path,
+          path: this.normalize(action.path),
           type: 'DELETE',
           content: null,
         });
       }
     }
     return fileChanges;
+  }
+
+  private normalize(path) {
+    return relative(this.root, join(this.root, path));
   }
 
   read(filePath: string): Buffer | null {
