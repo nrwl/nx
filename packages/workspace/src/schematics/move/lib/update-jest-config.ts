@@ -5,7 +5,7 @@ import * as path from 'path';
 import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Schema } from '../schema';
-import { getDestination, getNewProjectName } from './utils';
+import { getDestination, getNewProjectName, getWorkspaceLayout } from './utils';
 
 /**
  * Updates the project name and coverage folder in the jest.config.js if it exists
@@ -50,8 +50,9 @@ export function updateJestConfig(schema: Schema): Rule {
           .read(rootJestConfigPath)
           .toString('utf-8');
 
+        const { libsDir, appsDir } = getWorkspaceLayout(tree);
         const findProject = new RegExp(
-          `<rootDir>\/(libs|apps)\/${schema.projectName}`,
+          `<rootDir>\/(${libsDir}|${appsDir})\/${schema.projectName}`,
           'g'
         );
 
