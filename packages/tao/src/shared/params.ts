@@ -220,7 +220,7 @@ function validateProperty(
 
   const isPrimitive = typeof value !== 'object';
   if (isPrimitive) {
-    if (typeof value !== normalizedPrimitiveType(schema.type)) {
+    if (schema.type && typeof value !== normalizedPrimitiveType(schema.type)) {
       throw new SchemaError(
         `Property '${propName}' does not match the schema. '${value}' should be a '${schema.type}'.`
       );

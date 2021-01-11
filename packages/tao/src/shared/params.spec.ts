@@ -451,6 +451,21 @@ describe('params', () => {
       );
     });
 
+    it('should not throw if the schema type is absent (primitive types)', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: 'string' },
+          {
+            properties: {
+              a: {
+                default: false,
+              },
+            },
+          }
+        )
+      ).not.toThrow();
+    });
+
     it('should handle one of', () => {
       expect(() =>
         validateOptsAgainstSchema(
