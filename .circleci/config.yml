@@ -95,7 +95,7 @@ workflows:
       - e2e:
           matrix:
             parameters:
-              os: ['linux', 'windows']
+              os: ['linux']
               packages:
                 [
                   'e2e-workspace',
@@ -109,6 +109,6 @@ workflows:
       - e2e:
           matrix:
             parameters:
-              os: ['linux', 'windows']
+              os: ['linux']
               packages: ['e2e-angular']
           cli: 'angular'
