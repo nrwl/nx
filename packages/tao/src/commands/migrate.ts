@@ -664,9 +664,10 @@ async function runMigrations(
     stripJsonComments(readFileSync(join(root, opts.runMigrations)).toString())
   ).migrations;
 
-  const installed = installAngularDevkitIfNecessaryToExecuteLegacyMigrations(
-    migrations
-  );
+  // TODO: reenable after removing devkit
+  // const installed = installAngularDevkitIfNecessaryToExecuteLegacyMigrations(
+  //   migrations
+  // );
   try {
     for (let m of migrations) {
       logger.info(`Running migration ${m.name}`);
@@ -688,9 +689,9 @@ async function runMigrations(
       `NX Successfully finished running migrations from '${opts.runMigrations}'`
     );
   } finally {
-    if (installed) {
-      removeAngularDevkitMigrations();
-    }
+    // if (installed) {
+    //   removeAngularDevkitMigrations();
+    // }
   }
 }
 

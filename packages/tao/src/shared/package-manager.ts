@@ -36,7 +36,7 @@ export function getPackageManagerCommand(
         addDev: 'pnpm add -D',
         rm: 'pnpm rm',
         exec: 'pnpx',
-        list: 'pnpm ls',
+        list: 'pnpm ls --depth 100',
       };
 
     case 'npm':
