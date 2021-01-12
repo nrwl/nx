@@ -39,3 +39,4 @@ export {
 } from './src/utils/string-change';
 export { offsetFromRoot } from './src/utils/offset-from-root';
 export { convertNxGenerator } from './src/utils/invoke-nx-generator';
+export { convertNxExecutor } from './src/utils/convert-nx-executor';

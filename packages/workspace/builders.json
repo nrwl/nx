@@ -1,8 +1,15 @@
 {
   "builders": {
     "run-commands": {
-      "implementation": "./src/builders/run-commands/run-commands.impl",
-      "schema": "./src/builders/run-commands/schema.json",
+      "implementation": "./src/executors/run-commands/compat",
+      "schema": "./src/executors/run-commands/schema.json",
+      "description": "Run any custom commands with Nx"
+    }
+  },
+  "executors": {
+    "run-commands": {
+      "implementation": "./src/executors/run-commands/run-commands.impl",
+      "schema": "./src/executors/run-commands/schema.json",
       "description": "Run any custom commands with Nx"
     }
   }

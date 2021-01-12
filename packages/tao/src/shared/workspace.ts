@@ -137,6 +137,16 @@ export type Generator<T = unknown> = (
   schema: T
 ) => void | GeneratorCallback | Promise<void | GeneratorCallback>;
 
+export type Executor<T = any> = (
+  options: T,
+  context: {
+    root: string;
+    target: TargetConfiguration;
+    projectName: string;
+    workspace: WorkspaceConfiguration;
+  }
+) => Promise<any>;
+
 export class Workspaces {
   constructor(private root: string) {}
 
@@ -203,7 +213,7 @@ export class Workspaces {
       }
       const [modulePath, exportName] = executorConfig.implementation.split('#');
       const module = require(path.join(executorsDir, modulePath));
-      const implementation = module[exportName || 'default'];
+      const implementation = module[exportName || 'default'] as Executor;
       return { schema, implementation };
     } catch (e) {
       throw new Error(

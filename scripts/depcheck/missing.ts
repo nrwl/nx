@@ -19,6 +19,7 @@ const IGNORE_MATCHES = {
   ],
   cli: ['@nrwl/cli'],
   cypress: ['cypress'],
+  devkit: ['@angular-devkit/architect', 'rxjs'],
   jest: ['jest', '@jest/types', 'identity-obj-proxy'],
   linter: ['eslint', '@angular-devkit/schematics'],
   next: [
