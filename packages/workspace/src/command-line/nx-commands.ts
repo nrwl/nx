@@ -179,10 +179,26 @@ export const commandsObject = yargs
     `,
     (yargs) => yargs,
     () => {
-      const executable = `${getPackageManagerExecuteCommand()} tao`;
-      execSync(`${executable} migrate ${process.argv.slice(3).join(' ')}`, {
-        stdio: ['inherit', 'inherit', 'inherit'],
-      });
+      if (hasNpx() && process.env.NX_MIGRATE_USE_LOCAL === undefined) {
+        execSync(
+          `npx @nrwl/tao@latest migrate ${process.argv.slice(3).join(' ')}`,
+          {
+            stdio: ['inherit', 'inherit', 'inherit'],
+          }
+        );
+      } else {
+        console.log(
+          `No 'npx' found. Running migrations using locally installed packages.`
+        );
+        execSync(
+          `${getPackageManagerExecuteCommand()} tao migrate ${process.argv
+            .slice(3)
+            .join(' ')}`,
+          {
+            stdio: ['inherit', 'inherit', 'inherit'],
+          }
+        );
+      }
     }
   )
   .command(report)
@@ -410,4 +426,13 @@ function withTarget(yargs: yargs.Argv): yargs.Argv {
     demandOption: true,
     global: false,
   });
+}
+
+function hasNpx() {
+  try {
+    execSync(`npx --version`);
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
