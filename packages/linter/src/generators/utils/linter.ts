@@ -1,4 +1,4 @@
-export const enum Linter {
+export enum Linter {
   EsLint = 'eslint',
   TsLint = 'tslint',
   None = 'none',

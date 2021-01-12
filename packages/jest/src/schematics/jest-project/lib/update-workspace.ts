@@ -23,7 +23,7 @@ export function updateWorkspace(tree: Tree, options: JestProjectSchema) {
 
   if (isUsingTSLint) {
     projectConfig.targets.lint.options.tsConfig = [
-      ...projectConfig.targets.lint.options.tsConfig,
+      ...(projectConfig.targets.lint.options.tsConfig || []),
       join(normalize(projectConfig.root), 'tsconfig.spec.json'),
     ];
   }

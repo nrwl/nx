@@ -3,16 +3,16 @@ const { Linter } = require('@nrwl/linter');
 export interface Schema {
   name: string;
   directory?: string;
-  skipTsConfig: boolean;
-  skipFormat: boolean;
+  skipTsConfig?: boolean;
+  skipFormat?: boolean;
   tags?: string;
-  simpleModuleName: boolean;
-  unitTestRunner: 'jest' | 'none';
-  linter: Linter;
-  testEnvironment: 'jsdom' | 'node';
+  simpleModuleName?: boolean;
+  unitTestRunner?: 'jest' | 'none';
+  linter?: Linter;
+  testEnvironment?: 'jsdom' | 'node';
   importPath?: string;
-  js: boolean;
+  js?: boolean;
   babelJest?: boolean;
-  pascalCaseFiles: boolean;
-  strict: boolean;
+  pascalCaseFiles?: boolean;
+  strict?: boolean;
 }

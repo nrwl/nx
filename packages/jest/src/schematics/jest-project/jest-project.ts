@@ -16,6 +16,9 @@ const schemaDefaults = {
 } as const;
 
 function normalizeOptions(options: JestProjectSchema) {
+  if (!options.testEnvironment) {
+    options.testEnvironment = 'jsdom';
+  }
   if (options.testEnvironment === 'jsdom') {
     options.testEnvironment = '';
   }

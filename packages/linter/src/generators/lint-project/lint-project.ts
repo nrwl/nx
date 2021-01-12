@@ -5,6 +5,7 @@ import {
   updateProjectConfiguration,
   offsetFromRoot,
   readProjectConfiguration,
+  formatFiles,
 } from '@nrwl/devkit';
 import { join } from 'path';
 import { Linter } from '../utils/linter';
@@ -15,6 +16,7 @@ interface LintProjectOptions {
   linter: Linter;
   eslintFilePatterns?: string[];
   tsConfigPaths?: string[];
+  skipFormat: boolean;
 }
 
 function createTsLintConfiguration(
@@ -43,7 +45,10 @@ function createEsLintConfiguration(
   });
 }
 
-export function lintProjectGenerator(tree: Tree, options: LintProjectOptions) {
+export async function lintProjectGenerator(
+  tree: Tree,
+  options: LintProjectOptions
+) {
   const installTask = lintInitGenerator(tree, {
     linter: options.linter,
   });
@@ -69,6 +74,10 @@ export function lintProjectGenerator(tree: Tree, options: LintProjectOptions) {
   }
 
   updateProjectConfiguration(tree, options.project, projectConfig);
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
+  }
 
   return installTask;
 }

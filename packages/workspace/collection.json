@@ -45,7 +45,7 @@
     },
 
     "library": {
-      "factory": "./src/schematics/library/library",
+      "factory": "./src/schematics/library/library#librarySchematic",
       "schema": "./src/schematics/library/schema.json",
       "aliases": ["lib"],
       "description": "Create a library"
@@ -109,7 +109,7 @@
     },
 
     "library": {
-      "factory": "./src/schematics/library/library",
+      "factory": "./src/schematics/library/library#libraryGenerator",
       "schema": "./src/schematics/library/schema.json",
       "aliases": ["lib"],
       "description": "Create a library"

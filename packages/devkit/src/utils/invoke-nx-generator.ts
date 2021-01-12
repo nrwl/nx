@@ -38,7 +38,7 @@ export function convertNxGenerator<T = any>(generator: Generator<T>) {
  * Create a Rule to invoke an Nx Generator
  */
 function invokeNxGenerator<T = any>(generator: Generator<T>, options: T) {
-  return (tree, context) => {
+  return async (tree, context) => {
     if (context.engine.workflow) {
       const engineHost = (context.engine.workflow as any).engineHost;
       engineHost.registerTaskExecutor(createRunCallbackTask());
@@ -49,7 +49,7 @@ function invokeNxGenerator<T = any>(generator: Generator<T>, options: T) {
       : tree.root.path;
 
     const adapterTree = new DevkitTreeFromAngularDevkitTree(tree, root);
-    const result = generator(adapterTree, options);
+    const result = await generator(adapterTree, options);
 
     if (!result) {
       return adapterTree['tree'];
