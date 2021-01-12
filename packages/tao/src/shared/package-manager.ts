@@ -14,7 +14,9 @@ export function getPackageManagerCommand(
   install: string;
   add: string;
   addDev: string;
+  rm: string;
   exec: string;
+  list: string;
 } {
   switch (packageManager) {
     case 'yarn':
@@ -22,7 +24,9 @@ export function getPackageManagerCommand(
         install: 'yarn',
         add: 'yarn add',
         addDev: 'yarn add -D',
+        rm: 'yarn rm',
         exec: 'yarn',
+        list: 'yarn list',
       };
 
     case 'pnpm':
@@ -30,7 +34,9 @@ export function getPackageManagerCommand(
         install: 'pnpm install',
         add: 'pnpm add',
         addDev: 'pnpm add -D',
+        rm: 'pnpm rm',
         exec: 'pnpx',
+        list: 'pnpm ls',
       };
 
     case 'npm':
@@ -38,7 +44,9 @@ export function getPackageManagerCommand(
         install: 'npm install',
         add: 'npm install',
         addDev: 'npm install -D',
+        rm: 'npm rm',
         exec: 'npx',
+        list: 'npm ls',
       };
   }
 }

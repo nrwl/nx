@@ -374,6 +374,11 @@ export function parseMigrationsOptions(
       },
     })
   );
+
+  if (options.runMigrations === '') {
+    options.runMigrations = 'migrations.json';
+  }
+
   if (!options.runMigrations) {
     const from = options.from
       ? versionOverrides(options.from as string, 'from')
@@ -458,6 +463,7 @@ function createFetcher(packageManager: string) {
     return cache[`${packageName}-${packageVersion}`];
   };
 }
+
 // testing-fetch-end
 
 function packageToMigrationsFilePath(packageName: string, dir: string) {
@@ -562,7 +568,10 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       logger.info(
         `- Make sure package.json changes make sense and then run '${pmc.install}'`
       );
-      logger.info(`- Run 'nx migrate --run-migrations=migrations.json'`);
+      logger.info(`- Run 'nx migrate --run-migrations'`);
+      logger.info(
+        `- To learn more go to https://nx.dev/latest/core-concepts/updating-nx`
+      );
     } else {
       logger.info(`NX The migrate command has run successfully.`);
       logger.info(`- package.json has been updated`);
@@ -573,6 +582,9 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       logger.info(`NX Next steps:`);
       logger.info(
         `- Make sure package.json changes make sense and then run '${pmc.install}'`
+      );
+      logger.info(
+        `- To learn more go to https://nx.dev/latest/core-concepts/updating-nx`
       );
     }
   } catch (e) {
@@ -592,11 +604,57 @@ async function generateMigrationsJsonAndUpdatePackageJson(
   }
 }
 
+function installAngularDevkitIfNecessaryToExecuteLegacyMigrations(
+  migrations: { cli?: 'nx' | 'angular' }[]
+) {
+  const hasAngularDevkitMigrations = migrations.find(
+    (m) => m.cli === undefined || m.cli === 'angular'
+  );
+  if (!hasAngularDevkitMigrations) return false;
+
+  const pmCommands = getPackageManagerCommand(detectPackageManager());
+  const devkitInstalled =
+    execSync(`${pmCommands.list} @angular-devkit/schematics`)
+      .toString()
+      .indexOf(`@angular-devkit/schematics`) > -1;
+
+  if (devkitInstalled) return false;
+
+  logger.info(
+    `NX Temporary installing necessary packages to run old migrations.`
+  );
+  logger.info(`The packages will be deleted once migrations run successfully.`);
+
+  execSync(`${pmCommands.add} @angular-devkit/core`);
+  execSync(`${pmCommands.add} @angular-devkit/schematics`);
+  return true;
+}
+
+function removeAngularDevkitMigrations() {
+  const pmCommands = getPackageManagerCommand(detectPackageManager());
+  execSync(`${pmCommands.rm} @angular-devkit/schematics`);
+  execSync(`${pmCommands.rm} @angular-devkit/core`);
+}
+
+function runInstall() {
+  const pmCommands = getPackageManagerCommand(detectPackageManager());
+  logger.info(
+    `NX Running '${pmCommands.install}' to make sure necessary packages are installed`
+  );
+  execSync(pmCommands.install, { stdio: [0, 1, 2] });
+}
+
 async function runMigrations(
   root: string,
   opts: { runMigrations: string },
   isVerbose: boolean
 ) {
+  if (!process.env.NX_MIGRATE_SKIP_INSTALL) {
+    runInstall();
+  }
+
+  logger.info(`NX Running migrations from '${opts.runMigrations}'`);
+
   const migrations: {
     package: string;
     name: string;
@@ -606,20 +664,33 @@ async function runMigrations(
     stripJsonComments(readFileSync(join(root, opts.runMigrations)).toString())
   ).migrations;
 
-  for (let m of migrations) {
-    logger.info(`Running migration ${m.name}`);
-    if (m.cli === 'nx') {
-      await runNxMigration(root, m.package, m.name);
-    } else {
-      await (await import('./ngcli-adapter')).runMigration(
-        root,
-        m.package,
-        m.name,
-        isVerbose
-      );
+  const installed = installAngularDevkitIfNecessaryToExecuteLegacyMigrations(
+    migrations
+  );
+  try {
+    for (let m of migrations) {
+      logger.info(`Running migration ${m.name}`);
+      if (m.cli === 'nx') {
+        await runNxMigration(root, m.package, m.name);
+      } else {
+        await (await import('./ngcli-adapter')).runMigration(
+          root,
+          m.package,
+          m.name,
+          isVerbose
+        );
+      }
+      logger.info(`Successfully finished ${m.name}`);
+      logger.info(`---------------------------------------------------------`);
     }
-    logger.info(`Successfully finished ${m.name}`);
-    logger.info(`---------------------------------------------------------`);
+
+    logger.info(
+      `NX Successfully finished running migrations from '${opts.runMigrations}'`
+    );
+  } finally {
+    if (installed) {
+      removeAngularDevkitMigrations();
+    }
   }
 }
 

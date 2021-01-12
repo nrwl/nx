@@ -205,7 +205,14 @@ describe('migrate', () => {
     );
 
     runCLI(
-      'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"'
+      'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
+      {
+        env: {
+          ...process.env,
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      }
     );
 
     // updates package.json
@@ -232,7 +239,13 @@ describe('migrate', () => {
     });
 
     // runs migrations
-    runCLI('migrate --run-migrations=migrations.json');
+    runCLI('migrate --run-migrations=migrations.json', {
+      env: {
+        ...process.env,
+        NX_MIGRATE_SKIP_INSTALL: 'true',
+        NX_MIGRATE_USE_LOCAL: 'true',
+      },
+    });
     expect(readFile('file-11')).toEqual('content11');
     expect(readFile('file-20')).toEqual('content20');
   });
