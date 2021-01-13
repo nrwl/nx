@@ -11,7 +11,9 @@ import { report } from './report';
 import { workspaceGenerators } from './workspace-generators';
 import { affected } from './affected';
 import { runMany } from './run-many';
-import { logger } from '@nrwl/devkit';
+import { writeFileSync } from 'fs';
+import { dirSync } from 'tmp';
+import * as path from 'path';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
@@ -182,17 +184,12 @@ export const commandsObject = yargs
     `,
     (yargs) => yargs,
     () => {
-      if (hasNpx() && process.env.NX_MIGRATE_USE_LOCAL === undefined) {
-        execSync(
-          `npx @nrwl/tao@latest migrate ${process.argv.slice(3).join(' ')}`,
-          {
-            stdio: ['inherit', 'inherit', 'inherit'],
-          }
-        );
+      if (process.env.NX_MIGRATE_USE_LOCAL === undefined) {
+        const p = taoPath();
+        execSync(`${p} migrate ${process.argv.slice(3).join(' ')}`, {
+          stdio: ['inherit', 'inherit', 'inherit'],
+        });
       } else {
-        logger.info(
-          `NX No 'npx' found. Running migrations using locally installed packages.`
-        );
         const pmc = getPackageManagerCommand();
         execSync(`${pmc.exec} tao migrate ${process.argv.slice(3).join(' ')}`, {
           stdio: ['inherit', 'inherit', 'inherit'],
@@ -427,11 +424,24 @@ function withTarget(yargs: yargs.Argv): yargs.Argv {
   });
 }
 
-function hasNpx() {
-  try {
-    execSync(`npx --version`);
-    return true;
-  } catch (e) {
-    return false;
-  }
+function taoPath() {
+  const packageManager = getPackageManagerCommand();
+
+  const tmpDir = dirSync().name;
+  writeFileSync(
+    path.join(tmpDir, 'package.json'),
+    JSON.stringify({
+      dependencies: {
+        '@nrwl/tao': 'latest',
+      },
+      license: 'MIT',
+    })
+  );
+
+  execSync(packageManager.install, {
+    cwd: tmpDir,
+    stdio: ['ignore', 'ignore', 'ignore'],
+  });
+
+  return path.join(tmpDir, `node_modules`, '.bin', 'tao');
 }

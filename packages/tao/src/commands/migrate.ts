@@ -588,18 +588,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       );
     }
   } catch (e) {
-    logger.error(
-      `NX The migrate command failed. Try the following to migrate your workspace:`
-    );
-    logger.error(
-      `> npx @nrwl/tao@latest migrate ${opts.targetPackage}@${opts.targetVersion}`
-    );
-    logger.error(
-      `This will use the newest version of the migrate functionality, which might have your issue resolved.`
-    );
-    logger.error(
-      `----------------------------------------------------------------------------------------------------`
-    );
+    logger.error(`NX The migrate command failed.`);
     throw e;
   }
 }
