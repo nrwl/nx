@@ -137,15 +137,41 @@ export type Generator<T = unknown> = (
   schema: T
 ) => void | GeneratorCallback | Promise<void | GeneratorCallback>;
 
+/**
+ * Implementation of a target of a project
+ */
 export type Executor<T = any> = (
+  /**
+   * Options that users configure or pass via the command line
+   */
   options: T,
-  context: {
-    root: string;
-    target: TargetConfiguration;
-    projectName: string;
-    workspace: WorkspaceConfiguration;
-  }
+  context: ExecutorContext
 ) => Promise<any>;
+
+/**
+ * Context that is passed into an executor
+ */
+export interface ExecutorContext {
+  /**
+   * The root of the workspace
+   */
+  root: string;
+
+  /**
+   * The name of the project being executed on
+   */
+  projectName?: string;
+
+  /**
+   * The configuration of the target being executed
+   */
+  target?: TargetConfiguration;
+
+  /**
+   * The full workspace configuration
+   */
+  workspace: WorkspaceConfiguration;
+}
 
 export class Workspaces {
   constructor(private root: string) {}

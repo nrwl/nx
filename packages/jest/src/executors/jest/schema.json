@@ -1,6 +1,7 @@
 {
   "title": "Jest Builder",
   "description": "Jest target options for Build Facade",
+  "cli": "nx",
   "type": "object",
   "properties": {
     "codeCoverage": {
@@ -101,7 +102,8 @@
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "default": []
     },
     "colors": {
       "description": "Forces test results output highlighting even if stdout is not a TTY. (https://jestjs.io/docs/en/cli#colors)",

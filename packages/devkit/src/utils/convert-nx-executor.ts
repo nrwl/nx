@@ -1,7 +1,11 @@
 import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { Executor, Workspaces } from '@nrwl/tao/src/shared/workspace';
+import {
+  Executor,
+  ExecutorContext,
+  Workspaces,
+} from '@nrwl/tao/src/shared/workspace';
 import { BuilderContext } from '@angular-devkit/architect';
 
 /**
@@ -14,15 +18,21 @@ export function convertNxExecutor(executor: Executor) {
     const workspaceConfig = new Workspaces(
       builderContext.workspaceRoot
     ).readWorkspaceConfiguration();
-    const context = {
+    const context: ExecutorContext = {
       root: builderContext.workspaceRoot,
       projectName: builderContext.target.project,
-      target:
-        workspaceConfig.projects[builderContext.target.project].targets[
-          builderContext.target.target
-        ],
       workspace: workspaceConfig,
     };
+    if (
+      builderContext.target &&
+      builderContext.target.project &&
+      builderContext.target.target
+    ) {
+      context.target =
+        workspaceConfig.projects[builderContext.target.project].targets[
+          builderContext.target.target
+        ];
+    }
     return from(executor(options, context)).pipe(
       map((output) => {
         if (!output) {
