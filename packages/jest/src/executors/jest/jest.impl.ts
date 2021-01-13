@@ -1,14 +1,8 @@
-import {
-  BuilderContext,
-  BuilderOutput,
-  createBuilder,
-} from '@angular-devkit/architect';
 import { runCLI } from 'jest';
 import * as path from 'path';
-import { from, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { JestBuilderOptions } from './schema';
+import { JestExecutorOptions } from './schema';
 import { Config } from '@jest/types';
+import { ExecutorContext } from '@nrwl/devkit';
 
 try {
   require('dotenv').config();
@@ -20,11 +14,11 @@ if (process.env.NODE_ENV === null || process.env.NODE_ENV === undefined) {
   (process.env as any).NODE_ENV = 'test';
 }
 
-function run(
-  options: JestBuilderOptions,
-  context: BuilderContext
-): Observable<BuilderOutput> {
-  options.jestConfig = path.resolve(context.workspaceRoot, options.jestConfig);
+export async function jestExecutor(
+  options: JestExecutorOptions,
+  context: ExecutorContext
+): Promise<void> {
+  options.jestConfig = path.resolve(context.root, options.jestConfig);
 
   const jestConfig: {
     transform: any;
@@ -74,7 +68,7 @@ function run(
   if (options.setupFile) {
     const setupFilesAfterEnvSet = new Set([
       ...(jestConfig.setupFilesAfterEnv ?? []),
-      path.resolve(context.workspaceRoot, options.setupFile),
+      path.resolve(context.root, options.setupFile),
     ]);
     config.setupFilesAfterEnv = Array.from(setupFilesAfterEnvSet);
   }
@@ -93,7 +87,7 @@ function run(
 
   if (options.coverageDirectory) {
     config.coverageDirectory = path.join(
-      context.workspaceRoot,
+      context.root,
       options.coverageDirectory
     );
   }
@@ -113,13 +107,11 @@ function run(
     config.coverageReporters = options.coverageReporters;
   }
 
-  return from(runCLI(config, [options.jestConfig])).pipe(
-    map(({ results }) => {
-      return {
-        success: results.success,
-      };
-    })
-  );
+  const { results } = await runCLI(config, [options.jestConfig]);
+
+  if (!results.success) {
+    throw new Error();
+  }
 }
 
-export default createBuilder<JestBuilderOptions>(run);
+export default jestExecutor;

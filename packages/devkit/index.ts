@@ -5,6 +5,8 @@ export {
   ProjectConfiguration,
   Generator,
   GeneratorCallback,
+  Executor,
+  ExecutorContext,
 } from '@nrwl/tao/src/shared/workspace';
 export {
   NxJsonConfiguration,

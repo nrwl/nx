@@ -45,7 +45,7 @@ export async function handleErrors(isVerbose: boolean, fn: Function) {
   } catch (err) {
     if (err.constructor.name === 'UnsuccessfulWorkflowExecution') {
       logger.error('The generator workflow failed. See above.');
-    } else {
+    } else if (err.message) {
       logger.error(err.message);
     }
     if (isVerbose && err.stack) {
