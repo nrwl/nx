@@ -1,8 +1,4 @@
-import { Rule, SchematicContext } from '@angular-devkit/schematics';
-import { Tree } from '@angular-devkit/schematics/src/tree/interface';
-import { getWorkspace } from '@nrwl/workspace';
-import { from, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { ProjectConfiguration, Tree } from '@nrwl/devkit';
 import { Schema } from '../schema';
 import { getDestination, normalizeSlashes } from './utils';
 
@@ -14,30 +10,24 @@ import { getDestination, normalizeSlashes } from './utils';
  *
  * @param schema The options provided to the schematic
  */
-export function checkDestination(schema: Schema): Rule {
-  return (tree: Tree, _context: SchematicContext): Observable<Tree> => {
-    return from(getWorkspace(tree)).pipe(
-      map((workspace) => {
-        const INVALID_DESTINATION = `Invalid destination: [${schema.destination}]`;
+export function checkDestination(
+  tree: Tree,
+  schema: Schema,
+  projectConfig: ProjectConfiguration
+) {
+  const INVALID_DESTINATION = `Invalid destination: [${schema.destination}]`;
 
-        if (schema.destination.includes('..')) {
-          throw new Error(
-            `${INVALID_DESTINATION} - Please specify explicit path.`
-          );
-        }
+  if (schema.destination.includes('..')) {
+    throw new Error(`${INVALID_DESTINATION} - Please specify explicit path.`);
+  }
 
-        const destination = getDestination(schema, workspace, tree);
+  const destination = getDestination(tree, schema, projectConfig);
 
-        if (tree.getDir(destination).subfiles.length > 0) {
-          throw new Error(`${INVALID_DESTINATION} - Path is not empty.`);
-        }
+  if (tree.children(destination).length > 0) {
+    throw new Error(`${INVALID_DESTINATION} - Path is not empty.`);
+  }
 
-        if (schema.destination.startsWith('/')) {
-          schema.destination = normalizeSlashes(schema.destination.substr(1));
-        }
-
-        return tree;
-      })
-    );
-  };
+  if (schema.destination.startsWith('/')) {
+    schema.destination = normalizeSlashes(schema.destination.substr(1));
+  }
 }

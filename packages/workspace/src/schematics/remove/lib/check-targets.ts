@@ -1,5 +1,4 @@
-import { Tree } from '@angular-devkit/schematics';
-import { updateWorkspaceInTree } from '@nrwl/workspace';
+import { getProjects, Tree } from '@nrwl/devkit';
 import { Schema } from '../schema';
 
 /**
@@ -9,36 +8,30 @@ import { Schema } from '../schema';
  *
  * @param schema The options provided to the schematic
  */
-export function checkTargets(schema: Schema) {
+export function checkTargets(tree: Tree, schema: Schema) {
   if (schema.forceRemove) {
-    return (tree: Tree) => tree;
+    return;
   }
 
-  return updateWorkspaceInTree((workspace) => {
+  const usedIn = [];
+  getProjects(tree).forEach((project, projectName) => {
     const findTarget = new RegExp(`${schema.projectName}:`);
 
-    const usedIn = [];
-
-    for (const name of Object.keys(workspace.projects)) {
-      if (name === schema.projectName) {
-        continue;
-      }
-
-      const projectStr = JSON.stringify(workspace.projects[name]);
-
-      if (findTarget.test(projectStr)) {
-        usedIn.push(name);
-      }
+    if (projectName === schema.projectName) {
+      return;
     }
 
-    if (usedIn.length > 0) {
-      let message = `${schema.projectName} is still targeted by the following projects:\n\n`;
-      for (let project of usedIn) {
-        message += `${project}\n`;
-      }
-      throw new Error(message);
+    if (findTarget.test(JSON.stringify(project))) {
+      usedIn.push(projectName);
     }
-
-    return workspace;
   });
+
+  if (usedIn.length > 0) {
+    let message = `${schema.projectName} is still targeted by the following projects:\n\n`;
+    for (let project of usedIn) {
+      message += `${project}\n`;
+    }
+
+    throw new Error(message);
+  }
 }

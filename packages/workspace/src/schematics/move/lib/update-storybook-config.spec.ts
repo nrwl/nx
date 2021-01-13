@@ -1,20 +1,21 @@
-import { Tree } from '@angular-devkit/schematics';
-import { UnitTestTree } from '@angular-devkit/schematics/testing';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { callRule, runSchematic } from '../../../utils/testing';
+import { readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { Schema } from '../schema';
 import { updateStorybookConfig } from './update-storybook-config';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { libraryGenerator } from '../../library/library';
 
-describe('updateStorybookConfig Rule', () => {
-  let tree: UnitTestTree;
+describe('updateStorybookConfig', () => {
+  let tree: Tree;
 
   beforeEach(async () => {
-    tree = new UnitTestTree(Tree.empty());
-    tree = createEmptyWorkspace(tree) as UnitTestTree;
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should handle storybook config not existing', async () => {
-    tree = await runSchematic('lib', { name: 'my-source' }, tree);
+    await libraryGenerator(tree, {
+      name: 'my-source',
+    });
+    const projectConfig = readProjectConfiguration(tree, 'my-source');
 
     const schema: Schema = {
       projectName: 'my-source',
@@ -23,9 +24,7 @@ describe('updateStorybookConfig Rule', () => {
       updateImportPath: true,
     };
 
-    await expect(
-      callRule(updateStorybookConfig(schema), tree)
-    ).resolves.not.toThrow();
+    updateStorybookConfig(tree, schema, projectConfig);
   });
 
   it('should update the import path for main.js', async () => {
@@ -37,8 +36,11 @@ describe('updateStorybookConfig Rule', () => {
     const storybookMainPath =
       '/libs/namespace/my-destination/.storybook/main.js';
 
-    tree = await runSchematic('lib', { name: 'my-source' }, tree);
-    tree.create(storybookMainPath, storybookMain);
+    await libraryGenerator(tree, {
+      name: 'my-source',
+    });
+    const projectConfig = readProjectConfiguration(tree, 'my-source');
+    tree.write(storybookMainPath, storybookMain);
 
     const schema: Schema = {
       projectName: 'my-source',
@@ -47,10 +49,7 @@ describe('updateStorybookConfig Rule', () => {
       updateImportPath: true,
     };
 
-    tree = (await callRule(
-      updateStorybookConfig(schema),
-      tree
-    )) as UnitTestTree;
+    updateStorybookConfig(tree, schema, projectConfig);
 
     const storybookMainAfter = tree.read(storybookMainPath).toString();
     expect(storybookMainAfter).toContain(
@@ -66,8 +65,11 @@ describe('updateStorybookConfig Rule', () => {
     const storybookWebpackConfigPath =
       '/libs/namespace/my-destination/.storybook/webpack.config.js';
 
-    tree = await runSchematic('lib', { name: 'my-source' }, tree);
-    tree.create(storybookWebpackConfigPath, storybookWebpackConfig);
+    await libraryGenerator(tree, {
+      name: 'my-source',
+    });
+    const projectConfig = readProjectConfiguration(tree, 'my-source');
+    tree.write(storybookWebpackConfigPath, storybookWebpackConfig);
 
     const schema: Schema = {
       projectName: 'my-source',
@@ -76,10 +78,7 @@ describe('updateStorybookConfig Rule', () => {
       updateImportPath: true,
     };
 
-    tree = (await callRule(
-      updateStorybookConfig(schema),
-      tree
-    )) as UnitTestTree;
+    updateStorybookConfig(tree, schema, projectConfig);
 
     const storybookWebpackConfigAfter = tree
       .read(storybookWebpackConfigPath)

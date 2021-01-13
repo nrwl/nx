@@ -1,4 +1,6 @@
-import { NxJson, updateJsonInTree } from '@nrwl/workspace';
+import { Tree, updateJson } from '@nrwl/devkit';
+
+import { NxJson } from '../../../core/shared-interfaces';
 import { Schema } from '../schema';
 import { getNewProjectName } from './utils';
 
@@ -7,8 +9,8 @@ import { getNewProjectName } from './utils';
  *
  * @param schema The options provided to the schematic
  */
-export function updateNxJson(schema: Schema) {
-  return updateJsonInTree<NxJson>('nx.json', (json) => {
+export function updateImplicitDependencies(tree: Tree, schema: Schema) {
+  updateJson<NxJson>(tree, 'nx.json', (json) => {
     Object.values(json.projects).forEach((project) => {
       if (project.implicitDependencies) {
         const index = project.implicitDependencies.indexOf(schema.projectName);
@@ -19,10 +21,6 @@ export function updateNxJson(schema: Schema) {
         }
       }
     });
-    json.projects[getNewProjectName(schema.destination)] = {
-      ...json.projects[schema.projectName],
-    };
-    delete json.projects[schema.projectName];
     return json;
   });
 }

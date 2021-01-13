@@ -1,31 +1,31 @@
-import { chain, Rule } from '@angular-devkit/schematics';
-import { checkProjectExists } from '../../utils/rules/check-project-exists';
-import { formatFiles } from '../../utils/rules/format-files';
+import {
+  convertNxGenerator,
+  formatFiles,
+  readProjectConfiguration,
+  Tree,
+} from '@nrwl/devkit';
+
 import { checkDependencies } from './lib/check-dependencies';
 import { checkTargets } from './lib/check-targets';
 import { removeProject } from './lib/remove-project';
-import { updateNxJson } from './lib/update-nx-json';
 import { updateTsconfig } from './lib/update-tsconfig';
-import { updateWorkspace } from './lib/update-workspace';
+import { removeProjectConfig } from './lib/remove-project-config';
 import { Schema } from './schema';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { updateJestConfig } from './lib/update-jest-config';
 
-export default function (schema: Schema): Rule {
-  return chain([
-    checkProjectExists(schema),
-    checkDependencies(schema),
-    checkTargets(schema),
-    removeProject(schema),
-    updateNxJson(schema),
-    updateTsconfig(schema),
-    updateWorkspace(schema),
-    updateJestConfig(schema),
-    formatFiles(schema),
-  ]);
+export async function removeGenerator(tree: Tree, schema: Schema) {
+  const project = readProjectConfiguration(tree, schema.projectName);
+  checkDependencies(tree, schema);
+  checkTargets(tree, schema);
+  removeProject(tree, project);
+  removeProjectConfig(tree, schema);
+  updateTsconfig(tree, schema, project);
+  updateJestConfig(tree, schema);
+  if (!schema.skipFormat) {
+    await formatFiles(tree);
+  }
 }
 
-export const removeGenerator = wrapAngularDevkitSchematic(
-  '@nrwl/workspace',
-  'remove'
-);
+export default removeGenerator;
+
+export const removeSchematic = convertNxGenerator(removeGenerator);

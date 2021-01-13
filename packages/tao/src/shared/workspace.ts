@@ -8,6 +8,10 @@ import '../compat/compat';
  */
 export interface WorkspaceConfiguration {
   /**
+   * Version of the configuration format
+   */
+  version: number;
+  /**
    * Projects' configurations
    */
   projects: { [projectName: string]: ProjectConfiguration };
@@ -376,7 +380,7 @@ export function reformattedWorkspaceJsonOrNull(w: any) {
   return w.version === 2 ? toNewFormatOrNull(w) : toOldFormatOrNull(w);
 }
 
-export function toNewFormat(w: any) {
+export function toNewFormat(w: any): WorkspaceConfiguration {
   const f = toNewFormatOrNull(w);
   return f ? f : w;
 }

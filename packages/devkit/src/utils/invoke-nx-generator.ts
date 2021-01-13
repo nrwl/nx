@@ -77,10 +77,7 @@ class DevkitTreeFromAngularDevkitTree {
 
   children(dirPath: string): string[] {
     const { subdirs, subfiles } = this.tree.getDir(dirPath);
-    return [
-      ...subdirs.map((fragment) => join(this.root, fragment)),
-      ...subfiles.map((fragment) => join(this.root, fragment)),
-    ];
+    return [...subdirs, ...subfiles];
   }
 
   delete(filePath: string): void {
@@ -100,12 +97,12 @@ class DevkitTreeFromAngularDevkitTree {
     for (const action of this.tree.actions) {
       if (action.kind === 'r') {
         fileChanges.push({
-          path: this.normalize(action.path),
+          path: this.normalize(action.to),
           type: 'CREATE',
-          content: this.read(action.path),
+          content: this.read(action.to),
         });
         fileChanges.push({
-          path: this.normalize(action.to),
+          path: this.normalize(action.path),
           type: 'DELETE',
           content: null,
         });

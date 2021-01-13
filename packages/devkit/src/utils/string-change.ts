@@ -1,5 +1,5 @@
 export enum ChangeType {
-  Delete = 'DELETE',
+  Delete = 'Delete',
   Insert = 'Insert',
 }
 
@@ -68,22 +68,29 @@ export function applyChangesToString(
   changes: StringChange[]
 ): string {
   assertChangesValid(changes);
-  const sortedChanges = changes.sort(
-    (a, b) => getChangeIndex(a) - getChangeIndex(b)
-  );
+  const sortedChanges = changes.sort((a, b) => {
+    const diff = getChangeIndex(a) - getChangeIndex(b);
+    if (diff === 0) {
+      if (a.type === b.type) {
+        return 0;
+      } else {
+        // When at the same place, Insert before Delete
+        return a.type === ChangeType.Insert ? -1 : 1;
+      }
+    }
+    return diff;
+  });
   let offset = 0;
   for (const change of sortedChanges) {
+    const index = getChangeIndex(change) + offset;
     switch (change.type) {
       case ChangeType.Insert: {
-        const index = change.index + Math.max(offset, 0);
         text = text.substr(0, index) + change.text + text.substr(index);
         offset += change.text.length;
         break;
       }
       case ChangeType.Delete: {
-        text =
-          text.substr(0, change.start + offset) +
-          text.substr(change.start + change.length + offset);
+        text = text.substr(0, index) + text.substr(index + change.length);
         offset -= change.length;
         break;
       }

@@ -750,9 +750,7 @@ describe('Move Project', () => {
     const jestConfig = readFile(jestConfigPath);
     expect(jestConfig).toContain(`displayName: 'shared-${lib1}-data-access'`);
     expect(jestConfig).toContain(`preset: '../../../../jest.preset.js'`);
-    expect(jestConfig).toContain(
-      `coverageDirectory: '../../../../coverage/${newPath}'`
-    );
+    expect(jestConfig).toContain(`'../../../../coverage/${newPath}'`);
 
     const tsConfigPath = `${newPath}/tsconfig.json`;
     expect(moveOutput).toContain(`CREATE ${tsConfigPath}`);
@@ -888,9 +886,7 @@ describe('Move Project', () => {
     const jestConfig = readFile(jestConfigPath);
     expect(jestConfig).toContain(`displayName: 'shared-${lib1}-data-access'`);
     expect(jestConfig).toContain(`preset: '../../../../jest.preset.js'`);
-    expect(jestConfig).toContain(
-      `coverageDirectory: '../../../../coverage/${newPath}'`
-    );
+    expect(jestConfig).toContain(`'../../../../coverage/${newPath}'`);
 
     const tsConfigPath = `${newPath}/tsconfig.json`;
     expect(moveOutput).toContain(`CREATE ${tsConfigPath}`);
@@ -1029,9 +1025,7 @@ describe('Move Project', () => {
     const jestConfig = readFile(jestConfigPath);
     expect(jestConfig).toContain(`displayName: 'shared-${lib1}-data-access'`);
     expect(jestConfig).toContain(`preset: '../../../../jest.preset.js'`);
-    expect(jestConfig).toContain(
-      `coverageDirectory: '../../../../coverage/${newPath}'`
-    );
+    expect(jestConfig).toContain(`'../../../../coverage/${newPath}'`);
 
     const tsConfigPath = `${newPath}/tsconfig.json`;
     expect(moveOutput).toContain(`CREATE ${tsConfigPath}`);

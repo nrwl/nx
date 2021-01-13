@@ -1,15 +1,21 @@
-import { Tree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { callRule, runSchematic } from '../../../utils/testing';
+import {
+  ProjectConfiguration,
+  readProjectConfiguration,
+  Tree,
+} from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Schema } from '../schema';
 import { checkDestination } from './check-destination';
+import { libraryGenerator } from '../../library/library';
 
-describe('checkDestination Rule', () => {
+describe('checkDestination', () => {
   let tree: Tree;
+  let projectConfig: ProjectConfiguration;
 
   beforeEach(async () => {
-    tree = createEmptyWorkspace(Tree.empty());
-    tree = await runSchematic('lib', { name: 'my-lib' }, tree);
+    tree = createTreeWithEmptyWorkspace();
+    await libraryGenerator(tree, { name: 'my-lib' });
+    projectConfig = readProjectConfiguration(tree, 'my-lib');
   });
 
   it('should throw an error if the path is not explicit', async () => {
@@ -20,13 +26,15 @@ describe('checkDestination Rule', () => {
       updateImportPath: true,
     };
 
-    await expect(callRule(checkDestination(schema), tree)).rejects.toThrow(
+    expect(() => {
+      checkDestination(tree, schema, projectConfig);
+    }).toThrow(
       `Invalid destination: [${schema.destination}] - Please specify explicit path.`
     );
   });
 
   it('should throw an error if the path already exists', async () => {
-    tree = await runSchematic('lib', { name: 'my-other-lib' }, tree);
+    await libraryGenerator(tree, { name: 'my-other-lib' });
 
     const schema: Schema = {
       projectName: 'my-lib',
@@ -35,7 +43,9 @@ describe('checkDestination Rule', () => {
       updateImportPath: true,
     };
 
-    await expect(callRule(checkDestination(schema), tree)).rejects.toThrow(
+    expect(() => {
+      checkDestination(tree, schema, projectConfig);
+    }).toThrow(
       `Invalid destination: [${schema.destination}] - Path is not empty.`
     );
   });
@@ -48,9 +58,9 @@ describe('checkDestination Rule', () => {
       updateImportPath: true,
     };
 
-    await expect(
-      callRule(checkDestination(schema), tree)
-    ).resolves.not.toThrow();
+    expect(() => {
+      checkDestination(tree, schema, projectConfig);
+    }).not.toThrow();
   });
 
   it('should normalize the destination', async () => {
@@ -61,7 +71,7 @@ describe('checkDestination Rule', () => {
       updateImportPath: true,
     };
 
-    await callRule(checkDestination(schema), tree);
+    checkDestination(tree, schema, projectConfig);
 
     expect(schema.destination).toBe('my-other-lib/wibble');
   });

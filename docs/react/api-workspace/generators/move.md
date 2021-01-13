@@ -56,6 +56,16 @@ Type: `string`
 
 The name of the project to move
 
+### skipFormat
+
+Alias(es): skip-format
+
+Default: `false`
+
+Type: `boolean`
+
+Skip formatting files.
+
 ### updateImportPath
 
 Default: `true`

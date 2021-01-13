@@ -24,14 +24,14 @@
     },
 
     "move": {
-      "factory": "./src/schematics/move/move",
+      "factory": "./src/schematics/move/move#moveSchematic",
       "schema": "./src/schematics/move/schema.json",
       "aliases": ["mv"],
       "description": "Move an application or library to another folder"
     },
 
     "remove": {
-      "factory": "./src/schematics/remove/remove",
+      "factory": "./src/schematics/remove/remove#moveSchematic",
       "schema": "./src/schematics/remove/schema.json",
       "aliases": ["rm"],
       "description": "Remove an application or library"
@@ -88,14 +88,14 @@
     },
 
     "move": {
-      "factory": "./src/schematics/move/move",
+      "factory": "./src/schematics/move/move#moveGenerator",
       "schema": "./src/schematics/move/schema.json",
       "aliases": ["mv"],
       "description": "Move an application or library to another folder"
     },
 
     "remove": {
-      "factory": "./src/schematics/remove/remove",
+      "factory": "./src/schematics/remove/remove#removeGenerator",
       "schema": "./src/schematics/remove/schema.json",
       "aliases": ["rm"],
       "description": "Remove an application or library"

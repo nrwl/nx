@@ -1,4 +1,5 @@
-import { SchematicContext, Tree } from '@angular-devkit/schematics';
+import { SchematicContext } from '@angular-devkit/schematics';
+import { ProjectConfiguration, Tree, visitNotIgnoredFiles } from '@nrwl/devkit';
 import { getWorkspace } from '@nrwl/workspace';
 import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -10,23 +11,18 @@ import { getDestination } from './utils';
  *
  * @param schema The options provided to the schematic
  */
-export function moveProject(schema: Schema) {
-  return (tree: Tree, _context: SchematicContext): Observable<Tree> => {
-    return from(getWorkspace(tree)).pipe(
-      map((workspace) => {
-        const project = workspace.projects.get(schema.projectName);
+export function moveProject(
+  tree: Tree,
+  schema: Schema,
+  project: ProjectConfiguration
+) {
+  const destination = getDestination(tree, schema, project);
+  visitNotIgnoredFiles(tree, project.root, (file) => {
+    // This is a rename but Angular Devkit isn't capable of writing to a file after it's renamed so this is a workaround
+    const content = tree.read(file);
+    tree.write(file.replace(project.root, destination), content);
+    tree.delete(file);
+  });
 
-        const destination = getDestination(schema, workspace, tree);
-        const dir = tree.getDir(project.root);
-        dir.visit((file) => {
-          const newPath = file.replace(project.root, destination);
-          tree.create(newPath, tree.read(file));
-        });
-
-        tree.delete(project.root);
-
-        return tree;
-      })
-    );
-  };
+  tree.delete(project.root);
 }

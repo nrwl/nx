@@ -27,6 +27,7 @@ describe('Jest Executor', () => {
       root: '/root',
       projectName: 'proj',
       workspace: {
+        version: 2,
         projects: {
           proj: {
             root: 'proj',

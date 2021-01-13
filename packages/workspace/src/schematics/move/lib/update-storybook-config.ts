@@ -1,61 +1,44 @@
-import { Rule, SchematicContext } from '@angular-devkit/schematics';
-import { Tree } from '@angular-devkit/schematics/src/tree/interface';
-import { getWorkspace } from '@nrwl/workspace';
+import { ProjectConfiguration, Tree } from '@nrwl/devkit';
+
 import * as path from 'path';
-import { from, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+
+import { appRootPath } from '../../../utils/app-root';
 import { Schema } from '../schema';
 import { getDestination } from './utils';
-import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
-import { allFilesInDirInHost } from '@nrwl/workspace/src/utils/ast-utils';
-import { Path, normalize } from '@angular-devkit/core';
+import { join } from 'path';
 
 /**
  * Updates relative path to root storybook config for `main.js` & `webpack.config.js`
  *
  * @param schema The options provided to the schematic
  */
-export function updateStorybookConfig(schema: Schema): Rule {
-  return (tree: Tree, _context: SchematicContext): Observable<Tree> => {
-    return from(getWorkspace(tree)).pipe(
-      map((workspace) => {
-        const project = workspace.projects.get(schema.projectName);
-        const destination = getDestination(schema, workspace, tree);
+export function updateStorybookConfig(
+  tree: Tree,
+  schema: Schema,
+  project: ProjectConfiguration
+) {
+  const destination = getDestination(tree, schema, project);
 
-        const oldRelativeRoot = path
-          .relative(
-            path.join(appRootPath, `${project.root}/.storybook`),
-            appRootPath
-          )
-          .split(path.sep)
-          .join('/');
-        const newRelativeRoot = path
-          .relative(
-            path.join(appRootPath, `${destination}/.storybook`),
-            appRootPath
-          )
-          .split(path.sep)
-          .join('/');
+  const oldRelativeRoot = path
+    .relative(path.join(appRootPath, `${project.root}/.storybook`), appRootPath)
+    .split(path.sep)
+    .join('/');
+  const newRelativeRoot = path
+    .relative(path.join(appRootPath, `${destination}/.storybook`), appRootPath)
+    .split(path.sep)
+    .join('/');
 
-        const storybookDir = path.join(destination, '.storybook');
+  const storybookDir = path.join(destination, '.storybook');
 
-        if (!storybookDir) {
-          return tree;
-        }
+  if (!storybookDir) {
+    return;
+  }
 
-        // Replace relative import path to root storybook folder for each file under project storybook
-        tree.getDir(storybookDir).visit((file) => {
-          const oldContent = tree.read(file).toString('utf-8');
-          const newContent = oldContent.replace(
-            oldRelativeRoot,
-            newRelativeRoot
-          );
+  // Replace relative import path to root storybook folder for each file under project storybook
+  for (const file of tree.children(storybookDir)) {
+    const oldContent = tree.read(join(storybookDir, file)).toString('utf-8');
+    const newContent = oldContent.replace(oldRelativeRoot, newRelativeRoot);
 
-          tree.overwrite(file, newContent);
-        });
-
-        return tree;
-      })
-    );
-  };
+    tree.write(join(storybookDir, file), newContent);
+  }
 }

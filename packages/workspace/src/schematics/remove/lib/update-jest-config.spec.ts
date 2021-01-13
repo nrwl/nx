@@ -1,22 +1,19 @@
-import { Tree } from '@angular-devkit/schematics';
-import { UnitTestTree } from '@angular-devkit/schematics/testing';
-import {
-  callRule,
-  createEmptyWorkspace,
-  runSchematic,
-} from '@nrwl/workspace/testing';
-import { Schema } from '../schema';
+import { Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { updateJestConfig } from './update-jest-config';
 
-describe('updateRootJestConfig Rule', () => {
-  let tree: UnitTestTree;
+import { Schema } from '../schema';
+import { updateJestConfig } from './update-jest-config';
+import { libraryGenerator } from '../../library/library';
+
+describe('updateRootJestConfig', () => {
+  let tree: Tree;
   let schema: Schema;
 
   beforeEach(async () => {
-    tree = new UnitTestTree(Tree.empty());
-    tree = createEmptyWorkspace(tree) as UnitTestTree;
+    tree = createTreeWithEmptyWorkspace();
 
     schema = {
       projectName: 'my-lib',
@@ -24,22 +21,24 @@ describe('updateRootJestConfig Rule', () => {
       forceRemove: false,
     };
 
-    tree = await runSchematic('lib', { name: 'my-lib' }, tree);
+    await libraryGenerator(tree, {
+      name: 'my-lib',
+    });
 
-    tree.overwrite(
+    tree.write(
       'jest.config.js',
       readFileSync(join(__dirname, './test-files/jest.config.js')).toString()
     );
   });
 
   it('should delete lib project ref from root jest config', async () => {
-    const jestConfig = tree.readContent('jest.config.js');
+    const jestConfig = tree.read('jest.config.js').toString();
 
     expect(jestConfig).toMatchSnapshot();
 
-    tree = (await callRule(updateJestConfig(schema), tree)) as UnitTestTree;
+    updateJestConfig(tree, schema);
 
-    const updatedJestConfig = tree.readContent('jest.config.js');
+    const updatedJestConfig = tree.read('jest.config.js').toString();
 
     expect(updatedJestConfig).toMatchSnapshot();
   });
