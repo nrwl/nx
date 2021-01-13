@@ -16,6 +16,9 @@ const schemaDefaults = {
 } as const;
 
 function normalizeOptions(options: JestProjectSchema) {
+  if (!options.testEnvironment) {
+    options.testEnvironment = 'jsdom';
+  }
   if (options.testEnvironment === 'jsdom') {
     options.testEnvironment = '';
   }
@@ -43,7 +46,7 @@ export async function jestProjectGenerator(
   schema: JestProjectSchema
 ) {
   const options = normalizeOptions(schema);
-  init(tree, options);
+  const installTask = init(tree, options);
   checkForTestTarget(tree, options);
   createFiles(tree, options);
   updateTsConfig(tree, options);
@@ -52,6 +55,7 @@ export async function jestProjectGenerator(
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }
+  return installTask;
 }
 
 export const jestProjectSchematic = convertNxGenerator(jestProjectGenerator);

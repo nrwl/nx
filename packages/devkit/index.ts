@@ -21,6 +21,7 @@ export {
   readProjectConfiguration,
   updateProjectConfiguration,
 } from './src/generators/project-configuration';
+export { toJS } from './src/generators/to-js';
 
 export { readJson, writeJson, updateJson } from './src/utils/json';
 export { addDependenciesToPackageJson } from './src/utils/package-json';

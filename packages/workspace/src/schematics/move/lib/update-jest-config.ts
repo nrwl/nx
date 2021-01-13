@@ -51,7 +51,7 @@ export function updateJestConfig(schema: Schema): Rule {
           .toString('utf-8');
 
         const findProject = new RegExp(
-          `'<rootDir>\/(libs|apps)\/${schema.projectName}'`,
+          `<rootDir>\/(libs|apps)\/${schema.projectName}`,
           'g'
         );
 
