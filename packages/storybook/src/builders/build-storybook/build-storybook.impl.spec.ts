@@ -9,9 +9,9 @@ import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 
 describe('Build storybook', () => {
   let context: MockBuilderContext;
-  let mockCreateProjectGraph: jest.Mock<ReturnType<
-    typeof createProjectGraph
-  >> = createProjectGraph as any;
+  let mockCreateProjectGraph: jest.Mock<
+    ReturnType<typeof createProjectGraph>
+  > = createProjectGraph as any;
 
   beforeEach(async () => {
     context = await getMockContext();
