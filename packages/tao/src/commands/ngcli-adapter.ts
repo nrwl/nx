@@ -45,6 +45,7 @@ import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 import { Observable, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { NX_ERROR, NX_PREFIX } from '../shared/logger';
+import * as path from 'path';
 
 export async function run(root: string, opts: RunOptions, verbose: boolean) {
   const logger = getLogger(verbose);
@@ -223,7 +224,18 @@ class MigrationEngineHost extends NodeModulesEngineHost {
     if (extname(name)) {
       collectionPath = require.resolve(name);
     } else {
-      const packageJsonPath = require.resolve(join(name, 'package.json'));
+      let packageJsonPath;
+      try {
+        packageJsonPath = require.resolve(path.join(name, 'package.json'), {
+          paths: [process.cwd()],
+        });
+      } catch (e) {
+        // workaround for a bug in node 12
+        packageJsonPath = require.resolve(
+          path.join(process.cwd(), name, 'package.json')
+        );
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const packageJson = require(packageJsonPath);
       let pkgJsonSchematics = packageJson['nx-migrations'];
