@@ -30,6 +30,12 @@ Type: `number`
 
 Port to listen on.
 
+### projectBuildConfig
+
+Type: `string`
+
+Workspace project where Storybook reads the Webpack config from
+
 ### quiet
 
 Default: `true`

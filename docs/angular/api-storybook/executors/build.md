@@ -20,6 +20,12 @@ Type: `string`
 
 The output path of the generated files.
 
+### projectBuildConfig
+
+Type: `string`
+
+Workspace project where Storybook reads the Webpack config from
+
 ### quiet
 
 Default: `true`
