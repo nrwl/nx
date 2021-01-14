@@ -8,8 +8,9 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Run Commands', () => {
+  beforeAll(() => newProject());
+
   it('should not override environment variables already set when setting a custom env file path', async (done) => {
-    newProject();
     const nodeapp = uniq('nodeapp');
     updateFile(
       `.env`,
@@ -39,7 +40,6 @@ describe('Run Commands', () => {
   }, 120000);
 
   it('should interpolate provided arguments', async (done) => {
-    newProject();
     const myapp = uniq('myapp1');
 
     runCLI(`generate @nrwl/web:app ${myapp}`);
@@ -53,14 +53,13 @@ describe('Run Commands', () => {
     };
     updateFile(workspaceConfigName(), JSON.stringify(config));
 
-    const result = runCLI('echo --var1=x --var2=y');
+    const result = runCLI(`run ${myapp}:echo --var1=x --var2=y`);
     expect(result).toContain('print: x');
     expect(result).toContain('print: y');
     done();
   }, 120000);
 
   it('should fail when a process exits non-zero', () => {
-    newProject();
     const myapp = uniq('myapp1');
 
     runCLI(`generate @nrwl/web:app ${myapp}`);
@@ -75,8 +74,12 @@ describe('Run Commands', () => {
     updateFile(workspaceConfigName(), JSON.stringify(config));
 
     try {
-      runCLI('error');
+      runCLI(`run ${myapp}:error`);
       fail('Should error if process errors');
-    } catch (e) {}
+    } catch (e) {
+      expect(e.stderr.toString()).toContain(
+        'Something went wrong in @nrwl/run-commands - Command failed: exit 1'
+      );
+    }
   });
 });

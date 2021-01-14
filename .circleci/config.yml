@@ -29,6 +29,11 @@ commands:
           key: nrwl-nx-yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
+      - run:
+          name: Install PNPM
+          command: |
+            npm install --prefix=$HOME/.local -g pnpm
+            pnpm --version
 
 jobs:
   checks-and-unit-tests:
@@ -79,6 +84,7 @@ jobs:
           command: yarn e2e << parameters.packages >> affected
           no_output_timeout: 30m
     environment:
+      SELECTED_PM: pnpm
       SELECTED_CLI: << parameters.cli >>
 
 workflows:
