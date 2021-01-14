@@ -2,7 +2,7 @@
 
 ## Video of this Lesson
 
-<iframe width="560" height="600" src="https://www.youtube.com/embed/fNehP0WX__c" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/fNehP0WX__c" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Great! You have a failing E2E test. Now you can make it pass!
 
