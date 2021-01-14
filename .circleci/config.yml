@@ -9,13 +9,6 @@ executors:
     docker:
       - image: cimg/node:12.20-browsers
 
-  windows:
-    working_directory: *working_directory
-    resource_class: windows.medium
-    machine:
-      image: windows-server-2019-vs2019:stable
-    shell: cmd.exe
-
 commands:
   setup:
     parameters:
