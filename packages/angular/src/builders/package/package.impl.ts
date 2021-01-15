@@ -91,7 +91,8 @@ export function createLibraryBuilder(
                   context,
                   target,
                   dependencies,
-                  options.buildableProjectDepsInPackageJsonType || 'dependencies'
+                  options.buildableProjectDepsInPackageJsonType ||
+                    'dependencies'
                 );
               }
             }),
