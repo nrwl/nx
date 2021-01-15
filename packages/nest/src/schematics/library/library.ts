@@ -160,7 +160,9 @@ function createFiles(options: NormalizedSchema): Rule {
 
 function deleteFiles(options: NormalizedSchema): Rule {
   return (host: Tree) => {
-    host.delete(`${options.projectRoot}/src/lib/${options.fileName}.spec.ts`);
+    if (options.unitTestRunner !== 'none') {
+      host.delete(`${options.projectRoot}/src/lib/${options.fileName}.spec.ts`);
+    }
     host.delete(`${options.projectRoot}/src/lib/${options.fileName}.ts`);
   };
 }
