@@ -76,7 +76,10 @@ export function listPluginCapabilities(pluginName: string) {
     const pmc = getPackageManagerCommand();
     output.note({
       title: `${pluginName} is not currently installed`,
-      bodyLines: [`Use "${pmc.addDev} ${pluginName}" to add new capabilities`],
+      bodyLines: [
+        `Use "${pmc.addDev} ${pluginName}" to install the plugin.`,
+        `After that, use "${pmc.exec} nx g ${pluginName}:init" to add the required peer deps and initialize the plugin.`,
+      ],
     });
 
     return;
