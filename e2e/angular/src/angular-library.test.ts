@@ -9,7 +9,7 @@ import {
 import { names } from '@nrwl/devkit';
 
 ['publishable', 'buildable'].forEach((testConfig) => {
-  describe('Build Angular library', () => {
+  describe(`Build ${testConfig} Angular library`, () => {
     /**
      * Graph:
      *
@@ -159,8 +159,16 @@ import { names } from '@nrwl/devkit';
       // expect(jsonFile.dependencies).toEqual({ tslib: '^2.0.0' });
 
       expect(jsonFile.dependencies['tslib']).toEqual('^2.0.0');
-      expect(jsonFile.dependencies[`@proj/${childLib}`]).toBeDefined();
-      expect(jsonFile.dependencies[`@proj/${childLib2}`]).toBeDefined();
+      expect(
+        jsonFile[
+          testConfig === 'publishable' ? 'peerDependencies' : 'dependencies'
+        ][`@proj/${childLib}`]
+      ).toBeDefined();
+      expect(
+        jsonFile[
+          testConfig === 'publishable' ? 'peerDependencies' : 'dependencies'
+        ][`@proj/${childLib2}`]
+      ).toBeDefined();
       expect(jsonFile.peerDependencies['@angular/common']).toBeDefined();
       expect(jsonFile.peerDependencies['@angular/core']).toBeDefined();
     });
