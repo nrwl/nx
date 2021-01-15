@@ -56,7 +56,14 @@ export function createWebpackConfig(
               test: /\.[jt]sx?$/,
             },
             use: [
-              '@svgr/webpack?-svgo,+titleProp,+ref![path]',
+              {
+                loader: require.resolve('@svgr/webpack'),
+                options: {
+                  svgo: false,
+                  titleProp: true,
+                  ref: true,
+                },
+              },
               {
                 loader: require.resolve('url-loader'),
                 options: {
