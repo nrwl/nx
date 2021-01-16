@@ -25,7 +25,7 @@ Select `empty` when prompted:
 
 ## Exploring your workspace
 
-Take a tour of your [Nx workspace](/{{framework}}/workspace/workspace-overview). There are some important areas to know about as you migrate.
+Take a tour of your [Nx workspace](/{{framework}}/getting-started/folder-structure). There are some important areas to know about as you migrate.
 
 ### apps
 
