@@ -33,7 +33,7 @@ export function convertNxExecutor(executor: Executor) {
           builderContext.target.target
         ];
     }
-    return from(executor(options, context)).pipe(
+    return from(toPromise(executor(options, context))).pipe(
       map((output) => {
         if (!output) {
           return {
@@ -49,4 +49,13 @@ export function convertNxExecutor(executor: Executor) {
     );
   };
   return require('@angular-devkit/architect').createBuilder(builderFunction);
+}
+
+async function toPromise(promiseOrAsyncIterator: any): Promise<any> {
+  if (typeof promiseOrAsyncIterator.then === 'function')
+    return promiseOrAsyncIterator;
+  let q;
+  for await (q of promiseOrAsyncIterator) {
+  }
+  return q;
 }

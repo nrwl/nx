@@ -8,9 +8,33 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
+  workspaceConfigName,
 } from '@nrwl/e2e/utils';
 
-describe('Help', () => {
+describe('Cli', () => {
+  it('should execute long running tasks', () => {
+    newProject();
+    const myapp = uniq('myapp');
+    runCLI(`generate @nrwl/web:app ${myapp}`);
+
+    updateFile(workspaceConfigName(), (c) => {
+      const w = JSON.parse(c);
+      w.projects[myapp].targets['counter'] = {
+        executor: '@nrwl/workspace:counter',
+        options: {
+          to: 2,
+        },
+      };
+      return JSON.stringify(w);
+    });
+
+    const success = runCLI(`counter ${myapp} --result=true`);
+    expect(success).toContain('0');
+    expect(success).toContain('1');
+
+    expect(() => runCLI(`counter ${myapp} --result=false`)).toThrowError();
+  });
+
   it('should show help', async () => {
     newProject();
     const myapp = uniq('myapp');

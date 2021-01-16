@@ -17,7 +17,7 @@ if (process.env.NODE_ENV === null || process.env.NODE_ENV === undefined) {
 export async function jestExecutor(
   options: JestExecutorOptions,
   context: ExecutorContext
-): Promise<void> {
+): Promise<{ success: boolean }> {
   options.jestConfig = path.resolve(context.root, options.jestConfig);
 
   const jestConfig: {
@@ -109,9 +109,7 @@ export async function jestExecutor(
 
   const { results } = await runCLI(config, [options.jestConfig]);
 
-  if (!results.success) {
-    throw new Error();
-  }
+  return { success: results.success };
 }
 
 export default jestExecutor;

@@ -1,4 +1,4 @@
-import { Architect } from '@angular-devkit/architect';
+import { Architect, BuilderOutput } from '@angular-devkit/architect';
 import { WorkspaceNodeModulesArchitectHost } from '@angular-devkit/architect/node';
 import {
   json,
@@ -47,7 +47,11 @@ import { map, switchMap } from 'rxjs/operators';
 import { NX_ERROR, NX_PREFIX } from '../shared/logger';
 import * as path from 'path';
 
-export async function run(root: string, opts: RunOptions, verbose: boolean) {
+export async function scheduleTarget(
+  root: string,
+  opts: RunOptions,
+  verbose: boolean
+): Promise<Observable<BuilderOutput>> {
   const logger = getLogger(verbose);
   const fsHost = new NxScopedHost(normalize(root));
   const { workspace } = await workspaces.readWorkspace(
@@ -68,9 +72,7 @@ export async function run(root: string, opts: RunOptions, verbose: boolean) {
     opts.runOptions,
     { logger }
   );
-  const result = await run.output.toPromise();
-  await run.stop();
-  return result.success ? 0 : 1;
+  return run.output;
 }
 
 function createWorkflow(
