@@ -14,20 +14,6 @@ import {
   workspaceConfigName,
 } from '@nrwl/e2e/utils';
 
-let originalCIValue: any;
-
-/**
- * Setting CI=true makes it simpler to configure assertions around output, as there
- * won't be any colors.
- */
-beforeAll(() => {
-  originalCIValue = process.env.CI;
-  process.env.CI = 'true';
-});
-afterAll(() => {
-  process.env.CI = originalCIValue;
-});
-
 describe('run-one', () => {
   it('should build specific project', () => {
     const proj = newProject();

@@ -28,11 +28,15 @@ function publishPackage(packagePath) {
     `);
   }
   try {
+    console.log(` 📦 ${packagePath}`);
     execSync(`npm publish`, {
       cwd: packagePath,
       env: process.env,
+      stdio: ['ignore', 'ignore', 'ignore'],
     });
-  } catch (e) {}
+  } catch (e) {
+    console.log(e);
+  }
 }
 
 export function setup() {
