@@ -2,11 +2,11 @@ import { ProjectGraph, ProjectGraphNode } from '../core/project-graph';
 import { Environment, NxJson } from '../core/shared-interfaces';
 import { Task } from '../tasks-runner/tasks-runner';
 import { createTask, getRunner } from '../tasks-runner/run-command';
-import { basename } from 'path';
 import { getCommandAsString, getOutputs } from '../tasks-runner/utils';
 import * as yargs from 'yargs';
 import { NxArgs } from './utils';
 import { Hasher } from '../core/hasher/hasher';
+import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 
 export async function printAffected(
   affectedProjectsWithTargetAndConfig: ProjectGraphNode[],
@@ -61,12 +61,13 @@ async function createTasks(
   );
 
   const taskHashes = await hasher.hashTasks(tasks);
-  const isYarn = basename(process.env.npm_execpath || 'npm').startsWith('yarn');
+  const pm = detectPackageManager();
+  const isYarn = pm === 'yarn';
   return tasks.map((task, index) => ({
     id: task.id,
     overrides: overrides,
     target: task.target,
-    command: `${isYarn ? 'yarn' : 'npm run'} ${getCommandAsString(
+    command: `${isYarn ? 'yarn' : `${pm} run`} ${getCommandAsString(
       'nx',
       isYarn,
       task

@@ -29,6 +29,7 @@ export default function (schema: Schema): Rule {
         {},
         {
           '@nrwl/devkit': nxVersion,
+          '@nrwl/node': nxVersion,
           tslib: '^2.0.0',
         }
       ),
