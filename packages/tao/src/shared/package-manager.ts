@@ -32,7 +32,7 @@ export function getPackageManagerCommand(
 
     case 'pnpm':
       return {
-        install: 'pnpm install',
+        install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
         add: 'pnpm add',
         addDev: 'pnpm add -D',
         rm: 'pnpm rm',
