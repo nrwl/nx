@@ -146,7 +146,9 @@ export type Executor<T = any> = (
    */
   options: T,
   context: ExecutorContext
-) => Promise<any>;
+) =>
+  | Promise<{ success: boolean }>
+  | AsyncIterableIterator<{ success: boolean }>;
 
 /**
  * Context that is passed into an executor
@@ -223,7 +225,10 @@ export class Workspaces {
     return schema['cli'] === 'nx';
   }
 
-  readExecutor(nodeModule: string, executor: string) {
+  readExecutor(
+    nodeModule: string,
+    executor: string
+  ): { schema: any; implementation: Executor } {
     try {
       const { executorsFilePath, executorConfig } = this.readExecutorsJson(
         nodeModule,

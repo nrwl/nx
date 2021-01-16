@@ -15,6 +15,7 @@ import {
 
 import * as chalk from 'chalk';
 import { logger } from '../shared/logger';
+import { eachValueFrom } from 'rxjs-for-await';
 
 export interface RunOptions {
   project: string;
@@ -136,6 +137,21 @@ export interface TargetContext {
   projectName: string;
 }
 
+function isPromise(
+  v: Promise<{ success: boolean }> | AsyncIterableIterator<{ success: boolean }>
+): v is Promise<{ success: boolean }> {
+  return typeof (v as any).then === 'function';
+}
+
+async function iteratorToProcessStatusCode(
+  i: AsyncIterableIterator<{ success: boolean }>
+): Promise<number> {
+  let r;
+  for await (r of i) {
+  }
+  return r.success ? 0 : 1;
+}
+
 export async function run(
   cwd: string,
   root: string,
@@ -167,20 +183,29 @@ export async function run(
     }
 
     if (ws.isNxExecutor(nodeModule, executor)) {
-      return await implementation(combinedOptions, {
+      const r = implementation(combinedOptions, {
         root,
         target,
         workspace,
         projectName: opts.project,
       });
+      if (isPromise(r)) {
+        return (await r).success ? 0 : 1;
+      } else {
+        return iteratorToProcessStatusCode(r);
+      }
     } else {
-      return (await import('./ngcli-adapter')).run(
-        root,
-        {
-          ...opts,
-          runOptions: combinedOptions,
-        },
-        isVerbose
+      return iteratorToProcessStatusCode(
+        eachValueFrom(
+          await (await import('./ngcli-adapter')).scheduleTarget(
+            root,
+            {
+              ...opts,
+              runOptions: combinedOptions,
+            },
+            isVerbose
+          )
+        )
       );
     }
   });

@@ -262,7 +262,8 @@
     "worker-plugin": "3.2.0",
     "yargs": "15.4.1",
     "yargs-parser": "20.0.0",
-    "zone.js": "^0.10.0"
+    "zone.js": "^0.10.0",
+    "rxjs-for-await": "0.0.2"
   },
   "author": "Victor Savkin",
   "license": "MIT",
