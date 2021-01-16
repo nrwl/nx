@@ -210,11 +210,11 @@ describe('Node Libraries', () => {
   }, 60000);
 
   it('should be able to generate a publishable node library', async () => {
-    newProject();
+    const proj = newProject();
 
     const nodeLib = uniq('nodelib');
     runCLI(
-      `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@proj/${nodeLib}`
+      `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@${proj}/${nodeLib}`
     );
     checkFilesExist(`libs/${nodeLib}/package.json`);
     const tslibConfig = readJson(`libs/${nodeLib}/tsconfig.lib.json`);
@@ -238,7 +238,7 @@ describe('Node Libraries', () => {
 
     const packageJson = readJson(`dist/libs/${nodeLib}/package.json`);
     expect(packageJson).toEqual({
-      name: `@proj/${nodeLib}`,
+      name: `@${proj}/${nodeLib}`,
       version: '0.0.1',
       main: 'src/index.js',
       typings: 'src/index.d.ts',
@@ -246,20 +246,20 @@ describe('Node Libraries', () => {
   }, 60000);
 
   it('should be able to copy assets', () => {
-    newProject();
+    const proj = newProject();
     const nodelib = uniq('nodelib');
     const nglib = uniq('nglib');
 
     // Generating two libraries just to have a lot of files to copy
     runCLI(
-      `generate @nrwl/node:lib ${nodelib} --publishable --importPath=@proj/${nodelib}`
+      `generate @nrwl/node:lib ${nodelib} --publishable --importPath=@${proj}/${nodelib}`
     );
     /**
      * The angular lib contains a lot sub directories that would fail without
      * `nodir: true` in the package.impl.ts
      */
     runCLI(
-      `generate @nrwl/angular:lib ${nglib} --publishable --importPath=@proj/${nglib}`
+      `generate @nrwl/angular:lib ${nglib} --publishable --importPath=@${proj}/${nglib}`
     );
     const workspace = readJson(workspaceConfigName());
     workspace.projects[nodelib].targets.build.options.assets.push({
@@ -276,10 +276,10 @@ describe('Node Libraries', () => {
   }, 60000);
 
   it('should fail when trying to compile typescript files that are invalid', () => {
-    newProject();
+    const proj = newProject();
     const nodeLib = uniq('nodelib');
     runCLI(
-      `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@proj/${nodeLib}`
+      `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@${proj}/${nodeLib}`
     );
     updateFile(
       `libs/${nodeLib}/src/index.ts`,
@@ -385,6 +385,7 @@ describe('with dependencies', () => {
   let parentLib: string;
   let childLib: string;
   let childLib2: string;
+  let proj: string;
 
   beforeEach(() => {
     app = uniq('app');
@@ -392,7 +393,7 @@ describe('with dependencies', () => {
     childLib = uniq('childlib');
     childLib2 = uniq('childlib2');
 
-    newProject();
+    proj = newProject();
 
     runCLI(`generate @nrwl/express:app ${app}`);
     runCLI(`generate @nrwl/node:lib ${parentLib} --buildable=true`);
@@ -405,7 +406,9 @@ describe('with dependencies', () => {
         `libs/${parent}/src/lib/${parent}.ts`,
         `
                 ${children
-                  .map((entry) => `import { ${entry} } from '@proj/${entry}';`)
+                  .map(
+                    (entry) => `import { ${entry} } from '@${proj}/${entry}';`
+                  )
                   .join('\n')}
 
                 export function ${parent}(): string {
@@ -422,7 +425,7 @@ describe('with dependencies', () => {
     updateFile(
       `apps/${app}/src/main.ts`,
       `
-        import "@proj/${parentLib}";
+        import "@${proj}/${parentLib}";
         `
     );
 
@@ -478,7 +481,7 @@ describe('with dependencies', () => {
       version: string
     ) => {
       const jsonFile = readJson(`dist/libs/${parent}/package.json`);
-      const childDependencyVersion = jsonFile.dependencies[`@proj/${lib}`];
+      const childDependencyVersion = jsonFile.dependencies[`@${proj}/${lib}`];
       expect(childDependencyVersion).toBe(version);
     };
 

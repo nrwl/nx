@@ -16,8 +16,10 @@ import {
 import { NxJson } from '@nrwl/workspace';
 import { classify } from '@nrwl/workspace/src/utils/strings';
 
+let proj: string;
+
 beforeAll(() => {
-  newProject();
+  proj = newProject();
 });
 
 describe('lint', () => {
@@ -50,13 +52,13 @@ describe('lint', () => {
      *
      * Let's add it so that we can trigger the lint failure
      */
-    tsConfig.compilerOptions.paths[`@proj/${myapp2}`] = [
+    tsConfig.compilerOptions.paths[`@${proj}/${myapp2}`] = [
       `apps/${myapp2}/src/main.ts`,
     ];
 
     tsConfig.compilerOptions.paths[`@secondScope/${lazylib}`] =
-      tsConfig.compilerOptions.paths[`@proj/${lazylib}`];
-    delete tsConfig.compilerOptions.paths[`@proj/${lazylib}`];
+      tsConfig.compilerOptions.paths[`@${proj}/${lazylib}`];
+    delete tsConfig.compilerOptions.paths[`@${proj}/${lazylib}`];
     updateFile('tsconfig.base.json', JSON.stringify(tsConfig, null, 2));
 
     updateFile(
@@ -64,11 +66,11 @@ describe('lint', () => {
       `
       import '../../../libs/${mylib}';
       import '@secondScope/${lazylib}';
-      import '@proj/${myapp2}';
-      import '@proj/${invalidtaglib}';
-      import '@proj/${validtaglib}';
+      import '@${proj}/${myapp2}';
+      import '@${proj}/${invalidtaglib}';
+      import '@${proj}/${validtaglib}';
 
-      const s = {loadChildren: '@proj/${lazylib}'};
+      const s = {loadChildren: '@${proj}/${lazylib}'};
     `
     );
 
@@ -362,6 +364,7 @@ describe('workspace-generator', () => {
 });
 
 describe('dep-graph', () => {
+  let proj: string;
   let myapp: string;
   let myapp2: string;
   let myapp3: string;
@@ -371,6 +374,7 @@ describe('dep-graph', () => {
   let mylib: string;
   let mylib2: string;
   beforeAll(() => {
+    proj = newProject();
     myapp = uniq('myapp');
     myapp2 = uniq('myapp2');
     myapp3 = uniq('myapp3');
@@ -389,20 +393,20 @@ describe('dep-graph', () => {
     updateFile(
       `apps/${myapp}/src/main.ts`,
       `
-      import '@proj/${mylib}';
+      import '@${proj}/${mylib}';
 
-      const s = {loadChildren: '@proj/${mylib2}'};
+      const s = {loadChildren: '@${proj}/${mylib2}'};
     `
     );
 
     updateFile(
       `apps/${myapp2}/src/app/app.component.spec.ts`,
-      `import '@proj/${mylib}';`
+      `import '@${proj}/${mylib}';`
     );
 
     updateFile(
       `libs/${mylib}/src/mylib.module.spec.ts`,
-      `import '@proj/${mylib2}';`
+      `import '@${proj}/${mylib2}';`
     );
   });
 
@@ -550,12 +554,13 @@ describe('dep-graph', () => {
 });
 
 describe('Move Angular Project', () => {
+  let proj: string;
   let app1: string;
   let app2: string;
   let newPath: string;
 
   beforeEach(() => {
-    newProject();
+    proj = newProject();
     app1 = uniq('app1');
     app2 = uniq('app2');
     newPath = `subfolder/${app2}`;
@@ -638,7 +643,7 @@ describe('Move Angular Project', () => {
 
     updateFile(
       `libs/${lib2}/src/lib/${lib2}.module.ts`,
-      `import { ${classify(lib1)}Module } from '@proj/${lib1}';
+      `import { ${classify(lib1)}Module } from '@${proj}/${lib1}';
 
         export class ExtendedModule extends ${classify(lib1)}Module { }`
     );
@@ -672,7 +677,7 @@ describe('Move Angular Project', () => {
     const lib2FilePath = `libs/${lib2}/src/lib/${lib2}.module.ts`;
     const lib2File = readFile(lib2FilePath);
     expect(lib2File).toContain(
-      `import { ${newModule} } from '@proj/shared/${lib1}';`
+      `import { ${newModule} } from '@${proj}/shared/${lib1}';`
     );
     expect(lib2File).toContain(`extends ${newModule}`);
   });
@@ -683,7 +688,7 @@ describe('Move Project', () => {
    * Tries moving a library from ${lib}/data-access -> shared/${lib}/data-access
    */
   it('should work for libraries', () => {
-    newProject();
+    const proj = newProject();
     const lib1 = uniq('mylib');
     const lib2 = uniq('mylib');
     const lib3 = uniq('mylib');
@@ -707,7 +712,7 @@ describe('Move Project', () => {
 
     updateFile(
       `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`,
-      `import { fromLibOne } from '@proj/${lib1}/data-access';
+      `import { fromLibOne } from '@${proj}/${lib1}/data-access';
 
         export const fromLibTwo = () => fromLibOne();`
     );
@@ -790,10 +795,10 @@ describe('Move Project', () => {
     expect(moveOutput).toContain('UPDATE tsconfig.base.json');
     const rootTsConfig = readJson('tsconfig.base.json');
     expect(
-      rootTsConfig.compilerOptions.paths[`@proj/${lib1}/data-access`]
+      rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}/data-access`]
     ).toBeUndefined();
     expect(
-      rootTsConfig.compilerOptions.paths[`@proj/shared/${lib1}/data-access`]
+      rootTsConfig.compilerOptions.paths[`@${proj}/shared/${lib1}/data-access`]
     ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
     expect(moveOutput).toContain(`UPDATE workspace.json`);
@@ -813,12 +818,12 @@ describe('Move Project', () => {
     const lib2FilePath = `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`;
     const lib2File = readFile(lib2FilePath);
     expect(lib2File).toContain(
-      `import { fromLibOne } from '@proj/shared/${lib1}/data-access';`
+      `import { fromLibOne } from '@${proj}/shared/${lib1}/data-access';`
     );
   });
 
   it('should work for libs created with --importPath', () => {
-    newProject();
+    const proj = newProject();
     const importPath = '@wibble/fish';
     const lib1 = uniq('mylib');
     const lib2 = uniq('mylib');
@@ -928,10 +933,10 @@ describe('Move Project', () => {
     expect(moveOutput).toContain('UPDATE tsconfig.base.json');
     const rootTsConfig = readJson('tsconfig.base.json');
     expect(
-      rootTsConfig.compilerOptions.paths[`@proj/${lib1}/data-access`]
+      rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}/data-access`]
     ).toBeUndefined();
     expect(
-      rootTsConfig.compilerOptions.paths[`@proj/shared/${lib1}/data-access`]
+      rootTsConfig.compilerOptions.paths[`@${proj}/shared/${lib1}/data-access`]
     ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
 
     expect(moveOutput).toContain(`UPDATE workspace.json`);
@@ -952,12 +957,12 @@ describe('Move Project', () => {
     const lib2FilePath = `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`;
     const lib2File = readFile(lib2FilePath);
     expect(lib2File).toContain(
-      `import { fromLibOne } from '@proj/shared/${lib1}/data-access';`
+      `import { fromLibOne } from '@${proj}/shared/${lib1}/data-access';`
     );
   });
 
   it('should work for custom workspace layouts', () => {
-    newProject();
+    const proj = newProject();
     const lib1 = uniq('mylib');
     const lib2 = uniq('mylib');
     const lib3 = uniq('mylib');
@@ -986,7 +991,7 @@ describe('Move Project', () => {
 
     updateFile(
       `packages/${lib2}/ui/src/lib/${lib2}-ui.ts`,
-      `import { fromLibOne } from '@proj/${lib1}/data-access';
+      `import { fromLibOne } from '@${proj}/${lib1}/data-access';
 
         export const fromLibTwo = () => fromLibOne();`
     );
@@ -1069,10 +1074,10 @@ describe('Move Project', () => {
     expect(moveOutput).toContain('UPDATE tsconfig.base.json');
     const rootTsConfig = readJson('tsconfig.base.json');
     expect(
-      rootTsConfig.compilerOptions.paths[`@proj/${lib1}/data-access`]
+      rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}/data-access`]
     ).toBeUndefined();
     expect(
-      rootTsConfig.compilerOptions.paths[`@proj/shared/${lib1}/data-access`]
+      rootTsConfig.compilerOptions.paths[`@${proj}/shared/${lib1}/data-access`]
     ).toEqual([`packages/shared/${lib1}/data-access/src/index.ts`]);
 
     expect(moveOutput).toContain(`UPDATE workspace.json`);
@@ -1092,7 +1097,7 @@ describe('Move Project', () => {
     const lib2FilePath = `packages/${lib2}/ui/src/lib/${lib2}-ui.ts`;
     const lib2File = readFile(lib2FilePath);
     expect(lib2File).toContain(
-      `import { fromLibOne } from '@proj/shared/${lib1}/data-access';`
+      `import { fromLibOne } from '@${proj}/shared/${lib1}/data-access';`
     );
 
     nxJson = readJson('nx.json');

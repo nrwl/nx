@@ -11,12 +11,13 @@ import { names } from '@nrwl/devkit';
 describe('Angular Nrwl app builder', () => {
   let app;
   let buildableLib;
+  let proj: string;
 
   beforeEach(() => {
     app = uniq('app');
     buildableLib = uniq('buildlib1');
 
-    newProject();
+    proj = newProject();
 
     runCLI(`generate @nrwl/angular:app ${app} --style=css --no-interactive`);
     runCLI(
@@ -31,7 +32,7 @@ describe('Angular Nrwl app builder', () => {
         import { NgModule } from '@angular/core';
         import {${
           names(buildableLib).className
-        }Module} from '@proj/${buildableLib}';
+        }Module} from '@${proj}/${buildableLib}';
         
         import { AppComponent } from './app.component';
         
@@ -54,7 +55,9 @@ describe('Angular Nrwl app builder', () => {
 
   it('should build the dependent buildable lib as well as the app', () => {
     const libOutput = runCLI(`build ${app} --with-deps`);
-    expect(libOutput).toContain(`Building entry point '@proj/${buildableLib}'`);
+    expect(libOutput).toContain(
+      `Building entry point '@${proj}/${buildableLib}'`
+    );
     expect(libOutput).toContain(`nx run ${app}:build`);
 
     // to proof it has been built from source the "main.js" should actually contain
