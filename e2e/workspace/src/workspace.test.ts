@@ -1,5 +1,6 @@
 import { NxJson } from '@nrwl/workspace';
 import {
+  getPackageManagerCommand,
   listFiles,
   newProject,
   readFile,
@@ -194,7 +195,7 @@ describe('run-many', () => {
 });
 
 describe('affected:*', () => {
-  it('should print, build, and test affected apps', () => {
+  it('should print, build, and test affected apps', async () => {
     const proj = newProject();
     const myapp = uniq('myapp');
     const myapp2 = uniq('myapp2');
@@ -232,9 +233,12 @@ describe('affected:*', () => {
             `
     );
     expect(
-      runCLI(
-        `affected:apps --files="libs/${mylib}/src/index.ts" --plain`
-      ).split('\n')[4]
+      (
+        await runCLIAsync(
+          `affected:apps --files="libs/${mylib}/src/index.ts" --plain`,
+          { silent: true }
+        )
+      ).stdout.trim()
     ).toEqual(myapp);
 
     const affectedApps = runCLI(
@@ -255,9 +259,12 @@ describe('affected:*', () => {
     expect(noAffectedApps).not.toContain(myapp2);
 
     expect(
-      runCLI(
-        `affected:libs --files="libs/${mylib}/src/index.ts" --plain`
-      ).split('\n')[4]
+      (
+        await runCLIAsync(
+          `affected:libs --files="libs/${mylib}/src/index.ts" --plain`,
+          { silent: true }
+        )
+      ).stdout.trim()
     ).toEqual(`${mylib} ${mypublishablelib}`);
 
     const affectedLibs = runCLI(
@@ -341,7 +348,7 @@ describe('affected:*', () => {
     expect(isolatedTests).toContain(`- ${myapp}`);
 
     const interpolatedTests = runCLI(
-      `affected --target test --files="libs/${mylib}/src/index.ts" -- --jest-config {project.root}/jest.config.js`
+      `affected --target test --files="libs/${mylib}/src/index.ts" --jest-config {project.root}/jest.config.js`
     );
     expect(interpolatedTests).toContain(`Running target \"test\" succeeded`);
   }, 1000000);
@@ -480,6 +487,9 @@ describe('print-affected', () => {
       ).stdout.trim()
     );
 
+    const { runNx } = getPackageManagerCommand({
+      scriptsPrependNodePath: false,
+    });
     expect(resWithTarget.tasks[0]).toMatchObject({
       id: `${myapp}:test`,
       overrides: {},
@@ -487,7 +497,7 @@ describe('print-affected', () => {
         project: myapp,
         target: 'test',
       },
-      command: `npm run nx -- test ${myapp}`,
+      command: `${runNx} test ${myapp}`,
       outputs: [`coverage/apps/${myapp}`],
     });
     expect(resWithTarget.tasks[0].hash).toBeDefined();
@@ -509,7 +519,7 @@ describe('print-affected', () => {
         project: myapp,
         target: 'build',
       },
-      command: `npm run nx -- build ${myapp}`,
+      command: `${runNx} build ${myapp}`,
       outputs: [`dist/apps/${myapp}`],
     });
     expect(resWithDeps.tasks[0].hash).toBeDefined();
@@ -521,7 +531,7 @@ describe('print-affected', () => {
         project: mypublishablelib,
         target: 'build',
       },
-      command: `npm run nx -- build ${mypublishablelib}`,
+      command: `${runNx} build ${mypublishablelib}`,
       outputs: [`dist/libs/${mypublishablelib}`],
     });
     expect(resWithDeps.tasks[1].hash).toBeDefined();
