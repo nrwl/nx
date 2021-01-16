@@ -12,6 +12,7 @@ import {
   removeSync,
 } from 'fs-extra';
 import * as path from 'path';
+import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 
 interface RunCmdOpts {
   silenceError?: boolean;
@@ -25,11 +26,6 @@ export function currentCli() {
 }
 
 let projName: string;
-
-function setCurrentProjName(name: string) {
-  projName = name;
-  return name;
-}
 
 export function uniq(prefix: string) {
   return `${prefix}${Math.floor(Math.random() * 10000000)}`;
@@ -54,18 +50,18 @@ export function runCreateWorkspace(
     appName?: string;
     style?: string;
     base?: string;
-    packageManager?: string;
+    packageManager?: 'npm' | 'yarn' | 'pnpm';
     cli?: string;
     extraArgs?: string;
   }
 ) {
-  setCurrentProjName(name);
+  projName = name;
+
+  const pm = getPackageManagerCommand({ packageManager });
 
   const linterArg =
     preset === 'angular' || preset === 'angular-nest' ? ' --linter=tslint' : '';
-  let command = `npx create-nx-workspace@${
-    process.env.PUBLISHED_VERSION
-  } ${name} --cli=${
+  let command = `${pm.createWorkspace} ${name} --cli=${
     cli || currentCli()
   } --preset=${preset} ${linterArg} --no-nxCloud --no-interactive`;
   if (appName) {
@@ -97,7 +93,8 @@ export function runCreateWorkspace(
 
 export function packageInstall(pkg: string, projName?: string) {
   const cwd = projName ? `./tmp/${currentCli()}/${projName}` : tmpProjPath();
-  const install = execSync(`npm i ${pkg}`, {
+  const pm = getPackageManagerCommand({ path: cwd });
+  const install = execSync(`${pm.add} ${pkg}`, {
     cwd,
     // ...{ stdio: ['pipe', 'pipe', 'pipe'] },
     ...{ stdio: [0, 1, 2] },
@@ -118,9 +115,15 @@ export function runNgNew(): string {
  * for the currently selected CLI.
  */
 export function newProject(): string {
+  const packageManager = process.env.SELECTED_PM as any;
+
   try {
-    if (!directoryExists(tmpBackupProjPath())) {
-      runCreateWorkspace('proj', { preset: 'empty' });
+    const newProjName = uniq('proj');
+    const useBackupProject = packageManager !== 'pnpm';
+    const projScope = useBackupProject ? 'proj' : newProjName;
+
+    if (!useBackupProject || !directoryExists(tmpBackupProjPath())) {
+      runCreateWorkspace(projScope, { preset: 'empty', packageManager });
       const packages = [
         `@nrwl/angular`,
         `@nrwl/express`,
@@ -131,12 +134,16 @@ export function newProject(): string {
         `@nrwl/nx-plugin`,
         `@nrwl/eslint-plugin-nx`,
       ];
-      packageInstall(packages.join(` `), 'proj');
-      moveSync(`./tmp/${currentCli()}/proj`, `${tmpBackupProjPath()}`);
+      packageInstall(packages.join(` `), projScope);
+      if (useBackupProject) {
+        moveSync(`./tmp/${currentCli()}/proj`, `${tmpBackupProjPath()}`);
+      }
     }
-    projName = uniq('proj');
-    copySync(`${tmpBackupProjPath()}`, `${tmpProjPath()}`);
-    return 'proj';
+    projName = newProjName;
+    if (useBackupProject) {
+      copySync(`${tmpBackupProjPath()}`, `${tmpProjPath()}`);
+    }
+    return projScope;
   } catch (e) {
     console.log(`Failed to set up project for e2e tests.`);
     console.log(e.message);
@@ -178,7 +185,8 @@ export function runCommandUntil(
   criteria: (output: string) => boolean,
   { kill = true } = {}
 ): Promise<{ process: ChildProcess }> {
-  const p = exec(`npm run nx --scripts-prepend-node-path -- ${command}`, {
+  const pm = getPackageManagerCommand();
+  const p = exec(`${pm.runNx} ${command}`, {
     cwd: tmpProjPath(),
     env: { ...process.env, FORCE_COLOR: 'false' },
   });
@@ -217,10 +225,9 @@ export function runCLIAsync(
     silent: false,
   }
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
+  const pm = getPackageManagerCommand();
   return runCommandAsync(
-    `npm run nx ${
-      opts.silent ? '--silent' : ''
-    } --scripts-prepend-node-path -- ${command}`,
+    `${opts.silent ? pm.runNxSilent : pm.runNx} ${command}`,
     opts
   );
 }
@@ -265,9 +272,10 @@ export function runCLI(
   }
 ): string {
   try {
-    let r = execSync(`npm run nx --scripts-prepend-node-path -- ${command}`, {
+    const pm = getPackageManagerCommand();
+    let r = execSync(`${pm.runNx} ${command}`, {
       cwd: opts.cwd || tmpProjPath(),
-      env: opts.env as any,
+      env: opts.env,
     }).toString();
     r = r.replace(
       /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
@@ -447,4 +455,41 @@ function tmpBackupProjPath(path?: string) {
   return path
     ? `./tmp/${currentCli()}/proj-backup/${path}`
     : `./tmp/${currentCli()}/proj-backup`;
+}
+
+export function getPackageManagerCommand({
+  path = tmpProjPath(),
+  packageManager = detectPackageManager(path),
+  scriptsPrependNodePath = true,
+} = {}): {
+  createWorkspace: string;
+  runNx: string;
+  runNxSilent: string;
+  add: string;
+} {
+  const scriptsPrependNodePathFlag = scriptsPrependNodePath
+    ? ' --scripts-prepend-node-path '
+    : '';
+
+  return {
+    npm: {
+      createWorkspace: `npx create-nx-workspace@${process.env.PUBLISHED_VERSION}`,
+      runNx: `npm run nx${scriptsPrependNodePathFlag} --`,
+      runNxSilent: `npm run nx --silent${scriptsPrependNodePathFlag} --`,
+      add: `npm install`,
+    },
+    yarn: {
+      // `yarn create nx-workspace` is failing due to wrong global path
+      createWorkspace: `yarn global add create-nx-workspace@${process.env.PUBLISHED_VERSION} && create-nx-workspace`,
+      runNx: `yarn nx`,
+      runNxSilent: `yarn --silent nx`,
+      add: `yarn add`,
+    },
+    pnpm: {
+      createWorkspace: `pnpx create-nx-workspace@${process.env.PUBLISHED_VERSION}`,
+      runNx: `pnpm run nx --`,
+      runNxSilent: `pnpm run nx --silent --`,
+      add: `pnpm add`,
+    },
+  }[packageManager];
 }

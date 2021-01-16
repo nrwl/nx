@@ -1,9 +1,10 @@
 import { existsSync } from 'fs';
+import { join } from 'path';
 
-export function detectPackageManager() {
-  return existsSync('yarn.lock')
+export function detectPackageManager(dir = '') {
+  return existsSync(join(dir, 'yarn.lock'))
     ? 'yarn'
-    : existsSync('pnpm-lock.yaml')
+    : existsSync(join(dir, 'pnpm-lock.yaml'))
     ? 'pnpm'
     : 'npm';
 }
