@@ -11,7 +11,9 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Next.js Applications', () => {
-  beforeEach(() => newProject());
+  let proj: string;
+
+  beforeEach(() => (proj = newProject()));
 
   it('should be able to serve with a proxy configuration', async () => {
     const appName = uniq('app');
@@ -80,7 +82,10 @@ describe('Next.js Applications', () => {
     runCLI(`generate @nrwl/react:lib ${libName} --no-interactive --style=none`);
 
     const mainPath = `apps/${appName}/pages/index.tsx`;
-    updateFile(mainPath, `import '@proj/${libName}';\n` + readFile(mainPath));
+    updateFile(
+      mainPath,
+      `import '@${proj}/${libName}';\n` + readFile(mainPath)
+    );
 
     // Update lib to use css modules
     updateFile(
@@ -120,7 +125,7 @@ describe('Next.js Applications', () => {
       `
         import dynamic from 'next/dynamic';
         const DynamicComponent = dynamic(
-            () => import('@proj/${libName}').then(d => d.${stringUtils.capitalize(
+            () => import('@${proj}/${libName}').then(d => d.${stringUtils.capitalize(
         libName
       )})
           );
@@ -175,8 +180,8 @@ describe('Next.js Applications', () => {
     updateFile(
       mainPath,
       `
-        import { testFn } from '@proj/${tsLibName}';
-        import { TestComponent } from '@proj/${tsxLibName}';\n\n
+        import { testFn } from '@${proj}/${tsLibName}';
+        import { TestComponent } from '@${proj}/${tsxLibName}';\n\n
         ` +
         content.replace(
           `</h2>`,

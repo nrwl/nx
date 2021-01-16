@@ -15,7 +15,7 @@ import {
 
 describe('React Applications', () => {
   it('should be able to generate a react app + lib', async () => {
-    newProject();
+    const proj = newProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -26,7 +26,10 @@ describe('React Applications', () => {
     checkFilesDoNotExist(`libs/${libName}/package.json`);
 
     const mainPath = `apps/${appName}/src/main.tsx`;
-    updateFile(mainPath, `import '@proj/${libName}';\n` + readFile(mainPath));
+    updateFile(
+      mainPath,
+      `import '@${proj}/${libName}';\n` + readFile(mainPath)
+    );
 
     const libTestResults = await runCLIAsync(`test ${libName}`);
     expect(libTestResults.combinedOutput).toContain(
@@ -65,11 +68,11 @@ describe('React Applications', () => {
   }, 120000);
 
   it('should be able to generate a publishable react lib', async () => {
-    newProject();
+    const proj = newProject();
     const libName = uniq('lib');
 
     runCLI(
-      `generate @nrwl/react:lib ${libName} --publishable --importPath=@proj/${libName} --no-interactive`
+      `generate @nrwl/react:lib ${libName} --publishable --importPath=@${proj}/${libName} --no-interactive`
     );
 
     const libTestResults = await runCLIAsync(
@@ -102,7 +105,7 @@ describe('React Applications', () => {
   }, 120000);
 
   it('should be able to generate a react lib with no components', async () => {
-    newProject();
+    const proj = newProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -112,7 +115,10 @@ describe('React Applications', () => {
     );
 
     const mainPath = `apps/${appName}/src/main.tsx`;
-    updateFile(mainPath, `import '@proj/${libName}';\n` + readFile(mainPath));
+    updateFile(
+      mainPath,
+      `import '@${proj}/${libName}';\n` + readFile(mainPath)
+    );
 
     const libTestResults = await runCLIAsync(`test ${libName}`);
     expect(libTestResults.stderr).toBe('');
@@ -126,11 +132,11 @@ describe('React Applications', () => {
   }, 120000);
 
   it('should not create a dist folder if there is an error', async () => {
-    newProject();
+    const proj = newProject();
     const libName = uniq('lib');
 
     runCLI(
-      `generate @nrwl/react:lib ${libName} --publishable --importPath=@proj/${libName} --no-interactive`
+      `generate @nrwl/react:lib ${libName} --publishable --importPath=@${proj}/${libName} --no-interactive`
     );
 
     const mainPath = `libs/${libName}/src/lib/${libName}.tsx`;
@@ -290,7 +296,7 @@ describe('React Applications', () => {
   }, 120000);
 
   it('should be able to use JSX', async () => {
-    newProject();
+    const proj = newProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -321,7 +327,10 @@ describe('React Applications', () => {
     updateFile(workspaceConfigName(), serializeJson(angularJson));
 
     const mainPath = `apps/${appName}/src/main.jsx`;
-    updateFile(mainPath, `import '@proj/${libName}';\n` + readFile(mainPath));
+    updateFile(
+      mainPath,
+      `import '@${proj}/${libName}';\n` + readFile(mainPath)
+    );
 
     await testGeneratedApp(appName, {
       checkStyles: true,

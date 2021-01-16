@@ -24,13 +24,14 @@ import { names } from '@nrwl/devkit';
     let parentLib: string;
     let childLib: string;
     let childLib2: string;
+    let proj: string;
 
     beforeEach(() => {
       parentLib = uniq('parentlib');
       childLib = uniq('childlib');
       childLib2 = uniq('childlib2');
 
-      newProject();
+      proj = newProject();
 
       if (testConfig === 'buildable') {
         runCLI(
@@ -44,13 +45,13 @@ import { names } from '@nrwl/devkit';
         );
       } else {
         runCLI(
-          `generate @nrwl/angular:library ${parentLib} --publishable=true --importPath=@proj/${parentLib} --no-interactive`
+          `generate @nrwl/angular:library ${parentLib} --publishable=true --importPath=@${proj}/${parentLib} --no-interactive`
         );
         runCLI(
-          `generate @nrwl/angular:library ${childLib} --publishable=true --importPath=@proj/${childLib} --no-interactive`
+          `generate @nrwl/angular:library ${childLib} --publishable=true --importPath=@${proj}/${childLib} --no-interactive`
         );
         runCLI(
-          `generate @nrwl/angular:library ${childLib2} --publishable=true --importPath=@proj/${childLib2} --no-interactive`
+          `generate @nrwl/angular:library ${childLib2} --publishable=true --importPath=@${proj}/${childLib2} --no-interactive`
         );
 
         // create secondary entrypoint
@@ -84,9 +85,9 @@ import { names } from '@nrwl/devkit';
 
         updateFile(`tsconfig.base.json`, (s) => {
           return s.replace(
-            `"@proj/${childLib}": ["libs/${childLib}/src/index.ts"],`,
-            `"@proj/${childLib}": ["libs/${childLib}/src/index.ts"],
-      "@proj/${childLib}/sub": ["libs/${childLib}/sub/src/index.ts"],
+            `"@${proj}/${childLib}": ["libs/${childLib}/src/index.ts"],`,
+            `"@${proj}/${childLib}": ["libs/${childLib}/src/index.ts"],
+      "@${proj}/${childLib}/sub": ["libs/${childLib}/sub/src/index.ts"],
         `
           );
         });
@@ -102,14 +103,14 @@ import { names } from '@nrwl/devkit';
                   (entry) =>
                     `import { ${
                       names(entry).className
-                    }Module } from '@proj/${entry}';`
+                    }Module } from '@${proj}/${entry}';`
                 )
                 .join('\n')}
             `;
 
         if (testConfig === 'publishable') {
           moduleContent += `
-              import { SubModule } from '@proj/${childLib}/sub';
+              import { SubModule } from '@${proj}/${childLib}/sub';
 
               @NgModule({
                 imports: [CommonModule, ${children
@@ -159,8 +160,8 @@ import { names } from '@nrwl/devkit';
       // expect(jsonFile.dependencies).toEqual({ tslib: '^2.0.0' });
 
       expect(jsonFile.dependencies['tslib']).toEqual('^2.0.0');
-      expect(jsonFile.dependencies[`@proj/${childLib}`]).toBeDefined();
-      expect(jsonFile.dependencies[`@proj/${childLib2}`]).toBeDefined();
+      expect(jsonFile.dependencies[`@${proj}/${childLib}`]).toBeDefined();
+      expect(jsonFile.dependencies[`@${proj}/${childLib2}`]).toBeDefined();
       expect(jsonFile.peerDependencies['@angular/common']).toBeDefined();
       expect(jsonFile.peerDependencies['@angular/core']).toBeDefined();
     });

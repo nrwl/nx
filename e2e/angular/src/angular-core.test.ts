@@ -13,8 +13,10 @@ import {
 import { names } from '@nrwl/devkit';
 
 describe('Angular Package', () => {
+  let proj: string;
+
   beforeEach(() => {
-    newProject();
+    proj = newProject();
   });
 
   it('should work', async () => {
@@ -34,7 +36,7 @@ describe('Angular Package', () => {
         import { BrowserModule } from '@angular/platform-browser';
         import { MyDir${
           names(mylib).className
-        }Module } from '@proj/my-dir/${mylib}';
+        }Module } from '@${proj}/my-dir/${mylib}';
         import { AppComponent } from './app.component';
 
         @NgModule({
@@ -168,10 +170,12 @@ describe('Angular Package', () => {
       path.normalize(`apps/${myapp}/src/app/inline-template.component.ts`)
     );
     expect(appLintStdOut).toContain(
-      `5:21  error  The selector should be prefixed by one of the prefixes: 'proj' (https://angular.io/guide/styleguide#style-02-07)  @angular-eslint/component-selector`
+      `5:21  error  The selector should be prefixed by one of the prefixes: '${proj}' (https://angular.io/guide/styleguide#style-02-07)  @angular-eslint/component-selector`
     );
     expect(appLintStdOut).toContain(
-      `7:18  error  Invalid binding syntax. Use [(expr)] instead                                                                      @angular-eslint/template/banana-in-box`
+      `7:18  error  Invalid binding syntax. Use [(expr)] instead                                                                  ${' '.repeat(
+        proj.length
+      )}@angular-eslint/template/banana-in-box`
     );
 
     const mylib = uniq('mylib');
@@ -201,10 +205,12 @@ describe('Angular Package', () => {
       path.normalize(`libs/${mylib}/src/lib/inline-template.component.ts`)
     );
     expect(libLintStdOut).toContain(
-      `5:21  error  The selector should be prefixed by one of the prefixes: 'proj' (https://angular.io/guide/styleguide#style-02-07)  @angular-eslint/component-selector`
+      `5:21  error  The selector should be prefixed by one of the prefixes: '${proj}' (https://angular.io/guide/styleguide#style-02-07)  @angular-eslint/component-selector`
     );
     expect(libLintStdOut).toContain(
-      `7:18  error  Invalid binding syntax. Use [(expr)] instead                                                                      @angular-eslint/template/banana-in-box`
+      `7:18  error  Invalid binding syntax. Use [(expr)] instead                                                                  ${' '.repeat(
+        proj.length
+      )}@angular-eslint/template/banana-in-box`
     );
   });
 });

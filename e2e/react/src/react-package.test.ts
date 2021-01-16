@@ -30,6 +30,8 @@ describe('Build React libraries and apps', () => {
   let buildableChildLib: string;
   let buildableChildLib2: string;
 
+  let proj: string;
+
   beforeEach(() => {
     app = uniq('app');
     parentLib = uniq('parentlib');
@@ -39,7 +41,7 @@ describe('Build React libraries and apps', () => {
     buildableChildLib = uniq('buildablechildlib');
     buildableChildLib2 = uniq('buildablechildlib2');
 
-    newProject();
+    proj = newProject();
 
     // create dependencies by importing
     const createDep = (parent, children: string[]) => {
@@ -53,7 +55,7 @@ describe('Build React libraries and apps', () => {
                   (entry) =>
                     `import { ${
                       names(entry).className
-                    } } from '@proj/${entry}'; console.log(${
+                    } } from '@${proj}/${entry}'; console.log(${
                       names(entry).className
                     });`
                 )
@@ -66,13 +68,13 @@ describe('Build React libraries and apps', () => {
 
     // generate publishable libs
     runCLI(
-      `generate @nrwl/react:library ${parentLib} --publishable --importPath=@proj/${parentLib} --no-interactive`
+      `generate @nrwl/react:library ${parentLib} --publishable --importPath=@${proj}/${parentLib} --no-interactive`
     );
     runCLI(
-      `generate @nrwl/react:library ${childLib} --publishable --importPath=@proj/${childLib} --no-interactive`
+      `generate @nrwl/react:library ${childLib} --publishable --importPath=@${proj}/${childLib} --no-interactive`
     );
     runCLI(
-      `generate @nrwl/react:library ${childLib2} --publishable --importPath=@proj/${childLib2} --no-interactive`
+      `generate @nrwl/react:library ${childLib2} --publishable --importPath=@${proj}/${childLib2} --no-interactive`
     );
 
     createDep(parentLib, [childLib, childLib2]);
@@ -80,7 +82,7 @@ describe('Build React libraries and apps', () => {
     updateFile(
       `apps/${app}/src/main.tsx`,
       `
-        import {${names(parentLib).className}} from "@proj/${parentLib}";
+        import {${names(parentLib).className}} from "@${proj}/${parentLib}";
         console.log(${names(parentLib).className});
         `
     );
@@ -214,8 +216,8 @@ describe('Build React libraries and apps', () => {
       const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
       expect(jsonFile.peerDependencies).toEqual(
         expect.objectContaining({
-          [`@proj/${childLib}`]: '0.0.1',
-          [`@proj/${childLib2}`]: '0.0.1',
+          [`@${proj}/${childLib}`]: '0.0.1',
+          [`@${proj}/${childLib2}`]: '0.0.1',
           react: expect.anything(),
         })
       );

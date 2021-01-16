@@ -29,7 +29,7 @@ afterAll(() => {
 
 describe('run-one', () => {
   it('should build specific project', () => {
-    newProject();
+    const proj = newProject();
     const myapp = uniq('myapp');
     const mylib1 = uniq('mylib1');
     const mylib2 = uniq('mylib1');
@@ -40,8 +40,8 @@ describe('run-one', () => {
     updateFile(
       `apps/${myapp}/src/main.ts`,
       `
-          import "@proj/${mylib1}";
-          import "@proj/${mylib2}";
+          import "@${proj}/${mylib1}";
+          import "@${proj}/${mylib2}";
         `
     );
 
@@ -73,7 +73,7 @@ describe('run-one', () => {
 
 describe('run-many', () => {
   it('should build specific and all projects', () => {
-    newProject();
+    const proj = newProject();
     const appA = uniq('appa-rand');
     const libA = uniq('liba-rand');
     const libB = uniq('libb-rand');
@@ -90,7 +90,7 @@ describe('run-many', () => {
     updateFile(
       `libs/${libA}/src/lib/${libA}.module.spec.ts`,
       `
-              import '@proj/${libC}';
+              import '@${proj}/${libC}';
               describe('sample test', () => {
                 it('should test', () => {
                   expect(1).toEqual(1);
@@ -195,7 +195,7 @@ describe('run-many', () => {
 
 describe('affected:*', () => {
   it('should print, build, and test affected apps', () => {
-    newProject();
+    const proj = newProject();
     const myapp = uniq('myapp');
     const myapp2 = uniq('myapp2');
     const mylib = uniq('mylib');
@@ -206,13 +206,13 @@ describe('affected:*', () => {
     runCLI(`generate @nrwl/angular:lib ${mylib}`);
     runCLI(`generate @nrwl/angular:lib ${mylib2}`);
     runCLI(
-      `generate @nrwl/angular:lib ${mypublishablelib} --publishable --importPath=@proj/${mypublishablelib}`
+      `generate @nrwl/angular:lib ${mypublishablelib} --publishable --importPath=@${proj}/${mypublishablelib}`
     );
 
     updateFile(
       `apps/${myapp}/src/app/app.component.spec.ts`,
       `
-              import '@proj/${mylib}';
+              import '@${proj}/${mylib}';
               describe('sample test', () => {
                 it('should test', () => {
                   expect(1).toEqual(1);
@@ -223,7 +223,7 @@ describe('affected:*', () => {
     updateFile(
       `libs/${mypublishablelib}/src/lib/${mypublishablelib}.module.spec.ts`,
       `
-              import '@proj/${mylib}';
+              import '@${proj}/${mylib}';
               describe('sample test', () => {
                 it('should test', () => {
                   expect(1).toEqual(1);
@@ -421,7 +421,7 @@ describe('affected (with git)', () => {
 
 describe('print-affected', () => {
   it('should print information about affected projects', async () => {
-    newProject();
+    const proj = newProject();
     const myapp = uniq('myapp-a');
     const myapp2 = uniq('myapp-b');
     const mylib = uniq('mylib');
@@ -439,8 +439,8 @@ describe('print-affected', () => {
       `
           import React from 'react';
           import ReactDOM from 'react-dom';
-          import "@proj/${mylib}";
-          import "@proj/${mypublishablelib}";
+          import "@${proj}/${mylib}";
+          import "@${proj}/${mypublishablelib}";
           import App from './app/app';
 
           ReactDOM.render(<App />, document.getElementById('root'));
@@ -453,8 +453,8 @@ describe('print-affected', () => {
       `
           import React from 'react';
           import ReactDOM from 'react-dom';
-          import "@proj/${mylib}";
-          import "@proj/${mypublishablelib}";
+          import "@${proj}/${mylib}";
+          import "@${proj}/${mypublishablelib}";
           import App from './app/app';
 
           ReactDOM.render(<App />, document.getElementById('root'));

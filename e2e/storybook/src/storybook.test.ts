@@ -28,7 +28,7 @@ describe('Storybook schematics', () => {
     }, 1000000);
 
     it('should build a React based storybook that references another lib', () => {
-      newProject();
+      const proj = newProject();
 
       const reactStorybookLib = uniq('test-ui-lib-react');
       runCLI(`generate @nrwl/react:lib ${reactStorybookLib} --no-interactive`);
@@ -74,7 +74,7 @@ describe('Storybook schematics', () => {
         `
             import React from 'react';
             
-            import { MyTestCmp, MyTestCmpProps } from '@proj/${anotherReactLib}';
+            import { MyTestCmp, MyTestCmpProps } from '@${proj}/${anotherReactLib}';
     
             export default {
               component: MyTestCmp,

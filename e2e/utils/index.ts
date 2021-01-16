@@ -117,7 +117,7 @@ export function runNgNew(): string {
  * Sets up a new project in the temporary project path
  * for the currently selected CLI.
  */
-export function newProject(): void {
+export function newProject(): string {
   try {
     if (!directoryExists(tmpBackupProjPath())) {
       runCreateWorkspace('proj', { preset: 'empty' });
@@ -136,6 +136,7 @@ export function newProject(): void {
     }
     projName = uniq('proj');
     copySync(`${tmpBackupProjPath()}`, `${tmpProjPath()}`);
+    return 'proj';
   } catch (e) {
     console.log(`Failed to set up project for e2e tests.`);
     console.log(e.message);

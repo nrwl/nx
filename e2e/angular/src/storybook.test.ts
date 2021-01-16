@@ -162,7 +162,7 @@ describe('Storybook schematics', () => {
     }, 1000000);
 
     it('should build an Angular based storybook that references another lib', () => {
-      newProject();
+      const proj = newProject();
 
       const angularStorybookLib = uniq('test-ui-lib');
       createTestUILib(angularStorybookLib);
@@ -191,7 +191,7 @@ describe('Storybook schematics', () => {
           `libs/${angularStorybookLib}/src/lib/myteststory.stories.ts`
         ),
         `
-            import { MyTestCmpComponent } from '@proj/${anotherTestLib}';
+            import { MyTestCmpComponent } from '@${proj}/${anotherTestLib}';
 
             export default {
               title: 'My Test Cmp',
