@@ -146,6 +146,8 @@ function showHelp() {
     linter                    Default linter. Options: "eslint", "tslint".
 
     interactive               Enable interactive mode when using presets (boolean)
+
+    packageManager            Package manager to use (npm, yarn, pnpm)
     
     nx-cloud                  Use Nx Cloud (boolean)
 
