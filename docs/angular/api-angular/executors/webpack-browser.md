@@ -166,6 +166,12 @@ Type: `string`
 
 The full path for the main entry point to the app, relative to the current workspace.
 
+### maxParallel
+
+Type: `number`
+
+Max number of parallel jobs
+
 ### namedChunks
 
 Default: `true`
@@ -205,6 +211,14 @@ Type: `string`
             The full path for the new output directory, relative to the current workspace.
 
 By default, writes output to a folder named dist/ in the current project.
+
+### parallel
+
+Default: `true`
+
+Type: `boolean`
+
+Build the target in parallel
 
 ### poll
 
@@ -323,3 +337,11 @@ Run build when files change.
 Type: `string`
 
 TypeScript configuration for Web Worker modules.
+
+### withDeps
+
+Default: `true`
+
+Type: `boolean`
+
+Build the target and all its deps
