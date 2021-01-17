@@ -42,6 +42,7 @@ function checkDependenciesInstalled(schema: Schema): Rule {
       !packageJson.devDependencies['@storybook/addon-knobs']
     ) {
       devDependencies['@storybook/addon-knobs'] = storybookVersion;
+      devDependencies['@storybook/core'] = storybookVersion;
     }
 
     if (isFramework('angular', schema)) {
