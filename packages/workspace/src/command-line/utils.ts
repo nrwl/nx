@@ -3,6 +3,7 @@ import * as yargs from 'yargs';
 import * as fileUtils from '../core/file-utils';
 import { NxAffectedConfig } from '../core/shared-interfaces';
 import { output } from '../utils/output';
+import { names } from '@nrwl/devkit';
 
 const runOne = [
   'target',
@@ -10,16 +11,12 @@ const runOne = [
   'prod',
   'runner',
   'parallel',
-  'maxParallel',
   'max-parallel',
   'exclude',
-  'onlyFailed',
   'only-failed',
   'help',
   'version',
-  'withDeps',
   'with-deps',
-  'skipNxCache',
   'skip-nx-cache',
   'scan',
 ];
@@ -89,7 +86,8 @@ export function splitArgsIntoNxArgsAndOverrides(
   delete overrides._;
 
   Object.entries(args).forEach(([key, value]) => {
-    if (nxSpecific.includes(key)) {
+    const dasherized = names(key).fileName;
+    if (nxSpecific.includes(dasherized) || dasherized.startsWith('nx-')) {
       nxArgs[key] = value;
     } else if (!ignoreArgs.includes(key)) {
       overrides[key] = value;

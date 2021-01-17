@@ -82,9 +82,7 @@ Show help
 
 ### maxParallel
 
-Default: `3`
-
-Max number of parallel processes. This flag is ignored if the parallel option is set to `false`.
+Max number of parallel processes. This flag is ignored if the parallel option is set to `false`. (default: 3)
 
 ### only-failed
 
@@ -94,9 +92,7 @@ Isolate projects which previously failed
 
 ### parallel
 
-Default: `false`
-
-Parallelize the command
+Parallelize the command (default: false)
 
 ### runner
 
