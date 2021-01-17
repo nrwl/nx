@@ -402,15 +402,13 @@ function parseCSV(args: string[]) {
 function withParallel(yargs: yargs.Argv): yargs.Argv {
   return yargs
     .option('parallel', {
-      describe: 'Parallelize the command',
+      describe: 'Parallelize the command (default: false)',
       type: 'boolean',
-      default: false,
     })
     .option('maxParallel', {
       describe:
-        'Max number of parallel processes. This flag is ignored if the parallel option is set to `false`.',
+        'Max number of parallel processes. This flag is ignored if the parallel option is set to `false`. (default: 3)',
       type: 'number',
-      default: 3,
     });
 }
 

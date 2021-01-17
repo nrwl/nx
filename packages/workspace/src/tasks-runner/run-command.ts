@@ -13,6 +13,8 @@ import { output } from '../utils/output';
 
 type RunArgs = yargs.Arguments & ReporterArgs;
 
+function setParallelDefaults(options: NxArgs) {}
+
 export async function runCommand<T extends RunArgs>(
   projectsToRun: ProjectGraphNode[],
   projectGraph: ProjectGraph,
@@ -22,16 +24,15 @@ export async function runCommand<T extends RunArgs>(
   reporter: any,
   initiatingProject: string | null
 ) {
+  const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
+  // we have to special parallel because they can be overwritten in nx.json
+  setParallelDefaults(runnerOptions);
+
   reporter.beforeRun(
     projectsToRun.map((p) => p.name),
     nxArgs,
     overrides
   );
-
-  const { tasksRunner, tasksOptions } = getRunner(nxArgs, nxJson, {
-    ...nxArgs,
-    ...overrides,
-  });
 
   const tasks: Task[] = projectsToRun.map((project) => {
     return createTask({
@@ -43,14 +44,14 @@ export async function runCommand<T extends RunArgs>(
     });
   });
 
-  const hasher = new Hasher(projectGraph, nxJson, tasksOptions);
+  const hasher = new Hasher(projectGraph, nxJson, runnerOptions);
   const res = await hasher.hashTasks(tasks);
   for (let i = 0; i < res.length; ++i) {
     tasks[i].hash = res[i].value;
     tasks[i].hashDetails = res[i].details;
   }
   const cached = [];
-  tasksRunner(tasks, tasksOptions, {
+  tasksRunner(tasks, runnerOptions, {
     initiatingProject: initiatingProject,
     target: nxArgs.target,
     projectGraph,
@@ -150,26 +151,28 @@ function getId({
 
 export function getRunner(
   nxArgs: NxArgs,
-  nxJson: NxJson,
-  overrides: any
+  nxJson: NxJson
 ): {
   tasksRunner: TasksRunner;
-  tasksOptions: unknown;
+  runnerOptions: unknown;
 } {
   let runner = nxArgs.runner;
+
+  //TODO: vsavkin remove in Nx 12
   if (!nxJson.tasksRunnerOptions) {
     const t = require('./default-tasks-runner');
     return {
       tasksRunner: t.defaultTasksRunner,
-      tasksOptions: overrides,
+      runnerOptions: nxArgs,
     };
   }
 
+  //TODO: vsavkin remove in Nx 12
   if (!runner && !nxJson.tasksRunnerOptions.default) {
     const t = require('./default-tasks-runner');
     return {
       tasksRunner: t.defaultTasksRunner,
-      tasksOptions: overrides,
+      runnerOptions: nxArgs,
     };
   }
 
@@ -195,10 +198,9 @@ export function getRunner(
 
     return {
       tasksRunner,
-      tasksOptions: {
+      runnerOptions: {
         ...nxJson.tasksRunnerOptions[runner].options,
-        ...overrides,
-        skipNxCache: nxArgs.skipNxCache,
+        ...nxArgs,
       },
     };
   } else {

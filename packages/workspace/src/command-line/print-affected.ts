@@ -16,13 +16,10 @@ export async function printAffected(
   nxArgs: NxArgs,
   overrides: yargs.Arguments
 ) {
-  const { tasksOptions } = getRunner(nxArgs, nxJson, {
-    ...nxArgs,
-    ...overrides,
-  });
+  const { runnerOptions } = getRunner(nxArgs, nxJson);
 
   const projectNames = affectedProjects.map((p) => p.name);
-  const hasher = new Hasher(projectGraph, nxJson, tasksOptions);
+  const hasher = new Hasher(projectGraph, nxJson, runnerOptions);
   const tasksJson = await createTasks(
     affectedProjectsWithTargetAndConfig,
     projectGraph,
