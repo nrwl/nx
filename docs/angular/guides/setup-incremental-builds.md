@@ -83,7 +83,11 @@ Note: you can specify the `--with-deps` and `--parallel` flags as part of the op
     "architect": {
         "build": {
             "builder": "@nrwl/angular:webpack-browser",
-            "options": { ... }
+            "options": {
+                "withDeps": true,
+                "parallel": true
+                ...
+            },
             "configurations": { ... }
         },
         "serve": {
