@@ -344,6 +344,20 @@
         "type": "string"
       },
       "default": []
+    },
+    "withDeps": {
+      "type": "boolean",
+      "description": "Build the target and all its deps",
+      "default": true
+    },
+    "parallel": {
+      "type": "boolean",
+      "description": "Build the target in parallel",
+      "default": true
+    },
+    "maxParallel": {
+      "type": "number",
+      "description": "Max number of parallel jobs"
     }
   },
   "additionalProperties": false,
