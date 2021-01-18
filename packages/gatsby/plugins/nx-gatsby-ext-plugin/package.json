@@ -1,0 +1,10 @@
+{
+  "name": "nx-gatsby-ext-plugin",
+  "version": "1.0.0",
+  "main": "gatsby-config.js",
+  "author": "max koretskyi",
+  "license": "MIT",
+  "peerDependencies": {
+    "gatsby": "^2.6.0"
+  }
+}

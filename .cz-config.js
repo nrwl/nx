@@ -19,6 +19,7 @@ module.exports = {
     { name: 'core', description: 'anything Nx core specific' },
     { name: 'nxdev', description: 'anything related to docs infrastructure' },
     { name: 'nextjs', description: 'anything Next specific' },
+    { name: 'gatsby', description: 'anything Gatsby specific' },
     { name: 'nest', description: 'anything Nest specific' },
     { name: 'node', description: 'anything Node specific' },
     { name: 'express', description: 'anything Express specific' },

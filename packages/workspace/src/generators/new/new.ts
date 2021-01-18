@@ -26,6 +26,7 @@ export enum Preset {
   React = 'react',
   ReactWithExpress = 'react-express',
   NextJs = 'next',
+  Gatsby = 'gatsby',
   Nest = 'nest',
 }
 
@@ -243,6 +244,12 @@ const presetDependencies: Omit<
     dependencies: {},
     dev: {
       '@nrwl/next': nxVersion,
+    },
+  },
+  [Preset.Gatsby]: {
+    dependencies: {},
+    dev: {
+      '@nrwl/gatsby': nxVersion,
     },
   },
 };

@@ -1699,6 +1699,104 @@
             "name": "service generator",
             "id": "service",
             "file": "react/api-nest/generators/service"
+          },
+          {
+            "name": "gatsby",
+            "id": "gatsby",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "searchResultsName": "@nrwl/gatsby Overview",
+                "file": "shared/gatsby-plugin"
+              },
+              {
+                "id": "generators",
+                "name": "Generators",
+                "itemList": [
+                  {
+                    "name": "application",
+                    "id": "application",
+                    "file": "angular/api-gatsby/generators/application"
+                  },
+                  {
+                    "name": "component",
+                    "id": "component",
+                    "file": "angular/api-gatsby/generators/component"
+                  },
+                  {
+                    "name": "page",
+                    "id": "page",
+                    "file": "angular/api-gatsby/generators/page"
+                  }
+                ]
+              },
+              {
+                "id": "executors",
+                "name": "Executors / Builders",
+                "itemList": [
+                  {
+                    "name": "build",
+                    "id": "build",
+                    "file": "angular/api-gatsby/executors/build"
+                  },
+                  {
+                    "name": "server",
+                    "id": "server",
+                    "file": "angular/api-gatsby/executors/server"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Nx Plugin",
+            "id": "nx-plugin",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "searchResultsName": "@nrwl/nx-plugin Overview",
+                "file": "shared/nx-plugin"
+              },
+              {
+                "id": "generators",
+                "name": "Generators",
+                "itemList": [
+                  {
+                    "name": "executor",
+                    "id": "executor",
+                    "file": "angular/api-nx-plugin/generators/executor"
+                  },
+                  {
+                    "name": "migration",
+                    "id": "migration",
+                    "file": "angular/api-nx-plugin/generators/migration"
+                  },
+                  {
+                    "name": "plugin",
+                    "id": "plugin",
+                    "file": "angular/api-nx-plugin/generators/plugin"
+                  },
+                  {
+                    "name": "generator",
+                    "id": "schematic",
+                    "file": "angular/api-nx-plugin/generators/generator"
+                  }
+                ]
+              },
+              {
+                "id": "executors",
+                "name": "Executors / Builders",
+                "itemList": [
+                  {
+                    "name": "e2e",
+                    "id": "e2e",
+                    "file": "angular/api-nx-plugin/executors/e2e"
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -2229,6 +2327,104 @@
             "name": "run-commands executor",
             "id": "run-commands",
             "file": "node/api-workspace/executors/run-commands"
+          },
+          {
+            "name": "gatsby",
+            "id": "gatsby",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "searchResultsName": "@nrwl/gatsby Overview",
+                "file": "shared/gatsby-plugin"
+              },
+              {
+                "id": "generators",
+                "name": "Generators",
+                "itemList": [
+                  {
+                    "name": "application",
+                    "id": "application",
+                    "file": "react/api-gatsby/generators/application"
+                  },
+                  {
+                    "name": "component",
+                    "id": "component",
+                    "file": "react/api-gatsby/generators/component"
+                  },
+                  {
+                    "name": "page",
+                    "id": "page",
+                    "file": "react/api-gatsby/generators/page"
+                  }
+                ]
+              },
+              {
+                "id": "executors",
+                "name": "Executors / Builders",
+                "itemList": [
+                  {
+                    "name": "build",
+                    "id": "build",
+                    "file": "react/api-gatsby/executors/build"
+                  },
+                  {
+                    "name": "server",
+                    "id": "server",
+                    "file": "react/api-gatsby/executors/server"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Nx Plugin",
+            "id": "nx-plugin",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "searchResultsName": "@nrwl/nx-plugin Overview",
+                "file": "shared/nx-plugin"
+              },
+              {
+                "id": "generators",
+                "name": "Generators",
+                "itemList": [
+                  {
+                    "name": "executor",
+                    "id": "executor",
+                    "file": "react/api-nx-plugin/generators/executor"
+                  },
+                  {
+                    "name": "migration",
+                    "id": "migration",
+                    "file": "react/api-nx-plugin/generators/migration"
+                  },
+                  {
+                    "name": "plugin",
+                    "id": "plugin",
+                    "file": "react/api-nx-plugin/generators/plugin"
+                  },
+                  {
+                    "name": "generator",
+                    "id": "schematic",
+                    "file": "react/api-nx-plugin/generators/generator"
+                  }
+                ]
+              },
+              {
+                "id": "executors",
+                "name": "Executors / Builders",
+                "itemList": [
+                  {
+                    "name": "e2e",
+                    "id": "e2e",
+                    "file": "react/api-nx-plugin/executors/e2e"
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -2769,6 +2965,104 @@
             "name": "Dependency Graph",
             "id": "dependency-graph",
             "file": "shared/workspace/structure/dependency-graph"
+          },
+          {
+            "name": "gatsby",
+            "id": "gatsby",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "searchResultsName": "@nrwl/gatsby Overview",
+                "file": "shared/gatsby-plugin"
+              },
+              {
+                "id": "generators",
+                "name": "Generators",
+                "itemList": [
+                  {
+                    "name": "application",
+                    "id": "application",
+                    "file": "node/api-gatsby/generators/application"
+                  },
+                  {
+                    "name": "component",
+                    "id": "component",
+                    "file": "node/api-gatsby/generators/component"
+                  },
+                  {
+                    "name": "page",
+                    "id": "page",
+                    "file": "node/api-gatsby/generators/page"
+                  }
+                ]
+              },
+              {
+                "id": "executors",
+                "name": "Executors / Builders",
+                "itemList": [
+                  {
+                    "name": "build",
+                    "id": "build",
+                    "file": "node/api-gatsby/executors/build"
+                  },
+                  {
+                    "name": "server",
+                    "id": "server",
+                    "file": "node/api-gatsby/executors/server"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Nx Plugin",
+            "id": "nx-plugin",
+            "itemList": [
+              {
+                "id": "overview",
+                "name": "Overview",
+                "searchResultsName": "@nrwl/nx-plugin Overview",
+                "file": "shared/nx-plugin"
+              },
+              {
+                "id": "generators",
+                "name": "Generators",
+                "itemList": [
+                  {
+                    "name": "executor",
+                    "id": "executor",
+                    "file": "node/api-nx-plugin/generators/executor"
+                  },
+                  {
+                    "name": "migration",
+                    "id": "migration",
+                    "file": "node/api-nx-plugin/generators/migration"
+                  },
+                  {
+                    "name": "plugin",
+                    "id": "plugin",
+                    "file": "node/api-nx-plugin/generators/plugin"
+                  },
+                  {
+                    "name": "generator",
+                    "id": "schematic",
+                    "file": "node/api-nx-plugin/generators/generator"
+                  }
+                ]
+              },
+              {
+                "id": "executors",
+                "name": "Executors / Builders",
+                "itemList": [
+                  {
+                    "name": "e2e",
+                    "id": "e2e",
+                    "file": "node/api-nx-plugin/executors/e2e"
+                  }
+                ]
+              }
+            ]
           }
         ]
       },

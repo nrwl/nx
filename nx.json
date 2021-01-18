@@ -124,6 +124,10 @@
       "tags": [],
       "implicitDependencies": ["cypress"]
     },
+    "e2e-gatsby": {
+      "tags": [],
+      "implicitDependencies": ["gatsby"]
+    },
     "e2e-jest": {
       "tags": [],
       "implicitDependencies": ["jest"]
@@ -166,6 +170,9 @@
     "dep-graph-client-e2e": {
       "tags": [],
       "implicitDependencies": ["dep-graph-client"]
+    },
+    "gatsby": {
+      "tags": []
     }
   },
   "affected": {
