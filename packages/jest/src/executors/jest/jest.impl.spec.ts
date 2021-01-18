@@ -41,6 +41,8 @@ describe('Jest Executor', () => {
       target: {
         executor: '@nrwl/jest:jest',
       },
+      cwd: '/root',
+      isVerbose: true,
     };
   });
 

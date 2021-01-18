@@ -1,7 +1,7 @@
 import { JsonObject } from '@angular-devkit/core';
 import watch from 'node-watch';
 import { exec, execSync } from 'child_process';
-import { TargetContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nrwl/devkit';
 import ignore from 'ignore';
 import { readFileSync } from 'fs-extra';
 
@@ -57,7 +57,7 @@ function getBuildTargetCommand(opts: FileServerOptions) {
 
 function getBuildTargetOutputPath(
   opts: FileServerOptions,
-  context: TargetContext
+  context: ExecutorContext
 ) {
   let buildOpts;
   try {
@@ -95,7 +95,7 @@ function getIgnoredGlobs(root: string) {
 
 export default async function (
   opts: FileServerOptions,
-  context: TargetContext
+  context: ExecutorContext
 ) {
   let changed = true;
   let running = false;

@@ -173,6 +173,16 @@ export interface ExecutorContext {
    * The full workspace configuration
    */
   workspace: WorkspaceConfiguration;
+
+  /**
+   * The current working directory
+   */
+  cwd: string;
+
+  /**
+   * Enable verbose logging
+   */
+  isVerbose: boolean;
 }
 
 export class Workspaces {

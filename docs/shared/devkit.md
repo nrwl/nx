@@ -185,7 +185,7 @@ interface Schema {
 
 export default async function (
   options: Schema,
-  context: TargetContext
+  context: ExecutorContext
 ): Promise<{ success: true }> {
   if (options.allCaps) {
     console.log(options.message.toUpperCase());
