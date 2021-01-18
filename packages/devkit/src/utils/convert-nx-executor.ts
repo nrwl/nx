@@ -22,6 +22,8 @@ export function convertNxExecutor(executor: Executor) {
       root: builderContext.workspaceRoot,
       projectName: builderContext.target.project,
       workspace: workspaceConfig,
+      cwd: process.cwd(),
+      isVerbose: false,
     };
     if (
       builderContext.target &&

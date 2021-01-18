@@ -29,13 +29,20 @@ const registry = new CoreSchemaRegistry();
 registry.addFormat(pathFormat);
 registry.addFormat(htmlSelectorFormat);
 
+function readExecutorsJson(root: string) {
+  try {
+    return fs.readJsonSync(path.join(root, 'builders.json')).builders;
+  } catch (e) {
+    return fs.readJsonSync(path.join(root, 'executors.json')).executors;
+  }
+}
+
 function generateSchematicList(
   config: Configuration,
   registry: CoreSchemaRegistry
 ): Promise<FileSystemSchematicJsonDescription>[] {
-  const builderCollectionFile = path.join(config.root, 'builders.json');
   fs.removeSync(config.builderOutput);
-  const builderCollection = fs.readJsonSync(builderCollectionFile).builders;
+  const builderCollection = readExecutorsJson(config.root);
   return Object.keys(builderCollection).map((builderName) => {
     const schemaPath = path.join(
       config.root,

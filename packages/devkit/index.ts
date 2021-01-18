@@ -14,7 +14,7 @@ export {
 } from '@nrwl/tao/src/shared/nx';
 export { logger } from '@nrwl/tao/src/shared/logger';
 export { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
-export { TargetContext } from '@nrwl/tao/src/commands/run';
+export { runExecutor } from '@nrwl/tao/src/commands/run';
 
 export { formatFiles } from './src/generators/format-files';
 export { generateFiles } from './src/generators/generate-files';
@@ -43,3 +43,4 @@ export {
 export { offsetFromRoot } from './src/utils/offset-from-root';
 export { convertNxGenerator } from './src/utils/invoke-nx-generator';
 export { convertNxExecutor } from './src/utils/convert-nx-executor';
+export { stripIndents } from './src/utils/strip-indents';

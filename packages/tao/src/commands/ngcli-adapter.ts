@@ -49,7 +49,12 @@ import * as path from 'path';
 
 export async function scheduleTarget(
   root: string,
-  opts: RunOptions,
+  opts: {
+    project: string;
+    target: string;
+    configuration: string;
+    runOptions: any;
+  },
   verbose: boolean
 ): Promise<Observable<BuilderOutput>> {
   const logger = getLogger(verbose);
@@ -72,6 +77,7 @@ export async function scheduleTarget(
     opts.runOptions,
     { logger }
   );
+
   return run.output;
 }
 

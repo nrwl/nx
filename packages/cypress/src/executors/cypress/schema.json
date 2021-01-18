@@ -3,6 +3,7 @@
   "description": "Cypress target option for Build Facade",
   "type": "object",
   "outputCapture": "pipe",
+  "cli": "nx",
   "properties": {
     "cypressConfig": {
       "type": "string",
