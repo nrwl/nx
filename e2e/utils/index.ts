@@ -95,7 +95,7 @@ export function runCreateWorkspace(
 export function packageInstall(pkg: string, projName?: string) {
   const cwd = projName ? `./tmp/${currentCli()}/${projName}` : tmpProjPath();
   const pm = getPackageManagerCommand({ path: cwd });
-  const install = execSync(`${pm.add} ${pkg}`, {
+  const install = execSync(`${pm.addDev} ${pkg}`, {
     cwd,
     // ...{ stdio: ['pipe', 'pipe', 'pipe'] },
     ...{ stdio: [0, 1, 2] },
@@ -474,7 +474,7 @@ export function getPackageManagerCommand({
   createWorkspace: string;
   runNx: string;
   runNxSilent: string;
-  add: string;
+  addDev: string;
 } {
   const scriptsPrependNodePathFlag = scriptsPrependNodePath
     ? ' --scripts-prepend-node-path '
@@ -485,20 +485,20 @@ export function getPackageManagerCommand({
       createWorkspace: `npx create-nx-workspace@${process.env.PUBLISHED_VERSION}`,
       runNx: `npm run nx${scriptsPrependNodePathFlag} --`,
       runNxSilent: `npm run nx --silent${scriptsPrependNodePathFlag} --`,
-      add: `npm install`,
+      addDev: `npm install -D`,
     },
     yarn: {
       // `yarn create nx-workspace` is failing due to wrong global path
       createWorkspace: `yarn global add create-nx-workspace@${process.env.PUBLISHED_VERSION} && create-nx-workspace`,
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
-      add: `yarn add`,
+      addDev: `yarn add -D`,
     },
     pnpm: {
       createWorkspace: `pnpx create-nx-workspace@${process.env.PUBLISHED_VERSION}`,
       runNx: `pnpm run nx --`,
       runNxSilent: `pnpm run nx --silent --`,
-      add: `pnpm add`,
+      addDev: `pnpm add -D`,
     },
   }[packageManager];
 }
