@@ -5,6 +5,7 @@ import {
   uniq,
   updateFile,
   workspaceConfigName,
+  getPackageManagerCommand,
 } from '@nrwl/e2e/utils';
 
 describe('Run Commands', () => {
@@ -24,8 +25,10 @@ describe('Run Commands', () => {
 
     const command =
       process.platform === 'win32'
-        ? `"echo %SHARED_VAR% %ROOT_ONLY% %NESTED_ONLY%"`
-        : `'echo "\\$SHARED_VAR" "\\$ROOT_ONLY" "\\$NESTED_ONLY"'`;
+        ? `"echo %SHARED_VAR% %ROOT_ONLY% %NESTED_ONLY%"` // Windows
+        : getPackageManagerCommand().runNx.startsWith('yarn')
+        ? `'echo $SHARED_VAR $ROOT_ONLY $NESTED_ONLY'` // Yarn
+        : `'echo "\\$SHARED_VAR" "\\$ROOT_ONLY" "\\$NESTED_ONLY"'`; // NPM, PNPM
     const envFile = `apps/${nodeapp}/.custom.env`;
     runCLI(
       `generate @nrwl/workspace:run-commands echoEnvVariables --command=${command} --envFile=${envFile} --project=${nodeapp}`
