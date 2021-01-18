@@ -139,6 +139,7 @@ export function newProject({ name = uniq('proj') } = {}): string {
         `@nrwl/express`,
         `@nrwl/nest`,
         `@nrwl/next`,
+        `@nrwl/gatsby`,
         `@nrwl/node`,
         `@nrwl/react`,
         `@nrwl/storybook`,

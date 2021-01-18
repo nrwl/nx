@@ -18,5 +18,6 @@ module.exports = {
     '<rootDir>/packages/create-nx-plugin',
     '<rootDir>/packages/cli',
     '<rootDir>/packages/angular',
+    '<rootDir>/packages/gatsby',
   ],
 };
