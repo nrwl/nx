@@ -208,7 +208,7 @@ nx generate lib ui-button
 
 The new library can be used in your app like by adding this code to `App.tsx`:
 
-```tsx
+```typescriptx
 //...
 import { UiButton } from '@acme/ui-button';
 //...
