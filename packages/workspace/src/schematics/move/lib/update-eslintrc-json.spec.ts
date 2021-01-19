@@ -1,108 +1,61 @@
-import { UnitTestTree } from '@angular-devkit/schematics/testing';
-import { Tree } from '@angular-devkit/schematics';
-import {
-  callRule,
-  createEmptyWorkspace,
-  runSchematic,
-} from '@nrwl/workspace/testing';
-import { Schema } from '@nrwl/workspace/src/schematics/move/schema';
-import { Linter, readJsonInTree } from '@nrwl/workspace';
-import { updateEslintrcJson } from '@nrwl/workspace/src/schematics/move/lib/update-eslintrc-json';
+import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
-describe('updateEslint Rule', () => {
-  let tree: UnitTestTree;
+import { Linter } from '@nrwl/workspace';
+
+import { Schema } from '../schema';
+import { updateEslintrcJson } from './update-eslintrc-json';
+import { libraryGenerator } from '../../library/library';
+
+describe('updateEslint', () => {
+  let tree: Tree;
+  let schema: Schema;
 
   beforeEach(async () => {
-    tree = new UnitTestTree(Tree.empty());
-    tree = createEmptyWorkspace(tree) as UnitTestTree;
+    schema = {
+      projectName: 'my-lib',
+      destination: 'shared/my-destination',
+      importPath: undefined,
+      updateImportPath: true,
+    };
+
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should handle .eslintrc.json not existing', async () => {
-    tree = await runSchematic(
-      'lib',
-      { name: 'my-lib', linter: Linter.TsLint },
-      tree
-    );
+    await libraryGenerator(tree, {
+      name: 'my-lib',
+      linter: Linter.TsLint,
+    });
 
-    expect(tree.files).not.toContain('/libs/my-destination/.estlintrc.json');
+    const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
-    const schema: Schema = {
-      projectName: 'my-lib',
-      destination: 'my-destination',
-      importPath: undefined,
-      updateImportPath: true,
-    };
-
-    await expect(
-      callRule(updateEslintrcJson(schema), tree)
-    ).resolves.not.toThrow();
+    expect(() => {
+      updateEslintrcJson(tree, schema, projectConfig);
+    }).not.toThrow();
   });
 
   it('should update .eslintrc.json extends path when project is moved to subdirectory', async () => {
-    const eslintRc = {
-      extends: '../../.eslintrc.json',
-      rules: {},
-      ignorePatterns: ['!**/*'],
-    };
+    await libraryGenerator(tree, {
+      name: 'my-lib',
+      linter: Linter.EsLint,
+    });
 
-    tree = await runSchematic(
-      'lib',
-      { name: 'my-lib', linter: Linter.EsLint },
-      tree
+    // This step is usually handled elsewhere
+    tree.rename(
+      'libs/my-lib/.eslintrc.json',
+      'libs/shared/my-destination/.eslintrc.json'
     );
 
-    tree.create('/libs/core/my-lib/.eslintrc.json', JSON.stringify(eslintRc));
+    const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
-    expect(tree.files).toContain('/libs/core/my-lib/.eslintrc.json');
+    updateEslintrcJson(tree, schema, projectConfig);
 
-    const schema: Schema = {
-      projectName: 'my-lib',
-      destination: 'core/my-lib',
-      importPath: undefined,
-      updateImportPath: true,
-    };
-
-    tree = (await callRule(updateEslintrcJson(schema), tree)) as UnitTestTree;
-
-    expect(readJsonInTree(tree, '/libs/core/my-lib/.eslintrc.json')).toEqual(
+    expect(
+      readJson(tree, '/libs/shared/my-destination/.eslintrc.json')
+    ).toEqual(
       jasmine.objectContaining({
         extends: '../../../.eslintrc.json',
-      })
-    );
-  });
-
-  it('should update .eslintrc.json extends path when is renamed', async () => {
-    const eslintRc = {
-      extends: '../../.eslintrc.json',
-      rules: {},
-      ignorePatterns: ['!**/*'],
-    };
-
-    tree = await runSchematic(
-      'lib',
-      { name: 'my-lib', linter: Linter.EsLint },
-      tree
-    );
-
-    tree.create(
-      '/libs/my-destination/.eslintrc.json',
-      JSON.stringify(eslintRc)
-    );
-
-    expect(tree.files).toContain('/libs/my-destination/.eslintrc.json');
-
-    const schema: Schema = {
-      projectName: 'my-lib',
-      destination: 'my-destination',
-      importPath: undefined,
-      updateImportPath: true,
-    };
-
-    tree = (await callRule(updateEslintrcJson(schema), tree)) as UnitTestTree;
-
-    expect(readJsonInTree(tree, '/libs/my-destination/.eslintrc.json')).toEqual(
-      jasmine.objectContaining({
-        extends: '../../.eslintrc.json',
       })
     );
   });

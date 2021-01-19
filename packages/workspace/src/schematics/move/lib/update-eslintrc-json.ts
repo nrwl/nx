@@ -1,11 +1,14 @@
-import { Rule, SchematicContext, Tree } from '@angular-devkit/schematics';
-import { Schema } from '../schema';
-import { from, Observable } from 'rxjs';
-import { getWorkspace } from '@nrwl/workspace';
-import { map } from 'rxjs/operators';
 import { join } from 'path';
-import { offsetFromRoot } from '@nrwl/devkit';
-import { getDestination } from '@nrwl/workspace/src/schematics/move/lib/utils';
+import {
+  offsetFromRoot,
+  ProjectConfiguration,
+  readJson,
+  Tree,
+  updateJson,
+} from '@nrwl/devkit';
+
+import { Schema } from '../schema';
+import { getDestination } from './utils';
 
 interface PartialEsLintRcJson {
   extends: string;
@@ -16,30 +19,24 @@ interface PartialEsLintRcJson {
  *
  * @param schema The options provided to the schematic
  */
-export function updateEslintrcJson(schema: Schema): Rule {
-  return (tree: Tree, _context: SchematicContext): Observable<Tree> => {
-    return from(getWorkspace(tree)).pipe(
-      map((workspace) => {
-        const destination = getDestination(schema, workspace, tree);
-        const eslintRcPath = join(destination, '.eslintrc.json');
+export function updateEslintrcJson(
+  tree: Tree,
+  schema: Schema,
+  project: ProjectConfiguration
+) {
+  const destination = getDestination(tree, schema, project);
+  const eslintRcPath = join(destination, '.eslintrc.json');
 
-        if (!tree.exists(eslintRcPath)) {
-          // no .eslintrc found. nothing to do
-          return tree;
-        }
+  if (!tree.exists(eslintRcPath)) {
+    // no .eslintrc found. nothing to do
+    return;
+  }
 
-        const eslintRcJson = JSON.parse(
-          tree.read(eslintRcPath).toString('utf-8')
-        ) as PartialEsLintRcJson;
+  const offset = offsetFromRoot(destination);
 
-        const offset = offsetFromRoot(destination);
+  updateJson<PartialEsLintRcJson>(tree, eslintRcPath, (eslintRcJson) => {
+    eslintRcJson.extends = offset + '.eslintrc.json';
 
-        eslintRcJson.extends = offset + '.eslintrc.json';
-
-        tree.overwrite(eslintRcPath, JSON.stringify(eslintRcJson));
-
-        return tree;
-      })
-    );
-  };
+    return eslintRcJson;
+  });
 }

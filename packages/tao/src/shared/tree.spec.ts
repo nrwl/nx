@@ -216,25 +216,77 @@ describe('tree', () => {
       } catch (e) {}
     });
 
-    it('should return the list of children of a dir', () => {
-      tree.write('parent/new-child/new-child-file.txt', 'new child content');
+    describe('children', () => {
+      it('should return the list of children of a dir', () => {
+        expect(tree.children('parent')).toEqual(['child', 'parent-file.txt']);
+        expect(tree.children('parent/child')).toEqual(['child-file.txt']);
+      });
 
-      expect(tree.children('parent/child')).toEqual(['child-file.txt']);
-      expect(tree.children('parent/new-child')).toEqual(['new-child-file.txt']);
+      it('should add new children after writing new files', () => {
+        tree.write('parent/child/child-file2.txt', 'new child content');
+        tree.write('parent/new-child/new-child-file.txt', 'new child content');
 
-      tree.rename(
-        'parent/child/child-file.txt',
-        'parent/child/renamed-child-file.txt'
-      );
-      tree.rename(
-        'parent/new-child/new-child-file.txt',
-        'parent/new-child/renamed-new-child-file.txt'
-      );
+        expect(tree.children('parent')).toEqual([
+          'child',
+          'parent-file.txt',
+          'new-child',
+        ]);
+        expect(tree.children('parent/child')).toEqual([
+          'child-file.txt',
+          'child-file2.txt',
+        ]);
+        expect(tree.children('parent/new-child')).toEqual([
+          'new-child-file.txt',
+        ]);
+      });
 
-      expect(tree.children('parent/child')).toEqual(['renamed-child-file.txt']);
-      expect(tree.children('parent/new-child')).toEqual([
-        'renamed-new-child-file.txt',
-      ]);
+      it('should return the list of children after renaming', () => {
+        tree.rename(
+          'parent/child/child-file.txt',
+          'parent/child/renamed-child-file.txt'
+        );
+
+        expect(tree.children('parent/child')).toEqual([
+          'renamed-child-file.txt',
+        ]);
+
+        tree.rename(
+          'parent/child/renamed-child-file.txt',
+          'parent/renamed-child/renamed-child-file.txt'
+        );
+
+        expect(tree.children('parent')).toEqual([
+          'parent-file.txt',
+          'renamed-child',
+        ]);
+      });
+
+      describe('at the root', () => {
+        it('should return a list of children', () => {
+          expect(tree.children('')).toEqual(['parent', 'root-file.txt']);
+        });
+
+        it('should add a child after writing a file', () => {
+          tree.write('root-file2.txt', '');
+
+          expect(tree.children('')).toEqual([
+            'parent',
+            'root-file.txt',
+            'root-file2.txt',
+          ]);
+        });
+
+        it('should remove a child after deleting a file', () => {
+          tree.delete('parent/child/child-file.txt');
+          tree.delete('parent/parent-file.txt');
+
+          expect(tree.children('')).not.toContain('parent');
+
+          tree.delete('root-file.txt');
+
+          expect(tree.children('')).not.toContain('root-file.txt');
+        });
+      });
     });
 
     it('should be able to rename dirs', () => {

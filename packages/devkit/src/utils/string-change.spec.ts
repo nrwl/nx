@@ -134,6 +134,35 @@ describe('applyChangesToString', () => {
     expect(result).toEqual('Updated Text');
   });
 
+  it('should be able to replace text twice', () => {
+    const original = 'Original Text';
+
+    const result = applyChangesToString(original, [
+      {
+        type: ChangeType.Delete,
+        start: 0,
+        length: 8,
+      },
+      {
+        type: ChangeType.Insert,
+        index: 0,
+        text: 'Updated',
+      },
+      {
+        type: ChangeType.Delete,
+        start: 9,
+        length: 4,
+      },
+      {
+        type: ChangeType.Insert,
+        index: 9,
+        text: 'Updated',
+      },
+    ]);
+
+    expect(result).toEqual('Updated Updated');
+  });
+
   it('should sort changes when replacing text', () => {
     const original = 'Original Text';
 

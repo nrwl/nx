@@ -9,12 +9,9 @@ import {
   onlyWorkspaceProjects,
   ProjectGraph,
   ProjectGraphNode,
-  ProjectGraphDependency,
 } from '../core/project-graph';
 import { appRootPath } from '../utils/app-root';
 import { output } from '../utils/output';
-import { checkProjectExists } from '../utils/rules/check-project-exists';
-import { filter } from '@angular-devkit/schematics';
 
 // maps file extention to MIME types
 const mimeType = {

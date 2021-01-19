@@ -1,83 +1,37 @@
-import { Rule, Tree } from '@angular-devkit/schematics';
-import { FileData } from '@nrwl/workspace/src/core/file-utils';
+import { Tree } from '@nrwl/devkit';
 import {
-  readNxJsonInTree,
-  readWorkspace,
-} from '@nrwl/workspace/src/utils/ast-utils';
-import { getWorkspacePath } from '@nrwl/workspace/src/utils/cli-config-utils';
-import ignore from 'ignore';
-import * as path from 'path';
-import {
-  createProjectGraph,
   onlyWorkspaceProjects,
   ProjectGraph,
   reverse,
 } from '../../../core/project-graph';
 import { Schema } from '../schema';
+import { createProjectGraphFromTree } from '../../../utils/create-project-graph-from-tree';
 
 /**
  * Check whether the project to be removed is depended on by another project
  *
  * Throws an error if the project is in use, unless the `--forceRemove` option is used.
- *
- * @param schema The options provided to the schematic
  */
-export function checkDependencies(schema: Schema): Rule {
+export function checkDependencies(tree: Tree, schema: Schema) {
   if (schema.forceRemove) {
-    return (tree: Tree) => tree;
+    return;
   }
-  let ig = ignore();
 
-  return (tree: Tree): Tree => {
-    if (tree.exists('.gitignore')) {
-      ig = ig.add(tree.read('.gitignore').toString());
-    }
-    const files: FileData[] = [];
-    const workspaceDir = path.dirname(getWorkspacePath(tree));
+  const graph: ProjectGraph = createProjectGraphFromTree(tree);
 
-    for (const dir of tree.getDir('/').subdirs) {
-      if (ig.ignores(dir)) {
-        continue;
-      }
+  const reverseGraph = onlyWorkspaceProjects(reverse(graph));
 
-      tree.getDir(dir).visit((file: string) => {
-        files.push({
-          file: path.relative(workspaceDir, file),
-          ext: path.extname(file),
-          hash: '',
-        });
-      });
-    }
+  const deps = reverseGraph.dependencies[schema.projectName] || [];
 
-    const graph: ProjectGraph = createProjectGraph(
-      readWorkspace(tree),
-      readNxJsonInTree(tree),
-      files,
-      (file) => {
-        try {
-          return tree.read(file).toString('utf-8');
-        } catch (e) {
-          throw new Error(`Could not read ${file}`);
-        }
-      },
-      false,
-      false
-    );
+  if (deps.length === 0) {
+    return;
+  }
 
-    const reverseGraph = onlyWorkspaceProjects(reverse(graph));
-
-    const deps = reverseGraph.dependencies[schema.projectName] || [];
-
-    if (deps.length === 0) {
-      return tree;
-    }
-
-    throw new Error(
-      `${
-        schema.projectName
-      } is still depended on by the following projects:\n${deps
-        .map((x) => x.target)
-        .join('\n')}`
-    );
-  };
+  throw new Error(
+    `${
+      schema.projectName
+    } is still depended on by the following projects:\n${deps
+      .map((x) => x.target)
+      .join('\n')}`
+  );
 }

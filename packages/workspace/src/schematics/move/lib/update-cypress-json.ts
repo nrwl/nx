@@ -1,11 +1,8 @@
-import { Rule, SchematicContext } from '@angular-devkit/schematics';
-import { Tree } from '@angular-devkit/schematics/src/tree/interface';
-import { getWorkspace } from '@nrwl/workspace';
+import { Tree } from '@nrwl/devkit';
 import * as path from 'path';
-import { from, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { Schema } from '../schema';
 import { getDestination } from './utils';
+import { ProjectConfiguration } from '@nrwl/tao/src/shared/workspace';
 
 interface PartialCypressJson {
   videosFolder: string;
@@ -19,36 +16,31 @@ interface PartialCypressJson {
  *
  * @param schema The options provided to the schematic
  */
-export function updateCypressJson(schema: Schema): Rule {
-  return (tree: Tree, _context: SchematicContext): Observable<Tree> => {
-    return from(getWorkspace(tree)).pipe(
-      map((workspace) => {
-        const project = workspace.projects.get(schema.projectName);
-        const destination = getDestination(schema, workspace, tree);
+export function updateCypressJson(
+  tree: Tree,
+  schema: Schema,
+  project: ProjectConfiguration
+) {
+  const destination = getDestination(tree, schema, project);
 
-        const cypressJsonPath = path.join(destination, 'cypress.json');
+  const cypressJsonPath = path.join(destination, 'cypress.json');
 
-        if (!tree.exists(cypressJsonPath)) {
-          // nothing to do
-          return tree;
-        }
+  if (!tree.exists(cypressJsonPath)) {
+    // nothing to do
+    return tree;
+  }
 
-        const cypressJson = JSON.parse(
-          tree.read(cypressJsonPath).toString('utf-8')
-        ) as PartialCypressJson;
-        cypressJson.videosFolder = cypressJson.videosFolder.replace(
-          project.root,
-          destination
-        );
-        cypressJson.screenshotsFolder = cypressJson.screenshotsFolder.replace(
-          project.root,
-          destination
-        );
+  const cypressJson = JSON.parse(
+    tree.read(cypressJsonPath).toString('utf-8')
+  ) as PartialCypressJson;
+  cypressJson.videosFolder = cypressJson.videosFolder.replace(
+    project.root,
+    destination
+  );
+  cypressJson.screenshotsFolder = cypressJson.screenshotsFolder.replace(
+    project.root,
+    destination
+  );
 
-        tree.overwrite(cypressJsonPath, JSON.stringify(cypressJson));
-
-        return tree;
-      })
-    );
-  };
+  tree.write(cypressJsonPath, JSON.stringify(cypressJson));
 }

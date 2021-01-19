@@ -1,22 +1,11 @@
-import { SchematicContext, Tree } from '@angular-devkit/schematics';
-import { getWorkspace } from '@nrwl/workspace';
-import { from, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { Schema } from '../schema';
+import { ProjectConfiguration, Tree, visitNotIgnoredFiles } from '@nrwl/devkit';
 
 /**
- * Removes (deletes) a project from the folder tree
- *
- * @param schema The options provided to the schematic
+ * Removes (deletes) a project's files from the folder tree
  */
-export function removeProject(schema: Schema) {
-  return (tree: Tree, _context: SchematicContext): Observable<Tree> => {
-    return from(getWorkspace(tree)).pipe(
-      map((workspace) => {
-        const project = workspace.projects.get(schema.projectName);
-        tree.delete(project.root);
-        return tree;
-      })
-    );
-  };
+export function removeProject(tree: Tree, project: ProjectConfiguration) {
+  visitNotIgnoredFiles(tree, project.root, (file) => {
+    tree.delete(file);
+  });
+  tree.delete(project.root);
 }

@@ -21,9 +21,14 @@ export { generateFiles } from './src/generators/generate-files';
 export {
   addProjectConfiguration,
   readProjectConfiguration,
+  removeProjectConfiguration,
   updateProjectConfiguration,
+  readWorkspaceConfiguration,
+  updateWorkspaceConfiguration,
+  getProjects,
 } from './src/generators/project-configuration';
 export { toJS } from './src/generators/to-js';
+export { visitNotIgnoredFiles } from './src/generators/visit-not-ignored-files';
 
 export { readJson, writeJson, updateJson } from './src/utils/json';
 export { addDependenciesToPackageJson } from './src/utils/package-json';

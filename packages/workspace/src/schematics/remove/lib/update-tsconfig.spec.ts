@@ -1,18 +1,15 @@
-import { Tree } from '@angular-devkit/schematics';
-import { UnitTestTree } from '@angular-devkit/schematics/testing';
-import { readJsonInTree } from '@nrwl/workspace';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { callRule, runSchematic } from '../../../utils/testing';
+import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Schema } from '../schema';
 import { updateTsconfig } from './update-tsconfig';
+import { libraryGenerator } from '../../library/library';
 
-describe('updateTsconfig Rule', () => {
-  let tree: UnitTestTree;
+describe('updateTsconfig', () => {
+  let tree: Tree;
   let schema: Schema;
 
   beforeEach(async () => {
-    tree = new UnitTestTree(Tree.empty());
-    tree = createEmptyWorkspace(tree) as UnitTestTree;
+    tree = createTreeWithEmptyWorkspace();
 
     schema = {
       projectName: 'my-lib',
@@ -22,16 +19,14 @@ describe('updateTsconfig Rule', () => {
   });
 
   it('should delete project ref from the tsconfig', async () => {
-    tree = await runSchematic('lib', { name: 'my-lib' }, tree);
-
-    let tsConfig = readJsonInTree(tree, '/tsconfig.base.json');
-    expect(tsConfig.compilerOptions.paths).toEqual({
-      '@proj/my-lib': ['libs/my-lib/src/index.ts'],
+    await libraryGenerator(tree, {
+      name: 'my-lib',
     });
+    const project = readProjectConfiguration(tree, 'my-lib');
 
-    tree = (await callRule(updateTsconfig(schema), tree)) as UnitTestTree;
+    updateTsconfig(tree, schema, project);
 
-    tsConfig = readJsonInTree(tree, '/tsconfig.base.json');
+    const tsConfig = readJson(tree, '/tsconfig.base.json');
     expect(tsConfig.compilerOptions.paths).toEqual({});
   });
 });

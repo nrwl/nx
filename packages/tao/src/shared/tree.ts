@@ -122,6 +122,27 @@ export class FsTree implements Tree {
     this.write(filePath, content);
   }
 
+  delete(filePath: string): void {
+    filePath = this.normalize(filePath);
+    if (this.filesForDir(this.rp(filePath)).length > 0) {
+      this.filesForDir(this.rp(filePath)).forEach(
+        (f) => (this.recordedChanges[f] = { content: null, isDeleted: true })
+      );
+    }
+    this.recordedChanges[this.rp(filePath)] = {
+      content: null,
+      isDeleted: true,
+    };
+
+    // Delete directories when
+    if (
+      this.exists(dirname(this.rp(filePath))) &&
+      this.children(dirname(this.rp(filePath))).length < 1
+    ) {
+      this.delete(dirname(this.rp(filePath)));
+    }
+  }
+
   exists(filePath: string): boolean {
     filePath = this.normalize(filePath);
     try {
@@ -137,25 +158,12 @@ export class FsTree implements Tree {
     }
   }
 
-  delete(filePath: string): void {
-    filePath = this.normalize(filePath);
-    if (this.filesForDir(this.rp(filePath)).length > 0) {
-      this.filesForDir(this.rp(filePath)).forEach(
-        (f) => (this.recordedChanges[f] = { content: null, isDeleted: true })
-      );
-    }
-    this.recordedChanges[this.rp(filePath)] = {
-      content: null,
-      isDeleted: true,
-    };
-  }
-
   rename(from: string, to: string): void {
     from = this.normalize(from);
     to = this.normalize(to);
     const content = this.read(this.rp(from));
-    this.recordedChanges[this.rp(from)] = { content: null, isDeleted: true };
-    this.recordedChanges[this.rp(to)] = { content: content, isDeleted: false };
+    this.delete(this.rp(from));
+    this.write(this.rp(to), content);
   }
 
   isFile(filePath: string): boolean {
@@ -176,11 +184,12 @@ export class FsTree implements Tree {
     let res = this.fsReadDir(dirPath);
 
     res = [...res, ...this.directChildrenOfDir(this.rp(dirPath))];
-    return res.filter((q) => {
+    res = res.filter((q) => {
       const r = this.recordedChanges[join(this.rp(dirPath), q)];
-      if (r && r.isDeleted) return false;
-      return true;
+      return !r?.isDeleted;
     });
+    // Dedupe
+    return Array.from(new Set(res));
   }
 
   listChanges(): FileChange[] {
@@ -255,12 +264,18 @@ export class FsTree implements Tree {
 
   private directChildrenOfDir(path: string): string[] {
     const res = {};
+    if (path === '') {
+      return Object.keys(this.recordedChanges).map(
+        (file) => file.split('/')[0]
+      );
+    }
     Object.keys(this.recordedChanges).forEach((f) => {
       if (f.startsWith(path + '/')) {
         const [_, file] = f.split(path + '/');
         res[file.split('/')[0]] = true;
       }
     });
+
     return Object.keys(res);
   }
 

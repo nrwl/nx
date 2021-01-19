@@ -1,14 +1,21 @@
-import { Tree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { runSchematic } from '../../../utils/testing';
+import {
+  ProjectConfiguration,
+  readProjectConfiguration,
+  Tree,
+} from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Schema } from '../schema';
+import { libraryGenerator } from '../../library/library';
+import { moveProject } from '@nrwl/workspace/src/schematics/move/lib/move-project';
 
-describe('moveProject Rule', () => {
+describe('moveProject', () => {
   let tree: Tree;
+  let projectConfig: ProjectConfiguration;
 
   beforeEach(async () => {
-    tree = createEmptyWorkspace(Tree.empty());
-    tree = await runSchematic('lib', { name: 'my-lib' }, tree);
+    tree = createTreeWithEmptyWorkspace();
+    await libraryGenerator(tree, { name: 'my-lib' });
+    projectConfig = readProjectConfiguration(tree, 'my-lib');
   });
 
   it('should copy all files and delete the source folder', async () => {
@@ -19,22 +26,12 @@ describe('moveProject Rule', () => {
       updateImportPath: true,
     };
 
-    // TODO - Currently this test will fail due to
-    //        https://github.com/angular/angular-cli/issues/16527
-    // host = await callRule(moveProject(schema), host);
+    moveProject(tree, schema, projectConfig);
 
-    // const destinationDir = host.getDir('libs/my-destination');
-    // let filesFound = false;
-    // destinationDir.visit(_file => {
-    //   filesFound = true;
-    // });
-    // expect(filesFound).toBeTruthy();
+    const destinationChildren = tree.children('libs/my-destination');
+    expect(destinationChildren.length).toBeGreaterThan(0);
 
-    // const sourceDir = host.getDir('libs/my-lib');
-    // filesFound = false;
-    // sourceDir.visit(_file => {
-    //   filesFound = true;
-    // });
-    // expect(filesFound).toBeFalsy();
+    expect(tree.exists('libs/my-lib')).toBeFalsy();
+    expect(tree.children('libs')).not.toContain('my-lib');
   });
 });

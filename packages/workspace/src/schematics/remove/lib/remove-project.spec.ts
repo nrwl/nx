@@ -1,16 +1,18 @@
-import { Tree } from '@angular-devkit/schematics';
-import { UnitTestTree } from '@angular-devkit/schematics/testing';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { runSchematic } from '../../../utils/testing';
+import { readProjectConfiguration, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Schema } from '../schema';
+import { libraryGenerator } from '../../library/library';
+import { removeProject } from '@nrwl/workspace/src/schematics/remove/lib/remove-project';
 
-describe('moveProject Rule', () => {
-  let tree: UnitTestTree;
+describe('moveProject', () => {
   let schema: Schema;
+  let tree: Tree;
 
   beforeEach(async () => {
-    tree = createEmptyWorkspace(Tree.empty()) as UnitTestTree;
-    tree = await runSchematic('lib', { name: 'my-lib' }, tree);
+    tree = createTreeWithEmptyWorkspace();
+    await libraryGenerator(tree, {
+      name: 'my-lib',
+    });
 
     schema = {
       projectName: 'my-lib',
@@ -20,15 +22,7 @@ describe('moveProject Rule', () => {
   });
 
   it('should delete the project folder', async () => {
-    // TODO - Currently this test will fail due to
-    //        https://github.com/angular/angular-cli/issues/16527
-    // tree = (await callRule(removeProject(schema), tree)) as UnitTestTree;
-    //
-    // const libDir = tree.getDir('libs/my-lib');
-    // let filesFound = false;
-    // libDir.visit(_file => {
-    //   filesFound = true;
-    // });
-    // expect(filesFound).toBeFalsy();
+    removeProject(tree, readProjectConfiguration(tree, 'my-lib'));
+    expect(tree.children('libs')).not.toContain('my-lib');
   });
 });

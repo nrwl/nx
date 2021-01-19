@@ -1,16 +1,14 @@
-import { Tree } from '@angular-devkit/schematics';
-import { UnitTestTree } from '@angular-devkit/schematics/testing';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { callRule, runSchematic } from '../../../utils/testing';
+import { readProjectConfiguration, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Schema } from '../schema';
 import { updateProjectRootFiles } from './update-project-root-files';
+import { libraryGenerator } from '../../library/library';
 
-describe('updateProjectRootFiles Rule', () => {
-  let tree: UnitTestTree;
+describe('updateProjectRootFiles', () => {
+  let tree: Tree;
 
   beforeEach(async () => {
-    tree = new UnitTestTree(Tree.empty());
-    tree = createEmptyWorkspace(tree) as UnitTestTree;
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should update the relative root in files at the root of the project', async () => {
@@ -25,8 +23,11 @@ describe('updateProjectRootFiles Rule', () => {
     };`;
     const testFilePath = '/libs/subfolder/my-destination/jest.config.js';
 
-    tree = await runSchematic('lib', { name: 'my-source' }, tree);
-    tree.create(testFilePath, testFile);
+    await libraryGenerator(tree, {
+      name: 'my-source',
+    });
+    const projectConfig = readProjectConfiguration(tree, 'my-source');
+    tree.write(testFilePath, testFile);
 
     const schema: Schema = {
       projectName: 'my-source',
@@ -35,10 +36,7 @@ describe('updateProjectRootFiles Rule', () => {
       updateImportPath: true,
     };
 
-    tree = (await callRule(
-      updateProjectRootFiles(schema),
-      tree
-    )) as UnitTestTree;
+    updateProjectRootFiles(tree, schema, projectConfig);
 
     const testFileAfter = tree.read(testFilePath).toString();
     expect(testFileAfter).toContain(`preset: '../../../jest.config.js'`);
