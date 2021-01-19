@@ -166,7 +166,7 @@ export async function taoNew(cwd: string, args: string[], isVerbose = false) {
     const {
       normalizedGeneratorName,
       schema,
-      implementation,
+      implementationFactory,
     } = ws.readGenerator(opts.collectionName, opts.generatorName);
 
     const combinedOpts = await combineOptionsForGenerator(
@@ -182,6 +182,7 @@ export async function taoNew(cwd: string, args: string[], isVerbose = false) {
 
     if (ws.isNxGenerator(opts.collectionName, normalizedGeneratorName)) {
       const host = new FsTree(cwd, isVerbose);
+      const implementation = implementationFactory();
       const task = await implementation(host, combinedOpts);
       const changes = host.listChanges();
 
@@ -226,7 +227,7 @@ export async function generate(
     const {
       normalizedGeneratorName,
       schema,
-      implementation,
+      implementationFactory,
     } = ws.readGenerator(opts.collectionName, opts.generatorName);
 
     if (opts.help) {
@@ -246,6 +247,7 @@ export async function generate(
 
     if (ws.isNxGenerator(opts.collectionName, normalizedGeneratorName)) {
       const host = new FsTree(root, isVerbose);
+      const implementation = implementationFactory();
       const task = await implementation(host, combinedOpts);
       const changes = host.listChanges();
 
