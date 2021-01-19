@@ -31,7 +31,7 @@ The `schema.json` provides a description of the generator, available options, va
 
 The initial generator function creates a library.
 
-```ts
+```typescript
 import { Tree, formatFiles, installPackagesTask } from '@nrwl/devkit';
 import { libraryGenerator } from '@nrwl/workspace';
 
@@ -117,7 +117,7 @@ happynrwl/
 
 Next, update the `index.ts` file for the schematic, and create different rules for generating a library, and generating the new files. Both rules have access to the available options provided for the schematic.
 
-```ts
+```typescript
 import {
   apply,
   chain,
@@ -195,7 +195,7 @@ UPDATE package.json (1959 bytes)
 
 To create a TypeScript schema to use in your generator function, define a TypeScript file next to your schema.json named schema.ts. Inside the schema.ts, define an interface to match the properties in your schema.json file, and whether they are required.
 
-```ts
+```typescript
 export interface SchematicOptions {
   name: string;
   type?: string;
@@ -204,7 +204,7 @@ export interface SchematicOptions {
 
 Import the TypeScript schema into your generator file and replace the any in your generator function with the interface.
 
-```ts
+```typescript
 import { Tree, formatFiles, installPackagesTask } from '@nrwl/devkit';
 import { libraryGenerator } from '@nrwl/workspace';
 

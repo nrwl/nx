@@ -83,7 +83,7 @@ Changing knobs in the url query parameters allows your Cypress tests to test dif
 
 **\*.stories.tsx file**
 
-```ts
+```typescript
 import React from 'react';
 import { text, number } from '@storybook/addon-knobs';
 import { Button } from './button';
@@ -97,7 +97,7 @@ export const primary = () => (
 
 **Cypress \*.spec.ts file**
 
-```ts
+```typescript
 describe('shared-ui', () => {
   beforeEach(() =>
     cy.visit(

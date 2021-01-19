@@ -51,7 +51,7 @@ In our `impl.ts` file, we're creating an `Options` interface that matches the js
 
 The `impl.ts` contains the actual code for your builder. Your builder should use the `createBuilder` function of the `@angular-devkit/architect` package to create a builder that can be run via the Nx CLI tools.
 
-```ts
+```typescript
 import { BuilderOutput, createBuilder } from '@angular-devkit/architect';
 import * as childProcess from 'child_process';
 import { Observable } from 'rxjs';
@@ -89,7 +89,7 @@ Part of the power of the architect API is the ability to compose builders via ex
 
 Here's an example of this (from a hypothetical project), that will serve an api (project name: "api") in watch mode, then serve a frontend app (project name: "web-client") in watch mode:
 
-```ts
+```typescript
 import {
   BuilderContext,
   BuilderOutput,
@@ -178,7 +178,7 @@ The first difference to adjust is to mark the executor as an Nx Executor in the 
 
 Your executor's implementation must consist of a function that takes an options object and returns a `Promise<{ success: boolean }>`. Given the echo implementation provided in the Angular Devkit Builder section above, our Nx executor would look like this:
 
-```ts
+```typescript
 import * as childProcess from 'child_process';
 
 interface Options {
