@@ -183,7 +183,10 @@ async function runExecutorInternal<T extends { success: boolean }>(
   const ws = new Workspaces(root);
   const targetConfig = workspace.projects[project].targets[target];
   const [nodeModule, executor] = targetConfig.executor.split(':');
-  const { schema, implementation } = ws.readExecutor(nodeModule, executor);
+  const { schema, implementationFactory } = ws.readExecutor(
+    nodeModule,
+    executor
+  );
 
   if (printHelp) {
     printRunHelp({ project, target }, schema);
@@ -200,6 +203,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
   );
 
   if (ws.isNxExecutor(nodeModule, executor)) {
+    const implementation = implementationFactory();
     const r = implementation(combinedOptions, {
       root: root,
       target: targetConfig,

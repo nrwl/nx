@@ -242,7 +242,7 @@ export class Workspaces {
   readExecutor(
     nodeModule: string,
     executor: string
-  ): { schema: any; implementation: Executor } {
+  ): { schema: any; implementationFactory: () => Executor } {
     try {
       const { executorsFilePath, executorConfig } = this.readExecutorsJson(
         nodeModule,
@@ -257,9 +257,11 @@ export class Workspaces {
         schema.properties = {};
       }
       const [modulePath, exportName] = executorConfig.implementation.split('#');
-      const module = require(path.join(executorsDir, modulePath));
-      const implementation = module[exportName || 'default'] as Executor;
-      return { schema, implementation };
+      const implementationFactory = () => {
+        const module = require(path.join(executorsDir, modulePath));
+        return module[exportName || 'default'] as Executor;
+      };
+      return { schema, implementationFactory };
     } catch (e) {
       throw new Error(
         `Unable to resolve ${nodeModule}:${executor}.\n${e.message}`
@@ -289,9 +291,11 @@ export class Workspaces {
       const [modulePath, exportName] = generatorConfig.implementation.split(
         '#'
       );
-      const module = require(path.join(generatorsDir, modulePath));
-      const implementation = module[exportName || 'default'] as Generator;
-      return { normalizedGeneratorName, schema, implementation };
+      const implementationFactory = () => {
+        const module = require(path.join(generatorsDir, modulePath));
+        return module[exportName || 'default'] as Generator;
+      };
+      return { normalizedGeneratorName, schema, implementationFactory };
     } catch (e) {
       throw new Error(
         `Unable to resolve ${collectionName}:${generatorName}.\n${e.message}`
