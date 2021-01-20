@@ -1,4 +1,4 @@
-import { Tree } from '@nrwl/devkit';
+import { readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { readFileSync } from 'fs';
@@ -24,6 +24,9 @@ describe('updateRootJestConfig', () => {
     await libraryGenerator(tree, {
       name: 'my-lib',
     });
+    await libraryGenerator(tree, {
+      name: 'my-other-lib',
+    });
 
     tree.write(
       'jest.config.js',
@@ -36,10 +39,20 @@ describe('updateRootJestConfig', () => {
 
     expect(jestConfig).toMatchSnapshot();
 
-    updateJestConfig(tree, schema);
+    updateJestConfig(tree, schema, readProjectConfiguration(tree, 'my-lib'));
 
     const updatedJestConfig = tree.read('jest.config.js').toString();
 
     expect(updatedJestConfig).toMatchSnapshot();
+
+    updateJestConfig(
+      tree,
+      { ...schema, projectName: 'my-other-lib' },
+      readProjectConfiguration(tree, 'my-other-lib')
+    );
+
+    const updatedJestConfig2 = tree.read('jest.config.js').toString();
+
+    expect(updatedJestConfig2).toMatchSnapshot();
   });
 });

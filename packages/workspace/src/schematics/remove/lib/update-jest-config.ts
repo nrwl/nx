@@ -1,18 +1,31 @@
 import {
   applyChangesToString,
   ChangeType,
-  StringChange,
+  ProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
-import * as ts from 'typescript';
 import { getSourceNodes } from '@nrwl/workspace/src/utils/ast-utils';
 
 import { Schema } from '../schema';
+import {
+  ArrayLiteralExpression,
+  createSourceFile,
+  isArrayLiteralExpression,
+  isPropertyAssignment,
+  isStringLiteral,
+  PropertyAssignment,
+  ScriptTarget,
+  StringLiteral,
+} from 'typescript';
 
 /**
  * Updates the root jest config projects array and removes the project.
  */
-export function updateJestConfig(tree: Tree, schema: Schema) {
+export function updateJestConfig(
+  tree: Tree,
+  schema: Schema,
+  projectConfig: ProjectConfiguration
+) {
   const projectToRemove = schema.projectName;
 
   if (!tree.exists('jest.config.js')) {
@@ -20,27 +33,55 @@ export function updateJestConfig(tree: Tree, schema: Schema) {
   }
 
   const contents = tree.read('jest.config.js').toString();
-  const sourceFile = ts.createSourceFile(
+  const sourceFile = createSourceFile(
     'jest.config.js',
     contents,
-    ts.ScriptTarget.Latest
+    ScriptTarget.Latest
   );
 
-  const changes: StringChange[] = [];
   const sourceNodes = getSourceNodes(sourceFile);
 
-  sourceNodes.forEach((node) => {
-    if (
-      ts.isToken(node) &&
-      ts.isStringLiteral(node) &&
-      node.text.includes(projectToRemove)
-    ) {
-      changes.push({
+  const projectsAssignment = sourceNodes.find(
+    (node) =>
+      isPropertyAssignment(node) &&
+      node.name.getText(sourceFile) === 'projects' &&
+      isArrayLiteralExpression(node.initializer)
+  ) as PropertyAssignment;
+
+  if (!projectsAssignment) {
+    throw Error(
+      `Could not remove ${projectToRemove} from projects in /jest.config.js. Please remove ${projectToRemove} from your projects.`
+    );
+  }
+  const projectsArray = projectsAssignment.initializer as ArrayLiteralExpression;
+
+  const project = projectsArray.elements.find(
+    (item) =>
+      isStringLiteral(item) &&
+      item.text.startsWith(`<rootDir>/${projectConfig.root}`)
+  ) as StringLiteral;
+
+  if (!project) {
+    console.warn(
+      `Could not find ${projectToRemove} in projects in /jest.config.js.`
+    );
+  }
+
+  const previousProject =
+    projectsArray.elements[projectsArray.elements.indexOf(project) - 1];
+
+  const start = previousProject
+    ? previousProject.getEnd()
+    : project.getStart(sourceFile);
+
+  tree.write(
+    'jest.config.js',
+    applyChangesToString(contents, [
+      {
         type: ChangeType.Delete,
-        start: node.getStart(sourceFile),
-        length: node.getFullText(sourceFile).length,
-      });
-    }
-  });
-  tree.write('jest.config.js', applyChangesToString(contents, changes));
+        start,
+        length: project.getEnd() - start,
+      },
+    ])
+  );
 }
