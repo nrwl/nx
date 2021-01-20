@@ -48,7 +48,17 @@ export function readCache(): false | ProjectGraphCache {
     }
   }
 
-  const data = fileExists(nxDepsPath) ? readJsonFile(nxDepsPath) : null;
+  let data = null;
+  try {
+    if (fileExists(nxDepsPath)) {
+      data = readJsonFile(nxDepsPath);
+    }
+  } catch (error) {
+    console.log(
+      `Error reading cache file: ${nxDepsPath}. Process will continue as if cache would not exists.`
+    );
+    console.log(error);
+  }
 
   performance.mark('read cache:end');
   performance.measure('read cache', 'read cache:start', 'read cache:end');
