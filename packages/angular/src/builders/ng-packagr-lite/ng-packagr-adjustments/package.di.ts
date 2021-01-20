@@ -12,6 +12,7 @@ import {
   TransformProvider,
 } from 'ng-packagr/lib/graph/transform.di';
 import { PROJECT_TOKEN } from 'ng-packagr/lib/project.di';
+import { STYLESHEET_PROCESSOR } from 'ng-packagr/lib/styles/stylesheet-processor.di';
 import {
   DEFAULT_OPTIONS_PROVIDER,
   OPTIONS_TOKEN,
@@ -49,6 +50,7 @@ export const NX_PACKAGE_PROVIDERS: Provider[] = [
   NX_PACKAGE_TRANSFORM,
   DEFAULT_OPTIONS_PROVIDER,
   DEFAULT_TS_CONFIG_PROVIDER,
+  STYLESHEET_PROCESSOR,
   NX_INIT_TS_CONFIG_TRANSFORM,
   ANALYSE_SOURCES_TRANSFORM,
 ];

@@ -1,6 +1,6 @@
 {
   "name": "@nrwl/nx-source",
-  "version": "11.1.4",
+  "version": "11.99.0",
   "description": "Extensible Dev Tools for Monorepos",
   "homepage": "https://nx.dev",
   "main": "index.js",
@@ -167,7 +167,7 @@
     "identity-obj-proxy": "3.0.0",
     "ignore": "^5.0.4",
     "import-fresh": "^3.1.0",
-    "injection-js": "^2.3.1",
+    "injection-js": "^2.4.0",
     "is-ci": "^2.0.0",
     "jasmine-core": "~2.99.1",
     "jasmine-marbles": "~0.6.0",
@@ -192,7 +192,7 @@
     "minimatch": "3.0.4",
     "minimist": "^1.2.5",
     "next": "9.5.2",
-    "ng-packagr": "10.1.2",
+    "ng-packagr": "^11.1.2",
     "ngrx-store-freeze": "0.2.4",
     "node-watch": "0.7.0",
     "npm-run-all": "^4.1.5",
@@ -222,6 +222,7 @@
     "rollup-plugin-postcss": "^3.1.1",
     "rollup-plugin-typescript2": "^0.27.1",
     "rxjs": "6.6.3",
+    "rxjs-for-await": "0.0.2",
     "sass": "1.26.3",
     "sass-loader": "8.0.2",
     "semver": "6.3.0",
@@ -262,8 +263,7 @@
     "worker-plugin": "3.2.0",
     "yargs": "15.4.1",
     "yargs-parser": "20.0.0",
-    "zone.js": "^0.10.0",
-    "rxjs-for-await": "0.0.2"
+    "zone.js": "^0.10.0"
   },
   "author": "Victor Savkin",
   "license": "MIT",
