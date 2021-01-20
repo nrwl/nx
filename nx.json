@@ -19,7 +19,10 @@
         "cacheableOperations": ["build", "build-base", "test", "lint", "e2e"],
         "canTrackAnalytics": false,
         "showUsageWarnings": true,
-        "runtimeCacheInputs": ["echo $SELECTED_CLI"],
+        "runtimeCacheInputs": [
+          "echo $SELECTED_CLI",
+          "echo $NX_E2E_CI_CACHE_KEY"
+        ],
         "cacheDirectory": "/tmp/nx-cache"
       }
     }

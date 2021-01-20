@@ -2,12 +2,30 @@ version: 2.1
 
 # Variables
 var_1: &working_directory ~/repo
+var_2:
+  &nx_cli [
+    'e2e-workspace',
+    'e2e-cli,e2e-nx-plugin,dep-graph-client-e2e',
+    'e2e-cypress,e2e-jest',
+    'e2e-react',
+    'e2e-next',
+    'e2e-node',
+    'e2e-web,e2e-linter,e2e-storybook',
+  ]
+var_3: &ng_cli ['e2e-angular']
 
 executors:
   linux:
     working_directory: *working_directory
     docker:
       - image: cimg/node:12.20-browsers
+
+  windows:
+    working_directory: *working_directory
+    resource_class: windows.medium
+    machine:
+      image: windows-server-2019-vs2019:stable
+    shell: cmd.exe
 
 commands:
   setup:
@@ -29,11 +47,21 @@ commands:
           key: nrwl-nx-yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
-      - run:
-          name: Install PNPM
-          command: |
-            npm install --prefix=$HOME/.local -g pnpm
-            pnpm --version
+
+      - when:
+          condition:
+            equal: [<< parameters.os >>, linux]
+          steps:
+            - run:
+                name: Install PNPM
+                command: npm install --prefix=$HOME/.local -g pnpm
+      - when:
+          condition:
+            equal: [<< parameters.os >>, windows]
+          steps:
+            - run:
+                name: Install PNPM
+                command: npm install -g pnpm
 
 jobs:
   checks-and-unit-tests:
@@ -75,6 +103,9 @@ jobs:
       cli:
         type: string
         default: ''
+      pm:
+        type: string
+        default: pnpm
     executor: << parameters.os >>
     steps:
       - setup:
@@ -84,7 +115,8 @@ jobs:
           command: yarn e2e << parameters.packages >> affected
           no_output_timeout: 30m
     environment:
-      SELECTED_PM: pnpm
+      NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
+      SELECTED_PM: << parameters.pm >>
       SELECTED_CLI: << parameters.cli >>
 
 workflows:
@@ -95,19 +127,31 @@ workflows:
           matrix:
             parameters:
               os: ['linux']
-              packages:
-                [
-                  'e2e-workspace',
-                  'e2e-cli,e2e-nx-plugin,dep-graph-client-e2e',
-                  'e2e-cypress,e2e-jest',
-                  'e2e-react',
-                  'e2e-next',
-                  'e2e-node',
-                  'e2e-web,e2e-linter,e2e-storybook',
-                ]
+              packages: *nx_cli
       - e2e:
           matrix:
             parameters:
               os: ['linux']
-              packages: ['e2e-angular']
+              packages: *ng_cli
+          cli: 'angular'
+
+  build-windows:
+    triggers:
+      - schedule:
+          cron: '0 0 * * *'
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - e2e:
+          matrix:
+            parameters:
+              os: ['windows']
+              packages: *nx_cli
+      - e2e:
+          matrix:
+            parameters:
+              os: ['windows']
+              packages: *ng_cli
           cli: 'angular'
