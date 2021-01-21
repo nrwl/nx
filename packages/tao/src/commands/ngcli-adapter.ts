@@ -587,7 +587,7 @@ function convertEventTypeToHandleMultipleConfigNames(
 export function wrapAngularDevkitSchematic(
   collectionName: string,
   generatorName: string
-): any {
+) {
   return async (host: Tree, generatorOptions: { [k: string]: any }) => {
     const emptyLogger = {
       log: (e) => {},

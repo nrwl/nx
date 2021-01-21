@@ -1,7 +1,13 @@
 import { Tree } from '@angular-devkit/schematics';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
 import { readJsonInTree } from '../ast-utils';
-import { callRule, runSchematic, createEmptyWorkspace } from '../../../testing';
+import {
+  callRule,
+  runSchematic,
+  runExternalSchematic,
+} from '../../utils/testing';
+import { createEmptyWorkspace } from '../../../testing';
+
 import { renameNpmPackages, PackageRenameMapping } from './rename-npm-packages';
 
 describe('renameNpmPackages Rule', () => {
@@ -87,9 +93,10 @@ describe('renameNpmPackages Rule', () => {
 
     tree = await runSchematic('lib', { name: 'library-1' }, tree);
     tree = await runSchematic('lib', { name: 'library-2' }, tree);
-    tree = await runSchematic(
-      'preset',
-      { name: 'app-one', preset: 'angular' },
+    tree = await runExternalSchematic(
+      '@nrwl/angular',
+      'application',
+      { name: 'app-one' },
       tree
     );
 
