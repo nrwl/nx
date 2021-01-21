@@ -1,7 +1,7 @@
 import { Tree } from '@angular-devkit/schematics';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { callRule, runSchematic } from '../testing';
+import { callRule, runSchematic, runExternalSchematic } from '../testing';
 import { renamePackageImports } from './rename-package-imports';
 
 describe('renamePackageImports Rule', () => {
@@ -46,9 +46,10 @@ describe('renamePackageImports Rule', () => {
     tree = await runSchematic('lib', { name: 'library-1' }, tree);
     tree = await runSchematic('lib', { name: 'library-2' }, tree);
     tree = await runSchematic('lib', { name: 'dont-include-me' }, tree);
-    tree = await runSchematic(
-      'preset',
-      { name: 'app-one', preset: 'angular' },
+    tree = await runExternalSchematic(
+      '@nrwl/angular',
+      'application',
+      { name: 'app-one' },
       tree
     );
 

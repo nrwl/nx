@@ -63,6 +63,17 @@ const migrationTestRunner = new SchematicTestRunner(
   join(__dirname, '../../migrations.json')
 );
 
+export function runExternalSchematic<T = any>(
+  collectionName: string,
+  schematicName: string,
+  options: T,
+  tree: Tree
+) {
+  return testRunner
+    .runExternalSchematicAsync(collectionName, schematicName, options, tree)
+    .toPromise();
+}
+
 export function runSchematic<T = any>(
   schematicName: string,
   options: T,
