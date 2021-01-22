@@ -2,6 +2,7 @@ import * as path from 'path';
 import {
   checkFilesExist,
   expectTestsPass,
+  getSelectedPackageManager,
   getSize,
   newProject,
   runCLI,
@@ -118,6 +119,19 @@ describe('Angular Package', () => {
     runCLI(`build my-dir-${myapp} --aot`);
     expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));
   }, 1000000);
+
+  it('should support building in parallel', () => {
+    if (getSelectedPackageManager() === 'pnpm') {
+      // TODO: This tests fails with pnpm but we should still enable this for other package managers
+      return;
+    }
+    const myapp = uniq('myapp');
+    const myapp2 = uniq('myapp');
+    runCLI(`generate @nrwl/angular:app ${myapp}`);
+    runCLI(`generate @nrwl/angular:app ${myapp2}`);
+
+    runCLI('run-many --target build --all --parallel');
+  });
 
   it('should support eslint and pass linting on the standard generated code', async () => {
     const myapp = uniq('myapp');
