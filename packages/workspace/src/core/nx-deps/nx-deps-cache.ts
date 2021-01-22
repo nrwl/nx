@@ -62,7 +62,7 @@ export function readCache(): false | ProjectGraphCache {
     }
   } catch (error) {
     console.log(
-      `Error reading cache file: ${nxDepsPath}. Process will continue as if cache would not exists.`
+      `Error reading '${nxDepsPath}'. Continue the process without the cache.`
     );
     console.log(error);
   }
