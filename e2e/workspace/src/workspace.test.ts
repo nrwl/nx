@@ -188,12 +188,12 @@ describe('affected:*', () => {
     const mylib = uniq('mylib');
     const mylib2 = uniq('mylib2');
     const mypublishablelib = uniq('mypublishablelib');
-    runCLI(`generate @nrwl/angular:app ${myapp}`);
-    runCLI(`generate @nrwl/angular:app ${myapp2}`);
-    runCLI(`generate @nrwl/angular:lib ${mylib}`);
-    runCLI(`generate @nrwl/angular:lib ${mylib2}`);
+    runCLI(`generate @nrwl/react:app ${myapp}`);
+    runCLI(`generate @nrwl/react:app ${myapp2}`);
+    runCLI(`generate @nrwl/react:lib ${mylib}`);
+    runCLI(`generate @nrwl/react:lib ${mylib2}`);
     runCLI(
-      `generate @nrwl/angular:lib ${mypublishablelib} --publishable --importPath=@${proj}/${mypublishablelib}`
+      `generate @nrwl/react:lib ${mypublishablelib} --publishable --importPath=@${proj}/${mypublishablelib}`
     );
 
     updateFile(

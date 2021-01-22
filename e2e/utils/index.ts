@@ -111,12 +111,16 @@ export function runNgNew(): string {
   }).toString();
 }
 
+export function getSelectedPackageManager(): 'npm' | 'yarn' | 'pnpm' {
+  return process.env.SELECTED_PM as 'npm' | 'yarn' | 'pnpm';
+}
+
 /**
  * Sets up a new project in the temporary project path
  * for the currently selected CLI.
  */
 export function newProject({ name = uniq('proj') } = {}): string {
-  const packageManager = process.env.SELECTED_PM as any;
+  const packageManager = getSelectedPackageManager();
 
   try {
     const useBackupProject = packageManager !== 'pnpm';
