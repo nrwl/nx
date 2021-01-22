@@ -1,9 +1,11 @@
 ---
 name: "🐞 Bug Report"
-about: Report Current Behavior that is believed to be unintentional or unexpected.
+about: Report a bug.
 labels: "type: bug"
 
 ---
+
+
 
 <!-- Please do your best to fill out all of the sections below! -->
 

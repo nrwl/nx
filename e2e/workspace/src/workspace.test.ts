@@ -9,6 +9,7 @@ import {
   runCLI,
   runCLIAsync,
   runCommand,
+  runInstall,
   uniq,
   updateFile,
   workspaceConfigName,
@@ -181,7 +182,7 @@ describe('run-many', () => {
 });
 
 describe('affected:*', () => {
-  it('should print, build, and test affected apps', async () => {
+  it('qqqshould print, build, and test affected apps', async () => {
     const proj = newProject();
     const myapp = uniq('myapp');
     const myapp2 = uniq('myapp2');
@@ -273,6 +274,7 @@ describe('affected:*', () => {
     expect(noAffectedLibs).not.toContain(mylib2);
 
     // build
+    runInstall(); // TOOD: vsavkin remove thids workaround should not be needed
     const build = runCLI(
       `affected:build --files="libs/${mylib}/src/index.ts" --parallel`
     );

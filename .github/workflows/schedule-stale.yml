@@ -12,7 +12,7 @@ jobs:
         uses: actions/stale@v3.0.13
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 21
+          days-before-stale: 14
           days-before-close: 14
           stale-issue-label: "stale"
           operations-per-run: 300
@@ -28,7 +28,7 @@ jobs:
         uses: actions/stale@v3.0.13
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 21
+          days-before-stale: 14
           days-before-close: 14
           stale-issue-label: "stale"
           operations-per-run: 300
@@ -44,7 +44,7 @@ jobs:
         uses: actions/stale@v3.0.13
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 21
+          days-before-stale: 14
           days-before-close: 14
           stale-issue-label: "stale"
           operations-per-run: 300
@@ -60,7 +60,7 @@ jobs:
         uses: actions/stale@v3.0.13
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 21
+          days-before-stale: 14
           days-before-close: 14
           stale-issue-label: "stale"
           operations-per-run: 300
@@ -157,7 +157,7 @@ jobs:
         uses: actions/stale@v3.0.13
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 90
+          days-before-stale: 45
           days-before-close: 14
           stale-issue-label: "stale"
           operations-per-run: 300
