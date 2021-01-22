@@ -1,6 +1,6 @@
 ---
 name: "🐞 Bug Report"
-about: Report Current Behavior that is believed to be unintentional or unexpected.
+about: Report a bug
 labels: "type: bug"
 
 ---
