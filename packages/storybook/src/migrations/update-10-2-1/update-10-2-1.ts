@@ -63,7 +63,7 @@ function updateStorybookTsConfigPath(
   };
 
   const hasStorybookConfig =
-    architect.storybook && tree.exists(paths.tsConfigStorybook);
+    architect && architect.storybook && tree.exists(paths.tsConfigStorybook);
 
   if (!hasStorybookConfig) {
     context.logger.info(
