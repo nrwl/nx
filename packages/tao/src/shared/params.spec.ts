@@ -89,6 +89,21 @@ describe('params', () => {
         a: false,
       });
     });
+
+    it('should only coerce string values', () => {
+      const opts = coerceTypesInOptions(
+        { a: true } as any,
+        {
+          properties: {
+            a: { oneOf: [{ type: 'boolean' }, { type: 'number' }] },
+          },
+        } as Schema
+      );
+
+      expect(opts).toEqual({
+        a: true,
+      });
+    });
   });
 
   describe('convertToCamelCase', () => {
