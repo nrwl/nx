@@ -10,7 +10,7 @@
     },
 
     "ng-add": {
-      "factory": "./src/schematics/init/init",
+      "factory": "./src/schematics/init/init#initSchematic",
       "schema": "./src/schematics/init/schema.json",
       "description": "Convert an existing CLI project into an Nx Workspace",
       "hidden": true
@@ -59,7 +59,7 @@
     },
 
     "run-commands": {
-      "factory": "./src/schematics/run-commands/run-commands",
+      "factory": "./src/schematics/run-commands/run-commands#runCommandsSchematic",
       "schema": "./src/schematics/run-commands/schema.json",
       "aliases": ["run-command", "target"],
       "description": "Generates a target to run any command in the terminal"
@@ -74,7 +74,7 @@
     },
 
     "ng-add": {
-      "factory": "./src/schematics/init/init",
+      "factory": "./src/schematics/init/init#initGenerator",
       "schema": "./src/schematics/init/schema.json",
       "description": "Convert an existing CLI project into an Nx Workspace",
       "hidden": true
@@ -123,7 +123,7 @@
     },
 
     "run-commands": {
-      "factory": "./src/schematics/run-commands/run-commands",
+      "factory": "./src/schematics/run-commands/run-commands#runCommandsGenerator",
       "schema": "./src/schematics/run-commands/schema.json",
       "aliases": ["run-command", "target"],
       "description": "Generates a target to run any command in the terminal"

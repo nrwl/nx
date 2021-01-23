@@ -1,5 +1,6 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import runCommands from './run-commands';
+import { libraryGenerator } from '../library/library';
 
 describe('run-commands', () => {
   it('should generate a target', async () => {
@@ -12,7 +13,10 @@ describe('run-commands', () => {
       outputs: '/dist/a, /dist/b, /dist/c',
     };
 
-    tree.write('workspace.json', JSON.stringify({ projects: { lib: {} } }));
+    await libraryGenerator(tree, {
+      name: 'lib',
+    });
+
     await runCommands(tree, opts);
 
     const customTarget = JSON.parse(tree.read('workspace.json').toString())

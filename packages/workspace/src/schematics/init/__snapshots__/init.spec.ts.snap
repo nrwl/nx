@@ -19,6 +19,9 @@ Object {
       "tags": Array [],
     },
     "myApp-e2e": Object {
+      "implicitDependencies": Array [
+        "myApp",
+      ],
       "tags": Array [],
     },
   },
