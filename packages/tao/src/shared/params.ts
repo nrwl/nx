@@ -88,6 +88,8 @@ export function coerceTypesInOptions(opts: Options, schema: Schema): Options {
 
 function coerceType(prop: PropertyDescription | undefined, value: any) {
   if (!prop) return value;
+  if (typeof value !== 'string' && value !== undefined) return value;
+
   if (prop.oneOf) {
     for (let i = 0; i < prop.oneOf.length; ++i) {
       const coerced = coerceType(prop.oneOf[i], value);
@@ -101,10 +103,7 @@ function coerceType(prop: PropertyDescription | undefined, value: any) {
   } else if (normalizedPrimitiveType(prop.type) == 'number') {
     return Number(value);
   } else if (prop.type == 'array') {
-    return value
-      .toString()
-      .split(',')
-      .map((v) => coerceType(prop.items, v));
+    return value.split(',').map((v) => coerceType(prop.items, v));
   } else {
     return value;
   }
