@@ -1,4 +1,3 @@
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
   babelCoreVersion,
   babelJestVersion,
@@ -16,6 +15,7 @@ import {
   updateJson,
   addDependenciesToPackageJson,
   convertNxGenerator,
+  stripIndents,
 } from '@nrwl/devkit';
 
 interface NormalizedSchema extends ReturnType<typeof normalizeOptions> {}

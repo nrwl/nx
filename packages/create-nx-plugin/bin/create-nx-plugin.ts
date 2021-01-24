@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // we can't import from '@nrwl/workspace' because it will require typescript
-import { output } from '@nrwl/workspace/src/utils/output';
+import { output } from '@nrwl/workspace/src/utilities/output';
 import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { dirSync } from 'tmp';
 import { writeFileSync, readFileSync, removeSync } from 'fs-extra';

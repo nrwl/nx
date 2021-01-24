@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
-import { output, unparse } from '@nrwl/workspace';
-import { Schema, Preset } from '@nrwl/workspace/src/schematics/new/new';
+import { output } from '@nrwl/workspace/src/utilities/output';
+import { unparse } from '@nrwl/workspace/src/tasks-runner/utils';
+import { Schema, Preset } from '@nrwl/workspace/src/generators/new/new';
 import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { execSync } from 'child_process';
 import { writeFileSync } from 'fs';

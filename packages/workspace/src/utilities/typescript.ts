@@ -1,8 +1,6 @@
-import { dirname, join } from 'path';
+import { dirname } from 'path';
 import * as ts from 'typescript';
 import { appRootPath } from './app-root';
-import { existsSync } from 'fs';
-import { FileRead } from '@nrwl/workspace/src/core/file-utils';
 
 const normalizedAppRoot = appRootPath.replace(/\\/g, '/');
 

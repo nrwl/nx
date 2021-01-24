@@ -293,6 +293,7 @@ describe('workspace', () => {
 
       expect(tree.exists('/apps/myApp/tsconfig.app.json')).toBe(true);
       expect(tree.exists('/apps/myApp/karma.conf.js')).toBe(true);
+
       expect(tree.exists('/karma.conf.js')).toBe(true);
     });
 

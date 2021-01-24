@@ -6,7 +6,7 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Schema } from '../schema';
 import { libraryGenerator } from '../../library/library';
-import { moveProject } from '@nrwl/workspace/src/schematics/move/lib/move-project';
+import { moveProject } from '@nrwl/workspace/src/generators/move/lib/move-project';
 
 describe('moveProject', () => {
   let tree: Tree;

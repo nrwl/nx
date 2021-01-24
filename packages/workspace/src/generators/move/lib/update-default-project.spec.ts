@@ -1,4 +1,4 @@
-import { Schema } from '@nrwl/workspace/src/schematics/move/schema';
+import { Schema } from '@nrwl/workspace/src/generators/move/schema';
 import {
   addProjectConfiguration,
   readWorkspaceConfiguration,
@@ -6,7 +6,7 @@ import {
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { updateDefaultProject } from '@nrwl/workspace/src/schematics/move/lib/update-default-project';
+import { updateDefaultProject } from '@nrwl/workspace/src/generators/move/lib/update-default-project';
 
 describe('updateDefaultProject', () => {
   let tree: Tree;

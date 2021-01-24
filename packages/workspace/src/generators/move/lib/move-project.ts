@@ -1,8 +1,4 @@
-import { SchematicContext } from '@angular-devkit/schematics';
 import { ProjectConfiguration, Tree, visitNotIgnoredFiles } from '@nrwl/devkit';
-import { getWorkspace } from '@nrwl/workspace';
-import { from, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { Schema } from '../schema';
 import { getDestination } from './utils';
 

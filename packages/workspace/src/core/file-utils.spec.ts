@@ -1,5 +1,5 @@
 import { calculateFileChanges, WholeFileChange } from './file-utils';
-import { DiffType, JsonChange, jsonDiff } from '../utils/json-diff';
+import { DiffType, JsonChange, jsonDiff } from '../utilities/json-diff';
 
 const ignore = require('ignore');
 

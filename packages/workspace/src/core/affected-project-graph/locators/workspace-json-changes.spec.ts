@@ -1,6 +1,6 @@
 import { getTouchedProjectsInWorkspaceJson } from './workspace-json-changes';
 import { WholeFileChange } from '../../file-utils';
-import { DiffType } from '../../../utils/json-diff';
+import { DiffType } from '../../../utilities/json-diff';
 
 describe('getTouchedProjectsInWorkspaceJson', () => {
   it('should not return changes when workspace.json is not touched', () => {

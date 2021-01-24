@@ -1,7 +1,7 @@
 import { classify } from '@angular-devkit/core/src/utils/strings';
 import { SchematicContext, Tree } from '@angular-devkit/schematics';
 import { getWorkspace } from '@nrwl/workspace';
-import { getNewProjectName } from '@nrwl/workspace/src/schematics/move/lib/utils';
+import { getNewProjectName } from '@nrwl/workspace/src/generators/move/lib/utils';
 import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Schema } from '../schema';

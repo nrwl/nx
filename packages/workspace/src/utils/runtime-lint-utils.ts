@@ -1,4 +1,3 @@
-import { normalize } from '@angular-devkit/core';
 import * as path from 'path';
 import { FileData } from '../core/file-utils';
 import {
@@ -9,6 +8,7 @@ import {
   ProjectGraphNode,
 } from '../core/project-graph';
 import { TargetProjectLocator } from '../core/target-project-locator';
+import { normalizePath, joinPathFragments } from '@nrwl/devkit';
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 export type DepConstraint = {
@@ -35,14 +35,6 @@ function containsFile(
 
 function removeExt(file: string): string {
   return file.replace(/\.[^/.]+$/, '');
-}
-
-function removeWindowsDriveLetter(osSpecificPath: string): string {
-  return osSpecificPath.replace(/^[A-Z]:/, '');
-}
-
-function normalizePath(osSpecificPath: string): string {
-  return removeWindowsDriveLetter(osSpecificPath).split(path.sep).join('/');
 }
 
 export function matchImportWithWildcard(
@@ -285,7 +277,7 @@ export function onlyLoadChildren(
 }
 
 export function getSourceFilePath(sourceFileName: string, projectPath: string) {
-  return normalize(sourceFileName).substring(projectPath.length + 1);
+  return normalizePath(sourceFileName).substring(projectPath.length + 1);
 }
 
 /**

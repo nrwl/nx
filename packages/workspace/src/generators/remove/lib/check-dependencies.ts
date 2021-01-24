@@ -5,7 +5,7 @@ import {
   reverse,
 } from '../../../core/project-graph';
 import { Schema } from '../schema';
-import { createProjectGraphFromTree } from '../../../utils/create-project-graph-from-tree';
+import { createProjectGraphFromTree } from '../../../utilities/create-project-graph-from-tree';
 
 /**
  * Check whether the project to be removed is depended on by another project

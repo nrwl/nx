@@ -1,4 +1,4 @@
-import { output, CLIErrorMessageConfig } from '../utils/output';
+import { output, CLIErrorMessageConfig } from '../utilities/output';
 import { ProjectGraph } from '../core/project-graph';
 import { workspaceFileName } from '../core/file-utils';
 

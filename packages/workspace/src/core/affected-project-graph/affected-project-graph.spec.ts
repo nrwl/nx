@@ -1,5 +1,5 @@
 import { extname } from 'path';
-import { jsonDiff } from '../../utils/json-diff';
+import { jsonDiff } from '../../utilities/json-diff';
 import { vol } from 'memfs';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { createProjectGraph } from '../project-graph';
@@ -8,7 +8,7 @@ import { FileData, WholeFileChange } from '../file-utils';
 import { NxJson } from '../shared-interfaces';
 
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('../../utils/app-root', () => ({ appRootPath: '/root' }));
+jest.mock('../../utilities/app-root', () => ({ appRootPath: '/root' }));
 
 describe('project graph', () => {
   let packageJson: any;

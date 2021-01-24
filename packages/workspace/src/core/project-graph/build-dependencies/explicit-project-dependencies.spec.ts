@@ -1,4 +1,4 @@
-jest.mock('../../../utils/app-root', () => ({
+jest.mock('../../../utilities/app-root', () => ({
   appRootPath: '/root',
 }));
 jest.mock('fs', () => require('memfs').fs);
@@ -13,7 +13,7 @@ import {
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 import { createFileMap } from '../../file-graph';
 import { readWorkspaceFiles } from '../../file-utils';
-import { appRootPath } from '../../../utils/app-root';
+import { appRootPath } from '../../../utilities/app-root';
 import { string } from 'prop-types';
 
 describe('explicit project dependencies', () => {

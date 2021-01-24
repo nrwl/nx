@@ -1,7 +1,7 @@
 import { getFileHashes } from './git-hasher';
 import { readFileSync } from 'fs';
 import { defaultHashing, HashingImp } from './hashing-impl';
-import { appRootPath } from '../../utils/app-root';
+import { appRootPath } from '../../utilities/app-root';
 import { performance } from 'perf_hooks';
 
 type PathAndTransformer = {

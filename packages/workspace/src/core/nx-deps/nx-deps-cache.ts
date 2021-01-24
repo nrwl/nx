@@ -5,7 +5,7 @@ import {
   ProjectGraphNode,
 } from '../project-graph';
 import { join } from 'path';
-import { appRootPath } from '../../utils/app-root';
+import { appRootPath } from '../../utilities/app-root';
 import { existsSync } from 'fs';
 import * as fsExtra from 'fs-extra';
 import {
@@ -13,13 +13,13 @@ import {
   fileExists,
   readJsonFile,
   writeJsonFile,
-} from '../../utils/fileutils';
+} from '../../utilities/fileutils';
 import { FileMap } from '@nrwl/workspace/src/core/file-graph';
 import { performance } from 'perf_hooks';
 import {
   cacheDirectory,
   readCacheDirectoryProperty,
-} from '../../utils/cache-directory';
+} from '../../utilities/cache-directory';
 
 export interface ProjectGraphCache {
   version: string;

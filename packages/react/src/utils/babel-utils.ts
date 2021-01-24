@@ -1,4 +1,4 @@
-import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
+import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
 import { readJsonFile } from '@nrwl/workspace';
 import { join } from 'path';
 

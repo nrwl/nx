@@ -1,4 +1,4 @@
-import { resolveModuleByImport } from '../utils/typescript';
+import { resolveModuleByImport } from '../utilities/typescript';
 import { defaultFileRead, FileRead, normalizedProjectRoot } from './file-utils';
 import {
   ProjectGraphNode,
@@ -9,9 +9,9 @@ import {
   isNpmProject,
   isWorkspaceProject,
 } from './project-graph';
-import { isRelativePath, parseJsonWithComments } from '../utils/fileutils';
+import { isRelativePath, parseJsonWithComments } from '../utilities/fileutils';
 import { dirname, join } from 'path';
-import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
+import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
 
 export class TargetProjectLocator {
   private sortedProjects = getSortedProjectNodes(this.nodes);

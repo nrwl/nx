@@ -1,4 +1,4 @@
-import { appRootPath } from '../utils/app-root';
+import { appRootPath } from '../utilities/app-root';
 import { Task } from './tasks-runner';
 import {
   existsSync,
@@ -11,7 +11,7 @@ import { join, resolve } from 'path';
 import * as fsExtra from 'fs-extra';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { spawn } from 'child_process';
-import { cacheDirectory } from '../utils/cache-directory';
+import { cacheDirectory } from '../utilities/cache-directory';
 
 export type CachedResult = { terminalOutput: string; outputsPath: string };
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };

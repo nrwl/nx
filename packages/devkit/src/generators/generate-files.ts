@@ -1,6 +1,6 @@
-import * as path from 'path';
 import * as fs from 'fs';
 import { Tree } from '@nrwl/tao/src/shared/tree';
+import { joinPathFragments } from '../utils/path';
 
 const ejs = require('ejs');
 
@@ -41,7 +41,7 @@ export function generateFiles(
       substitutions
     );
     const newContent = ejs.render(fs.readFileSync(f).toString(), substitutions);
-    host.write(path.join(target, relativeToTarget), newContent);
+    host.write(joinPathFragments(target, relativeToTarget), newContent);
   });
 }
 
@@ -59,7 +59,7 @@ function allFilesInDir(parent: string) {
   let res = [];
   try {
     fs.readdirSync(parent).forEach((c) => {
-      const child = path.join(parent, c);
+      const child = joinPathFragments(parent, c);
       try {
         const s = fs.statSync(child);
         if (!s.isDirectory()) {

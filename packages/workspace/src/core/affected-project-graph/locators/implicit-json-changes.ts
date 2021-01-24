@@ -5,7 +5,7 @@ import {
   isJsonChange,
   JsonChange,
   walkJsonTree,
-} from '../../../utils/json-diff';
+} from '../../../utilities/json-diff';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
 import { ImplicitDependencyEntry } from '../../shared-interfaces';
 

@@ -8,7 +8,7 @@ import {
 import { NxJson } from '@nrwl/workspace';
 import { Schema } from '../schema';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { moveProjectConfiguration } from '@nrwl/workspace/src/schematics/move/lib/move-project-configuration';
+import { moveProjectConfiguration } from '@nrwl/workspace/src/generators/move/lib/move-project-configuration';
 
 describe('moveProjectConfiguration', () => {
   let tree: Tree;

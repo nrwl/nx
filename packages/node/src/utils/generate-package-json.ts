@@ -1,6 +1,6 @@
 import { ProjectGraph, readJsonFile } from '@nrwl/workspace';
 import { BuildNodeBuilderOptions } from './types';
-import { writeJsonFile } from '@nrwl/workspace/src/utils/fileutils';
+import { writeJsonFile } from '@nrwl/workspace/src/utilities/fileutils';
 import { OUT_FILENAME } from './config';
 
 /**

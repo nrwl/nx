@@ -3,7 +3,11 @@ import {
   WholeFileChange,
   workspaceFileName,
 } from '../../file-utils';
-import { DiffType, isJsonChange, JsonChange } from '../../../utils/json-diff';
+import {
+  DiffType,
+  isJsonChange,
+  JsonChange,
+} from '../../../utilities/json-diff';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
 
 export const getTouchedProjectsInWorkspaceJson: TouchedProjectLocator<
