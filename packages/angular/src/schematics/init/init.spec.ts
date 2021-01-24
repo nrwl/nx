@@ -28,7 +28,9 @@ describe('init', () => {
     expect(devDependencies['@angular/compiler-cli']).toBeDefined();
     expect(devDependencies['@angular/language-service']).toBeDefined();
     expect(devDependencies['@angular-devkit/build-angular']).toBeDefined();
-    expect(devDependencies['codelyzer']).toBeDefined();
+
+    // codelyzer should no longer be there by default
+    expect(devDependencies['codelyzer']).toBeUndefined();
   });
 
   it('should add a postinstall script for ngcc', async () => {
@@ -204,6 +206,22 @@ describe('init', () => {
         expect(schematics['@nrwl/angular:application'].e2eTestRunner).toEqual(
           'protractor'
         );
+      });
+    });
+  });
+
+  describe('--linter', () => {
+    describe('tslint', () => {
+      it('should add codelyzer', async () => {
+        const tree = await runSchematic(
+          'init',
+          {
+            linter: 'tslint',
+          },
+          appTree
+        );
+        const { devDependencies } = readJsonInTree(tree, 'package.json');
+        expect(devDependencies['codelyzer']).toBeDefined();
       });
     });
   });

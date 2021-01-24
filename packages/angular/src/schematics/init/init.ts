@@ -13,6 +13,7 @@ import {
   setDefaultCollection,
   updateJsonInTree,
   updateWorkspace,
+  Linter,
 } from '@nrwl/workspace';
 import {
   angularDevkitVersion,
@@ -22,29 +23,29 @@ import {
 } from '../../utils/versions';
 import { Schema } from './schema';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
-const updateDependencies = addDepsToPackageJson(
-  {
-    '@angular/animations': angularVersion,
-    '@angular/common': angularVersion,
-    '@angular/compiler': angularVersion,
-    '@angular/core': angularVersion,
-    '@angular/forms': angularVersion,
-    '@angular/platform-browser': angularVersion,
-    '@angular/platform-browser-dynamic': angularVersion,
-    '@angular/router': angularVersion,
-    rxjs: rxjsVersion,
-    tslib: '^2.0.0',
-    'zone.js': '^0.10.2',
-  },
-  {
-    '@angular/compiler-cli': angularVersion,
-    '@angular/language-service': angularVersion,
-    '@angular-devkit/build-angular': angularDevkitVersion,
-    codelyzer: '^6.0.0',
-  }
-);
+const updateDependencies = (options: Pick<Schema, 'linter'>): Rule =>
+  addDepsToPackageJson(
+    {
+      '@angular/animations': angularVersion,
+      '@angular/common': angularVersion,
+      '@angular/compiler': angularVersion,
+      '@angular/core': angularVersion,
+      '@angular/forms': angularVersion,
+      '@angular/platform-browser': angularVersion,
+      '@angular/platform-browser-dynamic': angularVersion,
+      '@angular/router': angularVersion,
+      rxjs: rxjsVersion,
+      tslib: '^2.0.0',
+      'zone.js': '^0.10.2',
+    },
+    {
+      '@angular/compiler-cli': angularVersion,
+      '@angular/language-service': angularVersion,
+      '@angular-devkit/build-angular': angularDevkitVersion,
+      codelyzer: options.linter === Linter.TsLint ? '^6.0.0' : undefined,
+    }
+  );
 
 export function addUnitTestRunner(
   options: Pick<Schema, 'unitTestRunner'>
@@ -168,7 +169,7 @@ export default function (options: Schema): Rule {
     setDefaults(options),
     // TODO: Remove this when ngcc can be run in parallel
     addPostinstall(),
-    updateDependencies,
+    updateDependencies(options),
     addUnitTestRunner(options),
     addE2eTestRunner(options),
     formatFiles(),
