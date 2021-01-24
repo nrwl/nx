@@ -1,18 +1,27 @@
-import { join, normalize } from '@angular-devkit/core';
 import { JestProjectSchema } from '../schema';
 import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
+  joinPathFragments,
+  normalizePath,
 } from '@nrwl/devkit';
 
 export function updateWorkspace(tree: Tree, options: JestProjectSchema) {
   const projectConfig = readProjectConfiguration(tree, options.project);
   projectConfig.targets.test = {
     executor: '@nrwl/jest:jest',
-    outputs: [join(normalize('coverage'), normalize(projectConfig.root))],
+    outputs: [
+      joinPathFragments(
+        normalizePath('coverage'),
+        normalizePath(projectConfig.root)
+      ),
+    ],
     options: {
-      jestConfig: join(normalize(projectConfig.root), 'jest.config.js'),
+      jestConfig: joinPathFragments(
+        normalizePath(projectConfig.root),
+        'jest.config.js'
+      ),
       passWithNoTests: true,
     },
   };
@@ -24,7 +33,10 @@ export function updateWorkspace(tree: Tree, options: JestProjectSchema) {
   if (isUsingTSLint) {
     projectConfig.targets.lint.options.tsConfig = [
       ...(projectConfig.targets.lint.options.tsConfig || []),
-      join(normalize(projectConfig.root), 'tsconfig.spec.json'),
+      joinPathFragments(
+        normalizePath(projectConfig.root),
+        'tsconfig.spec.json'
+      ),
     ];
   }
   updateProjectConfiguration(tree, options.project, projectConfig);

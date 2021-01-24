@@ -53,9 +53,6 @@
     "prettier": "^2.0.4"
   },
   "dependencies": {
-    "@angular-devkit/architect": "~0.1100.1",
-    "@angular-devkit/core": "~11.0.1",
-    "@angular-devkit/schematics": "~11.0.1",
     "@nrwl/cli": "*",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",

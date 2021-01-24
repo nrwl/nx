@@ -1,6 +1,6 @@
 import { Tree } from '@angular-devkit/schematics';
 import { readJsonInTree } from '../../utils/ast-utils';
-import { serializeJson } from '../../utils/fileutils';
+import { serializeJson } from '../../utilities/fileutils';
 import { runMigration } from '../../utils/testing';
 import { createEmptyWorkspace } from '../../utils/testing-utils';
 

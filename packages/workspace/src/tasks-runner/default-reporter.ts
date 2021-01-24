@@ -1,4 +1,4 @@
-import { output } from '../utils/output';
+import { output } from '../utilities/output';
 
 export interface ReporterArgs {
   target?: string;

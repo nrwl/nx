@@ -1,5 +1,5 @@
 import { assertWorkspaceValidity } from './assert-workspace-validity';
-import { output } from '../utils/output';
+import { output } from '../utilities/output';
 
 describe('assertWorkspaceValidity', () => {
   let mockNxJson: any;

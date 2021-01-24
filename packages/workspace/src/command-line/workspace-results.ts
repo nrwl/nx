@@ -3,16 +3,16 @@ import {
   directoryExists,
   readJsonFile,
   writeJsonFile,
-} from '../utils/fileutils';
+} from '../utilities/fileutils';
 import { existsSync, unlinkSync } from 'fs';
 import { ProjectGraphNode } from '../core/project-graph';
 import { join } from 'path';
-import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
+import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
 import * as fsExtra from 'fs-extra';
 import {
   cacheDirectory,
   readCacheDirectoryProperty,
-} from '../utils/cache-directory';
+} from '../utilities/cache-directory';
 
 const resultsDir = cacheDirectory(
   appRootPath,

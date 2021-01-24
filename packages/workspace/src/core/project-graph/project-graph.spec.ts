@@ -1,6 +1,6 @@
 import { vol, fs } from 'memfs';
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('../../utils/app-root', () => ({ appRootPath: '/root' }));
+jest.mock('../../utilities/app-root', () => ({ appRootPath: '/root' }));
 
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { createProjectGraph } from './project-graph';

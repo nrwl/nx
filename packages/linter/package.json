@@ -28,7 +28,6 @@
   },
   "builders": "./builders.json",
   "dependencies": {
-    "@angular-devkit/architect": "~0.1100.1",
     "@nrwl/devkit": "*",
     "glob": "7.1.4",
     "minimatch": "3.0.4",

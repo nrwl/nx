@@ -16,7 +16,7 @@ import { BuildResult } from '@angular-devkit/build-webpack';
 import {
   readJsonFile,
   writeJsonFile,
-} from '@nrwl/workspace/src/utils/fileutils';
+} from '@nrwl/workspace/src/utilities/fileutils';
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 
 import {

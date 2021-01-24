@@ -1,6 +1,6 @@
 import * as yargs from 'yargs';
-import { appRootPath } from '../utils/app-root';
-import { output } from '../utils/output';
+import { appRootPath } from '../utilities/app-root';
+import { output } from '../utilities/output';
 import {
   fetchCommunityPlugins,
   fetchCorePlugins,
@@ -9,7 +9,7 @@ import {
   listCorePlugins,
   listInstalledPlugins,
   listPluginCapabilities,
-} from '../utils/plugins';
+} from '../utilities/plugins';
 
 export interface YargsListArgs extends yargs.Arguments, ListArgs {}
 

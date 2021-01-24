@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 
 import { WorkspaceResults } from './workspace-results';
-import { serializeJson } from '../utils/fileutils';
+import { serializeJson } from '../utilities/fileutils';
 import { ProjectType } from '../core/project-graph';
 
 describe('WorkspacesResults', () => {

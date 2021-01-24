@@ -1,7 +1,7 @@
 import { getTouchedNpmPackages } from './npm-packages';
 import { NxJson } from '../../shared-interfaces';
 import { WholeFileChange } from '../../file-utils';
-import { DiffType } from '../../../utils/json-diff';
+import { DiffType } from '../../../utilities/json-diff';
 import { ProjectGraph } from '../../project-graph';
 
 describe('getTouchedNpmPackages', () => {

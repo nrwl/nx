@@ -10,8 +10,8 @@ import {
   ProjectGraph,
   ProjectGraphNode,
 } from '../core/project-graph';
-import { appRootPath } from '../utils/app-root';
-import { output } from '../utils/output';
+import { appRootPath } from '../utilities/app-root';
+import { output } from '../utilities/output';
 
 // maps file extention to MIME types
 const mimeType = {

@@ -3,7 +3,7 @@ import { createProjectGraph, ProjectGraph } from '../core/project-graph';
 import { readEnvironment } from '../core/file-utils';
 import { EmptyReporter } from '../tasks-runner/empty-reporter';
 import { splitArgsIntoNxArgsAndOverrides } from './utils';
-import { projectHasTarget } from '../utils/project-graph-utils';
+import { projectHasTarget } from '../utilities/project-graph-utils';
 import { promptForNxCloud } from './prompt-for-nx-cloud';
 
 export async function runOne(opts: {

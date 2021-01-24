@@ -1,23 +1,4 @@
-import {
-  JsonObject,
-  logging,
-  normalize,
-  schema,
-  tags,
-  virtualFs,
-} from '@angular-devkit/core';
 import * as chalk from 'chalk';
-import { createConsoleLogger, NodeJsSyncHost } from '@angular-devkit/core/node';
-import {
-  formats,
-  SchematicEngine,
-  UnsuccessfulWorkflowExecution,
-} from '@angular-devkit/schematics';
-import {
-  NodeModulesEngineHost,
-  NodeWorkflow,
-  validateOptionsWithSchema,
-} from '@angular-devkit/schematics/tools';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 import { writeFileSync } from 'fs';
@@ -25,15 +6,20 @@ import { copySync, removeSync } from 'fs-extra';
 import * as inquirer from 'inquirer';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
-import { appRootPath } from '../utils/app-root';
+import { appRootPath } from '../utilities/app-root';
 import {
   detectPackageManager,
   getPackageManagerCommand,
 } from '@nrwl/tao/src/shared/package-manager';
-import { fileExists, readJsonFile, writeJsonFile } from '../utils/fileutils';
-import { output } from '../utils/output';
+import {
+  fileExists,
+  readJsonFile,
+  writeJsonFile,
+} from '../utilities/fileutils';
+import { output } from '../utilities/output';
 import { CompilerOptions } from 'typescript';
 import { Workspaces } from '@nrwl/tao/src/shared/workspace';
+import { logger, normalizePath } from '@nrwl/devkit';
 
 const rootDirectory = appRootPath;
 
@@ -49,14 +35,10 @@ type TsConfig = {
 export async function workspaceGenerators(args: string[]) {
   const outDir = compileTools();
   const parsedArgs = parseOptions(args, outDir);
-  const logger = createConsoleLogger(
-    parsedArgs.verbose,
-    process.stdout,
-    process.stderr
-  );
+
   const collectionFile = path.join(outDir, 'workspace-generators.json');
   if (parsedArgs.listGenerators) {
-    return listGenerators(collectionFile, logger);
+    return listGenerators(collectionFile);
   }
   const generatorName = args[0];
   const ws = new Workspaces(rootDirectory);
@@ -72,6 +54,11 @@ export async function workspaceGenerators(args: string[]) {
       process.exit(1);
     }
   } else {
+    const logger = require('@angular-devkit/core/node').createConsoleLogger(
+      parsedArgs.verbose,
+      process.stdout,
+      process.stderr
+    );
     try {
       const workflow = createWorkflow(parsedArgs.dryRun);
       await executeAngularDevkitSchematic(
@@ -129,7 +116,7 @@ function constructCollection() {
     if (exists(path.join(childDir, 'schema.json'))) {
       generators[c] = {
         factory: `./${c}`,
-        schema: `./${normalize(path.join(c, 'schema.json'))}`,
+        schema: `./${normalizePath(path.join(c, 'schema.json'))}`,
         description: `Schematic ${c}`,
       };
     }
@@ -137,7 +124,7 @@ function constructCollection() {
   return {
     name: 'workspace-generators',
     version: '1.0',
-    schematics: generators, // TODO vsavkin: remove this
+    generators: generators,
   };
 }
 
@@ -165,29 +152,31 @@ function toolsTsConfig() {
 }
 
 function createWorkflow(dryRun: boolean) {
-  const root = normalize(rootDirectory);
+  const { virtualFs, schema } = require('@angular-devkit/core');
+  const { NodeJsSyncHost } = require('@angular-devkit/core/node');
+  const { formats } = require('@angular-devkit/schematics');
+  const { NodeWorkflow } = require('@angular-devkit/schematics/tools');
+  const root = normalizePath(rootDirectory);
   const host = new virtualFs.ScopedHost(new NodeJsSyncHost(), root);
   return new NodeWorkflow(host, {
     packageManager: detectPackageManager(),
-    root,
     dryRun,
     registry: new schema.CoreSchemaRegistry(formats.standardFormats),
     resolvePaths: [process.cwd(), rootDirectory],
   });
 }
 
-function listGenerators(collectionName: string, logger: logging.Logger) {
+function listGenerators(collectionFile: string) {
   try {
-    const engineHost = new NodeModulesEngineHost();
-    const engine = new SchematicEngine(engineHost);
-    const collection = engine.createCollection(collectionName);
     const bodyLines: string[] = [];
+
+    const collection = JSON.parse(fs.readFileSync(collectionFile).toString());
 
     bodyLines.push(chalk.bold(chalk.green('WORKSPACE GENERATORS')));
     bodyLines.push('');
     bodyLines.push(
-      ...Object.entries(collection.description.schematics).map(
-        ([schematicName, schematicMeta]) => {
+      ...Object.entries(collection.generators).map(
+        ([schematicName, schematicMeta]: [string, any]) => {
           return `${chalk.bold(schematicName)} : ${schematicMeta.description}`;
         }
       )
@@ -205,8 +194,8 @@ function listGenerators(collectionName: string, logger: logging.Logger) {
   return 0;
 }
 
-function createPromptProvider(): schema.PromptProvider {
-  return (definitions: Array<schema.PromptDefinition>) => {
+function createPromptProvider(): any {
+  return (definitions: Array<any>) => {
     const questions: inquirer.Questions = definitions.map((definition) => {
       const question: inquirer.Question = {
         name: definition.id,
@@ -252,10 +241,18 @@ function createPromptProvider(): schema.PromptProvider {
 async function executeAngularDevkitSchematic(
   schematicName: string,
   options: { [p: string]: any },
-  workflow: NodeWorkflow,
+  workflow: any,
   outDir: string,
-  logger: logging.Logger
+  logger: any
 ) {
+  const { schema } = require('@angular-devkit/core');
+  const {
+    validateOptionsWithSchema,
+  } = require('@angular-devkit/schematics/tools');
+  const {
+    UnsuccessfulWorkflowExecution,
+  } = require('@angular-devkit/schematics');
+
   output.logSingleLine(
     `${output.colors.gray(`Executing your local schematic`)}: ${schematicName}`
   );
@@ -281,27 +278,27 @@ async function executeAngularDevkitSchematic(
         break;
       case 'update':
         loggingQueue.push(
-          tags.oneLine`${chalk.white('UPDATE')} ${eventPath} (${
+          `${chalk.white('UPDATE')} ${eventPath} (${
             event.content.length
           } bytes)`
         );
         break;
       case 'create':
         loggingQueue.push(
-          tags.oneLine`${chalk.green('CREATE')} ${eventPath} (${
+          `${chalk.green('CREATE')} ${eventPath} (${
             event.content.length
           } bytes)`
         );
         break;
       case 'delete':
-        loggingQueue.push(tags.oneLine`${chalk.yellow('DELETE')} ${eventPath}`);
+        loggingQueue.push(`${chalk.yellow('DELETE')} ${eventPath}`);
         break;
       case 'rename':
         const eventToPath = event.to.startsWith('/')
           ? event.to.substr(1)
           : event.to;
         loggingQueue.push(
-          tags.oneLine`${chalk.blue('RENAME')} ${eventPath} => ${eventToPath}`
+          `${chalk.blue('RENAME')} ${eventPath} => ${eventToPath}`
         );
         break;
     }
@@ -319,7 +316,7 @@ async function executeAngularDevkitSchematic(
   });
 
   const args = options._.slice(1);
-  workflow.registry.addSmartDefaultProvider('argv', (schema: JsonObject) => {
+  workflow.registry.addSmartDefaultProvider('argv', (schema: any) => {
     if ('index' in schema) {
       return args[+schema.index];
     } else {

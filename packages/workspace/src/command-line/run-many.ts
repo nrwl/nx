@@ -11,8 +11,8 @@ import {
 } from '../core/project-graph';
 import { readEnvironment } from '../core/file-utils';
 import { DefaultReporter } from '../tasks-runner/default-reporter';
-import { projectHasTarget } from '../utils/project-graph-utils';
-import { output } from '../utils/output';
+import { projectHasTarget } from '../utilities/project-graph-utils';
+import { output } from '../utilities/output';
 import { promptForNxCloud } from './prompt-for-nx-cloud';
 
 export async function runMany(parsedArgs: yargs.Arguments) {

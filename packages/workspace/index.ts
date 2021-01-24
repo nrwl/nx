@@ -1,4 +1,4 @@
-export { readTsConfig } from './src/utils/typescript';
+export { readTsConfig } from './src/utilities/typescript';
 export { ProjectType, projectRootDir } from './src/utils/project-type';
 export {
   serializeJson,
@@ -7,7 +7,7 @@ export {
   readJsonFile,
   copyFile,
   createDirectory,
-} from './src/utils/fileutils';
+} from './src/utilities/fileutils';
 
 // TODO: vsavkin delete after Nx 12
 export * from './src/devkit-reexport';
@@ -15,9 +15,9 @@ export * from './src/devkit-reexport';
 export {
   ExistingPrettierConfig,
   resolveUserExistingPrettierConfig,
-} from './src/utils/common';
+} from './src/utilities/prettier';
 
-export { output } from './src/utils/output';
+export { output } from './src/utilities/output';
 export { commandsObject } from './src/command-line/nx-commands';
 export { supportedNxCommands } from './src/command-line/supported-nx-commands';
 export {
@@ -91,9 +91,9 @@ import * as strings from './src/utils/strings';
 export { checkAndCleanWithSemver } from './src/utils/version-utils';
 export { updatePackagesInPackageJson } from './src/utils/update-packages-in-package-json';
 
-export { libraryGenerator } from './src/schematics/library/library';
-export { moveGenerator } from './src/schematics/move/move';
-export { removeGenerator } from './src/schematics/remove/remove';
-export { runCommandsGenerator } from './src/schematics/run-commands/run-commands';
+export { libraryGenerator } from './src/generators/library/library';
+export { moveGenerator } from './src/generators/move/move';
+export { removeGenerator } from './src/generators/remove/remove';
+export { runCommandsGenerator } from './src/generators/run-commands/run-commands';
 
 export const stringUtils = strings;

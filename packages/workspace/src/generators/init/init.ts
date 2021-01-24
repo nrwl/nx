@@ -17,9 +17,10 @@ import {
   updateWorkspaceConfiguration,
   visitNotIgnoredFiles,
   writeJson,
+  normalizePath,
+  joinPathFragments,
 } from '@nrwl/devkit';
-import { basename, join } from 'path';
-import { JsonArray, normalize } from '@angular-devkit/core';
+import { basename } from 'path';
 import { Schema } from './schema';
 import {
   angularCliVersion,
@@ -28,8 +29,8 @@ import {
 } from '../../utils/versions';
 import { DEFAULT_NRWL_PRETTIER_CONFIG } from '../workspace/workspace';
 import { readFileSync } from 'fs';
-import { serializeJson } from '../../utils/fileutils';
-import { resolveUserExistingPrettierConfig } from '../../utils/common';
+import { serializeJson } from '../../utilities/fileutils';
+import { resolveUserExistingPrettierConfig } from '../../utilities/prettier';
 
 function updatePackageJson(tree) {
   updateJson(tree, 'package.json', (packageJson) => {
@@ -90,19 +91,20 @@ function updateAngularCLIJson(host: Tree, options: Schema) {
   const workspaceConfig = readWorkspaceConfiguration(host);
   const appName = workspaceConfig.defaultProject;
   const e2eName = appName + '-e2e';
-  const e2eRoot = join('apps', e2eName);
+  const e2eRoot = joinPathFragments('apps', e2eName);
   delete (workspaceConfig as any).newProjectRoot;
 
   const defaultProject = readProjectConfiguration(host, appName);
 
   const oldSourceRoot = defaultProject.sourceRoot;
-  const newRoot = join('apps', appName);
+  const newRoot = joinPathFragments('apps', appName);
   defaultProject.root = newRoot;
-  defaultProject.sourceRoot = join(newRoot, 'src');
+  defaultProject.sourceRoot = joinPathFragments(newRoot, 'src');
 
   function convertBuildOptions(buildOptions) {
     buildOptions.outputPath =
-      buildOptions.outputPath && join(normalize('dist'), 'apps', appName);
+      buildOptions.outputPath &&
+      joinPathFragments(normalizePath('dist'), 'apps', appName);
     buildOptions.index =
       buildOptions.index && convertAsset(buildOptions.index as string);
     buildOptions.main =
@@ -110,16 +112,13 @@ function updateAngularCLIJson(host: Tree, options: Schema) {
     buildOptions.polyfills =
       buildOptions.polyfills && convertAsset(buildOptions.polyfills as string);
     buildOptions.tsConfig =
-      buildOptions.tsConfig && join(newRoot, 'tsconfig.app.json');
+      buildOptions.tsConfig && joinPathFragments(newRoot, 'tsconfig.app.json');
     buildOptions.assets =
-      buildOptions.assets &&
-      (buildOptions.assets as JsonArray).map(convertAsset);
+      buildOptions.assets && (buildOptions.assets as any).map(convertAsset);
     buildOptions.styles =
-      buildOptions.styles &&
-      (buildOptions.styles as JsonArray).map(convertAsset);
+      buildOptions.styles && (buildOptions.styles as any).map(convertAsset);
     buildOptions.scripts =
-      buildOptions.scripts &&
-      (buildOptions.scripts as JsonArray).map(convertAsset);
+      buildOptions.scripts && (buildOptions.scripts as any).map(convertAsset);
     buildOptions.fileReplacements =
       buildOptions.fileReplacements &&
       buildOptions.fileReplacements.map((replacement) => ({
@@ -137,34 +136,37 @@ function updateAngularCLIJson(host: Tree, options: Schema) {
     testOptions.main = testOptions.main && convertAsset(testOptions.main);
     testOptions.polyfills =
       testOptions.polyfills && convertAsset(testOptions.polyfills);
-    testOptions.tsConfig = join(newRoot, 'tsconfig.spec.json');
-    testOptions.karmaConfig = join(newRoot, 'karma.conf.js');
+    testOptions.tsConfig = joinPathFragments(newRoot, 'tsconfig.spec.json');
+    testOptions.karmaConfig = joinPathFragments(newRoot, 'karma.conf.js');
     testOptions.assets =
-      testOptions.assets && (testOptions.assets as JsonArray).map(convertAsset);
+      testOptions.assets && (testOptions.assets as any).map(convertAsset);
     testOptions.styles =
-      testOptions.styles && (testOptions.styles as JsonArray).map(convertAsset);
+      testOptions.styles && (testOptions.styles as any).map(convertAsset);
     testOptions.scripts =
-      testOptions.scripts &&
-      (testOptions.scripts as JsonArray).map(convertAsset);
+      testOptions.scripts && (testOptions.scripts as any).map(convertAsset);
   }
 
   const lintTarget = defaultProject.targets.lint;
 
   if (lintTarget) {
     lintTarget.options.tsConfig = [
-      join(newRoot, 'tsconfig.app.json'),
-      join(newRoot, 'tsconfig.spec.json'),
+      joinPathFragments(newRoot, 'tsconfig.app.json'),
+      joinPathFragments(newRoot, 'tsconfig.spec.json'),
     ];
   }
 
   function convertServerOptions(serverOptions) {
     serverOptions.outputPath =
       serverOptions.outputPath &&
-      join(normalize('dist'), 'apps', options.name + '-server');
+      joinPathFragments(
+        normalizePath('dist'),
+        'apps',
+        options.name + '-server'
+      );
     serverOptions.main = serverOptions.main && convertAsset(serverOptions.main);
     serverOptions.tsConfig =
       serverOptions.tsConfig &&
-      join(normalize('apps'), appName, 'tsconfig.server.json');
+      joinPathFragments(normalizePath('apps'), appName, 'tsconfig.server.json');
     serverOptions.fileReplacements =
       serverOptions.fileReplacements &&
       serverOptions.fileReplacements.map((replacement) => ({
@@ -191,14 +193,14 @@ function updateAngularCLIJson(host: Tree, options: Schema) {
           ...defaultProject.targets.e2e,
           options: {
             ...defaultProject.targets.e2e.options,
-            protractorConfig: join(e2eRoot, 'protractor.conf.js'),
+            protractorConfig: joinPathFragments(e2eRoot, 'protractor.conf.js'),
           },
         },
         lint: {
           executor: '@angular-devkit/build-angular:tslint',
           options: {
             ...lintTargetOptions,
-            tsConfig: join(e2eRoot, 'tsconfig.json'),
+            tsConfig: joinPathFragments(e2eRoot, 'tsconfig.json'),
           },
         },
       },
@@ -349,7 +351,9 @@ function moveOutOfSrc(
   }
   const filename = !!filePath ? basename(filePath) : '';
   const from = filePath;
-  const to = filename ? join('apps', appName, filename) : join('apps', appName);
+  const to = filename
+    ? joinPathFragments('apps', appName, filename)
+    : joinPathFragments('apps', appName);
   renameSyncInTree(tree, from, to, required);
 }
 
@@ -395,11 +399,14 @@ function moveExistingFiles(host: Tree, options: Schema) {
     moveOutOfSrc(host, options.name, app.architect.server.options.tsConfig);
   }
   const oldAppSourceRoot = app.sourceRoot;
-  const newAppSourceRoot = join('apps', options.name, 'src');
+  const newAppSourceRoot = joinPathFragments('apps', options.name, 'src');
   renameDirSyncInTree(host, oldAppSourceRoot, newAppSourceRoot);
   if (e2eApp) {
-    const oldE2eRoot = join(app.root || '', 'e2e');
-    const newE2eRoot = join('apps', getE2eKey(workspaceJson) + '-e2e');
+    const oldE2eRoot = joinPathFragments(app.root || '', 'e2e');
+    const newE2eRoot = joinPathFragments(
+      'apps',
+      getE2eKey(workspaceJson) + '-e2e'
+    );
     renameDirSyncInTree(host, oldE2eRoot, newE2eRoot);
   } else {
     console.warn(
@@ -562,7 +569,12 @@ function createNxJson(host: Tree) {
 
 function decorateAngularClI(host: Tree) {
   const decorateCli = readFileSync(
-    join(__dirname as any, '..', 'utils', 'decorate-angular-cli.js__tmpl__')
+    joinPathFragments(
+      __dirname as any,
+      '..',
+      'utils',
+      'decorate-angular-cli.js__tmpl__'
+    )
   ).toString();
   host.write('decorate-angular-cli.js', decorateCli);
   updateJson(host, 'package.json', (json) => {
@@ -586,12 +598,12 @@ function decorateAngularClI(host: Tree) {
 }
 
 function addFiles(host: Tree) {
-  generateFiles(host, join(__dirname, './files/root'), '.', {
+  generateFiles(host, joinPathFragments(__dirname, './files/root'), '.', {
     tmpl: '',
   });
 
   if (!host.exists('.prettierignore')) {
-    generateFiles(host, join(__dirname, './files/prettier'), '.', {
+    generateFiles(host, joinPathFragments(__dirname, './files/prettier'), '.', {
       tmpl: '',
     });
   }

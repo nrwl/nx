@@ -19,7 +19,7 @@ import {
 } from '@angular-devkit/schematics';
 import * as ts from 'typescript';
 import * as stripJsonComments from 'strip-json-comments';
-import { serializeJson } from './fileutils';
+import { serializeJson } from '../utilities/fileutils';
 import { getWorkspacePath } from './cli-config-utils';
 import {
   createProjectGraph,

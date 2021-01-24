@@ -1,13 +1,18 @@
 import { Schema } from './schema';
-import { Tree, formatFiles, generateFiles, names } from '@nrwl/devkit';
-import * as path from 'path';
+import {
+  Tree,
+  formatFiles,
+  generateFiles,
+  names,
+  joinPathFragments,
+} from '@nrwl/devkit';
 
 export default async function (host: Tree, schema: Schema) {
   const options = normalizeOptions(schema);
   generateFiles(
     host,
-    path.join(__dirname, 'files'),
-    path.join('tools/generators', schema.name),
+    joinPathFragments(__dirname, 'files'),
+    joinPathFragments('tools/generators', schema.name),
     options
   );
   if (!schema.skipFormat) {

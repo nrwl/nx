@@ -3,7 +3,7 @@ tmp
 /build
 node_modules
 /package.json
-packages/workspace/src/schematics/**/files/**/*.json
+packages/workspace/src/generators/**/files/**/*.json
 packages/workspace/src/core/dep-graph/vendor.js
 packages/angular/src/schematics/**/files/**/*.json
 packages/angular/src/migrations/**/files/**/*.json

@@ -1,6 +1,6 @@
 import * as inquirer from 'inquirer';
 import { readNxJson } from '../core/file-utils';
-import { output } from '../utils/output';
+import { output } from '../utilities/output';
 import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { execSync } from 'child_process';
 

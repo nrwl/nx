@@ -9,7 +9,7 @@ import {
   fileExists,
   readJsonFile,
   writeJsonFile,
-} from '@nrwl/workspace/src/utils/fileutils';
+} from '@nrwl/workspace/src/utilities/fileutils';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { getOutputsForTargetAndConfiguration } from '@nrwl/workspace/src/tasks-runner/utils';
 import * as ts from 'typescript';

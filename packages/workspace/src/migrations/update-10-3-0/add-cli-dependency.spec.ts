@@ -1,7 +1,7 @@
 import { Tree } from '@angular-devkit/schematics';
 import { callRule, runMigration } from '../../utils/testing';
 import { readJsonInTree, serializeJson } from '@nrwl/workspace';
-import { nxVersion } from '../../../src/utils/versions';
+import { nxVersion } from '../../utils/versions';
 
 describe('CLI dependency migration', () => {
   let tree: Tree;

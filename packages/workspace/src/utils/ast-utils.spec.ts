@@ -10,7 +10,7 @@ import {
 } from '@angular-devkit/schematics/testing';
 import { join } from 'path';
 import { Tree, SchematicContext, TaskId } from '@angular-devkit/schematics';
-import { serializeJson } from './fileutils';
+import { serializeJson } from '../utilities/fileutils';
 import { createEmptyWorkspace } from './testing-utils';
 
 describe('readJsonInTree', () => {

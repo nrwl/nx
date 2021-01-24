@@ -4,9 +4,9 @@ import { AffectedEventType, Task } from './tasks-runner';
 import { getOutputs, unparse } from './utils';
 import { ChildProcess, fork } from 'child_process';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
-import { output } from '../utils/output';
+import { output } from '../utilities/output';
 import * as fs from 'fs';
-import { appRootPath } from '../utils/app-root';
+import { appRootPath } from '../utilities/app-root';
 import * as dotenv from 'dotenv';
 import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 

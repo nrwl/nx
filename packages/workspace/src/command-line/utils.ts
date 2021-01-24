@@ -2,7 +2,7 @@ import * as yargsParser from 'yargs-parser';
 import * as yargs from 'yargs';
 import * as fileUtils from '../core/file-utils';
 import { NxAffectedConfig } from '../core/shared-interfaces';
-import { output } from '../utils/output';
+import { output } from '../utilities/output';
 import { names } from '@nrwl/devkit';
 
 const runOne = [
