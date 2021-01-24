@@ -209,6 +209,9 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
     test,
     use: [
       { loader: require.resolve('raw-loader') },
+      // Including RawCssLoader here because per v4.x release notes for postcss-loader under breaking changes:
+      // "loader output only CSS, so you need to use css-loader/file-loader/raw-loader to inject code inside bundle"
+      RawCssLoader,
       {
         loader: require.resolve('postcss-loader'),
         options: {
