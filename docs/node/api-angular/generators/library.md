@@ -74,7 +74,7 @@ Add RouterModule.forChild when set to true, and a simple array of routes when se
 
 ### linter
 
-Default: `tslint`
+Default: `eslint`
 
 Type: `string`
 

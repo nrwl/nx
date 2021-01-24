@@ -108,15 +108,6 @@ describe('lib', () => {
 
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(workspaceJson.projects['my-lib'].architect.build).toBeDefined();
-      expect(
-        workspaceJson.projects['my-lib'].architect.lint.options.tsConfig
-      ).toEqual([
-        'libs/my-lib/tsconfig.lib.json',
-        'libs/my-lib/tsconfig.spec.json',
-      ]);
-      expect(
-        workspaceJson.projects['my-lib'].architect.lint.options.exclude
-      ).toEqual(['**/node_modules/**', '!libs/my-lib/**/*']);
     });
 
     it('should remove "build" target from workspace.json when a library is not publishable', async () => {
@@ -516,16 +507,6 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-dir-my-lib'].root).toEqual(
         'libs/my-dir/my-lib'
       );
-
-      expect(
-        workspaceJson.projects['my-dir-my-lib'].architect.lint.options.tsConfig
-      ).toEqual([
-        'libs/my-dir/my-lib/tsconfig.lib.json',
-        'libs/my-dir/my-lib/tsconfig.spec.json',
-      ]);
-      expect(
-        workspaceJson.projects['my-dir-my-lib'].architect.lint.options.exclude
-      ).toEqual(['**/node_modules/**', '!libs/my-dir/my-lib/**/*']);
     });
 
     it('should update tsconfig.json', async () => {
@@ -1045,15 +1026,6 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-lib'].architect.test.builder).toEqual(
         '@angular-devkit/build-angular:karma'
       );
-      expect(
-        workspaceJson.projects['my-lib'].architect.lint.options.tsConfig
-      ).toEqual([
-        'libs/my-lib/tsconfig.lib.json',
-        'libs/my-lib/tsconfig.spec.json',
-      ]);
-      expect(
-        workspaceJson.projects['my-lib'].architect.lint.options.exclude
-      ).toEqual(['**/node_modules/**', '!libs/my-lib/**/*']);
     });
 
     it('should generate module spec when addModuleSpec is specified', async () => {
@@ -1086,9 +1058,6 @@ describe('lib', () => {
       expect(resultTree.exists('libs/my-lib/karma.conf.js')).toBeFalsy();
       const workspaceJson = readJsonInTree(resultTree, 'workspace.json');
       expect(workspaceJson.projects['my-lib'].architect.test).toBeUndefined();
-      expect(
-        workspaceJson.projects['my-lib'].architect.lint.options.tsConfig
-      ).toEqual(['libs/my-lib/tsconfig.lib.json']);
     });
   });
 
@@ -1263,6 +1232,67 @@ describe('lib', () => {
               "rules": Object {},
             },
           ]
+        `);
+      });
+    });
+
+    describe('tslint', () => {
+      it('should add an architect target for lint', async () => {
+        const tree = await runSchematic(
+          'lib',
+          { name: 'myLib', linter: 'tslint' },
+          appTree
+        );
+        const workspaceJson = readJsonInTree(tree, 'workspace.json');
+        expect(workspaceJson.projects['my-lib'].architect.lint)
+          .toMatchInlineSnapshot(`
+          Object {
+            "builder": "@angular-devkit/build-angular:tslint",
+            "options": Object {
+              "exclude": Array [
+                "**/node_modules/**",
+                "!libs/my-lib/**/*",
+              ],
+              "tsConfig": Array [
+                "libs/my-lib/tsconfig.lib.json",
+                "libs/my-lib/tsconfig.spec.json",
+              ],
+            },
+          }
+        `);
+      });
+
+      it('should add valid tslint JSON configuration', async () => {
+        const tree = await runSchematic(
+          'lib',
+          { name: 'myLib', linter: 'tslint' },
+          appTree
+        );
+
+        const tslintConfig = readJsonInTree(tree, 'libs/my-lib/tslint.json');
+        expect(tslintConfig).toMatchInlineSnapshot(`
+          Object {
+            "extends": "../../tslint.json",
+            "linterOptions": Object {
+              "exclude": Array [
+                "!**/*",
+              ],
+            },
+            "rules": Object {
+              "component-selector": Array [
+                true,
+                "element",
+                "proj",
+                "kebab-case",
+              ],
+              "directive-selector": Array [
+                true,
+                "attribute",
+                "proj",
+                "camelCase",
+              ],
+            },
+          }
         `);
       });
     });

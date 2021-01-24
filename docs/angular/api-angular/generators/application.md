@@ -80,7 +80,7 @@ Specifies if the template will be in the ts file.
 
 ### linter
 
-Default: `tslint`
+Default: `eslint`
 
 Type: `string`
 
