@@ -1,31 +1,33 @@
-import { BuilderContext, createBuilder } from '@angular-devkit/architect';
 import { CLIEngine } from 'eslint';
 import { writeFileSync } from 'fs';
 import * as path from 'path';
 import { Schema } from './schema';
 import { createProgram } from './utility/ts-utils';
 import { lint, loadESLint } from './utility/eslint-utils';
-import { createDirectory } from '@nrwl/workspace';
+import { createDirectory } from '../eslint/utility/create-directory';
+import { ExecutorContext } from '@nrwl/devkit';
 
 /**
  * Adapted from @angular-eslint/builder source
  */
-async function run(options: Schema, context: BuilderContext): Promise<any> {
+export default async function run(
+  options: Schema,
+  context: ExecutorContext
+): Promise<any> {
   if (options.linter === 'tslint') {
     throw new Error(
       `'tslint' option is no longer supported. Update your angular.json to use "@nrwl/linter:eslint" builder.`
     );
   }
 
-  const systemRoot = context.workspaceRoot;
-  process.chdir(context.currentDirectory);
-  const projectName = (context.target && context.target.project) || '<???>';
+  const systemRoot = context.root;
+  process.chdir(context.cwd);
+  const projectName = context.projectName || '<???>';
 
   const printInfo = options.format && !options.silent;
 
-  context.reportStatus(`Linting ${JSON.stringify(projectName)}...`);
   if (printInfo) {
-    context.logger.info(`\nLinting ${JSON.stringify(projectName)}...`);
+    console.info(`\nLinting ${JSON.stringify(projectName)}...`);
   }
 
   const projectESLint = await loadESLint();
@@ -54,7 +56,6 @@ async function run(options: Schema, context: BuilderContext): Promise<any> {
     const tsConfigs: string[] = Array.isArray(options.tsConfig)
       ? options.tsConfig
       : [options.tsConfig];
-    context.reportProgress(0, tsConfigs.length);
     const allPrograms = tsConfigs.map((tsConfig: any) =>
       createProgram(path.resolve(systemRoot, tsConfig))
     );
@@ -72,7 +73,6 @@ async function run(options: Schema, context: BuilderContext): Promise<any> {
           allPrograms
         )),
       ];
-      context.reportProgress(++i, allPrograms.length);
     }
   } else {
     lintReports = [
@@ -112,19 +112,19 @@ async function run(options: Schema, context: BuilderContext): Promise<any> {
   }
 
   const formattedResults = formatter(bundledReport.results);
-  context.logger.info(formattedResults);
+  console.info(formattedResults);
 
   if (options.outputFile) {
-    const pathToFile = path.join(context.workspaceRoot, options.outputFile);
+    const pathToFile = path.join(context.root, options.outputFile);
     createDirectory(path.dirname(pathToFile));
     writeFileSync(pathToFile, formattedResults);
   }
   if (bundledReport.warningCount > 0 && printInfo) {
-    context.logger.warn('Lint warnings found in the listed files.\n');
+    console.warn('Lint warnings found in the listed files.\n');
   }
 
   if (bundledReport.errorCount > 0 && printInfo) {
-    context.logger.error('Lint errors found in the listed files.\n');
+    console.error('Lint errors found in the listed files.\n');
   }
 
   if (
@@ -132,7 +132,7 @@ async function run(options: Schema, context: BuilderContext): Promise<any> {
     bundledReport.errorCount === 0 &&
     printInfo
   ) {
-    context.logger.info('All files pass linting.\n');
+    console.info('All files pass linting.\n');
   }
 
   return {
@@ -143,5 +143,3 @@ async function run(options: Schema, context: BuilderContext): Promise<any> {
           bundledReport.warningCount <= options.maxWarnings)),
   };
 }
-
-export default createBuilder<any>(run);

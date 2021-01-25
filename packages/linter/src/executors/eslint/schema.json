@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "title": "ESLint Lint Target",
   "description": "ESLint Lint Target",
+  "cli": "nx",
   "type": "object",
   "properties": {
     "eslintConfig": {

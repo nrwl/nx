@@ -1,28 +1,25 @@
-import {
-  BuilderContext,
-  BuilderOutput,
-  createBuilder,
-} from '@angular-devkit/architect';
-import { createDirectory } from '@nrwl/workspace';
+import { ExecutorContext } from '@nrwl/devkit';
 import { ESLint } from 'eslint';
+
 import { writeFileSync } from 'fs';
-import * as path from 'path';
+import { dirname, join, resolve } from 'path';
+
 import { Schema } from './schema';
 import { lint, loadESLint } from './utility/eslint-utils';
+import { createDirectory } from './utility/create-directory';
 
-async function run(
+export default async function run(
   options: Schema,
-  context: BuilderContext
-): Promise<BuilderOutput> {
-  const systemRoot = context.workspaceRoot;
-  process.chdir(context.currentDirectory);
+  context: ExecutorContext
+): Promise<{ success: boolean }> {
+  const systemRoot = context.root;
+  process.chdir(context.cwd);
 
-  const projectName = context.target?.project || '<???>';
+  const projectName = context.projectName || '<???>';
   const printInfo = options.format && !options.silent;
 
-  context.reportStatus(`Linting ${JSON.stringify(projectName)}...`);
   if (printInfo) {
-    context.logger.info(`\nLinting ${JSON.stringify(projectName)}...`);
+    console.info(`\nLinting ${JSON.stringify(projectName)}...`);
   }
 
   const projectESLint: { ESLint: typeof ESLint } = await loadESLint();
@@ -43,7 +40,7 @@ async function run(
    * eslint automatically resolve the `.eslintrc.json` files in each folder.
    */
   const eslintConfigPath = options.eslintConfig
-    ? path.resolve(systemRoot, options.eslintConfig)
+    ? resolve(systemRoot, options.eslintConfig)
     : undefined;
 
   let lintResults: ESLint.LintResult[] = await lint(eslintConfigPath, options);
@@ -54,7 +51,7 @@ async function run(
 
   // if quiet, only show errors
   if (options.quiet) {
-    context.logger.debug('Quiet mode enabled - filtering out warnings\n');
+    console.debug('Quiet mode enabled - filtering out warnings\n');
     lintResults = ESLint.getErrorResults(lintResults);
   }
 
@@ -74,27 +71,24 @@ async function run(
   }
 
   const formattedResults = formatter.format(lintResults);
-  context.logger.info(formattedResults);
+  console.info(formattedResults);
 
   if (options.outputFile) {
-    const pathToOutputFile = path.join(
-      context.workspaceRoot,
-      options.outputFile
-    );
-    createDirectory(path.dirname(pathToOutputFile));
+    const pathToOutputFile = join(context.root, options.outputFile);
+    createDirectory(dirname(pathToOutputFile));
     writeFileSync(pathToOutputFile, formattedResults);
   }
 
   if (totalWarnings > 0 && printInfo) {
-    context.logger.warn('Lint warnings found in the listed files.\n');
+    console.warn('Lint warnings found in the listed files.\n');
   }
 
   if (totalErrors > 0 && printInfo) {
-    context.logger.error('Lint errors found in the listed files.\n');
+    console.error('Lint errors found in the listed files.\n');
   }
 
   if (totalWarnings === 0 && totalErrors === 0 && printInfo) {
-    context.logger.info('All files pass linting.\n');
+    console.info('All files pass linting.\n');
   }
 
   return {
@@ -104,5 +98,3 @@ async function run(
         (options.maxWarnings === -1 || totalWarnings <= options.maxWarnings)),
   };
 }
-
-export default createBuilder(run);
