@@ -1,7 +1,11 @@
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { normalize } from '@angular-devkit/core';
 import { resolve, dirname, relative, basename } from 'path';
-import { BuildBuilderOptions, PackageBuilderOptions } from './types';
+import {
+  AssetGlobPattern,
+  BuildBuilderOptions,
+  PackageBuilderOptions,
+} from './types';
 import { statSync } from 'fs';
 
 export interface FileReplacement {
@@ -12,7 +16,7 @@ export interface FileReplacement {
 export interface NormalizedBundleBuilderOptions extends PackageBuilderOptions {
   entryRoot: string;
   projectRoot: string;
-  assets: NormalizedCopyAssetOption[];
+  assets: AssetGlobPattern[];
 }
 
 export function normalizePackageOptions(
@@ -74,17 +78,11 @@ function normalizePluginPath(pluginPath: void | string, root: string) {
   }
 }
 
-export interface NormalizedCopyAssetOption {
-  glob: string;
-  input: string;
-  output: string;
-}
-
 export function normalizeAssets(
   assets: any[],
   root: string,
   sourceRoot: string
-): NormalizedCopyAssetOption[] {
+): AssetGlobPattern[] {
   return assets.map((asset) => {
     if (typeof asset === 'string') {
       const assetPath = normalize(asset);
