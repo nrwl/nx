@@ -26,9 +26,9 @@ For each project for which you want to enable `make`, add a target in `workspace
 ```json
 // ...
 "my-app": {
-    "architect": {
+    "targets": {
         "make": {
-            "builder": "@nrwl/workspace:run-commands",
+            "executor": "@nrwl/workspace:run-commands",
                 "options": {
                 "commands": [
                     {
@@ -44,15 +44,15 @@ For each project for which you want to enable `make`, add a target in `workspace
 
 For more information, see the [run-commands api doc](/{{framework}}/plugins/workspace/builders/run-commands).
 
-##### 3. Trigger the builder from the terminal
+##### 3. Trigger the executor from the terminal
 
-To run the builder for a single project:
+To run the executor for a single project:
 
 ```bash
 nx run my-app:make
 ```
 
-To run the builder for all affected projects:
+To run the executor for all affected projects:
 
 ```bash
 nx affected --target=make

@@ -25,7 +25,7 @@ Select `empty` when prompted:
 
 ## Exploring your workspace
 
-Take a tour of your [Nx workspace](/{{framework}}/workspace/workspace-overview). There are some important areas to know about as you migrate.
+Take a tour of your [Nx workspace](/{{framework}}/getting-started/folder-structure). There are some important areas to know about as you migrate.
 
 ### apps
 
@@ -34,10 +34,22 @@ The `apps` directory is the place where your top-level applications will be stor
 For Angular applications:
 
 ```bash
+npm install --save-dev @nrwl/angular
+```
+
+and
+
+```bash
 nx generate @nrwl/angular:application my-application
 ```
 
 For React applications:
+
+```bash
+npm install --save-dev @nrwl/react
+```
+
+and
 
 ```bash
 nx generate @nrwl/react:application my-application
@@ -45,10 +57,10 @@ nx generate @nrwl/react:application my-application
 
 There are a lot of options when creating your application. If you want to follow Nx recommendations, you can accept the defaults. If you have a well-established codebase, you can configure those options at the time of application generation. You can find documentation for these options for the different frameworks here:
 
-- [Angular](/{{framework}}/plugins/angular/schematics/application)
-- [React](/{{framework}}/plugins/react/schematics/application)
+- [Angular](/{{framework}}/plugins/angular/generators/application)
+- [React](/{{framework}}/plugins/react/generators/application)
 
-You may also find it useful to use the [Nx Console](/{{framework}}/cli/console) in Visual Studio Code. This will give you a visual way to generate your application with all of the options laid out in front of you.
+You may also find it useful to use the [Nx Console](/{{framework}}/getting-started/console) in Visual Studio Code. This will give you a visual way to generate your application with all of the options laid out in front of you.
 
 ### Configuration files
 
@@ -161,7 +173,7 @@ Your use-case may also be covered by one of our community plugins. Plugin author
 
 [Learn more about the `run-commands` builder](/{{framework}}/plugins/workspace/builders/run-commands)
 
-[Learn more about caching](/{{framework}}/workspace/computation-caching)
+[Learn more about caching](/{{framework}}/core-concepts/computation-caching)
 
 [Learn more about community plugins](/nx-community)
 

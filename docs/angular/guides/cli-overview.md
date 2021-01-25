@@ -11,17 +11,13 @@ The Nx CLI is a command-line interface tool that helps you setup, develop, build
 
 ## Nx CLI and Angular CLI
 
-Nx **is not** a replacement for Angular CLI. Under the hood, Nx uses the Angular CLI to generate code and run tasks.
+The Nx CLI supports different types of generators and executors. When running Angular Devkit schematics (e.g., generating an Angular component), the Nx CLI will use Angular Devkit under the hood. So the result will be exactly the same as if you used the Angular CLI. When running Angular Devkit builders, the Nx CLI once again will use the same Angular Devkit under the hood.
 
-When you run `nx build myapp`, Nx will invoke `ng build myapp` under the hood. When you run `nx g component mycmp`, Nx will invoke `ng g component mycmp` under the hood.
+In other words, anything the Angular CLI can run, the Nx CLI can run as well because it uses the same Angular Devkit written by the Angular team under the hood. Except that using the Nx CLI is often a lot faster because of its powerful computation caching and code change analysis.
 
-When it comes to generating code and running tasks, since `nx` delegates to `ng`, both CLIs will always produce the same result, except that running `nx` will often be a lot faster.
+The `Nx CLI` also supports a lot more commands than the Angular CLI. It can run a target against many projects in parallel, run a target against a project and its dependencies, visualize the dependency graph etc..
 
-How?
-
-Nx CLI uses advanced code analysis and computation caching to reuse previous computation results when possible. The Angular CLI doesn't do it. In other words, use `nx` instead of `ng`: everything will work just the same but often much faster.
-
-The `Nx CLI` also supports a lot more commands than the Angular CLI. It can run a target against many projects in parallel, run a target against a project and its dependencies, etc..
+Nx will create the `decorate-angular-cli.js` file in a new Nx workspace. This file essentially "wraps" the Angular CLI to give you computation caching and other powerful feature, so running `nx build myapp` and `ng build myapp` will produce the same result.
 
 ## Installing the CLI
 
@@ -53,26 +49,26 @@ If you don't have the Nx CLI installed globally, you can invoke `nx` using `yarn
 
 The Nx CLI has an advanced code generator. With it, you can generate new applications, libraries, components, state management utilities. You can change existing applications. And, because the Nx CLI comes with an implementation of a virtual file system, you can preview the changes without affecting anything on disk.
 
-The code generation recipes are called schematics. Schematics provide the underlying APIs for scaffolding, and utilities to automate changes to your filesystem. The example below is the command to generate a new application.
+The code generation recipes are called generators. Generators provide the underlying APIs for scaffolding, and utilities to automate changes to your filesystem. The example below is the command to generate a new application.
 
 ```sh
 nx generate @nrwl/angular:application myapp
 ```
 
-The `@nrwl/angular` package contains a collection of schematics, with `application` being the one used in this example. The Nx CLI applies the schematic to your workspace, verifying that the provided options are valid, and the destination files don't already exist. Once the validations are passed, the new files are generated, or existing files are updated. You can also customize the output of the generated application, by passing options to the schematic.
+The `@nrwl/angular` package contains a collection of generators, with `application` being the one used in this example. The Nx CLI applies the generator to your workspace, verifying that the provided options are valid, and the destination files don't already exist. Once the validations are passed, the new files are generated, or existing files are updated. You can also customize the output of the generated application, by passing options to the generator.
 
 ```sh
 nx generate @nrwl/angular:application myapp --style=scss
 ```
 
-You can preview the changes a schematic makes by using the `--dry-run` option. It will output the potential files created, and/or updated during the execution of the schematic.
+You can preview the changes a generator makes by using the `--dry-run` option. It will output the potential files created, and/or updated during the execution of the generator.
 
 **Generate command:**
 
-`nx generate` runs schematics to create or modify code given some inputs from the developer.
+`nx generate` runs generators to create or modify code given some inputs from the developer.
 
 - [nx generate](/{{framework}}/cli/generate)  
-  Syntax: `nx generate [plugin]:[schematic-name] [options]`  
+  Syntax: `nx generate [plugin]:[generator-name] [options]`  
   Example: `nx generate @nrwl/angular:component mycmp --project=myapp`
 
 ## Running Tasks
@@ -130,7 +126,7 @@ A target can have multiple configuration. In the example above the serve target 
 
 ```bash
 nx run todos:serve # default configuration
-nx run todos:serve:production # producttion configuration
+nx run todos:serve:production # production configuration
 ```
 
 Because running target is such a common operation, you can also use the following syntax to do it:
@@ -263,7 +259,7 @@ For example:
 2. `workspaceRoot/apps/my-app/.env` contains `AUTH_URL=https://prod-url.com/auth`
 3. Nx will first load the variables from `apps/my-app/.local.env` into the process. When it tries to load the variables from `apps/my-app/.env`, it will notice that `AUTH_URL` already exists, so it will ignore it.
 
-We recommend nesting your **app** specific `env` files in `apps/your-app`, and creating workspace/root level `env` files for workspace-specific settings (like the [Nx Cloud token](https://nx.dev/angular/workspace/computation-caching#nx-cloud-and-distributed-computation-memoization)).
+We recommend nesting your **app** specific `env` files in `apps/your-app`, and creating workspace/root level `env` files for workspace-specific settings (like the [Nx Cloud token](https://nx.dev/angular/core-concepts/computation-caching#nx-cloud-and-distributed-computation-memoization)).
 
 ### Pointing to custom env files
 

@@ -1,34 +1,44 @@
-import { logging, terminal } from '@angular-devkit/core';
-import { createConsoleLogger } from '@angular-devkit/core/node';
+import * as chalk from 'chalk';
 
-const NX_PREFIX = `${terminal.cyan('>')} ${terminal.inverse(
-  terminal.bold(terminal.cyan(' NX '))
+export const NX_PREFIX = `${chalk.cyan('>')} ${chalk.inverse(
+  chalk.bold(chalk.cyan(' NX '))
 )}`;
 
-const NX_ERROR = terminal.inverse(terminal.bold(terminal.red(' ERROR ')));
+export const NX_ERROR = chalk.inverse(chalk.bold(chalk.red(' ERROR ')));
 
-let logger: logging.Logger;
-export const getLogger = (isVerbose = false): logging.Logger => {
-  if (!logger) {
-    logger = createConsoleLogger(isVerbose, process.stdout, process.stderr, {
-      warn: (s) => terminal.bold(terminal.yellow(s)),
-      error: (s) => {
-        if (s.startsWith('NX ')) {
-          return `\n${NX_ERROR} ${terminal.bold(terminal.red(s.substr(3)))}\n`;
-        }
-
-        return terminal.bold(terminal.red(s));
-      },
-      fatal: (s) => terminal.bold(terminal.red(s)),
-      info: (s) => {
-        if (s.startsWith('NX ')) {
-          return `\n${NX_PREFIX} ${terminal.bold(s.substr(3))}\n`;
-        }
-
-        return terminal.white(s);
-      },
-    });
-  }
-
-  return logger;
+export const logger = {
+  warn: (s) => console.warn(chalk.bold(chalk.yellow(s))),
+  error: (s) => {
+    if (s.startsWith('NX ')) {
+      console.error(`\n${NX_ERROR} ${chalk.bold(chalk.red(s.substr(3)))}\n`);
+    } else {
+      console.error(chalk.bold(chalk.red(s)));
+    }
+  },
+  info: (s) => {
+    if (s.startsWith('NX ')) {
+      console.info(`\n${NX_PREFIX} ${chalk.bold(s.substr(3))}\n`);
+    } else {
+      console.info(chalk.white(s));
+    }
+  },
+  log: (...s) => {
+    console.log(...s);
+  },
+  debug: (...s) => {
+    console.debug(...s);
+  },
+  fatal: (...s) => {
+    console.error(...s);
+  },
 };
+
+export function stripIndent(str: string): string {
+  const match = str.match(/^[ \t]*(?=\S)/gm);
+  if (!match) {
+    return str;
+  }
+  const indent = match.reduce((r, a) => Math.min(r, a.length), Infinity);
+  const regex = new RegExp(`^[ \\t]{${indent}}`, 'gm');
+  return str.replace(regex, '');
+}

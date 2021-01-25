@@ -1,30 +1,21 @@
 import {
-  chain,
-  externalSchematic,
-  Rule,
   Tree,
-  SchematicContext,
-  mergeWith,
-  apply,
-  url,
-  template,
-  move,
-  noop,
-  SchematicsException,
-} from '@angular-devkit/schematics';
-import { join, normalize } from '@angular-devkit/core';
+  convertNxGenerator,
+  names,
+  offsetFromRoot,
+  generateFiles,
+  toJS,
+  getWorkspaceLayout,
+  addProjectConfiguration,
+  formatFiles,
+  updateJson,
+  GeneratorCallback,
+} from '@nrwl/devkit';
+import { join } from 'path';
 import { Schema } from './schema';
 
-import { updateWorkspaceInTree, getNpmScope } from '@nrwl/workspace';
-import { updateJsonInTree } from '@nrwl/workspace';
-import { toFileName, names } from '@nrwl/workspace';
-import { formatFiles } from '@nrwl/workspace';
-import { offsetFromRoot } from '@nrwl/workspace';
-
-import { generateProjectLint, addLintFiles } from '../../utils/lint';
-import { addProjectToNxJsonInTree, libsDir } from '../../utils/ast-utils';
-import { cliCommand } from '../../core/file-utils';
-import { toJS } from '../../utils/rules/to-js';
+const { jestProjectGenerator } = require('@nrwl/jest');
+const { lintProjectGenerator, Linter } = require('@nrwl/linter');
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -35,115 +26,162 @@ export interface NormalizedSchema extends Schema {
   importPath?: string;
 }
 
-function addProject(options: NormalizedSchema): Rule {
-  return updateWorkspaceInTree((json) => {
-    const architect: { [key: string]: any } = {};
+function addProject(tree: Tree, options: NormalizedSchema) {
+  addProjectConfiguration(tree, options.name, {
+    root: options.projectRoot,
+    sourceRoot: join(options.projectRoot, 'src'),
+    projectType: 'library',
+    targets: {},
+    tags: options.parsedTags,
+  });
+}
 
-    architect.lint = generateProjectLint(
-      normalize(options.projectRoot),
-      join(normalize(options.projectRoot), 'tsconfig.lib.json'),
-      options.linter,
-      [`${options.projectRoot}/**/*.ts`]
-    );
+function addLint(tree: Tree, options: NormalizedSchema) {
+  return lintProjectGenerator(tree, {
+    project: options.name,
+    linter: options.linter,
+    skipFormat: true,
+    eslintFilePatterns: [
+      `${options.projectRoot}/**/*.${options.js ? 'js' : 'ts'}`,
+    ],
+  });
+}
 
-    json.projects[options.name] = {
-      root: options.projectRoot,
-      sourceRoot: join(normalize(options.projectRoot), 'src'),
-      projectType: 'library',
-      schematics: {},
-      architect,
-    };
+function updateLibTsConfig(tree: Tree, options: NormalizedSchema) {
+  updateJson(tree, join(options.projectRoot, 'tsconfig.lib.json'), (json) => {
+    if (options.strict) {
+      json.compilerOptions = {
+        ...json.compilerOptions,
+        forceConsistentCasingInFileNames: true,
+        strict: true,
+        noImplicitReturns: true,
+        noFallthroughCasesInSwitch: true,
+      };
+    }
+
     return json;
   });
 }
 
-function updateTsConfig(options: NormalizedSchema): Rule {
-  return (host: Tree) =>
-    updateJsonInTree('tsconfig.base.json', (json) => {
-      const c = json.compilerOptions;
-      c.paths = c.paths || {};
-      delete c.paths[options.name];
+function updateRootTsConfig(host: Tree, options: NormalizedSchema) {
+  updateJson(host, 'tsconfig.base.json', (json) => {
+    const c = json.compilerOptions;
+    c.paths = c.paths || {};
+    delete c.paths[options.name];
 
-      if (c.paths[options.importPath]) {
-        throw new SchematicsException(
-          `You already have a library using the import path "${options.importPath}". Make sure to specify a unique one.`
-        );
-      }
+    if (c.paths[options.importPath]) {
+      throw new Error(
+        `You already have a library using the import path "${options.importPath}". Make sure to specify a unique one.`
+      );
+    }
 
-      c.paths[options.importPath] = [
-        maybeJs(
-          options,
-          `${libsDir(host)}/${options.projectDirectory}/src/index.ts`
-        ),
-      ];
+    c.paths[options.importPath] = [
+      join(options.projectRoot, './src', 'index.' + (options.js ? 'js' : 'ts')),
+    ];
 
-      return json;
-    });
+    return json;
+  });
 }
 
-function createFiles(options: NormalizedSchema): Rule {
-  return mergeWith(
-    apply(url(`./files/lib`), [
-      template({
-        ...options,
-        ...names(options.name),
-        cliCommand: cliCommand(),
-        tmpl: '',
-        offsetFromRoot: offsetFromRoot(options.projectRoot),
-        hasUnitTestRunner: options.unitTestRunner !== 'none',
-      }),
-      move(options.projectRoot),
-      options.js ? toJS() : noop(),
-    ])
-  );
+function createFiles(tree: Tree, options: NormalizedSchema) {
+  const { className, name, propertyName } = names(options.name);
+
+  generateFiles(tree, join(__dirname, './files/lib'), options.projectRoot, {
+    ...options,
+    className,
+    name,
+    propertyName,
+    js: !!options.js,
+    cliCommand: 'nx',
+    strict: undefined,
+    tmpl: '',
+    offsetFromRoot: offsetFromRoot(options.projectRoot),
+    hasUnitTestRunner: options.unitTestRunner !== 'none',
+  });
+
+  if (options.unitTestRunner === 'none') {
+    tree.delete(
+      join(options.projectRoot, 'src/lib', `${options.fileName}.spec.ts`)
+    );
+  }
+
+  if (options.js) {
+    toJS(tree);
+  }
+
+  updateLibTsConfig(tree, options);
 }
 
-function updateNxJson(options: NormalizedSchema): Rule {
-  return addProjectToNxJsonInTree(options.name, { tags: options.parsedTags });
+async function addJest(tree: Tree, options: NormalizedSchema) {
+  return await jestProjectGenerator(tree, {
+    project: options.name,
+    setupFile: 'none',
+    supportTsx: true,
+    babelJest: options.babelJest,
+    skipSerializers: true,
+    testEnvironment: options.testEnvironment,
+    skipFormat: true,
+  });
 }
 
-export default function (schema: Schema): Rule {
-  return (host: Tree, context: SchematicContext) => {
-    const options = normalizeOptions(host, schema);
+export async function libraryGenerator(tree: Tree, schema: Schema) {
+  const options = normalizeOptions(tree, schema);
 
-    return chain([
-      addLintFiles(options.projectRoot, options.linter),
-      createFiles(options),
-      !options.skipTsConfig ? updateTsConfig(options) : noop(),
-      addProject(options),
-      updateNxJson(options),
-      options.unitTestRunner !== 'none'
-        ? externalSchematic('@nrwl/jest', 'jest-project', {
-            project: options.name,
-            setupFile: 'none',
-            supportTsx: true,
-            babelJest: options.babelJest,
-            skipSerializers: true,
-            testEnvironment: options.testEnvironment,
-          })
-        : noop(),
-      formatFiles(options),
-    ])(host, context);
-  };
+  createFiles(tree, options);
+
+  if (!options.skipTsConfig) {
+    updateRootTsConfig(tree, options);
+  }
+  addProject(tree, options);
+
+  let installTask: GeneratorCallback;
+
+  if (options.linter !== 'none') {
+    installTask = await addLint(tree, options);
+  }
+  if (options.unitTestRunner === 'jest') {
+    installTask = (await addJest(tree, options)) || installTask;
+  }
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
+  }
+
+  return installTask;
 }
 
-function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
-  const name = toFileName(options.name);
+export default libraryGenerator;
+export const librarySchematic = convertNxGenerator(libraryGenerator);
+
+function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
+  const name = names(options.name).fileName;
   const projectDirectory = options.directory
-    ? `${toFileName(options.directory)}/${name}`
+    ? `${names(options.directory).fileName}/${name}`
     : name;
 
-  const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
-  const fileName = options.simpleModuleName ? name : projectName;
+  if (!options.unitTestRunner) {
+    options.unitTestRunner = 'jest';
+  }
 
-  // const projectRoot = `libs/${projectDirectory}`;
-  const projectRoot = `${libsDir(host)}/${projectDirectory}`;
+  if (!options.linter) {
+    options.linter = Linter.EsLint;
+  }
+
+  const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
+  const fileName = getCaseAwareFileName({
+    fileName: options.simpleModuleName ? name : projectName,
+    pascalCaseFiles: options.pascalCaseFiles,
+  });
+
+  const { libsDir, npmScope } = getWorkspaceLayout(tree);
+
+  const projectRoot = `${libsDir}/${projectDirectory}`;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const defaultImportPath = `@${getNpmScope(host)}/${projectDirectory}`;
+  const defaultImportPath = `@${npmScope}/${projectDirectory}`;
   const importPath = options.importPath || defaultImportPath;
 
   return {
@@ -157,8 +195,11 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   };
 }
 
-function maybeJs(options: NormalizedSchema, path: string): string {
-  return options.js && (path.endsWith('.ts') || path.endsWith('.tsx'))
-    ? path.replace(/\.tsx?$/, '.js')
-    : path;
+function getCaseAwareFileName(options: {
+  pascalCaseFiles: boolean;
+  fileName: string;
+}) {
+  const normalized = names(options.fileName);
+
+  return options.pascalCaseFiles ? normalized.className : normalized.fileName;
 }

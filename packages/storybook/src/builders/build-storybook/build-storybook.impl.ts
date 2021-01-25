@@ -13,8 +13,8 @@ import { mkdtempSync, statSync, copyFileSync, constants } from 'fs';
 //import { buildStaticStandalone } from '@storybook/core/dist/server/build-static';
 import * as build from '@storybook/core/standalone';
 
-import { NodeJsSyncHost } from '@angular-devkit/core/node';
 import { getRoot } from '../../utils/root';
+import { setStorybookAppProject } from '../../utils/utils';
 
 export interface StorybookConfig extends JsonObject {
   configFolder?: string;
@@ -25,6 +25,7 @@ export interface StorybookConfig extends JsonObject {
 
 export interface StorybookBuilderOptions extends JsonObject {
   uiFramework: string;
+  projectBuildConfig?: string;
   config: StorybookConfig;
   quiet?: boolean;
   outputPath?: string;
@@ -60,7 +61,7 @@ export function run(
     }),
     map((loaded) => {
       context.logger.info(`Storybook builder finished ...`);
-      context.logger.info(`Storybook files availble in ${options.outputPath}`);
+      context.logger.info(`Storybook files available in ${options.outputPath}`);
       const builder: BuilderOutput = { success: true } as BuilderOutput;
       return builder;
     })
@@ -76,6 +77,8 @@ async function storybookOptionMapper(
   frameworkOptions: any,
   context: BuilderContext
 ) {
+  setStorybookAppProject(context, builderOptions.projectBuildConfig);
+
   const storybookConfig = await findOrCreateConfig(
     builderOptions.config,
     context
@@ -110,8 +113,7 @@ async function findOrCreateConfig(
       config.srcRoot
     );
   } else {
-    const host = new NodeJsSyncHost();
-    const sourceRoot = await getRoot(context, host);
+    const sourceRoot = await getRoot(context);
     if (
       statSync(
         join(context.workspaceRoot, sourceRoot, '.storybook')

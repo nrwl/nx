@@ -5,7 +5,7 @@ import {
   scheduleTargetAndForget,
   targetFromTargetString,
 } from '@angular-devkit/architect';
-import { terminal } from '@angular-devkit/core';
+import * as chalk from 'chalk';
 import * as fs from 'fs';
 import {
   PHASE_DEVELOPMENT_SERVER,
@@ -31,8 +31,8 @@ try {
 
 export default createBuilder<NextServeBuilderOptions>(run);
 
-const infoPrefix = `[ ${terminal.dim(terminal.cyan('info'))} ] `;
-const readyPrefix = `[ ${terminal.green('ready')} ]`;
+const infoPrefix = `[ ${chalk.dim(chalk.cyan('info'))} ] `;
+const readyPrefix = `[ ${chalk.green('ready')} ]`;
 
 export function run(
   options: NextServeBuilderOptions,

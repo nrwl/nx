@@ -12,7 +12,7 @@ import {
   url,
 } from '@angular-devkit/schematics';
 import '@nrwl/tao/src/compat/compat';
-import { formatFiles, getWorkspace, names, toFileName } from '@nrwl/workspace';
+import { formatFiles, getWorkspace } from '@nrwl/workspace';
 import {
   addDepsToPackageJson,
   addGlobal,
@@ -30,6 +30,8 @@ import {
   typesReactReduxVersion,
 } from '../../utils/versions';
 import { NormalizedSchema, Schema } from './schema';
+import { names } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export default function (schema: any): Rule {
   return async (host: Tree, context: SchematicContext) => {
@@ -61,9 +63,10 @@ function addReduxPackageDependencies(): Rule {
     {
       '@reduxjs/toolkit': reduxjsToolkitVersion,
       'react-redux': reactReduxVersion,
-      '@types/react-redux': typesReactReduxVersion,
     },
-    {}
+    {
+      '@types/react-redux': typesReactReduxVersion,
+    }
   );
 }
 
@@ -208,7 +211,7 @@ async function normalizeOptions(
     ...options,
     ...extraNames,
     constantName: strings.underscore(options.name).toUpperCase(),
-    directory: toFileName(options.directory),
+    directory: names(options.directory).fileName,
     projectType,
     projectSourcePath: sourceRoot,
     projectModulePath: modulePath,
@@ -217,3 +220,8 @@ async function normalizeOptions(
     filesPath: join(sourceRoot, projectType === 'application' ? 'app' : 'lib'),
   };
 }
+
+export const reduxGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/react',
+  'redux'
+);

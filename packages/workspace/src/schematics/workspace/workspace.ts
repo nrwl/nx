@@ -1,17 +1,12 @@
 import {
-  apply,
-  branchAndMerge,
-  chain,
-  mergeWith,
-  noop,
-  Rule,
-  SchematicContext,
-  template,
+  generateFiles,
   Tree,
-  url,
-} from '@angular-devkit/schematics';
+  updateJson,
+  convertNxGenerator,
+  names,
+  writeJson,
+} from '@nrwl/devkit';
 import { Schema } from './schema';
-import { join, strings } from '@angular-devkit/core';
 import {
   angularCliVersion,
   eslintVersion,
@@ -21,7 +16,6 @@ import {
 } from '../../utils/versions';
 import { readFileSync } from 'fs';
 import { join as pathJoin } from 'path';
-import { updateJsonInTree } from '@nrwl/workspace';
 
 export const DEFAULT_NRWL_PRETTIER_CONFIG = {
   singleQuote: true,
@@ -31,11 +25,11 @@ const decorateAngularClI = (host: Tree) => {
   const decorateCli = readFileSync(
     pathJoin(__dirname as any, '..', 'utils', 'decorate-angular-cli.js__tmpl__')
   ).toString();
-  host.create('decorate-angular-cli.js', decorateCli);
+  host.write('decorate-angular-cli.js', decorateCli);
 };
 
-function setWorkspaceLayoutProperties(options: Schema) {
-  return updateJsonInTree('nx.json', (json) => {
+function setWorkspaceLayoutProperties(tree: Tree, options: Schema) {
+  updateJson(tree, 'nx.json', (json) => {
     if (options.layout === 'packages') {
       json.workspaceLayout = {
         appsDir: 'packages',
@@ -46,56 +40,51 @@ function setWorkspaceLayoutProperties(options: Schema) {
   });
 }
 
-function createAppsAndLibsFolders(options: Schema) {
-  return (host: Tree) => {
-    if (options.layout === 'packages') {
-      host.create('packages/.gitkeep', '');
-    } else {
-      host.create('apps/.gitkeep', '');
-      host.create('libs/.gitkeep', '');
-    }
-  };
+function createAppsAndLibsFolders(host: Tree, options: Schema) {
+  if (options.layout === 'packages') {
+    host.write('packages/.gitkeep', '');
+  } else {
+    host.write('apps/.gitkeep', '');
+    host.write('libs/.gitkeep', '');
+  }
 }
 
-export default function (options: Schema): Rule {
+function createFiles(host: Tree, options: Schema) {
+  const npmScope = options.npmScope ? options.npmScope : options.name;
+  const formattedNames = names(options.name);
+  generateFiles(host, pathJoin(__dirname, './files'), '', {
+    formattedNames,
+    dot: '.',
+    tmpl: '',
+    workspaceFile: options.cli === 'angular' ? 'angular' : 'workspace',
+    cliCommand: options.cli === 'angular' ? 'ng' : 'nx',
+    nxCli: false,
+    typescriptVersion,
+    prettierVersion,
+    eslintVersion,
+    // angular cli is used only when workspace schematics is added to angular cli
+    angularCliVersion,
+    ...(options as object),
+    nxVersion,
+    npmScope,
+  });
+}
+
+function createPrettierrc(host: Tree) {
+  writeJson(host, '.prettierrc', DEFAULT_NRWL_PRETTIER_CONFIG);
+}
+
+export function workspaceGenerator(host: Tree, options: Schema) {
   if (!options.name) {
     throw new Error(`Invalid options, "name" is required.`);
   }
-
-  return (host: Tree, context: SchematicContext) => {
-    const npmScope = options.npmScope ? options.npmScope : options.name;
-    const templateSource = apply(url('./files'), [
-      template({
-        utils: strings,
-        dot: '.',
-        tmpl: '',
-        workspaceFile: options.cli === 'angular' ? 'angular' : 'workspace',
-        cliCommand: options.cli === 'angular' ? 'ng' : 'nx',
-        nxCli: false,
-        typescriptVersion,
-        prettierVersion,
-        eslintVersion,
-        // angular cli is used only when workspace schematics is added to angular cli
-        angularCliVersion,
-        ...(options as object),
-        nxVersion,
-        npmScope,
-        defaultNrwlPrettierConfig: JSON.stringify(
-          DEFAULT_NRWL_PRETTIER_CONFIG,
-          null,
-          2
-        ),
-      }),
-    ]);
-    return chain([
-      branchAndMerge(
-        chain([
-          mergeWith(templateSource),
-          options.cli === 'angular' ? decorateAngularClI : noop(),
-          setWorkspaceLayoutProperties(options),
-          createAppsAndLibsFolders(options),
-        ])
-      ),
-    ])(host, context);
-  };
+  createFiles(host, options);
+  createPrettierrc(host);
+  if (options.cli === 'angular') {
+    decorateAngularClI(host);
+  }
+  setWorkspaceLayoutProperties(host, options);
+  createAppsAndLibsFolders(host, options);
 }
+
+export const workspaceSchematic = convertNxGenerator(workspaceGenerator);

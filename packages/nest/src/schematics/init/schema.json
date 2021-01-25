@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "id": "NxNestInit",
-  "title": "Add Nx Nest Schematics",
+  "title": "Init Nest Plugin",
   "type": "object",
   "properties": {
     "unitTestRunner": {

@@ -1,14 +1,15 @@
 import { BuilderContext } from '@angular-devkit/architect';
+import { normalize } from '@angular-devkit/core';
 import { readJsonFile } from '@nrwl/workspace';
 import { writeJsonFile } from '@nrwl/workspace/src/utils/fileutils';
-import { basename, join, normalize } from 'path';
+import { basename, join } from 'path';
 import { NormalizedBuilderOptions } from './models';
 
 export default function updatePackageJson(
   options: NormalizedBuilderOptions,
   context: BuilderContext
 ) {
-  const mainFile = basename(options.main, '.ts');
+  const mainFile = basename(options.main).replace(/\.[tj]s$/, '');
   const typingsFile = `${mainFile}.d.ts`;
   const mainJsFile = `${mainFile}.js`;
   const packageJson = readJsonFile(

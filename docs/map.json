@@ -7,9 +7,9 @@
         "id": "getting-started",
         "itemList": [
           {
-            "name": "Why Nx?",
-            "id": "why-nx",
-            "file": "angular/getting-started/why-nx"
+            "name": "Getting Started",
+            "id": "getting-started",
+            "file": "angular/getting-started/getting-started"
           },
           {
             "name": "Resources",
@@ -19,6 +19,28 @@
             "name": "Nx and Angular CLI",
             "id": "nx-and-cli",
             "file": "angular/getting-started/nx-and-cli"
+          },
+          {
+            "name": "CLI Overview",
+            "searchResultsName": "CLI Overview",
+            "id": "cli-overview",
+            "file": "angular/guides/cli-overview"
+          },
+          {
+            "name": "VS Code Plugin",
+            "id": "console",
+            "file": "shared/console"
+          },
+          {
+            "name": "Folder Structure",
+            "searchResultsName": "Folder Structure",
+            "id": "folder-structure",
+            "file": "shared/folder-structure"
+          },
+          {
+            "name": "Configuration",
+            "id": "configuration",
+            "file": "angular/guides/configuration"
           }
         ]
       },
@@ -77,6 +99,37 @@
         ]
       },
       {
+        "name": "Core Concepts",
+        "id": "core-concepts",
+        "itemList": [
+          {
+            "name": "Computation Caching",
+            "id": "computation-caching",
+            "file": "shared/computation-caching"
+          },
+          {
+            "name": "Rebuild Only What is Affected",
+            "id": "affected",
+            "file": "shared/affected"
+          },
+          {
+            "name": "Why Monorepos",
+            "id": "why-monorepos",
+            "file": "shared/guides/why-monorepos"
+          },
+          {
+            "name": "Updating Nx",
+            "id": "updating-nx",
+            "file": "angular/guides/update"
+          },
+          {
+            "name": "Nx Devkit",
+            "id": "nx-devkit",
+            "file": "shared/devkit"
+          }
+        ]
+      },
+      {
         "name": "Migration",
         "id": "migration",
         "itemList": [
@@ -104,17 +157,6 @@
         "name": "CLI",
         "id": "cli",
         "itemList": [
-          {
-            "name": "Overview",
-            "searchResultsName": "CLI Overview",
-            "id": "overview",
-            "file": "angular/guides/cli-overview"
-          },
-          {
-            "name": "Console",
-            "id": "console",
-            "file": "shared/console"
-          },
           {
             "name": "generate",
             "id": "generate",
@@ -236,646 +278,9 @@
             "file": "angular/cli/workspace-lint"
           },
           {
-            "name": "workspace-schematic",
-            "id": "workspace-schematic",
-            "file": "angular/cli/workspace-schematic"
-          }
-        ]
-      },
-      {
-        "name": "Plugins",
-        "id": "plugins",
-        "itemList": [
-          {
-            "name": "Overview",
-            "searchResultsName": "Plugins Overview",
-            "id": "overview",
-            "file": "shared/plugins-overview"
-          },
-          {
-            "name": "Workspace",
-            "id": "workspace",
-            "itemList": [
-              {
-                "id": "nrwl-workspace-overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/workspace Overview",
-                "file": "shared/workspace-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "library",
-                    "id": "library",
-                    "file": "angular/api-workspace/schematics/library"
-                  },
-                  {
-                    "name": "move",
-                    "id": "move",
-                    "file": "angular/api-workspace/schematics/move"
-                  },
-                  {
-                    "name": "remove",
-                    "id": "remove",
-                    "file": "angular/api-workspace/schematics/remove"
-                  },
-                  {
-                    "name": "run-commands",
-                    "id": "run-commands",
-                    "file": "angular/api-workspace/schematics/run-commands"
-                  },
-                  {
-                    "name": "workspace-schematic",
-                    "id": "workspace-schematic",
-                    "file": "angular/api-workspace/schematics/workspace-schematic"
-                  }
-                ]
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "run-commands",
-                    "id": "run-commands",
-                    "file": "angular/api-workspace/builders/run-commands"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "web",
-            "id": "web",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/web Overview",
-                "file": "shared/web-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "application",
-                    "id": "application",
-                    "file": "angular/api-web/schematics/application"
-                  }
-                ]
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "build",
-                    "id": "build",
-                    "file": "angular/api-web/builders/build"
-                  },
-                  {
-                    "name": "dev-server",
-                    "id": "dev-server",
-                    "file": "angular/api-web/builders/dev-server"
-                  },
-                  {
-                    "name": "package",
-                    "id": "package",
-                    "file": "angular/api-web/builders/package"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "angular",
-            "id": "angular",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/angular Overview",
-                "file": "shared/angular-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "application",
-                    "id": "application",
-                    "file": "angular/api-angular/schematics/application"
-                  },
-                  {
-                    "name": "downgrade-module",
-                    "id": "downgrade-module",
-                    "file": "angular/api-angular/schematics/downgrade-module"
-                  },
-                  {
-                    "name": "karma-project",
-                    "id": "karma-project",
-                    "file": "angular/api-angular/schematics/karma-project"
-                  },
-                  {
-                    "name": "karma",
-                    "id": "karma",
-                    "file": "angular/api-angular/schematics/karma"
-                  },
-                  {
-                    "name": "library",
-                    "id": "library",
-                    "file": "angular/api-angular/schematics/library"
-                  },
-                  {
-                    "name": "move",
-                    "id": "move",
-                    "file": "angular/api-angular/schematics/move"
-                  },
-                  {
-                    "name": "ngrx",
-                    "id": "ngrx",
-                    "file": "angular/api-angular/schematics/ngrx"
-                  },
-                  {
-                    "name": "stories",
-                    "id": "stories",
-                    "file": "angular/api-angular/schematics/stories"
-                  },
-                  {
-                    "name": "storybook-configuration",
-                    "id": "storybook-configuration",
-                    "file": "angular/api-angular/schematics/storybook-configuration"
-                  },
-                  {
-                    "name": "upgrade-module",
-                    "id": "upgrade-module",
-                    "file": "angular/api-angular/schematics/upgrade-module"
-                  }
-                ]
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "package",
-                    "id": "package",
-                    "file": "angular/api-angular/builders/package"
-                  },
-                  {
-                    "name": "ng packagr lite",
-                    "id": "ng-packagr-lite",
-                    "file": "angular/api-angular/builders/ng-packagr-lite"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "react",
-            "id": "react",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/react Overview",
-                "file": "shared/react-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "application",
-                    "id": "application",
-                    "file": "angular/api-react/schematics/application"
-                  },
-                  {
-                    "name": "component",
-                    "id": "component",
-                    "file": "angular/api-react/schematics/component"
-                  },
-                  {
-                    "name": "component-cypress-spec",
-                    "id": "component-cypress-spec",
-                    "file": "angular/api-react/schematics/component-cypress-spec"
-                  },
-                  {
-                    "name": "component-story",
-                    "id": "component-story",
-                    "file": "angular/api-react/schematics/component-story"
-                  },
-                  {
-                    "name": "library",
-                    "id": "library",
-                    "file": "angular/api-react/schematics/library"
-                  },
-                  {
-                    "name": "redux",
-                    "id": "redux",
-                    "file": "angular/api-react/schematics/redux"
-                  },
-                  {
-                    "name": "stories",
-                    "id": "stories",
-                    "file": "angular/api-react/schematics/stories"
-                  },
-                  {
-                    "name": "storybook-configuration",
-                    "id": "storybook-configuration",
-                    "file": "angular/api-react/schematics/storybook-configuration"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "jest",
-            "id": "jest",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/jest Overview",
-                "file": "shared/jest-plugin"
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "jest",
-                    "id": "jest",
-                    "file": "angular/api-jest/builders/jest"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "cypress",
-            "id": "cypress",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/cypress Overview",
-                "file": "shared/cypress-plugin"
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "cypress",
-                    "id": "cypress",
-                    "file": "angular/api-cypress/builders/cypress"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "storybook",
-            "id": "storybook",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/storybook Overview",
-                "file": "angular/guides/storybook-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "configuration",
-                    "id": "configuration",
-                    "file": "angular/api-storybook/schematics/configuration"
-                  },
-                  {
-                    "name": "cypress-project",
-                    "id": "cypress-project",
-                    "file": "angular/api-storybook/schematics/cypress-project"
-                  }
-                ]
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "build",
-                    "id": "build",
-                    "file": "angular/api-storybook/builders/build"
-                  },
-                  {
-                    "name": "storybook",
-                    "id": "storybook",
-                    "file": "angular/api-storybook/builders/storybook"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "linter",
-            "id": "linter",
-            "itemList": [
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "eslint",
-                    "id": "eslint",
-                    "file": "angular/api-linter/builders/eslint"
-                  },
-                  {
-                    "name": "lint",
-                    "id": "lint",
-                    "file": "angular/api-linter/builders/lint"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "node",
-            "id": "node",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/node Overview",
-                "file": "shared/node-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "application",
-                    "id": "application",
-                    "file": "angular/api-node/schematics/application"
-                  },
-                  {
-                    "name": "library",
-                    "id": "library",
-                    "file": "angular/api-node/schematics/library"
-                  }
-                ]
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "build",
-                    "id": "build",
-                    "file": "angular/api-node/builders/build"
-                  },
-                  {
-                    "name": "execute",
-                    "id": "execute",
-                    "file": "angular/api-node/builders/execute"
-                  },
-                  {
-                    "name": "package",
-                    "id": "package",
-                    "file": "angular/api-node/builders/package"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "express",
-            "id": "express",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/express Overview",
-                "file": "shared/express-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "application",
-                    "id": "application",
-                    "file": "angular/api-express/schematics/application"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "nest",
-            "id": "nest",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/nest Overview",
-                "file": "shared/nest-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "application",
-                    "id": "application",
-                    "file": "angular/api-nest/schematics/application"
-                  },
-                  {
-                    "name": "class",
-                    "id": "class",
-                    "file": "angular/api-nest/schematics/class"
-                  },
-                  {
-                    "name": "controller",
-                    "id": "controller",
-                    "file": "angular/api-nest/schematics/controller"
-                  },
-                  {
-                    "name": "decorator",
-                    "id": "decorator",
-                    "file": "angular/api-nest/schematics/decorator"
-                  },
-                  {
-                    "name": "filter",
-                    "id": "filter",
-                    "file": "angular/api-nest/schematics/filter"
-                  },
-                  {
-                    "name": "gateway",
-                    "id": "gateway",
-                    "file": "angular/api-nest/schematics/gateway"
-                  },
-                  {
-                    "name": "guard",
-                    "id": "guard",
-                    "file": "angular/api-nest/schematics/guard"
-                  },
-                  {
-                    "name": "interceptor",
-                    "id": "interceptor",
-                    "file": "angular/api-nest/schematics/interceptor"
-                  },
-                  {
-                    "name": "interface",
-                    "id": "interface",
-                    "file": "angular/api-nest/schematics/interface"
-                  },
-                  {
-                    "name": "library",
-                    "id": "library",
-                    "file": "angular/api-nest/schematics/library"
-                  },
-                  {
-                    "name": "middleware",
-                    "id": "middleware",
-                    "file": "angular/api-nest/schematics/middleware"
-                  },
-                  {
-                    "name": "module",
-                    "id": "module",
-                    "file": "angular/api-nest/schematics/module"
-                  },
-                  {
-                    "name": "pipe",
-                    "id": "pipe",
-                    "file": "angular/api-nest/schematics/pipe"
-                  },
-                  {
-                    "name": "provider",
-                    "id": "provider",
-                    "file": "angular/api-nest/schematics/provider"
-                  },
-                  {
-                    "name": "resolver",
-                    "id": "resolver",
-                    "file": "angular/api-nest/schematics/resolver"
-                  },
-                  {
-                    "name": "service",
-                    "id": "service",
-                    "file": "angular/api-nest/schematics/service"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "next",
-            "id": "next",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/next Overview",
-                "file": "shared/next-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "application",
-                    "id": "application",
-                    "file": "angular/api-next/schematics/application"
-                  },
-                  {
-                    "name": "component",
-                    "id": "component",
-                    "file": "angular/api-next/schematics/component"
-                  },
-                  {
-                    "name": "page",
-                    "id": "page",
-                    "file": "angular/api-next/schematics/page"
-                  }
-                ]
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "build",
-                    "id": "build",
-                    "file": "angular/api-next/builders/build"
-                  },
-                  {
-                    "name": "server",
-                    "id": "server",
-                    "file": "angular/api-next/builders/server"
-                  },
-                  {
-                    "name": "export",
-                    "id": "export",
-                    "file": "angular/api-next/builders/export"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "Nx Plugin",
-            "id": "nx-plugin",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/nx-plugin Overview",
-                "file": "shared/nx-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "builder",
-                    "id": "builder",
-                    "file": "angular/api-nx-plugin/schematics/builder"
-                  },
-                  {
-                    "name": "migration",
-                    "id": "migration",
-                    "file": "angular/api-nx-plugin/schematics/migration"
-                  },
-                  {
-                    "name": "plugin",
-                    "id": "plugin",
-                    "file": "angular/api-nx-plugin/schematics/plugin"
-                  },
-                  {
-                    "name": "schematic",
-                    "id": "schematic",
-                    "file": "angular/api-nx-plugin/schematics/schematic"
-                  }
-                ]
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "e2e",
-                    "id": "e2e",
-                    "file": "angular/api-nx-plugin/builders/e2e"
-                  }
-                ]
-              }
-            ]
+            "name": "workspace-generator",
+            "id": "workspace-generator",
+            "file": "angular/cli/workspace-generator"
           }
         ]
       },
@@ -884,98 +289,633 @@
         "id": "workspace",
         "itemList": [
           {
+            "id": "nrwl-workspace-overview",
             "name": "Overview",
-            "searchResultsName": "Workspace Overview",
-            "id": "workspace-overview",
-            "file": "shared/workspace-overview"
+            "searchResultsName": "@nrwl/workspace Overview",
+            "file": "shared/workspace-plugin"
           },
           {
-            "name": "Configuration",
+            "name": "library generator",
+            "id": "library",
+            "file": "angular/api-workspace/generators/library"
+          },
+          {
+            "name": "move generator",
+            "id": "move",
+            "file": "angular/api-workspace/generators/move"
+          },
+          {
+            "name": "remove generator",
+            "id": "remove",
+            "file": "angular/api-workspace/generators/remove"
+          },
+          {
+            "name": "run-commands generator",
+            "id": "run-commands",
+            "file": "angular/api-workspace/generators/run-commands"
+          },
+          {
+            "name": "workspace-generator generator",
+            "id": "workspace-generator",
+            "file": "angular/api-workspace/generators/workspace-generator"
+          },
+          {
+            "name": "run-commands executor",
+            "id": "run-commands",
+            "file": "angular/api-workspace/executors/run-commands"
+          }
+        ]
+      },
+      {
+        "name": "web",
+        "id": "web",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/web Overview",
+            "file": "shared/web-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "angular/api-web/generators/application"
+          },
+          {
+            "name": "build executor",
+            "id": "build",
+            "file": "angular/api-web/executors/build"
+          },
+          {
+            "name": "dev-server executor",
+            "id": "dev-server",
+            "file": "angular/api-web/executors/dev-server"
+          },
+          {
+            "name": "file-server executor",
+            "id": "file-server",
+            "file": "angular/api-web/executors/file-server"
+          },
+          {
+            "name": "package executor",
+            "id": "package",
+            "file": "angular/api-web/executors/package"
+          }
+        ]
+      },
+      {
+        "name": "angular",
+        "id": "angular",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/angular Overview",
+            "file": "shared/angular-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "angular/api-angular/generators/application"
+          },
+          {
+            "name": "downgrade-module generator",
+            "id": "downgrade-module",
+            "file": "angular/api-angular/generators/downgrade-module"
+          },
+          {
+            "name": "karma-project generator",
+            "id": "karma-project",
+            "file": "angular/api-angular/generators/karma-project"
+          },
+          {
+            "name": "karma generator",
+            "id": "karma",
+            "file": "angular/api-angular/generators/karma"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "angular/api-angular/generators/library"
+          },
+          {
+            "name": "move generator",
+            "id": "move",
+            "file": "angular/api-angular/generators/move"
+          },
+          {
+            "name": "ngrx generator",
+            "id": "ngrx",
+            "file": "angular/api-angular/generators/ngrx"
+          },
+          {
+            "name": "stories generator",
+            "id": "stories",
+            "file": "angular/api-angular/generators/stories"
+          },
+          {
+            "name": "storybook-configuration generator",
+            "id": "storybook-configuration",
+            "file": "angular/api-angular/generators/storybook-configuration"
+          },
+          {
+            "name": "upgrade-module generator",
+            "id": "upgrade-module",
+            "file": "angular/api-angular/generators/upgrade-module"
+          },
+          {
+            "name": "package executor",
+            "id": "package",
+            "file": "angular/api-angular/executors/package"
+          },
+          {
+            "name": "ng packagr lite executor",
+            "id": "ng-packagr-lite",
+            "file": "angular/api-angular/executors/ng-packagr-lite"
+          },
+          {
+            "name": "webpack-browser executor",
+            "id": "webpack-browser",
+            "file": "angular/api-angular/executors/webpack-browser"
+          }
+        ]
+      },
+      {
+        "name": "react",
+        "id": "react",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/react Overview",
+            "file": "shared/react-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "angular/api-react/generators/application"
+          },
+          {
+            "name": "component generator",
+            "id": "component",
+            "file": "angular/api-react/generators/component"
+          },
+          {
+            "name": "component-cypress-spec generator",
+            "id": "component-cypress-spec",
+            "file": "angular/api-react/generators/component-cypress-spec"
+          },
+          {
+            "name": "component-story generator",
+            "id": "component-story",
+            "file": "angular/api-react/generators/component-story"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "angular/api-react/generators/library"
+          },
+          {
+            "name": "redux generator",
+            "id": "redux",
+            "file": "angular/api-react/generators/redux"
+          },
+          {
+            "name": "stories generator",
+            "id": "stories",
+            "file": "angular/api-react/generators/stories"
+          },
+          {
+            "name": "storybook-configuration generator",
+            "id": "storybook-configuration",
+            "file": "angular/api-react/generators/storybook-configuration"
+          }
+        ]
+      },
+      {
+        "name": "jest",
+        "id": "jest",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/jest Overview",
+            "file": "shared/jest-plugin"
+          },
+          {
+            "name": "jest executor",
+            "id": "jest",
+            "file": "angular/api-jest/executors/jest"
+          }
+        ]
+      },
+      {
+        "name": "cypress",
+        "id": "cypress",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/cypress Overview",
+            "file": "shared/cypress-plugin"
+          },
+          {
+            "name": "cypress executor",
+            "id": "cypress",
+            "file": "angular/api-cypress/executors/cypress"
+          }
+        ]
+      },
+      {
+        "name": "storybook",
+        "id": "storybook",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/storybook Overview",
+            "file": "angular/guides/storybook-plugin"
+          },
+          {
+            "name": "configuration generator",
             "id": "configuration",
-            "file": "angular/guides/configuration"
+            "file": "angular/api-storybook/generators/configuration"
           },
           {
-            "name": "Builders",
-            "id": "builders",
-            "itemList": [
-              {
-                "name": "Using Builders",
-                "id": "using-builders",
-                "file": "shared/using-builders"
-              },
-              {
-                "name": "Run Commands Builder",
-                "id": "run-commands-builder",
-                "file": "shared/running-custom-commands"
-              },
-              {
-                "name": "Creating Custom Builders",
-                "id": "creating-custom-builders",
-                "file": "shared/tools-workspace-builders"
-              }
-            ]
+            "name": "cypress-project generator",
+            "id": "cypress-project",
+            "file": "angular/api-storybook/generators/cypress-project"
           },
           {
-            "name": "Computation Caching",
-            "id": "computation-caching",
-            "file": "shared/computation-caching"
+            "name": "build executor",
+            "id": "build",
+            "file": "angular/api-storybook/executors/build"
           },
           {
-            "name": "Schematics",
-            "id": "schematics",
-            "itemList": [
-              {
-                "name": "Using Schematics",
-                "id": "using-schematics",
-                "file": "shared/using-schematics"
-              },
-              {
-                "name": "Workspace Schematics",
-                "id": "workspace-schematics",
-                "file": "shared/tools-workspace-schematics"
-              }
-            ]
+            "name": "storybook executor",
+            "id": "storybook",
+            "file": "angular/api-storybook/executors/storybook"
+          }
+        ]
+      },
+      {
+        "name": "linter",
+        "id": "linter",
+        "itemList": [
+          {
+            "name": "eslint executor",
+            "id": "eslint",
+            "file": "angular/api-linter/executors/eslint"
           },
           {
-            "name": "Structure",
-            "id": "structure",
-            "itemList": [
-              {
-                "name": "Creating Libraries",
-                "id": "creating-libraries",
-                "file": "shared/workspace/creating-libraries"
-              },
-              {
-                "name": "Library Types",
-                "id": "library-types",
-                "file": "shared/workspace/library-types"
-              },
-              {
-                "name": "Grouping Libraries",
-                "id": "grouping-libraries",
-                "file": "shared/workspace/grouping-libraries"
-              },
-              {
-                "name": "Buildable and Publishable Libraries",
-                "id": "buildable-and-publishable-libraries",
-                "file": "shared/workspace/buildable-and-publishable-libraries"
-              },
-              {
-                "name": "Using Tags",
-                "id": "monorepo-tags",
-                "file": "shared/monorepo-tags"
-              },
-              {
-                "name": "Dependency Graph",
-                "id": "dependency-graph",
-                "file": "shared/workspace/structure/dependency-graph"
-              }
-            ]
+            "name": "lint executor",
+            "id": "lint",
+            "file": "angular/api-linter/executors/lint"
+          }
+        ]
+      },
+      {
+        "name": "node",
+        "id": "node",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/node Overview",
+            "file": "shared/node-plugin"
           },
           {
-            "name": "Updating Nx",
-            "id": "update",
-            "file": "shared/update"
+            "name": "application generator",
+            "id": "application",
+            "file": "angular/api-node/generators/application"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "angular/api-node/generators/library"
+          },
+          {
+            "name": "build executor",
+            "id": "build",
+            "file": "angular/api-node/executors/build"
+          },
+          {
+            "name": "execute executor",
+            "id": "execute",
+            "file": "angular/api-node/executors/execute"
+          },
+          {
+            "name": "package executor",
+            "id": "package",
+            "file": "angular/api-node/executors/package"
+          }
+        ]
+      },
+      {
+        "name": "express",
+        "id": "express",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/express Overview",
+            "file": "shared/express-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "angular/api-express/generators/application"
+          }
+        ]
+      },
+      {
+        "name": "nest",
+        "id": "nest",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/nest Overview",
+            "file": "shared/nest-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "angular/api-nest/generators/application"
+          },
+          {
+            "name": "class generator",
+            "id": "class",
+            "file": "angular/api-nest/generators/class"
+          },
+          {
+            "name": "controller generator",
+            "id": "controller",
+            "file": "angular/api-nest/generators/controller"
+          },
+          {
+            "name": "decorator generator",
+            "id": "decorator",
+            "file": "angular/api-nest/generators/decorator"
+          },
+          {
+            "name": "filter generator",
+            "id": "filter",
+            "file": "angular/api-nest/generators/filter"
+          },
+          {
+            "name": "gateway generator",
+            "id": "gateway",
+            "file": "angular/api-nest/generators/gateway"
+          },
+          {
+            "name": "guard generator",
+            "id": "guard",
+            "file": "angular/api-nest/generators/guard"
+          },
+          {
+            "name": "interceptor generator",
+            "id": "interceptor",
+            "file": "angular/api-nest/generators/interceptor"
+          },
+          {
+            "name": "interface generator",
+            "id": "interface",
+            "file": "angular/api-nest/generators/interface"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "angular/api-nest/generators/library"
+          },
+          {
+            "name": "middleware generator",
+            "id": "middleware",
+            "file": "angular/api-nest/generators/middleware"
+          },
+          {
+            "name": "module generator",
+            "id": "module",
+            "file": "angular/api-nest/generators/module"
+          },
+          {
+            "name": "pipe generator",
+            "id": "pipe",
+            "file": "angular/api-nest/generators/pipe"
+          },
+          {
+            "name": "provider generator",
+            "id": "provider",
+            "file": "angular/api-nest/generators/provider"
+          },
+          {
+            "name": "resolver generator",
+            "id": "resolver",
+            "file": "angular/api-nest/generators/resolver"
+          },
+          {
+            "name": "service generator",
+            "id": "service",
+            "file": "angular/api-nest/generators/service"
+          }
+        ]
+      },
+      {
+        "name": "next",
+        "id": "next",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/next Overview",
+            "file": "shared/next-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "angular/api-next/generators/application"
+          },
+          {
+            "name": "component generator",
+            "id": "component",
+            "file": "angular/api-next/generators/component"
+          },
+          {
+            "name": "page generator",
+            "id": "page",
+            "file": "angular/api-next/generators/page"
+          },
+          {
+            "name": "build executor",
+            "id": "build",
+            "file": "angular/api-next/executors/build"
+          },
+          {
+            "name": "server executor",
+            "id": "server",
+            "file": "angular/api-next/executors/server"
+          },
+          {
+            "name": "export executor",
+            "id": "export",
+            "file": "angular/api-next/executors/export"
+          }
+        ]
+      },
+      {
+        "name": "Nx Plugin",
+        "id": "nx-plugin",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/nx-plugin Overview",
+            "file": "shared/nx-plugin"
+          },
+          {
+            "name": "executor generator",
+            "id": "executor",
+            "file": "angular/api-nx-plugin/generators/executor"
+          },
+          {
+            "name": "migration generator",
+            "id": "migration",
+            "file": "angular/api-nx-plugin/generators/migration"
+          },
+          {
+            "name": "plugin generator",
+            "id": "plugin",
+            "file": "angular/api-nx-plugin/generators/plugin"
+          },
+          {
+            "name": "generator generator",
+            "id": "schematic",
+            "file": "angular/api-nx-plugin/generators/generator"
+          },
+          {
+            "name": "e2e executor",
+            "id": "e2e",
+            "file": "angular/api-nx-plugin/executors/e2e"
+          }
+        ]
+      },
+      {
+        "name": "Executors / Builders",
+        "id": "executors",
+        "itemList": [
+          {
+            "name": "Using Executors / Builders",
+            "id": "using-builders",
+            "file": "shared/using-builders"
+          },
+          {
+            "name": "Running Custom Commands",
+            "id": "run-commands-builder",
+            "file": "shared/running-custom-commands"
+          },
+          {
+            "name": "Creating Custom Builders",
+            "id": "creating-custom-builders",
+            "file": "shared/tools-workspace-builders"
+          }
+        ]
+      },
+      {
+        "name": "Generators",
+        "id": "generators",
+        "itemList": [
+          {
+            "name": "Using Generators",
+            "id": "using-schematics",
+            "file": "shared/using-schematics"
+          },
+          {
+            "name": "Workspace Generators",
+            "id": "workspace-generators",
+            "file": "shared/tools-workspace-generators"
+          }
+        ]
+      },
+      {
+        "name": "Workspace Structure",
+        "id": "structure",
+        "itemList": [
+          {
+            "name": "Creating Libraries",
+            "id": "creating-libraries",
+            "file": "shared/workspace/creating-libraries"
+          },
+          {
+            "name": "Library Types",
+            "id": "library-types",
+            "file": "shared/workspace/library-types"
+          },
+          {
+            "name": "Grouping Libraries",
+            "id": "grouping-libraries",
+            "file": "shared/workspace/grouping-libraries"
+          },
+          {
+            "name": "Buildable and Publishable Libraries",
+            "id": "buildable-and-publishable-libraries",
+            "file": "shared/workspace/buildable-and-publishable-libraries"
+          },
+          {
+            "name": "Using Tags",
+            "id": "monorepo-tags",
+            "file": "shared/monorepo-tags"
+          },
+          {
+            "name": "Dependency Graph",
+            "id": "dependency-graph",
+            "file": "shared/workspace/structure/dependency-graph"
+          }
+        ]
+      },
+      {
+        "name": "CI",
+        "id": "ci",
+        "itemList": [
+          {
+            "name": "Distributed CI: Overview",
+            "id": "distributed-builds",
+            "file": "shared/distributed-builds"
+          },
+          {
+            "name": "Distributed CI: Azure",
+            "id": "monorepo-ci-azure",
+            "file": "shared/monorepo-ci-azure"
+          },
+          {
+            "name": "Distributed CI: Jenkins",
+            "id": "monorepo-ci-jenkins",
+            "file": "shared/monorepo-ci-jenkins"
+          },
+          {
+            "name": "Incremental Builds",
+            "id": "incremental-builds",
+            "file": "shared/incremental-builds"
+          },
+          {
+            "name": "Setup incremental builds for Angular applications",
+            "id": "setup-incremental-builds-angular",
+            "file": "angular/guides/setup-incremental-builds"
+          }
+        ]
+      },
+      {
+        "name": "Modern Angular",
+        "id": "modern-angular",
+        "itemList": [
+          {
+            "name": "Moving from Protractor to Cypress",
+            "id": "protractor-to-cypress",
+            "file": "angular/guides/modern-angular/protractor-to-cypress"
+          },
+          {
+            "name": "Moving from Karma to Jest",
+            "id": "karma-to-jest",
+            "file": "angular/guides/modern-angular/karma-to-jest"
           }
         ]
       },
@@ -983,53 +923,6 @@
         "name": "Guides",
         "id": "guides",
         "itemList": [
-          {
-            "name": "CI",
-            "id": "ci",
-            "itemList": [
-              {
-                "name": "Rebuild Only What is Affected",
-                "id": "monorepo-affected",
-                "file": "shared/monorepo-affected"
-              },
-              {
-                "name": "Distributed CI: Overview",
-                "id": "distributed-builds",
-                "file": "shared/distributed-builds"
-              },
-              {
-                "name": "Distributed CI: Azure",
-                "id": "monorepo-ci-azure",
-                "file": "shared/monorepo-ci-azure"
-              },
-              {
-                "name": "Distributed CI: Jenkins",
-                "id": "monorepo-ci-jenkins",
-                "file": "shared/monorepo-ci-jenkins"
-              },
-              {
-                "name": "Incremental Builds",
-                "id": "incremental-builds",
-                "file": "shared/incremental-builds"
-              }
-            ]
-          },
-          {
-            "name": "Modern Angular",
-            "id": "modern-angular",
-            "itemList": [
-              {
-                "name": "Moving from Protractor to Cypress",
-                "id": "protractor-to-cypress",
-                "file": "angular/guides/modern-angular/protractor-to-cypress"
-              },
-              {
-                "name": "Moving from Karma to Jest",
-                "id": "karma-to-jest",
-                "file": "angular/guides/modern-angular/karma-to-jest"
-              }
-            ]
-          },
           {
             "name": "Using NgRx",
             "id": "misc-ngrx"
@@ -1055,6 +948,16 @@
             "name": "Configuring Browser Support",
             "id": "browser-support",
             "file": "shared/guides/browser-support"
+          },
+          {
+            "name": "Running custom commands",
+            "id": "running-custom-commands",
+            "file": "angular/guides/running-custom-commands"
+          },
+          {
+            "name": "Nx Devkit and Angular Devkit",
+            "id": "nx-devkit-angular-devkit",
+            "file": "angular/guides/nx-devkit-angular-devkit"
           }
         ]
       },
@@ -1089,13 +992,35 @@
         "id": "getting-started",
         "itemList": [
           {
-            "name": "Why Nx?",
-            "id": "why-nx",
-            "file": "react/getting-started/why-nx"
+            "name": "Getting Started",
+            "id": "getting-started",
+            "file": "react/getting-started/getting-started"
           },
           {
             "name": "Resources",
             "id": "resources"
+          },
+          {
+            "name": "CLI Overview",
+            "searchResultsName": "CLI Overview",
+            "id": "cli-overview",
+            "file": "react/guides/cli-overview"
+          },
+          {
+            "name": "VS Code Plugin",
+            "id": "console",
+            "file": "shared/console"
+          },
+          {
+            "name": "Folder Structure",
+            "searchResultsName": "Folder Structure",
+            "id": "folder-structure",
+            "file": "shared/folder-structure"
+          },
+          {
+            "name": "Configuration",
+            "id": "configuration",
+            "file": "react/guides/configuration"
           }
         ]
       },
@@ -1154,6 +1079,37 @@
         ]
       },
       {
+        "name": "Core Concepts",
+        "id": "core-concepts",
+        "itemList": [
+          {
+            "name": "Computation Caching",
+            "id": "computation-caching",
+            "file": "shared/computation-caching"
+          },
+          {
+            "name": "Rebuild Only What is Affected",
+            "id": "affected",
+            "file": "shared/affected"
+          },
+          {
+            "name": "Why Monorepos",
+            "id": "why-monorepos",
+            "file": "shared/guides/why-monorepos"
+          },
+          {
+            "name": "Updating Nx",
+            "id": "updating-nx",
+            "file": "shared/update"
+          },
+          {
+            "name": "Nx Devkit",
+            "id": "nx-devkit",
+            "file": "shared/devkit"
+          }
+        ]
+      },
+      {
         "name": "Migration",
         "id": "migration",
         "itemList": [
@@ -1177,17 +1133,6 @@
         "name": "CLI",
         "id": "cli",
         "itemList": [
-          {
-            "name": "Overview",
-            "searchResultsName": "CLI Overview",
-            "id": "overview",
-            "file": "react/guides/cli-overview"
-          },
-          {
-            "name": "Console",
-            "id": "console",
-            "file": "shared/console"
-          },
           {
             "name": "generate",
             "id": "generate",
@@ -1309,646 +1254,9 @@
             "file": "react/cli/workspace-lint"
           },
           {
-            "name": "workspace-schematic",
-            "id": "workspace-schematic",
-            "file": "react/cli/workspace-schematic"
-          }
-        ]
-      },
-      {
-        "name": "Plugins",
-        "id": "plugins",
-        "itemList": [
-          {
-            "name": "Overview",
-            "searchResultsName": "Plugins Overview",
-            "id": "overview",
-            "file": "shared/plugins-overview"
-          },
-          {
-            "name": "Workspace",
-            "id": "workspace",
-            "itemList": [
-              {
-                "id": "nrwl-workspace-overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/workspace Overview",
-                "file": "shared/workspace-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "library",
-                    "id": "library",
-                    "file": "react/api-workspace/schematics/library"
-                  },
-                  {
-                    "name": "move",
-                    "id": "move",
-                    "file": "react/api-workspace/schematics/move"
-                  },
-                  {
-                    "name": "remove",
-                    "id": "remove",
-                    "file": "react/api-workspace/schematics/remove"
-                  },
-                  {
-                    "name": "run-commands",
-                    "id": "run-commands",
-                    "file": "react/api-workspace/schematics/run-commands"
-                  },
-                  {
-                    "name": "workspace-schematic",
-                    "id": "workspace-schematic",
-                    "file": "react/api-workspace/schematics/workspace-schematic"
-                  }
-                ]
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "run-commands",
-                    "id": "run-commands",
-                    "file": "react/api-workspace/builders/run-commands"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "web",
-            "id": "web",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/web Overview",
-                "file": "shared/web-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "application",
-                    "id": "application",
-                    "file": "react/api-web/schematics/application"
-                  }
-                ]
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "build",
-                    "id": "build",
-                    "file": "react/api-web/builders/build"
-                  },
-                  {
-                    "name": "dev-server",
-                    "id": "dev-server",
-                    "file": "react/api-web/builders/dev-server"
-                  },
-                  {
-                    "name": "package",
-                    "id": "package",
-                    "file": "react/api-web/builders/package"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "angular",
-            "id": "angular",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/angular Overview",
-                "file": "shared/angular-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "application",
-                    "id": "application",
-                    "file": "react/api-angular/schematics/application"
-                  },
-                  {
-                    "name": "downgrade-module",
-                    "id": "downgrade-module",
-                    "file": "react/api-angular/schematics/downgrade-module"
-                  },
-                  {
-                    "name": "karma-project",
-                    "id": "karma-project",
-                    "file": "react/api-angular/schematics/karma-project"
-                  },
-                  {
-                    "name": "karma",
-                    "id": "karma",
-                    "file": "react/api-angular/schematics/karma"
-                  },
-                  {
-                    "name": "library",
-                    "id": "library",
-                    "file": "react/api-angular/schematics/library"
-                  },
-                  {
-                    "name": "move",
-                    "id": "move",
-                    "file": "react/api-angular/schematics/move"
-                  },
-                  {
-                    "name": "ngrx",
-                    "id": "ngrx",
-                    "file": "react/api-angular/schematics/ngrx"
-                  },
-                  {
-                    "name": "stories",
-                    "id": "stories",
-                    "file": "react/api-angular/schematics/stories"
-                  },
-                  {
-                    "name": "storybook-configuration",
-                    "id": "storybook-configuration",
-                    "file": "react/api-angular/schematics/storybook-configuration"
-                  },
-                  {
-                    "name": "upgrade-module",
-                    "id": "upgrade-module",
-                    "file": "react/api-angular/schematics/upgrade-module"
-                  }
-                ]
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "package",
-                    "id": "package",
-                    "file": "react/api-angular/builders/package"
-                  },
-                  {
-                    "name": "ng packagr lite",
-                    "id": "ng-packagr-lite",
-                    "file": "react/api-angular/builders/ng-packagr-lite"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "react",
-            "id": "react",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/react Overview",
-                "file": "shared/react-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "application",
-                    "id": "application",
-                    "file": "react/api-react/schematics/application"
-                  },
-                  {
-                    "name": "component",
-                    "id": "component",
-                    "file": "react/api-react/schematics/component"
-                  },
-                  {
-                    "name": "component-cypress-spec",
-                    "id": "component-cypress-spec",
-                    "file": "react/api-react/schematics/component-cypress-spec"
-                  },
-                  {
-                    "name": "component-story",
-                    "id": "component-story",
-                    "file": "react/api-react/schematics/component-story"
-                  },
-                  {
-                    "name": "library",
-                    "id": "library",
-                    "file": "react/api-react/schematics/library"
-                  },
-                  {
-                    "name": "redux",
-                    "id": "redux",
-                    "file": "react/api-react/schematics/redux"
-                  },
-                  {
-                    "name": "stories",
-                    "id": "stories",
-                    "file": "react/api-react/schematics/stories"
-                  },
-                  {
-                    "name": "storybook-configuration",
-                    "id": "storybook-configuration",
-                    "file": "react/api-react/schematics/storybook-configuration"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "jest",
-            "id": "jest",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/jest Overview",
-                "file": "shared/jest-plugin"
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "jest",
-                    "id": "jest",
-                    "file": "react/api-jest/builders/jest"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "cypress",
-            "id": "cypress",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/cypress Overview",
-                "file": "shared/cypress-plugin"
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "cypress",
-                    "id": "cypress",
-                    "file": "react/api-cypress/builders/cypress"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "storybook",
-            "id": "storybook",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/storybook Overview",
-                "file": "react/guides/storybook-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "configuration",
-                    "id": "configuration",
-                    "file": "react/api-storybook/schematics/configuration"
-                  },
-                  {
-                    "name": "cypress-project",
-                    "id": "cypress-project",
-                    "file": "react/api-storybook/schematics/cypress-project"
-                  }
-                ]
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "build",
-                    "id": "build",
-                    "file": "react/api-storybook/builders/build"
-                  },
-                  {
-                    "name": "storybook",
-                    "id": "storybook",
-                    "file": "react/api-storybook/builders/storybook"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "linter",
-            "id": "linter",
-            "itemList": [
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "eslint",
-                    "id": "eslint",
-                    "file": "react/api-linter/builders/eslint"
-                  },
-                  {
-                    "name": "lint",
-                    "id": "lint",
-                    "file": "react/api-linter/builders/lint"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "node",
-            "id": "node",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/node Overview",
-                "file": "shared/node-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "application",
-                    "id": "application",
-                    "file": "react/api-node/schematics/application"
-                  },
-                  {
-                    "name": "library",
-                    "id": "library",
-                    "file": "react/api-node/schematics/library"
-                  }
-                ]
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "build",
-                    "id": "build",
-                    "file": "react/api-node/builders/build"
-                  },
-                  {
-                    "name": "execute",
-                    "id": "execute",
-                    "file": "react/api-node/builders/execute"
-                  },
-                  {
-                    "name": "package",
-                    "id": "package",
-                    "file": "react/api-node/builders/package"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "express",
-            "id": "express",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/express Overview",
-                "file": "shared/express-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "application",
-                    "id": "application",
-                    "file": "react/api-express/schematics/application"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "nest",
-            "id": "nest",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/nest Overview",
-                "file": "shared/nest-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "application",
-                    "id": "application",
-                    "file": "react/api-nest/schematics/application"
-                  },
-                  {
-                    "name": "class",
-                    "id": "class",
-                    "file": "react/api-nest/schematics/class"
-                  },
-                  {
-                    "name": "controller",
-                    "id": "controller",
-                    "file": "react/api-nest/schematics/controller"
-                  },
-                  {
-                    "name": "decorator",
-                    "id": "decorator",
-                    "file": "react/api-nest/schematics/decorator"
-                  },
-                  {
-                    "name": "filter",
-                    "id": "filter",
-                    "file": "react/api-nest/schematics/filter"
-                  },
-                  {
-                    "name": "gateway",
-                    "id": "gateway",
-                    "file": "react/api-nest/schematics/gateway"
-                  },
-                  {
-                    "name": "guard",
-                    "id": "guard",
-                    "file": "react/api-nest/schematics/guard"
-                  },
-                  {
-                    "name": "interceptor",
-                    "id": "interceptor",
-                    "file": "react/api-nest/schematics/interceptor"
-                  },
-                  {
-                    "name": "interface",
-                    "id": "interface",
-                    "file": "react/api-nest/schematics/interface"
-                  },
-                  {
-                    "name": "library",
-                    "id": "library",
-                    "file": "react/api-nest/schematics/library"
-                  },
-                  {
-                    "name": "middleware",
-                    "id": "middleware",
-                    "file": "react/api-nest/schematics/middleware"
-                  },
-                  {
-                    "name": "module",
-                    "id": "module",
-                    "file": "react/api-nest/schematics/module"
-                  },
-                  {
-                    "name": "pipe",
-                    "id": "pipe",
-                    "file": "react/api-nest/schematics/pipe"
-                  },
-                  {
-                    "name": "provider",
-                    "id": "provider",
-                    "file": "react/api-nest/schematics/provider"
-                  },
-                  {
-                    "name": "resolver",
-                    "id": "resolver",
-                    "file": "react/api-nest/schematics/resolver"
-                  },
-                  {
-                    "name": "service",
-                    "id": "service",
-                    "file": "react/api-nest/schematics/service"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "next",
-            "id": "next",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/next Overview",
-                "file": "shared/next-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "application",
-                    "id": "application",
-                    "file": "react/api-next/schematics/application"
-                  },
-                  {
-                    "name": "component",
-                    "id": "component",
-                    "file": "react/api-next/schematics/component"
-                  },
-                  {
-                    "name": "page",
-                    "id": "page",
-                    "file": "react/api-next/schematics/page"
-                  }
-                ]
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "build",
-                    "id": "build",
-                    "file": "react/api-next/builders/build"
-                  },
-                  {
-                    "name": "server",
-                    "id": "server",
-                    "file": "react/api-next/builders/server"
-                  },
-                  {
-                    "name": "export",
-                    "id": "export",
-                    "file": "react/api-next/builders/export"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "Nx Plugin",
-            "id": "nx-plugin",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/nx-plugin Overview",
-                "file": "shared/nx-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "builder",
-                    "id": "builder",
-                    "file": "react/api-nx-plugin/schematics/builder"
-                  },
-                  {
-                    "name": "migration",
-                    "id": "migration",
-                    "file": "react/api-nx-plugin/schematics/migration"
-                  },
-                  {
-                    "name": "plugin",
-                    "id": "plugin",
-                    "file": "react/api-nx-plugin/schematics/plugin"
-                  },
-                  {
-                    "name": "schematic",
-                    "id": "schematic",
-                    "file": "react/api-nx-plugin/schematics/schematic"
-                  }
-                ]
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "e2e",
-                    "id": "e2e",
-                    "file": "react/api-nx-plugin/builders/e2e"
-                  }
-                ]
-              }
-            ]
+            "name": "workspace-generator",
+            "id": "workspace-generator",
+            "file": "react/cli/workspace-generator"
           }
         ]
       },
@@ -1957,98 +1265,618 @@
         "id": "workspace",
         "itemList": [
           {
+            "id": "nrwl-workspace-overview",
             "name": "Overview",
-            "searchResultsName": "Workspace Overview",
-            "id": "workspace-overview",
-            "file": "shared/workspace-overview"
+            "searchResultsName": "@nrwl/workspace Overview",
+            "file": "shared/workspace-plugin"
           },
           {
-            "name": "Configuration",
+            "name": "library generator",
+            "id": "library",
+            "file": "react/api-workspace/generators/library"
+          },
+          {
+            "name": "move generator",
+            "id": "move",
+            "file": "react/api-workspace/generators/move"
+          },
+          {
+            "name": "remove generator",
+            "id": "remove",
+            "file": "react/api-workspace/generators/remove"
+          },
+          {
+            "name": "run-commands generator",
+            "id": "run-commands",
+            "file": "react/api-workspace/generators/run-commands"
+          },
+          {
+            "name": "workspace-generator generator",
+            "id": "workspace-generator",
+            "file": "react/api-workspace/generators/workspace-generator"
+          },
+          {
+            "name": "run-commands executor",
+            "id": "run-commands",
+            "file": "react/api-workspace/executors/run-commands"
+          }
+        ]
+      },
+      {
+        "name": "web",
+        "id": "web",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/web Overview",
+            "file": "shared/web-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "react/api-web/generators/application"
+          },
+          {
+            "name": "build executor",
+            "id": "build",
+            "file": "react/api-web/executors/build"
+          },
+          {
+            "name": "dev-server executor",
+            "id": "dev-server",
+            "file": "react/api-web/executors/dev-server"
+          },
+          {
+            "name": "file-server executor",
+            "id": "file-server",
+            "file": "react/api-web/executors/file-server"
+          },
+          {
+            "name": "package executor",
+            "id": "package",
+            "file": "react/api-web/executors/package"
+          }
+        ]
+      },
+      {
+        "name": "angular",
+        "id": "angular",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/angular Overview",
+            "file": "shared/angular-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "react/api-angular/generators/application"
+          },
+          {
+            "name": "downgrade-module generator",
+            "id": "downgrade-module",
+            "file": "react/api-angular/generators/downgrade-module"
+          },
+          {
+            "name": "karma-project generator",
+            "id": "karma-project",
+            "file": "react/api-angular/generators/karma-project"
+          },
+          {
+            "name": "karma generator",
+            "id": "karma",
+            "file": "react/api-angular/generators/karma"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "react/api-angular/generators/library"
+          },
+          {
+            "name": "move generator",
+            "id": "move",
+            "file": "react/api-angular/generators/move"
+          },
+          {
+            "name": "ngrx generator",
+            "id": "ngrx",
+            "file": "react/api-angular/generators/ngrx"
+          },
+          {
+            "name": "stories generator",
+            "id": "stories",
+            "file": "react/api-angular/generators/stories"
+          },
+          {
+            "name": "storybook-configuration generator",
+            "id": "storybook-configuration",
+            "file": "react/api-angular/generators/storybook-configuration"
+          },
+          {
+            "name": "upgrade-module generator",
+            "id": "upgrade-module",
+            "file": "react/api-angular/generators/upgrade-module"
+          },
+          {
+            "name": "package executor",
+            "id": "package",
+            "file": "react/api-angular/executors/package"
+          },
+          {
+            "name": "ng packagr lite executor",
+            "id": "ng-packagr-lite",
+            "file": "react/api-angular/executors/ng-packagr-lite"
+          },
+          {
+            "name": "webpack-browser executor",
+            "id": "webpack-browser",
+            "file": "react/api-angular/executors/webpack-browser"
+          }
+        ]
+      },
+      {
+        "name": "react",
+        "id": "react",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/react Overview",
+            "file": "shared/react-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "react/api-react/generators/application"
+          },
+          {
+            "name": "component generator",
+            "id": "component",
+            "file": "react/api-react/generators/component"
+          },
+          {
+            "name": "component-cypress-spec generator",
+            "id": "component-cypress-spec",
+            "file": "react/api-react/generators/component-cypress-spec"
+          },
+          {
+            "name": "component-story generator",
+            "id": "component-story",
+            "file": "react/api-react/generators/component-story"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "react/api-react/generators/library"
+          },
+          {
+            "name": "redux generator",
+            "id": "redux",
+            "file": "react/api-react/generators/redux"
+          },
+          {
+            "name": "stories generator",
+            "id": "stories",
+            "file": "react/api-react/generators/stories"
+          },
+          {
+            "name": "storybook-configuration generator",
+            "id": "storybook-configuration",
+            "file": "react/api-react/generators/storybook-configuration"
+          }
+        ]
+      },
+      {
+        "name": "jest",
+        "id": "jest",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/jest Overview",
+            "file": "shared/jest-plugin"
+          },
+          {
+            "name": "jest executor",
+            "id": "jest",
+            "file": "react/api-jest/executors/jest"
+          }
+        ]
+      },
+      {
+        "name": "cypress",
+        "id": "cypress",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/cypress Overview",
+            "file": "shared/cypress-plugin"
+          },
+          {
+            "name": "cypress executor",
+            "id": "cypress",
+            "file": "react/api-cypress/executors/cypress"
+          }
+        ]
+      },
+      {
+        "name": "storybook",
+        "id": "storybook",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/storybook Overview",
+            "file": "react/guides/storybook-plugin"
+          },
+          {
+            "name": "configuration generator",
             "id": "configuration",
-            "file": "react/guides/configuration"
+            "file": "react/api-storybook/generators/configuration"
           },
           {
-            "name": "Builders",
-            "id": "builders",
+            "name": "cypress-project generator",
+            "id": "cypress-project",
+            "file": "react/api-storybook/generators/cypress-project"
+          },
+          {
+            "id": "executors",
+            "name": "Executors / Builders",
             "itemList": [
               {
-                "name": "Using Builders",
-                "id": "using-builders",
-                "file": "shared/using-builders"
+                "name": "build",
+                "id": "build",
+                "file": "react/api-storybook/executors/build"
               },
               {
-                "name": "Run Commands Builder",
-                "id": "run-commands-builder",
-                "file": "shared/running-custom-commands"
-              },
-              {
-                "name": "Creating Custom Builders",
-                "id": "creating-custom-builders",
-                "file": "shared/tools-workspace-builders"
+                "name": "storybook",
+                "id": "storybook",
+                "file": "react/api-storybook/executors/storybook"
               }
             ]
+          }
+        ]
+      },
+      {
+        "name": "linter",
+        "id": "linter",
+        "itemList": [
+          {
+            "name": "eslint executor",
+            "id": "eslint",
+            "file": "react/api-linter/executors/eslint"
           },
           {
-            "name": "Computation Caching",
-            "id": "computation-caching",
-            "file": "shared/computation-caching"
+            "name": "lint executor",
+            "id": "lint",
+            "file": "react/api-linter/executors/lint"
+          }
+        ]
+      },
+      {
+        "name": "node",
+        "id": "node",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/node Overview",
+            "file": "shared/node-plugin"
           },
           {
-            "name": "Schematics",
-            "id": "schematics",
-            "itemList": [
-              {
-                "name": "Using Schematics",
-                "id": "using-schematics",
-                "file": "shared/using-schematics"
-              },
-              {
-                "name": "Workspace Schematics",
-                "id": "workspace-schematics",
-                "file": "shared/tools-workspace-schematics"
-              }
-            ]
+            "name": "application generator",
+            "id": "application",
+            "file": "react/api-node/generators/application"
           },
           {
-            "name": "Structure",
-            "id": "structure",
-            "itemList": [
-              {
-                "name": "Creating Libraries",
-                "id": "creating-libraries",
-                "file": "shared/workspace/creating-libraries"
-              },
-              {
-                "name": "Library Types",
-                "id": "library-types",
-                "file": "shared/workspace/library-types"
-              },
-              {
-                "name": "Grouping Libraries",
-                "id": "grouping-libraries",
-                "file": "shared/workspace/grouping-libraries"
-              },
-              {
-                "name": "Buildable and Publishable Libraries",
-                "id": "buildable-and-publishable-libraries",
-                "file": "shared/workspace/buildable-and-publishable-libraries"
-              },
-              {
-                "name": "Using Tags",
-                "id": "monorepo-tags",
-                "file": "shared/monorepo-tags"
-              },
-              {
-                "name": "Dependency Graph",
-                "id": "dependency-graph",
-                "file": "shared/workspace/structure/dependency-graph"
-              }
-            ]
+            "name": "library generator",
+            "id": "library",
+            "file": "react/api-node/generators/library"
           },
           {
-            "name": "Updating Nx",
-            "id": "update",
-            "file": "shared/update"
+            "name": "build executor",
+            "id": "build",
+            "file": "react/api-node/executors/build"
+          },
+          {
+            "name": "execute executor",
+            "id": "execute",
+            "file": "react/api-node/executors/execute"
+          },
+          {
+            "name": "package executor",
+            "id": "package",
+            "file": "react/api-node/executors/package"
+          }
+        ]
+      },
+      {
+        "name": "express",
+        "id": "express",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/express Overview",
+            "file": "shared/express-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "react/api-express/generators/application"
+          }
+        ]
+      },
+      {
+        "name": "nest",
+        "id": "nest",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/nest Overview",
+            "file": "shared/nest-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "react/api-nest/generators/application"
+          },
+          {
+            "name": "class generator",
+            "id": "class",
+            "file": "react/api-nest/generators/class"
+          },
+          {
+            "name": "controller generator",
+            "id": "controller",
+            "file": "react/api-nest/generators/controller"
+          },
+          {
+            "name": "decorator generator",
+            "id": "decorator",
+            "file": "react/api-nest/generators/decorator"
+          },
+          {
+            "name": "filter generator",
+            "id": "filter",
+            "file": "react/api-nest/generators/filter"
+          },
+          {
+            "name": "gateway generator",
+            "id": "gateway",
+            "file": "react/api-nest/generators/gateway"
+          },
+          {
+            "name": "guard generator",
+            "id": "guard",
+            "file": "react/api-nest/generators/guard"
+          },
+          {
+            "name": "interceptor generator",
+            "id": "interceptor",
+            "file": "react/api-nest/generators/interceptor"
+          },
+          {
+            "name": "interface generator",
+            "id": "interface",
+            "file": "react/api-nest/generators/interface"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "react/api-nest/generators/library"
+          },
+          {
+            "name": "middleware generator",
+            "id": "middleware",
+            "file": "react/api-nest/generators/middleware"
+          },
+          {
+            "name": "module generator",
+            "id": "module",
+            "file": "react/api-nest/generators/module"
+          },
+          {
+            "name": "pipe generator",
+            "id": "pipe",
+            "file": "react/api-nest/generators/pipe"
+          },
+          {
+            "name": "provider generator",
+            "id": "provider",
+            "file": "react/api-nest/generators/provider"
+          },
+          {
+            "name": "resolver generator",
+            "id": "resolver",
+            "file": "react/api-nest/generators/resolver"
+          },
+          {
+            "name": "service generator",
+            "id": "service",
+            "file": "react/api-nest/generators/service"
+          }
+        ]
+      },
+      {
+        "name": "next",
+        "id": "next",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/next Overview",
+            "file": "shared/next-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "react/api-next/generators/application"
+          },
+          {
+            "name": "component generator",
+            "id": "component",
+            "file": "react/api-next/generators/component"
+          },
+          {
+            "name": "page generator",
+            "id": "page",
+            "file": "react/api-next/generators/page"
+          },
+          {
+            "name": "build executor",
+            "id": "build",
+            "file": "react/api-next/executors/build"
+          },
+          {
+            "name": "server executor",
+            "id": "server",
+            "file": "react/api-next/executors/server"
+          },
+          {
+            "name": "export executor",
+            "id": "export",
+            "file": "react/api-next/executors/export"
+          }
+        ]
+      },
+      {
+        "name": "Nx Plugin",
+        "id": "nx-plugin",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/nx-plugin Overview",
+            "file": "shared/nx-plugin"
+          },
+          {
+            "name": "executor generator",
+            "id": "executor",
+            "file": "react/api-nx-plugin/generators/executor"
+          },
+          {
+            "name": "migration generator",
+            "id": "migration",
+            "file": "react/api-nx-plugin/generators/migration"
+          },
+          {
+            "name": "plugin generator",
+            "id": "plugin",
+            "file": "react/api-nx-plugin/generators/plugin"
+          },
+          {
+            "name": "generator generator",
+            "id": "schematic",
+            "file": "react/api-nx-plugin/generators/generator"
+          },
+          {
+            "name": "e2e executor",
+            "id": "e2e",
+            "file": "react/api-nx-plugin/executors/e2e"
+          }
+        ]
+      },
+      {
+        "name": "Executors / Builders",
+        "id": "executors",
+        "itemList": [
+          {
+            "name": "Using Executors / Builders",
+            "id": "using-builders",
+            "file": "shared/using-builders"
+          },
+          {
+            "name": "Running Custom Commands",
+            "id": "run-commands-builder",
+            "file": "shared/running-custom-commands"
+          },
+          {
+            "name": "Creating Custom Builders",
+            "id": "creating-custom-builders",
+            "file": "shared/tools-workspace-builders"
+          }
+        ]
+      },
+      {
+        "name": "Generators",
+        "id": "generators",
+        "itemList": [
+          {
+            "name": "Using Generators",
+            "id": "using-schematics",
+            "file": "shared/using-schematics"
+          },
+          {
+            "name": "Workspace Generators",
+            "id": "workspace-generators",
+            "file": "shared/tools-workspace-generators"
+          }
+        ]
+      },
+      {
+        "name": "Workspace Structure",
+        "id": "structure",
+        "itemList": [
+          {
+            "name": "Creating Libraries",
+            "id": "creating-libraries",
+            "file": "shared/workspace/creating-libraries"
+          },
+          {
+            "name": "Library Types",
+            "id": "library-types",
+            "file": "shared/workspace/library-types"
+          },
+          {
+            "name": "Grouping Libraries",
+            "id": "grouping-libraries",
+            "file": "shared/workspace/grouping-libraries"
+          },
+          {
+            "name": "Buildable and Publishable Libraries",
+            "id": "buildable-and-publishable-libraries",
+            "file": "shared/workspace/buildable-and-publishable-libraries"
+          },
+          {
+            "name": "Using Tags",
+            "id": "monorepo-tags",
+            "file": "shared/monorepo-tags"
+          },
+          {
+            "name": "Dependency Graph",
+            "id": "dependency-graph",
+            "file": "shared/workspace/structure/dependency-graph"
+          }
+        ]
+      },
+      {
+        "name": "CI",
+        "id": "ci",
+        "itemList": [
+          {
+            "name": "Distributed CI: Overview",
+            "id": "distributed-builds",
+            "file": "shared/distributed-builds"
+          },
+          {
+            "name": "Distributed CI: Azure",
+            "id": "monorepo-ci-azure",
+            "file": "shared/monorepo-ci-azure"
+          },
+          {
+            "name": "Distributed CI: Jenkins",
+            "id": "monorepo-ci-jenkins",
+            "file": "shared/monorepo-ci-jenkins"
+          },
+          {
+            "name": "Incremental Builds",
+            "id": "incremental-builds",
+            "file": "shared/incremental-builds"
           }
         ]
       },
@@ -2056,37 +1884,6 @@
         "name": "Guides",
         "id": "guides",
         "itemList": [
-          {
-            "name": "CI",
-            "id": "ci",
-            "itemList": [
-              {
-                "name": "Rebuild Only What is Affected",
-                "id": "monorepo-affected",
-                "file": "shared/monorepo-affected"
-              },
-              {
-                "name": "Distributed CI: Overview",
-                "id": "distributed-builds",
-                "file": "shared/distributed-builds"
-              },
-              {
-                "name": "Distributed CI: Azure",
-                "id": "monorepo-ci-azure",
-                "file": "shared/monorepo-ci-azure"
-              },
-              {
-                "name": "Distributed CI: Jenkins",
-                "id": "monorepo-ci-jenkins",
-                "file": "shared/monorepo-ci-jenkins"
-              },
-              {
-                "name": "Incremental Builds",
-                "id": "incremental-builds",
-                "file": "shared/incremental-builds"
-              }
-            ]
-          },
           {
             "name": "Adding Images, Fonts, and Files",
             "id": "adding-assets-react",
@@ -2111,6 +1908,11 @@
             "name": "Configuring Browser Support",
             "id": "browser-support",
             "file": "shared/guides/browser-support"
+          },
+          {
+            "name": "Next.js projects with Nx",
+            "id": "nextjs",
+            "file": "react/guides/nextjs"
           }
         ]
       },
@@ -2145,13 +1947,35 @@
         "id": "getting-started",
         "itemList": [
           {
-            "name": "Why Nx?",
-            "id": "why-nx",
-            "file": "node/getting-started/why-nx"
+            "name": "Getting Started",
+            "id": "getting-started",
+            "file": "node/getting-started/getting-started"
           },
           {
             "name": "Resources",
             "id": "resources"
+          },
+          {
+            "name": "CLI Overview",
+            "searchResultsName": "CLI Overview",
+            "id": "cli-overview",
+            "file": "node/guides/cli-overview"
+          },
+          {
+            "name": "VS Code Plugin",
+            "id": "console",
+            "file": "shared/console"
+          },
+          {
+            "name": "Folder Structure",
+            "searchResultsName": "Folder Structure",
+            "id": "folder-structure",
+            "file": "shared/folder-structure"
+          },
+          {
+            "name": "Configuration",
+            "id": "configuration",
+            "file": "node/guides/configuration"
           }
         ]
       },
@@ -2194,6 +2018,37 @@
         ]
       },
       {
+        "name": "Core Concepts",
+        "id": "core-concepts",
+        "itemList": [
+          {
+            "name": "Computation Caching",
+            "id": "computation-caching",
+            "file": "shared/computation-caching"
+          },
+          {
+            "name": "Rebuild Only What is Affected",
+            "id": "affected",
+            "file": "shared/affected"
+          },
+          {
+            "name": "Why Monorepos",
+            "id": "why-monorepos",
+            "file": "shared/guides/why-monorepos"
+          },
+          {
+            "name": "Updating Nx",
+            "id": "updating-nx",
+            "file": "shared/update"
+          },
+          {
+            "name": "Nx Devkit",
+            "id": "nx-devkit",
+            "file": "shared/devkit"
+          }
+        ]
+      },
+      {
         "name": "Migration",
         "id": "migration",
         "itemList": [
@@ -2208,17 +2063,6 @@
         "name": "CLI",
         "id": "cli",
         "itemList": [
-          {
-            "name": "Overview",
-            "searchResultsName": "CLI Overview",
-            "id": "overview",
-            "file": "node/guides/cli-overview"
-          },
-          {
-            "name": "Console",
-            "id": "console",
-            "file": "shared/console"
-          },
           {
             "name": "generate",
             "id": "generate",
@@ -2340,646 +2184,9 @@
             "file": "node/cli/workspace-lint"
           },
           {
-            "name": "workspace-schematic",
-            "id": "workspace-schematic",
-            "file": "node/cli/workspace-schematic"
-          }
-        ]
-      },
-      {
-        "name": "Plugins",
-        "id": "plugins",
-        "itemList": [
-          {
-            "name": "Overview",
-            "searchResultsName": "Plugins Overview",
-            "id": "overview",
-            "file": "shared/plugins-overview"
-          },
-          {
-            "name": "Workspace",
-            "id": "workspace",
-            "itemList": [
-              {
-                "id": "nrwl-workspace-overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/workspace Overview",
-                "file": "shared/workspace-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "library",
-                    "id": "library",
-                    "file": "node/api-workspace/schematics/library"
-                  },
-                  {
-                    "name": "move",
-                    "id": "move",
-                    "file": "node/api-workspace/schematics/move"
-                  },
-                  {
-                    "name": "remove",
-                    "id": "remove",
-                    "file": "node/api-workspace/schematics/remove"
-                  },
-                  {
-                    "name": "run-commands",
-                    "id": "run-commands",
-                    "file": "node/api-workspace/schematics/run-commands"
-                  },
-                  {
-                    "name": "workspace-schematic",
-                    "id": "workspace-schematic",
-                    "file": "node/api-workspace/schematics/workspace-schematic"
-                  }
-                ]
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "run-commands",
-                    "id": "run-commands",
-                    "file": "node/api-workspace/builders/run-commands"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "web",
-            "id": "web",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/web Overview",
-                "file": "shared/web-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "application",
-                    "id": "application",
-                    "file": "node/api-web/schematics/application"
-                  }
-                ]
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "build",
-                    "id": "build",
-                    "file": "node/api-web/builders/build"
-                  },
-                  {
-                    "name": "dev-server",
-                    "id": "dev-server",
-                    "file": "node/api-web/builders/dev-server"
-                  },
-                  {
-                    "name": "package",
-                    "id": "package",
-                    "file": "node/api-web/builders/package"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "angular",
-            "id": "angular",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/angular Overview",
-                "file": "shared/angular-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "application",
-                    "id": "application",
-                    "file": "node/api-angular/schematics/application"
-                  },
-                  {
-                    "name": "downgrade-module",
-                    "id": "downgrade-module",
-                    "file": "node/api-angular/schematics/downgrade-module"
-                  },
-                  {
-                    "name": "karma-project",
-                    "id": "karma-project",
-                    "file": "node/api-angular/schematics/karma-project"
-                  },
-                  {
-                    "name": "karma",
-                    "id": "karma",
-                    "file": "node/api-angular/schematics/karma"
-                  },
-                  {
-                    "name": "library",
-                    "id": "library",
-                    "file": "node/api-angular/schematics/library"
-                  },
-                  {
-                    "name": "move",
-                    "id": "move",
-                    "file": "node/api-angular/schematics/move"
-                  },
-                  {
-                    "name": "ngrx",
-                    "id": "ngrx",
-                    "file": "node/api-angular/schematics/ngrx"
-                  },
-                  {
-                    "name": "stories",
-                    "id": "stories",
-                    "file": "node/api-angular/schematics/stories"
-                  },
-                  {
-                    "name": "storybook-configuration",
-                    "id": "storybook-configuration",
-                    "file": "node/api-angular/schematics/storybook-configuration"
-                  },
-                  {
-                    "name": "upgrade-module",
-                    "id": "upgrade-module",
-                    "file": "node/api-angular/schematics/upgrade-module"
-                  }
-                ]
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "package",
-                    "id": "package",
-                    "file": "node/api-angular/builders/package"
-                  },
-                  {
-                    "name": "ng packagr lite",
-                    "id": "ng-packagr-lite",
-                    "file": "node/api-angular/builders/ng-packagr-lite"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "react",
-            "id": "react",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/react Overview",
-                "file": "shared/react-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "application",
-                    "id": "application",
-                    "file": "node/api-react/schematics/application"
-                  },
-                  {
-                    "name": "component",
-                    "id": "component",
-                    "file": "node/api-react/schematics/component"
-                  },
-                  {
-                    "name": "component-cypress-spec",
-                    "id": "component-cypress-spec",
-                    "file": "node/api-react/schematics/component-cypress-spec"
-                  },
-                  {
-                    "name": "component-story",
-                    "id": "component-story",
-                    "file": "node/api-react/schematics/component-story"
-                  },
-                  {
-                    "name": "library",
-                    "id": "library",
-                    "file": "node/api-react/schematics/library"
-                  },
-                  {
-                    "name": "redux",
-                    "id": "redux",
-                    "file": "node/api-react/schematics/redux"
-                  },
-                  {
-                    "name": "stories",
-                    "id": "stories",
-                    "file": "node/api-react/schematics/stories"
-                  },
-                  {
-                    "name": "storybook-configuration",
-                    "id": "storybook-configuration",
-                    "file": "node/api-react/schematics/storybook-configuration"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "jest",
-            "id": "jest",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/jest Overview",
-                "file": "shared/jest-plugin"
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "jest",
-                    "id": "jest",
-                    "file": "node/api-jest/builders/jest"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "cypress",
-            "id": "cypress",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/cypress Overview",
-                "file": "shared/cypress-plugin"
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "cypress",
-                    "id": "cypress",
-                    "file": "node/api-cypress/builders/cypress"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "storybook",
-            "id": "storybook",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/storybook Overview",
-                "file": "node/guides/storybook-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "configuration",
-                    "id": "configuration",
-                    "file": "node/api-storybook/schematics/configuration"
-                  },
-                  {
-                    "name": "cypress-project",
-                    "id": "cypress-project",
-                    "file": "node/api-storybook/schematics/cypress-project"
-                  }
-                ]
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "build",
-                    "id": "build",
-                    "file": "node/api-storybook/builders/build"
-                  },
-                  {
-                    "name": "storybook",
-                    "id": "storybook",
-                    "file": "node/api-storybook/builders/storybook"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "linter",
-            "id": "linter",
-            "itemList": [
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "eslint",
-                    "id": "eslint",
-                    "file": "node/api-linter/builders/eslint"
-                  },
-                  {
-                    "name": "lint",
-                    "id": "lint",
-                    "file": "node/api-linter/builders/lint"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "node",
-            "id": "node",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/node Overview",
-                "file": "shared/node-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "application",
-                    "id": "application",
-                    "file": "node/api-node/schematics/application"
-                  },
-                  {
-                    "name": "library",
-                    "id": "library",
-                    "file": "node/api-node/schematics/library"
-                  }
-                ]
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "build",
-                    "id": "build",
-                    "file": "node/api-node/builders/build"
-                  },
-                  {
-                    "name": "execute",
-                    "id": "execute",
-                    "file": "node/api-node/builders/execute"
-                  },
-                  {
-                    "name": "package",
-                    "id": "package",
-                    "file": "node/api-node/builders/package"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "express",
-            "id": "express",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/express Overview",
-                "file": "shared/express-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "application",
-                    "id": "application",
-                    "file": "node/api-express/schematics/application"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "nest",
-            "id": "nest",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/nest Overview",
-                "file": "shared/nest-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "application",
-                    "id": "application",
-                    "file": "node/api-nest/schematics/application"
-                  },
-                  {
-                    "name": "class",
-                    "id": "class",
-                    "file": "node/api-nest/schematics/class"
-                  },
-                  {
-                    "name": "controller",
-                    "id": "controller",
-                    "file": "node/api-nest/schematics/controller"
-                  },
-                  {
-                    "name": "decorator",
-                    "id": "decorator",
-                    "file": "node/api-nest/schematics/decorator"
-                  },
-                  {
-                    "name": "filter",
-                    "id": "filter",
-                    "file": "node/api-nest/schematics/filter"
-                  },
-                  {
-                    "name": "gateway",
-                    "id": "gateway",
-                    "file": "node/api-nest/schematics/gateway"
-                  },
-                  {
-                    "name": "guard",
-                    "id": "guard",
-                    "file": "node/api-nest/schematics/guard"
-                  },
-                  {
-                    "name": "interceptor",
-                    "id": "interceptor",
-                    "file": "node/api-nest/schematics/interceptor"
-                  },
-                  {
-                    "name": "interface",
-                    "id": "interface",
-                    "file": "node/api-nest/schematics/interface"
-                  },
-                  {
-                    "name": "library",
-                    "id": "library",
-                    "file": "node/api-nest/schematics/library"
-                  },
-                  {
-                    "name": "middleware",
-                    "id": "middleware",
-                    "file": "node/api-nest/schematics/middleware"
-                  },
-                  {
-                    "name": "module",
-                    "id": "module",
-                    "file": "node/api-nest/schematics/module"
-                  },
-                  {
-                    "name": "pipe",
-                    "id": "pipe",
-                    "file": "node/api-nest/schematics/pipe"
-                  },
-                  {
-                    "name": "provider",
-                    "id": "provider",
-                    "file": "node/api-nest/schematics/provider"
-                  },
-                  {
-                    "name": "resolver",
-                    "id": "resolver",
-                    "file": "node/api-nest/schematics/resolver"
-                  },
-                  {
-                    "name": "service",
-                    "id": "service",
-                    "file": "node/api-nest/schematics/service"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "next",
-            "id": "next",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/next Overview",
-                "file": "shared/next-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "application",
-                    "id": "application",
-                    "file": "node/api-next/schematics/application"
-                  },
-                  {
-                    "name": "component",
-                    "id": "component",
-                    "file": "node/api-next/schematics/component"
-                  },
-                  {
-                    "name": "page",
-                    "id": "page",
-                    "file": "node/api-next/schematics/page"
-                  }
-                ]
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "build",
-                    "id": "build",
-                    "file": "node/api-next/builders/build"
-                  },
-                  {
-                    "name": "server",
-                    "id": "server",
-                    "file": "node/api-next/builders/server"
-                  },
-                  {
-                    "name": "export",
-                    "id": "export",
-                    "file": "node/api-next/builders/export"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "Nx Plugin",
-            "id": "nx-plugin",
-            "itemList": [
-              {
-                "id": "overview",
-                "name": "Overview",
-                "searchResultsName": "@nrwl/nx-plugin Overview",
-                "file": "shared/nx-plugin"
-              },
-              {
-                "id": "schematics",
-                "name": "Schematics",
-                "itemList": [
-                  {
-                    "name": "builder",
-                    "id": "builder",
-                    "file": "node/api-nx-plugin/schematics/builder"
-                  },
-                  {
-                    "name": "migration",
-                    "id": "migration",
-                    "file": "node/api-nx-plugin/schematics/migration"
-                  },
-                  {
-                    "name": "plugin",
-                    "id": "plugin",
-                    "file": "node/api-nx-plugin/schematics/plugin"
-                  },
-                  {
-                    "name": "schematic",
-                    "id": "schematic",
-                    "file": "node/api-nx-plugin/schematics/schematic"
-                  }
-                ]
-              },
-              {
-                "id": "builders",
-                "name": "Builders",
-                "itemList": [
-                  {
-                    "name": "e2e",
-                    "id": "e2e",
-                    "file": "node/api-nx-plugin/builders/e2e"
-                  }
-                ]
-              }
-            ]
+            "name": "workspace-generator",
+            "id": "workspace-generator",
+            "file": "node/cli/workspace-generator"
           }
         ]
       },
@@ -2988,98 +2195,606 @@
         "id": "workspace",
         "itemList": [
           {
+            "id": "nrwl-workspace-overview",
             "name": "Overview",
-            "searchResultsName": "Workspace Overview",
-            "id": "workspace-overview",
-            "file": "shared/workspace-overview"
+            "searchResultsName": "@nrwl/workspace Overview",
+            "file": "shared/workspace-plugin"
           },
           {
-            "name": "Configuration",
+            "name": "library generator",
+            "id": "library",
+            "file": "node/api-workspace/generators/library"
+          },
+          {
+            "name": "move generator",
+            "id": "move",
+            "file": "node/api-workspace/generators/move"
+          },
+          {
+            "name": "remove generator",
+            "id": "remove",
+            "file": "node/api-workspace/generators/remove"
+          },
+          {
+            "name": "run-commands generator",
+            "id": "run-commands",
+            "file": "node/api-workspace/generators/run-commands"
+          },
+          {
+            "name": "workspace-generator generator",
+            "id": "workspace-generator",
+            "file": "node/api-workspace/generators/workspace-generator"
+          },
+          {
+            "name": "run-commands executor",
+            "id": "run-commands",
+            "file": "node/api-workspace/executors/run-commands"
+          }
+        ]
+      },
+      {
+        "name": "web",
+        "id": "web",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/web Overview",
+            "file": "shared/web-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "node/api-web/generators/application"
+          },
+          {
+            "name": "build executor",
+            "id": "build",
+            "file": "node/api-web/executors/build"
+          },
+          {
+            "name": "dev-server executor",
+            "id": "dev-server",
+            "file": "node/api-web/executors/dev-server"
+          },
+          {
+            "name": "file-server executor",
+            "id": "file-server",
+            "file": "node/api-web/executors/file-server"
+          },
+          {
+            "name": "package executor",
+            "id": "package",
+            "file": "node/api-web/executors/package"
+          }
+        ]
+      },
+      {
+        "name": "angular",
+        "id": "angular",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/angular Overview",
+            "file": "shared/angular-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "node/api-angular/generators/application"
+          },
+          {
+            "name": "downgrade-module generator",
+            "id": "downgrade-module",
+            "file": "node/api-angular/generators/downgrade-module"
+          },
+          {
+            "name": "karma-project generator",
+            "id": "karma-project",
+            "file": "node/api-angular/generators/karma-project"
+          },
+          {
+            "name": "karma generator",
+            "id": "karma",
+            "file": "node/api-angular/generators/karma"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "node/api-angular/generators/library"
+          },
+          {
+            "name": "move generator",
+            "id": "move",
+            "file": "node/api-angular/generators/move"
+          },
+          {
+            "name": "ngrx generator",
+            "id": "ngrx",
+            "file": "node/api-angular/generators/ngrx"
+          },
+          {
+            "name": "stories generator",
+            "id": "stories",
+            "file": "node/api-angular/generators/stories"
+          },
+          {
+            "name": "storybook-configuration generator",
+            "id": "storybook-configuration",
+            "file": "node/api-angular/generators/storybook-configuration"
+          },
+          {
+            "name": "upgrade-module generator",
+            "id": "upgrade-module",
+            "file": "node/api-angular/generators/upgrade-module"
+          },
+          {
+            "name": "package executor",
+            "id": "package",
+            "file": "node/api-angular/executors/package"
+          },
+          {
+            "name": "ng packagr lite executor",
+            "id": "ng-packagr-lite",
+            "file": "node/api-angular/executors/ng-packagr-lite"
+          },
+          {
+            "name": "webpack-browser executor",
+            "id": "webpack-browser",
+            "file": "node/api-angular/executors/webpack-browser"
+          }
+        ]
+      },
+      {
+        "name": "react",
+        "id": "react",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/react Overview",
+            "file": "shared/react-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "node/api-react/generators/application"
+          },
+          {
+            "name": "component generator",
+            "id": "component",
+            "file": "node/api-react/generators/component"
+          },
+          {
+            "name": "component-cypress-spec generator",
+            "id": "component-cypress-spec",
+            "file": "node/api-react/generators/component-cypress-spec"
+          },
+          {
+            "name": "component-story generator",
+            "id": "component-story",
+            "file": "node/api-react/generators/component-story"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "node/api-react/generators/library"
+          },
+          {
+            "name": "redux generator",
+            "id": "redux",
+            "file": "node/api-react/generators/redux"
+          },
+          {
+            "name": "stories generator",
+            "id": "stories",
+            "file": "node/api-react/generators/stories"
+          },
+          {
+            "name": "storybook-configuration generator",
+            "id": "storybook-configuration",
+            "file": "node/api-react/generators/storybook-configuration"
+          }
+        ]
+      },
+      {
+        "name": "jest",
+        "id": "jest",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/jest Overview",
+            "file": "shared/jest-plugin"
+          },
+          {
+            "name": "jest executor",
+            "id": "jest",
+            "file": "node/api-jest/executors/jest"
+          }
+        ]
+      },
+      {
+        "name": "cypress",
+        "id": "cypress",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/cypress Overview",
+            "file": "shared/cypress-plugin"
+          },
+          {
+            "name": "cypress executor",
+            "id": "cypress",
+            "file": "node/api-cypress/executors/cypress"
+          }
+        ]
+      },
+      {
+        "name": "storybook",
+        "id": "storybook",
+        "itemList": [
+          {
+            "name": "configuration generator",
             "id": "configuration",
-            "file": "node/guides/configuration"
+            "file": "node/api-storybook/generators/configuration"
           },
           {
-            "name": "Builders",
-            "id": "builders",
-            "itemList": [
-              {
-                "name": "Using Builders",
-                "id": "using-builders",
-                "file": "shared/using-builders"
-              },
-              {
-                "name": "Run Commands Builder",
-                "id": "run-commands-builder",
-                "file": "shared/running-custom-commands"
-              },
-              {
-                "name": "Creating Custom Builders",
-                "id": "creating-custom-builders",
-                "file": "shared/tools-workspace-builders"
-              }
-            ]
+            "name": "cypress-project generator",
+            "id": "cypress-project",
+            "file": "node/api-storybook/generators/cypress-project"
           },
           {
-            "name": "Computation Caching",
-            "id": "computation-caching",
-            "file": "shared/computation-caching"
+            "name": "build executor",
+            "id": "build",
+            "file": "node/api-storybook/executors/build"
           },
           {
-            "name": "Schematics",
-            "id": "schematics",
-            "itemList": [
-              {
-                "name": "Using Schematics",
-                "id": "using-schematics",
-                "file": "shared/using-schematics"
-              },
-              {
-                "name": "Workspace Schematics",
-                "id": "workspace-schematics",
-                "file": "shared/tools-workspace-schematics"
-              }
-            ]
+            "name": "storybook executor",
+            "id": "storybook",
+            "file": "node/api-storybook/executors/storybook"
+          }
+        ]
+      },
+      {
+        "name": "linter",
+        "id": "linter",
+        "itemList": [
+          {
+            "name": "eslint executor",
+            "id": "eslint",
+            "file": "node/api-linter/executors/eslint"
           },
           {
-            "name": "Structure",
-            "id": "structure",
-            "itemList": [
-              {
-                "name": "Creating Libraries",
-                "id": "creating-libraries",
-                "file": "shared/workspace/creating-libraries"
-              },
-              {
-                "name": "Library Types",
-                "id": "library-types",
-                "file": "shared/workspace/library-types"
-              },
-              {
-                "name": "Grouping Libraries",
-                "id": "grouping-libraries",
-                "file": "shared/workspace/grouping-libraries"
-              },
-              {
-                "name": "Buildable and Publishable Libraries",
-                "id": "buildable-and-publishable-libraries",
-                "file": "shared/workspace/buildable-and-publishable-libraries"
-              },
-              {
-                "name": "Using Tags",
-                "id": "monorepo-tags",
-                "file": "shared/monorepo-tags"
-              },
-              {
-                "name": "Dependency Graph",
-                "id": "dependency-graph",
-                "file": "shared/workspace/structure/dependency-graph"
-              }
-            ]
+            "name": "lint executor",
+            "id": "lint",
+            "file": "node/api-linter/executors/lint"
+          }
+        ]
+      },
+      {
+        "name": "node",
+        "id": "node",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/node Overview",
+            "file": "shared/node-plugin"
           },
           {
-            "name": "Updating Nx",
-            "id": "update",
-            "file": "shared/update"
+            "name": "application generator",
+            "id": "application",
+            "file": "node/api-node/generators/application"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "node/api-node/generators/library"
+          },
+          {
+            "name": "build executor",
+            "id": "build",
+            "file": "node/api-node/executors/build"
+          },
+          {
+            "name": "execute executor",
+            "id": "execute",
+            "file": "node/api-node/executors/execute"
+          },
+          {
+            "name": "package executor",
+            "id": "package",
+            "file": "node/api-node/executors/package"
+          }
+        ]
+      },
+      {
+        "name": "express",
+        "id": "express",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/express Overview",
+            "file": "shared/express-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "node/api-express/generators/application"
+          }
+        ]
+      },
+      {
+        "name": "nest",
+        "id": "nest",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/nest Overview",
+            "file": "shared/nest-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "node/api-nest/generators/application"
+          },
+          {
+            "name": "class generator",
+            "id": "class",
+            "file": "node/api-nest/generators/class"
+          },
+          {
+            "name": "controller generator",
+            "id": "controller",
+            "file": "node/api-nest/generators/controller"
+          },
+          {
+            "name": "decorator generator",
+            "id": "decorator",
+            "file": "node/api-nest/generators/decorator"
+          },
+          {
+            "name": "filter generator",
+            "id": "filter",
+            "file": "node/api-nest/generators/filter"
+          },
+          {
+            "name": "gateway generator",
+            "id": "gateway",
+            "file": "node/api-nest/generators/gateway"
+          },
+          {
+            "name": "guard generator",
+            "id": "guard",
+            "file": "node/api-nest/generators/guard"
+          },
+          {
+            "name": "interceptor generator",
+            "id": "interceptor",
+            "file": "node/api-nest/generators/interceptor"
+          },
+          {
+            "name": "interface generator",
+            "id": "interface",
+            "file": "node/api-nest/generators/interface"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "node/api-nest/generators/library"
+          },
+          {
+            "name": "middleware generator",
+            "id": "middleware",
+            "file": "node/api-nest/generators/middleware"
+          },
+          {
+            "name": "module generator",
+            "id": "module",
+            "file": "node/api-nest/generators/module"
+          },
+          {
+            "name": "pipe generator",
+            "id": "pipe",
+            "file": "node/api-nest/generators/pipe"
+          },
+          {
+            "name": "provider generator",
+            "id": "provider",
+            "file": "node/api-nest/generators/provider"
+          },
+          {
+            "name": "resolver generator",
+            "id": "resolver",
+            "file": "node/api-nest/generators/resolver"
+          },
+          {
+            "name": "service generator",
+            "id": "service",
+            "file": "node/api-nest/generators/service"
+          }
+        ]
+      },
+      {
+        "name": "next",
+        "id": "next",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/next Overview",
+            "file": "shared/next-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "node/api-next/generators/application"
+          },
+          {
+            "name": "component generator",
+            "id": "component",
+            "file": "node/api-next/generators/component"
+          },
+          {
+            "name": "page generator",
+            "id": "page",
+            "file": "node/api-next/generators/page"
+          },
+          {
+            "name": "build executor",
+            "id": "build",
+            "file": "node/api-next/executors/build"
+          },
+          {
+            "name": "server executor",
+            "id": "server",
+            "file": "node/api-next/executors/server"
+          },
+          {
+            "name": "export executor",
+            "id": "export",
+            "file": "node/api-next/executors/export"
+          }
+        ]
+      },
+      {
+        "name": "Nx Plugin",
+        "id": "nx-plugin",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/nx-plugin Overview",
+            "file": "shared/nx-plugin"
+          },
+          {
+            "name": "executor generator",
+            "id": "executor",
+            "file": "node/api-nx-plugin/generators/executor"
+          },
+          {
+            "name": "migration generator",
+            "id": "migration",
+            "file": "node/api-nx-plugin/generators/migration"
+          },
+          {
+            "name": "plugin generator",
+            "id": "plugin",
+            "file": "node/api-nx-plugin/generators/plugin"
+          },
+          {
+            "name": "generator generator",
+            "id": "schematic",
+            "file": "node/api-nx-plugin/generators/generator"
+          },
+          {
+            "name": "e2e executor",
+            "id": "e2e",
+            "file": "node/api-nx-plugin/executors/e2e"
+          }
+        ]
+      },
+      {
+        "name": "Executors / Builders",
+        "id": "executors",
+        "itemList": [
+          {
+            "name": "Using Executors / Builders",
+            "id": "using-builders",
+            "file": "shared/using-builders"
+          },
+          {
+            "name": "Running Custom Commands",
+            "id": "run-commands-builder",
+            "file": "shared/running-custom-commands"
+          },
+          {
+            "name": "Creating Custom Builders",
+            "id": "creating-custom-builders",
+            "file": "shared/tools-workspace-builders"
+          }
+        ]
+      },
+      {
+        "name": "Generators",
+        "id": "generators",
+        "itemList": [
+          {
+            "name": "Using Generators",
+            "id": "using-schematics",
+            "file": "shared/using-schematics"
+          },
+          {
+            "name": "Workspace Generators",
+            "id": "workspace-generators",
+            "file": "shared/tools-workspace-generators"
+          }
+        ]
+      },
+      {
+        "name": "Workspace Structure",
+        "id": "structure",
+        "itemList": [
+          {
+            "name": "Creating Libraries",
+            "id": "creating-libraries",
+            "file": "shared/workspace/creating-libraries"
+          },
+          {
+            "name": "Library Types",
+            "id": "library-types",
+            "file": "shared/workspace/library-types"
+          },
+          {
+            "name": "Grouping Libraries",
+            "id": "grouping-libraries",
+            "file": "shared/workspace/grouping-libraries"
+          },
+          {
+            "name": "Buildable and Publishable Libraries",
+            "id": "buildable-and-publishable-libraries",
+            "file": "shared/workspace/buildable-and-publishable-libraries"
+          },
+          {
+            "name": "Using Tags",
+            "id": "monorepo-tags",
+            "file": "shared/monorepo-tags"
+          },
+          {
+            "name": "Dependency Graph",
+            "id": "dependency-graph",
+            "file": "shared/workspace/structure/dependency-graph"
+          }
+        ]
+      },
+      {
+        "name": "CI",
+        "id": "ci",
+        "itemList": [
+          {
+            "name": "Distributed CI: Overview",
+            "id": "distributed-builds",
+            "file": "shared/distributed-builds"
+          },
+          {
+            "name": "Distributed CI: Azure",
+            "id": "monorepo-ci-azure",
+            "file": "shared/monorepo-ci-azure"
+          },
+          {
+            "name": "Distributed CI: Jenkins",
+            "id": "monorepo-ci-jenkins",
+            "file": "shared/monorepo-ci-jenkins"
+          },
+          {
+            "name": "Incremental Builds",
+            "id": "incremental-builds",
+            "file": "shared/incremental-builds"
           }
         ]
       },
@@ -3087,37 +2802,6 @@
         "name": "Guides",
         "id": "guides",
         "itemList": [
-          {
-            "name": "CI",
-            "id": "ci",
-            "itemList": [
-              {
-                "name": "Rebuild Only What is Affected",
-                "id": "monorepo-affected",
-                "file": "shared/monorepo-affected"
-              },
-              {
-                "name": "Distributed CI: Overview",
-                "id": "distributed-builds",
-                "file": "shared/distributed-builds"
-              },
-              {
-                "name": "Distributed CI: Azure",
-                "id": "monorepo-ci-azure",
-                "file": "shared/monorepo-ci-azure"
-              },
-              {
-                "name": "Distributed CI: Jenkins",
-                "id": "monorepo-ci-jenkins",
-                "file": "shared/monorepo-ci-jenkins"
-              },
-              {
-                "name": "Incremental Builds",
-                "id": "incremental-builds",
-                "file": "shared/incremental-builds"
-              }
-            ]
-          },
           {
             "name": "Using Nx at Enterprises",
             "id": "monorepo-nx-enterprise",

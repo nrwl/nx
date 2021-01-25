@@ -1,6 +1,6 @@
 # Node Plugin
 
-The Node Plugin contains schematics and builders to manage Node applications within an Nx workspace.
+The Node Plugin contains generators and executors to manage Node applications within an Nx workspace.
 
 ## Installing the Node Plugin
 

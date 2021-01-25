@@ -318,7 +318,7 @@ const examples = {
         'Open the dep graph of the workspace in the browser, highlight the projects affected, but exclude project-one and project-two',
     },
   ],
-  'workspace-schematic': [],
+  'workspace-generator': [],
   list: [
     {
       command: 'list',
@@ -327,7 +327,7 @@ const examples = {
     {
       command: 'list @nrwl/web',
       description:
-        'List the schematics and builders available in the `@nrwl/web` plugin if it is installed (If the plugin is not installed `nx` will show advice on how to add it to your workspace)',
+        'List the generators and executors available in the `@nrwl/web` plugin if it is installed (If the plugin is not installed `nx` will show advice on how to add it to your workspace)',
     },
   ],
   'run-many': [

@@ -18,13 +18,17 @@ import {
 import {
   formatFiles,
   getNpmScope,
-  names,
-  offsetFromRoot,
-  toFileName,
   updateWorkspaceInTree,
 } from '@nrwl/workspace';
 import { Schema } from './schema';
 import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
+import {
+  maybeJs,
+  toJS,
+  updateTsConfigsToJs,
+} from '@nrwl/workspace/src/utils/rules/to-js';
+import { names, offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -51,6 +55,7 @@ export default function (schema: NormalizedSchema): Rule {
         importPath: options.importPath,
       }),
       createFiles(options),
+      options.js ? updateTsConfigsToJs(options) : noop(),
       addProject(options),
       formatFiles(options),
     ]);
@@ -59,9 +64,9 @@ export default function (schema: NormalizedSchema): Rule {
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const defaultPrefix = getNpmScope(host);
-  const name = toFileName(options.name);
+  const name = names(options.name).fileName;
   const projectDirectory = options.directory
-    ? `${toFileName(options.directory)}/${name}`
+    ? `${names(options.directory).fileName}/${name}`
     : name;
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
@@ -103,6 +108,7 @@ function createFiles(options: NormalizedSchema): Rule {
       options.publishable || options.buildable
         ? noop()
         : filter((file) => !file.endsWith('package.json')),
+      options.js ? toJS() : noop(),
     ]),
     MergeStrategy.Overwrite
   );
@@ -118,11 +124,12 @@ function addProject(options: NormalizedSchema): Rule {
     if (architect) {
       architect.build = {
         builder: '@nrwl/node:package',
+        outputs: ['{options.outputPath}'],
         options: {
           outputPath: `dist/${libsDir(host)}/${options.projectDirectory}`,
           tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
           packageJson: `${options.projectRoot}/package.json`,
-          main: `${options.projectRoot}/src/index.ts`,
+          main: maybeJs(options, `${options.projectRoot}/src/index.ts`),
           assets: [`${options.projectRoot}/*.md`],
         },
       };
@@ -134,3 +141,8 @@ function addProject(options: NormalizedSchema): Rule {
     return json;
   });
 }
+
+export const libraryGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/node',
+  'library'
+);

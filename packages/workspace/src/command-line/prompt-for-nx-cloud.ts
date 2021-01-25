@@ -1,27 +1,23 @@
 import * as inquirer from 'inquirer';
 import { readNxJson } from '../core/file-utils';
 import { output } from '../utils/output';
-import { detectPackageManager } from '../utils/detect-package-manager';
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { execSync } from 'child_process';
 
 export async function promptForNxCloud(scan: boolean) {
   if (!scan) return;
 
   const nxJson = readNxJson();
-  const nxCloudRunnerIsUsed = Object.values(nxJson.tasksRunnerOptions).find(
-    (r) => r.runner == '@nrwl/nx-cloud'
+  const defaultRunnerIsUsed = Object.values(nxJson.tasksRunnerOptions).find(
+    (r) => r.runner == '@nrwl/workspace/tasks-runners/default'
   );
-  if (nxCloudRunnerIsUsed) return;
+  if (!defaultRunnerIsUsed) return;
 
   const res = await askAboutNxCloud();
   if (res) {
-    const pm = detectPackageManager();
-    if (pm === 'yarn') {
-      execSync('yarn add -D @nrwl/nx-cloud@latest');
-    } else {
-      execSync('npm install --save-dev @nrwl/nx-cloud@latest');
-    }
-    execSync(`npx nx g @nrwl/nx-cloud:init`, {
+    const pmc = getPackageManagerCommand();
+    execSync(`${pmc.addDev} @nrwl/nx-cloud@latest`);
+    execSync(`${pmc.exec} nx g @nrwl/nx-cloud:init`, {
       stdio: [0, 1, 2],
     });
   } else {

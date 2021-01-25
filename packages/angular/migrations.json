@@ -40,6 +40,21 @@
       "version": "10.3.0-beta.1",
       "description": "Add tsconfig.editor.json to angular apps and update jest-angular-preset",
       "factory": "./src/migrations/update-10-3-0/update-10-3-0"
+    },
+    "update-10-4-0": {
+      "version": "10.4.0-beta.3",
+      "description": "Adjust karma and protractor setup",
+      "factory": "./src/migrations/update-10-4-0/update-10-4-0"
+    },
+    "add-template-support-and-presets-to-eslint": {
+      "version": "10.5.0-beta.0",
+      "description": "Update eslint config and builder to extend from new Nx Angular presets and lint templates",
+      "factory": "./src/migrations/update-10-5-0/add-template-support-and-presets-to-eslint"
+    },
+    "update-11-0-0": {
+      "version": "11.0.0-beta.13",
+      "description": "Update builder configurations and dependencies",
+      "factory": "./src/migrations/update-11-0-0/update-builders-config"
     }
   },
   "packageJsonUpdates": {
@@ -134,6 +149,142 @@
         },
         "jest-preset-angular": {
           "version": "8.3.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "10.4.0": {
+      "version": "10.4.0-beta.3",
+      "packages": {
+        "protractor": {
+          "version": "~7.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jasmine-core": {
+          "version": "~3.6.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jasmine-spec-reporter": {
+          "version": "~5.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/jasmine": {
+          "version": "~3.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "karma": {
+          "version": "~5.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "karma-chrome-launcher": {
+          "version": "~3.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "karma-coverage-istanbul-reporter": {
+          "version": "~3.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "karma-jasmine": {
+          "version": "~4.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "karma-jasmine-html-reporter": {
+          "version": "^1.5.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "11.0.0": {
+      "version": "11.0.0-beta.13",
+      "packages": {
+        "@angular/cli": {
+          "version": "~11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~0.1100.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/jasmine": {
+          "version": "~3.6.0",
+          "alwaysAddToPackageJson": false
+        },
+        "codelyzer": {
+          "version": "^6.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/common": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/forms": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/compiler": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/compiler-cli": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-browser": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-browser-dynamic": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/router": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/upgrade": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/language-service": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/animations": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/service-worker": {
+          "version": "^11.0.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "11.1.0": {
+      "version": "11.1.0-beta.0",
+      "packages": {
+        "@angular-eslint/eslint-plugin": {
+          "version": "~1.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "~1.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "~1.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "11.1.6": {
+      "version": "11.1.6-beta.0",
+      "packages": {
+        "jest-preset-angular": {
+          "version": "8.3.2",
           "alwaysAddToPackageJson": false
         }
       }

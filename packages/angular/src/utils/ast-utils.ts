@@ -1,25 +1,16 @@
 import * as ts from 'typescript';
 import {
-  findNodes,
   Change,
+  findNodes,
   getImport,
   getProjectConfig,
   getSourceNodes,
   InsertChange,
   RemoveChange,
 } from '@nrwl/workspace/src/utils/ast-utils';
-import {
-  Tree,
-  SchematicsException,
-  Source,
-  Rule,
-  SchematicContext,
-  mergeWith,
-  apply,
-  forEach,
-} from '@angular-devkit/schematics';
+import { SchematicsException, Tree } from '@angular-devkit/schematics';
 import * as path from 'path';
-import { toFileName } from '@nrwl/workspace/src/utils/name-utils';
+import { names } from '@nrwl/devkit';
 
 function _angularImportsFromNode(
   node: ts.ImportDeclaration,
@@ -560,12 +551,14 @@ export function readBootstrapInfo(
   );
   const bootstrapComponentFileName = `./${path.join(
     path.dirname(moduleImport.moduleSpec),
-    `${toFileName(
-      bootstrapComponentClassName.substring(
-        0,
-        bootstrapComponentClassName.length - 9
-      )
-    )}.component`
+    `${
+      names(
+        bootstrapComponentClassName.substring(
+          0,
+          bootstrapComponentClassName.length - 9
+        )
+      ).fileName
+    }.component`
   )}`;
 
   return {

@@ -1,0 +1,502 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "title": "Webpack browser schema for Build Facade.",
+  "description": "Browser target options",
+  "type": "object",
+  "properties": {
+    "assets": {
+      "type": "array",
+      "description": "List of static application assets.",
+      "default": [],
+      "items": {
+        "$ref": "#/definitions/assetPattern"
+      }
+    },
+    "main": {
+      "type": "string",
+      "description": "The full path for the main entry point to the app, relative to the current workspace.",
+      "$valueDescription": "fileName"
+    },
+    "polyfills": {
+      "type": "string",
+      "description": "The full path for the polyfills file, relative to the current workspace."
+    },
+    "tsConfig": {
+      "type": "string",
+      "description": "The full path for the TypeScript configuration file, relative to the current workspace."
+    },
+    "scripts": {
+      "description": "Global scripts to be included in the build.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "$ref": "#/definitions/extraEntryPoint"
+      }
+    },
+    "styles": {
+      "description": "Global styles to be included in the build.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "$ref": "#/definitions/extraEntryPoint"
+      }
+    },
+    "stylePreprocessorOptions": {
+      "description": "Options to pass to style preprocessors.",
+      "type": "object",
+      "properties": {
+        "includePaths": {
+          "description": "Paths to include. Paths will be resolved to project root.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      },
+      "additionalProperties": false
+    },
+    "optimization": {
+      "description": "Enables optimization of the build output.",
+      "x-user-analytics": 16,
+      "default": false,
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "scripts": {
+              "type": "boolean",
+              "description": "Enables optimization of the scripts output.",
+              "default": true
+            },
+            "styles": {
+              "type": "boolean",
+              "description": "Enables optimization of the styles output.",
+              "default": true
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "boolean"
+        }
+      ]
+    },
+    "fileReplacements": {
+      "description": "Replace compilation source files with other compilation source files in the build.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/fileReplacement"
+      },
+      "default": []
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "The full path for the new output directory, relative to the current workspace.\n\nBy default, writes output to a folder named dist/ in the current project."
+    },
+    "resourcesOutputPath": {
+      "type": "string",
+      "description": "The path where style resources will be placed, relative to outputPath.",
+      "default": ""
+    },
+    "aot": {
+      "type": "boolean",
+      "description": "Build using Ahead of Time compilation.",
+      "x-user-analytics": 13,
+      "default": false
+    },
+    "sourceMap": {
+      "description": "Output sourcemaps.",
+      "default": true,
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "scripts": {
+              "type": "boolean",
+              "description": "Output sourcemaps for all scripts.",
+              "default": true
+            },
+            "styles": {
+              "type": "boolean",
+              "description": "Output sourcemaps for all styles.",
+              "default": true
+            },
+            "hidden": {
+              "type": "boolean",
+              "description": "Output sourcemaps used for error reporting tools.",
+              "default": false
+            },
+            "vendor": {
+              "type": "boolean",
+              "description": "Resolve vendor packages sourcemaps.",
+              "default": false
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "boolean"
+        }
+      ]
+    },
+    "vendorChunk": {
+      "type": "boolean",
+      "description": "Use a separate bundle containing only vendor libraries.",
+      "default": true
+    },
+    "commonChunk": {
+      "type": "boolean",
+      "description": "Use a separate bundle containing code used across multiple bundles.",
+      "default": true
+    },
+    "baseHref": {
+      "type": "string",
+      "description": "Base url for the application being built."
+    },
+    "deployUrl": {
+      "type": "string",
+      "description": "URL where files will be deployed."
+    },
+    "verbose": {
+      "type": "boolean",
+      "description": "Adds more details to output logging.",
+      "default": false
+    },
+    "progress": {
+      "type": "boolean",
+      "description": "Log progress to the console while building."
+    },
+    "i18nFile": {
+      "type": "string",
+      "description": "Localization file to use for i18n.",
+      "x-deprecated": "Use 'locales' object in the project metadata instead."
+    },
+    "i18nFormat": {
+      "type": "string",
+      "description": "Format of the localization file specified with --i18n-file.",
+      "x-deprecated": "No longer needed as the format will be determined automatically."
+    },
+    "i18nLocale": {
+      "type": "string",
+      "description": "Locale to use for i18n.",
+      "x-deprecated": "Use 'localize' instead."
+    },
+    "i18nMissingTranslation": {
+      "type": "string",
+      "description": "How to handle missing translations for i18n.",
+      "enum": ["warning", "error", "ignore"],
+      "default": "warning"
+    },
+    "localize": {
+      "oneOf": [
+        {
+          "type": "boolean",
+          "description": "Translate all locales."
+        },
+        {
+          "type": "array",
+          "description": "List of locales ID's to translate.",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z]{2,3}(-[a-zA-Z]{4})?(-([a-zA-Z]{2}|[0-9]{3}))?(-[a-zA-Z]{5,8})?(-x(-[a-zA-Z0-9]{1,8})+)?$"
+          }
+        }
+      ]
+    },
+    "extractCss": {
+      "type": "boolean",
+      "description": "Extract css from global styles into css files instead of js ones.",
+      "default": false
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Run build when files change.",
+      "default": false
+    },
+    "outputHashing": {
+      "type": "string",
+      "description": "Define the output filename cache-busting hashing mode.",
+      "default": "none",
+      "enum": ["none", "all", "media", "bundles"]
+    },
+    "poll": {
+      "type": "number",
+      "description": "Enable and define the file watching poll time period in milliseconds."
+    },
+    "deleteOutputPath": {
+      "type": "boolean",
+      "description": "Delete the output path before building.",
+      "default": true
+    },
+    "preserveSymlinks": {
+      "type": "boolean",
+      "description": "Do not use the real path when resolving modules. If unset then will default to `true` if NodeJS option --preserve-symlinks is set."
+    },
+    "extractLicenses": {
+      "type": "boolean",
+      "description": "Extract all licenses in a separate file.",
+      "default": false
+    },
+    "showCircularDependencies": {
+      "type": "boolean",
+      "description": "Show circular dependency warnings on builds.",
+      "default": true
+    },
+    "buildOptimizer": {
+      "type": "boolean",
+      "description": "Enables '@angular-devkit/build-optimizer' optimizations when using the 'aot' option.",
+      "default": false
+    },
+    "namedChunks": {
+      "type": "boolean",
+      "description": "Use file name for lazy loaded chunks.",
+      "default": true
+    },
+    "subresourceIntegrity": {
+      "type": "boolean",
+      "description": "Enables the use of subresource integrity validation.",
+      "default": false
+    },
+    "serviceWorker": {
+      "type": "boolean",
+      "description": "Generates a service worker config for production builds.",
+      "default": false
+    },
+    "ngswConfigPath": {
+      "type": "string",
+      "description": "Path to ngsw-config.json."
+    },
+    "index": {
+      "description": "Configures the generation of the application's HTML index.",
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "The path of a file to use for the application's HTML index. The filename of the specified path will be used for the generated file and will be created in the root of the application's configured output path."
+        },
+        {
+          "type": "object",
+          "description": "",
+          "properties": {
+            "input": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The path of a file to use for the application's generated HTML index."
+            },
+            "output": {
+              "type": "string",
+              "minLength": 1,
+              "default": "index.html",
+              "description": "The output path of the application's generated HTML index file. The full provided path will be used and will be considered relative to the application's configured output path."
+            }
+          },
+          "required": ["input"]
+        }
+      ]
+    },
+    "statsJson": {
+      "type": "boolean",
+      "description": "Generates a 'stats.json' file which can be analyzed using tools such as 'webpack-bundle-analyzer'.",
+      "default": false
+    },
+    "forkTypeChecker": {
+      "type": "boolean",
+      "description": "Run the TypeScript type checker in a forked process.",
+      "default": true
+    },
+    "lazyModules": {
+      "description": "List of additional NgModule files that will be lazy loaded. Lazy router modules will be discovered automatically.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-deprecated": "'SystemJsNgModuleLoader' is deprecated, and this is part of its usage. Use 'import()' syntax instead.",
+      "default": []
+    },
+    "budgets": {
+      "description": "Budget thresholds to ensure parts of your application stay within boundaries which you set.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/budget"
+      },
+      "default": []
+    },
+    "webWorkerTsConfig": {
+      "type": "string",
+      "description": "TypeScript configuration for Web Worker modules."
+    },
+    "crossOrigin": {
+      "type": "string",
+      "description": "Define the crossorigin attribute setting of elements that provide CORS support.",
+      "default": "none",
+      "enum": ["none", "anonymous", "use-credentials"]
+    },
+    "experimentalRollupPass": {
+      "type": "boolean",
+      "description": "Concatenate modules with Rollup before bundling them with Webpack.",
+      "default": false
+    },
+    "allowedCommonJsDependencies": {
+      "description": "A list of CommonJS packages that are allowed to be used without a build time warning.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    }
+  },
+  "additionalProperties": false,
+  "required": ["outputPath", "index", "main", "tsConfig"],
+  "definitions": {
+    "assetPattern": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "glob": {
+              "type": "string",
+              "description": "The pattern to match."
+            },
+            "input": {
+              "type": "string",
+              "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
+            },
+            "ignore": {
+              "description": "An array of globs to ignore.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "output": {
+              "type": "string",
+              "description": "Absolute path within the output."
+            }
+          },
+          "additionalProperties": false,
+          "required": ["glob", "input", "output"]
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "fileReplacement": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "src": {
+              "type": "string"
+            },
+            "replaceWith": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": ["src", "replaceWith"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "replace": {
+              "type": "string"
+            },
+            "with": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": ["replace", "with"]
+        }
+      ]
+    },
+    "extraEntryPoint": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "input": {
+              "type": "string",
+              "description": "The file to include."
+            },
+            "bundleName": {
+              "type": "string",
+              "description": "The bundle name for this extra entry point."
+            },
+            "lazy": {
+              "type": "boolean",
+              "description": "If the bundle will be lazy loaded.",
+              "default": false,
+              "x-deprecated": "Use 'inject' option with 'false' value instead."
+            },
+            "inject": {
+              "type": "boolean",
+              "description": "If the bundle will be referenced in the HTML file.",
+              "default": true
+            }
+          },
+          "additionalProperties": false,
+          "required": ["input"]
+        },
+        {
+          "type": "string",
+          "description": "The file to include."
+        }
+      ]
+    },
+    "budget": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The type of budget.",
+          "enum": [
+            "all",
+            "allScript",
+            "any",
+            "anyScript",
+            "anyComponentStyle",
+            "bundle",
+            "initial"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the bundle."
+        },
+        "baseline": {
+          "type": "string",
+          "description": "The baseline size for comparison."
+        },
+        "maximumWarning": {
+          "type": "string",
+          "description": "The maximum threshold for warning relative to the baseline."
+        },
+        "maximumError": {
+          "type": "string",
+          "description": "The maximum threshold for error relative to the baseline."
+        },
+        "minimumWarning": {
+          "type": "string",
+          "description": "The minimum threshold for warning relative to the baseline."
+        },
+        "minimumError": {
+          "type": "string",
+          "description": "The minimum threshold for error relative to the baseline."
+        },
+        "warning": {
+          "type": "string",
+          "description": "The threshold for warning relative to the baseline (min & max)."
+        },
+        "error": {
+          "type": "string",
+          "description": "The threshold for error relative to the baseline (min & max)."
+        }
+      },
+      "additionalProperties": false,
+      "required": ["type"]
+    }
+  }
+}

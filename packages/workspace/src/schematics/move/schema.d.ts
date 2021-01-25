@@ -3,4 +3,5 @@ export interface Schema {
   destination: string;
   importPath?: string;
   updateImportPath: boolean;
+  skipFormat?: boolean;
 }

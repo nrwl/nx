@@ -14,21 +14,18 @@ describe('getRunner', () => {
       projects: {},
     };
     mockRunner = jest.fn();
-    overrides = { foo: 'bar' };
   });
 
   it('gets a default runner when runner is not defined in the nx json', () => {
-    const { tasksRunner, tasksOptions } = getRunner({}, nxJson, overrides);
+    const { tasksRunner, runnerOptions } = getRunner({}, nxJson);
 
     expect(tasksRunner).toEqual(defaultTaskRunner);
-    expect(tasksOptions).toEqual(overrides);
   });
 
   it('gets a default runner when default options are not configured', () => {
-    const { tasksRunner, tasksOptions } = getRunner({}, nxJson, overrides);
+    const { tasksRunner, runnerOptions } = getRunner({}, nxJson);
 
     expect(tasksRunner).toEqual(defaultTaskRunner);
-    expect(tasksOptions).toEqual(overrides);
   });
 
   it('gets a custom task runner', () => {
@@ -42,14 +39,12 @@ describe('getRunner', () => {
       },
     };
 
-    const { tasksRunner, tasksOptions } = getRunner(
+    const { tasksRunner, runnerOptions } = getRunner(
       { runner: 'custom' },
-      nxJson,
-      overrides
+      nxJson
     );
 
     expect(tasksRunner).toEqual(mockRunner);
-    expect(tasksOptions).toEqual(overrides);
   });
 
   it('gets a custom task runner with options', () => {
@@ -66,15 +61,14 @@ describe('getRunner', () => {
       },
     };
 
-    const { tasksRunner, tasksOptions } = getRunner(
+    const { tasksRunner, runnerOptions } = getRunner(
       { runner: 'custom' },
-      nxJson,
-      overrides
+      nxJson
     );
     expect(tasksRunner).toBe(mockRunner);
-    expect(tasksOptions).toEqual({
+    expect(runnerOptions).toEqual({
+      runner: 'custom',
       runnerOption: 'runner-option',
-      foo: 'bar',
     });
   });
 
@@ -89,7 +83,7 @@ describe('getRunner', () => {
       },
     };
 
-    const { tasksRunner } = getRunner({}, nxJson, overrides);
+    const { tasksRunner } = getRunner({}, nxJson);
 
     expect(tasksRunner).toEqual(mockRunner);
   });

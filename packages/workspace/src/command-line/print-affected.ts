@@ -1,25 +1,31 @@
 import { ProjectGraph, ProjectGraphNode } from '../core/project-graph';
+import { Environment, NxJson } from '../core/shared-interfaces';
 import { Task } from '../tasks-runner/tasks-runner';
-import { createTask } from '../tasks-runner/run-command';
-import { basename } from 'path';
+import { createTask, getRunner } from '../tasks-runner/run-command';
 import { getCommandAsString, getOutputs } from '../tasks-runner/utils';
 import * as yargs from 'yargs';
 import { NxArgs } from './utils';
-import { cliCommand } from '../core/file-utils';
+import { Hasher } from '../core/hasher/hasher';
+import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 
-export function printAffected(
+export async function printAffected(
   affectedProjectsWithTargetAndConfig: ProjectGraphNode[],
   affectedProjects: ProjectGraphNode[],
   projectGraph: ProjectGraph,
+  { nxJson }: Environment,
   nxArgs: NxArgs,
   overrides: yargs.Arguments
 ) {
+  const { runnerOptions } = getRunner(nxArgs, nxJson);
+
   const projectNames = affectedProjects.map((p) => p.name);
-  const tasksJson = createTasks(
+  const hasher = new Hasher(projectGraph, nxJson, runnerOptions);
+  const tasksJson = await createTasks(
     affectedProjectsWithTargetAndConfig,
     projectGraph,
     nxArgs,
-    overrides
+    overrides,
+    hasher
   );
   const result = {
     tasks: tasksJson,
@@ -33,11 +39,12 @@ export function printAffected(
   }
 }
 
-function createTasks(
+async function createTasks(
   affectedProjectsWithTargetAndConfig: ProjectGraphNode[],
   projectGraph: ProjectGraph,
   nxArgs: NxArgs,
-  overrides: yargs.Arguments
+  overrides: yargs.Arguments,
+  hasher: Hasher
 ) {
   const tasks: Task[] = affectedProjectsWithTargetAndConfig.map(
     (affectedProject) =>
@@ -46,20 +53,24 @@ function createTasks(
         target: nxArgs.target,
         configuration: nxArgs.configuration,
         overrides: overrides,
+        errorIfCannotFindConfiguration: false,
       })
   );
-  const cli = cliCommand();
-  const isYarn = basename(process.env.npm_execpath || 'npm').startsWith('yarn');
-  return tasks.map((task) => ({
+
+  const taskHashes = await hasher.hashTasks(tasks);
+  const pm = detectPackageManager();
+  const isYarn = pm === 'yarn';
+  return tasks.map((task, index) => ({
     id: task.id,
     overrides: overrides,
     target: task.target,
-    command: `${isYarn ? 'yarn' : 'npm run'} ${getCommandAsString(
-      cli,
+    command: `${isYarn ? 'yarn' : `${pm} run`} ${getCommandAsString(
+      'nx',
       isYarn,
       task
     )}`,
     outputs: getOutputs(projectGraph.nodes, task),
+    hash: taskHashes[index].value,
   }));
 }
 

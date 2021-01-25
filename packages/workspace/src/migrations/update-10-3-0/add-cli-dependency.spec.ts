@@ -16,7 +16,7 @@ describe('CLI dependency migration', () => {
     );
   });
 
-  it.only('should add @nrwl/cli to package.json', async () => {
+  it('should add @nrwl/cli to package.json', async () => {
     const result = await runMigration('add-cli-dependency', {}, tree);
     const packageJson = readJsonInTree(result, 'package.json');
     expect(packageJson.devDependencies['@nrwl/cli']).toEqual(nxVersion);

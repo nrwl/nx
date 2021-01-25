@@ -2,7 +2,7 @@
 
 ## Video of this Lesson
 
-<iframe width="560" height="600" src="https://www.youtube.com/embed/UcBSBQYNlhE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/UcBSBQYNlhE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 In this tutorial you will use Nx to build a server application out of common libraries using modern technologies.
 
@@ -10,9 +10,13 @@ In this tutorial you will use Nx to build a server application out of common lib
 
 **Start by creating a new workspace.**
 
-```shell script
-yarn create nx-workspace
+```bash
+npx create-nx-workspace@latest
+```
 
+You will then receive the following prompts in your command line:
+
+```
 ? Workspace name (e.g., org name)         myorg
 ? What to create in the new workspace     nest
 ? Application name                        todos
@@ -40,7 +44,7 @@ myorg/
 │       ├── tsconfig.json
 │       └── tsconfig.spec.json
 ├── tools/
-│   ├── schematics
+│   ├── generators
 │   └── tsconfig.tools.json
 ├── jest.config.js
 ├── libs
@@ -107,7 +111,7 @@ Options:
   --help                  Show available options for project target.
 ```
 
-It helps with good editor integration (see [VSCode Support](https://nx.dev/node/cli/console)).
+It helps with good editor integration (see [VSCode Support](https://nx.dev/node/getting-started/console)).
 
 But, most importantly, it provides a holistic dev experience regardless of the tools used, and enables advanced build features like distributed computation caching and distributed builds).
 

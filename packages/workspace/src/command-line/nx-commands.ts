@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { execSync } from 'child_process';
-import { getPackageManagerExecuteCommand } from '../utils/detect-package-manager';
+import { exec, execSync } from 'child_process';
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import * as yargs from 'yargs';
 import { nxVersion } from '../utils/versions';
 import { generateGraph } from './dep-graph';
@@ -8,9 +8,12 @@ import { format } from './format';
 import { workspaceLint } from './lint';
 import { list } from './list';
 import { report } from './report';
-import { workspaceSchematic } from './workspace-schematic';
+import { workspaceGenerators } from './workspace-generators';
 import { affected } from './affected';
 import { runMany } from './run-many';
+import { writeFileSync } from 'fs';
+import { dirSync } from 'tmp';
+import * as path from 'path';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
@@ -31,10 +34,12 @@ export const commandsObject = yargs
 
     You can also use the infix notation to run a target:
     (e.g., nx serve myapp --configuration=production)
+
+    You can skip the use of Nx cache by using the --skip-nx-cache option.
     `
   )
   .command(
-    'generate [schematic-collection:][schematic] [options, ...]',
+    'generate [collection:][generator] [options, ...]',
     `
     Generate code
     (e.g., nx generate @nrwl/web:app myapp).
@@ -150,26 +155,26 @@ export const commandsObject = yargs
     (_) => workspaceLint()
   )
   .command(
-    'workspace-schematic [name]',
-    'Runs a workspace schematic from the tools/schematics directory',
+    ['workspace-generator [name]', 'workspace-schematic [name]'],
+    'Runs a workspace generator from the tools/generators directory',
     (yargs) => {
-      yargs.option('list-schematics', {
-        describe: 'List the available workspace-schematics',
+      yargs.option('list-generators', {
+        describe: 'List the available workspace-generators',
         type: 'boolean',
       });
       /**
        * Don't require `name` if only listing available
        * schematics
        */
-      if (yargs.argv.listSchematics !== true) {
+      if (yargs.argv.listGenerators !== true) {
         yargs.demandOption(['name']).positional('name', {
           type: 'string',
-          describe: 'The name of your schematic`',
+          describe: 'The name of your generator`',
         });
       }
       return yargs;
     },
-    () => workspaceSchematic(process.argv.slice(3))
+    () => workspaceGenerators(process.argv.slice(3))
   )
   .command(
     'migrate',
@@ -179,10 +184,17 @@ export const commandsObject = yargs
     `,
     (yargs) => yargs,
     () => {
-      const executable = `${getPackageManagerExecuteCommand()} tao`;
-      execSync(`${executable} migrate ${process.argv.slice(3).join(' ')}`, {
-        stdio: ['inherit', 'inherit', 'inherit'],
-      });
+      if (process.env.NX_MIGRATE_USE_LOCAL === undefined) {
+        const p = taoPath();
+        execSync(`${p} migrate ${process.argv.slice(3).join(' ')}`, {
+          stdio: ['inherit', 'inherit', 'inherit'],
+        });
+      } else {
+        const pmc = getPackageManagerCommand();
+        execSync(`${pmc.exec} tao migrate ${process.argv.slice(3).join(' ')}`, {
+          stdio: ['inherit', 'inherit', 'inherit'],
+        });
+      }
     }
   )
   .command(report)
@@ -215,6 +227,7 @@ function withPlainOption(yargs: yargs.Argv): yargs.Argv {
     describe: 'Produces a plain output for affected:apps and affected:libs',
   });
 }
+
 function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
   return yargs
     .option('files', {
@@ -224,9 +237,21 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       requiresArg: true,
       coerce: parseCSV,
     })
-    .option('uncommitted', { describe: 'Uncommitted changes' })
-    .option('untracked', { describe: 'Untracked changes' })
-    .option('all', { describe: 'All projects' })
+    .option('uncommitted', {
+      describe: 'Uncommitted changes',
+      type: 'boolean',
+      default: undefined,
+    })
+    .option('untracked', {
+      describe: 'Untracked changes',
+      type: 'boolean',
+      default: undefined,
+    })
+    .option('all', {
+      describe: 'All projects',
+      type: 'boolean',
+      default: undefined,
+    })
     .option('base', {
       describe: 'Base of the current branch (usually master)',
       type: 'string',
@@ -247,9 +272,6 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
     )
     .group(['files', 'uncommitted', 'untracked'], 'or using:')
     .implies('head', 'base')
-    .nargs('uncommitted', 0)
-    .nargs('untracked', 0)
-    .nargs('all', 0)
     .option('exclude', {
       describe: 'Exclude certain projects from being processed',
       type: 'array',
@@ -295,8 +317,9 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
     })
     .option('all', {
       describe: 'Run the target on all projects in the workspace',
+      type: 'boolean',
+      default: undefined,
     })
-    .nargs('all', 0)
     .check(({ all, projects }) => {
       if ((all && projects) || (!all && !projects))
         throw new Error('You must provide either --all or --projects');
@@ -379,15 +402,13 @@ function parseCSV(args: string[]) {
 function withParallel(yargs: yargs.Argv): yargs.Argv {
   return yargs
     .option('parallel', {
-      describe: 'Parallelize the command',
+      describe: 'Parallelize the command (default: false)',
       type: 'boolean',
-      default: false,
     })
     .option('maxParallel', {
       describe:
-        'Max number of parallel processes. This flag is ignored if the parallel option is set to `false`.',
+        'Max number of parallel processes. This flag is ignored if the parallel option is set to `false`. (default: 3)',
       type: 'number',
-      default: 3,
     });
 }
 
@@ -399,4 +420,26 @@ function withTarget(yargs: yargs.Argv): yargs.Argv {
     demandOption: true,
     global: false,
   });
+}
+
+function taoPath() {
+  const packageManager = getPackageManagerCommand();
+
+  const tmpDir = dirSync().name;
+  writeFileSync(
+    path.join(tmpDir, 'package.json'),
+    JSON.stringify({
+      dependencies: {
+        '@nrwl/tao': 'latest',
+      },
+      license: 'MIT',
+    })
+  );
+
+  execSync(packageManager.install, {
+    cwd: tmpDir,
+    stdio: ['ignore', 'ignore', 'ignore'],
+  });
+
+  return path.join(tmpDir, `node_modules`, '.bin', 'tao');
 }

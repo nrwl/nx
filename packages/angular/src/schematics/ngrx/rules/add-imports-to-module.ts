@@ -1,6 +1,5 @@
 import { Rule, Tree } from '@angular-devkit/schematics';
 import * as ts from 'typescript';
-import { toClassName, toFileName, toPropertyName } from '@nrwl/workspace';
 import { insert } from '@nrwl/workspace';
 import { RequestContext } from './request-context';
 import {
@@ -8,6 +7,7 @@ import {
   addProviderToModule,
 } from '../../../utils/ast-utils';
 import { Change, insertImport } from '@nrwl/workspace/src/utils/ast-utils';
+import { names } from '@nrwl/devkit';
 
 export function addImportsToModule(context: RequestContext): Rule {
   return (host: Tree) => {
@@ -27,16 +27,16 @@ export function addImportsToModule(context: RequestContext): Rule {
       return insertImport(source, modulePath, symbolName, fileName, isDefault);
     };
 
-    const dir = `./${toFileName(context.options.directory)}`;
-    const pathPrefix = `${dir}/${toFileName(context.featureName)}`;
+    const dir = `./${names(context.options.directory).fileName}`;
+    const pathPrefix = `${dir}/${names(context.featureName).fileName}`;
     const reducerPath = `${pathPrefix}.reducer`;
     const effectsPath = `${pathPrefix}.effects`;
     const facadePath = `${pathPrefix}.facade`;
 
-    const featureName = `${toPropertyName(context.featureName)}`;
-    const effectsName = `${toClassName(context.featureName)}Effects`;
-    const facadeName = `${toClassName(context.featureName)}Facade`;
-    const className = `${toClassName(context.featureName)}`;
+    const featureName = `${names(context.featureName).propertyName}`;
+    const effectsName = `${names(context.featureName).className}Effects`;
+    const facadeName = `${names(context.featureName).className}Facade`;
+    const className = `${names(context.featureName).className}`;
     const reducerImports = `* as from${className}`;
 
     const storeMetaReducers = `metaReducers: !environment.production ? [] : []`;

@@ -78,6 +78,10 @@ function checkDependenciesInstalled(schema: Schema): Rule {
       }
     }
 
+    if (isFramework('html', schema)) {
+      devDependencies['@storybook/html'] = storybookVersion;
+    }
+
     return addDepsToPackageJson(dependencies, devDependencies);
   };
 }

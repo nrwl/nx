@@ -25,7 +25,7 @@ export const initialState: State = <%= propertyName %>Adapter.getInitialState({
 
 const <%= propertyName %>Reducer = createReducer(
   initialState,
-  on(<%= className %>Actions.load<%= className %>,
+  on(<%= className %>Actions.init,
     state => ({ ...state, loaded: false, error: null })
   ),
   on(<%= className %>Actions.load<%= className %>Success,

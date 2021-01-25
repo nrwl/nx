@@ -1,20 +1,22 @@
-import { Tree } from '@angular-devkit/schematics';
-import { UnitTestTree } from '@angular-devkit/schematics/testing';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { callRule, runSchematic } from '../../../utils/testing';
+import { readProjectConfiguration, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+
 import { Schema } from '../schema';
 import { updateJestConfig } from './update-jest-config';
+import { libraryGenerator } from '../../library/library';
 
-describe('updateJestConfig Rule', () => {
-  let tree: UnitTestTree;
+describe('updateJestConfig', () => {
+  let tree: Tree;
 
   beforeEach(async () => {
-    tree = new UnitTestTree(Tree.empty());
-    tree = createEmptyWorkspace(tree) as UnitTestTree;
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should handle jest config not existing', async () => {
-    tree = await runSchematic('lib', { name: 'my-source' }, tree);
+    await libraryGenerator(tree, {
+      name: 'my-source',
+    });
+    const projectConfig = readProjectConfiguration(tree, 'my-source');
 
     const schema: Schema = {
       projectName: 'my-source',
@@ -23,9 +25,7 @@ describe('updateJestConfig Rule', () => {
       updateImportPath: true,
     };
 
-    await expect(
-      callRule(updateJestConfig(schema), tree)
-    ).resolves.not.toThrow();
+    updateJestConfig(tree, schema, projectConfig);
   });
 
   it('should update the name and coverage directory', async () => {
@@ -40,8 +40,13 @@ describe('updateJestConfig Rule', () => {
     };`;
     const jestConfigPath = '/libs/my-destination/jest.config.js';
 
-    tree = await runSchematic('lib', { name: 'my-source' }, tree);
-    tree.create(jestConfigPath, jestConfig);
+    const rootJestConfigPath = '/jest.config.js';
+
+    await libraryGenerator(tree, {
+      name: 'my-source',
+    });
+    const projectConfig = readProjectConfiguration(tree, 'my-source');
+    tree.write(jestConfigPath, jestConfig);
 
     const schema: Schema = {
       projectName: 'my-source',
@@ -50,12 +55,16 @@ describe('updateJestConfig Rule', () => {
       updateImportPath: true,
     };
 
-    tree = (await callRule(updateJestConfig(schema), tree)) as UnitTestTree;
+    updateJestConfig(tree, schema, projectConfig);
 
     const jestConfigAfter = tree.read(jestConfigPath).toString();
+    const rootJestConfigAfter = tree.read(rootJestConfigPath).toString();
     expect(jestConfigAfter).toContain(`name: 'my-destination'`);
     expect(jestConfigAfter).toContain(
       `coverageDirectory: '../../coverage/libs/my-destination'`
     );
+
+    expect(rootJestConfigAfter).not.toContain('<rootDir>/libs/my-source');
+    expect(rootJestConfigAfter).toContain('<rootDir>/libs/my-destination');
   });
 });

@@ -2,7 +2,6 @@ import { UnitTestTree } from '@angular-devkit/schematics/testing';
 import { Tree } from '@angular-devkit/schematics';
 import { readJsonInTree } from '@nrwl/workspace';
 
-import { findModuleParent } from '@nrwl/workspace';
 import { getFileContent } from '@nrwl/workspace/testing';
 import {
   AppConfig,
@@ -13,6 +12,7 @@ import {
   runSchematic,
 } from '../../utils/testing';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
+import * as path from 'path';
 
 describe('ngrx', () => {
   let appTree: Tree;
@@ -336,7 +336,7 @@ describe('ngrx', () => {
       const appConfig = getAppConfig();
       const hasFile = (file) => expect(tree.exists(file)).toBeTruthy();
       const missingFile = (file) => expect(tree.exists(file)).not.toBeTruthy();
-      const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+      const statePath = `${path.dirname(appConfig.appModule)}/+state`;
 
       const tree = await buildNgrxTree(appConfig);
 
@@ -354,7 +354,7 @@ describe('ngrx', () => {
       const appConfig = getAppConfig();
       const hasFile = (file) => expect(tree.exists(file)).toBeTruthy();
       const tree = await buildNgrxTree(appConfig, 'user', true);
-      const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+      const statePath = `${path.dirname(appConfig.appModule)}/+state`;
 
       hasFile(`${statePath}/user.actions.ts`);
       hasFile(`${statePath}/user.effects.ts`);
@@ -372,7 +372,7 @@ describe('ngrx', () => {
       const appConfig = getAppConfig();
       const tree = await buildNgrxTree(appConfig, 'users');
 
-      const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+      const statePath = `${path.dirname(appConfig.appModule)}/+state`;
       const content = getFileContent(tree, `${statePath}/users.actions.ts`);
 
       expect(content).toContain('UsersActionTypes');
@@ -393,7 +393,7 @@ describe('ngrx', () => {
       const appConfig = getAppConfig();
       const tree = await buildNgrxTree(appConfig, 'users');
 
-      const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+      const statePath = `${path.dirname(appConfig.appModule)}/+state`;
       const content = getFileContent(tree, `${statePath}/users.selectors.ts`);
 
       [
@@ -409,7 +409,7 @@ describe('ngrx', () => {
       const includeFacade = true;
       const tree = await buildNgrxTree(appConfig, 'users', includeFacade);
 
-      const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+      const statePath = `${path.dirname(appConfig.appModule)}/+state`;
       const content = getFileContent(tree, `${statePath}/users.facade.ts`);
 
       [
@@ -425,7 +425,7 @@ describe('ngrx', () => {
       const appConfig = getAppConfig();
       const tree = await buildNgrxTree(appConfig, 'user');
 
-      const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+      const statePath = `${path.dirname(appConfig.appModule)}/+state`;
       const content = getFileContent(tree, `${statePath}/user.reducer.ts`);
 
       [
@@ -445,7 +445,7 @@ describe('ngrx', () => {
     it('should build the ngrx effects', async () => {
       const appConfig = getAppConfig();
       const tree = await buildNgrxTree(appConfig, 'users');
-      const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+      const statePath = `${path.dirname(appConfig.appModule)}/+state`;
       const content = getFileContent(tree, `${statePath}/users.effects.ts`);
 
       [
@@ -474,7 +474,7 @@ import {
       const appConfig = getAppConfig();
       const tree = await buildNgrxTree(appConfig);
 
-      const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+      const statePath = `${path.dirname(appConfig.appModule)}/+state`;
       const contents = tree.readContent(`${statePath}/user.reducer.spec.ts`);
 
       expect(contents).toContain(`describe('User Reducer', () => {`);
@@ -533,7 +533,7 @@ import {
         appTree
       );
 
-      const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+      const statePath = `${path.dirname(appConfig.appModule)}/+state`;
       const contents = tree.readContent(
         `${statePath}/super-users.reducer.spec.ts`
       );
@@ -565,17 +565,17 @@ import {
         appTree
       );
 
-      statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+      statePath = `${path.dirname(appConfig.appModule)}/+state`;
     });
 
     it('should generate a set of actions for the feature', async () => {
       const content = tree.readContent(`${statePath}/users.actions.ts`);
 
       [
-        '[Users] Load Users',
-        '[Users] Load Users Success',
+        '[Users Page] Init',
+        '[Users/API] Load Users Success',
         'props<{ users: UsersEntity[] }>()',
-        '[Users] Load Users Failure',
+        '[Users/API] Load Users Failure',
         'props<{ error: any }>()',
       ].forEach((text) => {
         expect(content).toContain(text);
@@ -662,7 +662,7 @@ import {
       );
       const content = tree.readContent(`${statePath}/users.effects.ts`);
 
-      [`{ fetch }`, `, ofType`, `ofType(UsersActions.loadUsers),`].forEach(
+      [`{ fetch }`, `, ofType`, `ofType(UsersActions.init),`].forEach(
         (text) => {
           expect(content).toContain(text);
         }
@@ -718,7 +718,7 @@ import {
         appTree
       );
 
-      const statePath = `${findModuleParent(appConfig.appModule)}/+state`;
+      const statePath = `${path.dirname(appConfig.appModule)}/+state`;
       const content = tree.readContent(`${statePath}/users.effects.ts`);
 
       [`{ fetch }`, `, ofType`, `ofType(UsersActionTypes.LoadUsers),`].forEach(

@@ -54,6 +54,26 @@
       "version": "9.5.0-beta.1",
       "description": "Update libraries",
       "factory": "./src/migrations/update-9-5-0/update-9-5-0"
+    },
+    "update-10.4.0": {
+      "version": "10.4.0-beta.1",
+      "description": "Update libraries",
+      "factory": "./src/migrations/update-10-4-0/update-10-4-0"
+    },
+    "rename-emotion-packages-11.0.0": {
+      "version": "11.0.0-beta.0",
+      "description": "Rename emotion packages to match new 11.0.0 package names",
+      "factory": "./src/migrations/update-11-0-0/rename-emotion-packages-11-0-0"
+    },
+    "update-11.0.0": {
+      "version": "11.0.0-beta.0",
+      "description": "Update libraries",
+      "factory": "./src/migrations/update-11-0-0/update-11-0-0"
+    },
+    "move-react-redux-types-package-11.2.0": {
+      "version": "11.2.0-beta.0",
+      "description": "Move react redux typings from dependencies to devDependencies in package.json",
+      "factory": "./src/migrations/update-11-2-0/move-react-redux-types-package-11-2-0"
     }
   },
   "packageJsonUpdates": {
@@ -303,6 +323,96 @@
         },
         "eslint-plugin-react-hooks": {
           "version": "4.0.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "10.4.0": {
+      "version": "9.5.0-beta.1",
+      "packages": {
+        "react": {
+          "version": "17.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "react-dom": {
+          "version": "17.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react": {
+          "version": "16.9.56",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-dom": {
+          "version": "16.9.9",
+          "alwaysAddToPackageJson": false
+        },
+        "styled-components": {
+          "version": "5.2.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/styled-components": {
+          "version": "5.1.4",
+          "alwaysAddToPackageJson": false
+        },
+        "react-is": {
+          "version": "17.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "styled-jsx": {
+          "version": "3.3.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-router-dom": {
+          "version": "5.1.6",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react": {
+          "version": "11.1.2",
+          "alwaysAddToPackageJson": false
+        },
+        "react-redux": {
+          "version": "7.2.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-redux": {
+          "version": "7.1.11",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-import": {
+          "version": "2.22.1",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-a11y": {
+          "version": "6.4.1",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-react": {
+          "version": "7.21.5",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-react-hooks": {
+          "version": "4.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "11.0.0": {
+      "version": "11.0.0-beta.0",
+      "packages": {
+        "@emotion/react": {
+          "version": "11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/styled": {
+          "version": "11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/babel-preset-css-prop": {
+          "version": "11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/server": {
+          "version": "11.0.0",
           "alwaysAddToPackageJson": false
         }
       }

@@ -2,7 +2,7 @@
 
 ## Video of this Lesson
 
-<iframe width="560" height="600" src="https://www.youtube.com/embed/i37yJKK8qGI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/i37yJKK8qGI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 In this tutorial you will use Nx to build a full-stack application out of common libraries using modern technologies like Cypress and Nest.
 
@@ -12,7 +12,11 @@ In this tutorial you will use Nx to build a full-stack application out of common
 
 ```bash
 npx create-nx-workspace@latest
+```
 
+You will then receive the following prompts in your command line:
+
+```
 ? Workspace name (e.g., org name)     myorg
 ? What to create in the new workspace angular
 ? Application name                    todos

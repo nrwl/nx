@@ -1,13 +1,10 @@
-const { execSync } = require('child_process');
+import { execSync } from 'child_process';
 import { readdirSync } from 'fs';
-const { promisify } = require('util');
-const { spawn, exec } = require('child_process');
+import { ensureDirSync, removeSync } from 'fs-extra';
 const kill = require('tree-kill');
+import { build } from './package';
 
-const asyncExec = promisify(exec);
-let localRegistryProcess;
-
-process.env.PUBLISHED_VERSION = `9999.0.1`;
+process.env.PUBLISHED_VERSION = `9999.0.2`;
 process.env.npm_config_registry = `http://localhost:4872/`;
 process.env.YARN_REGISTRY = process.env.npm_config_registry;
 
@@ -16,50 +13,13 @@ export const getDirectories = (source) =>
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
 
-async function spawnLocalRegistry() {
-  localRegistryProcess = spawn('npx', [
-    'verdaccio',
-    '--config',
-    './scripts/local-registry/config.yml',
-    '--listen',
-    '4872',
-  ]);
-
-  let collectedOutput = [];
-  let resolvedOrRejected = false;
-
-  setTimeout(() => {
-    if (!resolvedOrRejected) {
-      console.error(`Failed to start the npm registry`);
-      console.error(collectedOutput.join(''));
-      cleanUp(1);
-    }
-  }, 10000);
-
-  await new Promise((res, rej) => {
-    localRegistryProcess.stdout.on('data', (data) => {
-      collectedOutput.push(data.toString());
-      // wait for local-registry to come online
-      if (data.includes('http address')) {
-        resolvedOrRejected = true;
-        res();
-      }
-    });
-    localRegistryProcess.on('error', (err) => {
-      console.error(collectedOutput.join(''));
-      resolvedOrRejected = true;
-      rej(err);
-    });
-  });
-}
-
-async function updateVersion(packagePath) {
-  return exec(`npm version ${process.env.PUBLISHED_VERSION}`, {
+function updateVersion(packagePath) {
+  return execSync(`npm version ${process.env.PUBLISHED_VERSION}`, {
     cwd: packagePath,
   });
 }
 
-async function publishPackage(packagePath) {
+function publishPackage(packagePath) {
   if (process.env.npm_config_registry.indexOf('http://localhost') === -1) {
     throw Error(`
       ------------------
@@ -67,21 +27,23 @@ async function publishPackage(packagePath) {
       ------------------
     `);
   }
-  await asyncExec(`npm publish`, {
-    cwd: packagePath,
-    env: process.env,
-  });
+  try {
+    console.log(` 📦 ${packagePath}`);
+    execSync(`npm publish`, {
+      cwd: packagePath,
+      env: process.env,
+      stdio: ['ignore', 'ignore', 'ignore'],
+    });
+  } catch (e) {
+    console.log(e);
+  }
 }
 
-export async function setup() {
-  // @ts-ignore
-  await spawnLocalRegistry();
-  await Promise.all(
-    getDirectories('./build/packages').map(async (pkg) => {
-      await updateVersion(`./build/packages/${pkg}`);
-      return await publishPackage(`./build/packages/${pkg}`);
-    })
-  );
+export function setup() {
+  getDirectories('./build/packages').map((pkg) => {
+    updateVersion(`./build/packages/${pkg}`);
+    publishPackage(`./build/packages/${pkg}`);
+  });
 }
 
 async function runTest() {
@@ -94,7 +56,7 @@ async function runTest() {
 
   if (process.argv[3] === 'affected') {
     const affected = execSync(
-      `nx print-affected --base=origin/master --select=projects`
+      `npx nx print-affected --base=origin/master --select=projects`
     )
       .toString()
       .split(',')
@@ -109,33 +71,31 @@ async function runTest() {
             .join(',');
   }
 
-  execSync(`./scripts/package.sh 9999.0.1 "~10.0.0" "3.9.3" "2.0.4"`, {
-    stdio: [0, 1, 2],
-  });
-  execSync(`rm -rf tmp`);
-  execSync(`mkdir -p tmp/angular`);
-  execSync(`mkdir -p tmp/nx`);
+  build(process.env.PUBLISHED_VERSION, '~10.0.0', '3.9.3', '2.1.2');
+
+  if (process.argv[5] != '--rerun') {
+    removeSync(`tmp`);
+    ensureDirSync(`tmp/angular`);
+    ensureDirSync(`tmp/nx`);
+  }
 
   try {
-    await setup();
+    setup();
     if (selectedProjects === '') {
       console.log('No tests to run');
     } else if (selectedProjects) {
       execSync(
-        `node --max-old-space-size=4000 ./node_modules/.bin/nx run-many --target=e2e --projects=${selectedProjects} ${testNamePattern}`,
+        `yarn nx run-many --target=e2e --projects=${selectedProjects} ${testNamePattern}`,
         {
           stdio: [0, 1, 2],
           env: { ...process.env, NX_TERMINAL_CAPTURE_STDERR: 'true' },
         }
       );
     } else {
-      execSync(
-        `node --max-old-space-size=4000 ./node_modules/.bin/nx run-many --target=e2e --all`,
-        {
-          stdio: [0, 1, 2],
-          env: { ...process.env, NX_TERMINAL_CAPTURE_STDERR: 'true' },
-        }
-      );
+      execSync(`yarn nx run-many --target=e2e --all`, {
+        stdio: [0, 1, 2],
+        env: { ...process.env, NX_TERMINAL_CAPTURE_STDERR: 'true' },
+      });
     }
     cleanUp(0);
   } catch (e) {
@@ -151,17 +111,11 @@ function cleanUp(code) {
       kill(0);
     }
   } catch (e) {}
-  try {
-    if (localRegistryProcess) localRegistryProcess.kill(0);
-  } catch (e) {}
   // try killing everything after in case something hasn't terminated
   try {
     if (!process.env.CI) {
       kill(0, 'SIGKILL');
     }
-  } catch (e) {}
-  try {
-    if (localRegistryProcess) localRegistryProcess.kill(0, 'SIGKILL');
   } catch (e) {}
 
   process.exit(code);

@@ -1,6 +1,7 @@
 import { Tree } from '@angular-devkit/schematics';
-import { getProjectConfig, toFileName } from '@nrwl/workspace';
+import { getProjectConfig } from '@nrwl/workspace';
 import { NormalizedSchema, Schema } from '../schema';
+import { names } from '@nrwl/devkit';
 
 export function normalizeOptions(
   host: Tree,
@@ -8,9 +9,9 @@ export function normalizeOptions(
 ): NormalizedSchema {
   let name: string;
   if (options.name) {
-    name = toFileName(options.name);
+    name = names(options.name).fileName;
   } else {
-    name = toFileName(`update-${options.version}`);
+    name = names(`update-${options.version}`).fileName;
   }
 
   let description: string;

@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "NxJestInit",
+  "cli": "nx",
+  "title": "Add Jest Configuration to a workspace",
+  "type": "object",
+  "properties": {
+    "babelJest": {
+      "type": "boolean",
+      "alias": "babel-jest",
+      "description": "Use babel-jest instead of ts-jest",
+      "default": false
+    }
+  },
+  "required": []
+}

@@ -2,7 +2,7 @@
 
 ## Video of this Lesson
 
-<iframe width="560" height="600" src="https://www.youtube.com/embed/aNjvT3VX1Ts" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/aNjvT3VX1Ts" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Nx has built-in computation caching, which helps drastically improve the performance of the commands.
 
@@ -54,7 +54,7 @@ Based on the state of the source code and the environment, Nx was able to figure
 Nx read the output from cache instead of running the command for 1 out of 2 projects.
 ```
 
-Nx built `api` and retrieved `todos` from its computation cache. Read more about the cache [here](/{{framework}}/workspace/computation-caching).
+Nx built `api` and retrieved `todos` from its computation cache. Read more about the cache [here](/{{framework}}/core-concepts/computation-caching).
 
 ## --with-deps
 

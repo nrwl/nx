@@ -1,0 +1,36 @@
+{
+  "name": "@nrwl/devkit",
+  "version": "0.0.1",
+  "description": "Extensible Dev Tools for Monorepos",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nrwl/nx.git"
+  },
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "main": "index.js",
+  "types": "index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "dependencies": {
+    "@nrwl/tao": "*",
+    "ejs": "^3.1.5",
+    "ignore": "^5.0.4",
+    "semver": "6.3.0",
+    "strip-json-comments": "2.0.1",
+    "tslib": "^2.0.0"
+  }
+}

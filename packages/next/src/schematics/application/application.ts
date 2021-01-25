@@ -18,6 +18,7 @@ import { updateJestConfig } from './lib/update-jest-config';
 import { updateNxJson } from './lib/update-nx-json';
 import { Schema } from './schema';
 import { addStyleDependencies } from '../../utils/styles';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export default function (schema: Schema): Rule {
   return (host: Tree, _context: SchematicContext) => {
@@ -39,9 +40,14 @@ export default function (schema: Schema): Rule {
       addCypress(options),
       addJest(options),
       updateJestConfig(options),
-      addStyleDependencies(options.style),
+      ...addStyleDependencies(options.style),
       setDefaults(options),
       formatFiles(options),
     ]);
   };
 }
+
+export const applicationGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/next',
+  'application'
+);

@@ -31,13 +31,13 @@ describe('<%= className %>Effects', () => {
     effects = TestBed.get(<%= className %>Effects);
   });
 
-  describe('load<%= className %>$', () => {
+  describe('init$', () => {
     it('should work', () => {
-      actions = hot('-a-|', {a: <%= className %>Actions.load<%= className %>()});
+      actions = hot('-a-|', {a: <%= className %>Actions.init()});
 
       const expected = hot('-a-|', { a: <%= className %>Actions.load<%= className %>Success({ <%= propertyName %>: [] }) });
 
-      expect(effects.load<%= className %>$).toBeObservable(expected);
+      expect(effects.init$).toBeObservable(expected);
     });
   });
 });

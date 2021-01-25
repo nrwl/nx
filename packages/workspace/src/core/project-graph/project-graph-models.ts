@@ -1,6 +1,7 @@
 import { FileMap } from '../file-graph';
 import { FileData } from '../file-utils';
 import { NxJson } from '../shared-interfaces';
+import { TargetConfiguration } from '@nrwl/tao/src/shared/workspace';
 
 export interface ProjectGraph {
   nodes: Record<string, ProjectGraphNode>;
@@ -17,7 +18,7 @@ export interface ProjectGraphNode<T extends {} = {}> {
   type: string;
   name: string;
   data: T & {
-    architect?: { [k: string]: any };
+    targets?: { [targetName: string]: TargetConfiguration };
     files: FileData[];
     [k: string]: any;
   };

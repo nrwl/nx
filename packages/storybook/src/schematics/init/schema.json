@@ -1,13 +1,13 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "Nx Storybook Project Schematics Schema",
+  "id": "Init Storybook Plugin",
   "title": "Add Storybook Configuration to the workspace",
   "type": "object",
   "properties": {
     "uiFramework": {
       "type": "string",
       "description": "Storybook UI Framework to use",
-      "enum": ["@storybook/angular", "@storybook/react"],
+      "enum": ["@storybook/angular", "@storybook/react", "@storybook/html"],
       "x-prompt": "What UI framework plugin should storybook use?"
     }
   }

@@ -5,183 +5,181 @@ import {
 
 describe('utils', () => {
   describe('getOutputsForTargetAndConfiguration', () => {
-    it('should return outputs when defined', () => {
-      expect(
-        getOutputsForTargetAndConfiguration(
-          {
-            overrides: {},
-            target: {
-              project: 'myapp',
-              target: 'build',
-              configuration: 'production',
-            },
+    const task = {
+      overrides: {},
+      target: {
+        project: 'myapp',
+        target: 'build',
+        configuration: 'production',
+      },
+    };
+
+    function getNode(build) {
+      return {
+        name: 'myapp',
+        type: 'application',
+        data: {
+          targets: {
+            build: { ...build, executor: '' },
           },
-          {
-            name: 'myapp',
-            type: 'application',
-            data: {
-              architect: {
-                build: {
-                  outputs: ['one', 'two'],
+          files: [],
+        },
+      };
+    }
+
+    describe('when `outputs` are defined', () => {
+      it('should return them', () => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task,
+            getNode({
+              outputs: ['one', 'two'],
+            })
+          )
+        ).toEqual(['one', 'two']);
+      });
+
+      it('should support interpolation based on options', () => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task,
+            getNode({
+              outputs: ['path/{options.myVar}', 'two'],
+              options: {
+                myVar: 'one',
+              },
+            })
+          )
+        ).toEqual(['path/one', 'two']);
+      });
+
+      it('should support interpolation based on configuration-specific options', () => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task,
+            getNode({
+              outputs: ['path/{options.myVar}', 'two'],
+              options: {
+                myVar: 'one',
+              },
+              configurations: {
+                production: {
+                  myVar: 'other',
                 },
               },
-              files: [],
-            },
-          }
-        )
-      ).toEqual(['one', 'two']);
-    });
+            })
+          )
+        ).toEqual(['path/other', 'two']);
+      });
 
-    it('should return configuration-specific outputPath when defined', () => {
-      expect(
-        getOutputsForTargetAndConfiguration(
-          {
-            overrides: {},
-            target: {
-              project: 'myapp',
-              target: 'build',
-              configuration: 'production',
+      it('should support interpolation outputs from overrides', () => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            {
+              ...task,
+              overrides: {
+                myVar: 'overridePath',
+              },
             },
-          },
-          {
-            name: 'myapp',
-            type: 'application',
-            data: {
-              architect: {
-                build: {
-                  options: {
-                    outputPath: 'one',
-                  },
-                  configurations: {
-                    production: {
-                      outputPath: 'two',
-                    },
-                  },
+            getNode({
+              outputs: ['path/{options.myVar}', 'two'],
+              options: {
+                myVar: 'one',
+              },
+              configurations: {
+                production: {
+                  myVar: 'other',
                 },
               },
-              files: [],
-            },
-          }
-        )
-      ).toEqual(['two']);
+            })
+          )
+        ).toEqual(['path/overridePath', 'two']);
+      });
     });
 
-    it('should return configuration-independent outputPath when defined', () => {
-      expect(
-        getOutputsForTargetAndConfiguration(
-          {
-            overrides: {},
-            target: {
-              project: 'myapp',
-              target: 'build',
-              configuration: 'production',
-            },
-          },
-          {
-            name: 'myapp',
-            type: 'application',
-            data: {
-              architect: {
-                build: {
-                  options: {
-                    outputPath: 'one',
-                  },
-                  configurations: {
-                    production: {},
-                  },
+    describe('when `outputs` is missing (backwards compatibility)', () => {
+      it('should return configuration-specific outputPath when defined', () => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task,
+            getNode({
+              options: {
+                outputPath: 'one',
+              },
+              configurations: {
+                production: {
+                  outputPath: 'two',
                 },
               },
-              files: [],
-            },
-          }
-        )
-      ).toEqual(['one']);
-    });
+            })
+          )
+        ).toEqual(['two']);
+      });
 
-    it('should handle invalid configuration', () => {
-      expect(
-        getOutputsForTargetAndConfiguration(
-          {
-            overrides: {},
-            target: {
-              project: 'myapp',
-              target: 'build',
-              configuration: 'production',
-            },
-          },
-          {
-            name: 'myapp',
-            type: 'application',
-            data: {
-              architect: {
-                build: {
-                  options: {
-                    outputPath: 'one',
-                  },
-                },
+      it('should return configuration-independent outputPath when defined', () => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task,
+            getNode({
+              options: {
+                outputPath: 'one',
               },
-              files: [],
-            },
-          }
-        )
-      ).toEqual(['one']);
-    });
-
-    it('should handle overrides', () => {
-      expect(
-        getOutputsForTargetAndConfiguration(
-          {
-            overrides: {
-              outputPath: 'overrideOutputPath',
-            },
-            target: {
-              project: 'myapp',
-              target: 'build',
-              configuration: 'production',
-            },
-          },
-          {
-            name: 'myapp',
-            type: 'application',
-            data: {
-              architect: {
-                build: {
-                  options: {
-                    outputPath: 'one',
-                  },
-                },
+              configurations: {
+                production: {},
               },
-              files: [],
-            },
-          }
-        )
-      ).toEqual(['overrideOutputPath']);
-    });
+            })
+          )
+        ).toEqual(['one']);
+      });
 
-    it('should return default output path when nothing else is defined', () => {
-      expect(
-        getOutputsForTargetAndConfiguration(
-          {
-            overrides: {},
-            target: {
-              project: 'myapp',
-              target: 'build',
-              configuration: 'production',
+      it('should handle invalid configuration', () => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            task,
+            getNode({
+              options: {
+                outputPath: 'one',
+              },
+            })
+          )
+        ).toEqual(['one']);
+      });
+
+      it('should handle overrides', () => {
+        expect(
+          getOutputsForTargetAndConfiguration(
+            {
+              ...task,
+              overrides: {
+                outputPath: 'overrideOutputPath',
+              },
             },
-          },
-          {
+            getNode({
+              options: {
+                outputPath: 'one',
+              },
+            })
+          )
+        ).toEqual(['overrideOutputPath']);
+      });
+
+      it('should return default output path when nothing else is defined', () => {
+        expect(
+          getOutputsForTargetAndConfiguration(task, {
             name: 'myapp',
             type: 'application',
             data: {
               root: 'root-myapp',
-              architect: {
-                build: {},
+              targets: {
+                build: {
+                  executor: '',
+                },
               },
               files: [],
             },
-          }
-        )
-      ).toEqual(['dist/root-myapp']);
+          })
+        ).toEqual(['dist/root-myapp']);
+      });
     });
   });
 
@@ -236,6 +234,20 @@ describe('utils', () => {
         '--foo.w=2',
         '--foo.z=3',
         '--foo.z=4',
+      ]);
+    });
+
+    it('should quote string values with space(s)', () => {
+      const options = {
+        string1: 'one',
+        string2: 'one two',
+        string3: 'one two three',
+      };
+
+      expect(unparse(options)).toEqual([
+        '--string1=one',
+        '--string2="one two"',
+        '--string3="one two three"',
       ]);
     });
   });

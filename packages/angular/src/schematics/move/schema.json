@@ -30,7 +30,7 @@
     },
     "updateImportPath": {
       "type": "boolean",
-      "description": "Should the schematic update the import path to reflect the new location?",
+      "description": "Should the generator update the import path to reflect the new location?",
       "default": true
     }
   },

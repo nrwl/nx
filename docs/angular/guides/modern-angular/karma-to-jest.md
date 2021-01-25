@@ -65,20 +65,20 @@ This step is very manual and varies widely based on the usage of features from v
 
 - Bare spies
   - Jasmine
-    ```ts
+    ```typescript
     const myMock = jasmine.createSpy('myMock);
     ```
   - Jest
-    ```ts
+    ```typescript
     const myMock = jest.fn();
     ```
 - Spies on existing objects
   - Jasmine
-    ```ts
+    ```typescript
     spyOn(foo, 'setBar');
     ```
   - Jest
-    ```ts
+    ```typescript
     jest.spyOn(foo, ‘setBar’);
     ```
 

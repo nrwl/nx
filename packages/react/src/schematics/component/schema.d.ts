@@ -12,4 +12,5 @@ export interface Schema {
   routing?: boolean;
   js?: boolean;
   flat?: boolean;
+  globalCss?: boolean;
 }

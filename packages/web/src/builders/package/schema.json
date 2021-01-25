@@ -15,6 +15,11 @@
       "type": "string",
       "description": "The output path of the generated files."
     },
+    "deleteOutputPath": {
+      "type": "boolean",
+      "description": "Delete the output path before building.",
+      "default": true
+    },
     "tsConfig": {
       "type": "string",
       "description": "The path to tsconfig file."

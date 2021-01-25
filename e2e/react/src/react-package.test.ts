@@ -1,90 +1,124 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
-  ensureProject,
-  forEachCli,
+  newProject,
+  readFile,
   readJson,
   runCLI,
   uniq,
   updateFile,
-  readFile,
 } from '@nrwl/e2e/utils';
+import { names } from '@nrwl/devkit';
 
-forEachCli('nx', (cli) => {
-  describe('Build React libraries and apps', () => {
-    /**
-     * Graph:
-     *
-     *                      childLib
-     *                     /
-     * app => parentLib =>
-     *                    \
-     *                     childLib2
-     *
-     */
-    let app: string;
-    let parentLib: string;
-    let childLib: string;
-    let childLib2: string;
+describe('Build React libraries and apps', () => {
+  /**
+   * Graph:
+   *
+   *                      childLib
+   *                     /
+   * app => parentLib =>
+   *                    \
+   *                     childLib2
+   *
+   */
+  let app: string;
+  let parentLib: string;
+  let childLib: string;
+  let childLib2: string;
 
-    beforeEach(() => {
-      app = uniq('app');
-      parentLib = uniq('parentlib');
-      childLib = uniq('childlib');
-      childLib2 = uniq('childlib2');
+  let buildableParentLib: string;
+  let buildableChildLib: string;
+  let buildableChildLib2: string;
 
-      ensureProject();
+  let proj: string;
 
-      runCLI(`generate @nrwl/react:app ${app}`);
+  beforeEach(() => {
+    app = uniq('app');
+    parentLib = uniq('parentlib');
+    childLib = uniq('childlib');
+    childLib2 = uniq('childlib2');
+    buildableParentLib = uniq('buildableparentlib');
+    buildableChildLib = uniq('buildablechildlib');
+    buildableChildLib2 = uniq('buildablechildlib2');
 
-      runCLI(
-        `generate @nrwl/react:library ${parentLib} --publishable --importPath=@proj/${parentLib} --no-interactive`
-      );
-      runCLI(
-        `generate @nrwl/react:library ${childLib} --publishable --importPath=@proj/${childLib} --no-interactive`
-      );
-      runCLI(
-        `generate @nrwl/react:library ${childLib2} --publishable --importPath=@proj/${childLib2} --no-interactive`
-      );
+    proj = newProject();
 
-      // create dependencies by importing
-      const createDep = (parent, children: string[]) => {
-        updateFile(
-          `libs/${parent}/src/lib/${parent}.tsx`,
-          `
-              ${children.map((entry) => `import '@proj/${entry}';`).join('\n')}
-
-            `
-        );
-      };
-
-      createDep(parentLib, [childLib, childLib2]);
-
+    // create dependencies by importing
+    const createDep = (parent, children: string[]) => {
       updateFile(
-        `apps/${app}/src/main.tsx`,
+        `libs/${parent}/src/index.ts`,
         `
-        import "@proj/${parentLib}";
-        `
+        export * from './lib/${parent}';
+
+              ${children
+                .map(
+                  (entry) =>
+                    `import { ${
+                      names(entry).className
+                    } } from '@${proj}/${entry}'; console.log(${
+                      names(entry).className
+                    });`
+                )
+                .join('\n')}
+            `
       );
+    };
 
-      // we are setting paths to {} to make sure built libs are read from dist
-      updateFile('tsconfig.base.json', (c) => {
-        const json = JSON.parse(c);
-        json.compilerOptions.paths = {};
-        return JSON.stringify(json, null, 2);
-      });
+    runCLI(`generate @nrwl/react:app ${app}`);
 
-      // Add assets to child lib
-      updateFile(cli === 'angular' ? 'angular.json' : 'workspace.json', (c) => {
-        const json = JSON.parse(c);
-        json.projects[childLib].architect.build.options.assets = [
-          `libs/${childLib}/src/assets`,
-        ];
-        return JSON.stringify(json, null, 2);
-      });
-      updateFile(`libs/${childLib}/src/assets/hello.txt`, 'Hello World!');
+    // generate publishable libs
+    runCLI(
+      `generate @nrwl/react:library ${parentLib} --publishable --importPath=@${proj}/${parentLib} --no-interactive`
+    );
+    runCLI(
+      `generate @nrwl/react:library ${childLib} --publishable --importPath=@${proj}/${childLib} --no-interactive`
+    );
+    runCLI(
+      `generate @nrwl/react:library ${childLib2} --publishable --importPath=@${proj}/${childLib2} --no-interactive`
+    );
+
+    createDep(parentLib, [childLib, childLib2]);
+
+    updateFile(
+      `apps/${app}/src/main.tsx`,
+      `
+        import {${names(parentLib).className}} from "@${proj}/${parentLib}";
+        console.log(${names(parentLib).className});
+        `
+    );
+
+    // Add assets to child lib
+    updateFile('workspace.json', (c) => {
+      const json = JSON.parse(c);
+      json.projects[childLib].targets.build.options.assets = [
+        `libs/${childLib}/src/assets`,
+      ];
+      return JSON.stringify(json, null, 2);
     });
+    updateFile(`libs/${childLib}/src/assets/hello.txt`, 'Hello World!');
 
+    // generate buildable libs
+    runCLI(
+      `generate @nrwl/react:library ${buildableParentLib} --buildable --no-interactive`
+    );
+    runCLI(
+      `generate @nrwl/react:library ${buildableChildLib} --buildable --no-interactive`
+    );
+    runCLI(
+      `generate @nrwl/react:library ${buildableChildLib2} --buildable --no-interactive`
+    );
+
+    createDep(buildableParentLib, [buildableChildLib, buildableChildLib2]);
+
+    // we are setting paths to {} to make sure built libs are read from dist
+    updateFile('tsconfig.base.json', (c) => {
+      const json = JSON.parse(c);
+      json.compilerOptions.paths = {};
+      return JSON.stringify(json, null, 2);
+    });
+  });
+
+  describe('Publishable libraries', () => {
     it('should throw an error if the dependent library has not been built before building the parent lib', () => {
       expect.assertions(2);
 
@@ -152,13 +186,13 @@ forEachCli('nx', (cli) => {
     it('should build the library when it does not have any deps', () => {
       const output = runCLI(`build ${childLib}`);
       expect(output).toContain(`${childLib}.esm.js`);
-      expect(output).toContain(`Bundle complete`);
+      expect(output).toContain(`Bundle complete: ${childLib}`);
       checkFilesExist(`dist/libs/${childLib}/assets/hello.txt`);
     });
 
     it('should copy the README to dist', () => {
       const output = runCLI(`build ${childLib2}`);
-      expect(output).toContain(`Bundle complete`);
+      expect(output).toContain(`Bundle complete: ${childLib2}`);
       checkFilesExist(`dist/libs/${childLib2}/README.md`);
     });
 
@@ -169,28 +203,30 @@ forEachCli('nx', (cli) => {
 
       expect(childLibOutput).toContain(`${childLib}.esm.js`);
       expect(childLibOutput).toContain(`${childLib}.umd.js`);
-      expect(childLibOutput).toContain(`Bundle complete`);
+      expect(childLibOutput).toContain(`Bundle complete: ${childLib}`);
 
       expect(childLib2Output).toContain(`${childLib2}.esm.js`);
       expect(childLib2Output).toContain(`${childLib2}.umd.js`);
-      expect(childLib2Output).toContain(`Bundle complete`);
+      expect(childLib2Output).toContain(`Bundle complete: ${childLib2}`);
 
       expect(parentLibOutput).toContain(`${parentLib}.esm.js`);
       expect(parentLibOutput).toContain(`${parentLib}.umd.js`);
-      expect(parentLibOutput).toContain(`Bundle complete`);
+      expect(parentLibOutput).toContain(`Bundle complete: ${parentLib}`);
 
       const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
       expect(jsonFile.peerDependencies).toEqual(
         expect.objectContaining({
-          [`@proj/${childLib}`]: '0.0.1',
-          [`@proj/${childLib2}`]: '0.0.1',
+          [`@${proj}/${childLib}`]: '0.0.1',
+          [`@${proj}/${childLib2}`]: '0.0.1',
           react: expect.anything(),
         })
       );
     });
 
-    it('should build an app composed out of buildable libs', () => {
-      const buildWithDeps = runCLI(`build ${app} --with-deps`);
+    it('should build an app composed out of publishable libs', () => {
+      const buildWithDeps = runCLI(
+        `build ${app} --with-deps --buildLibsFromSource=false`
+      );
       expect(buildWithDeps).toContain(`Running target "build" succeeded`);
       checkFilesDoNotExist(`apps/${app}/tsconfig/tsconfig.nx-tmp`);
 
@@ -202,5 +238,15 @@ forEachCli('nx', (cli) => {
       );
       expect(failedBuild).toContain(`Can't resolve`);
     }, 1000000);
+  });
+
+  describe('Buildable libraries', () => {
+    it('should build dependent libraries', () => {
+      const parentLibOutput = runCLI(`build ${parentLib} --with-deps`);
+
+      expect(parentLibOutput).toContain(`Bundle complete: ${parentLib}`);
+      expect(parentLibOutput).toContain(`Bundle complete: ${childLib}`);
+      expect(parentLibOutput).toContain(`Bundle complete: ${childLib2}`);
+    });
   });
 });

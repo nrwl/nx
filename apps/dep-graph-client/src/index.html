@@ -2,7 +2,7 @@
 <head>
   <meta charset="utf-8" />
 
-  <title>DepGraphClient</title>
+  <title>Nx Workspace Dependency Graph</title>
   <base href="/" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -12,7 +12,7 @@
   />
 </head>
 <body>
-  <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <svg xmlns="http://www.w3.org/2000/svg" style="display: none">
     <symbol id="crosshair" viewBox="0 0 24 24">
       <g
         fill="none"
@@ -33,56 +33,12 @@
   <div id="app">
     <div class="sidebar">
       <div class="sidebar-content">
-        <div id="focused-project" class="sidebar-section" hidden>
-          <h4>Focused on <span id="focused-project-name"></span></h4>
-          <button onclick="window.unfocusProject()">Unfocus</button>
-        </div>
+        <div class="sidebar-section" id="focused-project"></div>
 
-        <div class="sidebar-section">
-          <h4>Display Options</h4>
-          <div class="flex">
-            <button
-              id="select-affected-button"
-              onclick="window.selectAffectedProjects()"
-              class="hide"
-            >
-              Select Affected
-            </button>
-            <button id="select-all-button" onclick="window.selectAllProjects()">
-              Select All
-            </button>
-            <button
-              id="deselect-all-button"
-              onclick="window.deselectAllProjects()"
-            >
-              Deselect All
-            </button>
-          </div>
+        <div class="sidebar-section" id="display-options-panel"></div>
 
-          <label>
-            <input
-              type="checkbox"
-              name="displayOptions"
-              value="groupByFolder"
-            />
-            group by folder
-          </label>
-        </div>
-        <div class="sidebar-section">
-          <div class="flex">
-            <input id="textFilterInput" type="text" name="filter" />
-            <button id="textFilterButton">Filter</button>
-          </div>
+        <div class="sidebar-section" id="text-filter-panel"></div>
 
-          <label>
-            <input
-              type="checkbox"
-              name="textFilterCheckbox"
-              value="includeInPath"
-            />
-            include projects in path
-          </label>
-        </div>
         <div id="project-lists"></div>
       </div>
     </div>
@@ -91,40 +47,7 @@
       <div id="no-projects-chosen">
         <h4>Please select projects in the sidebar.</h4>
       </div>
-      <svg id="svg-canvas" width="960" height="600">
-        <defs>
-          <filter
-            id="sofGlowFocus"
-            height="300%"
-            width="300%"
-            x="-75%"
-            y="-75%"
-          >
-            <feDropShadow
-              dx="0"
-              dy="0"
-              stdDeviation="10"
-              flood-color="rgb(8, 108, 159)"
-              flood-opacity="1"
-            />
-          </filter>
-          <filter
-            id="sofGlowFocusAffected"
-            height="300%"
-            width="300%"
-            x="-75%"
-            y="-75%"
-          >
-            <feDropShadow
-              dx="0"
-              dy="0"
-              stdDeviation="10"
-              flood-color="rgb(248,84,119)"
-              flood-opacity="1"
-            />
-          </filter>
-        </defs>
-      </svg>
+      <div id="graph-container"></div>
     </div>
   </div>
 

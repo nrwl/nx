@@ -46,6 +46,7 @@ describe('Update 8-5-0', () => {
 
     const config = readWorkspace(tree);
     expect(config).toEqual({
+      version: 1,
       schematics: {
         '@nrwl/react': {
           application: {},

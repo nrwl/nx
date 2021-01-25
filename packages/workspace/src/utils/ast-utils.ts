@@ -60,7 +60,7 @@ function insertAfterLastOccurrence(
   return new InsertChange(file, lastItemPosition, toInsert);
 }
 
-function sortObjectByKeys(obj: unknown) {
+export function sortObjectByKeys(obj: unknown) {
   return Object.keys(obj)
     .sort()
     .reduce((result, key) => {
@@ -367,15 +367,15 @@ export function insert(host: Tree, modulePath: string, changes: Change[]) {
   }
 
   // sort changes so that the highest pos goes first
-  const orderedChanges = changes.sort((a, b) => b.order - a.order);
+  const orderedChanges = changes.sort((a, b) => b.order - a.order) as any;
 
   const recorder = host.beginUpdate(modulePath);
   for (const change of orderedChanges) {
-    if (change instanceof InsertChange) {
+    if (change.type == 'insert') {
       recorder.insertLeft(change.pos, change.toAdd);
-    } else if (change instanceof RemoveChange) {
+    } else if (change.type == 'remove') {
       recorder.remove(change.pos - 1, change.toRemove.length + 1);
-    } else if (change instanceof ReplaceChange) {
+    } else if (change.type == 'replace') {
       recorder.remove(change.pos, change.oldText.length);
       recorder.insertLeft(change.pos, change.newText);
     } else if (change.type === 'noop') {
@@ -513,7 +513,7 @@ export function updateJsonInTree<T = any, O = T>(
 export function updateWorkspaceInTree<T = any, O = T>(
   callback: (json: T, context: SchematicContext, host: Tree) => O
 ): Rule {
-  return (host: Tree, context: SchematicContext): Tree => {
+  return (host: Tree, context: SchematicContext = undefined): Tree => {
     const path = getWorkspacePath(host);
     host.overwrite(
       path,
@@ -833,7 +833,7 @@ function renameFile(tree: Tree, from: string, to: string) {
   if (!buffer) {
     return;
   }
-  tree.create(to, buffer.toString());
+  tree.create(to, buffer);
   tree.delete(from);
 }
 

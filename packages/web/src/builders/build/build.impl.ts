@@ -25,12 +25,14 @@ import { basename, join } from 'path';
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
+  checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utils/buildable-libs-utils';
 import { CrossOriginValue } from '../../utils/third-party/cli-files/utilities/index-file/augment-index-html';
 import { readTsConfig } from '@nrwl/workspace';
 import { BuildBrowserFeatures } from '../../utils/third-party/utils/build-browser-features';
 import { deleteOutputDir } from '../../utils/delete-output-dir';
+import { ExtraEntryPoint } from '../../utils/third-party/browser/schema';
 
 export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   index: string;
@@ -44,8 +46,8 @@ export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   polyfills?: string;
   es2015Polyfills?: string;
 
-  scripts: string[];
-  styles: string[];
+  scripts: ExtraEntryPoint[];
+  styles: ExtraEntryPoint[];
 
   vendorChunk?: boolean;
   commonChunk?: boolean;
@@ -55,6 +57,8 @@ export interface WebBuildBuilderOptions extends BuildBuilderOptions {
 
   verbose?: boolean;
   buildLibsFromSource?: boolean;
+
+  deleteOutputPath?: boolean;
 }
 
 export default createBuilder<WebBuildBuilderOptions & JsonObject>(run);
@@ -90,10 +94,16 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
       target.data.root,
       dependencies
     );
+
+    if (!checkDependentProjectsHaveBeenBuilt(context, dependencies)) {
+      return { success: false };
+    }
   }
 
   // Delete output path before bundling
-  deleteOutputDir(context.workspaceRoot, options.outputPath);
+  if (options.deleteOutputPath) {
+    deleteOutputDir(context.workspaceRoot, options.outputPath);
+  }
 
   return from(getSourceRoot(context))
     .pipe(

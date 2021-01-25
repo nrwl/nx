@@ -1,34 +1,37 @@
-import { Tree } from '@angular-devkit/schematics';
-import { UnitTestTree } from '@angular-devkit/schematics/testing';
-import { readJsonInTree } from '@nrwl/workspace';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { callRule, runSchematic } from '../../../utils/testing';
+import {
+  ProjectConfiguration,
+  readProjectConfiguration,
+  Tree,
+  readJson,
+  writeJson,
+} from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Schema } from '../schema';
 import { updateCypressJson } from './update-cypress-json';
+import { libraryGenerator } from '../../library/library';
 
-describe('updateCypressJson Rule', () => {
-  let tree: UnitTestTree;
+describe('updateCypressJson', () => {
+  let tree: Tree;
+  let schema: Schema;
+  let projectConfig: ProjectConfiguration;
 
   beforeEach(async () => {
-    tree = new UnitTestTree(Tree.empty());
-    tree = createEmptyWorkspace(tree) as UnitTestTree;
-  });
-
-  it('should handle cypress.json not existing', async () => {
-    tree = await runSchematic('lib', { name: 'my-lib' }, tree);
-
-    expect(tree.files).not.toContain('/libs/my-destination/cypress.json');
-
-    const schema: Schema = {
+    schema = {
       projectName: 'my-lib',
       destination: 'my-destination',
       importPath: undefined,
       updateImportPath: true,
     };
 
-    await expect(
-      callRule(updateCypressJson(schema), tree)
-    ).resolves.not.toThrow();
+    tree = createTreeWithEmptyWorkspace();
+    await libraryGenerator(tree, { name: 'my-lib' });
+    projectConfig = readProjectConfiguration(tree, 'my-lib');
+  });
+
+  it('should handle cypress.json not existing', async () => {
+    expect(() => {
+      updateCypressJson(tree, schema, projectConfig);
+    }).not.toThrow();
   });
 
   it('should update the videos and screenshots folders', async () => {
@@ -44,24 +47,11 @@ describe('updateCypressJson Rule', () => {
       chromeWebSecurity: false,
     };
 
-    tree = await runSchematic('lib', { name: 'my-lib' }, tree);
-    tree.create(
-      '/libs/my-destination/cypress.json',
-      JSON.stringify(cypressJson)
-    );
+    writeJson(tree, '/libs/my-destination/cypress.json', cypressJson);
 
-    expect(tree.files).toContain('/libs/my-destination/cypress.json');
+    updateCypressJson(tree, schema, projectConfig);
 
-    const schema: Schema = {
-      projectName: 'my-lib',
-      destination: 'my-destination',
-      importPath: undefined,
-      updateImportPath: true,
-    };
-
-    tree = (await callRule(updateCypressJson(schema), tree)) as UnitTestTree;
-
-    expect(readJsonInTree(tree, '/libs/my-destination/cypress.json')).toEqual({
+    expect(readJson(tree, '/libs/my-destination/cypress.json')).toEqual({
       ...cypressJson,
       videosFolder: '../../dist/cypress/libs/my-destination/videos',
       screenshotsFolder: '../../dist/cypress/libs/my-destination/screenshots',

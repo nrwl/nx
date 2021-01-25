@@ -14,7 +14,7 @@ import {
   Linter,
   updateJsonInTree,
 } from '@nrwl/workspace';
-import { addUnitTestRunner } from '../init/init';
+import init, { addUnitTestRunner } from '../init/init';
 import { addModule } from './lib/add-module';
 import { normalizeOptions } from './lib/normalize-options';
 import { updateLibPackageNpmScope } from './lib/update-lib-package-npm-scope';
@@ -22,12 +22,21 @@ import { updateProject } from './lib/update-project';
 import { updateTsConfig } from './lib/update-tsconfig';
 import { Schema } from './schema';
 import { enableStrictTypeChecking } from './lib/enable-strict-type-checking';
+import {
+  createAngularEslintJson,
+  extraEslintDependencies,
+} from '../../utils/lint';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export default function (schema: Schema): Rule {
   return (host: Tree): Rule => {
     const options = normalizeOptions(host, schema);
     if (!options.routing && options.lazy) {
       throw new Error(`routing must be set`);
+    }
+
+    if (options.enableIvy === true && !options.buildable) {
+      throw new Error('enableIvy must only be used with buildable.');
     }
 
     if (options.publishable === true && !schema.importPath) {
@@ -37,8 +46,20 @@ export default function (schema: Schema): Rule {
     }
 
     return chain([
+      init({
+        ...options,
+        skipFormat: true,
+      }),
       addLintFiles(options.projectRoot, options.linter, {
         onlyGlobal: options.linter === Linter.TsLint,
+        localConfig:
+          options.linter === Linter.TsLint
+            ? undefined
+            : createAngularEslintJson(options.projectRoot, options.prefix),
+        extraPackageDeps:
+          options.linter === Linter.TsLint
+            ? undefined
+            : extraEslintDependencies,
       }),
       addUnitTestRunner(options),
       // TODO: Remove this after Angular 10.1.0
@@ -84,3 +105,7 @@ export default function (schema: Schema): Rule {
     ]);
   };
 }
+export const libraryGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/angular',
+  'library'
+);

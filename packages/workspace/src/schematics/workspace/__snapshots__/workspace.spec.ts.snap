@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@nrwl/workspace:workspace should create a prettierrc file 1`] = `
+"{
+  \\"singleQuote\\": true
+}"
+`;

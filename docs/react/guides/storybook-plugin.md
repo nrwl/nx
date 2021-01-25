@@ -61,7 +61,7 @@ nx run project-name:storybook
 
 ### Run Cypress Tests Against a Storybook Instance
 
-Both `storybook-configuration` schematic gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.
+Both `storybook-configuration` generator gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.
 
 To launch Storybook and run the Cypress tests against the iframe inside of Storybook:
 
@@ -83,7 +83,7 @@ Changing knobs in the url query parameters allows your Cypress tests to test dif
 
 **\*.stories.tsx file**
 
-```ts
+```typescript
 import React from 'react';
 import { text, number } from '@storybook/addon-knobs';
 import { Button } from './button';
@@ -97,7 +97,7 @@ export const primary = () => (
 
 **Cypress \*.spec.ts file**
 
-```ts
+```typescript
 describe('shared-ui', () => {
   beforeEach(() =>
     cy.visit(
@@ -219,7 +219,7 @@ Check that everything works as expected. If you are still having trouble, you ca
 
 ### Sample files for manual upgrade
 
-If you have not changed the content of the files which the `storybook-configuration` schematic produced, you can use the following samples to migrate to Storybook `6`:
+If you have not changed the content of the files which the `storybook-configuration` generator produced, you can use the following samples to migrate to Storybook `6`:
 
 #### Configuring the root `./storybook` directory
 

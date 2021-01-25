@@ -11,7 +11,6 @@ import {
 } from '@angular-devkit/schematics';
 import {
   getProjectConfig,
-  offsetFromRoot,
   updateWorkspace,
   updateWorkspaceInTree,
   serializeJson,
@@ -23,6 +22,7 @@ import {
   applyWithSkipExisting,
   isFramework,
   getTsConfigContent,
+  TsConfig,
 } from '../../utils/utils';
 import { CypressConfigureSchema } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';
@@ -30,6 +30,8 @@ import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 import { readPackageJson } from '@nrwl/workspace/src/core/file-utils';
 import { storybookVersion } from '../../utils/versions';
 import { projectDir } from '@nrwl/workspace/src/utils/project-type';
+import { offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export default function (rawSchema: StorybookConfigureSchema): Rule {
   const schema = normalizeSchema(rawSchema);
@@ -143,12 +145,20 @@ function createProjectStorybookDir(
   };
 }
 
-function getTsConfigPath(tree: Tree, projectName: string): string {
+function getTsConfigPath(
+  tree: Tree,
+  projectName: string,
+  path?: string
+): string {
   const { projectType } = getProjectConfig(tree, projectName);
   const projectPath = getProjectConfig(tree, projectName).root;
   return join(
     projectPath,
-    projectType === 'application' ? 'tsconfig.app.json' : 'tsconfig.lib.json'
+    path && path.length > 0
+      ? path
+      : projectType === 'application'
+      ? 'tsconfig.app.json'
+      : 'tsconfig.lib.json'
   );
 }
 
@@ -156,8 +166,22 @@ function configureTsProjectConfig(schema: StorybookConfigureSchema): Rule {
   const { name: projectName } = schema;
 
   return (tree: Tree) => {
-    const tsConfigPath = getTsConfigPath(tree, projectName);
-    const tsConfigContent = getTsConfigContent(tree, tsConfigPath);
+    let tsConfigPath: string;
+    let tsConfigContent: TsConfig;
+
+    try {
+      tsConfigPath = getTsConfigPath(tree, projectName);
+      tsConfigContent = getTsConfigContent(tree, tsConfigPath);
+    } catch {
+      /**
+       * Custom app configurations
+       * may contain a tsconfig.json
+       * instead of a tsconfig.app.json.
+       */
+
+      tsConfigPath = getTsConfigPath(tree, projectName, 'tsconfig.json');
+      tsConfigContent = getTsConfigContent(tree, tsConfigPath);
+    }
 
     tsConfigContent.exclude = [
       ...(tsConfigContent.exclude || []),
@@ -289,6 +313,7 @@ function addStorybookTask(projectName: string, uiFramework: string): Rule {
     });
     projectConfig.targets.set('build-storybook', {
       builder: '@nrwl/storybook:build',
+      outputs: ['{options.outputPath}'],
       options: {
         uiFramework,
         outputPath: join(
@@ -305,7 +330,7 @@ function addStorybookTask(projectName: string, uiFramework: string): Rule {
           quiet: true,
         },
       },
-    });
+    } as any);
   });
 }
 
@@ -348,3 +373,8 @@ function readCurrentWorkspaceStorybookVersion(): string {
   }
   return workspaceStorybookVersion;
 }
+
+export const configurationGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/storybook',
+  'configuration'
+);

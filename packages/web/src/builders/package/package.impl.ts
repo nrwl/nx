@@ -12,7 +12,6 @@ import * as autoprefixer from 'autoprefixer';
 import * as rollup from 'rollup';
 import * as peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import * as localResolve from 'rollup-plugin-local-resolve';
-import { toClassName } from '@nrwl/workspace/src/utils/name-utils';
 import { BuildResult } from '@angular-devkit/build-webpack';
 import {
   readJsonFile,
@@ -36,6 +35,7 @@ import {
 } from '../../utils/normalize';
 import { getSourceRoot } from '../../utils/source-root';
 import { deleteOutputDir } from '../../utils/delete-output-dir';
+import { names } from '@nrwl/devkit';
 
 // These use require because the ES import isn't correct.
 const resolve = require('@rollup/plugin-node-resolve');
@@ -97,7 +97,7 @@ export function run(
           const watcher = rollup.watch(rollupOptions);
           watcher.on('event', (data) => {
             if (data.code === 'START') {
-              context.logger.info('Bundling...');
+              context.logger.info(`Bundling ${context.target.project}...`);
             } else if (data.code === 'END') {
               updatePackageJson(
                 options,
@@ -121,10 +121,12 @@ export function run(
           return () => watcher.close();
         });
       } else {
-        context.logger.info(`Bundling...`);
+        context.logger.info(`Bundling ${context.target.project}...`);
 
         // Delete output path before bundling
-        deleteOutputDir(context.workspaceRoot, options.outputPath);
+        if (options.deleteOutputPath) {
+          deleteOutputDir(context.workspaceRoot, options.outputPath);
+        }
 
         return from(rollupOptions).pipe(
           concatMap((opts) =>
@@ -144,9 +146,13 @@ export function run(
                       dependencies,
                       packageJson
                     );
-                    context.logger.info('Bundle complete.');
+                    context.logger.info(
+                      `Bundle complete: ${context.target.project}`
+                    );
                   } else {
-                    context.logger.error('Bundle failed.');
+                    context.logger.error(
+                      `Bundle failed: ${context.target.project}`
+                    );
                   }
                 },
               })
@@ -218,7 +224,7 @@ export function createRollupOptions(
         plugins: [
           config.format === 'esm'
             ? undefined
-            : 'babel-plugin-transform-async-to-promises',
+            : require.resolve('babel-plugin-transform-async-to-promises'),
         ].filter(Boolean),
       }),
       commonjs(),
@@ -244,7 +250,7 @@ export function createRollupOptions(
         globals,
         format: config.format,
         file: `${options.outputPath}/${context.target.project}.${config.extension}.js`,
-        name: options.umdName || toClassName(context.target.project),
+        name: options.umdName || names(context.target.project).className,
       },
       external: (id) => externalPackages.includes(id),
       plugins,

@@ -16,20 +16,18 @@ import {
 } from '@angular-devkit/schematics';
 import {
   addGlobal,
-  deleteFile,
   formatFiles,
   getNpmScope,
   getProjectConfig,
   insert,
-  names,
-  offsetFromRoot,
-  toFileName,
   updateJsonInTree,
   updateWorkspaceInTree,
 } from '@nrwl/workspace';
 import { Schema } from './schema';
 import * as ts from 'typescript';
 import { libsDir, RemoveChange } from '@nrwl/workspace/src/utils/ast-utils';
+import { names, offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -51,17 +49,16 @@ export default function (schema: NormalizedSchema): Rule {
       updateTsConfig(options),
       addProject(options),
       formatFiles(options),
-      deleteFile(`/${options.projectRoot}/src/lib/${options.fileName}.spec.ts`),
-      deleteFile(`/${options.projectRoot}/src/lib/${options.fileName}.ts`),
+      deleteFiles(options),
     ]);
   };
 }
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const defaultPrefix = getNpmScope(host);
-  const name = toFileName(options.name);
+  const name = names(options.name).fileName;
   const projectDirectory = options.directory
-    ? `${toFileName(options.directory)}/${name}`
+    ? `${names(options.directory).fileName}/${name}`
     : name;
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
@@ -161,6 +158,15 @@ function createFiles(options: NormalizedSchema): Rule {
   );
 }
 
+function deleteFiles(options: NormalizedSchema): Rule {
+  return (host: Tree) => {
+    if (options.unitTestRunner !== 'none') {
+      host.delete(`${options.projectRoot}/src/lib/${options.fileName}.spec.ts`);
+    }
+    host.delete(`${options.projectRoot}/src/lib/${options.fileName}.ts`);
+  };
+}
+
 function updateTsConfig(options: NormalizedSchema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const projectConfig = getProjectConfig(host, options.name);
@@ -168,6 +174,15 @@ function updateTsConfig(options: NormalizedSchema): Rule {
       `${projectConfig.root}/tsconfig.lib.json`,
       (json) => {
         json.compilerOptions.target = options.target;
+        if (options.strict) {
+          json.compilerOptions = {
+            ...json.compilerOptions,
+            forceConsistentCasingInFileNames: true,
+            strict: true,
+            noImplicitReturns: true,
+            noFallthroughCasesInSwitch: true,
+          };
+        }
         return json;
       }
     );
@@ -185,6 +200,7 @@ function addProject(options: NormalizedSchema): Rule {
       if (architect) {
         architect.build = {
           builder: '@nrwl/node:package',
+          outputs: ['{options.outputPath}'],
           options: {
             outputPath: `dist/${libsDir(host)}/${options.projectDirectory}`,
             tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
@@ -198,3 +214,8 @@ function addProject(options: NormalizedSchema): Rule {
     }
   );
 }
+
+export const libraryGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/nest',
+  'library'
+);

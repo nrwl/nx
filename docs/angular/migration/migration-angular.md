@@ -32,14 +32,14 @@ To transform a Angular CLI workspace to an Nx workspace, use the `ng add` comman
 ng add @nrwl/workspace
 ```
 
-This installs the `@nrwl/workspace` package into your workspace and runs a schematic to transform your workspace. The schematic applies the following changes to your workspace:
+This installs the `@nrwl/workspace` package into your workspace and runs a generator (or schematic) to transform your workspace. The generator applies the following changes to your workspace:
 
 - Installs the packages for the `Nx` plugin `@nrwl/angular` in your package.json.
 - Creates an nx.json file in the root of your workspace.
 - Creates configuration files for Prettier.
 - Creates an `apps` folder for generating applications.
 - Creates a `libs` folder for generating libraries.
-- Creates a `tools` folder that includes files for custom workspace tooling, such as workspace-specific schematics and scripts.
+- Creates a `tools` folder that includes files for custom workspace tooling, such as workspace-specific generators and scripts.
 - Moves your application into the `apps` folder, and updates the relevant file paths in your configuration files.
 - Moves your e2e suite into the `apps/{{app name}}-e2e` folder, and updates the relevant file paths in your configuration files.
 - Updates your `package.json` with scripts to run various `Nx` workspace commands.
@@ -92,8 +92,8 @@ Learn more about the advantages of Nx in the following guides:
 
 - [Using Cypress for e2e tests](/angular/plugins/cypress/overview)
 - [Using Jest for unit tests](/angular/plugins/jest/overview)
-- [Computation Caching](/angular/workspace/computation-caching)
-- [Rebuilding and Retesting What is Affected](/angular/guides/ci/monorepo-affected)
+- [Computation Caching](/angular/core-concepts/computation-caching)
+- [Rebuilding and Retesting What is Affected](/angular/core-concepts/affected)
 
 ## Transitioning Manually
 
@@ -197,7 +197,6 @@ If you are using `Karma` for unit testing:
 
 ```json
 {
-  "version": 1,
   "projects": {
     "<app name>": {
       "projectType": "application",
@@ -377,4 +376,4 @@ Learn more about the advantages of Nx in the following guides:
 
 [Using Cypress for e2e tests](/angular/plugins/cypress/overview) \
 [Using Jest for unit tests](/angular/plugins/jest/overview) \
-[Rebuilding and Retesting What is Affected](/angular/guides/ci/monorepo-affected)
+[Rebuilding and Retesting What is Affected](/angular/core-concepts/affected)

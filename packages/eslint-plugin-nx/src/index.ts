@@ -4,6 +4,8 @@ import reactTmp from './configs/react-tmp';
 import reactBase from './configs/react-base';
 import reactJsx from './configs/react-jsx';
 import reactTypescript from './configs/react-typescript';
+import angularCode from './configs/angular';
+import angularTemplate from './configs/angular-template';
 
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
@@ -17,6 +19,8 @@ module.exports = {
     'react-base': reactBase,
     'react-typescript': reactTypescript,
     'react-jsx': reactJsx,
+    angular: angularCode,
+    'angular-template': angularTemplate,
   },
   rules: {
     [enforceModuleBoundariesRuleName]: enforceModuleBoundaries,

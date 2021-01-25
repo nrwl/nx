@@ -10,6 +10,7 @@ describe('Hasher', () => {
     'nx.json': 'nx.json.hash',
     'package-lock.json': 'package-lock.json.hash',
     'package.json': 'package.json.hash',
+    'pnpm-lock.yaml': 'pnpm-lock.yaml.hash',
     'tsconfig.base.json': 'tsconfig.base.json.hash',
     'workspace.json': 'workspace.json.hash',
   };
@@ -70,6 +71,7 @@ describe('Hasher', () => {
       'nx.json': 'nx.json.hash',
       'package-lock.json': 'package-lock.json.hash',
       'package.json': 'package.json.hash',
+      'pnpm-lock.yaml': 'pnpm-lock.yaml.hash',
       'tsconfig.base.json': 'tsconfig.base.json.hash',
       'workspace.json': 'workspace.json.hash',
     });
@@ -81,11 +83,19 @@ describe('Hasher', () => {
     done();
   });
 
-  it('should throw an error when failed to execute runtimeCacheInputs', async () => {
+  it('should throw an error when failed to execute runtimeCacheInputs', async (done) => {
     const hasher = new Hasher(
       {
-        nodes: {},
-        dependencies: {},
+        nodes: {
+          proj: {
+            name: 'proj',
+            type: 'lib',
+            data: { files: [{ file: '/file', ext: '.ts', hash: 'some-hash' }] },
+          },
+        },
+        dependencies: {
+          proj: [],
+        },
       },
       {} as any,
       {
@@ -110,6 +120,7 @@ describe('Hasher', () => {
       expect(e.message).toContain('boom:');
       expect(e.message).toContain(' not found');
     }
+    done();
   });
 
   it('should hash projects with dependencies', async (done) => {

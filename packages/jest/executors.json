@@ -1,0 +1,16 @@
+{
+  "builders": {
+    "jest": {
+      "implementation": "./src/executors/jest/compat",
+      "schema": "./src/executors/jest/schema.json",
+      "description": "Run Jest unit tests"
+    }
+  },
+  "executors": {
+    "jest": {
+      "implementation": "./src/executors/jest/jest.impl",
+      "schema": "./src/executors/jest/schema.json",
+      "description": "Run Jest unit tests"
+    }
+  }
+}

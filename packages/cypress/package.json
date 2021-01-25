@@ -26,19 +26,19 @@
   },
   "homepage": "https://nx.dev",
   "schematics": "./collection.json",
-  "builders": "./builders.json",
+  "builders": "./executors.json",
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json"
   },
   "peerDependencies": {
-    "@nrwl/workspace": "*",
-    "cypress": ">= 3 < 5"
+    "cypress": ">= 3 < 7"
   },
   "dependencies": {
-    "@angular-devkit/architect": "~0.1001.3",
-    "@angular-devkit/core": "~10.1.3",
-    "@angular-devkit/schematics": "~10.1.3",
+    "@nrwl/devkit": "*",
+    "@angular-devkit/architect": "~0.1100.1",
+    "@angular-devkit/core": "~11.0.1",
+    "@angular-devkit/schematics": "~11.0.1",
     "@cypress/webpack-preprocessor": "~4.1.2",
     "tree-kill": "1.2.2",
     "ts-loader": "5.4.5",

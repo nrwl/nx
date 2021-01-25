@@ -1,18 +1,19 @@
-import { Tree } from '@angular-devkit/schematics';
-import { UnitTestTree } from '@angular-devkit/schematics/testing';
-import { updateJsonInTree } from '@nrwl/workspace';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { callRule, runSchematic } from '../../../utils/testing';
+import {
+  readProjectConfiguration,
+  Tree,
+  updateProjectConfiguration,
+} from '@nrwl/devkit';
 import { Schema } from '../schema';
 import { checkDependencies } from './check-dependencies';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { libraryGenerator } from '../../library/library';
 
-describe('updateImports Rule', () => {
-  let tree: UnitTestTree;
+describe('checkDependencies', () => {
+  let tree: Tree;
   let schema: Schema;
 
   beforeEach(async () => {
-    tree = new UnitTestTree(Tree.empty());
-    tree = createEmptyWorkspace(tree) as UnitTestTree;
+    tree = createTreeWithEmptyWorkspace();
 
     schema = {
       projectName: 'my-source',
@@ -20,21 +21,25 @@ describe('updateImports Rule', () => {
       forceRemove: false,
     };
 
-    tree = await runSchematic('lib', { name: 'my-dependent' }, tree);
-    tree = await runSchematic('lib', { name: 'my-source' }, tree);
+    await libraryGenerator(tree, {
+      name: 'my-dependent',
+    });
+    await libraryGenerator(tree, {
+      name: 'my-source',
+    });
   });
 
   describe('static dependencies', () => {
     beforeEach(() => {
       const sourceFilePath = 'libs/my-source/src/lib/my-source.ts';
-      tree.overwrite(
+      tree.write(
         sourceFilePath,
         `export class MyClass {}
         `
       );
 
       const dependentFilePath = 'libs/my-dependent/src/lib/my-dependent.ts';
-      tree.overwrite(
+      tree.write(
         dependentFilePath,
         `import { MyClass } from '@proj/my-source';
   
@@ -44,33 +49,33 @@ describe('updateImports Rule', () => {
     });
 
     it('should fatally error if any dependent exists', async () => {
-      await expect(callRule(checkDependencies(schema), tree)).rejects.toThrow(
-        `${schema.projectName} is still depended on by the following projects:\nmy-dependent`
-      );
+      expect(() => {
+        checkDependencies(tree, schema);
+      }).toThrow();
     });
 
     it('should not error if forceRemove is true', async () => {
       schema.forceRemove = true;
 
-      await expect(
-        callRule(checkDependencies(schema), tree)
-      ).resolves.not.toThrow();
+      expect(() => {
+        checkDependencies(tree, schema);
+      }).not.toThrow();
     });
   });
 
   describe('implicit dependencies', () => {
     beforeEach(async () => {
-      tree = (await callRule(
-        updateJsonInTree('nx.json', (json) => {
-          json.projects['my-dependent'].implicitDependencies = ['my-source'];
-          return json;
-        }),
-        tree
-      )) as UnitTestTree;
+      const config = readProjectConfiguration(tree, 'my-dependent');
+      updateProjectConfiguration(tree, 'my-dependent', {
+        ...config,
+        implicitDependencies: ['my-source'],
+      });
     });
 
     it('should fatally error if any dependent exists', async () => {
-      await expect(callRule(checkDependencies(schema), tree)).rejects.toThrow(
+      expect(() => {
+        checkDependencies(tree, schema);
+      }).toThrow(
         `${schema.projectName} is still depended on by the following projects:\nmy-dependent`
       );
     });
@@ -78,15 +83,15 @@ describe('updateImports Rule', () => {
     it('should not error if forceRemove is true', async () => {
       schema.forceRemove = true;
 
-      await expect(
-        callRule(checkDependencies(schema), tree)
-      ).resolves.not.toThrow();
+      expect(() => {
+        checkDependencies(tree, schema);
+      }).not.toThrow();
     });
   });
 
   it('should not error if there are no dependents', async () => {
-    await expect(
-      callRule(checkDependencies(schema), tree)
-    ).resolves.not.toThrow();
+    expect(() => {
+      checkDependencies(tree, schema);
+    }).not.toThrow();
   });
 });

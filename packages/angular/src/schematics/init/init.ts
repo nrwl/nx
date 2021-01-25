@@ -42,7 +42,7 @@ const updateDependencies = addDepsToPackageJson(
     '@angular/compiler-cli': angularVersion,
     '@angular/language-service': angularVersion,
     '@angular-devkit/build-angular': angularDevkitVersion,
-    codelyzer: '~5.0.1',
+    codelyzer: '^6.0.0',
   }
 );
 
@@ -91,10 +91,10 @@ export function addE2eTestRunner(options: Pick<Schema, 'e2eTestRunner'>): Rule {
         return addDepsToPackageJson(
           {},
           {
-            protractor: '~5.4.0',
-            'jasmine-core': '~2.99.1',
-            'jasmine-spec-reporter': '~4.2.1',
-            '@types/jasmine': '~2.8.6',
+            protractor: '~7.0.0',
+            'jasmine-core': '~3.6.0',
+            'jasmine-spec-reporter': '~5.0.0',
+            '@types/jasmine': '~3.6.0',
             '@types/jasminewd2': '~2.0.3',
           }
         );
@@ -139,6 +139,11 @@ export function setDefaults(options: Schema): Rule {
     workspace.extensions.schematics['@nrwl/angular:library'].unitTestRunner =
       workspace.extensions.schematics['@nrwl/angular:library'].unitTestRunner ||
       options.unitTestRunner;
+
+    workspace.extensions.schematics['@nrwl/angular:component'] = workspace
+      .extensions.schematics['@nrwl/angular:component'] || {
+      style: options.style,
+    };
   });
 
   return chain([setDefaultCollection('@nrwl/angular'), updateAngularWorkspace]);

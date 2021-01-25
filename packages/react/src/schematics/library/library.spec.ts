@@ -113,7 +113,7 @@ describe('lib', () => {
       expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.tsx')).toBeTruthy();
-      expect(tree.exists('libs/my-lib/src/lib/my-lib.css')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.module.css')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.tsx')).toBeTruthy();
     });
   });
@@ -168,7 +168,7 @@ describe('lib', () => {
         tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.tsx')
       ).toBeTruthy();
       expect(
-        tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.css')
+        tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.module.css')
       ).toBeTruthy();
       expect(
         tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.spec.tsx')
@@ -239,7 +239,9 @@ describe('lib', () => {
         appTree
       );
 
-      expect(result.exists('libs/my-lib/src/lib/my-lib.scss')).toBeTruthy();
+      expect(
+        result.exists('libs/my-lib/src/lib/my-lib.module.scss')
+      ).toBeTruthy();
     });
   });
 
@@ -256,6 +258,15 @@ describe('lib', () => {
       expect(result.exists('libs/my-lib/src/lib/my-lib.css')).toBeFalsy();
       expect(result.exists('libs/my-lib/src/lib/my-lib.scss')).toBeFalsy();
       expect(result.exists('libs/my-lib/src/lib/my-lib.styl')).toBeFalsy();
+      expect(
+        result.exists('libs/my-lib/src/lib/my-lib.module.css')
+      ).toBeFalsy();
+      expect(
+        result.exists('libs/my-lib/src/lib/my-lib.module.scss')
+      ).toBeFalsy();
+      expect(
+        result.exists('libs/my-lib/src/lib/my-lib.module.styl')
+      ).toBeFalsy();
 
       const content = result.read('libs/my-lib/src/lib/my-lib.tsx').toString();
       expect(content).not.toContain('styled-components');
@@ -267,6 +278,9 @@ describe('lib', () => {
       expect(content).not.toContain('app.styl');
       expect(content).not.toContain('app.css');
       expect(content).not.toContain('app.scss');
+      expect(content).not.toContain('app.module.styl');
+      expect(content).not.toContain('app.module.css');
+      expect(content).not.toContain('app.module.scss');
     });
   });
 
@@ -390,6 +404,7 @@ describe('lib', () => {
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         builder: '@nrwl/web:package',
+        outputs: ['{options.outputPath}'],
         options: {
           external: ['react', 'react-dom'],
           entryFile: 'libs/my-lib/src/index.ts',
@@ -455,7 +470,7 @@ describe('lib', () => {
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
-          external: ['react', 'react-dom', '@emotion/styled', '@emotion/core'],
+          external: ['react', 'react-dom', '@emotion/styled', '@emotion/react'],
         },
       });
     });

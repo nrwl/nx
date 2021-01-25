@@ -7,11 +7,11 @@ export function updatePackageJson(options: NormalizedSchema): Rule {
   return updateJsonInTree(
     path.join(options.projectRoot, 'package.json'),
     (json) => {
-      if (!json['ng-update'] || !json['ng-update'].migrations) {
-        if (json['ng-update']) {
-          json['ng-update'].migrations = './migrations.json';
+      if (!json['nx-migrate'] || !json['nx-migrate'].migrations) {
+        if (json['nx-migrate']) {
+          json['nx-migrate'].migrations = './migrations.json';
         } else {
-          json['ng-update'] = {
+          json['nx-migrate'] = {
             migrations: './migrations.json',
           };
         }

@@ -1,25 +1,10 @@
-import { terminal } from '@angular-devkit/core';
+import * as chalk from 'chalk';
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { appRootPath } from '../app-root';
-import { detectPackageManager } from '../detect-package-manager';
 import { readJsonFile } from '../fileutils';
 import { output } from '../output';
 import { PluginCapabilities } from './models';
 import { hasElements } from './shared';
-
-function getPackageManagerInstallCommand(): string {
-  let packageManager = detectPackageManager();
-  let packageManagerInstallCommand = 'npm install --save-dev';
-  switch (packageManager) {
-    case 'yarn':
-      packageManagerInstallCommand = 'yarn add --dev';
-      break;
-
-    case 'pnpm':
-      packageManagerInstallCommand = 'pnpm install --save-dev';
-      break;
-  }
-  return packageManagerInstallCommand;
-}
 
 function tryGetCollection<T>(
   workspaceRoot: string,
@@ -52,18 +37,32 @@ export function getPluginCapabilities(
     const packageJson = readJsonFile(packageJsonPath);
     return {
       name: pluginName,
-      schematics: tryGetCollection(
-        workspaceRoot,
-        pluginName,
-        packageJson.schematics,
-        'schematics'
-      ),
-      builders: tryGetCollection(
-        workspaceRoot,
-        pluginName,
-        packageJson.builders,
-        'builders'
-      ),
+      generators:
+        tryGetCollection(
+          workspaceRoot,
+          pluginName,
+          packageJson.generators,
+          'generators'
+        ) ||
+        tryGetCollection(
+          workspaceRoot,
+          pluginName,
+          packageJson.schematics,
+          'schematics'
+        ),
+      executors:
+        tryGetCollection(
+          workspaceRoot,
+          pluginName,
+          packageJson.executors,
+          'executors'
+        ) ||
+        tryGetCollection(
+          workspaceRoot,
+          pluginName,
+          packageJson.builders,
+          'builders'
+        ),
     };
   } catch {
     return null;
@@ -74,33 +73,34 @@ export function listPluginCapabilities(pluginName: string) {
   const plugin = getPluginCapabilities(appRootPath, pluginName);
 
   if (!plugin) {
+    const pmc = getPackageManagerCommand();
     output.note({
       title: `${pluginName} is not currently installed`,
       bodyLines: [
-        `Use "${getPackageManagerInstallCommand()} ${pluginName}" to add new capabilities`,
+        `Use "${pmc.addDev} ${pluginName}" to install the plugin.`,
+        `After that, use "${pmc.exec} nx g ${pluginName}:init" to add the required peer deps and initialize the plugin.`,
       ],
     });
 
     return;
   }
 
-  const hasBuilders = hasElements(plugin.builders);
-  const hasSchematics = hasElements(plugin.schematics);
+  const hasBuilders = hasElements(plugin.executors);
+  const hasGenerators = hasElements(plugin.generators);
 
-  if (!hasBuilders && !hasSchematics) {
+  if (!hasBuilders && !hasGenerators) {
     output.warn({ title: `No capabilities found in ${pluginName}` });
     return;
   }
 
   const bodyLines = [];
 
-  if (hasSchematics) {
-    bodyLines.push(terminal.bold(terminal.green('SCHEMATICS')));
+  if (hasGenerators) {
+    bodyLines.push(chalk.bold(chalk.green('GENERATORS')));
     bodyLines.push('');
     bodyLines.push(
-      ...Object.keys(plugin.schematics).map(
-        (name) =>
-          `${terminal.bold(name)} : ${plugin.schematics[name].description}`
+      ...Object.keys(plugin.generators).map(
+        (name) => `${chalk.bold(name)} : ${plugin.generators[name].description}`
       )
     );
     if (hasBuilders) {
@@ -109,12 +109,11 @@ export function listPluginCapabilities(pluginName: string) {
   }
 
   if (hasBuilders) {
-    bodyLines.push(terminal.bold(terminal.green('BUILDERS')));
+    bodyLines.push(chalk.bold(chalk.green('EXECUTORS/BUILDERS')));
     bodyLines.push('');
     bodyLines.push(
-      ...Object.keys(plugin.builders).map(
-        (name) =>
-          `${terminal.bold(name)} : ${plugin.builders[name].description}`
+      ...Object.keys(plugin.executors).map(
+        (name) => `${chalk.bold(name)} : ${plugin.executors[name].description}`
       )
     );
   }

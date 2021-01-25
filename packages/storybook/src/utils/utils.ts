@@ -1,3 +1,4 @@
+import { BuilderContext } from '@angular-devkit/architect';
 import {
   JsonParseMode,
   join,
@@ -17,6 +18,10 @@ import {
   apply,
   forEach,
 } from '@angular-devkit/schematics';
+import {
+  createProjectGraph,
+  ProjectType,
+} from '@nrwl/workspace/src/core/project-graph';
 
 import { get } from 'http';
 import {
@@ -31,6 +36,34 @@ export interface NodePackage {
   version: string;
 }
 
+// see: https://github.com/storybookjs/storybook/pull/12565
+// TODO: this should really be passed as a param to the CLI rather than env
+export function setStorybookAppProject(
+  context: BuilderContext,
+  leadStorybookProject: string
+) {
+  const projGraph = createProjectGraph();
+
+  let leadingProject: string;
+  // for libs we check whether the build config should be fetched
+  // from some app
+  if (projGraph.nodes[context.target.project].type === ProjectType.lib) {
+    // we have a lib so let's try to see whether the app has
+    // been set from which we want to get the build config
+    if (leadStorybookProject) {
+      leadingProject = leadStorybookProject;
+    } else {
+      // do nothing
+      return;
+    }
+  } else {
+    // ..for apps we just use the app target itself
+    leadingProject = context.target.project;
+  }
+
+  process.env.STORYBOOK_ANGULAR_PROJECT = leadingProject;
+}
+
 export const Constants = {
   addonDependencies: ['@storybook/addons'],
   tsConfigExclusions: ['stories', '**/*.stories.ts'],
@@ -42,6 +75,7 @@ export const Constants = {
   uiFrameworks: {
     angular: '@storybook/angular',
     react: '@storybook/react',
+    html: '@storybook/html',
   } as const,
 };
 type Constants = typeof Constants;
@@ -58,6 +92,9 @@ export function isFramework(
     return true;
   }
   if (type === 'react' && schema.uiFramework === '@storybook/react') {
+    return true;
+  }
+  if (type === 'html' && schema.uiFramework === '@storybook/html') {
     return true;
   }
 

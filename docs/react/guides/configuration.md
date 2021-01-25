@@ -4,18 +4,19 @@ There are three top-level configuration files every Nx workspace has: `workspace
 
 ## workspace.json
 
-The `workspace.json` configuration file contains information about the targets and schematics. Let's look at the following example:
+The `workspace.json` configuration file contains information about the targets and generators. Let's look at the following example:
 
 ```json
 {
+  "version": 2,
   "projects": {
     "myapp": {
       "root": "apps/myapp/",
       "sourceRoot": "apps/myapp/src",
       "projectType": "application",
-      "architect": {
+      "targets": {
         "build": {
-          "builder": "@nrwl/web:build",
+          "executor": "@nrwl/web:build",
           "outputs": ["dist/apps/myapp"],
           "options": {
             "index": "apps/myapp/src/app.html",
@@ -28,14 +29,14 @@ The `workspace.json` configuration file contains information about the targets a
           }
         },
         "serve": {
-          "builder": "@nrwl/web:dev-server",
+          "executor": "@nrwl/web:dev-server",
           "options": {
             "buildTarget": "myapp:build",
             "proxyConfig": "apps/myapp/proxy.conf.json"
           }
         },
         "test": {
-          "builder": "@nrwl/jest:jest",
+          "executor": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "apps/myapp/jest.config.js",
             "tsConfig": "apps/myapp/tsconfig.spec.json"
@@ -47,9 +48,9 @@ The `workspace.json` configuration file contains information about the targets a
       "root": "libs/mylib/",
       "sourceRoot": "libs/mylib/src",
       "projectType": "library",
-      "architect": {
+      "targets": {
         "test": {
-          "builder": "@nrwl/jest:jest",
+          "executor": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "libs/mylib/jest.config.js",
             "tsConfig": "libs/mylib/tsconfig.spec.json"
@@ -61,7 +62,7 @@ The `workspace.json` configuration file contains information about the targets a
   "cli": {
     "defaultCollection": "@nrwl/react"
   },
-  "schematics": {
+  "generators": {
     "@nrwl/react:library": {
       "js": true
     }
@@ -81,7 +82,7 @@ For instance, the following configures `mylib`.
     "root": "libs/mylib/",
     "sourceRoot": "libs/mylib/src",
     "projectType": "library",
-    "architect": {}
+    "targets": {}
   }
 }
 ```
@@ -89,18 +90,16 @@ For instance, the following configures `mylib`.
 - `root` tells Nx the location of the library including its sources and configuration files.
 - `sourceRoot` tells Nx the location of the library's source files.
 - `projectType` is either 'application' or 'library'.
-- `architect` configures all the targets which define what tasks you can run against the library.
-
-> Nx uses the architect library built by the Angular team at Google. The naming reflects that. Important to note: it's a general purpose library that **does not** have any dependency on Angular.
+- `targets` configures all the targets which define what tasks you can run against the library.
 
 ### Targets
 
-Let's look at the simple architect target:
+Let's look at the simple target:
 
 ```json
 {
   "test": {
-    "builder": "@nrwl/jest:jest",
+    "executor": "@nrwl/jest:jest",
     "options": {
       "jestConfig": "libs/mylib/jest.config.js",
       "tsConfig": "libs/mylib/tsconfig.spec.json"
@@ -113,13 +112,13 @@ Let's look at the simple architect target:
 
 The name of the target `test` means that you can invoke it as follows: `nx test mylib` or `nx run mylib:test`. The name isn't significant in any other way. If you rename it to, for example, `mytest`, you will be able to run as follows: `nx run mylib:mytest`.
 
-**Builder**
+**Executor**
 
-The `builder` property tells Nx what function to invoke when you run the target. `"@nrwl/jest:jest"` tells Nx to find the `@nrwl/jest` package, find the builder named `jest` and invoke it with the options.
+The `executor` property tells Nx what function to invoke when you run the target. `"@nrwl/jest:jest"` tells Nx to find the `@nrwl/jest` package, find the executor named `jest` and invoke it with the options.
 
 **Options**
 
-The `options` provides a map of values that will be passed to the builder. The provided command line args will be merged into this map. I.e., `nx test mylib --jestConfig=libs/mylib/another-jest.config.js` will pass the following to the builder:
+The `options` provides a map of values that will be passed to the executor. The provided command line args will be merged into this map. I.e., `nx test mylib --jestConfig=libs/mylib/another-jest.config.js` will pass the following to the executor:
 
 ```json
 {
@@ -130,12 +129,12 @@ The `options` provides a map of values that will be passed to the builder. The p
 
 **Outputs**
 
-The `outputs` property lists the folders the builder will create files in. The property is optional. If not provided, Nx will assume it is `dist/libs/mylib`.
+The `outputs` property lists the folders the executor will create files in. The property is optional. If not provided, Nx will assume it is `dist/libs/mylib`.
 
 ```json
 {
   "build": {
-    "builder": "@nrwl/web:build",
+    "executor": "@nrwl/web:build",
     "outputs": ["dist/apps/myapp"],
     "options": {
       "index": "apps/myapp/src/app.html",
@@ -152,7 +151,7 @@ The `configurations` property provides extra sets of values that will be merged 
 ```json
 {
   "build": {
-    "builder": "@nrwl/web:build",
+    "executor": "@nrwl/web:build",
     "outputs": ["dist/apps/myapp"],
     "options": {
       "index": "apps/myapp/src/app.html",
@@ -169,21 +168,21 @@ The `configurations` property provides extra sets of values that will be merged 
 
 You can select a configuration like this: `nx build myapp --configuration=production` or `nx run myapp:build:configuration=production`.
 
-The following show how the builder options get constructed:
+The following show how the executor options get constructed:
 
 ```bash
-require(`@nrwl/jest`).builders['jest']({...options, ...selectedConfiguration, ...commandLineArgs}}) // Pseudocode
+require(`@nrwl/jest`).executors['jest']({...options, ...selectedConfiguration, ...commandLineArgs}}) // Pseudocode
 ```
 
 The selected configuration adds/overrides the default options, and the provided command line args add/override the configuration options.
 
-### Schematics
+### Generators
 
-You can configure default schematic options in `workspace.json` as well. For instance, the following will tell Nx to always pass `--js` when creating new libraries.
+You can configure default generator options in `workspace.json` as well. For instance, the following will tell Nx to always pass `--js` when creating new libraries.
 
 ```json
 {
-  "schematics": {
+  "generators": {
     "@nrwl/react:library": {
       "js": true
     }
@@ -199,12 +198,12 @@ You can also do it on the project level:
     "root": "libs/mylib/",
     "sourceRoot": "libs/mylib/src",
     "projectType": "library",
-    "schematics": {
+    "generators": {
       "@nrwl/react:component": {
         "classComponent": true
       }
     },
-    "architect": {}
+    "targets": {}
   }
 }
 ```
@@ -220,6 +219,10 @@ The following command will generate a new library: `nx g @nrwl/react:lib mylib`.
   }
 }
 ```
+
+### Version
+
+When the `version` of `workspace.json` is set to 2, `targets`, `generators` and `executor` properties are used instead of the version 1 properties `architect`, `schematics` and `builder`.
 
 ## nx.json
 

@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "id": "NxWorkspacePreset",
+  "cli": "nx",
   "title": "Creates applications in a new workspace",
   "type": "object",
   "properties": {
@@ -19,6 +20,12 @@
     "cli": {
       "description": "CLI powering the workspace.",
       "type": "string"
+    },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["tslint", "eslint"],
+      "default": "eslint"
     },
     "style": {
       "description": "The file extension to be used for style files.",

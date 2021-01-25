@@ -2,7 +2,17 @@
  * Babel preset to provide TypeScript support and module/nomodule for Nx.
  */
 
-module.exports = function (api: any, options: {}) {
+interface NxReactBabelPresetOptions {
+  decorators?: {
+    decoratorsBeforeExport?: boolean;
+    legacy?: boolean;
+  };
+  classProperties?: {
+    loose?: boolean;
+  };
+}
+
+module.exports = function (api: any, options: NxReactBabelPresetOptions = {}) {
   api.assertVersion(7);
 
   const isModern = api.caller((caller) => caller?.isModern);
@@ -30,10 +40,13 @@ module.exports = function (api: any, options: {}) {
     plugins: [
       require.resolve('babel-plugin-macros'),
       // Must use legacy decorators to remain compatible with TypeScript.
-      [require.resolve('@babel/plugin-proposal-decorators'), { legacy: true }],
+      [
+        require.resolve('@babel/plugin-proposal-decorators'),
+        options.decorators ?? { legacy: true },
+      ],
       [
         require.resolve('@babel/plugin-proposal-class-properties'),
-        { loose: true },
+        options.classProperties ?? { loose: true },
       ],
     ],
     overrides: [

@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { toClassName } from '@nrwl/workspace/src/utils/name-utils';
+import { names } from '@nrwl/devkit';
 
 module.exports = {
   process(src, filename) {
@@ -8,7 +8,7 @@ module.exports = {
     if (filename.match(/\.svg$/)) {
       // Based on how SVGR generates a component name:
       // https://github.com/smooth-code/svgr/blob/01b194cf967347d43d4cbe6b434404731b87cf27/packages/core/src/state.js#L6
-      const pascalCaseFilename = toClassName(path.parse(filename).name);
+      const pascalCaseFilename = names(path.parse(filename).name).className;
       const componentName = `Svg${pascalCaseFilename}`;
       return `const React = require('react');
       module.exports = {

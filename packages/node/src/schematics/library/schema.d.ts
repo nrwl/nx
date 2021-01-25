@@ -14,4 +14,7 @@ export interface Schema {
   testEnvironment: 'jsdom' | 'node';
   rootDir?: string;
   babelJest?: boolean;
+  js: boolean;
+  pascalCaseFiles: boolean;
+  strict: boolean;
 }

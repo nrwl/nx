@@ -1,30 +1,27 @@
-import { Tree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { runSchematic } from '../../utils/testing';
-import { readJsonInTree } from '../../utils/ast-utils';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import runCommands from './run-commands';
+import { libraryGenerator } from '../library/library';
 
 describe('run-commands', () => {
-  let appTree: Tree;
+  it('should generate a target', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    const opts = {
+      name: 'custom',
+      project: 'lib',
+      command: 'echo 1',
+      cwd: '/packages/foo',
+      outputs: '/dist/a, /dist/b, /dist/c',
+    };
 
-  beforeEach(async () => {
-    const t = createEmptyWorkspace(Tree.empty());
-    appTree = await runSchematic('lib', { name: 'lib' }, t);
-  });
+    await libraryGenerator(tree, {
+      name: 'lib',
+    });
 
-  it('should generate files', async () => {
-    const tree = await runSchematic(
-      'run-commands',
-      {
-        name: 'custom',
-        project: 'lib',
-        command: 'echo 1',
-        cwd: '/packages/foo',
-        outputs: '/dist/a, /dist/b, /dist/c',
-      },
-      appTree
-    );
-    const workspaceJson = readJsonInTree(tree, '/workspace.json');
-    expect(workspaceJson.projects['lib'].architect['custom']).toEqual({
+    await runCommands(tree, opts);
+
+    const customTarget = JSON.parse(tree.read('workspace.json').toString())
+      .projects['lib'].architect['custom'];
+    expect(customTarget).toEqual({
       builder: '@nrwl/workspace:run-commands',
       outputs: ['/dist/a', '/dist/b', '/dist/c'],
       options: {

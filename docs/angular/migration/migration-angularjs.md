@@ -98,7 +98,7 @@ Your `package.json` should now look like this:
     "format:write": "nx format:write",
     "format:check": "nx format:check",
     "update": "ng update @nrwl/workspace",
-    "workspace-schematic": "nx workspace-schematic",
+    "workspace-generator": "nx workspace-generator",
     "dep-graph": "nx dep-graph",
     "help": "nx help",
     "postinstall": "ngcc --properties es2015 browser module main --first-only --create-ivy-entry-points"
@@ -500,7 +500,7 @@ This change loads the HTML code directly and sets it to the template attribute o
 
 Now, go through each component of the application and make this change. To make sure that you’ve really modified every component correctly, delete the template cache file (`config/app.templates.js`) that gulp generated earlier.
 
-> In an example like this, it’s easy enough to make this kind of change by hand. In a larger codebase, doing this manually could be very time-intensive. You’ll want to look into an automated tool to do this for you, such as js-codemod or schematics.
+> In an example like this, it’s easy enough to make this kind of change by hand. In a larger codebase, doing this manually could be very time-intensive. You’ll want to look into an automated tool to do this for you, such as js-codemod or generators.
 
 Run the application the same way as before:
 

@@ -3,15 +3,30 @@
   "version": "0.1",
   "schematics": {
     "init": {
-      "factory": "./src/schematics/init/init",
-      "schema": "./src/schematics/init/schema.json",
+      "factory": "./src/generators/init/init#jestInitSchematic",
+      "schema": "./src/generators/init/schema.json",
       "description": "Initialize the @nrwl/jest plugin",
       "aliases": ["ng-add"],
       "hidden": true
     },
     "jest-project": {
-      "factory": "./src/schematics/jest-project/jest-project",
-      "schema": "./src/schematics/jest-project/schema.json",
+      "factory": "./src/generators/jest-project/jest-project#jestProjectSchematic",
+      "schema": "./src/generators/jest-project/schema.json",
+      "description": "Add Jest configuration to a project",
+      "hidden": true
+    }
+  },
+  "generators": {
+    "init": {
+      "factory": "./src/generators/init/init#jestInitGenerator",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the @nrwl/jest plugin",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+    "jest-project": {
+      "factory": "./src/generators/jest-project/jest-project#jestProjectGenerator",
+      "schema": "./src/generators/jest-project/schema.json",
       "description": "Add Jest configuration to a project",
       "hidden": true
     }

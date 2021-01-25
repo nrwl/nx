@@ -52,6 +52,17 @@
       "type": "boolean",
       "description": "Use babel instead ts-jest",
       "default": false
+    },
+    "pascalCaseFiles": {
+      "type": "boolean",
+      "description": "Use pascal case file names.",
+      "alias": "P",
+      "default": false
+    },
+    "js": {
+      "type": "boolean",
+      "description": "Generate JavaScript files rather than TypeScript files.",
+      "default": false
     }
   },
   "required": []

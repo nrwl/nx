@@ -10,6 +10,11 @@
       "implementation": "./src/builders/package/package.impl",
       "schema": "./src/builders/package/schema.json",
       "description": "Build and package an Angular library for publishing"
+    },
+    "webpack-browser": {
+      "implementation": "./src/builders/webpack-browser/webpack-browser.impl",
+      "schema": "./src/builders/webpack-browser/schema.json",
+      "description": "Angular browser builder that supports incremental builds"
     }
   }
 }

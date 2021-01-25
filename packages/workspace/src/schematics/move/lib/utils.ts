@@ -1,27 +1,8 @@
-import { WorkspaceDefinition } from '@angular-devkit/core/src/workspace';
-import { Tree } from '@angular-devkit/schematics';
-import { NxJson } from '@nrwl/workspace/src/core/shared-interfaces';
-import { readJsonInTree } from '@nrwl/workspace/src/utils/ast-utils';
 import * as path from 'path';
+
+import { ProjectConfiguration, Tree, getWorkspaceLayout } from '@nrwl/devkit';
+
 import { Schema } from '../schema';
-
-/**
- * This helper function retrieves the users workspace layout from
- * `nx.json`. If the user does not have this property defined then
- * we assume the default `apps/` and `libs/` layout.
- *
- * @param host The host tree
- */
-export function getWorkspaceLayout(
-  host: Tree
-): { appsDir?: string; libsDir?: string } {
-  const nxJson = readJsonInTree<NxJson>(host, 'nx.json');
-  const workspaceLayout = nxJson.workspaceLayout
-    ? nxJson.workspaceLayout
-    : { appsDir: 'apps', libsDir: 'libs' };
-
-  return workspaceLayout;
-}
 
 /**
  * This helper function ensures that we don't move libs or apps
@@ -34,16 +15,11 @@ export function getWorkspaceLayout(
  * @param workspace
  */
 export function getDestination(
+  host: Tree,
   schema: Schema,
-  workspace: WorkspaceDefinition | any,
-  host: Tree
+  project: ProjectConfiguration
 ): string {
-  const project = workspace.projects.get
-    ? workspace.projects.get(schema.projectName)
-    : workspace.projects[schema.projectName];
-  const projectType = project.extensions
-    ? project.extensions['projectType']
-    : project.projectType;
+  const projectType = project.projectType;
 
   const workspaceLayout = getWorkspaceLayout(host);
 
@@ -51,7 +27,7 @@ export function getDestination(
   if (projectType === 'application') {
     rootFolder = workspaceLayout.appsDir;
   }
-  return path.join(rootFolder, schema.destination).split(path.sep).join('/');
+  return path.join(rootFolder, schema.destination);
 }
 
 /**

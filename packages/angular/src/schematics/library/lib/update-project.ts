@@ -15,13 +15,13 @@ import {
 import {
   getWorkspacePath,
   Linter,
-  offsetFromRoot,
   replaceAppNameWithPath,
   updateJsonInTree,
 } from '@nrwl/workspace';
 import * as path from 'path';
 import { NormalizedSchema } from './normalized-schema';
 import { updateNgPackage } from './update-ng-package';
+import { offsetFromRoot } from '@nrwl/devkit';
 
 // TODO - refactor this into separate rules with better names
 export function updateProject(options: NormalizedSchema): Rule {
@@ -130,15 +130,7 @@ export function updateProject(options: NormalizedSchema): Rule {
           options.projectRoot
         );
 
-        fixedProject.schematics = fixedProject.schematics || {};
-        if (options.style !== 'css') {
-          fixedProject.schematics = {
-            ...fixedProject.schematics,
-            '@schematics/angular:component': {
-              style: options.style,
-            },
-          };
-        }
+        delete fixedProject.schematics;
 
         if (!options.publishable && !options.buildable) {
           delete fixedProject.architect.build;
@@ -170,6 +162,7 @@ export function updateProject(options: NormalizedSchema): Rule {
           fixedProject.architect.lint.builder = '@nrwl/linter:eslint';
           fixedProject.architect.lint.options.lintFilePatterns = [
             `${options.projectRoot}/src/**/*.ts`,
+            `${options.projectRoot}/src/**/*.html`,
           ];
           delete fixedProject.architect.lint.options.tsConfig;
           delete fixedProject.architect.lint.options.exclude;

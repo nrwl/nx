@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "id": "NxReactNgInit",
-  "title": "Add Nx React Schematics",
+  "title": "Init React Plugin",
   "type": "object",
   "properties": {
     "unitTestRunner": {

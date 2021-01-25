@@ -10,9 +10,10 @@ import {
   template,
   url,
 } from '@angular-devkit/schematics';
-import { names, offsetFromRoot } from '@nrwl/workspace';
+import { names } from '@nrwl/devkit';
 import { allFilesInDirInHost } from '@nrwl/workspace/src/utils/ast-utils';
 import { NormalizedSchema } from '../schema';
+import { offsetFromRoot } from '@nrwl/devkit';
 
 export function addFiles(options: NormalizedSchema): Rule {
   return chain([
@@ -38,12 +39,12 @@ export function addFiles(options: NormalizedSchema): Rule {
       ]),
       MergeStrategy.Overwrite
     ),
-    schematic('schematic', {
+    schematic('generator', {
       project: options.name,
       name: options.name,
       unitTestRunner: options.unitTestRunner,
     }),
-    schematic('builder', {
+    schematic('executor', {
       project: options.name,
       name: 'build',
       unitTestRunner: options.unitTestRunner,

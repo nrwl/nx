@@ -13,6 +13,7 @@ export const supportedNxCommands = [
   'format:check',
   'format:write',
   'workspace-schematic',
+  'workspace-generator',
   'workspace-lint',
   'migrate',
   'report',

@@ -1,7 +1,8 @@
 import { chain, noop, Rule, Tree } from '@angular-devkit/schematics';
-import { offsetFromRoot, updateJsonInTree } from '@nrwl/workspace';
+import { updateJsonInTree } from '@nrwl/workspace';
 import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
 import { NormalizedSchema } from './normalized-schema';
+import { offsetFromRoot } from '@nrwl/devkit';
 
 export function updateNgPackage(host: Tree, options: NormalizedSchema): Rule {
   if (!(options.publishable || options.buildable)) {

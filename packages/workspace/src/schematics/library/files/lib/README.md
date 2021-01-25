@@ -1,7 +1,7 @@
 # <%= name %>
 
 This library was generated with [Nx](https://nx.dev).
-<% if(hasUnitTestRunner) { %>
+<% if (hasUnitTestRunner) { %>
 
 ## Running unit tests
 

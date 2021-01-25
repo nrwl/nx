@@ -1,27 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`app --linter eslint should add an architect target for lint 1`] = `
-Object {
-  "builder": "@nrwl/linter:eslint",
-  "options": Object {
-    "lintFilePatterns": Array [
-      "apps/my-app/src/**/*.ts",
-    ],
-  },
-}
-`;
-
-exports[`app --linter eslint should add an architect target for lint 2`] = `
-Object {
-  "builder": "@nrwl/linter:eslint",
-  "options": Object {
-    "lintFilePatterns": Array [
-      "apps/my-app-e2e/**/*.{js,ts}",
-    ],
-  },
-}
-`;
-
 exports[`app nested should update workspace.json 1`] = `
 Object {
   "architect": Object {
@@ -42,7 +20,6 @@ Object {
             },
           ],
           "buildOptimizer": true,
-          "extractCss": true,
           "extractLicenses": true,
           "fileReplacements": Array [
             Object {
@@ -111,12 +88,14 @@ Object {
         "jestConfig": "apps/my-dir/my-app/jest.config.js",
         "passWithNoTests": true,
       },
+      "outputs": Array [
+        "coverage/apps/my-dir/my-app",
+      ],
     },
   },
   "prefix": "proj",
   "projectType": "application",
   "root": "apps/my-dir/my-app",
-  "schematics": Object {},
   "sourceRoot": "apps/my-dir/my-app/src",
 }
 `;
@@ -176,7 +155,6 @@ Object {
             },
           ],
           "buildOptimizer": true,
-          "extractCss": true,
           "extractLicenses": true,
           "fileReplacements": Array [
             Object {
@@ -245,12 +223,14 @@ Object {
         "jestConfig": "apps/my-app/jest.config.js",
         "passWithNoTests": true,
       },
+      "outputs": Array [
+        "coverage/apps/my-app",
+      ],
     },
   },
   "prefix": "proj",
   "projectType": "application",
   "root": "apps/my-app",
-  "schematics": Object {},
   "sourceRoot": "apps/my-app/src",
 }
 `;

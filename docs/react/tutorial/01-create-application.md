@@ -2,7 +2,7 @@
 
 ## Video of this Lesson
 
-<iframe width="560" height="600" src="https://www.youtube.com/embed/HcQE5R6ucng" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/HcQE5R6ucng" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 In this tutorial you will use Nx to build a full-stack application out of common libraries using modern technologies.
 
@@ -14,7 +14,11 @@ In this tutorial you will use Nx to build a full-stack application out of common
 
 ```bash
 npx create-nx-workspace@latest
+```
 
+You will then receive the following prompts in your command line:
+
+```
 ? Workspace name (e.g., org name)     myorg
 ? What to create in the new workspace react
 ? Application name                    todos

@@ -12,7 +12,6 @@ import {
   url,
 } from '@angular-devkit/schematics';
 
-import { names, toClassName, toFileName } from '@nrwl/workspace';
 import * as path from 'path';
 import { addMethod, addParameterToConstructor, insert } from '@nrwl/workspace';
 import { Schema } from './schema';
@@ -27,6 +26,7 @@ import {
   removeFromNgModule,
 } from '../../utils/ast-utils';
 import { insertImport } from '@nrwl/workspace/src/utils/ast-utils';
+import { names } from '@nrwl/devkit';
 
 function addImportsToModule(options: Schema): Rule {
   return (host: Tree) => {
@@ -39,8 +39,8 @@ function addImportsToModule(options: Schema): Rule {
       insertImport(
         moduleSource,
         modulePath,
-        `configure${toClassName(options.name)}, upgradedComponents`,
-        `../${toFileName(options.name)}-setup`
+        `configure${names(options.name).className}, upgradedComponents`,
+        `../${names(options.name).fileName}-setup`
       ),
       insertImport(
         moduleSource,
@@ -81,7 +81,7 @@ function addNgDoBootstrapToModule(options: Schema): Rule {
         className: moduleClassName,
         methodHeader: 'ngDoBootstrap(): void',
         body: `
-configure${toClassName(options.name)}(this.upgrade.injector);
+configure${names(options.name).className}(this.upgrade.injector);
 this.upgrade.bootstrap(document.body, ['downgraded', '${options.name}']);
         `,
       }),

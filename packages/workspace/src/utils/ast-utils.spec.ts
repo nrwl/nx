@@ -79,6 +79,15 @@ describe('renameSyncInTree', () => {
       expect(content).toEqual(tree.readContent('/x/y/z/b'));
     });
   });
+
+  it('should rename without corrupting binary files', () => {
+    const content = Buffer.from([0xca, 0xc5, 0x0e]);
+    tree.create('/a', content);
+    renameSyncInTree(tree, '/a', '/b', (err) => {
+      expect(err).toBeFalsy();
+    });
+    expect(Buffer.compare(content, tree.read('/b'))).toEqual(0);
+  });
 });
 
 describe('renameDirSyncInTree', () => {
@@ -150,7 +159,10 @@ describe('addDepsToPackageJson', () => {
       })
     );
 
-    const testRunner = new SchematicTestRunner('@nrwl/jest', null);
+    const testRunner = new SchematicTestRunner(
+      '@nrwl/jest',
+      join(__dirname, '../../../jest/collection.json')
+    );
 
     await testRunner
       .callRule(() => {
@@ -179,7 +191,10 @@ describe('addDepsToPackageJson', () => {
       })
     );
 
-    const testRunner = new SchematicTestRunner('@nrwl/jest', null);
+    const testRunner = new SchematicTestRunner(
+      '@nrwl/jest',
+      join(__dirname, '../../../jest/collection.json')
+    );
 
     await testRunner
       .callRule(() => {

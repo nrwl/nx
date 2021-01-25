@@ -1,155 +1,174 @@
 import {
-  chain,
-  externalSchematic,
-  noop,
-  Rule,
-  schematic,
-  SchematicContext,
+  addDependenciesToPackageJson,
+  convertNxGenerator,
+  formatFiles,
+  installPackagesTask,
+  names,
+  readWorkspaceConfiguration,
   Tree,
-} from '@angular-devkit/schematics';
+  updateWorkspaceConfiguration,
+} from '@nrwl/devkit';
 import { Schema } from './schema';
 
-import {
-  addDepsToPackageJson,
-  addGlobal,
-  insert,
-  insertImport,
-  updateWorkspaceInTree,
-} from '../../utils/ast-utils';
+import { libraryGenerator } from '../library/library';
 
-import { formatFiles } from '../../utils/rules/format-files';
+import { insertImport } from '../utils/insert-import';
+import { insertStatement } from '../utils/insert-statement';
 
-import * as ts from 'typescript';
-import { toFileName } from '../../utils/name-utils';
-
-export default function (options: Schema): Rule {
+export async function presetGenerator(tree: Tree, options: Schema) {
   options = normalizeOptions(options);
-  return (host: Tree, context: SchematicContext) => {
-    return chain([createPreset(options), formatFiles()])(host, context);
+  await createPreset(tree, options);
+  await formatFiles(tree);
+  return () => {
+    installPackagesTask(tree);
   };
 }
 
-function createPreset(options: Schema): Rule {
+export const presetSchematic = convertNxGenerator(presetGenerator);
+export default presetGenerator;
+
+async function createPreset(tree: Tree, options: Schema) {
   if (options.preset === 'empty') {
-    return noop();
+    return;
   } else if (options.preset === 'oss') {
-    return noop();
+    return;
   } else if (options.preset === 'angular') {
-    return chain([
-      externalSchematic('@nrwl/angular', 'application', {
-        name: options.name,
-        style: options.style,
-      }),
-      setDefaultCollection('@nrwl/angular'),
-    ]);
+    const {
+      applicationGenerator: angularApplicationGenerator,
+    } = require('@nrwl' + '/angular/src/schematics/application/application');
+
+    await angularApplicationGenerator(tree, {
+      name: options.name,
+      style: options.style,
+      linter: options.linter,
+    });
+    setDefaultCollection(tree, '@nrwl/angular');
   } else if (options.preset === 'react') {
-    return chain([
-      externalSchematic('@nrwl/react', 'application', {
-        name: options.name,
-        style: options.style,
-      }),
-      setDefaultCollection('@nrwl/react'),
-    ]);
+    const {
+      applicationGenerator: reactApplicationGenerator,
+    } = require('@nrwl' + '/react');
+
+    await reactApplicationGenerator(tree, {
+      name: options.name,
+      style: options.style,
+      linter: options.linter,
+    });
+    setDefaultCollection(tree, '@nrwl/react');
   } else if (options.preset === 'next') {
-    return chain([
-      externalSchematic('@nrwl/next', 'application', {
-        name: options.name,
-        style: options.style,
-      }),
-      setDefaultCollection('@nrwl/next'),
-    ]);
+    const { applicationGenerator: nextApplicationGenerator } = require('@nrwl' +
+      '/next');
+
+    await nextApplicationGenerator(tree, {
+      name: options.name,
+      style: options.style,
+      linter: options.linter,
+    });
+    setDefaultCollection(tree, '@nrwl/next');
   } else if (options.preset === 'web-components') {
-    return chain([
-      externalSchematic('@nrwl/web', 'application', {
-        name: options.name,
-        style: options.style,
-      }),
-      addDepsToPackageJson(
-        {},
-        {
-          '@ungap/custom-elements': '0.1.6',
-        }
-      ),
-      addPolyfills(`apps/${toFileName(options.name)}/src/polyfills.ts`, [
-        '@ungap/custom-elements',
-      ]),
-      setDefaultCollection('@nrwl/web'),
-    ]);
+    const { applicationGenerator: webApplicationGenerator } = require('@nrwl' +
+      '/web');
+
+    await webApplicationGenerator(tree, {
+      name: options.name,
+      style: options.style,
+      linter: options.linter,
+    });
+    addDependenciesToPackageJson(
+      tree,
+      {},
+      {
+        '@ungap/custom-elements': '0.1.6',
+      }
+    );
+    addPolyfills(
+      tree,
+      `apps/${names(options.name).fileName}/src/polyfills.ts`,
+      ['@ungap/custom-elements']
+    );
+    setDefaultCollection(tree, '@nrwl/web');
   } else if (options.preset === 'angular-nest') {
-    return chain([
-      externalSchematic('@nrwl/angular', 'application', {
-        name: options.name,
-        style: options.style,
-      }),
-      externalSchematic('@nrwl/nest', 'application', {
-        name: 'api',
-        frontendProject: options.name,
-      }),
-      schematic('library', { name: 'api-interfaces' }, { interactive: false }),
-      setDefaultCollection('@nrwl/angular'),
-      connectAngularAndNest(options),
-    ]);
+    const {
+      applicationGenerator: angularApplicationGenerator,
+    } = require('@nrwl' + '/angular/src/schematics/application/application');
+    const { applicationGenerator: nestApplicationGenerator } = require('@nrwl' +
+      '/nest');
+
+    await angularApplicationGenerator(tree, {
+      name: options.name,
+      style: options.style,
+      linter: options.linter,
+      skipFormat: true,
+    });
+    await nestApplicationGenerator(tree, {
+      name: 'api',
+      frontendProject: options.name,
+      linter: options.linter,
+    });
+    await libraryGenerator(tree, {
+      name: 'api-interfaces',
+      unitTestRunner: 'none',
+      linter: options.linter,
+    });
+    setDefaultCollection(tree, '@nrwl/angular');
+    connectAngularAndNest(tree, options);
   } else if (options.preset === 'react-express') {
-    return chain([
-      externalSchematic('@nrwl/react', 'application', {
-        name: options.name,
-        style: options.style,
-      }),
-      externalSchematic('@nrwl/express', 'application', {
-        name: 'api',
-        frontendProject: options.name,
-      }),
-      schematic('library', { name: 'api-interfaces' }, { interactive: false }),
-      setDefaultCollection('@nrwl/react'),
-      connectReactAndExpress(options),
-    ]);
+    const {
+      applicationGenerator: expressApplicationGenerator,
+    } = require('@nrwl' + '/express');
+    const {
+      applicationGenerator: reactApplicationGenerator,
+    } = require('@nrwl' + '/react');
+
+    await reactApplicationGenerator(tree, {
+      name: options.name,
+      style: options.style,
+      linter: options.linter,
+    });
+    await expressApplicationGenerator(tree, {
+      name: 'api',
+      frontendProject: options.name,
+      linter: options.linter,
+    });
+    await libraryGenerator(tree, {
+      name: 'api-interfaces',
+      unitTestRunner: 'none',
+      linter: options.linter,
+    });
+    setDefaultCollection(tree, '@nrwl/react');
+    connectReactAndExpress(options);
   } else if (options.preset === 'nest') {
-    return chain([
-      externalSchematic('@nrwl/nest', 'application', {
-        name: options.name,
-      }),
-      setDefaultCollection('@nrwl/nest'),
-    ]);
+    const { applicationGenerator: nestApplicationGenerator } = require('@nrwl' +
+      '/nest');
+
+    await nestApplicationGenerator(tree, {
+      name: options.name,
+      linter: options.linter,
+    });
+    setDefaultCollection(tree, '@nrwl/nest');
   } else {
     throw new Error(`Invalid preset ${options.preset}`);
   }
 }
 
-function connectAngularAndNest(options: Schema) {
-  const addImportToModule = require('@nrwl/' + 'angular/src/utils/ast-utils')
-    .addImportToModule;
-  return (host: Tree) => {
-    host.overwrite(
-      'libs/api-interfaces/src/lib/api-interfaces.ts',
-      `export interface Message { message: string }`
-    );
+function connectAngularAndNest(host: Tree, options: Schema) {
+  const { insertNgModuleImport } = require('@nrwl' +
+    '/angular/src/schematics/utils/insert-ngmodule-import');
+  host.write(
+    'libs/api-interfaces/src/lib/api-interfaces.ts',
+    `export interface Message { message: string }`
+  );
 
-    const modulePath = `apps/${options.name}/src/app/app.module.ts`;
-    const moduleFile = ts.createSourceFile(
-      modulePath,
-      host.read(modulePath).toString(),
-      ts.ScriptTarget.Latest,
-      true
-    );
-    insert(host, modulePath, [
-      insertImport(
-        moduleFile,
-        modulePath,
-        'HttpClientModule',
-        `@angular/common/http`
-      ),
-      ...addImportToModule(
-        moduleFile,
-        `@angular/common/http`,
-        `HttpClientModule`
-      ),
-    ]);
+  const modulePath = `apps/${options.name}/src/app/app.module.ts`;
 
-    const scope = options.npmScope;
-    const style = options.style ? options.style : 'css';
-    host.overwrite(
-      `apps/${options.name}/src/app/app.component.ts`,
-      `import { Component } from '@angular/core';
+  insertImport(host, modulePath, 'HttpClientModule', '@angular/common/http');
+
+  insertNgModuleImport(host, modulePath, 'HttpClientModule');
+
+  const scope = options.npmScope;
+  const style = options.style ? options.style : 'css';
+  host.write(
+    `apps/${options.name}/src/app/app.component.ts`,
+    `import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Message } from '@${scope}/api-interfaces';
 
@@ -163,11 +182,11 @@ export class AppComponent {
   constructor(private http: HttpClient) {}
 }
     `
-    );
+  );
 
-    host.overwrite(
-      `apps/${options.name}/src/app/app.component.spec.ts`,
-      `import { Component } from '@angular/core';
+  host.write(
+    `apps/${options.name}/src/app/app.component.spec.ts`,
+    `import { Component } from '@angular/core';
 import { TestBed, async } from '@angular/core/testing';
 import { HttpClientModule } from '@angular/common/http';
 import { AppComponent } from './app.component';
@@ -187,11 +206,11 @@ describe('AppComponent', () => {
   });
 });
     `
-    );
+  );
 
-    host.overwrite(
-      `apps/${options.name}/src/app/app.component.html`,
-      `<div style="text-align:center">
+  host.write(
+    `apps/${options.name}/src/app/app.component.html`,
+    `<div style="text-align:center">
   <h1>Welcome to ${options.name}!</h1>
   <img
     width="450"
@@ -200,11 +219,11 @@ describe('AppComponent', () => {
 </div>
 <div>Message: {{ (hello$|async)|json }}</div>
     `
-    );
+  );
 
-    host.overwrite(
-      `apps/api/src/app/app.controller.ts`,
-      `import { Controller, Get } from '@nestjs/common';
+  host.write(
+    `apps/api/src/app/app.controller.ts`,
+    `import { Controller, Get } from '@nestjs/common';
 
 import { Message } from '@${scope}/api-interfaces';
 
@@ -220,11 +239,11 @@ export class AppController {
   }
 }
     `
-    );
+  );
 
-    host.overwrite(
-      `apps/api/src/app/app.service.ts`,
-      `import { Injectable } from '@nestjs/common';
+  host.write(
+    `apps/api/src/app/app.service.ts`,
+    `import { Injectable } from '@nestjs/common';
 import { Message } from '@${scope}/api-interfaces';
 
 @Injectable()
@@ -234,19 +253,18 @@ export class AppService {
   }
 }
     `
-    );
-  };
+  );
 }
 
 function connectReactAndExpress(options: Schema) {
   return (host: Tree) => {
     const scope = options.npmScope;
-    host.overwrite(
+    host.write(
       'libs/api-interfaces/src/lib/api-interfaces.ts',
       `export interface Message { message: string }`
     );
 
-    host.overwrite(
+    host.write(
       `apps/${options.name}/src/app/app.tsx`,
       `import React, { useEffect, useState } from 'react';
 import { Message } from '@${scope}/api-interfaces';
@@ -278,9 +296,9 @@ export default App;
     `
     );
 
-    host.overwrite(
+    host.write(
       `apps/${options.name}/src/app/app.spec.tsx`,
-      `import { cleanup, getByText, render, wait } from '@testing-library/react';
+      `import { cleanup, getByText, render, waitFor } from '@testing-library/react';
 import React from 'react';
 import App from './app';
 
@@ -298,13 +316,13 @@ describe('App', () => {
     });
 
     const { baseElement } = render(<App />);
-    await wait(() => getByText(baseElement, 'my message'));
+    await waitFor(() => getByText(baseElement, 'my message'));
   });
 });
     `
     );
 
-    host.overwrite(
+    host.write(
       `apps/api/src/main.ts`,
       `import * as express from 'express';
 import { Message } from '@${scope}/api-interfaces';
@@ -327,37 +345,24 @@ server.on('error', console.error);
   };
 }
 
-function setDefaultCollection(defaultCollection: string) {
-  return updateWorkspaceInTree((json) => {
-    if (!json.cli) {
-      json.cli = {};
-    }
-    json.cli.defaultCollection = defaultCollection;
-    return json;
+function setDefaultCollection(tree: Tree, defaultCollection: string) {
+  const workspaceConfiguration = readWorkspaceConfiguration(tree);
+  updateWorkspaceConfiguration(tree, {
+    ...workspaceConfiguration,
+    cli: {
+      ...(workspaceConfiguration.cli || {}),
+      defaultCollection,
+    },
   });
 }
 
-function addPolyfills(polyfillsPath: string, polyfills: string[]): Rule {
-  return (host: Tree) => {
-    const polyfillsSource = host.read(polyfillsPath)!.toString('utf-8');
-    const polyfillsSourceFile = ts.createSourceFile(
-      polyfillsPath,
-      polyfillsSource,
-      ts.ScriptTarget.Latest,
-      true
-    );
-
-    insert(host, polyfillsPath, [
-      ...addGlobal(
-        polyfillsSourceFile,
-        polyfillsPath,
-        `\n${polyfills.map((im) => `import '${im}';`).join('\n')}\n`
-      ),
-    ]);
-  };
+function addPolyfills(host: Tree, polyfillsPath: string, polyfills: string[]) {
+  for (const polyfill of polyfills) {
+    insertStatement(host, polyfillsPath, `import '${polyfill}';\n`);
+  }
 }
 
 function normalizeOptions(options: Schema): Schema {
-  options.name = toFileName(options.name);
+  options.name = names(options.name).fileName;
   return options;
 }

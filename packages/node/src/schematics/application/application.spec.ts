@@ -1,6 +1,5 @@
 import { Tree } from '@angular-devkit/schematics';
-import * as stripJsonComments from 'strip-json-comments';
-import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
+import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
 import { NxJson, readJsonInTree } from '@nrwl/workspace';
 // to break the dependency
@@ -24,9 +23,10 @@ describe('app', () => {
       const project = workspaceJson.projects['my-node-app'];
       expect(project.root).toEqual('apps/my-node-app');
       expect(project.architect).toEqual(
-        jasmine.objectContaining({
+        expect.objectContaining({
           build: {
             builder: '@nrwl/node:build',
+            outputs: ['{options.outputPath}'],
             options: {
               outputPath: 'dist/apps/my-node-app',
               main: 'apps/my-node-app/src/main.ts',
@@ -85,37 +85,31 @@ describe('app', () => {
       expect(tree.exists(`apps/my-node-app/jest.config.js`)).toBeTruthy();
       expect(tree.exists('apps/my-node-app/src/main.ts')).toBeTruthy();
 
-      expect(tree.readContent('apps/my-node-app/tsconfig.json'))
-        .toMatchInlineSnapshot(`
-        "{
-          \\"extends\\": \\"../../tsconfig.base.json\\",
-          \\"files\\": [],
-          \\"include\\": [],
-          \\"references\\": [
-            {
-              \\"path\\": \\"./tsconfig.app.json\\"
+      const tsconfig = readJsonInTree(tree, 'apps/my-node-app/tsconfig.json');
+      expect(tsconfig).toMatchInlineSnapshot(`
+        Object {
+          "extends": "../../tsconfig.base.json",
+          "files": Array [],
+          "include": Array [],
+          "references": Array [
+            Object {
+              "path": "./tsconfig.app.json",
             },
-            {
-              \\"path\\": \\"./tsconfig.spec.json\\"
-            }
-          ]
+            Object {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
         }
-        "
       `);
 
-      const tsconfigApp = JSON.parse(
-        stripJsonComments(
-          getFileContent(tree, 'apps/my-node-app/tsconfig.app.json')
-        )
+      const tsconfigApp = readJsonInTree(
+        tree,
+        'apps/my-node-app/tsconfig.app.json'
       );
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
-      const eslintrc = JSON.parse(
-        stripJsonComments(
-          getFileContent(tree, 'apps/my-node-app/.eslintrc.json')
-        )
-      );
+      const eslintrc = readJsonInTree(tree, 'apps/my-node-app/.eslintrc.json');
       expect(eslintrc.extends).toEqual('../../.eslintrc.json');
     });
   });
@@ -162,8 +156,7 @@ describe('app', () => {
 
     it('should generate files', async () => {
       const hasJsonValue = ({ path, expectedValue, lookupFn }) => {
-        const content = getFileContent(tree, path);
-        const config = JSON.parse(stripJsonComments(content));
+        const config = readJsonInTree(tree, path);
 
         expect(lookupFn(config)).toEqual(expectedValue);
       };
@@ -243,12 +236,35 @@ describe('app', () => {
       );
 
       expect(tree.exists('apps/my-frontend/proxy.conf.json')).toBeTruthy();
-      const serve = JSON.parse(tree.readContent('workspace.json')).projects[
+      const serve = readJsonInTree(tree, 'workspace.json').projects[
         'my-frontend'
       ].architect.serve;
       expect(serve.options.proxyConfig).toEqual(
         'apps/my-frontend/proxy.conf.json'
       );
+    });
+
+    it('should configure proxies for multiple node projects with the same frontend app', async () => {
+      appTree = createApp(appTree, 'my-frontend');
+
+      appTree = await runSchematic(
+        'app',
+        { name: 'cart', frontendProject: 'my-frontend' },
+        appTree
+      );
+
+      const tree = await runSchematic(
+        'app',
+        { name: 'billing', frontendProject: 'my-frontend' },
+        appTree
+      );
+
+      expect(tree.exists('apps/my-frontend/proxy.conf.json')).toBeTruthy();
+
+      expect(readJsonInTree(tree, 'apps/my-frontend/proxy.conf.json')).toEqual({
+        '/api': { target: 'http://localhost:3333', secure: false },
+        '/billing-api': { target: 'http://localhost:3333', secure: false },
+      });
     });
 
     it('should work with unnormalized project names', async () => {
@@ -261,7 +277,7 @@ describe('app', () => {
       );
 
       expect(tree.exists('apps/my-frontend/proxy.conf.json')).toBeTruthy();
-      const serve = JSON.parse(tree.readContent('workspace.json')).projects[
+      const serve = readJsonInTree(tree, 'workspace.json').projects[
         'my-frontend'
       ].architect.serve;
       expect(serve.options.proxyConfig).toEqual(
@@ -311,6 +327,77 @@ describe('app', () => {
           ],
         }
       `);
+    });
+  });
+  describe('--js flag', () => {
+    it('should generate js files instead of ts files', async () => {
+      const tree = await runSchematic(
+        'app',
+        {
+          name: 'myNodeApp',
+          js: true,
+        } as Schema,
+        appTree
+      );
+
+      expect(tree.exists(`apps/my-node-app/jest.config.js`)).toBeTruthy();
+      expect(tree.exists('apps/my-node-app/src/main.js')).toBeTruthy();
+
+      const tsConfig = readJsonInTree(tree, 'apps/my-node-app/tsconfig.json');
+      expect(tsConfig.compilerOptions).toEqual({
+        allowJs: true,
+      });
+
+      const tsConfigApp = readJsonInTree(
+        tree,
+        'apps/my-node-app/tsconfig.app.json'
+      );
+      expect(tsConfigApp.include).toEqual(['**/*.ts', '**/*.js']);
+      expect(tsConfigApp.exclude).toEqual(['**/*.spec.ts', '**/*.spec.js']);
+    });
+
+    it('should update workspace.json', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myNodeApp', js: true } as Schema,
+        appTree
+      );
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      const project = workspaceJson.projects['my-node-app'];
+      const buildTarget = project.architect.build;
+
+      expect(buildTarget.options.main).toEqual('apps/my-node-app/src/main.js');
+      expect(buildTarget.configurations.production.fileReplacements).toEqual([
+        {
+          replace: 'apps/my-node-app/src/environments/environment.js',
+          with: 'apps/my-node-app/src/environments/environment.prod.js',
+        },
+      ]);
+    });
+
+    it('should generate js files for nested libs as well', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myNodeApp', directory: 'myDir', js: true } as Schema,
+        appTree
+      );
+      expect(
+        tree.exists(`apps/my-dir/my-node-app/jest.config.js`)
+      ).toBeTruthy();
+      expect(tree.exists('apps/my-dir/my-node-app/src/main.js')).toBeTruthy();
+    });
+  });
+
+  describe('--pascalCaseFiles', () => {
+    it(`should notify that this flag doesn't do anything`, async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'myNodeApp', pascalCaseFiles: true } as Schema,
+        appTree
+      );
+
+      // @TODO how to spy on context ?
+      // expect(contextLoggerSpy).toHaveBeenCalledWith('NOTE: --pascalCaseFiles is a noop')
     });
   });
 });

@@ -13,7 +13,7 @@ import { createDirectory } from '@nrwl/workspace';
 async function run(options: Schema, context: BuilderContext): Promise<any> {
   if (options.linter === 'tslint') {
     throw new Error(
-      `'tslint' option is no longer supported. Update your angular.json to use "@angular-eslint/builder:lint" builder directly.`
+      `'tslint' option is no longer supported. Update your angular.json to use "@nrwl/linter:eslint" builder.`
     );
   }
 

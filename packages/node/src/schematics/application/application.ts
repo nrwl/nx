@@ -20,11 +20,16 @@ import {
   addLintFiles,
   formatFiles,
 } from '@nrwl/workspace';
-import { toFileName } from '@nrwl/workspace';
 import { getProjectConfig } from '@nrwl/workspace';
-import { offsetFromRoot } from '@nrwl/workspace';
 import init from '../init/init';
 import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
+import {
+  toJS,
+  updateTsConfigsToJs,
+  maybeJs,
+} from '@nrwl/workspace/src/utils/rules/to-js';
+import { names, offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 interface NormalizedSchema extends Schema {
   appProjectRoot: Path;
@@ -46,9 +51,10 @@ function updateNxJson(options: NormalizedSchema): Rule {
 function getBuildConfig(project: any, options: NormalizedSchema) {
   return {
     builder: '@nrwl/node:build',
+    outputs: ['{options.outputPath}'],
     options: {
       outputPath: join(normalize('dist'), options.appProjectRoot),
-      main: join(project.sourceRoot, 'main.ts'),
+      main: maybeJs(options, join(project.sourceRoot, 'main.ts')),
       tsConfig: join(options.appProjectRoot, 'tsconfig.app.json'),
       assets: [join(project.sourceRoot, 'assets')],
     },
@@ -59,8 +65,14 @@ function getBuildConfig(project: any, options: NormalizedSchema) {
         inspect: false,
         fileReplacements: [
           {
-            replace: join(project.sourceRoot, 'environments/environment.ts'),
-            with: join(project.sourceRoot, 'environments/environment.prod.ts'),
+            replace: maybeJs(
+              options,
+              join(project.sourceRoot, 'environments/environment.ts')
+            ),
+            with: maybeJs(
+              options,
+              join(project.sourceRoot, 'environments/environment.prod.ts')
+            ),
           },
         ],
       },
@@ -84,7 +96,6 @@ function updateWorkspaceJson(options: NormalizedSchema): Rule {
       sourceRoot: join(options.appProjectRoot, 'src'),
       projectType: 'application',
       prefix: options.name,
-      schematics: {},
       architect: <any>{},
     };
 
@@ -94,7 +105,7 @@ function updateWorkspaceJson(options: NormalizedSchema): Rule {
       normalize(project.root),
       join(normalize(project.root), 'tsconfig.app.json'),
       options.linter,
-      [`${options.appProjectRoot}/**/*.ts`]
+      [`${options.appProjectRoot}/**/*.${options.js ? 'js' : 'ts'}`]
     );
 
     workspaceJson.projects[options.name] = project;
@@ -106,17 +117,26 @@ function updateWorkspaceJson(options: NormalizedSchema): Rule {
 }
 
 function addAppFiles(options: NormalizedSchema): Rule {
-  return mergeWith(
-    apply(url(`./files/app`), [
-      template({
-        tmpl: '',
-        name: options.name,
-        root: options.appProjectRoot,
-        offset: offsetFromRoot(options.appProjectRoot),
-      }),
-      move(options.appProjectRoot),
-    ])
-  );
+  return chain([
+    mergeWith(
+      apply(url(`./files/app`), [
+        template({
+          tmpl: '',
+          name: options.name,
+          root: options.appProjectRoot,
+          offset: offsetFromRoot(options.appProjectRoot),
+        }),
+        move(options.appProjectRoot),
+        options.js ? toJS() : noop(),
+      ])
+    ),
+    options.pascalCaseFiles
+      ? (tree, context) => {
+          context.logger.warn('NOTE: --pascalCaseFiles is a noop');
+          return tree;
+        }
+      : noop(),
+  ]);
 }
 
 function addProxy(options: NormalizedSchema): Rule {
@@ -124,19 +144,35 @@ function addProxy(options: NormalizedSchema): Rule {
     const projectConfig = getProjectConfig(host, options.frontendProject);
     if (projectConfig.architect && projectConfig.architect.serve) {
       const pathToProxyFile = `${projectConfig.root}/proxy.conf.json`;
-      host.create(
-        pathToProxyFile,
-        JSON.stringify(
-          {
-            '/api': {
-              target: 'http://localhost:3333',
-              secure: false,
+
+      if (!host.exists(pathToProxyFile)) {
+        host.create(
+          pathToProxyFile,
+          JSON.stringify(
+            {
+              '/api': {
+                target: 'http://localhost:3333',
+                secure: false,
+              },
             },
+            null,
+            2
+          )
+        );
+      } else {
+        //add new entry to existing config
+        const proxyFileContent = host.get(pathToProxyFile).content.toString();
+
+        const proxyModified = {
+          ...JSON.parse(proxyFileContent),
+          [`/${options.name}-api`]: {
+            target: 'http://localhost:3333',
+            secure: false,
           },
-          null,
-          2
-        )
-      );
+        };
+
+        host.overwrite(pathToProxyFile, JSON.stringify(proxyModified, null, 2));
+      }
 
       updateWorkspaceInTree((json) => {
         projectConfig.architect.serve.options.proxyConfig = pathToProxyFile;
@@ -145,6 +181,18 @@ function addProxy(options: NormalizedSchema): Rule {
       })(host, context);
     }
   };
+}
+
+function addJest(options: NormalizedSchema) {
+  return options.unitTestRunner === 'jest'
+    ? externalSchematic('@nrwl/jest', 'jest-project', {
+        project: options.name,
+        setupFile: 'none',
+        skipSerializers: true,
+        supportTsx: options.js,
+        babelJest: options.babelJest,
+      })
+    : noop();
 }
 
 export default function (schema: Schema): Rule {
@@ -157,16 +205,12 @@ export default function (schema: Schema): Rule {
       }),
       addLintFiles(options.appProjectRoot, options.linter),
       addAppFiles(options),
+      options.js
+        ? updateTsConfigsToJs({ projectRoot: options.appProjectRoot })
+        : noop,
       updateWorkspaceJson(options),
       updateNxJson(options),
-      options.unitTestRunner === 'jest'
-        ? externalSchematic('@nrwl/jest', 'jest-project', {
-            project: options.name,
-            setupFile: 'none',
-            skipSerializers: true,
-            babelJest: options.babelJest,
-          })
-        : noop(),
+      addJest(options),
       options.frontendProject ? addProxy(options) : noop(),
       formatFiles(options),
     ])(host, context);
@@ -175,8 +219,8 @@ export default function (schema: Schema): Rule {
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const appDirectory = options.directory
-    ? `${toFileName(options.directory)}/${toFileName(options.name)}`
-    : toFileName(options.name);
+    ? `${names(options.directory).fileName}/${names(options.name).fileName}`
+    : names(options.name).fileName;
 
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
 
@@ -188,11 +232,16 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
   return {
     ...options,
-    name: toFileName(appProjectName),
+    name: names(appProjectName).fileName,
     frontendProject: options.frontendProject
-      ? toFileName(options.frontendProject)
+      ? names(options.frontendProject).fileName
       : undefined,
     appProjectRoot,
     parsedTags,
   };
 }
+
+export const applicationGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/node',
+  'application'
+);

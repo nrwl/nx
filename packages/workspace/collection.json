@@ -3,69 +3,127 @@
   "version": "0.1",
   "schematics": {
     "workspace": {
-      "factory": "./src/schematics/workspace/workspace",
+      "factory": "./src/schematics/workspace/workspace#workspaceSchematic",
       "schema": "./src/schematics/workspace/schema.json",
       "description": "Create an empty workspace",
       "hidden": true
     },
 
     "ng-add": {
-      "factory": "./src/schematics/init/init",
+      "factory": "./src/schematics/init/init#initSchematic",
       "schema": "./src/schematics/init/schema.json",
       "description": "Convert an existing CLI project into an Nx Workspace",
       "hidden": true
     },
 
     "preset": {
-      "factory": "./src/schematics/preset/preset",
+      "factory": "./src/schematics/preset/preset#presetSchematic",
       "schema": "./src/schematics/preset/schema.json",
       "description": "Create application in an empty workspace",
       "hidden": true
     },
 
     "move": {
-      "factory": "./src/schematics/move/move",
+      "factory": "./src/schematics/move/move#moveSchematic",
       "schema": "./src/schematics/move/schema.json",
       "aliases": ["mv"],
       "description": "Move an application or library to another folder"
     },
 
     "remove": {
-      "factory": "./src/schematics/remove/remove",
+      "factory": "./src/schematics/remove/remove#moveSchematic",
       "schema": "./src/schematics/remove/schema.json",
       "aliases": ["rm"],
       "description": "Remove an application or library"
     },
 
-    "ng-new": {
-      "factory": "./src/schematics/ng-new/ng-new",
-      "schema": "./src/schematics/ng-new/schema.json",
-      "description": "Create a workspace",
-      "hidden": true
-    },
-
-    "tao-new": {
-      "factory": "./src/schematics/tao-new/tao-new",
-      "schema": "./src/schematics/tao-new/schema.json",
+    "new": {
+      "factory": "./src/schematics/new/new#newSchematic",
+      "schema": "./src/schematics/new/schema.json",
       "description": "Create a workspace",
       "hidden": true
     },
 
     "library": {
-      "factory": "./src/schematics/library/library",
+      "factory": "./src/schematics/library/library#librarySchematic",
       "schema": "./src/schematics/library/schema.json",
       "aliases": ["lib"],
       "description": "Create a library"
     },
 
-    "workspace-schematic": {
-      "factory": "./src/schematics/workspace-schematic/workspace-schematic",
-      "schema": "./src/schematics/workspace-schematic/schema.json",
-      "description": "Generates a workspace schematic"
+    "workspace-generator": {
+      "factory": "./src/schematics/workspace-generator/workspace-generator",
+      "schema": "./src/schematics/workspace-generator/schema.json",
+      "aliases": ["workspace-schematic"],
+      "description": "Generates a workspace generator"
     },
 
     "run-commands": {
-      "factory": "./src/schematics/run-commands/run-commands",
+      "factory": "./src/schematics/run-commands/run-commands#runCommandsSchematic",
+      "schema": "./src/schematics/run-commands/schema.json",
+      "aliases": ["run-command", "target"],
+      "description": "Generates a target to run any command in the terminal"
+    }
+  },
+  "generators": {
+    "workspace": {
+      "factory": "./src/schematics/workspace/workspace#workspaceGenerator",
+      "schema": "./src/schematics/workspace/schema.json",
+      "description": "Create an empty workspace",
+      "hidden": true
+    },
+
+    "ng-add": {
+      "factory": "./src/schematics/init/init#initGenerator",
+      "schema": "./src/schematics/init/schema.json",
+      "description": "Convert an existing CLI project into an Nx Workspace",
+      "hidden": true
+    },
+
+    "preset": {
+      "factory": "./src/schematics/preset/preset#presetGenerator",
+      "schema": "./src/schematics/preset/schema.json",
+      "description": "Create application in an empty workspace",
+      "hidden": true
+    },
+
+    "move": {
+      "factory": "./src/schematics/move/move#moveGenerator",
+      "schema": "./src/schematics/move/schema.json",
+      "aliases": ["mv"],
+      "description": "Move an application or library to another folder"
+    },
+
+    "remove": {
+      "factory": "./src/schematics/remove/remove#removeGenerator",
+      "schema": "./src/schematics/remove/schema.json",
+      "aliases": ["rm"],
+      "description": "Remove an application or library"
+    },
+
+    "new": {
+      "factory": "./src/schematics/new/new#newGenerator",
+      "schema": "./src/schematics/new/schema.json",
+      "description": "Create a workspace",
+      "hidden": true
+    },
+
+    "library": {
+      "factory": "./src/schematics/library/library#libraryGenerator",
+      "schema": "./src/schematics/library/schema.json",
+      "aliases": ["lib"],
+      "description": "Create a library"
+    },
+
+    "workspace-generator": {
+      "factory": "./src/schematics/workspace-generator/workspace-generator",
+      "schema": "./src/schematics/workspace-generator/schema.json",
+      "aliases": ["workspace-schematic"],
+      "description": "Generates a workspace generator"
+    },
+
+    "run-commands": {
+      "factory": "./src/schematics/run-commands/run-commands#runCommandsGenerator",
       "schema": "./src/schematics/run-commands/schema.json",
       "aliases": ["run-command", "target"],
       "description": "Generates a target to run any command in the terminal"

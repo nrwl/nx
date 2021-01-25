@@ -1,4 +1,3 @@
-import { offsetFromRoot } from '@nrwl/workspace';
 import {
   PHASE_DEVELOPMENT_SERVER,
   PHASE_EXPORT,
@@ -11,7 +10,8 @@ import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration } from 'webpack';
 import { FileReplacement, NextBuildBuilderOptions } from './types';
 import { BuilderContext } from '@angular-devkit/architect';
-import { createCopyPlugin } from '@nrwl/web/src/utils/config';
+import * as CopyWebpackPlugin from 'copy-webpack-plugin';
+import { offsetFromRoot } from '@nrwl/devkit';
 
 export function createWebpackConfig(
   workspaceRoot: string,
@@ -56,7 +56,14 @@ export function createWebpackConfig(
               test: /\.[jt]sx?$/,
             },
             use: [
-              '@svgr/webpack?-svgo,+titleProp,+ref![path]',
+              {
+                loader: require.resolve('@svgr/webpack'),
+                options: {
+                  svgo: false,
+                  titleProp: true,
+                  ref: true,
+                },
+              },
               {
                 loader: require.resolve('url-loader'),
                 options: {
@@ -80,18 +87,6 @@ export function createWebpackConfig(
           },
         ],
       }
-    );
-
-    config.plugins.push(
-      createCopyPlugin([
-        {
-          input: 'public',
-          // distDir is `dist/apps/[name]/.next` and we want public to be copied
-          // to `dist/apps/[name]/public` thus the `..` here.
-          output: '../public',
-          glob: '**/*',
-        },
-      ])
     );
 
     return config;

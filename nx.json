@@ -15,14 +15,15 @@
     "default": {
       "runner": "@nrwl/nx-cloud",
       "options": {
-        "scan": true,
         "accessToken": "OTM4MGQ1NDctZGRjMy00ZDlmLThkYzQtOTU3MDhkNWZhZjcwfHJlYWQ=",
         "cacheableOperations": ["build", "build-base", "test", "lint", "e2e"],
         "canTrackAnalytics": false,
         "showUsageWarnings": true,
-        "runtimeCacheInputs": ["echo $SELECTED_CLI"],
-        "cacheDirectory": "/tmp/nx-cache",
-        "nxCloudUsePrNumber": true
+        "runtimeCacheInputs": [
+          "echo $SELECTED_CLI",
+          "echo $NX_E2E_CI_CACHE_KEY"
+        ],
+        "cacheDirectory": "/tmp/nx-cache"
       }
     }
   },
@@ -36,9 +37,13 @@
     "tao": {
       "tags": []
     },
+    "devkit": {
+      "tags": ["tao"],
+      "implicitDependencies": ["tao"]
+    },
     "workspace": {
       "tags": [],
-      "implicitDependencies": ["tao", "cli"]
+      "implicitDependencies": ["tao", "cli", "devkit"]
     },
     "web": {
       "tags": [],
@@ -97,7 +102,8 @@
       "implicitDependencies": ["nx-plugin"]
     },
     "cli": {
-      "tags": []
+      "tags": [],
+      "implicitDependencies": ["tao"]
     },
     "angular": {
       "tags": [],

@@ -45,7 +45,7 @@ function getUntrackedFiles(): string[] {
 }
 
 function getFilesUsingBaseAndHead(base: string, head: string): string[] {
-  const mergeBase = execSync(`git merge-base --fork-point ${base} ${head} `, {
+  const mergeBase = execSync(`git merge-base ${base} ${head}`, {
     maxBuffer: TEN_MEGABYTES,
   })
     .toString()
@@ -59,15 +59,6 @@ function parseGitOutput(command: string): string[] {
     .split('\n')
     .map((a) => a.trim())
     .filter((a) => a.length > 0);
-}
-
-// TODO: remove it in Nx 10
-export function getProjectNodes(
-  workspaceJson: any,
-  nxJson: NxJson
-): ProjectGraphNode[] {
-  const graph = createProjectGraph(workspaceJson, nxJson);
-  return Object.values(graph.nodes);
 }
 
 export function getProjectRoots(projectNames: string[]): string[] {

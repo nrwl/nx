@@ -13,6 +13,10 @@
       "type": "string",
       "description": "The output path of the generated files."
     },
+    "projectBuildConfig": {
+      "type": "string",
+      "description": "Workspace project where Storybook reads the Webpack config from"
+    },
     "config": {
       "type": "object",
       "description": ".storybook configuration",
@@ -33,19 +37,7 @@
           "type": "string",
           "description": "Project source path."
         }
-      },
-      "oneOf": [
-        {
-          "anyOf": [
-            {
-              "required": ["configFolder"]
-            },
-            {
-              "required": ["pluginPath", "configPath", "srcRoot"]
-            }
-          ]
-        }
-      ]
+      }
     },
     "docsMode": {
       "type": "boolean",

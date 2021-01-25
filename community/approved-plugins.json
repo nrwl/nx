@@ -1,13 +1,28 @@
 [
   {
+    "name": "nx-electron",
+    "description": "An Nx plugin for developing Electron applications",
+    "url": "https://github.com/bennymeg/nx-electron"
+  },
+  {
     "name": "@nxtend/ionic-react",
     "description": "An Nx plugin for developing Ionic React applications and libraries",
-    "url": "https://github.com/nxtend-team/nxtend/tree/master/packages/ionic-react"
+    "url": "https://github.com/nxtend-team/nxtend/tree/main/packages/ionic-react"
+  },
+  {
+    "name": "@nxtend/ionic-angular",
+    "description": "An Nx plugin for developing Ionic Angular applications and libraries",
+    "url": "https://github.com/nxtend-team/nxtend/tree/main/packages/ionic-angular"
   },
   {
     "name": "@nxtend/capacitor",
     "description": "An Nx plugin for developing cross-platform applications using Capacitor",
-    "url": "https://github.com/nxtend-team/nxtend/tree/master/packages/capacitor"
+    "url": "https://github.com/nxtend-team/nxtend/tree/main/packages/capacitor"
+  },
+  {
+    "name": "@nxtend/firebase",
+    "description": "An Nx plugin for developing applications using Firebase",
+    "url": "https://github.com/nxtend-team/nxtend/tree/main/packages/firebase"
   },
   {
     "name": "@angular-architects/ddd",
@@ -93,5 +108,25 @@
     "name": "@nxrocks/nx-spring-boot",
     "description": "Nx plugin to generate, run, package, build (and more) Spring Boot projects inside your Nx workspace",
     "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-spring-boot"
+  },
+  {
+    "name": "@trumbitta/nx-plugin-openapi",
+    "description": "OpenAPI Plugin for Nx. Keep your API spec files in libs, and auto-generate sources.",
+    "url": "https://github.com/trumbitta/nx-trumbitta/tree/main/packages/nx-plugin-openapi"
+  },
+  {
+    "name": "@nxrocks/nx-flutter",
+    "description": "Nx Plugin adding first class support for Flutter in your Nx workspace",
+    "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-flutter"
+  },
+  {
+    "name": "@srleecode/domain",
+    "description": "Nx Plugin for allowing operations to occur at the domain level instead of the default library level",
+    "url": "https://github.com/srlee309/domain"
+  },
+  {
+    "name": "@jscutlery/semver",
+    "description": "Nx plugin to automate semantic versioning and CHANGELOG generation.",
+    "url": "https://github.com/jscutlery/semver"
   }
 ]

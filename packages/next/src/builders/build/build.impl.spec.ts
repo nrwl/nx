@@ -4,6 +4,7 @@ import { getMockContext } from '../../utils/testing';
 import { NextBuildBuilderOptions } from '../../utils/types';
 import { run } from './build.impl';
 
+jest.mock('fs-extra');
 jest.mock('next/dist/build');
 jest.mock('./lib/create-package-json', () => {
   return {

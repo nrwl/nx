@@ -214,5 +214,16 @@ describe('init', () => {
       const workspaceJson = readJsonInTree(result, 'workspace.json');
       expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/angular');
     });
+
+    it.each(['css', 'scss', 'styl', 'less'])(
+      'should set "%s" as default style extension for components',
+      async (style) => {
+        const result = await runSchematic('init', { style }, appTree);
+        const workspaceJson = readJsonInTree(result, 'workspace.json');
+        expect(
+          workspaceJson.schematics['@nrwl/angular:component']['style']
+        ).toBe(style);
+      }
+    );
   });
 });

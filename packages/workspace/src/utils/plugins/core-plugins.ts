@@ -1,4 +1,4 @@
-import { terminal } from '@angular-devkit/core';
+import * as chalk from 'chalk';
 import { output } from '../output';
 import { CorePlugin, PluginCapabilities } from './models';
 
@@ -6,55 +6,55 @@ export function fetchCorePlugins() {
   const corePlugins: CorePlugin[] = [
     {
       name: '@nrwl/angular',
-      capabilities: 'schematics',
+      capabilities: 'generators',
     },
     {
       name: '@nrwl/cypress',
-      capabilities: 'builders,schematics',
+      capabilities: 'executors,generators',
     },
     {
       name: '@nrwl/express',
-      capabilities: 'builders,schematics',
+      capabilities: 'executors,generators',
     },
     {
       name: '@nrwl/jest',
-      capabilities: 'builders,schematics',
+      capabilities: 'executors,generators',
     },
     {
       name: '@nrwl/linter',
-      capabilities: 'builders',
+      capabilities: 'executors',
     },
     {
       name: '@nrwl/nest',
-      capabilities: 'builders,schematics',
+      capabilities: 'executors,generators',
     },
     {
       name: '@nrwl/next',
-      capabilities: 'builders,schematics',
+      capabilities: 'executors,generators',
     },
     {
       name: '@nrwl/node',
-      capabilities: 'builders,schematics',
+      capabilities: 'executors,generators',
     },
     {
       name: '@nrwl/nx-plugin',
-      capabilities: 'builders,schematics',
+      capabilities: 'executors,generators',
     },
     {
       name: '@nrwl/react',
-      capabilities: 'builders,schematics',
+      capabilities: 'executors,generators',
     },
     {
       name: '@nrwl/storybook',
-      capabilities: 'builders,schematics',
+      capabilities: 'executors,generators',
     },
     {
       name: '@nrwl/web',
-      capabilities: 'builders,schematics',
+      capabilities: 'executors,generators',
     },
     {
       name: '@nrwl/workspace',
-      capabilities: 'builders,schematics',
+      capabilities: 'executors,generators',
     },
   ];
   return corePlugins;
@@ -76,7 +76,7 @@ export function listCorePlugins(
     output.log({
       title: `Also available:`,
       bodyLines: alsoAvailable.map((p) => {
-        return `${terminal.bold(p.name)} (${p.capabilities})`;
+        return `${chalk.bold(p.name)} (${p.capabilities})`;
       }),
     });
   }

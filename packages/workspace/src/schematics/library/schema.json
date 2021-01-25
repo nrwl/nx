@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "id": "Typescript library",
+  "cli": "nx",
   "title": "Create a TypeScript Library",
   "type": "object",
   "examples": [
@@ -47,8 +48,8 @@
     },
     "skipTsConfig": {
       "type": "boolean",
-      "default": false,
-      "description": "Do not update tsconfig.json for development experience."
+      "description": "Do not update tsconfig.json for development experience.",
+      "default": false
     },
     "testEnvironment": {
       "type": "string",
@@ -65,9 +66,20 @@
       "description": "Use babel instead ts-jest",
       "default": false
     },
+    "pascalCaseFiles": {
+      "type": "boolean",
+      "description": "Use pascal case file names.",
+      "alias": "P",
+      "default": false
+    },
     "js": {
       "type": "boolean",
       "description": "Generate JavaScript files rather than TypeScript files",
+      "default": false
+    },
+    "strict": {
+      "type": "boolean",
+      "description": "Whether to enable tsconfig strict mode or not.",
       "default": false
     }
   },

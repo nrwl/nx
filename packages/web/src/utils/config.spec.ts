@@ -2,7 +2,7 @@ import { getBaseWebpackPartial } from './config';
 
 import * as ts from 'typescript';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
+import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { ProgressPlugin } from 'webpack';
 import { BuildBuilderOptions } from './types';
 import { normalize } from '@angular-devkit/core';
@@ -25,7 +25,7 @@ describe('getBaseWebpackPartial', () => {
       statsJson: false,
     };
     (<any>(
-      TsConfigPathsPlugin
+      TsconfigPathsPlugin
     )).mockImplementation(function MockPathsPlugin() {});
   });
 
@@ -159,7 +159,7 @@ describe('getBaseWebpackPartial', () => {
       const result = getBaseWebpackPartial(input);
       expect(
         result.resolve.plugins.some(
-          (plugin) => plugin instanceof TsConfigPathsPlugin
+          (plugin) => plugin instanceof TsconfigPathsPlugin
         )
       ).toEqual(true);
     });

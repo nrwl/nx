@@ -1,6 +1,7 @@
 import { Task } from './tasks-runner';
 import { ProjectGraphNode } from '../core/project-graph';
 import * as flatten from 'flat';
+import * as _ from 'lodash';
 
 const commonCommands = ['build', 'test', 'lint', 'e2e', 'deploy'];
 
@@ -53,23 +54,27 @@ export function getOutputsForTargetAndConfiguration(
   task: Pick<Task, 'target' | 'overrides'>,
   node: ProjectGraphNode
 ) {
-  if (task.overrides?.outputPath) {
-    return [task.overrides?.outputPath];
-  }
   const { target, configuration } = task.target;
-  const architect = node.data.architect[target];
-  if (architect && architect.outputs) return architect.outputs;
 
-  let opts = architect.options || {};
-  if (architect.configurations && architect.configurations[configuration]) {
-    opts = {
-      ...opts,
-      ...architect.configurations[configuration],
-    };
+  const targets = node.data.targets[target];
+
+  const options = {
+    ...targets.options,
+    ...targets?.configurations?.[configuration],
+    ...task.overrides,
+  };
+
+  if (targets?.outputs) {
+    return targets.outputs.map((output) =>
+      _.template(output, { interpolate: /{([\s\S]+?)}/g })({ options })
+    );
   }
 
-  if (opts.outputPath) {
-    return Array.isArray(opts.outputPath) ? opts.outputPath : [opts.outputPath];
+  // Keep backwards compatibility in case `outputs` doesn't exist
+  if (options.outputPath) {
+    return Array.isArray(options.outputPath)
+      ? options.outputPath
+      : [options.outputPath];
   } else if (target === 'build') {
     return [`dist/${node.data.root}`];
   } else {
@@ -103,7 +108,9 @@ function unparseOption(key: string, value: any, unparsed: string[]) {
         unparsed
       );
     }
-  } else if (typeof value === 'string' || value != null) {
+  } else if (typeof value === 'string' && value.includes(' ')) {
+    unparsed.push(`--${key}="${value}"`);
+  } else if (value != null) {
     unparsed.push(`--${key}=${value}`);
   }
 }

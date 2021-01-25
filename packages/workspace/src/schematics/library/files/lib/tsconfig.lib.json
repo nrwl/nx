@@ -4,6 +4,6 @@
     "outDir": "<%= offsetFromRoot %>dist/out-tsc",
     "types": []
   },
-  "exclude": ["**/*.spec.ts"],
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts"<% if (js) { %>, "**/*.js"<% } %>],
+  "exclude": ["**/*.spec.ts"<% if (js) { %>, "**/*.spec.js"<% } %>]
 }

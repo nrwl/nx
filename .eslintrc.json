@@ -2,15 +2,13 @@
   "root": true,
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "ecmaVersion": 2018,
-    "sourceType": "module",
     "project": "./tsconfig.*?.json"
   },
   "env": {
     "node": true
   },
   "ignorePatterns": ["**/*.ts"],
-  "plugins": ["@typescript-eslint", "@nrwl/nx"],
+  "plugins": ["@typescript-eslint"],
   "extends": [],
   "rules": {
     "@typescript-eslint/explicit-module-boundary-types": "off"

@@ -1,29 +1,17 @@
 #!/usr/bin/env node
 
-// we can import from '@nrwl/workspace' because it will require typescript
-import { output } from '@nrwl/workspace/src/utils/output';
-import { getPackageManagerExecuteCommand } from '@nrwl/workspace/src/utils/detect-package-manager';
+import { output, unparse } from '@nrwl/workspace';
+import { Schema, Preset } from '@nrwl/workspace/src/schematics/new/new';
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { execSync } from 'child_process';
 import { writeFileSync } from 'fs';
 import * as inquirer from 'inquirer';
 import * as path from 'path';
 import { dirSync } from 'tmp';
 import * as yargsParser from 'yargs-parser';
-import { determinePackageManager, showNxWarning } from './shared';
+import { showNxWarning } from './shared';
 
-enum Preset {
-  Empty = 'empty',
-  OSS = 'oss',
-  WebComponents = 'web-components',
-  Angular = 'angular',
-  AngularWithNest = 'angular-nest',
-  React = 'react',
-  ReactWithExpress = 'react-express',
-  NextJs = 'next',
-  Nest = 'nest',
-}
-
-const presetOptions = [
+const presetOptions: { value: Preset; name: string }[] = [
   {
     value: Preset.Empty,
     name:
@@ -46,7 +34,7 @@ const presetOptions = [
     name: 'nest              [a workspace with a single Nest application]',
   },
   {
-    value: 'web-components',
+    value: Preset.WebComponents,
     name:
       'web components    [a workspace with a single app built using web components]',
   },
@@ -61,7 +49,7 @@ const presetOptions = [
       'angular-nest      [a workspace with a full stack application (Angular + Nest)]',
   },
   {
-    value: 'oss',
+    value: Preset.OSS,
     name:
       'oss               [an empty workspace with a layout that works best for open-source projects]',
   },
@@ -70,10 +58,14 @@ const presetOptions = [
 const tsVersion = 'TYPESCRIPT_VERSION';
 const cliVersion = 'NX_VERSION';
 const nxVersion = 'NX_VERSION';
-const angularCliVersion = 'ANGULAR_CLI_VERSION';
 const prettierVersion = 'PRETTIER_VERSION';
 
-const parsedArgs = yargsParser(process.argv, {
+interface WorkspaceArgs extends Schema {
+  _?: string[];
+  help?: boolean;
+}
+
+const parsedArgs: WorkspaceArgs = yargsParser(process.argv.slice(2), {
   string: [
     'cli',
     'preset',
@@ -84,39 +76,40 @@ const parsedArgs = yargsParser(process.argv, {
     'packageManager',
   ],
   alias: {
-    appName: 'app-name',
-    nxCloud: 'nx-cloud',
-    defaultBase: 'default-base',
+    packageManager: 'pm',
   },
   boolean: ['help', 'interactive', 'nxCloud'],
-});
+  default: {
+    interactive: false,
+  },
+  configuration: {
+    'strip-dashed': true,
+    'strip-aliased': true,
+  },
+}) as any;
 
 if (parsedArgs.help) {
   showHelp();
   process.exit(0);
 }
-const packageManager = determinePackageManager(parsedArgs.packageManager);
+const packageManager = parsedArgs.packageManager || 'npm';
 determineWorkspaceName(parsedArgs).then((name) => {
   determinePreset(parsedArgs).then((preset) => {
     return determineAppName(preset, parsedArgs).then((appName) => {
       return determineStyle(preset, parsedArgs).then((style) => {
         return determineCli(preset, parsedArgs).then((cli) => {
           return determineLinter(preset, parsedArgs).then((linter) => {
-            return askAboutNxCloud(parsedArgs).then((cloud) => {
+            return askAboutNxCloud(parsedArgs).then((nxCloud) => {
               const tmpDir = createSandbox(packageManager);
-              createApp(
-                tmpDir,
+              createApp(tmpDir, name, {
+                ...parsedArgs,
                 cli,
-                parsedArgs,
-                name,
                 preset,
                 appName,
                 style,
                 linter,
-                cloud,
-                parsedArgs.interactive,
-                parsedArgs.defaultBase
-              );
+                nxCloud,
+              });
               showNxWarning(name);
               pointToTutorialAndCourse(preset);
             });
@@ -153,6 +146,8 @@ function showHelp() {
     linter                    Default linter. Options: "eslint", "tslint".
 
     interactive               Enable interactive mode when using presets (boolean)
+
+    packageManager            Package manager to use (npm, yarn, pnpm)
     
     nx-cloud                  Use Nx Cloud (boolean)
 
@@ -160,8 +155,8 @@ function showHelp() {
 `);
 }
 
-function determineWorkspaceName(parsedArgs: any): Promise<string> {
-  const workspaceName: string = parsedArgs._[2];
+function determineWorkspaceName(parsedArgs: WorkspaceArgs): Promise<string> {
+  const workspaceName: string = parsedArgs._[0];
 
   if (workspaceName) {
     return Promise.resolve(workspaceName);
@@ -187,7 +182,7 @@ function determineWorkspaceName(parsedArgs: any): Promise<string> {
     });
 }
 
-function determinePreset(parsedArgs: any): Promise<Preset> {
+function determinePreset(parsedArgs: WorkspaceArgs): Promise<Preset> {
   if (parsedArgs.preset) {
     if (Object.values(Preset).indexOf(parsedArgs.preset) === -1) {
       output.error({
@@ -217,7 +212,10 @@ function determinePreset(parsedArgs: any): Promise<Preset> {
     .then((a: { Preset: Preset }) => a.Preset);
 }
 
-function determineAppName(preset: Preset, parsedArgs: any): Promise<string> {
+function determineAppName(
+  preset: Preset,
+  parsedArgs: WorkspaceArgs
+): Promise<string> {
   if (preset === Preset.Empty || preset === Preset.OSS) {
     return Promise.resolve('');
   }
@@ -246,19 +244,10 @@ function determineAppName(preset: Preset, parsedArgs: any): Promise<string> {
     });
 }
 
-function determineCli(preset: Preset, parsedArgs: any) {
-  const angular = {
-    package: '@angular/cli',
-    version: angularCliVersion,
-    command: 'ng',
-  };
-
-  const nx = {
-    package: '@nrwl/tao',
-    version: cliVersion,
-    command: 'tao',
-  };
-
+function determineCli(
+  preset: Preset,
+  parsedArgs: WorkspaceArgs
+): Promise<'nx' | 'angular'> {
   if (parsedArgs.cli) {
     if (['nx', 'angular'].indexOf(parsedArgs.cli) === -1) {
       output.error({
@@ -267,50 +256,21 @@ function determineCli(preset: Preset, parsedArgs: any) {
       });
       process.exit(1);
     }
-    return Promise.resolve(parsedArgs.cli === 'angular' ? angular : nx);
+    return Promise.resolve(parsedArgs.cli);
   }
 
   switch (preset) {
     case Preset.Angular:
     case Preset.AngularWithNest: {
-      return Promise.resolve(angular);
-    }
-    case Preset.OSS:
-    case Preset.WebComponents:
-    case Preset.React:
-    case Preset.ReactWithExpress:
-    case Preset.NextJs:
-    case Preset.Nest: {
-      return Promise.resolve(nx);
+      return Promise.resolve('angular');
     }
     default: {
-      return inquirer
-        .prompt([
-          {
-            name: 'CLI',
-            message: `CLI to power the Nx workspace      `,
-            default: 'nx',
-            type: 'list',
-            choices: [
-              {
-                value: 'nx',
-                name:
-                  'Nx           [Recommended for all applications (React, Node, etc..)]',
-              },
-
-              {
-                value: 'angular',
-                name: 'Angular CLI  [Recommended for Angular only workspaces]',
-              },
-            ],
-          },
-        ])
-        .then((a: { CLI: string }) => (a.CLI === 'angular' ? angular : nx));
+      return Promise.resolve('nx');
     }
   }
 }
 
-function determineStyle(preset: Preset, parsedArgs: any) {
+function determineStyle(preset: Preset, parsedArgs: WorkspaceArgs) {
   if (
     preset === Preset.Empty ||
     preset === Preset.OSS ||
@@ -389,7 +349,7 @@ function determineStyle(preset: Preset, parsedArgs: any) {
   return Promise.resolve(parsedArgs.style);
 }
 
-function determineLinter(preset: Preset, parsedArgs: any) {
+function determineLinter(preset: Preset, parsedArgs: WorkspaceArgs) {
   if (!parsedArgs.linter) {
     if (preset === Preset.Angular || preset === Preset.AngularWithNest) {
       return inquirer
@@ -397,16 +357,16 @@ function determineLinter(preset: Preset, parsedArgs: any) {
           {
             name: 'linter',
             message: `Default linter                     `,
-            default: 'tslint',
+            default: 'eslint',
             type: 'list',
             choices: [
               {
-                value: 'tslint',
-                name: 'TSLint [ Used by Angular CLI ]',
-              },
-              {
                 value: 'eslint',
                 name: 'ESLint [ Modern linting tool ]',
+              },
+              {
+                value: 'tslint',
+                name: 'TSLint [ Used by Angular CLI. Deprecated. ]',
               },
             ],
           },
@@ -452,79 +412,39 @@ function createSandbox(packageManager: string) {
   return tmpDir;
 }
 
-function createApp(
-  tmpDir: string,
-  cli: { command: string },
-  parsedArgs: any,
-  name: string,
-  preset: Preset,
-  appName: string,
-  style: string | null,
-  linter: string,
-  nxCloud: boolean,
-  interactive: boolean,
-  defaultBase: string
-) {
-  const filterArgs = [
-    '_',
-    'app-name',
-    'appName',
-    'cli',
-    'default-base',
-    'defaultBase',
-    'interactive',
-    'nx-cloud',
-    'nxCloud',
-    'preset',
-    'style',
-    'linter',
-  ];
+function createApp(tmpDir: string, name: string, parsedArgs: WorkspaceArgs) {
+  const { _, cli, ...restArgs } = parsedArgs;
+  const args = unparse(restArgs).join(' ');
 
-  // These are the arguments that are passed to the schematic
-  const args = Object.keys(parsedArgs)
-    .filter((key) => !filterArgs.includes(key))
-    .map((key) => `--${key}=${parsedArgs[key]}`)
-    .join(' ');
-
-  const appNameArg = appName ? ` --appName="${appName}"` : ``;
-  const styleArg = style ? ` --style="${style}"` : ``;
-  const linterArg = ` --linter="${linter}"`;
-  const nxCloudArg = nxCloud ? ` --nxCloud` : ``;
-  const interactiveArg = interactive
-    ? ` --interactive=true`
-    : ` --interactive=false`;
-  const defaultBaseArg = defaultBase ? ` --defaultBase="${defaultBase}"` : ``;
-
-  const packageExec = getPackageManagerExecuteCommand(packageManager);
-  const command = `new ${name} ${args} --preset="${preset}"${appNameArg}${styleArg}${linterArg}${nxCloudArg}${interactiveArg}${defaultBaseArg} --collection=@nrwl/workspace`;
+  const pmc = getPackageManagerCommand(packageManager);
+  const command = `new ${name} ${args} --collection=@nrwl/workspace`;
   console.log(command);
 
-  const collectionJsonPath = require.resolve(
-    '@nrwl/workspace/collection.json',
-    { paths: [tmpDir] }
-  );
+  let nxWorkspaceRoot = process.cwd().replace(/\\/g, '/');
+  if (process.platform === 'win32') {
+    nxWorkspaceRoot = `\\"${nxWorkspaceRoot}\\"`;
+  } else {
+    nxWorkspaceRoot = `"${nxWorkspaceRoot}"`;
+  }
 
   execSync(
-    `${packageExec} tao ${command.replace(
-      '--collection=@nrwl/workspace',
-      `--collection=${collectionJsonPath}`
-    )} --cli=${cli.command} --nxWorkspaceRoot="${process.cwd()}"`,
+    `${pmc.exec} tao ${command}/collection.json --cli=${cli} --nxWorkspaceRoot=${nxWorkspaceRoot}`,
     {
       stdio: [0, 1, 2],
       cwd: tmpDir,
     }
   );
 
-  if (nxCloud) {
+  if (parsedArgs.nxCloud) {
     output.addVerticalSeparator();
-    execSync(`${packageExec} nx g @nrwl/nx-cloud:init --no-analytics`, {
+    execSync(`${pmc.exec} nx g @nrwl/nx-cloud:init --no-analytics`, {
       stdio: [0, 1, 2],
       cwd: path.join(process.cwd(), name),
     });
   }
 }
 
-async function askAboutNxCloud(parsedArgs: any) {
+async function askAboutNxCloud(parsedArgs: WorkspaceArgs) {
   if (parsedArgs.nxCloud === undefined) {
     return inquirer
       .prompt([
@@ -564,7 +484,7 @@ function pointToTutorialAndCourse(preset: Preset) {
         title: title,
         bodyLines: [
           `https://nx.dev/react/tutorial/01-create-application`,
-          ...pointToCourse(),
+          ...pointToFreeCourseOnEgghead(),
         ],
       });
       break;
@@ -575,28 +495,35 @@ function pointToTutorialAndCourse(preset: Preset) {
         title: title,
         bodyLines: [
           `https://nx.dev/angular/tutorial/01-create-application`,
-          ...pointToCourse(),
+          ...pointToFreeCourseOnYoutube(),
         ],
       });
       break;
-    // TODO(Cammisuli): include this after the nx.dev site is updated with the node flavour
-    // case Preset.Nest:
-    //   output.addVerticalSeparator();
-    //   output.note({
-    //     title,
-    //     bodyLines: [
-    //       `https://nx.dev/node/tutorial/01-create-application`,
-    //       ...pointToCourse(),
-    //     ],
-    //   });
-    //   break;
+    case Preset.Nest:
+      output.addVerticalSeparator();
+      output.note({
+        title,
+        bodyLines: [
+          `https://nx.dev/node/tutorial/01-create-application`,
+          ...pointToFreeCourseOnYoutube(),
+        ],
+      });
+      break;
   }
 }
 
-function pointToCourse(): string[] {
+function pointToFreeCourseOnYoutube(): string[] {
   return [
     ``,
     `Prefer watching videos? Check out this free Nx course on YouTube.`,
     `https://www.youtube.com/watch?v=2mYLe9Kp9VM&list=PLakNactNC1dH38AfqmwabvOszDmKriGco`,
+  ];
+}
+
+function pointToFreeCourseOnEgghead(): string[] {
+  return [
+    ``,
+    `Prefer watching videos? Check out this free Nx course on Egghead.io.`,
+    `https://egghead.io/playlists/scale-react-development-with-nx-4038`,
   ];
 }

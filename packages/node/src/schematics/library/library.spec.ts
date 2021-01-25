@@ -26,6 +26,7 @@ describe('lib', () => {
       });
       expect(workspaceJson.projects['my-lib'].architect.test).toEqual({
         builder: '@nrwl/jest:jest',
+        outputs: ['coverage/libs/my-lib'],
         options: {
           jestConfig: 'libs/my-lib/jest.config.js',
           passWithNoTests: true,
@@ -71,15 +72,21 @@ describe('lib', () => {
     it('should create a local tsconfig.json', async () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
       const tsconfigJson = readJsonInTree(tree, 'libs/my-lib/tsconfig.json');
-      expect(tsconfigJson.extends).toEqual('../../tsconfig.base.json');
-      expect(tsconfigJson.references).toEqual([
-        {
-          path: './tsconfig.lib.json',
-        },
-        {
-          path: './tsconfig.spec.json',
-        },
-      ]);
+      expect(tsconfigJson).toMatchInlineSnapshot(`
+        Object {
+          "extends": "../../tsconfig.base.json",
+          "files": Array [],
+          "include": Array [],
+          "references": Array [
+            Object {
+              "path": "./tsconfig.lib.json",
+            },
+            Object {
+              "path": "./tsconfig.spec.json",
+            },
+          ],
+        }
+      `);
     });
 
     it('should extend the local tsconfig.json with tsconfig.spec.json', async () => {
@@ -280,7 +287,24 @@ describe('lib', () => {
 
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
 
-      expect(workspaceJson.projects['my-lib'].architect.build).toBeDefined();
+      expect(workspaceJson.projects['my-lib'].architect.build)
+        .toMatchInlineSnapshot(`
+        Object {
+          "builder": "@nrwl/node:package",
+          "options": Object {
+            "assets": Array [
+              "libs/my-lib/*.md",
+            ],
+            "main": "libs/my-lib/src/index.ts",
+            "outputPath": "dist/libs/my-lib",
+            "packageJson": "libs/my-lib/package.json",
+            "tsConfig": "libs/my-lib/tsconfig.lib.json",
+          },
+          "outputs": Array [
+            "{options.outputPath}",
+          ],
+        }
+      `);
     });
   });
 
@@ -411,6 +435,104 @@ describe('lib', () => {
           ],
         }
       `);
+    });
+  });
+  describe('--js flag', () => {
+    it('should generate js files instead of ts files', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          js: true,
+        } as Schema,
+        appTree
+      );
+
+      expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/index.js')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.js')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.js')).toBeTruthy();
+
+      expect(
+        readJsonInTree(tree, 'libs/my-lib/tsconfig.json').compilerOptions
+      ).toEqual({
+        allowJs: true,
+      });
+      expect(
+        readJsonInTree(tree, 'libs/my-lib/tsconfig.lib.json').include
+      ).toEqual(['**/*.ts', '**/*.js']);
+      expect(
+        readJsonInTree(tree, 'libs/my-lib/tsconfig.lib.json').exclude
+      ).toEqual(['**/*.spec.ts', '**/*.spec.js']);
+    });
+
+    it('should update root tsconfig.json with a js file path', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', js: true } as Schema,
+        appTree
+      );
+      const tsconfigJson = readJsonInTree(tree, '/tsconfig.base.json');
+      expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
+        'libs/my-lib/src/index.js',
+      ]);
+    });
+
+    it('should update architect builder when --buildable', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', buildable: true, js: true } as Schema,
+        appTree
+      );
+      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+
+      expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
+
+      expect(
+        workspaceJson.projects['my-lib'].architect.build.options.main
+      ).toEqual('libs/my-lib/src/index.js');
+    });
+
+    it('should generate js files for nested libs as well', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', directory: 'myDir', js: true } as Schema,
+        appTree
+      );
+      expect(tree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
+      expect(tree.exists('libs/my-dir/my-lib/src/index.js')).toBeTruthy();
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.js')
+      ).toBeTruthy();
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-dir-my-lib.spec.js')
+      ).toBeTruthy();
+    });
+  });
+
+  describe('--pascalCaseFiles', () => {
+    it('should generate files with upper case names', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', pascalCaseFiles: true } as Schema,
+        appTree
+      );
+      expect(tree.exists('libs/my-lib/src/lib/MyLib.ts')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/src/lib/MyLib.spec.ts')).toBeTruthy();
+    });
+
+    it('should generate files with upper case names for nested libs as well', async () => {
+      const tree = await runSchematic(
+        'lib',
+        { name: 'myLib', directory: 'myDir', pascalCaseFiles: true } as Schema,
+        appTree
+      );
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/MyDirMyLib.ts')
+      ).toBeTruthy();
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/MyDirMyLib.spec.ts')
+      ).toBeTruthy();
     });
   });
 });

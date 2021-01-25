@@ -97,7 +97,7 @@ A utility library can depend only on utility libraries.
 
 An example ui lib module: **libs/shared/util-formatting**
 
-```ts
+```typescript
 export { formatDate, formatTime } from './src/format-date-fns';
 export { formatCurrency } from './src/format-currency';
 ```

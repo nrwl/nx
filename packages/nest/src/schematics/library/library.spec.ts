@@ -26,6 +26,7 @@ describe('lib', () => {
       });
       expect(workspaceJson.projects['my-lib'].architect.test).toEqual({
         builder: '@nrwl/jest:jest',
+        outputs: ['coverage/libs/my-lib'],
         options: {
           jestConfig: 'libs/my-lib/jest.config.js',
           passWithNoTests: true,
@@ -316,6 +317,55 @@ describe('lib', () => {
           ],
         }
       `);
+    });
+  });
+
+  describe('--strict', () => {
+    it('should update the projects tsconfig with strict true', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          strict: true,
+        },
+        appTree
+      );
+      const tsconfigJson = readJsonInTree(
+        tree,
+        '/libs/my-lib/tsconfig.lib.json'
+      );
+
+      expect(tsconfigJson.compilerOptions.strict).toBeTruthy();
+      expect(
+        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
+      ).toBeTruthy();
+      expect(tsconfigJson.compilerOptions.noImplicitReturns).toBeTruthy();
+      expect(
+        tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
+      ).toBeTruthy();
+    });
+
+    it('should default to strict false', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+        },
+        appTree
+      );
+      const tsconfigJson = readJsonInTree(
+        tree,
+        '/libs/my-lib/tsconfig.lib.json'
+      );
+
+      expect(tsconfigJson.compilerOptions.strict).not.toBeDefined();
+      expect(
+        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
+      ).not.toBeDefined();
+      expect(tsconfigJson.compilerOptions.noImplicitReturns).not.toBeDefined();
+      expect(
+        tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
+      ).not.toBeDefined();
     });
   });
 

@@ -26,4 +26,6 @@ export interface Schema {
 
   linter: Linter;
   unitTestRunner: UnitTestRunner;
+
+  enableIvy: boolean;
 }

@@ -1,0 +1,55 @@
+name: E2E matrix
+
+on:
+  schedule:
+  - cron: "0 0 * * *"
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node_version:
+          # - 12.x
+          - 14.x
+          - 15.x
+        package_manager:
+          - npm
+          - yarn
+          - pnpm
+        packages:
+          - e2e-workspace
+          - e2e-cli,e2e-nx-plugin,dep-graph-client-e2e
+          - e2e-cypress,e2e-jest
+          - e2e-react
+          - e2e-next
+          - e2e-node
+          - e2e-web,e2e-linter,e2e-storybook
+          - e2e-angular
+      fail-fast: false
+
+    name: Node v${{ matrix.node_version }} (${{ matrix.package_manager }}) - ${{ matrix.packages }}
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Install dependencies
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: yarn install
+
+    - name: Install PNPM
+      if: ${{ matrix.package_manager == 'pnpm' }}
+      uses: pnpm/action-setup@v1.2.1
+      with:
+        version: latest
+
+    - name: Run e2e tests
+      run: yarn e2e ${{ matrix.packages }} affected
+      env:
+        NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.node_version }}-${{ matrix.package_manager }}
+        NODE_OPTIONS: --max_old_space_size=8192
+        SELECTED_PM: ${{ matrix.package_manager }}
+        SELECTED_CLI: ${{ matrix.packages == 'e2e-angular' && 'angular' || 'nx' }}
