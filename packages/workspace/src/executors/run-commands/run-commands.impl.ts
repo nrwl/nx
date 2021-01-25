@@ -218,7 +218,7 @@ function transformCommand(
 ) {
   if (command.indexOf('{args.') > -1) {
     const regex = /{args\.([^}]+)}/g;
-    return command.replace(regex, (_, group: string) => args[group]);
+    return command.replace(regex, (_, group: string) => args[camelCase(group)]);
   } else if (Object.keys(args).length > 0 && forwardAllArgs) {
     const stringifiedArgs = Object.keys(args)
       .map((a) => `--${a}=${args[a]}`)
@@ -234,21 +234,20 @@ function parseArgs(options: RunCommandsBuilderOptions) {
   if (!args) {
     const unknownOptionsTreatedAsArgs = Object.keys(options)
       .filter((p) => propKeys.indexOf(p) === -1)
-      .reduce((m, c) => ((m[c] = options[c]), m), {});
+      .reduce((m, c) => ((m[camelCase(c)] = options[c]), m), {});
     return unknownOptionsTreatedAsArgs;
   }
-  return args
-    .split(' ')
-    .map((t) => t.trim())
-    .reduce((m, c) => {
-      if (!c.startsWith('--')) {
-        throw new Error(`Invalid args: ${args}`);
-      }
-      const [key, value] = c.substring(2).split('=');
-      if (!key || !value) {
-        throw new Error(`Invalid args: ${args}`);
-      }
-      m[key] = value;
-      return m;
-    }, {});
+  return yargsParser(args.replace(/(^"|"$)/g, ''), {
+    configuration: { 'camel-case-expansion': true },
+  });
+}
+
+function camelCase(input) {
+  if (input.indexOf('-') > 1) {
+    return input
+      .toLowerCase()
+      .replace(/-(.)/g, (match, group1) => group1.toUpperCase());
+  } else {
+    return input;
+  }
 }
