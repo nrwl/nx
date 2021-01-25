@@ -30,6 +30,8 @@ import { FileData, FileRead } from '../core/file-utils';
 import { extname, join, normalize, Path } from '@angular-devkit/core';
 import { NxJson, NxJsonProjectConfig } from '../core/shared-interfaces';
 import { addInstallTask } from './rules/add-install-task';
+import { findNodes } from '../utilities/typescript/find-nodes';
+import { getSourceNodes } from '../utilities/typescript/get-source-nodes';
 
 function nodesByPosition(first: ts.Node, second: ts.Node): number {
   return first.getStart() - second.getStart();
@@ -71,58 +73,8 @@ export function sortObjectByKeys(obj: unknown) {
     }, {});
 }
 
-export function findNodes(
-  node: ts.Node,
-  kind: ts.SyntaxKind | ts.SyntaxKind[],
-  max = Infinity
-): ts.Node[] {
-  if (!node || max == 0) {
-    return [];
-  }
-
-  const arr: ts.Node[] = [];
-  const hasMatch = Array.isArray(kind)
-    ? kind.includes(node.kind)
-    : node.kind === kind;
-  if (hasMatch) {
-    arr.push(node);
-    max--;
-  }
-  if (max > 0) {
-    for (const child of node.getChildren()) {
-      findNodes(child, kind, max).forEach((node) => {
-        if (max > 0) {
-          arr.push(node);
-        }
-        max--;
-      });
-
-      if (max <= 0) {
-        break;
-      }
-    }
-  }
-
-  return arr;
-}
-
-export function getSourceNodes(sourceFile: ts.SourceFile): ts.Node[] {
-  const nodes: ts.Node[] = [sourceFile];
-  const result = [];
-
-  while (nodes.length > 0) {
-    const node = nodes.shift();
-
-    if (node) {
-      result.push(node);
-      if (node.getChildCount(sourceFile) >= 0) {
-        nodes.unshift(...node.getChildren());
-      }
-    }
-  }
-
-  return result;
-}
+export { findNodes } from '../utilities/typescript/find-nodes';
+export { getSourceNodes } from '../utilities/typescript/get-source-nodes';
 
 export interface Change {
   apply(host: any): Promise<void>;

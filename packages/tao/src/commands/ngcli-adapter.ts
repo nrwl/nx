@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-imports */
 import { Architect, BuilderOutput } from '@angular-devkit/architect';
 import { WorkspaceNodeModulesArchitectHost } from '@angular-devkit/architect/node';
 import {

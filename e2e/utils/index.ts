@@ -479,6 +479,7 @@ export function getPackageManagerCommand({
   runNx: string;
   runNxSilent: string;
   addDev: string;
+  list: string;
 } {
   const scriptsPrependNodePathFlag = scriptsPrependNodePath
     ? ' --scripts-prepend-node-path '
@@ -490,6 +491,7 @@ export function getPackageManagerCommand({
       runNx: `npm run nx${scriptsPrependNodePathFlag} --`,
       runNxSilent: `npm run nx --silent${scriptsPrependNodePathFlag} --`,
       addDev: `npm install -D`,
+      list: 'npm ls --depth 10',
     },
     yarn: {
       // `yarn create nx-workspace` is failing due to wrong global path
@@ -497,12 +499,20 @@ export function getPackageManagerCommand({
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
       addDev: `yarn add -D`,
+      list: 'npm ls --depth 10',
     },
     pnpm: {
       createWorkspace: `pnpx create-nx-workspace@${process.env.PUBLISHED_VERSION}`,
       runNx: `pnpm run nx --`,
       runNxSilent: `pnpm run nx --silent --`,
       addDev: `pnpm add -D`,
+      list: 'npm ls --depth 10',
     },
   }[packageManager];
+}
+
+export function expectNoAngularDevkit() {
+  const { list } = getPackageManagerCommand();
+  const result = runCommand(`${list} @angular-devkit/core`);
+  expect(result).not.toContain('@angular-devkit/core');
 }

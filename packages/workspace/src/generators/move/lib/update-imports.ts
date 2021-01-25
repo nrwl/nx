@@ -1,4 +1,3 @@
-import { findNodes, serializeJson } from '@nrwl/workspace';
 import {
   applyChangesToString,
   ChangeType,
@@ -8,7 +7,9 @@ import {
   StringChange,
   Tree,
   visitNotIgnoredFiles,
+  writeJson,
 } from '@nrwl/devkit';
+import { findNodes } from '../../../utilities/typescript/find-nodes';
 import * as ts from 'typescript';
 import { Schema } from '../schema';
 import { normalizeSlashes } from './utils';
@@ -101,7 +102,7 @@ export function updateImports(
       tsConfig.compilerOptions.paths[projectRef.from] = updatedPath;
     }
 
-    tree.write(tsConfigPath, serializeJson(tsConfig));
+    writeJson(tree, tsConfigPath, tsConfig);
   }
 }
 

@@ -6,7 +6,6 @@ import {
   ExecutorContext,
   Workspaces,
 } from '@nrwl/tao/src/shared/workspace';
-import { BuilderContext } from '@angular-devkit/architect';
 
 /**
  * Convert an Nx Executor into an Angular Devkit Builder
@@ -14,7 +13,7 @@ import { BuilderContext } from '@angular-devkit/architect';
  * Use this to expose a compatible Angular Builder
  */
 export function convertNxExecutor(executor: Executor) {
-  const builderFunction = (options, builderContext: BuilderContext) => {
+  const builderFunction = (options, builderContext) => {
     const workspaceConfig = new Workspaces(
       builderContext.workspaceRoot
     ).readWorkspaceConfiguration();

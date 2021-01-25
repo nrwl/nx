@@ -5,6 +5,7 @@ import {
   convertNxGenerator,
   names,
   writeJson,
+  formatFiles,
 } from '@nrwl/devkit';
 import { Schema } from './schema';
 import {
@@ -74,7 +75,7 @@ function createPrettierrc(host: Tree) {
   writeJson(host, '.prettierrc', DEFAULT_NRWL_PRETTIER_CONFIG);
 }
 
-export function workspaceGenerator(host: Tree, options: Schema) {
+export async function workspaceGenerator(host: Tree, options: Schema) {
   if (!options.name) {
     throw new Error(`Invalid options, "name" is required.`);
   }
@@ -85,6 +86,8 @@ export function workspaceGenerator(host: Tree, options: Schema) {
   }
   setWorkspaceLayoutProperties(host, options);
   createAppsAndLibsFolders(host, options);
+
+  await formatFiles(host);
 }
 
 export const workspaceSchematic = convertNxGenerator(workspaceGenerator);

@@ -1,6 +1,7 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  expectNoAngularDevkit,
   readJson,
   runCreateWorkspace,
   tmpProjPath,
@@ -28,6 +29,8 @@ describe('create-nx-workspace', () => {
       'libs/.gitkeep'
     );
     checkFilesDoNotExist('yarn.lock');
+
+    expectNoAngularDevkit();
   });
 
   it('should be able to create an oss workspace', () => {
