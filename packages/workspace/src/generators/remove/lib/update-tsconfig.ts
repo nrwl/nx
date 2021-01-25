@@ -1,10 +1,9 @@
 import {
+  getWorkspaceLayout,
   ProjectConfiguration,
   Tree,
   updateJson,
-  getWorkspaceLayout,
 } from '@nrwl/devkit';
-import { NxJson, readJsonInTree } from '@nrwl/workspace';
 import { Schema } from '../schema';
 
 /**

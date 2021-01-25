@@ -11,7 +11,7 @@ describe('@nrwl/workspace:workspace', () => {
   });
 
   it('should create files', async () => {
-    workspaceGenerator(tree, {
+    await workspaceGenerator(tree, {
       name: 'proj',
       cli: 'nx',
       layout: 'apps-and-libs',
@@ -24,7 +24,7 @@ describe('@nrwl/workspace:workspace', () => {
   });
 
   it('should create nx.json', async () => {
-    workspaceGenerator(tree, {
+    await workspaceGenerator(tree, {
       name: 'proj',
       cli: 'nx',
       layout: 'apps-and-libs',
@@ -60,7 +60,7 @@ describe('@nrwl/workspace:workspace', () => {
   });
 
   it('should create a prettierrc file', async () => {
-    workspaceGenerator(tree, {
+    await workspaceGenerator(tree, {
       name: 'proj',
       cli: 'nx',
       layout: 'apps-and-libs',
@@ -70,7 +70,7 @@ describe('@nrwl/workspace:workspace', () => {
   });
 
   it('should recommend vscode extensions', async () => {
-    workspaceGenerator(tree, {
+    await workspaceGenerator(tree, {
       name: 'proj',
       cli: 'nx',
       layout: 'apps-and-libs',
@@ -88,7 +88,7 @@ describe('@nrwl/workspace:workspace', () => {
   });
 
   it('should recommend vscode extensions (angular)', async () => {
-    workspaceGenerator(tree, {
+    await workspaceGenerator(tree, {
       name: 'proj',
       cli: 'angular',
       layout: 'apps-and-libs',
@@ -108,7 +108,7 @@ describe('@nrwl/workspace:workspace', () => {
   });
 
   it('should add decorate-angular-cli when used with angular cli', async () => {
-    workspaceGenerator(tree, {
+    await workspaceGenerator(tree, {
       name: 'proj',
       cli: 'angular',
       layout: 'apps-and-libs',
@@ -122,7 +122,7 @@ describe('@nrwl/workspace:workspace', () => {
   });
 
   it('should not add decorate-angular-cli when used with nx cli', async () => {
-    workspaceGenerator(tree, {
+    await workspaceGenerator(tree, {
       name: 'proj',
       cli: 'nx',
       layout: 'apps-and-libs',
@@ -134,7 +134,7 @@ describe('@nrwl/workspace:workspace', () => {
   });
 
   it('should create a workspace using package layout', async () => {
-    workspaceGenerator(tree, {
+    await workspaceGenerator(tree, {
       name: 'proj',
       cli: 'nx',
       layout: 'packages',

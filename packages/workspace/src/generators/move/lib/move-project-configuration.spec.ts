@@ -5,7 +5,7 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { NxJson } from '@nrwl/workspace';
+import { NxJson } from '../../../core/shared-interfaces';
 import { Schema } from '../schema';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { moveProjectConfiguration } from '@nrwl/workspace/src/generators/move/lib/move-project-configuration';

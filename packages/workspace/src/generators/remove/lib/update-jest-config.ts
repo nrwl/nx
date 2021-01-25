@@ -4,7 +4,7 @@ import {
   ProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
-import { getSourceNodes } from '@nrwl/workspace/src/utils/ast-utils';
+import { getSourceNodes } from '../../../utilities/typescript/get-source-nodes';
 
 import { Schema } from '../schema';
 import {

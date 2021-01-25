@@ -1,7 +1,7 @@
 import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
-import { Linter } from '@nrwl/workspace';
+import { Linter } from '../../../utils/lint';
 
 import { Schema } from '../schema';
 import { updateEslintrcJson } from './update-eslintrc-json';
