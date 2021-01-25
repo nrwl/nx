@@ -51,14 +51,31 @@ describe('Run Commands', () => {
     config.projects[myapp].targets.echo = {
       executor: '@nrwl/workspace:run-commands',
       options: {
-        commands: [`echo 'print: {args.var1}'`, `echo 'print: {args.var2}'`],
+        commands: [
+          `echo 'var1: {args.var1}'`,
+          `echo 'var2: {args.var2}'`,
+          `echo 'hyphen: {args.var-hyphen}'`,
+          `echo 'camel: {args.varCamelCase}'`,
+        ],
       },
     };
     updateFile(workspaceConfigName(), JSON.stringify(config));
 
-    const result = runCLI(`run ${myapp}:echo --var1=x --var2=y`);
-    expect(result).toContain('print: x');
-    expect(result).toContain('print: y');
+    const result = runCLI(
+      `run ${myapp}:echo --var1=a --var2=b --var-hyphen=c --varCamelCase=d`
+    );
+    expect(result).toContain('var1: a');
+    expect(result).toContain('var2: b');
+    expect(result).toContain('hyphen: c');
+    expect(result).toContain('camel: d');
+
+    const resultArgs = runCLI(
+      `run ${myapp}:echo --args="--var1=a --var2=b --var-hyphen=c --varCamelCase=d"`
+    );
+    expect(resultArgs).toContain('var1: a');
+    expect(resultArgs).toContain('var2: b');
+    expect(resultArgs).toContain('hyphen: c');
+    expect(resultArgs).toContain('camel: d');
     done();
   }, 120000);
 
