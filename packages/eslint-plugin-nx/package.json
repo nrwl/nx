@@ -31,7 +31,7 @@
     "@typescript-eslint/parser": "^4.3.0"
   },
   "dependencies": {
-    "@angular-devkit/core": "~11.0.1",
+    "@nrwl/devkit": "*",
     "@typescript-eslint/experimental-utils": "^4.3.0",
     "confusing-browser-globals": "^1.0.9"
   }

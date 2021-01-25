@@ -15,7 +15,7 @@ import {
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import { TSESTree } from '@typescript-eslint/experimental-utils';
 import { createESLintRule } from '../utils/create-eslint-rule';
-import { normalize } from '@angular-devkit/core';
+import { normalizePath } from '@nrwl/devkit';
 import {
   createProjectGraph,
   isNpmProject,
@@ -99,7 +99,9 @@ export default createESLintRule<Options, MessageIds>({
     /**
      * Globally cached info about workspace
      */
-    const projectPath = normalize((global as any).projectPath || appRootPath);
+    const projectPath = normalizePath(
+      (global as any).projectPath || appRootPath
+    );
     if (!(global as any).projectGraph) {
       const workspaceJson = readWorkspaceJson();
       const nxJson = readNxJson();
@@ -122,7 +124,7 @@ export default createESLintRule<Options, MessageIds>({
         const imp = (node.source as TSESTree.Literal).value as string;
 
         const sourceFilePath = getSourceFilePath(
-          normalize(context.getFilename()),
+          normalizePath(context.getFilename()),
           projectPath
         );
 
