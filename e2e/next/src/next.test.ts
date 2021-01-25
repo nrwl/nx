@@ -259,12 +259,29 @@ describe('Next.js Applications', () => {
     runCLI(
       `generate @nrwl/next:app ${appName} --no-interactive --style=@emotion/styled`
     );
-
     updateFile(`apps/${appName}/public/a/b.txt`, `Hello World!`);
+
+    // Shared assets
+    const sharedLib = uniq('sharedLib');
+    updateFile('workspace.json', (c) => {
+      const json = JSON.parse(c);
+      json.projects[appName].targets.build.options.assets = [
+        {
+          glob: '**/*',
+          input: `libs/${sharedLib}/src/assets`,
+          output: 'shared/ui',
+        },
+      ];
+      return JSON.stringify(json, null, 2);
+    });
+    updateFile(`libs/${sharedLib}/src/assets/hello.txt`, 'Hello World!');
 
     runCLI(`build ${appName}`);
 
-    checkFilesExist(`dist/apps/${appName}/public/a/b.txt`);
+    checkFilesExist(
+      `dist/apps/${appName}/public/a/b.txt`,
+      `dist/apps/${appName}/public/shared/ui/hello.txt`
+    );
   }, 120000);
 
   it('should build with a next.config.js file in the dist folder', async () => {

@@ -26,11 +26,10 @@ import {
   DependentBuildableProjectNode,
   updateBuildableProjectPackageJsonDependencies,
 } from '@nrwl/workspace/src/utils/buildable-libs-utils';
-import { PackageBuilderOptions } from '../../utils/types';
+import { AssetGlobPattern, PackageBuilderOptions } from '../../utils/types';
 import { runRollup } from './run-rollup';
 import {
   NormalizedBundleBuilderOptions,
-  NormalizedCopyAssetOption,
   normalizePackageOptions,
 } from '../../utils/normalize';
 import { getSourceRoot } from '../../utils/source-root';
@@ -299,7 +298,7 @@ interface RollupCopyAssetOption {
 
 function convertCopyAssetsToRollupOptions(
   outputPath: string,
-  assets: NormalizedCopyAssetOption[]
+  assets: AssetGlobPattern[]
 ): RollupCopyAssetOption[] {
   return assets
     ? assets.map((a) => ({

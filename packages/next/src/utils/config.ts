@@ -10,17 +10,27 @@ import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration } from 'webpack';
 import { FileReplacement, NextBuildBuilderOptions } from './types';
 import { BuilderContext } from '@angular-devkit/architect';
-import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import { offsetFromRoot } from '@nrwl/devkit';
+import { normalizeAssets } from '@nrwl/web/src/utils/normalize';
+import { createCopyPlugin } from '@nrwl/web/src/utils/config';
 
 export function createWebpackConfig(
   workspaceRoot: string,
   projectRoot: string,
-  fileReplacements: FileReplacement[] = []
+  fileReplacements: FileReplacement[] = [],
+  assets: any = null
 ): (a, b) => Configuration {
   return function webpackConfig(
     config: Configuration,
-    { defaultLoaders }
+    {
+      isServer,
+      defaultLoaders,
+    }: {
+      buildId: string;
+      dev: boolean;
+      isServer: boolean;
+      defaultLoaders: any;
+    }
   ): Configuration {
     const mainFields = ['es2015', 'module', 'main'];
     const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
@@ -89,6 +99,18 @@ export function createWebpackConfig(
       }
     );
 
+    // Copy (shared) assets to `public` folder during client-side compilation
+    if (!isServer && Array.isArray(assets) && assets.length > 0) {
+      config.plugins.push(
+        createCopyPlugin(
+          normalizeAssets(assets, workspaceRoot, projectRoot).map((asset) => ({
+            ...asset,
+            output: join('../public', asset.output),
+          }))
+        )
+      );
+    }
+
     return config;
   };
 }
@@ -114,7 +136,8 @@ export function prepareConfig(
     createWebpackConfig(
       context.workspaceRoot,
       options.root,
-      options.fileReplacements
+      options.fileReplacements,
+      options.assets
     )(userWebpack ? userWebpack(a, b) : a, b);
   return userNextConfig(phase, config, { options });
 }
