@@ -418,7 +418,7 @@ export function convertSmartDefaultsIntoNamedParams(
       v.visible === false &&
       relativeCwd
     ) {
-      opts[k] = relativeCwd;
+      opts[k] = relativeCwd.replace(/\\/g, '/');
     }
   });
   delete opts['_'];

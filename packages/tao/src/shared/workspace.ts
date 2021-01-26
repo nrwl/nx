@@ -193,14 +193,7 @@ export class Workspaces {
   constructor(private root: string) {}
 
   relativeCwd(cwd: string) {
-    let relativeCwd = cwd.replace(/\\/g, '/').split(this.root)[1];
-    if (relativeCwd) {
-      return relativeCwd.startsWith('/')
-        ? relativeCwd.substring(1)
-        : relativeCwd;
-    } else {
-      return null;
-    }
+    return path.relative(this.root, cwd) || null;
   }
 
   calculateDefaultProjectName(cwd: string, wc: WorkspaceConfiguration) {
