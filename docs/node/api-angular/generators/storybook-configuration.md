@@ -44,7 +44,7 @@ Automatically generate \*.stories.ts files for components declared in this libra
 
 ### linter
 
-Default: `tslint`
+Default: `eslint`
 
 Type: `string`
 
