@@ -1,6 +1,9 @@
-import * as path from 'path';
-
-import { ProjectConfiguration, Tree, getWorkspaceLayout } from '@nrwl/devkit';
+import {
+  getWorkspaceLayout,
+  joinPathFragments,
+  ProjectConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 
 import { Schema } from '../schema';
 
@@ -10,9 +13,6 @@ import { Schema } from '../schema';
  *
  * This will break if someone isn't using the default libs/apps
  * folders. In that case, they're on their own :/
- *
- * @param schema
- * @param workspace
  */
 export function getDestination(
   host: Tree,
@@ -27,7 +27,7 @@ export function getDestination(
   if (projectType === 'application') {
     rootFolder = workspaceLayout.appsDir;
   }
-  return path.join(rootFolder, schema.destination);
+  return joinPathFragments(rootFolder, schema.destination);
 }
 
 /**

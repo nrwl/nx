@@ -10,6 +10,7 @@ import {
   formatFiles,
   updateJson,
   GeneratorCallback,
+  joinPathFragments,
 } from '@nrwl/devkit';
 import { join } from 'path';
 import { Schema } from './schema';
@@ -29,7 +30,7 @@ export interface NormalizedSchema extends Schema {
 function addProject(tree: Tree, options: NormalizedSchema) {
   addProjectConfiguration(tree, options.name, {
     root: options.projectRoot,
-    sourceRoot: join(options.projectRoot, 'src'),
+    sourceRoot: joinPathFragments(options.projectRoot, 'src'),
     projectType: 'library',
     targets: {},
     tags: options.parsedTags,
