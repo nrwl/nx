@@ -51,7 +51,7 @@
     },
     "cypress": {
       "tags": [],
-      "implicitDependencies": ["workspace"]
+      "implicitDependencies": ["workspace", "linter"]
     },
     "jest": {
       "tags": [],

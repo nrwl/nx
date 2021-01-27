@@ -1,23 +1,26 @@
-import { Tree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { runSchematic } from '../../utils/testing';
-import { readJsonInTree, Linter, NxJson } from '@nrwl/workspace';
+import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { cypressProjectGenerator } from './cypress-project';
+import { Schema } from './schema';
+import { Linter } from '@nrwl/linter';
 
 describe('schematic:cypress-project', () => {
-  let appTree: Tree;
+  let tree: Tree;
+  const defaultOptions: Omit<Schema, 'name' | 'project'> = {
+    linter: Linter.EsLint,
+  };
 
   beforeEach(() => {
-    appTree = Tree.empty();
-    appTree = createEmptyWorkspace(appTree);
+    tree = createTreeWithEmptyWorkspace();
   });
 
   describe('Cypress Project', () => {
     it('should generate files', async () => {
-      const tree = await runSchematic(
-        'cypress-project',
-        { name: 'my-app-e2e', project: 'my-app' },
-        appTree
-      );
+      await cypressProjectGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-app-e2e',
+        project: 'my-app',
+      });
 
       expect(tree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
       expect(tree.exists('apps/my-app-e2e/tsconfig.e2e.json')).toBeTruthy();
@@ -37,12 +40,12 @@ describe('schematic:cypress-project', () => {
     });
 
     it('should add update `workspace.json` file', async () => {
-      const tree = await runSchematic(
-        'cypress-project',
-        { name: 'my-app-e2e', project: 'my-app', linter: Linter.TsLint },
-        appTree
-      );
-      const workspaceJson = readJsonInTree(tree, 'workspace.json');
+      await cypressProjectGenerator(tree, {
+        name: 'my-app-e2e',
+        project: 'my-app',
+        linter: Linter.TsLint,
+      });
+      const workspaceJson = readJson(tree, 'workspace.json');
       const project = workspaceJson.projects['my-app-e2e'];
 
       expect(project.root).toEqual('apps/my-app-e2e');
@@ -70,12 +73,12 @@ describe('schematic:cypress-project', () => {
     });
 
     it('should add update `workspace.json` file properly when eslint is passed', async () => {
-      const tree = await runSchematic(
-        'cypress-project',
-        { name: 'my-app-e2e', project: 'my-app', linter: Linter.EsLint },
-        appTree
-      );
-      const workspaceJson = readJsonInTree(tree, 'workspace.json');
+      await cypressProjectGenerator(tree, {
+        name: 'my-app-e2e',
+        project: 'my-app',
+        linter: Linter.EsLint,
+      });
+      const workspaceJson = readJson(tree, 'workspace.json');
       const project = workspaceJson.projects['my-app-e2e'];
 
       expect(project.architect.lint).toEqual({
@@ -87,26 +90,24 @@ describe('schematic:cypress-project', () => {
     });
 
     it('should update nx.json', async () => {
-      const tree = await runSchematic(
-        'cypress-project',
-        { name: 'my-app-e2e', project: 'my-app', linter: Linter.EsLint },
-        appTree
-      );
-
-      const nxJson = readJsonInTree<NxJson>(tree, 'nx.json');
-      expect(nxJson.projects['my-app-e2e']).toEqual({
-        tags: [],
-        implicitDependencies: ['my-app'],
+      await cypressProjectGenerator(tree, {
+        name: 'my-app-e2e',
+        project: 'my-app',
+        linter: Linter.EsLint,
       });
+
+      const project = readProjectConfiguration(tree, 'my-app-e2e');
+      expect(project.tags).toEqual([]);
+      expect(project.implicitDependencies).toEqual(['my-app']);
     });
 
     it('should set right path names in `cypress.json`', async () => {
-      const tree = await runSchematic(
-        'cypress-project',
-        { name: 'my-app-e2e', project: 'my-app' },
-        appTree
-      );
-      const cypressJson = readJsonInTree(tree, 'apps/my-app-e2e/cypress.json');
+      await cypressProjectGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-app-e2e',
+        project: 'my-app',
+      });
+      const cypressJson = readJson(tree, 'apps/my-app-e2e/cypress.json');
 
       expect(cypressJson).toEqual({
         fileServerFolder: '.',
@@ -123,15 +124,12 @@ describe('schematic:cypress-project', () => {
     });
 
     it('should set right path names in `tsconfig.e2e.json`', async () => {
-      const tree = await runSchematic(
-        'cypress-project',
-        { name: 'my-app-e2e', project: 'my-app' },
-        appTree
-      );
-      const tsconfigJson = readJsonInTree(
-        tree,
-        'apps/my-app-e2e/tsconfig.e2e.json'
-      );
+      await cypressProjectGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-app-e2e',
+        project: 'my-app',
+      });
+      const tsconfigJson = readJson(tree, 'apps/my-app-e2e/tsconfig.e2e.json');
 
       expect(tsconfigJson.extends).toEqual('./tsconfig.json');
       expect(tsconfigJson.compilerOptions.outDir).toEqual('../../dist/out-tsc');
@@ -139,17 +137,13 @@ describe('schematic:cypress-project', () => {
 
     describe('nested', () => {
       it('should update workspace.json', async () => {
-        const tree = await runSchematic(
-          'cypress-project',
-          {
-            name: 'my-app-e2e',
-            project: 'my-dir-my-app',
-            directory: 'my-dir',
-            linter: Linter.TsLint,
-          },
-          appTree
-        );
-        const projectConfig = readJsonInTree(tree, 'workspace.json').projects[
+        await cypressProjectGenerator(tree, {
+          name: 'my-app-e2e',
+          project: 'my-dir-my-app',
+          directory: 'my-dir',
+          linter: Linter.TsLint,
+        });
+        const projectConfig = readJson(tree, 'workspace.json').projects[
           'my-dir-my-app-e2e'
         ];
 
@@ -178,12 +172,13 @@ describe('schematic:cypress-project', () => {
       });
 
       it('should set right path names in `cypress.json`', async () => {
-        const tree = await runSchematic(
-          'cypress-project',
-          { name: 'my-app-e2e', project: 'my-dir-my-app', directory: 'my-dir' },
-          appTree
-        );
-        const cypressJson = readJsonInTree(
+        await cypressProjectGenerator(tree, {
+          ...defaultOptions,
+          name: 'my-app-e2e',
+          project: 'my-dir-my-app',
+          directory: 'my-dir',
+        });
+        const cypressJson = readJson(
           tree,
           'apps/my-dir/my-app-e2e/cypress.json'
         );
@@ -204,12 +199,13 @@ describe('schematic:cypress-project', () => {
       });
 
       it('should set right path names in `tsconfig.e2e.json`', async () => {
-        const tree = await runSchematic(
-          'cypress-project',
-          { name: 'my-app-e2e', project: 'my-dir-my-app', directory: 'my-dir' },
-          appTree
-        );
-        const tsconfigJson = readJsonInTree(
+        await cypressProjectGenerator(tree, {
+          ...defaultOptions,
+          name: 'my-app-e2e',
+          project: 'my-dir-my-app',
+          directory: 'my-dir',
+        });
+        const tsconfigJson = readJson(
           tree,
           'apps/my-dir/my-app-e2e/tsconfig.e2e.json'
         );
@@ -223,13 +219,12 @@ describe('schematic:cypress-project', () => {
     describe('--project', () => {
       describe('none', () => {
         it('should not add any implicit dependencies', async () => {
-          const tree = await runSchematic(
-            'cypress-project',
-            { name: 'my-app-e2e' },
-            appTree
-          );
+          await cypressProjectGenerator(tree, {
+            ...defaultOptions,
+            name: 'my-app-e2e',
+          });
 
-          const nxJson = readJsonInTree(tree, 'nx.json');
+          const nxJson = readJson(tree, 'nx.json');
           expect(nxJson.projects['my-app-e2e']).toEqual({ tags: [] });
         });
       });
@@ -238,16 +233,13 @@ describe('schematic:cypress-project', () => {
     describe('--linter', () => {
       describe('eslint', () => {
         it('should add eslint-plugin-cypress', async () => {
-          const tree = await runSchematic(
-            'cypress-project',
-            { name: 'my-app-e2e', project: 'my-app', linter: Linter.EsLint },
-            appTree
-          );
-          const packageJson = readJsonInTree(tree, 'package.json');
-          const eslintrcJson = readJsonInTree(
-            tree,
-            'apps/my-app-e2e/.eslintrc.json'
-          );
+          await cypressProjectGenerator(tree, {
+            name: 'my-app-e2e',
+            project: 'my-app',
+            linter: Linter.EsLint,
+          });
+          const packageJson = readJson(tree, 'package.json');
+          const eslintrcJson = readJson(tree, 'apps/my-app-e2e/.eslintrc.json');
 
           expect(
             packageJson.devDependencies['eslint-plugin-cypress']
