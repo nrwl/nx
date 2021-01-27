@@ -10,6 +10,7 @@ import {
   eslintVersion,
   typescriptESLintVersion,
   tslintVersion,
+  buildAngularVersion,
 } from '../../utils/versions';
 import { Linter } from '../utils/linter';
 
@@ -160,6 +161,7 @@ function initTsLint(tree: Tree) {
     {},
     {
       tslint: tslintVersion,
+      '@angular-devkit/build-angular': buildAngularVersion,
     }
   );
 }

@@ -11,6 +11,8 @@ import {
   typescriptESLintVersion,
   eslintConfigPrettierVersion,
   nxVersion,
+  tslintVersion,
+  buildAngularVersion,
 } from './versions';
 import { offsetFromRoot } from '@nrwl/devkit';
 
@@ -87,6 +89,16 @@ export function addLintFiles(
           );
         }
       });
+
+      chainedCommands.push(
+        addDepsToPackageJson(
+          {},
+          {
+            tslint: tslintVersion,
+            '@angular-devkit/build-angular': buildAngularVersion,
+          }
+        )
+      );
 
       return chain(chainedCommands);
     }

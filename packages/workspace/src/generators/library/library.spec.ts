@@ -34,12 +34,6 @@ describe('lib', () => {
 
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(workspaceJson.projects['my-lib'].architect.build).toBeUndefined();
-      expect(workspaceJson.projects['my-lib'].architect.lint).toEqual({
-        builder: '@nrwl/linter:eslint',
-        options: {
-          lintFilePatterns: ['libs/my-lib/**/*.ts'],
-        },
-      });
     });
 
     it('should update nx.json', async () => {
@@ -269,16 +263,129 @@ describe('lib', () => {
         },
       ]);
     });
+  });
 
-    it('should create a local .eslintrc.json', async () => {
-      await libraryGenerator(tree, {
-        ...defaultOptions,
-        name: 'myLib',
-        directory: 'myDir',
+  describe('--linter', () => {
+    describe('eslint', () => {
+      it('should add eslint dependencies', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+        });
+
+        const packageJson = readJson(tree, 'package.json');
+        expect(packageJson.devDependencies['eslint']).toBeDefined();
+        expect(packageJson.devDependencies['@nrwl/linter']).toBeDefined();
+        expect(
+          packageJson.devDependencies['@nrwl/eslint-plugin-nx']
+        ).toBeDefined();
       });
 
-      const lint = readJson(tree, 'libs/my-dir/my-lib/.eslintrc.json');
-      expect(lint.extends).toEqual(['../../../.eslintrc.json']);
+      describe('not nested', () => {
+        it('should update workspace.json', async () => {
+          await libraryGenerator(tree, {
+            ...defaultOptions,
+            name: 'myLib',
+          });
+
+          const workspaceJson = readJson(tree, 'workspace.json');
+          expect(workspaceJson.projects['my-lib'].architect.lint).toEqual({
+            builder: '@nrwl/linter:eslint',
+            options: {
+              lintFilePatterns: ['libs/my-lib/**/*.ts'],
+            },
+          });
+        });
+      });
+
+      describe('nested', () => {
+        it('should update workspace.json', async () => {
+          await libraryGenerator(tree, {
+            ...defaultOptions,
+            name: 'myLib',
+            directory: 'myDir',
+          });
+
+          const workspaceJson = readJson(tree, 'workspace.json');
+          expect(
+            workspaceJson.projects['my-dir-my-lib'].architect.lint
+          ).toEqual({
+            builder: '@nrwl/linter:eslint',
+            options: {
+              lintFilePatterns: ['libs/my-dir/my-lib/**/*.ts'],
+            },
+          });
+        });
+
+        it('should create a local .eslintrc.json', async () => {
+          await libraryGenerator(tree, {
+            ...defaultOptions,
+            name: 'myLib',
+            directory: 'myDir',
+          });
+
+          const lint = readJson(tree, 'libs/my-dir/my-lib/.eslintrc.json');
+          expect(lint.extends).toEqual(['../../../.eslintrc.json']);
+        });
+      });
+    });
+
+    describe('tslint', () => {
+      it('should add tslint dependencies', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          linter: 'tslint',
+        });
+
+        const packageJson = readJson(tree, 'package.json');
+        expect(packageJson.devDependencies['tslint']).toBeDefined();
+        expect(
+          packageJson.devDependencies['@angular-devkit/build-angular']
+        ).toBeDefined();
+      });
+
+      it('should update workspace.json', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          directory: 'myDir',
+          linter: 'tslint',
+        });
+
+        const workspaceJson = readJson(tree, 'workspace.json');
+        expect(workspaceJson.projects['my-dir-my-lib'].architect.lint).toEqual({
+          builder: '@angular-devkit/build-angular:tslint',
+          options: {
+            exclude: ['**/node_modules/**', '!libs/my-dir/my-lib/**/*'],
+            tsConfig: [
+              'libs/my-dir/my-lib/tsconfig.lib.json',
+              'libs/my-dir/my-lib/tsconfig.spec.json',
+            ],
+          },
+        });
+      });
+
+      it('should create a local tslint.json', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+          directory: 'myDir',
+          linter: 'tslint',
+        });
+        const tslintJson = readJson(tree, 'libs/my-dir/my-lib/tslint.json');
+        expect(tslintJson).toMatchInlineSnapshot(`
+          Object {
+            "extends": "../../../tslint.json",
+            "linterOptions": Object {
+              "exclude": Array [
+                "!**/*",
+              ],
+            },
+            "rules": Object {},
+          }
+        `);
+      });
     });
   });
 
