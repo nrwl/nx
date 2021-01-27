@@ -10,7 +10,6 @@ import {
 import { Schema } from './schema';
 import {
   angularCliVersion,
-  eslintVersion,
   nxVersion,
   prettierVersion,
   typescriptVersion,
@@ -62,7 +61,6 @@ function createFiles(host: Tree, options: Schema) {
     nxCli: false,
     typescriptVersion,
     prettierVersion,
-    eslintVersion,
     // angular cli is used only when workspace schematics is added to angular cli
     angularCliVersion,
     ...(options as object),

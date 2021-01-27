@@ -42,6 +42,9 @@ function addLint(tree: Tree, options: NormalizedSchema) {
     project: options.name,
     linter: options.linter,
     skipFormat: true,
+    tsConfigPaths: [
+      joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
+    ],
     eslintFilePatterns: [
       `${options.projectRoot}/**/*.${options.js ? 'js' : 'ts'}`,
     ],
@@ -77,11 +80,7 @@ function updateRootTsConfig(host: Tree, options: NormalizedSchema) {
     }
 
     c.paths[options.importPath] = [
-      joinPathFragments(
-        options.projectRoot,
-        './src',
-        'index.' + (options.js ? 'js' : 'ts')
-      ),
+      join(options.projectRoot, './src', 'index.' + (options.js ? 'js' : 'ts')),
     ];
 
     return json;

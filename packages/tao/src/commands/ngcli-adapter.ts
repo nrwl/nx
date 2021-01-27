@@ -13,20 +13,6 @@ import {
 } from '@angular-devkit/core';
 import * as chalk from 'chalk';
 import { createConsoleLogger, NodeJsSyncHost } from '@angular-devkit/core/node';
-import { RunOptions } from './run';
-import {
-  FileSystemCollectionDescription,
-  FileSystemSchematicDescription,
-  NodeModulesEngineHost,
-  NodeWorkflow,
-  validateOptionsWithSchema,
-} from '@angular-devkit/schematics/tools';
-import {
-  DryRunEvent,
-  formats,
-  Schematic,
-  TaskExecutor,
-} from '@angular-devkit/schematics';
 import * as fs from 'fs';
 import { readFileSync } from 'fs';
 import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
@@ -37,16 +23,13 @@ import {
   toOldFormatOrNull,
   workspaceConfigName,
 } from '@nrwl/tao/src/shared/workspace';
-import { BaseWorkflow } from '@angular-devkit/schematics/src/workflow';
-import { NodePackageName } from '@angular-devkit/schematics/tasks/package-manager/options';
-import { BuiltinTaskExecutor } from '@angular-devkit/schematics/tasks/node';
-import { dirname, extname, join, resolve } from 'path';
+import * as path from 'path';
+import { dirname, extname, resolve } from 'path';
 import * as stripJsonComments from 'strip-json-comments';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 import { Observable, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { NX_ERROR, NX_PREFIX } from '../shared/logger';
-import * as path from 'path';
 
 export async function scheduleTarget(
   root: string,
@@ -87,17 +70,22 @@ function createWorkflow(
   root: string,
   opts: any
 ) {
+  const NodeWorkflow = require('@angular-devkit/schematics/tools').NodeWorkflow;
   const workflow = new NodeWorkflow(fsHost, {
     force: opts.force,
     dryRun: opts.dryRun,
     packageManager: detectPackageManager(),
     root: normalize(root),
-    registry: new schema.CoreSchemaRegistry(formats.standardFormats),
+    registry: new schema.CoreSchemaRegistry(
+      require('@angular-devkit/schematics').formats.standardFormats
+    ),
     resolvePaths: [process.cwd(), root],
   });
   workflow.registry.addPostTransform(schema.transforms.addUndefinedDefaults);
   workflow.engineHost.registerOptionsTransform(
-    validateOptionsWithSchema(workflow.registry)
+    require('@angular-devkit/schematics/tools').validateOptionsWithSchema(
+      workflow.registry
+    )
   );
   return workflow;
 }
@@ -117,7 +105,7 @@ async function createRecorder(
   logger: logging.Logger
 ) {
   const actualConfigName = await host.workspaceConfigName();
-  return (event: DryRunEvent) => {
+  return (event: import('@angular-devkit/schematics').DryRunEvent) => {
     let eventPath = event.path.startsWith('/')
       ? event.path.substr(1)
       : event.path;
@@ -156,12 +144,12 @@ async function createRecorder(
 async function runSchematic(
   host: NxScopedHost,
   root: string,
-  workflow: NodeWorkflow,
+  workflow: import('@angular-devkit/schematics/tools').NodeWorkflow,
   logger: logging.Logger,
   opts: GenerateOptions,
-  schematic: Schematic<
-    FileSystemCollectionDescription,
-    FileSystemSchematicDescription
+  schematic: import('@angular-devkit/schematics').Schematic<
+    import('@angular-devkit/schematics/tools').FileSystemCollectionDescription,
+    import('@angular-devkit/schematics/tools').FileSystemSchematicDescription
   >,
   printDryRunMessage = true,
   recorder: any = null
@@ -192,95 +180,6 @@ async function runSchematic(
     logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
   }
   return { status: 0, loggingQueue: record.loggingQueue };
-}
-
-class MigrationEngineHost extends NodeModulesEngineHost {
-  private nodeInstallLogPrinted = false;
-
-  constructor(logger: logging.Logger) {
-    super();
-
-    // Overwrite the original CLI node package executor with a new one that does basically nothing
-    // since nx migrate doesn't do npm installs by itself
-    // (https://github.com/angular/angular-cli/blob/5df776780deadb6be5048b3ab006a5d3383650dc/packages/angular_devkit/schematics/tools/workflow/node-workflow.ts#L41)
-    this.registerTaskExecutor({
-      name: NodePackageName,
-      create: () =>
-        Promise.resolve<TaskExecutor>(() => {
-          return new Promise((res) => {
-            if (!this.nodeInstallLogPrinted) {
-              logger.warn(
-                `An installation of node_modules has been required. Make sure to run it after the migration`
-              );
-              this.nodeInstallLogPrinted = true;
-            }
-
-            res();
-          });
-        }),
-    });
-
-    this.registerTaskExecutor(BuiltinTaskExecutor.RunSchematic);
-  }
-
-  protected _resolveCollectionPath(name: string): string {
-    let collectionPath: string | undefined = undefined;
-
-    if (name.startsWith('.') || name.startsWith('/')) {
-      name = resolve(name);
-    }
-
-    if (extname(name)) {
-      collectionPath = require.resolve(name);
-    } else {
-      let packageJsonPath;
-      try {
-        packageJsonPath = require.resolve(path.join(name, 'package.json'), {
-          paths: [process.cwd()],
-        });
-      } catch (e) {
-        // workaround for a bug in node 12
-        packageJsonPath = require.resolve(
-          path.join(process.cwd(), name, 'package.json')
-        );
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const packageJson = require(packageJsonPath);
-      let pkgJsonSchematics = packageJson['nx-migrations'];
-      if (!pkgJsonSchematics) {
-        pkgJsonSchematics = packageJson['ng-update'];
-        if (!pkgJsonSchematics) {
-          throw new Error(`Could not find migrations in package: "${name}"`);
-        }
-      }
-      if (typeof pkgJsonSchematics != 'string') {
-        pkgJsonSchematics = pkgJsonSchematics.migrations;
-      }
-      collectionPath = resolve(dirname(packageJsonPath), pkgJsonSchematics);
-    }
-
-    try {
-      if (collectionPath) {
-        JSON.parse(stripJsonComments(readFileSync(collectionPath).toString()));
-        return collectionPath;
-      }
-    } catch (e) {
-      throw new Error(`Invalid migration file in package: "${name}"`);
-    }
-    throw new Error(`Collection cannot be resolved: "${name}"`);
-  }
-}
-
-class MigrationsWorkflow extends BaseWorkflow {
-  constructor(host: virtualFs.Host, logger: logging.Logger) {
-    super({
-      host,
-      engineHost: new MigrationEngineHost(logger),
-      force: true,
-      dryRun: false,
-    });
-  }
 }
 
 export class NxScopedHost extends virtualFs.ScopedHost<any> {
@@ -536,6 +435,107 @@ export async function runMigration(
   schematic: string,
   isVerbose: boolean
 ) {
+  const NodeModulesEngineHost = require('@angular-devkit/schematics/tools')
+    .NodeModulesEngineHost;
+
+  class MigrationEngineHost extends NodeModulesEngineHost {
+    private nodeInstallLogPrinted = false;
+
+    constructor(logger: logging.Logger) {
+      super();
+
+      // Overwrite the original CLI node package executor with a new one that does basically nothing
+      // since nx migrate doesn't do npm installs by itself
+      // (https://github.com/angular/angular-cli/blob/5df776780deadb6be5048b3ab006a5d3383650dc/packages/angular_devkit/schematics/tools/workflow/node-workflow.ts#L41)
+      this.registerTaskExecutor({
+        name: require('@angular-devkit/schematics/tasks/package-manager/options')
+          .NodePackageName,
+        create: () =>
+          Promise.resolve<import('@angular-devkit/schematics').TaskExecutor>(
+            () => {
+              return new Promise((res) => {
+                if (!this.nodeInstallLogPrinted) {
+                  logger.warn(
+                    `An installation of node_modules has been required. Make sure to run it after the migration`
+                  );
+                  this.nodeInstallLogPrinted = true;
+                }
+
+                res();
+              });
+            }
+          ),
+      });
+
+      this.registerTaskExecutor(
+        require('@angular-devkit/schematics/tasks/node').BuiltinTaskExecutor
+          .RunSchematic
+      );
+    }
+
+    protected _resolveCollectionPath(name: string): string {
+      let collectionPath: string | undefined = undefined;
+
+      if (name.startsWith('.') || name.startsWith('/')) {
+        name = resolve(name);
+      }
+
+      if (extname(name)) {
+        collectionPath = require.resolve(name);
+      } else {
+        let packageJsonPath;
+        try {
+          packageJsonPath = require.resolve(path.join(name, 'package.json'), {
+            paths: [process.cwd()],
+          });
+        } catch (e) {
+          // workaround for a bug in node 12
+          packageJsonPath = require.resolve(
+            path.join(process.cwd(), name, 'package.json')
+          );
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const packageJson = require(packageJsonPath);
+        let pkgJsonSchematics = packageJson['nx-migrations'];
+        if (!pkgJsonSchematics) {
+          pkgJsonSchematics = packageJson['ng-update'];
+          if (!pkgJsonSchematics) {
+            throw new Error(`Could not find migrations in package: "${name}"`);
+          }
+        }
+        if (typeof pkgJsonSchematics != 'string') {
+          pkgJsonSchematics = pkgJsonSchematics.migrations;
+        }
+        collectionPath = resolve(dirname(packageJsonPath), pkgJsonSchematics);
+      }
+
+      try {
+        if (collectionPath) {
+          JSON.parse(
+            stripJsonComments(readFileSync(collectionPath).toString())
+          );
+          return collectionPath;
+        }
+      } catch (e) {
+        throw new Error(`Invalid migration file in package: "${name}"`);
+      }
+      throw new Error(`Collection cannot be resolved: "${name}"`);
+    }
+  }
+
+  const { BaseWorkflow } = require('@angular-devkit/schematics/src/workflow');
+  class MigrationsWorkflow extends BaseWorkflow {
+    constructor(host: virtualFs.Host, logger: logging.Logger) {
+      super({
+        host,
+        engineHost: new MigrationEngineHost(logger) as any,
+        force: true,
+        dryRun: false,
+      });
+    }
+  }
+
   const logger = getLogger(isVerbose);
   const host = new NxScopedHostForMigrations(normalize(root));
   const workflow = new MigrationsWorkflow(host, logger as any);
@@ -599,7 +599,9 @@ export function wrapAngularDevkitSchematic(
     } as any;
     emptyLogger.createChild = () => emptyLogger;
 
-    const recorder = (event: DryRunEvent) => {
+    const recorder = (
+      event: import('@angular-devkit/schematics').DryRunEvent
+    ) => {
       let eventPath = event.path.startsWith('/')
         ? event.path.substr(1)
         : event.path;
