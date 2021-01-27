@@ -18,7 +18,7 @@ const IGNORE_MATCHES = {
     'rxjs',
   ],
   cli: ['@nrwl/cli'],
-  cypress: ['cypress'],
+  cypress: ['cypress', '@angular-devkit/schematics', '@nrwl/cypress'],
   devkit: ['@angular-devkit/architect', 'rxjs'],
   gatsby: ['@angular-devkit/architect', 'babel-preset-gatsby', 'rxjs'],
   jest: [

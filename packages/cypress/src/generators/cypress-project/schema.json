@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "id": "Nx Cypress Project Generator Schema",
+  "cli": "nx",
   "title": "Create Cypress Configuration for the workspace",
   "type": "object",
   "properties": {
@@ -32,6 +33,11 @@
     },
     "js": {
       "description": "Generate JavaScript files rather than TypeScript files",
+      "type": "boolean",
+      "default": false
+    },
+    "skipFormat": {
+      "description": "Skip formatting files",
       "type": "boolean",
       "default": false
     }
