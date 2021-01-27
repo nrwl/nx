@@ -30,16 +30,23 @@ export function initLocal(workspace: Workspace) {
           `Nx provides a much improved version of "ng update". It runs the same migrations, but allows you to:`
         );
         console.log(`- rerun the same migration multiple times`);
-        console.log(`- reorder migrations`);
-        console.log(`- skip migrations`);
+        console.log(`- reorder migrations, skip migrations`);
         console.log(`- fix migrations that "almost work"`);
         console.log(`- commit a partially migrated state`);
-        console.log(`- change versions of packages to match org requirements`);
+        console.log(
+          `- change versions of packages to match organizational requirements`
+        );
         console.log(
           `And, in general, it is lot more reliable for non-trivial workspaces. Read more at: https://nx.dev/latest/angular/workspace/update`
         );
         console.log(
           `Run "nx migrate latest" to update to the latest version of Nx.`
+        );
+        console.log(
+          `Running "ng update" can still be useful in some dev workflows, so we aren't planning to remove it.`
+        );
+        console.log(
+          `If you need to use it, run "FORCE_NG_UPDATE=true ng update".`
         );
       } else {
         loadCli(workspace);
