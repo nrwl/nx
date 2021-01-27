@@ -15,14 +15,5 @@ export function normalizePath(osSpecificPath: string): string {
  * Normalized path fragments and joins them
  */
 export function joinPathFragments(...fragments: string[]): string {
-  const normalizedFragments = [];
-  for (let i = 0; i < fragments.length; ++i) {
-    if (i === 0) {
-      normalizedFragments.push(normalizePath(fragments[i]));
-    } else {
-      const n = normalizePath(fragments[i]);
-      normalizedFragments.push(n.startsWith('/') ? n.substring(1) : n);
-    }
-  }
-  return normalizedFragments.join('/');
+  return normalizePath(path.join(...fragments));
 }

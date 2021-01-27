@@ -93,13 +93,11 @@ describe('schematic:configuration', () => {
     });
 
     expect(project.architect.lint).toEqual({
-      builder: '@angular-devkit/build-angular:tslint',
+      builder: '@nrwl/linter:eslint',
       options: {
-        exclude: ['**/node_modules/**', '!libs/test-ui-lib/**/*'],
-        tsConfig: [
-          'libs/test-ui-lib/tsconfig.lib.json',
-          'libs/test-ui-lib/tsconfig.spec.json',
-          'libs/test-ui-lib/.storybook/tsconfig.json',
+        lintFilePatterns: [
+          'libs/test-ui-lib/src/**/*.ts',
+          'libs/test-ui-lib/src/**/*.html',
         ],
       },
     });

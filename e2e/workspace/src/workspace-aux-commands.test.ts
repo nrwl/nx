@@ -38,12 +38,15 @@ describe('lint', () => {
     runCLI(`generate @nrwl/angular:lib ${invalidtaglib} --tags=invalidtag`);
     runCLI(`generate @nrwl/angular:lib ${validtaglib} --tags=validtag`);
 
-    const tslint = readJson('tslint.json');
-    tslint.rules['nx-enforce-module-boundaries'][1].depConstraints = [
+    const eslint = readJson('.eslintrc.json');
+    eslint.overrides[0].rules[
+      '@nrwl/nx/enforce-module-boundaries'
+    ][1].depConstraints = [
       { sourceTag: 'validtag', onlyDependOnLibsWithTags: ['validtag'] },
-      ...tslint.rules['nx-enforce-module-boundaries'][1].depConstraints,
+      ...eslint.overrides[0].rules['@nrwl/nx/enforce-module-boundaries'][1]
+        .depConstraints,
     ];
-    updateFile('tslint.json', JSON.stringify(tslint, null, 2));
+    updateFile('.eslintrc.json', JSON.stringify(eslint, null, 2));
 
     const tsConfig = readJson('tsconfig.base.json');
 
@@ -76,10 +79,10 @@ describe('lint', () => {
 
     const out = runCLI(`lint ${myapp}`, { silenceError: true });
     expect(out).toContain(
-      'libraries cannot be imported by a relative or absolute path, and must begin with a npm scope'
+      'Libraries cannot be imported by a relative or absolute path, and must begin with a npm scope'
     );
-    expect(out).toContain('imports of lazy-loaded libraries are forbidden');
-    expect(out).toContain('imports of apps are forbidden');
+    expect(out).toContain('Imports of lazy-loaded libraries are forbidden');
+    expect(out).toContain('Imports of apps are forbidden');
     expect(out).toContain(
       'A project tagged with "validtag" can only depend on libs tagged with "validtag"'
     );
@@ -582,7 +585,7 @@ describe('Move Angular Project', () => {
     expect(moveOutput).toContain(`CREATE apps/${newPath}/tsconfig.app.json`);
     expect(moveOutput).toContain(`CREATE apps/${newPath}/tsconfig.json`);
     expect(moveOutput).toContain(`CREATE apps/${newPath}/tsconfig.spec.json`);
-    expect(moveOutput).toContain(`CREATE apps/${newPath}/tslint.json`);
+    expect(moveOutput).toContain(`CREATE apps/${newPath}/.eslintrc.json`);
     expect(moveOutput).toContain(`CREATE apps/${newPath}/src/favicon.ico`);
     expect(moveOutput).toContain(`CREATE apps/${newPath}/src/index.html`);
     expect(moveOutput).toContain(`CREATE apps/${newPath}/src/main.ts`);
