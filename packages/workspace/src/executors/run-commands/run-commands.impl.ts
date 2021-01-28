@@ -59,15 +59,6 @@ export interface NormalizedRunCommandsBuilderOptions
 export default async function (
   options: RunCommandsBuilderOptions
 ): Promise<{ success: boolean }> {
-  // Special handling of extra options coming through Angular CLI
-  if (options['--']) {
-    const { _, ...overrides } = yargsParser(options['--'] as string[], {
-      configuration: { 'camel-case-expansion': false },
-    });
-    options = { ...options, ...overrides };
-    delete options['--'];
-  }
-
   loadEnvVars(options.envFile);
   const normalized = normalizeOptions(options);
 

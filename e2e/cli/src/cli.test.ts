@@ -35,6 +35,29 @@ describe('Cli', () => {
     expect(() => runCLI(`counter ${myapp} --result=false`)).toThrowError();
   });
 
+  it('should run npm scripts', () => {
+    newProject();
+    const mylib = uniq('mylib');
+    runCLI(`generate @nrwl/node:lib ${mylib}`);
+
+    updateFile(workspaceConfigName(), (c) => {
+      const j = JSON.parse(c);
+      delete j.projects[mylib].targets;
+      return JSON.stringify(j);
+    });
+
+    updateFile(
+      `libs/${mylib}/package.json`,
+      JSON.stringify({
+        name: 'mylib1',
+        scripts: { echo: `echo ECHOED:$1` },
+      })
+    );
+
+    const output = runCLI(`echo ${mylib} --a=123`);
+    expect(output).toContain(`ECHOED: --a=123`);
+  }, 1000000);
+
   it('should show help', async () => {
     newProject();
     const myapp = uniq('myapp');

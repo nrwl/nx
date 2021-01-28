@@ -18,6 +18,7 @@ export function getPackageManagerCommand(
   rm: string;
   exec: string;
   list: string;
+  run: (scrit: string, args: string) => string;
 } {
   switch (packageManager) {
     case 'yarn':
@@ -27,6 +28,7 @@ export function getPackageManagerCommand(
         addDev: 'yarn add -D',
         rm: 'yarn rm',
         exec: 'yarn',
+        run: (script: string, args: string) => `yarn ${script} ${args}`,
         list: 'yarn list',
       };
 
@@ -37,6 +39,7 @@ export function getPackageManagerCommand(
         addDev: 'pnpm add -D',
         rm: 'pnpm rm',
         exec: 'pnpx',
+        run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
         list: 'pnpm ls --depth 100',
       };
 
@@ -47,6 +50,7 @@ export function getPackageManagerCommand(
         addDev: 'npm install --legacy-peer-deps -D',
         rm: 'npm rm',
         exec: 'npx',
+        run: (script: string, args: string) => `npm run ${script} -- ${args}`,
         list: 'npm ls',
       };
   }

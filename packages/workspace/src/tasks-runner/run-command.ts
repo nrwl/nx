@@ -8,7 +8,10 @@ import { Environment, NxJson } from '../core/shared-interfaces';
 import { NxArgs } from '@nrwl/workspace/src/command-line/utils';
 import { isRelativePath } from '../utilities/fileutils';
 import { Hasher } from '../core/hasher/hasher';
-import { projectHasTargetAndConfiguration } from '../utilities/project-graph-utils';
+import {
+  projectHasTarget,
+  projectHasTargetAndConfiguration,
+} from '../utilities/project-graph-utils';
 import { output } from '../utilities/output';
 
 type RunArgs = yargs.Arguments & ReporterArgs;
@@ -105,6 +108,13 @@ export function createTask({
   overrides,
   errorIfCannotFindConfiguration,
 }: TaskParams): Task {
+  if (!projectHasTarget(project, target)) {
+    output.error({
+      title: `Cannot find target '${target}' for project '${project.name}'`,
+    });
+    process.exit(1);
+  }
+
   const config = projectHasTargetAndConfiguration(
     project,
     target,
