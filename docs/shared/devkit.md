@@ -171,7 +171,7 @@ The executor's schema describe the inputs--what you can pass into it.
 }
 ```
 
-The schema above defines two fields: `message` and `allCaps`. The `message` field is a string, `upperCase` is a boolean. The schema language is rich and lets you use lists, enums, references, etc.. See the plugins at [https://github.com/nrwl/nx](https://github.com/nrwl/nx) for more examples.
+The schema above defines two fields: `message` and `upperCase`. The `message` field is a string, `upperCase` is a boolean. The schema language is rich and lets you use lists, enums, references, etc.. See the plugins at [https://github.com/nrwl/nx](https://github.com/nrwl/nx) for more examples.
 
 ### Implementation
 
@@ -180,14 +180,14 @@ The implementation function takes two arguments (the options and the target cont
 ```typescript
 interface Schema {
   message: string;
-  allCaps: boolean;
+  upperCase: boolean;
 }
 
 export default async function (
   options: Schema,
   context: ExecutorContext
 ): Promise<{ success: true }> {
-  if (options.allCaps) {
+  if (options.upperCase) {
     console.log(options.message.toUpperCase());
   } else {
     console.log(options.message);
