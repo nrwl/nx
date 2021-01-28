@@ -169,6 +169,16 @@ export interface ExecutorContext {
   projectName?: string;
 
   /**
+   * The name of the target being executed
+   */
+  targetName?: string;
+
+  /**
+   * The name of the configuration being executed
+   */
+  configurationName?: string;
+
+  /**
    * The configuration of the target being executed
    */
   target?: TargetConfiguration;

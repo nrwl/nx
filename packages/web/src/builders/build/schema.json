@@ -1,6 +1,7 @@
 {
   "title": "Web Application Build Target",
   "description": "Web application build target options for Build Facade",
+  "cli": "nx",
   "type": "object",
   "properties": {
     "crossOrigin": {

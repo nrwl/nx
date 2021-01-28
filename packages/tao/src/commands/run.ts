@@ -193,6 +193,8 @@ async function runExecutorInternal<T extends { success: boolean }>(
       target: targetConfig,
       workspace: workspace,
       projectName: project,
+      targetName: target,
+      configurationName: configuration,
       cwd: cwd,
       isVerbose: isVerbose,
     });

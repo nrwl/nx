@@ -4,11 +4,10 @@ import { getBrowserConfig } from './third-party/cli-files/models/webpack-configs
 import { getCommonConfig } from './third-party/cli-files/models/webpack-configs/common';
 import { getStylesConfig } from './third-party/cli-files/models/webpack-configs/styles';
 import { Configuration } from 'webpack';
-import { LoggerApi } from '@angular-devkit/core/src/logger';
 import { basename, resolve, posix } from 'path';
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { convertBuildOptions } from './normalize';
-import { readTsConfig } from '@nrwl/workspace';
+import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { getBaseWebpackPartial } from './config';
 import { IndexHtmlWebpackPlugin } from './third-party/cli-files/plugins/index-html-webpack-plugin';
 import { generateEntryPoints } from './third-party/cli-files/utilities/package-chunk-sort';
@@ -21,7 +20,6 @@ export function getWebConfig(
   root,
   sourceRoot,
   options: WebBuildBuilderOptions,
-  logger: LoggerApi,
   esm?: boolean,
   isScriptOptimizeOn?: boolean,
   configuration?: string
@@ -41,7 +39,7 @@ export function getWebConfig(
     projectRoot: resolve(root, sourceRoot),
     buildOptions: convertBuildOptions(options),
     esm,
-    logger,
+    console,
     tsConfig,
     tsConfigPath: options.tsConfig,
   };
