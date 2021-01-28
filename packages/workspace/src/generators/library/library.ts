@@ -80,7 +80,11 @@ function updateRootTsConfig(host: Tree, options: NormalizedSchema) {
     }
 
     c.paths[options.importPath] = [
-      join(options.projectRoot, './src', 'index.' + (options.js ? 'js' : 'ts')),
+      joinPathFragments(
+        options.projectRoot,
+        './src',
+        'index.' + (options.js ? 'js' : 'ts')
+      ),
     ];
 
     return json;
