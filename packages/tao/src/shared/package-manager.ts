@@ -42,9 +42,9 @@ export function getPackageManagerCommand(
 
     case 'npm':
       return {
-        install: 'npm install',
-        add: 'npm install',
-        addDev: 'npm install -D',
+        install: 'npm install --legacy-peer-deps',
+        add: 'npm install --legacy-peer-deps',
+        addDev: 'npm install --legacy-peer-deps -D',
         rm: 'npm rm',
         exec: 'npx',
         list: 'npm ls',
