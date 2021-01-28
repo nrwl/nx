@@ -87,7 +87,7 @@ function buildProjectGraph(
   performance.mark('build project graph:start');
   const builder = new ProjectGraphBuilder(projectGraph);
   const buildNodesFns: BuildNodes[] = [
-    buildWorkspaceProjectNodes,
+    buildWorkspaceProjectNodes(fileRead),
     buildNpmPackageNodes,
   ];
   const buildDependenciesFns: BuildDependencies[] = [

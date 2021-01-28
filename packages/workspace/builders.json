@@ -4,6 +4,12 @@
       "implementation": "./src/executors/run-commands/compat",
       "schema": "./src/executors/run-commands/schema.json",
       "description": "Run any custom commands with Nx"
+    },
+    "run-script": {
+      "implementation": "./src/executors/run-script/compat",
+      "schema": "./src/executors/run-script/schema.json",
+      "description": "Run an npm script using Nx",
+      "hidden": true
     }
   },
   "executors": {
@@ -16,6 +22,12 @@
       "implementation": "./src/executors/counter/counter.impl",
       "schema": "./src/executors/counter/schema.json",
       "description": "A dummy executor useful for e2e tests",
+      "hidden": true
+    },
+    "run-script": {
+      "implementation": "./src/executors/run-script/run-script.impl",
+      "schema": "./src/executors/run-script/schema.json",
+      "description": "Run an npm script using Nx",
       "hidden": true
     }
   }

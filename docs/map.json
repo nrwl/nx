@@ -323,6 +323,11 @@
             "name": "run-commands executor",
             "id": "run-commands",
             "file": "angular/api-workspace/executors/run-commands"
+          },
+          {
+            "name": "run-script executor",
+            "id": "run-script",
+            "file": "angular/api-workspace/executors/run-script"
           }
         ]
       },
@@ -1299,6 +1304,11 @@
             "name": "run-commands executor",
             "id": "run-commands",
             "file": "react/api-workspace/executors/run-commands"
+          },
+          {
+            "name": "run-script executor",
+            "id": "run-script",
+            "file": "react/api-workspace/executors/run-script"
           }
         ]
       },
@@ -2327,6 +2337,11 @@
             "name": "run-commands executor",
             "id": "run-commands",
             "file": "node/api-workspace/executors/run-commands"
+          },
+          {
+            "name": "run-script executor",
+            "id": "run-script",
+            "file": "node/api-workspace/executors/run-script"
           },
           {
             "name": "gatsby",
