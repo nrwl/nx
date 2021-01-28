@@ -204,7 +204,7 @@ function upgradeStorybookPackagesInPackageJson(): Rule {
     return chain([
       maybeUpdateVersion(),
       formatFiles(),
-      addInstallTask({ skipInstall: !needsInstall }),
+      () => addInstallTask({ skipInstall: !needsInstall }),
     ]);
   };
 }
