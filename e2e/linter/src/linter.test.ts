@@ -105,7 +105,7 @@ describe('Linter', () => {
       /'tslint' option is no longer supported/
     );
     expect(() => runCLI(`lint ${myapp} --linter=random`)).toThrow(
-      /Schema validation failed/
+      /'random' should be one of eslint,tslint/
     );
   }, 1000000);
 

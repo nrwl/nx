@@ -226,6 +226,14 @@ function validateProperty(
         `Property '${propName}' does not match the schema. '${value}' should be a '${schema.type}'.`
       );
     }
+
+    if (schema.enum && !schema.enum.includes(value)) {
+      throw new SchemaError(
+        `Property '${propName}' does not match the schema. '${value}' should be one of ${schema.enum.join(
+          ','
+        )}.`
+      );
+    }
   } else if (Array.isArray(value)) {
     if (schema.type !== 'array') throwInvalidSchema(propName, schema);
     value.forEach((valueInArray) =>
