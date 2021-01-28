@@ -20,12 +20,6 @@
       "schema": "./src/schematics/cypress-project/schema.json",
       "description": "Add cypress e2e app to test a ui library that is set up for storybook",
       "hidden": false
-    },
-    "migrate-defaults-5-to-6": {
-      "factory": "./src/schematics/migrate-defaults-5-to-6/migrate-defaults-5-to-6",
-      "schema": "./src/schematics/migrate-defaults-5-to-6/schema.json",
-      "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
-      "hidden": false
     }
   }
 }
