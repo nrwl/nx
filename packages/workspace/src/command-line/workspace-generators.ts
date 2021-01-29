@@ -125,6 +125,7 @@ function constructCollection() {
     name: 'workspace-generators',
     version: '1.0',
     generators: generators,
+    schematics: generators,
   };
 }
 

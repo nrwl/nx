@@ -364,6 +364,33 @@ describe('workspace-generator', () => {
     expect(listOutput).toContain(custom);
     expect(listOutput).toContain(failing);
   }, 1000000);
+
+  it('should support angular devkit schematics', () => {
+    const angularDevkitSchematic = uniq('angular-devkit-schematic');
+    runCLI(`g workspace-generator ${angularDevkitSchematic} --no-interactive`);
+
+    const json = readJson(
+      `tools/generators/${angularDevkitSchematic}/schema.json`
+    );
+    json.properties = {};
+    json.required = [];
+    delete json.cli;
+    updateFile(
+      `tools/generators/${angularDevkitSchematic}/schema.json`,
+      JSON.stringify(json)
+    );
+
+    updateFile(
+      `tools/generators/${angularDevkitSchematic}/index.ts`,
+      `
+          export default function() {
+            return (tree) => tree;
+          }
+        `
+    );
+
+    runCLI(`workspace-generator ${angularDevkitSchematic} --no-interactive`);
+  });
 });
 
 describe('dep-graph', () => {
