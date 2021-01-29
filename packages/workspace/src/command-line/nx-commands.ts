@@ -434,6 +434,11 @@ function taoPath() {
     JSON.stringify({
       dependencies: {
         '@nrwl/tao': 'latest',
+
+        // these deps are required for migrations written using angular devkit
+        '@angular-devkit/architect': 'latest',
+        '@angular-devkit/schematics': 'latest',
+        '@angular-devkit/core': 'latest',
       },
       license: 'MIT',
     })
