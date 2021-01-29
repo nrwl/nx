@@ -123,27 +123,22 @@ export function addE2eTestRunner(options: Pick<Schema, 'e2eTestRunner'>): Rule {
 export function setDefaults(options: Schema): Rule {
   const updateAngularWorkspace = updateWorkspace((workspace) => {
     workspace.extensions.schematics = workspace.extensions.schematics || {};
-
-    workspace.extensions.schematics['@nrwl/angular:application'] =
-      workspace.extensions.schematics['@nrwl/angular:application'] || {};
-    workspace.extensions.schematics[
-      '@nrwl/angular:application'
-    ].unitTestRunner =
-      workspace.extensions.schematics['@nrwl/angular:application']
-        .unitTestRunner || options.unitTestRunner;
-    workspace.extensions.schematics['@nrwl/angular:application'].e2eTestRunner =
-      workspace.extensions.schematics['@nrwl/angular:application']
-        .e2eTestRunner || options.e2eTestRunner;
-
-    workspace.extensions.schematics['@nrwl/angular:library'] =
-      workspace.extensions.schematics['@nrwl/angular:library'] || {};
-    workspace.extensions.schematics['@nrwl/angular:library'].unitTestRunner =
-      workspace.extensions.schematics['@nrwl/angular:library'].unitTestRunner ||
-      options.unitTestRunner;
-
-    workspace.extensions.schematics['@nrwl/angular:component'] = workspace
-      .extensions.schematics['@nrwl/angular:component'] || {
+    workspace.extensions.schematics['@nrwl/angular:application'] = {
       style: options.style,
+      linter: options.linter,
+      unitTestRunner: options.unitTestRunner,
+      e2eTestRunner: options.e2eTestRunner,
+      ...(workspace.extensions.schematics['@nrwl/angular:application'] || {}),
+    };
+    workspace.extensions.schematics['@nrwl/angular:library'] = {
+      style: options.style,
+      linter: options.linter,
+      unitTestRunner: options.unitTestRunner,
+      ...(workspace.extensions.schematics['@nrwl/angular:library'] || {}),
+    };
+    workspace.extensions.schematics['@nrwl/angular:component'] = {
+      style: options.style,
+      ...(workspace.extensions.schematics['@nrwl/angular:component'] || {}),
     };
   });
 
