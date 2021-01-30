@@ -126,7 +126,7 @@ function normalizeOptions(host: Tree, options: Schema): CypressProjectSchema {
         names(options.directory).fileName,
         options.name
       )
-    : join(appsDir, options.name);
+    : joinPathFragments(appsDir, options.name);
   return {
     ...options,
     projectName,
