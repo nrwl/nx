@@ -76,7 +76,12 @@ export function getOutputsForTargetAndConfiguration(
       ? options.outputPath
       : [options.outputPath];
   } else if (target === 'build') {
-    return [`dist/${node.data.root}`, `${node.data.root}/dist`];
+    return [
+      `dist/${node.data.root}`,
+      `${node.data.root}/dist`,
+      `${node.data.root}/build`,
+      `${node.data.root}/public`,
+    ];
   } else {
     return [];
   }

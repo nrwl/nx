@@ -178,7 +178,12 @@ describe('utils', () => {
               files: [],
             },
           })
-        ).toEqual(['dist/root-myapp', 'root-myapp/dist']);
+        ).toEqual([
+          'dist/root-myapp',
+          'root-myapp/dist',
+          'root-myapp/build',
+          'root-myapp/public',
+        ]);
       });
     });
   });
