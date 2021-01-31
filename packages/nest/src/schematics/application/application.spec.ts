@@ -17,11 +17,50 @@ describe('app', () => {
       `await NestFactory.create(AppModule);`
     );
     expect(tree.exists('apps/my-node-app/src/app/app.module.ts')).toBeTruthy();
+
+    const eslintrcJson = readJsonInTree(
+      tree,
+      'apps/my-node-app/.eslintrc.json'
+    );
+    expect(eslintrcJson).toMatchInlineSnapshot(`
+      Object {
+        "extends": "../../.eslintrc.json",
+        "ignorePatterns": Array [
+          "!**/*",
+        ],
+        "rules": Object {},
+      }
+    `);
   });
 
   it('should have es2015 as the tsconfig target', async () => {
     const tree = await runSchematic('app', { name: 'myNodeApp' }, appTree);
     const tsconfig = readJsonInTree(tree, 'apps/my-node-app/tsconfig.app.json');
     expect(tsconfig.compilerOptions.target).toBe('es2015');
+  });
+
+  describe('--linter', () => {
+    describe('tslint', () => {
+      it('should generate files', async () => {
+        const tree = await runSchematic(
+          'app',
+          { name: 'myNodeApp', linter: 'tslint' },
+          appTree
+        );
+
+        const tslintJson = readJsonInTree(tree, 'apps/my-node-app/tslint.json');
+        expect(tslintJson).toMatchInlineSnapshot(`
+          Object {
+            "extends": "../../tslint.json",
+            "linterOptions": Object {
+              "exclude": Array [
+                "!**/*",
+              ],
+            },
+            "rules": Object {},
+          }
+        `);
+      });
+    });
   });
 });

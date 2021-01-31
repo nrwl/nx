@@ -112,6 +112,19 @@ describe('lib', () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
       expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
+
+      const eslintrc = readJsonInTree(tree, 'libs/my-lib/.eslintrc.json');
+      expect(eslintrc).toMatchInlineSnapshot(`
+        Object {
+          "extends": Array [
+            "../../.eslintrc.json",
+          ],
+          "ignorePatterns": Array [
+            "!**/*",
+          ],
+          "rules": Object {},
+        }
+      `);
     });
   });
 

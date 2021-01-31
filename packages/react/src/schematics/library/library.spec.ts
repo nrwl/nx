@@ -115,6 +115,19 @@ describe('lib', () => {
       expect(tree.exists('libs/my-lib/src/lib/my-lib.tsx')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.module.css')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.tsx')).toBeTruthy();
+
+      const eslintJson = readJsonInTree(tree, 'libs/my-lib/.eslintrc.json');
+      expect(eslintJson).toMatchInlineSnapshot(`
+        Object {
+          "extends": Array [
+            "plugin:@nrwl/nx/react",
+            "../../.eslintrc.json",
+          ],
+          "ignorePatterns": Array [
+            "!**/*",
+          ],
+        }
+      `);
     });
   });
 

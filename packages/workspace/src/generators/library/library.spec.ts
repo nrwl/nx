@@ -296,6 +296,26 @@ describe('lib', () => {
             },
           });
         });
+
+        it('should create a local .eslintrc.json', async () => {
+          await libraryGenerator(tree, {
+            ...defaultOptions,
+            name: 'myLib',
+          });
+
+          const eslintJson = readJson(tree, 'libs/my-lib/.eslintrc.json');
+          expect(eslintJson).toMatchInlineSnapshot(`
+            Object {
+              "extends": Array [
+                "../../.eslintrc.json",
+              ],
+              "ignorePatterns": Array [
+                "!**/*",
+              ],
+              "rules": Object {},
+            }
+          `);
+        });
       });
 
       describe('nested', () => {
@@ -324,8 +344,21 @@ describe('lib', () => {
             directory: 'myDir',
           });
 
-          const lint = readJson(tree, 'libs/my-dir/my-lib/.eslintrc.json');
-          expect(lint.extends).toEqual(['../../../.eslintrc.json']);
+          const eslintJson = readJson(
+            tree,
+            'libs/my-dir/my-lib/.eslintrc.json'
+          );
+          expect(eslintJson).toMatchInlineSnapshot(`
+            Object {
+              "extends": Array [
+                "../../../.eslintrc.json",
+              ],
+              "ignorePatterns": Array [
+                "!**/*",
+              ],
+              "rules": Object {},
+            }
+          `);
         });
       });
     });

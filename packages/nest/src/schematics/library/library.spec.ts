@@ -203,6 +203,19 @@ describe('lib', () => {
       expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists(`libs/my-lib/src/lib/my-lib.spec.ts`)).toBeFalsy();
+
+      const eslintrcJson = readJsonInTree(tree, 'libs/my-lib/.eslintrc.json');
+      expect(eslintrcJson).toMatchInlineSnapshot(`
+        Object {
+          "extends": Array [
+            "../../.eslintrc.json",
+          ],
+          "ignorePatterns": Array [
+            "!**/*",
+          ],
+          "rules": Object {},
+        }
+      `);
     });
   });
 

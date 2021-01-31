@@ -282,18 +282,39 @@ describe('app', () => {
       appTree
     );
 
-    const eslintJson = readJsonInTree(tree, '/apps/my-app/.eslintrc.json');
     const packageJson = readJsonInTree(tree, '/package.json');
-
-    expect(eslintJson.extends).toEqual(
-      expect.arrayContaining(['plugin:@nrwl/nx/react'])
-    );
     expect(packageJson).toMatchObject({
       devDependencies: {
         'eslint-plugin-react': expect.anything(),
         'eslint-plugin-react-hooks': expect.anything(),
       },
     });
+
+    const eslintJson = readJsonInTree(tree, '/apps/my-app/.eslintrc.json');
+    expect(eslintJson).toMatchInlineSnapshot(`
+      Object {
+        "extends": Array [
+          "plugin:@nrwl/nx/react",
+          "../../.eslintrc.json",
+        ],
+        "ignorePatterns": Array [
+          "!**/*",
+          "public",
+          ".cache",
+        ],
+        "overrides": Array [
+          Object {
+            "files": Array [
+              "*.tsx",
+              "*.ts",
+            ],
+            "rules": Object {
+              "@typescript-eslint/camelcase": "off",
+            },
+          },
+        ],
+      }
+    `);
   });
 
   describe('--js', () => {

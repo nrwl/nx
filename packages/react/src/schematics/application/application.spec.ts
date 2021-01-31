@@ -371,12 +371,7 @@ describe('app', () => {
       appTree
     );
 
-    const eslintJson = readJsonInTree(tree, '/apps/my-app/.eslintrc.json');
     const packageJson = readJsonInTree(tree, '/package.json');
-
-    expect(eslintJson.extends).toEqual(
-      expect.arrayContaining(['plugin:@nrwl/nx/react'])
-    );
     expect(packageJson.devDependencies.eslint).toBeDefined();
     expect(packageJson.devDependencies['@nrwl/linter']).toBeDefined();
     expect(packageJson.devDependencies['@nrwl/eslint-plugin-nx']).toBeDefined();
@@ -391,6 +386,19 @@ describe('app', () => {
       packageJson.devDependencies['@typescript-eslint/eslint-plugin']
     ).toBeDefined();
     expect(packageJson.devDependencies['eslint-config-prettier']).toBeDefined();
+
+    const eslintJson = readJsonInTree(tree, '/apps/my-app/.eslintrc.json');
+    expect(eslintJson).toMatchInlineSnapshot(`
+      Object {
+        "extends": Array [
+          "plugin:@nrwl/nx/react",
+          "../../.eslintrc.json",
+        ],
+        "ignorePatterns": Array [
+          "!**/*",
+        ],
+      }
+    `);
   });
 
   describe('--class-component', () => {
