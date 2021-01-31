@@ -147,6 +147,11 @@
             "id": "migration-angularjs"
           },
           {
+            "name": "Adding to Monorepo",
+            "id": "adding-to-monorepo",
+            "file": "shared/migration/adding-to-monorepo"
+          },
+          {
             "name": "Preserving Git Histories",
             "id": "preserving-git-histories",
             "file": "shared/migration/preserving-git-histories"
@@ -1126,6 +1131,11 @@
           {
             "name": "From CRA",
             "id": "migration-cra"
+          },
+          {
+            "name": "Adding to Monorepo",
+            "id": "adding-to-monorepo",
+            "file": "shared/migration/adding-to-monorepo"
           },
           {
             "name": "Preserving Git Histories",
@@ -2164,6 +2174,16 @@
             "name": "Overview",
             "id": "overview",
             "file": "shared/migration/overview"
+          },
+          {
+            "name": "Adding to Monorepo",
+            "id": "adding-to-monorepo",
+            "file": "shared/migration/adding-to-monorepo"
+          },
+          {
+            "name": "Preserving Git Histories",
+            "id": "preserving-git-histories",
+            "file": "shared/migration/preserving-git-histories"
           }
         ]
       },
