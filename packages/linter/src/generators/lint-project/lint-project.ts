@@ -41,7 +41,32 @@ function createEsLintConfiguration(
     extends: [`${offsetFromRoot(projectConfig.root)}.eslintrc.json`],
     // Include project files to be linted since the global one excludes all files.
     ignorePatterns: ['!**/*'],
-    rules: {},
+    overrides: [
+      {
+        files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+        parserOptions: {
+          /**
+           * In order to ensure maximum efficiency when typescript-eslint generates TypeScript Programs
+           * behind scenes during lint runs, we need to make sure the project is configured to use its
+           * own specific tsconfigs, and not fallback to the ones in the root of the workspace.
+           */
+          project: [`${projectConfig.root}/tsconfig.*?.json`],
+          /**
+           * Having an empty rules object present makes it more obvious to the user where they would
+           * extend things from if they needed to
+           */
+          rules: {},
+        },
+      },
+      {
+        files: ['*.ts', '*.tsx'],
+        rules: {},
+      },
+      {
+        files: ['*.js', '*.jsx'],
+        rules: {},
+      },
+    ],
   });
 }
 

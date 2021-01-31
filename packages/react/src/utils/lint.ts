@@ -1,3 +1,4 @@
+import type { Linter } from 'eslint';
 import {
   eslintPluginImportVersion,
   eslintPluginReactVersion,
@@ -15,6 +16,32 @@ export const extraEslintDependencies = {
   },
 };
 
-export const reactEslintJson = {
+export const createReactEslintJson = (projectRoot: string): Linter.Config => ({
   extends: ['plugin:@nrwl/nx/react'],
-};
+  overrides: [
+    {
+      files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+      parserOptions: {
+        /**
+         * In order to ensure maximum efficiency when typescript-eslint generates TypeScript Programs
+         * behind scenes during lint runs, we need to make sure the project is configured to use its
+         * own specific tsconfigs, and not fallback to the ones in the root of the workspace.
+         */
+        project: [`${projectRoot}/tsconfig.*?.json`],
+      },
+      /**
+       * Having an empty rules object present makes it more obvious to the user where they would
+       * extend things from if they needed to
+       */
+      rules: {},
+    },
+    {
+      files: ['*.ts', '*.tsx'],
+      rules: {},
+    },
+    {
+      files: ['*.js', '*.jsx'],
+      rules: {},
+    },
+  ],
+});

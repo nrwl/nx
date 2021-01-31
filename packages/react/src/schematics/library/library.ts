@@ -37,7 +37,10 @@ import {
   addRoute,
   findComponentImportPath,
 } from '../../utils/ast-utils';
-import { extraEslintDependencies, reactEslintJson } from '../../utils/lint';
+import {
+  extraEslintDependencies,
+  createReactEslintJson,
+} from '../../utils/lint';
 import {
   reactDomVersion,
   reactRouterDomVersion,
@@ -77,7 +80,7 @@ export default function (schema: Schema): Rule {
     }
     return chain([
       addLintFiles(options.projectRoot, options.linter, {
-        localConfig: reactEslintJson,
+        localConfig: createReactEslintJson(options.projectRoot),
         extraPackageDeps: extraEslintDependencies,
       }),
       createFiles(options),

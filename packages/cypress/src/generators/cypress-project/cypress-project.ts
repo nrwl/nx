@@ -89,6 +89,26 @@ async function addLinter(host: Tree, options: CypressProjectSchema) {
   updateJson(host, join(options.projectRoot, '.eslintrc.json'), (json) => {
     json.extends = ['plugin:cypress/recommended', ...json.extends];
     json.overrides = [
+      /**
+       * In order to ensure maximum efficiency when typescript-eslint generates TypeScript Programs
+       * behind scenes during lint runs, we need to make sure the project is configured to use its
+       * own specific tsconfigs, and not fallback to the ones in the root of the workspace.
+       */
+      {
+        files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+        parserOptions: {
+          project: `${options.projectRoot}/tsconfig.*?.json`,
+        },
+        /**
+         * Having an empty rules object present makes it more obvious to the user where they would
+         * extend things from if they needed to
+         */
+        rules: {},
+      },
+      /**
+       * We need this override because we enabled allowJS in the tsconfig to allow for JS based Cypress tests.
+       * That however leads to issues with the CommonJS Cypress plugin file.
+       */
       {
         files: ['src/plugins/index.js'],
         rules: {

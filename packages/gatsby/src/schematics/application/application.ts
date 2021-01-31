@@ -39,10 +39,11 @@ import {
 import {
   assertValidStyle,
   extraEslintDependencies,
-  reactEslintJson,
+  createReactEslintJson,
 } from '@nrwl/react';
 import { addStyleDependencies } from '../../utils/styles';
 import { wrapAngularDevkitSchematic } from '@nrwl/tao/src/commands/ngcli-adapter';
+import type { Linter as ESLintLinter } from 'eslint';
 
 const projectType = ProjectType.Application;
 
@@ -62,17 +63,7 @@ export default function (options: GatsbyPluginSchematicSchema): Rule {
       skipFormat: true,
     }),
     addLintFiles(normalizedOptions.projectRoot, Linter.EsLint, {
-      localConfig: {
-        ...reactEslintJson,
-        overrides: [
-          {
-            files: ['*.tsx', '*.ts'],
-            rules: {
-              '@typescript-eslint/camelcase': 'off',
-            },
-          },
-        ],
-      },
+      localConfig: createReactEslintJson(normalizedOptions.projectRoot),
       extraPackageDeps: extraEslintDependencies,
     }),
     addProject(normalizedOptions),
@@ -269,8 +260,27 @@ function updateEslintConfig(options: NormalizedSchema) {
   return (host) => {
     const appProjectRoot = `${appsDir(host)}/${appDirectory}`;
     const configPath = `${appProjectRoot}/.eslintrc.json`;
-    return updateJsonInTree(configPath, (json) => {
+    return updateJsonInTree(configPath, (json: ESLintLinter.Config) => {
       json.ignorePatterns = ['!**/*', 'public', '.cache'];
+
+      // Should be impossible at runtime based on our generators
+      if (!json.overrides) {
+        return json;
+      }
+
+      for (const override of json.overrides) {
+        if (!override.files || override.files.length !== 2) {
+          continue;
+        }
+        if (
+          !(override.files.includes('*.ts') && override.files.includes('*.tsx'))
+        ) {
+          continue;
+        }
+        override.rules = override.rules || {};
+        override.rules['@typescript-eslint/camelcase'] = 'off';
+      }
+
       return json;
     });
   };

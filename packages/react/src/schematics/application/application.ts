@@ -5,7 +5,10 @@ import {
   Tree,
 } from '@angular-devkit/schematics';
 import { addLintFiles, formatFiles } from '@nrwl/workspace';
-import { extraEslintDependencies, reactEslintJson } from '../../utils/lint';
+import {
+  extraEslintDependencies,
+  createReactEslintJson,
+} from '../../utils/lint';
 import init from '../init/init';
 import { Schema } from './schema';
 import { createApplicationFiles } from './lib/create-application-files';
@@ -29,7 +32,7 @@ export default function (schema: Schema): Rule {
         skipFormat: true,
       }),
       addLintFiles(options.appProjectRoot, options.linter, {
-        localConfig: reactEslintJson,
+        localConfig: createReactEslintJson(options.appProjectRoot),
         extraPackageDeps: extraEslintDependencies,
       }),
       createApplicationFiles(options),

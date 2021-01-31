@@ -305,12 +305,33 @@ describe('app', () => {
         "overrides": Array [
           Object {
             "files": Array [
-              "*.tsx",
               "*.ts",
+              "*.tsx",
+              "*.js",
+              "*.jsx",
+            ],
+            "parserOptions": Object {
+              "project": Array [
+                "apps/my-app/tsconfig.*?.json",
+              ],
+            },
+            "rules": Object {},
+          },
+          Object {
+            "files": Array [
+              "*.ts",
+              "*.tsx",
             ],
             "rules": Object {
               "@typescript-eslint/camelcase": "off",
             },
+          },
+          Object {
+            "files": Array [
+              "*.js",
+              "*.jsx",
+            ],
+            "rules": Object {},
           },
         ],
       }

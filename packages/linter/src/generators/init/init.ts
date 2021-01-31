@@ -122,11 +122,6 @@ const globalEsLintConfiguration = {
       files: ['*.ts', '*.tsx'],
       extends: ['plugin:@nrwl/nx/typescript'],
       /**
-       * TODO: Remove this usage of project at the root in a follow up PR (and migration),
-       * it should be set in each project's config
-       */
-      parserOptions: { project: './tsconfig.*?.json' },
-      /**
        * Having an empty rules object present makes it more obvious to the user where they would
        * extend things from if they needed to
        */

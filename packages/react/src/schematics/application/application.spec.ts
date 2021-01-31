@@ -397,6 +397,36 @@ describe('app', () => {
         "ignorePatterns": Array [
           "!**/*",
         ],
+        "overrides": Array [
+          Object {
+            "files": Array [
+              "*.ts",
+              "*.tsx",
+              "*.js",
+              "*.jsx",
+            ],
+            "parserOptions": Object {
+              "project": Array [
+                "apps/my-app/tsconfig.*?.json",
+              ],
+            },
+            "rules": Object {},
+          },
+          Object {
+            "files": Array [
+              "*.ts",
+              "*.tsx",
+            ],
+            "rules": Object {},
+          },
+          Object {
+            "files": Array [
+              "*.js",
+              "*.jsx",
+            ],
+            "rules": Object {},
+          },
+        ],
       }
     `);
   });

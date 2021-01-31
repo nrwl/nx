@@ -4,7 +4,7 @@ import {
   SchematicContext,
   Tree,
 } from '@angular-devkit/schematics';
-import { extraEslintDependencies, reactEslintJson } from '@nrwl/react';
+import { extraEslintDependencies, createReactEslintJson } from '@nrwl/react';
 import { addLintFiles, formatFiles } from '@nrwl/workspace';
 import init from '../init/init';
 import { addCypress } from './lib/add-cypress';
@@ -30,7 +30,7 @@ export default function (schema: Schema): Rule {
         skipFormat: true,
       }),
       addLintFiles(options.appProjectRoot, options.linter, {
-        localConfig: reactEslintJson,
+        localConfig: createReactEslintJson(options.appProjectRoot),
         extraPackageDeps: extraEslintDependencies,
       }),
       createApplicationFiles(options),

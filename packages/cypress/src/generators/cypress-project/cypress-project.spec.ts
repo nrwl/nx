@@ -256,6 +256,18 @@ describe('schematic:cypress-project', () => {
               "overrides": Array [
                 Object {
                   "files": Array [
+                    "*.ts",
+                    "*.tsx",
+                    "*.js",
+                    "*.jsx",
+                  ],
+                  "parserOptions": Object {
+                    "project": "apps/my-app-e2e/tsconfig.*?.json",
+                  },
+                  "rules": Object {},
+                },
+                Object {
+                  "files": Array [
                     "src/plugins/index.js",
                   ],
                   "rules": Object {
@@ -264,7 +276,6 @@ describe('schematic:cypress-project', () => {
                   },
                 },
               ],
-              "rules": Object {},
             }
           `);
         });

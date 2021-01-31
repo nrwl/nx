@@ -213,7 +213,36 @@ describe('lib', () => {
           "ignorePatterns": Array [
             "!**/*",
           ],
-          "rules": Object {},
+          "overrides": Array [
+            Object {
+              "files": Array [
+                "*.ts",
+                "*.tsx",
+                "*.js",
+                "*.jsx",
+              ],
+              "parserOptions": Object {
+                "project": Array [
+                  "libs/my-lib/tsconfig.*?.json",
+                ],
+                "rules": Object {},
+              },
+            },
+            Object {
+              "files": Array [
+                "*.ts",
+                "*.tsx",
+              ],
+              "rules": Object {},
+            },
+            Object {
+              "files": Array [
+                "*.js",
+                "*.jsx",
+              ],
+              "rules": Object {},
+            },
+          ],
         }
       `);
     });
