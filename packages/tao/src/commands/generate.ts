@@ -148,12 +148,13 @@ export function flushChanges(root: string, fileChanges: FileChange[]) {
 
 function printChanges(fileChanges: FileChange[]) {
   fileChanges.forEach((f) => {
+    const normalizedPath = f.path.replace(/\\/g, '/');
     if (f.type === 'CREATE') {
-      console.log(`${chalk.green('CREATE')} ${f.path}`);
+      console.log(`${chalk.green('CREATE')} ${normalizedPath}`);
     } else if (f.type === 'UPDATE') {
-      console.log(`${chalk.white('UPDATE')} ${f.path}`);
+      console.log(`${chalk.white('UPDATE')} ${normalizedPath}`);
     } else if (f.type === 'DELETE') {
-      console.log(`${chalk.yellow('DELETE')} ${f.path}`);
+      console.log(`${chalk.yellow('DELETE')} ${normalizedPath}`);
     }
   });
 }

@@ -1,6 +1,7 @@
 import { output, CLIErrorMessageConfig } from '../utilities/output';
 import { ProjectGraph } from '../core/project-graph';
 import { workspaceFileName } from '../core/file-utils';
+import { normalizePath } from '@nrwl/devkit';
 
 export class WorkspaceIntegrityChecks {
   constructor(private projectGraph: ProjectGraph, private files: string[]) {}
@@ -12,7 +13,10 @@ export class WorkspaceIntegrityChecks {
   private projectWithoutFilesCheck(): CLIErrorMessageConfig[] {
     const errors = Object.values(this.projectGraph.nodes)
       .filter((n) => n.data.files.length === 0)
-      .map((p) => `Cannot find project '${p.name}' in '${p.data.root}'`);
+      .map(
+        (p) =>
+          `Cannot find project '${p.name}' in '${normalizePath(p.data.root)}'`
+      );
 
     const errorGroupBodyLines = errors.map(
       (f) => `${output.colors.gray('-')} ${f}`
