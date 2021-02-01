@@ -20,7 +20,6 @@ export function getDevServerConfig(
     root,
     sourceRoot,
     buildOptions,
-    logger,
     true, // Don't need to support legacy browsers for dev.
     false
   );

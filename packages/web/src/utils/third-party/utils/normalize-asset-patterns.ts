@@ -5,20 +5,12 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-import {
-  BaseException,
-  Path,
-  basename,
-  dirname,
-  join,
-  normalize,
-  relative,
-  resolve,
-  virtualFs,
-} from '@angular-devkit/core';
+import { normalizePath } from '@nrwl/devkit';
+import { basename, dirname, relative, join, resolve } from 'path';
 import { AssetPattern, AssetPatternClass } from '../browser/schema';
+import { statSync } from 'fs-extra';
 
-export class MissingAssetSourceRootException extends BaseException {
+export class MissingAssetSourceRootException extends Error {
   constructor(path: String) {
     super(`The ${path} asset path must start with the project source root.`);
   }
@@ -26,10 +18,9 @@ export class MissingAssetSourceRootException extends BaseException {
 
 export function normalizeAssetPatterns(
   assetPatterns: AssetPattern[],
-  host: virtualFs.SyncDelegateHost,
-  root: Path,
-  projectRoot: Path,
-  maybeSourceRoot: Path | undefined
+  root: string,
+  projectRoot: string,
+  maybeSourceRoot: string | undefined
 ): AssetPatternClass[] {
   // When sourceRoot is not available, we default to ${projectRoot}/src.
   const sourceRoot = maybeSourceRoot || join(projectRoot, 'src');
@@ -42,7 +33,7 @@ export function normalizeAssetPatterns(
   return assetPatterns.map((assetPattern) => {
     // Normalize string asset patterns to objects.
     if (typeof assetPattern === 'string') {
-      const assetPath = normalize(assetPattern);
+      const assetPath = normalizePath(assetPattern);
       const resolvedAssetPath = resolve(root, assetPath);
 
       // Check if the string asset is within sourceRoot.
@@ -50,14 +41,12 @@ export function normalizeAssetPatterns(
         throw new MissingAssetSourceRootException(assetPattern);
       }
 
-      let glob: string, input: Path, output: Path;
+      let glob: string, input: string, output: string;
       let isDirectory = false;
 
       try {
-        isDirectory = host.isDirectory(resolvedAssetPath);
-      } catch {
-        isDirectory = true;
-      }
+        isDirectory = statSync(resolvedAssetPath).isDirectory();
+      } catch {}
 
       if (isDirectory) {
         // Folders get a recursive star glob.

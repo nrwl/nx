@@ -6,34 +6,26 @@
  * found in the LICENSE file at https://angular.io/license
  */
 
-import { EmittedFiles } from '@angular-devkit/build-webpack';
-import {
-  Path,
-  dirname,
-  getSystemPath,
-  join,
-  virtualFs,
-} from '@angular-devkit/core';
-import { Observable, of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { dirname, join } from 'path';
+import { EmittedFile } from '@nrwl/workspace/src/utilities/run-webpack';
 import { ExtraEntryPoint } from '../../../browser/schema';
 import { generateEntryPoints } from '../package-chunk-sort';
 import { stripBom } from '../strip-bom';
 import {
+  augmentIndexHtml,
   CrossOriginValue,
   FileInfo,
-  augmentIndexHtml,
 } from './augment-index-html';
+import { readFileSync, writeFileSync } from 'fs-extra';
 
 type ExtensionFilter = '.js' | '.css';
 
 export interface WriteIndexHtmlOptions {
-  host: virtualFs.Host;
-  outputPath: Path;
-  indexPath: Path;
-  files?: EmittedFiles[];
-  noModuleFiles?: EmittedFiles[];
-  moduleFiles?: EmittedFiles[];
+  outputPath: string;
+  indexPath: string;
+  files?: EmittedFile[];
+  noModuleFiles?: EmittedFile[];
+  moduleFiles?: EmittedFile[];
   baseHref?: string;
   deployUrl?: string;
   sri?: boolean;
@@ -45,8 +37,7 @@ export interface WriteIndexHtmlOptions {
 
 export type IndexHtmlTransform = (content: string) => Promise<string>;
 
-export function writeIndexHtml({
-  host,
+export async function writeIndexHtml({
   outputPath,
   indexPath,
   files = [],
@@ -59,39 +50,32 @@ export function writeIndexHtml({
   styles = [],
   postTransform,
   crossOrigin,
-}: WriteIndexHtmlOptions): Observable<void> {
-  return host.read(indexPath).pipe(
-    map((content) => stripBom(virtualFs.fileBufferToString(content))),
-    switchMap((content) =>
-      augmentIndexHtml({
-        input: getSystemPath(outputPath),
-        inputContent: content,
-        baseHref,
-        deployUrl,
-        crossOrigin,
-        sri,
-        entrypoints: generateEntryPoints({ scripts, styles }),
-        files: filterAndMapBuildFiles(files, ['.js', '.css']),
-        noModuleFiles: filterAndMapBuildFiles(noModuleFiles, '.js'),
-        moduleFiles: filterAndMapBuildFiles(moduleFiles, '.js'),
-        loadOutputFile: async (filePath) => {
-          return host
-            .read(join(dirname(outputPath), filePath))
-            .pipe(map((data) => virtualFs.fileBufferToString(data)))
-            .toPromise();
-        },
-      })
-    ),
-    switchMap((content) =>
-      postTransform ? postTransform(content) : of(content)
-    ),
-    map((content) => virtualFs.stringToFileBuffer(content)),
-    switchMap((content) => host.write(outputPath, content))
-  );
+}: WriteIndexHtmlOptions) {
+  let content = readFileSync(indexPath).toString();
+  content = stripBom(content);
+  content = augmentIndexHtml({
+    input: outputPath,
+    inputContent: content,
+    baseHref,
+    deployUrl,
+    crossOrigin,
+    sri,
+    entrypoints: generateEntryPoints({ scripts, styles }),
+    files: filterAndMapBuildFiles(files, ['.js', '.css']),
+    noModuleFiles: filterAndMapBuildFiles(noModuleFiles, '.js'),
+    moduleFiles: filterAndMapBuildFiles(moduleFiles, '.js'),
+    loadOutputFile: (filePath) =>
+      readFileSync(join(dirname(outputPath), filePath)).toString(),
+  });
+  if (postTransform) {
+    content = await postTransform(content);
+  }
+
+  writeFileSync(outputPath, content);
 }
 
 function filterAndMapBuildFiles(
-  files: EmittedFiles[],
+  files: EmittedFile[],
   extensionFilter: ExtensionFilter | ExtensionFilter[]
 ): FileInfo[] {
   const filteredFiles: FileInfo[] = [];
