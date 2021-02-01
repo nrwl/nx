@@ -24,6 +24,7 @@
       "@nrwl/workspace/*": ["./packages/workspace/*"],
       "@nrwl/cli": ["./packages/cli"],
       "@nrwl/cli/*": ["./packages/cli/*"],
+      "@nrwl/cypress": ["./packages/cypress"],
       "@nrwl/express": ["./packages/express"],
       "@nrwl/nest": ["./packages/nest"],
       "@nrwl/next": ["./packages/next"],

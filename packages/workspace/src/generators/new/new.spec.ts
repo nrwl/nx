@@ -62,22 +62,25 @@ describe('new', () => {
   });
 
   describe('--packageManager', () => {
-    describe.each([['npm'], ['yarn'], ['pnpm']])('%s', (packageManager) => {
-      it('should set the packageManager in workspace.json', async () => {
-        await newGenerator(tree, {
-          ...defaultOptions,
-          name: 'my-workspace',
-          directory: 'my-workspace',
-          npmScope: 'npmScope',
-          appName: 'app',
-          cli: 'angular',
-          packageManager,
-        });
+    describe.each([['npm'], ['yarn'], ['pnpm']])(
+      '%s',
+      (packageManager: 'npm' | 'yarn' | 'pnpm') => {
+        it('should set the packageManager in workspace.json', async () => {
+          await newGenerator(tree, {
+            ...defaultOptions,
+            name: 'my-workspace',
+            directory: 'my-workspace',
+            npmScope: 'npmScope',
+            appName: 'app',
+            cli: 'angular',
+            packageManager,
+          });
 
-        const workspaceJson = readJson(tree, 'my-workspace/angular.json');
-        expect(workspaceJson.cli.packageManager).toEqual(packageManager);
-      });
-    });
+          const workspaceJson = readJson(tree, 'my-workspace/angular.json');
+          expect(workspaceJson.cli.packageManager).toEqual(packageManager);
+        });
+      }
+    );
   });
 
   it('should not modify any existing files', async () => {

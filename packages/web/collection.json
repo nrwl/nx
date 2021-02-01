@@ -4,15 +4,30 @@
   "extends": ["@nrwl/workspace"],
   "schematics": {
     "init": {
-      "factory": "./src/schematics/init/init",
-      "schema": "./src/schematics/init/schema.json",
+      "factory": "./src/generators/init/init#webInitSchematic",
+      "schema": "./src/generators/init/schema.json",
       "description": "Add @nrwl/web to a project",
       "hidden": true
     },
 
     "application": {
-      "factory": "./src/schematics/application/application",
-      "schema": "./src/schematics/application/schema.json",
+      "factory": "./src/generators/application/application#applicationSchematic",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "description": "Create an application"
+    }
+  },
+  "generators": {
+    "init": {
+      "factory": "./src/generators/init/init#webInitGenerator",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Add @nrwl/web to a project",
+      "hidden": true
+    },
+
+    "application": {
+      "factory": "./src/generators/application/application#applicationGenerator",
+      "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "description": "Create an application"
     }

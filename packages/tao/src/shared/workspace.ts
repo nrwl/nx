@@ -44,7 +44,10 @@ export interface WorkspaceConfiguration {
   /**
    * Default generator collection. It is used when no collection is provided.
    */
-  cli?: { defaultCollection: string };
+  cli?: {
+    packageManager?: 'npm' | 'yarn' | 'pnpm';
+    defaultCollection?: string;
+  };
 }
 
 /**
