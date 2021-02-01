@@ -16,6 +16,7 @@ import {
   serializeJson,
   Linter,
   updateJsonInTree,
+  readJsonInTree,
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
 import {
@@ -36,9 +37,11 @@ import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 export default function (rawSchema: StorybookConfigureSchema): Rule {
   const schema = normalizeSchema(rawSchema);
 
-  const workspaceStorybookVersion = readCurrentWorkspaceStorybookVersion();
-
   return (tree: Tree, context: SchematicContext) => {
+    const workspaceStorybookVersion = readCurrentWorkspaceStorybookVersion(
+      tree
+    );
+
     const { projectType } = getProjectConfig(tree, schema.name);
     return chain([
       schematic('ng-add', {
@@ -334,8 +337,8 @@ function addStorybookTask(projectName: string, uiFramework: string): Rule {
   });
 }
 
-function readCurrentWorkspaceStorybookVersion(): string {
-  const packageJsonContents = readPackageJson();
+function readCurrentWorkspaceStorybookVersion(tree: Tree): string {
+  const packageJsonContents = readJsonInTree(tree, 'package.json');
   let workspaceStorybookVersion = storybookVersion;
   if (packageJsonContents && packageJsonContents['devDependencies']) {
     if (packageJsonContents['devDependencies']['@storybook/angular']) {

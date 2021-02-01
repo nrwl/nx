@@ -10,3 +10,4 @@ export { libraryGenerator } from './src/schematics/library/library';
 export { reduxGenerator } from './src/schematics/redux/redux';
 export { storiesGenerator } from './src/schematics/stories/stories';
 export { storybookConfigurationGenerator } from './src/schematics/storybook-configuration/configuration';
+export { storybookMigration5to6Generator } from './src/schematics/storybook-migrate-defaults-5-to-6/migrate-defaults-5-to-6';
