@@ -5,6 +5,7 @@ import {
   readFile,
   readJson,
   runCLI,
+  runCLIAsync,
   tmpProjPath,
   uniq,
   updateFile,
@@ -35,7 +36,7 @@ describe('Cli', () => {
     expect(() => runCLI(`counter ${myapp} --result=false`)).toThrowError();
   });
 
-  it('should run npm scripts', () => {
+  it('should run npm scripts', async () => {
     newProject();
     const mylib = uniq('mylib');
     runCLI(`generate @nrwl/node:lib ${mylib}`);
@@ -50,12 +51,14 @@ describe('Cli', () => {
       `libs/${mylib}/package.json`,
       JSON.stringify({
         name: 'mylib1',
-        scripts: { echo: `echo ECHOED:$1` },
+        scripts: { echo: `echo ECHOED` },
       })
     );
 
-    const output = runCLI(`echo ${mylib} --a=123`);
-    expect(output).toContain(`ECHOED: --a=123`);
+    const { stdout } = await runCLIAsync(`echo ${mylib} --a=123`, {
+      silent: true,
+    });
+    expect(stdout).toMatch(/ECHOED "?--a=123"?/);
   }, 1000000);
 
   it('should show help', async () => {

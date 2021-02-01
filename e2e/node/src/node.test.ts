@@ -273,7 +273,7 @@ describe('Node Libraries', () => {
     runCLI(`build ${nglib}`);
     runCLI(`build ${nodelib}`);
     checkFilesExist(`./dist/libs/${nodelib}/esm2015/index.js`);
-  }, 60000);
+  }, 120000);
 
   it('should fail when trying to compile typescript files that are invalid', () => {
     const proj = newProject();
