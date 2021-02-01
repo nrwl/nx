@@ -424,6 +424,11 @@
             "file": "angular/api-angular/generators/storybook-configuration"
           },
           {
+            "name": "storybook-migrate-defaults-5-to-6 generator",
+            "id": "storybook-migrate-defaults-5-to-6",
+            "file": "angular/api-angular/generators/storybook-migrate-defaults-5-to-6"
+          },
+          {
             "name": "upgrade-module generator",
             "id": "upgrade-module",
             "file": "angular/api-angular/generators/upgrade-module"
@@ -494,6 +499,11 @@
             "name": "storybook-configuration generator",
             "id": "storybook-configuration",
             "file": "angular/api-react/generators/storybook-configuration"
+          },
+          {
+            "name": "storybook-migrate-defaults-5-to-6 generator",
+            "id": "storybook-migrate-defaults-5-to-6",
+            "file": "angular/api-react/generators/storybook-migrate-defaults-5-to-6"
           }
         ]
       },
@@ -545,6 +555,11 @@
             "name": "configuration generator",
             "id": "configuration",
             "file": "angular/api-storybook/generators/configuration"
+          },
+          {
+            "name": "migrate-defaults-5-to-6 generator",
+            "id": "migrate-defaults-5-to-6",
+            "file": "angular/api-storybook/generators/migrate-defaults-5-to-6"
           },
           {
             "name": "cypress-project generator",
@@ -1405,6 +1420,11 @@
             "file": "react/api-angular/generators/storybook-configuration"
           },
           {
+            "name": "storybook-migrate-defaults-5-to-6 generator",
+            "id": "storybook-migrate-defaults-5-to-6",
+            "file": "react/api-angular/generators/storybook-migrate-defaults-5-to-6"
+          },
+          {
             "name": "upgrade-module generator",
             "id": "upgrade-module",
             "file": "react/api-angular/generators/upgrade-module"
@@ -1475,6 +1495,11 @@
             "name": "storybook-configuration generator",
             "id": "storybook-configuration",
             "file": "react/api-react/generators/storybook-configuration"
+          },
+          {
+            "name": "storybook-migrate-defaults-5-to-6 generator",
+            "id": "storybook-migrate-defaults-5-to-6",
+            "file": "react/api-react/generators/storybook-migrate-defaults-5-to-6"
           }
         ]
       },
@@ -1531,6 +1556,11 @@
             "name": "cypress-project generator",
             "id": "cypress-project",
             "file": "react/api-storybook/generators/cypress-project"
+          },
+          {
+            "name": "migrate-defaults-5-to-6 generator",
+            "id": "migrate-defaults-5-to-6",
+            "file": "react/api-storybook/generators/migrate-defaults-5-to-6"
           },
           {
             "id": "executors",
@@ -2536,6 +2566,11 @@
             "file": "node/api-angular/generators/storybook-configuration"
           },
           {
+            "name": "storybook-migrate-defaults-5-to-6 generator",
+            "id": "storybook-migrate-defaults-5-to-6",
+            "file": "node/api-angular/generators/storybook-migrate-defaults-5-to-6"
+          },
+          {
             "name": "upgrade-module generator",
             "id": "upgrade-module",
             "file": "node/api-angular/generators/upgrade-module"
@@ -2606,6 +2641,11 @@
             "name": "storybook-configuration generator",
             "id": "storybook-configuration",
             "file": "node/api-react/generators/storybook-configuration"
+          },
+          {
+            "name": "storybook-migrate-defaults-5-to-6 generator",
+            "id": "storybook-migrate-defaults-5-to-6",
+            "file": "node/api-react/generators/storybook-migrate-defaults-5-to-6"
           }
         ]
       },
@@ -2651,6 +2691,11 @@
             "name": "configuration generator",
             "id": "configuration",
             "file": "node/api-storybook/generators/configuration"
+          },
+          {
+            "name": "migrate-defaults-5-to-6 generator",
+            "id": "migrate-defaults-5-to-6",
+            "file": "node/api-storybook/generators/migrate-defaults-5-to-6"
           },
           {
             "name": "cypress-project generator",
