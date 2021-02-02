@@ -298,8 +298,8 @@ The executor's schema describe the inputs--what you can pass into it.
       "description": "Message to echo"
     },
     "upperCase": {
-      "description": "Covert to all upper case",
       "type": "boolean",
+      "description": "Covert to all upper case",
       "default": false
     }
   },
@@ -307,7 +307,7 @@ The executor's schema describe the inputs--what you can pass into it.
 }
 ```
 
-The schema above defines two fields: `message` and `allCaps`. The `message` field is a string, `upperCase` is a boolean. The schema support for executors and generators is identical, so see the section on generators above for more information.
+The schema above defines two fields: `message` and `upperCase`. The `message` field is a string, `upperCase` is a boolean. The schema support for executors and generators is identical, so see the section on generators above for more information.
 
 ### Implementation
 
@@ -318,14 +318,14 @@ Most of the time executors return a promise.
 ```typescript
 interface Schema {
   message: string;
-  allCaps: boolean;
+  upperCase: boolean;
 }
 
 export default async function printAllCaps(
   options: Schema,
   context: ExecutorContext
 ): Promise<{ success: true }> {
-  if (options.allCaps) {
+  if (options.upperCase) {
     console.log(options.message.toUpperCase());
   } else {
     console.log(options.message);
