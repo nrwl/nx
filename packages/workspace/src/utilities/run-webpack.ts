@@ -1,7 +1,12 @@
 import * as webpack from 'webpack';
-import { Observable } from 'rxjs';
 import { Stats, Configuration } from 'webpack';
+import * as WebpackDevServer from 'webpack-dev-server';
+import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
+
+import { Observable } from 'rxjs';
+
 import { extname } from 'path';
+import * as url from 'url';
 
 export function runWebpack(config: Configuration): Observable<Stats> {
   return new Observable((subscriber) => {
@@ -16,12 +21,69 @@ export function runWebpack(config: Configuration): Observable<Stats> {
 
     if (config.watch) {
       const watchOptions = config.watchOptions || {};
-      webpackCompiler.watch(watchOptions, callback);
+      const watching = webpackCompiler.watch(watchOptions, callback);
+
+      return () => {
+        watching.close(() => {});
+      };
     } else {
       webpackCompiler.run((err, stats) => {
         callback(err, stats);
         subscriber.complete();
       });
+    }
+  });
+}
+
+export function runWebpackDevServer(
+  config: Configuration
+): Observable<{ stats: Stats; baseUrl: string }> {
+  return new Observable((subscriber) => {
+    const webpackCompiler = webpack(config);
+
+    let baseUrl: string;
+
+    webpackCompiler.hooks.done.tap('build-webpack', (stats) => {
+      subscriber.next({ stats, baseUrl });
+    });
+
+    const devServerConfig = config.devServer || {};
+
+    const originalOnListen = devServerConfig.onListening;
+
+    devServerConfig.onListening = function (server: any) {
+      originalOnListen(server);
+
+      const devServerOptions: WebpackDevServerConfiguration = server.options;
+      baseUrl = url.format({
+        protocol: devServerOptions.https ? 'https' : 'http',
+        hostname: server.hostname,
+        port: server.listeningApp.address().port,
+        pathname: devServerOptions.publicPath,
+      });
+    };
+
+    const webpackServer = new WebpackDevServer(
+      webpackCompiler,
+      devServerConfig
+    );
+
+    try {
+      const server = webpackServer.listen(
+        devServerConfig.port ?? 8080,
+        devServerConfig.host ?? 'localhost',
+        function (err) {
+          if (err) {
+            subscriber.error(err);
+          }
+        }
+      );
+
+      return () => {
+        server.close();
+      };
+    } catch (e) {
+      throw new Error('Could not start start dev server');
     }
   });
 }

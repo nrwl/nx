@@ -1,9 +1,13 @@
+import { logger } from '@nrwl/devkit';
 import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
+
+import * as opn from 'opn';
+import * as url from 'url';
 import { readFileSync } from 'fs';
 import * as path from 'path';
+
 import { getWebConfig } from './web.config';
 import { Configuration } from 'webpack';
-import { LoggerApi } from '@angular-devkit/core/src/logger';
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { WebDevServerOptions } from '../builders/dev-server/dev-server.impl';
 import { buildServePath } from './serve-path';
@@ -13,8 +17,7 @@ export function getDevServerConfig(
   root: string,
   sourceRoot: string,
   buildOptions: WebBuildBuilderOptions,
-  serveOptions: WebDevServerOptions,
-  logger: LoggerApi
+  serveOptions: WebDevServerOptions
 ) {
   const webpackConfig: Configuration = getWebConfig(
     root,
@@ -52,6 +55,23 @@ function getDevServerPartial(
       index: `${servePath}/${path.basename(buildOptions.index)}`,
       disableDotRule: true,
       htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+    },
+    noInfo: true,
+    onListening: function (server: any) {
+      // Depend on the info in the server for this function because the user might adjust the webpack config
+      const serverUrl = url.format({
+        protocol: server.options.https ? 'https' : 'http',
+        hostname: server.hostname,
+        port: server.listeningApp.address().port,
+        pathname: buildServePath(buildOptions),
+      });
+
+      logger.info(`NX Web Development Server is listening at ${serverUrl}`);
+      if (server.options.open) {
+        opn(serverUrl, {
+          wait: false,
+        });
+      }
     },
     stats: false,
     compress: scriptsOptimization || stylesOptimization,

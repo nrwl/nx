@@ -12,7 +12,7 @@
       "description": "Package a library"
     },
     "dev-server": {
-      "implementation": "./src/builders/dev-server/dev-server.impl",
+      "implementation": "./src/builders/dev-server/compat",
       "schema": "./src/builders/dev-server/schema.json",
       "description": "Serve a web application"
     },

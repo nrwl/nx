@@ -1,27 +1,19 @@
 import {
-  BuilderContext,
-  createBuilder,
-  targetFromTargetString,
-} from '@angular-devkit/architect';
-import { JsonObject } from '@angular-devkit/core';
-
-import { Observable, from, forkJoin } from 'rxjs';
-import { normalizeWebBuildOptions } from '../../utils/normalize';
-import { map, switchMap } from 'rxjs/operators';
-import { WebBuildBuilderOptions } from '../build/build.impl';
+  ExecutorContext,
+  parseTargetString,
+  readTargetOptions,
+} from '@nrwl/devkit';
 import { Configuration } from 'webpack';
-import * as opn from 'opn';
-import * as url from 'url';
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { getDevServerConfig } from '../../utils/devserver.config';
-import { buildServePath } from '../../utils/serve-path';
-import { getSourceRoot } from '../../utils/source-root';
-import {
-  runWebpackDevServer,
-  DevServerBuildOutput,
-} from '@angular-devkit/build-webpack';
 
-export interface WebDevServerOptions extends JsonObject {
+import { eachValueFrom } from 'rxjs-for-await';
+import { map, tap } from 'rxjs/operators';
+import { runWebpackDevServer } from '@nrwl/workspace/src/utilities/run-webpack';
+
+import { normalizeWebBuildOptions } from '../../utils/normalize';
+import { WebBuildBuilderOptions } from '../build/build.impl';
+import { getDevServerConfig } from '../../utils/devserver.config';
+
+export interface WebDevServerOptions {
   host: string;
   port: number;
   publicHost?: string;
@@ -39,111 +31,67 @@ export interface WebDevServerOptions extends JsonObject {
   baseHref?: string;
 }
 
-export default createBuilder<WebDevServerOptions>(run);
-
-export function run(
+export default function devServerExecutor(
   serveOptions: WebDevServerOptions,
-  context: BuilderContext
-): Observable<DevServerBuildOutput> {
-  return forkJoin(
+  context: ExecutorContext
+) {
+  const sourceRoot = context.workspace.projects[context.projectName].sourceRoot;
+  const buildOptions = normalizeWebBuildOptions(
     getBuildOptions(serveOptions, context),
-    from(getSourceRoot(context))
-  ).pipe(
-    map(([buildOptions, sourceRoot]) => {
-      buildOptions = normalizeWebBuildOptions(
-        buildOptions,
-        context.workspaceRoot,
-        sourceRoot
-      );
-      let webpackConfig: Configuration = getDevServerConfig(
-        context.workspaceRoot,
-        sourceRoot,
-        buildOptions,
-        serveOptions,
-        context.logger
-      );
-      if (buildOptions.webpackConfig) {
-        webpackConfig = require(buildOptions.webpackConfig)(webpackConfig, {
-          buildOptions,
-          configuration: serveOptions.buildTarget.split(':')[2],
-        });
-      }
-      return [webpackConfig, buildOptions] as [
-        Configuration,
-        WebBuildBuilderOptions
-      ];
-    }),
-    map(([_, options]) => {
-      const path = buildServePath(options);
-      const serverUrl = url.format({
-        protocol: serveOptions.ssl ? 'https' : 'http',
-        hostname: serveOptions.host,
-        port: serveOptions.port.toString(),
-        pathname: path,
-      });
+    context.root,
+    sourceRoot
+  );
+  let webpackConfig: Configuration = getDevServerConfig(
+    context.root,
+    sourceRoot,
+    buildOptions,
+    serveOptions
+  );
+  if (buildOptions.webpackConfig) {
+    webpackConfig = require(buildOptions.webpackConfig)(webpackConfig, {
+      buildOptions,
+      configuration: serveOptions.buildTarget.split(':')[2],
+    });
+  }
 
-      context.logger.info(stripIndents`
-            **
-            Web Development Server is listening at ${serverUrl}
-            **
-          `);
-      if (serveOptions.open) {
-        opn(serverUrl, {
-          wait: false,
-        });
-      }
-      return [_, options, serverUrl] as [
-        Configuration,
-        WebBuildBuilderOptions,
-        string
-      ];
-    }),
-    switchMap(([config, options, serverUrl]) => {
-      return runWebpackDevServer(config, context, {
-        logging: (stats) => {
-          context.logger.info(stats.toString(config.stats));
-        },
-        webpackFactory: require('webpack'),
-        webpackDevServerFactory: require('webpack-dev-server'),
-      }).pipe(
-        map((output) => {
-          output.baseUrl = serverUrl;
-          return output;
-        })
-      );
-    })
+  return eachValueFrom(
+    runWebpackDevServer(webpackConfig).pipe(
+      tap(({ stats }) => {
+        console.info(stats.toString(webpackConfig.stats));
+      }),
+      map(({ baseUrl, stats }) => {
+        return {
+          stats,
+          baseUrl,
+          success: !stats.hasErrors(),
+        };
+      })
+    )
   );
 }
 
 function getBuildOptions(
   options: WebDevServerOptions,
-  context: BuilderContext
-): Observable<WebBuildBuilderOptions> {
-  const target = targetFromTargetString(options.buildTarget);
-  const overrides: Partial<WebBuildBuilderOptions> = {};
+  context: ExecutorContext
+): WebBuildBuilderOptions {
+  const target = parseTargetString(options.buildTarget);
+  const overrides: Partial<WebBuildBuilderOptions> = {
+    watch: false,
+  };
   if (options.maxWorkers) {
     overrides.maxWorkers = options.maxWorkers;
   }
   if (options.memoryLimit) {
     overrides.memoryLimit = options.memoryLimit;
   }
-  return from(
-    Promise.all([
-      context.getTargetOptions(target),
-      context.getBuilderNameForTarget(target),
-    ])
-      .then(([targetOptions, builderName]) => {
-        if (options.baseHref) {
-          targetOptions.baseHref = options.baseHref;
-        }
-        return context.validateOptions<WebBuildBuilderOptions & JsonObject>(
-          targetOptions,
-          builderName
-        );
-      })
-      .then((options) => ({
-        ...options,
-        ...overrides,
-      }))
-  );
+  if (options.baseHref) {
+    overrides.baseHref = options.baseHref;
+  }
+
+  const buildOptions = readTargetOptions(target, context);
+
+  return {
+    ...buildOptions,
+    ...overrides,
+  };
 }
