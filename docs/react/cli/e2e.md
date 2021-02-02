@@ -64,7 +64,7 @@ Show version number
 
 ### watch
 
-Open the Cypress test runner & autmatically run tests when files are updated
+Open the Cypress test runner & automatically run tests when files are updated
 
 ## Cypress Options
 
