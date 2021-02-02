@@ -137,6 +137,8 @@ export function newProject({ name = uniq('proj') } = {}): string {
       const packages = [
         `@nrwl/angular`,
         `@nrwl/express`,
+        `@nrwl/jest`,
+        `@nrwl/linter`,
         `@nrwl/nest`,
         `@nrwl/next`,
         `@nrwl/gatsby`,
