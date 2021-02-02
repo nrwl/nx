@@ -1,5 +1,20 @@
 {
   "extends": "../../.eslintrc",
   "rules": {},
+  "overrides": [
+    {
+      "files": ["**/*.ts"],
+      "excludedFiles": ["./src/migrations/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "warn",
+          "@nrwl/workspace",
+          "@angular-devkit/core",
+          "@angular-devkit/schematics",
+          "@angular-devkit/architect"
+        ]
+      }
+    }
+  ],
   "ignorePatterns": ["!**/*"]
 }

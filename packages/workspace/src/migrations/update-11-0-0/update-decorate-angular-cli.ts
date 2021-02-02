@@ -9,7 +9,7 @@ export default function update() {
         __dirname as any,
         '..',
         '..',
-        'schematics',
+        'generators',
         'utils',
         'decorate-angular-cli.js__tmpl__'
       )

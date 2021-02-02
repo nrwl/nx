@@ -1,5 +1,14 @@
 {
   "extends": "../../.eslintrc",
   "rules": {},
+  "overrides": [
+    {
+      "files": ["**/*.ts"],
+      "excludedFiles": ["./src/migrations/**"],
+      "rules": {
+        "no-restricted-imports": ["error", "@nrwl/workspace"]
+      }
+    }
+  ],
   "ignorePatterns": ["!**/*"]
 }

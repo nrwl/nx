@@ -1,5 +1,5 @@
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
-import { normalize } from '@angular-devkit/core';
+import { normalizePath } from '@nrwl/devkit';
 import { resolve, dirname, relative, basename } from 'path';
 import {
   AssetGlobPattern,
@@ -85,7 +85,7 @@ export function normalizeAssets(
 ): AssetGlobPattern[] {
   return assets.map((asset) => {
     if (typeof asset === 'string') {
-      const assetPath = normalize(asset);
+      const assetPath = normalizePath(asset);
       const resolvedAssetPath = resolve(root, assetPath);
       const resolvedSourceRoot = resolve(root, sourceRoot);
 
@@ -113,7 +113,7 @@ export function normalizeAssets(
         );
       }
 
-      const assetPath = normalize(asset.input);
+      const assetPath = normalizePath(asset.input);
       const resolvedAssetPath = resolve(root, assetPath);
       return {
         ...asset,

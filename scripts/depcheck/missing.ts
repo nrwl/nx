@@ -18,7 +18,7 @@ const IGNORE_MATCHES = {
     'rxjs',
   ],
   cli: ['@nrwl/cli'],
-  cypress: ['cypress'],
+  cypress: ['cypress', '@angular-devkit/schematics', '@nrwl/cypress'],
   devkit: ['@angular-devkit/architect', 'rxjs'],
   gatsby: ['@angular-devkit/architect', 'babel-preset-gatsby', 'rxjs'],
   jest: [
@@ -70,6 +70,7 @@ const IGNORE_MATCHES = {
     'karma-coverage-istanbul-reporter',
     'karma-jasmine',
     'karma-jasmine-html-reporter',
+    'webpack',
   ],
 };
 

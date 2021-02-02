@@ -58,8 +58,8 @@ describe('<%= className %>Facade', () => {
       class RootModule {}
       TestBed.configureTestingModule({ imports: [RootModule] });
 
-      store = TestBed.get(Store);
-      facade = TestBed.get(<%= className %>Facade);
+      store = TestBed.inject(Store);
+      facade = TestBed.inject(<%= className %>Facade);
     });
 
     /**

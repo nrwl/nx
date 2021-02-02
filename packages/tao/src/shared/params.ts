@@ -15,7 +15,9 @@ type PropertyDescription = {
   default?: string | number | boolean | string[];
   $ref?: string;
   $default?: { $source: 'argv'; index: number } | { $source: 'projectName' };
-  'x-prompt'?: string | { message: string; type: string; items: any[] };
+  'x-prompt'?:
+    | string
+    | { message: string; type: string; items: any[]; multiselect?: boolean };
 };
 
 type Properties = {
@@ -222,6 +224,14 @@ function validateProperty(
     if (schema.type && typeof value !== normalizedPrimitiveType(schema.type)) {
       throw new SchemaError(
         `Property '${propName}' does not match the schema. '${value}' should be a '${schema.type}'.`
+      );
+    }
+
+    if (schema.enum && !schema.enum.includes(value)) {
+      throw new SchemaError(
+        `Property '${propName}' does not match the schema. '${value}' should be one of ${schema.enum.join(
+          ','
+        )}.`
       );
     }
   } else if (Array.isArray(value)) {
@@ -479,6 +489,9 @@ async function promptForValues(opts: Options, schema: Schema) {
       if (typeof v['x-prompt'] === 'string') {
         question.message = v['x-prompt'];
         question.type = v.type === 'boolean' ? 'confirm' : 'string';
+      } else if (v['x-prompt'].type == 'number') {
+        question.message = v['x-prompt'].message;
+        question.type = 'number';
       } else if (
         v['x-prompt'].type == 'confirmation' ||
         v['x-prompt'].type == 'confirm'
@@ -487,7 +500,7 @@ async function promptForValues(opts: Options, schema: Schema) {
         question.type = 'confirm';
       } else {
         question.message = v['x-prompt'].message;
-        question.type = 'list';
+        question.type = v['x-prompt'].multiselect ? 'checkbox' : 'list';
         question.choices =
           v['x-prompt'].items &&
           v['x-prompt'].items.map((item) => {

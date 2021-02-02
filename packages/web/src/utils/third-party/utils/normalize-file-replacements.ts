@@ -6,31 +6,25 @@
  * found in the LICENSE file at https://angular.io/license
  */
 
-import {
-  BaseException,
-  Path,
-  getSystemPath,
-  join,
-  normalize,
-  virtualFs,
-} from '@angular-devkit/core';
+import { normalizePath } from '@nrwl/devkit';
+import { join } from 'path';
+import { existsSync } from 'fs';
 import { FileReplacement } from '../browser/schema';
 
-export class MissingFileReplacementException extends BaseException {
+export class MissingFileReplacementException extends Error {
   constructor(path: String) {
     super(`The ${path} path in file replacements does not exist.`);
   }
 }
 
 export interface NormalizedFileReplacement {
-  replace: Path;
-  with: Path;
+  replace: string;
+  with: string;
 }
 
 export function normalizeFileReplacements(
   fileReplacements: FileReplacement[],
-  host: virtualFs.SyncDelegateHost,
-  root: Path
+  root: string
 ): NormalizedFileReplacement[] {
   if (fileReplacements.length === 0) {
     return [];
@@ -41,12 +35,12 @@ export function normalizeFileReplacements(
   );
 
   for (const { replace, with: replacementWith } of normalizedReplacement) {
-    if (!host.exists(replacementWith)) {
-      throw new MissingFileReplacementException(getSystemPath(replacementWith));
+    if (!existsSync(replacementWith)) {
+      throw new MissingFileReplacementException(replacementWith);
     }
 
-    if (!host.exists(replace)) {
-      throw new MissingFileReplacementException(getSystemPath(replace));
+    if (!existsSync(replace)) {
+      throw new MissingFileReplacementException(replace);
     }
   }
 
@@ -55,16 +49,16 @@ export function normalizeFileReplacements(
 
 function normalizeFileReplacement(
   fileReplacement: FileReplacement,
-  root?: Path
+  root?: string
 ): NormalizedFileReplacement {
-  let replacePath: Path;
-  let withPath: Path;
+  let replacePath: string;
+  let withPath: string;
   if (fileReplacement.src && fileReplacement.replaceWith) {
-    replacePath = normalize(fileReplacement.src);
-    withPath = normalize(fileReplacement.replaceWith);
+    replacePath = normalizePath(fileReplacement.src);
+    withPath = normalizePath(fileReplacement.replaceWith);
   } else if (fileReplacement.replace && fileReplacement.with) {
-    replacePath = normalize(fileReplacement.replace);
-    withPath = normalize(fileReplacement.with);
+    replacePath = normalizePath(fileReplacement.replace);
+    withPath = normalizePath(fileReplacement.with);
   } else {
     throw new Error(
       `Invalid file replacement: ${JSON.stringify(fileReplacement)}`

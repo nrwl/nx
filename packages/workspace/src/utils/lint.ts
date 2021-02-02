@@ -115,6 +115,7 @@ export function addLintFiles(
                 : {}),
             },
             {
+              '@nrwl/linter': nxVersion,
               '@nrwl/eslint-plugin-nx': nxVersion,
               '@typescript-eslint/parser': typescriptESLintVersion,
               '@typescript-eslint/eslint-plugin': typescriptESLintVersion,

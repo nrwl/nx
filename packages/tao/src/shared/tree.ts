@@ -7,7 +7,7 @@ import {
 } from 'fs';
 import { mkdirpSync, rmdirSync } from 'fs-extra';
 import { logger } from './logger';
-import { dirname, join, relative } from 'path';
+import { dirname, join, relative, sep } from 'path';
 const chalk = require('chalk');
 
 /**
@@ -219,7 +219,7 @@ export class FsTree implements Tree {
   }
 
   private normalize(path: string) {
-    return relative(this.root, join(this.root, path));
+    return relative(this.root, join(this.root, path)).split(sep).join('/');
   }
 
   private fsReadDir(dirPath: string) {

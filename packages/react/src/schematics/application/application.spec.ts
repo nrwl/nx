@@ -377,12 +377,20 @@ describe('app', () => {
     expect(eslintJson.extends).toEqual(
       expect.arrayContaining(['plugin:@nrwl/nx/react'])
     );
-    expect(packageJson).toMatchObject({
-      devDependencies: {
-        'eslint-plugin-react': expect.anything(),
-        'eslint-plugin-react-hooks': expect.anything(),
-      },
-    });
+    expect(packageJson.devDependencies.eslint).toBeDefined();
+    expect(packageJson.devDependencies['@nrwl/linter']).toBeDefined();
+    expect(packageJson.devDependencies['@nrwl/eslint-plugin-nx']).toBeDefined();
+    expect(packageJson.devDependencies['eslint-plugin-react']).toBeDefined();
+    expect(
+      packageJson.devDependencies['eslint-plugin-react-hooks']
+    ).toBeDefined();
+    expect(
+      packageJson.devDependencies['@typescript-eslint/parser']
+    ).toBeDefined();
+    expect(
+      packageJson.devDependencies['@typescript-eslint/eslint-plugin']
+    ).toBeDefined();
+    expect(packageJson.devDependencies['eslint-config-prettier']).toBeDefined();
   });
 
   describe('--class-component', () => {

@@ -4,15 +4,15 @@ import { getBrowserConfig } from './third-party/cli-files/models/webpack-configs
 import { getCommonConfig } from './third-party/cli-files/models/webpack-configs/common';
 import { getStylesConfig } from './third-party/cli-files/models/webpack-configs/styles';
 import { Configuration } from 'webpack';
-import { LoggerApi } from '@angular-devkit/core/src/logger';
-import { basename, resolve } from 'path';
+import { basename, resolve, posix } from 'path';
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { convertBuildOptions } from './normalize';
-import { readTsConfig } from '@nrwl/workspace';
+import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { getBaseWebpackPartial } from './config';
 import { IndexHtmlWebpackPlugin } from './third-party/cli-files/plugins/index-html-webpack-plugin';
 import { generateEntryPoints } from './third-party/cli-files/utilities/package-chunk-sort';
 import { ScriptTarget } from 'typescript';
+import { getHashDigest, interpolateName } from 'loader-utils';
 
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
@@ -20,7 +20,6 @@ export function getWebConfig(
   root,
   sourceRoot,
   options: WebBuildBuilderOptions,
-  logger: LoggerApi,
   esm?: boolean,
   isScriptOptimizeOn?: boolean,
   configuration?: string
@@ -40,7 +39,7 @@ export function getWebConfig(
     projectRoot: resolve(root, sourceRoot),
     buildOptions: convertBuildOptions(options),
     esm,
-    logger,
+    console,
     tsConfig,
     tsConfigPath: options.tsConfig,
   };
@@ -135,6 +134,15 @@ function getStylesPartial(
     });
     return rule;
   });
+
+  const loaderModulesOptions = {
+    modules: {
+      mode: 'local',
+      getLocalIdent: getCSSModuleLocalIdent,
+    },
+    importLoaders: 1,
+  };
+
   partial.module.rules = [
     {
       test: /\.css$|\.scss$|\.sass$|\.less$|\.styl$/,
@@ -149,10 +157,7 @@ function getStylesPartial(
             },
             {
               loader: require.resolve('css-loader'),
-              options: {
-                modules: true,
-                importLoaders: 1,
-              },
+              options: loaderModulesOptions,
             },
           ],
         },
@@ -166,10 +171,7 @@ function getStylesPartial(
             },
             {
               loader: require.resolve('css-loader'),
-              options: {
-                modules: true,
-                importLoaders: 1,
-              },
+              options: loaderModulesOptions,
             },
             { loader: require.resolve('sass-loader') },
           ],
@@ -184,10 +186,7 @@ function getStylesPartial(
             },
             {
               loader: require.resolve('css-loader'),
-              options: {
-                modules: true,
-                importLoaders: 1,
-              },
+              options: loaderModulesOptions,
             },
             { loader: require.resolve('less-loader') },
           ],
@@ -202,10 +201,7 @@ function getStylesPartial(
             },
             {
               loader: require.resolve('css-loader'),
-              options: {
-                modules: true,
-                importLoaders: 1,
-              },
+              options: loaderModulesOptions,
             },
             { loader: require.resolve('stylus-loader') },
           ],
@@ -250,4 +246,28 @@ function getPolyfillsPartial(
   }
 
   return config;
+}
+
+function getCSSModuleLocalIdent(context, localIdentName, localName, options) {
+  // Use the filename or folder name, based on some uses the index.js / index.module.(css|scss|sass) project style
+  const fileNameOrFolder = context.resourcePath.match(
+    /index\.module\.(css|scss|sass|styl)$/
+  )
+    ? '[folder]'
+    : '[name]';
+  // Create a hash based on a the file location and class name. Will be unique across a project, and close to globally unique.
+  const hash = getHashDigest(
+    posix.relative(context.rootContext, context.resourcePath) + localName,
+    'md5',
+    'base64',
+    5
+  );
+  // Use loaderUtils to find the file or folder name
+  const className = interpolateName(
+    context,
+    fileNameOrFolder + '_' + localName + '__' + hash,
+    options
+  );
+  // Remove the .module that appears in every classname when based on the file and replace all "." with "_".
+  return className.replace('.module_', '_').replace(/\./g, '_');
 }
