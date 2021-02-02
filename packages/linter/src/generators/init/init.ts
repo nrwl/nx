@@ -15,7 +15,7 @@ import {
 import { Linter } from '../utils/linter';
 
 export interface LinterInitOptions {
-  linter: Linter;
+  linter?: Linter;
 }
 
 const globalTsLintConfiguration = {
@@ -197,9 +197,9 @@ function initEsLint(tree: Tree) {
 }
 
 export function lintInitGenerator(tree: Tree, options: LinterInitOptions) {
-  if (options.linter === Linter.TsLint) {
-    return initTsLint(tree);
-  } else if (options.linter === Linter.EsLint) {
+  if (!options.linter || options.linter === Linter.EsLint) {
     return initEsLint(tree);
+  } else if (options.linter === Linter.TsLint) {
+    return initTsLint(tree);
   }
 }

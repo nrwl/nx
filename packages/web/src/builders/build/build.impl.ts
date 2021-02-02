@@ -33,9 +33,9 @@ import { ExtraEntryPoint } from '../../utils/third-party/browser/schema';
 
 export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   index: string;
-  budgets: any[];
-  baseHref: string;
-  deployUrl: string;
+  budgets?: any[];
+  baseHref?: string;
+  deployUrl?: string;
 
   extractCss?: boolean;
   crossOrigin?: CrossOriginValue;
@@ -48,6 +48,8 @@ export interface WebBuildBuilderOptions extends BuildBuilderOptions {
 
   vendorChunk?: boolean;
   commonChunk?: boolean;
+
+  namedChunks?: boolean;
 
   stylePreprocessingOptions?: any;
   subresourceIntegrity?: boolean;

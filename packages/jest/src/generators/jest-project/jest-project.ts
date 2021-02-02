@@ -23,6 +23,10 @@ function normalizeOptions(options: JestProjectSchema) {
     options.testEnvironment = '';
   }
 
+  if (!options.hasOwnProperty('supportTsx')) {
+    options.supportTsx = false;
+  }
+
   // if we support TSX or babelJest we don't support angular(html templates)
   if (options.supportTsx || options.babelJest) {
     options.skipSerializers = true;

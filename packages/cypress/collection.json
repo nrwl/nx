@@ -3,7 +3,7 @@
   "version": "0.1",
   "schematics": {
     "init": {
-      "factory": "./src/generators/init/init#initSchematic",
+      "factory": "./src/generators/init/init#cypressInitSchematic",
       "schema": "./src/generators/init/schema.json",
       "description": "Initialize the @nrwl/cypress plugin",
       "aliases": ["ng-add"],
@@ -18,7 +18,7 @@
   },
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init#initGenerator",
+      "factory": "./src/generators/init/init#cypressInitGenerator",
       "schema": "./src/generators/init/schema.json",
       "description": "Initialize the @nrwl/cypress plugin",
       "aliases": ["ng-add"],

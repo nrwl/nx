@@ -24,7 +24,7 @@ export interface BuildBuilderOptions {
   maxWorkers?: number;
   poll?: number;
 
-  fileReplacements: FileReplacement[];
+  fileReplacements?: FileReplacement[];
   assets?: any[];
 
   progress?: boolean;

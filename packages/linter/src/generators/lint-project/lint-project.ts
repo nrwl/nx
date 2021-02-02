@@ -13,7 +13,7 @@ import { lintInitGenerator } from '../init/init';
 
 interface LintProjectOptions {
   project: string;
-  linter: Linter;
+  linter?: Linter;
   eslintFilePatterns?: string[];
   tsConfigPaths?: string[];
   skipFormat: boolean;

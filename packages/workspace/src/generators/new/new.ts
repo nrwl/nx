@@ -8,6 +8,9 @@ import {
   convertNxGenerator,
   names,
   getPackageManagerCommand,
+  readWorkspaceConfiguration,
+  updateWorkspaceConfiguration,
+  WorkspaceConfiguration,
 } from '@nrwl/devkit';
 
 import { join } from 'path';
@@ -45,7 +48,7 @@ export interface Schema {
   commit?: { name: string; email: string; message?: string };
   defaultBase: string;
   linter: 'tslint' | 'eslint';
-  packageManager?: string;
+  packageManager?: 'npm' | 'yarn' | 'pnpm';
 }
 
 function generatePreset(host: Tree, opts: Schema) {
@@ -344,13 +347,17 @@ function setDefaultPackageManager(host: Tree, options: Schema) {
     return;
   }
 
-  updateJson(host, getWorkspacePath(host, options), (json) => {
-    if (!json.cli) {
-      json.cli = {};
+  updateJson<WorkspaceConfiguration>(
+    host,
+    getWorkspacePath(host, options),
+    (json) => {
+      if (!json.cli) {
+        json.cli = {};
+      }
+      json.cli.packageManager = options.packageManager;
+      return json;
     }
-    json.cli['packageManager'] = options.packageManager;
-    return json;
-  });
+  );
 }
 
 function setDefault(

@@ -46,10 +46,10 @@ import {
 } from '../../utils/versions';
 import { Schema } from './schema';
 import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
-import { initRootBabelConfig } from '@nrwl/web/src/utils/rules';
 import { updateBabelJestConfig } from '../../rules/update-babel-jest-config';
 import { names, offsetFromRoot } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import init from '../init/init';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -76,6 +76,11 @@ export default function (schema: Schema): Rule {
       options.style = 'none';
     }
     return chain([
+      init({
+        ...options,
+        e2eTestRunner: 'none',
+        skipFormat: true,
+      }),
       addLintFiles(options.projectRoot, options.linter, {
         localConfig: reactEslintJson,
         extraPackageDeps: extraEslintDependencies,
@@ -125,7 +130,6 @@ export default function (schema: Schema): Rule {
         {}
       ),
       updateAppRoutes(options, context),
-      initRootBabelConfig(),
       formatFiles(options),
     ])(host, context);
   };
