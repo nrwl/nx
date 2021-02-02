@@ -1,5 +1,6 @@
 export interface Schema {
   name: string;
+  directory: string;
   npmScope?: string;
   skipInstall?: boolean;
   skipGit?: boolean;

@@ -17,14 +17,15 @@ import { GeneratorCallback } from '@nrwl/tao/src/shared/workspace';
 export function addDependenciesToPackageJson(
   host: Tree,
   dependencies: Record<string, string>,
-  devDependencies: Record<string, string>
+  devDependencies: Record<string, string>,
+  packageJsonPath: string = 'package.json'
 ): GeneratorCallback | undefined {
-  const currentPackageJson = readJson(host, 'package.json');
+  const currentPackageJson = readJson(host, packageJsonPath);
 
   if (
     requiresAddingOfPackages(currentPackageJson, dependencies, devDependencies)
   ) {
-    updateJson(host, 'package.json', (json) => {
+    updateJson(host, packageJsonPath, (json) => {
       json.dependencies = {
         ...(json.dependencies || {}),
         ...dependencies,

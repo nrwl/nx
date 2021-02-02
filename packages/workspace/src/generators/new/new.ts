@@ -4,7 +4,7 @@ import {
   updateJson,
   addDependenciesToPackageJson,
   installPackagesTask,
-  getWorkspacePath,
+  getWorkspacePath as devkitGetWorkspacePath,
   convertNxGenerator,
   names,
   getPackageManagerCommand,
@@ -16,6 +16,7 @@ import { spawn, SpawnOptions } from 'child_process';
 
 import { workspaceGenerator } from '../workspace/workspace';
 import { nxVersion } from '../../utils/versions';
+import { reformattedWorkspaceJsonOrNull } from '@nrwl/tao/src/shared/workspace';
 
 export enum Preset {
   Empty = 'empty',
@@ -161,6 +162,12 @@ export async function newGenerator(host: Tree, options: Schema) {
     throw new Error(`Cannot select nxCloud when skipInstall is set to true.`);
   }
 
+  if (devkitGetWorkspacePath(host)) {
+    throw new Error(
+      'Cannot generate a new workspace within an existing workspace'
+    );
+  }
+
   options = normalizeOptions(options);
 
   const layout: 'packages' | 'apps-and-libs' =
@@ -171,7 +178,7 @@ export async function newGenerator(host: Tree, options: Schema) {
     preset: undefined,
     nxCloud: undefined,
   };
-  workspaceGenerator(host, workspaceOpts);
+  await workspaceGenerator(host, workspaceOpts);
 
   if (options.cli === 'angular') {
     setDefaultPackageManager(host, options);
@@ -181,11 +188,6 @@ export async function newGenerator(host: Tree, options: Schema) {
   addCloudDependencies(host, options);
 
   await formatFiles(host);
-  host.listChanges().forEach((change) => {
-    if (change.type !== 'DELETE') {
-      host.rename(change.path, join(options.directory, change.path));
-    }
-  });
   return async () => {
     installPackagesTask(host, false, options.directory);
     await generatePreset(host, options);
@@ -203,7 +205,8 @@ function addCloudDependencies(host: Tree, options: Schema) {
     return addDependenciesToPackageJson(
       host,
       {},
-      { '@nrwl/nx-cloud': 'latest' }
+      { '@nrwl/nx-cloud': 'latest' },
+      join(options.directory, 'package.json')
     );
   }
 }
@@ -259,7 +262,12 @@ function addPresetDependencies(host: Tree, options: Schema) {
     return;
   }
   const { dependencies, dev } = presetDependencies[options.preset];
-  return addDependenciesToPackageJson(host, dependencies, dev);
+  return addDependenciesToPackageJson(
+    host,
+    dependencies,
+    dev,
+    join(options.directory, 'package.json')
+  );
 }
 
 function normalizeOptions(options: Schema): Schema {
@@ -271,7 +279,8 @@ function normalizeOptions(options: Schema): Schema {
   return options;
 }
 
-function setDefaultLinter(host: Tree, { linter, preset }: Schema) {
+function setDefaultLinter(host: Tree, options: Schema) {
+  const { linter, preset } = options;
   // Don't do anything if someone doesn't pick angular
   if (preset !== 'angular' && preset !== 'angular-nest') {
     return;
@@ -279,11 +288,11 @@ function setDefaultLinter(host: Tree, { linter, preset }: Schema) {
 
   switch (linter) {
     case 'eslint': {
-      setESLintDefault(host);
+      setESLintDefault(host, options);
       break;
     }
     case 'tslint': {
-      setTSLintDefault(host);
+      setTSLintDefault(host, options);
       break;
     }
   }
@@ -292,8 +301,8 @@ function setDefaultLinter(host: Tree, { linter, preset }: Schema) {
 /**
  * This sets ESLint as the default for any schematics that default to TSLint
  */
-function setESLintDefault(host: Tree) {
-  updateJson(host, getWorkspacePath(host), (json) => {
+function setESLintDefault(host: Tree, options: Schema) {
+  updateJson(host, getWorkspacePath(host, options), (json) => {
     setDefault(json, '@nrwl/angular', 'application', 'linter', 'eslint');
     setDefault(json, '@nrwl/angular', 'library', 'linter', 'eslint');
     setDefault(
@@ -310,8 +319,8 @@ function setESLintDefault(host: Tree) {
 /**
  * This sets TSLint as the default for any schematics that default to ESLint
  */
-function setTSLintDefault(host: Tree) {
-  updateJson(host, getWorkspacePath(host), (json) => {
+function setTSLintDefault(host: Tree, options: Schema) {
+  updateJson(host, getWorkspacePath(host, options), (json) => {
     setDefault(json, '@nrwl/workspace', 'library', 'linter', 'tslint');
     setDefault(json, '@nrwl/cypress', 'cypress-project', 'linter', 'tslint');
     setDefault(json, '@nrwl/cypress', 'cypress-project', 'linter', 'tslint');
@@ -326,16 +335,20 @@ function setTSLintDefault(host: Tree) {
   });
 }
 
-function setDefaultPackageManager(host: Tree, { packageManager }: Schema) {
-  if (!packageManager) {
+function getWorkspacePath(host: Tree, { directory, cli }: Schema) {
+  return join(directory, cli === 'angular' ? 'angular.json' : 'workspace.json');
+}
+
+function setDefaultPackageManager(host: Tree, options: Schema) {
+  if (!options.packageManager) {
     return;
   }
 
-  updateJson(host, getWorkspacePath(host), (json) => {
+  updateJson(host, getWorkspacePath(host, options), (json) => {
     if (!json.cli) {
       json.cli = {};
     }
-    json.cli['packageManager'] = packageManager;
+    json.cli['packageManager'] = options.packageManager;
     return json;
   });
 }
