@@ -44,7 +44,7 @@ function invokeNxGenerator<T = any>(generator: Generator<T>, options: T) {
       engineHost.registerTaskExecutor(createRunCallbackTask());
     }
 
-    const root = context.engine.workflow
+    const root = context.engine.workflow.engineHost.paths
       ? context.engine.workflow.engineHost.paths[1]
       : tree.root.path;
 
