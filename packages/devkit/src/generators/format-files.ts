@@ -57,6 +57,10 @@ export async function formatFiles(host: Tree) {
 
 function updateWorkspaceJsonToMatchFormatVersion(host: Tree) {
   const path = getWorkspacePath(host);
+  if (!path) {
+    return;
+  }
+
   try {
     const workspaceJson = JSON.parse(
       stripJsonComments(host.read(path).toString())
