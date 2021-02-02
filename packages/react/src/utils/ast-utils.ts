@@ -500,6 +500,10 @@ export function getComponentPropsInterface(
     if (propsParam && propsParam.type) {
       propsTypeName = ((propsParam.type as ts.TypeReferenceNode)
         .typeName as ts.Identifier).text;
+    } else {
+      // If user is using React.FC<INTERFACE> then get the name of it
+      propsTypeName = ((cmpDeclaration as ts.VariableDeclaration)
+        .type as ts.NodeWithTypeArguments)?.typeArguments[0].getText();
     }
   } else if (
     // do we have a class component extending from React.Component

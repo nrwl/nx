@@ -63,7 +63,7 @@ describe('react:component-story', () => {
         expect(stripIndents`${tree.readContent(storyFilePath)}`)
           .toContain(stripIndents`
             import React from 'react';
-            import { TestUiLib, TestUiLibProps } from './test-ui-lib';
+            import { TestUiLib, ITestUiLibProps } from './test-ui-lib';
             
             export default {
               component: TestUiLib,
@@ -72,9 +72,9 @@ describe('react:component-story', () => {
             
             export const primary = () => {
               /* eslint-disable-next-line */
-              const props: TestUiLibProps = {};
+              const props: ITestUiLibProps = {};
             
-              return <TestUiLib />;
+              return <TestUiLib></TestUiLib>;
             };
           `);
       });
@@ -132,7 +132,7 @@ describe('react:component-story', () => {
               /* eslint-disable-next-line */
               const props = {};
             
-              return <Test />;
+              return <Test></Test>;
             };
           `);
       });
@@ -180,7 +180,7 @@ describe('react:component-story', () => {
             };
             
             export const primary = () => {
-              return <Test />;
+              return <Test></Test>;
             };
           `);
       });
@@ -194,12 +194,12 @@ describe('react:component-story', () => {
   
           import './test.scss';
           
-          export interface TestProps {
+          export interface ITestProps {
             name: string;
             displayAge: boolean;
           }
           
-          export const Test = (props: TestProps) => {
+          export const Test = (props: ITestProps) => {
             return (
               <div>
                 <h1>Welcome to test component, {props.name}</h1>
@@ -226,7 +226,7 @@ describe('react:component-story', () => {
           .toContain(stripIndents`
             import { text, boolean } from '@storybook/addon-knobs';
             import React from 'react';
-            import { Test, TestProps } from './test-ui-lib';
+            import { Test, ITestProps } from './test-ui-lib';
             
             export default {
               component: Test,
@@ -234,12 +234,12 @@ describe('react:component-story', () => {
             };
             
             export const primary = () => {
-              const props: TestProps = {
+              const props: ITestProps = {
                 name: text('name', ''),
                 displayAge: boolean('displayAge', false),
               };
             
-              return <Test name={props.name} displayAge={props.displayAge} />;
+              return <Test name={props.name} displayAge={props.displayAge}></Test>;
             };
           `);
       });
@@ -248,7 +248,7 @@ describe('react:component-story', () => {
     [
       {
         name: 'default export function',
-        src: `export default function Test(props: TestProps) {
+        src: `export default function Test(props: ITestProps) {
         return (
           <div>
             <h1>Welcome to test component, {props.name}</h1>
@@ -260,7 +260,7 @@ describe('react:component-story', () => {
       {
         name: 'function and then export',
         src: `
-      function Test(props: TestProps) {
+      function Test(props: ITestProps) {
         return (
           <div>
             <h1>Welcome to test component, {props.name}</h1>
@@ -273,7 +273,7 @@ describe('react:component-story', () => {
       {
         name: 'arrow function',
         src: `
-      const Test = (props: TestProps) => {
+      const Test = (props: ITestProps) => {
         return (
           <div>
             <h1>Welcome to test component, {props.name}</h1>
@@ -286,14 +286,14 @@ describe('react:component-story', () => {
       {
         name: 'arrow function without {..}',
         src: `
-      const Test = (props: TestProps) => <div><h1>Welcome to test component, {props.name}</h1></div>;
+      const Test = (props: ITestProps) => <div><h1>Welcome to test component, {props.name}</h1></div>;
       export default Test
       `,
       },
       {
         name: 'direct export of component class',
         src: `
-        export default class Test extends React.Component<TestProps> {
+        export default class Test extends React.Component<ITestProps> {
           render() {
             return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
           }
@@ -303,7 +303,7 @@ describe('react:component-story', () => {
       {
         name: 'component class & then default export',
         src: `
-        class Test extends React.Component<TestProps> {
+        class Test extends React.Component<ITestProps> {
           render() {
             return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
           }
@@ -314,7 +314,7 @@ describe('react:component-story', () => {
       {
         name: 'PureComponent class & then default export',
         src: `
-        class Test extends React.PureComponent<TestProps> {
+        class Test extends React.PureComponent<ITestProps> {
           render() {
             return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
           }
@@ -331,7 +331,7 @@ describe('react:component-story', () => {
     
             import './test.scss';
             
-            export interface TestProps {
+            export interface ITestProps {
               name: string;
               displayAge: boolean;
             }
@@ -355,7 +355,7 @@ describe('react:component-story', () => {
             .toContain(stripIndents`
             import { text, boolean } from '@storybook/addon-knobs';
             import React from 'react';
-            import { Test, TestProps } from './test-ui-lib';
+            import { Test, ITestProps } from './test-ui-lib';
             
             export default {
               component: Test,
@@ -363,12 +363,12 @@ describe('react:component-story', () => {
             };
             
             export const primary = () => {
-              const props: TestProps = {
+              const props: ITestProps = {
                 name: text('name', ''),
                 displayAge: boolean('displayAge', false),
               };
             
-              return <Test name={props.name} displayAge={props.displayAge} />;
+              return <Test name={props.name} displayAge={props.displayAge}></Test>;
             };
           `);
         });
@@ -393,7 +393,7 @@ describe('react:component-story', () => {
       expect(stripIndents`${tree.readContent(storyFilePath)}`)
         .toContain(stripIndents`
           import React from 'react';
-          import { TestUiLib, TestUiLibProps } from './test-ui-lib';
+          import { TestUiLib, ITestUiLibProps } from './test-ui-lib';
           
           export default {
             component: TestUiLib,
@@ -402,9 +402,9 @@ describe('react:component-story', () => {
           
           export const primary = () => {
             /* eslint-disable-next-line */
-            const props: TestUiLibProps = {};
+            const props: ITestUiLibProps = {};
           
-            return <TestUiLib />;
+            return <TestUiLib></TestUiLib>;
           };
         `);
     });

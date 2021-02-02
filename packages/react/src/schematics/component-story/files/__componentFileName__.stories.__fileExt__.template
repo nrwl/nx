@@ -15,5 +15,5 @@ export const primary = () => {
   };
   <% } %>
 
-  return <<%= componentName %> <% for (let prop of props) { %><%= prop.name %> = {props.<%= prop.name %>} <% } %> />;
+  return <<%= componentName %> <% for (let prop of props) { %><%= prop.name %> = {props.<%= prop.name %>} <% }%>></<%= componentName %>>;
 };
