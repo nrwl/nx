@@ -19,10 +19,13 @@ import * as chalk from 'chalk';
 import { logger } from '../shared/logger';
 import { eachValueFrom } from 'rxjs-for-await';
 
-export interface RunOptions {
+export interface Target {
   project: string;
   target: string;
-  configuration: string;
+  configuration?: string;
+}
+
+export interface RunOptions extends Target {
   help: boolean;
   runOptions: Options;
 }

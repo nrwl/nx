@@ -1,36 +1,56 @@
-import { MockBuilderContext } from '@nrwl/workspace/testing';
-import { getMockContext } from '../../utils/testing';
-import { EMPTY } from 'rxjs';
 import * as normalizeUtils from '../../utils/normalize';
 import { WebBuildBuilderOptions } from '../build/build.impl';
-import { run, WebDevServerOptions } from './dev-server.impl';
+import webDevServerImpl, { WebDevServerOptions } from './dev-server.impl';
 
-jest.mock('@angular-devkit/build-webpack', () => ({
-  runWebpackDevServer: () => EMPTY,
-}));
+jest.mock('@nrwl/devkit');
+import { readTargetOptions, ExecutorContext } from '@nrwl/devkit';
 
 jest.mock('../../utils/devserver.config', () => ({
   getDevServerConfig: jest.fn().mockReturnValue({}),
 }));
 
 describe('Web Server Builder', () => {
-  let context: MockBuilderContext;
+  let context: ExecutorContext;
   let options: WebDevServerOptions;
 
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    context = await getMockContext();
-    context.getProjectMetadata = jest
-      .fn()
-      .mockReturnValue({ sourceRoot: '/root/app/src' });
-
-    context.getTargetOptions = jest.fn().mockReturnValue({});
+    context = {
+      root: '/root',
+      cwd: '/root',
+      projectName: 'proj',
+      targetName: 'serve',
+      workspace: {
+        version: 2,
+        projects: {
+          proj: {
+            root: 'proj',
+            sourceRoot: 'proj/src',
+            targets: {
+              serve: {
+                executor: '@nrwl/web:dev-server',
+                options: {
+                  buildTarget: 'proj:build',
+                },
+              },
+              build: {
+                executor: 'build',
+                options: {},
+              },
+            },
+          },
+        },
+      },
+      isVerbose: false,
+    };
 
     options = {
-      buildTarget: 'app:build',
+      buildTarget: 'proj:build',
       port: 4200,
     } as WebDevServerOptions;
+
+    (readTargetOptions as any).mockImplementation(() => {});
 
     jest
       .spyOn(normalizeUtils, 'normalizeWebBuildOptions')
@@ -39,14 +59,14 @@ describe('Web Server Builder', () => {
 
   it('should pass `baseHref` to build', async () => {
     const baseHref = '/my-domain';
-    await run({ ...options, baseHref }, context).toPromise();
+    await webDevServerImpl({ ...options, baseHref }, context);
 
     expect(normalizeUtils.normalizeWebBuildOptions).toHaveBeenCalledWith(
       expect.objectContaining({
         baseHref,
       }),
       '/root',
-      '/root/app/src'
+      'proj/src'
     );
   });
 });

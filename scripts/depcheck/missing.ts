@@ -71,6 +71,7 @@ const IGNORE_MATCHES = {
     'karma-jasmine',
     'karma-jasmine-html-reporter',
     'webpack',
+    'webpack-dev-server',
   ],
 };
 
