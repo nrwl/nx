@@ -90,6 +90,34 @@ describe('params', () => {
       });
     });
 
+    it('should handle oneOf with enums inside', () => {
+      const opts = coerceTypesInOptions(
+        { inspect: 'inspect' } as any,
+        {
+          properties: {
+            inspect: {
+              oneOf: [
+                {
+                  type: 'string',
+                  enum: ['inspect', 'inspect-brk'],
+                },
+                {
+                  type: 'number',
+                },
+                {
+                  type: 'boolean',
+                },
+              ],
+            },
+          },
+        } as Schema
+      );
+
+      expect(opts).toEqual({
+        inspect: 'inspect',
+      });
+    });
+
     it('should only coerce string values', () => {
       const opts = coerceTypesInOptions(
         { a: true } as any,
@@ -533,6 +561,74 @@ describe('params', () => {
           }
         )
       ).not.toThrow();
+    });
+
+    it('should handle oneOf properties with enums', () => {
+      // matching enum value
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: 'inspect' },
+          {
+            properties: {
+              a: {
+                oneOf: [
+                  {
+                    type: 'string',
+                    enum: ['inspect', 'inspect-brk'],
+                  },
+                  {
+                    type: 'boolean',
+                  },
+                ],
+              },
+            },
+          }
+        )
+      ).not.toThrow();
+
+      // matching oneOf value
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: true },
+          {
+            properties: {
+              a: {
+                oneOf: [
+                  {
+                    type: 'string',
+                    enum: ['inspect', 'inspect-brk'],
+                  },
+                  {
+                    type: 'boolean',
+                  },
+                ],
+              },
+            },
+          }
+        )
+      ).not.toThrow();
+
+      // non-matching enum value
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: 'abc' },
+          {
+            properties: {
+              a: {
+                oneOf: [
+                  {
+                    type: 'string',
+                    enum: ['inspect', 'inspect-brk'],
+                  },
+                  {
+                    type: 'boolean',
+                  },
+                ],
+              },
+            },
+          }
+        )
+      ).toThrow();
     });
 
     it("should throw if the type doesn't match (arrays)", () => {
