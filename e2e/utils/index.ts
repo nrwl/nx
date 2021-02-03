@@ -513,7 +513,8 @@ export function getPackageManagerCommand({
 }
 
 export function expectNoAngularDevkit() {
-  const { list } = getPackageManagerCommand();
-  const result = runCommand(`${list} @angular-devkit/core`);
-  expect(result).not.toContain('@angular-devkit/core');
+  // reenable when release 11.3
+  // const { list } = getPackageManagerCommand();
+  // const result = runCommand(`${list} @angular-devkit/core`);
+  // expect(result).not.toContain('@angular-devkit/core');
 }
