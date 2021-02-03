@@ -1,6 +1,4 @@
 /* eslint-disable no-restricted-imports */
-import { Architect, BuilderOutput } from '@angular-devkit/architect';
-import { WorkspaceNodeModulesArchitectHost } from '@angular-devkit/architect/node';
 import {
   json,
   logging,
@@ -40,7 +38,12 @@ export async function scheduleTarget(
     runOptions: any;
   },
   verbose: boolean
-): Promise<Observable<BuilderOutput>> {
+): Promise<Observable<import('@angular-devkit/architect').BuilderOutput>> {
+  const { Architect } = require('@angular-devkit/architect');
+  const {
+    WorkspaceNodeModulesArchitectHost,
+  } = require('@angular-devkit/architect/node');
+
   const logger = getLogger(verbose);
   const fsHost = new NxScopedHost(normalize(root));
   const { workspace } = await workspaces.readWorkspace(
