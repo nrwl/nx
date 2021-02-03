@@ -112,7 +112,10 @@ function readTsConfigWithRemappedPaths(
   return generatedTsConfig;
 }
 
-export function computeCompilerOptionsPaths(tsConfig, dependencies) {
+export function computeCompilerOptionsPaths(
+  tsConfig: string,
+  dependencies: DependentBuildableProjectNode[]
+) {
   const paths = readPaths(tsConfig) || {};
   updatePaths(dependencies, paths);
   return paths;
