@@ -192,7 +192,7 @@ export async function newGenerator(host: Tree, options: Schema) {
 
   await formatFiles(host);
   return async () => {
-    installPackagesTask(host, false, options.directory);
+    installPackagesTask(host, false, options.directory, options.packageManager);
     await generatePreset(host, options);
     if (!options.skipGit) {
       await initializeGitRepo(host, options.directory, options);
