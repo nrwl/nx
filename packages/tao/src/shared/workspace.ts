@@ -44,7 +44,10 @@ export interface WorkspaceConfiguration {
   /**
    * Default generator collection. It is used when no collection is provided.
    */
-  cli?: { defaultCollection: string };
+  cli?: {
+    packageManager?: 'npm' | 'yarn' | 'pnpm';
+    defaultCollection?: string;
+  };
 }
 
 /**
@@ -167,6 +170,16 @@ export interface ExecutorContext {
    * The name of the project being executed on
    */
   projectName?: string;
+
+  /**
+   * The name of the target being executed
+   */
+  targetName?: string;
+
+  /**
+   * The name of the configuration being executed
+   */
+  configurationName?: string;
 
   /**
    * The configuration of the target being executed

@@ -76,7 +76,7 @@ async function addLinter(host: Tree, options: CypressProjectSchema) {
     ],
   });
 
-  if (options.linter !== Linter.EsLint) {
+  if (!options.linter || options.linter !== Linter.EsLint) {
     return installTask;
   }
 
@@ -147,6 +147,8 @@ function normalizeOptions(host: Tree, options: Schema): CypressProjectSchema {
         options.name
       )
     : joinPathFragments(appsDir, options.name);
+
+  options.linter = options.linter || Linter.EsLint;
   return {
     ...options,
     projectName,

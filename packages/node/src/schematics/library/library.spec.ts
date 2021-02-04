@@ -134,8 +134,8 @@ describe('lib', () => {
                 "project": Array [
                   "libs/my-lib/tsconfig.*?.json",
                 ],
-                "rules": Object {},
               },
+              "rules": Object {},
             },
             Object {
               "files": Array [

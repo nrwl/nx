@@ -1,21 +1,21 @@
-# Next.js Plugin
+# Gatsby Plugin
 
-The Nx Plugin for Next.js contains executors and generators for managing Next.js applications and libraries within an Nx workspace. It provides:
+The Nx Plugin for Gatsby contains executors and generators for managing Gatsby applications and libraries within an Nx workspace. It provides:
 
-- Scaffolding for creating, building, serving, linting, and testing Next.js applications.
-- Integration with building, serving, and exporting a Next.js application.
+- Scaffolding for creating, building, serving, linting, and testing Gatsby applications.
+- Integration with building, serving, and exporting a Gatsby application.
 - Integration with React libraries within the workspace.
 
-## Installing the Next.js Plugin
+## Installing the Gatsby Plugin
 
-Installing the Next plugin to a workspace can be done with the following:
+Installing the Gatsby plugin to a workspace can be done with the following:
 
 ```shell script
-yarn add -D @nrwl/next
+yarn add -D @nrwl/gatsby
 ```
 
 ```shell script
-npm install -D @nrwl/next
+npm install -D @nrwl/gatsby
 ```
 
 ## Applications
@@ -23,7 +23,7 @@ npm install -D @nrwl/next
 Generating new applications can be done with the following:
 
 ```shell script
-nx generate @nrwl/next:application <name>
+nx generate @nrwl/gatsby:application <name>
 ```
 
 This creates the following app structure:
@@ -32,11 +32,13 @@ This creates the following app structure:
 myorg/
 ├── apps/
 │   ├── myapp/
-│   │   ├── pages/
-│   │   │   ├── index.css
-│   │   │   └── index.tsx
+│   │   ├── src/
+│   │   │   ├── pages/
+│   │   │   │   ├── index.module.css
+│   │   │   │   └── index.tsx
 │   │   ├── jest.conf.js
 │   │   ├── tsconfig.json
+│   │   ├── tsconfig.app.json
 │   │   ├── tsconfig.spec.json
 │   │   └── .eslintrc.json
 │   └── myapp-e2e/
@@ -60,14 +62,15 @@ myorg/
 
 ## See Also
 
-- [Using Next.js](https://nextjs.org/docs/getting-started)
+- [Using Gatsby](https://www.gatsbyjs.com/docs/quick-start/)
 
 ## Executors / Builders
 
-- [build](/{{framework}}/plugins/next/executors/build) - Builds a Next.js application
-- [dev-server](/{{framework}}/plugins/next/executors/dev-server) - Builds and serves a Next.js application
-- [export](/{{framework}}/plugins/next/executors/package) - Export a Next.js app. The exported application is located at `dist/$outputPath/exported`
+- [build](/{{framework}}/plugins/gatsby/executors/build) - Builds a Gatsby application
+- [server](/{{framework}}/plugins/gatsby/executors/server) - Builds and serves a Gatsby application
 
 ## Generators
 
-- [application](/{{framework}}/plugins/next/generators/application) - Create an Next.js application
+- [application](/{{framework}}/plugins/gatsby/generators/application) - Create a Gatsby application
+- [component](/{{framework}}/plugins/gatsby/generators/component) - Create a Gatsby component
+- [page](/{{framework}}/plugins/gatsby/generators/page) - Create a Gatsby page

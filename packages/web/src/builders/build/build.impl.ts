@@ -1,44 +1,41 @@
-import { BuilderContext, createBuilder } from '@angular-devkit/architect';
-import {
-  join as devkitJoin,
-  JsonObject,
-  normalize,
-} from '@angular-devkit/core';
-import { BuildResult, runWebpack } from '@angular-devkit/build-webpack';
+import { ExecutorContext } from '@nrwl/devkit';
+import * as webpack from 'webpack';
+import { Stats } from 'webpack';
+
 import { from, of } from 'rxjs';
-import { normalizeWebBuildOptions } from '../../utils/normalize';
-import { getWebConfig } from '../../utils/web.config';
-import { BuildBuilderOptions } from '../../utils/types';
-import {
-  bufferCount,
-  concatMap,
-  map,
-  mergeScan,
-  switchMap,
-} from 'rxjs/operators';
-import { getSourceRoot } from '../../utils/source-root';
-import { writeIndexHtml } from '../../utils/third-party/cli-files/utilities/index-file/write-index-html';
-import { NodeJsSyncHost } from '@angular-devkit/core/node';
+import { bufferCount, mergeScan, switchMap, tap } from 'rxjs/operators';
+import { eachValueFrom } from 'rxjs-for-await';
 import { execSync } from 'child_process';
 import { Range, satisfies } from 'semver';
 import { basename, join } from 'path';
+
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
-} from '@nrwl/workspace/src/utils/buildable-libs-utils';
+} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import {
+  getEmittedFiles,
+  runWebpack,
+} from '@nrwl/workspace/src/utilities/run-webpack';
+import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+
+import { writeIndexHtml } from '../../utils/third-party/cli-files/utilities/index-file/write-index-html';
 import { CrossOriginValue } from '../../utils/third-party/cli-files/utilities/index-file/augment-index-html';
-import { readTsConfig } from '@nrwl/workspace';
 import { BuildBrowserFeatures } from '../../utils/third-party/utils/build-browser-features';
+
+import { normalizeWebBuildOptions } from '../../utils/normalize';
+import { getWebConfig } from '../../utils/web.config';
+import { BuildBuilderOptions } from '../../utils/types';
 import { deleteOutputDir } from '../../utils/delete-output-dir';
 import { ExtraEntryPoint } from '../../utils/third-party/browser/schema';
 
 export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   index: string;
-  budgets: any[];
-  baseHref: string;
-  deployUrl: string;
+  budgets?: any[];
+  baseHref?: string;
+  deployUrl?: string;
 
   extractCss?: boolean;
   crossOrigin?: CrossOriginValue;
@@ -52,6 +49,8 @@ export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   vendorChunk?: boolean;
   commonChunk?: boolean;
 
+  namedChunks?: boolean;
+
   stylePreprocessingOptions?: any;
   subresourceIntegrity?: boolean;
 
@@ -61,17 +60,62 @@ export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   deleteOutputPath?: boolean;
 }
 
-export default createBuilder<WebBuildBuilderOptions & JsonObject>(run);
-
-export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
-  const host = new NodeJsSyncHost();
+function getWebpackConfigs(
+  options: WebBuildBuilderOptions,
+  context: ExecutorContext
+): webpack.Configuration[] {
+  const metadata = context.workspace.projects[context.projectName];
+  const sourceRoot = metadata.sourceRoot;
+  const projectRoot = metadata.root;
+  options = normalizeWebBuildOptions(options, context.root, sourceRoot);
   const isScriptOptimizeOn =
     typeof options.optimization === 'boolean'
       ? options.optimization
       : options.optimization && options.optimization.scripts
       ? options.optimization.scripts
       : false;
+  const tsConfig = readTsConfig(options.tsConfig);
+  const scriptTarget = tsConfig.options.target;
 
+  const buildBrowserFeatures = new BuildBrowserFeatures(
+    projectRoot,
+    scriptTarget
+  );
+
+  return [
+    // ESM build for modern browsers.
+    getWebConfig(
+      context.root,
+      sourceRoot,
+      options,
+      true,
+      isScriptOptimizeOn,
+      context.configurationName
+    ),
+    // ES5 build for legacy browsers.
+    isScriptOptimizeOn && buildBrowserFeatures.isDifferentialLoadingNeeded()
+      ? getWebConfig(
+          context.root,
+          sourceRoot,
+          options,
+          false,
+          isScriptOptimizeOn,
+          context.configurationName
+        )
+      : undefined,
+  ]
+    .filter(Boolean)
+    .map((config) =>
+      options.webpackConfig
+        ? require(options.webpackConfig)(config, {
+            options,
+            configuration: context.configurationName,
+          })
+        : config
+    );
+}
+
+export function run(options: WebBuildBuilderOptions, context: ExecutorContext) {
   // Node versions 12.2-12.8 has a bug where prod builds will hang for 2-3 minutes
   // after the program exits.
   const nodeVersion = execSync(`node --version`).toString('utf-8').trim();
@@ -81,145 +125,85 @@ export function run(options: WebBuildBuilderOptions, context: BuilderContext) {
       `Node version ${nodeVersion} is not supported. Supported range is "${supportedRange.raw}".`
     );
   }
+  const metadata = context.workspace.projects[context.projectName];
 
-  if (!options.buildLibsFromSource) {
+  if (!options.buildLibsFromSource && context.targetName) {
     const projGraph = createProjectGraph();
-    const { target, dependencies } = calculateProjectDependencies(
+    const { dependencies } = calculateProjectDependencies(
       projGraph,
-      context
+      context.root,
+      context.projectName,
+      context.targetName,
+      context.configurationName
     );
     options.tsConfig = createTmpTsConfig(
-      join(context.workspaceRoot, options.tsConfig),
-      context.workspaceRoot,
-      target.data.root,
+      join(context.root, options.tsConfig),
+      context.root,
+      metadata.root,
       dependencies
     );
 
-    if (!checkDependentProjectsHaveBeenBuilt(context, dependencies)) {
-      return { success: false };
+    if (
+      !checkDependentProjectsHaveBeenBuilt(
+        context.root,
+        context.projectName,
+        context.targetName,
+        dependencies
+      )
+    ) {
+      throw new Error();
     }
   }
 
   // Delete output path before bundling
   if (options.deleteOutputPath) {
-    deleteOutputDir(context.workspaceRoot, options.outputPath);
+    deleteOutputDir(context.root, options.outputPath);
   }
 
-  return from(getSourceRoot(context))
-    .pipe(
-      concatMap(async (sourceRoot) => {
-        options = normalizeWebBuildOptions(
-          options,
-          context.workspaceRoot,
-          sourceRoot
-        );
-        const tsConfig = readTsConfig(options.tsConfig);
-        const scriptTarget = tsConfig.options.target;
-        const metadata = await context.getProjectMetadata(
-          context.target.project
-        );
-        const projectRoot = metadata.root as string;
-
-        const buildBrowserFeatures = new BuildBrowserFeatures(
-          projectRoot,
-          scriptTarget
-        );
-
-        return [
-          // ESM build for modern browsers.
-          getWebConfig(
-            context.workspaceRoot,
-            sourceRoot,
-            options,
-            context.logger,
-            true,
-            isScriptOptimizeOn,
-            context.target.configuration
-          ),
-          // ES5 build for legacy browsers.
-          isScriptOptimizeOn &&
-          buildBrowserFeatures.isDifferentialLoadingNeeded()
-            ? getWebConfig(
-                context.workspaceRoot,
-                sourceRoot,
-                options,
-                context.logger,
-                false,
-                isScriptOptimizeOn,
-                context.target.configuration
-              )
-            : undefined,
-        ]
-          .filter(Boolean)
-          .map((config) =>
-            options.webpackConfig
-              ? require(options.webpackConfig)(config, {
-                  options,
-                  configuration: context.target.configuration,
-                })
-              : config
-          );
+  const configs = getWebpackConfigs(options, context);
+  return eachValueFrom(
+    from(configs).pipe(
+      // Run build sequentially and bail when first one fails.
+      mergeScan(
+        (acc, config) => {
+          if (!acc.hasErrors()) {
+            return runWebpack(config).pipe(
+              tap((stats) => {
+                console.info(stats.toString(config.stats));
+              })
+            );
+          } else {
+            return of();
+          }
+        },
+        { hasErrors: () => false } as Stats,
+        1
+      ),
+      // Collect build results as an array.
+      bufferCount(configs.length),
+      switchMap(async ([result1, result2]) => {
+        const success =
+          result1 && !result1.hasErrors() && (!result2 || !result2.hasErrors());
+        const emittedFiles1 = getEmittedFiles(result1);
+        const emittedFiles2 = result2 ? getEmittedFiles(result2) : [];
+        if (options.optimization) {
+          await writeIndexHtml({
+            crossOrigin: options.crossOrigin,
+            outputPath: join(options.outputPath, basename(options.index)),
+            indexPath: join(context.root, options.index),
+            files: emittedFiles1.filter((x) => x.extension === '.css'),
+            noModuleFiles: emittedFiles2,
+            moduleFiles: emittedFiles1,
+            baseHref: options.baseHref,
+            deployUrl: options.deployUrl,
+            scripts: options.scripts,
+            styles: options.styles,
+          });
+        }
+        return { success, emittedFiles: [...emittedFiles1, ...emittedFiles2] };
       })
     )
-    .pipe(
-      switchMap((configs) =>
-        from(configs).pipe(
-          // Run build sequentially and bail when first one fails.
-          mergeScan(
-            (acc, config) => {
-              if (acc.success) {
-                return runWebpack(config, context, {
-                  logging: (stats) => {
-                    context.logger.info(stats.toString(config.stats));
-                  },
-                  webpackFactory: require('webpack'),
-                });
-              } else {
-                return of();
-              }
-            },
-            { success: true } as BuildResult,
-            1
-          ),
-          // Collect build results as an array.
-          bufferCount(configs.length)
-        )
-      ),
-      switchMap(([result1, result2 = { success: true, emittedFiles: [] }]) => {
-        const success = [result1, result2].every((result) => result.success);
-        return (options.optimization
-          ? writeIndexHtml({
-              crossOrigin: options.crossOrigin,
-              host,
-              outputPath: devkitJoin(
-                normalize(options.outputPath),
-                basename(options.index)
-              ),
-              indexPath: devkitJoin(
-                normalize(context.workspaceRoot),
-                options.index
-              ),
-              files: result1.emittedFiles.filter((x) => x.extension === '.css'),
-              noModuleFiles: result2.emittedFiles,
-              moduleFiles: result1.emittedFiles,
-              baseHref: options.baseHref,
-              deployUrl: options.deployUrl,
-              scripts: options.scripts,
-              styles: options.styles,
-            })
-          : of(null)
-        ).pipe(
-          map(
-            () =>
-              ({
-                success,
-                emittedFiles: [
-                  ...result1.emittedFiles,
-                  ...result2.emittedFiles,
-                ],
-              } as BuildResult)
-          )
-        );
-      })
-    );
+  );
 }
+
+export default run;

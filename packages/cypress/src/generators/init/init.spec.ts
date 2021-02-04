@@ -2,7 +2,7 @@ import { readJson, Tree, updateJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { cypressVersion } from '../../utils/versions';
-import initGenerator from './init';
+import { cypressInitGenerator } from './init';
 
 describe('init', () => {
   let tree: Tree;
@@ -21,7 +21,7 @@ describe('init', () => {
       json.devDependencies[existing] = existingVersion;
       return json;
     });
-    initGenerator(tree);
+    cypressInitGenerator(tree);
     const packageJson = readJson(tree, 'package.json');
 
     expect(packageJson.devDependencies.cypress).toBeDefined();

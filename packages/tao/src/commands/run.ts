@@ -19,10 +19,13 @@ import * as chalk from 'chalk';
 import { logger } from '../shared/logger';
 import { eachValueFrom } from 'rxjs-for-await';
 
-export interface RunOptions {
+export interface Target {
   project: string;
   target: string;
-  configuration: string;
+  configuration?: string;
+}
+
+export interface RunOptions extends Target {
   help: boolean;
   runOptions: Options;
 }
@@ -193,6 +196,8 @@ async function runExecutorInternal<T extends { success: boolean }>(
       target: targetConfig,
       workspace: workspace,
       projectName: project,
+      targetName: target,
+      configurationName: configuration,
       cwd: cwd,
       isVerbose: isVerbose,
     });

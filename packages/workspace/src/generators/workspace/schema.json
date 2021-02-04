@@ -42,7 +42,6 @@
       "type": "string",
       "format": "path",
       "description": "The directory name to create the workspace in.",
-      "x-deprecated": "This option is no longer used.",
       "default": ""
     },
     "layout": {

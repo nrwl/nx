@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "id": "NxWebInit",
+  "cli": "nx",
   "title": "Init Web Plugin",
   "type": "object",
   "properties": {

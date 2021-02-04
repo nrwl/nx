@@ -20,6 +20,8 @@ export function convertNxExecutor(executor: Executor) {
     const context: ExecutorContext = {
       root: builderContext.workspaceRoot,
       projectName: builderContext.target.project,
+      targetName: builderContext.target.target,
+      configurationName: builderContext.target.configuration,
       workspace: workspaceConfig,
       cwd: process.cwd(),
       isVerbose: false,

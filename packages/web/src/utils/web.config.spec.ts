@@ -1,7 +1,6 @@
 import { getWebConfig as getWebPartial } from './web.config';
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import { createConsoleLogger } from '@angular-devkit/core/node';
-import { Logger } from '@angular-devkit/core/src/logger';
 import * as ts from 'typescript';
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { join } from 'path';
@@ -10,7 +9,6 @@ jest.mock('tsconfig-paths-webpack-plugin');
 
 describe('getWebConfig', () => {
   let input: WebBuildBuilderOptions;
-  let logger: Logger;
   let root: string;
   let sourceRoot: string;
   let mockCompilerOptions: any;
@@ -42,7 +40,6 @@ describe('getWebConfig', () => {
       root,
       sourceRoot,
     };
-    logger = createConsoleLogger();
 
     mockCompilerOptions = {
       target: 'es2015',
@@ -60,7 +57,7 @@ describe('getWebConfig', () => {
   });
 
   it('should resolve the browser main field', () => {
-    const result = getWebPartial(root, sourceRoot, input, logger, false, false);
+    const result = getWebPartial(root, sourceRoot, input, false, false);
     expect(result.resolve.mainFields).toContain('browser');
   });
 
@@ -74,7 +71,6 @@ describe('getWebConfig', () => {
             ...input,
             polyfills: 'polyfills.ts',
           },
-          logger,
           false,
           false
         );
@@ -91,7 +87,6 @@ describe('getWebConfig', () => {
             ...input,
             es2015Polyfills: 'polyfills.es2015.ts',
           },
-          logger,
           false,
           false
         );
@@ -110,7 +105,6 @@ describe('getWebConfig', () => {
             ...input,
             polyfills: 'polyfills.ts',
           },
-          logger,
           true,
           true
         );
@@ -122,7 +116,6 @@ describe('getWebConfig', () => {
             ...input,
             polyfills: 'polyfills.ts',
           },
-          logger,
           false,
           true
         );
@@ -140,7 +133,6 @@ describe('getWebConfig', () => {
             polyfills: 'polyfills.ts',
             es2015Polyfills: 'polyfills.es2015.ts',
           },
-          logger,
           false,
           true
         );
@@ -157,7 +149,6 @@ describe('getWebConfig', () => {
             ...input,
             polyfills: 'polyfills.ts',
           },
-          logger,
           true,
           true
         );

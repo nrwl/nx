@@ -1,6 +1,7 @@
 {
   "title": "Web Dev Server",
   "description": "Web Dev Server",
+  "cli": "nx",
   "type": "object",
   "properties": {
     "buildTarget": {

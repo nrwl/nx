@@ -24,9 +24,9 @@ function updateDependencies(host: Tree) {
   );
 }
 
-export function initGenerator(host: Tree) {
+export function cypressInitGenerator(host: Tree) {
   return updateDependencies(host);
 }
 
-export default initGenerator;
-export const initSchematic = convertNxGenerator(initGenerator);
+export default cypressInitGenerator;
+export const cypressInitSchematic = convertNxGenerator(cypressInitGenerator);

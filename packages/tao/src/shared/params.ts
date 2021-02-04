@@ -100,9 +100,15 @@ function coerceType(prop: PropertyDescription | undefined, value: any) {
       }
     }
     return value;
-  } else if (normalizedPrimitiveType(prop.type) == 'boolean') {
+  } else if (
+    normalizedPrimitiveType(prop.type) == 'boolean' &&
+    isConvertibleToBoolean(value)
+  ) {
     return value === true || value == 'true';
-  } else if (normalizedPrimitiveType(prop.type) == 'number') {
+  } else if (
+    normalizedPrimitiveType(prop.type) == 'number' &&
+    isConvertibleToNumber(value)
+  ) {
     return Number(value);
   } else if (prop.type == 'array') {
     return value.split(',').map((v) => coerceType(prop.items, v));
@@ -576,4 +582,33 @@ function levenshtein(a: string, b: string) {
 
 function isTTY(): boolean {
   return !!process.stdout.isTTY && process.env['CI'] !== 'true';
+}
+
+/**
+ * Verifies whether the given value can be converted to a boolean
+ * @param value
+ */
+function isConvertibleToBoolean(value) {
+  if ('boolean' === typeof value) {
+    return true;
+  }
+
+  if ('string' === typeof value && /true|false/.test(value)) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Verifies whether the given value can be converted to a number
+ * @param value
+ */
+function isConvertibleToNumber(value) {
+  // exclude booleans explicitly
+  if ('boolean' === typeof value) {
+    return false;
+  }
+
+  return !isNaN(+value);
 }

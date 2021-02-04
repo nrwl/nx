@@ -1,4 +1,4 @@
-import { Tree } from '@nrwl/devkit';
+import { readJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { presetGenerator } from './preset';
 
@@ -9,9 +9,9 @@ describe('preset', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  // TODO: reenable. This doesn't work because wrapAngularDevkit uses the fs
-  xdescribe('--preset', () => {
-    describe('angular', () => {
+  describe('--preset', () => {
+    // TODO: reenable. This doesn't work because wrapAngularDevkit uses the fs
+    xdescribe('angular', () => {
       it('should create files (preset = angular)', async () => {
         await presetGenerator(tree, {
           name: 'proj',
@@ -29,6 +29,20 @@ describe('preset', () => {
         ).toBe('@nrwl/angular');
       });
     });
+
+    describe('web-components', () => {
+      it('should create files (preset = web-components)', async () => {
+        await presetGenerator(tree, {
+          name: 'proj',
+          preset: 'web-components',
+          cli: 'nx',
+        });
+        expect(tree.exists('/apps/proj/src/main.ts')).toBe(true);
+        expect(readJson(tree, '/workspace.json').cli.defaultCollection).toBe(
+          '@nrwl/web'
+        );
+      });
+    });
   });
 
   // it('should create files (preset = react)', async () => {
@@ -43,17 +57,6 @@ describe('preset', () => {
   //   ).toBe('@nrwl/react');
   // });
   //
-  // it('should create files (preset = web-components)', async () => {
-  //   const tree = await runSchematic(
-  //     'preset',
-  //     { name: 'proj', preset: 'web-components' },
-  //     tree
-  //   );
-  //   expect(tree.exists('/apps/proj/src/main.ts')).toBe(true);
-  //   expect(
-  //     JSON.parse(tree.readContent('/workspace.json')).cli.defaultCollection
-  //   ).toBe('@nrwl/web');
-  // });
   //
   // it('should create files (preset = next)', async () => {
   //   const tree = await runSchematic(

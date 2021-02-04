@@ -181,7 +181,9 @@ Nx now comes with [Storybook version 6](https://storybook.js.org/releases/6.0). 
 
 Nx version `10.2.x` will continue to support Storybook version `5.2.x`, however newer versions of Nx will only support Storybook version `6` (and on).
 
-We chose not to provide an automatic migration script for your Storybook instances and configurations across your apps and libraries, since there a number of breaking changes that Storybook introduced in versions `5.3` and `6.0`, and making decisions on what to migrate automatically would risk the integrity of your code. Instead, when you choose to migrate from Nx versions `<10.1.x` to Nx versions `>10.2.x` we will keep your Storybook packages and Storybook instances and configurations intact. We suggest that you do the migration on your own, manually, using the guide below, with all the references to the official Storybook migration guides. Look at the use cases below, and follow the one that matches your case.
+When you are running the Nx workspace migration script, your Storybook instances and configurations across your apps and libraries will NOT be migrated automatically. We chose not to migrate your Storybook instances and configurations across your apps and libraries automatically, since there a number of breaking changes that Storybook introduced in versions `5.3` and `6.0`, and making decisions on what to migrate automatically would risk the integrity of your code.
+
+Instead, when you choose to migrate from Nx versions `<10.1.x` to Nx versions `>10.2.x` (using the Nx migration script - `nx migrate`) we will keep your Storybook packages and Storybook instances and configurations intact. We suggest that you do the migration on your own, using the guide below, with all the references to the official Storybook migration guides. Look at the use cases below, and follow the one that matches your case.
 
 ### Use cases:
 
@@ -197,7 +199,47 @@ If you already have an Nx workspace with a previous version of Nx that does NOT 
 
 In that case, when you run the Nx migration scripts, the scripts will ignore the Storybook packages, the Storybook configuration files, the Storybook instances in your apps and libraries, and all the generated stories. If you continue to add Storybook configurations and Storybook instances to new libraries and applications, then the version of Storybook that you already have will be used (most probably, if you have not changed anything manually, that version will be `5.3.9` using, however, the configuration files of `5.2`). You will have to do the [upgrade to the latest Storybook on your own, manually](#upgrading-to-storybook-6-manually). After that, Nx will use that version, and configure all new Storybook instances using the new version.
 
+### Upgrading to Storybook 6 using the Nx migration generator
+
+#### Some info about the generator
+
+The `@nrwl/angular:storybook-migrate-defaults-5-to-6` generator will not exactly do a migration. It will perform the following actions:
+
+- It will generate new Storybook configuration files using the new (`>6.x`) Storybook way. The way it will do that is, it will look into `workspace.json` and it will find all the projects that have a `Storybook` configuration. Using the `configFolder` path provided there, it will go and generate new Storybook instaces in all these paths. Finally, it will generate a new Storybook instance at the root directory.
+
+- If you choose to `keepOld`, then it will add all your existing Storybook configuration files into another folder labeled `.old_storybook`.
+
+- It will update all the Storybook-related (`@storybook/*`) packages in your `package.json`.
+
+#### How to use the generator
+
+That way, you can have working Storybook instances for all your projects just by running
+
+```
+nx g @nrwl/angular:storybook-migrate-defaults-5-to-6
+```
+
+#### What if I had made changes to the defaults?
+
+In case you had made customizations to the default Storybook configurations, you can then manually change each of your Storybook instance configuration files using the official [Storybook 6 Migration Guide](https://medium.com/storybookjs/storybook-6-migration-guide-200346241bb5) to make sure you use the new syntax. Your old configuration files are available to you to use as a reference.
+
+Please check out this official [Storybook 6 Migration Guide](https://medium.com/storybookjs/storybook-6-migration-guide-200346241bb5) article, as well as the [detailed guides here](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#from-version-53x-to-60x).
+
+#### What if I am not ready to change everything at once?
+
+The generator gives you the option to migrate one project at a time. You can provide the `--name=PROJECT_NAME` flag, and then the generator will **only** generate new files for the specified project.
+
+Please note that this option will NOT update all the Storybook-related (`@storybook/*`) packages in your `package.json`, or the root Storybook folder. The reason is that if you want to do the migration gradually, one project at a time, you want your old, existing, projects, to still work. That way, you will still be able to run your old, non-migrated Storybook projects. However, you will not be able to run any migrated Storbook projects. Once you have migrated all your Storybook projects, you can run `nx g @nrwl/angular:storybook-migrate-defaults-5-to-6` once again, and the generator will take care of updating all the Storybook-related (`@storybook/*`) packages in your `package.json` and it will also generate the new Storybook files for the root Storybook directory.
+
+#### General tip:
+
+**Commit any changes you have locally**. We would suggest that you start the migration with a clean git history, in case anything goes wrong.
+
 ### Upgrading to Storybook 6 manually
+
+There is really no great reason for doing the migration completely manually. The `@nrwl/angular:storybook-migrate-defaults-5-to-6` generator [will take care of Steps 1, 2 and 3](#upgrading-to-storybook-6-using-the-nx-migration-generator). What you will need to do after running the generator is that you have to manually migrate any custom changes you had done to the default Storybook configuration files that were automatically generated by Nx when you first used Nx Storybook. To do the manual migration you should use the official [Storybook 6 Migration Guide](https://medium.com/storybookjs/storybook-6-migration-guide-200346241bb5) article, as well as the [detailed guides here](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#from-version-53x-to-60x).
+
+However, if you still want to do everything manually, these are the steps you should follow:
 
 #### Step 0:
 

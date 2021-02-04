@@ -13,7 +13,7 @@ import { lintInitGenerator } from '../init/init';
 
 interface LintProjectOptions {
   project: string;
-  linter: Linter;
+  linter?: Linter;
   eslintFilePatterns?: string[];
   tsConfigPaths?: string[];
   skipFormat: boolean;
@@ -51,12 +51,12 @@ function createEsLintConfiguration(
            * own specific tsconfigs, and not fallback to the ones in the root of the workspace.
            */
           project: [`${projectConfig.root}/tsconfig.*?.json`],
-          /**
-           * Having an empty rules object present makes it more obvious to the user where they would
-           * extend things from if they needed to
-           */
-          rules: {},
         },
+        /**
+         * Having an empty rules object present makes it more obvious to the user where they would
+         * extend things from if they needed to
+         */
+        rules: {},
       },
       {
         files: ['*.ts', '*.tsx'],

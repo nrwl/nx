@@ -18,8 +18,8 @@
     },
     "generateStories": {
       "type": "boolean",
-      "description": "Automatically generate *.stories.ts files for components declared in this library",
-      "x-prompt": "Automatically generate *.stories.ts files for components declared in this library?"
+      "description": "Automatically generate *.stories.ts files for components declared in this library/application?",
+      "x-prompt": "Automatically generate *.stories.ts files for components declared in this library/application?"
     },
     "generateCypressSpecs": {
       "type": "boolean",

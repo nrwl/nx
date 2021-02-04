@@ -137,6 +137,8 @@ export function newProject({ name = uniq('proj') } = {}): string {
       const packages = [
         `@nrwl/angular`,
         `@nrwl/express`,
+        `@nrwl/jest`,
+        `@nrwl/linter`,
         `@nrwl/nest`,
         `@nrwl/next`,
         `@nrwl/gatsby`,
@@ -513,8 +515,7 @@ export function getPackageManagerCommand({
 }
 
 export function expectNoAngularDevkit() {
-  // reenable when release 11.3
-  // const { list } = getPackageManagerCommand();
-  // const result = runCommand(`${list} @angular-devkit/core`);
-  // expect(result).not.toContain('@angular-devkit/core');
+  const { list } = getPackageManagerCommand();
+  const result = runCommand(`${list} @angular-devkit/core`);
+  expect(result).not.toContain('@angular-devkit/core');
 }

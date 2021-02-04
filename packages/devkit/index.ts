@@ -14,7 +14,7 @@ export {
 } from '@nrwl/tao/src/shared/nx';
 export { logger } from '@nrwl/tao/src/shared/logger';
 export { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
-export { runExecutor } from '@nrwl/tao/src/commands/run';
+export { runExecutor, Target } from '@nrwl/tao/src/commands/run';
 
 export { formatFiles } from './src/generators/format-files';
 export { generateFiles } from './src/generators/generate-files';
@@ -29,6 +29,9 @@ export {
 } from './src/generators/project-configuration';
 export { toJS } from './src/generators/to-js';
 export { visitNotIgnoredFiles } from './src/generators/visit-not-ignored-files';
+
+export { parseTargetString } from './src/executors/parse-target-string';
+export { readTargetOptions } from './src/executors/read-target-options';
 
 export { readJson, writeJson, updateJson } from './src/utils/json';
 export { addDependenciesToPackageJson } from './src/utils/package-json';

@@ -62,6 +62,13 @@
       "hidden": false
     },
 
+    "storybook-migrate-defaults-5-to-6": {
+      "factory": "./src/schematics/storybook-migrate-defaults-5-to-6/migrate-defaults-5-to-6",
+      "schema": "./src/schematics/storybook-migrate-defaults-5-to-6/schema.json",
+      "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
+      "hidden": false
+    },
+
     "stories": {
       "factory": "./src/schematics/stories/stories",
       "schema": "./src/schematics/stories/schema.json",
