@@ -19,9 +19,9 @@ exports[`@nrwl/linter:lint-project --linter eslint should generate a eslint conf
       \\"parserOptions\\": {
         \\"project\\": [
           \\"libs/test-lib/tsconfig.*?.json\\"
-        ],
-        \\"rules\\": {}
-      }
+        ]
+      },
+      \\"rules\\": {}
     },
     {
       \\"files\\": [

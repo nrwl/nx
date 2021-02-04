@@ -324,8 +324,8 @@ describe('lib', () => {
                     "project": Array [
                       "libs/my-lib/tsconfig.*?.json",
                     ],
-                    "rules": Object {},
                   },
+                  "rules": Object {},
                 },
                 Object {
                   "files": Array [
@@ -397,8 +397,8 @@ describe('lib', () => {
                     "project": Array [
                       "libs/my-dir/my-lib/tsconfig.*?.json",
                     ],
-                    "rules": Object {},
                   },
+                  "rules": Object {},
                 },
                 Object {
                   "files": Array [
