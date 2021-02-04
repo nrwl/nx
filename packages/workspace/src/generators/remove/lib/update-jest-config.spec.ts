@@ -55,4 +55,20 @@ describe('updateRootJestConfig', () => {
 
     expect(updatedJestConfig2).toMatchSnapshot();
   });
+
+  it('should not delete lib project ref from root jest config if there is no project jest config', () => {
+    tree.delete('libs/my-lib/jest.config.js');
+
+    const originalRootJestConfig = tree.read('jest.config.js').toString();
+    tree.write(
+      'jest.config.js',
+      originalRootJestConfig.replace(`'<rootDir>/libs/my-lib',`, '')
+    );
+
+    updateJestConfig(tree, schema, readProjectConfiguration(tree, 'my-lib'));
+
+    const rootJestConfig = tree.read('jest.config.js').toString();
+
+    expect(rootJestConfig).toMatchSnapshot();
+  });
 });
