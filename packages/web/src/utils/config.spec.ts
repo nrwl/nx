@@ -5,7 +5,6 @@ import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { ProgressPlugin } from 'webpack';
 import { BuildBuilderOptions } from './types';
-import { normalize } from '@angular-devkit/core';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
@@ -21,7 +20,7 @@ describe('getBaseWebpackPartial', () => {
       tsConfig: 'tsconfig.json',
       fileReplacements: [],
       root: '/root',
-      sourceRoot: normalize('/root/src'),
+      sourceRoot: '/root/src',
       statsJson: false,
     };
     (<any>(

@@ -9,7 +9,7 @@ import {
   stripIndent,
   stripIndents,
 } from '@angular-devkit/core/src/utils/literals';
-import { initRootBabelConfig } from '@nrwl/web/src/utils/rules';
+import { initRootBabelConfig } from '../utils/rules';
 import { addDepsToPackageJson, formatFiles } from '@nrwl/workspace';
 
 let addedEmotionPreset = false;

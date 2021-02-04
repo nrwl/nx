@@ -1,5 +1,4 @@
 {
-  "$schema": "@angular-devkit/architect/src/builders-schema.json",
   "builders": {
     "build": {
       "implementation": "./src/builders/build/compat",
@@ -17,7 +16,7 @@
       "description": "Serve a web application"
     },
     "file-server": {
-      "implementation": "./src/builders/file-server/file-server.impl",
+      "implementation": "./src/builders/file-server/compat",
       "schema": "./src/builders/file-server/schema.json",
       "description": "Serve a web application from a folder"
     }

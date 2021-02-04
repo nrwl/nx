@@ -167,7 +167,7 @@ describe('getDevServerConfig', () => {
       });
 
       it('should open the url if --open is passed', () => {
-        mockServer.options.open = true;
+        serveInput.open = true;
         const { devServer: result } = getDevServerConfig(
           root,
           sourceRoot,

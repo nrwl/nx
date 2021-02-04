@@ -5,7 +5,6 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-import { tags } from '@angular-devkit/core';
 import {
   AugmentIndexHtmlOptions,
   FileInfo,
@@ -19,12 +18,9 @@ describe('augment-index-html', () => {
     baseHref: '/',
     sri: false,
     files: [],
-    loadOutputFile: async (_fileName: string) => '',
+    loadOutputFile: (_fileName: string) => '',
     entrypoints: ['scripts', 'polyfills', 'main', 'styles'],
   };
-
-  const oneLineHtml = (html: TemplateStringsArray) =>
-    tags.stripIndents`${html}`.replace(/(\>\s+)/g, '>');
 
   it('can generate index.html', async () => {
     const source = augmentIndexHtml({
@@ -39,18 +35,7 @@ describe('augment-index-html', () => {
     });
 
     const html = await source;
-    expect(html).toEqual(oneLineHtml`
-      <html>
-        <head><base href="/">
-          <link rel="stylesheet" href="styles.css">
-        </head>
-        <body>
-          <script src="runtime.js" defer></script>
-          <script src="polyfills.js" defer></script>
-          <script src="main.js" defer></script>
-        </body>
-      </html>
-    `);
+    expect(html).toMatchSnapshot();
   });
 
   it(`should emit correct script tags when having 'module' and 'non-module' js`, async () => {
@@ -79,22 +64,7 @@ describe('augment-index-html', () => {
     });
 
     const html = await source;
-    expect(html).toEqual(oneLineHtml`
-      <html>
-        <head>
-          <base href="/">
-          <link rel="stylesheet" href="styles.css">
-        </head>
-        <body>
-          <script src="runtime-es2015.js" type="module"></script>
-          <script src="polyfills-es2015.js" type="module"></script>
-          <script src="runtime-es5.js" nomodule defer></script>
-          <script src="polyfills-es5.js" nomodule defer></script>
-          <script src="main-es2015.js" type="module"></script>
-          <script src="main-es5.js" nomodule defer></script>
-        </body>
-      </html>
-    `);
+    expect(html).toMatchSnapshot();
   });
 
   it(`should not add 'module' and 'non-module' attr to js files which are in both module formats`, async () => {
@@ -119,18 +89,6 @@ describe('augment-index-html', () => {
     });
 
     const html = await source;
-    expect(html).toEqual(oneLineHtml`
-      <html>
-        <head>
-          <base href="/">
-          <link rel="stylesheet" href="styles.css">
-        </head>
-        <body>
-          <script src="scripts.js" defer></script>
-          <script src="main-es2015.js" type="module"></script>
-          <script src="main-es5.js" nomodule defer></script>
-        </body>
-      </html>
-    `);
+    expect(html).toMatchSnapshot();
   });
 });
