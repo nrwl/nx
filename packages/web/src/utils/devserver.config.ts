@@ -67,7 +67,7 @@ function getDevServerPartial(
       });
 
       logger.info(`NX Web Development Server is listening at ${serverUrl}`);
-      if (server.options.open) {
+      if (options.open) {
         opn(serverUrl, {
           wait: false,
         });

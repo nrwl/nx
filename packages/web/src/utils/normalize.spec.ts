@@ -1,13 +1,12 @@
 import { normalizeBuildOptions, normalizePackageOptions } from './normalize';
 import { BuildBuilderOptions, PackageBuilderOptions } from './types';
-import { Path, normalize } from '@angular-devkit/core';
 
 import * as fs from 'fs';
 
 describe('normalizeBuildOptions', () => {
   let testOptions: BuildBuilderOptions;
   let root: string;
-  let sourceRoot: Path;
+  let sourceRoot: string;
 
   beforeEach(() => {
     testOptions = {
@@ -29,7 +28,7 @@ describe('normalizeBuildOptions', () => {
       webpackConfig: 'apps/nodeapp/webpack.config',
     };
     root = '/root';
-    sourceRoot = normalize('apps/nodeapp/src');
+    sourceRoot = 'apps/nodeapp/src';
   });
 
   it('should resolve main from root', () => {
@@ -117,7 +116,7 @@ describe('normalizeBuildOptions', () => {
 describe('normalizePackageOptions', () => {
   let testOptions: PackageBuilderOptions;
   let root: string;
-  let sourceRoot: Path;
+  let sourceRoot: string;
 
   beforeEach(() => {
     testOptions = {
@@ -129,7 +128,7 @@ describe('normalizePackageOptions', () => {
       rollupConfig: 'apps/nodeapp/rollup.config',
     };
     root = '/root';
-    sourceRoot = normalize('apps/nodeapp/src');
+    sourceRoot = 'apps/nodeapp/src';
   });
 
   it('should resolve both node modules and relative path for babelConfig/rollupConfig', () => {
