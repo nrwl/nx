@@ -32,7 +32,7 @@ function getHttpServerArgs(opts: FileServerOptions) {
     args.push(`-C ${opts.sslCert}`);
   }
   if (opts.sslKey) {
-    args.push(`-K ${opts.sslCert}`);
+    args.push(`-K ${opts.sslKey}`);
   }
   if (opts.proxyUrl) {
     args.push(`-P ${opts.proxyUrl}`);
