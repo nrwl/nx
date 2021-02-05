@@ -442,8 +442,8 @@ The Nx devkit only uses language primitives (promises and async iterables). It d
 
 ## Using Generators and Executors
 
-There are three main ways ot use generators and executors:
+There are three main ways to use generators and executors:
 
-- Workspace generators. Learn more in [this guide](/{{framework}}/workspace/generators/workspace-generators)
-- Workspace executors. Learn more in [this guide](/{{framework}}/workspace/executors/tools-workspace-builders)
-- Creating custom plugins. Learn more in [this guide](/{{framework}}/plugins/nx-plugin/overview)
+- Workspace generators. Learn more in [this guide](/{{framework}}/generators/workspace-generators)
+- Workspace executors. Learn more in [this guide](/{{framework}}/executors/creating-custom-builders)
+- Creating custom plugins. Learn more in [this guide](/{{framework}}/nx-plugin/overview)

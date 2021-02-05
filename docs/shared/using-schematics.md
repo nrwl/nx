@@ -6,15 +6,15 @@ Generators provide a way to automate many tasks you regularly perform as part of
 
 Generators can be written using `@nx/devkit` or `@angular/devkit`. Generators written with the `@angular/devkit` are called schematics. To read more about the concepts of `@angular/devkit` schematics, and building an example schematic, see the [Schematics Authoring Guide](https://angular.io/guide/schematics-authoring).
 
-The [Workspace Generators](/{{framework}}/workspace/generators/workspace-generators) guide shows you how to create, run, and customize workspace generators within your Nx workspace.
+The [Workspace Generators](/{{framework}}/generators/workspace-generators) guide shows you how to create, run, and customize workspace generators within your Nx workspace.
 
 ## Types of Generators
 
 There are three main types of generators:
 
 1. **Plugin Generators** are available when an Nx plugin has been installed in your workspace.
-2. **Workspace Generators** are generators that you can create for your own workspace. [Workspace generators](/{{framework}}/workspace/generators/workspace-generators) allow you to codify the processes that are unique to your own organization.
-3. **Update Generators** are invoked by Nx plugins when you [update Nx](/{{framework}}/workspace/update) to keep your config files in sync with the latest versions of third party tools.
+2. **Workspace Generators** are generators that you can create for your own workspace. [Workspace generators](/{{framework}}/generators/workspace-generators) allow you to codify the processes that are unique to your own organization.
+3. **Update Generators** are invoked by Nx plugins when you [update Nx](/{{framework}}/core-concepts/updating-nx) to keep your config files in sync with the latest versions of third party tools.
 
 ## Invoking Plugin Generators
 

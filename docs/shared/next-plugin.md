@@ -64,10 +64,10 @@ myorg/
 
 ## Executors / Builders
 
-- [build](/{{framework}}/plugins/next/executors/build) - Builds a Next.js application
-- [dev-server](/{{framework}}/plugins/next/executors/dev-server) - Builds and serves a Next.js application
-- [export](/{{framework}}/plugins/next/executors/package) - Export a Next.js app. The exported application is located at `dist/$outputPath/exported`
+- [build](/{{framework}}/next/build) - Builds a Next.js application
+- [server](/{{framework}}/next/server) - Builds and serves a Next.js application
+- [export](/{{framework}}/next/package) - Export a Next.js app. The exported application is located at `dist/$outputPath/exported`
 
 ## Generators
 
-- [application](/{{framework}}/plugins/next/generators/application) - Create an Next.js application
+- [application](/{{framework}}/next/application) - Create an Next.js application

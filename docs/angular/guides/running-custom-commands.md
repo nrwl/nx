@@ -37,7 +37,7 @@ For each project for which you want to enable compodoc, add a target in `angular
 }
 ```
 
-For more information, see the [run-commands api doc](/{{framework}}/plugins_workspace_builders/run-commands).
+For more information, see the [run-commands api doc](/{{framework}}/workspace/run-commands-executor).
 
 Note: Replace `apps/my-app/tsconfig.app.json` with the appropriate `tsconfig.json` path for each project.
 

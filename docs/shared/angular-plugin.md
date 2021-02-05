@@ -87,20 +87,20 @@ myorg/
 
 ## Executors / Builders
 
-- [package](/{{framework}}/plugins/angular/executors/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
+- [package](/{{framework}}/angular/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
 
 ## Generators
 
-- [application](/{{framework}}/plugins/angular/generators/application) - Create an Angular application
-- [downgrade-module](/{{framework}}/plugins/angular/generators/downgrade-module) - Setup Downgrade Module
-- [karma](/{{framework}}/plugins/angular/generators/karma) - Add karma configuration to a workspace
-- [karma-project](/{{framework}}/plugins/angular/generators/karma-project) - Add karma testing to a project
-- [library](/{{framework}}/plugins/angular/generators/library) - Create an Angular library
-- [move](/{{framework}}/plugins/angular/generators/move) - Move an Angular application or library to another folder within the workspace
-- [ngrx](/{{framework}}/plugins/angular/generators/ngrx) - Add and use NgRx for state management
-- [stories](/{{framework}}/plugins/angular/generators/stories) - Create stories/specs for all components declared in a library
-- [storybook-configuration](/{{framework}}/plugins/angular/generators/storybook-configuration) - Setup configuration for Storybook
-- [upgrade-module](/{{framework}}/plugins/angular/generators/upgrade-module) - Add an upgrade module
+- [application](/{{framework}}/angular/application) - Create an Angular application
+- [downgrade-module](/{{framework}}/angular/downgrade-module) - Setup Downgrade Module
+- [karma](/{{framework}}/angular/karma) - Add karma configuration to a workspace
+- [karma-project](/{{framework}}/angular/karma-project) - Add karma testing to a project
+- [library](/{{framework}}/angular/library) - Create an Angular library
+- [move](/{{framework}}/angular/move) - Move an Angular application or library to another folder within the workspace
+- [ngrx](/{{framework}}/angular/ngrx) - Add and use NgRx for state management
+- [stories](/{{framework}}/angular/stories) - Create stories/specs for all components declared in a library
+- [storybook-configuration](/{{framework}}/angular/storybook-configuration) - Setup configuration for Storybook
+- [upgrade-module](/{{framework}}/angular/upgrade-module) - Add an upgrade module
 
 ## Public API
 
