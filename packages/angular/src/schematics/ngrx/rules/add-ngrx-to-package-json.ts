@@ -9,6 +9,7 @@ export function addNgRxToPackageJson(): Rule {
       '@ngrx/effects': ngrxVersion,
       '@ngrx/entity': ngrxVersion,
       '@ngrx/router-store': ngrxVersion,
+      '@ngrx/component-store': ngrxVersion,
     },
     {
       '@ngrx/schematics': ngrxVersion,
