@@ -3,7 +3,6 @@
   "version": "11.2.6",
   "description": "Extensible Dev Tools for Monorepos",
   "homepage": "https://nx.dev",
-  "main": "index.js",
   "private": true,
   "scripts": {
     "build": "./scripts/package.sh --local",
