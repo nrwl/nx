@@ -104,13 +104,13 @@ async function getRoots(
     new NxScopedHost(normalize(context.workspaceRoot))
   );
   const { workspace } = await workspaces.readWorkspace('', workspaceHost);
-  const project = workspace.projects.get(context.target.project);
-  if (project.sourceRoot && project.root) {
-    return { sourceRoot: project.sourceRoot, projectRoot: project.root };
-  } else {
-    context.reportStatus('Error');
-    const message = `${context.target.project} does not have a sourceRoot or root. Please define one.`;
-    context.logger.error(message);
-    throw new Error(message);
+  const { project } = context.target;
+  const { sourceRoot, root } = workspace.projects.get(project);
+  if (sourceRoot && root) {
+    return { sourceRoot, projectRoot: root };
   }
+  context.reportStatus('Error');
+  const message = `${project} does not have a sourceRoot or root. Please define both.`;
+  context.logger.error(message);
+  throw new Error(message);
 }
