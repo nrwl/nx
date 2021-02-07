@@ -1,5 +1,8 @@
 import { exec, execSync } from 'child_process';
+import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
+import { pathExistsSync } from 'fs-extra';
+import { ExecutorContext } from '@nrwl/devkit';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 
@@ -57,7 +60,8 @@ export interface NormalizedRunCommandsBuilderOptions
 }
 
 export default async function (
-  options: RunCommandsBuilderOptions
+  options: RunCommandsBuilderOptions,
+  context: ExecutorContext
 ): Promise<{ success: boolean }> {
   loadEnvVars(options.envFile);
   const normalized = normalizeOptions(options);
@@ -70,8 +74,8 @@ export default async function (
 
   try {
     const success = options.parallel
-      ? await runInParallel(normalized)
-      : await runSerially(normalized);
+      ? await runInParallel(normalized, context)
+      : await runSerially(normalized, context);
     return { success };
   } catch (e) {
     throw new Error(
@@ -80,13 +84,17 @@ export default async function (
   }
 }
 
-async function runInParallel(options: NormalizedRunCommandsBuilderOptions) {
+async function runInParallel(
+  options: NormalizedRunCommandsBuilderOptions,
+  context: ExecutorContext
+) {
   const procs = options.commands.map((c) =>
     createProcess(
       c.command,
       options.readyWhen,
       options.color,
-      options.cwd
+      options.cwd,
+      context
     ).then((result) => ({
       result,
       command: c.command,
@@ -120,7 +128,7 @@ async function runInParallel(options: NormalizedRunCommandsBuilderOptions) {
 }
 
 function normalizeOptions(
-  options: RunCommandsBuilderOptions
+  options: RunCommandsBuilderOptions,
 ): NormalizedRunCommandsBuilderOptions {
   options.parsedArgs = parseArgs(options);
 
@@ -142,24 +150,55 @@ function normalizeOptions(
   return options as any;
 }
 
-async function runSerially(options: NormalizedRunCommandsBuilderOptions) {
+async function runSerially(
+  options: NormalizedRunCommandsBuilderOptions,
+  context: ExecutorContext
+) {
   for (const c of options.commands) {
-    createSyncProcess(c.command, options.color, options.cwd);
+    createSyncProcess(
+      c.command,
+      options.color,
+      options.cwd,
+      context
+    );
   }
   return true;
+}
+
+/**
+ *  @see {https://stackoverflow.com/questions/18894433/nodejs-child-process-working-directory}
+ *  @see https://github.com/nodejs/node/issues/11520
+ *
+ *  The above happen when you call the `nx run ...` command from inside the app
+ *  if the app is using the `run-commands` executor and has `cwd` set to
+ *  to the app, e.g. `apps/some-app`.
+ */
+function checkCwd(cwd: string | undefined, context: ExecutorContext): string | undefined {
+  if(!cwd) {
+    return cwd;
+  } else if(path.isAbsolute(cwd)) {
+    // absolute is an edge-case i dont know how to deal with
+    return cwd;
+  }
+  const constructedPath = path.join(process.cwd(), cwd)
+  if (!pathExistsSync(constructedPath)) {
+    return context.root;
+  }
+  return cwd;
 }
 
 function createProcess(
   command: string,
   readyWhen: string,
   color: boolean,
-  cwd: string
+  cwd: string,
+  context: ExecutorContext
 ): Promise<boolean> {
   return new Promise((res) => {
     const childProcess = exec(command, {
       maxBuffer: LARGE_BUFFER,
       env: processEnv(color),
-      cwd,
+      cwd: checkCwd(cwd, context),
     });
     /**
      * Ensure the child process is killed when the parent exits
@@ -185,12 +224,17 @@ function createProcess(
   });
 }
 
-function createSyncProcess(command: string, color: boolean, cwd: string) {
+function createSyncProcess(
+  command: string,
+  color: boolean,
+  cwd: string,
+  context: ExecutorContext
+) {
   execSync(command, {
     env: processEnv(color),
     stdio: [0, 1, 2],
     maxBuffer: LARGE_BUFFER,
-    cwd,
+    cwd: checkCwd(cwd, context),
   });
 }
 

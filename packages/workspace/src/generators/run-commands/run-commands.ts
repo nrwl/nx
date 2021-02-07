@@ -17,6 +17,7 @@ export async function runCommandsGenerator(host: Tree, schema: Schema) {
       : [],
     options: {
       command: schema.command,
+      // https://stackoverflow.com/questions/38458118/nodejs-error-spawn-c-windows-system32-cmd-exe-enoent
       cwd: schema.cwd,
       envFile: schema.envFile,
     },
