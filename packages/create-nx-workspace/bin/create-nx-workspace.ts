@@ -426,8 +426,8 @@ function createApp(tmpDir: string, name: string, parsedArgs: WorkspaceArgs) {
   console.log(command);
 
   let nxWorkspaceRoot = process.cwd().replace(/\\/g, '/');
-  if (process.platform === 'win32') {
-    nxWorkspaceRoot = `\\"${nxWorkspaceRoot}\\"`;
+  if (process.platform === 'win32' && /\s/.test(nxWorkspaceRoot)) {
+    nxWorkspaceRoot = `\\"${nxWorkspaceRoot}\\"`; // Try to overcome Windows issues with spaces in path
   } else {
     nxWorkspaceRoot = `"${nxWorkspaceRoot}"`;
   }
