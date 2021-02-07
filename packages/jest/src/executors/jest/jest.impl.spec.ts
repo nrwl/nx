@@ -321,35 +321,5 @@ describe('Jest Executor', () => {
         );
       });
     });
-
-    describe('when the user tries to use babel-jest AND ts-jest', () => {
-      beforeEach(() => {
-        jest.doMock(
-          '/root/jest.config.js',
-          () => ({
-            transform: {
-              '^.+\\.tsx?$': 'ts-jest',
-              '^.+\\.jsx?$': 'babel-jest',
-            },
-          }),
-          { virtual: true }
-        );
-      });
-
-      it('should throw an appropriate error', async () => {
-        const options: JestExecutorOptions = {
-          jestConfig: './jest.config.js',
-          watch: false,
-        };
-
-        try {
-          await jestExecutor(options, mockContext);
-        } catch (e) {
-          expect(e.message).toMatch(
-            /Using babel-jest and ts-jest together is not supported/
-          );
-        }
-      });
-    });
   });
 });
