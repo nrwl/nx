@@ -1,5 +1,6 @@
 {
   "title": "Storybook Builder",
+  "cli": "nx",
   "description": "Build storybook in production mode",
   "type": "object",
   "properties": {
