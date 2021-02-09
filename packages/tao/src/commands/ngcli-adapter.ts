@@ -366,6 +366,24 @@ export class NxScopedHostForMigrations extends NxScopedHost {
   }
 }
 
+export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
+  constructor(root: Path, private readonly host: Tree) {
+    super(root);
+  }
+
+  read(path: Path): Observable<FileBuffer> {
+    const targetPath = path.startsWith('/') ? path.substring(1) : path;
+    const r = this.host
+      .listChanges()
+      .find((f) => f.path == targetPath.toString() && f.type !== 'DELETE');
+    if (r) {
+      return of(Buffer.from(r.content));
+    } else {
+      return super.read(path);
+    }
+  }
+}
+
 function processConfigWhenReading(content: ArrayBuffer) {
   try {
     const json = JSON.parse(Buffer.from(content).toString());
@@ -627,16 +645,9 @@ export function wrapAngularDevkitSchematic(
       }
     };
 
-    const fsHost = new NxScopedHost(normalize(host.root));
-
-    await Promise.all(
-      (host as FsTree).listChanges().map(async (c) => {
-        if (c.type === 'CREATE' || c.type === 'UPDATE') {
-          await fsHost.write(c.path as any, c.content).toPromise();
-        } else {
-          await fsHost.delete(c.path as any).toPromise();
-        }
-      })
+    const fsHost = new NxScopeHostUsedForWrappedSchematics(
+      normalize(host.root),
+      host
     );
 
     const options = {
