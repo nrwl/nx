@@ -1,7 +1,7 @@
 {
-  "$schema": "http://json-schema.org/schema",
-  "id": "Init Storybook Plugin",
+  "cli": "nx",
   "title": "Add Storybook Configuration to the workspace",
+  "id": "Init Storybook Plugin",
   "type": "object",
   "properties": {
     "uiFramework": {

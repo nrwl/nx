@@ -1,6 +1,6 @@
 export { Tree, FileChange } from '@nrwl/tao/src/shared/tree';
 export {
-  WorkspaceConfiguration,
+  WorkspaceJsonConfiguration,
   TargetConfiguration,
   ProjectConfiguration,
   Generator,
@@ -19,6 +19,7 @@ export { runExecutor, Target } from '@nrwl/tao/src/commands/run';
 export { formatFiles } from './src/generators/format-files';
 export { generateFiles } from './src/generators/generate-files';
 export {
+  WorkspaceConfiguration,
   addProjectConfiguration,
   readProjectConfiguration,
   removeProjectConfiguration,

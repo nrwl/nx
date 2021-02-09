@@ -65,14 +65,14 @@ Array [
   "/apps/test-ui-lib-e2e/tsconfig.json",
   "/apps/test-ui-lib-e2e/.eslintrc.json",
   "/apps/test-ui-lib-e2e/src/fixtures/example.json",
-  "/apps/test-ui-lib-e2e/src/plugins/index.js",
-  "/apps/test-ui-lib-e2e/src/support/commands.ts",
-  "/apps/test-ui-lib-e2e/src/support/index.ts",
   "/apps/test-ui-lib-e2e/src/integration/test-button/test-button.component.spec.ts",
   "/apps/test-ui-lib-e2e/src/integration/test-other/test-other.component.spec.ts",
   "/apps/test-ui-lib-e2e/src/integration/barrel-button/barrel-button.component.spec.ts",
   "/apps/test-ui-lib-e2e/src/integration/variable-declare-button/variable-declare-button.component.spec.ts",
   "/apps/test-ui-lib-e2e/src/integration/variable-declare-view/variable-declare-view.component.spec.ts",
   "/apps/test-ui-lib-e2e/src/integration/nested-button/nested-button.component.spec.ts",
+  "/apps/test-ui-lib-e2e/src/plugins/index.js",
+  "/apps/test-ui-lib-e2e/src/support/commands.ts",
+  "/apps/test-ui-lib-e2e/src/support/index.ts",
 ]
 `;

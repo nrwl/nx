@@ -47,15 +47,15 @@ describe('Build storybook', () => {
         config: {
           pluginPath: join(
             __dirname,
-            `/../../schematics/configuration/root-files/.storybook/main.js`
+            `/../../generators/configuration/root-files/.storybook/main.js`
           ),
           configPath: join(
             __dirname,
-            `/../../schematics/configuration/root-files/.storybook/webpack.config.js`
+            `/../../generators/configuration/root-files/.storybook/webpack.config.js`
           ),
           srcRoot: join(
             __dirname,
-            `/../../schematics/configuration/root-files/.storybook/tsconfig.json`
+            `/../../generators/configuration/root-files/.storybook/tsconfig.json`
           ),
         },
       },

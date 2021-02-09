@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
   "id": "migrate-defaults-5-to-6",
   "type": "object",
   "properties": {

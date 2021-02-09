@@ -1,2 +1,2 @@
-export { configurationGenerator } from './src/schematics/configuration/configuration';
-export { cypressProjectGenerator } from './src/schematics/cypress-project/cypress-project';
+export { configurationGenerator } from './src/generators/configuration/configuration';
+export { cypressProjectGenerator } from './src/generators/cypress-project/cypress-project';
