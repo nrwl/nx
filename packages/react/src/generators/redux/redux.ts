@@ -1,65 +1,60 @@
-import { join, Path, strings } from '@angular-devkit/core';
-import {
-  apply,
-  chain,
-  mergeWith,
-  move,
-  noop,
-  Rule,
-  SchematicContext,
-  template,
-  Tree,
-  url,
-} from '@angular-devkit/schematics';
-import '@nrwl/tao/src/compat/compat';
-import { formatFiles, getWorkspace } from '@nrwl/workspace';
-import {
-  addDepsToPackageJson,
-  addGlobal,
-  getProjectConfig,
-  insert,
-  readJsonInTree,
-} from '@nrwl/workspace/src/utils/ast-utils';
-import { toJS } from '@nrwl/workspace/src/utils/rules/to-js';
 import * as path from 'path';
 import * as ts from 'typescript';
-import { addReduxStoreToMain, updateReduxStore } from '../../utils/ast-utils';
+import {
+  addImport,
+  addReduxStoreToMain,
+  updateReduxStore,
+} from '../../utils/ast-utils';
 import {
   reactReduxVersion,
   reduxjsToolkitVersion,
   typesReactReduxVersion,
 } from '../../utils/versions';
 import { NormalizedSchema, Schema } from './schema';
-import { names } from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import {
+  addDependenciesToPackageJson,
+  applyChangesToString,
+  convertNxGenerator,
+  formatFiles,
+  generateFiles,
+  getProjects,
+  joinPathFragments,
+  names,
+  readJson,
+  toJS,
+  Tree,
+} from '@nrwl/devkit';
 
-export default function (schema: any): Rule {
-  return async (host: Tree, context: SchematicContext) => {
-    const options = await normalizeOptions(host, schema);
+export async function reduxGenerator(host: Tree, schema: Schema) {
+  const options = normalizeOptions(host, schema);
+  generateReduxFiles(host, options);
+  addExportsToBarrel(host, options);
+  addReduxPackageDependencies(host);
+  addStoreConfiguration(host, options);
+  updateReducerConfiguration(host, options);
 
-    return chain([
-      generateReduxFiles(options),
-      addExportsToBarrel(options),
-      addReduxPackageDependencies,
-      addStoreConfiguration(options, context),
-      updateReducerConfiguration(options, context),
-      formatFiles(),
-    ]);
-  };
+  await formatFiles(host);
 }
 
-function generateReduxFiles(options: NormalizedSchema) {
-  const templateSource = apply(url('./files'), [
-    template({ ...options, tmpl: '' }),
-    move(options.filesPath),
-    options.js ? toJS() : noop(),
-  ]);
+function generateReduxFiles(host: Tree, options: NormalizedSchema) {
+  generateFiles(
+    host,
+    joinPathFragments(__dirname, './files'),
+    options.filesPath,
+    {
+      ...options,
+      tmpl: '',
+    }
+  );
 
-  return mergeWith(templateSource);
+  if (options.js) {
+    toJS(host);
+  }
 }
 
-function addReduxPackageDependencies(): Rule {
-  return addDepsToPackageJson(
+function addReduxPackageDependencies(host: Tree) {
+  addDependenciesToPackageJson(
+    host,
     {
       '@reduxjs/toolkit': reduxjsToolkitVersion,
       'react-redux': reactReduxVersion,
@@ -70,108 +65,86 @@ function addReduxPackageDependencies(): Rule {
   );
 }
 
-function addExportsToBarrel(options: NormalizedSchema): Rule {
-  return (host: Tree) => {
-    const indexFilePath = path.join(
-      options.projectSourcePath,
-      options.js ? 'index.js' : 'index.ts'
+function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
+  const indexFilePath = path.join(
+    options.projectSourcePath,
+    options.js ? 'index.js' : 'index.ts'
+  );
+
+  const buffer = host.read(indexFilePath);
+  if (!!buffer) {
+    const indexSource = buffer.toString('utf-8');
+    const indexSourceFile = ts.createSourceFile(
+      indexFilePath,
+      indexSource,
+      ts.ScriptTarget.Latest,
+      true
     );
 
-    const buffer = host.read(indexFilePath);
-    if (!!buffer) {
-      const indexSource = buffer.toString('utf-8');
-      const indexSourceFile = ts.createSourceFile(
-        indexFilePath,
-        indexSource,
-        ts.ScriptTarget.Latest,
-        true
-      );
-
-      const statePath = options.directory
-        ? `./lib/${options.directory}/${options.fileName}`
-        : `./lib/${options.fileName}`;
-
-      insert(host, indexFilePath, [
-        ...addGlobal(
-          indexSourceFile,
-          indexFilePath,
-          `export * from '${statePath}.slice';`
-        ),
-      ]);
-    }
-
-    return host;
-  };
+    const statePath = options.directory
+      ? `./lib/${options.directory}/${options.fileName}`
+      : `./lib/${options.fileName}`;
+    const changes = applyChangesToString(
+      indexSource,
+      addImport(indexSourceFile, `export * from '${statePath}.slice';`)
+    );
+    host.write(indexFilePath, changes);
+  }
 }
 
-function addStoreConfiguration(
-  options: NormalizedSchema,
-  context: SchematicContext
-) {
-  return options.appProjectSourcePath
-    ? (host: Tree) => {
-        const mainSource = host.read(options.appMainFilePath).toString();
-        if (!mainSource.includes('redux')) {
-          const mainSourceFile = ts.createSourceFile(
-            options.appMainFilePath,
-            mainSource,
-            ts.ScriptTarget.Latest,
-            true
-          );
-          insert(
-            host,
-            options.appMainFilePath,
-            addReduxStoreToMain(
-              options.appMainFilePath,
-              mainSourceFile,
-              context
-            )
-          );
-        }
-        return host;
-      }
-    : noop();
+function addStoreConfiguration(host: Tree, options: NormalizedSchema) {
+  if (!options.appProjectSourcePath) {
+    return;
+  }
+
+  const mainSource = host.read(options.appMainFilePath).toString();
+  if (!mainSource.includes('redux')) {
+    const mainSourceFile = ts.createSourceFile(
+      options.appMainFilePath,
+      mainSource,
+      ts.ScriptTarget.Latest,
+      true
+    );
+    const changes = applyChangesToString(
+      mainSource,
+      addReduxStoreToMain(options.appMainFilePath, mainSourceFile)
+    );
+    host.write(options.appMainFilePath, changes);
+  }
 }
 
-function updateReducerConfiguration(
-  options: NormalizedSchema,
-  context: SchematicContext
-) {
-  return options.appProjectSourcePath
-    ? (host: Tree) => {
-        const mainSource = host.read(options.appMainFilePath).toString();
-        const mainSourceFile = ts.createSourceFile(
-          options.appMainFilePath,
-          mainSource,
-          ts.ScriptTarget.Latest,
-          true
-        );
-        insert(
-          host,
-          options.appMainFilePath,
-          updateReduxStore(options.appMainFilePath, mainSourceFile, context, {
-            keyName: `${options.constantName}_FEATURE_KEY`,
-            reducerName: `${options.propertyName}Reducer`,
-            modulePath: `${options.projectModulePath}`,
-          })
-        );
-        return host;
-      }
-    : noop();
+function updateReducerConfiguration(host: Tree, options: NormalizedSchema) {
+  if (!options.appProjectSourcePath) {
+    return;
+  }
+
+  const mainSource = host.read(options.appMainFilePath).toString();
+  const mainSourceFile = ts.createSourceFile(
+    options.appMainFilePath,
+    mainSource,
+    ts.ScriptTarget.Latest,
+    true
+  );
+  const changes = applyChangesToString(
+    mainSource,
+    updateReduxStore(options.appMainFilePath, mainSourceFile, {
+      keyName: `${options.constantName}_FEATURE_KEY`,
+      reducerName: `${options.propertyName}Reducer`,
+      modulePath: `${options.projectModulePath}`,
+    })
+  );
+  host.write(options.appMainFilePath, changes);
 }
 
-async function normalizeOptions(
-  host: Tree,
-  options: Schema
-): Promise<NormalizedSchema> {
-  let appProjectSourcePath: Path;
+function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
+  let appProjectSourcePath: string;
   let appMainFilePath: string;
   const extraNames = names(options.name);
-  const { sourceRoot } = getProjectConfig(host, options.project);
-  const workspace = await getWorkspace(host);
-  const projectType = workspace.projects.get(options.project).extensions
-    .projectType as string;
-  const tsConfigJson = readJsonInTree(host, 'tsconfig.base.json');
+  const projects = getProjects(host);
+  const project = projects.get(options.project);
+  const { sourceRoot, projectType } = project;
+
+  const tsConfigJson = readJson(host, 'tsconfig.base.json');
   const tsPaths: { [module: string]: string[] } = tsConfigJson.compilerOptions
     ? tsConfigJson.compilerOptions.paths || {}
     : {};
@@ -190,7 +163,7 @@ async function normalizeOptions(
     options.appProject ||
     (projectType === 'application' ? options.project : undefined);
   if (options.appProject) {
-    const appConfig = getProjectConfig(host, options.appProject);
+    const appConfig = projects.get(options.appProject);
     if (appConfig.projectType !== 'application') {
       throw new Error(
         `Expected ${options.appProject} to be an application but got ${appConfig.projectType}`
@@ -210,18 +183,19 @@ async function normalizeOptions(
   return {
     ...options,
     ...extraNames,
-    constantName: strings.underscore(options.name).toUpperCase(),
-    directory: names(options.directory).fileName,
+    constantName: names(options.name).constantName.toUpperCase(),
+    directory: names(options.directory ?? '').fileName,
     projectType,
     projectSourcePath: sourceRoot,
     projectModulePath: modulePath,
     appProjectSourcePath,
     appMainFilePath,
-    filesPath: join(sourceRoot, projectType === 'application' ? 'app' : 'lib'),
+    filesPath: joinPathFragments(
+      sourceRoot,
+      projectType === 'application' ? 'app' : 'lib'
+    ),
   };
 }
 
-export const reduxGenerator = wrapAngularDevkitSchematic(
-  '@nrwl/react',
-  'redux'
-);
+export default reduxGenerator;
+export const reduxSchematic = convertNxGenerator(reduxGenerator);

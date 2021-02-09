@@ -1,20 +1,18 @@
-import { Path } from '@angular-devkit/core';
-
 export interface Schema {
   name: string;
   project: string;
-  directory: string;
-  appProject: string;
+  directory?: string;
+  appProject?: string;
   js?: string;
 }
 
 interface NormalizedSchema extends Schema {
   projectType: string;
-  projectSourcePath: Path;
+  projectSourcePath: string;
   projectModulePath: string;
-  appProjectSourcePath: Path;
+  appProjectSourcePath: string;
   appMainFilePath: string;
-  filesPath: Path;
+  filesPath: string;
   className: string;
   constantName: string;
   propertyName: string;

@@ -4,7 +4,7 @@ import { Linter } from '@nrwl/linter';
 export interface Schema {
   name: string;
   directory?: string;
-  style?: SupportedStyles;
+  style: SupportedStyles;
   skipTsConfig: boolean;
   skipFormat: boolean;
   tags?: string;
