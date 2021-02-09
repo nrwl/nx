@@ -30,6 +30,7 @@ export {
 } from './src/generators/project-configuration';
 export { toJS } from './src/generators/to-js';
 export { visitNotIgnoredFiles } from './src/generators/visit-not-ignored-files';
+export { setDefaultCollection } from './src/generators/set-default-collection';
 
 export { parseTargetString } from './src/executors/parse-target-string';
 export { readTargetOptions } from './src/executors/read-target-options';

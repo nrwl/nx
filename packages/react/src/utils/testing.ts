@@ -3,7 +3,10 @@ import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { Rule, Tree } from '@angular-devkit/schematics';
 import { updateWorkspace } from '@nrwl/workspace/src/utils/workspace';
 import { readJsonInTree } from '@nrwl/workspace';
-import { names } from '@nrwl/devkit';
+import { addProjectConfiguration, names } from '@nrwl/devkit';
+import applicationGenerator from '../generators/application/application';
+import { Linter } from '@nrwl/linter';
+import { applicationGenerator as webApplicationGenerator } from '@nrwl/web/src/generators/application/application';
 
 const testRunner = new SchematicTestRunner(
   '@nrwl/react',

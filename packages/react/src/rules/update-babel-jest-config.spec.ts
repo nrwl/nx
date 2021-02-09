@@ -1,41 +1,31 @@
-import { Tree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { readJsonInTree } from '@nrwl/workspace';
+import { readJson, Tree } from '@nrwl/devkit';
 import { updateBabelJestConfig } from './update-babel-jest-config';
-import { callRule } from '@nrwl/workspace/src/utils/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 describe('updateBabelJestConfig', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = Tree.empty();
-    tree = createEmptyWorkspace(tree);
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should update babel-jest.config.json', async () => {
-    tree.create('/apps/demo/babel-jest.config.json', JSON.stringify({}));
+    tree.write('/apps/demo/babel-jest.config.json', JSON.stringify({}));
 
-    tree = await callRule(
-      updateBabelJestConfig('/apps/demo', (json) => {
-        json.plugins = ['test'];
-        return json;
-      }),
-      tree
-    );
+    updateBabelJestConfig(tree, '/apps/demo', (json) => {
+      json.plugins = ['test'];
+      return json;
+    });
 
-    const config = readJsonInTree(tree, '/apps/demo/babel-jest.config.json');
+    const config = readJson(tree, '/apps/demo/babel-jest.config.json');
     expect(config.plugins).toEqual(['test']);
   });
 
   it('should do nothing if project does not use babel jest', async () => {
-    tree = await callRule(
-      updateBabelJestConfig('/apps/demo', (json) => {
-        json.plugins = ['test'];
-        return json;
-      }),
-      tree
-    );
-
+    updateBabelJestConfig(tree, '/apps/demo', (json) => {
+      json.plugins = ['test'];
+      return json;
+    });
     expect(tree.exists('/apps/demo/babel-jest.config.json')).toBe(false);
   });
 });
