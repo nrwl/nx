@@ -3,6 +3,9 @@ import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { callRule, createTestUILib } from '../../utils/testing';
 import { storybookVersion } from '../../utils/versions';
 
+// TODO: migrate these tests when schematics are moved over to generators
+// These Tests would fail if rewritten with @nrwl/devkit
+// Keeping these as is so we can still test teh functionality
 describe('migrate-defaults-5-to-6 schematic', () => {
   let appTree: Tree;
 

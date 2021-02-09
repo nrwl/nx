@@ -7,7 +7,7 @@ import {
   Schema,
 } from '../shared/params';
 import { printHelp } from '../shared/print-help';
-import { WorkspaceConfiguration, Workspaces } from '../shared/workspace';
+import { WorkspaceJsonConfiguration, Workspaces } from '../shared/workspace';
 import { statSync, unlinkSync, writeFileSync } from 'fs';
 import { mkdirpSync, rmdirSync } from 'fs-extra';
 import * as path from 'path';
@@ -121,7 +121,7 @@ export function printGenHelp(opts: GenerateOptions, schema: Schema) {
   });
 }
 
-function readDefaultCollection(workspace: WorkspaceConfiguration) {
+function readDefaultCollection(workspace: WorkspaceJsonConfiguration) {
   return workspace.cli ? workspace.cli.defaultCollection : null;
 }
 

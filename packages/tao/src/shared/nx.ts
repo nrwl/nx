@@ -30,7 +30,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   tasksRunnerOptions?: {
     [tasksRunnerName: string]: {
       runner: string;
-      options?: object;
+      options?: any;
     };
   };
 }

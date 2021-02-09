@@ -1,39 +1,29 @@
-import { Tree } from '@angular-devkit/schematics';
+import { addDependenciesToPackageJson, readJson, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
-import { addDepsToPackageJson, NxJson, readJsonInTree } from '@nrwl/workspace';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-
-import { callRule, runSchematic } from '../../utils/testing';
 import { storybookVersion } from '../../utils/versions';
+import { initGenerator } from './init';
 
-describe('init', () => {
-  let appTree: Tree;
+describe('@nrwl/storybook:init', () => {
+  let tree: Tree;
 
   beforeEach(() => {
-    appTree = Tree.empty();
-    appTree = createEmptyWorkspace(appTree);
+    tree = createTreeWithEmptyWorkspace();
   });
 
   describe('dependencies for package.json', () => {
     it('should add angular related dependencies when using Angular as uiFramework', async () => {
       const existing = 'existing';
       const existingVersion = '1.0.0';
-      await callRule(
-        addDepsToPackageJson(
-          { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
-          { [existing]: existingVersion },
-          false
-        ),
-        appTree
+      addDependenciesToPackageJson(
+        tree,
+        { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
+        { [existing]: existingVersion }
       );
-      const tree = await runSchematic(
-        'init',
-        {
-          uiFramework: '@storybook/angular',
-        },
-        appTree
-      );
-      const packageJson = readJsonInTree(tree, 'package.json');
+      await initGenerator(tree, {
+        uiFramework: '@storybook/angular',
+      });
+      const packageJson = readJson(tree, 'package.json');
 
       // general deps
       expect(packageJson.devDependencies['@nrwl/storybook']).toBeDefined();
@@ -61,22 +51,15 @@ describe('init', () => {
     it('should add react related dependencies when using React as uiFramework', async () => {
       const existing = 'existing';
       const existingVersion = '1.0.0';
-      await callRule(
-        addDepsToPackageJson(
-          { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
-          { [existing]: existingVersion },
-          false
-        ),
-        appTree
+      addDependenciesToPackageJson(
+        tree,
+        { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
+        { [existing]: existingVersion }
       );
-      const tree = await runSchematic(
-        'init',
-        {
-          uiFramework: '@storybook/react',
-        },
-        appTree
-      );
-      const packageJson = readJsonInTree(tree, 'package.json');
+      await initGenerator(tree, {
+        uiFramework: '@storybook/react',
+      });
+      const packageJson = readJson(tree, 'package.json');
 
       // general deps
       expect(packageJson.devDependencies['@nrwl/storybook']).toBeDefined();
@@ -106,22 +89,15 @@ describe('init', () => {
   it('should add html related dependencies when using html as uiFramework', async () => {
     const existing = 'existing';
     const existingVersion = '1.0.0';
-    await callRule(
-      addDepsToPackageJson(
-        { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
-        { [existing]: existingVersion },
-        false
-      ),
-      appTree
+    addDependenciesToPackageJson(
+      tree,
+      { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
+      { [existing]: existingVersion }
     );
-    const tree = await runSchematic(
-      'init',
-      {
-        uiFramework: '@storybook/html',
-      },
-      appTree
-    );
-    const packageJson = readJsonInTree(tree, 'package.json');
+    await initGenerator(tree, {
+      uiFramework: '@storybook/html',
+    });
+    const packageJson = readJson(tree, 'package.json');
 
     // general deps
     expect(packageJson.devDependencies['@nrwl/storybook']).toBeDefined();
@@ -144,8 +120,10 @@ describe('init', () => {
   });
 
   it('should add build-storybook to cacheable operations', async () => {
-    const tree = await runSchematic('init', {}, appTree);
-    const nxJson = readJsonInTree(tree, 'nx.json');
+    await initGenerator(tree, {
+      uiFramework: '@storybook/html',
+    });
+    const nxJson = readJson(tree, 'nx.json');
     expect(
       nxJson.tasksRunnerOptions.default.options.cacheableOperations
     ).toContain('build-storybook');

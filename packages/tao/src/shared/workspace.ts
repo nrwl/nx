@@ -6,7 +6,7 @@ import '../compat/compat';
 /**
  * Workspace configuration
  */
-export interface WorkspaceConfiguration {
+export interface WorkspaceJsonConfiguration {
   /**
    * Version of the configuration format
    */
@@ -189,7 +189,7 @@ export interface ExecutorContext {
   /**
    * The full workspace configuration
    */
-  workspace: WorkspaceConfiguration;
+  workspace: WorkspaceJsonConfiguration;
 
   /**
    * The current working directory
@@ -209,7 +209,7 @@ export class Workspaces {
     return path.relative(this.root, cwd) || null;
   }
 
-  calculateDefaultProjectName(cwd: string, wc: WorkspaceConfiguration) {
+  calculateDefaultProjectName(cwd: string, wc: WorkspaceJsonConfiguration) {
     const relativeCwd = this.relativeCwd(cwd);
     if (relativeCwd) {
       const matchingProject = Object.keys(wc.projects).find((p) => {
@@ -224,7 +224,7 @@ export class Workspaces {
     return wc.defaultProject;
   }
 
-  readWorkspaceConfiguration(): WorkspaceConfiguration {
+  readWorkspaceConfiguration(): WorkspaceJsonConfiguration {
     const w = JSON.parse(
       stripJsonComments(
         fs
@@ -400,7 +400,7 @@ export function reformattedWorkspaceJsonOrNull(w: any) {
   return w.version === 2 ? toNewFormatOrNull(w) : toOldFormatOrNull(w);
 }
 
-export function toNewFormat(w: any): WorkspaceConfiguration {
+export function toNewFormat(w: any): WorkspaceJsonConfiguration {
   const f = toNewFormatOrNull(w);
   return f ? f : w;
 }

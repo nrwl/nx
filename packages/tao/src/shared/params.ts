@@ -1,5 +1,5 @@
 import { ParsedArgs } from 'minimist';
-import { TargetConfiguration, WorkspaceConfiguration } from './workspace';
+import { TargetConfiguration, WorkspaceJsonConfiguration } from './workspace';
 import * as inquirer from 'inquirer';
 import { logger } from './logger';
 
@@ -369,7 +369,7 @@ export async function combineOptionsForGenerator(
   commandLineOpts: Options,
   collectionName: string,
   generatorName: string,
-  wc: WorkspaceConfiguration | null,
+  wc: WorkspaceJsonConfiguration | null,
   schema: Schema,
   isInteractive: boolean,
   defaultProjectName: string | null,
@@ -442,7 +442,7 @@ export function convertSmartDefaultsIntoNamedParams(
 
 function getGeneratorDefaults(
   projectName: string | null,
-  wc: WorkspaceConfiguration,
+  wc: WorkspaceJsonConfiguration,
   collectionName: string,
   generatorName: string
 ) {
