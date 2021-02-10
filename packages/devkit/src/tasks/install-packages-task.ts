@@ -1,5 +1,6 @@
 import { Tree } from '@nrwl/tao/src/shared/tree';
 import { execSync } from 'child_process';
+import { join } from 'path';
 import {
   detectPackageManager,
   getPackageManagerCommand,
@@ -38,7 +39,7 @@ export function installPackagesTask(
       const pm = packageManager || detectPackageManager(cwd);
       const pmc = getPackageManagerCommand(pm);
       execSync(pmc.install, {
-        cwd: joinPathFragments(host.root, cwd),
+        cwd: join(host.root, cwd),
         stdio: [0, 1, 2],
       });
     }
