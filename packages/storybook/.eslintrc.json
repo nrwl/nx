@@ -4,10 +4,14 @@
   "overrides": [
     {
       "files": ["**/*.ts"],
-      "excludedFiles": ["./src/migrations/**"],
+      "excludedFiles": [
+        "./src/migrations/**",
+        "./src/generators/migrate-defaults-5-to-6/*.spec.ts",
+        "./src/utils/testing.ts"
+      ],
       "rules": {
         "no-restricted-imports": [
-          "warn",
+          "error",
           "@nrwl/workspace",
           "@angular-devkit/core",
           "@angular-devkit/schematics",
