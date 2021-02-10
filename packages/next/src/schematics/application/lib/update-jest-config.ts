@@ -1,6 +1,20 @@
-import { chain, noop, Rule } from '@angular-devkit/schematics';
+import { chain, noop, Rule, Tree } from '@angular-devkit/schematics';
 import { NormalizedSchema } from './normalize-options';
-import { updateBabelJestConfig } from '@nrwl/react/src/rules/update-babel-jest-config';
+import { updateJsonInTree } from '@nrwl/workspace';
+
+type BabelJestConfigUpdater<T> = (json: T) => T;
+
+function updateBabelJestConfigOriginal<T = any>(
+  projectRoot: string,
+  update: BabelJestConfigUpdater<T>
+) {
+  return (host: Tree) => {
+    const configPath = `${projectRoot}/babel-jest.config.json`;
+    return host.exists(configPath)
+      ? updateJsonInTree<T>(configPath, update)
+      : noop();
+  };
+}
 
 export function updateJestConfig(options: NormalizedSchema): Rule {
   return options.unitTestRunner === 'none'
@@ -15,7 +29,7 @@ export function updateJestConfig(options: NormalizedSchema): Rule {
           );
           host.overwrite(configPath, content);
         },
-        updateBabelJestConfig(options.appProjectRoot, (json) => {
+        updateBabelJestConfigOriginal(options.appProjectRoot, (json) => {
           if (options.style === 'styled-jsx') {
             json.plugins = (json.plugins || []).concat('styled-jsx/babel');
           }
