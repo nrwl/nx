@@ -1,16 +1,21 @@
-import { noop, Rule } from '@angular-devkit/schematics';
-import { addDepsToPackageJson } from '@nrwl/workspace';
 import { CSS_IN_JS_DEPENDENCIES } from '@nrwl/react';
 import {
-  gatsbyPluginStyledComponentsVersion,
   gatsbyPluginEmotionVersion,
   gatsbyPluginLessVersion,
-  nodeSassVersion,
   gatsbyPluginSassVersion,
+  gatsbyPluginStyledComponentsVersion,
   gatsbyPluginStylusVersion,
+  nodeSassVersion,
 } from './versions';
+import { Tree } from '@nrwl/tao/src/shared/tree';
+import {
+  addDependenciesToPackageJson,
+  GeneratorCallback,
+  updateJson,
+} from '@nrwl/devkit';
+import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 
-export const NEXT_SPECIFIC_STYLE_DEPENDENCIES = {
+export const GATSBY_SPECIFIC_STYLE_DEPENDENCIES = {
   'styled-components': {
     dependencies: CSS_IN_JS_DEPENDENCIES['styled-components'].dependencies,
     devDependencies: {
@@ -44,12 +49,30 @@ export const NEXT_SPECIFIC_STYLE_DEPENDENCIES = {
   },
 };
 
-export function addStyleDependencies(style: string): Rule {
-  const extraDependencies = NEXT_SPECIFIC_STYLE_DEPENDENCIES[style];
-  return extraDependencies
-    ? addDepsToPackageJson(
-        extraDependencies.dependencies,
-        extraDependencies.devDependencies
-      )
-    : noop();
+export function addStyleDependencies(host: Tree, style: string) {
+  let installTask: GeneratorCallback;
+
+  const extraDependencies = GATSBY_SPECIFIC_STYLE_DEPENDENCIES[style];
+
+  if (!extraDependencies) return;
+
+  installTask = addDependenciesToPackageJson(
+    host,
+    extraDependencies.dependencies,
+    extraDependencies.devDependencies
+  );
+
+  // @zeit/next-less & @zeit/next-stylus internal configuration is working only
+  // for specific CSS loader version, causing PNPM resolution to fail.
+  if (
+    detectPackageManager() === 'pnpm' &&
+    (style === 'less' || style === 'styl')
+  ) {
+    updateJson(host, `package.json`, (json) => {
+      json.resolutions = { ...json.resolutions, 'css-loader': '1.0.1' };
+      return json;
+    });
+  }
+
+  return installTask;
 }

@@ -244,11 +244,11 @@ export function Index() {
   /*
    * Replace the elements below with your own.
    *
-   * Note: The corresponding styles are in the ./${fileName}.${style} file.
+   * Note: The corresponding styles are in the ./<%= fileName %>.<%= style %> file.
    */
   return (
     <<%= wrapper %><% if (!styledModule) {%> className={styles.page}<% } %>>
-      <%= innerJsx %>
+      <%- innerJsx %>
     </<%= wrapper %>>
   );
 };
