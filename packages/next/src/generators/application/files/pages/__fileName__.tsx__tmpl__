@@ -4,12 +4,12 @@ import React from 'react';
 %>import styled from '<%= styledModule %>';<% } else {
   var wrapper = 'div';
 %>
-  <%= style !== 'styled-jsx' ? `import styles from './${fileName}.module.${style}';` : '' %>
+  <%- style !== 'styled-jsx' ? `import styles from './${fileName}.module.${style}';` : '' %>
 <% }
 %>
 
 <% if (styledModule && styledModule !== 'styled-jsx') { %>
-const StyledPage = styled.div`<%= pageStyleContent %>`;
+const StyledPage = styled.div`<%- pageStyleContent %>`;
 <% }%>
 
 export function Index() {
@@ -20,8 +20,8 @@ export function Index() {
    */
   return (
     <<%= wrapper %><% if (!styledModule) {%> className={styles.page}<% } %>>
-      <%= styledModule === 'styled-jsx' ? `<style jsx>{\`${pageStyleContent}\`}</style>` : `` %>
-      <%= appContent %>
+      <%- styledModule === 'styled-jsx' ? `<style jsx>{\`${pageStyleContent}\`}</style>` : `` %>
+      <%- appContent %>
     </<%= wrapper %>>
   );
 };

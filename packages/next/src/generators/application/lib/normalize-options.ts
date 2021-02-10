@@ -1,15 +1,13 @@
-import { normalize, Path } from '@angular-devkit/core';
-import { Tree } from '@angular-devkit/schematics';
 import { assertValidStyle } from '@nrwl/react';
+import { getWorkspaceLayout, names, Tree } from '@nrwl/devkit';
+
 import { Schema } from '../schema';
-import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
-import { names } from '@nrwl/devkit';
 
 export interface NormalizedSchema extends Schema {
   projectName: string;
-  appProjectRoot: Path;
+  appProjectRoot: string;
   e2eProjectName: string;
-  e2eProjectRoot: Path;
+  e2eProjectRoot: string;
   parsedTags: string[];
   fileName: string;
   styledModule: null | string;
@@ -24,11 +22,13 @@ export function normalizeOptions(
     ? `${names(options.directory).fileName}/${names(options.name).fileName}`
     : names(options.name).fileName;
 
+  const { appsDir } = getWorkspaceLayout(host);
+
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
   const e2eProjectName = `${appProjectName}-e2e`;
 
-  const appProjectRoot = normalize(`${appsDir(host)}/${appDirectory}`);
-  const e2eProjectRoot = normalize(`${appsDir(host)}/${appDirectory}-e2e`);
+  const appProjectRoot = `${appsDir}/${appDirectory}`;
+  const e2eProjectRoot = `${appsDir}/${appDirectory}-e2e`;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -46,6 +46,9 @@ export function normalizeOptions(
     ...options,
     name: names(options.name).fileName,
     projectName: appProjectName,
+    unitTestRunner: options.unitTestRunner || 'jest',
+    e2eTestRunner: options.e2eTestRunner || 'cypress',
+    style: options.style || 'css',
     appProjectRoot,
     e2eProjectRoot,
     e2eProjectName,
