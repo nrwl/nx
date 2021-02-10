@@ -103,6 +103,11 @@
         "id": "core-concepts",
         "itemList": [
           {
+            "name": "Plugins",
+            "id": "plugins",
+            "file": "shared/plugins-overview"
+          },
+          {
             "name": "Computation Caching",
             "id": "computation-caching",
             "file": "shared/computation-caching"
@@ -1145,6 +1150,11 @@
         "id": "core-concepts",
         "itemList": [
           {
+            "name": "Plugins",
+            "id": "plugins",
+            "file": "shared/plugins-overview"
+          },
+          {
             "name": "Computation Caching",
             "id": "computation-caching",
             "file": "shared/computation-caching"
@@ -2145,6 +2155,11 @@
         "name": "Core Concepts",
         "id": "core-concepts",
         "itemList": [
+          {
+            "name": "Plugins",
+            "id": "plugins",
+            "file": "shared/plugins-overview"
+          },
           {
             "name": "Computation Caching",
             "id": "computation-caching",
