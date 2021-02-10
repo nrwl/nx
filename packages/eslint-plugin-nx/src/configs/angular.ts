@@ -12,5 +12,10 @@
 export default {
   plugins: ['@angular-eslint'],
   extends: ['plugin:@angular-eslint/recommended'],
+  /**
+   * Apply our thin wrapper around @typescript-eslint/parser
+   * NOTE: For the relative path to work it needs to be relative to eslint-plugin-nx/src/index.js
+   */
+  parser: './parser.js',
   rules: {},
 };
