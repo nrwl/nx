@@ -12,7 +12,7 @@ describe('empty', () => {
 //   ProjectGraph,
 //   ProjectType,
 // } from '@nrwl/workspace/src/core/project-graph';
-// import * as fileUtils from '@nrwl/workspace/src/utils/fileutils';
+// import * as fileUtils from '@nrwl/workspace/src/utilities/fileutils';
 //
 // jest.mock('ng-packagr');
 // import * as ngPackagrImport from 'ng-packagr';
