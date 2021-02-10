@@ -1,11 +1,10 @@
-import { JsonObject } from '@angular-devkit/core';
 import watch from 'node-watch';
 import { exec, execSync } from 'child_process';
 import { ExecutorContext } from '@nrwl/devkit';
 import ignore from 'ignore';
 import { readFileSync } from 'fs-extra';
 
-export interface FileServerOptions extends JsonObject {
+export interface FileServerOptions {
   host: string;
   port: number;
   ssl: boolean;
@@ -33,7 +32,7 @@ function getHttpServerArgs(opts: FileServerOptions) {
     args.push(`-C ${opts.sslCert}`);
   }
   if (opts.sslKey) {
-    args.push(`-K ${opts.sslCert}`);
+    args.push(`-K ${opts.sslKey}`);
   }
   if (opts.proxyUrl) {
     args.push(`-P ${opts.proxyUrl}`);
@@ -141,7 +140,7 @@ export default async function (
     process.stderr.write(chunk);
   });
 
-  return new Promise((res) => {
+  return new Promise<{ success: boolean }>((res) => {
     serve.on('exit', (code) => {
       if (code == 0) {
         res({ success: true });

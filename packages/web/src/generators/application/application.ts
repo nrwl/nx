@@ -158,6 +158,25 @@ function addProject(tree: Tree, options: NormalizedSchema) {
   }
 }
 
+function setDefaults(tree: Tree, options: NormalizedSchema) {
+  const workspace = readWorkspaceConfiguration(tree);
+  workspace.generators = workspace.generators || {};
+  workspace.generators['@nrwl/web:application'] = {
+    style: options.style,
+    linter: options.linter,
+    unitTestRunner: options.unitTestRunner,
+    e2eTestRunner: options.e2eTestRunner,
+    ...workspace.generators['@nrwl/web:application'],
+  };
+  workspace.generators['@nrwl/web:library'] = {
+    style: options.style,
+    linter: options.linter,
+    unitTestRunner: options.unitTestRunner,
+    ...workspace.generators['@nrwl/web:library'],
+  };
+  updateWorkspaceConfiguration(tree, workspace);
+}
+
 export async function applicationGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
 
@@ -198,6 +217,8 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     });
     installTask = jestInstallTask || installTask;
   }
+
+  setDefaults(host, options);
 
   if (!schema.skipFormat) {
     await formatFiles(host);

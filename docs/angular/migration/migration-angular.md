@@ -90,8 +90,8 @@ Your workspace is now powered by Nx! You can verify out that your application st
 
 Learn more about the advantages of Nx in the following guides:
 
-- [Using Cypress for e2e tests](/angular/plugins/cypress/overview)
-- [Using Jest for unit tests](/angular/plugins/jest/overview)
+- [Using Cypress for e2e tests](/angular/cypress/overview)
+- [Using Jest for unit tests](/angular/jest/overview)
 - [Computation Caching](/angular/core-concepts/computation-caching)
 - [Rebuilding and Retesting What is Affected](/angular/core-concepts/affected)
 
@@ -374,6 +374,6 @@ yarn lint
 
 Learn more about the advantages of Nx in the following guides:
 
-[Using Cypress for e2e tests](/angular/plugins/cypress/overview) \
-[Using Jest for unit tests](/angular/plugins/jest/overview) \
+[Using Cypress for e2e tests](/angular/cypress/overview) \
+[Using Jest for unit tests](/angular/jest/overview) \
 [Rebuilding and Retesting What is Affected](/angular/core-concepts/affected)

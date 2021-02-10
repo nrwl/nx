@@ -68,19 +68,15 @@ myorg/
 
 ## See Also
 
-- [Using Cypress](/{{framework}}/plugins/cypress/overview)
-- [Using Jest](/{{framework}}/plugins/cypress/overview)
+- [Using Cypress](/{{framework}}/cypress/overview)
+- [Using Jest](/{{framework}}/cypress/overview)
 
 ## Executors / Builders
 
-- [build](/{{framework}}/plugins/web/executors/build) - Builds a web components application
-- [dev-server](/{{framework}}/plugins/web/executors/package) - Builds and serves a web application
-- [package](/{{framework}}/plugins/web/executors/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
+- [build](/{{framework}}/web/build) - Builds a web components application
+- [dev-server](/{{framework}}/web/dev-server) - Builds and serves a web application
+- [package](/{{framework}}/web/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
 
 ## Generators
 
-- [application](/{{framework}}/plugins/web/generators/application) - Create an Web Components application
-- [component](/{{framework}}/plugins/web/generators/component) - Create an Web Components library
-- [library](/{{framework}}/plugins/web/generators/library) - Create an Web Components library
-- [redux](/{{framework}}/plugins/web/generators/redux) - Generate a Redux slice for a project
-- [storybook-configuration](/{{framework}}/plugins/web/generators/storybook-configuration) - Set up Storybook for a react library
+- [application](/{{framework}}/web/application) - Create an Web Components application

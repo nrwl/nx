@@ -17,6 +17,7 @@ import {
   ScriptTarget,
   StringLiteral,
 } from 'typescript';
+import { join } from 'path';
 
 /**
  * Updates the root jest config projects array and removes the project.
@@ -28,7 +29,10 @@ export function updateJestConfig(
 ) {
   const projectToRemove = schema.projectName;
 
-  if (!tree.exists('jest.config.js')) {
+  if (
+    !tree.exists('jest.config.js') ||
+    !tree.exists(join(projectConfig.root, 'jest.config.js'))
+  ) {
     return;
   }
 
@@ -65,6 +69,7 @@ export function updateJestConfig(
     console.warn(
       `Could not find ${projectToRemove} in projects in /jest.config.js.`
     );
+    return;
   }
 
   const previousProject =

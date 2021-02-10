@@ -1,22 +1,30 @@
-const mockCopyPlugin = jest.fn();
+import { ExecutorContext } from '@nrwl/devkit';
+
+let mockCopyPlugin = jest.fn();
 jest.mock('rollup-plugin-copy', () => mockCopyPlugin);
-
-import { MockBuilderContext } from '@nrwl/workspace/testing';
-
-import { createRollupOptions } from './package.impl';
-import { getMockContext } from '../../utils/testing';
-import { PackageBuilderOptions } from '../../utils/types';
-import { normalizePackageOptions } from '@nrwl/web/src/utils/normalize';
 
 jest.mock('tsconfig-paths-webpack-plugin');
 
-describe('WebPackagebuilder', () => {
-  let context: MockBuilderContext;
+import { createRollupOptions } from './package.impl';
+import { PackageBuilderOptions } from '../../utils/types';
+import { normalizePackageOptions } from '../../utils/normalize';
+
+describe('packageExecutor', () => {
+  let context: ExecutorContext;
   let testOptions: PackageBuilderOptions;
 
   beforeEach(async () => {
-    context = await getMockContext();
-    context.target.project = 'example';
+    context = {
+      root: '/root',
+      cwd: '/root',
+      workspace: {
+        version: 2,
+        projects: {},
+      },
+      isVerbose: false,
+      projectName: 'example',
+      targetName: 'build',
+    };
     testOptions = {
       entryFile: 'libs/ui/src/index.ts',
       outputPath: 'dist/ui',

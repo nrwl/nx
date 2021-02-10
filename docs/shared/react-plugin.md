@@ -69,22 +69,22 @@ myorg/
 
 ## See Also
 
-- [Using Cypress](/{{framework}}/plugins/cypress/overview)
-- [Using Jest](/{{framework}}/plugins/jest/overview)
-- [Using Storybook](/{{framework}}/plugins/storybook/overview)
+- [Using Cypress](/{{framework}}/cypress/overview)
+- [Using Jest](/{{framework}}/jest/overview)
+- [Using Storybook](/{{framework}}/storybook/overview)
 
 ## Executors / Builders
 
 React applications are built using the executors from the `@nrwl/web` plugin.
 
-- [build](/{{framework}}/plugins/web/executors/build) - Builds a web components application
-- [dev-server](/{{framework}}/plugins/web/executors/package) - Builds and serves a web application
-- [package](/{{framework}}/plugins/web/executors/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
+- [build](/{{framework}}/web/build) - Builds a web components application
+- [dev-server](/{{framework}}/web/package) - Builds and serves a web application
+- [package](/{{framework}}/web/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
 
 ## Generators
 
-- [application](/{{framework}}/plugins/react/generators/application) - Create an React application
-- [component](/{{framework}}/plugins/react/generators/component) - Create an React library
-- [library](/{{framework}}/plugins/react/generators/library) - Create an React library
-- [redux](/{{framework}}/plugins/react/generators/redux) - Generate a Redux slice for a project
-- [storybook-configuration](/{{framework}}/plugins/react/generators/storybook-configuration) - Set up Storybook for a react library
+- [application](/{{framework}}/react/application) - Create an React application
+- [component](/{{framework}}/react/component) - Create an React library
+- [library](/{{framework}}/react/library) - Create an React library
+- [redux](/{{framework}}/react/redux) - Generate a Redux slice for a project
+- [storybook-configuration](/{{framework}}/react/storybook-configuration) - Set up Storybook for a react library
