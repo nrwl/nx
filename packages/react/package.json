@@ -35,6 +35,8 @@
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/web": "*",
+    "@nrwl/linter": "*",
+    "@nrwl/storybook": "*",
     "@angular-devkit/schematics": "~11.0.1",
     "@svgr/webpack": "^5.4.0",
     "eslint-plugin-import": "^2.20.1",
