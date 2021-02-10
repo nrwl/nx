@@ -76,7 +76,7 @@ export default async function run(
     const pathToOutputFile = join(context.root, options.outputFile);
     createDirectory(dirname(pathToOutputFile));
     writeFileSync(pathToOutputFile, formattedResults);
-  } else if (printInfo) {
+  } else {
     console.info(formattedResults);
   }
 
