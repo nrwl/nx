@@ -20,6 +20,7 @@ const IGNORE_MATCHES = {
   cli: ['@nrwl/cli'],
   cypress: ['cypress', '@angular-devkit/schematics', '@nrwl/cypress'],
   devkit: ['@angular-devkit/architect', 'rxjs'],
+  'eslint-plugin-nx': ['@typescript-eslint/parser'],
   gatsby: ['@angular-devkit/architect', 'babel-preset-gatsby', 'rxjs'],
   jest: [
     'jest',
