@@ -1,13 +1,13 @@
-import { externalSchematic, Tree } from '@angular-devkit/schematics';
-import { UnitTestTree } from '@angular-devkit/schematics/testing';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { callRule, runSchematic } from '../../utils/testing';
-import { CreateComponentSpecFileSchema } from './component-cypress-spec';
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { Tree } from '@nrwl/devkit';
+import componentCypressSpecGenerator from './component-cypress-spec';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import libraryGenerator from '../library/library';
+import { Linter } from '@nrwl/linter';
+import applicationGenerator from '../application/application';
+import { formatFile } from '../../utils/format-file';
 
 describe('react:component-cypress-spec', () => {
   let appTree: Tree;
-  let tree: UnitTestTree;
 
   [
     {
@@ -91,22 +91,20 @@ describe('react:component-cypress-spec', () => {
           beforeEach(async () => {
             appTree = await createTestUILib('test-ui-lib', testConfig.plainJS);
 
-            appTree.overwrite(cmpPath, testConfig.testCmpSrcWithProps);
+            appTree.write(cmpPath, testConfig.testCmpSrcWithProps);
 
-            tree = await runSchematic(
-              'component-cypress-spec',
-              <CreateComponentSpecFileSchema>{
-                componentPath: `lib/test-ui-lib.${fileCmpExt}`,
-                project: 'test-ui-lib',
-                js: testConfig.plainJS,
-              },
-              appTree
-            );
+            await componentCypressSpecGenerator(appTree, {
+              componentPath: `lib/test-ui-lib.${fileCmpExt}`,
+              project: 'test-ui-lib',
+              js: testConfig.plainJS,
+            });
           });
 
           it('should properly set up the spec', () => {
-            expect(stripIndents`${tree.readContent(cypressStorySpecFilePath)}`)
-              .toContain(stripIndents`describe('test-ui-lib: Test component', () => {
+            expect(
+              formatFile`${appTree.read(cypressStorySpecFilePath).toString()}`
+            )
+              .toContain(formatFile`describe('test-ui-lib: Test component', () => {
         beforeEach(() => cy.visit('/iframe.html?id=test--primary&knob-name=&knob-displayAge=false'));
         
         it('should render the component', () => {
@@ -122,22 +120,19 @@ describe('react:component-cypress-spec', () => {
         beforeEach(async () => {
           appTree = await createTestUILib('test-ui-lib', testConfig.plainJS);
 
-          appTree.overwrite(cmpPath, testConfig.testCmpSrcWithoutProps);
+          appTree.write(cmpPath, testConfig.testCmpSrcWithoutProps);
 
-          tree = await runSchematic(
-            'component-cypress-spec',
-            <CreateComponentSpecFileSchema>{
-              componentPath: `lib/test-ui-lib.${fileCmpExt}`,
-              project: 'test-ui-lib',
-              js: testConfig.plainJS,
-            },
-            appTree
-          );
+          await componentCypressSpecGenerator(appTree, {
+            componentPath: `lib/test-ui-lib.${fileCmpExt}`,
+            project: 'test-ui-lib',
+            js: testConfig.plainJS,
+          });
         });
 
         it('should properly set up the spec', () => {
-          expect(stripIndents`${tree.readContent(cypressStorySpecFilePath)}`)
-            .toContain(stripIndents`describe('test-ui-lib: Test component', () => {
+          expect(
+            formatFile`${appTree.read(cypressStorySpecFilePath).toString()}`
+          ).toContain(formatFile`describe('test-ui-lib: Test component', () => {
       beforeEach(() => cy.visit('/iframe.html?id=test--primary'));
       
       it('should render the component', () => {
@@ -155,24 +150,30 @@ export async function createTestUILib(
   libName: string,
   plainJS = false
 ): Promise<Tree> {
-  let appTree = Tree.empty();
-  appTree = createEmptyWorkspace(appTree);
-  appTree = await callRule(
-    externalSchematic('@nrwl/react', 'library', {
-      name: libName,
-      js: plainJS,
-    }),
-    appTree
-  );
+  let appTree = createTreeWithEmptyWorkspace();
+  await libraryGenerator(appTree, {
+    name: libName,
+    linter: Linter.EsLint,
+    js: plainJS,
+    component: true,
+    skipFormat: true,
+    skipTsConfig: false,
+    style: 'css',
+    unitTestRunner: 'jest',
+  });
 
   // create some Nx app that we'll use to generate the cypress
   // spec into it. We don't need a real Cypress setup
-  appTree = await callRule(
-    externalSchematic('@nrwl/react', 'application', {
-      name: `${libName}-e2e`,
-      js: plainJS,
-    }),
-    appTree
-  );
+  await applicationGenerator(appTree, {
+    babelJest: false,
+    js: plainJS,
+    e2eTestRunner: 'none',
+    linter: Linter.EsLint,
+    name: `${libName}-e2e`,
+    skipFormat: true,
+    style: 'css',
+    unitTestRunner: 'none',
+  });
+
   return appTree;
 }

@@ -7,6 +7,7 @@ export function createTreeWithEmptyWorkspace() {
   const tree = new FsTree('/virtual', false);
 
   tree.write('/workspace.json', JSON.stringify({ version: 1, projects: {} }));
+  tree.write('./.prettierrc', '{"singleQuote": true}');
   tree.write(
     '/package.json',
     JSON.stringify({

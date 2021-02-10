@@ -3,6 +3,7 @@ export {
   WorkspaceJsonConfiguration,
   TargetConfiguration,
   ProjectConfiguration,
+  ProjectType,
   Generator,
   GeneratorCallback,
   Executor,

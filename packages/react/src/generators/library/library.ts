@@ -18,25 +18,25 @@ import {
 import { Schema } from './schema';
 import { updateBabelJestConfig } from '../../rules/update-babel-jest-config';
 import {
+  addDependenciesToPackageJson,
+  addProjectConfiguration,
+  applyChangesToString,
   convertNxGenerator,
+  formatFiles,
+  generateFiles,
+  GeneratorCallback,
   getProjects,
   getWorkspaceLayout,
   joinPathFragments,
   names,
-  offsetFromRoot,
-  Tree,
   normalizePath,
-  updateJson,
-  GeneratorCallback,
-  addDependenciesToPackageJson,
-  generateFiles,
+  offsetFromRoot,
   toJS,
-  addProjectConfiguration,
-  formatFiles,
-  applyChangesToString,
+  Tree,
+  updateJson,
 } from '@nrwl/devkit';
 import init from '../init/init';
-import { lintProjectGenerator } from '@nrwl/linter';
+import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { jestProjectGenerator } from '@nrwl/jest';
 import componentGenerator from '../component/component';
 
@@ -141,6 +141,10 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx}`],
     skipFormat: true,
   });
+
+  if (options.linter === Linter.TsLint) {
+    return;
+  }
 
   updateJson(
     host,

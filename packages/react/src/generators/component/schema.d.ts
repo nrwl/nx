@@ -3,7 +3,7 @@ import { SupportedStyles } from '../../../typings/style';
 export interface Schema {
   name: string;
   project: string;
-  style?: SupportedStyles;
+  style: SupportedStyles;
   skipTests?: boolean;
   directory?: string;
   export?: boolean;

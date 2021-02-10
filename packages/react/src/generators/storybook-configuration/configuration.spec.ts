@@ -1,8 +1,11 @@
-import { externalSchematic, Tree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { callRule, runSchematic } from '../../utils/testing';
-import { StorybookConfigureSchema } from './schema';
 import * as fileUtils from '@nrwl/workspace/src/core/file-utils';
+import { Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import libraryGenerator from '../library/library';
+import { Linter } from '@nrwl/linter';
+import applicationGenerator from '../application/application';
+import componentGenerator from '../component/component';
+import storybookConfigurationGenerator from './configuration';
 
 describe('react:storybook-configuration', () => {
   let appTree;
@@ -18,43 +21,35 @@ describe('react:storybook-configuration', () => {
 
   it('should configure everything at once', async () => {
     appTree = await createTestUILib('test-ui-lib');
+    await storybookConfigurationGenerator(appTree, {
+      name: 'test-ui-lib',
+      configureCypress: true,
+    });
 
-    const tree = await runSchematic(
-      'storybook-configuration',
-      <StorybookConfigureSchema>{
-        name: 'test-ui-lib',
-        configureCypress: true,
-      },
-      appTree
-    );
-    expect(tree.exists('libs/test-ui-lib/.storybook/main.js')).toBeTruthy();
+    expect(appTree.exists('libs/test-ui-lib/.storybook/main.js')).toBeTruthy();
     expect(
-      tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
+      appTree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
     ).toBeTruthy();
-    expect(tree.exists('apps/test-ui-lib-e2e/cypress.json')).toBeTruthy();
+    expect(appTree.exists('apps/test-ui-lib-e2e/cypress.json')).toBeTruthy();
   });
 
   it('should generate stories for components', async () => {
     appTree = await createTestUILib('test-ui-lib');
-
-    const tree = await runSchematic(
-      'storybook-configuration',
-      <StorybookConfigureSchema>{
-        name: 'test-ui-lib',
-        generateStories: true,
-      },
-      appTree
-    );
+    await storybookConfigurationGenerator(appTree, {
+      name: 'test-ui-lib',
+      generateStories: true,
+      configureCypress: false,
+    });
 
     expect(
-      tree.exists('libs/test-ui-lib/src/lib/test-ui-lib.stories.tsx')
+      appTree.exists('libs/test-ui-lib/src/lib/test-ui-lib.stories.tsx')
     ).toBeTruthy();
   });
 
   it('should generate stories for components written in plain JS', async () => {
     appTree = await createTestUILib('test-ui-lib', true);
 
-    appTree.create(
+    appTree.write(
       'libs/test-ui-lib/src/lib/test-ui-libplain.js',
       `import React from 'react';
 
@@ -71,38 +66,29 @@ describe('react:storybook-configuration', () => {
       export default Test;
       `
     );
-
-    const tree = await runSchematic(
-      'storybook-configuration',
-      <StorybookConfigureSchema>{
-        name: 'test-ui-lib',
-        generateCypressSpecs: true,
-        generateStories: true,
-        js: true,
-      },
-      appTree
-    );
+    await storybookConfigurationGenerator(appTree, {
+      name: 'test-ui-lib',
+      generateCypressSpecs: true,
+      generateStories: true,
+      configureCypress: false,
+      js: true,
+    });
 
     expect(
-      tree.exists('libs/test-ui-lib/src/lib/test-ui-libplain.stories.js')
+      appTree.exists('libs/test-ui-lib/src/lib/test-ui-libplain.stories.js')
     ).toBeTruthy();
   });
 
   it('should configure everything at once', async () => {
     appTree = await createTestAppLib('test-ui-app');
+    await storybookConfigurationGenerator(appTree, {
+      name: 'test-ui-app',
+      configureCypress: true,
+    });
 
-    const tree = await runSchematic(
-      'storybook-configuration',
-      <StorybookConfigureSchema>{
-        name: 'test-ui-app',
-        configureCypress: true,
-      },
-      appTree
-    );
-
-    expect(tree.exists('apps/test-ui-app/.storybook/main.js')).toBeTruthy();
+    expect(appTree.exists('apps/test-ui-app/.storybook/main.js')).toBeTruthy();
     expect(
-      tree.exists('apps/test-ui-app/.storybook/tsconfig.json')
+      appTree.exists('apps/test-ui-app/.storybook/tsconfig.json')
     ).toBeTruthy();
 
     /**
@@ -117,21 +103,17 @@ describe('react:storybook-configuration', () => {
 
   it('should generate stories for components', async () => {
     appTree = await createTestAppLib('test-ui-app');
-
-    const tree = await runSchematic(
-      'storybook-configuration',
-      <StorybookConfigureSchema>{
-        name: 'test-ui-app',
-        generateStories: true,
-      },
-      appTree
-    );
+    await storybookConfigurationGenerator(appTree, {
+      name: 'test-ui-app',
+      generateStories: true,
+      configureCypress: false,
+    });
 
     // Currently the auto-generate stories feature only picks up components under the 'lib' directory.
     // In our 'createTestAppLib' function, we call @nrwl/react:component to generate a component
     // under the specified 'lib' directory
     expect(
-      tree.exists(
+      appTree.exists(
         'apps/test-ui-app/src/app/my-component/my-component.stories.tsx'
       )
     ).toBeTruthy();
@@ -142,15 +124,17 @@ export async function createTestUILib(
   libName: string,
   plainJS = false
 ): Promise<Tree> {
-  let appTree = Tree.empty();
-  appTree = createEmptyWorkspace(appTree);
-  appTree = await callRule(
-    externalSchematic('@nrwl/react', 'library', {
-      name: libName,
-      js: plainJS,
-    }),
-    appTree
-  );
+  let appTree = createTreeWithEmptyWorkspace();
+
+  await libraryGenerator(appTree, {
+    linter: Linter.EsLint,
+    component: true,
+    skipFormat: true,
+    skipTsConfig: false,
+    style: 'css',
+    unitTestRunner: 'none',
+    name: libName,
+  });
   return appTree;
 }
 
@@ -158,23 +142,25 @@ export async function createTestAppLib(
   libName: string,
   plainJS = false
 ): Promise<Tree> {
-  let appTree = Tree.empty();
-  appTree = createEmptyWorkspace(appTree);
-  appTree = await callRule(
-    externalSchematic('@nrwl/react', 'application', {
-      name: libName,
-      js: plainJS,
-      e2eTestRunner: 'none',
-    }),
-    appTree
-  );
-  appTree = await callRule(
-    externalSchematic('@nrwl/react', 'component', {
-      name: 'my-component',
-      project: libName,
-      directory: 'app',
-    }),
-    appTree
-  );
+  let appTree = createTreeWithEmptyWorkspace();
+
+  await applicationGenerator(appTree, {
+    babelJest: false,
+    e2eTestRunner: 'none',
+    linter: Linter.EsLint,
+    skipFormat: false,
+    style: 'css',
+    unitTestRunner: 'none',
+    name: libName,
+    js: plainJS,
+  });
+
+  await componentGenerator(appTree, {
+    name: 'my-component',
+    project: libName,
+    directory: 'app',
+    style: 'css',
+  });
+
   return appTree;
 }

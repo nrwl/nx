@@ -1,25 +1,37 @@
-import {
-  chain,
-  Rule,
-  schematic,
-  SchematicContext,
-  Tree,
-  SchematicsException,
-  noop,
-} from '@angular-devkit/schematics';
-import { join, Path } from '@angular-devkit/core';
-import { getProjectConfig } from '@nrwl/workspace';
-import { CreateComponentStoriesFileSchema } from '../component-story/component-story';
-import { CreateComponentSpecFileSchema } from '../component-cypress-spec/component-cypress-spec';
+import componentStoryGenerator from '../component-story/component-story';
+import componentCypressSpecGenerator from '../component-cypress-spec/component-cypress-spec';
 import { getComponentName } from '../../utils/ast-utils';
 import * as ts from 'typescript';
-import { projectRootPath } from '@nrwl/workspace/src/utils/project-type';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import {
+  convertNxGenerator,
+  getProjects,
+  joinPathFragments,
+  ProjectType,
+  Tree,
+} from '@nrwl/devkit';
+import { join } from 'path';
 
 export interface StorybookStoriesSchema {
   project: string;
   generateCypressSpecs: boolean;
   js?: boolean;
+}
+
+export function projectRootPath(
+  tree: Tree,
+  sourceRoot: string,
+  projectType: ProjectType
+): string {
+  let projectDir = '';
+  if (projectType === 'application') {
+    // apps/test-app/src/app
+    projectDir = 'app';
+  } else if (projectType == 'library') {
+    // libs/test-lib/src/lib
+    projectDir = 'lib';
+  }
+
+  return joinPathFragments(sourceRoot, projectDir);
 }
 
 function containsComponentDeclaration(
@@ -28,7 +40,7 @@ function containsComponentDeclaration(
 ): boolean {
   const contents = tree.read(componentPath);
   if (!contents) {
-    throw new SchematicsException(`Failed to read ${componentPath}`);
+    throw new Error(`Failed to read ${componentPath}`);
   }
 
   const sourceFile = ts.createSourceFile(
@@ -41,65 +53,70 @@ function containsComponentDeclaration(
   return !!getComponentName(sourceFile);
 }
 
-export function createAllStories(
+export async function createAllStories(
+  tree: Tree,
   projectName: string,
   generateCypressSpecs: boolean,
-  js
-): Rule {
-  return (tree: Tree, context: SchematicContext) => {
-    const projectSrcRoot = getProjectConfig(tree, projectName).sourceRoot;
-    const libPath = projectRootPath(tree, projectName);
+  js: boolean
+) {
+  const projects = getProjects(tree);
+  const project = projects.get(projectName);
 
-    let componentPaths: string[] = [];
-    tree.getDir(libPath).visit((filePath) => {
-      if (
-        (filePath.endsWith('.tsx') && !filePath.endsWith('.spec.tsx')) ||
-        (filePath.endsWith('.js') && !filePath.endsWith('.spec.js')) ||
-        (filePath.endsWith('.jsx') && !filePath.endsWith('.spec.jsx'))
-      ) {
-        componentPaths.push(filePath);
+  const { sourceRoot, projectType } = project;
+  const libPath = projectRootPath(tree, sourceRoot, projectType);
+
+  let componentPaths: string[] = [];
+  tree.listChanges().forEach((fileChange) => {
+    const filePath = fileChange.path;
+
+    if (!filePath.startsWith(libPath) || fileChange.type === 'DELETE') {
+      return;
+    }
+
+    if (
+      (filePath.endsWith('.tsx') && !filePath.endsWith('.spec.tsx')) ||
+      (filePath.endsWith('.js') && !filePath.endsWith('.spec.js')) ||
+      (filePath.endsWith('.jsx') && !filePath.endsWith('.spec.jsx'))
+    ) {
+      componentPaths.push(filePath);
+    }
+  });
+
+  await Promise.all(
+    componentPaths.map(async (componentPath) => {
+      const relativeCmpDir = componentPath.replace(join(sourceRoot, '/'), '');
+
+      if (!containsComponentDeclaration(tree, componentPath)) {
+        return;
       }
-    });
 
-    return chain(
-      componentPaths.map((componentPath) => {
-        const relativeCmpDir = componentPath.replace(
-          join('/' as Path, projectSrcRoot, '/'),
-          ''
-        );
+      await componentStoryGenerator(tree, {
+        componentPath: relativeCmpDir,
+        project: projectName,
+      });
 
-        if (!containsComponentDeclaration(tree, componentPath)) {
-          return chain([noop()]);
-        }
-
-        return chain([
-          schematic<CreateComponentStoriesFileSchema>('component-story', {
-            componentPath: relativeCmpDir,
-            project: projectName,
-          }),
-          generateCypressSpecs
-            ? schematic<CreateComponentSpecFileSchema>(
-                'component-cypress-spec',
-                {
-                  project: projectName,
-                  componentPath: relativeCmpDir,
-                  js,
-                }
-              )
-            : () => {},
-        ]);
-      })
-    );
-  };
+      if (generateCypressSpecs) {
+        await componentCypressSpecGenerator(tree, {
+          project: projectName,
+          componentPath: relativeCmpDir,
+          js,
+        });
+      }
+    })
+  );
 }
 
-export default function (schema: StorybookStoriesSchema): Rule {
-  return chain([
-    createAllStories(schema.project, schema.generateCypressSpecs, schema.js),
-  ]);
+export async function storiesGenerator(
+  host: Tree,
+  schema: StorybookStoriesSchema
+) {
+  await createAllStories(
+    host,
+    schema.project,
+    schema.generateCypressSpecs,
+    schema.js
+  );
 }
 
-export const storiesGenerator = wrapAngularDevkitSchematic(
-  '@nrwl/react',
-  'stories'
-);
+export default storiesGenerator;
+export const storiesSchematic = convertNxGenerator(storiesGenerator);

@@ -1,18 +1,20 @@
-import { chain, externalSchematic, Rule } from '@angular-devkit/schematics';
 import { StorybookMigrateDefault5to6Schema } from './schema';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
-export default function (schema: StorybookMigrateDefault5to6Schema): Rule {
-  return chain([
-    externalSchematic('@nrwl/storybook', 'migrate-defaults-5-to-6', {
-      name: schema.name,
-      all: schema.all,
-      keepOld: schema.keepOld,
-    }),
-  ]);
+import { convertNxGenerator, Tree } from '@nrwl/devkit';
+import { migrateDefaultsGenerator } from '@nrwl/storybook';
+
+export function storybookMigration5to6Generator(
+  host: Tree,
+  schema: StorybookMigrateDefault5to6Schema
+) {
+  return migrateDefaultsGenerator(host, {
+    name: schema.name,
+    all: schema.all,
+    keepOld: schema.keepOld,
+  });
 }
 
-export const storybookMigration5to6Generator = wrapAngularDevkitSchematic(
-  '@nrwl/react',
-  'storybook-migrate-defaults-5-to-6'
+export default storybookMigration5to6Generator;
+export const storybookMigration5to6Schematic = convertNxGenerator(
+  storybookMigration5to6Generator
 );

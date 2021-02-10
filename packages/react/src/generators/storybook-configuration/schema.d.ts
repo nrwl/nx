@@ -1,4 +1,4 @@
-import { Linter } from '@nrwl/workspace';
+import { Linter } from '@nrwl/linter';
 
 export interface StorybookConfigureSchema {
   name: string;

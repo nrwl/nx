@@ -1,40 +1,35 @@
-import {
-  chain,
-  externalSchematic,
-  Rule,
-  schematic,
-  noop,
-} from '@angular-devkit/schematics';
 import { StorybookConfigureSchema } from './schema';
-import { StorybookStoriesSchema } from '../stories/stories';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import storiesGenerator from '../stories/stories';
+import { convertNxGenerator, Tree } from '@nrwl/devkit';
+import { configurationGenerator } from '@nrwl/storybook';
 
-function generateStories(schema: StorybookConfigureSchema): Rule {
-  return (tree, context) => {
-    return schematic<StorybookStoriesSchema>('stories', {
-      project: schema.name,
-      generateCypressSpecs:
-        schema.configureCypress && schema.generateCypressSpecs,
-      js: schema.js,
-    });
-  };
+async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
+  await storiesGenerator(host, {
+    project: schema.name,
+    generateCypressSpecs:
+      schema.configureCypress && schema.generateCypressSpecs,
+    js: schema.js,
+  });
 }
 
-export default function (schema: StorybookConfigureSchema): Rule {
-  return chain([
-    externalSchematic('@nrwl/storybook', 'configuration', {
-      name: schema.name,
-      uiFramework: '@storybook/react',
-      configureCypress: schema.configureCypress,
-      generateCypressSpecs: schema.generateCypressSpecs,
-      js: schema.js,
-      linter: schema.linter,
-    }),
-    schema.generateStories ? generateStories(schema) : noop(),
-  ]);
+export async function storybookConfigurationGenerator(
+  host: Tree,
+  schema: StorybookConfigureSchema
+) {
+  await configurationGenerator(host, {
+    name: schema.name,
+    uiFramework: '@storybook/react',
+    configureCypress: schema.configureCypress,
+    js: schema.js,
+    linter: schema.linter,
+  });
+
+  if (schema.generateStories) {
+    await generateStories(host, schema);
+  }
 }
 
-export const storybookConfigurationGenerator = wrapAngularDevkitSchematic(
-  '@nrwl/react',
-  'storybook-configuration'
+export default storybookConfigurationGenerator;
+export const storybookConfigurationSchematic = convertNxGenerator(
+  storybookConfigurationGenerator
 );

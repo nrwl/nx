@@ -1,13 +1,12 @@
-import { externalSchematic, Tree } from '@angular-devkit/schematics';
-import { UnitTestTree } from '@angular-devkit/schematics/testing';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { callRule, runSchematic } from '../../utils/testing';
-import { CreateComponentStoriesFileSchema } from './component-story';
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { getProjects, Tree, updateProjectConfiguration } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import libraryGenerator from '../library/library';
+import componentStoryGenerator from './component-story';
+import { Linter } from '@nrwl/linter';
+import { formatFile } from '../../utils/format-file';
 
 describe('react:component-story', () => {
   let appTree: Tree;
-  let tree: UnitTestTree;
   let cmpPath = 'libs/test-ui-lib/src/lib/test-ui-lib.tsx';
   let storyFilePath = 'libs/test-ui-lib/src/lib/test-ui-lib.stories.tsx';
 
@@ -18,7 +17,7 @@ describe('react:component-story', () => {
 
     describe('when file does not contain a component', () => {
       beforeEach(() => {
-        appTree.overwrite(
+        appTree.write(
           cmpPath,
           `export const add = (a: number, b: number) => a + b;`
         );
@@ -26,14 +25,10 @@ describe('react:component-story', () => {
 
       it('should fail with a descriptive error message', async (done) => {
         try {
-          tree = await runSchematic(
-            'component-story',
-            <CreateComponentStoriesFileSchema>{
-              componentPath: 'lib/test-ui-lib.tsx',
-              project: 'test-ui-lib',
-            },
-            appTree
-          );
+          await componentStoryGenerator(appTree, {
+            componentPath: 'lib/test-ui-lib.tsx',
+            project: 'test-ui-lib',
+          });
         } catch (e) {
           expect(e.message).toContain(
             'Could not find any React component in file libs/test-ui-lib/src/lib/test-ui-lib.tsx'
@@ -45,23 +40,19 @@ describe('react:component-story', () => {
 
     describe('default component setup', () => {
       beforeEach(async () => {
-        tree = await runSchematic(
-          'component-story',
-          <CreateComponentStoriesFileSchema>{
-            componentPath: 'lib/test-ui-lib.tsx',
-            project: 'test-ui-lib',
-          },
-          appTree
-        );
+        await componentStoryGenerator(appTree, {
+          componentPath: 'lib/test-ui-lib.tsx',
+          project: 'test-ui-lib',
+        });
       });
 
       it('should create the story file', () => {
-        expect(tree.exists(storyFilePath)).toBeTruthy();
+        expect(appTree.exists(storyFilePath)).toBeTruthy();
       });
 
       it('should properly set up the story', () => {
-        expect(stripIndents`${tree.readContent(storyFilePath)}`)
-          .toContain(stripIndents`
+        expect(formatFile`${appTree.read(storyFilePath).toString()}`)
+          .toContain(formatFile`
             import React from 'react';
             import { TestUiLib, TestUiLibProps } from './test-ui-lib';
             
@@ -85,7 +76,7 @@ describe('react:component-story', () => {
         'libs/test-ui-lib/src/lib/test-ui-libplain.stories.jsx';
 
       beforeEach(async () => {
-        appTree.create(
+        appTree.write(
           'libs/test-ui-lib/src/lib/test-ui-libplain.jsx',
           `import React from 'react';
   
@@ -103,23 +94,19 @@ describe('react:component-story', () => {
           `
         );
 
-        tree = await runSchematic(
-          'component-story',
-          <CreateComponentStoriesFileSchema>{
-            componentPath: 'lib/test-ui-libplain.jsx',
-            project: 'test-ui-lib',
-          },
-          appTree
-        );
+        await componentStoryGenerator(appTree, {
+          componentPath: 'lib/test-ui-libplain.jsx',
+          project: 'test-ui-lib',
+        });
       });
 
       it('should create the story file', () => {
-        expect(tree.exists(storyFilePathPlain)).toBeTruthy();
+        expect(appTree.exists(storyFilePathPlain)).toBeTruthy();
       });
 
       it('should properly set up the story', () => {
-        expect(stripIndents`${tree.readContent(storyFilePathPlain)}`)
-          .toContain(stripIndents`
+        expect(formatFile`${appTree.read(storyFilePathPlain).toString()}`)
+          .toContain(formatFile`
             import React from 'react';
             import { Test } from './test-ui-libplain';
             
@@ -140,7 +127,7 @@ describe('react:component-story', () => {
 
     describe('component without any props defined', () => {
       beforeEach(async () => {
-        appTree.overwrite(
+        appTree.write(
           cmpPath,
           `import React from 'react';
   
@@ -158,19 +145,15 @@ describe('react:component-story', () => {
           `
         );
 
-        tree = await runSchematic(
-          'component-story',
-          <CreateComponentStoriesFileSchema>{
-            componentPath: 'lib/test-ui-lib.tsx',
-            project: 'test-ui-lib',
-          },
-          appTree
-        );
+        await componentStoryGenerator(appTree, {
+          componentPath: 'lib/test-ui-lib.tsx',
+          project: 'test-ui-lib',
+        });
       });
 
       it('should create a story without knobs', () => {
-        expect(stripIndents`${tree.readContent(storyFilePath)}`)
-          .toContain(stripIndents`
+        expect(formatFile`${appTree.read(storyFilePath).toString()}`)
+          .toContain(formatFile`
             import React from 'react';
             import { Test } from './test-ui-lib';
             
@@ -181,14 +164,14 @@ describe('react:component-story', () => {
             
             export const primary = () => {
               return <Test />;
-            };
+            }
           `);
       });
     });
 
     describe('component with props', () => {
       beforeEach(async () => {
-        appTree.overwrite(
+        appTree.write(
           cmpPath,
           `import React from 'react';
   
@@ -211,19 +194,15 @@ describe('react:component-story', () => {
           `
         );
 
-        tree = await runSchematic(
-          'component-story',
-          <CreateComponentStoriesFileSchema>{
-            componentPath: 'lib/test-ui-lib.tsx',
-            project: 'test-ui-lib',
-          },
-          appTree
-        );
+        await componentStoryGenerator(appTree, {
+          componentPath: 'lib/test-ui-lib.tsx',
+          project: 'test-ui-lib',
+        });
       });
 
       it('should setup knobs based on the component props', () => {
-        expect(stripIndents`${tree.readContent(storyFilePath)}`)
-          .toContain(stripIndents`
+        expect(formatFile`${appTree.read(storyFilePath).toString()}`)
+          .toContain(formatFile`
             import { text, boolean } from '@storybook/addon-knobs';
             import React from 'react';
             import { Test, TestProps } from './test-ui-lib';
@@ -325,7 +304,7 @@ describe('react:component-story', () => {
     ].forEach((config) => {
       describe(`React component defined as:${config.name}`, () => {
         beforeEach(async () => {
-          appTree.overwrite(
+          appTree.write(
             cmpPath,
             `import React from 'react';
     
@@ -340,19 +319,15 @@ describe('react:component-story', () => {
             `
           );
 
-          tree = await runSchematic(
-            'component-story',
-            <CreateComponentStoriesFileSchema>{
-              componentPath: 'lib/test-ui-lib.tsx',
-              project: 'test-ui-lib',
-            },
-            appTree
-          );
+          await componentStoryGenerator(appTree, {
+            componentPath: 'lib/test-ui-lib.tsx',
+            project: 'test-ui-lib',
+          });
         });
 
         it('should properly setup the knobs based on the component props', () => {
-          expect(stripIndents`${tree.readContent(storyFilePath)}`)
-            .toContain(stripIndents`
+          expect(formatFile`${appTree.read(storyFilePath).toString()}`)
+            .toContain(formatFile`
             import { text, boolean } from '@storybook/addon-knobs';
             import React from 'react';
             import { Test, TestProps } from './test-ui-lib';
@@ -379,19 +354,15 @@ describe('react:component-story', () => {
   describe('using eslint', () => {
     beforeEach(async () => {
       appTree = await createTestUILib('test-ui-lib', false);
-      tree = await runSchematic(
-        'component-story',
-        <CreateComponentStoriesFileSchema>{
-          componentPath: 'lib/test-ui-lib.tsx',
-          project: 'test-ui-lib',
-        },
-        appTree
-      );
+      await componentStoryGenerator(appTree, {
+        componentPath: 'lib/test-ui-lib.tsx',
+        project: 'test-ui-lib',
+      });
     });
 
     it('should properly set up the story', () => {
-      expect(stripIndents`${tree.readContent(storyFilePath)}`)
-        .toContain(stripIndents`
+      expect(formatFile`${appTree.read(storyFilePath).toString()}`)
+        .toContain(formatFile`
           import React from 'react';
           import { TestUiLib, TestUiLibProps } from './test-ui-lib';
           
@@ -415,24 +386,24 @@ export async function createTestUILib(
   libName: string,
   useEsLint = false
 ): Promise<Tree> {
-  let appTree = Tree.empty();
-  appTree = createEmptyWorkspace(appTree);
-  appTree = await callRule(
-    externalSchematic('@nrwl/react', 'library', {
-      name: libName,
-    }),
-    appTree
-  );
+  let appTree = createTreeWithEmptyWorkspace();
+  await libraryGenerator(appTree, {
+    name: libName,
+    linter: useEsLint ? Linter.EsLint : Linter.TsLint,
+    component: true,
+    skipFormat: true,
+    skipTsConfig: false,
+    style: 'css',
+    unitTestRunner: 'jest',
+  });
 
   if (useEsLint) {
-    const currentWorkspaceJson = JSON.parse(
-      appTree.read('workspace.json').toString('utf-8')
-    );
+    const currentWorkspaceJson = getProjects(appTree);
 
-    currentWorkspaceJson.projects[libName].architect.lint.options.linter =
-      'eslint';
+    const projectConfig = currentWorkspaceJson.get(libName);
+    projectConfig.targets.lint.options.linter = 'eslint';
 
-    appTree.overwrite('workspace.json', JSON.stringify(currentWorkspaceJson));
+    updateProjectConfiguration(appTree, libName, projectConfig);
   }
 
   return appTree;

@@ -1,22 +1,16 @@
-import { join, normalize } from '@angular-devkit/core';
-import {
-  applyTemplates,
-  chain,
-  move,
-  Rule,
-  SchematicContext,
-  SchematicsException,
-  Tree,
-  url,
-} from '@angular-devkit/schematics';
-import { getProjectConfig } from '@nrwl/workspace';
-import { applyWithSkipExisting } from '@nrwl/workspace/src/utils/ast-utils';
 import {
   getComponentName,
   getComponentPropsInterface,
 } from '../../utils/ast-utils';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-import ts = require('typescript');
+
+import * as ts from 'typescript';
+import {
+  convertNxGenerator,
+  generateFiles,
+  getProjects,
+  joinPathFragments,
+  Tree,
+} from '@nrwl/devkit';
 
 export interface CreateComponentSpecFileSchema {
   project: string;
@@ -24,8 +18,11 @@ export interface CreateComponentSpecFileSchema {
   js?: boolean;
 }
 
-export default function (schema: CreateComponentSpecFileSchema): Rule {
-  return chain([createComponentSpecFile(schema)]);
+export function componentCypressGenerator(
+  host: Tree,
+  schema: CreateComponentSpecFileSchema
+) {
+  createComponentSpecFile(host, schema);
 }
 
 // TODO: candidate to refactor with the angular component story
@@ -44,72 +41,72 @@ export function getKnobDefaultValue(property: ts.SyntaxKind): string {
   }
 }
 
-export function createComponentSpecFile({
-  project,
-  componentPath,
-  js,
-}: CreateComponentSpecFileSchema): Rule {
-  return (tree: Tree, context: SchematicContext): Rule => {
-    const e2eLibIntegrationFolderPath =
-      getProjectConfig(tree, project + '-e2e').sourceRoot + '/integration';
+export function createComponentSpecFile(
+  tree: Tree,
+  { project, componentPath, js }: CreateComponentSpecFileSchema
+) {
+  const projects = getProjects(tree);
+  const e2eLibIntegrationFolderPath =
+    projects.get(project + '-e2e').sourceRoot + '/integration';
 
-    const proj = getProjectConfig(tree, project);
-    const componentFilePath = normalize(join(proj.sourceRoot, componentPath));
-    const componentName = componentFilePath
-      .slice(componentFilePath.lastIndexOf('/') + 1)
-      .replace('.tsx', '')
-      .replace('.jsx', '')
-      .replace('.js', '');
+  const proj = projects.get(project);
+  const componentFilePath = joinPathFragments(proj.sourceRoot, componentPath);
+  const componentName = componentFilePath
+    .slice(componentFilePath.lastIndexOf('/') + 1)
+    .replace('.tsx', '')
+    .replace('.jsx', '')
+    .replace('.js', '');
 
-    const contents = tree.read(componentFilePath);
-    if (!contents) {
-      throw new SchematicsException(`Failed to read ${componentFilePath}`);
-    }
+  const contents = tree.read(componentFilePath);
+  if (!contents) {
+    throw new Error(`Failed to read ${componentFilePath}`);
+  }
 
-    const sourceFile = ts.createSourceFile(
-      componentFilePath,
-      contents.toString(),
-      ts.ScriptTarget.Latest,
-      true
+  const sourceFile = ts.createSourceFile(
+    componentFilePath,
+    contents.toString(),
+    ts.ScriptTarget.Latest,
+    true
+  );
+
+  const cmpDeclaration = getComponentName(sourceFile);
+  if (!cmpDeclaration) {
+    throw new Error(
+      `Could not find any React component in file ${componentFilePath}`
     );
+  }
 
-    const cmpDeclaration = getComponentName(sourceFile);
-    if (!cmpDeclaration) {
-      throw new SchematicsException(
-        `Could not find any React component in file ${componentFilePath}`
-      );
+  const propsInterface = getComponentPropsInterface(sourceFile);
+
+  let props: {
+    name: string;
+    defaultValue: any;
+  }[] = [];
+
+  if (propsInterface) {
+    props = propsInterface.members.map((member: ts.PropertySignature) => {
+      return {
+        name: (member.name as ts.Identifier).text,
+        defaultValue: getKnobDefaultValue(member.type.kind),
+      };
+    });
+  }
+
+  generateFiles(
+    tree,
+    joinPathFragments(__dirname, './files'),
+    e2eLibIntegrationFolderPath + '/' + componentName,
+    {
+      projectName: project,
+      componentName,
+      componentSelector: (cmpDeclaration as any).name.text,
+      props,
+      fileExt: js ? 'js' : 'ts',
     }
-
-    const propsInterface = getComponentPropsInterface(sourceFile);
-
-    let props: {
-      name: string;
-      defaultValue: any;
-    }[] = [];
-
-    if (propsInterface) {
-      props = propsInterface.members.map((member: ts.PropertySignature) => {
-        return {
-          name: (member.name as ts.Identifier).text,
-          defaultValue: getKnobDefaultValue(member.type.kind),
-        };
-      });
-    }
-
-    return applyWithSkipExisting(url('./files'), [
-      applyTemplates({
-        projectName: project,
-        componentName,
-        componentSelector: (cmpDeclaration as any).name.text,
-        props,
-        fileExt: js ? 'js' : 'ts',
-      }),
-      move(e2eLibIntegrationFolderPath + '/' + componentName),
-    ]);
-  };
+  );
 }
 
-export const componentCypressGenerator = wrapAngularDevkitSchematic(
-  '@nrwl/react',
-  'component-cypress-spec'
+export default componentCypressGenerator;
+export const componentCypressSchematic = convertNxGenerator(
+  componentCypressGenerator
 );
