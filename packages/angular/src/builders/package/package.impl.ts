@@ -90,7 +90,8 @@ export function createLibraryBuilder(
                 updateBuildableProjectPackageJsonDependencies(
                   context,
                   target,
-                  dependencies
+                  dependencies,
+                  options.buildableProjectDepsInPackageJsonType
                 );
               }
             }),

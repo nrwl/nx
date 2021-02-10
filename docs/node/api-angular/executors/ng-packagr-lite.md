@@ -7,6 +7,16 @@ Read more about how to use executors and the CLI here: https://nx.dev/node/guide
 
 ## Properties
 
+### buildableProjectDepsInPackageJsonType
+
+Default: `peerDependencies`
+
+Type: `string`
+
+Possible values: `dependencies`, `peerDependencies`
+
+When updateBuildableProjectDepsInPackageJson is true, this adds dependencies to either `peerDependencies` or `dependencies`
+
 ### project
 
 Type: `string`
