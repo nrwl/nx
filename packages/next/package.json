@@ -33,6 +33,9 @@
   },
   "dependencies": {
     "@nrwl/react": "*",
+    "@nrwl/cypress": "*",
+    "@nrwl/jest": "*",
+    "@nrwl/linter": "*",
     "@nrwl/web": "*",
     "@angular-devkit/core": "~11.0.1",
     "@angular-devkit/schematics": "~11.0.1",

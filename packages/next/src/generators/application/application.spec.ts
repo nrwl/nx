@@ -1,20 +1,27 @@
-import { Tree } from '@angular-devkit/schematics';
-import { NxJson, readJsonInTree } from '@nrwl/workspace';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
+import { Linter } from '@nrwl/workspace';
 import { runSchematic } from '../../utils/testing';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import {
+  getProjects,
+  readJson,
+  readWorkspaceConfiguration,
+  Tree,
+} from '@nrwl/devkit';
+
+import { applicationGenerator } from './application';
 
 describe('app', () => {
-  let appTree: Tree;
+  let tree: Tree;
 
   beforeEach(() => {
-    appTree = Tree.empty();
-    appTree = createEmptyWorkspace(appTree);
+    tree = createTreeWithEmptyWorkspace();
   });
 
   describe('not nested', () => {
     it('should update workspace.json', async () => {
-      const tree = await runSchematic('app', { name: 'myApp' }, appTree);
-      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      await applicationGenerator(tree, { name: 'myApp', style: 'css' });
+
+      const workspaceJson = readJson(tree, 'workspace.json');
 
       expect(workspaceJson.projects['my-app'].root).toEqual('apps/my-app');
       expect(workspaceJson.projects['my-app-e2e'].root).toEqual(
@@ -24,13 +31,15 @@ describe('app', () => {
     });
 
     it('should update nx.json', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myApp', tags: 'one,two' },
-        appTree
-      );
-      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
-      expect(nxJson.projects).toEqual({
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        style: 'css',
+        tags: 'one,two',
+      });
+
+      const nxJson = readJson(tree, 'nx.json');
+
+      expect(nxJson.projects).toMatchObject({
         'my-app': {
           tags: ['one', 'two'],
         },
@@ -42,7 +51,7 @@ describe('app', () => {
     });
 
     it('should generate files', async () => {
-      const tree = await runSchematic('app', { name: 'myApp' }, appTree);
+      await applicationGenerator(tree, { name: 'myApp', style: 'css' });
       expect(tree.exists('apps/my-app/tsconfig.json')).toBeTruthy();
       expect(tree.exists('apps/my-app/tsconfig.app.json')).toBeTruthy();
       expect(tree.exists('apps/my-app/pages/index.tsx')).toBeTruthy();
@@ -53,17 +62,15 @@ describe('app', () => {
 
   describe('--style scss', () => {
     it('should generate scss styles', async () => {
-      const result = await runSchematic(
-        'app',
-        { name: 'myApp', style: 'scss' },
-        appTree
-      );
-      expect(result.exists('apps/my-app/pages/index.module.scss')).toBeTruthy();
-      expect(result.exists('apps/my-app/pages/styles.css')).toBeTruthy();
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        style: 'scss',
+      });
 
-      const indexContent = result
-        .read('apps/my-app/pages/index.tsx')
-        .toString();
+      expect(tree.exists('apps/my-app/pages/index.module.scss')).toBeTruthy();
+      expect(tree.exists('apps/my-app/pages/styles.css')).toBeTruthy();
+
+      const indexContent = tree.read('apps/my-app/pages/index.tsx').toString();
       expect(indexContent).toContain(
         `import styles from './index.module.scss'`
       );
@@ -72,17 +79,15 @@ describe('app', () => {
 
   describe('--style less', () => {
     it('should generate scss styles', async () => {
-      const result = await runSchematic(
-        'app',
-        { name: 'myApp', style: 'less' },
-        appTree
-      );
-      expect(result.exists('apps/my-app/pages/index.module.less')).toBeTruthy();
-      expect(result.exists('apps/my-app/pages/styles.less')).toBeTruthy();
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        style: 'less',
+      });
 
-      const indexContent = result
-        .read('apps/my-app/pages/index.tsx')
-        .toString();
+      expect(tree.exists('apps/my-app/pages/index.module.less')).toBeTruthy();
+      expect(tree.exists('apps/my-app/pages/styles.less')).toBeTruthy();
+
+      const indexContent = tree.read('apps/my-app/pages/index.tsx').toString();
       expect(indexContent).toContain(
         `import styles from './index.module.less'`
       );
@@ -91,17 +96,15 @@ describe('app', () => {
 
   describe('--style styl', () => {
     it('should generate scss styles', async () => {
-      const result = await runSchematic(
-        'app',
-        { name: 'myApp', style: 'styl' },
-        appTree
-      );
-      expect(result.exists('apps/my-app/pages/index.module.styl')).toBeTruthy();
-      expect(result.exists('apps/my-app/pages/styles.styl')).toBeTruthy();
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        style: 'styl',
+      });
 
-      const indexContent = result
-        .read('apps/my-app/pages/index.tsx')
-        .toString();
+      expect(tree.exists('apps/my-app/pages/index.module.styl')).toBeTruthy();
+      expect(tree.exists('apps/my-app/pages/styles.styl')).toBeTruthy();
+
+      const indexContent = tree.read('apps/my-app/pages/index.tsx').toString();
       expect(indexContent).toContain(
         `import styles from './index.module.styl'`
       );
@@ -110,19 +113,17 @@ describe('app', () => {
 
   describe('--style styled-components', () => {
     it('should generate scss styles', async () => {
-      const result = await runSchematic(
-        'app',
-        { name: 'myApp', style: 'styled-components' },
-        appTree
-      );
-      expect(
-        result.exists('apps/my-app/pages/index.module.styled-components')
-      ).toBeFalsy();
-      expect(result.exists('apps/my-app/pages/styles.css')).toBeTruthy();
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        style: 'styled-components',
+      });
 
-      const indexContent = result
-        .read('apps/my-app/pages/index.tsx')
-        .toString();
+      expect(
+        tree.exists('apps/my-app/pages/index.module.styled-components')
+      ).toBeFalsy();
+      expect(tree.exists('apps/my-app/pages/styles.css')).toBeTruthy();
+
+      const indexContent = tree.read('apps/my-app/pages/index.tsx').toString();
       expect(indexContent).not.toContain(`import styles from './index.module`);
       expect(indexContent).toContain(`import styled from 'styled-components'`);
     });
@@ -130,19 +131,17 @@ describe('app', () => {
 
   describe('--style @emotion/styled', () => {
     it('should generate scss styles', async () => {
-      const result = await runSchematic(
-        'app',
-        { name: 'myApp', style: '@emotion/styled' },
-        appTree
-      );
-      expect(
-        result.exists('apps/my-app/pages/index.module.styled-components')
-      ).toBeFalsy();
-      expect(result.exists('apps/my-app/pages/styles.css')).toBeTruthy();
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        style: '@emotion/styled',
+      });
 
-      const indexContent = result
-        .read('apps/my-app/pages/index.tsx')
-        .toString();
+      expect(
+        tree.exists('apps/my-app/pages/index.module.styled-components')
+      ).toBeFalsy();
+      expect(tree.exists('apps/my-app/pages/styles.css')).toBeTruthy();
+
+      const indexContent = tree.read('apps/my-app/pages/index.tsx').toString();
       expect(indexContent).not.toContain(`import styles from './index.module`);
       expect(indexContent).toContain(`import styled from '@emotion/styled'`);
     });
@@ -150,27 +149,24 @@ describe('app', () => {
 
   describe('--style styled-jsx', () => {
     it('should use <style jsx> in index page', async () => {
-      const result = await runSchematic(
-        'app',
-        { name: 'myApp', style: 'styled-jsx' },
-        appTree
-      );
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        style: 'styled-jsx',
+      });
 
-      const indexContent = result
-        .read('apps/my-app/pages/index.tsx')
-        .toString();
+      const indexContent = tree.read('apps/my-app/pages/index.tsx').toString();
 
-      const babelJestConfig = readJsonInTree(
-        result,
+      const babelJestConfig = readJson(
+        tree,
         'apps/my-app/babel-jest.config.json'
       );
 
-      expect(indexContent).toMatch(/<style jsx>/);
+      expect(indexContent).toMatch(/<style jsx>{`.page {}`}<\/style>/);
       expect(babelJestConfig.plugins).toContain('styled-jsx/babel');
       expect(
-        result.exists('apps/my-app/pages/index.module.styled-jsx')
+        tree.exists('apps/my-app/pages/index.module.styled-jsx')
       ).toBeFalsy();
-      expect(result.exists('apps/my-app/pages/styles.css')).toBeTruthy();
+      expect(tree.exists('apps/my-app/pages/styles.css')).toBeTruthy();
 
       expect(indexContent).not.toContain(`import styles from './index.module`);
       expect(indexContent).not.toContain(
@@ -180,42 +176,25 @@ describe('app', () => {
   });
 
   it('should setup jest with tsx support', async () => {
-    const tree = await runSchematic(
-      'app',
-      {
-        name: 'my-app',
-      },
-      appTree
-    );
+    await applicationGenerator(tree, { name: 'my-app', style: 'css' });
 
-    expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
+    expect(tree.read('apps/my-app/jest.config.js').toString('utf-8')).toContain(
       `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],`
     );
   });
 
   it('should setup jest with SVGR support', async () => {
-    const tree = await runSchematic(
-      'app',
-      {
-        name: 'my-app',
-      },
-      appTree
-    );
+    await applicationGenerator(tree, { name: 'my-app', style: 'css' });
 
-    expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
+    expect(tree.read('apps/my-app/jest.config.js').toString('utf-8')).toContain(
       `'^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest'`
     );
   });
 
   it('should set up the nrwl next build builder', async () => {
-    const tree = await runSchematic(
-      'app',
-      {
-        name: 'my-app',
-      },
-      appTree
-    );
-    const workspaceJson = readJsonInTree(tree, 'workspace.json');
+    await applicationGenerator(tree, { name: 'my-app', style: 'css' });
+
+    const workspaceJson = readJson(tree, 'workspace.json');
     const architectConfig = workspaceJson.projects['my-app'].architect;
     expect(architectConfig.build.builder).toEqual('@nrwl/next:build');
     expect(architectConfig.build.options).toEqual({
@@ -225,14 +204,9 @@ describe('app', () => {
   });
 
   it('should set up the nrwl next server builder', async () => {
-    const tree = await runSchematic(
-      'app',
-      {
-        name: 'my-app',
-      },
-      appTree
-    );
-    const workspaceJson = readJsonInTree(tree, 'workspace.json');
+    await applicationGenerator(tree, { name: 'my-app', style: 'css' });
+
+    const workspaceJson = readJson(tree, 'workspace.json');
     const architectConfig = workspaceJson.projects['my-app'].architect;
     expect(architectConfig.serve.builder).toEqual('@nrwl/next:server');
     expect(architectConfig.serve.options).toEqual({
@@ -245,14 +219,9 @@ describe('app', () => {
   });
 
   it('should set up the nrwl next export builder', async () => {
-    const tree = await runSchematic(
-      'app',
-      {
-        name: 'my-app',
-      },
-      appTree
-    );
-    const workspaceJson = readJsonInTree(tree, 'workspace.json');
+    await applicationGenerator(tree, { name: 'my-app', style: 'css' });
+
+    const workspaceJson = readJson(tree, 'workspace.json');
     const architectConfig = workspaceJson.projects['my-app'].architect;
     expect(architectConfig.export.builder).toEqual('@nrwl/next:export');
     expect(architectConfig.export.options).toEqual({
@@ -262,11 +231,11 @@ describe('app', () => {
 
   describe('--unit-test-runner none', () => {
     it('should not generate test configuration', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myApp', unitTestRunner: 'none' },
-        appTree
-      );
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        style: 'css',
+        unitTestRunner: 'none',
+      });
       expect(tree.exists('jest.config.js')).toBeFalsy();
       expect(tree.exists('apps/my-app/specs/index.spec.tsx')).toBeFalsy();
     });
@@ -274,19 +243,19 @@ describe('app', () => {
 
   describe('--e2e-test-runner none', () => {
     it('should not generate test configuration', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myApp', e2eTestRunner: 'none' },
-        appTree
-      );
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        style: 'css',
+        e2eTestRunner: 'none',
+      });
       expect(tree.exists('apps/my-app-e2e')).toBeFalsy();
-      const workspaceJson = readJsonInTree(tree, 'workspace.json');
+      const workspaceJson = readJson(tree, 'workspace.json');
       expect(workspaceJson.projects['my-app-e2e']).toBeUndefined();
     });
   });
 
   it('should generate functional components by default', async () => {
-    const tree = await runSchematic('app', { name: 'myApp' }, appTree);
+    await applicationGenerator(tree, { name: 'myApp', style: 'css' });
 
     const appContent = tree.read('apps/my-app/pages/index.tsx').toString();
 
@@ -295,14 +264,14 @@ describe('app', () => {
 
   describe('--linter=eslint', () => {
     it('should add .eslintrc.json and dependencies', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myApp', linter: 'eslint' },
-        appTree
-      );
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        style: 'css',
+        linter: Linter.EsLint,
+      });
 
-      const eslintJson = readJsonInTree(tree, '/apps/my-app/.eslintrc.json');
-      const packageJson = readJsonInTree(tree, '/package.json');
+      const eslintJson = readJson(tree, '/apps/my-app/.eslintrc.json');
+      const packageJson = readJson(tree, '/package.json');
 
       expect(eslintJson.extends).toEqual(
         expect.arrayContaining(['plugin:@nrwl/nx/react'])
@@ -318,21 +287,21 @@ describe('app', () => {
 
   describe('--js', () => {
     it('generates JS files', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myApp', js: true },
-        appTree
-      );
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        style: 'css',
+        js: true,
+      });
 
       expect(tree.exists('apps/my-app/pages/index.js')).toBeTruthy();
       expect(tree.exists('apps/my-app/specs/index.spec.js')).toBeTruthy();
       expect(tree.exists('apps/my-app/index.d.js')).toBeFalsy();
       expect(tree.exists('apps/my-app/index.d.ts')).toBeFalsy();
 
-      const tsConfig = readJsonInTree(tree, 'apps/my-app/tsconfig.json');
+      const tsConfig = readJson(tree, 'apps/my-app/tsconfig.json');
       expect(tsConfig.compilerOptions.allowJs).toEqual(true);
 
-      const tsConfigApp = readJsonInTree(tree, 'apps/my-app/tsconfig.app.json');
+      const tsConfigApp = readJson(tree, 'apps/my-app/tsconfig.app.json');
       expect(tsConfigApp.include).toContain('**/*.js');
       expect(tsConfigApp.exclude).toContain('**/*.spec.js');
     });

@@ -30,6 +30,7 @@ export {
   getProjects,
 } from './src/generators/project-configuration';
 export { toJS } from './src/generators/to-js';
+export { updateTsConfigsToJs } from './src/generators/update-ts-configs-to-js';
 export { visitNotIgnoredFiles } from './src/generators/visit-not-ignored-files';
 export { setDefaultCollection } from './src/generators/set-default-collection';
 

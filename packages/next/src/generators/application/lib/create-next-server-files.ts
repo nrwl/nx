@@ -1,16 +1,16 @@
-import { dirname, join } from '@angular-devkit/core';
-import { Tree } from '@angular-devkit/schematics';
 import { NormalizedSchema } from './normalize-options';
-import { appsDir } from '@nrwl/workspace/src/utils/ast-utils';
+import { getWorkspaceLayout, joinPathFragments, Tree } from '@nrwl/devkit';
+import { dirname } from 'path';
 
-export function createNextServerFiles(options: NormalizedSchema) {
-  return (host: Tree) => {
-    if (options.server) {
-      const directory = dirname(join(options.appProjectRoot, options.server));
+export function createNextServerFiles(host: Tree, options: NormalizedSchema) {
+  if (options.server) {
+    const directory = dirname(
+      joinPathFragments(options.appProjectRoot, options.server)
+    );
 
-      host.create(
-        join(options.appProjectRoot, options.server),
-        `
+    host.write(
+      joinPathFragments(options.appProjectRoot, options.server),
+      `
       // @ts-check
       'use strict';
 
@@ -47,13 +47,13 @@ export function createNextServerFiles(options: NormalizedSchema) {
         });
       }
       `
-      );
+    );
 
-      const apps = appsDir(host);
+    const { appsDir } = getWorkspaceLayout(host);
 
-      host.create(
-        join(directory, 'server.js'),
-        `
+    host.write(
+      joinPathFragments(directory, 'server.js'),
+      `
       // @ts-check
       'use strict';
 
@@ -74,7 +74,7 @@ export function createNextServerFiles(options: NormalizedSchema) {
       const express = require('express');
 
       const nextApp = new NextServer({
-        dir: './dist/${apps}/<%= name %>',
+        dir: './dist/${appsDir}/<%= name %>',
         staticMarkup: false,
         quiet: false,
         conf: {
@@ -101,7 +101,6 @@ export function createNextServerFiles(options: NormalizedSchema) {
 
       serve().then(server => console.log('Server is running on port 4200'));
       `
-      );
-    }
-  };
+    );
+  }
 }
