@@ -2,6 +2,7 @@ import {
   checkFilesExist,
   newProject,
   readJson,
+  removeProject,
   runCLI,
   uniq,
   updateFile,
@@ -125,6 +126,8 @@ import { names } from '@nrwl/devkit';
 
       createDep(parentLib, [childLib, childLib2]);
     });
+
+    afterEach(() => removeProject({ onlyOnCI: true }));
 
     it('should throw an error if the dependent library has not been built before building the parent lib', () => {
       expect.assertions(2);
