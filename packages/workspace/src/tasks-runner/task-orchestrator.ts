@@ -173,12 +173,16 @@ export class TaskOrchestrator {
         let out = [];
         let outWithErr = [];
         p.stdout.on('data', (chunk) => {
-          process.stdout.write(chunk);
+          if (forwardOutput) {
+            process.stdout.write(chunk);
+          }
           out.push(chunk.toString());
           outWithErr.push(chunk.toString());
         });
         p.stderr.on('data', (chunk) => {
-          process.stderr.write(chunk);
+          if (forwardOutput) {
+            process.stderr.write(chunk);
+          }
           outWithErr.push(chunk.toString());
         });
 
