@@ -167,6 +167,14 @@ export function newProject({ name = uniq('proj') } = {}): string {
   }
 }
 
+// Useful in order to cleanup space during CI to prevent `No space left on device` exceptions
+export function removeProject({ onlyOnCI = false } = {}) {
+  if (onlyOnCI && !isCI) {
+    return;
+  }
+  removeSync(tmpProjPath());
+}
+
 export function supportUi() {
   return false;
   // return !process.env.NO_CHROME;

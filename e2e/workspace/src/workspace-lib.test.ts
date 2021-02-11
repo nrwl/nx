@@ -1,6 +1,7 @@
 import {
   checkFilesExist,
   newProject,
+  removeProject,
   runCLI,
   runCLIAsync,
   uniq,
@@ -11,6 +12,10 @@ let proj: string;
 
 beforeAll(() => {
   proj = newProject();
+});
+
+afterAll(() => {
+  removeProject({ onlyOnCI: true });
 });
 
 describe('@nrwl/workspace:library', () => {
