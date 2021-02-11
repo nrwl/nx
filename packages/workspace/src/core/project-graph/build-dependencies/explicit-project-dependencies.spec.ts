@@ -14,7 +14,6 @@ import { buildExplicitTypeScriptDependencies } from './explicit-project-dependen
 import { createFileMap } from '../../file-graph';
 import { readWorkspaceFiles } from '../../file-utils';
 import { appRootPath } from '../../../utilities/app-root';
-import { string } from 'prop-types';
 
 describe('explicit project dependencies', () => {
   let ctx: ProjectGraphContext;
@@ -83,6 +82,32 @@ describe('explicit project dependencies', () => {
         import { a } from '@proj/proj1234-child'
       `,
       './libs/proj1234-child/index.ts': 'export const a = 7',
+      './libs/proj1234/a.b.ts': `// nx-ignore-next-line
+                                 import('@proj/proj2')
+                                 /* nx-ignore-next-line */
+                                 import {a} from '@proj/proj3a
+      `,
+      './libs/proj1234/b.c.ts': `// nx-ignore-next-line
+                                 require('@proj/proj4ab#a')
+                                 // nx-ignore-next-line
+                                 import('@proj/proj2')
+                                 /* nx-ignore-next-line */
+                                 import {a} from '@proj/proj3a
+                                 const a = { 
+                                     // nx-ignore-next-line
+                                    loadChildren: '@proj/3a'
+                                 }
+                                 const b = {
+                                    // nx-ignore-next-line
+                                    loadChildren: '@proj/3a',
+                                    children: [{
+                                      // nx-ignore-next-line
+                                      loadChildren: '@proj/proj2,
+                                      // nx-ignore-next-line
+                                      loadChildren: '@proj/proj3a'
+                                    }]
+                                 }
+      `,
     };
     vol.fromJSON(fsJson, '/root');
 
