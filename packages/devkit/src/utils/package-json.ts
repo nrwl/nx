@@ -19,7 +19,7 @@ export function addDependenciesToPackageJson(
   dependencies: Record<string, string>,
   devDependencies: Record<string, string>,
   packageJsonPath: string = 'package.json'
-): GeneratorCallback | undefined {
+): GeneratorCallback {
   const currentPackageJson = readJson(host, packageJsonPath);
 
   if (
@@ -41,10 +41,10 @@ export function addDependenciesToPackageJson(
 
       return json;
     });
-    return () => {
-      installPackagesTask(host);
-    };
   }
+  return () => {
+    installPackagesTask(host);
+  };
 }
 
 function sortObjectByKeys(obj: unknown) {

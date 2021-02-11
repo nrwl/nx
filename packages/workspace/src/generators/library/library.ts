@@ -12,6 +12,7 @@ import {
   GeneratorCallback,
   joinPathFragments,
 } from '@nrwl/devkit';
+import { parallelizeTasks } from '@nrwl/workspace/src/utilities/parallelize-tasks';
 import { join } from 'path';
 import { Schema } from './schema';
 
@@ -37,7 +38,10 @@ function addProject(tree: Tree, options: NormalizedSchema) {
   });
 }
 
-function addLint(tree: Tree, options: NormalizedSchema) {
+function addLint(
+  tree: Tree,
+  options: NormalizedSchema
+): Promise<GeneratorCallback> {
   return lintProjectGenerator(tree, {
     project: options.name,
     linter: options.linter,
@@ -120,7 +124,10 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
   updateLibTsConfig(tree, options);
 }
 
-async function addJest(tree: Tree, options: NormalizedSchema) {
+async function addJest(
+  tree: Tree,
+  options: NormalizedSchema
+): Promise<GeneratorCallback> {
   return await jestProjectGenerator(tree, {
     project: options.name,
     setupFile: 'none',
@@ -142,20 +149,22 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
   }
   addProject(tree, options);
 
-  let installTask: GeneratorCallback;
+  const tasks: GeneratorCallback[] = [];
 
   if (options.linter !== 'none') {
-    installTask = await addLint(tree, options);
+    const lintCallback = await addLint(tree, options);
+    tasks.push(lintCallback);
   }
   if (options.unitTestRunner === 'jest') {
-    installTask = (await addJest(tree, options)) || installTask;
+    const jestCallback = await addJest(tree, options);
+    tasks.push(jestCallback);
   }
 
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
 
-  return installTask;
+  return parallelizeTasks(...tasks);
 }
 
 export default libraryGenerator;

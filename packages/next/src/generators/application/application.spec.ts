@@ -1,12 +1,6 @@
-import { Linter } from '@nrwl/workspace';
-import { runSchematic } from '../../utils/testing';
+import { Linter } from '@nrwl/linter';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import {
-  getProjects,
-  readJson,
-  readWorkspaceConfiguration,
-  Tree,
-} from '@nrwl/devkit';
+import { readJson, Tree } from '@nrwl/devkit';
 
 import { applicationGenerator } from './application';
 

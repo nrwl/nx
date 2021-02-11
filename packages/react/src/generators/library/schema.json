@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
   "id": "NxReactLibrary",
   "title": "Create a React Library for Nx",
   "type": "object",

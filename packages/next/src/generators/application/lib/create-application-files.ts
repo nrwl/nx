@@ -45,7 +45,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     );
   }
 
-  if (options.style === 'styled-components') {
+  if (options.style !== 'styled-components') {
     host.delete(`${options.appProjectRoot}/pages/_document.tsx`);
   }
 

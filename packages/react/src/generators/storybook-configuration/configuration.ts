@@ -16,7 +16,7 @@ export async function storybookConfigurationGenerator(
   host: Tree,
   schema: StorybookConfigureSchema
 ) {
-  await configurationGenerator(host, {
+  const installTask = await configurationGenerator(host, {
     name: schema.name,
     uiFramework: '@storybook/react',
     configureCypress: schema.configureCypress,
@@ -27,6 +27,8 @@ export async function storybookConfigurationGenerator(
   if (schema.generateStories) {
     await generateStories(host, schema);
   }
+
+  return installTask;
 }
 
 export default storybookConfigurationGenerator;

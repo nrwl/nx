@@ -7,42 +7,23 @@ import { names } from '@nrwl/devkit';
 
 const testRunner = new SchematicTestRunner(
   '@nrwl/react',
-  join(__dirname, '../../collection.json')
+  join(__dirname, '../../../collection.json')
 );
 
 testRunner.registerCollection(
   '@nrwl/jest',
-  join(__dirname, '../../../jest/collection.json')
+  join(__dirname, '../../../../jest/collection.json')
 );
 
 testRunner.registerCollection(
   '@nrwl/cypress',
-  join(__dirname, '../../../cypress/collection.json')
+  join(__dirname, '../../../../cypress/collection.json')
 );
 
 testRunner.registerCollection(
   '@nrwl/storybook',
-  join(__dirname, '../../../storybook/collection.json')
+  join(__dirname, '../../../../storybook/collection.json')
 );
-
-export function runSchematic<SchemaOptions = any>(
-  schematicName: string,
-  options: SchemaOptions,
-  tree: Tree
-) {
-  return testRunner.runSchematicAsync(schematicName, options, tree).toPromise();
-}
-
-export function runExternalSchematic<SchemaOptions = any>(
-  collectionName: string,
-  schematicName: string,
-  options: SchemaOptions,
-  tree: Tree
-) {
-  return testRunner
-    .runExternalSchematicAsync(collectionName, schematicName, options, tree)
-    .toPromise();
-}
 
 export function callRule(rule: Rule, tree: Tree) {
   return testRunner.callRule(rule, tree).toPromise();

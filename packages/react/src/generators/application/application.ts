@@ -18,12 +18,13 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
+import { parallelizeTasks } from '@nrwl/workspace/src/utilities/parallelize-tasks';
 import reactInitGenerator from '../init/init';
 import { lintProjectGenerator } from '@nrwl/linter';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
-  let installTask: GeneratorCallback;
-  installTask = await lintProjectGenerator(host, {
+  const tasks: GeneratorCallback[] = [];
+  const lintTask = await lintProjectGenerator(host, {
     linter: options.linter,
     project: options.projectName,
     tsConfigPaths: [
@@ -32,6 +33,7 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     eslintFilePatterns: [`${options.appProjectRoot}/**/*.{ts,tsx,js,jsx}`],
     skipFormat: true,
   });
+  tasks.push(lintTask);
 
   updateJson(
     host,
@@ -42,40 +44,46 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     }
   );
 
-  installTask = await addDependenciesToPackageJson(
+  const installTask = await addDependenciesToPackageJson(
     host,
     extraEslintDependencies.dependencies,
     extraEslintDependencies.devDependencies
   );
+  tasks.push(installTask);
 
-  return installTask;
+  return parallelizeTasks(...tasks);
 }
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
-  let installTask: GeneratorCallback;
-
   const options = normalizeOptions(host, schema);
 
-  installTask = await reactInitGenerator(host, {
+  const initTask = await reactInitGenerator(host, {
     ...options,
     skipFormat: true,
   });
 
   createApplicationFiles(host, options);
   addProject(host, options);
-  await addLinting(host, options);
-  await addCypress(host, options);
-  await addJest(host, options);
+  const lintTask = await addLinting(host, options);
+  const cypressTask = await addCypress(host, options);
+  const jestTask = await addJest(host, options);
   updateJestConfig(host, options);
-  addStyledModuleDependencies(host, options.styledModule);
-  addRouting(host, options);
+  const styledTask = addStyledModuleDependencies(host, options.styledModule);
+  const routingTask = addRouting(host, options);
   setDefaults(host, options);
 
   if (!options.skipFormat) {
     await formatFiles(host);
   }
 
-  return installTask;
+  return parallelizeTasks(
+    initTask,
+    lintTask,
+    cypressTask,
+    jestTask,
+    styledTask,
+    routingTask
+  );
 }
 
 export default applicationGenerator;

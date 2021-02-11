@@ -1,27 +1,21 @@
-import { Tree } from '@nrwl/tao/src/shared/tree';
-import { GeneratorCallback } from '@nrwl/tao/src/shared/workspace';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import {
+  Tree,
+  GeneratorCallback,
   addDependenciesToPackageJson,
   joinPathFragments,
   updateJson,
 } from '@nrwl/devkit';
 import { extraEslintDependencies, reactEslintJson } from '@nrwl/react';
 import { NormalizedSchema } from './normalize-options';
+import { parallelizeTasks } from '@nrwl/workspace/src/utilities/parallelize-tasks';
 
-export async function addLinting(host: Tree, options: NormalizedSchema) {
-  let installTask: GeneratorCallback;
-
-  /**
-   * TODO: Remove this use of any once we are consistent across the codebase
-   * in our use of the Linter enum. Currently we have one coming from linter
-   * and one from workspace and they do not match because one is a const enum
-   * and one is not.
-   */
-  const linter: any = options.linter || Linter.EsLint;
-
-  await lintProjectGenerator(host, {
-    linter,
+export async function addLinting(
+  host: Tree,
+  options: NormalizedSchema
+): Promise<GeneratorCallback> {
+  const lintTask = await lintProjectGenerator(host, {
+    linter: options.linter,
     project: options.projectName,
     tsConfigPaths: [
       joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
@@ -30,7 +24,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     skipFormat: true,
   });
 
-  if (linter === Linter.EsLint) {
+  if (options.linter === Linter.EsLint) {
     updateJson(
       host,
       joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
@@ -41,11 +35,11 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     );
   }
 
-  installTask = await addDependenciesToPackageJson(
+  const installTask = addDependenciesToPackageJson(
     host,
     extraEslintDependencies.dependencies,
     extraEslintDependencies.devDependencies
   );
 
-  return installTask;
+  return parallelizeTasks(lintTask, installTask);
 }

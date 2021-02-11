@@ -1,5 +1,10 @@
-import { Rule } from '@angular-devkit/schematics';
-import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
+import {
+  addDependenciesToPackageJson,
+  GeneratorCallback,
+  Tree,
+  updateJson,
+} from '@nrwl/devkit';
+
 import { CSS_IN_JS_DEPENDENCIES } from '@nrwl/react';
 import {
   babelPluginStyledComponentsVersion,
@@ -8,7 +13,6 @@ import {
   zeitNextLess,
   zeitNextStylus,
 } from './versions';
-import { addDependenciesToPackageJson, Tree, updateJson } from '@nrwl/devkit';
 
 export const NEXT_SPECIFIC_STYLE_DEPENDENCIES = {
   'styled-components': {
@@ -49,12 +53,15 @@ export const NEXT_SPECIFIC_STYLE_DEPENDENCIES = {
   },
 };
 
-export function addStyleDependencies(host: Tree, style: string): Rule[] {
+export function addStyleDependencies(
+  host: Tree,
+  style: string
+): GeneratorCallback {
   const extraDependencies = NEXT_SPECIFIC_STYLE_DEPENDENCIES[style];
 
-  if (!extraDependencies) return;
+  if (!extraDependencies) return () => {};
 
-  addDependenciesToPackageJson(
+  const installTask = addDependenciesToPackageJson(
     host,
     extraDependencies.dependencies,
     extraDependencies.devDependencies
@@ -62,13 +69,12 @@ export function addStyleDependencies(host: Tree, style: string): Rule[] {
 
   // @zeit/next-less & @zeit/next-stylus internal configuration is working only
   // for specific CSS loader version, causing PNPM resolution to fail.
-  if (
-    detectPackageManager() === 'pnpm' &&
-    (style === 'less' || style === 'styl')
-  ) {
+  if (host.exists('pnpm-lock.yaml') && (style === 'less' || style === 'styl')) {
     updateJson(host, `package.json`, (json) => {
       json.resolutions = { ...json.resolutions, 'css-loader': '1.0.1' };
       return json;
     });
   }
+
+  return installTask;
 }

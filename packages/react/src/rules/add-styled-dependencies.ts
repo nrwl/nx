@@ -10,5 +10,7 @@ export function addStyledModuleDependencies(host: Tree, styledModule: string) {
       extraDependencies.dependencies,
       extraDependencies.devDependencies
     );
+  } else {
+    return () => {};
   }
 }

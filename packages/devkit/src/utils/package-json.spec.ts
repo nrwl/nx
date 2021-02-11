@@ -47,7 +47,7 @@ describe('addDependenciesToPackageJson', () => {
     expect(readJson(tree, 'package.json').dependencies).toEqual({
       react: 'latest',
     });
-    expect(installTask).toBeUndefined();
+    expect(installTask).toBeDefined();
   });
 
   it('should add devDependencies to the package.json', () => {
@@ -76,6 +76,6 @@ describe('addDependenciesToPackageJson', () => {
     expect(readJson(tree, 'package.json').devDependencies).toEqual({
       jest: 'latest',
     });
-    expect(installTask).toBeUndefined();
+    expect(installTask).toBeDefined();
   });
 });
