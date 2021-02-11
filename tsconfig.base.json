@@ -33,6 +33,7 @@
       "@nrwl/workspace/testing": ["./packages/workspace/testing"],
       "@nrwl/react": ["./packages/react"],
       "@nrwl/react/*": ["./packages/react/*"],
+      "@nrwl/storybook": ["./packages/storybook"],
       "@nrwl/web": ["./packages/web"],
       "@nrwl/web/*": ["./packages/web/*"],
       "@nrwl/angular": ["./packages/angular"],

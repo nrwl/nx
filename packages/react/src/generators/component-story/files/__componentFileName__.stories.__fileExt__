@@ -1,0 +1,19 @@
+<% if(usedKnobs && usedKnobs.length > 0) { %>import { <%= usedKnobs %> } from '@storybook/addon-knobs';<% } %>
+import React from 'react';
+import { <%= componentName %><% if ( propsTypeName && !isPlainJs ) { %>, <%= propsTypeName %> <% } %> } from './<%= componentFileName %>';
+
+export default {
+  component: <%= componentName %>,
+  title: '<%= componentName %>'
+};
+
+export const primary = () => {
+  <% if (propsTypeName || isPlainJs ) { %>
+  <% if (props.length === 0) { %>/* <%= usesEsLint ? 'eslint' : 'tslint'%>-disable-next-line */<% } %>
+  const props<%= isPlainJs ? '': ':' + propsTypeName %> = {<% for (let prop of props) { %>
+    <%= prop.name %>: <%= prop.type %>('<%= prop.name %>', <%- prop.defaultValue %>),<% } %>
+  };
+  <% } %>
+
+  return <<%= componentName %> <% for (let prop of props) { %><%= prop.name %> = {props.<%= prop.name %>} <% } %> />;
+};

@@ -51,6 +51,11 @@ export interface WorkspaceJsonConfiguration {
 }
 
 /**
+ * Type of project supported
+ */
+export type ProjectType = 'library' | 'application';
+
+/**
  * Project configuration
  */
 export interface ProjectConfiguration {
@@ -72,7 +77,7 @@ export interface ProjectConfiguration {
   /**
    * Project type
    */
-  projectType?: 'library' | 'application';
+  projectType?: ProjectType;
 
   /**
    * List of default values used by generators.
