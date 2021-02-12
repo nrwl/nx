@@ -39,7 +39,10 @@
       "@nrwl/angular": ["./packages/angular"],
       "@nrwl/angular/*": ["./packages/angular/*"],
       "@nrwl/e2e/utils": ["./e2e/utils"],
-      "@nrwl/e2e/cli": ["./e2e/cli"]
+      "@nrwl/e2e/cli": ["./e2e/cli"],
+      "@nrwl/documentation/ui/header": [
+        "libs/documentation/ui/header/src/index.ts"
+      ]
     }
   }
 }

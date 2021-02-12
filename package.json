@@ -71,8 +71,10 @@
     "@nrwl/eslint-plugin-nx": "11.3.0",
     "@nrwl/jest": "11.3.0",
     "@nrwl/linter": "11.3.0",
+    "@nrwl/next": "11.3.0-beta.0",
     "@nrwl/node": "11.3.0",
     "@nrwl/nx-cloud": "11.1.4",
+    "@nrwl/react": "11.3.0-beta.0",
     "@nrwl/tao": "11.3.0",
     "@nrwl/web": "11.3.0",
     "@nrwl/workspace": "11.3.0",
@@ -120,6 +122,7 @@
     "app-root-path": "^2.0.1",
     "autoprefixer": "9.7.4",
     "axios": "0.21.1",
+    "babel-jest": "26.2.2",
     "babel-loader": "8.1.0",
     "babel-plugin-const-enum": "^1.0.1",
     "babel-plugin-emotion": "^10.0.29",
@@ -278,7 +281,14 @@
       "pre-push": "yarn check-commit && yarn documentation && pretty-quick --check"
     }
   },
-  "dependencies": {},
+  "dependencies": {
+    "core-js": "^3.6.5",
+    "document-register-element": "1.13.1",
+    "next": "10.0.1",
+    "react": "17.0.1",
+    "react-dom": "17.0.1",
+    "tslib": "^2.0.0"
+  },
   "resolutions": {
     "ng-packagr/rxjs": "6.6.3"
   }

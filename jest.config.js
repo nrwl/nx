@@ -19,5 +19,7 @@ module.exports = {
     '<rootDir>/packages/cli',
     '<rootDir>/packages/angular',
     '<rootDir>/packages/gatsby',
+    '<rootDir>/apps/documentation',
+    '<rootDir>/libs/documentation/ui/header',
   ],
 };

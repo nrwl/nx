@@ -1,5 +1,22 @@
 {
   "version": 2,
+  "cli": {
+    "defaultCollection": "@nrwl/next"
+  },
+  "generators": {
+    "@nrwl/react": {
+      "application": {
+        "babel": true
+      }
+    },
+    "@nrwl/next": {
+      "application": {
+        "style": "css",
+        "linter": "eslint"
+      }
+    }
+  },
+  "defaultProject": "documentation",
   "projects": {
     "nx": {
       "root": "packages/nx",
@@ -2114,75 +2131,105 @@
           }
         }
       }
-    }
-  },
-  "cli": {
-    "defaultCollection": "@nrwl/workspace"
-  },
-  "generators": {
-    "@nrwl/workspace": {
-      "library": {
-        "linter": "eslint"
+    },
+    "documentation": {
+      "root": "apps/documentation",
+      "sourceRoot": "apps/documentation",
+      "projectType": "application",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/next:build",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "root": "apps/documentation",
+            "outputPath": "dist/apps/documentation"
+          },
+          "configurations": {
+            "production": {}
+          }
+        },
+        "serve": {
+          "executor": "@nrwl/next:server",
+          "options": {
+            "buildTarget": "documentation:build",
+            "dev": true
+          },
+          "configurations": {
+            "production": {
+              "buildTarget": "documentation:build:production",
+              "dev": false
+            }
+          }
+        },
+        "export": {
+          "executor": "@nrwl/next:export",
+          "options": {
+            "buildTarget": "documentation:build:production"
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": ["apps/documentation/**/*.{ts,tsx,js,jsx}"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/apps/documentation"],
+          "options": {
+            "jestConfig": "apps/documentation/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
       }
     },
-    "@nrwl/cypress": {
-      "cypress-project": {
-        "linter": "eslint"
+    "documentation-e2e": {
+      "root": "apps/documentation-e2e",
+      "sourceRoot": "apps/documentation-e2e/src",
+      "projectType": "application",
+      "targets": {
+        "e2e": {
+          "executor": "@nrwl/cypress:cypress",
+          "options": {
+            "cypressConfig": "apps/documentation-e2e/cypress.json",
+            "tsConfig": "apps/documentation-e2e/tsconfig.e2e.json",
+            "devServerTarget": "documentation:serve"
+          },
+          "configurations": {
+            "production": {
+              "devServerTarget": "documentation:serve:production"
+            }
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": ["apps/documentation-e2e/**/*.{js,ts}"]
+          }
+        }
       }
     },
-    "@nrwl/react": {
-      "application": {
-        "linter": "eslint"
-      },
-      "library": {
-        "linter": "eslint"
-      },
-      "storybook-configuration": {
-        "linter": "eslint"
-      }
-    },
-    "@nrwl/next": {
-      "application": {
-        "linter": "eslint"
-      }
-    },
-    "@nrwl/web": {
-      "application": {
-        "linter": "eslint"
-      }
-    },
-    "@nrwl/node": {
-      "application": {
-        "linter": "eslint"
-      },
-      "library": {
-        "linter": "eslint"
-      }
-    },
-    "@nrwl/nx-plugin": {
-      "plugin": {
-        "linter": "eslint"
-      }
-    },
-    "@nrwl/nest": {
-      "application": {
-        "linter": "eslint"
-      }
-    },
-    "@nrwl/express": {
-      "application": {
-        "linter": "eslint"
-      },
-      "library": {
-        "linter": "eslint"
-      }
-    },
-    "@nrwl/gatsby": {
-      "application": {
-        "linter": "eslint"
-      },
-      "library": {
-        "linter": "eslint"
+    "documentation-ui-header": {
+      "root": "libs/documentation/ui/header",
+      "sourceRoot": "libs/documentation/ui/header/src",
+      "projectType": "library",
+      "targets": {
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "libs/documentation/ui/header/**/*.{ts,tsx,js,jsx}"
+            ]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/libs/documentation/ui/header"],
+          "options": {
+            "jestConfig": "libs/documentation/ui/header/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
       }
     }
   }
