@@ -103,9 +103,14 @@ describe('app', () => {
         { name: 'myApp', e2eTestRunner: 'protractor' },
         appTree
       );
+
       const withPrefix = await runSchematic(
         'app',
-        { name: 'myApp', prefix: 'custom', e2eTestRunner: 'protractor' },
+        {
+          name: 'myAppWithPrefix',
+          prefix: 'custom',
+          e2eTestRunner: 'protractor',
+        },
         appTree
       );
 
@@ -128,7 +133,7 @@ describe('app', () => {
         .read('apps/my-app-e2e/src/app.e2e-spec.ts')
         .toString();
       workspaceJson = JSON.parse(withPrefix.read('workspace.json').toString());
-      myAppPrefix = workspaceJson.projects['my-app'].prefix;
+      myAppPrefix = workspaceJson.projects['my-app-with-prefix'].prefix;
 
       expect(myAppPrefix).toEqual('custom');
       expect(appE2eSpec).toContain('Welcome to my-app!');

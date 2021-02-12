@@ -342,12 +342,12 @@ describe('lib', () => {
 
       const withPrefix = await runSchematic(
         'lib',
-        { name: 'myLib', prefix: 'custom' },
+        { name: 'myLibWithPrefix', prefix: 'custom' },
         appTree
       );
       expect(
         JSON.parse(withPrefix.read('workspace.json').toString()).projects[
-          'my-lib'
+          'my-lib-with-prefix'
         ].prefix
       ).toEqual('custom');
     });
