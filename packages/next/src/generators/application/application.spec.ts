@@ -262,25 +262,58 @@ describe('app', () => {
     expect(appContent).not.toMatch(/extends Component/);
   });
 
-  describe('--linter=eslint', () => {
-    it('should add .eslintrc.json and dependencies', async () => {
-      await applicationGenerator(tree, {
-        name: 'myApp',
-        style: 'css',
-        linter: Linter.EsLint,
+  describe('--linter', () => {
+    describe('default (eslint)', () => {
+      it('should add .eslintrc.json and dependencies', async () => {
+        await applicationGenerator(tree, {
+          name: 'myApp',
+          style: 'css',
+        });
+
+        const packageJson = readJson(tree, '/package.json');
+        expect(packageJson).toMatchObject({
+          devDependencies: {
+            'eslint-plugin-react': expect.anything(),
+            'eslint-plugin-react-hooks': expect.anything(),
+          },
+        });
+
+        const eslintJson = readJson(tree, '/apps/my-app/.eslintrc.json');
+        expect(eslintJson).toMatchInlineSnapshot(`
+          Object {
+            "extends": Array [
+              "plugin:@nrwl/nx/react",
+              "../../.eslintrc.json",
+            ],
+            "ignorePatterns": Array [
+              "!**/*",
+            ],
+            "rules": Object {},
+          }
+        `);
       });
+    });
 
-      const eslintJson = readJson(tree, '/apps/my-app/.eslintrc.json');
-      const packageJson = readJson(tree, '/package.json');
+    describe('tslint', () => {
+      it('should generate files', async () => {
+        await applicationGenerator(tree, {
+          name: 'myApp',
+          style: 'css',
+          linter: Linter.TsLint,
+        });
 
-      expect(eslintJson.extends).toEqual(
-        expect.arrayContaining(['plugin:@nrwl/nx/react'])
-      );
-      expect(packageJson).toMatchObject({
-        devDependencies: {
-          'eslint-plugin-react': expect.anything(),
-          'eslint-plugin-react-hooks': expect.anything(),
-        },
+        const tslintJson = readJson(tree, 'apps/my-app/tslint.json');
+        expect(tslintJson).toMatchInlineSnapshot(`
+          Object {
+            "extends": "../../tslint.json",
+            "linterOptions": Object {
+              "exclude": Array [
+                "!**/*",
+              ],
+            },
+            "rules": Object {},
+          }
+        `);
       });
     });
   });
