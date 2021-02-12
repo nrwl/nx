@@ -181,10 +181,8 @@ function upgradeStorybookPackagesInPackageJson(tree: Tree) {
 }
 
 function deleteOldFiles(tree: Tree, configFolderDir: string) {
-  console.log('deleting old files');
   visitNotIgnoredFiles(tree, configFolderDir, (file) => {
     if (file.includes('addons.js') || file.includes('config.js')) {
-      console.log('deleting', file);
       tree.delete(file);
     }
   });
