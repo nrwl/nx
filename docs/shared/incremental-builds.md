@@ -55,6 +55,6 @@ Also, using incremental builds only really makes sense when using the distribute
 
 ## Setup an incremental build
 
-- [Setup an incremental build for an Angular app](/{{framework}}/ci/setup-incremental-builds-angular)
+- [Setup an incremental build for an Angular app](/angular/ci/setup-incremental-builds-angular)
 - _Setup an incremental build for a React app (soon)_
 - _Setup an incremental build for a Node app (soon)_

@@ -81,9 +81,9 @@ myorg/
 
 ## See Also
 
-- [Using DataPersistence](/{{framework}}/guides/misc-data-persistence)
-- [Using NgRx](/{{framework}}/guides/misc-ngrx)
-- [Upgrading an AngularJS application to Angular](/{{framework}}/guides/misc-angular)
+- [Using DataPersistence](/angular/guides/misc-data-persistence)
+- [Using NgRx](/angular/guides/misc-ngrx)
+- [Upgrading an AngularJS application to Angular](/angular/guides/misc-upgrade)
 
 ## Executors / Builders
 
