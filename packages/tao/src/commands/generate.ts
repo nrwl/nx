@@ -41,7 +41,7 @@ function parseGenerateOpts(
 ): GenerateOptions {
   const generatorOptions = convertToCamelCase(
     minimist(args, {
-      boolean: ['help', 'dryRun', 'debug', 'force', 'interactive'],
+      boolean: ['help', 'dryRun', 'debug', 'force', 'interactive', 'defaults'],
       alias: {
         dryRun: 'dry-run',
         d: 'dryRun',
@@ -53,6 +53,14 @@ function parseGenerateOpts(
       },
     })
   );
+
+  // TODO: vsavkin remove defaults in Nx 13
+  if (generatorOptions.defaults) {
+    logger.warn(
+      `Use --no-interactive instead of --defaults. The --defaults option will be removed in Nx 13.`
+    );
+    generatorOptions.interactive = false;
+  }
 
   let collectionName: string | null = null;
   let generatorName: string | null = null;
