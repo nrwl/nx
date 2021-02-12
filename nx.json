@@ -167,6 +167,18 @@
     },
     "dep-graph-dep-graph": {
       "tags": ["core"]
+    },
+    "nx-dev": { "tags": ["scope:nx-dev", "type:app"] },
+    "nx-dev-e2e": {
+      "tags": ["scope:nx-dev", "type:e2e"],
+      "implicitDependencies": ["nx-dev"]
+    },
+    "nx-dev-ui-common": { "tags": ["scope:nx-dev", "type:ui"] },
+    "nx-dev-feature-doc-viewer": {
+      "tags": ["scope:nx-dev", "type:feature"]
+    },
+    "nx-dev-data-access-documents": {
+      "tags": ["scope:nx-dev", "type:data-access"]
     }
   },
   "affected": {

@@ -156,6 +156,7 @@ Object {
         "error",
         Object {
           "allow": Array [
+            "Console",
             "_buffer",
             "_counters",
             "_groupDepth",

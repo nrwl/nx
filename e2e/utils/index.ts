@@ -12,7 +12,7 @@ import {
   statSync,
   writeFileSync,
 } from 'fs-extra';
-import * as isCI from 'is-ci';
+import isCI = require('is-ci');
 import * as path from 'path';
 import { dirSync } from 'tmp';
 
