@@ -20,7 +20,7 @@ import {
   toJS,
   Tree,
 } from '@nrwl/devkit';
-import { parallelizeTasks } from '@nrwl/workspace/src/utilities/parallelize-tasks';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { addImport } from '../../utils/ast-utils';
 
 interface NormalizedSchema extends Schema {
@@ -53,7 +53,7 @@ export async function componentGenerator(host: Tree, schema: Schema) {
 
   await formatFiles(host);
 
-  return parallelizeTasks(...tasks);
+  return runTasksInSerial(...tasks);
 }
 
 function createComponentFiles(host: Tree, options: NormalizedSchema) {

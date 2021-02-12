@@ -14,7 +14,7 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nrwl/devkit';
-import { parallelizeTasks } from '@nrwl/workspace/src/utilities/parallelize-tasks';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 import { Linter } from '@nrwl/linter';
 import { join } from 'path';
@@ -72,7 +72,7 @@ export async function configurationGenerator(
 
   await formatFiles(tree);
 
-  return parallelizeTasks(...tasks);
+  return runTasksInSerial(...tasks);
 }
 
 function normalizeSchema(schema: StorybookConfigureSchema) {

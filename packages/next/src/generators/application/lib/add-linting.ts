@@ -8,7 +8,7 @@ import {
 } from '@nrwl/devkit';
 import { extraEslintDependencies, reactEslintJson } from '@nrwl/react';
 import { NormalizedSchema } from './normalize-options';
-import { parallelizeTasks } from '@nrwl/workspace/src/utilities/parallelize-tasks';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 export async function addLinting(
   host: Tree,
@@ -41,5 +41,5 @@ export async function addLinting(
     extraEslintDependencies.devDependencies
   );
 
-  return parallelizeTasks(lintTask, installTask);
+  return runTasksInSerial(lintTask, installTask);
 }

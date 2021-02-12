@@ -12,7 +12,7 @@ import { updateJestConfig } from './lib/update-jest-config';
 import { nextInitGenerator } from '../init/init';
 import { addStyleDependencies } from '../../utils/styles';
 import { addLinting } from './lib/add-linting';
-import { parallelizeTasks } from '@nrwl/workspace/src/utilities/parallelize-tasks';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
@@ -35,7 +35,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     await formatFiles(host);
   }
 
-  return parallelizeTasks(
+  return runTasksInSerial(
     nextTask,
     cypressTask,
     jestTask,

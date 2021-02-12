@@ -30,7 +30,7 @@ import {
 } from '../../utils/versions';
 
 import { InitSchema } from './schema';
-import { parallelizeTasks } from '@nrwl/workspace/src/utilities/parallelize-tasks';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 function updateDependencies(host: Tree) {
   const isPnpm = host.exists('pnpm-lock.yaml');
@@ -81,7 +81,7 @@ export async function gatsbyInitGenerator(host: Tree, schema: InitSchema) {
   const installTask = updateDependencies(host);
   tasks.push(installTask);
 
-  return parallelizeTasks(...tasks);
+  return runTasksInSerial(...tasks);
 }
 
 export default gatsbyInitGenerator;

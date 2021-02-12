@@ -15,7 +15,7 @@ import {
   Tree,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
-import { parallelizeTasks } from '@nrwl/workspace/src/utilities/parallelize-tasks';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 import { join } from 'path';
 
@@ -228,7 +228,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   if (!schema.skipFormat) {
     await formatFiles(host);
   }
-  return parallelizeTasks(...tasks);
+  return runTasksInSerial(...tasks);
 }
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {

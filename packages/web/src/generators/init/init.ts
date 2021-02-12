@@ -8,7 +8,7 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
-import { parallelizeTasks } from '@nrwl/workspace/src/utilities/parallelize-tasks';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { Schema } from './schema';
 import {
   documentRegisterElementVersion,
@@ -65,7 +65,7 @@ export async function webInitGenerator(tree: Tree, schema: Schema) {
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }
-  return parallelizeTasks(...tasks);
+  return runTasksInSerial(...tasks);
 }
 
 export default webInitGenerator;

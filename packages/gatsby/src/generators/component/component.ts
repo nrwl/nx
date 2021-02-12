@@ -2,7 +2,7 @@ import type { SupportedStyles } from '@nrwl/react';
 import { componentGenerator as reactComponentGenerator } from '@nrwl/react';
 import { convertNxGenerator, Tree } from '@nrwl/devkit';
 import { addStyleDependencies } from '../../utils/styles';
-import { parallelizeTasks } from '@nrwl/workspace/src/utilities/parallelize-tasks';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 interface Schema {
   name: string;
@@ -29,7 +29,7 @@ export async function componentGenerator(host: Tree, options: Schema) {
 
   const styledTask = addStyleDependencies(host, options.style);
 
-  return parallelizeTasks(componentTask, styledTask);
+  return runTasksInSerial(componentTask, styledTask);
 }
 
 export default componentGenerator;

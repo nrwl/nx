@@ -1,5 +1,5 @@
 import { Tree } from '@nrwl/tao/src/shared/tree';
-import { parallelizeTasks } from '@nrwl/workspace/src/utilities/parallelize-tasks';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import {
   addDependenciesToPackageJson,
@@ -43,5 +43,5 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     extraEslintDependencies.devDependencies
   );
 
-  return parallelizeTasks(lintTask, installTask);
+  return runTasksInSerial(lintTask, installTask);
 }

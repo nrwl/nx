@@ -18,7 +18,7 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { parallelizeTasks } from '@nrwl/workspace/src/utilities/parallelize-tasks';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import reactInitGenerator from '../init/init';
 import { lintProjectGenerator } from '@nrwl/linter';
 
@@ -51,7 +51,7 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
   );
   tasks.push(installTask);
 
-  return parallelizeTasks(...tasks);
+  return runTasksInSerial(...tasks);
 }
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
@@ -76,7 +76,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     await formatFiles(host);
   }
 
-  return parallelizeTasks(
+  return runTasksInSerial(
     initTask,
     lintTask,
     cypressTask,
