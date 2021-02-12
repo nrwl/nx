@@ -12,7 +12,13 @@ import { NormalizedSchema } from './normalize-options';
 export async function addLinting(host: Tree, options: NormalizedSchema) {
   let installTask: GeneratorCallback;
 
-  const linter = options.linter || Linter.EsLint;
+  /**
+   * TODO: Remove this use of any once we are consistent across the codebase
+   * in our use of the Linter enum. Currently we have one coming from linter
+   * and one from workspace and they do not match because one is a const enum
+   * and one is not.
+   */
+  const linter: any = options.linter || Linter.EsLint;
 
   await lintProjectGenerator(host, {
     linter,
