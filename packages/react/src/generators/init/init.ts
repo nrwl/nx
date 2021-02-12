@@ -5,6 +5,7 @@ import {
   GeneratorCallback,
   readWorkspaceConfiguration,
   Tree,
+  updateJson,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
@@ -41,6 +42,31 @@ function setDefault(host: Tree) {
   setDefaultCollection(host, '@nrwl/react');
 }
 
+function updateDependencies(host: Tree) {
+  updateJson(host, 'package.json', (json) => {
+    if (json.dependencies && json.dependencies['@nrwl/react']) {
+      delete json.dependencies['@nrwl/react'];
+    }
+    return json;
+  });
+
+  return addDependenciesToPackageJson(
+    host,
+    {
+      'core-js': '^3.6.5',
+      react: reactVersion,
+      'react-dom': reactDomVersion,
+      tslib: '^2.0.0',
+    },
+    {
+      '@nrwl/react': nxVersion,
+      '@types/react': typesReactVersion,
+      '@types/react-dom': typesReactDomVersion,
+      '@testing-library/react': testingLibraryReactVersion,
+    }
+  );
+}
+
 export async function reactInitGenerator(host: Tree, schema: InitSchema) {
   const tasks: GeneratorCallback[] = [];
 
@@ -57,21 +83,7 @@ export async function reactInitGenerator(host: Tree, schema: InitSchema) {
 
   const initTask = await webInitGenerator(host, schema);
   tasks.push(initTask);
-  const installTask = addDependenciesToPackageJson(
-    host,
-    {
-      'core-js': '^3.6.5',
-      react: reactVersion,
-      'react-dom': reactDomVersion,
-      tslib: '^2.0.0',
-    },
-    {
-      '@nrwl/react': nxVersion,
-      '@types/react': typesReactVersion,
-      '@types/react-dom': typesReactDomVersion,
-      '@testing-library/react': testingLibraryReactVersion,
-    }
-  );
+  const installTask = updateDependencies(host);
   tasks.push(installTask);
 
   return parallelizeTasks(...tasks);
