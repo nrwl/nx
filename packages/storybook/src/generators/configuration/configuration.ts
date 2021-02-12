@@ -345,10 +345,7 @@ function readCurrentWorkspaceStorybookVersion(tree: Tree): string {
         packageJsonContents['dependencies']['@storybook/core'];
     }
   }
-  if (
-    workspaceStorybookVersion.startsWith('6') ||
-    workspaceStorybookVersion.startsWith('^6')
-  ) {
+  if (/[\^|\~]*6/.test(workspaceStorybookVersion)) {
     workspaceStorybookVersion = '6';
   }
   return workspaceStorybookVersion;

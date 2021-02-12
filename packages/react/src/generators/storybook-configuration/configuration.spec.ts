@@ -6,6 +6,7 @@ import { Linter } from '@nrwl/linter';
 import applicationGenerator from '../application/application';
 import componentGenerator from '../component/component';
 import storybookConfigurationGenerator from './configuration';
+import { storybookVersion } from '@nrwl/storybook';
 
 describe('react:storybook-configuration', () => {
   let appTree;
@@ -13,8 +14,8 @@ describe('react:storybook-configuration', () => {
   beforeEach(async () => {
     jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
       devDependencies: {
-        '@storybook/addon-essentials': '^6.0.21',
-        '@storybook/react': '^6.0.21',
+        '@storybook/addon-essentials': storybookVersion,
+        '@storybook/react': storybookVersion,
       },
     });
   });

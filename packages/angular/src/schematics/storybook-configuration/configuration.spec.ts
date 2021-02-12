@@ -3,6 +3,7 @@ import { runSchematic } from '../../utils/testing';
 import { StorybookConfigureSchema } from './schema';
 import { createTestUILib } from '../stories/stories-lib.spec';
 import * as fileUtils from '@nrwl/workspace/src/core/file-utils';
+import { storybookVersion } from '@nrwl/storybook';
 
 describe('schematic:configuration', () => {
   let appTree: Tree;
@@ -11,8 +12,8 @@ describe('schematic:configuration', () => {
     appTree = await createTestUILib('test-ui-lib');
     jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
       devDependencies: {
-        '@storybook/addon-essentials': '^6.0.21',
-        '@storybook/react': '^6.0.21',
+        '@storybook/addon-essentials': storybookVersion,
+        '@storybook/angular': storybookVersion,
       },
     });
   });
