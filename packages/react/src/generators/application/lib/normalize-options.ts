@@ -30,6 +30,8 @@ export function normalizeOptions(
 
   options.routing = options.routing ?? false;
   options.classComponent = options.classComponent ?? false;
+  options.unitTestRunner = options.unitTestRunner ?? 'jest';
+  options.e2eTestRunner = options.e2eTestRunner ?? 'cypress';
 
   return {
     ...options,
