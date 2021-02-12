@@ -44,6 +44,8 @@ const IGNORE_MATCHES = {
     'babel-plugin-styled-components',
     'rollup',
     'webpack',
+    '@angular-devkit/core',
+    '@angular-devkit/schematics',
   ],
   storybook: [
     '@angular-devkit/architect',

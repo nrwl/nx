@@ -1,15 +1,36 @@
-import {
-  addGlobal,
-  Change,
-  findNodes,
-  InsertChange,
-  ReplaceChange,
-} from '@nrwl/workspace/src/utils/ast-utils';
 import * as ts from 'typescript';
+import { findNodes } from '@nrwl/workspace/src/utilities/typescript/find-nodes';
 import {
-  SchematicContext,
-  SchematicsException,
-} from '@angular-devkit/schematics';
+  ChangeType,
+  logger,
+  StringChange,
+  StringInsertion,
+} from '@nrwl/devkit';
+
+export function addImport(
+  source: ts.SourceFile,
+  statement: string
+): StringChange[] {
+  const allImports = findNodes(source, ts.SyntaxKind.ImportDeclaration);
+  if (allImports.length > 0) {
+    const lastImport = allImports[allImports.length - 1];
+    return [
+      {
+        type: ChangeType.Insert,
+        index: lastImport.end + 1,
+        text: `\n${statement}\n`,
+      },
+    ];
+  } else {
+    return [
+      {
+        type: ChangeType.Insert,
+        index: 0,
+        text: `\n${statement}\n`,
+      },
+    ];
+  }
+}
 
 export function findMainRenderStatement(
   source: ts.SourceFile
@@ -193,9 +214,8 @@ export function isTag(tagName: string, node: ts.Node) {
 
 export function addInitialRoutes(
   sourcePath: string,
-  source: ts.SourceFile,
-  context: SchematicContext
-): Change[] {
+  source: ts.SourceFile
+): StringChange[] {
   const jsxClosingElements = findNodes(source, [
     ts.SyntaxKind.JsxClosingElement,
     ts.SyntaxKind.JsxClosingFragment,
@@ -203,16 +223,16 @@ export function addInitialRoutes(
   const outerMostJsxClosing = jsxClosingElements[jsxClosingElements.length - 1];
 
   if (!outerMostJsxClosing) {
-    context.logger.warn(
+    logger.warn(
       `Could not find JSX elements in ${sourcePath}; Skipping insert routes`
     );
     return [];
   }
 
-  const insertRoutes = new InsertChange(
-    sourcePath,
-    outerMostJsxClosing.getStart(),
-    `
+  const insertRoutes: StringInsertion = {
+    type: ChangeType.Insert,
+    index: outerMostJsxClosing.getStart(),
+    text: `
     {/* START: routes */}
     {/* These routes and navigation have been generated for you */}
     {/* Feel free to move and update them to fit your needs */}
@@ -240,15 +260,11 @@ export function addInitialRoutes(
       )}
     />
     {/* END: routes */}
-    `
-  );
+    `,
+  };
 
   return [
-    ...addGlobal(
-      source,
-      sourcePath,
-      `import { Route, Link } from 'react-router-dom';`
-    ),
+    ...addImport(source, `import { Route, Link } from 'react-router-dom';`),
     insertRoutes,
   ];
 }
@@ -260,56 +276,48 @@ export function addRoute(
     routePath: string;
     componentName: string;
     moduleName: string;
-  },
-  context: SchematicContext
-): Change[] {
+  }
+): StringChange[] {
   const routes = findElements(source, 'Route');
   const links = findElements(source, 'Link');
 
   if (routes.length === 0) {
-    context.logger.warn(
+    logger.warn(
       `Could not find <Route/> components in ${sourcePath}; Skipping add route`
     );
     return [];
   } else {
-    const changes: Change[] = [];
+    const changes: StringChange[] = [];
     const firstRoute = routes[0];
     const firstLink = links[0];
 
     changes.push(
-      ...addGlobal(
+      ...addImport(
         source,
-        sourcePath,
         `import { ${options.componentName} } from '${options.moduleName}';`
       )
     );
 
-    changes.push(
-      new InsertChange(
-        sourcePath,
-        firstRoute.getEnd(),
-        `<Route path="${options.routePath}" component={${options.componentName}} />`
-      )
-    );
+    changes.push({
+      type: ChangeType.Insert,
+      index: firstRoute.getEnd(),
+      text: `<Route path="${options.routePath}" component={${options.componentName}} />`,
+    });
 
     if (firstLink) {
       const parentLi = findClosestOpening('li', firstLink);
       if (parentLi) {
-        changes.push(
-          new InsertChange(
-            sourcePath,
-            parentLi.getEnd(),
-            `<li><Link to="${options.routePath}">${options.componentName}</Link></li>`
-          )
-        );
+        changes.push({
+          type: ChangeType.Insert,
+          index: parentLi.getEnd(),
+          text: `<li><Link to="${options.routePath}">${options.componentName}</Link></li>`,
+        });
       } else {
-        changes.push(
-          new InsertChange(
-            sourcePath,
-            firstLink.parent.getEnd(),
-            `<Link to="${options.routePath}">${options.componentName}</Link>`
-          )
-        );
+        changes.push({
+          type: ChangeType.Insert,
+          index: firstLink.parent.getEnd(),
+          text: `<Link to="${options.routePath}">${options.componentName}</Link>`,
+        });
       }
     }
 
@@ -319,22 +327,25 @@ export function addRoute(
 
 export function addBrowserRouter(
   sourcePath: string,
-  source: ts.SourceFile,
-  context: SchematicContext
-): Change[] {
+  source: ts.SourceFile
+): StringChange[] {
   const app = findElements(source, 'App')[0];
   if (app) {
     return [
-      ...addGlobal(
-        source,
-        sourcePath,
-        `import { BrowserRouter } from 'react-router-dom';`
-      ),
-      new InsertChange(sourcePath, app.getStart(), `<BrowserRouter>`),
-      new InsertChange(sourcePath, app.getEnd(), `</BrowserRouter>`),
+      ...addImport(source, `import { BrowserRouter } from 'react-router-dom';`),
+      {
+        type: ChangeType.Insert,
+        index: app.getStart(),
+        text: `<BrowserRouter>`,
+      },
+      {
+        type: ChangeType.Insert,
+        index: app.getEnd(),
+        text: `</BrowserRouter>`,
+      },
     ];
   } else {
-    context.logger.warn(
+    logger.warn(
       `Could not find App component in ${sourcePath}; Skipping add <BrowserRouter>`
     );
     return [];
@@ -343,26 +354,24 @@ export function addBrowserRouter(
 
 export function addReduxStoreToMain(
   sourcePath: string,
-  source: ts.SourceFile,
-  context: SchematicContext
-): Change[] {
+  source: ts.SourceFile
+): StringChange[] {
   const renderStmt = findMainRenderStatement(source);
   if (!renderStmt) {
-    context.logger.warn(`Could not find ReactDOM.render in ${sourcePath}`);
+    logger.warn(`Could not find ReactDOM.render in ${sourcePath}`);
     return [];
   }
   const jsx = renderStmt.arguments[0];
   return [
-    ...addGlobal(
+    ...addImport(
       source,
-      sourcePath,
       `import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';`
     ),
-    new InsertChange(
-      sourcePath,
-      renderStmt.getStart(),
-      `
+    {
+      type: ChangeType.Insert,
+      index: renderStmt.getStart(),
+      text: `
 const store = configureStore({
   reducer: {},
   // Additional middleware can be passed to this array
@@ -372,23 +381,30 @@ const store = configureStore({
   enhancers: [],
 });
 
-`
-    ),
-    new InsertChange(sourcePath, jsx.getStart(), `<Provider store={store}>`),
-    new InsertChange(sourcePath, jsx.getEnd(), `</Provider>`),
+`,
+    },
+    {
+      type: ChangeType.Insert,
+      index: jsx.getStart(),
+      text: `<Provider store={store}>`,
+    },
+    {
+      type: ChangeType.Insert,
+      index: jsx.getEnd(),
+      text: `</Provider>`,
+    },
   ];
 }
 
 export function updateReduxStore(
   sourcePath: string,
   source: ts.SourceFile,
-  context: SchematicContext,
   feature: {
     keyName: string;
     reducerName: string;
     modulePath: string;
   }
-): Change[] {
+): StringChange[] {
   const calls = findNodes(
     source,
     ts.SyntaxKind.CallExpression
@@ -434,25 +450,24 @@ export function updateReduxStore(
   }
 
   if (!reducerDescriptor) {
-    context.logger.warn(
+    logger.warn(
       `Could not find configureStore/combineReducer call in ${sourcePath}`
     );
     return [];
   }
 
   return [
-    ...addGlobal(
+    ...addImport(
       source,
-      sourcePath,
       `import { ${feature.keyName}, ${feature.reducerName} } from '${feature.modulePath}';`
     ),
-    new InsertChange(
-      sourcePath,
-      reducerDescriptor.getStart() + 1,
-      `[${feature.keyName}]: ${feature.reducerName}${
+    {
+      type: ChangeType.Insert,
+      index: reducerDescriptor.getStart() + 1,
+      text: `[${feature.keyName}]: ${feature.reducerName}${
         reducerDescriptor.properties.length > 0 ? ',' : ''
-      }`
-    ),
+      }`,
+    },
   ];
 }
 

@@ -1,5 +1,4 @@
-import { noop, Rule } from '@angular-devkit/schematics';
-import { addDepsToPackageJson, updateJsonInTree } from '@nrwl/workspace';
+import { Rule } from '@angular-devkit/schematics';
 import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 import { CSS_IN_JS_DEPENDENCIES } from '@nrwl/react';
 import {
@@ -9,6 +8,7 @@ import {
   zeitNextLess,
   zeitNextStylus,
 } from './versions';
+import { addDependenciesToPackageJson, Tree, updateJson } from '@nrwl/devkit';
 
 export const NEXT_SPECIFIC_STYLE_DEPENDENCIES = {
   'styled-components': {
@@ -49,23 +49,26 @@ export const NEXT_SPECIFIC_STYLE_DEPENDENCIES = {
   },
 };
 
-export function addStyleDependencies(style: string): Rule[] {
+export function addStyleDependencies(host: Tree, style: string): Rule[] {
   const extraDependencies = NEXT_SPECIFIC_STYLE_DEPENDENCIES[style];
-  return extraDependencies
-    ? [
-        addDepsToPackageJson(
-          extraDependencies.dependencies,
-          extraDependencies.devDependencies
-        ),
-        // @zeit/next-less & @zeit/next-stylus internal configuration is working only
-        // for specific CSS loader version, causing PNPM resolution to fail.
-        detectPackageManager() === 'pnpm' &&
-        (style === 'less' || style === 'styl')
-          ? updateJsonInTree(`/package.json`, (json) => {
-              json.resolutions = { ...json.resolutions, 'css-loader': '1.0.1' };
-              return json;
-            })
-          : noop(),
-      ]
-    : [noop()];
+
+  if (!extraDependencies) return;
+
+  addDependenciesToPackageJson(
+    host,
+    extraDependencies.dependencies,
+    extraDependencies.devDependencies
+  );
+
+  // @zeit/next-less & @zeit/next-stylus internal configuration is working only
+  // for specific CSS loader version, causing PNPM resolution to fail.
+  if (
+    detectPackageManager() === 'pnpm' &&
+    (style === 'less' || style === 'styl')
+  ) {
+    updateJson(host, `package.json`, (json) => {
+      json.resolutions = { ...json.resolutions, 'css-loader': '1.0.1' };
+      return json;
+    });
+  }
 }

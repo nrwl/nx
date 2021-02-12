@@ -1,8 +1,9 @@
 export { Tree, FileChange } from '@nrwl/tao/src/shared/tree';
 export {
-  WorkspaceConfiguration,
+  WorkspaceJsonConfiguration,
   TargetConfiguration,
   ProjectConfiguration,
+  ProjectType,
   Generator,
   GeneratorCallback,
   Executor,
@@ -19,6 +20,7 @@ export { runExecutor, Target } from '@nrwl/tao/src/commands/run';
 export { formatFiles } from './src/generators/format-files';
 export { generateFiles } from './src/generators/generate-files';
 export {
+  WorkspaceConfiguration,
   addProjectConfiguration,
   readProjectConfiguration,
   removeProjectConfiguration,
@@ -28,7 +30,9 @@ export {
   getProjects,
 } from './src/generators/project-configuration';
 export { toJS } from './src/generators/to-js';
+export { updateTsConfigsToJs } from './src/generators/update-ts-configs-to-js';
 export { visitNotIgnoredFiles } from './src/generators/visit-not-ignored-files';
+export { setDefaultCollection } from './src/generators/set-default-collection';
 
 export { parseTargetString } from './src/executors/parse-target-string';
 export { readTargetOptions } from './src/executors/read-target-options';

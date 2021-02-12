@@ -1,10 +1,8 @@
-import { JsonObject } from '@angular-devkit/core';
-
-export interface GatsbyPluginBuilderSchema extends JsonObject {
+export interface GatsbyPluginBuilderSchema {
   prefixPaths?: boolean;
-  uglify: boolean;
+  uglify?: boolean;
   profile?: boolean;
   openTracingConfigFile?: string;
   graphqlTracing?: boolean;
-  color: boolean;
+  color?: boolean;
 }

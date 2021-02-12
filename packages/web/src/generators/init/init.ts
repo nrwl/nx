@@ -8,6 +8,7 @@ import {
   updateJson,
   updateWorkspaceConfiguration,
   writeJson,
+  setDefaultCollection,
 } from '@nrwl/devkit';
 import { Schema } from './schema';
 import {
@@ -36,19 +37,6 @@ function updateDependencies(tree: Tree) {
   );
 }
 
-function setDefaultCollection(tree: Tree) {
-  const workspace = readWorkspaceConfiguration(tree);
-  workspace.cli = workspace.cli || {};
-
-  const defaultCollection = workspace.cli.defaultCollection;
-
-  if (!defaultCollection || defaultCollection === '@nrwl/workspace') {
-    workspace.cli.defaultCollection = '@nrwl/web';
-  }
-
-  updateWorkspaceConfiguration(tree, workspace);
-}
-
 function initRootBabelConfig(tree: Tree) {
   if (tree.exists('/babel.config.json') || tree.exists('/babel.config.js')) {
     return;
@@ -63,7 +51,7 @@ function initRootBabelConfig(tree: Tree) {
 export async function webInitGenerator(tree: Tree, schema: Schema) {
   let installTask: GeneratorCallback;
 
-  setDefaultCollection(tree);
+  setDefaultCollection(tree, '@nrwl/web');
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
     installTask = jestInitGenerator(tree, {});
   }

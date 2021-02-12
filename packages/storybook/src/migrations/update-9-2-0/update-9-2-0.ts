@@ -1,7 +1,7 @@
-import { chain } from '@angular-devkit/schematics';
-import { addCacheableOperation } from '../../schematics/init/init';
-import { formatFiles } from '@nrwl/workspace';
+import { Tree, formatFiles } from '@nrwl/devkit';
+import { addCacheableOperation } from '../../generators/init/init';
 
-export default function () {
-  return chain([addCacheableOperation, formatFiles()]);
+export default async function (tree: Tree) {
+  addCacheableOperation(tree);
+  await formatFiles(tree);
 }

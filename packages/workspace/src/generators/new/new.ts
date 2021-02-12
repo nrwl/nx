@@ -8,9 +8,7 @@ import {
   convertNxGenerator,
   names,
   getPackageManagerCommand,
-  readWorkspaceConfiguration,
-  updateWorkspaceConfiguration,
-  WorkspaceConfiguration,
+  WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 
 import { join } from 'path';
@@ -347,7 +345,7 @@ function setDefaultPackageManager(host: Tree, options: Schema) {
     return;
   }
 
-  updateJson<WorkspaceConfiguration>(
+  updateJson<WorkspaceJsonConfiguration>(
     host,
     getWorkspacePath(host, options),
     (json) => {

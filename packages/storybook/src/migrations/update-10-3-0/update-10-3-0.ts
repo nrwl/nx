@@ -8,11 +8,12 @@ import {
 
 import {
   formatFiles,
+  readJsonInTree,
   updateWorkspaceInTree,
   serializeJson,
 } from '@nrwl/workspace';
 
-import { getTsConfigContent, isFramework } from '../../utils/utils';
+import { isFramework, TsConfig } from '../../utils/utilities';
 import { normalize } from '@angular-devkit/core';
 
 interface ProjectDefinition {
@@ -77,14 +78,14 @@ function updateLintTarget(
     >[1]['uiFramework'],
   });
 
-  const mainTsConfigContent = getTsConfigContent(tree, paths.tsConfig);
+  const mainTsConfigContent = readJsonInTree<TsConfig>(tree, paths.tsConfig);
 
   const tsConfig = {
     main: mainTsConfigContent,
     lib: tree.exists(paths.tsConfigLib)
-      ? getTsConfigContent(tree, paths.tsConfigLib)
+      ? readJsonInTree<TsConfig>(tree, paths.tsConfigLib)
       : mainTsConfigContent,
-    storybook: getTsConfigContent(tree, paths.tsConfigStorybook),
+    storybook: readJsonInTree<TsConfig>(tree, paths.tsConfigStorybook),
   };
 
   if (isReactProject && Array.isArray(tsConfig.lib.exclude)) {

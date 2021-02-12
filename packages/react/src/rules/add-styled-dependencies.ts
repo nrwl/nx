@@ -1,13 +1,14 @@
-import { noop, Rule } from '@angular-devkit/schematics';
-import { addDepsToPackageJson } from '@nrwl/workspace';
 import { CSS_IN_JS_DEPENDENCIES } from '../utils/styled';
+import { addDependenciesToPackageJson, Tree } from '@nrwl/devkit';
 
-export function addStyledModuleDependencies(styledModule: string): Rule {
+export function addStyledModuleDependencies(host: Tree, styledModule: string) {
   const extraDependencies = CSS_IN_JS_DEPENDENCIES[styledModule];
-  return extraDependencies
-    ? addDepsToPackageJson(
-        extraDependencies.dependencies,
-        extraDependencies.devDependencies
-      )
-    : noop();
+
+  if (extraDependencies) {
+    return addDependenciesToPackageJson(
+      host,
+      extraDependencies.dependencies,
+      extraDependencies.devDependencies
+    );
+  }
 }

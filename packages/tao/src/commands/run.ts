@@ -11,7 +11,7 @@ import {
   ExecutorContext,
   ProjectConfiguration,
   TargetConfiguration,
-  WorkspaceConfiguration,
+  WorkspaceJsonConfiguration,
   Workspaces,
 } from '../shared/workspace';
 
@@ -99,7 +99,7 @@ export function printRunHelp(
 }
 
 export function validateProject(
-  workspace: WorkspaceConfiguration,
+  workspace: WorkspaceJsonConfiguration,
   projectName: string
 ) {
   const project = workspace.projects[projectName];
@@ -157,7 +157,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
   options: { [k: string]: any },
   root: string,
   cwd: string,
-  workspace: WorkspaceConfiguration,
+  workspace: WorkspaceJsonConfiguration,
   isVerbose: boolean,
   printHelp: boolean
 ): Promise<AsyncIterableIterator<T>> {

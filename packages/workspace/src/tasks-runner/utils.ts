@@ -75,7 +75,7 @@ export function getOutputsForTargetAndConfiguration(
     return Array.isArray(options.outputPath)
       ? options.outputPath
       : [options.outputPath];
-  } else if (target === 'build') {
+  } else if (target === 'build' || target === 'prepare') {
     return [
       `dist/${node.data.root}`,
       `${node.data.root}/dist`,

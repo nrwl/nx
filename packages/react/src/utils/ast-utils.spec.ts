@@ -1,7 +1,7 @@
 import * as utils from './ast-utils';
 import * as ts from 'typescript';
-import { Tree } from '@angular-devkit/schematics';
-import { insert } from '@nrwl/workspace/src/utils/ast-utils';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { applyChangesToString, Tree } from '@nrwl/devkit';
 
 describe('findDefaultExport', () => {
   it('should find exported variable', () => {
@@ -101,7 +101,7 @@ describe('addRoute', () => {
     context = {
       warn: jest.fn(),
     };
-    tree = Tree.empty();
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should add links and routes if they are not present', async () => {
@@ -114,7 +114,7 @@ const App = () => (
 );
 export default App; 
       `;
-    tree.create('/app.tsx', sourceCode);
+    tree.write('/app.tsx', sourceCode);
     const source = ts.createSourceFile(
       '/app.tsx',
       sourceCode,
@@ -122,13 +122,10 @@ export default App;
       true
     );
 
-    insert(
-      tree,
-      '/app.tsx',
-      utils.addInitialRoutes('/app.tsx', source, context)
+    const result = applyChangesToString(
+      sourceCode,
+      utils.addInitialRoutes('/app.tsx', source)
     );
-
-    const result = tree.read('/app.tsx').toString();
 
     expect(result).toMatch(/role="navigation"/);
     expect(result).toMatch(/<Link\s+to="\/page-2"/);
@@ -155,7 +152,7 @@ const App = () => (
 );
 export default App; 
       `;
-    tree.create('/app.tsx', sourceCode);
+    tree.write('/app.tsx', sourceCode);
     const source = ts.createSourceFile(
       '/app.tsx',
       sourceCode,
@@ -163,22 +160,14 @@ export default App;
       true
     );
 
-    insert(
-      tree,
-      '/app.tsx',
-      utils.addRoute(
-        '/app.tsx',
-        source,
-        {
-          routePath: '/about',
-          componentName: 'About',
-          moduleName: '@example/about',
-        },
-        context
-      )
+    const result = applyChangesToString(
+      sourceCode,
+      utils.addRoute('/app.tsx', source, {
+        routePath: '/about',
+        componentName: 'About',
+        moduleName: '@example/about',
+      })
     );
-
-    const result = tree.read('/app.tsx').toString();
 
     expect(result).toMatch(/<li><Link\s+to="\/about"/);
     expect(result).toMatch(/<Route\s+path="\/about"\s+component={About}/);
@@ -193,7 +182,7 @@ describe('addBrowserRouter', () => {
     context = {
       warn: jest.fn(),
     };
-    tree = Tree.empty();
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should wrap around App component', () => {
@@ -203,7 +192,7 @@ import ReactDOM from 'react-dom';
 import { App } from '@example/my-app';
 ReactDOM.render(<App/>, document.getElementById('root'));
       `;
-    tree.create('/main.tsx', sourceCode);
+    tree.write('/main.tsx', sourceCode);
     const source = ts.createSourceFile(
       '/main.tsx',
       sourceCode,
@@ -211,13 +200,10 @@ ReactDOM.render(<App/>, document.getElementById('root'));
       true
     );
 
-    insert(
-      tree,
-      '/main.tsx',
-      utils.addBrowserRouter('/main.tsx', source, context)
+    const result = applyChangesToString(
+      sourceCode,
+      utils.addBrowserRouter('/main.tsx', source)
     );
-
-    const result = tree.read('/main.tsx').toString();
     expect(result).toContain('<BrowserRouter><App/></BrowserRouter>');
   });
 });
@@ -230,7 +216,7 @@ describe('findMainRenderStatement', () => {
     context = {
       warn: jest.fn(),
     };
-    tree = Tree.empty();
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should return render(...)', () => {
@@ -239,7 +225,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 ReactDOM.render(<div/>, document.getElementById('root'));
       `;
-    tree.create('/main.tsx', sourceCode);
+    tree.write('/main.tsx', sourceCode);
     const source = ts.createSourceFile(
       '/main.tsx',
       sourceCode,
@@ -257,7 +243,7 @@ import React from 'react';
 import { render } from 'react-dom';
 render(<div/>, document.getElementById('root'));
       `;
-    tree.create('/main.tsx', sourceCode);
+    tree.write('/main.tsx', sourceCode);
     const source = ts.createSourceFile(
       '/main.tsx',
       sourceCode,
@@ -271,7 +257,7 @@ render(<div/>, document.getElementById('root'));
 
   it('should return null when not found', () => {
     const sourceCode = ``;
-    tree.create('/main.tsx', sourceCode);
+    tree.write('/main.tsx', sourceCode);
     const source = ts.createSourceFile(
       '/main.tsx',
       sourceCode,
@@ -292,7 +278,7 @@ describe('addReduxStoreToMain', () => {
     context = {
       warn: jest.fn(),
     };
-    tree = Tree.empty();
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should wrap around App component', () => {
@@ -302,7 +288,7 @@ import ReactDOM from 'react-dom';
 import { App } from '@example/my-app';
 ReactDOM.render(<App/>, document.getElementById('root'));
       `;
-    tree.create('/main.tsx', sourceCode);
+    tree.write('/main.tsx', sourceCode);
     const source = ts.createSourceFile(
       '/main.tsx',
       sourceCode,
@@ -310,13 +296,10 @@ ReactDOM.render(<App/>, document.getElementById('root'));
       true
     );
 
-    insert(
-      tree,
-      '/main.tsx',
-      utils.addReduxStoreToMain('/main.tsx', source, context)
+    const result = applyChangesToString(
+      sourceCode,
+      utils.addReduxStoreToMain('/main.tsx', source)
     );
-
-    const result = tree.read('/main.tsx').toString();
     expect(result).toContain('@reduxjs/toolkit');
     expect(result).toContain('const store = configureStore');
     expect(result).toContain('<Provider store={store}>');
@@ -331,7 +314,7 @@ describe('updateReduxStore', () => {
     context = {
       warn: jest.fn(),
     };
-    tree = Tree.empty();
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should update configureStore call', () => {
@@ -341,7 +324,7 @@ const store = configureStore({
   reducer: {}
 });
       `;
-    tree.create('/main.tsx', sourceCode);
+    tree.write('/main.tsx', sourceCode);
     const source = ts.createSourceFile(
       '/main.tsx',
       sourceCode,
@@ -349,17 +332,14 @@ const store = configureStore({
       true
     );
 
-    insert(
-      tree,
-      '/main.tsx',
-      utils.updateReduxStore('/main.tsx', source, context, {
+    const result = applyChangesToString(
+      sourceCode,
+      utils.updateReduxStore('/main.tsx', source, {
         keyName: 'SLICE_KEY',
         reducerName: 'sliceReducer',
         modulePath: '@test/slice',
       })
     );
-
-    const result = tree.read('/main.tsx').toString();
     expect(result).toContain(
       "import { SLICE_KEY, sliceReducer } from '@test/slice'"
     );
@@ -371,7 +351,7 @@ const store = configureStore({
 import { createStore, combineReducer } from 'redux';
 const store = createStore(combineReducer({}));
       `;
-    tree.create('/main.tsx', sourceCode);
+    tree.write('/main.tsx', sourceCode);
     const source = ts.createSourceFile(
       '/main.tsx',
       sourceCode,
@@ -379,17 +359,14 @@ const store = createStore(combineReducer({}));
       true
     );
 
-    insert(
-      tree,
-      '/main.tsx',
-      utils.updateReduxStore('/main.tsx', source, context, {
+    const result = applyChangesToString(
+      sourceCode,
+      utils.updateReduxStore('/main.tsx', source, {
         keyName: 'SLICE_KEY',
         reducerName: 'sliceReducer',
         modulePath: '@test/slice',
       })
     );
-
-    const result = tree.read('/main.tsx').toString();
     expect(result).toContain(
       "import { SLICE_KEY, sliceReducer } from '@test/slice'"
     );

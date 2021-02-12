@@ -18,6 +18,7 @@ export const extraEslintDependencies = {
 
 export const createReactEslintJson = (projectRoot: string): Linter.Config => ({
   extends: ['plugin:@nrwl/nx/react'],
+  ignorePatterns: ['!**/*'],
   overrides: [
     {
       files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
