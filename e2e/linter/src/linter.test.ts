@@ -175,7 +175,7 @@ describe('Linter', () => {
         silenceError: true,
       }
     );
-    expect(stdout).toContain('Unexpected console statement');
+    expect(stdout).not.toContain('Unexpected console statement');
     expect(() => checkFilesExist(outputFile)).not.toThrow();
     const outputContents = JSON.parse(readFile(outputFile));
     const outputForApp: any = Object.values(

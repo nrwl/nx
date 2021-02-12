@@ -71,12 +71,13 @@ export default async function run(
   }
 
   const formattedResults = formatter.format(lintResults);
-  console.info(formattedResults);
 
   if (options.outputFile) {
     const pathToOutputFile = join(context.root, options.outputFile);
     createDirectory(dirname(pathToOutputFile));
     writeFileSync(pathToOutputFile, formattedResults);
+  } else {
+    console.info(formattedResults);
   }
 
   if (totalWarnings > 0 && printInfo) {
