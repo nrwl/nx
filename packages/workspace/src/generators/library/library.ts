@@ -12,7 +12,7 @@ import {
   GeneratorCallback,
   joinPathFragments,
 } from '@nrwl/devkit';
-import { parallelizeTasks } from '@nrwl/workspace/src/utilities/parallelize-tasks';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { join } from 'path';
 import { Schema } from './schema';
 
@@ -164,7 +164,7 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
     await formatFiles(tree);
   }
 
-  return parallelizeTasks(...tasks);
+  return runTasksInSerial(...tasks);
 }
 
 export default libraryGenerator;

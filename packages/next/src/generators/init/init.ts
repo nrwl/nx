@@ -5,7 +5,7 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
-import { parallelizeTasks } from '@nrwl/workspace/src/utilities/parallelize-tasks';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { jestInitGenerator } from '@nrwl/jest';
 import { cypressInitGenerator } from '@nrwl/cypress';
 import { reactDomVersion, reactInitGenerator, reactVersion } from '@nrwl/react';
@@ -46,7 +46,7 @@ export async function nextInitGenerator(host: Tree, schema: InitSchema) {
   const installTask = updateDependencies(host);
   tasks.push(installTask);
 
-  return parallelizeTasks(...tasks);
+  return runTasksInSerial(...tasks);
 }
 
 export default nextInitGenerator;

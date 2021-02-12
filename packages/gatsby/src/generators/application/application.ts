@@ -4,7 +4,7 @@ import {
   GeneratorCallback,
   Tree,
 } from '@nrwl/devkit';
-import { parallelizeTasks } from '@nrwl/workspace/src/utilities/parallelize-tasks';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 import { gatsbyInitGenerator } from '../init/init';
 import { Schema } from './schema';
@@ -39,7 +39,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   addGitIgnoreEntry(host, options);
   await formatFiles(host);
 
-  return parallelizeTasks(
+  return runTasksInSerial(
     initTask,
     styledTask,
     lintTask,

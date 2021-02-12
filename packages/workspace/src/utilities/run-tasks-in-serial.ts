@@ -1,9 +1,11 @@
 import { GeneratorCallback } from '@nrwl/devkit';
 
-export function parallelizeTasks(
+export function runTasksInSerial(
   ...tasks: GeneratorCallback[]
 ): GeneratorCallback {
   return async () => {
-    await Promise.all(tasks.map((task) => task()));
+    for (const task of tasks) {
+      await task();
+    }
   };
 }

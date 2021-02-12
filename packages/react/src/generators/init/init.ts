@@ -11,7 +11,7 @@ import { jestInitGenerator } from '@nrwl/jest';
 import { cypressInitGenerator } from '@nrwl/cypress';
 import { webInitGenerator } from '@nrwl/web';
 import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
-import { parallelizeTasks } from '@nrwl/workspace/src/utilities/parallelize-tasks';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import {
   nxVersion,
   reactDomVersion,
@@ -74,7 +74,7 @@ export async function reactInitGenerator(host: Tree, schema: InitSchema) {
   );
   tasks.push(installTask);
 
-  return parallelizeTasks(...tasks);
+  return runTasksInSerial(...tasks);
 }
 
 export default reactInitGenerator;

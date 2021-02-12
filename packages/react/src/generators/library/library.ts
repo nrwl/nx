@@ -35,7 +35,7 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { parallelizeTasks } from '@nrwl/workspace/src/utilities/parallelize-tasks';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import init from '../init/init';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { jestProjectGenerator } from '@nrwl/jest';
@@ -137,7 +137,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
     await formatFiles(host);
   }
 
-  return parallelizeTasks(...tasks);
+  return runTasksInSerial(...tasks);
 }
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
@@ -170,7 +170,7 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     extraEslintDependencies.devDependencies
   );
 
-  return parallelizeTasks(lintTask, installTask);
+  return runTasksInSerial(lintTask, installTask);
 }
 
 function addProject(host: Tree, options: NormalizedSchema) {

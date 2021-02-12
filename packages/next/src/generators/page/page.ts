@@ -3,7 +3,7 @@ import { convertNxGenerator, Tree } from '@nrwl/devkit';
 
 import { addStyleDependencies } from '../../utils/styles';
 import { Schema } from './schema';
-import { parallelizeTasks } from '@nrwl/workspace/src/utilities/parallelize-tasks';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 /*
  * This schematic is basically the React component one, but for Next we need
@@ -24,7 +24,7 @@ export async function pageGenerator(host: Tree, options: Schema) {
 
   const styledTask = addStyleDependencies(host, options.style);
 
-  return parallelizeTasks(componentTask, styledTask);
+  return runTasksInSerial(componentTask, styledTask);
 }
 
 export default pageGenerator;
