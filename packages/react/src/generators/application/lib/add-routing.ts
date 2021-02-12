@@ -15,7 +15,7 @@ import {
 
 export function addRouting(host: Tree, options: NormalizedSchema) {
   if (!options.routing) {
-    return;
+    return () => {};
   }
 
   const appPath = joinPathFragments(
@@ -36,7 +36,7 @@ export function addRouting(host: Tree, options: NormalizedSchema) {
   );
   host.write(appPath, changes);
 
-  addDependenciesToPackageJson(
+  return addDependenciesToPackageJson(
     host,
     { 'react-router-dom': reactRouterDomVersion },
     { '@types/react-router-dom': typesReactRouterDomVersion }

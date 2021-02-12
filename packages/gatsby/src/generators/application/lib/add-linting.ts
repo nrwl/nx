@@ -1,5 +1,5 @@
 import { Tree } from '@nrwl/tao/src/shared/tree';
-import { GeneratorCallback } from '@nrwl/tao/src/shared/workspace';
+import { parallelizeTasks } from '@nrwl/workspace/src/utilities/parallelize-tasks';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import {
   addDependenciesToPackageJson,
@@ -10,9 +10,7 @@ import { extraEslintDependencies, reactEslintJson } from '@nrwl/react';
 import { NormalizedSchema } from './normalize-options';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
-  let installTask: GeneratorCallback;
-
-  installTask = await lintProjectGenerator(host, {
+  const lintTask = await lintProjectGenerator(host, {
     linter: Linter.EsLint,
     project: options.projectName,
     tsConfigPaths: [
@@ -39,12 +37,11 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     }
   );
 
-  installTask =
-    (await addDependenciesToPackageJson(
-      host,
-      extraEslintDependencies.dependencies,
-      extraEslintDependencies.devDependencies
-    )) || installTask;
+  const installTask = await addDependenciesToPackageJson(
+    host,
+    extraEslintDependencies.dependencies,
+    extraEslintDependencies.devDependencies
+  );
 
-  return installTask;
+  return parallelizeTasks(lintTask, installTask);
 }

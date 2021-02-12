@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
   "id": "NxReactApp",
   "title": "Create a React Component for Gatsby",
   "type": "object",

@@ -3,6 +3,7 @@ import { convertNxGenerator, Tree } from '@nrwl/devkit';
 
 import { addStyleDependencies } from '../../utils/styles';
 import { Schema } from './schema';
+import { parallelizeTasks } from '@nrwl/workspace/src/utilities/parallelize-tasks';
 
 /*
  * This schematic is basically the React component one, but for Next we need
@@ -10,7 +11,7 @@ import { Schema } from './schema';
  * it is under `pages` folder.
  */
 export async function pageGenerator(host: Tree, options: Schema) {
-  await reactComponentGenerator(host, {
+  const componentTask = await reactComponentGenerator(host, {
     ...options,
     directory: options.directory ? `pages/${options.directory}` : 'pages',
     pascalCaseFiles: false,
@@ -21,7 +22,9 @@ export async function pageGenerator(host: Tree, options: Schema) {
     flat: true,
   });
 
-  addStyleDependencies(host, options.style);
+  const styledTask = addStyleDependencies(host, options.style);
+
+  return parallelizeTasks(componentTask, styledTask);
 }
 
 export default pageGenerator;

@@ -1,5 +1,5 @@
 import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
-import { readJsonFile } from '@nrwl/workspace';
+import { readJsonFile } from '@nrwl/workspace/src/utilities/fileutils';
 import { join } from 'path';
 
 export function updateBabelOptions(options: any): void {

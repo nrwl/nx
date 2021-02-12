@@ -4,7 +4,7 @@ import { NormalizedSchema } from '../schema';
 
 export async function addJest(host: Tree, options: NormalizedSchema) {
   if (options.unitTestRunner !== 'jest') {
-    return;
+    return () => {};
   }
 
   return await jestProjectGenerator(host, {

@@ -4,13 +4,14 @@ import {
   convertNxGenerator,
   GeneratorCallback,
   readWorkspaceConfiguration,
-  setDefaultCollection,
   Tree,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
 import { cypressInitGenerator } from '@nrwl/cypress';
 import { webInitGenerator } from '@nrwl/web';
+import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
+import { parallelizeTasks } from '@nrwl/workspace/src/utilities/parallelize-tasks';
 import {
   nxVersion,
   reactDomVersion,
@@ -41,19 +42,22 @@ function setDefault(host: Tree) {
 }
 
 export async function reactInitGenerator(host: Tree, schema: InitSchema) {
-  let installTask: GeneratorCallback;
+  const tasks: GeneratorCallback[] = [];
 
   setDefault(host);
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    installTask = jestInitGenerator(host, {});
+    const jestTask = jestInitGenerator(host, {});
+    tasks.push(jestTask);
   }
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
-    installTask = cypressInitGenerator(host) || installTask;
+    const cypressTask = cypressInitGenerator(host);
+    tasks.push(cypressTask);
   }
 
-  await webInitGenerator(host, schema);
-  installTask = addDependenciesToPackageJson(
+  const initTask = await webInitGenerator(host, schema);
+  tasks.push(initTask);
+  const installTask = addDependenciesToPackageJson(
     host,
     {
       'core-js': '^3.6.5',
@@ -68,8 +72,9 @@ export async function reactInitGenerator(host: Tree, schema: InitSchema) {
       '@testing-library/react': testingLibraryReactVersion,
     }
   );
+  tasks.push(installTask);
 
-  return installTask;
+  return parallelizeTasks(...tasks);
 }
 
 export default reactInitGenerator;
