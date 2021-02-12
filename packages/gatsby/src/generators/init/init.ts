@@ -3,6 +3,7 @@ import {
   convertNxGenerator,
   GeneratorCallback,
   Tree,
+  updateJson,
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
 import { cypressInitGenerator } from '@nrwl/cypress';
@@ -33,6 +34,13 @@ import { InitSchema } from './schema';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 function updateDependencies(host: Tree) {
+  updateJson(host, 'package.json', (json) => {
+    if (json.dependencies && json.dependencies['@nrwl/gatsby']) {
+      delete json.dependencies['@nrwl/gatsby'];
+    }
+    return json;
+  });
+
   const isPnpm = host.exists('pnpm-lock.yaml');
   return addDependenciesToPackageJson(
     host,
@@ -54,7 +62,7 @@ function updateDependencies(host: Tree) {
       ...(isPnpm ? { 'gatsby-plugin-pnpm': gatsbyPluginPnpm } : {}),
     },
     {
-      '@nrwl/react': nxVersion,
+      '@nrwl/gatsby': nxVersion,
       '@testing-library/react': testingLibraryReactVersion,
       'babel-plugin-module-resolver': babelPluginModuleResolverVersion,
       'babel-preset-gatsby': babelPresetGatsbyVersion,

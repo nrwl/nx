@@ -3,6 +3,7 @@ import {
   convertNxGenerator,
   GeneratorCallback,
   Tree,
+  updateJson,
 } from '@nrwl/devkit';
 import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
@@ -10,10 +11,17 @@ import { jestInitGenerator } from '@nrwl/jest';
 import { cypressInitGenerator } from '@nrwl/cypress';
 import { reactDomVersion, reactInitGenerator, reactVersion } from '@nrwl/react';
 
-import { nextVersion } from '../../utils/versions';
+import { nextVersion, nxVersion } from '../../utils/versions';
 import { InitSchema } from './schema';
 
 function updateDependencies(host: Tree) {
+  updateJson(host, 'package.json', (json) => {
+    if (json.dependencies && json.dependencies['@nrwl/gatsby']) {
+      delete json.dependencies['@nrwl/gatsby'];
+    }
+    return json;
+  });
+
   return addDependenciesToPackageJson(
     host,
     {
@@ -22,7 +30,9 @@ function updateDependencies(host: Tree) {
       'react-dom': reactDomVersion,
       tslib: '^2.0.0',
     },
-    {}
+    {
+      '@nrwl/next': nxVersion,
+    }
   );
 }
 
