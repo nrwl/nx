@@ -122,6 +122,14 @@
       "type": "boolean",
       "description": "Generates a package.json file with the project's node_module dependencies populated for installing in a container. If a package.json exists in the project's directory, it will be reused with dependencies populated.",
       "default": false
+    },
+    "implicitDependencies": {
+      "description": "Defines implicit dependencies for the generated package json.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
     }
   },
   "required": ["tsConfig", "main"],

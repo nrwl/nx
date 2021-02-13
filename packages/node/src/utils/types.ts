@@ -50,4 +50,5 @@ export interface BuildNodeBuilderOptions extends BuildBuilderOptions {
   externalDependencies: 'all' | 'none' | string[];
   buildLibsFromSource?: boolean;
   generatePackageJson?: boolean;
+  implicitDependencies?: string[];
 }

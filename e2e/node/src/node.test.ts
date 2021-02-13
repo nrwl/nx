@@ -1,7 +1,4 @@
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { exec, execSync } from 'child_process';
-import * as http from 'http';
-import * as treeKill from 'tree-kill';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
@@ -16,6 +13,9 @@ import {
   updateFile,
   workspaceConfigName,
 } from '@nrwl/e2e/utils';
+import { exec, execSync } from 'child_process';
+import * as http from 'http';
+import * as treeKill from 'tree-kill';
 
 function getData(): Promise<any> {
   return new Promise((resolve) => {
@@ -185,6 +185,45 @@ describe('Build Node apps', () => {
         dependencies: {
           '@nestjs/common': '^7.0.0',
           '@nestjs/core': '^7.0.0',
+        },
+        main: 'main.js',
+        name: expect.any(String),
+        version: '0.0.1',
+      })
+    );
+  });
+
+  it('should generate a package.json with the `--generatePackageJson` flag and take care of --implicitDependencies ', async () => {
+    newProject();
+    const nestapp = uniq('nestapp');
+    runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
+
+    const workspace = readJson(workspaceConfigName());
+
+    workspace.projects[nestapp].targets.build.options.implicitDependencies = [
+      'reflect-metadata',
+      'tslib',
+      'rxjs',
+      '@nestjs/platform-express',
+    ];
+
+    updateFile(workspaceConfigName(), JSON.stringify(workspace));
+
+    await runCLIAsync(`build ${nestapp} --generatePackageJson`);
+
+    checkFilesExist(`dist/apps/${nestapp}/package.json`);
+    const packageJson = JSON.parse(
+      readFile(`dist/apps/${nestapp}/package.json`)
+    );
+    expect(packageJson).toEqual(
+      expect.objectContaining({
+        dependencies: {
+          '@nestjs/common': '^7.0.0',
+          '@nestjs/core': '^7.0.0',
+          'reflect-metadata': '^0.1.13',
+          tslib: '^2.0.0',
+          rxjs: '~6.6.3',
+          '@nestjs/platform-express': '^7.0.0',
         },
         main: 'main.js',
         name: expect.any(String),

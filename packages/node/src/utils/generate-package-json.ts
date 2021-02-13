@@ -1,7 +1,7 @@
 import { ProjectGraph, readJsonFile } from '@nrwl/workspace';
-import { BuildNodeBuilderOptions } from './types';
 import { writeJsonFile } from '@nrwl/workspace/src/utilities/fileutils';
 import { OUT_FILENAME } from './config';
+import { BuildNodeBuilderOptions } from './types';
 
 /**
  * Creates a package.json in the output directory for support  to install dependencies within containers.
@@ -39,6 +39,16 @@ export function generatePackageJson(
   Object.entries(npmDeps).forEach(([packageName, version]) => {
     // don't include devDeps
     if (rootPackageJson.devDependencies?.[packageName]) {
+      return;
+    }
+
+    packageJson.dependencies[packageName] = version;
+  });
+
+  options.implicitDependencies.forEach((packageName) => {
+    const version = rootPackageJson.dependencies[packageName];
+
+    if (!version) {
       return;
     }
 
