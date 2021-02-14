@@ -36,4 +36,4 @@ Note that for these files, the file-history of the stand-alone project will be n
 
 ## Using `git mv`
 
-Especially if your stand-alone project was not an Nx workspace, it's likely that your migration work will also entail moving around directories to match a typical Nx Workspace structure. You can find more information in the [Overview](/{{framwork}}/migration/overview) page, but when migrating an existing project, you'll want to ensure that you use [`git mv`](https://git-scm.com/docs/git-mv) when moving a file or directory to ensure that file history from the old standalone repo is not lost!
+Especially if your stand-alone project was not an Nx workspace, it's likely that your migration work will also entail moving around directories to match a typical Nx Workspace structure. You can find more information in the [Overview](/{{framework}}/migration/overview) page, but when migrating an existing project, you'll want to ensure that you use [`git mv`](https://git-scm.com/docs/git-mv) when moving a file or directory to ensure that file history from the old standalone repo is not lost!
