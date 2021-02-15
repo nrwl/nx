@@ -6,4 +6,5 @@ export type SupportedStyles =
   | 'styled-components'
   | '@emotion/styled'
   | 'styled-jsx'
+  | '@material-ui'
   | 'none';

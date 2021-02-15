@@ -6,6 +6,7 @@ const VALID_STYLES = [
   'styled-components',
   '@emotion/styled',
   'styled-jsx',
+  '@material-ui',
   'none',
 ];
 export function assertValidStyle(style: string): void {

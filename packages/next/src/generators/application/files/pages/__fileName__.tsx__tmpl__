@@ -1,22 +1,25 @@
 import React from 'react';
-<% if (styledModule && styledModule !== 'styled-jsx') {
+<% if (styledModule && styledModule === '@material-ui') {
+  var wrapper = 'Container';
+%>import { Container } from '@material-ui/core';
+<% } else if  (styledModule && styledModule !== 'styled-jsx') {
   var wrapper = 'StyledPage';
 %>import styled from '<%= styledModule %>';<% } else {
   var wrapper = 'div';
 %>
-  <%- style !== 'styled-jsx' ? `import styles from './${fileName}.module.${style}';` : '' %>
+  <%- (style !== 'styled-jsx' && style !== '@material-ui') ? `import styles from './${fileName}.module.${style}';` : '' %>
 <% }
 %>
 
-<% if (styledModule && styledModule !== 'styled-jsx') { %>
+<% if (styledModule && styledModule !== 'styled-jsx' && styledModule !== '@material-ui') { %>
 const StyledPage = styled.div`<%- pageStyleContent %>`;
-<% }%>
+<% } %>
 
 export function Index() {
   /*
    * Replace the elements below with your own.
    *
-   * Note: The corresponding styles are in the ./<%= fileName %>.<%= style %> file.
+   <% if ((styledModule && styledModule !== '@material-ui') || !styledModule) { %> * Note: The corresponding styles are in the ./<%= fileName %>.<%= style %> file.<% } %>
    */
   return (
     <<%= wrapper %><% if (!styledModule) {%> className={styles.page}<% } %>>

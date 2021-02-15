@@ -61,6 +61,9 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
     );
   }
+
+  // TODO: Would this not break a library that intends to use a style library but simply did not want an initial component?
+  // Default library as well as injecting the correct dependencies comes to mind from below
   if (!options.component) {
     options.style = 'none';
   }

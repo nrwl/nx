@@ -51,6 +51,10 @@ export const NEXT_SPECIFIC_STYLE_DEPENDENCIES = {
     },
     devDependencies: {},
   },
+  '@material-ui': {
+    dependencies: CSS_IN_JS_DEPENDENCIES['@material-ui'].dependencies,
+    devDependencies: CSS_IN_JS_DEPENDENCIES['@material-ui'].devDependencies,
+  },
 };
 
 export function addStyleDependencies(

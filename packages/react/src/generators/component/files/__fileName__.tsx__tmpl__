@@ -9,7 +9,11 @@ import { Route, Link } from 'react-router-dom';
 <% } %>
 
 <% if (hasStyles) {
-   if (styledModule && styledModule !== 'styled-jsx') {
+     if (styledModule && styledModule === '@material-ui') {
+    var wrapper = 'Box';
+  %>
+  import { Box, createStyles, makeStyles, Theme } from '@material-ui/core';
+  <% } else if (styledModule && styledModule !== 'styled-jsx') {
     var wrapper = 'Styled' + className;
   %>
   import styled from '<%= styledModule %>';
@@ -17,18 +21,22 @@ import { Route, Link } from 'react-router-dom';
     var wrapper = 'div';
   %>
   <%- style !== 'styled-jsx' ? globalCss ? `import './${fileName}.${style}';` : `import './${fileName}.module.${style}';`: '' %>
-  <% }
-} else { var wrapper = 'div'; } %>
+  <% } } else { var wrapper = 'div'; } %>
 
 /* eslint-disable-next-line */
 export interface <%= className %>Props {
 }
 
-<% if (styledModule && styledModule !== 'styled-jsx') { %>
+<% if (styledModule && styledModule === '@material-ui') { %>
+// Customize your theme and other variables here
+const useStyles = makeStyles((theme: Theme) =>
+  createStyles({})
+);
+<% } else if (styledModule && styledModule !== 'styled-jsx') { %>
 const Styled<%= className %> = styled.div`
   color: pink;
 `;
-<% }%>
+<% } %>
 <% if (classComponent) { %>
 export class <%= className %> extends Component<<%= className %>Props> {
   render() {

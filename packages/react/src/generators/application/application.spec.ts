@@ -535,6 +535,57 @@ describe('app', () => {
     });
   });
 
+  describe('--style @material-ui', () => {
+    it('should use @material-ui as the styled API library', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        style: '@material-ui',
+      });
+
+      expect(
+        appTree.exists('apps/my-app/src/app/app.@material-ui')
+      ).toBeFalsy();
+      expect(
+        appTree.exists('apps/my-app/src/app/styles.@material-ui')
+      ).toBeFalsy();
+      expect(appTree.exists('apps/my-app/src/app/styles.css')).toBeFalsy();
+
+      expect(appTree.exists('apps/my-app/src/app/app.tsx')).toBeTruthy();
+
+      const content = appTree.read('apps/my-app/src/app/app.tsx').toString();
+      expect(content).toContain(
+        `import { Container } from '@material-ui/core'`
+      );
+      expect(content).toContain('<Container>');
+    });
+
+    it('should add dependencies to package.json', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        style: '@material-ui',
+      });
+
+      const packageJSON = readJson(appTree, 'package.json');
+      expect(packageJSON.dependencies['@material-ui/core']).toBeDefined();
+      expect(packageJSON.dependencies['clsx']).toBeDefined();
+    });
+
+    it('should update babel config', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        style: 'styled-jsx',
+      });
+
+      const babelrc = readJson(appTree, 'apps/my-app/.babelrc');
+      const babelJestConfig = readJson(
+        appTree,
+        'apps/my-app/babel-jest.config.json'
+      );
+      expect(babelrc.plugins).toContain('styled-jsx/babel');
+      expect(babelJestConfig.plugins).toContain('styled-jsx/babel');
+    });
+  });
+
   describe('--routing', () => {
     it('should add routes to the App component', async () => {
       await applicationGenerator(appTree, {

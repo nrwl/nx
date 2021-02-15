@@ -169,6 +169,27 @@ describe('app', () => {
     });
   });
 
+  describe('--style @material-ui', () => {
+    it('should use <Container> in index page', async () => {
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        style: '@material-ui',
+      });
+
+      expect(
+        tree.exists('apps/my-app/pages/index.module.@material-ui')
+      ).toBeFalsy();
+      expect(tree.exists('apps/my-app/pages/styles.@material-ui')).toBeFalsy();
+      expect(tree.exists('apps/my-app/pages/styles.css')).toBeFalsy();
+
+      const indexContent = tree.read('apps/my-app/pages/index.tsx').toString();
+      expect(indexContent).toContain(
+        `import { Container } from '@material-ui/core'`
+      );
+      expect(indexContent).toContain(`<Container>`);
+    });
+  });
+
   it('should setup jest with tsx support', async () => {
     await applicationGenerator(tree, { name: 'my-app', style: 'css' });
 

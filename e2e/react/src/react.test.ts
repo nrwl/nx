@@ -225,6 +225,19 @@ describe('React Applications', () => {
       checkE2E: false,
     });
 
+    const materialUiApp = uniq('app');
+
+    runCLI(
+      `generate @nrwl/react:app ${materialUiApp} --style @material-ui --no-interactive`
+    );
+
+    await testGeneratedApp(materialUiApp, {
+      checkStyles: false,
+      checkProdBuild: false,
+      checkLinter: false,
+      checkE2E: false,
+    });
+
     const noStylesApp = uniq('app');
 
     runCLI(

@@ -55,7 +55,8 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
         joinPathFragments(options.appProjectRoot, 'src/assets'),
       ],
       styles:
-        options.styledModule || !options.hasStyles
+        (options.styledModule && options.styledModule !== '@material-ui') ||
+        !options.hasStyles
           ? []
           : [
               joinPathFragments(

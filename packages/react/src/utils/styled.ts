@@ -9,6 +9,8 @@ import {
   typesReactIsVersion,
   typesStyledComponentsVersion,
   typesStyledJsxVersion,
+  materialUiCoreVersion,
+  clsxVersion,
 } from './versions';
 import { PackageDependencies } from './dependencies';
 
@@ -42,5 +44,12 @@ export const CSS_IN_JS_DEPENDENCIES: {
     devDependencies: {
       '@types/styled-jsx': typesStyledJsxVersion,
     },
+  },
+  '@material-ui': {
+    dependencies: {
+      '@material-ui/core': materialUiCoreVersion,
+      clsx: clsxVersion,
+    },
+    devDependencies: {},
   },
 };

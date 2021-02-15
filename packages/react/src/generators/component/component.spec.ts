@@ -283,6 +283,40 @@ describe('component', () => {
     });
   });
 
+  describe('--style @material-ui', () => {
+    it('should use @material-ui as the styled API library', async () => {
+      await componentGenerator(appTree, {
+        name: 'hello',
+        project: projectName,
+        style: '@material-ui',
+      });
+
+      expect(
+        appTree.exists('libs/my-lib/src/lib/hello/hello.@material-ui')
+      ).toBeFalsy();
+      expect(
+        appTree.exists('libs/my-lib/src/lib/hello/hello.tsx')
+      ).toBeTruthy();
+
+      const content = appTree
+        .read('libs/my-lib/src/lib/hello/hello.tsx')
+        .toString();
+      expect(content).toContain('<Box>');
+    });
+
+    it('should add dependencies to package.json', async () => {
+      await componentGenerator(appTree, {
+        name: 'hello',
+        project: projectName,
+        style: '@material-ui',
+      });
+
+      const packageJSON = readJson(appTree, 'package.json');
+      expect(packageJSON.dependencies['@material-ui/core']).toBeDefined();
+      expect(packageJSON.dependencies['clsx']).toBeDefined();
+    });
+  });
+
   describe('--routing', () => {
     it('should add routes to the component', async () => {
       await componentGenerator(appTree, {

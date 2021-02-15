@@ -143,6 +143,7 @@ describe('app', () => {
   });
 
   // TODO: We should also add styled-jsx support for Gatsby to keep React plugins consistent.
+  // TODO: Should @material-ui support be added as well?
   // This needs to be here before Nx 12 is released.
   xdescribe('--style styled-jsx', () => {
     it('should use <style jsx> in index page', async () => {

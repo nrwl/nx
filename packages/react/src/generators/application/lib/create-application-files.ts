@@ -4,12 +4,20 @@ import { join } from 'path';
 
 export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   let styleSolutionSpecificAppFiles: string;
-  if (options.styledModule && options.style !== 'styled-jsx') {
-    styleSolutionSpecificAppFiles = '../files/styled-module';
-  } else if (options.style === 'styled-jsx') {
-    styleSolutionSpecificAppFiles = '../files/styled-jsx';
-  } else if (options.style === 'none') {
-    styleSolutionSpecificAppFiles = '../files/none';
+  if (options.styledModule) {
+    switch (options.style) {
+      case 'styled-jsx':
+        styleSolutionSpecificAppFiles = '../files/styled-jsx';
+        break;
+      case '@material-ui':
+        styleSolutionSpecificAppFiles = '../files/material-ui';
+        break;
+      case 'none':
+        styleSolutionSpecificAppFiles = '../files/none';
+        break;
+      default:
+        styleSolutionSpecificAppFiles = '../files/styled-module';
+    }
   } else if (options.globalCss) {
     styleSolutionSpecificAppFiles = '../files/global-css';
   } else {

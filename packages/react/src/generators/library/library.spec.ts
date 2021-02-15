@@ -458,6 +458,22 @@ describe('lib', () => {
       expect(babelJestConfig.plugins).toContain('styled-jsx/babel');
     });
 
+    it('should support @material-ui', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        publishable: true,
+        importPath: '@proj/my-lib',
+        style: '@material-ui',
+      });
+
+      const workspaceJson = readJson(appTree, '/workspace.json');
+      expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
+        options: {
+          external: ['react', 'react-dom', '@material-ui/core', 'clsx'],
+        },
+      });
+    });
+
     it('should support style none', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,

@@ -49,6 +49,12 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     host.delete(`${options.appProjectRoot}/pages/_document.tsx`);
   }
 
+  if (options.style === '@material-ui') {
+    host.delete(
+      `${options.appProjectRoot}/pages/styles.${templateVariables.stylesExt}`
+    );
+  }
+
   if (options.js) {
     host.delete(`${options.appProjectRoot}/index.d.ts`);
     toJS(host);

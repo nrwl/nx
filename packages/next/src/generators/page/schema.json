@@ -73,6 +73,10 @@
             "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
           },
           {
+            "value": "@material-ui",
+            "label": "material-ui       [ https://material-ui.com       ]"
+          },
+          {
             "value": "none",
             "label": "None"
           }

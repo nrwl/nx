@@ -75,7 +75,8 @@ function createComponentFiles(host: Tree, options: NormalizedSchema) {
     }
 
     if (
-      (options.styledModule || !options.hasStyles) &&
+      ((options.styledModule && options.styledModule !== '@material-ui') ||
+        !options.hasStyles) &&
       c.path.endsWith(`.${options.style}`)
     ) {
       deleteFile = true;
@@ -153,7 +154,9 @@ async function normalizeOptions(
 
   const directory = await getDirectory(host, options);
 
-  const styledModule = /^(css|scss|less|styl|none)$/.test(options.style)
+  const styledModule = /^(css|scss|less|styl|material|none)$/.test(
+    options.style
+  )
     ? null
     : options.style;
 

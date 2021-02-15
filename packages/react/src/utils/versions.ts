@@ -33,3 +33,6 @@ export const eslintPluginReactVersion = '7.21.5';
 export const eslintPluginReactHooksVersion = '4.2.0';
 
 export const babelPluginStyledComponentsVersion = '1.10.7';
+
+export const materialUiCoreVersion = '4.11.3';
+export const clsxVersion = '1.1.1';

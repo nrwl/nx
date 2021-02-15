@@ -23,6 +23,7 @@ const excluded = ['nxVersion'];
 const scoped = [
   'babel',
   'emotion',
+  'material',
   'reduxjs',
   'testing-library',
   'types',
