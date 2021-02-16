@@ -1,4 +1,4 @@
-import { Linter } from '@nrwl/workspace';
+import { Linter } from '@nrwl/linter';
 import { SupportedStyles } from '@nrwl/react';
 
 export interface Schema {

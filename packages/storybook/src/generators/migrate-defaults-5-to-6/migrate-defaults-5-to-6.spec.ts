@@ -1,6 +1,11 @@
-import { externalSchematic, Tree } from '@angular-devkit/schematics';
+import { Tree } from '@angular-devkit/schematics';
 import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
-import { callRule, createTestUILib } from '../../utils/testing';
+import {
+  callRule,
+  createTestUILib,
+  runSchematic,
+  runExternalSchematic,
+} from '../../utils/testing';
 import { storybookVersion } from '../../utils/versions';
 
 // TODO: migrate these tests when schematics are moved over to generators
@@ -29,34 +34,39 @@ describe('migrate-defaults-5-to-6 schematic', () => {
         appTree
       );
 
-      appTree = await callRule(
-        externalSchematic('@nrwl/angular', 'library', {
+      appTree = await runExternalSchematic(
+        '@nrwl/angular',
+        'library',
+        {
           name: 'test-ui-lib2',
-        }),
+        },
         appTree
       );
 
-      appTree = await callRule(
-        externalSchematic('@nrwl/storybook', 'configuration', {
+      appTree = await runSchematic(
+        'configuration',
+        {
           name: 'test-ui-lib1',
-        }),
+        },
         appTree
       );
 
-      appTree = await callRule(
-        externalSchematic('@nrwl/storybook', 'configuration', {
+      appTree = await runSchematic(
+        'configuration',
+        {
           name: 'test-ui-lib2',
-        }),
+        },
         appTree
       );
     });
 
     describe('a single project run', () => {
       it('should not update dependencies when a single project is run', async () => {
-        appTree = await callRule(
-          externalSchematic('@nrwl/storybook', 'migrate-defaults-5-to-6', {
+        appTree = await runSchematic(
+          'migrate-defaults-5-to-6',
+          {
             name: 'test-ui-lib1',
-          }),
+          },
           appTree
         );
         const packageJson = readJsonInTree(appTree, 'package.json');
@@ -70,10 +80,11 @@ describe('migrate-defaults-5-to-6 schematic', () => {
       });
 
       it('should update that project and leave others unchanged', async () => {
-        appTree = await callRule(
-          externalSchematic('@nrwl/storybook', 'migrate-defaults-5-to-6', {
+        appTree = await runSchematic(
+          'migrate-defaults-5-to-6',
+          {
             name: 'test-ui-lib1',
-          }),
+          },
           appTree
         );
 
@@ -86,10 +97,11 @@ describe('migrate-defaults-5-to-6 schematic', () => {
       });
 
       it('should not update the root config', async () => {
-        appTree = await callRule(
-          externalSchematic('@nrwl/storybook', 'migrate-defaults-5-to-6', {
+        appTree = await runSchematic(
+          'migrate-defaults-5-to-6',
+          {
             name: 'test-ui-lib1',
-          }),
+          },
           appTree
         );
 
@@ -101,10 +113,7 @@ describe('migrate-defaults-5-to-6 schematic', () => {
 
     describe('all projects run', () => {
       it('should update dependencies', async () => {
-        appTree = await callRule(
-          externalSchematic('@nrwl/storybook', 'migrate-defaults-5-to-6', {}),
-          appTree
-        );
+        appTree = await runSchematic('migrate-defaults-5-to-6', {}, appTree);
         const packageJson = readJsonInTree(appTree, 'package.json');
         // general deps
         expect(packageJson.devDependencies['@storybook/angular']).toEqual(
@@ -116,10 +125,11 @@ describe('migrate-defaults-5-to-6 schematic', () => {
       });
 
       it('should update root config', async () => {
-        appTree = await callRule(
-          externalSchematic('@nrwl/storybook', 'migrate-defaults-5-to-6', {
+        appTree = await runSchematic(
+          'migrate-defaults-5-to-6',
+          {
             all: true,
-          }),
+          },
           appTree
         );
 
@@ -129,10 +139,11 @@ describe('migrate-defaults-5-to-6 schematic', () => {
       });
 
       it('should update all projects', async () => {
-        appTree = await callRule(
-          externalSchematic('@nrwl/storybook', 'migrate-defaults-5-to-6', {
+        appTree = await runSchematic(
+          'migrate-defaults-5-to-6',
+          {
             all: true,
-          }),
+          },
           appTree
         );
 
@@ -154,10 +165,7 @@ describe('migrate-defaults-5-to-6 schematic', () => {
 
     describe('--keepOld', () => {
       it('should keep old files by default', async () => {
-        appTree = await callRule(
-          externalSchematic('@nrwl/storybook', 'migrate-defaults-5-to-6', {}),
-          appTree
-        );
+        appTree = await runSchematic('migrate-defaults-5-to-6', {}, appTree);
         expect(
           appTree.exists('libs/test-ui-lib1/.old_storybook/addons.js')
         ).toBeTruthy();
@@ -176,10 +184,11 @@ describe('migrate-defaults-5-to-6 schematic', () => {
       });
 
       it('should delete old files when set to false', async () => {
-        appTree = await callRule(
-          externalSchematic('@nrwl/storybook', 'migrate-defaults-5-to-6', {
+        appTree = await runSchematic(
+          'migrate-defaults-5-to-6',
+          {
             keepOld: false,
-          }),
+          },
           appTree
         );
         expect(
@@ -221,34 +230,39 @@ describe('migrate-defaults-5-to-6 schematic', () => {
         appTree
       );
 
-      appTree = await callRule(
-        externalSchematic('@nrwl/react', 'library', {
+      appTree = await runExternalSchematic(
+        '@nrwl/react',
+        'library',
+        {
           name: 'test-ui-lib2',
-        }),
+        },
         appTree
       );
 
-      appTree = await callRule(
-        externalSchematic('@nrwl/storybook', 'configuration', {
+      appTree = await runSchematic(
+        'configuration',
+        {
           name: 'test-ui-lib1',
-        }),
+        },
         appTree
       );
 
-      appTree = await callRule(
-        externalSchematic('@nrwl/storybook', 'configuration', {
+      appTree = await runSchematic(
+        'configuration',
+        {
           name: 'test-ui-lib2',
-        }),
+        },
         appTree
       );
     });
 
     describe('a single project run', () => {
       it('should not update dependencies when a single project is run', async () => {
-        appTree = await callRule(
-          externalSchematic('@nrwl/storybook', 'migrate-defaults-5-to-6', {
+        appTree = await runSchematic(
+          'migrate-defaults-5-to-6',
+          {
             name: 'test-ui-lib1',
-          }),
+          },
           appTree
         );
         const packageJson = readJsonInTree(appTree, 'package.json');
@@ -264,10 +278,7 @@ describe('migrate-defaults-5-to-6 schematic', () => {
 
     describe('all projects run', () => {
       it('should update dependencies', async () => {
-        appTree = await callRule(
-          externalSchematic('@nrwl/storybook', 'migrate-defaults-5-to-6', {}),
-          appTree
-        );
+        appTree = await runSchematic('migrate-defaults-5-to-6', {}, appTree);
         const packageJson = readJsonInTree(appTree, 'package.json');
         // general deps
         expect(packageJson.devDependencies['@storybook/react']).toEqual(

@@ -20,6 +20,7 @@ import {
   toJS,
   Tree,
 } from '@nrwl/devkit';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { addImport } from '../../utils/ast-utils';
 
 interface NormalizedSchema extends Schema {
@@ -33,23 +34,26 @@ interface NormalizedSchema extends Schema {
 export async function componentGenerator(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
   createComponentFiles(host, options);
-  addStyledModuleDependencies(host, options.styledModule);
+
+  const tasks: GeneratorCallback[] = [];
+
+  const styledTask = addStyledModuleDependencies(host, options.styledModule);
+  tasks.push(styledTask);
+
   addExportsToBarrel(host, options);
 
-  let installTask: GeneratorCallback;
   if (options.routing) {
-    installTask = addDependenciesToPackageJson(
+    const routingTask = addDependenciesToPackageJson(
       host,
       { 'react-router-dom': reactRouterDomVersion },
       { '@types/react-router-dom': typesReactRouterDomVersion }
     );
+    tasks.push(routingTask);
   }
 
   await formatFiles(host);
 
-  if (installTask) {
-    return installTask;
-  }
+  return runTasksInSerial(...tasks);
 }
 
 function createComponentFiles(host: Tree, options: NormalizedSchema) {

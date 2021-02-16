@@ -1,8 +1,8 @@
-import { Tree } from '@nrwl/tao/src/shared/tree';
 import {
   readWorkspaceConfiguration,
   updateWorkspaceConfiguration,
-} from './project-configuration';
+  Tree,
+} from '@nrwl/devkit';
 
 /**
  * Sets the default collection within the workspace.

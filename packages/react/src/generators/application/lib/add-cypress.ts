@@ -4,7 +4,7 @@ import { NormalizedSchema } from '../schema';
 
 export async function addCypress(host: Tree, options: NormalizedSchema) {
   if (options.e2eTestRunner !== 'cypress') {
-    return;
+    return () => {};
   }
 
   return await cypressProjectGenerator(host, {

@@ -3001,45 +3001,52 @@
   resolved "https://registry.yarnpkg.com/@next/react-refresh-utils/-/react-refresh-utils-9.5.2.tgz#5d92d8ad0f2bd79de2290614e74e5a12a0cda02b"
   integrity sha512-ch/16u3OVy/aIXJROwqXZjGw/tFMyG7qy2IGDA2RFjvQMtPyJJrklmwX2EcfH4+4spRI2MZKes2soI+0w2/MDQ==
 
-"@ngrx/effects@11.0.0-rc.0":
-  version "11.0.0-rc.0"
-  resolved "https://registry.yarnpkg.com/@ngrx/effects/-/effects-11.0.0-rc.0.tgz#5b6edd930ac05d4b188265d50dd2a0ae6c3f5fbb"
-  integrity sha512-T9WXcq+XLdKom0iwzvrd/S0Ji+laoh5thY0vMEOg40gE+mrSYew+hgZphKN0lojwqs/aLNEOAezHOBXQPsFbSw==
+"@ngrx/component-store@11.0.0":
+  version "11.0.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/component-store/-/component-store-11.0.0.tgz#4ef2ea4fed0920cb8da19e19467fd4b421decfb8"
+  integrity sha512-dq8c7eleroBvN8JvLNr+PpLeC23QKl/V7Rc1rpkfESXUi7mq2NmCcU3gXvfqhDM8+Kuxwj9D0Ljd59Hfz3Z8LQ==
   dependencies:
     tslib "^2.0.0"
 
-"@ngrx/entity@11.0.0-rc.0":
-  version "11.0.0-rc.0"
-  resolved "https://registry.yarnpkg.com/@ngrx/entity/-/entity-11.0.0-rc.0.tgz#713a42944f258c7c11c69f1b548dbca3cd0ca721"
-  integrity sha512-T8y0Xl0us7H3zNH4THCYBW6PTTYBj7zqwO1gK0XSKXTN5OeWtqiWPgizWh/2sZVos+9+YvKPkU97SRorwa+RsQ==
+"@ngrx/effects@11.0.0":
+  version "11.0.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/effects/-/effects-11.0.0.tgz#22b4f8c32da2f51878e723c8332779e585f5d6e0"
+  integrity sha512-TYWSBQNAISVSkWBY3wGEPBGRthanXdAi6xch29qQUYJHhXuCJC26aIMKvqHsYQVcn33/f0uzcyO6/tNBBI55Rg==
   dependencies:
     tslib "^2.0.0"
 
-"@ngrx/router-store@11.0.0-rc.0":
-  version "11.0.0-rc.0"
-  resolved "https://registry.yarnpkg.com/@ngrx/router-store/-/router-store-11.0.0-rc.0.tgz#f90faab6836aa27ee35b9ea118cdf6ac2a6a06f5"
-  integrity sha512-YgpN6lqKzVq/FadrApWe34wLeHSm4pBNX/sbhtrm8Q7YIAZWbWQ/AGfI9OVpSnxb3stRa/7Mhz4VgDjL3C5KCA==
+"@ngrx/entity@11.0.0":
+  version "11.0.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/entity/-/entity-11.0.0.tgz#b1ca17963d1466e4f76a8e2dbea1ef03c0f9801d"
+  integrity sha512-3SFMO6GvRLK8Ze8cwxue6F5a7xeR/1+xtKAtBTi6mHBe8o6y3wQ9FG34JAGoCwiTxP5388P74jUQU8j3ZdjXRQ==
   dependencies:
     tslib "^2.0.0"
 
-"@ngrx/schematics@11.0.0-rc.0":
-  version "11.0.0-rc.0"
-  resolved "https://registry.yarnpkg.com/@ngrx/schematics/-/schematics-11.0.0-rc.0.tgz#fd71876e7fdb997b74f7e02f1958e2f8184bb3a8"
-  integrity sha512-oLdfRtHQj2labceBhcV4b4v9jKluxKpvo2vXtPgz0n71nmMiQvsLWeRSi3Mo38aRQsuIFY/lkA90eJks36IDEQ==
+"@ngrx/router-store@11.0.0":
+  version "11.0.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/router-store/-/router-store-11.0.0.tgz#2c68eac0683d63109bd1f607a5e1500efe593427"
+  integrity sha512-FwsPnmchxFDwCAYKdLs+qACr3+bChE5c/hWsr7PbiB1gtg4+dhLTx2DVbjVucBNo9Zrb/58qxobwgE7UBuEbng==
+  dependencies:
+    tslib "^2.0.0"
+
+"@ngrx/schematics@11.0.0":
+  version "11.0.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/schematics/-/schematics-11.0.0.tgz#6261ac31eee58c1e7893ba660e4877ff1f326a17"
+  integrity sha512-vDVl5U7Z4fy960MYGM10VEfWL7XPcY4o7OAhoRcm2XQXHfR/1Q0kplWw+T9NwqGxknczR8nCFOzKbF/27Q3Puw==
   dependencies:
     "@angular/core" "^11.0.2"
 
-"@ngrx/store-devtools@11.0.0-rc.0":
-  version "11.0.0-rc.0"
-  resolved "https://registry.yarnpkg.com/@ngrx/store-devtools/-/store-devtools-11.0.0-rc.0.tgz#1009af7c62643f2d7bdb75c3aaff6888541e4037"
-  integrity sha512-wz5CHWbMsfRzGBZPEg8zrdlB2V+K0KraEEPRWGJOyd79SNNRw8D/eBhq5w9ZQAkGA9AVhEN5B3baTa3Uq6Fm2g==
+"@ngrx/store-devtools@11.0.0":
+  version "11.0.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/store-devtools/-/store-devtools-11.0.0.tgz#ab342b022d65181eecaaa7d9236f8ecfc29e9527"
+  integrity sha512-QwcYIvW0q8Obt3sOKkG+CJ4B4n/EvQc8U8teViUDVmWvo8HvMGa1PnhYEejHB9QyYOyNEwFCbsdDmsZawNiVVw==
   dependencies:
     tslib "^2.0.0"
 
-"@ngrx/store@11.0.0-rc.0":
-  version "11.0.0-rc.0"
-  resolved "https://registry.yarnpkg.com/@ngrx/store/-/store-11.0.0-rc.0.tgz#ec6a7c1f35ce7dd823ed0162edfea926af11fa16"
-  integrity sha512-0Z8jPotNUyHxMTTG6Goi4M001Q51kWUlYYyjh/9P4sMUrbh8ozBiDZa3NVAMXUwotRie9sYkAardWi7YkL2WXw==
+"@ngrx/store@11.0.0":
+  version "11.0.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/store/-/store-11.0.0.tgz#5978d19b38c6416766f9961697a75d3d4b6a5849"
+  integrity sha512-LWuOb/QyIDW0v8QodPOPuzDx1IZRI0beDHVinvQMoP8dyQcDkDdbEypAkivfs4A1SHbWMpiKBGp9WsZ4l7ADfw==
   dependencies:
     tslib "^2.0.0"
 
@@ -5724,6 +5731,14 @@ argparse@^1.0.7:
   dependencies:
     sprintf-js "~1.0.2"
 
+argparse@~0.1.15:
+  version "0.1.16"
+  resolved "https://registry.yarnpkg.com/argparse/-/argparse-0.1.16.tgz#cfd01e0fbba3d6caed049fbd758d40f65196f57c"
+  integrity sha1-z9AeD7uj1srtBJ+9dY1A9lGW9Xw=
+  dependencies:
+    underscore "~1.7.0"
+    underscore.string "~2.4.0"
+
 aria-query@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/aria-query/-/aria-query-3.0.0.tgz#65b3fcc1ca1155a8c9ae64d6eee297f15d5133cc"
@@ -5982,6 +5997,11 @@ atob@^2.1.2:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/atob/-/atob-2.1.2.tgz#6d9517eb9e030d2436666651e86bd9f6f13533c9"
   integrity sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==
+
+autolinker@~0.15.0:
+  version "0.15.3"
+  resolved "https://registry.yarnpkg.com/autolinker/-/autolinker-0.15.3.tgz#342417d8f2f3461b14cf09088d5edf8791dc9832"
+  integrity sha1-NCQX2PLzRhsUzwkIjV7fh5HcmDI=
 
 autoprefixer@9.7.4:
   version "9.7.4"
@@ -17573,6 +17593,13 @@ parse-json@^5.0.0:
     json-parse-better-errors "^1.0.1"
     lines-and-columns "^1.1.6"
 
+parse-markdown-links@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/parse-markdown-links/-/parse-markdown-links-1.0.4.tgz#43172c8099824e87f327ab3e8a1dddc60b35817f"
+  integrity sha512-/gAfJ4wi6taa0Ayu2S9JXzbzUd2+OWzxlkEs3J00MC24IH2rMriTxMa5unO8a4Ei45nMM2QuAKGpVgX05Aur4w==
+  dependencies:
+    remarkable "1.7.1"
+
 parse-node-version@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/parse-node-version/-/parse-node-version-1.0.1.tgz#e2b5dbede00e7fa9bc363607f53327e8b073189b"
@@ -19613,6 +19640,14 @@ release-it@^7.4.0:
     uuid "3.3.2"
     window-size "1.1.1"
     yargs-parser "11.0.0"
+
+remarkable@1.7.1:
+  version "1.7.1"
+  resolved "https://registry.yarnpkg.com/remarkable/-/remarkable-1.7.1.tgz#aaca4972100b66a642a63a1021ca4bac1be3bff6"
+  integrity sha1-qspJchALZqZCpjoQIcpLrBvjv/Y=
+  dependencies:
+    argparse "~0.1.15"
+    autolinker "~0.15.0"
 
 remove-trailing-separator@^1.0.1:
   version "1.1.0"
@@ -22423,6 +22458,16 @@ ultron@~1.1.0:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/ultron/-/ultron-1.1.1.tgz#9fe1536a10a664a65266a1e3ccf85fd36302bc9c"
   integrity sha512-UIEXBNeYmKptWH6z8ZnqTeS8fV74zG0/eRU9VGkpzz+LIJNs8W/zM/L+7ctCkRrgbNnnR0xxw4bKOr0cW0N0Og==
+
+underscore.string@~2.4.0:
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/underscore.string/-/underscore.string-2.4.0.tgz#8cdd8fbac4e2d2ea1e7e2e8097c42f442280f85b"
+  integrity sha1-jN2PusTi0uoefi6Al8QvRCKA+Fs=
+
+underscore@~1.7.0:
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.7.0.tgz#6bbaf0877500d36be34ecaa584e0db9fef035209"
+  integrity sha1-a7rwh3UA02vjTsqlhODbn+8DUgk=
 
 unfetch@^4.1.0:
   version "4.1.0"

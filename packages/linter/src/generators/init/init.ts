@@ -1,5 +1,6 @@
 import {
   addDependenciesToPackageJson,
+  GeneratorCallback,
   Tree,
   updateJson,
   writeJson,
@@ -144,9 +145,9 @@ const globalEsLintConfiguration = {
   ],
 };
 
-function initTsLint(tree: Tree) {
+function initTsLint(tree: Tree): GeneratorCallback {
   if (tree.exists('/tslint.json')) {
-    return;
+    return () => {};
   }
   writeJson(tree, 'tslint.json', globalTsLintConfiguration);
 
@@ -161,9 +162,9 @@ function initTsLint(tree: Tree) {
   );
 }
 
-function initEsLint(tree: Tree) {
+function initEsLint(tree: Tree): GeneratorCallback {
   if (tree.exists('/.eslintrc.json')) {
-    return;
+    return () => {};
   }
 
   updateJson(tree, 'package.json', (json) => {

@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
   "id": "redux",
   "type": "object",
   "properties": {

@@ -2,6 +2,7 @@ import { addStyleDependencies } from '../../utils/styles';
 import type { SupportedStyles } from '@nrwl/react';
 import { componentGenerator as reactComponentGenerator } from '@nrwl/react';
 import { convertNxGenerator, Tree } from '@nrwl/devkit';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 interface Schema {
   name: string;
@@ -16,7 +17,7 @@ interface Schema {
  * extra dependencies for css, sass, less, styl style options.
  */
 export async function componentGenerator(host: Tree, options: Schema) {
-  await reactComponentGenerator(host, {
+  const componentInstall = await reactComponentGenerator(host, {
     ...options,
     directory: options.directory || 'components',
     pascalCaseFiles: false,
@@ -25,7 +26,9 @@ export async function componentGenerator(host: Tree, options: Schema) {
     routing: false,
   });
 
-  addStyleDependencies(host, options.style);
+  const styledInstall = addStyleDependencies(host, options.style);
+
+  return runTasksInSerial(styledInstall, componentInstall);
 }
 
 export default componentGenerator;

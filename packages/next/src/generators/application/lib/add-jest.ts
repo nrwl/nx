@@ -4,10 +4,10 @@ import { NormalizedSchema } from './normalize-options';
 
 export async function addJest(host: Tree, options: NormalizedSchema) {
   if (options.unitTestRunner !== 'jest') {
-    return;
+    return () => {};
   }
 
-  await jestProjectGenerator(host, {
+  const jestTask = await jestProjectGenerator(host, {
     project: options.projectName,
     supportTsx: true,
     skipSerializers: true,
@@ -19,4 +19,6 @@ export async function addJest(host: Tree, options: NormalizedSchema) {
     json.compilerOptions.jsx = 'react';
     return json;
   });
+
+  return jestTask;
 }

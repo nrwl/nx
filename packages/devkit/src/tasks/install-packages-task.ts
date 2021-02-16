@@ -32,6 +32,7 @@ export function installPackagesTask(
       .find((f) => f.path === joinPathFragments(cwd, 'package.json')) ||
     alwaysRun
   ) {
+    // Don't install again if install was already executed with package.json
     if (storedPackageJsonValue != packageJsonValue || alwaysRun) {
       storedPackageJsonValue = host
         .read(joinPathFragments(cwd, 'package.json'))

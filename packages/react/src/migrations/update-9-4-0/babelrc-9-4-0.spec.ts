@@ -2,7 +2,7 @@ import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import * as path from 'path';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { createApp, createLib, createWebApp } from '../../utils/testing';
+import { createApp, createLib, createWebApp } from '../utils/testing';
 
 describe('Migrate babel setup', () => {
   let tree: Tree;

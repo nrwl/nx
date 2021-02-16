@@ -38,6 +38,7 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import init from '../init/init';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { jestProjectGenerator } from '@nrwl/jest';
@@ -55,7 +56,7 @@ export interface NormalizedSchema extends Schema {
 }
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
-  let installTask: GeneratorCallback;
+  const tasks: GeneratorCallback[] = [];
 
   const options = normalizeOptions(host, schema);
   if (options.publishable === true && !schema.importPath) {
@@ -67,14 +68,18 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
     options.style = 'none';
   }
 
-  installTask = await init(host, {
+  const initTask = await init(host, {
     ...options,
     e2eTestRunner: 'none',
     skipFormat: true,
   });
+  tasks.push(initTask);
 
   addProject(host, options);
-  await addLinting(host, options);
+
+  const lintTask = await addLinting(host, options);
+  tasks.push(lintTask);
+
   createFiles(host, options);
 
   if (!options.skipTsConfig) {
@@ -82,13 +87,15 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
   }
 
   if (options.unitTestRunner === 'jest') {
-    await jestProjectGenerator(host, {
+    const jestTask = await jestProjectGenerator(host, {
       project: options.name,
       setupFile: 'none',
       supportTsx: true,
       skipSerializers: true,
       babelJest: true,
     });
+    tasks.push(jestTask);
+
     updateBabelJestConfig(host, options.projectRoot, (json) => {
       if (options.style === 'styled-jsx') {
         json.plugins = (json.plugins || []).concat('styled-jsx/babel');
@@ -98,7 +105,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
   }
 
   if (options.component) {
-    await componentGenerator(host, {
+    const componentTask = await componentGenerator(host, {
       name: options.name,
       project: options.name,
       flat: true,
@@ -109,13 +116,14 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       js: options.js,
       pascalCaseFiles: options.pascalCaseFiles,
     });
+    tasks.push(componentTask);
   }
 
   if (options.publishable || options.buildable) {
     updateLibPackageNpmScope(host, options);
   }
 
-  await addDependenciesToPackageJson(
+  const installTask = await addDependenciesToPackageJson(
     host,
     {
       react: reactVersion,
@@ -123,19 +131,20 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
     },
     {}
   );
+  tasks.push(installTask);
 
-  updateAppRoutes(host, options);
+  const routeTask = updateAppRoutes(host, options);
+  tasks.push(routeTask);
 
   if (!options.skipFormat) {
     await formatFiles(host);
   }
 
-  return installTask;
+  return runTasksInSerial(...tasks);
 }
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
-  let installTask: GeneratorCallback;
-  installTask = await lintProjectGenerator(host, {
+  const lintTask = await lintProjectGenerator(host, {
     linter: options.linter,
     project: options.name,
     tsConfigPaths: [
@@ -157,13 +166,13 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     () => reactEslintJson
   );
 
-  installTask = await addDependenciesToPackageJson(
+  const installTask = await addDependenciesToPackageJson(
     host,
     extraEslintDependencies.dependencies,
     extraEslintDependencies.devDependencies
   );
 
-  return installTask;
+  return runTasksInSerial(lintTask, installTask);
 }
 
 function addProject(host: Tree, options: NormalizedSchema) {
@@ -262,7 +271,7 @@ function createFiles(host: Tree, options: NormalizedSchema) {
 
 function updateAppRoutes(host: Tree, options: NormalizedSchema) {
   if (!options.appMain || !options.appSourceRoot) {
-    return;
+    return () => {};
   }
 
   const { content, source } = readComponent(host, options.appMain);
@@ -280,7 +289,7 @@ function updateAppRoutes(host: Tree, options: NormalizedSchema) {
     maybeJs(options, `${componentImportPath}.tsx`)
   );
 
-  addDependenciesToPackageJson(
+  const routerTask = addDependenciesToPackageJson(
     host,
     { 'react-router-dom': reactRouterDomVersion },
     { '@types/react-router-dom': typesReactRouterDomVersion }
@@ -329,6 +338,8 @@ function updateAppRoutes(host: Tree, options: NormalizedSchema) {
     );
     host.write(appComponentPath, changes);
   }
+
+  return routerTask;
 }
 
 function readComponent(

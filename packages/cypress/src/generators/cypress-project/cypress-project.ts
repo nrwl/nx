@@ -13,6 +13,7 @@ import {
   updateJson,
 } from '@nrwl/devkit';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 import { join } from 'path';
 // app
@@ -121,7 +122,7 @@ async function addLinter(host: Tree, options: CypressProjectSchema) {
     return json;
   });
 
-  return installTask || installTask2;
+  return runTasksInSerial(installTask, installTask2);
 }
 
 export async function cypressProjectGenerator(host: Tree, schema: Schema) {

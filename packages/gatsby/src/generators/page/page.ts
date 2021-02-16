@@ -5,6 +5,7 @@ import {
 import { convertNxGenerator, Tree } from '@nrwl/devkit';
 
 import { addStyleDependencies } from '../../utils/styles';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 interface Schema {
   name: string;
@@ -20,7 +21,7 @@ interface Schema {
  * it is under `pages` folder.
  */
 export async function pageGenerator(host: Tree, options: Schema) {
-  let installTask = await reactComponentGenerator(host, {
+  const componentTask = await reactComponentGenerator(host, {
     ...options,
     directory: options.directory || 'pages',
     pascalCaseFiles: false,
@@ -30,9 +31,9 @@ export async function pageGenerator(host: Tree, options: Schema) {
     flat: true,
   });
 
-  installTask = addStyleDependencies(host, options.style) || installTask;
+  const styledTask = addStyleDependencies(host, options.style);
 
-  return installTask;
+  return runTasksInSerial(componentTask, styledTask);
 }
 
 export default pageGenerator;

@@ -105,6 +105,14 @@ export class FsTree implements Tree {
 
   write(filePath: string, content: Buffer | string): void {
     filePath = this.normalize(filePath);
+    if (
+      this.fsExists(this.rp(filePath)) &&
+      Buffer.from(content).equals(this.fsReadFile(filePath))
+    ) {
+      // Remove recorded change because the file has been restored to it's original contents
+      delete this.recordedChanges[this.rp(filePath)];
+      return;
+    }
     try {
       this.recordedChanges[this.rp(filePath)] = {
         content: Buffer.from(content),

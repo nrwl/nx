@@ -2,12 +2,13 @@ import {
   addDependenciesToPackageJson,
   convertNxGenerator,
   GeneratorCallback,
-  setDefaultCollection,
   Tree,
+  updateJson,
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
 import { cypressInitGenerator } from '@nrwl/cypress';
 import { reactDomVersion, reactInitGenerator, reactVersion } from '@nrwl/react';
+import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
 
 import {
   babelPluginModuleResolverVersion,
@@ -30,8 +31,16 @@ import {
 } from '../../utils/versions';
 
 import { InitSchema } from './schema';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 function updateDependencies(host: Tree) {
+  updateJson(host, 'package.json', (json) => {
+    if (json.dependencies && json.dependencies['@nrwl/gatsby']) {
+      delete json.dependencies['@nrwl/gatsby'];
+    }
+    return json;
+  });
+
   const isPnpm = host.exists('pnpm-lock.yaml');
   return addDependenciesToPackageJson(
     host,
@@ -53,7 +62,7 @@ function updateDependencies(host: Tree) {
       ...(isPnpm ? { 'gatsby-plugin-pnpm': gatsbyPluginPnpm } : {}),
     },
     {
-      '@nrwl/react': nxVersion,
+      '@nrwl/gatsby': nxVersion,
       '@testing-library/react': testingLibraryReactVersion,
       'babel-plugin-module-resolver': babelPluginModuleResolverVersion,
       'babel-preset-gatsby': babelPresetGatsbyVersion,
@@ -62,22 +71,25 @@ function updateDependencies(host: Tree) {
 }
 
 export async function gatsbyInitGenerator(host: Tree, schema: InitSchema) {
-  let installTask: GeneratorCallback;
-
+  const tasks: GeneratorCallback[] = [];
   setDefaultCollection(host, '@nrwl/gatsby');
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    installTask = jestInitGenerator(host, {});
+    const jestTask = jestInitGenerator(host, {});
+    tasks.push(jestTask);
   }
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
-    installTask = cypressInitGenerator(host) || installTask;
+    const cypressTask = cypressInitGenerator(host);
+    tasks.push(cypressTask);
   }
 
-  installTask = (await reactInitGenerator(host, schema)) || installTask;
+  const reactTask = await reactInitGenerator(host, schema);
+  tasks.push(reactTask);
 
-  installTask = updateDependencies(host) || installTask;
+  const installTask = updateDependencies(host);
+  tasks.push(installTask);
 
-  return installTask;
+  return runTasksInSerial(...tasks);
 }
 
 export default gatsbyInitGenerator;

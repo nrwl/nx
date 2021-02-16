@@ -4,6 +4,7 @@ import {
   GeneratorCallback,
   Tree,
 } from '@nrwl/devkit';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 import { gatsbyInitGenerator } from '../init/init';
 import { Schema } from './schema';
@@ -22,22 +23,29 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   let installTask: GeneratorCallback;
   const options = normalizeOptions(schema);
 
-  installTask = await gatsbyInitGenerator(host, {
+  const initTask = await gatsbyInitGenerator(host, {
     ...options,
     skipFormat: true,
   });
 
   createApplicationFiles(host, options);
-  installTask = addStyleDependencies(host, options.style) || installTask;
-  addProject(host, options), await addLinting(host, options);
-  installTask = (await addCypress(host, options)) || installTask;
-  installTask = (await addJest(host, options)) || installTask;
+  addProject(host, options);
+  const styledTask = addStyleDependencies(host, options.style);
+  const lintTask = await addLinting(host, options);
+  const cypressTask = await addCypress(host, options);
+  const jestTask = await addJest(host, options);
   updateJestConfig(host, options);
   addPrettierIgnoreEntry(host, options);
   addGitIgnoreEntry(host, options);
   await formatFiles(host);
 
-  return installTask;
+  return runTasksInSerial(
+    initTask,
+    styledTask,
+    lintTask,
+    cypressTask,
+    jestTask
+  );
 }
 
 export default applicationGenerator;

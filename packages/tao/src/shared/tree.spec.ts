@@ -59,6 +59,19 @@ describe('tree', () => {
       ).toEqual('new content');
     });
 
+    it('should not record a change if writing the file with no changes to the content', () => {
+      tree.write('root-file.txt', 'root content');
+
+      expect(tree.listChanges().length).toEqual(0);
+    });
+
+    it('should not record a change if writing a file with changes then reverting it back to existing content', () => {
+      tree.write('root-file.txt', 'changed content');
+      tree.write('root-file.txt', 'root content');
+
+      expect(tree.listChanges()).toEqual([]);
+    });
+
     it('should be able to create files', () => {
       tree.write('parent/new-parent-file.txt', 'new parent content');
       tree.write('parent/new-child/new-child-file.txt', 'new child content');

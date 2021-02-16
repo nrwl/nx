@@ -3,13 +3,12 @@ import {
   convertNxGenerator,
   formatFiles,
   GeneratorCallback,
-  readWorkspaceConfiguration,
   Tree,
   updateJson,
-  updateWorkspaceConfiguration,
   writeJson,
-  setDefaultCollection,
 } from '@nrwl/devkit';
+import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { Schema } from './schema';
 import {
   documentRegisterElementVersion,
@@ -49,21 +48,24 @@ function initRootBabelConfig(tree: Tree) {
 }
 
 export async function webInitGenerator(tree: Tree, schema: Schema) {
-  let installTask: GeneratorCallback;
+  let tasks: GeneratorCallback[] = [];
 
   setDefaultCollection(tree, '@nrwl/web');
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    installTask = jestInitGenerator(tree, {});
+    const jestTask = jestInitGenerator(tree, {});
+    tasks.push(jestTask);
   }
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
-    installTask = cypressInitGenerator(tree) || installTask;
+    const cypressTask = cypressInitGenerator(tree);
+    tasks.push(cypressTask);
   }
-  installTask = updateDependencies(tree) || installTask;
+  const installTask = updateDependencies(tree);
+  tasks.push(installTask);
   initRootBabelConfig(tree);
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }
-  return installTask;
+  return runTasksInSerial(...tasks);
 }
 
 export default webInitGenerator;

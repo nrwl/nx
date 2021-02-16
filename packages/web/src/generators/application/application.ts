@@ -3,6 +3,7 @@ import {
   convertNxGenerator,
   formatFiles,
   generateFiles,
+  GeneratorCallback,
   getWorkspaceLayout,
   joinPathFragments,
   names,
@@ -14,6 +15,7 @@ import {
   Tree,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 import { join } from 'path';
 
@@ -180,15 +182,18 @@ function setDefaults(tree: Tree, options: NormalizedSchema) {
 export async function applicationGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
 
-  let installTask = await webInitGenerator(host, {
+  const tasks: GeneratorCallback[] = [];
+
+  const webTask = await webInitGenerator(host, {
     ...options,
     skipFormat: true,
   });
+  tasks.push(webTask);
 
   createApplicationFiles(host, options);
   addProject(host, options);
 
-  const lintInstallTask = await lintProjectGenerator(host, {
+  const lintTask = await lintProjectGenerator(host, {
     linter: options.linter,
     project: options.projectName,
     tsConfigPaths: [
@@ -197,25 +202,25 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     eslintFilePatterns: [`${options.appProjectRoot}/**/*.ts`],
     skipFormat: true,
   });
-  installTask = lintInstallTask || installTask;
+  tasks.push(lintTask);
 
   if (options.e2eTestRunner === 'cypress') {
-    const cypressInstallTask = await cypressProjectGenerator(host, {
+    const cypressTask = await cypressProjectGenerator(host, {
       ...options,
       name: options.name + '-e2e',
       directory: options.directory,
       project: options.projectName,
     });
-    installTask = cypressInstallTask || installTask;
+    tasks.push(cypressTask);
   }
   if (options.unitTestRunner === 'jest') {
-    const jestInstallTask = await jestProjectGenerator(host, {
+    const jestTask = await jestProjectGenerator(host, {
       project: options.projectName,
       skipSerializers: true,
       setupFile: 'web-components',
       babelJest: options.babelJest,
     });
-    installTask = jestInstallTask || installTask;
+    tasks.push(jestTask);
   }
 
   setDefaults(host, options);
@@ -223,7 +228,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   if (!schema.skipFormat) {
     await formatFiles(host);
   }
-  return installTask;
+  return runTasksInSerial(...tasks);
 }
 
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {

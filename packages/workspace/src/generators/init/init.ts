@@ -649,7 +649,6 @@ export async function initGenerator(tree: Tree, schema: Schema) {
     addDependenciesToPackageJson(tree, {}, { '@nrwl/workspace': nxVersion });
     createNxJson(tree);
     decorateAngularClI(tree);
-    return;
   } else {
     const options = {
       ...schema,
@@ -668,11 +667,11 @@ export async function initGenerator(tree: Tree, schema: Schema) {
     updateTsConfigsJson(tree, options);
     decorateAngularClI(tree);
     await formatFiles(tree);
-    if (!options.skipInstall) {
-      return () => {
-        installPackagesTask(tree);
-      };
-    }
+  }
+  if (!schema.skipInstall) {
+    return () => {
+      installPackagesTask(tree);
+    };
   }
 }
 

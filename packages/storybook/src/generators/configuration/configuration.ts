@@ -2,6 +2,7 @@ import {
   convertNxGenerator,
   formatFiles,
   generateFiles,
+  GeneratorCallback,
   joinPathFragments,
   logger,
   offsetFromRoot,
@@ -13,6 +14,7 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nrwl/devkit';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 import { Linter } from '@nrwl/linter';
 import { join } from 'path';
@@ -29,12 +31,17 @@ export async function configurationGenerator(
 ) {
   const schema = normalizeSchema(rawSchema);
 
+  const tasks: GeneratorCallback[] = [];
+
   const workspaceStorybookVersion = readCurrentWorkspaceStorybookVersion(tree);
 
   const { projectType } = readProjectConfiguration(tree, schema.name);
-  let installTask = await initGenerator(tree, {
+
+  const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
   });
+  tasks.push(initTask);
+
   createRootStorybookDir(
     tree,
     schema.name,
@@ -53,19 +60,19 @@ export async function configurationGenerator(
   updateLintConfig(tree, schema);
   addStorybookTask(tree, schema.name, schema.uiFramework);
   if (schema.configureCypress && projectType !== 'application') {
-    const cypressInstallTask = await cypressProjectGenerator(tree, {
+    const cypressTask = await cypressProjectGenerator(tree, {
       name: schema.name,
       js: schema.js,
       linter: schema.linter,
     });
-    installTask = cypressInstallTask || installTask;
+    tasks.push(cypressTask);
   } else {
     logger.warn('There is already an e2e project setup');
   }
 
   await formatFiles(tree);
 
-  return installTask;
+  return runTasksInSerial(...tasks);
 }
 
 function normalizeSchema(schema: StorybookConfigureSchema) {

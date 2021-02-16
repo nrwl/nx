@@ -1,5 +1,6 @@
 import { assertValidStyle } from '@nrwl/react';
 import { getWorkspaceLayout, names, Tree } from '@nrwl/devkit';
+import { Linter } from '@nrwl/linter';
 
 import { Schema } from '../schema';
 
@@ -46,6 +47,7 @@ export function normalizeOptions(
     ...options,
     name: names(options.name).fileName,
     projectName: appProjectName,
+    linter: options.linter || Linter.EsLint,
     unitTestRunner: options.unitTestRunner || 'jest',
     e2eTestRunner: options.e2eTestRunner || 'cypress',
     style: options.style || 'css',

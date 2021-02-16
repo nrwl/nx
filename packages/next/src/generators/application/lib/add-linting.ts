@@ -1,19 +1,21 @@
-import { Tree } from '@nrwl/tao/src/shared/tree';
-import { GeneratorCallback } from '@nrwl/tao/src/shared/workspace';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import {
+  Tree,
+  GeneratorCallback,
   addDependenciesToPackageJson,
   joinPathFragments,
   updateJson,
 } from '@nrwl/devkit';
 import { extraEslintDependencies, createReactEslintJson } from '@nrwl/react';
 import { NormalizedSchema } from './normalize-options';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
-export async function addLinting(host: Tree, options: NormalizedSchema) {
-  let installTask: GeneratorCallback;
-
-  await lintProjectGenerator(host, {
-    linter: Linter.EsLint,
+export async function addLinting(
+  host: Tree,
+  options: NormalizedSchema
+): Promise<GeneratorCallback> {
+  const lintTask = await lintProjectGenerator(host, {
+    linter: options.linter,
     project: options.projectName,
     tsConfigPaths: [
       joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
@@ -22,19 +24,20 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     skipFormat: true,
   });
 
-  const reactEslintJson = createReactEslintJson(options.appProjectRoot);
+  if (options.linter === Linter.EsLint) {
+    const reactEslintJson = createReactEslintJson(options.appProjectRoot);
+    updateJson(
+      host,
+      joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
+      () => reactEslintJson
+    );
+  }
 
-  updateJson(
-    host,
-    joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
-    () => reactEslintJson
-  );
-
-  installTask = await addDependenciesToPackageJson(
+  const installTask = addDependenciesToPackageJson(
     host,
     extraEslintDependencies.dependencies,
     extraEslintDependencies.devDependencies
   );
 
-  return installTask;
+  return runTasksInSerial(lintTask, installTask);
 }

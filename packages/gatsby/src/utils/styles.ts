@@ -54,7 +54,7 @@ export function addStyleDependencies(host: Tree, style: string) {
 
   const extraDependencies = GATSBY_SPECIFIC_STYLE_DEPENDENCIES[style];
 
-  if (!extraDependencies) return;
+  if (!extraDependencies) return () => {};
 
   installTask = addDependenciesToPackageJson(
     host,
@@ -64,10 +64,7 @@ export function addStyleDependencies(host: Tree, style: string) {
 
   // @zeit/next-less & @zeit/next-stylus internal configuration is working only
   // for specific CSS loader version, causing PNPM resolution to fail.
-  if (
-    detectPackageManager() === 'pnpm' &&
-    (style === 'less' || style === 'styl')
-  ) {
+  if (host.exists('pnpm-lock.yaml') && (style === 'less' || style === 'styl')) {
     updateJson(host, `package.json`, (json) => {
       json.resolutions = { ...json.resolutions, 'css-loader': '1.0.1' };
       return json;

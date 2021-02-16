@@ -56,6 +56,8 @@ describe('create-nx-workspace', () => {
       style: 'css',
       appName,
     });
+
+    expectNoAngularDevkit();
   });
 
   it('should be able to create an next workspace', () => {
@@ -76,6 +78,8 @@ describe('create-nx-workspace', () => {
       style: 'css',
       appName,
     });
+
+    expectNoAngularDevkit();
   });
 
   it('should be able to create an angular + nest workspace', () => {

@@ -29,11 +29,13 @@ export async function reduxGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
   generateReduxFiles(host, options);
   addExportsToBarrel(host, options);
-  addReduxPackageDependencies(host);
+  const installTask = addReduxPackageDependencies(host);
   addStoreConfiguration(host, options);
   updateReducerConfiguration(host, options);
 
   await formatFiles(host);
+
+  return installTask;
 }
 
 function generateReduxFiles(host: Tree, options: NormalizedSchema) {
@@ -53,7 +55,7 @@ function generateReduxFiles(host: Tree, options: NormalizedSchema) {
 }
 
 function addReduxPackageDependencies(host: Tree) {
-  addDependenciesToPackageJson(
+  return addDependenciesToPackageJson(
     host,
     {
       '@reduxjs/toolkit': reduxjsToolkitVersion,
