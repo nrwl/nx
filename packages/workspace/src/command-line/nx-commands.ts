@@ -14,6 +14,7 @@ import { runMany } from './run-many';
 import { writeFileSync } from 'fs';
 import { dirSync } from 'tmp';
 import * as path from 'path';
+import { removeSync } from 'fs-extra';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
@@ -189,6 +190,8 @@ export const commandsObject = yargs
         execSync(`${p} migrate ${process.argv.slice(3).join(' ')}`, {
           stdio: ['inherit', 'inherit', 'inherit'],
         });
+        // Clean up
+        removeSync(path.resolve(p, '../../..'));
       } else {
         const pmc = getPackageManagerCommand();
         execSync(`${pmc.exec} tao migrate ${process.argv.slice(3).join(' ')}`, {
@@ -446,5 +449,24 @@ function taoPath() {
     stdio: ['ignore', 'ignore', 'ignore'],
   });
 
+  // Set NODE_PATH so that these modules can be used for module resolution
+  addToNodePath(path.join(tmpDir, 'node_modules'));
+
   return path.join(tmpDir, `node_modules`, '.bin', 'tao');
+}
+
+function addToNodePath(dir: string) {
+  // NODE_PATH is a delimited list of paths.
+  // The delimiter is different for windows.
+  const delimiter = require('os').platform === 'win32' ? ';' : ':';
+
+  const paths = process.env.NODE_PATH
+    ? process.env.NODE_PATH.split(delimiter)
+    : [];
+
+  // Add the tmp path
+  paths.push(dir);
+
+  // Update the env variable.
+  process.env.NODE_PATH = paths.join(delimiter);
 }
