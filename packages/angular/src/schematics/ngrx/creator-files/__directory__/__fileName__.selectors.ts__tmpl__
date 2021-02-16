@@ -2,7 +2,7 @@ import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { <%= constantName %>_FEATURE_KEY, State, <%= className %>PartialState, <%= propertyName %>Adapter } from './<%= fileName %>.reducer';
 
 // Lookup the '<%= className %>' feature state managed by NgRx
-export const get<%= className %>State = createFeatureSelector<<%= className %>PartialState, State>(<%= propertyName.toUpperCase() %>_FEATURE_KEY);
+export const get<%= className %>State = createFeatureSelector<<%= className %>PartialState, State>(<%= constantName %>_FEATURE_KEY);
 
 const { selectAll, selectEntities } = <%= propertyName %>Adapter.getSelectors();
 
