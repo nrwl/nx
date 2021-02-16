@@ -8,6 +8,7 @@ import {
   joinPathFragments,
   ProjectType,
   Tree,
+  visitNotIgnoredFiles,
 } from '@nrwl/devkit';
 import { join } from 'path';
 
@@ -66,19 +67,13 @@ export async function createAllStories(
   const libPath = projectRootPath(tree, sourceRoot, projectType);
 
   let componentPaths: string[] = [];
-  tree.listChanges().forEach((fileChange) => {
-    const filePath = fileChange.path;
-
-    if (!filePath.startsWith(libPath) || fileChange.type === 'DELETE') {
-      return;
-    }
-
+  visitNotIgnoredFiles(tree, libPath, (path) => {
     if (
-      (filePath.endsWith('.tsx') && !filePath.endsWith('.spec.tsx')) ||
-      (filePath.endsWith('.js') && !filePath.endsWith('.spec.js')) ||
-      (filePath.endsWith('.jsx') && !filePath.endsWith('.spec.jsx'))
+      (path.endsWith('.tsx') && !path.endsWith('.spec.tsx')) ||
+      (path.endsWith('.js') && !path.endsWith('.spec.js')) ||
+      (path.endsWith('.jsx') && !path.endsWith('.spec.jsx'))
     ) {
-      componentPaths.push(filePath);
+      componentPaths.push(path);
     }
   });
 
