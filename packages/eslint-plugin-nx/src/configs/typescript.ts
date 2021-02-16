@@ -11,11 +11,7 @@
  * tsx configuration in a follow up PR which handles overrides.
  */
 export default {
-  /**
-   * Apply our thin wrapper around @typescript-eslint/parser
-   * NOTE: For the relative path to work it needs to be relative to eslint-plugin-nx/src/index.js
-   */
-  parser: './parser.js',
+  parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 2020,
     sourceType: 'module',

@@ -47,8 +47,8 @@ function createEsLintConfiguration(
         parserOptions: {
           /**
            * In order to ensure maximum efficiency when typescript-eslint generates TypeScript Programs
-           * behind scenes during lint runs, we need to make sure the project is configured to use its
-           * own specific tsconfigs, and not fallback to the ones in the root of the workspace.
+           * behind the scenes during lint runs, we need to make sure the project is configured to use its
+           * own specific tsconfigs, and not fall back to the ones in the root of the workspace.
            */
           project: [`${projectConfig.root}/tsconfig.*?.json`],
         },
