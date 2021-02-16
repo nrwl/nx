@@ -15,6 +15,10 @@
  * related plugins and rules below.
  */
 export default {
+  env: {
+    browser: true,
+    node: true,
+  },
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 2020,
