@@ -294,27 +294,29 @@ function updateTsConfigsJson(host: Tree, options: Schema) {
 }
 
 function updateTsLint(host: Tree) {
-  updateJson(host, 'tslint.json', (tslintJson) => {
-    [
-      'no-trailing-whitespace',
-      'one-line',
-      'quotemark',
-      'typedef-whitespace',
-      'whitespace',
-    ].forEach((key) => {
-      tslintJson[key] = undefined;
+  if (host.exists(`tslint.json`)) {
+    updateJson(host, 'tslint.json', (tslintJson) => {
+      [
+        'no-trailing-whitespace',
+        'one-line',
+        'quotemark',
+        'typedef-whitespace',
+        'whitespace',
+      ].forEach((key) => {
+        tslintJson[key] = undefined;
+      });
+      tslintJson.rulesDirectory = tslintJson.rulesDirectory || [];
+      tslintJson.rulesDirectory.push('node_modules/@nrwl/workspace/src/tslint');
+      tslintJson.rules['nx-enforce-module-boundaries'] = [
+        true,
+        {
+          allow: [],
+          depConstraints: [{ sourceTag: '*', onlyDependOnLibsWithTags: ['*'] }],
+        },
+      ];
+      return tslintJson;
     });
-    tslintJson.rulesDirectory = tslintJson.rulesDirectory || [];
-    tslintJson.rulesDirectory.push('node_modules/@nrwl/workspace/src/tslint');
-    tslintJson.rules['nx-enforce-module-boundaries'] = [
-      true,
-      {
-        allow: [],
-        depConstraints: [{ sourceTag: '*', onlyDependOnLibsWithTags: ['*'] }],
-      },
-    ];
-    return tslintJson;
-  });
+  }
 }
 
 function updateProjectTsLint(host: Tree, options: Schema) {
