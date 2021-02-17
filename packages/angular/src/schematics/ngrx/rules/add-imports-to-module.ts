@@ -33,7 +33,7 @@ export function addImportsToModule(context: RequestContext): Rule {
     const effectsPath = `${pathPrefix}.effects`;
     const facadePath = `${pathPrefix}.facade`;
 
-    const featureName = `${names(context.featureName).propertyName}`;
+    const constantName = `${names(context.featureName).constantName}`;
     const effectsName = `${names(context.featureName).className}Effects`;
     const facadeName = `${names(context.featureName).className}Facade`;
     const className = `${names(context.featureName).className}`;
@@ -53,7 +53,7 @@ export function addImportsToModule(context: RequestContext): Rule {
     const nxModule = 'NxModule.forRoot()';
     const effectsForRoot = `EffectsModule.forRoot([${effectsName}])`;
     const effectsForEmptyRoot = `EffectsModule.forRoot([])`;
-    const storeForFeature = `StoreModule.forFeature(from${className}.${featureName.toUpperCase()}_FEATURE_KEY, from${className}.reducer)`;
+    const storeForFeature = `StoreModule.forFeature(from${className}.${constantName}_FEATURE_KEY, from${className}.reducer)`;
     const effectsForFeature = `EffectsModule.forFeature([${effectsName}])`;
     const devTools = `!environment.production ? StoreDevtoolsModule.instrument() : []`;
     const storeRouterModule = 'StoreRouterConnectingModule.forRoot()';
