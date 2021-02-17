@@ -14,7 +14,6 @@ import { runMany } from './run-many';
 import { writeFileSync } from 'fs';
 import { dirSync } from 'tmp';
 import * as path from 'path';
-import { removeSync } from 'fs-extra';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
@@ -190,8 +189,6 @@ export const commandsObject = yargs
         execSync(`${p} migrate ${process.argv.slice(3).join(' ')}`, {
           stdio: ['inherit', 'inherit', 'inherit'],
         });
-        // Clean up
-        removeSync(path.resolve(p, '../../..'));
       } else {
         const pmc = getPackageManagerCommand();
         execSync(`${pmc.exec} tao migrate ${process.argv.slice(3).join(' ')}`, {
