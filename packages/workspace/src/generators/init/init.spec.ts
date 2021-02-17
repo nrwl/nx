@@ -312,6 +312,13 @@ describe('workspace', () => {
       const prettierIgnore = tree.read('/.prettierignore').toString();
       expect(prettierIgnore).toBe('# existing ignore rules');
     });
+
+    it('should work with no root tslint.json', async () => {
+      tree.delete('/tslint.json');
+      await initGenerator(tree, { name: 'myApp' });
+
+      expect(tree.exists('/tslint.json')).toBe(false);
+    });
   });
 
   describe('preserve angular cli layout', () => {
