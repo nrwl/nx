@@ -33,5 +33,11 @@ export default {
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/no-parameter-properties': 'off',
+    /**
+     * Until ESM usage in Node matures, using require in e.g. JS config files
+     * is by far the more common thing to do, so disabling this to avoid users
+     * having to frequently use "eslint-disable-next-line" in their configs.
+     */
+    '@typescript-eslint/no-var-requires': 'off',
   },
 };
