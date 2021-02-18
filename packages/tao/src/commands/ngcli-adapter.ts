@@ -615,6 +615,7 @@ export function wrapAngularDevkitSchematic(
       log: (e) => {},
       info: (e) => {},
       warn: (e) => {},
+      debug: () => {},
       error: (e) => {},
       fatal: (e) => {},
     } as any;
