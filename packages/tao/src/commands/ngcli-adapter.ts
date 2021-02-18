@@ -282,7 +282,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
       .toPromise();
   }
 
-  private context(
+  protected context(
     path: string
   ): Observable<{
     isWorkspaceConfig: boolean;
@@ -372,15 +372,45 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
   }
 
   read(path: Path): Observable<FileBuffer> {
-    const targetPath = path.startsWith('/') ? path.substring(1) : path;
-    const r = this.host
-      .listChanges()
-      .find((f) => f.path == targetPath.toString() && f.type !== 'DELETE');
-    if (r) {
-      return of(Buffer.from(r.content));
-    } else {
-      return super.read(path);
-    }
+    return this.context(path).pipe(
+      switchMap((r) => {
+        // if it is a workspace config, handle it in a special way
+        if (r.isWorkspaceConfig) {
+          const match = this.host
+            .listChanges()
+            .find(
+              (f) => f.path == 'workspace.json' || f.path == 'angular.json'
+            );
+
+          // no match, default to existing behavior
+          if (!match) {
+            return super.read(path);
+          }
+
+          // we try to format it, if it changes, return it, otherwise return the original change
+          try {
+            const w = JSON.parse(Buffer.from(match.content).toString());
+            const formatted = toOldFormatOrNull(w);
+            return of(
+              formatted
+                ? Buffer.from(JSON.stringify(formatted, null, 2))
+                : Buffer.from(match.content)
+            );
+          } catch (e) {
+            return super.read(path);
+          }
+        } else {
+          const targetPath = path.startsWith('/') ? path.substring(1) : path;
+          // found a matching change in the host
+          const match = this.host
+            .listChanges()
+            .find(
+              (f) => f.path == targetPath.toString() && f.type !== 'DELETE'
+            );
+          return match ? of(Buffer.from(match.content)) : super.read(path);
+        }
+      })
+    );
   }
 }
 
@@ -546,6 +576,7 @@ export async function runMigration(
   }
 
   const { BaseWorkflow } = require('@angular-devkit/schematics/src/workflow');
+
   class MigrationsWorkflow extends BaseWorkflow {
     constructor(host: virtualFs.Host, logger: logging.Logger) {
       super({
