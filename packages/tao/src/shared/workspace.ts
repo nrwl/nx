@@ -324,6 +324,13 @@ export class Workspaces {
     const executorsFile = packageJson.executors
       ? packageJson.executors
       : packageJson.builders;
+
+    if (!executorsFile) {
+      throw new Error(
+        `The "${nodeModule}" package does not support Nx executors.`
+      );
+    }
+
     const executorsFilePath = require.resolve(
       path.join(path.dirname(packageJsonPath), executorsFile)
     );
@@ -361,6 +368,13 @@ export class Workspaces {
       const generatorsFile = packageJson.generators
         ? packageJson.generators
         : packageJson.schematics;
+
+      if (!generatorsFile) {
+        throw new Error(
+          `The "${collectionName}" package does not support Nx generators.`
+        );
+      }
+
       generatorsFilePath = require.resolve(
         path.join(path.dirname(packageJsonPath), generatorsFile)
       );
