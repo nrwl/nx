@@ -70,6 +70,12 @@ Type: `number`
 
 Number of warnings to trigger nonzero exit code - default: -1
 
+### noEslintrc
+
+Type: `string`
+
+The equivalent of the --no-eslintrc flag on the ESLint CLI, it is false by default
+
 ### outputFile
 
 Type: `string`
