@@ -48,7 +48,7 @@ function replaceSegmentsInPath(
   substitutions: { [k: string]: any }
 ) {
   Object.entries(substitutions).forEach(([t, r]) => {
-    filePath = filePath.replace(`__${t}__`, r);
+    filePath = filePath.split(`__${t}__`).join(r);
   });
   return filePath;
 }
