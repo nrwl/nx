@@ -52,4 +52,25 @@ describe('eslint-utils', () => {
       errorOnUnmatchedPattern: false,
     });
   });
+
+  describe('noEslintrc', () => {
+    it('should create the ESLint instance with "useEslintrc" set to false', async () => {
+      await lint(undefined, <any>{
+        fix: true,
+        cache: true,
+        cacheLocation: '/root/cache',
+        noEslintrc: true,
+      }).catch(() => {});
+
+      expect(ESLint).toHaveBeenCalledWith({
+        overrideConfigFile: undefined,
+        fix: true,
+        cache: true,
+        cacheLocation: '/root/cache',
+        ignorePath: undefined,
+        useEslintrc: false,
+        errorOnUnmatchedPattern: false,
+      });
+    });
+  });
 });
