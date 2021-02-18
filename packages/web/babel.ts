@@ -48,6 +48,7 @@ module.exports = function (api: any, options: NxReactBabelPresetOptions = {}) {
         require.resolve('@babel/plugin-proposal-class-properties'),
         options.classProperties ?? { loose: true },
       ],
+      require.resolve('babel-plugin-transform-typescript-metadata'),
     ],
     overrides: [
       // Convert `const enum` to `enum`. The former cannot be supported by babel
