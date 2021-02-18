@@ -18,7 +18,11 @@ export async function lint(
   const projectESLint: { ESLint: typeof ESLint } = await loadESLint();
 
   const eslint = new projectESLint.ESLint({
-    useEslintrc: true,
+    /**
+     * If "noEslintrc" is set to `true` (and therefore here "useEslintrc" will be `false`), then ESLint will not
+     * merge the provided config with others it finds automatically.
+     */
+    useEslintrc: !options.noEslintrc,
     overrideConfigFile: eslintConfigPath,
     ignorePath: options.ignorePath || undefined,
     fix: !!options.fix,
