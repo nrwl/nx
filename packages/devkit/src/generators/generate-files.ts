@@ -35,22 +35,34 @@ export function generateFiles(
   target: string,
   substitutions: { [k: string]: any }
 ) {
-  allFilesInDir(srcFolder).forEach((f) => {
-    const relativeFromSrcFolder = relative(srcFolder, f);
-    const newPath = join(target, relativeFromSrcFolder);
-    const newContent = ejs.render(fs.readFileSync(f).toString(), substitutions);
-    host.write(replaceSegmentsInPath(newPath, substitutions), newContent);
+  allFilesInDir(srcFolder).forEach((filePath) => {
+    const computedPath = computePath(
+      srcFolder,
+      target,
+      filePath,
+      substitutions
+    );
+    const template = fs.readFileSync(filePath).toString();
+    const newContent = ejs.render(template, substitutions);
+    host.write(computedPath, newContent);
   });
 }
 
-function replaceSegmentsInPath(
+function computePath(
+  srcFolder: string,
+  target: string,
   filePath: string,
   substitutions: { [k: string]: any }
 ) {
-  Object.entries(substitutions).forEach(([t, r]) => {
-    filePath = filePath.split(`__${t}__`).join(r);
+  const relativeFromSrcFolder = relative(srcFolder, filePath);
+  let computedPath = join(target, relativeFromSrcFolder);
+  if (computedPath.endsWith('.template')) {
+    computedPath = computedPath.substring(0, computedPath.length - 9);
+  }
+  Object.entries(substitutions).forEach(([propertyName, value]) => {
+    computedPath = computedPath.split(`__${propertyName}__`).join(value);
   });
-  return filePath;
+  return computedPath;
 }
 
 function allFilesInDir(parent: string) {
