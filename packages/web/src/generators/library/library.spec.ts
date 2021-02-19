@@ -3,7 +3,6 @@ import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import libraryGenerator from './library';
 import { Linter } from '@nrwl/linter';
 import { Schema } from './schema';
-import applicationGenerator from '../application/application';
 
 describe('lib', () => {
   let appTree: Tree;
@@ -93,6 +92,7 @@ describe('lib', () => {
     it('should generate files', async () => {
       await libraryGenerator(appTree, defaultSchema);
       expect(appTree.exists('libs/my-lib/package.json')).toBeFalsy();
+      expect(appTree.exists(`libs/my-lib/.eslintrc.json`)).toBeTruthy();
       expect(appTree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
       expect(appTree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
       expect(appTree.exists('libs/my-lib/src/lib/hello.ts')).toBeTruthy();
@@ -134,6 +134,7 @@ describe('lib', () => {
 
     it('should generate files', async () => {
       await libraryGenerator(appTree, { ...defaultSchema, directory: 'myDir' });
+      expect(appTree.exists(`libs/my-dir/my-lib/.eslintrc.json`)).toBeTruthy();
       expect(appTree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
       expect(appTree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(

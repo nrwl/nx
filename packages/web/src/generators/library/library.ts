@@ -1,7 +1,3 @@
-import {
-  extraEslintDependencies,
-  reactEslintJson,
-} from '@nrwl/react/src/utils/lint';
 import { Schema } from './schema';
 import {
   addDependenciesToPackageJson,
@@ -96,22 +92,7 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     return;
   }
 
-  updateJson(
-    host,
-    joinPathFragments(options.projectRoot, '.eslintrc.json'),
-    (json) => {
-      json.extends = [...reactEslintJson.extends, ...json.extends];
-      return json;
-    }
-  );
-
-  const installTask = await addDependenciesToPackageJson(
-    host,
-    extraEslintDependencies.dependencies,
-    extraEslintDependencies.devDependencies
-  );
-
-  return runTasksInSerial(lintTask, installTask);
+  return lintTask;
 }
 
 function addProject(host: Tree, options: NormalizedSchema) {
