@@ -148,7 +148,7 @@ import { names } from '@nrwl/devkit';
       checkFilesExist(`dist/libs/${childLib}/package.json`);
     });
 
-    it('should properly add references to any dependency into the parent package.json', () => {
+    it('aaashould properly add references to any dependency into the parent package.json', () => {
       runCLI(`build ${childLib}`);
       runCLI(`build ${childLib2}`);
       runCLI(`build ${parentLib}`);
@@ -160,11 +160,10 @@ import { names } from '@nrwl/devkit';
       );
 
       const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
-      // expect(jsonFile.dependencies).toEqual({ tslib: '^2.0.0' });
 
       expect(jsonFile.dependencies['tslib']).toEqual('^2.0.0');
-      expect(jsonFile.dependencies[`@${proj}/${childLib}`]).toBeDefined();
-      expect(jsonFile.dependencies[`@${proj}/${childLib2}`]).toBeDefined();
+      expect(jsonFile.peerDependencies[`@${proj}/${childLib}`]).toBeDefined();
+      expect(jsonFile.peerDependencies[`@${proj}/${childLib2}`]).toBeDefined();
       expect(jsonFile.peerDependencies['@angular/common']).toBeDefined();
       expect(jsonFile.peerDependencies['@angular/core']).toBeDefined();
     });

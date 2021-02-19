@@ -6,6 +6,16 @@ Properties can be configured in angular.json when defining the executor, or when
 
 ## Properties
 
+### buildableProjectDepsInPackageJsonType
+
+Default: `peerDependencies`
+
+Type: `string`
+
+Possible values: `dependencies`, `peerDependencies`
+
+When updateBuildableProjectDepsInPackageJson is true, this adds dependencies to either `peerDependencies` or `dependencies`
+
 ### project
 
 Type: `string`
