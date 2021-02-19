@@ -52,6 +52,7 @@ function createValidRunBuilderOptions(
     ignorePath: null,
     outputFile: null,
     maxWarnings: -1,
+    noEslintrc: false,
     quiet: false,
     ...additionalOptions,
   };
@@ -134,6 +135,7 @@ describe('Linter Builder', () => {
       maxWarnings: null,
       outputFile: null,
       quiet: false,
+      noEslintrc: false,
     });
   });
 

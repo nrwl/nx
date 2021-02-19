@@ -85,7 +85,7 @@
       "description": "The path of the .eslintignore file."
     },
     "noEslintrc": {
-      "type": "string",
+      "type": "boolean",
       "description": "The equivalent of the --no-eslintrc flag on the ESLint CLI, it is false by default",
       "default": false
     }
