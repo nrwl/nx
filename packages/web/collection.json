@@ -15,6 +15,13 @@
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "description": "Create an application"
+    },
+
+    "library": {
+      "factory": "./src/generators/library/library#librarySchematic",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "description": "Create a library"
     }
   },
   "generators": {
@@ -30,6 +37,13 @@
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "description": "Create an application"
+    },
+
+    "library": {
+      "factory": "./src/generators/library/library#libraryGenerator",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "description": "Create a library"
     }
   }
 }

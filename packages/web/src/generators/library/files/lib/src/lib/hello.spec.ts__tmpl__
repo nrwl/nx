@@ -1,0 +1,7 @@
+import { hello } from './hello';
+
+describe('Hello function', () => {
+  it('should say world', () => {
+    expect(hello()).toEqual('world');
+  });
+});
