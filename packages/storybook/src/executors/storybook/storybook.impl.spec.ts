@@ -44,11 +44,10 @@ describe('@nrwl/storybook:storybook', () => {
     };
   });
 
-  it('should provide options to storybook', (done) => {
-    storybookExecutor(options, context);
-    setTimeout(() => {
-      expect(buildDevStandalone).toHaveBeenCalled();
-      done();
-    }, 0);
+  it('should provide options to storybook', async () => {
+    const iterator = storybookExecutor(options, context);
+    const { value } = await iterator.next();
+    expect(value).toEqual({ success: true });
+    expect(buildDevStandalone).toHaveBeenCalled();
   });
 });
