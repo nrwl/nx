@@ -357,6 +357,11 @@
             "file": "angular/api-web/generators/application"
           },
           {
+            "name": "library generator",
+            "id": "library",
+            "file": "angular/api-web/generators/library"
+          },
+          {
             "name": "build executor",
             "id": "build",
             "file": "angular/api-web/executors/build"
@@ -1400,6 +1405,11 @@
             "file": "react/api-web/generators/application"
           },
           {
+            "name": "library generator",
+            "id": "library",
+            "file": "react/api-web/generators/library"
+          },
+          {
             "name": "build executor",
             "id": "build",
             "file": "react/api-web/executors/build"
@@ -2400,6 +2410,11 @@
             "name": "application generator",
             "id": "application",
             "file": "node/api-web/generators/application"
+          },
+          {
+            "name": "library generator",
+            "id": "library",
+            "file": "node/api-web/generators/library"
           },
           {
             "name": "build executor",
