@@ -9,6 +9,18 @@ export function detectPackageManager(dir = '') {
     : 'npm';
 }
 
+/**
+ * Returns commands for the package manager used in the workspace.
+ * By default, the package manager is derived based on the lock file,
+ * but it can also be passed in explicitly.
+ *
+ * Example:
+ *
+ * ```javascript
+ * execSync(`${getPackageManagerCommand().addDev} my-dev-package`);
+ * ```
+ *
+ */
 export function getPackageManagerCommand(
   packageManager = detectPackageManager()
 ): {
@@ -18,6 +30,7 @@ export function getPackageManagerCommand(
   rm: string;
   exec: string;
   list: string;
+  run: (script: string, args: string) => string;
 } {
   switch (packageManager) {
     case 'yarn':
@@ -27,6 +40,7 @@ export function getPackageManagerCommand(
         addDev: 'yarn add -D',
         rm: 'yarn rm',
         exec: 'yarn',
+        run: (script: string, args: string) => `yarn ${script} ${args}`,
         list: 'yarn list',
       };
 
@@ -37,16 +51,18 @@ export function getPackageManagerCommand(
         addDev: 'pnpm add -D',
         rm: 'pnpm rm',
         exec: 'pnpx',
+        run: (script: string, args: string) => `pnpm run ${script} -- ${args}`,
         list: 'pnpm ls --depth 100',
       };
 
     case 'npm':
       return {
-        install: 'npm install',
-        add: 'npm install',
-        addDev: 'npm install -D',
+        install: 'npm install --legacy-peer-deps',
+        add: 'npm install --legacy-peer-deps',
+        addDev: 'npm install --legacy-peer-deps -D',
         rm: 'npm rm',
         exec: 'npx',
+        run: (script: string, args: string) => `npm run ${script} -- ${args}`,
         list: 'npm ls',
       };
   }

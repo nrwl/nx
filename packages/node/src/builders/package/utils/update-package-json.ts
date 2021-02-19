@@ -1,7 +1,7 @@
 import { BuilderContext } from '@angular-devkit/architect';
 import { normalize } from '@angular-devkit/core';
 import { readJsonFile } from '@nrwl/workspace';
-import { writeJsonFile } from '@nrwl/workspace/src/utils/fileutils';
+import { writeJsonFile } from '@nrwl/workspace/src/utilities/fileutils';
 import { basename, join } from 'path';
 import { NormalizedBuilderOptions } from './models';
 

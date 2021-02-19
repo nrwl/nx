@@ -28,19 +28,19 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@angular-devkit/core": "~11.0.1",
     "@babel/core": "7.9.6",
     "@babel/preset-react": "7.9.4",
     "@nrwl/cypress": "*",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/web": "*",
-    "@angular-devkit/schematics": "~11.0.1",
+    "@nrwl/linter": "*",
+    "@nrwl/storybook": "*",
     "@svgr/webpack": "^5.4.0",
     "eslint-plugin-import": "^2.20.1",
     "eslint-plugin-jsx-a11y": "^6.2.3",
     "eslint-plugin-react": "^7.18.3",
-    "eslint-plugin-react-hooks": "^2.4.0",
+    "eslint-plugin-react-hooks": "4.2.0",
     "url-loader": "^3.0.0"
   }
 }

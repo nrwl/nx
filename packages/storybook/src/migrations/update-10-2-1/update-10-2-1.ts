@@ -10,9 +10,10 @@ import {
   formatFiles,
   updateWorkspaceInTree,
   serializeJson,
+  readJsonInTree,
 } from '@nrwl/workspace';
 
-import { getTsConfigContent } from '../../utils/utils';
+import { TsConfig } from '../../utils/utilities';
 
 interface ProjectDefinition {
   root: string;
@@ -73,7 +74,7 @@ function updateStorybookTsConfigPath(
   }
 
   const tsConfig = {
-    storybook: getTsConfigContent(tree, paths.tsConfigStorybook),
+    storybook: readJsonInTree<TsConfig>(tree, paths.tsConfigStorybook),
   };
 
   // update extends prop to point to the lib relative tsconfig rather

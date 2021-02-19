@@ -103,6 +103,11 @@
         "id": "core-concepts",
         "itemList": [
           {
+            "name": "Plugins",
+            "id": "plugins",
+            "file": "shared/plugins-overview"
+          },
+          {
             "name": "Computation Caching",
             "id": "computation-caching",
             "file": "shared/computation-caching"
@@ -145,6 +150,11 @@
           {
             "name": "From AngularJS",
             "id": "migration-angularjs"
+          },
+          {
+            "name": "Adding to Monorepo",
+            "id": "adding-to-monorepo",
+            "file": "shared/migration/adding-to-monorepo"
           },
           {
             "name": "Preserving Git Histories",
@@ -311,7 +321,7 @@
           },
           {
             "name": "run-commands generator",
-            "id": "run-commands",
+            "id": "run-commands-generator",
             "file": "angular/api-workspace/generators/run-commands"
           },
           {
@@ -321,8 +331,13 @@
           },
           {
             "name": "run-commands executor",
-            "id": "run-commands",
+            "id": "run-commands-executor",
             "file": "angular/api-workspace/executors/run-commands"
+          },
+          {
+            "name": "run-script executor",
+            "id": "run-script",
+            "file": "angular/api-workspace/executors/run-script"
           }
         ]
       },
@@ -419,6 +434,11 @@
             "file": "angular/api-angular/generators/storybook-configuration"
           },
           {
+            "name": "storybook-migrate-defaults-5-to-6 generator",
+            "id": "storybook-migrate-defaults-5-to-6",
+            "file": "angular/api-angular/generators/storybook-migrate-defaults-5-to-6"
+          },
+          {
             "name": "upgrade-module generator",
             "id": "upgrade-module",
             "file": "angular/api-angular/generators/upgrade-module"
@@ -489,6 +509,11 @@
             "name": "storybook-configuration generator",
             "id": "storybook-configuration",
             "file": "angular/api-react/generators/storybook-configuration"
+          },
+          {
+            "name": "storybook-migrate-defaults-5-to-6 generator",
+            "id": "storybook-migrate-defaults-5-to-6",
+            "file": "angular/api-react/generators/storybook-migrate-defaults-5-to-6"
           }
         ]
       },
@@ -540,6 +565,11 @@
             "name": "configuration generator",
             "id": "configuration",
             "file": "angular/api-storybook/generators/configuration"
+          },
+          {
+            "name": "migrate-defaults-5-to-6 generator",
+            "id": "migrate-defaults-5-to-6",
+            "file": "angular/api-storybook/generators/migrate-defaults-5-to-6"
           },
           {
             "name": "cypress-project generator",
@@ -759,6 +789,43 @@
             "name": "export executor",
             "id": "export",
             "file": "angular/api-next/executors/export"
+          }
+        ]
+      },
+      {
+        "name": "gatsby",
+        "id": "gatsby",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/gatsby Overview",
+            "file": "shared/gatsby-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "angular/api-gatsby/generators/application"
+          },
+          {
+            "name": "component generator",
+            "id": "component",
+            "file": "angular/api-gatsby/generators/component"
+          },
+          {
+            "name": "page generator",
+            "id": "page",
+            "file": "angular/api-gatsby/generators/page"
+          },
+          {
+            "name": "build executor",
+            "id": "build",
+            "file": "angular/api-gatsby/executors/build"
+          },
+          {
+            "name": "server executor",
+            "id": "server",
+            "file": "angular/api-gatsby/executors/server"
           }
         ]
       },
@@ -1083,6 +1150,11 @@
         "id": "core-concepts",
         "itemList": [
           {
+            "name": "Plugins",
+            "id": "plugins",
+            "file": "shared/plugins-overview"
+          },
+          {
             "name": "Computation Caching",
             "id": "computation-caching",
             "file": "shared/computation-caching"
@@ -1121,6 +1193,11 @@
           {
             "name": "From CRA",
             "id": "migration-cra"
+          },
+          {
+            "name": "Adding to Monorepo",
+            "id": "adding-to-monorepo",
+            "file": "shared/migration/adding-to-monorepo"
           },
           {
             "name": "Preserving Git Histories",
@@ -1287,7 +1364,7 @@
           },
           {
             "name": "run-commands generator",
-            "id": "run-commands",
+            "id": "run-commands-generator",
             "file": "react/api-workspace/generators/run-commands"
           },
           {
@@ -1297,8 +1374,13 @@
           },
           {
             "name": "run-commands executor",
-            "id": "run-commands",
+            "id": "run-commands-executor",
             "file": "react/api-workspace/executors/run-commands"
+          },
+          {
+            "name": "run-script executor",
+            "id": "run-script",
+            "file": "react/api-workspace/executors/run-script"
           }
         ]
       },
@@ -1395,6 +1477,11 @@
             "file": "react/api-angular/generators/storybook-configuration"
           },
           {
+            "name": "storybook-migrate-defaults-5-to-6 generator",
+            "id": "storybook-migrate-defaults-5-to-6",
+            "file": "react/api-angular/generators/storybook-migrate-defaults-5-to-6"
+          },
+          {
             "name": "upgrade-module generator",
             "id": "upgrade-module",
             "file": "react/api-angular/generators/upgrade-module"
@@ -1465,6 +1552,11 @@
             "name": "storybook-configuration generator",
             "id": "storybook-configuration",
             "file": "react/api-react/generators/storybook-configuration"
+          },
+          {
+            "name": "storybook-migrate-defaults-5-to-6 generator",
+            "id": "storybook-migrate-defaults-5-to-6",
+            "file": "react/api-react/generators/storybook-migrate-defaults-5-to-6"
           }
         ]
       },
@@ -1521,6 +1613,11 @@
             "name": "cypress-project generator",
             "id": "cypress-project",
             "file": "react/api-storybook/generators/cypress-project"
+          },
+          {
+            "name": "migrate-defaults-5-to-6 generator",
+            "id": "migrate-defaults-5-to-6",
+            "file": "react/api-storybook/generators/migrate-defaults-5-to-6"
           },
           {
             "id": "executors",
@@ -1741,6 +1838,43 @@
             "name": "export executor",
             "id": "export",
             "file": "react/api-next/executors/export"
+          }
+        ]
+      },
+      {
+        "name": "gatsby",
+        "id": "gatsby",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/gatsby Overview",
+            "file": "shared/gatsby-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "react/api-gatsby/generators/application"
+          },
+          {
+            "name": "component generator",
+            "id": "component",
+            "file": "react/api-gatsby/generators/component"
+          },
+          {
+            "name": "page generator",
+            "id": "page",
+            "file": "react/api-gatsby/generators/page"
+          },
+          {
+            "name": "build executor",
+            "id": "build",
+            "file": "react/api-gatsby/executors/build"
+          },
+          {
+            "name": "server executor",
+            "id": "server",
+            "file": "react/api-gatsby/executors/server"
           }
         ]
       },
@@ -2022,6 +2156,11 @@
         "id": "core-concepts",
         "itemList": [
           {
+            "name": "Plugins",
+            "id": "plugins",
+            "file": "shared/plugins-overview"
+          },
+          {
             "name": "Computation Caching",
             "id": "computation-caching",
             "file": "shared/computation-caching"
@@ -2056,6 +2195,16 @@
             "name": "Overview",
             "id": "overview",
             "file": "shared/migration/overview"
+          },
+          {
+            "name": "Adding to Monorepo",
+            "id": "adding-to-monorepo",
+            "file": "shared/migration/adding-to-monorepo"
+          },
+          {
+            "name": "Preserving Git Histories",
+            "id": "preserving-git-histories",
+            "file": "shared/migration/preserving-git-histories"
           }
         ]
       },
@@ -2217,7 +2366,7 @@
           },
           {
             "name": "run-commands generator",
-            "id": "run-commands",
+            "id": "run-commands-generator",
             "file": "node/api-workspace/generators/run-commands"
           },
           {
@@ -2227,8 +2376,13 @@
           },
           {
             "name": "run-commands executor",
-            "id": "run-commands",
+            "id": "run-commands-executor",
             "file": "node/api-workspace/executors/run-commands"
+          },
+          {
+            "name": "run-script executor",
+            "id": "run-script",
+            "file": "node/api-workspace/executors/run-script"
           }
         ]
       },
@@ -2325,6 +2479,11 @@
             "file": "node/api-angular/generators/storybook-configuration"
           },
           {
+            "name": "storybook-migrate-defaults-5-to-6 generator",
+            "id": "storybook-migrate-defaults-5-to-6",
+            "file": "node/api-angular/generators/storybook-migrate-defaults-5-to-6"
+          },
+          {
             "name": "upgrade-module generator",
             "id": "upgrade-module",
             "file": "node/api-angular/generators/upgrade-module"
@@ -2395,6 +2554,11 @@
             "name": "storybook-configuration generator",
             "id": "storybook-configuration",
             "file": "node/api-react/generators/storybook-configuration"
+          },
+          {
+            "name": "storybook-migrate-defaults-5-to-6 generator",
+            "id": "storybook-migrate-defaults-5-to-6",
+            "file": "node/api-react/generators/storybook-migrate-defaults-5-to-6"
           }
         ]
       },
@@ -2440,6 +2604,11 @@
             "name": "configuration generator",
             "id": "configuration",
             "file": "node/api-storybook/generators/configuration"
+          },
+          {
+            "name": "migrate-defaults-5-to-6 generator",
+            "id": "migrate-defaults-5-to-6",
+            "file": "node/api-storybook/generators/migrate-defaults-5-to-6"
           },
           {
             "name": "cypress-project generator",
@@ -2659,6 +2828,43 @@
             "name": "export executor",
             "id": "export",
             "file": "node/api-next/executors/export"
+          }
+        ]
+      },
+      {
+        "name": "gatsby",
+        "id": "gatsby",
+        "itemList": [
+          {
+            "id": "overview",
+            "name": "Overview",
+            "searchResultsName": "@nrwl/gatsby Overview",
+            "file": "shared/gatsby-plugin"
+          },
+          {
+            "name": "application generator",
+            "id": "application",
+            "file": "node/api-gatsby/generators/application"
+          },
+          {
+            "name": "component generator",
+            "id": "component",
+            "file": "node/api-gatsby/generators/component"
+          },
+          {
+            "name": "page generator",
+            "id": "page",
+            "file": "node/api-gatsby/generators/page"
+          },
+          {
+            "name": "build executor",
+            "id": "build",
+            "file": "node/api-gatsby/executors/build"
+          },
+          {
+            "name": "server executor",
+            "id": "server",
+            "file": "node/api-gatsby/executors/server"
           }
         ]
       },

@@ -2089,22 +2089,22 @@ export const smallGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file: 'packages/workspace/src/utils/fileutils.spec.ts',
+            file: 'packages/workspace/src/utilities/fileutils.spec.ts',
             hash: '569be9a37b37ed35602d71827adebda16e5b6bee',
             ext: '.ts',
           },
           {
-            file: 'packages/workspace/src/utils/fileutils.ts',
+            file: 'packages/workspace/src/utilities/fileutils.ts',
             hash: 'bdd5b33522cb110cbb230d30c1610a13649aabab',
             ext: '.ts',
           },
           {
-            file: 'packages/workspace/src/utils/json-diff.spec.ts',
+            file: 'packages/workspace/src/utilities/json-diff.spec.ts',
             hash: '032381884374a2cfc2f02b10b9ef652ae502b186',
             ext: '.ts',
           },
           {
-            file: 'packages/workspace/src/utils/json-diff.ts',
+            file: 'packages/workspace/src/utilities/json-diff.ts',
             hash: 'a723ee63b7448a8a5bbd70356d51ed06b554d472',
             ext: '.ts',
           },
@@ -2129,47 +2129,50 @@ export const smallGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file: 'packages/workspace/src/utils/perf-logging.ts',
+            file: 'packages/workspace/src/utilities/perf-logging.ts',
             hash: 'f3b86436e28a566af275873f048776b680fc2317',
             ext: '.ts',
           },
           {
-            file: 'packages/workspace/src/utils/plugins/community-plugins.ts',
+            file:
+              'packages/workspace/src/utilities/plugins/community-plugins.ts',
             hash: 'b8eb35cc82541340e8333c05f7392d54ca994d95',
             ext: '.ts',
           },
           {
-            file: 'packages/workspace/src/utils/plugins/core-plugins.ts',
+            file: 'packages/workspace/src/utilities/plugins/core-plugins.ts',
             hash: '2de09f2eec860a03efe71718b736533b140d0447',
             ext: '.ts',
           },
           {
-            file: 'packages/workspace/src/utils/plugins/index.ts',
+            file: 'packages/workspace/src/utilities/plugins/index.ts',
             hash: '007409e5443a7051731e40bb3ef82376c75451cf',
             ext: '.ts',
           },
           {
-            file: 'packages/workspace/src/utils/plugins/installed-plugins.ts',
+            file:
+              'packages/workspace/src/utilities/plugins/installed-plugins.ts',
             hash: '35690c04e9548014a7e7aa2b0c46db37d8826d3d',
             ext: '.ts',
           },
           {
-            file: 'packages/workspace/src/utils/plugins/models.ts',
+            file: 'packages/workspace/src/utilities/plugins/models.ts',
             hash: '57561297a50cd702a338dbee0496342e65d7d291',
             ext: '.ts',
           },
           {
-            file: 'packages/workspace/src/utils/plugins/plugin-capabilities.ts',
+            file:
+              'packages/workspace/src/utilities/plugins/plugin-capabilities.ts',
             hash: 'fd688e795d47d80f44d5e5b317dcfda77620983a',
             ext: '.ts',
           },
           {
-            file: 'packages/workspace/src/utils/plugins/shared.ts',
+            file: 'packages/workspace/src/utilities/plugins/shared.ts',
             hash: '534feccefec66b287622c7a2c6206b234d160ac2',
             ext: '.ts',
           },
           {
-            file: 'packages/workspace/src/utils/project-graph-utils.ts',
+            file: 'packages/workspace/src/utilities/project-graph-utils.ts',
             hash: '699d97015f039005ee481d46bbc48cf524a157e2',
             ext: '.ts',
           },
@@ -2257,12 +2260,12 @@ export const smallGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file: 'packages/workspace/src/utils/strip-source-code.spec.ts',
+            file: 'packages/workspace/src/utilities/strip-source-code.spec.ts',
             hash: '79ef7faca5e9756c35c1044755adc76f851a95fe',
             ext: '.ts',
           },
           {
-            file: 'packages/workspace/src/utils/strip-source-code.ts',
+            file: 'packages/workspace/src/utilities/strip-source-code.ts',
             hash: '6ca8e89d9e42b6cbb5441fef65d3c7e1c4abd6a9',
             ext: '.ts',
           },
@@ -2277,7 +2280,7 @@ export const smallGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file: 'packages/workspace/src/utils/typescript.ts',
+            file: 'packages/workspace/src/utilities/typescript.ts',
             hash: '2a6b93a8e2975037825d808651d1c73fe93dc954',
             ext: '.ts',
           },

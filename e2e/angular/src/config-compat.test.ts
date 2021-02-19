@@ -2,6 +2,7 @@ import {
   expectTestsPass,
   newProject,
   readJson,
+  removeProject,
   runCLI,
   runCLIAsync,
   uniq,
@@ -9,9 +10,11 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('new config format', () => {
-  it('should work', async () => {
-    newProject();
+  beforeEach(() => newProject());
 
+  afterEach(() => removeProject({ onlyOnCI: true }));
+
+  it('should work', async () => {
     const myapp = uniq('myapp');
     runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
 

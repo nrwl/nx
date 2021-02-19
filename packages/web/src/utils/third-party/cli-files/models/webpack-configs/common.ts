@@ -5,23 +5,18 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-import {
-  BuildOptimizerWebpackPlugin,
-  buildOptimizerLoaderPath,
-} from '@angular-devkit/build-optimizer';
-import { tags } from '@angular-devkit/core';
 import * as path from 'path';
 import { ScriptTarget } from 'typescript';
 import {
+  compilation,
   Compiler,
   Configuration,
   ContextReplacementPlugin,
-  HashedModuleIdsPlugin,
-  compilation,
   debug,
+  HashedModuleIdsPlugin,
 } from 'webpack';
 import { RawSource } from 'webpack-sources';
-import { AssetPatternClass, ExtraEntryPoint } from '../../../browser/schema';
+import { ExtraEntryPoint } from '../../../browser/schema';
 import { BuildBrowserFeatures, fullDifferential } from '../../../utils';
 import { manglingDisabled } from '../../../utils/mangle-options';
 import { BundleBudgetPlugin } from '../../plugins/bundle-budget';
@@ -278,19 +273,6 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
     };
   }
 
-  let buildOptimizerUseRule;
-  if (buildOptions.buildOptimizer) {
-    extraPlugins.push(new BuildOptimizerWebpackPlugin());
-    buildOptimizerUseRule = {
-      use: [
-        {
-          loader: buildOptimizerLoaderPath,
-          options: { sourceMap: scriptsSourceMap },
-        },
-      ],
-    };
-  }
-
   // Allow loaders to be in a node_modules nested inside the devkit/build-angular package.
   // This is important in case loaders do not get hoisted.
   // If this file moves to another location, alter potentialNodeModules as well.
@@ -463,7 +445,6 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
           test: /\.js$/,
           // Factory files are processed by BO in the rules added in typescript.ts.
           exclude: /(ngfactory|ngstyle)\.js$/,
-          ...buildOptimizerUseRule,
         },
         {
           test: /\.js$/,

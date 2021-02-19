@@ -18,10 +18,16 @@ const IGNORE_MATCHES = {
     'rxjs',
   ],
   cli: ['@nrwl/cli'],
-  cypress: ['cypress'],
+  cypress: ['cypress', '@angular-devkit/schematics', '@nrwl/cypress'],
   devkit: ['@angular-devkit/architect', 'rxjs'],
-  jest: ['jest', '@jest/types', 'identity-obj-proxy'],
-  linter: ['eslint', '@angular-devkit/schematics'],
+  gatsby: ['@angular-devkit/architect', 'babel-preset-gatsby', 'rxjs'],
+  jest: [
+    'jest',
+    '@jest/types',
+    'identity-obj-proxy',
+    '@angular-devkit/schematics',
+  ],
+  linter: ['eslint', '@angular-devkit/schematics', '@angular-devkit/architect'],
   next: [
     '@angular-devkit/architect',
     '@nrwl/devkit',
@@ -37,6 +43,8 @@ const IGNORE_MATCHES = {
     'babel-plugin-styled-components',
     'rollup',
     'webpack',
+    '@angular-devkit/core',
+    '@angular-devkit/schematics',
   ],
   storybook: [
     '@angular-devkit/architect',
@@ -46,9 +54,27 @@ const IGNORE_MATCHES = {
     '@storybook/core',
     'rxjs',
   ],
-  tao: ['@angular-devkit/build-angular'],
+  tao: [
+    '@angular-devkit/build-angular',
+    '@angular-devkit/schematics',
+    '@angular-devkit/core',
+    '@angular-devkit/architect',
+  ],
   web: ['fibers', 'node-sass'],
-  workspace: ['tslint'],
+  workspace: [
+    'tslint',
+    '@angular-devkit/architect',
+    '@angular-devkit/build-angular',
+    '@angular-devkit/core',
+    '@angular-devkit/schematics',
+    'karma',
+    'karma-chrome-launcher',
+    'karma-coverage-istanbul-reporter',
+    'karma-jasmine',
+    'karma-jasmine-html-reporter',
+    'webpack',
+    'webpack-dev-server',
+  ],
 };
 
 export default async function getMissingDependencies(

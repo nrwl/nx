@@ -11,7 +11,7 @@ const decorateAngularClI = (host: Tree, context: SchematicContext) => {
         __dirname as any,
         '..',
         '..',
-        'schematics',
+        'generators',
         'utils',
         'decorate-angular-cli.js__tmpl__'
       )

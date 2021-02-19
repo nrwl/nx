@@ -28,7 +28,7 @@ describe('<%= className %>Effects', () => {
       ],
     });
 
-    effects = TestBed.get(<%= className %>Effects);
+    effects = TestBed.inject(<%= className %>Effects);
   });
 
   describe('init$', () => {

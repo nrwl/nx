@@ -1,6 +1,6 @@
-import * as path from 'path';
 import * as fs from 'fs';
 import { Tree } from '@nrwl/tao/src/shared/tree';
+import { join, relative } from 'path';
 
 const ejs = require('ejs');
 
@@ -36,12 +36,10 @@ export function generateFiles(
   substitutions: { [k: string]: any }
 ) {
   allFilesInDir(srcFolder).forEach((f) => {
-    const relativeToTarget = replaceSegmentsInPath(
-      f.substring(srcFolder.length),
-      substitutions
-    );
+    const relativeFromSrcFolder = relative(srcFolder, f);
+    const newPath = join(target, relativeFromSrcFolder);
     const newContent = ejs.render(fs.readFileSync(f).toString(), substitutions);
-    host.write(path.join(target, relativeToTarget), newContent);
+    host.write(replaceSegmentsInPath(newPath, substitutions), newContent);
   });
 }
 
@@ -50,7 +48,7 @@ function replaceSegmentsInPath(
   substitutions: { [k: string]: any }
 ) {
   Object.entries(substitutions).forEach(([t, r]) => {
-    filePath = filePath.replace(`__${t}__`, r);
+    filePath = filePath.split(`__${t}__`).join(r);
   });
   return filePath;
 }
@@ -59,7 +57,7 @@ function allFilesInDir(parent: string) {
   let res = [];
   try {
     fs.readdirSync(parent).forEach((c) => {
-      const child = path.join(parent, c);
+      const child = join(parent, c);
       try {
         const s = fs.statSync(child);
         if (!s.isDirectory()) {

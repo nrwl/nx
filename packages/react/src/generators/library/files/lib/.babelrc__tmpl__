@@ -1,0 +1,10 @@
+{
+  "presets": [
+    "@nrwl/react/babel"
+    <% if (style === '@emotion/styled') { %>,"@emotion/babel-preset-css-prop"<% } %>
+  ],
+  "plugins": [
+    <% if (style === 'styled-components') { %>["styled-components", { "pure": true, "ssr": true }]<% } %>
+    <% if (style === 'styled-jsx') { %>"styled-jsx/babel"<% } %>
+  ]
+}

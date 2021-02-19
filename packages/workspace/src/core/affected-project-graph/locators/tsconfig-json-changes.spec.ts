@@ -1,5 +1,5 @@
 import { WholeFileChange } from '../../file-utils';
-import { jsonDiff } from '../../../utils/json-diff';
+import { jsonDiff } from '../../../utilities/json-diff';
 import { getTouchedProjectsFromTsConfig } from './tsconfig-json-changes';
 import { DependencyType, ProjectGraph } from '../../project-graph';
 

@@ -22,6 +22,7 @@ export function build(
     ...[
       'react',
       'next',
+      'gatsby',
       'web',
       'jest',
       'node',
@@ -35,6 +36,7 @@ export function build(
     ...[
       'react',
       'next',
+      'gatsby',
       'web',
       'jest',
       'node',

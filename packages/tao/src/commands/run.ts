@@ -9,7 +9,9 @@ import {
 import { printHelp } from '../shared/print-help';
 import {
   ExecutorContext,
-  WorkspaceConfiguration,
+  ProjectConfiguration,
+  TargetConfiguration,
+  WorkspaceJsonConfiguration,
   Workspaces,
 } from '../shared/workspace';
 
@@ -17,10 +19,13 @@ import * as chalk from 'chalk';
 import { logger } from '../shared/logger';
 import { eachValueFrom } from 'rxjs-for-await';
 
-export interface RunOptions {
+export interface Target {
   project: string;
   target: string;
-  configuration: string;
+  configuration?: string;
+}
+
+export interface RunOptions extends Target {
   help: boolean;
   runOptions: Options;
 }
@@ -93,43 +98,13 @@ export function printRunHelp(
   printHelp(`nx run ${opts.project}:${opts.target}`, schema);
 }
 
-export function validateTargetAndConfiguration(
-  workspace: WorkspaceConfiguration,
-  opts: { project: string; target: string; configuration?: string }
+export function validateProject(
+  workspace: WorkspaceJsonConfiguration,
+  projectName: string
 ) {
-  const project = workspace.projects[opts.project];
+  const project = workspace.projects[projectName];
   if (!project) {
-    throw new Error(`Could not find project "${opts.project}"`);
-  }
-  const target = project.targets[opts.target];
-  const availableTargets = Object.keys(project.targets);
-  if (!target) {
-    throw new Error(
-      `Could not find target "${opts.target}" in the ${
-        opts.project
-      } project. Valid targets are: ${chalk.bold(availableTargets.join(', '))}`
-    );
-  }
-
-  // Not all targets have configurations
-  // and an undefined configuration is valid
-  if (opts.configuration) {
-    if (target.configurations) {
-      const configuration = target.configurations[opts.configuration];
-      if (!configuration) {
-        throw new Error(
-          `Could not find configuration "${opts.configuration}" in ${
-            opts.project
-          }:${opts.target}. Valid configurations are: ${Object.keys(
-            target.configurations
-          ).join(', ')}`
-        );
-      }
-    } else {
-      throw new Error(
-        `No configurations are defined for ${opts.project}:${opts.target}, so "${opts.configuration}" is invalid.`
-      );
-    }
+    throw new Error(`Could not find project "${projectName}"`);
   }
 }
 
@@ -157,6 +132,18 @@ async function iteratorToProcessStatusCode(
   return r.success ? 0 : 1;
 }
 
+function createImplicitTargetConfig(
+  proj: ProjectConfiguration,
+  targetName: string
+): TargetConfiguration {
+  return {
+    executor: '@nrwl/workspace:run-script',
+    options: {
+      script: targetName,
+    },
+  };
+}
+
 async function runExecutorInternal<T extends { success: boolean }>(
   {
     project,
@@ -170,18 +157,18 @@ async function runExecutorInternal<T extends { success: boolean }>(
   options: { [k: string]: any },
   root: string,
   cwd: string,
-  workspace: WorkspaceConfiguration,
+  workspace: WorkspaceJsonConfiguration,
   isVerbose: boolean,
   printHelp: boolean
 ): Promise<AsyncIterableIterator<T>> {
-  validateTargetAndConfiguration(workspace, {
-    project,
-    target,
-    configuration,
-  });
+  validateProject(workspace, project);
 
   const ws = new Workspaces(root);
-  const targetConfig = workspace.projects[project].targets[target];
+  const proj = workspace.projects[project];
+  const targetConfig =
+    proj.targets && proj.targets[target]
+      ? proj.targets[target]
+      : createImplicitTargetConfig(proj, target);
   const [nodeModule, executor] = targetConfig.executor.split(':');
   const { schema, implementationFactory } = ws.readExecutor(
     nodeModule,
@@ -209,6 +196,8 @@ async function runExecutorInternal<T extends { success: boolean }>(
       target: targetConfig,
       workspace: workspace,
       projectName: project,
+      targetName: target,
+      configurationName: configuration,
       cwd: cwd,
       isVerbose: isVerbose,
     });

@@ -3,9 +3,9 @@ import { assertValidStyle } from './assertion';
 describe('assertValidStyle', () => {
   it('should accept style option values from app, lib, component schematics', () => {
     const schemas = [
-      require('../schematics/application/schema.json'),
-      require('../schematics/component/schema.json'),
-      require('../schematics/library/schema.json'),
+      require('../generators/application/schema.json'),
+      require('../generators/component/schema.json'),
+      require('../generators/library/schema.json'),
     ];
 
     schemas.forEach((schema) => {

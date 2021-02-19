@@ -6,7 +6,7 @@ import '../compat/compat';
 /**
  * Workspace configuration
  */
-export interface WorkspaceConfiguration {
+export interface WorkspaceJsonConfiguration {
   /**
    * Version of the configuration format
    */
@@ -44,8 +44,16 @@ export interface WorkspaceConfiguration {
   /**
    * Default generator collection. It is used when no collection is provided.
    */
-  cli?: { defaultCollection: string };
+  cli?: {
+    packageManager?: 'npm' | 'yarn' | 'pnpm';
+    defaultCollection?: string;
+  };
 }
+
+/**
+ * Type of project supported
+ */
+export type ProjectType = 'library' | 'application';
 
 /**
  * Project configuration
@@ -69,7 +77,7 @@ export interface ProjectConfiguration {
   /**
    * Project type
    */
-  projectType?: 'library' | 'application';
+  projectType?: ProjectType;
 
   /**
    * List of default values used by generators.
@@ -169,6 +177,16 @@ export interface ExecutorContext {
   projectName?: string;
 
   /**
+   * The name of the target being executed
+   */
+  targetName?: string;
+
+  /**
+   * The name of the configuration being executed
+   */
+  configurationName?: string;
+
+  /**
    * The configuration of the target being executed
    */
   target?: TargetConfiguration;
@@ -176,7 +194,7 @@ export interface ExecutorContext {
   /**
    * The full workspace configuration
    */
-  workspace: WorkspaceConfiguration;
+  workspace: WorkspaceJsonConfiguration;
 
   /**
    * The current working directory
@@ -193,17 +211,10 @@ export class Workspaces {
   constructor(private root: string) {}
 
   relativeCwd(cwd: string) {
-    let relativeCwd = cwd.replace(/\\/g, '/').split(this.root)[1];
-    if (relativeCwd) {
-      return relativeCwd.startsWith('/')
-        ? relativeCwd.substring(1)
-        : relativeCwd;
-    } else {
-      return null;
-    }
+    return path.relative(this.root, cwd) || null;
   }
 
-  calculateDefaultProjectName(cwd: string, wc: WorkspaceConfiguration) {
+  calculateDefaultProjectName(cwd: string, wc: WorkspaceJsonConfiguration) {
     const relativeCwd = this.relativeCwd(cwd);
     if (relativeCwd) {
       const matchingProject = Object.keys(wc.projects).find((p) => {
@@ -218,7 +229,7 @@ export class Workspaces {
     return wc.defaultProject;
   }
 
-  readWorkspaceConfiguration(): WorkspaceConfiguration {
+  readWorkspaceConfiguration(): WorkspaceJsonConfiguration {
     const w = JSON.parse(
       stripJsonComments(
         fs
@@ -394,7 +405,7 @@ export function reformattedWorkspaceJsonOrNull(w: any) {
   return w.version === 2 ? toNewFormatOrNull(w) : toOldFormatOrNull(w);
 }
 
-export function toNewFormat(w: any): WorkspaceConfiguration {
+export function toNewFormat(w: any): WorkspaceJsonConfiguration {
   const f = toNewFormatOrNull(w);
   return f ? f : w;
 }

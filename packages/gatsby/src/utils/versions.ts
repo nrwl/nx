@@ -1,0 +1,24 @@
+export const nxVersion = '*';
+
+export const gatsbyVersion = '2.32.3';
+export const gatsbyImageVersion = '2.11.0';
+export const gatsbyPluginManifestVersion = '2.12.0';
+export const gatsbyPluginOfflineVersion = '3.10.0';
+export const gatsbyPluginReactHelmetVersion = '3.10.0';
+export const gatsbyPluginSharpVersion = '2.14.1';
+export const gatsbySourceFilesystemVersion = '2.11.0';
+export const gatsbyTransformerSharpVersion = '2.12.0';
+export const propTypesVersion = '15.7.2';
+export const reactHelmetVersion = '6.1.0';
+export const gatsbyPluginTypescriptVersion = '2.12.0';
+export const babelPluginModuleResolverVersion = '4.0.0';
+export const babelPresetGatsbyVersion = '0.12.1';
+export const testingLibraryReactVersion = '11.2.2';
+export const gatsbyPluginEmotionVersion = '5.4.0';
+export const gatsbyPluginStyledComponentsVersion = '3.10.0';
+export const gatsbyPluginSassVersion = '3.2.0';
+export const gatsbyPluginLessVersion = '4.7.0';
+export const gatsbyPluginStylusVersion = '2.10.0';
+export const nodeSassVersion = '4.14.1';
+export const gatsbyPluginSvgrVersion = '2.1.0';
+export const gatsbyPluginPnpm = '1.2.5';

@@ -7,7 +7,7 @@ import {
   ProjectGraph,
   ProjectType,
 } from '../core/project-graph';
-import { appRootPath } from '../utils/app-root';
+import { appRootPath } from '../utilities/app-root';
 import {
   DepConstraint,
   findConstraintsFor,
@@ -22,7 +22,7 @@ import {
   matchImportWithWildcard,
   onlyLoadChildren,
 } from '../utils/runtime-lint-utils';
-import { normalize } from '@angular-devkit/core';
+import { normalize } from 'path';
 import {
   readNxJson,
   readWorkspaceJson,

@@ -6,7 +6,6 @@
  * found in the LICENSE file at https://angular.io/license
  */
 
-import { Path, virtualFs } from '@angular-devkit/core';
 import { BuildOptions } from '../cli-files/models/build-options';
 import {
   AssetPatternClass,
@@ -34,14 +33,11 @@ export type NormalizedBrowserBuilderSchema = BrowserBuilderSchema &
   };
 
 export function normalizeBrowserSchema(
-  host: virtualFs.Host<{}>,
-  root: Path,
-  projectRoot: Path,
-  sourceRoot: Path | undefined,
+  root: string,
+  projectRoot: string,
+  sourceRoot: string | undefined,
   options: BrowserBuilderSchema
 ): NormalizedBrowserBuilderSchema {
-  const syncHost = new virtualFs.SyncDelegateHost(host);
-
   const normalizedSourceMapOptions = normalizeSourceMaps(
     options.sourceMap || false
   );
@@ -52,14 +48,12 @@ export function normalizeBrowserSchema(
     ...options,
     assets: normalizeAssetPatterns(
       options.assets || [],
-      syncHost,
       root,
       projectRoot,
       sourceRoot
     ),
     fileReplacements: normalizeFileReplacements(
       options.fileReplacements || [],
-      syncHost,
       root
     ),
     optimization: normalizeOptimization(options.optimization),

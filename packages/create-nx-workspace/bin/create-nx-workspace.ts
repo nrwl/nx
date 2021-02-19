@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
-import { output, unparse } from '@nrwl/workspace';
-import { Schema, Preset } from '@nrwl/workspace/src/schematics/new/new';
+import { output } from '@nrwl/workspace/src/utilities/output';
+import { unparse } from '@nrwl/workspace/src/tasks-runner/utils';
+import { Schema, Preset } from '@nrwl/workspace/src/generators/new/new';
 import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { execSync } from 'child_process';
 import { writeFileSync } from 'fs';
@@ -29,6 +30,11 @@ const presetOptions: { value: Preset; name: string }[] = [
     value: Preset.NextJs,
     name: 'next.js           [a workspace with a single Next.js application]',
   },
+  // TODO: Re-enable when gatsby preset is implemented
+  // {
+  //   value: Preset.Gatsby,
+  //   name: 'gatsby            [a workspace with a single Gatsby application]',
+  // },
   {
     value: Preset.Nest,
     name: 'nest              [a workspace with a single Nest application]',
@@ -298,7 +304,15 @@ function determineStyle(preset: Preset, parsedArgs: WorkspaceArgs) {
     },
   ];
 
-  if ([Preset.ReactWithExpress, Preset.React, Preset.NextJs].includes(preset)) {
+  if (
+    [
+      Preset.ReactWithExpress,
+      Preset.React,
+      Preset.NextJs,
+      // TODO: Re-enable when gatsby preset is implemented
+      // Preset.Gatsby,
+    ].includes(preset)
+  ) {
     choices.push(
       {
         value: 'styled-components',
@@ -479,6 +493,8 @@ function pointToTutorialAndCourse(preset: Preset) {
     case Preset.React:
     case Preset.ReactWithExpress:
     case Preset.NextJs:
+      // TODO: Re-enable when gatsby preset is implemented
+      // case Preset.Gatsby:
       output.addVerticalSeparator();
       output.note({
         title: title,

@@ -1,0 +1,127 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "id": "NxReactApp",
+  "title": "Create a React Component for Nx",
+  "type": "object",
+  "examples": [
+    {
+      "command": "g component my-component --project=mylib",
+      "description": "Generate a component in the mylib library"
+    },
+    {
+      "command": "g component my-component --project=mylib --classComponent",
+      "description": "Generate a class component in the mylib library"
+    }
+  ],
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project.",
+      "alias": "p",
+      "$default": {
+        "$source": "projectName"
+      },
+      "x-prompt": "What is the name of the project for this component?"
+    },
+    "name": {
+      "type": "string",
+      "description": "The name of the component.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What name would you like to use for the component?"
+    },
+    "style": {
+      "description": "The file extension to be used for style files.",
+      "type": "string",
+      "alias": "s",
+      "default": "css",
+      "x-prompt": {
+        "message": "Which stylesheet format would you like to use?",
+        "type": "list",
+        "items": [
+          { "value": "css", "label": "CSS" },
+          {
+            "value": "scss",
+            "label": "SASS(.scss)       [ http://sass-lang.com          ]"
+          },
+          {
+            "value": "styl",
+            "label": "Stylus(.styl)     [ http://stylus-lang.com        ]"
+          },
+          {
+            "value": "less",
+            "label": "LESS              [ http://lesscss.org            ]"
+          },
+          {
+            "value": "styled-components",
+            "label": "styled-components [ https://styled-components.com ]"
+          },
+          {
+            "value": "@emotion/styled",
+            "label": "emotion           [ https://emotion.sh            ]"
+          },
+          {
+            "value": "styled-jsx",
+            "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
+          },
+          {
+            "value": "none",
+            "label": "None"
+          }
+        ]
+      }
+    },
+    "js": {
+      "type": "boolean",
+      "description": "Generate JavaScript files rather than TypeScript files.",
+      "default": false
+    },
+    "skipTests": {
+      "type": "boolean",
+      "description": "When true, does not create \"spec.ts\" test files for the new component.",
+      "default": false
+    },
+    "directory": {
+      "type": "string",
+      "description": "Create the component under this directory (can be nested).",
+      "alias": "d"
+    },
+    "flat": {
+      "type": "boolean",
+      "description": "Create component at the source root rather than its own directory.",
+      "default": false
+    },
+    "export": {
+      "type": "boolean",
+      "description": "When true, the component is exported from the project index.ts (if it exists).",
+      "alias": "e",
+      "default": false,
+      "x-prompt": "Should this component be exported in the project?"
+    },
+    "pascalCaseFiles": {
+      "type": "boolean",
+      "description": "Use pascal case component file name (e.g. App.tsx).",
+      "alias": "P",
+      "default": false
+    },
+    "classComponent": {
+      "type": "boolean",
+      "alias": "C",
+      "description": "Use class components instead of functional component.",
+      "default": false
+    },
+    "routing": {
+      "type": "boolean",
+      "description": "Generate a library with routes."
+    },
+    "globalCss": {
+      "type": "boolean",
+      "description": "Default is false. When true, the component is generated with *.css/*.scss instead of *.module.css/*.module.scss",
+      "default": false
+    }
+  },
+  "required": ["name", "project"]
+}

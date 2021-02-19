@@ -1,17 +1,8 @@
-import { join, sep } from 'path';
-import { tmpdir } from 'os';
-import { mkdtempSync } from 'fs';
-
-import { schema } from '@angular-devkit/core';
+import { join } from 'path';
 import { externalSchematic, Rule, Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import { Architect } from '@angular-devkit/architect';
-import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 
-import {
-  createEmptyWorkspace,
-  MockBuilderContext,
-} from '@nrwl/workspace/testing';
+import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 
 const testRunner = new SchematicTestRunner(
   '@nrwl/storybook',
@@ -43,12 +34,19 @@ const migrationRunner = new SchematicTestRunner(
   join(__dirname, '../../migrations.json')
 );
 
-export function runSchematic<SchemaOptions = any>(
+export function runSchematic(schematicName: string, options: any, tree: Tree) {
+  return testRunner.runSchematicAsync(schematicName, options, tree).toPromise();
+}
+
+export function runExternalSchematic(
+  collectionName: string,
   schematicName: string,
-  options: SchemaOptions,
+  options: any,
   tree: Tree
 ) {
-  return testRunner.runSchematicAsync(schematicName, options, tree).toPromise();
+  return testRunner
+    .runExternalSchematicAsync(collectionName, schematicName, options, tree)
+    .toPromise();
 }
 
 export function callRule(rule: Rule, tree: Tree) {
@@ -134,31 +132,4 @@ export class TestButtonComponent implements OnInit {
       `<button [attr.type]="type" [ngClass]="style"></button>`
     );
   }
-}
-
-function getTempDir() {
-  const tmpDir = tmpdir();
-  const tmpFolder = `${tmpDir}${sep}`;
-  return mkdtempSync(tmpFolder);
-}
-
-export async function getTestArchitect() {
-  const tmpDir = getTempDir();
-  const architectHost = new TestingArchitectHost(tmpDir, tmpDir);
-  const registry = new schema.CoreSchemaRegistry();
-  registry.addPostTransform(schema.transforms.addUndefinedDefaults);
-
-  const architect = new Architect(architectHost, registry);
-
-  await architectHost.addBuilderFromPackage(join(__dirname, '../..'));
-
-  return [architect, architectHost] as [Architect, TestingArchitectHost];
-}
-
-export async function getMockContext() {
-  const [architect, architectHost] = await getTestArchitect();
-
-  const context = new MockBuilderContext(architect, architectHost);
-  await context.addBuilderFromPackage(join(__dirname, '../..'));
-  return context;
 }

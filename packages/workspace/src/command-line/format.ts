@@ -2,7 +2,7 @@ import { execSync } from 'child_process';
 import * as path from 'path';
 import * as resolve from 'resolve';
 import { getProjectRoots, parseFiles } from './shared';
-import { fileExists } from '../utils/fileutils';
+import { fileExists } from '../utilities/fileutils';
 import {
   createProjectGraph,
   onlyWorkspaceProjects,
@@ -15,7 +15,7 @@ import {
   reformattedWorkspaceJsonOrNull,
   workspaceConfigName,
 } from '@nrwl/tao/src/shared/workspace';
-import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
+import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
 import { readFileSync, writeFileSync } from 'fs-extra';
 import * as stripJsonComments from 'strip-json-comments';
 

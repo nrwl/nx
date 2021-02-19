@@ -1,4 +1,4 @@
-import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
+import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
 import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';

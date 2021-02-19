@@ -70,7 +70,7 @@ function updateProjectESLintConfigsAndBuilders(host: Tree): Rule {
     ) {
       return;
     }
-    Object.keys(project.architect).forEach((targetName) => {
+    Object.keys(project.architect || {}).forEach((targetName) => {
       const target = project.architect[targetName];
       if (target.builder !== '@nrwl/linter:eslint') {
         return;

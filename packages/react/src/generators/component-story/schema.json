@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "id": "component-story",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The project name where to add the components.",
+      "examples": ["shared-ui-component"],
+      "$default": {
+        "$source": "projectName",
+        "index": 0
+      },
+      "x-prompt": "What's name of the project where the component lives?"
+    },
+    "componentPath": {
+      "type": "string",
+      "description": "Relative path to the component file from the library root",
+      "examples": ["lib/components"],
+      "x-prompt": "What's path of the component relative to the project's lib root?"
+    }
+  },
+  "required": ["project", "componentPath"]
+}

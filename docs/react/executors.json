@@ -2,6 +2,7 @@
   "angular",
   "cypress",
   "express",
+  "gatsby",
   "jest",
   "linter",
   "nest",

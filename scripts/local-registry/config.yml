@@ -1,9 +1,5 @@
 # path to a directory with all packages
 storage: ../../tmp/local-registry/storage
-auth:
-  htpasswd:
-    file: ./htpasswd
-    max_users: 1
 
 # a list of other known repositories we can talk to
 uplinks:

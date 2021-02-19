@@ -72,10 +72,10 @@ describe('app', () => {
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
-      const tslintJson = JSON.parse(
-        stripJsonComments(getFileContent(tree, 'apps/my-app/tslint.json'))
+      const eslintrcJson = JSON.parse(
+        stripJsonComments(getFileContent(tree, 'apps/my-app/.eslintrc.json'))
       );
-      expect(tslintJson.extends).toEqual('../../tslint.json');
+      expect(eslintrcJson.extends).toEqual(['../../.eslintrc.json']);
 
       expect(tree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
       const tsconfigE2E = JSON.parse(
@@ -103,9 +103,14 @@ describe('app', () => {
         { name: 'myApp', e2eTestRunner: 'protractor' },
         appTree
       );
+
       const withPrefix = await runSchematic(
         'app',
-        { name: 'myApp', prefix: 'custom', e2eTestRunner: 'protractor' },
+        {
+          name: 'myAppWithPrefix',
+          prefix: 'custom',
+          e2eTestRunner: 'protractor',
+        },
         appTree
       );
 
@@ -128,7 +133,7 @@ describe('app', () => {
         .read('apps/my-app-e2e/src/app.e2e-spec.ts')
         .toString();
       workspaceJson = JSON.parse(withPrefix.read('workspace.json').toString());
-      myAppPrefix = workspaceJson.projects['my-app'].prefix;
+      myAppPrefix = workspaceJson.projects['my-app-with-prefix'].prefix;
 
       expect(myAppPrefix).toEqual('custom');
       expect(appE2eSpec).toContain('Welcome to my-app!');
@@ -221,9 +226,9 @@ describe('app', () => {
           expectedValue: '../../../dist/out-tsc',
         },
         {
-          path: 'apps/my-dir/my-app/tslint.json',
+          path: 'apps/my-dir/my-app/.eslintrc.json',
           lookupFn: (json) => json.extends,
-          expectedValue: '../../../tslint.json',
+          expectedValue: ['../../../.eslintrc.json'],
         },
       ].forEach(hasJsonValue);
     });
@@ -400,6 +405,68 @@ describe('app', () => {
           ]
         `);
       });
+
+      describe('tslint', () => {
+        it('should add an architect target for lint', async () => {
+          const tree = await runSchematic(
+            'app',
+            { name: 'myApp', linter: 'tslint' },
+            appTree
+          );
+          const workspaceJson = readJsonInTree(tree, 'workspace.json');
+          expect(workspaceJson.projects['my-app'].architect.lint)
+            .toMatchInlineSnapshot(`
+            Object {
+              "builder": "@angular-devkit/build-angular:tslint",
+              "options": Object {
+                "exclude": Array [
+                  "**/node_modules/**",
+                  "!apps/my-app/**/*",
+                ],
+                "tsConfig": Array [
+                  "apps/my-app/tsconfig.app.json",
+                  "apps/my-app/tsconfig.spec.json",
+                  "apps/my-app/tsconfig.editor.json",
+                ],
+              },
+            }
+          `);
+        });
+
+        it('should add valid tslint JSON configuration', async () => {
+          const tree = await runSchematic(
+            'app',
+            { name: 'myApp', linter: 'tslint' },
+            appTree
+          );
+
+          const tslintConfig = readJsonInTree(tree, 'apps/my-app/tslint.json');
+          expect(tslintConfig).toMatchInlineSnapshot(`
+            Object {
+              "extends": "../../tslint.json",
+              "linterOptions": Object {
+                "exclude": Array [
+                  "!**/*",
+                ],
+              },
+              "rules": Object {
+                "component-selector": Array [
+                  true,
+                  "element",
+                  "proj",
+                  "kebab-case",
+                ],
+                "directive-selector": Array [
+                  true,
+                  "attribute",
+                  "proj",
+                  "camelCase",
+                ],
+              },
+            }
+          `);
+        });
+      });
     });
   });
 
@@ -434,13 +501,6 @@ describe('app', () => {
         expect(workspaceJson.projects['my-app'].architect.test.builder).toEqual(
           '@angular-devkit/build-angular:karma'
         );
-        expect(
-          workspaceJson.projects['my-app'].architect.lint.options.tsConfig
-        ).toEqual([
-          'apps/my-app/tsconfig.app.json',
-          'apps/my-app/tsconfig.spec.json',
-          'apps/my-app/tsconfig.editor.json',
-        ]);
         const tsconfigAppJson = readJsonInTree(
           tree,
           'apps/my-app/tsconfig.app.json'
@@ -468,12 +528,6 @@ describe('app', () => {
         ).toBeFalsy();
         const workspaceJson = readJsonInTree(tree, 'workspace.json');
         expect(workspaceJson.projects['my-app'].architect.test).toBeUndefined();
-        expect(
-          workspaceJson.projects['my-app'].architect.lint.options.tsConfig
-        ).toEqual([
-          'apps/my-app/tsconfig.app.json',
-          'apps/my-app/tsconfig.editor.json',
-        ]);
       });
     });
   });
@@ -508,10 +562,9 @@ describe('app', () => {
               },
             },
             lint: {
-              builder: '@angular-devkit/build-angular:tslint',
+              builder: '@nrwl/linter:eslint',
               options: {
-                tsConfig: ['apps/my-app-e2e/tsconfig.e2e.json'],
-                exclude: ['**/node_modules/**', '!apps/my-app-e2e/**/*'],
+                lintFilePatterns: ['apps/my-app-e2e/**/*.ts'],
               },
             },
           },

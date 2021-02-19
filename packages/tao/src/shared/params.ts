@@ -1,5 +1,5 @@
 import { ParsedArgs } from 'minimist';
-import { TargetConfiguration, WorkspaceConfiguration } from './workspace';
+import { TargetConfiguration, WorkspaceJsonConfiguration } from './workspace';
 import * as inquirer from 'inquirer';
 import { logger } from './logger';
 
@@ -15,7 +15,9 @@ type PropertyDescription = {
   default?: string | number | boolean | string[];
   $ref?: string;
   $default?: { $source: 'argv'; index: number } | { $source: 'projectName' };
-  'x-prompt'?: string | { message: string; type: string; items: any[] };
+  'x-prompt'?:
+    | string
+    | { message: string; type: string; items: any[]; multiselect?: boolean };
 };
 
 type Properties = {
@@ -98,9 +100,15 @@ function coerceType(prop: PropertyDescription | undefined, value: any) {
       }
     }
     return value;
-  } else if (normalizedPrimitiveType(prop.type) == 'boolean') {
+  } else if (
+    normalizedPrimitiveType(prop.type) == 'boolean' &&
+    isConvertibleToBoolean(value)
+  ) {
     return value === true || value == 'true';
-  } else if (normalizedPrimitiveType(prop.type) == 'number') {
+  } else if (
+    normalizedPrimitiveType(prop.type) == 'number' &&
+    isConvertibleToNumber(value)
+  ) {
     return Number(value);
   } else if (prop.type == 'array') {
     return value.split(',').map((v) => coerceType(prop.items, v));
@@ -222,6 +230,14 @@ function validateProperty(
     if (schema.type && typeof value !== normalizedPrimitiveType(schema.type)) {
       throw new SchemaError(
         `Property '${propName}' does not match the schema. '${value}' should be a '${schema.type}'.`
+      );
+    }
+
+    if (schema.enum && !schema.enum.includes(value)) {
+      throw new SchemaError(
+        `Property '${propName}' does not match the schema. '${value}' should be one of ${schema.enum.join(
+          ','
+        )}.`
       );
     }
   } else if (Array.isArray(value)) {
@@ -353,7 +369,7 @@ export async function combineOptionsForGenerator(
   commandLineOpts: Options,
   collectionName: string,
   generatorName: string,
-  wc: WorkspaceConfiguration | null,
+  wc: WorkspaceJsonConfiguration | null,
   schema: Schema,
   isInteractive: boolean,
   defaultProjectName: string | null,
@@ -418,7 +434,7 @@ export function convertSmartDefaultsIntoNamedParams(
       v.visible === false &&
       relativeCwd
     ) {
-      opts[k] = relativeCwd;
+      opts[k] = relativeCwd.replace(/\\/g, '/');
     }
   });
   delete opts['_'];
@@ -426,7 +442,7 @@ export function convertSmartDefaultsIntoNamedParams(
 
 function getGeneratorDefaults(
   projectName: string | null,
-  wc: WorkspaceConfiguration,
+  wc: WorkspaceJsonConfiguration,
   collectionName: string,
   generatorName: string
 ) {
@@ -479,6 +495,9 @@ async function promptForValues(opts: Options, schema: Schema) {
       if (typeof v['x-prompt'] === 'string') {
         question.message = v['x-prompt'];
         question.type = v.type === 'boolean' ? 'confirm' : 'string';
+      } else if (v['x-prompt'].type == 'number') {
+        question.message = v['x-prompt'].message;
+        question.type = 'number';
       } else if (
         v['x-prompt'].type == 'confirmation' ||
         v['x-prompt'].type == 'confirm'
@@ -487,7 +506,7 @@ async function promptForValues(opts: Options, schema: Schema) {
         question.type = 'confirm';
       } else {
         question.message = v['x-prompt'].message;
-        question.type = 'list';
+        question.type = v['x-prompt'].multiselect ? 'checkbox' : 'list';
         question.choices =
           v['x-prompt'].items &&
           v['x-prompt'].items.map((item) => {
@@ -563,4 +582,33 @@ function levenshtein(a: string, b: string) {
 
 function isTTY(): boolean {
   return !!process.stdout.isTTY && process.env['CI'] !== 'true';
+}
+
+/**
+ * Verifies whether the given value can be converted to a boolean
+ * @param value
+ */
+function isConvertibleToBoolean(value) {
+  if ('boolean' === typeof value) {
+    return true;
+  }
+
+  if ('string' === typeof value && /true|false/.test(value)) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Verifies whether the given value can be converted to a number
+ * @param value
+ */
+function isConvertibleToNumber(value) {
+  // exclude booleans explicitly
+  if ('boolean' === typeof value) {
+    return false;
+  }
+
+  return !isNaN(+value);
 }

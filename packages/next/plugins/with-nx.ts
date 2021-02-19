@@ -1,5 +1,5 @@
 const { join } = require('path');
-const { appRootPath } = require('@nrwl/workspace/src/utils/app-root');
+const { appRootPath } = require('@nrwl/workspace/src/utilities/app-root');
 const { workspaceLayout } = require('@nrwl/workspace/src/core/file-utils');
 
 function regexEqual(x, y) {

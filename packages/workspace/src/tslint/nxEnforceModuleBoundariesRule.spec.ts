@@ -12,7 +12,7 @@ import { TargetProjectLocator } from '../core/target-project-locator';
 import { readFileSync } from 'fs';
 
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('../utils/app-root', () => ({ appRootPath: '/root' }));
+jest.mock('../utilities/app-root', () => ({ appRootPath: '/root' }));
 
 const tsconfig = {
   compilerOptions: {

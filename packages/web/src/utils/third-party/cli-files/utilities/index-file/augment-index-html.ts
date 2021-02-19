@@ -11,7 +11,7 @@ import { RawSource, ReplaceSource } from 'webpack-sources';
 
 const parse5 = require('parse5');
 
-export type LoadOutputFileFunctionType = (file: string) => Promise<string>;
+export type LoadOutputFileFunctionType = (file: string) => string;
 
 export type CrossOriginValue = 'none' | 'anonymous' | 'use-credentials';
 
@@ -56,9 +56,7 @@ export interface FileInfo {
  * after processing several configurations in order to build different sets of
  * bundles for differential serving.
  */
-export async function augmentIndexHtml(
-  params: AugmentIndexHtmlOptions
-): Promise<string> {
+export function augmentIndexHtml(params: AugmentIndexHtmlOptions): string {
   const {
     loadOutputFile,
     files,
@@ -178,7 +176,7 @@ export async function augmentIndexHtml(
     }
 
     if (params.sri) {
-      const content = await loadOutputFile(script);
+      const content = loadOutputFile(script);
       attrs.push(..._generateSriAttributes(content));
     }
 
@@ -247,7 +245,7 @@ export async function augmentIndexHtml(
     }
 
     if (params.sri) {
-      const content = await loadOutputFile(stylesheet);
+      const content = loadOutputFile(stylesheet);
       attrs.push(..._generateSriAttributes(content));
     }
 

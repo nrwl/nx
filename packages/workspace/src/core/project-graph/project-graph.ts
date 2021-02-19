@@ -12,6 +12,7 @@ import {
 import { normalizeNxJson } from '../normalize-nx-json';
 import {
   BuildDependencies,
+  buildExplicitPackageJsonDependencies,
   buildExplicitTypeScriptDependencies,
   buildImplicitProjectDependencies,
 } from './build-dependencies';
@@ -87,12 +88,13 @@ function buildProjectGraph(
   performance.mark('build project graph:start');
   const builder = new ProjectGraphBuilder(projectGraph);
   const buildNodesFns: BuildNodes[] = [
-    buildWorkspaceProjectNodes,
+    buildWorkspaceProjectNodes(fileRead),
     buildNpmPackageNodes,
   ];
   const buildDependenciesFns: BuildDependencies[] = [
     buildExplicitTypeScriptDependencies,
     buildImplicitProjectDependencies,
+    buildExplicitPackageJsonDependencies,
   ];
   buildNodesFns.forEach((f) => f(ctx, builder.addNode.bind(builder), fileRead));
   buildDependenciesFns.forEach((f) =>

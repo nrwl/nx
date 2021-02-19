@@ -15,7 +15,10 @@ function getRollupOptions(options: rollup.RollupOptions) {
   } else {
     options.output = {
       ...options.output,
-      ...extraGlobals,
+      globals: {
+        ...options.output.globals,
+        ...extraGlobals,
+      },
     };
   }
   return options;

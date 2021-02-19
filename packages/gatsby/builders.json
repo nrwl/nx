@@ -1,0 +1,14 @@
+{
+  "builders": {
+    "build": {
+      "implementation": "./src/builders/build/builder",
+      "schema": "./src/builders/build/schema.json",
+      "description": "Build a Gatsby app"
+    },
+    "server": {
+      "implementation": "./src/builders/server/builder",
+      "schema": "./src/builders/server/schema.json",
+      "description": "Starts server for app"
+    }
+  }
+}

@@ -1,41 +1,9 @@
-import { join, relative } from 'path';
-import {
-  BuilderContext,
-  BuilderOutput,
-  createBuilder,
-} from '@angular-devkit/architect';
-import { JsonObject } from '@angular-devkit/core';
-import { from, Observable, of } from 'rxjs';
-import { catchError, concatMap, last, switchMap, tap } from 'rxjs/operators';
-import { getBabelInputPlugin } from '@rollup/plugin-babel';
-import * as autoprefixer from 'autoprefixer';
+import { ExecutorContext, logger, names } from '@nrwl/devkit';
+
 import * as rollup from 'rollup';
 import * as peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import * as localResolve from 'rollup-plugin-local-resolve';
-import { BuildResult } from '@angular-devkit/build-webpack';
-import {
-  readJsonFile,
-  writeJsonFile,
-} from '@nrwl/workspace/src/utils/fileutils';
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
-
-import {
-  calculateProjectDependencies,
-  checkDependentProjectsHaveBeenBuilt,
-  computeCompilerOptionsPaths,
-  DependentBuildableProjectNode,
-  updateBuildableProjectPackageJsonDependencies,
-} from '@nrwl/workspace/src/utils/buildable-libs-utils';
-import { PackageBuilderOptions } from '../../utils/types';
-import { runRollup } from './run-rollup';
-import {
-  NormalizedBundleBuilderOptions,
-  NormalizedCopyAssetOption,
-  normalizePackageOptions,
-} from '../../utils/normalize';
-import { getSourceRoot } from '../../utils/source-root';
-import { deleteOutputDir } from '../../utils/delete-output-dir';
-import { names } from '@nrwl/devkit';
+import { getBabelInputPlugin } from '@rollup/plugin-babel';
 
 // These use require because the ES import isn't correct.
 const resolve = require('@rollup/plugin-node-resolve');
@@ -47,7 +15,35 @@ const copy = require('rollup-plugin-copy');
 const postcss = require('rollup-plugin-postcss');
 const filesize = require('rollup-plugin-filesize');
 
-export default createBuilder<PackageBuilderOptions & JsonObject>(run);
+import { join, relative } from 'path';
+import { from, Observable, of } from 'rxjs';
+import { catchError, concatMap, last, tap } from 'rxjs/operators';
+import { eachValueFrom } from 'rxjs-for-await';
+import * as autoprefixer from 'autoprefixer';
+
+import {
+  readJsonFile,
+  writeJsonFile,
+} from '@nrwl/workspace/src/utilities/fileutils';
+import {
+  createProjectGraph,
+  ProjectGraphNode,
+} from '@nrwl/workspace/src/core/project-graph';
+import {
+  calculateProjectDependencies,
+  checkDependentProjectsHaveBeenBuilt,
+  computeCompilerOptionsPaths,
+  DependentBuildableProjectNode,
+  updateBuildableProjectPackageJsonDependencies,
+} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+
+import { AssetGlobPattern, PackageBuilderOptions } from '../../utils/types';
+import {
+  NormalizedBundleBuilderOptions,
+  normalizePackageOptions,
+} from '../../utils/normalize';
+import { deleteOutputDir } from '../../utils/delete-output-dir';
+import { runRollup } from './run-rollup';
 
 interface OutputConfig {
   format: rollup.ModuleFormat;
@@ -62,106 +58,106 @@ const outputConfigs: OutputConfig[] = [
 
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
 
-export function run(
+export default function run(
   rawOptions: PackageBuilderOptions,
-  context: BuilderContext
-): Observable<BuilderOutput> {
+  context: ExecutorContext
+) {
+  const project = context.workspace.projects[context.projectName];
+  const sourceRoot = project.sourceRoot;
   const projGraph = createProjectGraph();
   const { target, dependencies } = calculateProjectDependencies(
     projGraph,
-    context
+    context.root,
+    context.projectName,
+    context.targetName,
+    context.configurationName
+  );
+  if (
+    !checkDependentProjectsHaveBeenBuilt(
+      context.root,
+      context.projectName,
+      context.targetName,
+      dependencies
+    )
+  ) {
+    throw new Error();
+  }
+
+  const options = normalizePackageOptions(rawOptions, context.root, sourceRoot);
+  const packageJson = readJsonFile(options.project);
+
+  const rollupOptions = createRollupOptions(
+    options,
+    dependencies,
+    context,
+    packageJson,
+    sourceRoot
   );
 
-  return from(getSourceRoot(context)).pipe(
-    switchMap((sourceRoot) => {
-      if (!checkDependentProjectsHaveBeenBuilt(context, dependencies)) {
-        return of({ success: false });
-      }
-
-      const options = normalizePackageOptions(
-        rawOptions,
-        context.workspaceRoot,
-        sourceRoot
-      );
-      const packageJson = readJsonFile(options.project);
-      const rollupOptions = createRollupOptions(
-        options,
-        dependencies,
-        context,
-        packageJson,
-        sourceRoot
-      );
-
-      if (options.watch) {
-        return new Observable<BuildResult>((obs) => {
-          const watcher = rollup.watch(rollupOptions);
-          watcher.on('event', (data) => {
-            if (data.code === 'START') {
-              context.logger.info(`Bundling ${context.target.project}...`);
-            } else if (data.code === 'END') {
-              updatePackageJson(
-                options,
-                context,
-                target,
-                dependencies,
-                packageJson
-              );
-              context.logger.info(
-                'Bundle complete. Watching for file changes...'
-              );
-              obs.next({ success: true });
-            } else if (data.code === 'ERROR') {
-              context.logger.error(
-                `Error during bundle: ${data.error.message}`
-              );
-              obs.next({ success: false });
-            }
-          });
-          // Teardown logic. Close watcher when unsubscribed.
-          return () => watcher.close();
+  if (options.watch) {
+    const watcher = rollup.watch(rollupOptions);
+    return eachValueFrom(
+      new Observable<{ success: boolean }>((obs) => {
+        watcher.on('event', (data) => {
+          if (data.code === 'START') {
+            logger.info(`Bundling ${context.projectName}...`);
+          } else if (data.code === 'END') {
+            updatePackageJson(
+              options,
+              context,
+              target,
+              dependencies,
+              packageJson
+            );
+            logger.info('Bundle complete. Watching for file changes...');
+            obs.next({ success: true });
+          } else if (data.code === 'ERROR') {
+            logger.error(`Error during bundle: ${data.error.message}`);
+            obs.next({ success: false });
+          }
         });
-      } else {
-        context.logger.info(`Bundling ${context.target.project}...`);
+        // Teardown logic. Close watcher when unsubscribed.
+        return () => watcher.close();
+      })
+    );
+  } else {
+    logger.info(`Bundling ${context.projectName}...`);
 
-        // Delete output path before bundling
-        if (options.deleteOutputPath) {
-          deleteOutputDir(context.workspaceRoot, options.outputPath);
-        }
+    // Delete output path before bundling
+    if (options.deleteOutputPath) {
+      deleteOutputDir(context.root, options.outputPath);
+    }
 
-        return from(rollupOptions).pipe(
-          concatMap((opts) =>
-            runRollup(opts).pipe(
-              catchError((e) => {
-                context.logger.error(`Error during bundle: ${e}`);
-                return of({ success: false });
-              }),
-              last(),
-              tap({
-                next: (result) => {
-                  if (result.success) {
-                    updatePackageJson(
-                      options,
-                      context,
-                      target,
-                      dependencies,
-                      packageJson
-                    );
-                    context.logger.info(
-                      `Bundle complete: ${context.target.project}`
-                    );
-                  } else {
-                    context.logger.error(
-                      `Bundle failed: ${context.target.project}`
-                    );
-                  }
-                },
-              })
-            )
+    return from(rollupOptions)
+      .pipe(
+        concatMap((opts) =>
+          runRollup(opts).pipe(
+            catchError((e) => {
+              logger.error(`Error during bundle: ${e}`);
+              return of({ success: false });
+            }),
+            last(),
+            tap({
+              next: (result) => {
+                if (result.success) {
+                  updatePackageJson(
+                    options,
+                    context,
+                    target,
+                    dependencies,
+                    packageJson
+                  );
+                  logger.info(`Bundle complete: ${context.projectName}`);
+                } else {
+                  logger.error(`Bundle failed: ${context.projectName}`);
+                }
+              },
+            })
           )
-        );
-      }
-    })
-  );
+        )
+      )
+      .toPromise();
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -169,7 +165,7 @@ export function run(
 export function createRollupOptions(
   options: NormalizedBundleBuilderOptions,
   dependencies: DependentBuildableProjectNode[],
-  context: BuilderContext,
+  context: ExecutorContext,
   packageJson: any,
   sourceRoot: string
 ): rollup.InputOptions[] {
@@ -215,7 +211,7 @@ export function createRollupOptions(
         extensions: fileExtensions,
       }),
       getBabelInputPlugin({
-        cwd: join(context.workspaceRoot, sourceRoot),
+        cwd: join(context.root, sourceRoot),
         rootMode: 'upward',
         babelrc: true,
         extensions: fileExtensions,
@@ -249,8 +245,8 @@ export function createRollupOptions(
       output: {
         globals,
         format: config.format,
-        file: `${options.outputPath}/${context.target.project}.${config.extension}.js`,
-        name: options.umdName || names(context.target.project).className,
+        file: `${options.outputPath}/${context.projectName}.${config.extension}.js`,
+        name: options.umdName || names(context.projectName).className,
       },
       external: (id) => externalPackages.includes(id),
       plugins,
@@ -264,12 +260,12 @@ export function createRollupOptions(
 
 function updatePackageJson(
   options: NormalizedBundleBuilderOptions,
-  context,
-  target,
-  dependencies,
-  packageJson
+  context: ExecutorContext,
+  target: ProjectGraphNode,
+  dependencies: DependentBuildableProjectNode[],
+  packageJson: any
 ) {
-  const entryFileTmpl = `./${context.target.project}.<%= extension %>.js`;
+  const entryFileTmpl = `./${context.projectName}.<%= extension %>.js`;
   const typingsFile = relative(options.entryRoot, options.entryFile).replace(
     /\.[jt]sx?$/,
     '.d.ts'
@@ -284,7 +280,10 @@ function updatePackageJson(
     options.updateBuildableProjectDepsInPackageJson
   ) {
     updateBuildableProjectPackageJsonDependencies(
-      context,
+      context.root,
+      context.projectName,
+      context.targetName,
+      context.configurationName,
       target,
       dependencies,
       options.buildableProjectDepsInPackageJsonType
@@ -299,7 +298,7 @@ interface RollupCopyAssetOption {
 
 function convertCopyAssetsToRollupOptions(
   outputPath: string,
-  assets: NormalizedCopyAssetOption[]
+  assets: AssetGlobPattern[]
 ): RollupCopyAssetOption[] {
   return assets
     ? assets.map((a) => ({

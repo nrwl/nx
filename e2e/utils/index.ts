@@ -137,8 +137,11 @@ export function newProject({ name = uniq('proj') } = {}): string {
       const packages = [
         `@nrwl/angular`,
         `@nrwl/express`,
+        `@nrwl/jest`,
+        `@nrwl/linter`,
         `@nrwl/nest`,
         `@nrwl/next`,
+        `@nrwl/gatsby`,
         `@nrwl/node`,
         `@nrwl/react`,
         `@nrwl/storybook`,
@@ -162,6 +165,14 @@ export function newProject({ name = uniq('proj') } = {}): string {
     console.log(e.message);
     throw e;
   }
+}
+
+// Useful in order to cleanup space during CI to prevent `No space left on device` exceptions
+export function removeProject({ onlyOnCI = false } = {}) {
+  if (onlyOnCI && !isCI) {
+    return;
+  }
+  removeSync(tmpProjPath());
 }
 
 export function supportUi() {
@@ -479,6 +490,7 @@ export function getPackageManagerCommand({
   runNx: string;
   runNxSilent: string;
   addDev: string;
+  list: string;
 } {
   const scriptsPrependNodePathFlag = scriptsPrependNodePath
     ? ' --scripts-prepend-node-path '
@@ -490,6 +502,7 @@ export function getPackageManagerCommand({
       runNx: `npm run nx${scriptsPrependNodePathFlag} --`,
       runNxSilent: `npm run nx --silent${scriptsPrependNodePathFlag} --`,
       addDev: `npm install -D`,
+      list: 'npm ls --depth 10',
     },
     yarn: {
       // `yarn create nx-workspace` is failing due to wrong global path
@@ -497,12 +510,20 @@ export function getPackageManagerCommand({
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
       addDev: `yarn add -D`,
+      list: 'npm ls --depth 10',
     },
     pnpm: {
       createWorkspace: `pnpx create-nx-workspace@${process.env.PUBLISHED_VERSION}`,
       runNx: `pnpm run nx --`,
       runNxSilent: `pnpm run nx --silent --`,
       addDev: `pnpm add -D`,
+      list: 'npm ls --depth 10',
     },
   }[packageManager];
+}
+
+export function expectNoAngularDevkit() {
+  const { list } = getPackageManagerCommand();
+  const result = runCommand(`${list} @angular-devkit/core`);
+  expect(result).not.toContain('@angular-devkit/core');
 }

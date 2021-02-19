@@ -5,7 +5,7 @@ import {
 } from './project-graph/project-graph-models';
 import { TargetProjectLocator } from './target-project-locator';
 
-jest.mock('../utils/app-root', () => ({
+jest.mock('../utilities/app-root', () => ({
   appRootPath: '/root',
 }));
 jest.mock('fs', () => require('memfs').fs);

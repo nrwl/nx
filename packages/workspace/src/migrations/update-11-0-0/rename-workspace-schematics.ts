@@ -3,6 +3,8 @@ import * as fs from 'fs-extra';
 
 export default function update(): Rule {
   return () => {
-    fs.moveSync('tools/schematics', 'tools/generators');
+    if (fs.existsSync('tools/schematics')) {
+      fs.moveSync('tools/schematics', 'tools/generators');
+    }
   };
 }

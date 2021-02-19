@@ -1,18 +1,17 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  expectNoAngularDevkit,
   readJson,
+  removeProject,
   runCreateWorkspace,
-  tmpProjPath,
   uniq,
 } from '@nrwl/e2e/utils';
-import { existsSync, mkdirSync, remove } from 'fs-extra';
+import { existsSync, mkdirSync } from 'fs-extra';
 import { execSync } from 'child_process';
-import * as isCI from 'is-ci';
 
 describe('create-nx-workspace', () => {
-  // Cleanup space during CI to prevent `No space left on device` exceptions
-  afterEach(() => isCI && remove(tmpProjPath()));
+  afterEach(() => removeProject({ onlyOnCI: true }));
 
   it('should be able to create an empty workspace', () => {
     const wsName = uniq('empty');
@@ -28,6 +27,8 @@ describe('create-nx-workspace', () => {
       'libs/.gitkeep'
     );
     checkFilesDoNotExist('yarn.lock');
+
+    expectNoAngularDevkit();
   });
 
   it('should be able to create an oss workspace', () => {
@@ -55,6 +56,8 @@ describe('create-nx-workspace', () => {
       style: 'css',
       appName,
     });
+
+    expectNoAngularDevkit();
   });
 
   it('should be able to create an next workspace', () => {
@@ -75,6 +78,8 @@ describe('create-nx-workspace', () => {
       style: 'css',
       appName,
     });
+
+    expectNoAngularDevkit();
   });
 
   it('should be able to create an angular + nest workspace', () => {

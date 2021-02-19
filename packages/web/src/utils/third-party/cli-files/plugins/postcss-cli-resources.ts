@@ -7,7 +7,7 @@
  */
 import { interpolateName } from 'loader-utils';
 import * as path from 'path';
-import * as postcss from 'postcss';
+import type { Declaration } from 'postcss';
 import * as url from 'url';
 import * as webpack from 'webpack';
 
@@ -45,128 +45,132 @@ async function resolve(
   }
 }
 
-export default postcss.plugin(
-  'postcss-cli-resources',
-  (options: PostcssCliResourcesOptions) => {
-    const {
-      deployUrl = '',
-      baseHref = '',
-      resourcesOutputPath = '',
-      rebaseRootRelative = false,
-      filename,
-      loader,
-    } = options;
+module.exports.postcss = true;
 
-    const dedupeSlashes = (url: string) => url.replace(/\/\/+/g, '/');
+export default (options: PostcssCliResourcesOptions) => {
+  const {
+    deployUrl = '',
+    baseHref = '',
+    resourcesOutputPath = '',
+    rebaseRootRelative = false,
+    filename,
+    loader,
+  } = options;
 
-    const process = async (
-      inputUrl: string,
-      context: string,
-      resourceCache: Map<string, string>
-    ) => {
-      // If root-relative, absolute or protocol relative url, leave as is
-      if (/^((?:\w+:)?\/\/|data:|chrome:|#)/.test(inputUrl)) {
-        return inputUrl;
+  const dedupeSlashes = (url: string) => url.replace(/\/\/+/g, '/');
+
+  const process = async (
+    inputUrl: string,
+    context: string,
+    resourceCache: Map<string, string>
+  ) => {
+    // If root-relative, absolute or protocol relative url, leave as is
+    if (/^((?:\w+:)?\/\/|data:|chrome:|#)/.test(inputUrl)) {
+      return inputUrl;
+    }
+
+    if (!rebaseRootRelative && /^\//.test(inputUrl)) {
+      return inputUrl;
+    }
+
+    // If starts with a caret, remove and return remainder
+    // this supports bypassing asset processing
+    if (inputUrl.startsWith('^')) {
+      return inputUrl.substr(1);
+    }
+
+    const cacheKey = path.resolve(context, inputUrl);
+    const cachedUrl = resourceCache.get(cacheKey);
+    if (cachedUrl) {
+      return cachedUrl;
+    }
+
+    if (inputUrl.startsWith('~')) {
+      inputUrl = inputUrl.substr(1);
+    }
+
+    if (inputUrl.startsWith('/')) {
+      let outputUrl = '';
+      if (deployUrl.match(/:\/\//) || deployUrl.startsWith('/')) {
+        // If deployUrl is absolute or root relative, ignore baseHref & use deployUrl as is.
+        outputUrl = `${deployUrl.replace(/\/$/, '')}${inputUrl}`;
+      } else if (baseHref.match(/:\/\//)) {
+        // If baseHref contains a scheme, include it as is.
+        outputUrl =
+          baseHref.replace(/\/$/, '') +
+          dedupeSlashes(`/${deployUrl}/${inputUrl}`);
+      } else {
+        // Join together base-href, deploy-url and the original URL.
+        outputUrl = dedupeSlashes(`/${baseHref}/${deployUrl}/${inputUrl}`);
       }
 
-      if (!rebaseRootRelative && /^\//.test(inputUrl)) {
-        return inputUrl;
-      }
+      resourceCache.set(cacheKey, outputUrl);
 
-      // If starts with a caret, remove and return remainder
-      // this supports bypassing asset processing
-      if (inputUrl.startsWith('^')) {
-        return inputUrl.substr(1);
-      }
+      return outputUrl;
+    }
 
-      const cacheKey = path.resolve(context, inputUrl);
-      const cachedUrl = resourceCache.get(cacheKey);
-      if (cachedUrl) {
-        return cachedUrl;
-      }
-
-      if (inputUrl.startsWith('~')) {
-        inputUrl = inputUrl.substr(1);
-      }
-
-      if (inputUrl.startsWith('/')) {
-        let outputUrl = '';
-        if (deployUrl.match(/:\/\//) || deployUrl.startsWith('/')) {
-          // If deployUrl is absolute or root relative, ignore baseHref & use deployUrl as is.
-          outputUrl = `${deployUrl.replace(/\/$/, '')}${inputUrl}`;
-        } else if (baseHref.match(/:\/\//)) {
-          // If baseHref contains a scheme, include it as is.
-          outputUrl =
-            baseHref.replace(/\/$/, '') +
-            dedupeSlashes(`/${deployUrl}/${inputUrl}`);
-        } else {
-          // Join together base-href, deploy-url and the original URL.
-          outputUrl = dedupeSlashes(`/${baseHref}/${deployUrl}/${inputUrl}`);
-        }
-
-        resourceCache.set(cacheKey, outputUrl);
-
-        return outputUrl;
-      }
-
-      const { pathname, hash, search } = url.parse(
-        inputUrl.replace(/\\/g, '/')
-      );
-      const resolver = (file: string, base: string) =>
-        new Promise<string>((resolve, reject) => {
-          loader.resolve(base, decodeURI(file), (err, result) => {
-            if (err) {
-              reject(err);
-
-              return;
-            }
-            resolve(result);
-          });
-        });
-
-      const result = await resolve(pathname as string, context, resolver);
-
-      return new Promise<string>((resolve, reject) => {
-        loader.fs.readFile(result, (err: Error, content: Buffer) => {
+    const { pathname, hash, search } = url.parse(inputUrl.replace(/\\/g, '/'));
+    const resolver = (file: string, base: string) =>
+      new Promise<string>((resolve, reject) => {
+        loader.resolve(base, decodeURI(file), (err, result) => {
           if (err) {
             reject(err);
 
             return;
           }
-
-          let outputPath = interpolateName(
-            { resourcePath: result } as webpack.loader.LoaderContext,
-            filename,
-            { content }
-          );
-
-          if (resourcesOutputPath) {
-            outputPath = path.posix.join(resourcesOutputPath, outputPath);
-          }
-
-          loader.addDependency(result);
-          loader.emitFile(outputPath, content, undefined);
-
-          let outputUrl = outputPath.replace(/\\/g, '/');
-          if (hash || search) {
-            outputUrl = url.format({ pathname: outputUrl, hash, search });
-          }
-
-          if (
-            deployUrl &&
-            loader.loaders[loader.loaderIndex].options.ident !== 'extracted'
-          ) {
-            outputUrl = url.resolve(deployUrl, outputUrl);
-          }
-
-          resourceCache.set(cacheKey, outputUrl);
-          resolve(outputUrl);
+          resolve(result);
         });
       });
-    };
 
-    return (root) => {
-      const urlDeclarations: Array<postcss.Declaration> = [];
+    const result = await resolve(pathname as string, context, resolver);
+
+    return new Promise<string>((resolve, reject) => {
+      loader.fs.readFile(result, (err: Error, content: Buffer) => {
+        if (err) {
+          reject(err);
+
+          return;
+        }
+
+        let outputPath = interpolateName(
+          { resourcePath: result } as webpack.loader.LoaderContext,
+          filename,
+          { content }
+        );
+
+        if (resourcesOutputPath) {
+          outputPath = path.posix.join(resourcesOutputPath, outputPath);
+        }
+
+        loader.addDependency(result);
+        loader.emitFile(outputPath, content, undefined);
+
+        let outputUrl = outputPath.replace(/\\/g, '/');
+        if (hash || search) {
+          outputUrl = url.format({ pathname: outputUrl, hash, search });
+        }
+
+        if (
+          deployUrl &&
+          loader.loaders[loader.loaderIndex].options.ident !== 'extracted'
+        ) {
+          outputUrl = url.resolve(deployUrl, outputUrl);
+        }
+
+        resourceCache.set(cacheKey, outputUrl);
+        resolve(outputUrl);
+      });
+    });
+  };
+
+  return {
+    postcssPlugin: 'postcss-cli-resources',
+    Once(root) {
+      const urlDeclarations: Array<Declaration> = [];
+      /**
+       * TODO: Explore if this can be rewritten using the new `Declaration()`
+       * listener added in postcss v8
+       */
       root.walkDecls((decl) => {
         if (decl.value && decl.value.includes('url')) {
           urlDeclarations.push(decl);
@@ -230,6 +234,6 @@ export default postcss.plugin(
           }
         })
       );
-    };
-  }
-);
+    },
+  };
+};

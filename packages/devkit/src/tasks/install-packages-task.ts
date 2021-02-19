@@ -1,7 +1,12 @@
 import { Tree } from '@nrwl/tao/src/shared/tree';
 import { execSync } from 'child_process';
-import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { join } from 'path';
+import {
+  detectPackageManager,
+  getPackageManagerCommand,
+} from '@nrwl/tao/src/shared/package-manager';
+
+import { joinPathFragments } from '../utils/path';
 
 let storedPackageJsonValue;
 
@@ -15,16 +20,25 @@ let storedPackageJsonValue;
 export function installPackagesTask(
   host: Tree,
   alwaysRun: boolean = false,
-  cwd: string = ''
+  cwd: string = '',
+  packageManager?: string
 ) {
-  const packageJsonValue = host.read(join(cwd, 'package.json')).toString();
+  const packageJsonValue = host
+    .read(joinPathFragments(cwd, 'package.json'))
+    .toString();
   if (
-    host.listChanges().find((f) => f.path === join(cwd, 'package.json')) ||
+    host
+      .listChanges()
+      .find((f) => f.path === joinPathFragments(cwd, 'package.json')) ||
     alwaysRun
   ) {
+    // Don't install again if install was already executed with package.json
     if (storedPackageJsonValue != packageJsonValue || alwaysRun) {
-      storedPackageJsonValue = host.read(join(cwd, 'package.json')).toString();
-      const pmc = getPackageManagerCommand();
+      storedPackageJsonValue = host
+        .read(joinPathFragments(cwd, 'package.json'))
+        .toString();
+      const pm = packageManager || detectPackageManager(cwd);
+      const pmc = getPackageManagerCommand(pm);
       execSync(pmc.install, {
         cwd: join(host.root, cwd),
         stdio: [0, 1, 2],

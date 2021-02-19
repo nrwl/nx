@@ -16,9 +16,9 @@ jest.mock('glob');
 import * as glob from 'glob';
 jest.mock('fs-extra');
 import * as fs from 'fs-extra';
-jest.mock('@nrwl/workspace/src/utils/fileutils');
-import * as fsUtility from '@nrwl/workspace/src/utils/fileutils';
-import * as tsUtils from '@nrwl/workspace/src/utils/typescript';
+jest.mock('@nrwl/workspace/src/utilities/fileutils');
+import * as fsUtility from '@nrwl/workspace/src/utilities/fileutils';
+import * as tsUtils from '@nrwl/workspace/src/utilities/typescript';
 import * as ts from 'typescript';
 
 describe('NodePackageBuilder', () => {

@@ -7,7 +7,7 @@ import {
   Schema,
 } from '../shared/params';
 import { printHelp } from '../shared/print-help';
-import { WorkspaceConfiguration, Workspaces } from '../shared/workspace';
+import { WorkspaceJsonConfiguration, Workspaces } from '../shared/workspace';
 import { statSync, unlinkSync, writeFileSync } from 'fs';
 import { mkdirpSync, rmdirSync } from 'fs-extra';
 import * as path from 'path';
@@ -41,7 +41,7 @@ function parseGenerateOpts(
 ): GenerateOptions {
   const generatorOptions = convertToCamelCase(
     minimist(args, {
-      boolean: ['help', 'dryRun', 'debug', 'force', 'interactive'],
+      boolean: ['help', 'dryRun', 'debug', 'force', 'interactive', 'defaults'],
       alias: {
         dryRun: 'dry-run',
         d: 'dryRun',
@@ -53,6 +53,14 @@ function parseGenerateOpts(
       },
     })
   );
+
+  // TODO: vsavkin remove defaults in Nx 13
+  if (generatorOptions.defaults) {
+    logger.warn(
+      `Use --no-interactive instead of --defaults. The --defaults option will be removed in Nx 13.`
+    );
+    generatorOptions.interactive = false;
+  }
 
   let collectionName: string | null = null;
   let generatorName: string | null = null;
@@ -121,7 +129,7 @@ export function printGenHelp(opts: GenerateOptions, schema: Schema) {
   });
 }
 
-function readDefaultCollection(workspace: WorkspaceConfiguration) {
+function readDefaultCollection(workspace: WorkspaceJsonConfiguration) {
   return workspace.cli ? workspace.cli.defaultCollection : null;
 }
 

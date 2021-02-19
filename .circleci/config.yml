@@ -8,7 +8,7 @@ var_2:
     'e2e-cli,e2e-nx-plugin,dep-graph-client-e2e',
     'e2e-cypress,e2e-jest',
     'e2e-react',
-    'e2e-next',
+    'e2e-next,e2e-gatsby',
     'e2e-node',
     'e2e-web,e2e-linter,e2e-storybook',
   ]
@@ -132,26 +132,5 @@ workflows:
           matrix:
             parameters:
               os: ['linux']
-              packages: *ng_cli
-          cli: 'angular'
-
-  build-windows:
-    triggers:
-      - schedule:
-          cron: '0 0 * * *'
-          filters:
-            branches:
-              only:
-                - master
-    jobs:
-      - e2e:
-          matrix:
-            parameters:
-              os: ['windows']
-              packages: *nx_cli
-      - e2e:
-          matrix:
-            parameters:
-              os: ['windows']
               packages: *ng_cli
           cli: 'angular'

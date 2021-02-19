@@ -2,15 +2,18 @@ import {
   expectTestsPass,
   newProject,
   readJson,
+  removeProject,
   runCLI,
   runCLIAsync,
   uniq,
 } from '@nrwl/e2e/utils';
 
 describe('ngrx', () => {
-  it('should work', async () => {
-    newProject();
+  beforeEach(() => newProject());
 
+  afterEach(() => removeProject({ onlyOnCI: true }));
+
+  it('should work', async () => {
     const myapp = uniq('myapp');
     runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
 
@@ -37,8 +40,6 @@ describe('ngrx', () => {
   }, 1000000);
 
   it('should work with creators', async () => {
-    newProject();
-
     const myapp = uniq('myapp');
     runCLI(`generate @nrwl/angular:app ${myapp} --routing --no-interactive`);
 

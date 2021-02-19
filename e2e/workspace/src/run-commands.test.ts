@@ -1,15 +1,17 @@
 import {
   newProject,
   readJson,
+  removeProject,
   runCLI,
   uniq,
   updateFile,
   workspaceConfigName,
-  getPackageManagerCommand,
 } from '@nrwl/e2e/utils';
 
 describe('Run Commands', () => {
   beforeAll(() => newProject());
+
+  afterAll(() => removeProject({ onlyOnCI: true }));
 
   it('should not override environment variables already set when setting a custom env file path', async (done) => {
     const nodeapp = uniq('nodeapp');
@@ -23,16 +25,20 @@ describe('Run Commands', () => {
       'SHARED_VAR=shared-nested-value\nNESTED_ONLY=nested-only-value'
     );
 
-    const command =
-      process.platform === 'win32'
-        ? `"echo %SHARED_VAR% %ROOT_ONLY% %NESTED_ONLY%"` // Windows
-        : getPackageManagerCommand().runNx.startsWith('yarn')
-        ? `'echo $SHARED_VAR $ROOT_ONLY $NESTED_ONLY'` // Yarn
-        : `'echo "\\$SHARED_VAR" "\\$ROOT_ONLY" "\\$NESTED_ONLY"'`; // NPM, PNPM
     const envFile = `apps/${nodeapp}/.custom.env`;
     runCLI(
-      `generate @nrwl/workspace:run-commands echoEnvVariables --command=${command} --envFile=${envFile} --project=${nodeapp}`
+      `generate @nrwl/workspace:run-commands echoEnvVariables --command=echo --envFile=${envFile} --project=${nodeapp}`
     );
+
+    const command =
+      process.platform === 'win32'
+        ? `%SHARED_VAR% %ROOT_ONLY% %NESTED_ONLY%` // Windows
+        : `$SHARED_VAR $ROOT_ONLY $NESTED_ONLY`;
+    const config = readJson(workspaceConfigName());
+    config.projects[
+      nodeapp
+    ].targets.echoEnvVariables.options.command += ` ${command}`;
+    updateFile(workspaceConfigName(), JSON.stringify(config, null, 2));
 
     const result = runCLI('echoEnvVariables');
     expect(result).toContain('shared-root-value');
@@ -51,14 +57,31 @@ describe('Run Commands', () => {
     config.projects[myapp].targets.echo = {
       executor: '@nrwl/workspace:run-commands',
       options: {
-        commands: [`echo 'print: {args.var1}'`, `echo 'print: {args.var2}'`],
+        commands: [
+          `echo 'var1: {args.var1}'`,
+          `echo 'var2: {args.var2}'`,
+          `echo 'hyphen: {args.var-hyphen}'`,
+          `echo 'camel: {args.varCamelCase}'`,
+        ],
       },
     };
     updateFile(workspaceConfigName(), JSON.stringify(config));
 
-    const result = runCLI(`run ${myapp}:echo --var1=x --var2=y`);
-    expect(result).toContain('print: x');
-    expect(result).toContain('print: y');
+    const result = runCLI(
+      `run ${myapp}:echo --var1=a --var2=b --var-hyphen=c --varCamelCase=d`
+    );
+    expect(result).toContain('var1: a');
+    expect(result).toContain('var2: b');
+    expect(result).toContain('hyphen: c');
+    expect(result).toContain('camel: d');
+
+    const resultArgs = runCLI(
+      `run ${myapp}:echo --args="--var1=a --var2=b --var-hyphen=c --varCamelCase=d"`
+    );
+    expect(resultArgs).toContain('var1: a');
+    expect(resultArgs).toContain('var2: b');
+    expect(resultArgs).toContain('hyphen: c');
+    expect(resultArgs).toContain('camel: d');
     done();
   }, 120000);
 

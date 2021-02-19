@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "id": "cypress-configure",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Library or application name",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
+    },
+    "js": {
+      "type": "boolean",
+      "description": "Generate JavaScript files rather than TypeScript files",
+      "default": false
+    },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["eslint", "tslint"],
+      "default": "eslint"
+    }
+  },
+  "required": ["name"]
+}

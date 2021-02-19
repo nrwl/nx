@@ -3,7 +3,7 @@ import {
   ImplicitJsonSubsetDependency,
   NxJson,
 } from '@nrwl/workspace/src/core/shared-interfaces';
-import { output } from '../utils/output';
+import { output } from '../utilities/output';
 
 export function assertWorkspaceValidity(workspaceJson, nxJson: NxJson) {
   const workspaceJsonProjects = Object.keys(workspaceJson.projects);

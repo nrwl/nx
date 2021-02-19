@@ -27,7 +27,7 @@ On the other hand, the executor of a **buildable library**, performs a subset of
 nx g @nrwl/react:lib mylib --buildable
 ```
 
-Read more about [Publishable and Buildable Nx Libraries here.](https://nx.dev/latest/workspace/structure/buildable-and-publishable-libraries)
+Read more about [Publishable and Buildable Nx Libraries here.](/{{framework}}/structure/buildable-and-publishable-libraries)
 
 ## Nx computation cache and Nx Cloud
 
@@ -55,6 +55,6 @@ Also, using incremental builds only really makes sense when using the distribute
 
 ## Setup an incremental build
 
-- [Setup an incremental build for an Angular app](/{{framework}}/guides/ci/setup-incremental-builds-angular)
+- [Setup an incremental build for an Angular app](/{{framework}}/ci/setup-incremental-builds-angular)
 - _Setup an incremental build for a React app (soon)_
 - _Setup an incremental build for a Node app (soon)_

@@ -26,6 +26,32 @@ function calculateDefaultProjectName(cwd: string, root: string, wc: any) {
   return defaultProjectName;
 }
 
+const invalidTargetNames = [
+  'g',
+  'generate',
+  'update',
+  'migrate',
+  'add',
+  'affected',
+  'run-many',
+  'affected:apps',
+  'affected:libs',
+  'affected:build',
+  'affected:test',
+  'affected:e2e',
+  'affected:dep-graph',
+  'affected:lint',
+  'print-affected',
+  'format:check',
+  'format',
+  'format:write',
+  'workspace-lint',
+  'workspace-generator',
+  'workspace-schematic',
+  'report',
+  'list',
+];
+
 export function parseRunOneOptions(
   root: string,
   workspaceConfigJson: any,
@@ -62,6 +88,7 @@ export function parseRunOneOptions(
     parsedArgs._ = parsedArgs._.slice(2);
   }
 
+  const projectIsNotSetExplicitly = !project;
   if (!project && defaultProjectName) {
     project = defaultProjectName;
   }
@@ -86,7 +113,9 @@ export function parseRunOneOptions(
   if (!p) return false;
 
   const targets = p.architect ? p.architect : p.targets;
-  if (!targets || !targets[target]) return false;
+  // for backwards compat we require targets to be set when use defaultProjectName
+  if ((!targets || !targets[target]) && projectIsNotSetExplicitly) return false;
+  if (invalidTargetNames.indexOf(target) > -1) return false;
 
   const res = { project, target, configuration, parsedArgs };
   delete parsedArgs['c'];

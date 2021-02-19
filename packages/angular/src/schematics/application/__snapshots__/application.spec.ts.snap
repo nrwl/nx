@@ -58,16 +58,11 @@ Object {
       },
     },
     "lint": Object {
-      "builder": "@angular-devkit/build-angular:tslint",
+      "builder": "@nrwl/linter:eslint",
       "options": Object {
-        "exclude": Array [
-          "**/node_modules/**",
-          "!apps/my-dir/my-app/**/*",
-        ],
-        "tsConfig": Array [
-          "apps/my-dir/my-app/tsconfig.app.json",
-          "apps/my-dir/my-app/tsconfig.spec.json",
-          "apps/my-dir/my-app/tsconfig.editor.json",
+        "lintFilePatterns": Array [
+          "apps/my-dir/my-app/src/**/*.ts",
+          "apps/my-dir/my-app/src/**/*.html",
         ],
       },
     },
@@ -117,14 +112,10 @@ Object {
       },
     },
     "lint": Object {
-      "builder": "@angular-devkit/build-angular:tslint",
+      "builder": "@nrwl/linter:eslint",
       "options": Object {
-        "exclude": Array [
-          "**/node_modules/**",
-          "!apps/my-dir/my-app-e2e/**/*",
-        ],
-        "tsConfig": Array [
-          "apps/my-dir/my-app-e2e/tsconfig.e2e.json",
+        "lintFilePatterns": Array [
+          "apps/my-dir/my-app-e2e/**/*.{js,ts}",
         ],
       },
     },
@@ -193,16 +184,11 @@ Object {
       },
     },
     "lint": Object {
-      "builder": "@angular-devkit/build-angular:tslint",
+      "builder": "@nrwl/linter:eslint",
       "options": Object {
-        "exclude": Array [
-          "**/node_modules/**",
-          "!apps/my-app/**/*",
-        ],
-        "tsConfig": Array [
-          "apps/my-app/tsconfig.app.json",
-          "apps/my-app/tsconfig.spec.json",
-          "apps/my-app/tsconfig.editor.json",
+        "lintFilePatterns": Array [
+          "apps/my-app/src/**/*.ts",
+          "apps/my-app/src/**/*.html",
         ],
       },
     },
@@ -252,14 +238,10 @@ Object {
       },
     },
     "lint": Object {
-      "builder": "@angular-devkit/build-angular:tslint",
+      "builder": "@nrwl/linter:eslint",
       "options": Object {
-        "exclude": Array [
-          "**/node_modules/**",
-          "!apps/my-app-e2e/**/*",
-        ],
-        "tsConfig": Array [
-          "apps/my-app-e2e/tsconfig.e2e.json",
+        "lintFilePatterns": Array [
+          "apps/my-app-e2e/**/*.{js,ts}",
         ],
       },
     },

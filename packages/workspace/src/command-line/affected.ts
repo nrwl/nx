@@ -10,8 +10,8 @@ import {
 } from '../core/project-graph';
 import { DefaultReporter } from '../tasks-runner/default-reporter';
 import { runCommand } from '../tasks-runner/run-command';
-import { output } from '../utils/output';
-import { projectHasTarget } from '../utils/project-graph-utils';
+import { output } from '../utilities/output';
+import { projectHasTarget } from '../utilities/project-graph-utils';
 import { generateGraph } from './dep-graph';
 import { printAffected } from './print-affected';
 import { promptForNxCloud } from './prompt-for-nx-cloud';

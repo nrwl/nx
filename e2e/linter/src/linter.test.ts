@@ -105,7 +105,7 @@ describe('Linter', () => {
       /'tslint' option is no longer supported/
     );
     expect(() => runCLI(`lint ${myapp} --linter=random`)).toThrow(
-      /Schema validation failed/
+      /'random' should be one of eslint,tslint/
     );
   }, 1000000);
 
@@ -175,7 +175,7 @@ describe('Linter', () => {
         silenceError: true,
       }
     );
-    expect(stdout).toContain('Unexpected console statement');
+    expect(stdout).not.toContain('Unexpected console statement');
     expect(() => checkFilesExist(outputFile)).not.toThrow();
     const outputContents = JSON.parse(readFile(outputFile));
     const outputForApp: any = Object.values(
