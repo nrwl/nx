@@ -72,7 +72,9 @@ Number of warnings to trigger nonzero exit code - default: -1
 
 ### noEslintrc
 
-Type: `string`
+Default: `false`
+
+Type: `boolean`
 
 The equivalent of the --no-eslintrc flag on the ESLint CLI, it is false by default
 
