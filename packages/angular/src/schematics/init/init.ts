@@ -167,6 +167,6 @@ export default function (options: Schema): Rule {
     updateDependencies(options),
     addUnitTestRunner(options),
     addE2eTestRunner(options),
-    formatFiles(),
+    formatFiles(options),
   ]);
 }

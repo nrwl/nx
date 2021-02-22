@@ -835,6 +835,7 @@ export default function (schema: Schema): Rule {
             supportTsx: false,
             skipSerializers: false,
             setupFile: 'angular',
+            skipFormat: options.skipFormat,
           })
         : noop(),
       options.unitTestRunner === 'karma'
@@ -848,6 +849,7 @@ export default function (schema: Schema): Rule {
             directory: options.directory,
             project: options.name,
             linter: options.linter,
+            skipFormat: options.skipFormat,
           })
         : noop(),
       addEditorTsConfigReference(options),
