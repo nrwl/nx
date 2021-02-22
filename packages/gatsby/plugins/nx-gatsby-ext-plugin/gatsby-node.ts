@@ -1,6 +1,6 @@
 import * as path from 'path';
-import { appRootPath as workspaceRoot } from '@nrwl/workspace/src/utils/app-root';
-import { readJsonFile } from '@nrwl/workspace';
+import { appRootPath as workspaceRoot } from '@nrwl/workspace/src/utilities/app-root';
+import { readJsonFile } from '@nrwl/workspace/src/utilities/fileutils';
 
 function onCreateBabelConfig({ actions }, options) {
   const tsConfig = readJsonFile(path.join(workspaceRoot, 'tsconfig.base.json'));
