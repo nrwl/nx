@@ -38,6 +38,7 @@
     "@nrwl/linter": "*",
     "@nrwl/web": "*",
     "@angular-devkit/architect": "~0.1102.0",
+    "@angular-devkit/schematics": "~11.2.0",
     "@angular-devkit/core": "~11.2.0",
     "@svgr/webpack": "^5.4.0",
     "chalk": "4.1.0",
