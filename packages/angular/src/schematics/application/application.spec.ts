@@ -1,8 +1,10 @@
 import { Tree } from '@angular-devkit/schematics';
+import { NxJson, readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import * as stripJsonComments from 'strip-json-comments';
-import { readJsonInTree, updateJsonInTree, NxJson } from '@nrwl/workspace';
-import { runSchematic, callRule } from '../../utils/testing';
+import { callRule, runSchematic } from '../../utils/testing';
+
+const prettier = require('prettier');
 
 describe('app', () => {
   let appTree: Tree;
@@ -316,6 +318,28 @@ describe('app', () => {
     });
   });
 
+  describe('--skipFormat', () => {
+    it('should format files by default', async () => {
+      const spy = spyOn(prettier, 'getFileInfo').and.callThrough();
+
+      appTree = await runSchematic('app', { name: 'myApp' }, appTree);
+
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('should skip format when set to true', async () => {
+      const spy = spyOn(prettier, 'format').and.callThrough();
+
+      appTree = await runSchematic(
+        'app',
+        { name: 'myApp', skipFormat: true },
+        appTree
+      );
+
+      expect(spy).not.toHaveBeenCalled();
+    });
+  });
+
   describe('--linter', () => {
     describe('eslint', () => {
       it('should add an architect target for lint', async () => {
@@ -405,17 +429,18 @@ describe('app', () => {
           ]
         `);
       });
+    });
 
-      describe('tslint', () => {
-        it('should add an architect target for lint', async () => {
-          const tree = await runSchematic(
-            'app',
-            { name: 'myApp', linter: 'tslint' },
-            appTree
-          );
-          const workspaceJson = readJsonInTree(tree, 'workspace.json');
-          expect(workspaceJson.projects['my-app'].architect.lint)
-            .toMatchInlineSnapshot(`
+    describe('tslint', () => {
+      it('should add an architect target for lint', async () => {
+        const tree = await runSchematic(
+          'app',
+          { name: 'myApp', linter: 'tslint' },
+          appTree
+        );
+        const workspaceJson = readJsonInTree(tree, 'workspace.json');
+        expect(workspaceJson.projects['my-app'].architect.lint)
+          .toMatchInlineSnapshot(`
             Object {
               "builder": "@angular-devkit/build-angular:tslint",
               "options": Object {
@@ -431,17 +456,17 @@ describe('app', () => {
               },
             }
           `);
-        });
+      });
 
-        it('should add valid tslint JSON configuration', async () => {
-          const tree = await runSchematic(
-            'app',
-            { name: 'myApp', linter: 'tslint' },
-            appTree
-          );
+      it('should add valid tslint JSON configuration', async () => {
+        const tree = await runSchematic(
+          'app',
+          { name: 'myApp', linter: 'tslint' },
+          appTree
+        );
 
-          const tslintConfig = readJsonInTree(tree, 'apps/my-app/tslint.json');
-          expect(tslintConfig).toMatchInlineSnapshot(`
+        const tslintConfig = readJsonInTree(tree, 'apps/my-app/tslint.json');
+        expect(tslintConfig).toMatchInlineSnapshot(`
             Object {
               "extends": "../../tslint.json",
               "linterOptions": Object {
@@ -465,7 +490,6 @@ describe('app', () => {
               },
             }
           `);
-        });
       });
     });
   });
