@@ -8,8 +8,8 @@ export function normalizeOptions(
   options: Schema
 ): NormalizedSchema {
   const nxJson = readNxJsonInTree(host);
-  const npmScope = nxJson.npmScope;
-  const fileName = names(options.name).fileName;
+  const { npmScope } = nxJson;
+  const { fileName } = names(options.name);
 
   const { root: projectRoot, sourceRoot: projectSourceRoot } = getProjectConfig(
     host,

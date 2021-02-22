@@ -21,9 +21,9 @@ describe('git-hasher', () => {
     run(`echo AAA > a.txt`);
     run(`git add .`);
     run(`git commit -am init`);
-    const hashes1 = getFileHashes(dir);
-    expect([...hashes1.keys()]).toEqual([`${dir}/a.txt`]);
-    expect(hashes1.get(`${dir}/a.txt`)).toBeDefined();
+    const hashes = getFileHashes(dir);
+    expect([...hashes.keys()]).toEqual([`${dir}/a.txt`]);
+    expect(hashes.get(`${dir}/a.txt`)).toBeDefined();
 
     // should handle additions
     run(`echo BBB > b.txt`);
