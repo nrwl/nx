@@ -24,7 +24,7 @@ if (exitCode === 0) {
   console.log('Commit ACCEPTED 👌');
 } else {
   console.log(
-    '[Error]: Ho no! 😦 Your commit message: \n' +
+    '[Error]: Oh no! 😦 Your commit message: \n' +
       '-------------------------------------------------------------------\n' +
       gitMessage +
       '\n-------------------------------------------------------------------' +
