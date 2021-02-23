@@ -7,6 +7,8 @@ import {
   Workspaces,
 } from '@nrwl/tao/src/shared/workspace';
 
+console.log("test")
+
 /**
  * Convert an Nx Executor into an Angular Devkit Builder
  *
