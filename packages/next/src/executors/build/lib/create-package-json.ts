@@ -1,16 +1,22 @@
-import { BuilderContext } from '@angular-devkit/architect';
+import { ExecutorContext } from '@nrwl/devkit';
+
 import { writeFileSync } from 'fs';
 import { join } from 'path';
-import { readJsonFile } from '@nrwl/workspace';
+
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
-import { calculateProjectDependencies } from '@nrwl/workspace/src/utils/buildable-libs-utils';
+import { readJsonFile } from '@nrwl/workspace/src/utilities/fileutils';
+import { calculateProjectDependencies } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+
 import { NextBuildBuilderOptions } from '../../../utils/types';
 
-function getProjectDeps(context: BuilderContext, rootPackageJson: any) {
+function getProjectDeps(context: ExecutorContext, rootPackageJson: any) {
   const projGraph = createProjectGraph();
   const { dependencies: deps } = calculateProjectDependencies(
     projGraph,
-    context
+    context.root,
+    context.projectName,
+    context.targetName,
+    context.configurationName
   );
   const depNames = deps
     .map((d) => d.node)
@@ -36,20 +42,18 @@ function getProjectDeps(context: BuilderContext, rootPackageJson: any) {
   };
 }
 
-export async function createPackageJson(
+export function createPackageJson(
   options: NextBuildBuilderOptions,
-  context: BuilderContext
+  context: ExecutorContext
 ) {
-  const rootPackageJson = readJsonFile(
-    join(context.workspaceRoot, 'package.json')
-  );
+  const rootPackageJson = readJsonFile(join(context.root, 'package.json'));
   const { dependencies, devDependencies } = getProjectDeps(
     context,
     rootPackageJson
   );
 
   const outPackageJson = {
-    name: context.target.project,
+    name: context.projectName,
     version: '0.0.1',
     scripts: {
       start: 'next start',

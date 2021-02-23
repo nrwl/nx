@@ -1,8 +1,9 @@
-import { MockBuilderContext } from '@nrwl/workspace/testing';
+import { ExecutorContext } from '@nrwl/devkit';
+
 import * as build from 'next/dist/build';
-import { getMockContext } from '../../utils/testing';
+
 import { NextBuildBuilderOptions } from '../../utils/types';
-import { run } from './build.impl';
+import buildExecutor from './build.impl';
 
 jest.mock('fs-extra');
 jest.mock('next/dist/build');
@@ -13,12 +14,21 @@ jest.mock('./lib/create-package-json', () => {
 });
 
 describe('Next.js Builder', () => {
-  let context: MockBuilderContext;
+  let context: ExecutorContext;
   let options: NextBuildBuilderOptions;
 
   beforeEach(async () => {
-    context = await getMockContext();
-
+    context = {
+      root: '/root',
+      cwd: '/root',
+      projectName: 'my-app',
+      targetName: 'build',
+      workspace: {
+        version: 2,
+        projects: {},
+      },
+      isVerbose: false,
+    };
     options = {
       root: 'apps/wibble',
       outputPath: 'dist/apps/wibble',
@@ -34,7 +44,7 @@ describe('Next.js Builder', () => {
   });
 
   it('should call next build', async () => {
-    await run(options, context).toPromise();
+    await buildExecutor(options, context);
 
     expect(build.default).toHaveBeenCalledWith(
       '/root/apps/wibble',

@@ -7,7 +7,7 @@
       "excludedFiles": ["./src/migrations/**"],
       "rules": {
         "no-restricted-imports": [
-          "warn",
+          "error",
           "@nrwl/workspace",
           "@angular-devkit/core",
           "@angular-devkit/schematics",

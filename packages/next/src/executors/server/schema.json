@@ -1,4 +1,5 @@
 {
+  "cli": "nx",
   "title": "Next Serve",
   "description": "Serve a Next.js app",
   "type": "object",

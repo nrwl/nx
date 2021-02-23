@@ -1,3 +1,4 @@
+import { ExecutorContext, offsetFromRoot } from '@nrwl/devkit';
 import {
   PHASE_DEVELOPMENT_SERVER,
   PHASE_EXPORT,
@@ -9,8 +10,6 @@ import { join, resolve } from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration } from 'webpack';
 import { FileReplacement, NextBuildBuilderOptions } from './types';
-import { BuilderContext } from '@angular-devkit/architect';
-import { offsetFromRoot } from '@nrwl/devkit';
 import { normalizeAssets } from '@nrwl/web/src/utils/normalize';
 import { createCopyPlugin } from '@nrwl/web/src/utils/config';
 
@@ -122,7 +121,7 @@ export function prepareConfig(
     | typeof PHASE_DEVELOPMENT_SERVER
     | typeof PHASE_PRODUCTION_SERVER,
   options: NextBuildBuilderOptions,
-  context: BuilderContext
+  context: ExecutorContext
 ) {
   const config = loadConfig(phase, options.root, null);
   const userWebpack = config.webpack;
@@ -134,7 +133,7 @@ export function prepareConfig(
   config.distDir = join(config.outdir, '.next');
   config.webpack = (a, b) =>
     createWebpackConfig(
-      context.workspaceRoot,
+      context.root,
       options.root,
       options.fileReplacements,
       options.assets
