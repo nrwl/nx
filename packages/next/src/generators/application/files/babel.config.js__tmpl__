@@ -1,4 +1,4 @@
-{
+module.exports = {
   "presets": ["next/babel"],
   "plugins": [<% if (style === 'styled-components') { %>["styled-components", { "pure": true, "ssr": true }]<% } %>]
 }
