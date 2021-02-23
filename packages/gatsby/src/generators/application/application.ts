@@ -1,9 +1,4 @@
-import {
-  convertNxGenerator,
-  formatFiles,
-  GeneratorCallback,
-  Tree,
-} from '@nrwl/devkit';
+import { convertNxGenerator, formatFiles, Tree } from '@nrwl/devkit';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 import { gatsbyInitGenerator } from '../init/init';
@@ -18,10 +13,10 @@ import { addStyleDependencies } from '../../utils/styles';
 import { updateJestConfig } from './lib/update-jest-config';
 import { addPrettierIgnoreEntry } from './lib/add-prettier-ignore-entry';
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
+import { setDefaults } from './lib/set-defaults';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
-  let installTask: GeneratorCallback;
-  const options = normalizeOptions(schema);
+  const options = normalizeOptions(host, schema);
 
   const initTask = await gatsbyInitGenerator(host, {
     ...options,
@@ -37,6 +32,8 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   updateJestConfig(host, options);
   addPrettierIgnoreEntry(host, options);
   addGitIgnoreEntry(host, options);
+
+  setDefaults(host, options);
   await formatFiles(host);
 
   return runTasksInSerial(

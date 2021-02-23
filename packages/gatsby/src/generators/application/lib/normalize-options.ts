@@ -1,5 +1,5 @@
+import { Tree, names, getWorkspaceLayout } from '@nrwl/devkit';
 import { Schema } from '../schema';
-import { projectRootDir, ProjectType, toFileName } from '@nrwl/workspace';
 import { assertValidStyle } from '@nrwl/react';
 
 export interface NormalizedSchema extends Schema {
@@ -10,15 +10,20 @@ export interface NormalizedSchema extends Schema {
   styledModule: null | string;
 }
 
-export function normalizeOptions(options: Schema): NormalizedSchema {
-  const name = toFileName(options.name);
+export function normalizeOptions(
+  host: Tree,
+  options: Schema
+): NormalizedSchema {
+  const name = names(options.name).fileName;
+  const directoryName = options.directory
+    ? names(options.directory).fileName
+    : '';
   const projectDirectory = options.directory
-    ? `${toFileName(options.directory)}/${name}`
+    ? `${directoryName}/${name}`
     : name;
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
-  const projectRoot = `${projectRootDir(
-    ProjectType.Application
-  )}/${projectDirectory}`;
+  const { appsDir } = getWorkspaceLayout(host);
+  const projectRoot = `${appsDir}/${projectDirectory}`;
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];

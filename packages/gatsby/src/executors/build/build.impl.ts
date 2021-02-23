@@ -1,44 +1,22 @@
-import {
-  BuilderContext,
-  BuilderOutput,
-  createBuilder,
-} from '@angular-devkit/architect';
 import { fork } from 'child_process';
 import { join } from 'path';
-import { from, Observable } from 'rxjs';
-import { concatMap } from 'rxjs/operators';
 import { GatsbyPluginBuilderSchema } from './schema';
-import { getProjectRoot } from '../../utils/get-project-root';
+import { ExecutorContext } from '@nrwl/tao/src/shared/workspace';
 
-export function runBuilder(
+export default async function buildExecutor(
   options: GatsbyPluginBuilderSchema,
-  context: BuilderContext
-): Observable<BuilderOutput> {
-  return from(getProjectRoot(context)).pipe(
-    concatMap((projectRoot) => {
-      return new Observable<BuilderOutput>((subscriber) => {
-        runGatsbyBuild(context.workspaceRoot, projectRoot, options)
-          .then(() => {
-            subscriber.next({
-              success: true,
-            });
-            subscriber.complete();
-          })
-          .catch((err) => {
-            context.logger.error('Error during build', err);
-            subscriber.next({
-              success: false,
-            });
-            subscriber.complete();
-          });
-      });
-    })
-  );
+  context: ExecutorContext
+) {
+  const projectRoot = context.workspace.projects[context.projectName].root;
+  await runGatsbyBuild(context.root, projectRoot, context.projectName, options);
+
+  return { success: true };
 }
 
 export function runGatsbyBuild(
   workspaceRoot: string,
   projectRoot: string,
+  projectName: string,
   options: GatsbyPluginBuilderSchema
 ) {
   return new Promise((resolve, reject) => {
@@ -50,6 +28,9 @@ export function runGatsbyBuild(
       }
     );
 
+    // Ensure the child process is killed when the parent exits
+    process.on('exit', (code) => cp.kill(code));
+
     cp.on('error', (err) => {
       reject(err);
     });
@@ -58,7 +39,9 @@ export function runGatsbyBuild(
       if (code === 0) {
         resolve();
       } else {
-        reject(code);
+        reject(
+          new Error(`Could not build "${projectName}". See errors above.`)
+        );
       }
     });
   });
@@ -89,5 +72,3 @@ function createGatsbyBuildOptions(options: GatsbyPluginBuilderSchema) {
     }
   }, []);
 }
-
-export default createBuilder(runBuilder);
