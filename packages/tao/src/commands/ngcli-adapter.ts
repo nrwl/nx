@@ -289,13 +289,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     actualConfigFileName: any;
     isNewFormat: boolean;
   }> {
-    const p = path.toString();
-    if (
-      p === 'angular.json' ||
-      p === '/angular.json' ||
-      p === 'workspace.json' ||
-      p === '/workspace.json'
-    ) {
+    if (isWorkspaceConfigPath(path)) {
       return super.exists('/angular.json' as any).pipe(
         switchMap((isAngularJson) => {
           const actualConfigFileName = isAngularJson
@@ -340,7 +334,7 @@ export class NxScopedHostForMigrations extends NxScopedHost {
   }
 
   read(path: Path): Observable<FileBuffer> {
-    if (this.isWorkspaceConfig(path)) {
+    if (isWorkspaceConfigPath(path)) {
       return super.read(path).pipe(map(processConfigWhenReading));
     } else {
       return super.read(path);
@@ -348,21 +342,11 @@ export class NxScopedHostForMigrations extends NxScopedHost {
   }
 
   write(path: Path, content: FileBuffer) {
-    if (this.isWorkspaceConfig(path)) {
+    if (isWorkspaceConfigPath(path)) {
       return super.write(path, processConfigWhenWriting(content));
     } else {
       return super.write(path, content);
     }
-  }
-
-  protected isWorkspaceConfig(path: Path) {
-    const p = path.toString();
-    return (
-      p === 'angular.json' ||
-      p === '/angular.json' ||
-      p === 'workspace.json' ||
-      p === '/workspace.json'
-    );
   }
 }
 
@@ -372,46 +356,77 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
   }
 
   read(path: Path): Observable<FileBuffer> {
-    return this.context(path).pipe(
-      switchMap((r) => {
-        // if it is a workspace config, handle it in a special way
-        if (r.isWorkspaceConfig) {
-          const match = this.host
-            .listChanges()
-            .find(
-              (f) => f.path == 'workspace.json' || f.path == 'angular.json'
-            );
+    if (isWorkspaceConfigPath(path)) {
+      const match = findWorkspaceConfigFileChange(this.host);
+      // no match, default to existing behavior
+      if (!match) {
+        return super.read(path);
+      }
 
-          // no match, default to existing behavior
-          if (!match) {
-            return super.read(path);
-          }
-
-          // we try to format it, if it changes, return it, otherwise return the original change
-          try {
-            const w = JSON.parse(Buffer.from(match.content).toString());
-            const formatted = toOldFormatOrNull(w);
-            return of(
-              formatted
-                ? Buffer.from(JSON.stringify(formatted, null, 2))
-                : Buffer.from(match.content)
-            );
-          } catch (e) {
-            return super.read(path);
-          }
-        } else {
-          const targetPath = path.startsWith('/') ? path.substring(1) : path;
-          // found a matching change in the host
-          const match = this.host
-            .listChanges()
-            .find(
-              (f) => f.path == targetPath.toString() && f.type !== 'DELETE'
-            );
-          return match ? of(Buffer.from(match.content)) : super.read(path);
-        }
-      })
-    );
+      // we try to format it, if it changes, return it, otherwise return the original change
+      try {
+        const w = JSON.parse(Buffer.from(match.content).toString());
+        const formatted = toOldFormatOrNull(w);
+        return of(
+          formatted
+            ? Buffer.from(JSON.stringify(formatted, null, 2))
+            : Buffer.from(match.content)
+        );
+      } catch (e) {
+        return super.read(path);
+      }
+    } else {
+      // found a matching change in the host
+      const match = findMatchingFileChange(this.host, path);
+      return match ? of(Buffer.from(match.content)) : super.read(path);
+    }
   }
+
+  exists(path: Path): Observable<boolean> {
+    if (isWorkspaceConfigPath(path)) {
+      return findWorkspaceConfigFileChange(this.host)
+        ? of(true)
+        : super.exists(path);
+    } else {
+      return findMatchingFileChange(this.host, path)
+        ? of(true)
+        : super.exists(path);
+    }
+  }
+
+  isFile(path: Path): Observable<boolean> {
+    if (isWorkspaceConfigPath(path)) {
+      return findWorkspaceConfigFileChange(this.host)
+        ? of(true)
+        : super.isFile(path);
+    } else {
+      return findMatchingFileChange(this.host, path)
+        ? of(true)
+        : super.isFile(path);
+    }
+  }
+}
+
+function findWorkspaceConfigFileChange(host: Tree) {
+  return host
+    .listChanges()
+    .find((f) => f.path == 'workspace.json' || f.path == 'angular.json');
+}
+
+function findMatchingFileChange(host: Tree, path: Path) {
+  const targetPath = path.startsWith('/') ? path.substring(1) : path.toString;
+  return host
+    .listChanges()
+    .find((f) => f.path == targetPath.toString() && f.type !== 'DELETE');
+}
+
+function isWorkspaceConfigPath(p: Path | string) {
+  return (
+    p === 'angular.json' ||
+    p === '/angular.json' ||
+    p === 'workspace.json' ||
+    p === '/workspace.json'
+  );
 }
 
 function processConfigWhenReading(content: ArrayBuffer) {
@@ -637,11 +652,77 @@ function convertEventTypeToHandleMultipleConfigNames(
   }
 }
 
+let collectionResolutionOverrides = null;
+let mockedSchematics = null;
+
+/**
+ * By default, Angular Devkit schematic collections will be resolved using the Node resolution.
+ * This doesn't work if you are testing schematics that refer to other schematics in the
+ * same repo.
+ *
+ * This function can can be used to override the resolution behaviour.
+ *
+ * Example:
+ *
+ * ```
+ *   overrideCollectionResolutionForTesting({
+ *     '@nrwl/workspace': path.join(__dirname, '../../../../workspace/collection.json'),
+ *     '@nrwl/angular': path.join(__dirname, '../../../../angular/collection.json'),
+ *     '@nrwl/linter': path.join(__dirname, '../../../../linter/collection.json')
+ *   });
+ *
+ * ```
+ */
+export function overrideCollectionResolutionForTesting(collections: {
+  [name: string]: string;
+}) {
+  collectionResolutionOverrides = collections;
+}
+
+/**
+ * If you have an Nx Devkit generator invoking the wrapped Angular Devkit schematic,
+ * and you don't want the Angular Devkit schematic to run, you can mock it up using this function.
+ *
+ * Unfortunately, there are some edge cases in the Nx-Angular devkit integration that
+ * can be seen in the unit tests context. This function is useful for handling that as well.
+ *
+ * In this case, you can mock it up.
+ *
+ * Example:
+ *
+ * ```
+ *   mockSchematicsForTesting({
+ *     'mycollection:myschematic': (tree, params) => {
+ *        tree.write('README.md');
+ *     }
+ *   });
+ *
+ * ```
+ */
+export function mockSchematicsForTesting(schematics: {
+  [name: string]: (
+    host: Tree,
+    generatorOptions: { [k: string]: any }
+  ) => Promise<void>;
+}) {
+  mockedSchematics = schematics;
+}
+
 export function wrapAngularDevkitSchematic(
   collectionName: string,
   generatorName: string
 ) {
   return async (host: Tree, generatorOptions: { [k: string]: any }) => {
+    if (
+      mockedSchematics &&
+      mockedSchematics[`${collectionName}:${generatorName}`]
+    ) {
+      return await mockedSchematics[`${collectionName}:${generatorName}`](
+        host,
+        generatorOptions
+      );
+    }
+
     const emptyLogger = {
       log: (e) => {},
       info: (e) => {},
@@ -694,6 +775,19 @@ export function wrapAngularDevkitSchematic(
       defaults: false,
     };
     const workflow = createWorkflow(fsHost, host.root, options);
+
+    // used for testing
+    if (collectionResolutionOverrides) {
+      const r = workflow.engineHost.resolve;
+      workflow.engineHost.resolve = (collection, b, c) => {
+        if (collectionResolutionOverrides[collection]) {
+          return collectionResolutionOverrides[collection];
+        } else {
+          return r.apply(workflow.engineHost, [collection, b, c]);
+        }
+      };
+    }
+
     const collection = getCollection(workflow, collectionName);
     const schematic = collection.createSchematic(generatorName, true);
     const res = await runSchematic(
