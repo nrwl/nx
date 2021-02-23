@@ -31,6 +31,7 @@
     "@nrwl/cypress": "*",
     "@nrwl/devkit": "*",
     "@nrwl/linter": "*",
+    "@nrwl/workspace": "*",
     "core-js": "^3.6.5",
     "semver": "6.3.0",
     "tree-kill": "1.2.2",
