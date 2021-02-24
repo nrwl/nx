@@ -218,10 +218,13 @@ export function startDevServer(
   const overrides = {
     watch: isWatching,
   };
+
+  const target = targetFromTargetString(devServerTarget);
+
   return scheduleTargetAndForget(
     context,
-    targetFromTargetString(devServerTarget),
-    overrides
+    target,
+    ['build', 'serve'].includes(target.target) ? overrides : {} // Do not pass the overrides with --watch flag to targets that do not support it
   ).pipe(
     map((output) => {
       if (!output.success && !isWatching) {
