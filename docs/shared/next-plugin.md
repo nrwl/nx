@@ -66,7 +66,7 @@ myorg/
 
 - [build](/{{framework}}/next/build) - Builds a Next.js application
 - [server](/{{framework}}/next/server) - Builds and serves a Next.js application
-- [export](/{{framework}}/next/package) - Export a Next.js app. The exported application is located at `dist/$outputPath/exported`
+- [export](/{{framework}}/next/export) - Export a Next.js app. The exported application is located at `dist/$outputPath/exported`
 
 ## Generators
 

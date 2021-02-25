@@ -97,7 +97,7 @@ Learn more about the advantages of Nx in the following guides:
 
 ## Transitioning Manually
 
-If you are unable to automatically transform your Angular CLI workspace to an Nx workspace using the [ng add](/angular/guides/transition-to-nx#using-ng-add) method, there are some manual steps you can take to move your project(s) into an Nx workspace.
+If you are unable to automatically transform your Angular CLI workspace to an Nx workspace using the [ng add](angular/migration/migration-angular#using-ng-add) method, there are some manual steps you can take to move your project(s) into an Nx workspace.
 
 ### Generating a new workspace
 

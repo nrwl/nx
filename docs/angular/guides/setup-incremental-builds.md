@@ -1,6 +1,6 @@
 # Setup incremental builds for Angular applications
 
-In this guide we’ll specifically look into which changes need to be made to enable [incremental builds](/angular/guides/ci/incremental-builds) for Angular applications.
+In this guide we’ll specifically look into which changes need to be made to enable [incremental builds](/angular/ci/incremental-builds) for Angular applications.
 
 ## Use buildable libraries
 
