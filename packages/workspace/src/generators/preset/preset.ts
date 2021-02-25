@@ -135,7 +135,7 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
     });
     setDefaultCollection(tree, '@nrwl/react');
-    connectReactAndExpress(options);
+    connectReactAndExpress(tree, options);
   } else if (options.preset === 'nest') {
     const { applicationGenerator: nestApplicationGenerator } = require('@nrwl' +
       '/nest');
@@ -256,17 +256,16 @@ export class AppService {
   );
 }
 
-function connectReactAndExpress(options: Schema) {
-  return (host: Tree) => {
-    const scope = options.npmScope;
-    host.write(
-      'libs/api-interfaces/src/lib/api-interfaces.ts',
-      `export interface Message { message: string }`
-    );
+function connectReactAndExpress(host: Tree, options: Schema) {
+  const scope = options.npmScope;
+  host.write(
+    'libs/api-interfaces/src/lib/api-interfaces.ts',
+    `export interface Message { message: string }`
+  );
 
-    host.write(
-      `apps/${options.name}/src/app/app.tsx`,
-      `import React, { useEffect, useState } from 'react';
+  host.write(
+    `apps/${options.name}/src/app/app.tsx`,
+    `import React, { useEffect, useState } from 'react';
 import { Message } from '@${scope}/api-interfaces';
 
 export const App = () => {
@@ -294,11 +293,11 @@ export const App = () => {
 
 export default App;
     `
-    );
+  );
 
-    host.write(
-      `apps/${options.name}/src/app/app.spec.tsx`,
-      `import { cleanup, getByText, render, waitFor } from '@testing-library/react';
+  host.write(
+    `apps/${options.name}/src/app/app.spec.tsx`,
+    `import { cleanup, getByText, render, waitFor } from '@testing-library/react';
 import React from 'react';
 import App from './app';
 
@@ -320,11 +319,11 @@ describe('App', () => {
   });
 });
     `
-    );
+  );
 
-    host.write(
-      `apps/api/src/main.ts`,
-      `import * as express from 'express';
+  host.write(
+    `apps/api/src/main.ts`,
+    `import * as express from 'express';
 import { Message } from '@${scope}/api-interfaces';
 
 const app = express();
@@ -341,8 +340,7 @@ const server = app.listen(port, () => {
 });
 server.on('error', console.error);
     `
-    );
-  };
+  );
 }
 
 function setDefaultCollection(tree: Tree, defaultCollection: string) {

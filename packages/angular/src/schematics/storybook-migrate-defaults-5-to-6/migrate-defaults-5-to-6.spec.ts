@@ -62,9 +62,16 @@ describe('migrate-defaults-5-to-6 schematic', () => {
       }),
       appTree
     );
-    expect(appTree.exists('.storybook/addons.js')).toBeFalsy();
+
+    expect(appTree.exists('.storybook/addons.js')).toBeTruthy();
+    expect(appTree.exists('.old_storybook/addons.js')).toBeTruthy();
     expect(appTree.exists('.storybook/main.js')).toBeTruthy();
-    expect(appTree.exists('libs/test-ui-lib/.storybook/addons.js')).toBeFalsy();
+    expect(
+      appTree.exists('libs/test-ui-lib/.old_storybook/addons.js')
+    ).toBeTruthy();
+    expect(
+      appTree.exists('libs/test-ui-lib/.storybook/addons.js')
+    ).toBeTruthy();
     expect(appTree.exists('libs/test-ui-lib/.storybook/main.js')).toBeTruthy();
   });
 });

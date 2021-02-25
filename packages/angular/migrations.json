@@ -292,6 +292,70 @@
     "11.3.0": {
       "version": "11.3.0-beta.0",
       "packages": {
+        "@angular/cli": {
+          "version": "^11.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~0.1102.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-optimizer": {
+          "version": "~0.1102.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "^11.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/common": {
+          "version": "^11.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/forms": {
+          "version": "^11.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/elements": {
+          "version": "^11.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/compiler": {
+          "version": "^11.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/compiler-cli": {
+          "version": "^11.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-browser": {
+          "version": "^11.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-browser-dynamic": {
+          "version": "^11.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/router": {
+          "version": "^11.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/upgrade": {
+          "version": "^11.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/language-service": {
+          "version": "^11.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/animations": {
+          "version": "^11.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/service-worker": {
+          "version": "^11.2.0",
+          "alwaysAddToPackageJson": false
+        },
         "@ngrx/store": {
           "version": "11.0.0",
           "alwaysAddToPackageJson": false
@@ -319,6 +383,10 @@
         "@ngrx/component-store": {
           "version": "11.0.0",
           "alwaysAddToPackageJson": true
+        },
+        "ng-packagr": {
+          "version": "^11.2.0",
+          "alwaysAddToPackageJson": false
         }
       }
     }

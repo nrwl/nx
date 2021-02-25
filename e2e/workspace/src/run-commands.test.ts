@@ -6,7 +6,6 @@ import {
   uniq,
   updateFile,
   workspaceConfigName,
-  getPackageManagerCommand,
 } from '@nrwl/e2e/utils';
 
 describe('Run Commands', () => {
@@ -26,16 +25,20 @@ describe('Run Commands', () => {
       'SHARED_VAR=shared-nested-value\nNESTED_ONLY=nested-only-value'
     );
 
-    const command =
-      process.platform === 'win32'
-        ? `"echo %SHARED_VAR% %ROOT_ONLY% %NESTED_ONLY%"` // Windows
-        : getPackageManagerCommand().runNx.startsWith('yarn')
-        ? `'echo $SHARED_VAR $ROOT_ONLY $NESTED_ONLY'` // Yarn
-        : `'echo "\\$SHARED_VAR" "\\$ROOT_ONLY" "\\$NESTED_ONLY"'`; // NPM, PNPM
     const envFile = `apps/${nodeapp}/.custom.env`;
     runCLI(
-      `generate @nrwl/workspace:run-commands echoEnvVariables --command=${command} --envFile=${envFile} --project=${nodeapp}`
+      `generate @nrwl/workspace:run-commands echoEnvVariables --command=echo --envFile=${envFile} --project=${nodeapp}`
     );
+
+    const command =
+      process.platform === 'win32'
+        ? `%SHARED_VAR% %ROOT_ONLY% %NESTED_ONLY%` // Windows
+        : `$SHARED_VAR $ROOT_ONLY $NESTED_ONLY`;
+    const config = readJson(workspaceConfigName());
+    config.projects[
+      nodeapp
+    ].targets.echoEnvVariables.options.command += ` ${command}`;
+    updateFile(workspaceConfigName(), JSON.stringify(config, null, 2));
 
     const result = runCLI('echoEnvVariables');
     expect(result).toContain('shared-root-value');

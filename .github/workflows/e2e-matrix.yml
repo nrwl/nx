@@ -37,7 +37,7 @@ jobs:
     - name: Install dependencies
       uses: actions/setup-node@v2
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: ${{ matrix.node_version }}
     - run: yarn install
 
     - name: Install PNPM

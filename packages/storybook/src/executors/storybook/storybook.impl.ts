@@ -33,7 +33,7 @@ try {
   require('dotenv').config();
 } catch (e) {}
 
-export default async function storybookExecutor(
+export default async function* storybookExecutor(
   options: StorybookExecutorOptions,
   context: ExecutorContext
 ) {
@@ -43,8 +43,10 @@ export default async function storybookExecutor(
   const option = storybookOptionMapper(options, frameworkOptions, context);
   await runInstance(option);
 
+  yield { success: true };
+
   // This Promise intentionally never resolves, leaving the process running
-  return new Promise<{ success: boolean }>(() => {});
+  await new Promise<{ success: boolean }>(() => {});
 }
 
 function runInstance(options: StorybookExecutorOptions) {

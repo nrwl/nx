@@ -1,6 +1,7 @@
 import { PHASE_PRODUCTION_BUILD } from 'next/dist/next-server/lib/constants';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { createWebpackConfig, prepareConfig } from './config';
+import { NextBuildBuilderOptions } from '@nrwl/next';
 
 jest.mock('tsconfig-paths-webpack-plugin');
 jest.mock('next/dist/next-server/server/config', () => ({
@@ -93,7 +94,7 @@ describe('Next.js webpack config builder', () => {
           fileReplacements: [],
           nextConfig: require.resolve('./config.fixture'),
           customValue: 'test',
-        },
+        } as NextBuildBuilderOptions,
         { workspaceRoot: '/root' } as any
       );
 

@@ -446,5 +446,24 @@ function taoPath() {
     stdio: ['ignore', 'ignore', 'ignore'],
   });
 
+  // Set NODE_PATH so that these modules can be used for module resolution
+  addToNodePath(path.join(tmpDir, 'node_modules'));
+
   return path.join(tmpDir, `node_modules`, '.bin', 'tao');
+}
+
+function addToNodePath(dir: string) {
+  // NODE_PATH is a delimited list of paths.
+  // The delimiter is different for windows.
+  const delimiter = require('os').platform === 'win32' ? ';' : ':';
+
+  const paths = process.env.NODE_PATH
+    ? process.env.NODE_PATH.split(delimiter)
+    : [];
+
+  // Add the tmp path
+  paths.push(dir);
+
+  // Update the env variable.
+  process.env.NODE_PATH = paths.join(delimiter);
 }

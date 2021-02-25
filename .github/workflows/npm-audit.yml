@@ -1,0 +1,15 @@
+name: NPM Audit
+
+on:
+  schedule:
+  - cron: "0 0 * * *"
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Run a security audit
+      run: npx audit-ci --critical --report-type summary

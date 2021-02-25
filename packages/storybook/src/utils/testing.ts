@@ -9,24 +9,11 @@ const testRunner = new SchematicTestRunner(
   join(__dirname, '../../collection.json')
 );
 
-testRunner.registerCollection(
-  '@nrwl/angular',
-  join(__dirname, '../../../angular/collection.json')
-);
-
-testRunner.registerCollection(
-  '@nrwl/react',
-  join(__dirname, '../../../react/collection.json')
-);
-
-testRunner.registerCollection(
-  '@nrwl/jest',
-  join(__dirname, '../../../jest/collection.json')
-);
-
-testRunner.registerCollection(
-  '@nrwl/cypress',
-  join(__dirname, '../../../cypress/collection.json')
+['angular', 'react', 'jest', 'cypress'].forEach((collection) =>
+  testRunner.registerCollection(
+    `@nrwl/${collection}`,
+    join(__dirname, `../../../${collection}/collection.json`)
+  )
 );
 
 const migrationRunner = new SchematicTestRunner(

@@ -306,7 +306,7 @@ function addStorybookTask(
     outputs: ['{options.outputPath}'],
     options: {
       uiFramework,
-      outputPath: join('dist/storybook', projectName),
+      outputPath: joinPathFragments('dist/storybook', projectName),
       config: {
         configFolder: `${projectConfig.root}/.storybook`,
       },

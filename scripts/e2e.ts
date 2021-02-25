@@ -1,11 +1,11 @@
 import { execSync } from 'child_process';
 import { readdirSync } from 'fs';
-import { ensureDirSync, removeSync } from 'fs-extra';
+import { ensureDirSync, removeSync, writeFileSync } from 'fs-extra';
 const kill = require('tree-kill');
 import { build } from './package';
 
 process.env.PUBLISHED_VERSION = `9999.0.2`;
-process.env.npm_config_registry = `http://localhost:4872/`;
+process.env.npm_config_registry = `http://localhost:4872`;
 process.env.YARN_REGISTRY = process.env.npm_config_registry;
 
 export const getDirectories = (source) =>
@@ -19,7 +19,7 @@ function updateVersion(packagePath) {
   });
 }
 
-function publishPackage(packagePath) {
+function publishPackage(packagePath, npmMajorVersion: number) {
   if (process.env.npm_config_registry.indexOf('http://localhost') === -1) {
     throw Error(`
       ------------------
@@ -29,6 +29,21 @@ function publishPackage(packagePath) {
   }
   try {
     console.log(` 📦 ${packagePath}`);
+
+    // NPM@7 requires a token to publish, thus, is just a matter of fake a token to bypass npm.
+    // See: https://twitter.com/verdaccio_npm/status/1357798427283910660
+    if (npmMajorVersion === 7) {
+      writeFileSync(
+        `${packagePath}/.npmrc`,
+        `registry=${
+          process.env.npm_config_registry
+        }\n${process.env.npm_config_registry.replace(
+          'http:',
+          ''
+        )}/:_authToken=fake`
+      );
+    }
+
     execSync(`npm publish`, {
       cwd: packagePath,
       env: process.env,
@@ -40,9 +55,14 @@ function publishPackage(packagePath) {
 }
 
 export function setup() {
+  const npmMajorVersion = execSync(`npm --version`)
+    .toString('utf-8')
+    .trim()
+    .split('.')[0];
+
   getDirectories('./build/packages').map((pkg) => {
     updateVersion(`./build/packages/${pkg}`);
-    publishPackage(`./build/packages/${pkg}`);
+    publishPackage(`./build/packages/${pkg}`, +npmMajorVersion);
   });
 }
 

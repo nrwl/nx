@@ -30,7 +30,10 @@ describe('Hasher', () => {
           proj: {
             name: 'proj',
             type: 'lib',
-            data: { files: [{ file: '/file', ext: '.ts', hash: 'some-hash' }] },
+            data: {
+              root: '',
+              files: [{ file: '/file', ext: '.ts', hash: 'some-hash' }],
+            },
           },
         },
         dependencies: {
@@ -90,7 +93,10 @@ describe('Hasher', () => {
           proj: {
             name: 'proj',
             type: 'lib',
-            data: { files: [{ file: '/file', ext: '.ts', hash: 'some-hash' }] },
+            data: {
+              root: '',
+              files: [{ file: '/file', ext: '.ts', hash: 'some-hash' }],
+            },
           },
         },
         dependencies: {
@@ -133,6 +139,7 @@ describe('Hasher', () => {
             name: 'parent',
             type: 'lib',
             data: {
+              root: '',
               files: [{ file: '/filea', ext: '.ts', hash: 'some-hash' }],
             },
           },
@@ -140,6 +147,7 @@ describe('Hasher', () => {
             name: 'child',
             type: 'lib',
             data: {
+              root: '',
               files: [{ file: '/fileb', ext: '.ts', hash: 'some-hash' }],
             },
           },
@@ -182,6 +190,7 @@ describe('Hasher', () => {
             name: 'proja',
             type: 'lib',
             data: {
+              root: '',
               files: [{ file: '/filea', ext: '.ts', hash: 'some-hash' }],
             },
           },
@@ -189,6 +198,7 @@ describe('Hasher', () => {
             name: 'projb',
             type: 'lib',
             data: {
+              root: '',
               files: [{ file: '/fileb', ext: '.ts', hash: 'some-hash' }],
             },
           },

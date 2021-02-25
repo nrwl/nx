@@ -29,14 +29,13 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@angular-devkit/core": "~11.0.1",
-    "@angular-devkit/schematics": "~11.0.1",
     "@nrwl/cypress": "*",
     "@nrwl/linter": "*",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/node": "*",
     "@nrwl/react": "*",
+    "@nrwl/workspace": "*",
     "gatsby-cli": "^2.17.1"
   }
 }

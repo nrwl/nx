@@ -18,6 +18,17 @@ export async function jestExecutor(
   options: JestExecutorOptions,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
+  const config = jestConfigParser(options, context);
+
+  const { results } = await runCLI(config, [options.jestConfig]);
+
+  return { success: results.success };
+}
+
+export function jestConfigParser(
+  options: JestExecutorOptions,
+  context: ExecutorContext
+): Config.Argv {
   options.jestConfig = path.resolve(context.root, options.jestConfig);
 
   const jestConfig: {
@@ -107,9 +118,7 @@ export async function jestExecutor(
     config.coverageReporters = options.coverageReporters;
   }
 
-  const { results } = await runCLI(config, [options.jestConfig]);
-
-  return { success: results.success };
+  return config;
 }
 
 export default jestExecutor;

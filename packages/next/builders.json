@@ -1,19 +1,35 @@
 {
-  "$schema": "@angular-devkit/architect/src/builders-schema.json",
-  "builders": {
+  "executors": {
     "build": {
-      "implementation": "./src/builders/build/build.impl",
-      "schema": "./src/builders/build/schema.json",
+      "implementation": "./src/executors/build/build.impl",
+      "schema": "./src/executors/build/schema.json",
       "description": "Build a Next.js app"
     },
     "server": {
-      "implementation": "./src/builders/server/server.impl",
-      "schema": "./src/builders/server/schema.json",
+      "implementation": "./src/executors/server/server.impl",
+      "schema": "./src/executors/server/schema.json",
       "description": "Serve a Next.js app"
     },
     "export": {
-      "implementation": "./src/builders/export/export.impl",
-      "schema": "./src/builders/export/schema.json",
+      "implementation": "./src/executors/export/export.impl",
+      "schema": "./src/executors/export/schema.json",
+      "description": "Export a Next.js app. The exported application is located at dist/$outputPath/exported."
+    }
+  },
+  "builders": {
+    "build": {
+      "implementation": "./src/executors/build/compat",
+      "schema": "./src/executors/build/schema.json",
+      "description": "Build a Next.js app"
+    },
+    "server": {
+      "implementation": "./src/executors/server/compat",
+      "schema": "./src/executors/server/schema.json",
+      "description": "Serve a Next.js app"
+    },
+    "export": {
+      "implementation": "./src/executors/export/compat",
+      "schema": "./src/executors/export/schema.json",
       "description": "Export a Next.js app. The exported application is located at dist/$outputPath/exported."
     }
   }

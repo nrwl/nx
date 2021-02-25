@@ -18,6 +18,7 @@ export interface ProjectGraphNode<T extends {} = {}> {
   type: string;
   name: string;
   data: T & {
+    root?: string;
     targets?: { [targetName: string]: TargetConfiguration };
     files: FileData[];
     [k: string]: any;

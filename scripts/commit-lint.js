@@ -21,10 +21,10 @@ const matchRelease = /Release/gi.test(gitMessage);
 const exitCode = +!(matchRelease || matchRevert || matchCommit);
 
 if (exitCode === 0) {
-  console.log('Commit ACCEPTED 👌');
+  console.log('Commit ACCEPTED 👍');
 } else {
   console.log(
-    '[Error]: Ho no! 😦 Your commit message: \n' +
+    '[Error]: Oh no! 😦 Your commit message: \n' +
       '-------------------------------------------------------------------\n' +
       gitMessage +
       '\n-------------------------------------------------------------------' +

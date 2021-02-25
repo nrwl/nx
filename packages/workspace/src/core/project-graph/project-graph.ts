@@ -12,6 +12,7 @@ import {
 import { normalizeNxJson } from '../normalize-nx-json';
 import {
   BuildDependencies,
+  buildExplicitPackageJsonDependencies,
   buildExplicitTypeScriptDependencies,
   buildImplicitProjectDependencies,
 } from './build-dependencies';
@@ -93,6 +94,7 @@ function buildProjectGraph(
   const buildDependenciesFns: BuildDependencies[] = [
     buildExplicitTypeScriptDependencies,
     buildImplicitProjectDependencies,
+    buildExplicitPackageJsonDependencies,
   ];
   buildNodesFns.forEach((f) => f(ctx, builder.addNode.bind(builder), fileRead));
   buildDependenciesFns.forEach((f) =>

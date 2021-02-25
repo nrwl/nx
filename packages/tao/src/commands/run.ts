@@ -108,28 +108,42 @@ export function validateProject(
   }
 }
 
-function isPromise(
-  v: Promise<{ success: boolean }> | AsyncIterableIterator<{ success: boolean }>
-): v is Promise<{ success: boolean }> {
-  return typeof (v as any).then === 'function';
+function isPromise<T extends { success: boolean }>(
+  v: Promise<T> | AsyncIterableIterator<T>
+): v is Promise<T> {
+  return typeof (v as any)?.then === 'function';
 }
 
-async function* promiseToIterator(
-  v: Promise<{ success: boolean }>
-): AsyncIterableIterator<{ success: boolean }> {
+function isAsyncIterator<T extends { success: boolean }>(
+  v: Promise<{ success: boolean }> | AsyncIterableIterator<T>
+): v is AsyncIterableIterator<T> {
+  return typeof (v as any)?.[Symbol.asyncIterator] === 'function';
+}
+
+async function* promiseToIterator<T extends { success: boolean }>(
+  v: Promise<T>
+): AsyncIterableIterator<T> {
   yield await v;
 }
 
 async function iteratorToProcessStatusCode(
   i: AsyncIterableIterator<{ success: boolean }>
 ): Promise<number> {
-  let r;
-  for await (r of i) {
-  }
-  if (!r) {
-    throw new Error('NX Executor has not returned or yielded a response.');
-  }
-  return r.success ? 0 : 1;
+  let success: boolean;
+
+  let prev: IteratorResult<{ success: boolean }>;
+  let current: IteratorResult<{ success: boolean }>;
+  do {
+    prev = current;
+    current = await i.next();
+  } while (!current.done);
+
+  success =
+    current.value !== undefined || !prev
+      ? current.value.success
+      : prev.value.success;
+
+  return success ? 0 : 1;
 }
 
 function createImplicitTargetConfig(
@@ -200,8 +214,16 @@ async function runExecutorInternal<T extends { success: boolean }>(
       configurationName: configuration,
       cwd: cwd,
       isVerbose: isVerbose,
-    });
-    return (isPromise(r) ? promiseToIterator(r) : r) as any;
+    }) as Promise<T> | AsyncIterableIterator<T>;
+    if (isPromise<T>(r)) {
+      return promiseToIterator<T>(r);
+    } else if (isAsyncIterator<T>(r)) {
+      return r;
+    } else {
+      throw new TypeError(
+        `NX Executor "${targetConfig.executor}" should return either a Promise or an AsyncIterator`
+      );
+    }
   } else {
     const observable = await (await import('./ngcli-adapter')).scheduleTarget(
       root,

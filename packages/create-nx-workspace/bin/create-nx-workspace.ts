@@ -30,10 +30,11 @@ const presetOptions: { value: Preset; name: string }[] = [
     value: Preset.NextJs,
     name: 'next.js           [a workspace with a single Next.js application]',
   },
-  {
-    value: Preset.Gatsby,
-    name: 'gatsby            [a workspace with a single Gatsby application]',
-  },
+  // TODO: Re-enable when gatsby preset is implemented
+  // {
+  //   value: Preset.Gatsby,
+  //   name: 'gatsby            [a workspace with a single Gatsby application]',
+  // },
   {
     value: Preset.Nest,
     name: 'nest              [a workspace with a single Nest application]',
@@ -303,7 +304,15 @@ function determineStyle(preset: Preset, parsedArgs: WorkspaceArgs) {
     },
   ];
 
-  if ([Preset.ReactWithExpress, Preset.React, Preset.NextJs].includes(preset)) {
+  if (
+    [
+      Preset.ReactWithExpress,
+      Preset.React,
+      Preset.NextJs,
+      // TODO: Re-enable when gatsby preset is implemented
+      // Preset.Gatsby,
+    ].includes(preset)
+  ) {
     choices.push(
       {
         value: 'styled-components',
@@ -484,7 +493,8 @@ function pointToTutorialAndCourse(preset: Preset) {
     case Preset.React:
     case Preset.ReactWithExpress:
     case Preset.NextJs:
-    case Preset.Gatsby:
+      // TODO: Re-enable when gatsby preset is implemented
+      // case Preset.Gatsby:
       output.addVerticalSeparator();
       output.note({
         title: title,
