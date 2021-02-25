@@ -220,6 +220,7 @@ export class Migrator {
           '@nrwl/angular',
           '@nrwl/cli',
           '@nrwl/cypress',
+          '@nrwl/devkit',
           '@nrwl/eslint-plugin-nx',
           '@nrwl/express',
           '@nrwl/jest',
