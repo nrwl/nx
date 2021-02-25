@@ -43,7 +43,7 @@ export interface RawNxArgs extends NxArgs {
 
 export interface NxArgs {
   target?: string;
-  configuration?: string;
+  configuration?: string[];
   runner?: string;
   parallel?: boolean;
   maxParallel?: number;
@@ -106,7 +106,7 @@ export function splitArgsIntoNxArgsAndOverrides(
 
   if (nxArgs.prod) {
     delete nxArgs.prod;
-    nxArgs.configuration = 'production';
+    nxArgs.configuration = ['production'];
   }
 
   if (mode === 'affected') {

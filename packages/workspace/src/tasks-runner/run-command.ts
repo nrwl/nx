@@ -41,7 +41,7 @@ export async function runCommand<T extends RunArgs>(
     return createTask({
       project,
       target: nxArgs.target,
-      configuration: nxArgs.configuration,
+      configurations: nxArgs.configuration,
       overrides: overrides,
       errorIfCannotFindConfiguration: project.name === initiatingProject,
     });
@@ -96,7 +96,7 @@ export async function runCommand<T extends RunArgs>(
 interface TaskParams {
   project: ProjectGraphNode;
   target: string;
-  configuration: string;
+  configurations: string[];
   overrides: Object;
   errorIfCannotFindConfiguration: boolean;
 }
@@ -104,7 +104,7 @@ interface TaskParams {
 export function createTask({
   project,
   target,
-  configuration,
+  configurations,
   overrides,
   errorIfCannotFindConfiguration,
 }: TaskParams): Task {
@@ -115,25 +115,34 @@ export function createTask({
     process.exit(1);
   }
 
-  const config = projectHasTargetAndConfiguration(
-    project,
-    target,
-    configuration
-  )
-    ? configuration
-    : undefined;
+  const applicableConfigurations = [];
+  if (configurations) {
+    for (const configuration of configurations) {
+      const projectHasConfiguration = projectHasTargetAndConfiguration(
+        project,
+        target,
+        configuration
+      );
+      if (errorIfCannotFindConfiguration && !projectHasConfiguration) {
+        output.error({
+          title: `Cannot find configuration '${configuration}' for project '${project.name}'`,
+        });
+        process.exit(1);
+      }
 
-  if (errorIfCannotFindConfiguration && configuration && !config) {
-    output.error({
-      title: `Cannot find configuration '${configuration}' for project '${project.name}'`,
-    });
-    process.exit(1);
+      if (projectHasConfiguration) {
+        applicableConfigurations.push(configuration);
+      }
+    }
   }
 
   const qualifiedTarget = {
     project: project.name,
     target,
-    configuration: config,
+    configuration:
+      applicableConfigurations.length > 0
+        ? applicableConfigurations.join(',')
+        : undefined,
   };
   return {
     id: getId(qualifiedTarget),

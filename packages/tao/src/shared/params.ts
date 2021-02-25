@@ -339,7 +339,7 @@ function resolveDefinition(ref: string, definitions: Properties) {
 
 export function combineOptionsForExecutor(
   commandLineOpts: Options,
-  config: string,
+  config: string[],
   target: TargetConfiguration,
   schema: Schema,
   defaultProjectName: string | null,
@@ -350,8 +350,13 @@ export function combineOptionsForExecutor(
     schema,
     false
   );
-  const configOpts =
-    config && target.configurations ? target.configurations[config] || {} : {};
+  let configOpts = {};
+  for (const configuration of config) {
+    Object.assign(
+      configOpts,
+      target.configurations ? target.configurations[configuration] || {} : {}
+    );
+  }
   const combined = { ...target.options, ...configOpts, ...r };
   convertSmartDefaultsIntoNamedParams(
     combined,

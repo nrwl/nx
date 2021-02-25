@@ -189,6 +189,8 @@ async function runExecutorInternal<T extends { success: boolean }>(
     executor
   );
 
+  const configArray = configuration ? configuration.split(',') : [];
+
   if (printHelp) {
     printRunHelp({ project, target }, schema);
     process.exit(0);
@@ -196,7 +198,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
 
   const combinedOptions = combineOptionsForExecutor(
     options,
-    configuration,
+    configArray,
     targetConfig,
     schema,
     project,

@@ -51,7 +51,7 @@ async function createTasks(
       createTask({
         project: affectedProject,
         target: nxArgs.target,
-        configuration: nxArgs.configuration,
+        configurations: nxArgs.configuration,
         overrides: overrides,
         errorIfCannotFindConfiguration: false,
       })

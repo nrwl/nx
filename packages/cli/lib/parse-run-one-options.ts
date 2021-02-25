@@ -66,6 +66,9 @@ export function parseRunOneOptions(
   const parsedArgs = yargsParser(args, {
     boolean: ['prod', 'help'],
     string: ['configuration', 'project'],
+    coerce: {
+      configuration: parseCsv,
+    },
     alias: {
       c: 'configuration',
     },
@@ -81,6 +84,9 @@ export function parseRunOneOptions(
 
   if (parsedArgs._[0] === 'run') {
     [project, target, configuration] = (parsedArgs._[1] as any).split(':');
+    if (configuration) {
+      configuration = configuration.split(',').filter((a) => !!a);
+    }
     parsedArgs._ = parsedArgs._.slice(2);
   } else {
     target = parsedArgs._[0];
@@ -96,7 +102,7 @@ export function parseRunOneOptions(
   if (parsedArgs.configuration) {
     configuration = parsedArgs.configuration;
   } else if (parsedArgs.prod) {
-    configuration = 'production';
+    configuration = ['production'];
   }
   if (parsedArgs.project) {
     project = parsedArgs.project;
@@ -124,4 +130,8 @@ export function parseRunOneOptions(
   delete parsedArgs['project'];
 
   return res;
+}
+
+function parseCsv(csv: string): string[] {
+  return csv.split(',').filter((a) => !!a);
 }

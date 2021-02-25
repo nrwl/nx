@@ -292,6 +292,7 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       describe:
         'This is the configuration to use when performing tasks on projects',
       type: 'string',
+      coerce: (arg) => (Array.isArray(arg) ? arg : parseCSV([arg])),
     })
     .options('only-failed', {
       describe: 'Isolate projects which previously failed',
@@ -339,6 +340,7 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       describe:
         'This is the configuration to use when performing tasks on projects',
       type: 'string',
+      coerce: (arg) => (Array.isArray(arg) ? arg : parseCSV([arg])),
     })
     .options('with-deps', {
       describe:
@@ -393,7 +395,7 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
 
 function parseCSV(args: string[]) {
   return args
-    .map((arg) => arg.split(','))
+    .map((arg) => arg.split(',').filter((a) => !!a))
     .reduce((acc, value) => {
       return [...acc, ...value];
     }, [] as string[]);

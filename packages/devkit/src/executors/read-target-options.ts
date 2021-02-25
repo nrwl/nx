@@ -18,9 +18,11 @@ export function readTargetOptions<T = any>(
     context.workspace
   );
 
+  const configs = configuration ? configuration.split(',') : [];
+
   return combineOptionsForExecutor(
     {},
-    configuration,
+    configs,
     targetConfiguration,
     schema,
     defaultProject,

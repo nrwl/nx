@@ -24,6 +24,12 @@ describe('run-one', () => {
     runCLI(`generate @nrwl/react:lib ${mylib1} --buildable`);
     runCLI(`generate @nrwl/react:lib ${mylib2} --buildable`);
 
+    const workspace = readJson('workspace.json');
+    workspace.projects[myapp].build.configurations.staging = {
+      baseUrl: 'https://staging.example.com',
+    };
+    updateFile('workspace.json', JSON.stringify(workspace));
+
     updateFile(
       `apps/${myapp}/src/main.ts`,
       `
@@ -36,6 +42,17 @@ describe('run-one', () => {
     expect(() => runCLI(`build ${myapp} -c=invalid`)).toThrow();
     expect(runCommand(`cd apps/${myapp}-e2e/src && npx nx lint`)).toContain(
       `nx run ${myapp}-e2e:lint`
+    );
+
+    // Passing multiple configurations combines them
+    const combinedConfigurations = runCLI(
+      `build ${myapp} --configuration production,staging`
+    );
+    expect(combinedConfigurations).toContain(
+      `Running target "build" succeeded`
+    );
+    expect(combinedConfigurations).toContain(
+      `nx run ${myapp}:build:production,staging`
     );
 
     // configuration doesn't have to exists for deps (here only the app has production)
@@ -125,6 +142,28 @@ describe('run-many', () => {
     expect(buildConfig).toContain(`run ${appA}:build:production`);
     expect(buildConfig).toContain(`run ${libA}:build:production`);
     expect(buildConfig).toContain('Running target "build" succeeded');
+
+    // testing run many --configuration
+    const workspace = readJson('workspace.json');
+    workspace.projects[appA].build.configurations.staging = {
+      baseUrl: 'https://staging.example.com',
+    };
+    updateFile('workspace.json', JSON.stringify(workspace));
+
+    const combinedConfigurations = runCLI(
+      `run-many --target=build --projects="${appA},${libA}" --configuration production,staging`
+    );
+    expect(combinedConfigurations).toContain(
+      `Running target build for projects:`
+    );
+    expect(combinedConfigurations).toContain(
+      `run ${appA}:build:production,staging`
+    );
+    // It shouldn't use the configurations that it doesn't find
+    expect(combinedConfigurations).toContain(`run ${libA}:build:production`);
+    expect(combinedConfigurations).toContain(
+      'Running target "build" succeeded'
+    );
   }, 1000000);
 
   it('should run only failed projects', () => {
@@ -287,6 +326,31 @@ describe('affected:*', () => {
     );
     expect(buildExcluded).toContain(`Running target build for projects:`);
     expect(buildExcluded).toContain(`- ${mypublishablelib}`);
+
+    // testing run many --configuration
+    const workspace = readJson('workspace.json');
+    workspace.projects[myapp].build.configurations.staging = {
+      baseUrl: 'https://staging.example.com',
+    };
+    updateFile('workspace.json', JSON.stringify(workspace));
+
+    const combinedConfigurations = runCLI(
+      `affected:build --files="libs/${mylib}/src/index.ts" --parallel --configuration production,staging`
+    );
+    expect(combinedConfigurations).toContain(
+      `Running target build for projects:`
+    );
+    expect(combinedConfigurations).toContain(`- ${myapp}`);
+    expect(combinedConfigurations).toContain(`- ${mypublishablelib}`);
+    expect(combinedConfigurations).toContain(
+      `run ${myapp}:build:production,staging`
+    );
+
+    // It should not use not applicable configurations
+    expect(combinedConfigurations).toContain(`run ${mypublishablelib}:build`);
+    expect(combinedConfigurations).not.toContain(
+      `run ${mypublishablelib}:build:production,staging`
+    );
 
     // test
     updateFile(
