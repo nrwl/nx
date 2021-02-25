@@ -60,7 +60,7 @@ export async function workspaceGenerators(args: string[]) {
       process.stderr
     );
     try {
-      const workflow = createWorkflow(parsedArgs.dryRun);
+      const workflow = createWorkflow(ws, parsedArgs.dryRun);
       await executeAngularDevkitSchematic(
         generatorName,
         parsedArgs,
@@ -152,19 +152,26 @@ function toolsTsConfig() {
   return readJsonFile<TsConfig>(toolsTsConfigPath());
 }
 
-function createWorkflow(dryRun: boolean) {
+function createWorkflow(workspace: Workspaces, dryRun: boolean) {
   const { virtualFs, schema } = require('@angular-devkit/core');
   const { NodeJsSyncHost } = require('@angular-devkit/core/node');
   const { formats } = require('@angular-devkit/schematics');
   const { NodeWorkflow } = require('@angular-devkit/schematics/tools');
   const root = normalizePath(rootDirectory);
   const host = new virtualFs.ScopedHost(new NodeJsSyncHost(), root);
-  return new NodeWorkflow(host, {
+  const workflow = new NodeWorkflow(host, {
     packageManager: detectPackageManager(),
     dryRun,
     registry: new schema.CoreSchemaRegistry(formats.standardFormats),
     resolvePaths: [process.cwd(), rootDirectory],
   });
+  workflow.registry.addSmartDefaultProvider('projectName', () =>
+    workspace.calculateDefaultProjectName(
+      process.cwd(),
+      workspace.readWorkspaceConfiguration()
+    )
+  );
+  return workflow;
 }
 
 function listGenerators(collectionFile: string) {
