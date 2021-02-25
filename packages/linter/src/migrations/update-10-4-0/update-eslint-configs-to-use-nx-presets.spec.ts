@@ -5,10 +5,10 @@ import type { Linter } from 'eslint';
 import { runMigration } from '../../utils/testing';
 import {
   updateExtendsAndRemoveDuplication,
+  updateObjPropAndRemoveDuplication,
   updateOverridesAndRemoveDuplication,
   updateParserOptionsAndRemoveDuplication,
   updatePluginsAndRemoveDuplication,
-  updateObjPropAndRemoveDuplication,
 } from './update-eslint-configs-to-use-nx-presets';
 
 describe('Update ESLint config files to use preset configs which eslint-plugin-nx exports', () => {
@@ -69,7 +69,6 @@ describe('Update ESLint config files to use preset configs which eslint-plugin-n
           'plugin:@typescript-eslint/eslint-recommended',
           'plugin:@typescript-eslint/recommended',
           'prettier',
-          'prettier/@typescript-eslint',
         ],
         rules: {
           '@typescript-eslint/explicit-member-accessibility': 'off',
@@ -553,7 +552,6 @@ describe('Update ESLint config files to use preset configs which eslint-plugin-n
               'plugin:@typescript-eslint/eslint-recommended',
               'plugin:@typescript-eslint/recommended',
               'prettier',
-              'prettier/@typescript-eslint',
             ],
           },
           extendsToAdd: 'plugin:@nrwl/nx/typescript',
@@ -568,7 +566,6 @@ describe('Update ESLint config files to use preset configs which eslint-plugin-n
               'plugin:@typescript-eslint/eslint-recommended',
               'plugin:@typescript-eslint/recommended',
               'prettier',
-              'prettier/@typescript-eslint',
             ],
           },
           configBeingExtended: {
@@ -577,7 +574,6 @@ describe('Update ESLint config files to use preset configs which eslint-plugin-n
               'plugin:@typescript-eslint/eslint-recommended',
               'plugin:@typescript-eslint/recommended',
               'prettier',
-              'prettier/@typescript-eslint',
             ],
           },
           extendsToAdd: 'plugin:@nrwl/nx/typescript',
@@ -595,7 +591,6 @@ describe('Update ESLint config files to use preset configs which eslint-plugin-n
               'plugin:@typescript-eslint/eslint-recommended',
               'plugin:@typescript-eslint/recommended',
               'prettier',
-              'prettier/@typescript-eslint',
             ],
           },
           extendsToAdd: 'plugin:@nrwl/nx/typescript',
