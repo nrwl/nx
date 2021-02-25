@@ -2,7 +2,8 @@ import { exists, readFile, readFileSync, statSync, writeFileSync } from 'fs';
 import { copySync } from 'fs-extra';
 import * as http from 'http';
 import * as opn from 'opn';
-import { join, normalize, parse } from 'path';
+import { join, normalize, parse, dirname } from 'path';
+import { ensureDirSync } from 'fs-extra';
 import * as url from 'url';
 import {
   createProjectGraph,
@@ -237,6 +238,8 @@ export function generateGraph(
       });
     } else if (ext === 'json') {
       filename = `${folder}/${filename}`;
+
+      ensureDirSync(dirname(filename));
 
       writeFileSync(
         filename,
