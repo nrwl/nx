@@ -29,6 +29,7 @@ describe('Update eslint builder and config for 10.3.0', () => {
           'plugin:@typescript-eslint/eslint-recommended',
           'plugin:@typescript-eslint/recommended',
           'prettier',
+          'prettier/@typescript-eslint',
         ],
         rules: {
           '@typescript-eslint/explicit-member-accessibility': 'off',
