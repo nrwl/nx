@@ -1,8 +1,35 @@
 import * as fs from 'fs';
+import * as path from 'path';
 import { Tree } from '@nrwl/tao/src/shared/tree';
 import { join, relative } from 'path';
 
 const ejs = require('ejs');
+
+const binaryExts = new Set([
+  // // Image types originally from https://github.com/sindresorhus/image-type/blob/5541b6a/index.js
+  '.jpg',
+  '.jpeg',
+  '.png',
+  '.gif',
+  '.webp',
+  '.flif',
+  '.cr2',
+  '.tif',
+  '.bmp',
+  '.jxr',
+  '.psd',
+  '.ico',
+  '.bpg',
+  '.jp2',
+  '.jpm',
+  '.jpx',
+  '.heic',
+  '.cur',
+
+  // Java files
+  '.jar',
+  '.keystore',
+]);
 
 /**
  * Generates a folder of files based on provided templates.
@@ -36,14 +63,21 @@ export function generateFiles(
   substitutions: { [k: string]: any }
 ) {
   allFilesInDir(srcFolder).forEach((filePath) => {
+    let newContent: Buffer | string;
     const computedPath = computePath(
       srcFolder,
       target,
       filePath,
       substitutions
     );
-    const template = fs.readFileSync(filePath).toString();
-    const newContent = ejs.render(template, substitutions);
+
+    if (binaryExts.has(path.extname(filePath))) {
+      newContent = fs.readFileSync(filePath);
+    } else {
+      const template = fs.readFileSync(filePath).toString();
+      newContent = ejs.render(template, substitutions);
+    }
+
     host.write(computedPath, newContent);
   });
 }

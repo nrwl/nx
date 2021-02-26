@@ -2,6 +2,7 @@ import { Tree } from '@nrwl/tao/src/shared/tree';
 import { createTree } from '../tests/create-tree';
 import { generateFiles } from './generate-files';
 import { join } from 'path';
+import * as FileType from 'file-type';
 
 describe('generateFiles', () => {
   let tree: Tree;
@@ -69,5 +70,13 @@ describe('generateFiles', () => {
     ).toBeTruthy();
     expect(tree.exists(`src/my-project-name/output/.gitkeep`)).toBeTruthy();
     expect(tree.exists(`src/my-project.module.ts`)).toBeTruthy();
+  });
+
+  it('should preserve image files', async () => {
+    expect(tree.exists('image.png')).toBeTruthy();
+    await expect(FileType.fromBuffer(tree.read('image.png'))).resolves.toEqual({
+      ext: 'png',
+      mime: 'image/png',
+    });
   });
 });
