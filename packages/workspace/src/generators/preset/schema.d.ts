@@ -13,5 +13,6 @@ export interface Schema {
     | 'web-components'
     | 'angular-nest'
     | 'react-express'
-    | 'nest';
+    | 'nest'
+    | 'express';
 }

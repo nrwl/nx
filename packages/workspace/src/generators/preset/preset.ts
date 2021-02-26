@@ -145,6 +145,15 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
     });
     setDefaultCollection(tree, '@nrwl/nest');
+  } else if (options.preset === 'express') {
+    const {
+      applicationGenerator: expressApplicationGenerator,
+    } = require('@nrwl' + '/express');
+    await expressApplicationGenerator(tree, {
+      name: options.name,
+      linter: options.linter,
+    });
+    setDefaultCollection(tree, '@nrwl/express');
   } else {
     throw new Error(`Invalid preset ${options.preset}`);
   }

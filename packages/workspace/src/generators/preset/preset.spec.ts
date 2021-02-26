@@ -112,7 +112,7 @@ describe('preset', () => {
     );
   });
 
-  it('should create files (preset react-express)', async () => {
+  it('should create files (preset = react-express)', async () => {
     await presetGenerator(tree, {
       name: 'proj',
       preset: 'react-express',
@@ -128,5 +128,17 @@ describe('preset', () => {
     expect(tree.exists('/apps/proj/.eslintrc.json')).toBe(true);
     expect(tree.exists('/apps/api/.eslintrc.json')).toBe(true);
     expect(tree.exists('/libs/api-interfaces/.eslintrc.json')).toBe(true);
+  });
+
+  it('should create files (preset = express)', async () => {
+    await presetGenerator(tree, {
+      name: 'proj',
+      preset: 'express',
+      linter: 'eslint',
+      cli: 'nx',
+    });
+
+    expect(tree.exists('apps/proj/src/main.ts')).toBe(true);
+    expect(tree.exists('apps/proj/.eslintrc.json')).toBe(true);
   });
 });
