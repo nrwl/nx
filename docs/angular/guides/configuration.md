@@ -174,7 +174,7 @@ The selected configuration adds/overrides the default options, and the provided 
 
 ### Generators
 
-Generators that are created using `@angular/devkit` are called schematics. You can configure default generator options in `angular.json` as well. For instance, the following will tell Nx to always pass `--style=scss` when creating new libraries.
+Generators that are created using `@angular-devkit` are called schematics. You can configure default generator options in `angular.json` as well. For instance, the following will tell Nx to always pass `--style=scss` when creating new libraries.
 
 ```json
 {

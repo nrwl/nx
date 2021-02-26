@@ -35,18 +35,18 @@ The initial generator function creates a library.
 import { Tree, formatFiles, installPackagesTask } from '@nrwl/devkit';
 import { libraryGenerator } from '@nrwl/workspace';
 
-export default async function (host: Tree, schema: any) {
-  await libraryGenerator(host, { name: schema.name });
-  await formatFiles(host);
+export default async function (tree: Tree, schema: any) {
+  await libraryGenerator(tree, { name: schema.name });
+  await formatFiles(tree);
   return () => {
-    installPackagesTask(host);
+    installPackagesTask(tree);
   };
 }
 ```
 
-To invoke other generators, import the entry point function and run it against the host tree. `async/await` can be used to make code with Promises read like procedural code. The generator function may return a callback function that is executed after changes to the file system have been applied.
+To invoke other generators, import the entry point function and run it against the tree tree. `async/await` can be used to make code with Promises read like procedural code. The generator function may return a callback function that is executed after changes to the file system have been applied.
 
-In the schema.json file for your generator, the `name` is provided as a default option. The `cli` property is set to `nx` to signal that this is a generator that uses `@nrwl/devkit` and not `@angular/devkit`.
+In the schema.json file for your generator, the `name` is provided as a default option. The `cli` property is set to `nx` to signal that this is a generator that uses `@nrwl/devkit` and not `@angular-devkit`.
 
 ```json
 {
@@ -77,9 +77,9 @@ To run a generator, invoke the `nx workspace-generator` command with the name of
 nx workspace-generator my-generator mylib
 ```
 
-## Running a workspace schematic created with @angular/devkit
+## Running a workspace schematic created with @angular-devkit
 
-Generators that are created using the `@angular/devkit` are called schematics. Workspace schematics that have been created with the `@angular/devkit` will omit the `"cli": "nx"` property in `schema.json`. Nx will recognize this and correctly run the schematic using the same command as an `@nrwl/devkit` generator.
+Generators that are created using the `@angular-devkit` are called schematics. Workspace schematics that have been created with the `@angular-devkit` will omit the `"cli": "nx"` property in `schema.json`. Nx will recognize this and correctly run the schematic using the same command as an `@nrwl/devkit` generator.
 
 ```sh
 nx workspace-generator my-schematic mylib
@@ -91,7 +91,7 @@ The command is also aliased to the previous `workspace-schematic` command, so th
 nx workspace-schematic my-schematic mylib
 ```
 
-## Creating custom rules with @angular/devkit
+## Creating custom rules with @angular-devkit
 
 Generators provide an API for managing files within your workspace. You can use schematics to do things such as create, update, move, and delete files. Files with static or dynamic content can also be created.
 
@@ -208,11 +208,11 @@ Import the TypeScript schema into your generator file and replace the any in you
 import { Tree, formatFiles, installPackagesTask } from '@nrwl/devkit';
 import { libraryGenerator } from '@nrwl/workspace';
 
-export default async function (host: Tree, schema: SchematicOptions) {
-  await libraryGenerator(host, { name: `${schema.name}-${schema.type || ''}` });
-  await formatFiles(host);
+export default async function (tree: Tree, schema: SchematicOptions) {
+  await libraryGenerator(tree, { name: `${schema.name}-${schema.type || ''}` });
+  await formatFiles(tree);
   return () => {
-    installPackagesTask(host);
+    installPackagesTask(tree);
   };
 }
 ```
@@ -304,6 +304,6 @@ Running the generator without providing a value for the type will prompt the use
 
 ![](/shared/vscode-schematics-debug.png)
 
-## Workspace generator utilities
+## Workspace Generator Utilities
 
-The `@nrwl/workspace` package provides many utility functions that can be used in schematics to help with modifying files, reading and updating configuration files, and working with an Abstract Syntax Tree (AST).
+The `@nrwl/devkit` package provides many utility functions that can be used in schematics to help with modifying files, reading and updating configuration files, and working with an Abstract Syntax Tree (AST).
