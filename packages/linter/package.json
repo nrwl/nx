@@ -27,6 +27,9 @@
     "migrations": "./migrations.json"
   },
   "builders": "./builders.json",
+  "peerDependencies": {
+    "eslint-config-prettier": "^8.1.0"
+  },
   "dependencies": {
     "@nrwl/devkit": "*",
     "glob": "7.1.4",
