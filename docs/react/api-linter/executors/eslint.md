@@ -3,7 +3,7 @@
 Run ESLint on a project
 
 Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/react/guides/cli.
+Read more about how to use executors and the CLI here: https://nx.dev/react/getting-started/cli-overview#running-tasks.
 
 ## Properties
 
