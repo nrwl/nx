@@ -8,7 +8,7 @@ export function build(
   prettierVersion
 ) {
   try {
-    execSync('npx nx run-many --target=build --all --parallel', {
+    execSync('npx nx run-many --target=build --all', {
       stdio: [0, 1, 2],
     });
   } catch {
