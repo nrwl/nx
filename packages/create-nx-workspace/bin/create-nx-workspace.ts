@@ -3,7 +3,10 @@
 import { output } from '@nrwl/workspace/src/utilities/output';
 import { unparse } from '@nrwl/workspace/src/tasks-runner/utils';
 import { Schema, Preset } from '@nrwl/workspace/src/generators/new/new';
-import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
+import {
+  getPackageManagerCommand,
+  getPackageManagerVersion,
+} from '@nrwl/tao/src/shared/package-manager';
 import { execSync } from 'child_process';
 import { writeFileSync } from 'fs';
 import * as inquirer from 'inquirer';
@@ -434,11 +437,19 @@ function createApp(tmpDir: string, name: string, parsedArgs: WorkspaceArgs) {
   const command = `new ${name} ${args} --collection=@nrwl/workspace`;
   console.log(command);
 
-  let nxWorkspaceRoot = process.cwd().replace(/\\/g, '/');
-  if (process.platform === 'win32') {
-    nxWorkspaceRoot = `\\"${nxWorkspaceRoot}\\"`;
-  } else {
-    nxWorkspaceRoot = `"${nxWorkspaceRoot}"`;
+  let nxWorkspaceRoot = `"${process.cwd().replace(/\\/g, '/')}"`;
+
+  // If path contains spaces there is a problem in Windows for npm@6.
+  // In this case we have to escape the wrapping quotes.
+  if (
+    process.platform === 'win32' &&
+    /\s/.test(nxWorkspaceRoot) &&
+    packageManager === 'npm'
+  ) {
+    const pmVersion = +getPackageManagerVersion(packageManager).split('.')[0];
+    if (pmVersion < 7) {
+      nxWorkspaceRoot = `\\"${nxWorkspaceRoot.slice(1, -1)}\\"`;
+    }
   }
 
   execSync(
