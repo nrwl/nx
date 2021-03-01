@@ -1,3 +1,4 @@
+import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { join } from 'path';
 
@@ -66,4 +67,10 @@ export function getPackageManagerCommand(
         list: 'npm ls',
       };
   }
+}
+
+export function getPackageManagerVersion(
+  packageManager: 'npm' | 'yarn' | 'pnpm'
+): string {
+  return execSync(`${packageManager} --version`).toString('utf-8').trim();
 }
