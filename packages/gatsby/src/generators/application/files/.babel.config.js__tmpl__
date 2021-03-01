@@ -1,4 +1,4 @@
-{
+module.exports = {
   "presets": ["@nrwl/gatsby/babel"],
   "plugins": []
 }
