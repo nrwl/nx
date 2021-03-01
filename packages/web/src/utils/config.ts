@@ -20,6 +20,7 @@ export function getBaseWebpackPartial(
   options: BuildBuilderOptions,
   esm?: boolean,
   isScriptOptimizeOn?: boolean,
+  emitDecoratorMetadata?: boolean,
   configuration?: string
 ): Configuration {
   const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
@@ -54,6 +55,7 @@ export function getBaseWebpackPartial(
           options: {
             rootMode: 'upward',
             cwd: join(options.root, options.sourceRoot),
+            emitDecoratorMetadata,
             isModern: esm,
             envName: configuration,
             babelrc: true,

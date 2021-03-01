@@ -16,6 +16,9 @@ module.exports = function (api: any, options: NxReactBabelPresetOptions = {}) {
   api.assertVersion(7);
 
   const isModern = api.caller((caller) => caller?.isModern);
+  const emitDecoratorMetadata = api.caller(
+    (caller) => caller?.emitDecoratorMetadata ?? true
+  );
 
   return {
     presets: [
@@ -39,6 +42,9 @@ module.exports = function (api: any, options: NxReactBabelPresetOptions = {}) {
     ],
     plugins: [
       require.resolve('babel-plugin-macros'),
+      emitDecoratorMetadata
+        ? require.resolve('babel-plugin-transform-typescript-metadata')
+        : undefined,
       // Must use legacy decorators to remain compatible with TypeScript.
       [
         require.resolve('@babel/plugin-proposal-decorators'),
@@ -48,7 +54,7 @@ module.exports = function (api: any, options: NxReactBabelPresetOptions = {}) {
         require.resolve('@babel/plugin-proposal-class-properties'),
         options.classProperties ?? { loose: true },
       ],
-    ],
+    ].filter(Boolean),
     overrides: [
       // Convert `const enum` to `enum`. The former cannot be supported by babel
       // but at least we can get it to not error out.

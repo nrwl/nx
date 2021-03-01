@@ -44,7 +44,13 @@ export function getWebConfig(
     tsConfigPath: options.tsConfig,
   };
   return mergeWebpack([
-    _getBaseWebpackPartial(options, esm, isScriptOptimizeOn, configuration),
+    _getBaseWebpackPartial(
+      options,
+      esm,
+      isScriptOptimizeOn,
+      tsConfig.options.emitDecoratorMetadata,
+      configuration
+    ),
     getPolyfillsPartial(options, esm, isScriptOptimizeOn),
     getStylesPartial(wco, options),
     getCommonPartial(wco),
@@ -89,12 +95,14 @@ function _getBaseWebpackPartial(
   options: WebBuildBuilderOptions,
   esm: boolean,
   isScriptOptimizeOn: boolean,
+  emitDecoratorMetadata: boolean,
   configuration?: string
 ) {
   let partial = getBaseWebpackPartial(
     options,
     esm,
     isScriptOptimizeOn,
+    emitDecoratorMetadata,
     configuration
   );
   delete partial.resolve.mainFields;

@@ -105,6 +105,60 @@ describe('Web Components Applications', () => {
       output.match(/Starting type checking service.../g) || []
     ).toHaveLength(1);
   }, 120000);
+
+  it('should emit decorator metadata when it is enabled in tsconfig', async () => {
+    newProject();
+    const appName = uniq('app');
+    runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+
+    updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
+      const newContent = `${content}
+        function enumerable(value: boolean) {
+          return function (
+            target: any,
+            propertyKey: string,
+            descriptor: PropertyDescriptor
+          ) {
+            descriptor.enumerable = value;
+          };
+        }
+        function sealed(target: any) {
+          return target;
+        }
+        
+        @sealed
+        class Foo {
+          @enumerable(false) bar() {}
+        }
+      `;
+      return newContent;
+    });
+
+    updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
+      const newContent = `${content}
+        // bust babel and nx cache
+      `;
+      return newContent;
+    });
+    runCLI(`build ${appName}`);
+
+    expect(readFile(`dist/apps/${appName}/main.js`)).toMatch(
+      /Reflect\.metadata/
+    );
+
+    // Turn off decorator metadata
+    updateFile(`apps/${appName}/tsconfig.app.json`, (content) => {
+      const json = JSON.parse(content);
+      json.compilerOptions.emitDecoratorMetadata = false;
+      return JSON.stringify(json);
+    });
+
+    runCLI(`build ${appName}`);
+
+    expect(readFile(`dist/apps/${appName}/main.js`)).not.toMatch(
+      /Reflect\.metadata/
+    );
+  }, 120000);
 });
 
 describe('CLI - Environment Variables', () => {
