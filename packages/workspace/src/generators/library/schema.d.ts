@@ -15,4 +15,5 @@ export interface Schema {
   babelJest?: boolean;
   pascalCaseFiles?: boolean;
   strict?: boolean;
+  skipBabelrc?: boolean;
 }

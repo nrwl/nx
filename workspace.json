@@ -287,6 +287,11 @@
               },
               {
                 "input": "packages/workspace",
+                "glob": "**/files/**/.babelrc__tmpl__",
+                "output": "/"
+              },
+              {
+                "input": "packages/workspace",
                 "glob": "**/*.{js,css,html,svg}",
                 "output": "/"
               },

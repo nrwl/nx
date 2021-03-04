@@ -746,6 +746,7 @@ describe('lib', () => {
       `);
     });
   });
+
   describe('--pascalCaseFiles', () => {
     it('should generate files with upper case names', async () => {
       await libraryGenerator(tree, {
@@ -770,6 +771,25 @@ describe('lib', () => {
       expect(
         tree.exists('libs/my-dir/my-lib/src/lib/MyDirMyLib.spec.ts')
       ).toBeTruthy();
+    });
+  });
+
+  describe('--skipBabelrc', () => {
+    it('should skip generating .babelrc when --skipBabelrc=true', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        skipBabelrc: true,
+      });
+      expect(tree.exists('libs/my-lib/.babelrc')).toBeFalsy();
+    });
+
+    it('should generate .babelrc by default', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+      });
+      expect(tree.exists('libs/my-lib/.babelrc')).toBeTruthy();
     });
   });
 });

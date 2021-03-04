@@ -1,4 +1,3 @@
 {
-  "babelrcRoots": ["*"],
   "presets": ["@nrwl/web/babel"]
 }

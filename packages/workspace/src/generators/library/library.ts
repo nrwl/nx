@@ -117,6 +117,10 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     );
   }
 
+  if (options.skipBabelrc) {
+    tree.delete(join(options.projectRoot, '.babelrc'));
+  }
+
   if (options.js) {
     toJS(tree);
   }
