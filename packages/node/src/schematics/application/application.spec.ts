@@ -110,7 +110,44 @@ describe('app', () => {
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
       const eslintrc = readJsonInTree(tree, 'apps/my-node-app/.eslintrc.json');
-      expect(eslintrc.extends).toEqual('../../.eslintrc.json');
+      expect(eslintrc).toMatchInlineSnapshot(`
+        Object {
+          "extends": "../../.eslintrc.json",
+          "ignorePatterns": Array [
+            "!**/*",
+          ],
+          "overrides": Array [
+            Object {
+              "files": Array [
+                "*.ts",
+                "*.tsx",
+                "*.js",
+                "*.jsx",
+              ],
+              "parserOptions": Object {
+                "project": Array [
+                  "apps/my-node-app/tsconfig.*?.json",
+                ],
+              },
+              "rules": Object {},
+            },
+            Object {
+              "files": Array [
+                "*.ts",
+                "*.tsx",
+              ],
+              "rules": Object {},
+            },
+            Object {
+              "files": Array [
+                "*.js",
+                "*.jsx",
+              ],
+              "rules": Object {},
+            },
+          ],
+        }
+      `);
     });
   });
 

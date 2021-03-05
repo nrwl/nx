@@ -43,9 +43,6 @@ exports[`@nrwl/linter:init --linter eslint should generate the global eslint con
       \\"extends\\": [
         \\"plugin:@nrwl/nx/typescript\\"
       ],
-      \\"parserOptions\\": {
-        \\"project\\": \\"./tsconfig.*?.json\\"
-      },
       \\"rules\\": {}
     },
     {

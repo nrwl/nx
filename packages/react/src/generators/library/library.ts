@@ -8,7 +8,10 @@ import {
   addRoute,
   findComponentImportPath,
 } from '../../utils/ast-utils';
-import { extraEslintDependencies, reactEslintJson } from '../../utils/lint';
+import {
+  extraEslintDependencies,
+  createReactEslintJson,
+} from '../../utils/lint';
 import {
   reactDomVersion,
   reactRouterDomVersion,
@@ -155,13 +158,12 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     return;
   }
 
+  const reactEslintJson = createReactEslintJson(options.projectRoot);
+
   updateJson(
     host,
     joinPathFragments(options.projectRoot, '.eslintrc.json'),
-    (json) => {
-      json.extends = [...reactEslintJson.extends, ...json.extends];
-      return json;
-    }
+    () => reactEslintJson
   );
 
   const installTask = await addDependenciesToPackageJson(

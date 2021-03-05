@@ -32,6 +32,7 @@
   },
   "dependencies": {
     "@nrwl/devkit": "*",
+    "@nrwl/workspace": "*",
     "@typescript-eslint/experimental-utils": "^4.3.0",
     "confusing-browser-globals": "^1.0.9"
   }

@@ -334,12 +334,8 @@ describe('app', () => {
   it('should add .eslintrc.json and dependencies', async () => {
     await applicationGenerator(appTree, { ...schema, linter: Linter.EsLint });
 
-    const eslintJson = readJson(appTree, '/apps/my-app/.eslintrc.json');
     const packageJson = readJson(appTree, '/package.json');
 
-    expect(eslintJson.extends).toEqual(
-      expect.arrayContaining(['plugin:@nrwl/nx/react'])
-    );
     expect(packageJson.devDependencies.eslint).toBeDefined();
     expect(packageJson.devDependencies['@nrwl/linter']).toBeDefined();
     expect(packageJson.devDependencies['@nrwl/eslint-plugin-nx']).toBeDefined();
@@ -354,6 +350,49 @@ describe('app', () => {
       packageJson.devDependencies['@typescript-eslint/eslint-plugin']
     ).toBeDefined();
     expect(packageJson.devDependencies['eslint-config-prettier']).toBeDefined();
+
+    const eslintJson = readJson(appTree, '/apps/my-app/.eslintrc.json');
+    expect(eslintJson).toMatchInlineSnapshot(`
+      Object {
+        "extends": Array [
+          "plugin:@nrwl/nx/react",
+          "../../.eslintrc.json",
+        ],
+        "ignorePatterns": Array [
+          "!**/*",
+        ],
+        "overrides": Array [
+          Object {
+            "files": Array [
+              "*.ts",
+              "*.tsx",
+              "*.js",
+              "*.jsx",
+            ],
+            "parserOptions": Object {
+              "project": Array [
+                "apps/my-app/tsconfig.*?.json",
+              ],
+            },
+            "rules": Object {},
+          },
+          Object {
+            "files": Array [
+              "*.ts",
+              "*.tsx",
+            ],
+            "rules": Object {},
+          },
+          Object {
+            "files": Array [
+              "*.js",
+              "*.jsx",
+            ],
+            "rules": Object {},
+          },
+        ],
+      }
+    `);
   });
 
   describe('--class-component', () => {
