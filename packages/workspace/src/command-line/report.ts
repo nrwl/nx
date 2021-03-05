@@ -23,6 +23,7 @@ export const packagesWeCareAbout = [
   '@nrwl/tao',
   '@nrwl/web',
   '@nrwl/workspace',
+  '@nrwl/storybook',
   'typescript',
 ];
 
