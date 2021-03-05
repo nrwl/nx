@@ -21,8 +21,4 @@ export function createFiles(tree: Tree, options: JestProjectSchema) {
   if (options.setupFile === 'none') {
     tree.delete(join(projectConfig.root, './src/test-setup.ts'));
   }
-
-  if (!options.babelJest) {
-    tree.delete(join(projectConfig.root, './babel-jest.config.json'));
-  }
 }

@@ -100,6 +100,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
 
   generateFiles(tree, join(__dirname, './files/lib'), options.projectRoot, {
     ...options,
+    dot: '.',
     className,
     name,
     propertyName,

@@ -1,24 +1,17 @@
-import { Tree } from '@angular-devkit/schematics';
-import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import * as path from 'path';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { readJsonInTree } from '@nrwl/workspace';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { readJson, Tree } from '@nrwl/devkit';
+import updateBabelConfig from './update-babel-config';
 
 describe('Migrate babel setup', () => {
   let tree: Tree;
-  let schematicRunner: SchematicTestRunner;
 
   beforeEach(async () => {
-    tree = Tree.empty();
-    tree = createEmptyWorkspace(tree);
-    schematicRunner = new SchematicTestRunner(
-      '@nrwl/next',
-      path.join(__dirname, '../../../migrations.json')
-    );
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it(`should add web babel preset if it does not exist`, async () => {
-    tree.overwrite(
+    tree.write(
       'workspace.json',
       JSON.stringify({
         projects: {
@@ -34,7 +27,7 @@ describe('Migrate babel setup', () => {
         },
       })
     );
-    tree.overwrite(
+    tree.write(
       'nx.json',
       JSON.stringify({
         projects: {
@@ -44,26 +37,24 @@ describe('Migrate babel setup', () => {
         },
       })
     );
-    tree.create(
+    tree.write(
       'apps/app1/.babelrc',
       JSON.stringify({
         presets: ['@nrwl/react/babel'],
       })
     );
-    tree.create(
+    tree.write(
       'apps/app2/.babelrc',
       JSON.stringify({ presets: ['next/babel'] })
     );
 
-    tree = await schematicRunner
-      .runSchematicAsync('update-babel-config-11.5.0', {}, tree)
-      .toPromise();
+    await updateBabelConfig(tree);
 
-    expect(readJsonInTree(tree, 'apps/app1/.babelrc')).toMatchObject({
+    expect(readJson(tree, 'apps/app1/.babelrc')).toMatchObject({
       presets: ['@nrwl/react/babel'],
     });
 
-    expect(readJsonInTree(tree, 'apps/app2/.babelrc')).toMatchObject({
+    expect(readJson(tree, 'apps/app2/.babelrc')).toMatchObject({
       presets: ['@nrwl/next/babel'],
     });
 

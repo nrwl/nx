@@ -1,5 +1,5 @@
 /*
- * Babel preset to provide Gatsby support for Nx.
+ * Babel preset to provide Next.js support for Nx.
  */
 module.exports = function (api, options) {
   api.assertVersion(7);

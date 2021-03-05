@@ -25,18 +25,23 @@ module.exports = function (api: any, options: NxReactBabelPresetOptions = {}) {
       // Support module/nomodule pattern.
       [
         require.resolve('@babel/preset-env'),
-        {
-          // Allow importing core-js in entrypoint and use browserlist to select polyfills.
-          // This is needed for differential loading as well.
-          useBuiltIns: 'entry',
-          corejs: 3,
-          // Do not transform modules to CJS
-          modules: false,
-          targets: isModern ? { esmodules: true } : undefined,
-          bugfixes: true,
-          // Exclude transforms that make all code slower
-          exclude: ['transform-typeof-symbol'],
-        },
+        // For Jest tests, NODE_ENV is set as 'test' and we only want to set target as Node.
+        // All other options will fail in Jest since Node does not support some ES features
+        // such as import syntax.
+        process.env.NODE_ENV === 'test'
+          ? { targets: { node: 'current' } }
+          : {
+              // Allow importing core-js in entrypoint and use browserlist to select polyfills.
+              // This is needed for differential loading as well.
+              useBuiltIns: 'entry',
+              corejs: 3,
+              // Do not transform modules to CJS
+              modules: false,
+              targets: isModern ? { esmodules: true } : undefined,
+              bugfixes: true,
+              // Exclude transforms that make all code slower
+              exclude: ['transform-typeof-symbol'],
+            },
       ],
       require.resolve('@babel/preset-typescript'),
     ],

@@ -1,31 +1,22 @@
-import { chain, Rule, Tree } from '@angular-devkit/schematics';
-import { getFullProjectGraphFromHost } from '@nrwl/workspace/src/utils/ast-utils';
-import { formatFiles, updateJsonInTree } from '@nrwl/workspace';
+import { formatFiles, getProjects, Tree, updateJson } from '@nrwl/devkit';
 
-export default function update(): Rule {
-  return (host: Tree) => {
-    const updates = [];
-    const projectGraph = getFullProjectGraphFromHost(host);
+export async function updateBabelConfig(host: Tree) {
+  const projects = getProjects(host);
 
-    Object.keys(projectGraph.nodes).forEach((name) => {
-      const p = projectGraph.nodes[name];
+  projects.forEach((p) => {
+    const babelrcPath = `${p.root}/.babelrc`;
+    if (!host.exists(babelrcPath)) return;
 
-      const babelrcPath = `${p.data.root}/.babelrc`;
-      if (!host.exists(babelrcPath)) return;
-
-      updates.push(
-        updateJsonInTree(babelrcPath, (json) => {
-          json.presets = json.presets || [];
-          json.presets = json.presets.map((x) =>
-            x === 'next/babel' ? '@nrwl/next/babel' : x
-          );
-          return json;
-        })
+    updateJson(host, babelrcPath, (json) => {
+      json.presets = json.presets || [];
+      json.presets = json.presets.map((x) =>
+        x === 'next/babel' ? '@nrwl/next/babel' : x
       );
+      return json;
     });
+  });
 
-    updates.push(formatFiles());
-
-    return chain(updates);
-  };
+  await formatFiles(host);
 }
+
+export default updateBabelConfig;

@@ -1,24 +1,15 @@
-import { Tree } from '@angular-devkit/schematics';
-import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import * as path from 'path';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { readJsonInTree } from '@nrwl/workspace';
-
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { readJson, Tree } from '@nrwl/devkit';
+import { updateBabelConfig } from './update-babel-config';
 describe('Migrate babel setup', () => {
   let tree: Tree;
-  let schematicRunner: SchematicTestRunner;
 
   beforeEach(async () => {
-    tree = Tree.empty();
-    tree = createEmptyWorkspace(tree);
-    schematicRunner = new SchematicTestRunner(
-      '@nrwl/web',
-      path.join(__dirname, '../../../migrations.json')
-    );
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it(`should add web babel preset if it does not exist`, async () => {
-    tree.overwrite(
+    tree.write(
       'workspace.json',
       JSON.stringify({
         projects: {
@@ -49,7 +40,7 @@ describe('Migrate babel setup', () => {
         },
       })
     );
-    tree.overwrite(
+    tree.write(
       'nx.json',
       JSON.stringify({
         projects: {
@@ -62,53 +53,51 @@ describe('Migrate babel setup', () => {
         },
       })
     );
-    tree.create(
+    tree.write(
       'babel.config.json',
       JSON.stringify({
         presets: ['@nrwl/web/babel'],
       })
     );
-    tree.create('apps/app1/.babelrc', JSON.stringify({}));
-    tree.create(
+    tree.write('apps/app1/.babelrc', JSON.stringify({}));
+    tree.write(
       'apps/app2/.babelrc',
       JSON.stringify({ presets: ['@nrwl/web/babel'] })
     );
-    tree.create(
+    tree.write(
       'apps/app3/.babelrc',
       JSON.stringify({ presets: ['@nrwl/react/babel'] })
     );
-    tree.create(
+    tree.write(
       'apps/app4/.babelrc',
       JSON.stringify({ presets: ['@nrwl/gatsby/babel'] })
     );
 
-    tree = await schematicRunner
-      .runSchematicAsync('update-babel-config-11.5.0', {}, tree)
-      .toPromise();
+    await updateBabelConfig(tree);
 
-    expect(readJsonInTree(tree, 'babel.config.json').presets).not.toContain(
+    expect(readJson(tree, 'babel.config.json').presets).not.toContain(
       '@nrwl/web/babel'
     );
 
-    expect(readJsonInTree(tree, 'apps/app1/.babelrc')).toMatchObject({
+    expect(readJson(tree, 'apps/app1/.babelrc')).toMatchObject({
       presets: ['@nrwl/web/babel'],
     });
 
-    expect(readJsonInTree(tree, 'apps/app2/.babelrc')).toMatchObject({
+    expect(readJson(tree, 'apps/app2/.babelrc')).toMatchObject({
       presets: ['@nrwl/web/babel'],
     });
 
-    expect(readJsonInTree(tree, 'apps/app3/.babelrc')).toMatchObject({
+    expect(readJson(tree, 'apps/app3/.babelrc')).toMatchObject({
       presets: ['@nrwl/react/babel'],
     });
 
-    expect(readJsonInTree(tree, 'apps/app4/.babelrc')).toMatchObject({
+    expect(readJson(tree, 'apps/app4/.babelrc')).toMatchObject({
       presets: ['@nrwl/gatsby/babel'],
     });
 
     expect(tree.exists('apps/app5/.babelrc')).not.toBeTruthy();
 
-    expect(readJsonInTree(tree, 'libs/lib1/.babelrc')).toMatchObject({
+    expect(readJson(tree, 'libs/lib1/.babelrc')).toMatchObject({
       presets: ['@nrwl/web/babel'],
     });
   });
