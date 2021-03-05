@@ -2,7 +2,7 @@
 
 Executors perform actions on your code. This can include building, linting, testing, serving and many other actions.
 
-Executors can be written using `@nx/devkit` or `@angular/devkit`. Executors written with the `@angular/devkit` are called Builders.
+Executors can be written using `@nrwl/devkit` or `@angular-devkit`. Executors written with the `@angular-devkit` are called Builders.
 
 There are two main differences between an executor and a shell script or an npm script:
 
@@ -47,11 +47,11 @@ The executors that are available for each project are defined and configured in 
 }
 ```
 
-Note: There are a few property keys in `workspace.json` that have interchangeable aliases. You can replace `generators` with `schematics`, `targets` with `architect` or `executor` with `builder`.
+> Note: There are a few property keys in `workspace.json` that have interchangeable aliases. You can replace `generators` with `schematics`, `targets` with `architect` or `executor` with `builder`.
 
 Each project has its executors defined in the `targets` property. In this snippet, `cart` has two executors defined - `build` and `test`.
 
-**Note:** `build` and `test` can be any strings you choose. For the sake of consistency, we make `test` run unit tests for every project and `build` produce compiled code for the projects which can be built.
+> Note: `build` and `test` can be any strings you choose. For the sake of consistency, we make `test` run unit tests for every project and `build` produce compiled code for the projects which can be built.
 
 Each executor definition has an `executor` property and, optionally, an `options` and a `configurations` property.
 
