@@ -149,7 +149,7 @@
     "dotenv": "6.2.0",
     "ejs": "^3.1.5",
     "eslint": "7.10.0",
-    "eslint-config-prettier": "^7.1.0",
+    "eslint-config-prettier": "^8.1.0",
     "eslint-plugin-cypress": "^2.10.3",
     "express": "4.17.1",
     "file-loader": "4.2.0",

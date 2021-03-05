@@ -58,6 +58,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "11.5.0": {
+      "version": "11.5.0-beta.0",
+      "packages": {
+        "eslint-config-prettier": {
+          "version": "8.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

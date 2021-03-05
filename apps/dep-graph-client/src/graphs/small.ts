@@ -9945,7 +9945,7 @@ export const smallGraph: ProjectGraphCache = {
       type: 'npm',
       name: 'npm:eslint-config-prettier',
       data: {
-        version: '6.0.0',
+        version: '8.1.0',
         packageName: 'eslint-config-prettier',
         files: [],
       },
