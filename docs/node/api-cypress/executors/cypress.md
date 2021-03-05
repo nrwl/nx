@@ -105,6 +105,14 @@ Type: `string`
 
 The reporter options used. Supported options depend on the reporter.
 
+### skipServe
+
+Default: `false`
+
+Type: `boolean`
+
+Skip dev-server build.
+
 ### spec
 
 Type: `string`
