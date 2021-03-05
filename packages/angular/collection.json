@@ -109,12 +109,5 @@
       "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
       "description": "Convert a project from TSLint to ESLint"
     }
-  },
-  "generators": {
-    "convert-tslint-to-eslint": {
-      "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionGenerator",
-      "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
-      "description": "Convert a project from TSLint to ESLint"
-    }
   }
 }
