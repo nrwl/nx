@@ -288,8 +288,22 @@ export class Workspaces {
         normalizedGeneratorName,
       } = this.readGeneratorsJson(collectionName, generatorName);
       const generatorsDir = path.dirname(generatorsFilePath);
-      const generatorConfig = (generatorsJson.generators ||
-        generatorsJson.schematics)[normalizedGeneratorName];
+
+      /**
+       * In order to support incremental migration to @nrwl/devkit we support
+       * looking up a definition in generators first, falling back to schematics
+       * if needed (and then ultimately erroring if still not found).
+       */
+      let generatorConfig;
+      if (
+        generatorsJson.generators &&
+        generatorsJson.generators[normalizedGeneratorName]
+      ) {
+        generatorConfig = generatorsJson.generators[normalizedGeneratorName];
+      } else {
+        generatorConfig = generatorsJson.schematics[normalizedGeneratorName];
+      }
+
       const schemaPath = path.join(generatorsDir, generatorConfig.schema || '');
       const schema = JSON.parse(
         stripJsonComments(fs.readFileSync(schemaPath).toString())
@@ -383,15 +397,36 @@ export class Workspaces {
       stripJsonComments(fs.readFileSync(generatorsFilePath).toString())
     );
 
+    /**
+     * In order to support incremental migration to @nrwl/devkit we support
+     * looking up a definition in generators first, falling back to schematics
+     * if needed (and then ultimately erroring if still not found).
+     */
     let normalizedGeneratorName;
-    const gens = generatorsJson.generators || generatorsJson.schematics;
-    for (let k of Object.keys(gens)) {
-      if (k === generator) {
-        normalizedGeneratorName = k;
+    for (let gen of Object.keys(generatorsJson.generators)) {
+      if (gen === generator) {
+        normalizedGeneratorName = gen;
         break;
       }
-      if (gens[k].aliases && gens[k].aliases.indexOf(generator) > -1) {
-        normalizedGeneratorName = k;
+      if (
+        generatorsJson.generators[gen].aliases &&
+        generatorsJson.generators[gen].aliases.indexOf(generator) > -1
+      ) {
+        normalizedGeneratorName = gen;
+        break;
+      }
+    }
+
+    for (let schematic of Object.keys(generatorsJson.schematics)) {
+      if (schematic === generator) {
+        normalizedGeneratorName = schematic;
+        break;
+      }
+      if (
+        generatorsJson.schematics[schematic].aliases &&
+        generatorsJson.schematics[schematic].aliases.indexOf(generator) > -1
+      ) {
+        normalizedGeneratorName = schematic;
         break;
       }
     }
