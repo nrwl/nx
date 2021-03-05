@@ -55,6 +55,11 @@
       "version": "11.0.0-beta.13",
       "description": "Update builder configurations and dependencies",
       "factory": "./src/migrations/update-11-0-0/update-builders-config"
+    },
+    "update-ngcc-postinstall": {
+      "version": "12.0.0-beta.0",
+      "description": "adjusts the ngcc postinstall command to just leave 'ngcc' in there. This fixes Ivy in Jest tests and Storybooks",
+      "factory": "./src/migrations/update-12-0-0/update-ngcc-postinstall"
     }
   },
   "packageJsonUpdates": {
