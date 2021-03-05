@@ -181,13 +181,7 @@ describe('app', () => {
         .read('apps/my-app/src/pages/index.tsx')
         .toString();
 
-      const babelJestConfig = readJson(
-        tree,
-        'apps/my-app/babel-jest.config.json'
-      );
-
       expect(indexContent).toMatch(/<style jsx>/);
-      expect(babelJestConfig.plugins).toContain('styled-jsx/babel');
       expect(
         tree.exists('apps/my-app/src/pages/index.module.styled-jsx')
       ).toBeFalsy();

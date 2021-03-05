@@ -6,6 +6,7 @@ import { serializeJson } from '@nrwl/workspace';
 import { jestConfigObject } from '../utils/config/legacy/functions';
 
 import { getJestObject } from './require-jest-config';
+
 jest.mock('./require-jest-config');
 const getJestObjectMock = getJestObject as jest.Mock<typeof getJestObject>;
 
@@ -28,10 +29,7 @@ const reactJestObject = {
   preset: '../../jest.config.js',
   transform: {
     '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest',
-    '^.+\\\\.[tj]sx?$': [
-      'babel-jest',
-      { cwd: __dirname, configFile: './babel-jest.config.json' },
-    ],
+    '^.+\\\\.[tj]sx?$': ['babel-jest', { cwd: __dirname }],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   coverageDirectory: '../../coverage/apps/my-react-app',

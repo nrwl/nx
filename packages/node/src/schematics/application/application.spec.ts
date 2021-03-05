@@ -300,32 +300,12 @@ describe('app', () => {
           displayName: 'my-node-app',
           preset: '../../jest.preset.js',
           transform: {
-            '^.+\\\\\\\\.[tj]s$': [
-              'babel-jest',
-              { cwd: __dirname, configFile: './babel-jest.config.json' },
-            ],
+            '^.+\\\\\\\\.[tj]s$': ['babel-jest', { cwd: __dirname }],
           },
           moduleFileExtensions: ['ts', 'js', 'html'],
           coverageDirectory: '../../coverage/apps/my-node-app',
         };
         "
-      `);
-
-      expect(readJsonInTree(tree, 'apps/my-node-app/babel-jest.config.json'))
-        .toMatchInlineSnapshot(`
-        Object {
-          "presets": Array [
-            Array [
-              "@babel/preset-env",
-              Object {
-                "targets": Object {
-                  "node": "current",
-                },
-              },
-            ],
-            "@babel/preset-typescript",
-          ],
-        }
       `);
     });
   });

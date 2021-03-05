@@ -16,7 +16,6 @@ import {
   typesReactRouterDomVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
-import { updateBabelJestConfig } from '../../rules/update-babel-jest-config';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
@@ -92,13 +91,6 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       babelJest: true,
     });
     tasks.push(jestTask);
-
-    updateBabelJestConfig(host, options.projectRoot, (json) => {
-      if (options.style === 'styled-jsx') {
-        json.plugins = (json.plugins || []).concat('styled-jsx/babel');
-      }
-      return json;
-    });
   }
 
   if (options.component) {

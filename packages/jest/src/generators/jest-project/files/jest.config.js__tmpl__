@@ -17,7 +17,7 @@ module.exports = {
   testEnvironment: '<%= testEnvironment %>',<% } %><% if(skipSerializers){ %>
   transform: {
     <% if (supportTsx){ %>'^.+\\.[tj]sx?$'<% } else { %>'^.+\\.[tj]s$'<% } %>: <% if (transformer == 'babel-jest') { %>[ 'babel-jest',
-    { cwd: __dirname, configFile: './babel-jest.config.json' }]<% } else { %> 'ts-jest' <% } %>
+    { cwd: __dirname }]<% } else { %> 'ts-jest' <% } %>
   },<% if (supportTsx) { %>
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],<% } else { %>
     moduleFileExtensions: ['ts', 'js', 'html'],<% } %><% } %>

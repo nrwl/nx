@@ -1,12 +1,12 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`jestProject --babelJest should generate proper jest.transform and babel-jest.config.json when babelJest and supportTsx is true 1`] = `
+exports[`jestProject --babelJest should generate proper jest.transform when babelJest and supportTsx is true 1`] = `
 "module.exports = {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   transform: {
     '^.+\\\\\\\\.[tj]sx?$': [ 'babel-jest',
-    { cwd: __dirname, configFile: './babel-jest.config.json' }]
+    { cwd: __dirname }]
   },
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/libs/lib1'
@@ -14,13 +14,13 @@ exports[`jestProject --babelJest should generate proper jest.transform and babel
 "
 `;
 
-exports[`jestProject --babelJest should generate proper jest.transform and babel-jest.config.json when babelJest is true 1`] = `
+exports[`jestProject --babelJest should generate proper jest.transform when babelJest is true 1`] = `
 "module.exports = {
   displayName: 'lib1',
   preset: '../../jest.preset.js',
   transform: {
     '^.+\\\\\\\\.[tj]s$': [ 'babel-jest',
-    { cwd: __dirname, configFile: './babel-jest.config.json' }]
+    { cwd: __dirname }]
   },
     moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/libs/lib1'

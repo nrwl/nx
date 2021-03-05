@@ -599,30 +599,12 @@ describe('lib', () => {
           preset: '../../jest.preset.js',
           transform: {
             '^.+\\\\\\\\.[tj]sx?$': [ 'babel-jest',
-            { cwd: __dirname, configFile: './babel-jest.config.json' }]
+            { cwd: __dirname }]
           },
             moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
           coverageDirectory: '../../coverage/libs/my-lib'
         };
         "
-      `);
-
-      expect(readJson(tree, 'libs/my-lib/babel-jest.config.json'))
-        .toMatchInlineSnapshot(`
-        Object {
-          "presets": Array [
-            Array [
-              "@babel/preset-env",
-              Object {
-                "targets": Object {
-                  "node": "current",
-                },
-              },
-            ],
-            "@babel/preset-typescript",
-            "@babel/preset-react",
-          ],
-        }
       `);
     });
   });
