@@ -51,4 +51,5 @@ export interface BuildNodeBuilderOptions extends BuildBuilderOptions {
   buildLibsFromSource?: boolean;
   generatePackageJson?: boolean;
   implicitDependencies?: string[];
+  implicitDependenciesBehavior?: 'keep' | 'replace';
 }

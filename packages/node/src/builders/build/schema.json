@@ -130,6 +130,12 @@
         "type": "string"
       },
       "default": []
+    },
+    "implicitDependenciesBehavior": {
+      "description": "Defines implicit dependencies behavior for the generated package json.",
+      "type": "string",
+      "enum": ["keep", "replace"],
+      "default": "keep"
     }
   },
   "required": ["tsConfig", "main"],

@@ -46,7 +46,14 @@ export function generatePackageJson(
   });
 
   options.implicitDependencies.forEach((packageName) => {
-    const version = rootPackageJson.dependencies[packageName];
+    let version: string | undefined;
+
+    switch (options.implicitDependenciesBehavior) {
+      case 'keep':
+        version = packageJson.dependencies[packageName];
+      case 'replace':
+        version = version ?? rootPackageJson.dependencies[packageName];
+    }
 
     if (!version) {
       return;

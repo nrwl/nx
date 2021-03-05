@@ -16,6 +16,7 @@ import {
 import { exec, execSync } from 'child_process';
 import * as http from 'http';
 import * as treeKill from 'tree-kill';
+import { OUT_FILENAME } from '../../../packages/node/src/utils/config';
 
 function getData(): Promise<any> {
   return new Promise((resolve) => {
@@ -193,7 +194,7 @@ describe('Build Node apps', () => {
     );
   });
 
-  it('should generate a package.json with the `--generatePackageJson` flag and take care of --implicitDependencies ', async () => {
+  it('should generate a package.json with the `--generatePackageJson` flag and take care of --implicitDependencies (default)', async () => {
     newProject();
     const nestapp = uniq('nestapp');
     runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
@@ -231,7 +232,199 @@ describe('Build Node apps', () => {
       })
     );
   });
+
+  it('should generate a package.json with the `--generatePackageJson` flag and take care of --implicitDependencies (mode keep)', async () => {
+    newProject();
+    const nestapp = uniq('nestapp');
+    runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
+
+    const workspace = readJson(workspaceConfigName());
+
+    workspace.projects[
+      nestapp
+    ].targets.build.options.implicitDependenciesBehavior = 'keep';
+    workspace.projects[nestapp].targets.build.options.implicitDependencies = [
+      'reflect-metadata',
+      'tslib',
+      'rxjs',
+      '@nestjs/platform-express',
+    ];
+
+    updateFile(workspaceConfigName(), JSON.stringify(workspace));
+
+    await runCLIAsync(`build ${nestapp} --generatePackageJson`);
+
+    checkFilesExist(`dist/apps/${nestapp}/package.json`);
+    const packageJson = JSON.parse(
+      readFile(`dist/apps/${nestapp}/package.json`)
+    );
+    expect(packageJson).toEqual(
+      expect.objectContaining({
+        dependencies: {
+          '@nestjs/common': '^7.0.0',
+          '@nestjs/core': '^7.0.0',
+          'reflect-metadata': '^0.1.13',
+          tslib: '^2.0.0',
+          rxjs: '~6.6.3',
+          '@nestjs/platform-express': '^7.0.0',
+        },
+        main: 'main.js',
+        name: expect.any(String),
+        version: '0.0.1',
+      })
+    );
+  });
+
+  it('should generate a package.json with the `--generatePackageJson` flag and take care of --implicitDependencies (mode keep + app package)', async () => {
+    newProject();
+    const nestapp = uniq('nestapp');
+    runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
+
+    let appPackageJson = {
+      name: nestapp,
+      version: '0.0.1',
+      main: OUT_FILENAME,
+      dependencies: {
+        tslib: '1.0.0',
+        rxjs: '6.0.0',
+      },
+    };
+
+    updateFile(`apps/${nestapp}/package.json`, JSON.stringify(appPackageJson));
+
+    const workspace = readJson(workspaceConfigName());
+
+    workspace.projects[
+      nestapp
+    ].targets.build.options.implicitDependenciesBehavior = 'keep';
+    workspace.projects[nestapp].targets.build.options.implicitDependencies = [
+      'reflect-metadata',
+      'tslib',
+      'rxjs',
+      '@nestjs/platform-express',
+    ];
+
+    updateFile(workspaceConfigName(), JSON.stringify(workspace));
+
+    await runCLIAsync(`build ${nestapp} --generatePackageJson`);
+
+    checkFilesExist(`dist/apps/${nestapp}/package.json`);
+    const packageJson = JSON.parse(
+      readFile(`dist/apps/${nestapp}/package.json`)
+    );
+    expect(packageJson).toEqual(
+      expect.objectContaining({
+        dependencies: {
+          '@nestjs/common': '^7.0.0',
+          '@nestjs/core': '^7.0.0',
+          'reflect-metadata': '^0.1.13',
+          tslib: '1.0.0',
+          rxjs: '6.0.0',
+          '@nestjs/platform-express': '^7.0.0',
+        },
+        main: 'main.js',
+        name: expect.any(String),
+        version: '0.0.1',
+      })
+    );
+  });
+
+  it('should generate a package.json with the `--generatePackageJson` flag and take care of --implicitDependencies (mode replace)', async () => {
+    newProject();
+    const nestapp = uniq('nestapp');
+    runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
+
+    const workspace = readJson(workspaceConfigName());
+
+    workspace.projects[
+      nestapp
+    ].targets.build.options.implicitDependenciesBehavior = 'replace';
+    workspace.projects[nestapp].targets.build.options.implicitDependencies = [
+      'reflect-metadata',
+      'tslib',
+      'rxjs',
+      '@nestjs/platform-express',
+    ];
+
+    updateFile(workspaceConfigName(), JSON.stringify(workspace));
+
+    await runCLIAsync(`build ${nestapp} --generatePackageJson`);
+
+    checkFilesExist(`dist/apps/${nestapp}/package.json`);
+    const packageJson = JSON.parse(
+      readFile(`dist/apps/${nestapp}/package.json`)
+    );
+    expect(packageJson).toEqual(
+      expect.objectContaining({
+        dependencies: {
+          '@nestjs/common': '^7.0.0',
+          '@nestjs/core': '^7.0.0',
+          'reflect-metadata': '^0.1.13',
+          tslib: '^2.0.0',
+          rxjs: '~6.6.3',
+          '@nestjs/platform-express': '^7.0.0',
+        },
+        main: 'main.js',
+        name: expect.any(String),
+        version: '0.0.1',
+      })
+    );
+  });
+
+  it('should generate a package.json with the `--generatePackageJson` flag and take care of --implicitDependencies (mode replace + app package)', async () => {
+    newProject();
+    const nestapp = uniq('nestapp');
+    runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
+
+    let appPackageJson = {
+      name: nestapp,
+      version: '0.0.1',
+      main: OUT_FILENAME,
+      dependencies: {
+        tslib: '1.0.0',
+        rxjs: '6.0.0',
+      },
+    };
+    updateFile(`apps/${nestapp}/package.json`, JSON.stringify(appPackageJson));
+
+    const workspace = readJson(workspaceConfigName());
+
+    workspace.projects[
+      nestapp
+    ].targets.build.options.implicitDependenciesBehavior = 'replace';
+    workspace.projects[nestapp].targets.build.options.implicitDependencies = [
+      'reflect-metadata',
+      'tslib',
+      'rxjs',
+      '@nestjs/platform-express',
+    ];
+
+    updateFile(workspaceConfigName(), JSON.stringify(workspace));
+
+    await runCLIAsync(`build ${nestapp} --generatePackageJson`);
+
+    checkFilesExist(`dist/apps/${nestapp}/package.json`);
+    const packageJson = JSON.parse(
+      readFile(`dist/apps/${nestapp}/package.json`)
+    );
+    expect(packageJson).toEqual(
+      expect.objectContaining({
+        dependencies: {
+          '@nestjs/common': '^7.0.0',
+          '@nestjs/core': '^7.0.0',
+          'reflect-metadata': '^0.1.13',
+          tslib: '^2.0.0',
+          rxjs: '~6.6.3',
+          '@nestjs/platform-express': '^7.0.0',
+        },
+        main: 'main.js',
+        name: expect.any(String),
+        version: '0.0.1',
+      })
+    );
+  });
 });
+
 describe('Node Libraries', () => {
   it('should be able to generate a node library', async () => {
     newProject();

@@ -68,6 +68,16 @@ Type: `array`
 
 Defines implicit dependencies for the generated package json.
 
+### implicitDependenciesBehavior
+
+Default: `keep`
+
+Type: `string`
+
+Possible values: `keep`, `replace`
+
+Defines implicit dependencies behavior for the generated package json.
+
 ### main
 
 Type: `string`
