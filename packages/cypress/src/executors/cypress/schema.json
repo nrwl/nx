@@ -86,6 +86,11 @@
     "reporterOptions": {
       "type": "string",
       "description": "The reporter options used. Supported options depend on the reporter."
+    },
+    "skipServe": {
+      "type": "boolean",
+      "description": "Skip dev-server build.",
+      "default": false
     }
   },
   "additionalProperties": true,
