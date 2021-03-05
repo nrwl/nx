@@ -403,31 +403,35 @@ export class Workspaces {
      * if needed (and then ultimately erroring if still not found).
      */
     let normalizedGeneratorName;
-    for (let gen of Object.keys(generatorsJson.generators)) {
-      if (gen === generator) {
-        normalizedGeneratorName = gen;
-        break;
-      }
-      if (
-        generatorsJson.generators[gen].aliases &&
-        generatorsJson.generators[gen].aliases.indexOf(generator) > -1
-      ) {
-        normalizedGeneratorName = gen;
-        break;
+    if (generatorsJson.generators) {
+      for (let gen of Object.keys(generatorsJson.generators)) {
+        if (gen === generator) {
+          normalizedGeneratorName = gen;
+          break;
+        }
+        if (
+          generatorsJson.generators[gen].aliases &&
+          generatorsJson.generators[gen].aliases.indexOf(generator) > -1
+        ) {
+          normalizedGeneratorName = gen;
+          break;
+        }
       }
     }
 
-    for (let schematic of Object.keys(generatorsJson.schematics)) {
-      if (schematic === generator) {
-        normalizedGeneratorName = schematic;
-        break;
-      }
-      if (
-        generatorsJson.schematics[schematic].aliases &&
-        generatorsJson.schematics[schematic].aliases.indexOf(generator) > -1
-      ) {
-        normalizedGeneratorName = schematic;
-        break;
+    if (generatorsJson.schematics) {
+      for (let schematic of Object.keys(generatorsJson.schematics)) {
+        if (schematic === generator) {
+          normalizedGeneratorName = schematic;
+          break;
+        }
+        if (
+          generatorsJson.schematics[schematic].aliases &&
+          generatorsJson.schematics[schematic].aliases.indexOf(generator) > -1
+        ) {
+          normalizedGeneratorName = schematic;
+          break;
+        }
       }
     }
 
