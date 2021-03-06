@@ -22,7 +22,7 @@ export default function (schema: Schema): Rule {
       externalSchematic('@nrwl/node', 'lib', {
         ...schema,
         publishable: true,
-        importPath: schema.importPath,
+        importPath: schema.importPath || options.npmPackageName,
         unitTestRunner,
       }),
       addDepsToPackageJson(
