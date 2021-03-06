@@ -1,25 +1,37 @@
-import { Tree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { runSchematic } from '../../utils/testing';
-import { NxJson, readJsonInTree } from '@nrwl/workspace';
-// to break the dependency
-const createApp = require('../../../../angular/' + 'src/utils/testing')
-  .createApp;
+import { NxJsonConfiguration, readJson, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
+import { applicationGenerator as angularApplicationGenerator } from '@nrwl/angular/generators';
 import { Schema } from './schema';
+import { applicationGenerator } from './application';
+import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
+import { join } from 'path';
 
 describe('app', () => {
-  let appTree: Tree;
+  let tree: Tree;
 
   beforeEach(() => {
-    appTree = Tree.empty();
-    appTree = createEmptyWorkspace(appTree);
+    tree = createTreeWithEmptyWorkspace();
+
+    overrideCollectionResolutionForTesting({
+      '@nrwl/cypress': join(__dirname, '../../../../cypress/collection.json'),
+      '@nrwl/jest': join(__dirname, '../../../../jest/collection.json'),
+      '@nrwl/workspace': join(
+        __dirname,
+        '../../../../workspace/collection.json'
+      ),
+      '@nrwl/angular': join(__dirname, '../../../../angular/collection.json'),
+    });
+  });
+
+  afterEach(() => {
+    overrideCollectionResolutionForTesting(null);
   });
 
   describe('not nested', () => {
     it('should update workspace.json', async () => {
-      const tree = await runSchematic('app', { name: 'myNodeApp' }, appTree);
-      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      await applicationGenerator(tree, { name: 'myNodeApp' });
+      const workspaceJson = readJson(tree, '/workspace.json');
       const project = workspaceJson.projects['my-node-app'];
       expect(project.root).toEqual('apps/my-node-app');
       expect(project.architect).toEqual(
@@ -67,12 +79,8 @@ describe('app', () => {
     });
 
     it('should update nx.json', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myNodeApp', tags: 'one,two' },
-        appTree
-      );
-      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
+      await applicationGenerator(tree, { name: 'myNodeApp', tags: 'one,two' });
+      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-node-app': {
           tags: ['one', 'two'],
@@ -81,11 +89,11 @@ describe('app', () => {
     });
 
     it('should generate files', async () => {
-      const tree = await runSchematic('app', { name: 'myNodeApp' }, appTree);
+      await applicationGenerator(tree, { name: 'myNodeApp' });
       expect(tree.exists(`apps/my-node-app/jest.config.js`)).toBeTruthy();
       expect(tree.exists('apps/my-node-app/src/main.ts')).toBeTruthy();
 
-      const tsconfig = readJsonInTree(tree, 'apps/my-node-app/tsconfig.json');
+      const tsconfig = readJson(tree, 'apps/my-node-app/tsconfig.json');
       expect(tsconfig).toMatchInlineSnapshot(`
         Object {
           "extends": "../../tsconfig.base.json",
@@ -102,17 +110,16 @@ describe('app', () => {
         }
       `);
 
-      const tsconfigApp = readJsonInTree(
-        tree,
-        'apps/my-node-app/tsconfig.app.json'
-      );
+      const tsconfigApp = readJson(tree, 'apps/my-node-app/tsconfig.app.json');
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
-      const eslintrc = readJsonInTree(tree, 'apps/my-node-app/.eslintrc.json');
+      const eslintrc = readJson(tree, 'apps/my-node-app/.eslintrc.json');
       expect(eslintrc).toMatchInlineSnapshot(`
         Object {
-          "extends": "../../.eslintrc.json",
+          "extends": Array [
+            "../../.eslintrc.json",
+          ],
           "ignorePatterns": Array [
             "!**/*",
           ],
@@ -153,12 +160,11 @@ describe('app', () => {
 
   describe('nested', () => {
     it('should update workspace.json', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myNodeApp', directory: 'myDir' },
-        appTree
-      );
-      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      await applicationGenerator(tree, {
+        name: 'myNodeApp',
+        directory: 'myDir',
+      });
+      const workspaceJson = readJson(tree, '/workspace.json');
 
       expect(workspaceJson.projects['my-dir-my-node-app'].root).toEqual(
         'apps/my-dir/my-node-app'
@@ -178,12 +184,12 @@ describe('app', () => {
     });
 
     it('should update nx.json', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myNodeApp', directory: 'myDir', tags: 'one,two' },
-        appTree
-      );
-      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
+      await applicationGenerator(tree, {
+        name: 'myNodeApp',
+        directory: 'myDir',
+        tags: 'one,two',
+      });
+      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-dir-my-node-app': {
           tags: ['one', 'two'],
@@ -193,15 +199,14 @@ describe('app', () => {
 
     it('should generate files', async () => {
       const hasJsonValue = ({ path, expectedValue, lookupFn }) => {
-        const config = readJsonInTree(tree, path);
+        const config = readJson(tree, path);
 
         expect(lookupFn(config)).toEqual(expectedValue);
       };
-      const tree = await runSchematic(
-        'app',
-        { name: 'myNodeApp', directory: 'myDir' },
-        appTree
-      );
+      await applicationGenerator(tree, {
+        name: 'myNodeApp',
+        directory: 'myDir',
+      });
 
       // Make sure these exist
       [
@@ -226,7 +231,7 @@ describe('app', () => {
         {
           path: 'apps/my-dir/my-node-app/.eslintrc.json',
           lookupFn: (json) => json.extends,
-          expectedValue: '../../../.eslintrc.json',
+          expectedValue: ['../../../.eslintrc.json'],
         },
       ].forEach(hasJsonValue);
     });
@@ -234,17 +239,16 @@ describe('app', () => {
 
   describe('--unit-test-runner none', () => {
     it('should not generate test configuration', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myNodeApp', unitTestRunner: 'none' },
-        appTree
-      );
+      await applicationGenerator(tree, {
+        name: 'myNodeApp',
+        unitTestRunner: 'none',
+      });
       expect(tree.exists('jest.config.js')).toBeFalsy();
       expect(tree.exists('apps/my-node-app/src/test-setup.ts')).toBeFalsy();
       expect(tree.exists('apps/my-node-app/src/test.ts')).toBeFalsy();
       expect(tree.exists('apps/my-node-app/tsconfig.spec.json')).toBeFalsy();
       expect(tree.exists('apps/my-node-app/jest.config.js')).toBeFalsy();
-      const workspaceJson = readJsonInTree(tree, 'workspace.json');
+      const workspaceJson = readJson(tree, 'workspace.json');
       expect(
         workspaceJson.projects['my-node-app'].architect.test
       ).toBeUndefined();
@@ -264,59 +268,53 @@ describe('app', () => {
 
   describe('--frontendProject', () => {
     it('should configure proxy', async () => {
-      appTree = createApp(appTree, 'my-frontend');
+      await angularApplicationGenerator(tree, { name: 'my-frontend' });
 
-      const tree = await runSchematic(
-        'app',
-        { name: 'myNodeApp', frontendProject: 'my-frontend' },
-        appTree
-      );
+      await applicationGenerator(tree, {
+        name: 'myNodeApp',
+        frontendProject: 'my-frontend',
+      });
 
       expect(tree.exists('apps/my-frontend/proxy.conf.json')).toBeTruthy();
-      const serve = readJsonInTree(tree, 'workspace.json').projects[
-        'my-frontend'
-      ].architect.serve;
+      const serve = readJson(tree, 'workspace.json').projects['my-frontend']
+        .architect.serve;
       expect(serve.options.proxyConfig).toEqual(
         'apps/my-frontend/proxy.conf.json'
       );
     });
 
     it('should configure proxies for multiple node projects with the same frontend app', async () => {
-      appTree = createApp(appTree, 'my-frontend');
+      await angularApplicationGenerator(tree, { name: 'my-frontend' });
 
-      appTree = await runSchematic(
-        'app',
-        { name: 'cart', frontendProject: 'my-frontend' },
-        appTree
-      );
+      await applicationGenerator(tree, {
+        name: 'cart',
+        frontendProject: 'my-frontend',
+      });
 
-      const tree = await runSchematic(
-        'app',
-        { name: 'billing', frontendProject: 'my-frontend' },
-        appTree
-      );
+      await applicationGenerator(tree, {
+        name: 'billing',
+        frontendProject: 'my-frontend',
+      });
 
       expect(tree.exists('apps/my-frontend/proxy.conf.json')).toBeTruthy();
 
-      expect(readJsonInTree(tree, 'apps/my-frontend/proxy.conf.json')).toEqual({
+      expect(readJson(tree, 'apps/my-frontend/proxy.conf.json')).toEqual({
         '/api': { target: 'http://localhost:3333', secure: false },
         '/billing-api': { target: 'http://localhost:3333', secure: false },
       });
     });
 
     it('should work with unnormalized project names', async () => {
-      appTree = createApp(appTree, 'myFrontend');
+      await angularApplicationGenerator(tree, { name: 'myFrontend' });
 
-      const tree = await runSchematic(
-        'app',
-        { name: 'myNodeApp', frontendProject: 'myFrontend' },
-        appTree
-      );
+      await applicationGenerator(tree, {
+        name: 'myNodeApp',
+        frontendProject: 'myFrontend',
+      });
 
       expect(tree.exists('apps/my-frontend/proxy.conf.json')).toBeTruthy();
-      const serve = readJsonInTree(tree, 'workspace.json').projects[
-        'my-frontend'
-      ].architect.serve;
+      const serve = readJson(tree, 'workspace.json').projects['my-frontend']
+        .architect.serve;
       expect(serve.options.proxyConfig).toEqual(
         'apps/my-frontend/proxy.conf.json'
       );
@@ -325,22 +323,22 @@ describe('app', () => {
 
   describe('--babelJest', () => {
     it('should use babel for jest', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myNodeApp', tags: 'one,two', babelJest: true } as Schema,
-        appTree
-      );
+      await applicationGenerator(tree, {
+        name: 'myNodeApp',
+        tags: 'one,two',
+        babelJest: true,
+      } as Schema);
 
-      expect(tree.readContent(`apps/my-node-app/jest.config.js`))
+      expect(tree.read(`apps/my-node-app/jest.config.js`).toString())
         .toMatchInlineSnapshot(`
         "module.exports = {
           displayName: 'my-node-app',
           preset: '../../jest.preset.js',
           transform: {
-            '^.+\\\\\\\\.[tj]s$': 'babel-jest',
+            '^.+\\\\\\\\.[tj]s$': 'babel-jest'
           },
-          moduleFileExtensions: ['ts', 'js', 'html'],
-          coverageDirectory: '../../coverage/apps/my-node-app',
+            moduleFileExtensions: ['ts', 'js', 'html'],
+          coverageDirectory: '../../coverage/apps/my-node-app'
         };
         "
       `);
@@ -348,38 +346,30 @@ describe('app', () => {
   });
   describe('--js flag', () => {
     it('should generate js files instead of ts files', async () => {
-      const tree = await runSchematic(
-        'app',
-        {
-          name: 'myNodeApp',
-          js: true,
-        } as Schema,
-        appTree
-      );
+      await applicationGenerator(tree, {
+        name: 'myNodeApp',
+        js: true,
+      } as Schema);
 
       expect(tree.exists(`apps/my-node-app/jest.config.js`)).toBeTruthy();
       expect(tree.exists('apps/my-node-app/src/main.js')).toBeTruthy();
 
-      const tsConfig = readJsonInTree(tree, 'apps/my-node-app/tsconfig.json');
+      const tsConfig = readJson(tree, 'apps/my-node-app/tsconfig.json');
       expect(tsConfig.compilerOptions).toEqual({
         allowJs: true,
       });
 
-      const tsConfigApp = readJsonInTree(
-        tree,
-        'apps/my-node-app/tsconfig.app.json'
-      );
+      const tsConfigApp = readJson(tree, 'apps/my-node-app/tsconfig.app.json');
       expect(tsConfigApp.include).toEqual(['**/*.ts', '**/*.js']);
       expect(tsConfigApp.exclude).toEqual(['**/*.spec.ts', '**/*.spec.js']);
     });
 
     it('should update workspace.json', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myNodeApp', js: true } as Schema,
-        appTree
-      );
-      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      await applicationGenerator(tree, {
+        name: 'myNodeApp',
+        js: true,
+      } as Schema);
+      const workspaceJson = readJson(tree, '/workspace.json');
       const project = workspaceJson.projects['my-node-app'];
       const buildTarget = project.architect.build;
 
@@ -393,11 +383,11 @@ describe('app', () => {
     });
 
     it('should generate js files for nested libs as well', async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myNodeApp', directory: 'myDir', js: true } as Schema,
-        appTree
-      );
+      await applicationGenerator(tree, {
+        name: 'myNodeApp',
+        directory: 'myDir',
+        js: true,
+      } as Schema);
       expect(
         tree.exists(`apps/my-dir/my-node-app/jest.config.js`)
       ).toBeTruthy();
@@ -407,11 +397,10 @@ describe('app', () => {
 
   describe('--pascalCaseFiles', () => {
     it(`should notify that this flag doesn't do anything`, async () => {
-      const tree = await runSchematic(
-        'app',
-        { name: 'myNodeApp', pascalCaseFiles: true } as Schema,
-        appTree
-      );
+      await applicationGenerator(tree, {
+        name: 'myNodeApp',
+        pascalCaseFiles: true,
+      } as Schema);
 
       // @TODO how to spy on context ?
       // expect(contextLoggerSpy).toHaveBeenCalledWith('NOTE: --pascalCaseFiles is a noop')

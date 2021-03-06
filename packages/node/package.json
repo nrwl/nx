@@ -29,6 +29,7 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
+    "@nrwl/workspace": "*",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
