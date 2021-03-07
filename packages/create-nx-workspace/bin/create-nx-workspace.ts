@@ -513,7 +513,7 @@ function pointToTutorialAndCourse(preset: Preset) {
       // case Preset.Gatsby:
       output.addVerticalSeparator();
       output.note({
-        title: title,
+        title,
         bodyLines: [
           `https://nx.dev/react/tutorial/01-create-application`,
           ...pointToFreeCourseOnEgghead(),
@@ -524,7 +524,7 @@ function pointToTutorialAndCourse(preset: Preset) {
     case Preset.AngularWithNest:
       output.addVerticalSeparator();
       output.note({
-        title: title,
+        title,
         bodyLines: [
           `https://nx.dev/angular/tutorial/01-create-application`,
           ...pointToFreeCourseOnYoutube(),

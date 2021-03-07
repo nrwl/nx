@@ -16,7 +16,7 @@ export function createProjectGraphFromTree(tree: Tree) {
 
   visitNotIgnoredFiles(tree, '', (file) => {
     files.push({
-      file: file,
+      file,
       ext: extname(file),
       hash: '',
     });

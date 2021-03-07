@@ -42,7 +42,7 @@ export async function runCommand<T extends RunArgs>(
       project,
       target: nxArgs.target,
       configuration: nxArgs.configuration,
-      overrides: overrides,
+      overrides,
       errorIfCannotFindConfiguration: project.name === initiatingProject,
     });
   });
@@ -55,7 +55,7 @@ export async function runCommand<T extends RunArgs>(
   }
   const cached = [];
   tasksRunner(tasks, runnerOptions, {
-    initiatingProject: initiatingProject,
+    initiatingProject,
     target: nxArgs.target,
     projectGraph,
     nxJson,

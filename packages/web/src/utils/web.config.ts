@@ -81,7 +81,7 @@ function getBrowserPartial(
         output: basename(index),
         baseHref,
         entrypoints: generateEntryPoints({ scripts, styles }),
-        deployUrl: deployUrl,
+        deployUrl,
         sri: subresourceIntegrity,
         noModuleEntrypoints: ['polyfills-es5'],
       })
