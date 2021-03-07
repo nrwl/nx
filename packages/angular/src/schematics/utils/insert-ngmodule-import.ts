@@ -78,9 +78,9 @@ export function insertNgModuleImport(
     if (!importsProperty) {
       let text = `imports: [${importName}]`;
       if (ngModuleOptions.properties.hasTrailingComma) {
-        text = text + ',';
+        text = `${text},`;
       } else {
-        text = ', ' + text;
+        text = `, ${text}`;
       }
       const newContents = applyChangesToString(contents, [
         {
@@ -99,9 +99,9 @@ export function insertNgModuleImport(
 
       let text: string;
       if (importsProperty.initializer.elements.hasTrailingComma) {
-        text = importName + ',';
+        text = `${importName},`;
       } else {
-        text = ', ' + importName;
+        text = `, ${importName}`;
       }
       const newContents = applyChangesToString(contents, [
         {

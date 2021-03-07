@@ -84,7 +84,7 @@ describe('Next.js Applications', () => {
     const mainPath = `apps/${appName}/pages/index.tsx`;
     updateFile(
       mainPath,
-      `import '@${proj}/${libName}';\n` + readFile(mainPath)
+      `import '@${proj}/${libName}';\n${readFile(mainPath)}`
     );
 
     // Update lib to use css modules
@@ -129,7 +129,7 @@ describe('Next.js Applications', () => {
         libName
       )})
           );
-      ` + readFile(mainPath)
+      ${readFile(mainPath)}`
     );
 
     await checkApp(appName, {
@@ -182,8 +182,7 @@ describe('Next.js Applications', () => {
       `
         import { testFn } from '@${proj}/${tsLibName}';
         import { TestComponent } from '@${proj}/${tsxLibName}';\n\n
-        ` +
-        content.replace(
+        ${content.replace(
           `</h2>`,
           `</h2>
               <div>
@@ -191,7 +190,7 @@ describe('Next.js Applications', () => {
                 <TestComponent text="Hello Next.JS" />
               </div>
             `
-        )
+        )}`
     );
 
     await checkApp(appName, {

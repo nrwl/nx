@@ -28,7 +28,7 @@ describe('React Applications', () => {
     const mainPath = `apps/${appName}/src/main.tsx`;
     updateFile(
       mainPath,
-      `import '@${proj}/${libName}';\n` + readFile(mainPath)
+      `import '@${proj}/${libName}';\n${readFile(mainPath)}`
     );
 
     const libTestResults = await runCLIAsync(`test ${libName}`);
@@ -117,7 +117,7 @@ describe('React Applications', () => {
     const mainPath = `apps/${appName}/src/main.tsx`;
     updateFile(
       mainPath,
-      `import '@${proj}/${libName}';\n` + readFile(mainPath)
+      `import '@${proj}/${libName}';\n${readFile(mainPath)}`
     );
 
     const libTestResults = await runCLIAsync(`test ${libName}`);
@@ -140,7 +140,7 @@ describe('React Applications', () => {
     );
 
     const mainPath = `libs/${libName}/src/lib/${libName}.tsx`;
-    updateFile(mainPath, readFile(mainPath) + `\n console.log(a);`); // should error - "a" will be undefined
+    updateFile(mainPath, `${readFile(mainPath)}\n console.log(a);`); // should error - "a" will be undefined
 
     await expect(runCLIAsync(`build ${libName}`)).rejects.toThrow(
       /Bundle failed/
@@ -329,7 +329,7 @@ describe('React Applications', () => {
     const mainPath = `apps/${appName}/src/main.jsx`;
     updateFile(
       mainPath,
-      `import '@${proj}/${libName}';\n` + readFile(mainPath)
+      `import '@${proj}/${libName}';\n${readFile(mainPath)}`
     );
 
     await testGeneratedApp(appName, {

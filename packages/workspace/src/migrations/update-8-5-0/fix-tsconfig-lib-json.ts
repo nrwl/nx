@@ -17,9 +17,9 @@ export default function () {
           project.architect.test.builder === '@nrwl/jest:jest' &&
           project.architect.test.options &&
           project.architect.test.options.setupFile ===
-            project.sourceRoot + '/test-setup.ts'
+            `${project.sourceRoot}/test-setup.ts`
         ) {
-          configsToUpdate.push(project.root + '/tsconfig.lib.json');
+          configsToUpdate.push(`${project.root}/tsconfig.lib.json`);
         }
       });
 

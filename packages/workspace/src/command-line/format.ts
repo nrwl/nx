@@ -72,7 +72,7 @@ function getPatterns(args: NxArgs & { libsAndApps: boolean; _: string[] }) {
     const patterns = p.files
       .filter((f) => fileExists(f))
       .filter((f) =>
-        PRETTIER_EXTENSIONS.map((ext) => '.' + ext).includes(path.extname(f))
+        PRETTIER_EXTENSIONS.map((ext) => `.${ext}`).includes(path.extname(f))
       );
 
     return args.libsAndApps ? getPatternsFromApps(patterns) : patterns;

@@ -68,9 +68,8 @@ A new jest.preset.js file will be created that would have your existing configur
 
         let existingRootConfig = host.read('jest.config.js').toString('utf-8');
 
-        existingRootConfig =
-          "const nxPreset = require('@nrwl/jest/preset'); \n" +
-          existingRootConfig;
+        existingRootConfig = `const nxPreset = require('@nrwl/jest/preset'); 
+${existingRootConfig}`;
 
         const presetPath = 'jest.preset.js';
 

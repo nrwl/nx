@@ -17,7 +17,7 @@ function updateExcludePattern(host: Tree, context: SchematicContext) {
       const index: number = (options?.exclude as JsonArray).indexOf(
         faultyPattern
       );
-      (options?.exclude as JsonArray)[index] = faultyPattern + '/*';
+      (options?.exclude as JsonArray)[index] = `${faultyPattern}/*`;
     }
     return options;
   }, ...builders);

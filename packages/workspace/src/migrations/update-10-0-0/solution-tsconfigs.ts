@@ -51,10 +51,11 @@ function addReference(
 ): Rule {
   return updateJsonInTree(extendedTsconfigPath, (json, context) => {
     json.references = json.references || [];
-    const relativePath =
-      (relative(dirname(extendedTsconfigPath), file).startsWith('../')
+    const relativePath = `${
+      relative(dirname(extendedTsconfigPath), file).startsWith('../')
         ? ''
-        : './') + relative(dirname(extendedTsconfigPath), file);
+        : './'
+    }${relative(dirname(extendedTsconfigPath), file)}`;
     context.logger.info(`Referencing ${file} in ${extendedTsconfigPath}`);
     json.references.push({
       path: relativePath,

@@ -214,7 +214,7 @@ export class Migrator {
 
     if (packageName === '@nrwl/workspace') {
       if (!m.packageJsonUpdates) m.packageJsonUpdates = {};
-      m.packageJsonUpdates[targetVersion + '-defaultPackages'] = {
+      m.packageJsonUpdates[`${targetVersion}-defaultPackages`] = {
         version: targetVersion,
         packages: [
           '@nrwl/angular',
@@ -700,7 +700,7 @@ async function runNxMigration(root: string, packageName: string, name: string) {
   } catch (e) {
     // workaround for a bug in node 12
     implPath = require.resolve(
-      dirname(collectionPath) + '/' + implRelativePath
+      `${dirname(collectionPath)}/${implRelativePath}`
     );
   }
 

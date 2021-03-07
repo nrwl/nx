@@ -33,7 +33,7 @@ export function generateProjectLint(
       builder: '@angular-devkit/build-angular:tslint',
       options: {
         tsConfig: [tsConfigPath],
-        exclude: ['**/node_modules/**', '!' + projectRoot + '/**/*'],
+        exclude: ['**/node_modules/**', `!${projectRoot}/**/*`],
       },
     };
   } else if (linter === Linter.EsLint) {

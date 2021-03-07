@@ -152,9 +152,9 @@ function getId({
   target: string;
   configuration?: string;
 }): string {
-  let id = project + ':' + target;
+  let id = `${project}:${target}`;
   if (configuration) {
-    id += ':' + configuration;
+    id += `:${configuration}`;
   }
   return id;
 }

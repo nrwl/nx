@@ -202,7 +202,7 @@ function updateModuleSpecifier(
 ): StringChange[] {
   if (
     moduleSpecifier.text === from ||
-    moduleSpecifier.text.startsWith(from + '/')
+    moduleSpecifier.text.startsWith(`${from}/`)
   ) {
     return [
       {

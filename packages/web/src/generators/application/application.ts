@@ -207,7 +207,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   if (options.e2eTestRunner === 'cypress') {
     const cypressTask = await cypressProjectGenerator(host, {
       ...options,
-      name: options.name + '-e2e',
+      name: `${options.name}-e2e`,
       directory: options.directory,
       project: options.projectName,
     });

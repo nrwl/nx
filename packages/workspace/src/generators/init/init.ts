@@ -90,7 +90,7 @@ function convertPath(name: string, originalPath: string) {
 function updateAngularCLIJson(host: Tree, options: Schema) {
   const workspaceConfig = readWorkspaceConfiguration(host);
   const appName = workspaceConfig.defaultProject;
-  const e2eName = appName + '-e2e';
+  const e2eName = `${appName}-e2e`;
   const e2eRoot = joinPathFragments('apps', e2eName);
   delete (workspaceConfig as any).newProjectRoot;
 
@@ -161,7 +161,7 @@ function updateAngularCLIJson(host: Tree, options: Schema) {
       joinPathFragments(
         normalizePath('dist'),
         'apps',
-        options.name + '-server'
+        `${options.name}-server`
       );
     serverOptions.main = serverOptions.main && convertAsset(serverOptions.main);
     serverOptions.tsConfig =
@@ -407,7 +407,7 @@ function moveExistingFiles(host: Tree, options: Schema) {
     const oldE2eRoot = joinPathFragments(app.root || '', 'e2e');
     const newE2eRoot = joinPathFragments(
       'apps',
-      getE2eKey(workspaceJson) + '-e2e'
+      `${getE2eKey(workspaceJson)}-e2e`
     );
     renameDirSyncInTree(host, oldE2eRoot, newE2eRoot);
   } else {
@@ -439,7 +439,7 @@ async function createAdditionalFiles(host: Tree, options: Schema) {
         [options.name]: {
           tags: [],
         },
-        [getE2eKey(workspaceJson) + '-e2e']: {
+        [`${getE2eKey(workspaceJson)}-e2e`]: {
           tags: [],
         },
       },

@@ -20,7 +20,7 @@ export function insertStatement(tree: Tree, path: string, statement: string) {
       : 0;
 
   if (importStatements.length > 0) {
-    statement = '\n' + statement;
+    statement = `\n${statement}`;
   }
 
   const newContents = applyChangesToString(contents, [

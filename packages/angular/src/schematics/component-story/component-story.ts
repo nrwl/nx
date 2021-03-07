@@ -46,7 +46,7 @@ export function createComponentStoriesFile({
         props,
         tmpl: '',
       }),
-      move(libPath + '/' + componentPath),
+      move(`${libPath}/${componentPath}`),
     ]);
   };
 }

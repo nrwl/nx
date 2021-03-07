@@ -17,7 +17,7 @@ describe('ast-utils', () => {
       const toAdd = 'MyProvider';
 
       const { start, text } = createTemplate(
-        moduleImport + '@NgModule({',
+        `${moduleImport}@NgModule({`,
         '})'
       );
       const source = createStockModule(text);
@@ -33,7 +33,7 @@ describe('ast-utils', () => {
       const toAdd = 'MyProvider';
 
       const { start, text } = createTemplate(
-        moduleImport + '@NgModule({providers:[',
+        `${moduleImport}@NgModule({providers:[`,
         ']})'
       );
       const source = createStockModule(text);
@@ -47,7 +47,7 @@ describe('ast-utils', () => {
       const toAdd = 'MyProvider';
 
       let template = createTemplate(
-        moduleImport + '@NgModule({providers:[ProviderOne,ProviderTwo',
+        `${moduleImport}@NgModule({providers:[ProviderOne,ProviderTwo`,
         ']})'
       );
       let source = createStockModule(template.text);
@@ -59,8 +59,7 @@ describe('ast-utils', () => {
       expect(change).toEqual(expectedChange);
 
       template = createTemplate(
-        moduleImport +
-          '@NgModule({providers:[{provide:MyClass,useExisting:MyExistingClass}',
+        `${moduleImport}@NgModule({providers:[{provide:MyClass,useExisting:MyExistingClass}`,
         ']})'
       );
       source = createStockModule(template.text);
@@ -72,7 +71,7 @@ describe('ast-utils', () => {
       expect(change).toEqual(expectedChange);
 
       template = createTemplate(
-        moduleImport + '@NgModule({providers:[someCondition ? MyProvider : []',
+        `${moduleImport}@NgModule({providers:[someCondition ? MyProvider : []`,
         ']})'
       );
       source = createStockModule(template.text);
@@ -84,8 +83,7 @@ describe('ast-utils', () => {
       expect(change).toEqual(expectedChange);
 
       template = createTemplate(
-        moduleImport +
-          '@NgModule({providers:[[NestedProvider1, NestedProvider2]',
+        `${moduleImport}@NgModule({providers:[[NestedProvider1, NestedProvider2]`,
         ']})'
       );
       source = createStockModule(template.text);
@@ -97,7 +95,7 @@ describe('ast-utils', () => {
       expect(change).toEqual(expectedChange);
 
       template = createTemplate(
-        moduleImport + '@NgModule({providers:[...ExistingProviders',
+        `${moduleImport}@NgModule({providers:[...ExistingProviders`,
         ']})'
       );
       source = createStockModule(template.text);

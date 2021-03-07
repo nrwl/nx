@@ -273,7 +273,7 @@ function getCSSModuleLocalIdent(context, localIdentName, localName, options) {
   // Use loaderUtils to find the file or folder name
   const className = interpolateName(
     context,
-    fileNameOrFolder + '_' + localName + '__' + hash,
+    `${fileNameOrFolder}_${localName}__${hash}`,
     options
   );
   // Remove the .module that appears in every classname when based on the file and replace all "." with "_".

@@ -43,8 +43,9 @@ export function createComponentSpecFile({
   componentFileName,
 }: CreateComponentSpecFileSchema): Rule {
   return (tree: Tree, context: SchematicContext): Rule => {
-    const e2eLibIntegrationFolderPath =
-      getProjectConfig(tree, projectName + '-e2e').sourceRoot + '/integration';
+    const e2eLibIntegrationFolderPath = `${
+      getProjectConfig(tree, `${projectName}-e2e`).sourceRoot
+    }/integration`;
     const fullComponentPath = join(
       normalize(libPath),
       componentPath,
@@ -80,7 +81,7 @@ export function createComponentSpecFile({
         props,
         tmpl: '',
       }),
-      move(e2eLibIntegrationFolderPath + '/' + componentPath),
+      move(`${e2eLibIntegrationFolderPath}/${componentPath}`),
     ]);
   };
 }

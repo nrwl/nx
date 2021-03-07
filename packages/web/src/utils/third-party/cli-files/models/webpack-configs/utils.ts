@@ -119,7 +119,7 @@ export function getEsVersionForFileName(
   esVersionInFileName = false
 ): string {
   return scriptTargetOverride && esVersionInFileName
-    ? '-' + ScriptTarget[scriptTargetOverride].toLowerCase()
+    ? `-${ScriptTarget[scriptTargetOverride].toLowerCase()}`
     : '';
 }
 

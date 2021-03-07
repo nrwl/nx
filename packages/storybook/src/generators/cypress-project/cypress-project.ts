@@ -21,7 +21,7 @@ export async function cypressProjectGenerator(
   tree: Tree,
   schema: CypressConfigureSchema
 ) {
-  const e2eProjectName = schema.name + '-e2e';
+  const e2eProjectName = `${schema.name}-e2e`;
   const installTask = await _cypressProjectGenerator(tree, {
     name: e2eProjectName,
     project: schema.name,
@@ -40,19 +40,22 @@ export async function cypressProjectGenerator(
 function removeUnneededFiles(tree: Tree, projectName: string, js: boolean) {
   safeFileDelete(
     tree,
-    readProjectConfiguration(tree, projectName).sourceRoot +
-      (js ? '/integration/app.spec.js' : '/integration/app.spec.ts')
+    `${readProjectConfiguration(tree, projectName).sourceRoot}${
+      js ? '/integration/app.spec.js' : '/integration/app.spec.ts'
+    }`
   );
   safeFileDelete(
     tree,
-    readProjectConfiguration(tree, projectName).sourceRoot +
-      (js ? '/support/app.po.js' : '/support/app.po.ts')
+    `${readProjectConfiguration(tree, projectName).sourceRoot}${
+      js ? '/support/app.po.js' : '/support/app.po.ts'
+    }`
   );
 }
 
 function addBaseUrlToCypressConfig(tree: Tree, projectName: string) {
-  const cypressConfigPath =
-    readProjectConfiguration(tree, projectName).root + '/cypress.json';
+  const cypressConfigPath = `${
+    readProjectConfiguration(tree, projectName).root
+  }/cypress.json`;
   updateJson(tree, cypressConfigPath, (cypressConfig) => {
     cypressConfig.baseUrl = 'http://localhost:4400';
     return cypressConfig;

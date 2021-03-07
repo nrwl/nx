@@ -14,7 +14,7 @@ describe('formatFiles', () => {
       '@nrwl/workspace',
       path.join(__dirname, '../../../collection.json')
     );
-    spyOn(prettier, 'format').and.callFake((input) => 'formatted :: ' + input);
+    spyOn(prettier, 'format').and.callFake((input) => `formatted :: ${input}`);
     tree = Tree.empty();
   });
 

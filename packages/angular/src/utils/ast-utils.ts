@@ -39,7 +39,7 @@ function _angularImportsFromNode(
       if (nb.kind == ts.SyntaxKind.NamespaceImport) {
         // This is of the form `import * as name from 'path'`. Return `name.`.
         return {
-          [(nb as ts.NamespaceImport).name.text + '.']: modulePath,
+          [`${(nb as ts.NamespaceImport).name.text}.`]: modulePath,
         };
       } else {
         // This is of the form `import {a,b,c} from 'path'`
@@ -117,7 +117,7 @@ export function getDecoratorMetadata(
         const id = paExpr.name.text;
         const moduleId = (paExpr.expression as ts.Identifier).getText(source);
 
-        return id === identifier && angularImports[moduleId + '.'] === module;
+        return id === identifier && angularImports[`${moduleId}.`] === module;
       }
 
       return false;

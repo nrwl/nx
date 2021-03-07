@@ -118,7 +118,7 @@ export async function createTestUILib(
     skipFormat: false,
     style: 'css',
     unitTestRunner: 'none',
-    name: libName + '-e2e',
+    name: `${libName}-e2e`,
     js: plainJS,
   });
   return appTree;

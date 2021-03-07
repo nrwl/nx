@@ -409,9 +409,9 @@ describe('dep-graph', () => {
     myapp = uniq('myapp');
     myapp2 = uniq('myapp2');
     myapp3 = uniq('myapp3');
-    myappE2e = myapp + '-e2e';
-    myapp2E2e = myapp2 + '-e2e';
-    myapp3E2e = myapp3 + '-e2e';
+    myappE2e = `${myapp}-e2e`;
+    myapp2E2e = `${myapp2}-e2e`;
+    myapp3E2e = `${myapp3}-e2e`;
     mylib = uniq('mylib');
     mylib2 = uniq('mylib2');
 

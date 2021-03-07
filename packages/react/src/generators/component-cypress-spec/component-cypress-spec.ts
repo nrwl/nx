@@ -46,8 +46,9 @@ export function createComponentSpecFile(
   { project, componentPath, js }: CreateComponentSpecFileSchema
 ) {
   const projects = getProjects(tree);
-  const e2eLibIntegrationFolderPath =
-    projects.get(project + '-e2e').sourceRoot + '/integration';
+  const e2eLibIntegrationFolderPath = `${
+    projects.get(`${project}-e2e`).sourceRoot
+  }/integration`;
 
   const proj = projects.get(project);
   const componentFilePath = joinPathFragments(proj.sourceRoot, componentPath);
@@ -95,7 +96,7 @@ export function createComponentSpecFile(
   generateFiles(
     tree,
     joinPathFragments(__dirname, './files'),
-    e2eLibIntegrationFolderPath + '/' + componentName,
+    `${e2eLibIntegrationFolderPath}/${componentName}`,
     {
       projectName: project,
       componentName,

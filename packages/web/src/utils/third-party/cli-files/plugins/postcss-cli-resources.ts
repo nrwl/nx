@@ -39,7 +39,7 @@ async function resolve(
   resolver: (file: string, base: string) => Promise<string>
 ): Promise<string> {
   try {
-    return await resolver('./' + file, base);
+    return await resolver(`./${file}`, base);
   } catch {
     return resolver(file, base);
   }
