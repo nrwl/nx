@@ -206,14 +206,14 @@ async function runExecutorInternal<T extends { success: boolean }>(
   if (ws.isNxExecutor(nodeModule, executor)) {
     const implementation = implementationFactory();
     const r = implementation(combinedOptions, {
-      root: root,
+      root,
       target: targetConfig,
-      workspace: workspace,
+      workspace,
       projectName: project,
       targetName: target,
       configurationName: configuration,
-      cwd: cwd,
-      isVerbose: isVerbose,
+      cwd,
+      isVerbose,
     }) as Promise<T> | AsyncIterableIterator<T>;
     if (isPromise<T>(r)) {
       return promiseToIterator<T>(r);

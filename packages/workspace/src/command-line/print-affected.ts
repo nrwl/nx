@@ -52,7 +52,7 @@ async function createTasks(
         project: affectedProject,
         target: nxArgs.target,
         configuration: nxArgs.configuration,
-        overrides: overrides,
+        overrides,
         errorIfCannotFindConfiguration: false,
       })
   );
@@ -62,7 +62,7 @@ async function createTasks(
   const isYarn = pm === 'yarn';
   return tasks.map((task, index) => ({
     id: task.id,
-    overrides: overrides,
+    overrides,
     target: task.target,
     command: `${isYarn ? 'yarn' : `${pm} run`} ${getCommandAsString(
       'nx',

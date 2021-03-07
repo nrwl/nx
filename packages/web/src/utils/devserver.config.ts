@@ -57,7 +57,7 @@ function getDevServerPartial(
       htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
     },
     noInfo: true,
-    onListening: function (server: any) {
+    onListening(server: any) {
       // Depend on the info in the server for this function because the user might adjust the webpack config
       const serverUrl = url.format({
         protocol: server.options.https ? 'https' : 'http',

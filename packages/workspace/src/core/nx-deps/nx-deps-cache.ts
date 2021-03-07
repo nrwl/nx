@@ -131,7 +131,7 @@ export function differentFromCache(
   };
 
   return {
-    filesDifferentFromCache: filesDifferentFromCache,
+    filesDifferentFromCache,
     partiallyConstructedProjectGraph,
     noDifference: Object.keys(filesDifferentFromCache).length === 0,
   };

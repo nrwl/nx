@@ -53,8 +53,8 @@ describe('Build storybook', () => {
 
     const result = await storybookBuilder(
       {
-        uiFramework: uiFramework,
-        outputPath: outputPath,
+        uiFramework,
+        outputPath,
         config,
       },
       context

@@ -144,7 +144,7 @@ async function runCypress(baseUrl: string, opts: CypressExecutorOptions) {
 
   // If not, will use the `baseUrl` normally from `cypress.json`
   if (baseUrl) {
-    options.config = { baseUrl: baseUrl };
+    options.config = { baseUrl };
   }
 
   if (opts.browser) {

@@ -79,17 +79,14 @@ function createWorkspace(
 }
 
 function createNxPlugin(workspaceName, pluginName, packageManager) {
-  console.log(
-    `nx generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${workspaceName}/${pluginName}`
-  );
+  const command = `nx generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${workspaceName}/${pluginName}`;
+  console.log(command);
+
   const pmc = getPackageManagerCommand(packageManager);
-  execSync(
-    `${pmc.exec} nx generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${workspaceName}/${pluginName}`,
-    {
-      cwd: workspaceName,
-      stdio: [0, 1, 2],
-    }
-  );
+  execSync(`${pmc.exec} ${command}`, {
+    cwd: workspaceName,
+    stdio: [0, 1, 2],
+  });
 }
 
 function updateWorkspace(workspaceName: string) {

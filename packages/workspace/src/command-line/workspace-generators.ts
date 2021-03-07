@@ -124,7 +124,7 @@ function constructCollection() {
   return {
     name: 'workspace-generators',
     version: '1.0',
-    generators: generators,
+    generators,
     schematics: generators,
   };
 }
@@ -353,8 +353,8 @@ async function executeAngularDevkitSchematic(
       .execute({
         collection: path.join(outDir, 'workspace-generators.json'),
         schematic: schematicName,
-        options: options,
-        logger: logger,
+        options,
+        logger,
       })
       .toPromise();
 
