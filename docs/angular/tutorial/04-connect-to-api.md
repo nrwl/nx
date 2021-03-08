@@ -1,6 +1,6 @@
-# Step 4: Connect to an API
+# Angular Nx Tutorial - Step 4: Connect to an API
 
-## Video of this Lesson
+## Nx.dev Tutorial | Angular | Step 4: Connect to API
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/digMpZzPtg8" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 

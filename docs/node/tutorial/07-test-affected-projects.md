@@ -1,6 +1,6 @@
-# Step 7: Test Affected Projects
+# Node Nx Tutorial - Step 7: Test Affected Projects
 
-## Video of this Lesson
+## Nx.dev Tutorial | Node | Step 6: Computation Caching
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/TRRVLyHfN60" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 

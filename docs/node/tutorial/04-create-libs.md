@@ -1,6 +1,6 @@
-# Step 4: Create Libraries
+# Node Nx Tutorial - Step 4: Create Libraries
 
-## Video of this Lesson
+## Nx.dev Tutorial | Node | Step 4: Create Libraries
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/V29I_DHGlB8" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 

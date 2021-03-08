@@ -1,6 +1,6 @@
-# Step 1: Create Application
+# React Nx Tutorial - Step 1: Create Application
 
-## Video of this Lesson
+## Nx.dev Tutorial | React | Step 1: Create Application
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/HcQE5R6ucng" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
