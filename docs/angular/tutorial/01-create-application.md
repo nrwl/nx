@@ -1,6 +1,6 @@
-# Step 1: Create Application
+# Angular Nx Tutorial - Step 1: Create Application
 
-## Video of this Lesson
+## Nx.dev Tutorial | Angular | Step 1: Create Application
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/i37yJKK8qGI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 

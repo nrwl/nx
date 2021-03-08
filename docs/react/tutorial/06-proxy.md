@@ -1,6 +1,6 @@
-# Step 6: Proxy
+# React Nx Tutorial - Step 6: Proxy
 
-## Video of this Lesson
+## Nx.dev Tutorial | React | Step 6: Proxy
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/xfvCz-yLeEw" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 

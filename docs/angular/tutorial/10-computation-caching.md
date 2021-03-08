@@ -1,6 +1,6 @@
-# Step 10: Computation Caching
+# Angular Nx Tutorial - Step 10: Computation Caching
 
-## Video of this Lesson
+## Nx.dev Tutorial | Angular | Step 10: Use Computation Caching
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/HX3--ilBhBs" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 

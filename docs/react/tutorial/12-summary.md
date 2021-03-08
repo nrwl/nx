@@ -1,4 +1,4 @@
-# Step 12: Summary
+# React Nx Tutorial - Step 12: Summary
 
 In this tutorial you:
 
