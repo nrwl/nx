@@ -1,5 +1,5 @@
 import { Tree } from '@nrwl/tao/src/shared/tree';
-import { updateJson } from '../utils/json';
+import { readJson, updateJson } from '../utils/json';
 
 export function updateTsConfigsToJs(
   host: Tree,
@@ -19,6 +19,12 @@ export function updateTsConfigsToJs(
     }
     if (tree.exists(paths.tsConfigLib)) {
       return 'library';
+    }
+    if (tree.exists(paths.tsConfig)) {
+      const contents = readJson(host, paths.tsConfig);
+      if (contents.include && contents.include.length > 0) {
+        return 'root-application';
+      }
     }
 
     throw new Error(
@@ -42,6 +48,9 @@ export function updateTsConfigsToJs(
   }
   if (projectType === 'application') {
     updateConfigPath = paths.tsConfigApp;
+  }
+  if (projectType === 'root-application') {
+    updateConfigPath = paths.tsConfig;
   }
 
   updateJson(host, updateConfigPath, (json) => {
