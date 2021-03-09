@@ -49,7 +49,6 @@ describe('preset', () => {
     expect(tree.children('apps/proj')).toMatchSnapshot();
     expect(tree.children('apps/proj/src/')).toMatchSnapshot();
     expect(tree.children('apps/proj/src/app')).toMatchSnapshot();
-    console.log(tree.children(''));
 
     expect(
       JSON.parse(tree.read('/workspace.json').toString()).cli.defaultCollection

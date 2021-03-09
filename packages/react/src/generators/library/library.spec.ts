@@ -487,10 +487,6 @@ describe('lib', () => {
 
       const workspaceJson = readJson(appTree, '/workspace.json');
       const babelrc = readJson(appTree, 'libs/my-lib/.babelrc');
-      const babelJestConfig = readJson(
-        appTree,
-        'libs/my-lib/babel-jest.config.json'
-      );
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
@@ -498,7 +494,6 @@ describe('lib', () => {
         },
       });
       expect(babelrc.plugins).toContain('styled-jsx/babel');
-      expect(babelJestConfig.plugins).toContain('styled-jsx/babel');
     });
 
     it('should support style none', async () => {

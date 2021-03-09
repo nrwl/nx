@@ -565,12 +565,7 @@ describe('app', () => {
       });
 
       const babelrc = readJson(appTree, 'apps/my-app/.babelrc');
-      const babelJestConfig = readJson(
-        appTree,
-        'apps/my-app/babel-jest.config.json'
-      );
       expect(babelrc.plugins).toContain('styled-jsx/babel');
-      expect(babelJestConfig.plugins).toContain('styled-jsx/babel');
     });
   });
 

@@ -718,34 +718,16 @@ describe('lib', () => {
           displayName: 'my-lib',
           preset: '../../jest.preset.js',
           transform: {
-            '^.+\\\\\\\\.[tj]sx?$': [ 'babel-jest',
-            { cwd: __dirname, configFile: './babel-jest.config.json' }]
+            '^.+\\\\\\\\.[tj]sx?$': 'babel-jest'
           },
             moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
           coverageDirectory: '../../coverage/libs/my-lib'
         };
         "
       `);
-
-      expect(readJson(tree, 'libs/my-lib/babel-jest.config.json'))
-        .toMatchInlineSnapshot(`
-        Object {
-          "presets": Array [
-            Array [
-              "@babel/preset-env",
-              Object {
-                "targets": Object {
-                  "node": "current",
-                },
-              },
-            ],
-            "@babel/preset-typescript",
-            "@babel/preset-react",
-          ],
-        }
-      `);
     });
   });
+
   describe('--pascalCaseFiles', () => {
     it('should generate files with upper case names', async () => {
       await libraryGenerator(tree, {
@@ -770,6 +752,25 @@ describe('lib', () => {
       expect(
         tree.exists('libs/my-dir/my-lib/src/lib/MyDirMyLib.spec.ts')
       ).toBeTruthy();
+    });
+  });
+
+  describe('--skipBabelrc', () => {
+    it('should skip generating .babelrc when --skipBabelrc=true', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        skipBabelrc: true,
+      });
+      expect(tree.exists('libs/my-lib/.babelrc')).toBeFalsy();
+    });
+
+    it('should generate .babelrc by default', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+      });
+      expect(tree.exists('libs/my-lib/.babelrc')).toBeTruthy();
     });
   });
 });
