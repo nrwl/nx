@@ -47,7 +47,6 @@ describe('app', () => {
     it('should generate files', async () => {
       await applicationGenerator(tree, { name: 'myApp', style: 'css' });
       expect(tree.exists('apps/my-app/tsconfig.json')).toBeTruthy();
-      expect(tree.exists('apps/my-app/tsconfig.app.json')).toBeTruthy();
       expect(tree.exists('apps/my-app/pages/index.tsx')).toBeTruthy();
       expect(tree.exists('apps/my-app/specs/index.spec.tsx')).toBeTruthy();
       expect(tree.exists('apps/my-app/pages/index.module.css')).toBeTruthy();
@@ -292,7 +291,7 @@ describe('app', () => {
                 ],
                 "parserOptions": Object {
                   "project": Array [
-                    "apps/my-app/tsconfig.*?.json",
+                    "apps/my-app/tsconfig(.*)?.json",
                   ],
                 },
                 "rules": Object {},
@@ -357,9 +356,9 @@ describe('app', () => {
       const tsConfig = readJson(tree, 'apps/my-app/tsconfig.json');
       expect(tsConfig.compilerOptions.allowJs).toEqual(true);
 
-      const tsConfigApp = readJson(tree, 'apps/my-app/tsconfig.app.json');
+      const tsConfigApp = readJson(tree, 'apps/my-app/tsconfig.json');
       expect(tsConfigApp.include).toContain('**/*.js');
-      expect(tsConfigApp.exclude).toContain('**/*.spec.js');
+      expect(tsConfigApp.exclude).not.toContain('**/*.spec.js');
     });
   });
 });
