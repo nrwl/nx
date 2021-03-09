@@ -1,39 +1,29 @@
-import { Tree } from '@angular-devkit/schematics';
-import { readJsonInTree, updateWorkspace } from '@nrwl/workspace';
-import { callRule, createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { runMigration } from '../../utils/testing';
+import { addProjectConfiguration, readJson, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import updateTsConfigsWithEslint from './always-use-project-level-tsconfigs-with-eslint';
 
 describe('Always use project level tsconfigs with eslint', () => {
   let tree: Tree;
   beforeEach(async () => {
-    tree = Tree.empty();
-    tree = createEmptyWorkspace(tree);
-    tree = await callRule(
-      updateWorkspace((workspace) => {
-        workspace.projects.add({
-          name: 'react-app',
-          root: 'apps/react-app',
-          sourceRoot: 'apps/react-app/src',
-          projectType: 'application',
-          targets: {},
-        });
-        workspace.projects.add({
-          name: 'workspace-lib',
-          root: 'libs/workspace-lib',
-          sourceRoot: 'libs/workspace-lib/src',
-          projectType: 'library',
-          targets: {},
-        });
-        workspace.projects.add({
-          name: 'some-lib',
-          root: 'libs/some-lib',
-          sourceRoot: 'libs/some-lib/src',
-          projectType: 'library',
-          targets: {},
-        });
-      }),
-      tree
-    );
+    tree = createTreeWithEmptyWorkspace();
+    addProjectConfiguration(tree, 'react-app', {
+      root: 'apps/react-app',
+      sourceRoot: 'apps/react-app/src',
+      projectType: 'application',
+      targets: {},
+    });
+    addProjectConfiguration(tree, 'workspace-lib', {
+      root: 'libs/workspace-lib',
+      sourceRoot: 'libs/workspace-lib/src',
+      projectType: 'library',
+      targets: {},
+    });
+    addProjectConfiguration(tree, 'some-lib', {
+      root: 'libs/some-lib',
+      sourceRoot: 'libs/some-lib/src',
+      projectType: 'library',
+      targets: {},
+    });
   });
 
   it('should remove the "project" parserOption from the root ESLint config', async () => {
@@ -72,15 +62,11 @@ describe('Always use project level tsconfigs with eslint', () => {
       ],
     };
 
-    tree.create('.eslintrc.json', JSON.stringify(rootEslintConfig));
+    tree.write('.eslintrc.json', JSON.stringify(rootEslintConfig));
 
-    const result = await runMigration(
-      'always-use-project-level-tsconfigs-with-eslint',
-      {},
-      tree
-    );
+    await updateTsConfigsWithEslint(tree);
 
-    expect(readJsonInTree(result, '.eslintrc.json')).toMatchInlineSnapshot(`
+    expect(readJson(tree, '.eslintrc.json')).toMatchInlineSnapshot(`
       Object {
         "ignorePatterns": Array [
           "**/*",
@@ -149,7 +135,7 @@ describe('Always use project level tsconfigs with eslint', () => {
         'jsx-a11y/anchor-is-valid': ['off'],
       },
     };
-    tree.create(
+    tree.write(
       'apps/react-app/.eslintrc.json',
       JSON.stringify(projectEslintConfig1)
     );
@@ -167,7 +153,7 @@ describe('Always use project level tsconfigs with eslint', () => {
         },
       ],
     };
-    tree.create(
+    tree.write(
       'libs/workspace-lib/.eslintrc.json',
       JSON.stringify(projectEslintConfig2)
     );
@@ -186,18 +172,14 @@ describe('Always use project level tsconfigs with eslint', () => {
         },
       ],
     };
-    tree.create(
+    tree.write(
       'libs/some-lib/.eslintrc.json',
       JSON.stringify(projectEslintConfig3)
     );
 
-    const result = await runMigration(
-      'always-use-project-level-tsconfigs-with-eslint',
-      {},
-      tree
-    );
+    await updateTsConfigsWithEslint(tree);
 
-    expect(readJsonInTree(result, 'apps/react-app/.eslintrc.json'))
+    expect(readJson(tree, 'apps/react-app/.eslintrc.json'))
       .toMatchInlineSnapshot(`
       Object {
         "extends": Array [
@@ -245,7 +227,7 @@ describe('Always use project level tsconfigs with eslint', () => {
       }
     `);
 
-    expect(readJsonInTree(result, 'libs/workspace-lib/.eslintrc.json'))
+    expect(readJson(tree, 'libs/workspace-lib/.eslintrc.json'))
       .toMatchInlineSnapshot(`
       Object {
         "extends": "../../../.eslintrc.json",
@@ -280,7 +262,7 @@ describe('Always use project level tsconfigs with eslint', () => {
     `);
 
     // No change
-    expect(readJsonInTree(result, 'libs/some-lib/.eslintrc.json')).toEqual(
+    expect(readJson(tree, 'libs/some-lib/.eslintrc.json')).toEqual(
       projectEslintConfig3
     );
   });
