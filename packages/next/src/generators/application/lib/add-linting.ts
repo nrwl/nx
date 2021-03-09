@@ -29,7 +29,14 @@ export async function addLinting(
     updateJson(
       host,
       joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
-      () => reactEslintJson
+      () => {
+        if (reactEslintJson.overrides?.[0].parserOptions?.project) {
+          reactEslintJson.overrides[0].parserOptions.project = [
+            `${options.appProjectRoot}/tsconfig(.*)?.json`,
+          ];
+        }
+        return reactEslintJson;
+      }
     );
   }
 
