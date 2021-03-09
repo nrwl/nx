@@ -114,7 +114,7 @@
     "ajv": "6.10.2",
     "angular": "1.8.0",
     "app-root-path": "^2.0.1",
-    "autoprefixer": "9.7.4",
+    "autoprefixer": "^10.2.5",
     "axios": "0.21.1",
     "babel-loader": "8.1.0",
     "babel-plugin-const-enum": "^1.0.1",
