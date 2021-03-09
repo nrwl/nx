@@ -39,7 +39,7 @@ export function getPackageManagerCommand(
         install: 'yarn',
         add: 'yarn add',
         addDev: 'yarn add -D',
-        rm: 'yarn rm',
+        rm: 'yarn remove',
         exec: 'yarn',
         run: (script: string, args: string) => `yarn ${script} ${args}`,
         list: 'yarn list',
