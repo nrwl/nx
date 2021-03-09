@@ -45,7 +45,7 @@
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "7.1.1",
     "ajv": "6.10.2",
-    "autoprefixer": "9.7.4",
+    "autoprefixer": "^10.2.5",
     "babel-loader": "8.1.0",
     "babel-plugin-const-enum": "^1.0.1",
     "babel-plugin-macros": "^2.8.0",
