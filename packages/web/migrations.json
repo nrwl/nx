@@ -14,12 +14,6 @@
       "version": "9.2.0-beta.1",
       "description": "Set buildLibsFromSource property to true to not break existing projects.",
       "factory": "./src/migrations/update-9-2-0/set-build-libs-from-source"
-    },
-    "update-babel-config-11.5.0": {
-      "cli": "nx",
-      "version": "11.5.0-beta.1",
-      "description": "Update babel config to support different TS setup",
-      "factory": "./src/migrations/update-11-5-0/update-babel-config"
     }
   }
 }
