@@ -1,0 +1,10 @@
+{
+  "schematics": {
+    "add-js-include-11.6.0": {
+      "cli": "nx",
+      "version": "11.6.0-beta.0",
+      "description": "Add js patterns to tsconfig.app.json",
+      "factory": "./src/migrations/update-11-6-0/add-js-include-11-6-0"
+    }
+  }
+}
