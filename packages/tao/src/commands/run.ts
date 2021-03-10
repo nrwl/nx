@@ -185,7 +185,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
 
   if (!targetConfig) {
     throw new Error(
-      "NX Cannot find target '${target}' for project '${project.name}'"
+      `NX Cannot find target '${target}' for project '${project}'`
     );
   }
   const [nodeModule, executor] = targetConfig.executor.split(':');
