@@ -179,10 +179,15 @@ async function runExecutorInternal<T extends { success: boolean }>(
 
   const ws = new Workspaces(root);
   const proj = workspace.projects[project];
-  const targetConfig =
-    proj.targets && proj.targets[target]
-      ? proj.targets[target]
-      : createImplicitTargetConfig(proj, target);
+  const targetConfig = proj.targets
+    ? proj.targets[target]
+    : createImplicitTargetConfig(proj, target);
+
+  if (!targetConfig) {
+    throw new Error(
+      "NX Cannot find target '${target}' for project '${project.name}'"
+    );
+  }
   const [nodeModule, executor] = targetConfig.executor.split(':');
   const { schema, implementationFactory } = ws.readExecutor(
     nodeModule,
