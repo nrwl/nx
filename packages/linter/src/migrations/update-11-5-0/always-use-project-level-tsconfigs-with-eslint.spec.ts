@@ -266,4 +266,78 @@ describe('Always use project level tsconfigs with eslint', () => {
       projectEslintConfig3
     );
   });
+
+  it('should set Next.js eslint "project" option to include tsconfig.json', async () => {
+    addProjectConfiguration(tree, 'next-app', {
+      root: 'apps/next-app',
+      sourceRoot: 'apps/next-app/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@nrwl/next:build',
+        },
+      },
+    });
+    const projectEslintConfig1 = {
+      extends: ['plugin:@nrwl/nx/react', '../../.eslintrc.json'],
+      ignorePatterns: ['!**/*'],
+      rules: {
+        'jsx-a11y/anchor-is-valid': ['off'],
+      },
+    };
+    tree.write(
+      'apps/next-app/.eslintrc.json',
+      JSON.stringify(projectEslintConfig1)
+    );
+
+    await updateTsConfigsWithEslint(tree);
+
+    expect(readJson(tree, 'apps/next-app/.eslintrc.json'))
+      .toMatchInlineSnapshot(`
+      Object {
+        "extends": Array [
+          "plugin:@nrwl/nx/react",
+          "../../.eslintrc.json",
+        ],
+        "ignorePatterns": Array [
+          "!**/*",
+        ],
+        "overrides": Array [
+          Object {
+            "files": Array [
+              "*.ts",
+              "*.tsx",
+              "*.js",
+              "*.jsx",
+            ],
+            "parserOptions": Object {
+              "project": Array [
+                "apps/next-app/tsconfig(.*)?.json",
+              ],
+            },
+            "rules": Object {},
+          },
+          Object {
+            "files": Array [
+              "*.ts",
+              "*.tsx",
+            ],
+            "rules": Object {},
+          },
+          Object {
+            "files": Array [
+              "*.js",
+              "*.jsx",
+            ],
+            "rules": Object {},
+          },
+        ],
+        "rules": Object {
+          "jsx-a11y/anchor-is-valid": Array [
+            "off",
+          ],
+        },
+      }
+    `);
+  });
 });
