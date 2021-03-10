@@ -1,5 +1,5 @@
-import { ProjectGraph } from '@nrwl/workspace/src/core/project-graph';
-import { checkCircularPath } from './runtime-lint-utils';
+import { ProjectGraph } from '../core/project-graph';
+import { checkCircularPath } from './graph-utils';
 
 describe('should find the path between nodes', () => {
   it('should return empty path when when there are no connecting edges', () => {
