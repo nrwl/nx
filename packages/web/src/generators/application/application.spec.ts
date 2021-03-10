@@ -61,13 +61,52 @@ describe('app', () => {
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
-      const linter = readJson(tree, 'apps/my-app/.eslintrc.json');
-      expect(linter.extends).toEqual(['../../.eslintrc.json']);
-
       expect(tree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
       const tsconfigE2E = readJson(tree, 'apps/my-app-e2e/tsconfig.e2e.json');
       expect(tsconfigE2E.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigE2E.extends).toEqual('./tsconfig.json');
+
+      const eslintJson = readJson(tree, '/apps/my-app/.eslintrc.json');
+      expect(eslintJson).toMatchInlineSnapshot(`
+        Object {
+          "extends": Array [
+            "../../.eslintrc.json",
+          ],
+          "ignorePatterns": Array [
+            "!**/*",
+          ],
+          "overrides": Array [
+            Object {
+              "files": Array [
+                "*.ts",
+                "*.tsx",
+                "*.js",
+                "*.jsx",
+              ],
+              "parserOptions": Object {
+                "project": Array [
+                  "apps/my-app/tsconfig.*?.json",
+                ],
+              },
+              "rules": Object {},
+            },
+            Object {
+              "files": Array [
+                "*.ts",
+                "*.tsx",
+              ],
+              "rules": Object {},
+            },
+            Object {
+              "files": Array [
+                "*.js",
+                "*.jsx",
+              ],
+              "rules": Object {},
+            },
+          ],
+        }
+      `);
     });
   });
 
@@ -315,30 +354,12 @@ describe('app', () => {
           preset: '../../jest.preset.js',
           setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
           transform: {
-            '^.+\\\\\\\\.[tj]s$': [ 'babel-jest',
-            { cwd: __dirname, configFile: './babel-jest.config.json' }]
+            '^.+\\\\\\\\.[tj]s$': 'babel-jest'
           },
             moduleFileExtensions: ['ts', 'js', 'html'],
           coverageDirectory: '../../coverage/apps/my-app'
         };
         "
-      `);
-
-      expect(readJson(tree, 'apps/my-app/babel-jest.config.json'))
-        .toMatchInlineSnapshot(`
-        Object {
-          "presets": Array [
-            Array [
-              "@babel/preset-env",
-              Object {
-                "targets": Object {
-                  "node": "current",
-                },
-              },
-            ],
-            "@babel/preset-typescript",
-          ],
-        }
       `);
     });
   });

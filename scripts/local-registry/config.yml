@@ -9,10 +9,6 @@ uplinks:
     maxage: 30m
     fail_timeout: 10m
     timeout: 600s
-    agent_options:
-      keepAlive: true
-      maxSockets: 40
-      maxFreeSockets: 10
     cache: false
 
 packages:

@@ -181,13 +181,7 @@ describe('app', () => {
         .read('apps/my-app/src/pages/index.tsx')
         .toString();
 
-      const babelJestConfig = readJson(
-        tree,
-        'apps/my-app/babel-jest.config.json'
-      );
-
       expect(indexContent).toMatch(/<style jsx>/);
-      expect(babelJestConfig.plugins).toContain('styled-jsx/babel');
       expect(
         tree.exists('apps/my-app/src/pages/index.module.styled-jsx')
       ).toBeFalsy();
@@ -294,18 +288,60 @@ describe('app', () => {
       style: 'css',
     });
 
-    const eslintJson = readJson(tree, '/apps/my-app/.eslintrc.json');
     const packageJson = readJson(tree, '/package.json');
-
-    expect(eslintJson.extends).toEqual(
-      expect.arrayContaining(['plugin:@nrwl/nx/react'])
-    );
     expect(packageJson).toMatchObject({
       devDependencies: {
         'eslint-plugin-react': expect.anything(),
         'eslint-plugin-react-hooks': expect.anything(),
       },
     });
+
+    const eslintJson = readJson(tree, '/apps/my-app/.eslintrc.json');
+    expect(eslintJson).toMatchInlineSnapshot(`
+      Object {
+        "extends": Array [
+          "plugin:@nrwl/nx/react",
+          "../../.eslintrc.json",
+        ],
+        "ignorePatterns": Array [
+          "!**/*",
+          "public",
+          ".cache",
+        ],
+        "overrides": Array [
+          Object {
+            "files": Array [
+              "*.ts",
+              "*.tsx",
+              "*.js",
+              "*.jsx",
+            ],
+            "parserOptions": Object {
+              "project": Array [
+                "apps/my-app/tsconfig.*?.json",
+              ],
+            },
+            "rules": Object {},
+          },
+          Object {
+            "files": Array [
+              "*.ts",
+              "*.tsx",
+            ],
+            "rules": Object {
+              "@typescript-eslint/camelcase": "off",
+            },
+          },
+          Object {
+            "files": Array [
+              "*.js",
+              "*.jsx",
+            ],
+            "rules": Object {},
+          },
+        ],
+      }
+    `);
   });
 
   describe('--js', () => {

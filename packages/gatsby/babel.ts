@@ -4,6 +4,9 @@
 module.exports = function (api, options) {
   api.assertVersion(7);
   return {
-    presets: [[require.resolve('babel-preset-gatsby'), { useBuiltIns: true }]],
+    presets: [
+      '@nrwl/web/babel',
+      [require.resolve('babel-preset-gatsby'), { useBuiltIns: true }],
+    ],
   };
 };

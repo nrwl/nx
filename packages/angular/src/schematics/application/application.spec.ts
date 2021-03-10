@@ -382,51 +382,58 @@ describe('app', () => {
         );
 
         const eslintConfig = readJsonInTree(tree, 'apps/my-app/.eslintrc.json');
-
-        expect(eslintConfig.overrides).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "extends": Array [
-                "plugin:@nrwl/nx/angular",
-                "plugin:@angular-eslint/template/process-inline-templates",
-              ],
-              "files": Array [
-                "*.ts",
-              ],
-              "parserOptions": Object {
-                "project": Array [
-                  "apps/my-app/tsconfig.*?.json",
+        expect(eslintConfig).toMatchInlineSnapshot(`
+          Object {
+            "extends": Array [
+              "../../.eslintrc.json",
+            ],
+            "ignorePatterns": Array [
+              "!**/*",
+            ],
+            "overrides": Array [
+              Object {
+                "extends": Array [
+                  "plugin:@nrwl/nx/angular",
+                  "plugin:@angular-eslint/template/process-inline-templates",
                 ],
+                "files": Array [
+                  "*.ts",
+                ],
+                "parserOptions": Object {
+                  "project": Array [
+                    "apps/my-app/tsconfig.*?.json",
+                  ],
+                },
+                "rules": Object {
+                  "@angular-eslint/component-selector": Array [
+                    "error",
+                    Object {
+                      "prefix": "proj",
+                      "style": "kebab-case",
+                      "type": "element",
+                    },
+                  ],
+                  "@angular-eslint/directive-selector": Array [
+                    "error",
+                    Object {
+                      "prefix": "proj",
+                      "style": "camelCase",
+                      "type": "attribute",
+                    },
+                  ],
+                },
               },
-              "rules": Object {
-                "@angular-eslint/component-selector": Array [
-                  "error",
-                  Object {
-                    "prefix": "proj",
-                    "style": "kebab-case",
-                    "type": "element",
-                  },
+              Object {
+                "extends": Array [
+                  "plugin:@nrwl/nx/angular-template",
                 ],
-                "@angular-eslint/directive-selector": Array [
-                  "error",
-                  Object {
-                    "prefix": "proj",
-                    "style": "camelCase",
-                    "type": "attribute",
-                  },
+                "files": Array [
+                  "*.html",
                 ],
+                "rules": Object {},
               },
-            },
-            Object {
-              "extends": Array [
-                "plugin:@nrwl/nx/angular-template",
-              ],
-              "files": Array [
-                "*.html",
-              ],
-              "rules": Object {},
-            },
-          ]
+            ],
+          }
         `);
       });
     });

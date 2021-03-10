@@ -42,7 +42,6 @@ function initRootBabelConfig(tree: Tree) {
   }
 
   writeJson(tree, '/babel.config.json', {
-    presets: ['@nrwl/web/babel'],
     babelrcRoots: ['*'], // Make sure .babelrc files other than root can be loaded in a monorepo
   });
 }

@@ -70,7 +70,7 @@ export function createProjectGraph(
     const ctx = {
       workspaceJson,
       nxJson: normalizedNxJson,
-      fileMap: fileMap,
+      fileMap,
     };
     const projectGraph = buildProjectGraph(ctx, fileRead, null);
     if (shouldCache) {

@@ -130,7 +130,10 @@ export function prepareConfig(
     : (_, x) => x;
   // Yes, these do have different capitalisation...
   config.outdir = `${offsetFromRoot(options.root)}${options.outputPath}`;
-  config.distDir = join(config.outdir, '.next');
+  config.distDir =
+    config.distDir && config.distDir !== '.next'
+      ? config.distDir
+      : join(config.outdir, '.next');
   config.webpack = (a, b) =>
     createWebpackConfig(
       context.root,

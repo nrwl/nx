@@ -1,6 +1,6 @@
-# Step 2: Add E2E Tests
+# Angular Nx Tutorial - Step 2: Add E2E Tests
 
-## Video of this Lesson
+## Nx.dev Tutorial | Angular | Step 2: Add E2E Test
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/owRAO75DIR4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 

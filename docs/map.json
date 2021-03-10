@@ -2601,6 +2601,11 @@
         "id": "storybook",
         "itemList": [
           {
+            "name": "Overview",
+            "id": "overview",
+            "file": "node/guides/storybook-plugin"
+          },
+          {
             "name": "configuration generator",
             "id": "configuration",
             "file": "node/api-storybook/generators/configuration"

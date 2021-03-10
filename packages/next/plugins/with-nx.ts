@@ -28,12 +28,19 @@ function withNx(nextConfig = {} as any) {
   const userWebpack = nextConfig.webpack || ((x) => x);
   return {
     ...nextConfig,
-    /*
-     * Modify the Next.js webpack config to allow workspace libs to use css modules.
-     *
-     * Note: This would be easier if Next.js exposes css-loader and sass-loader on `defaultLoaders`.
-     */
     webpack: (config, options) => {
+      /*
+       * Update babel to support our monorepo setup.
+       * The 'upward' mode allows the root babel.config.json and per-project .babelrc files to be picked up.
+       */
+      options.defaultLoaders.babel.options.babelrc = true;
+      options.defaultLoaders.babel.options.rootMode = 'upward';
+
+      /*
+       * Modify the Next.js webpack config to allow workspace libs to use css modules.
+       * Note: This would be easier if Next.js exposes css-loader and sass-loader on `defaultLoaders`.
+       */
+
       // Include workspace libs in css/sass loaders
       const includes = [join(appRootPath, workspaceLayout().libsDir)];
 

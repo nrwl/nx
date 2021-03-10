@@ -84,6 +84,32 @@ export default async function getMissingDependencies(
   verbose: boolean
 ) {
   const options: any = {
+    /**
+     * If a dependency is exclusively used via a TypeScript type import
+     * e.g. `import type { Foo } from 'bar';`
+     * ...then we do not want it to trigger a missing dependency warning
+     * because it is not required at runtime.
+     *
+     * We can achieve this by overriding the default detector for
+     * ImportDeclaration nodes to check the `importKind` value.
+     */
+    detectors: [
+      ...Object.entries(depcheck.detector).map(([detectorName, detectorFn]) => {
+        // Use all the default detectors, apart from 'importDeclaration'
+        if (detectorName !== 'importDeclaration') {
+          return detectorFn;
+        }
+        const customImportDeclarationDetector: depcheck.Detector = (node) => {
+          return node.type === 'ImportDeclaration' &&
+            node.source &&
+            node.source.value &&
+            node.importKind !== 'type'
+            ? [node.source.value]
+            : [];
+        };
+        return customImportDeclarationDetector;
+      }),
+    ],
     skipMissing: false, // skip calculation of missing dependencies
     ignorePatterns: [
       '*.d.ts',

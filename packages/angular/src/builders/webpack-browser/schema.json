@@ -73,6 +73,26 @@
               "type": "boolean",
               "description": "Enables optimization of the styles output.",
               "default": true
+            },
+            "fonts": {
+              "description": "Enables optimization for fonts. This option requires internet access. `HTTPS_PROXY` environment variable can be used to specify a proxy server.",
+              "default": true,
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "inline": {
+                      "type": "boolean",
+                      "description": "Reduce render blocking requests by inlining external Google fonts and icons CSS definitions in the application's HTML index file. This option requires internet access. `HTTPS_PROXY` environment variable can be used to specify a proxy server.",
+                      "default": true
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
             }
           },
           "additionalProperties": false

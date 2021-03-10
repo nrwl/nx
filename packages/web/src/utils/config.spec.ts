@@ -5,9 +5,9 @@ import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { ProgressPlugin } from 'webpack';
 import { BuildBuilderOptions } from './types';
+import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 
 jest.mock('tsconfig-paths-webpack-plugin');
 
@@ -448,6 +448,7 @@ describe('getBaseWebpackPartial', () => {
           ...input,
           progress: true,
         },
+        true,
         true,
         true,
         'production'

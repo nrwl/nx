@@ -163,7 +163,32 @@ export function addLintFiles(
             configJson = {
               extends: rootConfig,
               ignorePatterns,
-              rules: {},
+              overrides: [
+                {
+                  files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+                  parserOptions: {
+                    /**
+                     * In order to ensure maximum efficiency when typescript-eslint generates TypeScript Programs
+                     * behind the scenes during lint runs, we need to make sure the project is configured to use its
+                     * own specific tsconfigs, and not fall back to the ones in the root of the workspace.
+                     */
+                    project: [`${projectRoot}/tsconfig.*?.json`],
+                  },
+                  /**
+                   * Having an empty rules object present makes it more obvious to the user where they would
+                   * extend things from if they needed to
+                   */
+                  rules: {},
+                },
+                {
+                  files: ['*.ts', '*.tsx'],
+                  rules: {},
+                },
+                {
+                  files: ['*.js', '*.jsx'],
+                  rules: {},
+                },
+              ],
             };
           }
 
@@ -286,11 +311,6 @@ const globalESLint = JSON.stringify({
     {
       files: ['*.ts', '*.tsx'],
       extends: ['plugin:@nrwl/nx/typescript'],
-      /**
-       * TODO: Remove this usage of project at the root in a follow up PR (and migration),
-       * it should be set in each project's config
-       */
-      parserOptions: { project: './tsconfig.*?.json' },
       /**
        * Having an empty rules object present makes it more obvious to the user where they would
        * extend things from if they needed to

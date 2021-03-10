@@ -642,10 +642,10 @@ function convertEventTypeToHandleMultipleConfigNames(
           content: Buffer.from(JSON.stringify(formatted, null, 2)),
         };
       } else {
-        return { eventPath: actualConfigName, content: content };
+        return { eventPath: actualConfigName, content };
       }
     } else {
-      return { eventPath: actualConfigName, content: content };
+      return { eventPath: actualConfigName, content };
     }
   } else {
     return { eventPath, content };

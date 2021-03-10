@@ -113,7 +113,7 @@ export function addOrUpdateProperty(
           {
             type: ChangeType.Insert,
             index: arrayLiteral.elements.end,
-            text: text,
+            text,
           },
         ]);
         tree.write(path, updatedContents);
@@ -145,7 +145,7 @@ export function addOrUpdateProperty(
       {
         type: ChangeType.Insert,
         index: object.properties.end,
-        text: text,
+        text,
       },
     ]);
     tree.write(path, updatedContents);

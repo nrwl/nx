@@ -5,6 +5,7 @@ import * as parseLinks from 'parse-markdown-links';
 
 const BASE_PATH = 'docs';
 const FRAMEWORK_SYMBOL = '{{framework}}';
+const DIRECT_INTERNAL_LINK_SYMBOL = 'https://nx.dev';
 
 function readFileContents(path: string): string {
   const buffer = fs.readFileSync(path, { encoding: 'utf-8' });
@@ -42,7 +43,14 @@ function expandFrameworks(linkPaths: string[]): string[] {
 
 function extractAllInternalLinks(): Record<string, string[]> {
   return shell.ls(`${BASE_PATH}/**/*.md`).reduce((acc, path) => {
-    const links = parseLinks(readFileContents(path))
+    const fileContents = readFileContents(path);
+    const directLinks = fileContents
+      .split(/[ ,]+/)
+      .filter((word) => word.startsWith(DIRECT_INTERNAL_LINK_SYMBOL))
+      .map((word) => word.replace(DIRECT_INTERNAL_LINK_SYMBOL, ''))
+      .filter((x) => !!x);
+    const links = parseLinks(fileContents)
+      .concat(directLinks)
       .filter(isLinkInternal)
       .filter(isNotAsset)
       .filter(isNotImage)

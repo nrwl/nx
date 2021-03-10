@@ -6,7 +6,7 @@ import {
   joinPathFragments,
   updateJson,
 } from '@nrwl/devkit';
-import { extraEslintDependencies, reactEslintJson } from '@nrwl/react';
+import { extraEslintDependencies, createReactEslintJson } from '@nrwl/react';
 import { NormalizedSchema } from './normalize-options';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
@@ -25,12 +25,17 @@ export async function addLinting(
   });
 
   if (options.linter === Linter.EsLint) {
+    const reactEslintJson = createReactEslintJson(options.appProjectRoot);
     updateJson(
       host,
       joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
-      (json) => {
-        json.extends = [...reactEslintJson.extends, ...json.extends];
-        return json;
+      () => {
+        if (reactEslintJson.overrides?.[0].parserOptions?.project) {
+          reactEslintJson.overrides[0].parserOptions.project = [
+            `${options.appProjectRoot}/tsconfig(.*)?.json`,
+          ];
+        }
+        return reactEslintJson;
       }
     );
   }

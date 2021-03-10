@@ -1,6 +1,6 @@
-# Step 2: Display todos
+# Node Nx Tutorial - Step 2: Display todos
 
-## Video of this Lesson
+## Nx.dev Tutorial | Node | Step 2: Display Todos
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/I4-sO2LeVbU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 

@@ -90,6 +90,14 @@ Type: `boolean`
 
 Use pascal case file names.
 
+### skipBabelrc
+
+Default: `false`
+
+Type: `boolean`
+
+Do not generate .babelrc file. Useful for Node libraries that are not compiled by Babel
+
 ### skipFormat
 
 Default: `false`

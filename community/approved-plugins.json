@@ -40,6 +40,11 @@
     "url": "https://github.com/flowaccount/nx-plugins"
   },
   {
+    "name": "@ns3/nx-serverless",
+    "description": "Nx plugin for node serverless applications in an Nx workspace",
+    "url": "https://github.com/Bielik20/nx-plugins/tree/master/packages/nx-serverless"
+  },
+  {
     "name": "@dev-thought/nx-deploy-it",
     "description": "Nx plugin to deploy applications on your favorite cloud provider",
     "url": "https://github.com/Dev-Thought/nx-plugins/tree/master/libs/nx-deploy-it"
