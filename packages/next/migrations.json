@@ -30,6 +30,12 @@
       "version": "11.5.0-beta.1",
       "description": "Update .babelrc to use '@nrwl/next/babel' instead of 'next/babel'",
       "factory": "./src/migrations/update-11-5-0/update-babel-config"
+    },
+    "remove-tsconfig-app-11.5.0": {
+      "cli": "nx",
+      "version": "11.5.0-beta.1",
+      "description": "Remove tsconfig.app.json",
+      "factory": "./src/migrations/update-11-5-0/remove-tsconfig-app-11-5-0"
     }
   },
   "packageJsonUpdates": {

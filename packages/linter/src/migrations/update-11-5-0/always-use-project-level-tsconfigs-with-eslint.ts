@@ -40,7 +40,11 @@ function updateProjectESLintConfigs(host: Tree) {
       return;
     }
 
-    const parserOptionsProjectVal = [`${p.root}/tsconfig.*?.json`];
+    const isNextJs = p.targets?.build?.executor === '@nrwl/next:build';
+
+    const parserOptionsProjectVal = isNextJs
+      ? [`${p.root}/tsconfig(.*)?.json`]
+      : [`${p.root}/tsconfig.*?.json`];
 
     return updateJson(host, eslintConfigPath, (json) => {
       if (!json.overrides) {
