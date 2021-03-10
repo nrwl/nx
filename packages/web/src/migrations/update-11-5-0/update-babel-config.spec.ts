@@ -33,6 +33,10 @@ describe('Migrate babel setup', () => {
             root: 'apps/app5',
             projectType: 'application',
           },
+          app6: {
+            root: 'apps/app6',
+            projectType: 'application',
+          },
           lib1: {
             root: 'libs/lib1',
             projectType: 'library',
@@ -49,6 +53,7 @@ describe('Migrate babel setup', () => {
           app3: {},
           app4: {},
           app5: {},
+          app6: {},
           lib1: {},
         },
       })
@@ -71,6 +76,10 @@ describe('Migrate babel setup', () => {
     tree.write(
       'apps/app4/.babelrc',
       JSON.stringify({ presets: ['@nrwl/gatsby/babel'] })
+    );
+    tree.write(
+      'apps/app6/.babelrc',
+      JSON.stringify({ presets: ['@nrwl/next/babel'] })
     );
 
     await updateBabelConfig(tree);
@@ -96,6 +105,10 @@ describe('Migrate babel setup', () => {
     });
 
     expect(tree.exists('apps/app5/.babelrc')).not.toBeTruthy();
+
+    expect(readJson(tree, 'apps/app6/.babelrc')).toMatchObject({
+      presets: ['@nrwl/next/babel'],
+    });
 
     expect(readJson(tree, 'libs/lib1/.babelrc')).toMatchObject({
       presets: ['@nrwl/web/babel'],

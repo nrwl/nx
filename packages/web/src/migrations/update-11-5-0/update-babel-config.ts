@@ -26,6 +26,7 @@ export async function updateBabelConfig(host: Tree) {
             (x) =>
               x === '@nrwl/web/babel' ||
               x === '@nrwl/react/babel' ||
+              x === '@nrwl/next/babel' ||
               x === '@nrwl/gatsby/babel'
           )
         ) {
