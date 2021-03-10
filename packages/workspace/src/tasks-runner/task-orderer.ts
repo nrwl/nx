@@ -1,6 +1,7 @@
 import { ProjectGraph } from '../core/project-graph';
 import { Task } from './tasks-runner';
-import { DefaultTasksRunnerOptions } from '@nrwl/workspace/src/tasks-runner/default-tasks-runner';
+import { DefaultTasksRunnerOptions } from './default-tasks-runner';
+import { getPath } from '../utils/graph-utils';
 
 export class TaskOrderer {
   constructor(
@@ -32,25 +33,10 @@ export class TaskOrderer {
   }
 
   private taskDependsOnDeps(task: Task, deps: Task[]) {
-    const g = this.projectGraph;
-
-    function hasDep(source: string, target: string, visitedProjects: string[]) {
-      if (!g.dependencies[source]) {
-        return false;
-      }
-
-      if (g.dependencies[source].find((d) => d.target === target)) {
-        return true;
-      }
-
-      return !!g.dependencies[source].find((r) => {
-        if (visitedProjects.indexOf(r.target) > -1) return null;
-        return hasDep(r.target, target, [...visitedProjects, r.target]);
-      });
-    }
-
-    return !!deps.find((dep) =>
-      hasDep(task.target.project, dep.target.project, [])
+    return !!deps.find(
+      (dep) =>
+        getPath(this.projectGraph, task.target.project, dep.target.project)
+          .length > 0
     );
   }
 

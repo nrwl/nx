@@ -17,7 +17,6 @@ import {
   hasArchitectBuildBuilder,
   hasNoneOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
-  checkCircularPath,
   isRelativeImportIntoAnotherProject,
   matchImportWithWildcard,
   onlyLoadChildren,
@@ -28,6 +27,7 @@ import {
   readWorkspaceJson,
 } from '@nrwl/workspace/src/core/file-utils';
 import { TargetProjectLocator } from '../core/target-project-locator';
+import { checkCircularPath } from '@nrwl/workspace/src/utils/graph-utils';
 
 export class Rule extends Lint.Rules.AbstractRule {
   constructor(
