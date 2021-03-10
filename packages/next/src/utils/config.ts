@@ -57,6 +57,11 @@ export function createWebpackConfig(
         use: [defaultLoaders.babel],
       },
       {
+        test: /\.js?$/,
+        exclude: /node_modules/,
+        use: [defaultLoaders.babel],
+      },
+      {
         test: /\.svg$/,
         oneOf: [
           // If coming from JS/TS file, then transform into React component using SVGR.
