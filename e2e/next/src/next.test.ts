@@ -342,6 +342,45 @@ describe('Next.js Applications', () => {
       `Type error: Type 'number' is not assignable to type 'string'.`
     );
   }, 120000);
+
+  it('should be able to consume a react lib writen in JavaScript', async () => {
+    const appName = uniq('app');
+    const libName = uniq('lib');
+
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
+
+    runCLI(`generate @nrwl/react:lib ${libName} --no-interactive --style=none --js`);
+
+    const mainPath = `apps/${appName}/pages/index.tsx`;
+    updateFile(
+      mainPath,
+      `import '@${proj}/${libName}';\n` + readFile(mainPath)
+    );
+
+    // Update lib to use css modules
+    updateFile(
+      `libs/${libName}/src/lib/${libName}.js`,
+      `
+        import React from 'react';
+        import styles from './style.module.css';
+        export function Test() {
+          return <div className={styles.container}>Hello</div>;
+        }
+      `
+    );
+    updateFile(
+      `libs/${libName}/src/lib/style.module.css`,
+      `
+        .container {}
+      `
+    );
+
+    await checkApp(appName, {
+      checkUnitTest: true,
+      checkLint: true,
+      checkE2E: false,
+    });
+  }, 120000);
 });
 
 async function checkApp(
