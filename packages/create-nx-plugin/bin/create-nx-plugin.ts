@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 
 // we can't import from '@nrwl/workspace' because it will require typescript
-import { output } from '@nrwl/workspace/src/utilities/output';
 import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
-import { dirSync } from 'tmp';
-import { writeFileSync, readFileSync, removeSync } from 'fs-extra';
-import * as path from 'path';
+import { output } from '@nrwl/workspace/src/utilities/output';
 import { execSync } from 'child_process';
+import { readFileSync, removeSync, writeFileSync } from 'fs-extra';
 import * as inquirer from 'inquirer';
-import yargsParser = require('yargs-parser');
+import * as path from 'path';
+import { dirSync } from 'tmp';
 import { showNxWarning } from './shared';
+import yargsParser = require('yargs-parser');
 
 const tsVersion = 'TYPESCRIPT_VERSION';
 const cliVersion = 'NX_VERSION';
@@ -92,7 +92,7 @@ function createNxPlugin(workspaceName, pluginName, packageManager) {
 function updateWorkspace(workspaceName: string) {
   const nxJsonPath = path.join(workspaceName, 'nx.json');
 
-  const nxJson = JSON.parse(readFileSync(nxJsonPath).toString('UTF-8'));
+  const nxJson = JSON.parse(readFileSync(nxJsonPath).toString('utf-8'));
 
   nxJson['workspaceLayout'] = {
     appsDir: 'e2e',
@@ -174,13 +174,13 @@ function showHelp() {
 
   Create a new Nx workspace
 
-  Args: 
+  Args:
 
     name           workspace name (e.g., org name)
 
   Options:
 
-    pluginName     the name of the plugin to be created  
+    pluginName     the name of the plugin to be created
 `);
 }
 

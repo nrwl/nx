@@ -3,13 +3,11 @@ import {
   parseTargetString,
   readTargetOptions,
 } from '@nrwl/devkit';
-
 import { ChildProcess, fork } from 'child_process';
 import { join } from 'path';
-
-import { GatsbyPluginBuilderSchema } from './schema';
 import { runGatsbyBuild } from '../build/build.impl';
 import { GatsbyPluginBuilderSchema as BuildBuilderSchema } from '../build/schema';
+import { GatsbyPluginBuilderSchema } from './schema';
 
 export default async function* serverExecutor(
   options: GatsbyPluginBuilderSchema,
@@ -83,7 +81,7 @@ async function runGatsbyDevelop(workspaceRoot, projectRoot, options) {
       }
     );
 
-    childProcess.on('message', ({ action }) => {
+    childProcess.on('message', ({ action }: any) => {
       if (
         action?.type === 'ACTIVITY_END' &&
         action?.payload?.status === 'SUCCESS' &&

@@ -869,6 +869,10 @@
         "dotenv": {
           "version": "8.2.0",
           "alwaysAddToPackageJson": false
+        },
+        "@types/node": {
+          "version": "14.14.33",
+          "alwaysAddToPackageJson": false
         }
       }
     }
