@@ -36,7 +36,7 @@
     "@nrwl/tao": "<%= nxVersion %>",
     "@nrwl/cli": "<%= nxVersion %>",
     "@nrwl/workspace": "<%= nxVersion %>",
-    "@types/node": "12.12.38",
+    "@types/node": "14.14.33",
     "dotenv": "8.2.0",
     "ts-node": "~9.1.1",
     "typescript": "<%= typescriptVersion %>",

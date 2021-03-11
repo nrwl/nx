@@ -1,18 +1,18 @@
+import { toOldFormatOrNull, Workspaces } from '@nrwl/tao/src/shared/workspace';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 import { readFileSync } from 'fs';
 import * as path from 'path';
 import { extname, join } from 'path';
+import { performance } from 'perf_hooks';
 import { NxArgs } from '../command-line/utils';
 import { WorkspaceResults } from '../command-line/workspace-results';
 import { appRootPath } from '../utilities/app-root';
 import { fileExists, readJsonFile } from '../utilities/fileutils';
 import { jsonDiff } from '../utilities/json-diff';
+import { defaultFileHasher } from './hasher/file-hasher';
 import { ProjectGraphNode } from './project-graph';
 import { Environment, NxJson } from './shared-interfaces';
-import { defaultFileHasher } from './hasher/file-hasher';
-import { performance } from 'perf_hooks';
-import { toOldFormatOrNull, Workspaces } from '@nrwl/tao/src/shared/workspace';
 
 const ignore = require('ignore');
 
@@ -160,7 +160,9 @@ function getIgnoredGlobs() {
 }
 
 function readFileIfExisting(path: string) {
-  return fs.existsSync(path) ? fs.readFileSync(path, 'UTF-8').toString() : '';
+  return fs.existsSync(path)
+    ? fs.readFileSync(path, { encoding: 'utf-8' }).toString()
+    : '';
 }
 
 export function readWorkspaceJson(): any {
@@ -189,7 +191,7 @@ export function workspaceFileName() {
 export type FileRead = (s: string) => string;
 
 export function defaultFileRead(filePath: string): string | null {
-  return readFileSync(join(appRootPath, filePath), 'UTF-8');
+  return readFileSync(join(appRootPath, filePath), { encoding: 'utf-8' });
 }
 
 export function readPackageJson(): any {
