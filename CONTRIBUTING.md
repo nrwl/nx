@@ -64,7 +64,7 @@ yarn local-registry disable
 To publish packages to a local registry, do the following:
 
 - Run `yarn local-registry start` in Terminal 1 (keep it running)
-- Run `npm adduser` in Terminal 2 (real credentials are not required, you just need to be logged in)
+- Run `npm adduser --registry http://localhost:4873` in Terminal 2 (real credentials are not required, you just need to be logged in)
 - Run `yarn local-registry enable` in Terminal 2
 - Run `yarn nx-release 999.9.9 --local` in Terminal 2
 - Run `cd /tmp` in Terminal 2
