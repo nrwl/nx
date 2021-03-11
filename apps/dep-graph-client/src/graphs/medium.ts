@@ -25450,7 +25450,7 @@ export const mediumGraph: ProjectGraphCache = {
       type: 'npm',
       name: 'npm:dotenv',
       data: {
-        version: '6.2.0',
+        version: '8.2.0',
         packageName: 'dotenv',
         files: [],
       },
