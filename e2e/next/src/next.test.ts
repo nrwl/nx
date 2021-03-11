@@ -314,6 +314,34 @@ describe('Next.js Applications', () => {
       checkE2E: true,
     });
   }, 180000);
+
+  it('should fail the build when TS errors are present', async () => {
+    const appName = uniq('app');
+
+    runCLI(
+      `generate @nrwl/next:app ${appName} --no-interactive --style=@emotion/styled`
+    );
+
+    updateFile(
+      `apps/${appName}/pages/index.tsx`,
+      `
+        import React from 'react';
+
+        export function Index() {
+          let x = '';
+          // below is an intentional TS error
+          x = 3;
+          return <div />;
+        }
+
+        export default Index;
+        `
+    );
+
+    expect(() => runCLI(`build ${appName}`)).toThrowError(
+      `Type error: Type 'number' is not assignable to type 'string'.`
+    );
+  }, 120000);
 });
 
 async function checkApp(

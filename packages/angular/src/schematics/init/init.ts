@@ -148,8 +148,7 @@ export function setDefaults(options: Schema): Rule {
 function addPostinstall(): Rule {
   return updateJsonInTree('package.json', (json, context) => {
     json.scripts = json.scripts || {};
-    const command =
-      'ngcc --properties es2015 browser module main --first-only --create-ivy-entry-points';
+    const command = 'ngcc --properties es2015 browser module main';
     if (!json.scripts.postinstall) {
       json.scripts.postinstall = command;
     } else if (!json.scripts.postinstall.includes('ngcc')) {

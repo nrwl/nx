@@ -1,6 +1,6 @@
-# Step 1: Create Application
+# Node Nx Tutorial - Step 1: Create Application
 
-## Video of this Lesson
+## Nx.dev Tutorial | Node | Step 1: Create Application
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/UcBSBQYNlhE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 

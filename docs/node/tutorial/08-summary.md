@@ -1,4 +1,4 @@
-# Step 8: Summary
+# Node Nx Tutorial - Step 8: Summary
 
 In this tutorial you:
 

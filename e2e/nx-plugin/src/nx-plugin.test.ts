@@ -97,7 +97,7 @@ describe('Nx Plugin', () => {
     expect(migrationsJson).toMatchObject({
       generators: expect.objectContaining({
         [`update-${version}`]: {
-          version: version,
+          version,
           description: `update-${version}`,
           cli: `nx`,
           implementation: `./src/migrations/update-${version}/update-${version}`,

@@ -275,7 +275,7 @@ describe('jestProject', () => {
       });
     });
 
-    it('should generate proper jest.transform and babel-jest.config.json when babelJest is true', async () => {
+    it('should generate proper jest.transform when babelJest is true', async () => {
       await jestProjectGenerator(tree, {
         ...defaultOptions,
         project: 'lib1',
@@ -291,27 +291,9 @@ describe('jestProject', () => {
       expect(
         tree.read('libs/lib1/jest.config.js').toString()
       ).toMatchSnapshot();
-
-      expect(tree.exists('libs/lib1/babel-jest.config.json'));
-      expect(readJson(tree, 'libs/lib1/babel-jest.config.json'))
-        .toMatchInlineSnapshot(`
-              Object {
-                "presets": Array [
-                  Array [
-                    "@babel/preset-env",
-                    Object {
-                      "targets": Object {
-                        "node": "current",
-                      },
-                    },
-                  ],
-                  "@babel/preset-typescript",
-                ],
-              }
-            `);
     });
 
-    it('should generate proper jest.transform and babel-jest.config.json when babelJest and supportTsx is true', async () => {
+    it('should generate proper jest.transform when babelJest and supportTsx is true', async () => {
       await jestProjectGenerator(tree, {
         ...defaultOptions,
         project: 'lib1',
@@ -321,24 +303,6 @@ describe('jestProject', () => {
       expect(
         tree.read('libs/lib1/jest.config.js').toString()
       ).toMatchSnapshot();
-
-      expect(readJson(tree, 'libs/lib1/babel-jest.config.json'))
-        .toMatchInlineSnapshot(`
-            Object {
-              "presets": Array [
-                Array [
-                  "@babel/preset-env",
-                  Object {
-                    "targets": Object {
-                      "node": "current",
-                    },
-                  },
-                ],
-                "@babel/preset-typescript",
-                "@babel/preset-react",
-              ],
-            }
-          `);
     });
   });
 });

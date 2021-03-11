@@ -5,10 +5,10 @@ import type { Linter } from 'eslint';
 import { runMigration } from '../../utils/testing';
 import {
   updateExtendsAndRemoveDuplication,
+  updateObjPropAndRemoveDuplication,
   updateOverridesAndRemoveDuplication,
   updateParserOptionsAndRemoveDuplication,
   updatePluginsAndRemoveDuplication,
-  updateObjPropAndRemoveDuplication,
 } from './update-eslint-configs-to-use-nx-presets';
 
 describe('Update ESLint config files to use preset configs which eslint-plugin-nx exports', () => {

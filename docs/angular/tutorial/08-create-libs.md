@@ -1,6 +1,6 @@
-# Step 8: Create Libs
+# Angular Nx Tutorial - Step 8: Create Libs
 
-## Video of this Lesson
+## Nx.dev Tutorial | Angular | Step 8: Create Libraries
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/szaH7fNw0zg" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 

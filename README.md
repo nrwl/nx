@@ -208,12 +208,12 @@ If you want to file a bug or submit a PR, read up on our [guidelines for contrib
 | ![Jack Hsu](https://avatars0.githubusercontent.com/u/53559?s=150&v=4) | ![Jo Hanna Pearce](https://avatars1.githubusercontent.com/u/439121?s=150&v=4) | ![Jon Cammisuli](https://avatars2.githubusercontent.com/u/4332460?s=150&v=4) | ![Isaac Mann](https://avatars1.githubusercontent.com/u/861504?s=150) |
 | [jaysoo](https://github.com/jaysoo)                                   | [jdpearce](https://github.com/jdpearce)                                       | [cammisuli](https://github.com/cammisuli)                                    | [isaacplmann](https://github.com/isaacplmann)                        |
 
-| Adam Barrett                                                              | Juri Strumpflohner                                                               | Max Koretskyi                                                                | Philip Fulcher /                                                          |
-| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| ![Adam Barrett](https://avatars0.githubusercontent.com/u/76821?s=150&v=4) | ![Juri Strumpflohner](https://avatars1.githubusercontent.com/u/542458?s=150&v=4) | ![Max Koretskyi](https://avatars2.githubusercontent.com/u/6124091?s=150&v=4) | ![Philip Fulcher](https://avatars1.githubusercontent.com/u/1536471?s=150) |
-| [BigAB](https://github.com/BigAB)                                         | [juristr](https://github.com/juristr)                                            | [maxkoretskyi](https://github.com/maxkoretskyi)                              | [philipjfulcher](https://github.com/philipjfulcher)                       |
+| Tasos Bekos                                                              | Juri Strumpflohner                                                               | Philip Fulcher                                                            | Katerina Skroumpelou                                                                |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| ![Tasos Bekos](https://avatars.githubusercontent.com/u/551595?s=150&v=4) | ![Juri Strumpflohner](https://avatars1.githubusercontent.com/u/542458?s=150&v=4) | ![Philip Fulcher](https://avatars1.githubusercontent.com/u/1536471?s=150) | ![Katerina Skroumpelou](https://avatars0.githubusercontent.com/u/6603745?s=150&v=4) |
+| [bekos](https://github.com/bekos)                                        | [juristr](https://github.com/juristr)                                            | [philipjfulcher](https://github.com/philipjfulcher)                       | [mandarini](https://github.com/mandarini)                                           |
 
-| Katerina Skroumpelou                                                                |
-| ----------------------------------------------------------------------------------- |
-| ![Katerina Skroumpelou](https://avatars0.githubusercontent.com/u/6603745?s=150&v=4) |
-| [mandarini](https://github.com/mandarini)                                           |
+| Kirils Ladovs                                                               |
+| --------------------------------------------------------------------------- |
+| ![Kirils Ladovs](https://avatars.githubusercontent.com/u/9858620?s=150&v=4) |
+| [kirjai](https://github.com/kirjai)                                         |

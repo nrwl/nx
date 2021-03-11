@@ -1,6 +1,6 @@
-# Step 10: Computation Caching
+# React Nx Tutorial - Step 10: Computation Caching
 
-## Video of this Lesson
+## Nx.dev Tutorial | React | step 10: Computation Caching
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/aNjvT3VX1Ts" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 

@@ -12,7 +12,12 @@ describe('TaskStages', () => {
 
   it('should split tasks into stages based on their dependencies', () => {
     const stages = new TaskOrderer({} as any, 'build', {
-      nodes: {},
+      nodes: {
+        child1: { type: 'lib' },
+        child2: { type: 'lib' },
+        parent: { type: 'lib' },
+        grandparent: { type: 'lib' },
+      } as any,
       dependencies: {
         child1: [],
         child2: [],
@@ -78,7 +83,7 @@ describe('TaskStages', () => {
       { strictlyOrderedTargets: ['custom'] } as any,
       'custom',
       {
-        nodes: {},
+        nodes: { child1: { type: 'lib' }, parent: { type: 'lib' } } as any,
         dependencies: {
           child1: [],
           parent: [
@@ -151,7 +156,12 @@ describe('TaskStages', () => {
 
   it('should split tasks into stages based on their dependencies when there are unrelated packages', () => {
     const stages = new TaskOrderer({} as any, 'build', {
-      nodes: {},
+      nodes: {
+        app1: { type: 'lib' },
+        app2: { type: 'lib' },
+        common1: { type: 'lib' },
+        common2: { type: 'lib' },
+      } as any,
       dependencies: {
         app1: [
           {

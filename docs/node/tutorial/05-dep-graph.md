@@ -1,6 +1,6 @@
-# Step 5: Dep Graph
+# Node Nx Tutorial - Step 5: Dep Graph
 
-## Video of this Lesson
+## Nx.dev Tutorial | Node | Step 5: Dep Graph
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/l9MjZ9IPdu4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 

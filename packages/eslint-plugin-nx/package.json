@@ -28,10 +28,12 @@
   },
   "homepage": "https://nx.dev",
   "peerDependencies": {
-    "@typescript-eslint/parser": "^4.3.0"
+    "@typescript-eslint/parser": "^4.3.0",
+    "eslint-config-prettier": "^8.1.0"
   },
   "dependencies": {
     "@nrwl/devkit": "*",
+    "@nrwl/workspace": "*",
     "@typescript-eslint/experimental-utils": "^4.3.0",
     "confusing-browser-globals": "^1.0.9"
   }

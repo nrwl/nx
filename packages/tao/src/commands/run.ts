@@ -179,10 +179,15 @@ async function runExecutorInternal<T extends { success: boolean }>(
 
   const ws = new Workspaces(root);
   const proj = workspace.projects[project];
-  const targetConfig =
-    proj.targets && proj.targets[target]
-      ? proj.targets[target]
-      : createImplicitTargetConfig(proj, target);
+  const targetConfig = proj.targets
+    ? proj.targets[target]
+    : createImplicitTargetConfig(proj, target);
+
+  if (!targetConfig) {
+    throw new Error(
+      `NX Cannot find target '${target}' for project '${project}'`
+    );
+  }
   const [nodeModule, executor] = targetConfig.executor.split(':');
   const { schema, implementationFactory } = ws.readExecutor(
     nodeModule,
@@ -206,14 +211,14 @@ async function runExecutorInternal<T extends { success: boolean }>(
   if (ws.isNxExecutor(nodeModule, executor)) {
     const implementation = implementationFactory();
     const r = implementation(combinedOptions, {
-      root: root,
+      root,
       target: targetConfig,
-      workspace: workspace,
+      workspace,
       projectName: project,
       targetName: target,
       configurationName: configuration,
-      cwd: cwd,
-      isVerbose: isVerbose,
+      cwd,
+      isVerbose,
     }) as Promise<T> | AsyncIterableIterator<T>;
     if (isPromise<T>(r)) {
       return promiseToIterator<T>(r);

@@ -225,7 +225,7 @@ function parseArgs(options: RunCommandsBuilderOptions) {
   if (!args) {
     const unknownOptionsTreatedAsArgs = Object.keys(options)
       .filter((p) => propKeys.indexOf(p) === -1)
-      .reduce((m, c) => ((m[camelCase(c)] = options[c]), m), {});
+      .reduce((m, c) => ((m[c] = options[c]), m), {});
     return unknownOptionsTreatedAsArgs;
   }
   return yargsParser(args.replace(/(^"|"$)/g, ''), {

@@ -1,6 +1,6 @@
-# Step 3: Share Code
+# Node Nx Tutorial - Step 3: Share Code
 
-## Video of this Lesson
+## Nx.dev Tutorial | Node | Step 3: Share Code
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/MqqwOoKa-Ho" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 

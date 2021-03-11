@@ -7,6 +7,7 @@ import {
   runCreateWorkspace,
   uniq,
   packageInstall,
+  removeProject,
 } from '@nrwl/e2e/utils';
 
 describe('custom workspace layout', () => {
@@ -63,5 +64,7 @@ describe('custom workspace layout', () => {
     expect(appBuildResults.stdout).toContain(`nx run ${expressApp}:build`);
 
     checkFilesExist(`dist/packages/${expressApp}/main.js`);
+
+    removeProject({ onlyOnCI: true });
   }, 1000000);
 });

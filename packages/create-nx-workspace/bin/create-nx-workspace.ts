@@ -43,6 +43,10 @@ const presetOptions: { value: Preset; name: string }[] = [
     name: 'nest              [a workspace with a single Nest application]',
   },
   {
+    value: Preset.Express,
+    name: 'express           [a workspace with a single Express application]',
+  },
+  {
     value: Preset.WebComponents,
     name:
       'web components    [a workspace with a single app built using web components]',
@@ -283,7 +287,8 @@ function determineStyle(preset: Preset, parsedArgs: WorkspaceArgs) {
   if (
     preset === Preset.Empty ||
     preset === Preset.OSS ||
-    preset === Preset.Nest
+    preset === Preset.Nest ||
+    preset === Preset.Express
   ) {
     return Promise.resolve(null);
   }
@@ -508,7 +513,7 @@ function pointToTutorialAndCourse(preset: Preset) {
       // case Preset.Gatsby:
       output.addVerticalSeparator();
       output.note({
-        title: title,
+        title,
         bodyLines: [
           `https://nx.dev/react/tutorial/01-create-application`,
           ...pointToFreeCourseOnEgghead(),
@@ -519,7 +524,7 @@ function pointToTutorialAndCourse(preset: Preset) {
     case Preset.AngularWithNest:
       output.addVerticalSeparator();
       output.note({
-        title: title,
+        title,
         bodyLines: [
           `https://nx.dev/angular/tutorial/01-create-application`,
           ...pointToFreeCourseOnYoutube(),

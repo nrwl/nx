@@ -34,6 +34,12 @@
       "version": "10.4.0-beta.1",
       "description": "Update root ESLint config to use overrides",
       "factory": "./src/migrations/update-10-4-0/update-root-eslint-config-to-use-overrides"
+    },
+    "always-use-project-level-tsconfigs-with-eslint": {
+      "cli": "nx",
+      "version": "11.5.0-beta.0",
+      "description": "Update project .eslintrc.json files to always use project level tsconfigs",
+      "factory": "./src/migrations/update-11-5-0/always-use-project-level-tsconfigs-with-eslint"
     }
   },
   "packageJsonUpdates": {
@@ -50,6 +56,15 @@
         },
         "eslint": {
           "version": "7.10.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "11.5.0": {
+      "version": "11.5.0-beta.0",
+      "packages": {
+        "eslint-config-prettier": {
+          "version": "8.1.0",
           "alwaysAddToPackageJson": false
         }
       }

@@ -112,6 +112,48 @@ describe('lib', () => {
       const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
       expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
+
+      const eslintrc = readJsonInTree(tree, 'libs/my-lib/.eslintrc.json');
+      expect(eslintrc).toMatchInlineSnapshot(`
+        Object {
+          "extends": Array [
+            "../../.eslintrc.json",
+          ],
+          "ignorePatterns": Array [
+            "!**/*",
+          ],
+          "overrides": Array [
+            Object {
+              "files": Array [
+                "*.ts",
+                "*.tsx",
+                "*.js",
+                "*.jsx",
+              ],
+              "parserOptions": Object {
+                "project": Array [
+                  "libs/my-lib/tsconfig.*?.json",
+                ],
+              },
+              "rules": Object {},
+            },
+            Object {
+              "files": Array [
+                "*.ts",
+                "*.tsx",
+              ],
+              "rules": Object {},
+            },
+            Object {
+              "files": Array [
+                "*.js",
+                "*.jsx",
+              ],
+              "rules": Object {},
+            },
+          ],
+        }
+      `);
     });
   });
 
@@ -407,33 +449,12 @@ describe('lib', () => {
           displayName: 'my-lib',
           preset: '../../jest.preset.js',
           transform: {
-            '^.+\\\\\\\\.[tj]sx?$': [
-              'babel-jest',
-              { cwd: __dirname, configFile: './babel-jest.config.json' },
-            ],
+            '^.+\\\\\\\\.[tj]sx?$': 'babel-jest',
           },
           moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
           coverageDirectory: '../../coverage/libs/my-lib',
         };
         "
-      `);
-
-      expect(readJsonInTree(tree, 'libs/my-lib/babel-jest.config.json'))
-        .toMatchInlineSnapshot(`
-        Object {
-          "presets": Array [
-            Array [
-              "@babel/preset-env",
-              Object {
-                "targets": Object {
-                  "node": "current",
-                },
-              },
-            ],
-            "@babel/preset-typescript",
-            "@babel/preset-react",
-          ],
-        }
       `);
     });
   });

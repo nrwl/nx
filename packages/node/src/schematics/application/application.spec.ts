@@ -110,7 +110,44 @@ describe('app', () => {
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
       const eslintrc = readJsonInTree(tree, 'apps/my-node-app/.eslintrc.json');
-      expect(eslintrc.extends).toEqual('../../.eslintrc.json');
+      expect(eslintrc).toMatchInlineSnapshot(`
+        Object {
+          "extends": "../../.eslintrc.json",
+          "ignorePatterns": Array [
+            "!**/*",
+          ],
+          "overrides": Array [
+            Object {
+              "files": Array [
+                "*.ts",
+                "*.tsx",
+                "*.js",
+                "*.jsx",
+              ],
+              "parserOptions": Object {
+                "project": Array [
+                  "apps/my-node-app/tsconfig.*?.json",
+                ],
+              },
+              "rules": Object {},
+            },
+            Object {
+              "files": Array [
+                "*.ts",
+                "*.tsx",
+              ],
+              "rules": Object {},
+            },
+            Object {
+              "files": Array [
+                "*.js",
+                "*.jsx",
+              ],
+              "rules": Object {},
+            },
+          ],
+        }
+      `);
     });
   });
 
@@ -300,32 +337,12 @@ describe('app', () => {
           displayName: 'my-node-app',
           preset: '../../jest.preset.js',
           transform: {
-            '^.+\\\\\\\\.[tj]s$': [
-              'babel-jest',
-              { cwd: __dirname, configFile: './babel-jest.config.json' },
-            ],
+            '^.+\\\\\\\\.[tj]s$': 'babel-jest',
           },
           moduleFileExtensions: ['ts', 'js', 'html'],
           coverageDirectory: '../../coverage/apps/my-node-app',
         };
         "
-      `);
-
-      expect(readJsonInTree(tree, 'apps/my-node-app/babel-jest.config.json'))
-        .toMatchInlineSnapshot(`
-        Object {
-          "presets": Array [
-            Array [
-              "@babel/preset-env",
-              Object {
-                "targets": Object {
-                  "node": "current",
-                },
-              },
-            ],
-            "@babel/preset-typescript",
-          ],
-        }
       `);
     });
   });

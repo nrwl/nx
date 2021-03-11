@@ -117,6 +117,49 @@ describe('lib', () => {
       expect(
         appTree.exists('libs/my-lib/src/lib/my-lib.spec.tsx')
       ).toBeTruthy();
+
+      const eslintJson = readJson(appTree, 'libs/my-lib/.eslintrc.json');
+      expect(eslintJson).toMatchInlineSnapshot(`
+        Object {
+          "extends": Array [
+            "plugin:@nrwl/nx/react",
+            "../../.eslintrc.json",
+          ],
+          "ignorePatterns": Array [
+            "!**/*",
+          ],
+          "overrides": Array [
+            Object {
+              "files": Array [
+                "*.ts",
+                "*.tsx",
+                "*.js",
+                "*.jsx",
+              ],
+              "parserOptions": Object {
+                "project": Array [
+                  "libs/my-lib/tsconfig.*?.json",
+                ],
+              },
+              "rules": Object {},
+            },
+            Object {
+              "files": Array [
+                "*.ts",
+                "*.tsx",
+              ],
+              "rules": Object {},
+            },
+            Object {
+              "files": Array [
+                "*.js",
+                "*.jsx",
+              ],
+              "rules": Object {},
+            },
+          ],
+        }
+      `);
     });
   });
 
@@ -444,10 +487,6 @@ describe('lib', () => {
 
       const workspaceJson = readJson(appTree, '/workspace.json');
       const babelrc = readJson(appTree, 'libs/my-lib/.babelrc');
-      const babelJestConfig = readJson(
-        appTree,
-        'libs/my-lib/babel-jest.config.json'
-      );
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
@@ -455,7 +494,6 @@ describe('lib', () => {
         },
       });
       expect(babelrc.plugins).toContain('styled-jsx/babel');
-      expect(babelJestConfig.plugins).toContain('styled-jsx/babel');
     });
 
     it('should support style none', async () => {

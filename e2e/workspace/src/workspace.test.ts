@@ -5,6 +5,7 @@ import {
   newProject,
   readFile,
   readJson,
+  removeProject,
   rmDist,
   runCLI,
   runCLIAsync,
@@ -15,8 +16,13 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('run-one', () => {
+  let proj: string;
+
+  beforeEach(() => (proj = newProject()));
+
+  afterEach(() => removeProject({ onlyOnCI: true }));
+
   it('should build specific project', () => {
-    const proj = newProject();
     const myapp = uniq('myapp');
     const mylib1 = uniq('mylib1');
     const mylib2 = uniq('mylib1');
@@ -59,8 +65,13 @@ describe('run-one', () => {
 });
 
 describe('run-many', () => {
+  let proj: string;
+
+  beforeEach(() => (proj = newProject()));
+
+  afterEach(() => removeProject({ onlyOnCI: true }));
+
   it('should build specific and all projects', () => {
-    const proj = newProject();
     const appA = uniq('appa-rand');
     const libA = uniq('liba-rand');
     const libB = uniq('libb-rand');
@@ -128,7 +139,6 @@ describe('run-many', () => {
   }, 1000000);
 
   it('should run only failed projects', () => {
-    newProject();
     const myapp = uniq('myapp');
     const myapp2 = uniq('myapp2');
     runCLI(`generate @nrwl/angular:app ${myapp}`);
@@ -181,8 +191,13 @@ describe('run-many', () => {
 });
 
 describe('affected:*', () => {
+  let proj: string;
+
+  beforeEach(() => (proj = newProject()));
+
+  afterEach(() => removeProject({ onlyOnCI: true }));
+
   it('should print, build, and test affected apps', async () => {
-    const proj = newProject();
     const myapp = uniq('myapp');
     const myapp2 = uniq('myapp2');
     const mylib = uniq('mylib');
@@ -344,9 +359,12 @@ describe('affected (with git)', () => {
   let myapp = uniq('myapp');
   let myapp2 = uniq('myapp');
   let mylib = uniq('mylib');
-  it('should not affect other projects by generating a new project', () => {
-    newProject();
 
+  beforeAll(() => newProject());
+
+  afterAll(() => removeProject({ onlyOnCI: true }));
+
+  it('should not affect other projects by generating a new project', () => {
     const nxJson: NxJson = readJson('nx.json');
 
     delete nxJson.implicitDependencies;
@@ -413,8 +431,13 @@ describe('affected (with git)', () => {
 });
 
 describe('print-affected', () => {
+  let proj: string;
+
+  beforeEach(() => (proj = newProject()));
+
+  afterEach(() => removeProject({ onlyOnCI: true }));
+
   it('should print information about affected projects', async () => {
-    const proj = newProject();
     const myapp = uniq('myapp-a');
     const myapp2 = uniq('myapp-b');
     const mylib = uniq('mylib');
@@ -564,9 +587,11 @@ describe('print-affected', () => {
 });
 
 describe('cache', () => {
-  it('should cache command execution', async () => {
-    newProject();
+  beforeEach(() => newProject());
 
+  afterEach(() => removeProject({ onlyOnCI: true }));
+
+  it('should cache command execution', async () => {
     const myapp1 = uniq('myapp1');
     const myapp2 = uniq('myapp2');
     runCLI(`generate @nrwl/web:app ${myapp1}`);
@@ -676,8 +701,6 @@ describe('cache', () => {
   }, 120000);
 
   it('should only cache specific files if build outputs is configured with specific files', async () => {
-    newProject();
-
     const mylib1 = uniq('mylib1');
     runCLI(`generate @nrwl/react:lib ${mylib1} --buildable`);
 
@@ -738,8 +761,11 @@ describe('cache', () => {
 });
 
 describe('workspace structure', () => {
+  beforeEach(() => newProject());
+
+  afterEach(() => removeProject({ onlyOnCI: true }));
+
   it('should have a vscode/extensions.json file created', () => {
-    newProject();
     const extensions = readJson('.vscode/extensions.json');
     expect(extensions).toEqual({
       recommendations: [

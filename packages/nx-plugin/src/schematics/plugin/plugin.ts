@@ -17,13 +17,13 @@ import { Schema } from './schema';
 export default function (schema: Schema): Rule {
   return (host: Tree) => {
     const options = normalizeOptions(host, schema);
-
+    const { unitTestRunner } = options;
     return chain([
       externalSchematic('@nrwl/node', 'lib', {
         ...schema,
         publishable: true,
         importPath: schema.importPath,
-        unitTestRunner: options.unitTestRunner,
+        unitTestRunner,
       }),
       addDepsToPackageJson(
         {},

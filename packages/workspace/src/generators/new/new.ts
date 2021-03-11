@@ -30,6 +30,7 @@ export enum Preset {
   NextJs = 'next',
   Gatsby = 'gatsby',
   Nest = 'nest',
+  Express = 'express',
 }
 
 export interface Schema {
@@ -242,6 +243,12 @@ const presetDependencies: Omit<
     dependencies: {},
     dev: {
       '@nrwl/nest': nxVersion,
+    },
+  },
+  [Preset.Express]: {
+    dependencies: {},
+    dev: {
+      '@nrwl/express': nxVersion,
     },
   },
   [Preset.NextJs]: {

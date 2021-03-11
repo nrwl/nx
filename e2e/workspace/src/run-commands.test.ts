@@ -48,6 +48,31 @@ describe('Run Commands', () => {
     done();
   }, 120000);
 
+  it('should pass options', async (done) => {
+    const myapp = uniq('myapp1');
+
+    runCLI(`generate @nrwl/web:app ${myapp}`);
+
+    const config = readJson(workspaceConfigName());
+    config.projects[myapp].targets.echo = {
+      executor: '@nrwl/workspace:run-commands',
+      options: {
+        command: 'echo',
+        var1: 'a',
+        var2: 'b',
+        'var-hyphen': 'c',
+        varCamelCase: 'd',
+      },
+    };
+    updateFile(workspaceConfigName(), JSON.stringify(config));
+
+    const result = runCLI(`run ${myapp}:echo`, { silent: true });
+    expect(result).toContain(
+      '--var1=a --var2=b --var-hyphen=c --varCamelCase=d'
+    );
+    done();
+  }, 120000);
+
   it('should interpolate provided arguments', async (done) => {
     const myapp = uniq('myapp1');
 

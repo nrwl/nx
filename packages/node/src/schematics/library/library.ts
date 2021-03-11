@@ -120,7 +120,7 @@ function addProject(options: NormalizedSchema): Rule {
   }
 
   return updateWorkspaceInTree((json, context, host) => {
-    const architect = json.projects[options.name].architect;
+    const { architect } = json.projects[options.name];
     if (architect) {
       architect.build = {
         builder: '@nrwl/node:package',

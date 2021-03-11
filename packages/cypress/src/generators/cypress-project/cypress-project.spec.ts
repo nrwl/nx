@@ -239,12 +239,45 @@ describe('schematic:cypress-project', () => {
             linter: Linter.EsLint,
           });
           const packageJson = readJson(tree, 'package.json');
-          const eslintrcJson = readJson(tree, 'apps/my-app-e2e/.eslintrc.json');
-
           expect(
             packageJson.devDependencies['eslint-plugin-cypress']
           ).toBeTruthy();
-          expect(eslintrcJson.extends).toContain('plugin:cypress/recommended');
+
+          const eslintrcJson = readJson(tree, 'apps/my-app-e2e/.eslintrc.json');
+          expect(eslintrcJson).toMatchInlineSnapshot(`
+            Object {
+              "extends": Array [
+                "plugin:cypress/recommended",
+                "../../.eslintrc.json",
+              ],
+              "ignorePatterns": Array [
+                "!**/*",
+              ],
+              "overrides": Array [
+                Object {
+                  "files": Array [
+                    "*.ts",
+                    "*.tsx",
+                    "*.js",
+                    "*.jsx",
+                  ],
+                  "parserOptions": Object {
+                    "project": "apps/my-app-e2e/tsconfig.*?.json",
+                  },
+                  "rules": Object {},
+                },
+                Object {
+                  "files": Array [
+                    "src/plugins/index.js",
+                  ],
+                  "rules": Object {
+                    "@typescript-eslint/no-var-requires": "off",
+                    "no-undef": "off",
+                  },
+                },
+              ],
+            }
+          `);
         });
       });
     });

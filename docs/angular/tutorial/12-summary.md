@@ -1,4 +1,4 @@
-# Step 12: Summary
+# Angular Nx Tutorial - Step 12: Summary
 
 In this tutorial you:
 

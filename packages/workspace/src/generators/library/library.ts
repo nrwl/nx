@@ -100,6 +100,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
 
   generateFiles(tree, join(__dirname, './files/lib'), options.projectRoot, {
     ...options,
+    dot: '.',
     className,
     name,
     propertyName,
@@ -115,6 +116,10 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     tree.delete(
       join(options.projectRoot, 'src/lib', `${options.fileName}.spec.ts`)
     );
+  }
+
+  if (options.skipBabelrc) {
+    tree.delete(join(options.projectRoot, '.babelrc'));
   }
 
   if (options.js) {

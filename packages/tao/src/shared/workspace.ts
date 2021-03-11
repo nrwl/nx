@@ -288,22 +288,9 @@ export class Workspaces {
         normalizedGeneratorName,
       } = this.readGeneratorsJson(collectionName, generatorName);
       const generatorsDir = path.dirname(generatorsFilePath);
-
-      /**
-       * In order to support incremental migration to @nrwl/devkit we support
-       * looking up a definition in generators first, falling back to schematics
-       * if needed (and then ultimately erroring if still not found).
-       */
-      let generatorConfig;
-      if (
-        generatorsJson.generators &&
-        generatorsJson.generators[normalizedGeneratorName]
-      ) {
-        generatorConfig = generatorsJson.generators[normalizedGeneratorName];
-      } else {
-        generatorConfig = generatorsJson.schematics[normalizedGeneratorName];
-      }
-
+      const generatorConfig =
+        generatorsJson.generators?.[normalizedGeneratorName] ||
+        generatorsJson.schematics?.[normalizedGeneratorName];
       const schemaPath = path.join(generatorsDir, generatorConfig.schema || '');
       const schema = JSON.parse(
         stripJsonComments(fs.readFileSync(schemaPath).toString())
@@ -351,10 +338,8 @@ export class Workspaces {
     const executorsJson = JSON.parse(
       stripJsonComments(fs.readFileSync(executorsFilePath).toString())
     );
-    const mapOfExecutors = executorsJson.executors
-      ? executorsJson.executors
-      : executorsJson.builders;
-    const executorConfig = mapOfExecutors[executor];
+    const executorConfig =
+      executorsJson.executors?.[executor] || executorsJson.builders?.[executor];
     if (!executorConfig) {
       throw new Error(
         `Cannot find executor '${executor}' in ${executorsFilePath}.`
@@ -397,43 +382,9 @@ export class Workspaces {
       stripJsonComments(fs.readFileSync(generatorsFilePath).toString())
     );
 
-    /**
-     * In order to support incremental migration to @nrwl/devkit we support
-     * looking up a definition in generators first, falling back to schematics
-     * if needed (and then ultimately erroring if still not found).
-     */
-    let normalizedGeneratorName;
-    if (generatorsJson.generators) {
-      for (let gen of Object.keys(generatorsJson.generators)) {
-        if (gen === generator) {
-          normalizedGeneratorName = gen;
-          break;
-        }
-        if (
-          generatorsJson.generators[gen].aliases &&
-          generatorsJson.generators[gen].aliases.indexOf(generator) > -1
-        ) {
-          normalizedGeneratorName = gen;
-          break;
-        }
-      }
-    }
-
-    if (generatorsJson.schematics) {
-      for (let schematic of Object.keys(generatorsJson.schematics)) {
-        if (schematic === generator) {
-          normalizedGeneratorName = schematic;
-          break;
-        }
-        if (
-          generatorsJson.schematics[schematic].aliases &&
-          generatorsJson.schematics[schematic].aliases.indexOf(generator) > -1
-        ) {
-          normalizedGeneratorName = schematic;
-          break;
-        }
-      }
-    }
+    let normalizedGeneratorName =
+      findFullGeneratorName(generator, generatorsJson.generators) ||
+      findFullGeneratorName(generator, generatorsJson.schematics);
 
     if (!normalizedGeneratorName) {
       for (let parent of generatorsJson.extends || []) {
@@ -451,6 +402,26 @@ export class Workspaces {
 
   private resolvePaths() {
     return this.root ? [this.root, __dirname] : [__dirname];
+  }
+}
+
+function findFullGeneratorName(
+  name: string,
+  generators: {
+    [name: string]: { aliases?: string[] };
+  }
+) {
+  if (generators) {
+    for (let [key, data] of Object.entries<{ aliases?: string[] }>(
+      generators
+    )) {
+      if (
+        key === name ||
+        (data.aliases && (data.aliases as string[]).includes(name))
+      ) {
+        return key;
+      }
+    }
   }
 }
 
