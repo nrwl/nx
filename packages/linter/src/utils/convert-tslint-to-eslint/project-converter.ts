@@ -86,22 +86,6 @@ export class ProjectConverter {
       projectConfig: ProjectConfiguration & NxJsonProjectConfiguration;
     }) => Promise<void>;
   }) {
-    /**
-     * We are not able to support --dry-run in this generator, because we need to dynamically install
-     * and use the tslint-to-eslint-config package within the same execution.
-     *
-     * This is a worthwhile trade-off and the dry-run output doesn't offer a ton of value for this use-case anyway.
-     */
-    if (
-      process.argv.includes('--dry-run') ||
-      process.argv.includes('--dryRun') ||
-      process.argv.includes('-d')
-    ) {
-      throw new Error(
-        'NOTE: This generator does not support --dry-run. If you are running this in Nx Console, it should execute fine once you hit the "Run" button.\n'
-      );
-    }
-
     this.host = host;
     this.projectName = projectName;
     this.eslintInitializer = eslintInitializer;
@@ -131,6 +115,22 @@ export class ProjectConverter {
 
     const pm = detectPackageManager();
     this.pmc = getPackageManagerCommand(pm);
+
+    /**
+     * We are not able to support --dry-run in this generator, because we need to dynamically install
+     * and use the tslint-to-eslint-config package within the same execution.
+     *
+     * This is a worthwhile trade-off and the dry-run output doesn't offer a ton of value for this use-case anyway.
+     */
+    if (
+      process.argv.includes('--dry-run') ||
+      process.argv.includes('--dryRun') ||
+      process.argv.includes('-d')
+    ) {
+      throw new Error(
+        'NOTE: This generator does not support --dry-run. If you are running this in Nx Console, it should execute fine once you hit the "Run" button.\n'
+      );
+    }
   }
 
   /**

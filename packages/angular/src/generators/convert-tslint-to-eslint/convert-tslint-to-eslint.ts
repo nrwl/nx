@@ -3,6 +3,7 @@ import {
   convertNxGenerator,
   formatFiles,
   GeneratorCallback,
+  logger,
   Tree,
 } from '@nrwl/devkit';
 import { ConvertTSLintToESLintSchema, ProjectConverter } from '@nrwl/linter';
@@ -72,16 +73,25 @@ export async function conversionGenerator(
   projectConverter.removeProjectTSLintFile();
 
   /**
-   * If the Angular project is an app which has an e2e project, convert that as well.
+   * If the Angular project is an app which has an e2e project, try and convert that as well.
    */
   let cypressInstallTask: GeneratorCallback = () => Promise.resolve(undefined);
   const e2eProjectName = projectConverter.getE2EProjectName();
   if (e2eProjectName) {
-    cypressInstallTask = await cypressConversionGenerator(host, {
-      project: e2eProjectName,
-      removeTSLintIfNoMoreTSLintTargets:
-        options.removeTSLintIfNoMoreTSLintTargets,
-    });
+    try {
+      cypressInstallTask = await cypressConversionGenerator(host, {
+        project: e2eProjectName,
+        /**
+         * We can always set this to false, because it will already be handled by the next
+         * step of this parent generator, if applicable
+         */
+        removeTSLintIfNoMoreTSLintTargets: false,
+      });
+    } catch {
+      logger.warn(
+        'This Angular app has an e2e project, but it was not possible to convert it from TSLint to ESLint. This could be because the e2e project did not have a tslint.json file to begin with.'
+      );
+    }
   }
 
   /**
