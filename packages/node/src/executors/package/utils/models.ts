@@ -1,6 +1,4 @@
-import { JsonObject } from '@angular-devkit/core';
-
-export interface NodePackageBuilderOptions extends JsonObject {
+export interface NodePackageBuilderOptions {
   main: string;
   tsConfig: string;
   outputPath: string;

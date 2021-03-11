@@ -1,7 +1,7 @@
+import { ExecutorContext } from '@nrwl/devkit';
 import { join } from 'path';
-import { getMockContext } from '../../utils/testing';
-import { MockBuilderContext } from '@nrwl/workspace/testing';
 import { mocked } from 'ts-jest/utils';
+
 jest.mock('@nrwl/workspace/src/core/project-graph');
 import * as projectGraph from '@nrwl/workspace/src/core/project-graph';
 import {
@@ -9,13 +9,15 @@ import {
   ProjectType,
 } from '@nrwl/workspace/src/core/project-graph';
 
-import { runNodePackageBuilder } from './package.impl';
+import { packageExecutor } from './package.impl';
 import { NodePackageBuilderOptions } from './utils/models';
 
 jest.mock('glob');
 import * as glob from 'glob';
+
 jest.mock('fs-extra');
 import * as fs from 'fs-extra';
+
 jest.mock('@nrwl/workspace/src/utilities/fileutils');
 import * as fsUtility from '@nrwl/workspace/src/utilities/fileutils';
 import * as tsUtils from '@nrwl/workspace/src/utilities/typescript';
@@ -23,7 +25,7 @@ import * as ts from 'typescript';
 
 describe('NodePackageBuilder', () => {
   let testOptions: NodePackageBuilderOptions;
-  let context: MockBuilderContext;
+  let context: ExecutorContext;
 
   beforeEach(async () => {
     mocked(fsUtility.readJsonFile).mockImplementation(
@@ -53,9 +55,24 @@ describe('NodePackageBuilder', () => {
         return;
       }
     );
-    context = await getMockContext();
-    context.target.target = 'build';
-    context.target.project = 'nodelib';
+    context = {
+      root: '/root',
+      cwd: '/root',
+
+      projectName: 'nodelib',
+      targetName: 'build',
+      workspace: {
+        version: 2,
+        projects: {
+          nodelib: {
+            root: 'libs/nodelib',
+            sourceRoot: 'libs/nodelib/src',
+            targets: {},
+          },
+        },
+      },
+      isVerbose: false,
+    };
     testOptions = {
       assets: [],
       main: 'libs/nodelib/src/index.ts',
@@ -111,31 +128,22 @@ describe('NodePackageBuilder', () => {
       });
     });
 
-    it('should update the package.json after compiling typescript', (done) => {
-      runNodePackageBuilder(testOptions, context).subscribe({
-        complete: () => {
-          expect(fsUtility.writeJsonFile).toHaveBeenCalledWith(
-            `${testOptions.outputPath}/package.json`,
-            {
-              name: 'nodelib',
-              main: 'src/index.js',
-              typings: 'src/index.d.ts',
-            }
-          );
-          done();
-        },
-      });
+    it('should update the package.json after compiling typescript', async () => {
+      await packageExecutor(testOptions, context);
+      expect(fsUtility.writeJsonFile).toHaveBeenCalledWith(
+        `${testOptions.outputPath}/package.json`,
+        {
+          name: 'nodelib',
+          main: 'src/index.js',
+          typings: 'src/index.d.ts',
+        }
+      );
     });
 
-    it('should have the output path in the BuilderOutput', (done) => {
-      runNodePackageBuilder(testOptions, context).subscribe({
-        next: (value) => {
-          expect(value.outputPath).toEqual(testOptions.outputPath);
-        },
-        complete: () => {
-          done();
-        },
-      });
+    it('should have the output path in the BuilderOutput', async () => {
+      const result = await packageExecutor(testOptions, context);
+
+      expect(result.outputPath).toEqual(testOptions.outputPath);
     });
 
     describe('Asset copying', () => {
@@ -143,9 +151,9 @@ describe('NodePackageBuilder', () => {
         jest.clearAllMocks();
       });
 
-      it('should be able to copy assets using the glob object', (done) => {
+      it('should be able to copy assets using the glob object', async () => {
         mocked(glob.sync).mockReturnValue(['logo.png']);
-        runNodePackageBuilder(
+        await packageExecutor(
           {
             ...testOptions,
             assets: [
@@ -158,64 +166,53 @@ describe('NodePackageBuilder', () => {
             ],
           },
           context
-        ).subscribe({
-          complete: () => {
-            expect(fs.copy).toHaveBeenCalledTimes(1);
-            expect(fs.copy).toHaveBeenCalledWith(
-              `${context.workspaceRoot}/lib/nodelib/src/assets/logo.png`,
-              `${context.workspaceRoot}/${testOptions.outputPath}/newfolder/logo.png`
-            );
-
-            done();
-          },
-        });
+        );
+        expect(fs.copy).toHaveBeenCalledTimes(1);
+        expect(fs.copy).toHaveBeenCalledWith(
+          `${context.root}/lib/nodelib/src/assets/logo.png`,
+          `${context.root}/${testOptions.outputPath}/newfolder/logo.png`
+        );
       });
-      it('should be able to copy assets with a regular string', (done) => {
+      it('should be able to copy assets with a regular string', async () => {
         mocked(glob.sync).mockReturnValue(['lib/nodelib/src/LICENSE']);
 
-        runNodePackageBuilder(
+        await packageExecutor(
           {
             ...testOptions,
             assets: ['lib/nodelib/src/LICENSE'],
           },
           context
-        ).subscribe({
-          complete: () => {
-            expect(fs.copy).toHaveBeenCalledTimes(1);
-            expect(fs.copy).toHaveBeenCalledWith(
-              `${context.workspaceRoot}/lib/nodelib/src/LICENSE`,
-              `${context.workspaceRoot}/${testOptions.outputPath}/LICENSE`
-            );
-            done();
-          },
-        });
+        );
+
+        expect(fs.copy).toHaveBeenCalledTimes(1);
+        expect(fs.copy).toHaveBeenCalledWith(
+          `${context.root}/lib/nodelib/src/LICENSE`,
+          `${context.root}/${testOptions.outputPath}/LICENSE`
+        );
       });
 
-      it('should be able to copy assets with a glob string', (done) => {
+      it('should be able to copy assets with a glob string', async () => {
         mocked(glob.sync).mockReturnValue([
           'lib/nodelib/src/README.md',
           'lib/nodelib/src/CONTRIBUTING.md',
         ]);
-        runNodePackageBuilder(
+        await packageExecutor(
           {
             ...testOptions,
             assets: ['lib/nodelib/src/*.MD'],
           },
           context
-        ).subscribe({
-          complete: () => {
-            expect(fs.copy).toHaveBeenCalledTimes(2);
-            expect(fs.copy).toHaveBeenCalledWith(
-              `${context.workspaceRoot}/lib/nodelib/src/README.md`,
-              `${context.workspaceRoot}/${testOptions.outputPath}/README.md`
-            );
-            expect(fs.copy).toHaveBeenCalledWith(
-              `${context.workspaceRoot}/lib/nodelib/src/CONTRIBUTING.md`,
-              `${context.workspaceRoot}/${testOptions.outputPath}/CONTRIBUTING.md`
-            );
-            done();
-          },
-        });
+        );
+
+        expect(fs.copy).toHaveBeenCalledTimes(2);
+        expect(fs.copy).toHaveBeenCalledWith(
+          `${context.root}/lib/nodelib/src/README.md`,
+          `${context.root}/${testOptions.outputPath}/README.md`
+        );
+        expect(fs.copy).toHaveBeenCalledWith(
+          `${context.root}/lib/nodelib/src/CONTRIBUTING.md`,
+          `${context.root}/${testOptions.outputPath}/CONTRIBUTING.md`
+        );
       });
     });
 
@@ -226,33 +223,26 @@ describe('NodePackageBuilder', () => {
         spy = jest.spyOn(ts, 'createCompilerHost');
       });
 
-      it('should use srcRootForCompilationRoot when it is defined', (done) => {
+      it('should use srcRootForCompilationRoot when it is defined', async () => {
         testOptions.srcRootForCompilationRoot = 'libs/nodelib/src';
 
-        runNodePackageBuilder(testOptions, context).subscribe({
-          complete: () => {
-            expect(spy).toHaveBeenCalledWith(
-              expect.objectContaining({
-                rootDir: 'libs/nodelib/src',
-              })
-            );
-            done();
-          },
-        });
+        await packageExecutor(testOptions, context);
+        expect(spy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            rootDir: 'libs/nodelib/src',
+          })
+        );
       });
-      it('should not use srcRootForCompilationRoot when it is not defined', (done) => {
+      it('should not use srcRootForCompilationRoot when it is not defined', async () => {
         testOptions.srcRootForCompilationRoot = undefined;
 
-        runNodePackageBuilder(testOptions, context).subscribe({
-          complete: () => {
-            expect(spy).toHaveBeenCalledWith(
-              expect.objectContaining({
-                rootDir: 'libs/nodelib',
-              })
-            );
-            done();
-          },
-        });
+        await packageExecutor(testOptions, context);
+
+        expect(spy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            rootDir: 'libs/nodelib',
+          })
+        );
       });
     });
   });
@@ -312,7 +302,7 @@ describe('NodePackageBuilder', () => {
       });
     });
 
-    it('should call the tsc compiler with the modified tsconfig.json', (done) => {
+    it('should call the tsc compiler with the modified tsconfig.json', async () => {
       const tmpTsConfigPath = join(
         '/root',
         'tmp',
@@ -322,12 +312,8 @@ describe('NodePackageBuilder', () => {
 
       const tsConfigSpy = jest.spyOn(tsUtils, 'readTsConfig');
 
-      runNodePackageBuilder(testOptions, context).subscribe({
-        complete: () => {
-          expect(tsConfigSpy).toHaveBeenCalledWith(tmpTsConfigPath);
-          done();
-        },
-      });
+      await packageExecutor(testOptions, context);
+      expect(tsConfigSpy).toHaveBeenCalledWith(tmpTsConfigPath);
     });
   });
 });

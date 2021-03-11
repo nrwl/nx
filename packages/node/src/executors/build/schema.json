@@ -1,6 +1,7 @@
 {
   "title": "Node Application Build Target",
   "description": "Node application build target options for Build Facade",
+  "cli": "nx",
   "type": "object",
   "properties": {
     "main": {

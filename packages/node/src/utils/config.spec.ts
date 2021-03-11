@@ -1,5 +1,4 @@
 import { getBaseWebpackPartial } from './config';
-import { normalize, getSystemPath } from '@angular-devkit/core';
 
 import * as ts from 'typescript';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
@@ -19,7 +18,7 @@ describe('getBaseWebpackPartial', () => {
       outputPath: 'dist',
       tsConfig: 'tsconfig.json',
       fileReplacements: [],
-      root: getSystemPath(normalize('/root')),
+      root: '/root',
       statsJson: false,
     };
     (<any>(

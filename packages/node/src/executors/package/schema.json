@@ -1,6 +1,7 @@
 {
   "title": "Node Library Package Target",
   "description": "Packages a Node library using TypeScript",
+  "cli": "nx",
   "type": "object",
   "properties": {
     "main": {
