@@ -1,14 +1,14 @@
-import { Cache, TaskWithCachedResult } from './cache';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
+import { ChildProcess, fork } from 'child_process';
+import * as dotenv from 'dotenv';
+import * as fs from 'fs';
 import { ProjectGraph } from '../core/project-graph';
+import { appRootPath } from '../utilities/app-root';
+import { output } from '../utilities/output';
+import { Cache, TaskWithCachedResult } from './cache';
+import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { AffectedEventType, Task } from './tasks-runner';
 import { getOutputs, unparse } from './utils';
-import { ChildProcess, fork } from 'child_process';
-import { DefaultTasksRunnerOptions } from './default-tasks-runner';
-import { output } from '../utilities/output';
-import * as fs from 'fs';
-import { appRootPath } from '../utilities/app-root';
-import * as dotenv from 'dotenv';
-import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 
 export class TaskOrchestrator {
   workspaceRoot = appRootPath;
@@ -291,7 +291,7 @@ export class TaskOrchestrator {
       ...parseEnv(`${task.projectRoot}/.local.env`),
     };
 
-    const env = {
+    const env: NodeJS.ProcessEnv = {
       ...envsFromFiles,
       FORCE_COLOR: forceColor,
       ...process.env,
