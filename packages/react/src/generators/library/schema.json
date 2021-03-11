@@ -140,6 +140,11 @@
       "type": "boolean",
       "description": "When true, the stylesheet is generated using global CSS instead of CSS modules (e.g. file is '*.css' rather than '*.module.css').",
       "default": false
+    },
+    "strict": {
+      "type": "boolean",
+      "description": "Whether to enable tsconfig strict mode or not.",
+      "default": false
     }
   },
   "required": ["name"]

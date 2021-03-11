@@ -18,6 +18,7 @@ import {
   reactVersion,
   typesReactRouterDomVersion,
 } from '../../utils/versions';
+import { join } from 'path';
 import { Schema } from './schema';
 import {
   addDependenciesToPackageJson,
@@ -217,6 +218,22 @@ function addProject(host: Tree, options: NormalizedSchema) {
   });
 }
 
+function updateLibTsConfig(tree: Tree, options: NormalizedSchema) {
+  updateJson(tree, join(options.projectRoot, 'tsconfig.lib.json'), (json) => {
+    if (options.strict) {
+      json.compilerOptions = {
+        ...json.compilerOptions,
+        forceConsistentCasingInFileNames: true,
+        strict: true,
+        noImplicitReturns: true,
+        noFallthroughCasesInSwitch: true,
+      };
+    }
+
+    return json;
+  });
+}
+
 function updateTsConfig(host: Tree, options: NormalizedSchema) {
   updateJson(host, 'tsconfig.base.json', (json) => {
     const c = json.compilerOptions;
@@ -247,6 +264,7 @@ function createFiles(host: Tree, options: NormalizedSchema) {
     {
       ...options,
       ...names(options.name),
+      strict: undefined,
       tmpl: '',
       offsetFromRoot: offsetFromRoot(options.projectRoot),
     }
@@ -259,6 +277,8 @@ function createFiles(host: Tree, options: NormalizedSchema) {
   if (options.js) {
     toJS(host);
   }
+
+  updateLibTsConfig(host, options);
 }
 
 function updateAppRoutes(host: Tree, options: NormalizedSchema) {
