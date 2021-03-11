@@ -45,6 +45,11 @@
     "url": "https://github.com/Bielik20/nx-plugins/tree/master/packages/nx-serverless"
   },
   {
+    "name": "@ns3/nx-jest-playwright",
+    "description": "Nx plugin to run jest-playwright e2e tests in an Nx workspace",
+    "url": "https://github.com/Bielik20/nx-plugins/tree/master/packages/nx-jest-playwright"
+  },
+  {
     "name": "@dev-thought/nx-deploy-it",
     "description": "Nx plugin to deploy applications on your favorite cloud provider",
     "url": "https://github.com/Dev-Thought/nx-plugins/tree/master/libs/nx-deploy-it"
