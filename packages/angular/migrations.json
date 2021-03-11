@@ -288,6 +288,13 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "11.5.2": {
+      "version": "11.5.2-beta.0",
+      "packages": {
+        "version": "8.4.0",
+        "alwaysAddToPackageJson": false
+      }
     }
   }
 }
