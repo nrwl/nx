@@ -9,7 +9,7 @@ Object {
     "@typescript-eslint/eslint-plugin": "4.3.0",
     "@typescript-eslint/parser": "4.3.0",
     "eslint": "7.10.0",
-    "eslint-config-prettier": "6.0.0",
+    "eslint-config-prettier": "8.1.0",
     "eslint-plugin-import": "latest",
   },
   "name": "test-name",
@@ -131,9 +131,6 @@ Object {
         "*.ts",
         "*.tsx",
       ],
-      "parserOptions": Object {
-        "project": "./tsconfig.*?.json",
-      },
       "rules": Object {},
     },
     Object {
@@ -162,6 +159,36 @@ Object {
   ],
   "ignorePatterns": Array [
     "!**/*",
+  ],
+  "overrides": Array [
+    Object {
+      "files": Array [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx",
+      ],
+      "parserOptions": Object {
+        "project": Array [
+          "apps/nest-app-1/tsconfig.*?.json",
+        ],
+      },
+      "rules": Object {},
+    },
+    Object {
+      "files": Array [
+        "*.ts",
+        "*.tsx",
+      ],
+      "rules": Object {},
+    },
+    Object {
+      "files": Array [
+        "*.js",
+        "*.jsx",
+      ],
+      "rules": Object {},
+    },
   ],
   "rules": Object {
     "@typescript-eslint/no-empty-interface": "error",
@@ -269,7 +296,7 @@ Object {
     "@typescript-eslint/eslint-plugin": "4.3.0",
     "@typescript-eslint/parser": "4.3.0",
     "eslint": "7.10.0",
-    "eslint-config-prettier": "6.0.0",
+    "eslint-config-prettier": "8.1.0",
     "eslint-plugin-import": "latest",
   },
   "name": "test-name",
@@ -391,9 +418,6 @@ Object {
         "*.ts",
         "*.tsx",
       ],
-      "parserOptions": Object {
-        "project": "./tsconfig.*?.json",
-      },
       "rules": Object {},
     },
     Object {
@@ -422,6 +446,36 @@ Object {
   ],
   "ignorePatterns": Array [
     "!**/*",
+  ],
+  "overrides": Array [
+    Object {
+      "files": Array [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx",
+      ],
+      "parserOptions": Object {
+        "project": Array [
+          "libs/nest-lib-1/tsconfig.*?.json",
+        ],
+      },
+      "rules": Object {},
+    },
+    Object {
+      "files": Array [
+        "*.ts",
+        "*.tsx",
+      ],
+      "rules": Object {},
+    },
+    Object {
+      "files": Array [
+        "*.js",
+        "*.jsx",
+      ],
+      "rules": Object {},
+    },
   ],
   "rules": Object {
     "@typescript-eslint/no-empty-interface": "error",

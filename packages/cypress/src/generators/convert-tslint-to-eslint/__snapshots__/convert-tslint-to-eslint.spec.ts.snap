@@ -9,7 +9,7 @@ Object {
     "@typescript-eslint/eslint-plugin": "4.3.0",
     "@typescript-eslint/parser": "4.3.0",
     "eslint": "7.10.0",
-    "eslint-config-prettier": "6.0.0",
+    "eslint-config-prettier": "8.1.0",
     "eslint-plugin-cypress": "^2.10.3",
     "eslint-plugin-import": "latest",
   },
@@ -132,9 +132,6 @@ Object {
         "*.ts",
         "*.tsx",
       ],
-      "parserOptions": Object {
-        "project": "./tsconfig.*?.json",
-      },
       "rules": Object {},
     },
     Object {
@@ -166,6 +163,18 @@ Object {
     "!**/*",
   ],
   "overrides": Array [
+    Object {
+      "files": Array [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx",
+      ],
+      "parserOptions": Object {
+        "project": "apps/e2e-app-1/tsconfig.*?.json",
+      },
+      "rules": Object {},
+    },
     Object {
       "files": Array [
         "src/plugins/index.js",

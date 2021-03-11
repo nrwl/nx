@@ -61,8 +61,12 @@ describe('ProjectConverter', () => {
     });
   });
 
-  it('should immediately throw if --dry-run is set', () => {
+  it('should throw if --dry-run is set', () => {
+    writeJson(host, 'tslint.json', {});
+    writeJson(host, `${projectRoot}/tslint.json`, {});
+
     process.argv.push('--dry-run');
+
     expect(
       () =>
         new ProjectConverter({
@@ -74,8 +78,12 @@ describe('ProjectConverter', () => {
     ).toThrowErrorMatchingSnapshot();
   });
 
-  it('should immediately throw if --dryRun is set', () => {
+  it('should throw if --dryRun is set', () => {
+    writeJson(host, 'tslint.json', {});
+    writeJson(host, `${projectRoot}/tslint.json`, {});
+
     process.argv.push('--dryRun');
+
     expect(
       () =>
         new ProjectConverter({
@@ -87,8 +95,12 @@ describe('ProjectConverter', () => {
     ).toThrowErrorMatchingSnapshot();
   });
 
-  it('should immediately throw if -d is set', () => {
+  it('should throw if -d is set', () => {
+    writeJson(host, 'tslint.json', {});
+    writeJson(host, `${projectRoot}/tslint.json`, {});
+
     process.argv.push('-d');
+
     expect(
       () =>
         new ProjectConverter({

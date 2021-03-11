@@ -12,7 +12,7 @@ Object {
     "@typescript-eslint/eslint-plugin": "4.3.0",
     "@typescript-eslint/parser": "4.3.0",
     "eslint": "7.10.0",
-    "eslint-config-prettier": "6.0.0",
+    "eslint-config-prettier": "8.1.0",
     "eslint-plugin-import": "latest",
   },
   "name": "test-name",
@@ -136,9 +136,6 @@ Object {
         "*.ts",
         "*.tsx",
       ],
-      "parserOptions": Object {
-        "project": "./tsconfig.*?.json",
-      },
       "rules": Object {},
     },
     Object {
@@ -362,7 +359,7 @@ Object {
     "@typescript-eslint/eslint-plugin": "4.3.0",
     "@typescript-eslint/parser": "4.3.0",
     "eslint": "7.10.0",
-    "eslint-config-prettier": "6.0.0",
+    "eslint-config-prettier": "8.1.0",
     "eslint-plugin-import": "latest",
   },
   "name": "test-name",
@@ -486,9 +483,6 @@ Object {
         "*.ts",
         "*.tsx",
       ],
-      "parserOptions": Object {
-        "project": "./tsconfig.*?.json",
-      },
       "rules": Object {},
     },
     Object {
