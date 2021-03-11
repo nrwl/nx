@@ -17,9 +17,11 @@ const nxVersion = 'NX_VERSION';
 const prettierVersion = 'PRETTIER_VERSION';
 
 const parsedArgs = yargsParser(process.argv, {
-  string: ['pluginName', 'packageManager'],
+  string: ['pluginName', 'packageManager', 'importPath'],
   alias: {
+    importPath: 'import-path',
     pluginName: 'plugin-name',
+    packageManager: 'pm',
   },
   boolean: ['help'],
 });
@@ -78,8 +80,14 @@ function createWorkspace(
   });
 }
 
-function createNxPlugin(workspaceName, pluginName, packageManager) {
-  const command = `nx generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${workspaceName}/${pluginName}`;
+function createNxPlugin(
+  workspaceName,
+  pluginName,
+  packageManager,
+  parsedArgs: any
+) {
+  const importPath = parsedArgs.importPath ?? `${workspaceName}/${pluginName}`;
+  const command = `nx generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${importPath}`;
   console.log(command);
 
   const pmc = getPackageManagerCommand(packageManager);
@@ -195,7 +203,7 @@ determineWorkspaceName(parsedArgs).then((workspaceName) => {
     const tmpDir = createSandbox(packageManager);
     createWorkspace(tmpDir, packageManager, parsedArgs, workspaceName);
     updateWorkspace(workspaceName);
-    createNxPlugin(workspaceName, pluginName, packageManager);
+    createNxPlugin(workspaceName, pluginName, packageManager, parsedArgs);
     commitChanges(workspaceName);
     showNxWarning(workspaceName);
   });

@@ -37,6 +37,14 @@ describe('Cypress builder', () => {
       },
     ]);
     (devkit as any).stripIndents = (s) => s;
+    (devkit as any).parseTargetString = (s) => {
+      const [project, target, configuration] = s.split(':');
+      return {
+        project,
+        target,
+        configuration,
+      };
+    };
     cypressRun = spyOn(Cypress, 'run').and.returnValue(Promise.resolve({}));
     cypressOpen = spyOn(Cypress, 'open').and.returnValue(Promise.resolve({}));
   });

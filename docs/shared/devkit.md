@@ -4,16 +4,16 @@ Nx is a pluggable build tool, so most of its functionality is provided by plugin
 
 Plugins have:
 
-- Generators
-  - Anytime you run `nx generate ...`, you invoke a generator
-  - Generators automate making changes to the file system
+- **Generators**
+  - Anytime you run `nx generate ...`, you invoke a generator.
+  - Generators automate making changes to the file system.
   - They are used to create/update applications, libraries, components, etc..
-- Executors
-  - Anytime you run `nx run ...` (or `nx test`, `nx build`), you invoke an executor
-  - Executors define how to perform an action on a project
+- **Executors**
+  - Anytime you run `nx run ...` (or `nx test`, `nx build`), you invoke an executor.
+  - Executors define how to perform an action on a project.
   - They are used to build applications and libraries, test them, lint them, etc..
 
-All of the core plugins are written using Nx Devkit and you can use the same utilities to write your own generators and executors.
+All of the core plugins are written using Nx Devkit, and you can use the same utilities to write your own generators and executors.
 
 ## Pay as You Go
 
@@ -21,14 +21,14 @@ As with most things in Nx, the core of Nx Devkit is very simple. It only uses la
 
 ## Generators
 
-Generators automate making file changes for you. They can create new files, overwrite existing files, delete existing files, etc. For example, adding a new application may involve creating numerous files and updating configuration. By providing a generator that creates new applications, you can start coding the interesting parts of their application without having to spend hours setting the project up.
+Generators automate making file changes. They can create new files, overwrite existing files, delete existing files, etc. For example, adding a new application often requires creating numerous files and updating configuration. Adding a new component may require adding a storybook configuration and a suite of e2e tests. Generators can automate all of these and help you focus on actually matters.
 
-A generator consists of the following:
+A generator has:
 
-- a schema that describes what can be input into the generator
-- the implementation that takes the inputs and makes changes to the file system
+- a schema describing the inputs (i.e., flags, args, options)
+- the implementation taking the inputs and making changes to the file system
 
-Unlike a naive script which makes changes to the file system, generators update the file system atomically at the end. This means that if an error occurs, the file system is not partially updated.
+Unlike many other tools Nx generators update the file system atomically at the end. This means that if an error occurs, the file system is not partially updated. It also means that you can preview the changes to the file system without actually modifying any files.
 
 ### Schema
 
@@ -163,13 +163,15 @@ If you want to learn more about the schema language, check out the core plugins 
 The implementation is a function that takes two arguments:
 
 - `tree`: an implementation of the file system
-  - Allows you to read/write files, list children, etc.
-  - It's recommended to use the tree instead of directly interacting with the file system
-  - This enables the `--dry-run` mode so you can try different sets of options before actually making changes to their files.
-- `options`: the options that a user passes
-  - This is described by the schema and allows users to customize the result of the generator to their needs.
+  - It allows you to read/write files, list children, etc.
+  - It's recommended to use the tree instead of directly interacting with the file system.
+  - This enables the `--dry-run` mode so you can try different sets of options before actually making changes to the files.
+- `options`
+  - This is a combination of the options from `workspace.json`, command-line overrides, and schema defaults.
+  - All the options are validated and transformed in accordance with the schema.
+  - You normally don't have to validate anything in the implementation function because it won't be invoked unless the schema validation passes.
 
-The implementation can return a callback which is invoked _after changes have been made to the file system_. For example, the implementation might add dependencies to `package.json` and install them afterwards. Because installing dependencies requires that the `package.json` has the changes on disk, installing dependencies should be done in the callback returned.
+The implementation can return a callback which is invoked _after changes have been made to the file system_.
 
 #### Examples
 
@@ -208,7 +210,7 @@ The generator is an async function. You could create new projects and generate n
 
 ### Composing Generators
 
-A generator is just an async function so they can be easily composed together. This is often useful when you want to combine multiple generations. For instance, to write a generator that generates two React libraries:
+Generators are just async functions so they can be easily composed together. For instance, to write a generator that generates two React libraries:
 
 ```typescript
 import {
@@ -303,16 +305,16 @@ export default async function (tree, opts) {
 
 ## Executors
 
-Executors act on a project commonly producing some resulting artifacts. The canonical example of an executor is one which builds a project for deployment.
+Executors act on a project. Some examples including: building projects, testing projects, serving projects.
 
 An executor consists of the following:
 
-- a schema that describes what options are available
-- the implementation which defines what is done when performing an action on a project
+- a schema describing the inputs (i.e., flags, args, options).
+- the implementation taking the inputs and acting on the project.
 
 ### Schema
 
-The executor's schema describes the inputs--what you can pass into it.
+A generator's schema describes the inputs--what you can pass into it. The schema is used to validate inputs, to parse args (e.g., covert strings into numbers), to set defaults, and to power the VSCode plugin. It is written with [JSON Schema](https://json-schema.org/).
 
 ```json
 {
@@ -335,11 +337,11 @@ The executor's schema describes the inputs--what you can pass into it.
 }
 ```
 
-The schema above defines two fields: `message` and `upperCase`. The `message` field is a string, `upperCase` is a boolean. The schema support for executors and generators is identical, so see the section on generators above for more information.
+The schema above defines two fields: `message` and `upperCase`. The `message` field is a string, `upperCase` is a boolean. The schema support for executors and generators is identical. See the section on generators above for more information.
 
 ### Implementation
 
-The implementation function takes two arguments (the options and the target context) and returns a promise (or an async iterable) with the success property. The context params contains information about the workspace and the invoked target.
+The implementation function takes two arguments (the options and the executor context) and returns a promise (or an async iterable) with the success property. The context params contains information about the workspace and the invoked target.
 
 Most of the time executors return a promise.
 
@@ -420,7 +422,9 @@ async function* startDevServer(
   opts: CypressExecutorOptions,
   context: ExecutorContext
 ) {
-  const [project, target, configuration] = opts.devServerTarget.split(':');
+  const { project, target, configuration } = parseTargetString(
+    opts.devServerTarget
+  );
   for await (const output of await runExecutor<{
     success: boolean;
     baseUrl?: string;
@@ -438,12 +442,14 @@ async function* startDevServer(
 }
 ```
 
-The `runExecutor` utility will find the target in the configuration, find the executor, construct the options (as if you invoked it in the terminal) and invoke the executor. Note that runExecutor always returns an iterable instead of a promise.
+The `runExecutor` utility will find the target in the configuration, find the executor, construct the options (as if you invoked it in the terminal) and invoke the executor. Note that `runExecutor` always returns an iterable instead of a promise.
 
 ### Devkit Helper Functions
 
 - `logger` -- Wraps `console` to add some formatting.
 - `getPackageManagerCommand` -- Returns commands for the package manager used in the workspace.
+- `parseTargetString` -- Parses a target string into {project, target, configuration}.
+- `readTargetOptions` -- Reads and combines options for a given target.
 - `runExecutor` -- Constructs options and invokes an executor.
 
 ### Simplest Executor
