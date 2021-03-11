@@ -1,21 +1,20 @@
-import { Tree } from '@angular-devkit/schematics';
-import { NxJson, readJsonInTree } from '@nrwl/workspace';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { runSchematic } from '../../utils/testing';
+import { NxJsonConfiguration, readJson, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+
 import { Schema } from './schema.d';
+import { libraryGenerator } from './library';
 
 describe('lib', () => {
-  let appTree: Tree;
+  let tree: Tree;
 
   beforeEach(() => {
-    appTree = Tree.empty();
-    appTree = createEmptyWorkspace(appTree);
+    tree = createTreeWithEmptyWorkspace();
   });
 
   describe('not nested', () => {
     it('should update workspace.json', async () => {
-      const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
-      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      await libraryGenerator(tree, { name: 'myLib' });
+      const workspaceJson = readJson(tree, '/workspace.json');
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(workspaceJson.projects['my-lib'].architect.build).toBeUndefined();
       expect(workspaceJson.projects['my-lib'].architect.lint).toEqual({
@@ -35,12 +34,12 @@ describe('lib', () => {
     });
 
     it('adds srcRootForCompilationRoot in workspace.json', async () => {
-      const tree = await runSchematic(
-        'lib',
-        { name: 'myLib', rootDir: './src', buildable: true },
-        appTree
-      );
-      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      await libraryGenerator(tree, {
+        name: 'myLib',
+        rootDir: './src',
+        buildable: true,
+      });
+      const workspaceJson = readJson(tree, '/workspace.json');
       expect(
         workspaceJson.projects['my-lib'].architect.build.options
           .srcRootForCompilationRoot
@@ -48,12 +47,8 @@ describe('lib', () => {
     });
 
     it('should update nx.json', async () => {
-      const tree = await runSchematic(
-        'lib',
-        { name: 'myLib', tags: 'one,two' },
-        appTree
-      );
-      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
+      await libraryGenerator(tree, { name: 'myLib', tags: 'one,two' });
+      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-lib': {
           tags: ['one', 'two'],
@@ -62,16 +57,16 @@ describe('lib', () => {
     });
 
     it('should update root tsconfig.base.json', async () => {
-      const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
-      const tsconfigJson = readJsonInTree(tree, '/tsconfig.base.json');
+      await libraryGenerator(tree, { name: 'myLib' });
+      const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
         'libs/my-lib/src/index.ts',
       ]);
     });
 
     it('should create a local tsconfig.json', async () => {
-      const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
-      const tsconfigJson = readJsonInTree(tree, 'libs/my-lib/tsconfig.json');
+      await libraryGenerator(tree, { name: 'myLib' });
+      const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.json');
       expect(tsconfigJson).toMatchInlineSnapshot(`
         Object {
           "extends": "../../tsconfig.base.json",
@@ -90,30 +85,24 @@ describe('lib', () => {
     });
 
     it('should extend the local tsconfig.json with tsconfig.spec.json', async () => {
-      const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
-      const tsconfigJson = readJsonInTree(
-        tree,
-        'libs/my-lib/tsconfig.spec.json'
-      );
+      await libraryGenerator(tree, { name: 'myLib' });
+      const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.spec.json');
       expect(tsconfigJson.extends).toEqual('./tsconfig.json');
     });
 
     it('should extend the local tsconfig.json with tsconfig.lib.json', async () => {
-      const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
-      const tsconfigJson = readJsonInTree(
-        tree,
-        'libs/my-lib/tsconfig.lib.json'
-      );
+      await libraryGenerator(tree, { name: 'myLib' });
+      const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
       expect(tsconfigJson.compilerOptions.types).toContain('node');
       expect(tsconfigJson.extends).toEqual('./tsconfig.json');
     });
 
     it('should generate files', async () => {
-      const tree = await runSchematic('lib', { name: 'myLib' }, appTree);
+      await libraryGenerator(tree, { name: 'myLib' });
       expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
 
-      const eslintrc = readJsonInTree(tree, 'libs/my-lib/.eslintrc.json');
+      const eslintrc = readJson(tree, 'libs/my-lib/.eslintrc.json');
       expect(eslintrc).toMatchInlineSnapshot(`
         Object {
           "extends": Array [
@@ -159,32 +148,24 @@ describe('lib', () => {
 
   describe('nested', () => {
     it('should update nx.json', async () => {
-      const tree = await runSchematic(
-        'lib',
-        {
-          name: 'myLib',
-          directory: 'myDir',
-          tags: 'one',
-        },
-        appTree
-      );
-      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
+      await libraryGenerator(tree, {
+        name: 'myLib',
+        directory: 'myDir',
+        tags: 'one',
+      });
+      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-dir-my-lib': {
           tags: ['one'],
         },
       });
 
-      const tree2 = await runSchematic(
-        'lib',
-        {
-          name: 'myLib2',
-          directory: 'myDir',
-          tags: 'one,two',
-        },
-        tree
-      );
-      const nxJson2 = readJsonInTree<NxJson>(tree2, '/nx.json');
+      await libraryGenerator(tree, {
+        name: 'myLib2',
+        directory: 'myDir',
+        tags: 'one,two',
+      });
+      const nxJson2 = readJson<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson2.projects).toEqual({
         'my-dir-my-lib': {
           tags: ['one'],
@@ -196,22 +177,14 @@ describe('lib', () => {
     });
 
     it('should generate files', async () => {
-      const tree = await runSchematic(
-        'lib',
-        { name: 'myLib', directory: 'myDir' },
-        appTree
-      );
+      await libraryGenerator(tree, { name: 'myLib', directory: 'myDir' });
       expect(tree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
     });
 
     it('should update workspace.json', async () => {
-      const tree = await runSchematic(
-        'lib',
-        { name: 'myLib', directory: 'myDir' },
-        appTree
-      );
-      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      await libraryGenerator(tree, { name: 'myLib', directory: 'myDir' });
+      const workspaceJson = readJson(tree, '/workspace.json');
 
       expect(workspaceJson.projects['my-dir-my-lib'].root).toEqual(
         'libs/my-dir/my-lib'
@@ -225,12 +198,8 @@ describe('lib', () => {
     });
 
     it('should update tsconfig.json', async () => {
-      const tree = await runSchematic(
-        'lib',
-        { name: 'myLib', directory: 'myDir' },
-        appTree
-      );
-      const tsconfigJson = readJsonInTree(tree, '/tsconfig.base.json');
+      await libraryGenerator(tree, { name: 'myLib', directory: 'myDir' });
+      const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(
         tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']
       ).toEqual(['libs/my-dir/my-lib/src/index.ts']);
@@ -243,15 +212,11 @@ describe('lib', () => {
       expect.assertions(1);
 
       try {
-        const tree = await runSchematic(
-          'lib',
-          {
-            name: 'myLib',
-            directory: 'myDir',
-            publishable: true,
-          },
-          appTree
-        );
+        await libraryGenerator(tree, {
+          name: 'myLib',
+          directory: 'myDir',
+          publishable: true,
+        });
       } catch (e) {
         expect(e.message).toContain(
           'For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)'
@@ -260,16 +225,9 @@ describe('lib', () => {
     });
 
     it('should create a local tsconfig.json', async () => {
-      const tree = await runSchematic(
-        'lib',
-        { name: 'myLib', directory: 'myDir' },
-        appTree
-      );
+      await libraryGenerator(tree, { name: 'myLib', directory: 'myDir' });
 
-      const tsconfigJson = readJsonInTree(
-        tree,
-        'libs/my-dir/my-lib/tsconfig.json'
-      );
+      const tsconfigJson = readJson(tree, 'libs/my-dir/my-lib/tsconfig.json');
       expect(tsconfigJson.extends).toEqual('../../../tsconfig.base.json');
       expect(tsconfigJson.references).toEqual([
         {
@@ -284,20 +242,13 @@ describe('lib', () => {
 
   describe('--unit-test-runner none', () => {
     it('should not generate test configuration', async () => {
-      const resultTree = await runSchematic(
-        'lib',
-        { name: 'myLib', unitTestRunner: 'none' },
-        appTree
-      );
-      expect(resultTree.exists('libs/my-lib/tsconfig.spec.json')).toBeFalsy();
-      expect(resultTree.exists('libs/my-lib/jest.config.js')).toBeFalsy();
-      expect(resultTree.exists('libs/my-lib/lib/my-lib.spec.ts')).toBeFalsy();
-      const workspaceJson = readJsonInTree(resultTree, 'workspace.json');
+      await libraryGenerator(tree, { name: 'myLib', unitTestRunner: 'none' });
+      expect(tree.exists('libs/my-lib/tsconfig.spec.json')).toBeFalsy();
+      expect(tree.exists('libs/my-lib/jest.config.js')).toBeFalsy();
+      expect(tree.exists('libs/my-lib/lib/my-lib.spec.ts')).toBeFalsy();
+      const workspaceJson = readJson(tree, 'workspace.json');
       expect(workspaceJson.projects['my-lib'].architect.test).toBeUndefined();
-      const tsconfigJson = readJsonInTree(
-        resultTree,
-        'libs/my-lib/tsconfig.json'
-      );
+      const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.json');
       expect(tsconfigJson.extends).toEqual('../../tsconfig.base.json');
       expect(tsconfigJson.references).toEqual([
         {
@@ -320,12 +271,8 @@ describe('lib', () => {
 
   describe('buildable package', () => {
     it('should have a builder defined', async () => {
-      const tree = await runSchematic(
-        'lib',
-        { name: 'myLib', buildable: true },
-        appTree
-      );
-      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      await libraryGenerator(tree, { name: 'myLib', buildable: true });
+      const workspaceJson = readJson(tree, '/workspace.json');
 
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
 
@@ -352,12 +299,12 @@ describe('lib', () => {
 
   describe('publishable package', () => {
     it('should have a builder defined', async () => {
-      const tree = await runSchematic(
-        'lib',
-        { name: 'myLib', publishable: true, importPath: '@proj/mylib' },
-        appTree
-      );
-      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      await libraryGenerator(tree, {
+        name: 'myLib',
+        publishable: true,
+        importPath: '@proj/mylib',
+      });
+      const workspaceJson = readJson(tree, '/workspace.json');
 
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
 
@@ -365,16 +312,13 @@ describe('lib', () => {
     });
 
     it('should update package.json', async () => {
-      const publishableTree = await runSchematic(
-        'lib',
-        { name: 'mylib', publishable: true, importPath: '@proj/mylib' },
-        appTree
-      );
+      await libraryGenerator(tree, {
+        name: 'mylib',
+        publishable: true,
+        importPath: '@proj/mylib',
+      });
 
-      let packageJsonContent = readJsonInTree(
-        publishableTree,
-        'libs/mylib/package.json'
-      );
+      let packageJsonContent = readJson(tree, 'libs/mylib/package.json');
 
       expect(packageJsonContent.name).toEqual('@proj/mylib');
     });
@@ -382,21 +326,14 @@ describe('lib', () => {
 
   describe('--importPath', () => {
     it('should update the package.json & tsconfig with the given import path', async () => {
-      const tree = await runSchematic(
-        'lib',
-        {
-          name: 'myLib',
-          publishable: true,
-          directory: 'myDir',
-          importPath: '@myorg/lib',
-        },
-        appTree
-      );
-      const packageJson = readJsonInTree(
-        tree,
-        'libs/my-dir/my-lib/package.json'
-      );
-      const tsconfigJson = readJsonInTree(tree, '/tsconfig.base.json');
+      await libraryGenerator(tree, {
+        name: 'myLib',
+        publishable: true,
+        directory: 'myDir',
+        importPath: '@myorg/lib',
+      });
+      const packageJson = readJson(tree, 'libs/my-dir/my-lib/package.json');
+      const tsconfigJson = readJson(tree, '/tsconfig.base.json');
 
       expect(packageJson.name).toBe('@myorg/lib');
       expect(
@@ -405,26 +342,18 @@ describe('lib', () => {
     });
 
     it('should fail if the same importPath has already been used', async () => {
-      const tree1 = await runSchematic(
-        'lib',
-        {
-          name: 'myLib1',
-          publishable: true,
-          importPath: '@myorg/lib',
-        },
-        appTree
-      );
+      await libraryGenerator(tree, {
+        name: 'myLib1',
+        publishable: true,
+        importPath: '@myorg/lib',
+      });
 
       try {
-        await runSchematic(
-          'lib',
-          {
-            name: 'myLib2',
-            publishable: true,
-            importPath: '@myorg/lib',
-          },
-          tree1
-        );
+        await libraryGenerator(tree, {
+          name: 'myLib2',
+          publishable: true,
+          importPath: '@myorg/lib',
+        });
       } catch (e) {
         expect(e.message).toContain(
           'You already have a library using the import path'
@@ -437,22 +366,21 @@ describe('lib', () => {
 
   describe(`--babelJest`, () => {
     it('should use babel for jest', async () => {
-      const tree = await runSchematic(
-        'lib',
-        { name: 'myLib', babelJest: true } as Schema,
-        appTree
-      );
+      await libraryGenerator(tree, {
+        name: 'myLib',
+        babelJest: true,
+      } as Schema);
 
-      expect(tree.readContent(`libs/my-lib/jest.config.js`))
+      expect(tree.read(`libs/my-lib/jest.config.js`).toString())
         .toMatchInlineSnapshot(`
         "module.exports = {
           displayName: 'my-lib',
           preset: '../../jest.preset.js',
           transform: {
-            '^.+\\\\\\\\.[tj]sx?$': 'babel-jest',
+            '^.+\\\\\\\\.[tj]sx?$': 'babel-jest'
           },
-          moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-          coverageDirectory: '../../coverage/libs/my-lib',
+            moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+          coverageDirectory: '../../coverage/libs/my-lib'
         };
         "
       `);
@@ -460,14 +388,10 @@ describe('lib', () => {
   });
   describe('--js flag', () => {
     it('should generate js files instead of ts files', async () => {
-      const tree = await runSchematic(
-        'lib',
-        {
-          name: 'myLib',
-          js: true,
-        } as Schema,
-        appTree
-      );
+      await libraryGenerator(tree, {
+        name: 'myLib',
+        js: true,
+      } as Schema);
 
       expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/index.js')).toBeTruthy();
@@ -475,37 +399,35 @@ describe('lib', () => {
       expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.js')).toBeTruthy();
 
       expect(
-        readJsonInTree(tree, 'libs/my-lib/tsconfig.json').compilerOptions
+        readJson(tree, 'libs/my-lib/tsconfig.json').compilerOptions
       ).toEqual({
         allowJs: true,
       });
-      expect(
-        readJsonInTree(tree, 'libs/my-lib/tsconfig.lib.json').include
-      ).toEqual(['**/*.ts', '**/*.js']);
-      expect(
-        readJsonInTree(tree, 'libs/my-lib/tsconfig.lib.json').exclude
-      ).toEqual(['**/*.spec.ts', '**/*.spec.js']);
+      expect(readJson(tree, 'libs/my-lib/tsconfig.lib.json').include).toEqual([
+        '**/*.ts',
+        '**/*.js',
+      ]);
+      expect(readJson(tree, 'libs/my-lib/tsconfig.lib.json').exclude).toEqual([
+        '**/*.spec.ts',
+        '**/*.spec.js',
+      ]);
     });
 
     it('should update root tsconfig.json with a js file path', async () => {
-      const tree = await runSchematic(
-        'lib',
-        { name: 'myLib', js: true } as Schema,
-        appTree
-      );
-      const tsconfigJson = readJsonInTree(tree, '/tsconfig.base.json');
+      await libraryGenerator(tree, { name: 'myLib', js: true } as Schema);
+      const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
         'libs/my-lib/src/index.js',
       ]);
     });
 
     it('should update architect builder when --buildable', async () => {
-      const tree = await runSchematic(
-        'lib',
-        { name: 'myLib', buildable: true, js: true } as Schema,
-        appTree
-      );
-      const workspaceJson = readJsonInTree(tree, '/workspace.json');
+      await libraryGenerator(tree, {
+        name: 'myLib',
+        buildable: true,
+        js: true,
+      } as Schema);
+      const workspaceJson = readJson(tree, '/workspace.json');
 
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
 
@@ -515,11 +437,11 @@ describe('lib', () => {
     });
 
     it('should generate js files for nested libs as well', async () => {
-      const tree = await runSchematic(
-        'lib',
-        { name: 'myLib', directory: 'myDir', js: true } as Schema,
-        appTree
-      );
+      await libraryGenerator(tree, {
+        name: 'myLib',
+        directory: 'myDir',
+        js: true,
+      } as Schema);
       expect(tree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.js')).toBeTruthy();
       expect(
@@ -533,21 +455,20 @@ describe('lib', () => {
 
   describe('--pascalCaseFiles', () => {
     it('should generate files with upper case names', async () => {
-      const tree = await runSchematic(
-        'lib',
-        { name: 'myLib', pascalCaseFiles: true } as Schema,
-        appTree
-      );
+      await libraryGenerator(tree, {
+        name: 'myLib',
+        pascalCaseFiles: true,
+      } as Schema);
       expect(tree.exists('libs/my-lib/src/lib/MyLib.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/MyLib.spec.ts')).toBeTruthy();
     });
 
     it('should generate files with upper case names for nested libs as well', async () => {
-      const tree = await runSchematic(
-        'lib',
-        { name: 'myLib', directory: 'myDir', pascalCaseFiles: true } as Schema,
-        appTree
-      );
+      await libraryGenerator(tree, {
+        name: 'myLib',
+        directory: 'myDir',
+        pascalCaseFiles: true,
+      } as Schema);
       expect(
         tree.exists('libs/my-dir/my-lib/src/lib/MyDirMyLib.ts')
       ).toBeTruthy();

@@ -71,7 +71,7 @@
     },
     "node": {
       "tags": [],
-      "implicitDependencies": ["workspace", "jest"]
+      "implicitDependencies": ["workspace", "jest", "linter"]
     },
     "next": {
       "tags": [],

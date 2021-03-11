@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
   "id": "NxNodeLibrary",
   "title": "Create a Node Library for Nx",
   "type": "object",
