@@ -1,19 +1,31 @@
 #!/usr/bin/env node
 
-import { output } from '@nrwl/workspace/src/utilities/output';
-import { unparse } from '@nrwl/workspace/src/tasks-runner/utils';
-import { Schema, Preset } from '@nrwl/workspace/src/generators/new/new';
-import {
-  getPackageManagerCommand,
-  getPackageManagerVersion,
-} from '@nrwl/tao/src/shared/package-manager';
 import { execSync } from 'child_process';
 import { writeFileSync } from 'fs';
 import * as inquirer from 'inquirer';
 import * as path from 'path';
 import { dirSync } from 'tmp';
 import * as yargsParser from 'yargs-parser';
-import { showNxWarning } from './shared';
+import { showNxWarning, unparse } from './shared';
+import { output } from './output';
+import {
+  getPackageManagerCommand,
+  getPackageManagerVersion,
+} from './package-manager';
+
+export enum Preset {
+  Empty = 'empty',
+  OSS = 'oss',
+  WebComponents = 'web-components',
+  Angular = 'angular',
+  AngularWithNest = 'angular-nest',
+  React = 'react',
+  ReactWithExpress = 'react-express',
+  NextJs = 'next',
+  Gatsby = 'gatsby',
+  Nest = 'nest',
+  Express = 'express',
+}
 
 const presetOptions: { value: Preset; name: string }[] = [
   {
@@ -73,12 +85,7 @@ const cliVersion = 'NX_VERSION';
 const nxVersion = 'NX_VERSION';
 const prettierVersion = 'PRETTIER_VERSION';
 
-interface WorkspaceArgs extends Schema {
-  _?: string[];
-  help?: boolean;
-}
-
-const parsedArgs: WorkspaceArgs = yargsParser(process.argv.slice(2), {
+const parsedArgs: any = yargsParser(process.argv.slice(2), {
   string: [
     'cli',
     'preset',
@@ -168,7 +175,7 @@ function showHelp() {
 `);
 }
 
-function determineWorkspaceName(parsedArgs: WorkspaceArgs): Promise<string> {
+function determineWorkspaceName(parsedArgs: any): Promise<string> {
   const workspaceName: string = parsedArgs._[0];
 
   if (workspaceName) {
@@ -195,7 +202,7 @@ function determineWorkspaceName(parsedArgs: WorkspaceArgs): Promise<string> {
     });
 }
 
-function determinePreset(parsedArgs: WorkspaceArgs): Promise<Preset> {
+function determinePreset(parsedArgs: any): Promise<Preset> {
   if (parsedArgs.preset) {
     if (Object.values(Preset).indexOf(parsedArgs.preset) === -1) {
       output.error({
@@ -225,10 +232,7 @@ function determinePreset(parsedArgs: WorkspaceArgs): Promise<Preset> {
     .then((a: { Preset: Preset }) => a.Preset);
 }
 
-function determineAppName(
-  preset: Preset,
-  parsedArgs: WorkspaceArgs
-): Promise<string> {
+function determineAppName(preset: Preset, parsedArgs: any): Promise<string> {
   if (preset === Preset.Empty || preset === Preset.OSS) {
     return Promise.resolve('');
   }
@@ -259,7 +263,7 @@ function determineAppName(
 
 function determineCli(
   preset: Preset,
-  parsedArgs: WorkspaceArgs
+  parsedArgs: any
 ): Promise<'nx' | 'angular'> {
   if (parsedArgs.cli) {
     if (['nx', 'angular'].indexOf(parsedArgs.cli) === -1) {
@@ -283,7 +287,7 @@ function determineCli(
   }
 }
 
-function determineStyle(preset: Preset, parsedArgs: WorkspaceArgs) {
+function determineStyle(preset: Preset, parsedArgs: any) {
   if (
     preset === Preset.Empty ||
     preset === Preset.OSS ||
@@ -371,7 +375,7 @@ function determineStyle(preset: Preset, parsedArgs: WorkspaceArgs) {
   return Promise.resolve(parsedArgs.style);
 }
 
-function determineLinter(preset: Preset, parsedArgs: WorkspaceArgs) {
+function determineLinter(preset: Preset, parsedArgs: any) {
   if (!parsedArgs.linter) {
     if (preset === Preset.Angular || preset === Preset.AngularWithNest) {
       return inquirer
@@ -411,7 +415,13 @@ function determineLinter(preset: Preset, parsedArgs: WorkspaceArgs) {
 }
 
 function createSandbox(packageManager: string) {
-  console.log(`Creating a sandbox with Nx...`);
+  output.log({
+    title: 'Nx is creating your workspace.',
+    bodyLines: [
+      'To make sure the command works reliably in all environments, and that the preset is applied correctly,',
+      `Nx will run "${packageManager} install" several times. Please wait.`,
+    ],
+  });
   const tmpDir = dirSync().name;
   writeFileSync(
     path.join(tmpDir, 'package.json'),
@@ -434,13 +444,12 @@ function createSandbox(packageManager: string) {
   return tmpDir;
 }
 
-function createApp(tmpDir: string, name: string, parsedArgs: WorkspaceArgs) {
+function createApp(tmpDir: string, name: string, parsedArgs: any) {
   const { _, cli, ...restArgs } = parsedArgs;
   const args = unparse(restArgs).join(' ');
 
   const pmc = getPackageManagerCommand(packageManager);
   const command = `new ${name} ${args} --collection=@nrwl/workspace`;
-  console.log(command);
 
   let nxWorkspaceRoot = `"${process.cwd().replace(/\\/g, '/')}"`;
 
@@ -456,14 +465,27 @@ function createApp(tmpDir: string, name: string, parsedArgs: WorkspaceArgs) {
       nxWorkspaceRoot = `\\"${nxWorkspaceRoot.slice(1, -1)}\\"`;
     }
   }
+  const fullCommand = `${pmc.exec} tao ${command}/collection.json --cli=${cli} --nxWorkspaceRoot=${nxWorkspaceRoot}`;
 
-  execSync(
-    `${pmc.exec} tao ${command}/collection.json --cli=${cli} --nxWorkspaceRoot=${nxWorkspaceRoot}`,
-    {
+  try {
+    execSync(fullCommand, {
+      stdio: ['ignore', 'ignore', 'ignore'],
+      cwd: tmpDir,
+    });
+  } catch (e) {
+    output.error({
+      title:
+        'Something went wrong. Rerunning the command with verbose logging.',
+    });
+    execSync(fullCommand, {
       stdio: [0, 1, 2],
       cwd: tmpDir,
-    }
-  );
+    });
+  }
+
+  output.success({
+    title: 'Nx has successfully created the workspace.',
+  });
 
   if (parsedArgs.nxCloud) {
     output.addVerticalSeparator();
@@ -474,7 +496,7 @@ function createApp(tmpDir: string, name: string, parsedArgs: WorkspaceArgs) {
   }
 }
 
-async function askAboutNxCloud(parsedArgs: WorkspaceArgs) {
+async function askAboutNxCloud(parsedArgs: any) {
   if (parsedArgs.nxCloud === undefined) {
     return inquirer
       .prompt([
