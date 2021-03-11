@@ -3,6 +3,7 @@ import { installedCypressVersion } from '../../utils/cypress-version';
 import {
   ExecutorContext,
   logger,
+  parseTargetString,
   runExecutor,
   stripIndents,
 } from '@nrwl/devkit';
@@ -110,7 +111,11 @@ async function* startDevServer(
     return;
   }
 
-  const [project, target, configuration] = opts.devServerTarget.split(':');
+  console.log('VALUE....', parseTargetString(opts.devServerTarget));
+
+  const { project, target, configuration } = parseTargetString(
+    opts.devServerTarget
+  );
   for await (const output of await runExecutor<{
     success: boolean;
     baseUrl?: string;

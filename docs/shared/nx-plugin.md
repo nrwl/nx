@@ -18,6 +18,8 @@ npx create-nx-plugin my-org --pluginName my-plugin
 
 This command creates a brand new workspace, and sets up a pre-configured plugin with the specified name.
 
+> Note, the command above will create a plugin the package name set to `@my-org/my-plugin`. You can pass `--importPath` to provide a different package name.
+
 ## Workspace Structure
 
 After executing the above command, the following tree structure is created:
@@ -75,7 +77,7 @@ A new plugin is created with a default generator, executor, and e2e app.
 
 ## Generator
 
-The generated generator contains boilerplate that will do the following:
+The created generator contains boilerplate that will do the following:
 
 - Normalize a schema (the options that the generator accepts)
 - Update the `workspace.json`
