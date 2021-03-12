@@ -463,6 +463,7 @@ export class ProjectConverter {
             delete collectionConfig[generatorName];
             continue;
           }
+
           for (const optionName of Object.keys(generatorConfig)) {
             if (optionName === 'linter') {
               // Default is eslint, so in all cases we can just remove the config altogether
@@ -473,14 +474,13 @@ export class ProjectConverter {
           if (Object.keys(generatorConfig).length === 0) {
             delete collectionConfig[generatorName];
           }
-          // If removing the generator leaves no other generators in the config, remove the config as well
-          if (Object.keys(generatorConfig).length === 0) {
-            delete parentConfig.generators[collectionName];
-          }
         }
 
-        // If removing the defaults from the collection leaves absolutely no generators configuration remaining, remove it
-        if (Object.keys(parentConfig.generators[collectionName]).length === 0) {
+        // If removing the generator leaves no other generators in the config, remove the config as well
+        if (
+          parentConfig.generators[collectionName] &&
+          Object.keys(parentConfig.generators[collectionName]).length === 0
+        ) {
           delete parentConfig.generators[collectionName];
         }
       }
