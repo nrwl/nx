@@ -105,17 +105,20 @@ async function runTest() {
       console.log('No tests to run');
     } else if (selectedProjects) {
       execSync(
-        `yarn nx run-many --target=e2e --projects=${selectedProjects} ${testNamePattern}`,
+        `node -max-old-space-size=4096 ./node_modules/.bin/nx run-many --target=e2e --projects=${selectedProjects} ${testNamePattern}`,
         {
           stdio: [0, 1, 2],
           env: { ...process.env, NX_TERMINAL_CAPTURE_STDERR: 'true' },
         }
       );
     } else {
-      execSync(`yarn nx run-many --target=e2e --all`, {
-        stdio: [0, 1, 2],
-        env: { ...process.env, NX_TERMINAL_CAPTURE_STDERR: 'true' },
-      });
+      execSync(
+        `node -max-old-space-size=4096 ./node_modules/.bin/nx run-many --target=e2e --all`,
+        {
+          stdio: [0, 1, 2],
+          env: { ...process.env, NX_TERMINAL_CAPTURE_STDERR: 'true' },
+        }
+      );
     }
     cleanUp(0);
   } catch (e) {
