@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.io/license
  */
 import * as path from 'path';
-import { Compiler, compilation } from 'webpack';
+import { Compiler, Compilation } from 'webpack';
 import { RawSource } from 'webpack-sources';
 import {
   CrossOriginValue,
@@ -31,7 +31,7 @@ export interface IndexHtmlWebpackPluginOptions {
 
 function readFile(
   filename: string,
-  compilation: compilation.Compilation
+  compilation: Compilation
 ): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     compilation.inputFileSystem.readFile(
@@ -98,8 +98,11 @@ export class IndexHtmlWebpackPlugin {
           }
         }
 
+        // TODO:  the source() method can return a Buffer.
+        //  This fails to handle that case
         const loadOutputFile = (name: string) =>
-          compilation.assets[name].source();
+          compilation.assets[name].source() as string; // This will break if Buffer  _generateSriAttributes  in augment-index.html.ts
+
         let indexSource = await augmentIndexHtml({
           input: this._options.input,
           inputContent,
@@ -119,7 +122,7 @@ export class IndexHtmlWebpackPlugin {
         }
 
         // Add to compilation assets
-        compilation.assets[this._options.output] = new RawSource(indexSource);
+        compilation.assets[this._options.output] = new RawSource(indexSource) as never;  //TODO This is a hack as RawSource lacks Buffer, which is now in the webpack Source object
       }
     );
   }

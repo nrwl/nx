@@ -1,5 +1,10 @@
 import * as webpack from 'webpack';
-import { Configuration, ProgressPlugin, Stats } from 'webpack';
+import {
+  Configuration,
+  ProgressPlugin,
+  Stats,
+  WebpackPluginInstance,
+} from 'webpack';
 
 import * as ts from 'typescript';
 
@@ -55,7 +60,7 @@ export function getBaseWebpackPartial(
           configFile: options.tsConfig,
           extensions,
           mainFields,
-        }),
+        }) as never,
       ],
       mainFields,
     },
@@ -64,12 +69,11 @@ export function getBaseWebpackPartial(
     },
     plugins: [
       new ForkTsCheckerWebpackPlugin({
-        tsconfig: options.tsConfig,
-        memoryLimit:
-          options.memoryLimit ||
-          ForkTsCheckerWebpackPlugin.DEFAULT_MEMORY_LIMIT,
-        workers: options.maxWorkers || ForkTsCheckerWebpackPlugin.TWO_CPUS_FREE,
-        useTypescriptIncrementalApi: false,
+        typescript: {
+          enabled: true,
+          configFile: options.tsConfig,
+          memoryLimit: options.memoryLimit || 2018,
+        },
       }),
     ],
     watch: options.watch,
@@ -79,7 +83,7 @@ export function getBaseWebpackPartial(
     stats: getStatsConfig(options),
   };
 
-  const extraPlugins: webpack.Plugin[] = [];
+  const extraPlugins: WebpackPluginInstance[] = [];
 
   if (options.progress) {
     extraPlugins.push(new ProgressPlugin());
@@ -93,7 +97,7 @@ export function getBaseWebpackPartial(
         },
         perChunkOutput: false,
         outputFilename: `3rdpartylicenses.txt`,
-      }) as unknown) as webpack.Plugin
+      }) as unknown) as WebpackPluginInstance
     );
   }
 
@@ -144,7 +148,10 @@ function getAliases(options: BuildBuilderOptions): { [key: string]: string } {
   );
 }
 
-function getStatsConfig(options: BuildBuilderOptions): Stats.ToStringOptions {
+// TODO  Update the typing with new version of webpack
+// The StatsOptions type needs to be exported from webpack
+// PR: https://github.com/webpack/webpack/pull/12875
+function getStatsConfig(options: BuildBuilderOptions): unknown {
   return {
     hash: true,
     timings: false,

@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { WebDevServerOptions } from '../builders/dev-server/dev-server.impl';
 import { join } from 'path';
+import * as devServerHelpers from './devserver.config-helper';
 
 jest.mock('tsconfig-paths-webpack-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
@@ -367,12 +368,11 @@ describe('getDevServerConfig', () => {
       });
 
       it('should configure it with the key and cert provided when on', () => {
-        spyOn(fs, 'readFileSync').and.callFake((path) => {
-          if (path.endsWith('ssl.key')) {
-            return 'sslKeyContents';
-          } else if (path.endsWith('ssl.cert')) {
-            return 'sslCertContents';
-          }
+        spyOn(devServerHelpers, 'getSslConfig').and.callFake(() => {
+          return {
+            key: 'sslKeyContents',
+            cert: 'sslCertContents',
+          };
         });
 
         const { devServer: result } = getDevServerConfig(
@@ -462,21 +462,21 @@ describe('getDevServerConfig', () => {
         expect(result.allowedHosts).toEqual([]);
       });
 
-      describe('the max workers option', () => {
-        it('should set the maximum workers for the type checker', () => {
-          const result = getDevServerConfig(
-            root,
-            sourceRoot,
-            { ...buildInput, maxWorkers: 1 },
-            serveInput
-          ) as any;
-
-          const typeCheckerPlugin = result.plugins.find(
-            (plugin) => plugin instanceof ForkTsCheckerWebpackPlugin
-          ) as ForkTsCheckerWebpackPlugin;
-          expect(typeCheckerPlugin.options.workers).toEqual(1);
-        });
-      });
+      // describe('the max workers option', () => {
+      //   it('should set the maximum workers for the type checker', () => {
+      //     const result = getDevServerConfig(
+      //       root,
+      //       sourceRoot,
+      //       { ...buildInput, maxWorkers: 1 },
+      //       serveInput
+      //     ) as any;
+      //
+      //     const typeCheckerPlugin = result.plugins.find(
+      //       (plugin) => plugin instanceof ForkTsCheckerWebpackPlugin
+      //     ) as ForkTsCheckerWebpackPlugin;
+      //     expect(typeCheckerPlugin.options.workers).toEqual(1);
+      //   });
+      // });
 
       describe('the memory limit option', () => {
         it('should set the memory limit for the type checker', () => {
@@ -490,7 +490,14 @@ describe('getDevServerConfig', () => {
           const typeCheckerPlugin = result.plugins.find(
             (plugin) => plugin instanceof ForkTsCheckerWebpackPlugin
           ) as ForkTsCheckerWebpackPlugin;
-          expect(typeCheckerPlugin.options.memoryLimit).toEqual(1024);
+          // TODO Options is a private variable (why test if the plugin works?)
+          //   Consider a mock of ForkTsCheckerWebpackPlugin to test setting of options
+          const {
+            options: {
+              typescript: { memoryLimit },
+            },
+          } = typeCheckerPlugin as never;
+          expect(memoryLimit).toEqual(1024);
         });
       });
     });

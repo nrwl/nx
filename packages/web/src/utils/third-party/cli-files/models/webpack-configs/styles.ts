@@ -8,6 +8,7 @@
 
 import * as path from 'path';
 import * as webpack from 'webpack';
+import {  } from 'webpack';
 import {
   PostcssCliResources,
   RawCssLoader,
@@ -47,7 +48,8 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
   const hashFormat = getOutputHashFormat(buildOptions.outputHashing as string);
 
   const postcssOptionsCreator = (sourceMap: boolean) => {
-    return (loader: webpack.loader.LoaderContext) => ({
+    // TODO LoaderContext is no longer an exported type, or any type...
+    return (loader) => ({
       map: sourceMap && {
         inline: true,
         annotation: false,
@@ -221,7 +223,7 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
           },
         },
       },
-      ...(use as webpack.Loader[]),
+      ...(use as never[]),
     ],
   }));
 
@@ -246,7 +248,7 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
                 postcssOptions: postcssOptionsCreator(globalSourceMap),
               },
             },
-            ...(use as webpack.Loader[]),
+            ...(use as never[]),
           ],
         };
       })

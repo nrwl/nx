@@ -1,4 +1,4 @@
-import * as mergeWebpack from 'webpack-merge';
+import { merge } from 'webpack-merge';
 // TODO @FrozenPandaz we should remove the following imports
 import { getBrowserConfig } from './third-party/cli-files/models/webpack-configs/browser';
 import { getCommonConfig } from './third-party/cli-files/models/webpack-configs/common';
@@ -33,7 +33,6 @@ export function getWebConfig(
     // We want to force the target if overriden
     tsConfig.options.target = ScriptTarget.ES5;
   }
-
   const wco: any = {
     root,
     projectRoot: resolve(root, sourceRoot),
@@ -43,7 +42,7 @@ export function getWebConfig(
     tsConfig,
     tsConfigPath: options.tsConfig,
   };
-  return mergeWebpack([
+  return merge([
     _getBaseWebpackPartial(
       options,
       esm,

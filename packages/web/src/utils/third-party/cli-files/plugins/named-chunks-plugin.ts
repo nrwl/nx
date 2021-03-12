@@ -10,7 +10,7 @@ import { Compiler } from 'webpack';
 // There doesn't seem to exist any ergonomic way to alter chunk names for non-context lazy chunks
 // (https://github.com/webpack/webpack/issues/9075) so this is the best alternative for now.
 const ImportDependency = require('webpack/lib/dependencies/ImportDependency');
-const ImportDependenciesBlock = require('webpack/lib/dependencies/ImportDependenciesBlock');
+const AsyncDependenciesBlock = require('webpack/lib/AsyncDependenciesBlock');
 const Template = require('webpack/lib/Template');
 
 export class NamedLazyChunksPlugin {
@@ -28,7 +28,7 @@ export class NamedLazyChunksPlugin {
             if (
               // Check this dependency is from an `import()` statement.
               dependency instanceof ImportDependency &&
-              dependency.block instanceof ImportDependenciesBlock &&
+              dependency.block instanceof AsyncDependenciesBlock &&
               // Don't rename chunks that already have a name.
               dependency.block.chunkName === null
             ) {

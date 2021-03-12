@@ -1,7 +1,6 @@
 import { BuilderContext, createBuilder } from '@angular-devkit/architect';
 import { JsonObject, normalize, workspaces } from '@angular-devkit/core';
 import { BuildResult, runWebpack } from '@angular-devkit/build-webpack';
-
 import { from, Observable } from 'rxjs';
 import { join, resolve } from 'path';
 import { concatMap, map, tap } from 'rxjs/operators';
@@ -79,7 +78,8 @@ function run(
       return config;
     }),
     concatMap((config) =>
-      runWebpack(config, context, {
+      // TODO  Likely @anguar-devkit needs to update typings for webpack 5
+      runWebpack(config, (context as never), {
         logging: (stats) => {
           context.logger.info(stats.toString(config.stats));
         },

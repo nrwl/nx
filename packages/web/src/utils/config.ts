@@ -1,5 +1,5 @@
 import * as webpack from 'webpack';
-import { Configuration, ProgressPlugin, Stats } from 'webpack';
+import { Configuration, ProgressPlugin, WebpackPluginInstance } from 'webpack';
 import { join, resolve } from 'path';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
@@ -15,6 +15,8 @@ const IGNORED_WEBPACK_WARNINGS = [
   /The comment file/i,
   /could not find any license/i,
 ];
+
+export const DEFAULT_MEMORY_LIMIT = 2048;
 
 export function getBaseWebpackPartial(
   options: BuildBuilderOptions,
@@ -69,11 +71,13 @@ export function getBaseWebpackPartial(
       extensions,
       alias: getAliases(options),
       plugins: [
+        // TODO  Remove the never type when module is updated
+        // PR opened for the proper typing here; https://github.com/dividab/tsconfig-paths-webpack-plugin/pull/66
         new TsconfigPathsPlugin({
           configFile: options.tsConfig,
           extensions,
           mainFields,
-        }),
+        }) as never,
       ],
       // Search closest node_modules first, and then fallback to to default node module resolution scheme.
       // This ensures we are pulling the correct versions of dependencies, such as `core-js`.
@@ -98,17 +102,17 @@ export function getBaseWebpackPartial(
     };
   }
 
-  const extraPlugins: webpack.Plugin[] = [];
+  const extraPlugins: WebpackPluginInstance[] = [];
 
+  // TODO Find out what happened to workers in the settings
   if (esm) {
     extraPlugins.push(
       new ForkTsCheckerWebpackPlugin({
-        tsconfig: options.tsConfig,
-        memoryLimit:
-          options.memoryLimit ||
-          ForkTsCheckerWebpackPlugin.DEFAULT_MEMORY_LIMIT,
-        workers: options.maxWorkers || ForkTsCheckerWebpackPlugin.TWO_CPUS_FREE,
-        useTypescriptIncrementalApi: false,
+        typescript: {
+          enabled: true,
+          configFile: options.tsConfig,
+          memoryLimit: options.memoryLimit || 2048,
+        },
       })
     );
   }
@@ -117,6 +121,7 @@ export function getBaseWebpackPartial(
     extraPlugins.push(new ProgressPlugin());
   }
 
+  // TODO  LicenseWebpackPlugin needs a PR for proper typing
   if (options.extractLicenses) {
     extraPlugins.push(
       (new LicenseWebpackPlugin({
@@ -125,7 +130,7 @@ export function getBaseWebpackPartial(
         },
         perChunkOutput: false,
         outputFilename: `3rdpartylicenses.txt`,
-      }) as unknown) as webpack.Plugin
+      }) as unknown) as WebpackPluginInstance
     );
   }
 
@@ -156,14 +161,13 @@ function getAliases(options: BuildBuilderOptions): { [key: string]: string } {
   );
 }
 
+// TODO  Sourcemap and cache options have been removed from plugin.
+//  Investigate what this mgiht change in the build process
 export function createTerserPlugin(esm: boolean, sourceMap: boolean) {
   return new TerserWebpackPlugin({
     parallel: true,
-    cache: true,
-    sourceMap,
     terserOptions: {
       ecma: esm ? 8 : 5,
-      // Don't remove safari 10 workaround for ES modules
       safari10: true,
       output: {
         ascii_only: true,
@@ -174,7 +178,10 @@ export function createTerserPlugin(esm: boolean, sourceMap: boolean) {
   });
 }
 
-function getStatsConfig(options: BuildBuilderOptions): Stats.ToStringOptions {
+// TODO  Update the typing with new version of webpack
+// The StatsOptions type needs to be exported from webpack
+// PR: https://github.com/webpack/webpack/pull/12875
+function getStatsConfig(options: BuildBuilderOptions): unknown {
   return {
     hash: true,
     timings: false,

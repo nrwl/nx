@@ -8,7 +8,7 @@ import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 jest.mock('tsconfig-paths-webpack-plugin');
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
-import { ProgressPlugin } from 'webpack';
+import { ProgressPlugin, RuleSetRule } from 'webpack';
 import { BuildBuilderOptions } from './types';
 
 describe('getBaseWebpackPartial', () => {
@@ -44,8 +44,8 @@ describe('getBaseWebpackPartial', () => {
       const result = getBaseWebpackPartial(input);
 
       const typescriptRule = result.module.rules.find((rule) =>
-        (rule.test as RegExp).test('app/main.ts')
-      );
+        ((rule as RuleSetRule).test as RegExp).test('app/main.ts')
+      ) as RuleSetRule;
       expect(typescriptRule).toBeTruthy();
 
       expect(typescriptRule.loader).toContain('ts-loader');
@@ -132,9 +132,9 @@ describe('getBaseWebpackPartial', () => {
       const result = getBaseWebpackPartial(input);
 
       expect(
-        result.module.rules.find((rule) =>
-          rule.loader.toString().includes('ts-loader')
-        ).options
+        (result.module.rules.find((rule) =>
+          (rule as RuleSetRule).loader.toString().includes('ts-loader')
+        ) as RuleSetRule).options
       ).toEqual({
         configFile: 'tsconfig.json',
         transpileOnly: true,
@@ -148,7 +148,14 @@ describe('getBaseWebpackPartial', () => {
       const typeCheckerPlugin = result.plugins.find(
         (plugin) => plugin instanceof ForkTsCheckerWebpackPlugin
       ) as ForkTsCheckerWebpackPlugin;
-      expect(typeCheckerPlugin.options.tsconfig).toBe('tsconfig.json');
+      // TODO Options is a private variable (why test if the plugin works?)
+      //   Consider a mock of ForkTsCheckerWebpackPlugin to test setting of options
+      const {
+        options: {
+          typescript: { configFile },
+        },
+      } = typeCheckerPlugin as never;
+      expect(configFile).toBe('tsconfig.json');
     });
 
     it('should add the TsConfigPathsPlugin for resolving', () => {
@@ -264,19 +271,20 @@ describe('getBaseWebpackPartial', () => {
     });
   });
 
-  describe('the max workers option', () => {
-    it('should set the maximum workers for the type checker', () => {
-      const result = getBaseWebpackPartial({
-        ...input,
-        maxWorkers: 1,
-      });
-
-      const typeCheckerPlugin = result.plugins.find(
-        (plugin) => plugin instanceof ForkTsCheckerWebpackPlugin
-      ) as ForkTsCheckerWebpackPlugin;
-      expect(typeCheckerPlugin.options.workers).toEqual(1);
-    });
-  });
+  // There are mo more workers
+  // describe('the max workers option', () => {
+  //   it('should set the maximum workers for the type checker', () => {
+  //     const result = getBaseWebpackPartial({
+  //       ...input,
+  //       maxWorkers: 1,
+  //     });
+  //
+  //     const typeCheckerPlugin = result.plugins.find(
+  //       (plugin) => plugin instanceof ForkTsCheckerWebpackPlugin
+  //     ) as ForkTsCheckerWebpackPlugin;
+  //     expect(typeCheckerPlugin.options.workers).toEqual(1);
+  //   });
+  // });
 
   describe('the memory limit option', () => {
     it('should set the memory limit for the type checker', () => {
@@ -288,7 +296,14 @@ describe('getBaseWebpackPartial', () => {
       const typeCheckerPlugin = result.plugins.find(
         (plugin) => plugin instanceof ForkTsCheckerWebpackPlugin
       ) as ForkTsCheckerWebpackPlugin;
-      expect(typeCheckerPlugin.options.memoryLimit).toEqual(512);
+      // TODO Options is a private variable (why test if the plugin works?)
+      //   Consider a mock of ForkTsCheckerWebpackPlugin to test setting of options
+      const {
+        options: {
+          typescript: { memoryLimit },
+        },
+      } = typeCheckerPlugin as never;
+      expect(memoryLimit).toEqual(512);
     });
   });
 

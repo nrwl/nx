@@ -3,7 +3,6 @@ import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-serv
 
 import * as opn from 'opn';
 import * as url from 'url';
-import { readFileSync } from 'fs';
 import * as path from 'path';
 
 import { getWebConfig } from './web.config';
@@ -12,26 +11,31 @@ import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { WebDevServerOptions } from '../builders/dev-server/dev-server.impl';
 import { buildServePath } from './serve-path';
 import { OptimizationOptions } from './types';
+import {
+  getProxyConfig,
+  getSslConfig,
+} from '@nrwl/web/src/utils/devserver.config-helper';
 
 export function getDevServerConfig(
   root: string,
   sourceRoot: string,
   buildOptions: WebBuildBuilderOptions,
   serveOptions: WebDevServerOptions
-) {
-  const webpackConfig: Configuration = getWebConfig(
+): WebpackDevServerConfiguration & Configuration {
+  const webpackConfig: WebpackDevServerConfiguration &
+    Configuration = getWebConfig(
     root,
     sourceRoot,
     buildOptions,
     true, // Don't need to support legacy browsers for dev.
     false
   );
-  (webpackConfig as any).devServer = getDevServerPartial(
+
+  webpackConfig.devServer = getDevServerPartial(
     root,
     serveOptions,
     buildOptions
   );
-
   return webpackConfig;
 }
 
@@ -103,16 +107,4 @@ function getDevServerPartial(
   }
 
   return config;
-}
-
-function getSslConfig(root: string, options: WebDevServerOptions) {
-  return {
-    key: readFileSync(path.resolve(root, options.sslKey), 'utf-8'),
-    cert: readFileSync(path.resolve(root, options.sslCert), 'utf-8'),
-  };
-}
-
-function getProxyConfig(root: string, options: WebDevServerOptions) {
-  const proxyPath = path.resolve(root, options.proxyConfig as string);
-  return require(proxyPath);
 }

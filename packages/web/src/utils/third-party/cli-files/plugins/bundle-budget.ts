@@ -5,7 +5,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-import { Compiler, compilation } from 'webpack';
+import { Compiler, Compilation, WebpackError } from 'webpack';
 import { Budget, Type } from '../../browser/schema';
 import {
   Size,
@@ -41,7 +41,7 @@ export class BundleBudgetPlugin {
 
     compiler.hooks.compilation.tap(
       'BundleBudgetPlugin',
-      (compilation: compilation.Compilation) => {
+      (compilation) => {
         compilation.hooks.afterOptimizeChunkAssets.tap(
           'BundleBudgetPlugin',
           () => {
@@ -64,7 +64,7 @@ export class BundleBudgetPlugin {
 
     compiler.hooks.afterEmit.tap(
       'BundleBudgetPlugin',
-      (compilation: compilation.Compilation) => {
+      (compilation) => {
         const filteredBudgets = budgets.filter(
           (budget) => budget.type !== Type.AnyComponentStyle
         );
@@ -76,16 +76,16 @@ export class BundleBudgetPlugin {
   private checkMinimum(
     threshold: number | undefined,
     size: Size,
-    messages: string[]
+    messages: WebpackError[]
   ) {
     if (threshold) {
       if (threshold > size.size) {
         const sizeDifference = formatSize(threshold - size.size);
         messages.push(
-          `budgets, minimum exceeded for ${size.label}. ` +
+          new WebpackError(`budgets, minimum exceeded for ${size.label}. ` +
             `Budget ${formatSize(
               threshold
-            )} was not reached by ${sizeDifference}.`
+            )} was not reached by ${sizeDifference}.`)
         );
       }
     }
@@ -94,14 +94,14 @@ export class BundleBudgetPlugin {
   private checkMaximum(
     threshold: number | undefined,
     size: Size,
-    messages: string[]
+    messages: WebpackError[]
   ) {
     if (threshold) {
       if (threshold < size.size) {
         const sizeDifference = formatSize(size.size - threshold);
         messages.push(
-          `budgets, maximum exceeded for ${size.label}. ` +
-            `Budget ${formatSize(threshold)} was exceeded by ${sizeDifference}.`
+          new WebpackError(`budgets, maximum exceeded for ${size.label}. ` +
+            `Budget ${formatSize(threshold)} was exceeded by ${sizeDifference}.`)
         );
       }
     }
@@ -168,7 +168,7 @@ export class BundleBudgetPlugin {
     return thresholds;
   }
 
-  private runChecks(budgets: Budget[], compilation: compilation.Compilation) {
+  private runChecks(budgets: Budget[], compilation: Compilation) {
     budgets
       .map((budget) => ({
         budget,

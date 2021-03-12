@@ -1,6 +1,6 @@
 import { getWebConfig as getWebPartial } from './web.config';
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
-import { createConsoleLogger } from '@angular-devkit/core/node';
+import { EntryObject } from 'webpack';
 import * as ts from 'typescript';
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { join } from 'path';
@@ -74,7 +74,8 @@ describe('getWebConfig', () => {
           false,
           false
         );
-        expect(result.entry.polyfills).toEqual(['polyfills.ts']);
+        const { polyfills } = result.entry as EntryObject;
+        expect(polyfills).toEqual(['polyfills.ts']);
       });
     });
 
@@ -108,7 +109,10 @@ describe('getWebConfig', () => {
           true,
           true
         );
-        expect(es2015Config.entry.polyfills).toContain('polyfills.ts');
+        const {
+          polyfills: es2015Polyfills,
+        } = es2015Config.entry as EntryObject;
+        expect(es2015Polyfills).toContain('polyfills.ts');
         const es5Config = getWebPartial(
           root,
           sourceRoot,
@@ -119,7 +123,8 @@ describe('getWebConfig', () => {
           false,
           true
         );
-        expect(es5Config.entry.polyfills).toContain('polyfills.ts');
+        const { polyfills } = es5Config.entry as EntryObject;
+        expect(polyfills).toContain('polyfills.ts');
       });
     });
 
@@ -136,7 +141,8 @@ describe('getWebConfig', () => {
           false,
           true
         );
-        expect(es5Config.entry.polyfills).toContain('polyfills.es2015.ts');
+        const { polyfills } = es5Config.entry as EntryObject;
+        expect(polyfills).toContain('polyfills.es2015.ts');
       });
     });
 
@@ -152,7 +158,8 @@ describe('getWebConfig', () => {
           true,
           true
         );
-        expect(es2015Config.entry.polyfills).toContain(
+        const { polyfills } = es2015Config.entry as EntryObject;
+        expect(polyfills).toContain(
           require.resolve(
             '@nrwl/web/src/utils/third-party/cli-files/models/safari-nomodule.js'
           )

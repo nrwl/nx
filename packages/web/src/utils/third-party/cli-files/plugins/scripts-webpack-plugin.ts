@@ -15,7 +15,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-import { Compiler, loader } from 'webpack';
+import { Compiler } from 'webpack';
 import {
   CachedSource,
   ConcatSource,
@@ -167,7 +167,7 @@ export class ScriptsWebpackPlugin {
 
           const combinedSource = new CachedSource(concatSource);
           const filename = interpolateName(
-            { resourcePath: 'scripts.js' } as loader.LoaderContext,
+            { resourcePath: 'scripts.js' },
             this.options.filename as string,
             { content: combinedSource.source() }
           );

@@ -8,12 +8,11 @@
 import * as path from 'path';
 import { ScriptTarget } from 'typescript';
 import {
-  compilation,
+  Chunk,
   Compiler,
   Configuration,
   ContextReplacementPlugin,
   debug,
-  HashedModuleIdsPlugin,
 } from 'webpack';
 import { RawSource } from 'webpack-sources';
 import { ExtraEntryPoint } from '../../../browser/schema';
@@ -241,6 +240,7 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
     );
   }
 
+  // TODO Needs source exported from webpack
   if (buildOptions.statsJson) {
     extraPlugins.push(
       new (class {
@@ -251,7 +251,7 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
             );
             compilation.assets[`stats${targetInFileName}.json`] = new RawSource(
               data
-            );
+            ) as never;
           });
         }
       })()
@@ -360,23 +360,27 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
           (differentialLoadingNeeded && fullDifferential)),
     };
 
+    // TODO  This is probably a breaking change.
+    //  There are no more chunkFilters in TerserPlugin
     extraMinimizers.push(
       new TerserPlugin({
-        sourceMap: scriptsSourceMap,
+        // sourceMap: scriptsSourceMap,
         parallel: true,
-        cache: true,
-        chunkFilter: (chunk: compilation.Chunk) =>
-          !globalScriptsByBundleName.some((s) => s.bundleName === chunk.name),
+        // cache: true,
+        // chunkFilter: (chunk: Chunk) =>
+        //   !globalScriptsByBundleName.some((s) => s.bundleName === chunk.name),
         terserOptions,
       }),
       // Script bundles are fully optimized here in one step since they are never downleveled.
       // They are shared between ES2015 & ES5 outputs so must support ES5.
+      // TODO  This is probably a breaking change.
+      //  There are no more chunkFilters in TerserPlugin
       new TerserPlugin({
-        sourceMap: scriptsSourceMap,
+        // sourceMap: scriptsSourceMap,
         parallel: true,
-        cache: true,
-        chunkFilter: (chunk: compilation.Chunk) =>
-          globalScriptsByBundleName.some((s) => s.bundleName === chunk.name),
+        // cache: true,
+        // chunkFilter: (chunk: Chunk) =>
+        //   globalScriptsByBundleName.some((s) => s.bundleName === chunk.name),
         terserOptions: {
           ...terserOptions,
           compress: {
@@ -410,7 +414,7 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
     context: projectRoot,
     entry: entryPoints,
     output: {
-      futureEmitAssets: true,
+      // futureEmitAssets: true,  // TODO  This does not exist on Webpack 5, should be default now
       path: path.resolve(root, buildOptions.outputPath as string),
       publicPath: buildOptions.deployUrl,
       filename: `[name]${targetInFileName}${hashFormat.chunk}.js`,
@@ -456,8 +460,8 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
     },
     optimization: {
       noEmitOnErrors: true,
+      moduleIds: 'deterministic',
       minimizer: [
-        new HashedModuleIdsPlugin(),
         // TODO: check with Mike what this feature needs.
         new BundleBudgetPlugin({ budgets: buildOptions.budgets }),
         ...extraMinimizers,

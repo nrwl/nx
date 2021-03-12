@@ -6,8 +6,9 @@
  * found in the LICENSE file at https://angular.io/license
  */
 import * as CleanCSS from 'clean-css';
-import { Compiler, compilation } from 'webpack';
+import { Compiler, Compilation, Chunk, WebpackError } from 'webpack';
 import { RawSource, Source, SourceMapSource } from 'webpack-sources';
+import { RawSourceMap } from 'source-map';
 
 export interface CleanCssWebpackPluginOptions {
   sourceMap: boolean;
@@ -17,13 +18,13 @@ export interface CleanCssWebpackPluginOptions {
 function hook(
   compiler: Compiler,
   action: (
-    compilation: compilation.Compilation,
-    chunks: compilation.Chunk[]
-  ) => Promise<void | void[]>
+    compilation: Compilation,
+    chunks: Set<Chunk>
+  ) => Promise<void>
 ) {
   compiler.hooks.compilation.tap(
     'cleancss-webpack-plugin',
-    (compilation: compilation.Compilation) => {
+    (compilation) => {
       compilation.hooks.optimizeChunkAssets.tapPromise(
         'cleancss-webpack-plugin',
         (chunks) => action(compilation, chunks)
@@ -32,6 +33,8 @@ function hook(
   );
 }
 
+// TODO This plugin probably doesn't work the same at all in Webpack 5.
+//  What in the world does it even do?
 export class CleanCssWebpackPlugin {
   private readonly _options: CleanCssWebpackPluginOptions;
 
@@ -46,7 +49,7 @@ export class CleanCssWebpackPlugin {
   apply(compiler: Compiler): void {
     hook(
       compiler,
-      (compilation: compilation.Compilation, chunks: compilation.Chunk[]) => {
+      (compilation, chunks):Promise<void> => {
         const cleancss = new CleanCSS({
           compatibility: 'ie9',
           level: {
@@ -65,26 +68,25 @@ export class CleanCssWebpackPlugin {
         const files: string[] = [...compilation.additionalChunkAssets];
 
         chunks.forEach((chunk) => {
-          if (chunk.files && chunk.files.length > 0) {
-            files.push(...chunk.files);
+          if (chunk.files && chunk.files.size > 0) {
+            files.push(...Array.from(chunk.files.values()));
           }
         });
 
         const actions = files
           .filter((file) => this._options.test(file))
           .map(async (file) => {
-            const asset = compilation.assets[file] as Source;
+            const asset = compilation.assets[file];
             if (!asset) {
               return;
             }
 
-            let content: string;
-            // tslint:disable-next-line: no-any
-            let map: any;
+            let content: string | Buffer;
+            let map: RawSourceMap;
             if (this._options.sourceMap && asset.sourceAndMap) {
               const sourceAndMap = asset.sourceAndMap();
               content = sourceAndMap.source;
-              map = sourceAndMap.map;
+              map = sourceAndMap.map as RawSourceMap;
             } else {
               content = asset.source();
             }
@@ -103,7 +105,7 @@ export class CleanCssWebpackPlugin {
 
             if (output.errors && output.errors.length > 0) {
               output.errors.forEach((error: string) =>
-                compilation.errors.push(new Error(error))
+                compilation.errors.push(new WebpackError(error))
               );
 
               return;
@@ -121,7 +123,9 @@ export class CleanCssWebpackPlugin {
                 file,
                 // tslint:disable-next-line: no-any
                 output.sourceMap.toString() as any,
-                content,
+                content as string,
+              // TODO This map is not mapping as expected...
+              // @ts-ignore
                 map
               );
             } else {
@@ -131,7 +135,7 @@ export class CleanCssWebpackPlugin {
             compilation.assets[file] = newSource;
           });
 
-        return Promise.all(actions);
+        return Promise.all(actions).then(() => undefined)
       }
     );
   }
