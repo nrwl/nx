@@ -1994,13 +1994,11 @@
         },
         "test": {
           "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/apps/dep-graph-client"],
           "options": {
             "jestConfig": "apps/dep-graph-client/jest.config.js",
-            "tsConfig": "apps/dep-graph-client/tsconfig.spec.json",
-            "passWithNoTests": true,
-            "setupFile": "apps/dep-graph-client/src/test-setup.ts"
-          },
-          "outputs": ["coverage/apps/dep-graph-client"]
+            "passWithNoTests": true
+          }
         }
       }
     },
