@@ -3273,26 +3273,26 @@
     node-gyp "^6.1.0"
     read-package-json-fast "^1.1.3"
 
-"@nrwl/cli@11.5.0-beta.0":
-  version "11.5.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@nrwl/cli/-/cli-11.5.0-beta.0.tgz#9f86dccf4f925843085ed0b0f6937bca0f765b67"
-  integrity sha512-w1rKfdqc6QbAGe5LO9t96ast8TEBAS8fFPbLhCQi6LeRInHCkKccblLaNvENCmKu1EankBxiiosVLJndUfeeAg==
+"@nrwl/cli@11.5.1":
+  version "11.5.1"
+  resolved "https://registry.yarnpkg.com/@nrwl/cli/-/cli-11.5.1.tgz#6d7ac5d1e8dc7d55baa9790789ce7565206a9e5e"
+  integrity sha512-xQNKOSkqoPUP02/d2k8VOfDwqORFy4abNkdCehlZsxkb0sNCPttuuPSnu0tsVNyblQg62VIz2sPul7KXNpyIsg==
   dependencies:
-    "@nrwl/tao" "11.5.0-beta.0"
+    "@nrwl/tao" "11.5.1"
     chalk "4.1.0"
     tmp "0.0.33"
     yargs "15.4.1"
     yargs-parser "20.0.0"
 
-"@nrwl/cypress@11.5.0-beta.0":
-  version "11.5.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@nrwl/cypress/-/cypress-11.5.0-beta.0.tgz#9dd2cd8c4a1a8efd24d07d401be427f468f5d2e3"
-  integrity sha512-NRywJhjE4A1LMceCvmv/wxW4H1iOjM3AKxtElA/FegZ1z8BcqZvT03fXot5cBqUv4OEND37INLAlr/mieuNdYA==
+"@nrwl/cypress@11.5.1":
+  version "11.5.1"
+  resolved "https://registry.yarnpkg.com/@nrwl/cypress/-/cypress-11.5.1.tgz#e21860d9077a683ec63d1b9e4b6675f04ae3e776"
+  integrity sha512-g245uo3CqCbY/TzhS/pq7C/G1oJUFtNZs/hd11qUMbBLYhy85Gn9abpd7nbWJwnXwf5K9FpUyEYgMVhV1VjFCg==
   dependencies:
     "@cypress/webpack-preprocessor" "~4.1.2"
-    "@nrwl/devkit" "11.5.0-beta.0"
-    "@nrwl/linter" "11.5.0-beta.0"
-    "@nrwl/workspace" "11.5.0-beta.0"
+    "@nrwl/devkit" "11.5.1"
+    "@nrwl/linter" "11.5.1"
+    "@nrwl/workspace" "11.5.1"
     fork-ts-checker-webpack-plugin "^3.1.1"
     fs-extra "7.0.1"
     rxjs "^6.5.4"
@@ -3303,61 +3303,61 @@
     webpack-node-externals "1.7.2"
     yargs-parser "20.0.0"
 
-"@nrwl/devkit@11.5.0-beta.0":
-  version "11.5.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@nrwl/devkit/-/devkit-11.5.0-beta.0.tgz#5ca86a29721829ade1c25e286880fde5d335e8f7"
-  integrity sha512-P8Z51wRIfFrUYyx3UMJoA/ru00HcLRu8YbvKRgvn2CnHN/SoXJJUCht7zpoDhcAxp/KsW1idV5rM2JC9LCp5YA==
+"@nrwl/devkit@11.5.1":
+  version "11.5.1"
+  resolved "https://registry.yarnpkg.com/@nrwl/devkit/-/devkit-11.5.1.tgz#806c0620a1c22fc591c729915105a9860f492087"
+  integrity sha512-AUGAT1LGt1wac6wfQtUPj1GG4b7DA/y1DxjZX3VD7L2hnOlTPfK3xY+1FtKAX3xR//Jvf3K1abPsLL2DnWHhqA==
   dependencies:
-    "@nrwl/tao" "11.5.0-beta.0"
+    "@nrwl/tao" "11.5.1"
     ejs "^3.1.5"
     ignore "^5.0.4"
     semver "6.3.0"
     strip-json-comments "2.0.1"
     tslib "^2.0.0"
 
-"@nrwl/eslint-plugin-nx@11.5.0-beta.0":
-  version "11.5.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@nrwl/eslint-plugin-nx/-/eslint-plugin-nx-11.5.0-beta.0.tgz#e5609687339872ab9864162e3569e722e3090bd6"
-  integrity sha512-g98rmUGeekBK3u3QTNXBS7xitMZL4/XgAhZ57j2RfsKIoBDUlG97H2dgi2LB+YU2b+SBQjtc2UXOIiGxWPolJQ==
+"@nrwl/eslint-plugin-nx@11.5.1":
+  version "11.5.1"
+  resolved "https://registry.yarnpkg.com/@nrwl/eslint-plugin-nx/-/eslint-plugin-nx-11.5.1.tgz#99c99b26784576ed1ed5fef15e27aaa965ac2d2d"
+  integrity sha512-wkPx+e/+0XabPOntBHeVFewYk3siU7sKQCIuNFyG0c4vr3y+Sw+xJLKUmgZ4lUf7PscEtTa7Vb427+4vYu1ZEw==
   dependencies:
-    "@nrwl/devkit" "11.5.0-beta.0"
-    "@nrwl/workspace" "11.5.0-beta.0"
+    "@nrwl/devkit" "11.5.1"
+    "@nrwl/workspace" "11.5.1"
     "@typescript-eslint/experimental-utils" "^4.3.0"
     confusing-browser-globals "^1.0.9"
 
-"@nrwl/jest@11.5.0-beta.0":
-  version "11.5.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@nrwl/jest/-/jest-11.5.0-beta.0.tgz#4698135bd12b177b9724d3f2d3d6d8c9d7afc836"
-  integrity sha512-BgDyjT3W2QaNMSzjZJAWEcloXFavJ/BOMvloDvihKYGCE7N73rBlIUa9/fCNX1PCVnQw0nQwvjT3IpDtz5dk0g==
+"@nrwl/jest@11.5.1":
+  version "11.5.1"
+  resolved "https://registry.yarnpkg.com/@nrwl/jest/-/jest-11.5.1.tgz#12a3b943da47f075b50bf1c6f225d70aed610f02"
+  integrity sha512-9Lwc5F66WeRTADg5Di9HHdTBN97Ti3vlSLhJwwL86CyvBV4syKDa5Z0qc7g0o5+nMNzuDH3dwjARdHgFBUDVow==
   dependencies:
-    "@nrwl/devkit" "11.5.0-beta.0"
+    "@nrwl/devkit" "11.5.1"
     jest-resolve "^26.6.2"
     rxjs "^6.5.4"
     strip-json-comments "2.0.1"
     tslib "^2.0.0"
 
-"@nrwl/linter@11.5.0-beta.0":
-  version "11.5.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@nrwl/linter/-/linter-11.5.0-beta.0.tgz#8aa8a06b36030309e2affd3de249660387ca13a8"
-  integrity sha512-T5idjhVFdoMekfTMZHux9lEX7s2HuTcB18x6wsMiWg+ghafFQkR7aVz0pc1OdYuW2m8jmfioFvpcQJCx7tUERg==
+"@nrwl/linter@11.5.1":
+  version "11.5.1"
+  resolved "https://registry.yarnpkg.com/@nrwl/linter/-/linter-11.5.1.tgz#7d17616c4408769f93ac4ed2a4e377ad372e3f23"
+  integrity sha512-zGZSs9VJF3CIbnaOgTINtHPYhEAHZnhlqK34n5vJu4xEFuus+f9piwQMNXOfm6EqlgLBw+qbtuCbsOTuDRrp3g==
   dependencies:
-    "@nrwl/devkit" "11.5.0-beta.0"
+    "@nrwl/devkit" "11.5.1"
     glob "7.1.4"
     minimatch "3.0.4"
     tslib "^2.0.0"
 
-"@nrwl/node@11.5.0-beta.0":
-  version "11.5.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@nrwl/node/-/node-11.5.0-beta.0.tgz#5db10ce5056037fa3a1843aa6ba8faa4235b2d9d"
-  integrity sha512-LyxAciYZZx/lE/V7gakvESu/7gBVO4ygbjkeEE+Qh9jykguENHoGuDl7yWbBBwwkB4fACFlJJToQsTG0+FFKWg==
+"@nrwl/node@11.5.1":
+  version "11.5.1"
+  resolved "https://registry.yarnpkg.com/@nrwl/node/-/node-11.5.1.tgz#2a34cdbb02f4be4c8edf653a28c2a4e817830f46"
+  integrity sha512-MKhIqxGGWkZzuoPNUTqkCPid/4Brtg1n0xyAKLfHXK0Y+2SwGSJpjbGrbby77TzQ+LV74f4BYpBjyw5Epo/LXA==
   dependencies:
     "@angular-devkit/architect" "~0.1102.0"
     "@angular-devkit/build-webpack" "~0.1102.0"
     "@angular-devkit/core" "~11.2.0"
     "@angular-devkit/schematics" "~11.2.0"
-    "@nrwl/devkit" "11.5.0-beta.0"
-    "@nrwl/jest" "11.5.0-beta.0"
-    "@nrwl/linter" "11.5.0-beta.0"
+    "@nrwl/devkit" "11.5.1"
+    "@nrwl/jest" "11.5.1"
+    "@nrwl/linter" "11.5.1"
     circular-dependency-plugin "5.2.0"
     copy-webpack-plugin "6.0.3"
     fork-ts-checker-webpack-plugin "^3.1.1"
@@ -3375,10 +3375,10 @@
     webpack-merge "4.2.1"
     webpack-node-externals "1.7.2"
 
-"@nrwl/nx-cloud@11.1.4":
-  version "11.1.4"
-  resolved "https://registry.yarnpkg.com/@nrwl/nx-cloud/-/nx-cloud-11.1.4.tgz#b1c4a90714f51d380690d9cbedd365577dc0cc47"
-  integrity sha512-x9CcS3RnYmGrhCMRiDj1Db5WEmHXpZi+/quaZH+wfmwIoh7/ejp/1HqZ178jUS+LTcrHYOIgd+54pOgEg6IcxQ==
+"@nrwl/nx-cloud@11.2.0":
+  version "11.2.0"
+  resolved "https://registry.yarnpkg.com/@nrwl/nx-cloud/-/nx-cloud-11.2.0.tgz#f876dfc4426a4804457d3d31e632335d8366aebf"
+  integrity sha512-aKDAUbhOzPzgayuqQB4jas8FrgXG2jKyJYicBtgnLipRj3HerPpz6ZVIW7SZbqjX5b0700c6lCWCF+A5x4MkWg==
   dependencies:
     axios "^0.21.1"
     chalk "4.1.0"
@@ -3387,10 +3387,10 @@
     tar "5.0.5"
     uuid "^3.3.3"
 
-"@nrwl/tao@11.5.0-beta.0":
-  version "11.5.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@nrwl/tao/-/tao-11.5.0-beta.0.tgz#8689c63fff427eb890bd5847fa1812e000602c6f"
-  integrity sha512-Ur0XJv8bz/g/L4P8NuAY1MasX3ROiuCHISIn92rdZ+sai8wb7iDnaysccadCBYFjPnsURQiWIfgPQ3JtOwOFZA==
+"@nrwl/tao@11.5.1":
+  version "11.5.1"
+  resolved "https://registry.yarnpkg.com/@nrwl/tao/-/tao-11.5.1.tgz#87101395c8fe053572d5e41eacc6bb651039985a"
+  integrity sha512-RXQTVDT699vXaRmz5tIKDG/6gY9FfyxRYqS9wVL9B9Qp9ayIRWs2EfYBLww9Wq4irLmRsO2+UoUOLfk6346V9w==
   dependencies:
     chalk "4.1.0"
     fs-extra "7.0.1"
@@ -3404,10 +3404,10 @@
     tslib "^2.0.0"
     yargs-parser "20.0.0"
 
-"@nrwl/web@11.5.0-beta.0":
-  version "11.5.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@nrwl/web/-/web-11.5.0-beta.0.tgz#f0c518293412103dbd2ab5172375c0ca6ac1e2b7"
-  integrity sha512-CvCSPQCsudEUaS6mZTvAgOzZlw5kDVEsjc0DKT6ea1lE+cKT/EQ7qGdyIGbpPAyhv1SjsjyuQ0fC52ZERSQ4Sg==
+"@nrwl/web@11.5.1":
+  version "11.5.1"
+  resolved "https://registry.yarnpkg.com/@nrwl/web/-/web-11.5.1.tgz#3e3c313eb8caa9d52f5e82aa4906e3a7d8aa9143"
+  integrity sha512-cpPAtjdYuJnk85jM4aneupPQ4l+nZrctK4HBTPbbRIkJ69fRQiu86CyM4GZFjZ0AlK3fo9qWixfNapCAYAEdbA==
   dependencies:
     "@babel/core" "7.9.6"
     "@babel/plugin-proposal-class-properties" "7.8.3"
@@ -3415,18 +3415,18 @@
     "@babel/plugin-transform-regenerator" "7.8.7"
     "@babel/preset-env" "7.9.6"
     "@babel/preset-typescript" "7.10.4"
-    "@nrwl/cypress" "11.5.0-beta.0"
-    "@nrwl/devkit" "11.5.0-beta.0"
-    "@nrwl/jest" "11.5.0-beta.0"
-    "@nrwl/linter" "11.5.0-beta.0"
-    "@nrwl/workspace" "11.5.0-beta.0"
+    "@nrwl/cypress" "11.5.1"
+    "@nrwl/devkit" "11.5.1"
+    "@nrwl/jest" "11.5.1"
+    "@nrwl/linter" "11.5.1"
+    "@nrwl/workspace" "11.5.1"
     "@rollup/plugin-babel" "5.0.2"
     "@rollup/plugin-commonjs" "11.0.2"
     "@rollup/plugin-image" "2.0.4"
     "@rollup/plugin-json" "^4.1.0"
     "@rollup/plugin-node-resolve" "7.1.1"
     ajv "6.10.2"
-    autoprefixer "9.7.4"
+    autoprefixer "^10.2.5"
     babel-loader "8.1.0"
     babel-plugin-const-enum "^1.0.1"
     babel-plugin-macros "^2.8.0"
@@ -3501,15 +3501,15 @@
     webpack-subresource-integrity "^1.5.1"
     worker-plugin "3.2.0"
 
-"@nrwl/workspace@11.5.0-beta.0":
-  version "11.5.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@nrwl/workspace/-/workspace-11.5.0-beta.0.tgz#14cc5ad388301b4461bfc5a8c1481f3da02cf428"
-  integrity sha512-vib9dhyA0ixHvCiLVmIZIDos90LD8w2cLN6tXcNVuRAYWOAGl10QyafHgLGwa7mTzw5jMP3nOHUjNCg4j72qzQ==
+"@nrwl/workspace@11.5.1":
+  version "11.5.1"
+  resolved "https://registry.yarnpkg.com/@nrwl/workspace/-/workspace-11.5.1.tgz#e6f81ef561fe36ba124bf4e058420b6cbe212c49"
+  integrity sha512-bRAK6LsyWjHIhI35yePAjq6FLQgAfAST2vAxelqAfA93Kjm3nrXAcq5eCGAgWvt6S4w27hz4c6NwsV5DDqSmlw==
   dependencies:
-    "@nrwl/cli" "11.5.0-beta.0"
-    "@nrwl/devkit" "11.5.0-beta.0"
-    "@nrwl/jest" "11.5.0-beta.0"
-    "@nrwl/linter" "11.5.0-beta.0"
+    "@nrwl/cli" "11.5.1"
+    "@nrwl/devkit" "11.5.1"
+    "@nrwl/jest" "11.5.1"
+    "@nrwl/linter" "11.5.1"
     axios "0.21.1"
     chalk "4.1.0"
     cosmiconfig "^4.0.0"
@@ -6099,19 +6099,6 @@ autoprefixer@10.2.4:
     normalize-range "^0.1.2"
     postcss-value-parser "^4.1.0"
 
-autoprefixer@9.7.4:
-  version "9.7.4"
-  resolved "https://registry.yarnpkg.com/autoprefixer/-/autoprefixer-9.7.4.tgz#f8bf3e06707d047f0641d87aee8cfb174b2a5378"
-  integrity sha512-g0Ya30YrMBAEZk60lp+qfX5YQllG+S5W3GYCFvyHTvhOki0AEQJLPEcIuGRsqVwLi8FvXPVtwTGhfr38hVpm0g==
-  dependencies:
-    browserslist "^4.8.3"
-    caniuse-lite "^1.0.30001020"
-    chalk "^2.4.2"
-    normalize-range "^0.1.2"
-    num2fraction "^1.2.2"
-    postcss "^7.0.26"
-    postcss-value-parser "^4.0.2"
-
 autoprefixer@^10.2.4, autoprefixer@^10.2.5:
   version "10.2.5"
   resolved "https://registry.yarnpkg.com/autoprefixer/-/autoprefixer-10.2.5.tgz#096a0337dbc96c0873526d7fef5de4428d05382d"
@@ -7410,7 +7397,7 @@ browserslist@^3.2.6:
     caniuse-lite "^1.0.30000844"
     electron-to-chromium "^1.3.47"
 
-browserslist@^4.0.0, browserslist@^4.11.1, browserslist@^4.12.0, browserslist@^4.14.5, browserslist@^4.14.6, browserslist@^4.16.1, browserslist@^4.16.3, browserslist@^4.8.3, browserslist@^4.8.5, browserslist@^4.9.1:
+browserslist@^4.0.0, browserslist@^4.11.1, browserslist@^4.12.0, browserslist@^4.14.5, browserslist@^4.14.6, browserslist@^4.16.1, browserslist@^4.16.3, browserslist@^4.8.5, browserslist@^4.9.1:
   version "4.16.3"
   resolved "https://registry.yarnpkg.com/browserslist/-/browserslist-4.16.3.tgz#340aa46940d7db878748567c5dea24a48ddf3717"
   integrity sha512-vIyhWmIkULaq04Gt93txdh+j02yX/JzlyhLYbV3YQCn/zvES3JnY7TifHHvvr1w5hTDluNKMkV05cs4vy8Q7sw==
@@ -7829,7 +7816,7 @@ caniuse-api@^3.0.0:
     lodash.memoize "^4.1.2"
     lodash.uniq "^4.5.0"
 
-caniuse-lite@^1.0.0, caniuse-lite@^1.0.30000844, caniuse-lite@^1.0.30001020, caniuse-lite@^1.0.30001030, caniuse-lite@^1.0.30001032, caniuse-lite@^1.0.30001035, caniuse-lite@^1.0.30001093, caniuse-lite@^1.0.30001109, caniuse-lite@^1.0.30001113, caniuse-lite@^1.0.30001181, caniuse-lite@^1.0.30001196:
+caniuse-lite@^1.0.0, caniuse-lite@^1.0.30000844, caniuse-lite@^1.0.30001030, caniuse-lite@^1.0.30001032, caniuse-lite@^1.0.30001035, caniuse-lite@^1.0.30001093, caniuse-lite@^1.0.30001109, caniuse-lite@^1.0.30001113, caniuse-lite@^1.0.30001181, caniuse-lite@^1.0.30001196:
   version "1.0.30001197"
   resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001197.tgz#47ad15b977d2f32b3ec2fe2b087e0c50443771db"
   integrity sha512-8aE+sqBqtXz4G8g35Eg/XEaFr2N7rd/VQ6eABGBmNtcB8cN6qNJhMi6oSFy4UWWZgqgL3filHT8Nha4meu3tsw==
