@@ -75,6 +75,31 @@ describe('@nrwl/storybook:configuration', () => {
     ).toBeFalsy();
   });
 
+  it('should not update root files after generating them once', async () => {
+    await configurationGenerator(tree, {
+      name: 'test-ui-lib',
+      uiFramework: '@storybook/angular',
+    });
+
+    const newContents = `module.exports = {
+  stories: [],
+  addons: ['@storybook/addon-knobs/register', 'new-addon'],
+};
+`;
+    // Setup a new lib
+    await libraryGenerator(tree, {
+      name: 'test-ui-lib-2',
+    });
+
+    tree.write('.storybook/main.js', newContents);
+    await configurationGenerator(tree, {
+      name: 'test-ui-lib-2',
+      uiFramework: '@storybook/angular',
+    });
+
+    expect(tree.read('.storybook/main.js').toString()).toEqual(newContents);
+  });
+
   it('should update workspace file', async () => {
     await configurationGenerator(tree, {
       name: 'test-ui-lib',
