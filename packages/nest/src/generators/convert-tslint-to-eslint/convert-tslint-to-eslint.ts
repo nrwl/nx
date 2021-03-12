@@ -5,7 +5,10 @@ import {
   Tree,
 } from '@nrwl/devkit';
 import { ConvertTSLintToESLintSchema, ProjectConverter } from '@nrwl/linter';
-import { addLintingToApplicationGenerator } from '@nrwl/node/src/schematics/add-linting-to-application/add-linting-to-application';
+import {
+  addLintingToApplication,
+  NormalizedSchema as AddLintForApplicationSchema,
+} from '@nrwl/node/src/generators/application/application';
 import {
   addLint as addLintingToLibraryGenerator,
   NormalizedSchema as AddLintForLibrarySchema,
@@ -38,12 +41,12 @@ export async function conversionGenerator(
       const js = false;
 
       if (projectConfig.projectType === 'application') {
-        await addLintingToApplicationGenerator(host, {
-          linter: 'eslint',
-          projectName,
-          projectRoot: projectConfig.root,
+        await addLintingToApplication(host, {
+          linter: 'eslint' as any,
+          name: projectName,
+          appProjectRoot: projectConfig.root,
           js,
-        });
+        } as AddLintForApplicationSchema);
       }
 
       if (projectConfig.projectType === 'library') {

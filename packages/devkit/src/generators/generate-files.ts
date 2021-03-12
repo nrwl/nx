@@ -75,7 +75,7 @@ export function generateFiles(
       newContent = fs.readFileSync(filePath);
     } else {
       const template = fs.readFileSync(filePath).toString();
-      newContent = ejs.render(template, substitutions);
+      newContent = ejs.render(template, substitutions, {});
     }
 
     host.write(computedPath, newContent);

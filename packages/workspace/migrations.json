@@ -862,6 +862,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "11.6.0": {
+      "version": "11.6.0-beta.0",
+      "packages": {
+        "dotenv": {
+          "version": "8.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

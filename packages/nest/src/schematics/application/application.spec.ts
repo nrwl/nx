@@ -24,7 +24,9 @@ describe('app', () => {
     );
     expect(eslintrcJson).toMatchInlineSnapshot(`
       Object {
-        "extends": "../../.eslintrc.json",
+        "extends": Array [
+          "../../.eslintrc.json",
+        ],
         "ignorePatterns": Array [
           "!**/*",
         ],

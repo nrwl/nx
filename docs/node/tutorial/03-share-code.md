@@ -19,17 +19,17 @@ The result should look like this:
 ```treeview
 myorg/
 ├── apps/
-│   └── todos/
+│   └── todos/
 ├── libs/
-│   └── data/
-│       ├── src/
-│       │   ├── lib/
+│   └── data/
+│       ├── src/
+│       │   ├── lib/
 │       │   │   └── data.ts
-│       │   └── index.ts
-│       ├── jest.config.js
-│       ├── tsconfig.lib.json
-│       ├── tsconfig.json
-│       └── tsconfig.spec.json
+│       │   └── index.ts
+│       ├── jest.config.js
+│       ├── tsconfig.lib.json
+│       ├── tsconfig.json
+│       └── tsconfig.spec.json
 ├── tools/
 ├── nx.json
 ├── package.json

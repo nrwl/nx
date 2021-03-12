@@ -25,23 +25,23 @@ You should see the following:
 ```treeview
 myorg/
 ├── apps/
-│   ├── todos/
-│   ├── todos-e2e/
-│   └── api/
+│   ├── todos/
+│   ├── todos-e2e/
+│   └── api/
 ├── libs/
-│   ├── data/
+│   ├── data/
 │   └── ui/
-│       ├── src/
-│       │   ├── lib/
-│       │   │   └── ui/
-│       │   │       ├── ui.css
-│       │   │       ├── ui.spec.tsx
-│       │   │       └── ui.tsx
-│       │   └── index.ts
-│       ├── jest.conf.js
-│       ├── tsconfig.app.json
-│       ├── tsconfig.json
-│       └── tsconfig.spec.json
+│       ├── src/
+│       │   ├── lib/
+│       │   │   └── ui/
+│       │   │       ├── ui.css
+│       │   │       ├── ui.spec.tsx
+│       │   │       └── ui.tsx
+│       │   └── index.ts
+│       ├── jest.conf.js
+│       ├── tsconfig.app.json
+│       ├── tsconfig.json
+│       └── tsconfig.spec.json
 ├── tools/
 ├── nx.json
 ├── package.json
@@ -81,27 +81,27 @@ npx nx g @nrwl/react:component todos --project=ui --export
 ```treeview
 myorg/
 ├── apps/
-│   ├── todos/
-│   ├── todos-e2e/
-│   └── api/
+│   ├── todos/
+│   ├── todos-e2e/
+│   └── api/
 ├── libs/
-│   ├── data/
+│   ├── data/
 │   └── ui/
-│       ├── src/
-│       │   ├── lib/
-│       │   │   ├── ui/
-│       │   │   │   ├── ui.css
-│       │   │   │   ├── ui.spec.tsx
-│       │   │   │   └── ui.tsx
-│       │   │   └── todos/
-│       │   │       ├── todos.css
-│       │   │       ├── todos.spec.tsx
-│       │   │       └── todos.tsx
-│       │   └── index.ts
-│       ├── jest.conf.js
-│       ├── tsconfig.app.json
-│       ├── tsconfig.json
-│       └── tsconfig.spec.json
+│       ├── src/
+│       │   ├── lib/
+│       │   │   ├── ui/
+│       │   │   │   ├── ui.css
+│       │   │   │   ├── ui.spec.tsx
+│       │   │   │   └── ui.tsx
+│       │   │   └── todos/
+│       │   │       ├── todos.css
+│       │   │       ├── todos.spec.tsx
+│       │   │       └── todos.tsx
+│       │   └── index.ts
+│       ├── jest.conf.js
+│       ├── tsconfig.app.json
+│       ├── tsconfig.json
+│       └── tsconfig.spec.json
 ├── tools/
 ├── workspace.json
 ├── nx.json

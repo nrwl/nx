@@ -50,25 +50,25 @@ After the changes are applied, your workspace file structure should look similar
 ```treeview
 <workspace name>/
 ├── apps/
-│   ├── <app name>/
-│   │   ├── src/
-│   │   │   ├── app/
-│   │   │   ├── assets/
-│   │   │   ├── environments/
-│   │   │   ├── favicon.ico
-│   │   │   ├── index.html
-│   │   │   ├── main.ts
-│   │   │   ├── polyfills.ts
-│   │   │   ├── styles.css
-│   │   │   └── test.ts
-│   │   ├── browserslist
-│   │   ├── karma.conf.js
-│   │   ├── tsconfig.app.json
-│   │   └── tsconfig.spec.json
-│   └── <app name>-e2e/
-│       ├── src/
-│       ├── protractor.conf.js
-│       └── tsconfig.json
+│   ├── <app name>/
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   ├── assets/
+│   │   │   ├── environments/
+│   │   │   ├── favicon.ico
+│   │   │   ├── index.html
+│   │   │   ├── main.ts
+│   │   │   ├── polyfills.ts
+│   │   │   ├── styles.css
+│   │   │   └── test.ts
+│   │   ├── browserslist
+│   │   ├── karma.conf.js
+│   │   ├── tsconfig.app.json
+│   │   └── tsconfig.spec.json
+│   └── <app name>-e2e/
+│       ├── src/
+│       ├── protractor.conf.js
+│       └── tsconfig.json
 ├── libs/
 ├── tools/
 ├── README.md
@@ -128,29 +128,29 @@ A new Nx workspace with your `org name` as the folder name, and your `applicatio
 ```treeview
 <workspace name>/
 ├── apps/
-│   ├── <app name>/
-│   │   ├── src/
-│   │   │   ├── app/
-│   │   │   ├── assets/
-│   │   │   ├── environments/
-│   │   │   ├── favicon.ico
-│   │   │   ├── index.html
-│   │   │   ├── main.ts
-│   │   │   ├── polyfills.ts
-│   │   │   ├── styles.css
-│   │   │   └── test.ts
-│   │   ├── browserslist
-│   │   ├── jest.conf.js
-│   │   ├── tsconfig.app.json
-│   │   ├── tsconfig.json
-│   │   ├── tslint.json
-│   │   └── tsconfig.spec.json
-│   └── <app name>-e2e/
-│       ├── src/
-│       ├── cypress.json
-│       ├── tsconfig.e2e.json
-│       ├── tslint.json
-│       └── tsconfig.json
+│   ├── <app name>/
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   ├── assets/
+│   │   │   ├── environments/
+│   │   │   ├── favicon.ico
+│   │   │   ├── index.html
+│   │   │   ├── main.ts
+│   │   │   ├── polyfills.ts
+│   │   │   ├── styles.css
+│   │   │   └── test.ts
+│   │   ├── browserslist
+│   │   ├── jest.conf.js
+│   │   ├── tsconfig.app.json
+│   │   ├── tsconfig.json
+│   │   ├── tslint.json
+│   │   └── tsconfig.spec.json
+│   └── <app name>-e2e/
+│       ├── src/
+│       ├── cypress.json
+│       ├── tsconfig.e2e.json
+│       ├── tslint.json
+│       └── tsconfig.json
 ├── libs/
 ├── tools/
 ├── .prettierignore

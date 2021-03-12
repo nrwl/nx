@@ -6,8 +6,6 @@ Nx plugins are npm packages that contain generators and executors to extend a Nx
 > A list of custom plugins created by the community is found in the [Community](/nx-community) section.
 > Plugins are written using Nx Devkit. **Read [Nx Devkit](/{{framework}}/core-concepts/nx-devkit) for more information.**
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/XYO689PAhow" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
 ## Generating a Plugin
 
 To get started with building a Nx Plugin, run the following command:
@@ -17,6 +15,8 @@ npx create-nx-plugin my-org --pluginName my-plugin
 ```
 
 This command creates a brand new workspace, and sets up a pre-configured plugin with the specified name.
+
+> Note, the command above will create a plugin the package name set to `@my-org/my-plugin`. You can pass `--importPath` to provide a different package name.
 
 ## Workspace Structure
 
@@ -75,7 +75,7 @@ A new plugin is created with a default generator, executor, and e2e app.
 
 ## Generator
 
-The generated generator contains boilerplate that will do the following:
+The created generator contains boilerplate that will do the following:
 
 - Normalize a schema (the options that the generator accepts)
 - Update the `workspace.json`

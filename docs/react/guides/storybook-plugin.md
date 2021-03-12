@@ -25,9 +25,9 @@ If there's no `.storybook` folder at the root of the workspace, one is created.
 ```treeview
 <workspace name>/
 ├── .storybook/
-│   ├── main.js
-│   ├── tsconfig.json
-│   └── webpack.config.js
+│   ├── main.js
+│   ├── tsconfig.json
+│   └── webpack.config.js
 ├── apps/
 ├── libs/
 ├── nx.json
@@ -41,10 +41,10 @@ Also, a project-specific `.storybook` folder is added in the root of the project
 ```treeview
 <project root>/
 ├── .storybook/
-│   ├── main.js
-│   ├── config.js
-│   ├── tsconfig.json
-│   └── webpack.config.js
+│   ├── main.js
+│   ├── config.js
+│   ├── tsconfig.json
+│   └── webpack.config.js
 ├── src/
 ├── README.md
 ├── tsconfig.json

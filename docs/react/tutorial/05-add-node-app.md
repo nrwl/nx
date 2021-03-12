@@ -74,21 +74,21 @@ After this is done, you should see something like this:
 ```treeview
 myorg/
 ├── apps/
-│   ├── todos/
-│   ├── todos-e2e/
-│   └── api/
-│       ├── src/
-│       │   ├── app/
-│       │   ├── assets/
-│       │   ├── environments/
-│       │   │   ├── environment.ts
-│       │   │   └── environment.prod.ts
-│       │   └── main.ts
-│       ├── jest.conf.js
-│       ├── proxy.conf.json
-│       ├── tsconfig.app.json
-│       ├── tsconfig.json
-│       └── tsconfig.spec.json
+│   ├── todos/
+│   ├── todos-e2e/
+│   └── api/
+│       ├── src/
+│       │   ├── app/
+│       │   ├── assets/
+│       │   ├── environments/
+│       │   │   ├── environment.ts
+│       │   │   └── environment.prod.ts
+│       │   └── main.ts
+│       ├── jest.conf.js
+│       ├── proxy.conf.json
+│       ├── tsconfig.app.json
+│       ├── tsconfig.json
+│       └── tsconfig.spec.json
 ├── libs/
 ├── tools/
 ├── workspace.json

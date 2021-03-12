@@ -38,14 +38,6 @@ export function jestConfigParser(
     // eslint-disable-next-line @typescript-eslint/no-var-requires
   } = require(options.jestConfig);
 
-  const transformers = Object.values<string>(jestConfig.transform || {});
-  if (transformers.includes('babel-jest') && transformers.includes('ts-jest')) {
-    throw new Error(
-      'Using babel-jest and ts-jest together is not supported.\n' +
-        'See ts-jest documentation for babel integration: https://kulshekhar.github.io/ts-jest/user/config/babelConfig'
-    );
-  }
-
   const config: Config.Argv = {
     $0: undefined,
     _: [],
