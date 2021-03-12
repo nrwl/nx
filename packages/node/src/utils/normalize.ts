@@ -1,4 +1,3 @@
-import { normalize } from '@angular-devkit/core';
 import { resolve, dirname, relative, basename } from 'path';
 import { BuildBuilderOptions } from './types';
 import { statSync } from 'fs';
@@ -37,8 +36,7 @@ function normalizeAssets(
 ): any[] {
   return assets.map((asset) => {
     if (typeof asset === 'string') {
-      const assetPath = normalize(asset);
-      const resolvedAssetPath = resolve(root, assetPath);
+      const resolvedAssetPath = resolve(root, asset);
       const resolvedSourceRoot = resolve(root, sourceRoot);
 
       if (!resolvedAssetPath.startsWith(resolvedSourceRoot)) {
@@ -65,8 +63,7 @@ function normalizeAssets(
         );
       }
 
-      const assetPath = normalize(asset.input);
-      const resolvedAssetPath = resolve(root, assetPath);
+      const resolvedAssetPath = resolve(root, asset.input);
       return {
         ...asset,
         input: resolvedAssetPath,

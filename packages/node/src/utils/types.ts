@@ -1,5 +1,3 @@
-import { Path } from '@angular-devkit/core';
-
 export interface FileReplacement {
   replace: string;
   with: string;
@@ -40,7 +38,7 @@ export interface BuildBuilderOptions {
   webpackConfig?: string;
 
   root?: string;
-  sourceRoot?: Path;
+  sourceRoot?: string;
   projectRoot?: string;
 }
 

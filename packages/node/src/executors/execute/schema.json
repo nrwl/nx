@@ -1,6 +1,7 @@
 {
   "title": "Schema for Executing NodeJS apps",
   "description": "NodeJS execution options",
+  "cli": "nx",
   "type": "object",
   "properties": {
     "buildTarget": {
