@@ -73,6 +73,14 @@ export async function conversionGenerator(
   projectConverter.removeProjectTSLintFile();
 
   /**
+   * Store user preference regarding removeTSLintIfNoMoreTSLintTargets for the collection
+   */
+  projectConverter.setDefaults(
+    '@nrwl/angular',
+    options.removeTSLintIfNoMoreTSLintTargets
+  );
+
+  /**
    * If the Angular project is an app which has an e2e project, try and convert that as well.
    */
   let cypressInstallTask: GeneratorCallback = () => Promise.resolve(undefined);

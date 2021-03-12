@@ -69,6 +69,14 @@ export async function conversionGenerator(
   projectConverter.removeProjectTSLintFile();
 
   /**
+   * Store user preference regarding removeTSLintIfNoMoreTSLintTargets for the collection
+   */
+  projectConverter.setDefaults(
+    '@nrwl/cypress',
+    options.removeTSLintIfNoMoreTSLintTargets
+  );
+
+  /**
    * Based on user preference and remaining usage, remove TSLint from the workspace entirely.
    */
   let uninstallTSLintTask: GeneratorCallback = () => Promise.resolve(undefined);

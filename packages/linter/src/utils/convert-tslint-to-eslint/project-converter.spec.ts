@@ -153,6 +153,46 @@ describe('ProjectConverter', () => {
     ).not.toThrow();
   });
 
+  describe('setDefaults()', () => {
+    it('should set the default configuration for removeTSLintIfNoMoreTSLintTargets in workspace.json', async () => {
+      writeJson(host, 'tslint.json', {});
+      writeJson(host, `${projectRoot}/tslint.json`, {});
+
+      const projectConverter = new ProjectConverter({
+        host,
+        packageSpecificShareableConfigName: 'bar.eslintrc.json',
+        projectName,
+        eslintInitializer: () => undefined,
+      });
+
+      const workspace = readWorkspaceConfiguration(host);
+      workspace.generators = {
+        '@nrwl/angular': {
+          application: {
+            linter: 'tslint',
+          },
+          library: {
+            linter: 'tslint',
+          },
+        },
+      };
+      updateWorkspaceConfiguration(host, workspace);
+
+      // BEFORE - no entry for convert-tslint-to-eslint wthin @nrwl/angular generators
+      expect(readJson(host, 'workspace.json')).toMatchSnapshot();
+
+      projectConverter.setDefaults('@nrwl/angular', true);
+
+      // AFTER (1) - convert-tslint-to-eslint wthin @nrwl/angular generators has removeTSLintIfNoMoreTSLintTargets set to true
+      expect(readJson(host, 'workspace.json')).toMatchSnapshot();
+
+      projectConverter.setDefaults('@nrwl/angular', false);
+
+      // AFTER (2) - convert-tslint-to-eslint wthin @nrwl/angular generators has removeTSLintIfNoMoreTSLintTargets set to false
+      expect(readJson(host, 'workspace.json')).toMatchSnapshot();
+    });
+  });
+
   describe('removeTSLintFromWorkspace()', () => {
     it('should remove all relevant traces of TSLint from the workspace', async () => {
       writeJson(host, 'tslint.json', {});
@@ -200,6 +240,36 @@ describe('ProjectConverter', () => {
       expect(readJson(host, 'package.json')).toMatchSnapshot();
 
       // AFTER - generators config from global and project-level settings removed (because eslint is always default)
+      expect(readJson(host, 'workspace.json')).toMatchSnapshot();
+    });
+
+    it('should remove the entry in generators for convert-tslint-to-eslint because it is no longer needed', async () => {
+      writeJson(host, 'tslint.json', {});
+      writeJson(host, `${projectRoot}/tslint.json`, {});
+
+      const projectConverter = new ProjectConverter({
+        host,
+        packageSpecificShareableConfigName: 'bar.eslintrc.json',
+        projectName,
+        eslintInitializer: () => undefined,
+      });
+
+      const workspace = readWorkspaceConfiguration(host);
+      workspace.generators = {
+        '@nrwl/angular': {
+          'convert-tslint-to-eslint': {
+            removeTSLintIfNoMoreTSLintTargets: true,
+          },
+        },
+      };
+      updateWorkspaceConfiguration(host, workspace);
+
+      // BEFORE - convert-tslint-to-eslint wthin @nrwl/angular generators has a value for removeTSLintIfNoMoreTSLintTargets
+      expect(readJson(host, 'workspace.json')).toMatchSnapshot();
+
+      await projectConverter.removeTSLintFromWorkspace()();
+
+      // AFTER - generators config no longer has a reference to convert-tslint-to-eslint
       expect(readJson(host, 'workspace.json')).toMatchSnapshot();
     });
   });

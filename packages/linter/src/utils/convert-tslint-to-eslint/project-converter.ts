@@ -458,6 +458,11 @@ export class ProjectConverter {
         for (const [generatorName, generatorConfig] of Object.entries(
           collectionConfig
         )) {
+          if (generatorName === 'convert-tslint-to-eslint') {
+            // No longer relevant because of TSLint is being removed the conversion process must be complete
+            delete collectionConfig[generatorName];
+            continue;
+          }
           for (const optionName of Object.keys(generatorConfig)) {
             if (optionName === 'linter') {
               // Default is eslint, so in all cases we can just remove the config altogether
@@ -472,6 +477,11 @@ export class ProjectConverter {
           if (Object.keys(generatorConfig).length === 0) {
             delete parentConfig.generators[collectionName];
           }
+        }
+
+        // If removing the defaults from the collection leaves absolutely no generators configuration remaining, remove it
+        if (Object.keys(parentConfig.generators[collectionName]).length === 0) {
+          delete parentConfig.generators[collectionName];
         }
       }
     }
@@ -508,5 +518,29 @@ export class ProjectConverter {
       }
     }
     return e2eProjectName;
+  }
+
+  setDefaults(
+    collectionName: string,
+    removeTSLintIfNoMoreTSLintTargets: ConvertTSLintToESLintSchema['removeTSLintIfNoMoreTSLintTargets']
+  ) {
+    const workspace = readWorkspaceConfiguration(this.host);
+
+    workspace.generators = workspace.generators || {};
+    workspace.generators[collectionName] =
+      workspace.generators[collectionName] || {};
+    const prev = workspace.generators[collectionName];
+
+    workspace.generators = {
+      ...workspace.generators,
+      [collectionName]: {
+        ...prev,
+        'convert-tslint-to-eslint': {
+          removeTSLintIfNoMoreTSLintTargets,
+        },
+      },
+    };
+
+    updateWorkspaceConfiguration(this.host, workspace);
   }
 }
