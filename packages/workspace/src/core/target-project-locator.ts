@@ -60,7 +60,10 @@ export class TargetProjectLocator {
     const normalizedImportExpr = importExpr.split('#')[0];
 
     if (isRelativePath(normalizedImportExpr)) {
-      const resolvedModule = posix.join(dirname(filePath), normalizedImportExpr);
+      const resolvedModule = posix.join(
+        dirname(filePath),
+        normalizedImportExpr
+      );
       return this.findProjectOfResolvedModule(resolvedModule);
     }
 
