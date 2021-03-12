@@ -30,9 +30,7 @@ export class ProjectNode {
       type: this.project.type,
       tags: this.project.data.tags,
       parent:
-        groupByFolder &&
-        this.project.type == 'lib' &&
-        this.project.data.hasOwnProperty('sourceRoot')
+        groupByFolder && this.project.data.hasOwnProperty('sourceRoot')
           ? this.getParentId(this.project.data.sourceRoot)
           : null,
     };
