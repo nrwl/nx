@@ -28,36 +28,36 @@ The file structure for a React application looks like:
 ```treeview
 myorg/
 ├── apps/
-│   ├── myapp/
-│   │   ├── src/
-│   │   │   ├── app/
-│   │   │   ├── assets/
-│   │   │   ├── environments/
-│   │   │   ├── favicon.ico
-│   │   │   ├── index.html
-│   │   │   ├── main.tsx
-│   │   │   ├── polyfills.ts
-│   │   │   └── styles.css
-│   │   ├── browserslist
-│   │   ├── jest.config.js
-│   │   ├── tsconfig.app.json
-│   │   ├── tsconfig.json
-│   │   └── tsconfig.spec.json
-│   └── myapp-e2e/
-│       ├── src/
-│       │   ├── fixtures/
-│       │   │   └── example.json
-│       │   ├── integration/
-│       │   │   └── app.spec.ts
-│       │   ├── plugins/
-│       │   │   └── index.ts
-│       │   └── support/
-│       │       ├── app.po.ts
-│       │       ├── commands.ts
-│       │       └── index.ts
-│       ├── cypress.json
-│       ├── tsconfig.e2e.json
-│       └── tsconfig.json
+│   ├── myapp/
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   ├── assets/
+│   │   │   ├── environments/
+│   │   │   ├── favicon.ico
+│   │   │   ├── index.html
+│   │   │   ├── main.tsx
+│   │   │   ├── polyfills.ts
+│   │   │   └── styles.css
+│   │   ├── browserslist
+│   │   ├── jest.config.js
+│   │   ├── tsconfig.app.json
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.spec.json
+│   └── myapp-e2e/
+│       ├── src/
+│       │   ├── fixtures/
+│       │   │   └── example.json
+│       │   ├── integration/
+│       │   │   └── app.spec.ts
+│       │   ├── plugins/
+│       │   │   └── index.ts
+│       │   └── support/
+│       │       ├── app.po.ts
+│       │       ├── commands.ts
+│       │       └── index.ts
+│       ├── cypress.json
+│       ├── tsconfig.e2e.json
+│       └── tsconfig.json
 ├── libs/
 ├── tools/
 ├── README.md

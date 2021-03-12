@@ -76,27 +76,27 @@ After this is done, you should see something like this:
 ```treeview
 myorg/
 ├── apps/
-│   ├── todos/
-│   ├── todos-e2e/
-│   └── api/
-│       ├── src/
-│       │   ├── app/
-│       │   │   ├── app.controller.ts
-│       │   │   ├── app.controller.spec.ts
-│       │   │   ├── app.module.ts
-│       │   │   ├── app.service.ts
-│       │   │   └── app.service.spec.ts
-│       │   ├── assets/
-│       │   ├── environments/
-│       │   │   ├── environment.ts
-│       │   │   └── environment.prod.ts
-│       │   └── main.ts
-│       ├── jest.conf.js
-│       ├── proxy.conf.json
-│       ├── tsconfig.app.json
-│       ├── tsconfig.json
-│       ├── tsconfig.spec.json
-│       └── tslint.json
+│   ├── todos/
+│   ├── todos-e2e/
+│   └── api/
+│       ├── src/
+│       │   ├── app/
+│       │   │   ├── app.controller.ts
+│       │   │   ├── app.controller.spec.ts
+│       │   │   ├── app.module.ts
+│       │   │   ├── app.service.ts
+│       │   │   └── app.service.spec.ts
+│       │   ├── assets/
+│       │   ├── environments/
+│       │   │   ├── environment.ts
+│       │   │   └── environment.prod.ts
+│       │   └── main.ts
+│       ├── jest.conf.js
+│       ├── proxy.conf.json
+│       ├── tsconfig.app.json
+│       ├── tsconfig.json
+│       ├── tsconfig.spec.json
+│       └── tslint.json
 ├── libs/
 ├── angular.json
 ├── nx.json

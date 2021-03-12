@@ -36,22 +36,22 @@ This creates the following app structure:
 ```treeview
 my-org/
 ├── apps/
-    └── nest-app/
-        ├── jest.config.js
-        ├── src/
-        │   ├── app/
-        │   │   ├── app.controller.ts
-        │   │   ├── app.controller.spec.ts
-        │   │   ├── app.module.ts
-        │   │   ├── app.service.ts
-        │   │   └── app.service.spec.ts
-        │   ├── assets/
-        │   ├── environments/
-        │   └── main.ts
-        ├── tsconfig.app.json
-        ├── tsconfig.json
-        ├── tsconfig.spec.json
-        └── tslint.json
+    └── nest-app/
+        ├── jest.config.js
+        ├── src/
+        │   ├── app/
+        │   │   ├── app.controller.ts
+        │   │   ├── app.controller.spec.ts
+        │   │   ├── app.module.ts
+        │   │   ├── app.service.ts
+        │   │   └── app.service.spec.ts
+        │   ├── assets/
+        │   ├── environments/
+        │   └── main.ts
+        ├── tsconfig.app.json
+        ├── tsconfig.json
+        ├── tsconfig.spec.json
+        └── tslint.json
 ```
 
 The `main.ts` content should look similar to this:

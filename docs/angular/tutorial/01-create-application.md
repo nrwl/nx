@@ -28,39 +28,39 @@ When asked about 'preset', select `angular`, and `todos` for the app name.
 ```treeview
 myorg/
 ├── apps/
-│   ├── todos/
-│   │   ├── src/
-│   │   │   ├── app/
-│   │   │   ├── assets/
-│   │   │   ├── environments/
-│   │   │   ├── favicon.ico
-│   │   │   ├── index.html
-│   │   │   ├── main.ts
-│   │   │   ├── polyfills.ts
-│   │   │   ├── styles.scss
-│   │   │   └── test.ts
-│   │   ├── browserslist
-│   │   ├── jest.conf.js
-│   │   ├── tsconfig.app.json
-│   │   ├── tsconfig.json
-│   │   ├── tsconfig.spec.json
-│   │   └── tslint.json
-│   └── todos-e2e/
-│       ├── src/
-│       │   ├── fixtures/
-│       │   │   └── example.json
-│       │   ├── integration/
-│       │   │   └── app.spec.ts
-│       │   ├── plugins/
-│       │   │   └── index.ts
-│       │   └── support/
-│       │       ├── app.po.ts
-│       │       ├── commands.ts
-│       │       └── index.ts
-│       ├── cypress.json
-│       ├── tsconfig.e2e.json
-│       ├── tsconfig.json
-│       └── tslint.json
+│   ├── todos/
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   ├── assets/
+│   │   │   ├── environments/
+│   │   │   ├── favicon.ico
+│   │   │   ├── index.html
+│   │   │   ├── main.ts
+│   │   │   ├── polyfills.ts
+│   │   │   ├── styles.scss
+│   │   │   └── test.ts
+│   │   ├── browserslist
+│   │   ├── jest.conf.js
+│   │   ├── tsconfig.app.json
+│   │   ├── tsconfig.json
+│   │   ├── tsconfig.spec.json
+│   │   └── tslint.json
+│   └── todos-e2e/
+│       ├── src/
+│       │   ├── fixtures/
+│       │   │   └── example.json
+│       │   ├── integration/
+│       │   │   └── app.spec.ts
+│       │   ├── plugins/
+│       │   │   └── index.ts
+│       │   └── support/
+│       │       ├── app.po.ts
+│       │       ├── commands.ts
+│       │       └── index.ts
+│       ├── cypress.json
+│       ├── tsconfig.e2e.json
+│       ├── tsconfig.json
+│       └── tslint.json
 ├── libs/
 ├── tools/
 ├── angular.json

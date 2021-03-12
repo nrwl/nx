@@ -30,36 +30,36 @@ When asked about 'preset', select `react`, and `todos` for the app name.
 ```treeview
 myorg/
 ├── apps/
-│   ├── todos/
-│   │   ├── src/
-│   │   │   ├── app/
-│   │   │   ├── assets/
-│   │   │   ├── environments/
-│   │   │   ├── favicon.ico
-│   │   │   ├── index.html
-│   │   │   ├── main.tsx
-│   │   │   ├── polyfills.ts
-│   │   │   └── styles.css
-│   │   ├── browserslist
-│   │   ├── jest.config.js
-│   │   ├── tsconfig.app.json
-│   │   ├── tsconfig.json
-│   │   └── tsconfig.spec.json
-│   └── todos-e2e/
-│       ├── src/
-│       │   ├── fixtures/
-│       │   │   └── example.json
-│       │   ├── integration/
-│       │   │   └── app.spec.ts
-│       │   ├── plugins/
-│       │   │   └── index.ts
-│       │   └── support/
-│       │       ├── app.po.ts
-│       │       ├── commands.ts
-│       │       └── index.ts
-│       ├── cypress.json
-│       ├── tsconfig.e2e.json
-│       └── tsconfig.json
+│   ├── todos/
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   ├── assets/
+│   │   │   ├── environments/
+│   │   │   ├── favicon.ico
+│   │   │   ├── index.html
+│   │   │   ├── main.tsx
+│   │   │   ├── polyfills.ts
+│   │   │   └── styles.css
+│   │   ├── browserslist
+│   │   ├── jest.config.js
+│   │   ├── tsconfig.app.json
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.spec.json
+│   └── todos-e2e/
+│       ├── src/
+│       │   ├── fixtures/
+│       │   │   └── example.json
+│       │   ├── integration/
+│       │   │   └── app.spec.ts
+│       │   ├── plugins/
+│       │   │   └── index.ts
+│       │   └── support/
+│       │       ├── app.po.ts
+│       │       ├── commands.ts
+│       │       └── index.ts
+│       ├── cypress.json
+│       ├── tsconfig.e2e.json
+│       └── tsconfig.json
 ├── libs/
 ├── tools/
 ├── README.md

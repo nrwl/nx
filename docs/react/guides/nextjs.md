@@ -37,24 +37,24 @@ and you will see the following:
 ```treeview
 happynrwl/
 ├── apps/
-│   ├── tuskdesk/
-│   │   ├── pages/
-│   │   │   ├── index.css
-│   │   │   └── index.tsx
-│   │   ├── jest.conf.js
-│   │   ├── tsconfig.json
-│   │   ├── tsconfig.spec.json
-│   │   └── .eslintrc.json
-│   └── tuskdesk-e2e/
-│   │   ├── src/
-│   │   │   ├── integrations/
-│   │   │   │   └── app.spec.ts
-│   │   │   ├── fixtures/
-│   │   │   ├── plugins/
-│   │   │   └── support/
-│   │   ├── cypress.json
-│   │   ├── tsconfig.e2e.json
-│   │   └── .eslintrc.json
+│   ├── tuskdesk/
+│   │   ├── pages/
+│   │   │   ├── index.css
+│   │   │   └── index.tsx
+│   │   ├── jest.conf.js
+│   │   ├── tsconfig.json
+│   │   ├── tsconfig.spec.json
+│   │   └── .eslintrc.json
+│   └── tuskdesk-e2e/
+│   │   ├── src/
+│   │   │   ├── integrations/
+│   │   │   │   └── app.spec.ts
+│   │   │   ├── fixtures/
+│   │   │   ├── plugins/
+│   │   │   └── support/
+│   │   ├── cypress.json
+│   │   ├── tsconfig.e2e.json
+│   │   └── .eslintrc.json
 ├── libs/
 ├── workspace.json
 ├── nx.json
@@ -89,21 +89,21 @@ and you will see the following:
 ```treeview
 happynrwl/
 ├── apps/
-│   ├── tuskdesk/
-│   └── tuskdesk-e2e/
+│   ├── tuskdesk/
+│   └── tuskdesk-e2e/
 ├── libs/
-│   └── shared-components/
-│       ├── src/
-│       │   ├── lib/
-│       │   │    ├── home.css
-│       │   │    ├── home.tsx
-│       │   │    └── home.spec.tsx
-│       │   └ index.ts
-│       ├── jest.config.js
-│       ├── tsconfig.json
-│       ├── tsconfig.lib.json
-│       ├── tsconfig.spec.json
-│       └── tslint.json
+│   └── shared-components/
+│       ├── src/
+│       │   ├── lib/
+│       │   │    ├── home.css
+│       │   │    ├── home.tsx
+│       │   │    └── home.spec.tsx
+│       │   └ index.ts
+│       ├── jest.config.js
+│       ├── tsconfig.json
+│       ├── tsconfig.lib.json
+│       ├── tsconfig.spec.json
+│       └── tslint.json
 ├── nx.json
 ├── workspace.json
 ├── package.json

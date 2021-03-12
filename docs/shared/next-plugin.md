@@ -31,24 +31,24 @@ This creates the following app structure:
 ```treeview
 myorg/
 ├── apps/
-│   ├── myapp/
-│   │   ├── pages/
-│   │   │   ├── index.css
-│   │   │   └── index.tsx
-│   │   ├── jest.conf.js
-│   │   ├── tsconfig.json
-│   │   ├── tsconfig.spec.json
-│   │   └── .eslintrc.json
-│   └── myapp-e2e/
-│   │   ├── src/
-│   │   │   ├── integrations/
-│   │   │   │   └── app.spec.ts
-│   │   │   ├── fixtures/
-│   │   │   ├── plugins/
-│   │   │   └── support/
-│   │   ├── cypress.json
-│   │   ├── tsconfig.e2e.json
-│   │   └── .eslintrc.json
+│   ├── myapp/
+│   │   ├── pages/
+│   │   │   ├── index.css
+│   │   │   └── index.tsx
+│   │   ├── jest.conf.js
+│   │   ├── tsconfig.json
+│   │   ├── tsconfig.spec.json
+│   │   └── .eslintrc.json
+│   └── myapp-e2e/
+│   │   ├── src/
+│   │   │   ├── integrations/
+│   │   │   │   └── app.spec.ts
+│   │   │   ├── fixtures/
+│   │   │   ├── plugins/
+│   │   │   └── support/
+│   │   ├── cypress.json
+│   │   ├── tsconfig.e2e.json
+│   │   └── .eslintrc.json
 ├── libs/
 ├── workspace.json
 ├── nx.json
