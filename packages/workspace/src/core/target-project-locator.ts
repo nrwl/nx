@@ -10,7 +10,7 @@ import {
   isWorkspaceProject,
 } from './project-graph';
 import { isRelativePath, parseJsonWithComments } from '../utilities/fileutils';
-import { dirname, join } from 'path';
+import { dirname, join, posix } from 'path';
 import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
 
 export class TargetProjectLocator {
@@ -60,7 +60,10 @@ export class TargetProjectLocator {
     const normalizedImportExpr = importExpr.split('#')[0];
 
     if (isRelativePath(normalizedImportExpr)) {
-      const resolvedModule = join(dirname(filePath), normalizedImportExpr);
+      const resolvedModule = posix.join(
+        dirname(filePath),
+        normalizedImportExpr
+      );
       return this.findProjectOfResolvedModule(resolvedModule);
     }
 
