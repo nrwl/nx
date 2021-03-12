@@ -19,7 +19,7 @@ export class RemoveHashPlugin {
   apply(compiler: Compiler): void {
     compiler.hooks.compilation.tap('remove-hash-plugin', (compilation) => {
       // MainTemplate is slated to be removed in Webpack 6
-      const mainTemplate = compilation.mainTemplate
+      const mainTemplate = compilation.mainTemplate;
 
       mainTemplate.hooks.assetPath.tap(
         'remove-hash-plugin',

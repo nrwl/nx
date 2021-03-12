@@ -39,38 +39,32 @@ export class BundleBudgetPlugin {
       return;
     }
 
-    compiler.hooks.compilation.tap(
-      'BundleBudgetPlugin',
-      (compilation) => {
-        compilation.hooks.afterOptimizeChunkAssets.tap(
-          'BundleBudgetPlugin',
-          () => {
-            // In AOT compilations component styles get processed in child compilations.
-            // tslint:disable-next-line: no-any
-            const parentCompilation = (compilation.compiler as any)
-              .parentCompilation;
-            if (!parentCompilation) {
-              return;
-            }
-
-            const filteredBudgets = budgets.filter(
-              (budget) => budget.type === Type.AnyComponentStyle
-            );
-            this.runChecks(filteredBudgets, compilation);
+    compiler.hooks.compilation.tap('BundleBudgetPlugin', (compilation) => {
+      compilation.hooks.afterOptimizeChunkAssets.tap(
+        'BundleBudgetPlugin',
+        () => {
+          // In AOT compilations component styles get processed in child compilations.
+          // tslint:disable-next-line: no-any
+          const parentCompilation = (compilation.compiler as any)
+            .parentCompilation;
+          if (!parentCompilation) {
+            return;
           }
-        );
-      }
-    );
 
-    compiler.hooks.afterEmit.tap(
-      'BundleBudgetPlugin',
-      (compilation) => {
-        const filteredBudgets = budgets.filter(
-          (budget) => budget.type !== Type.AnyComponentStyle
-        );
-        this.runChecks(filteredBudgets, compilation);
-      }
-    );
+          const filteredBudgets = budgets.filter(
+            (budget) => budget.type === Type.AnyComponentStyle
+          );
+          this.runChecks(filteredBudgets, compilation);
+        }
+      );
+    });
+
+    compiler.hooks.afterEmit.tap('BundleBudgetPlugin', (compilation) => {
+      const filteredBudgets = budgets.filter(
+        (budget) => budget.type !== Type.AnyComponentStyle
+      );
+      this.runChecks(filteredBudgets, compilation);
+    });
   }
 
   private checkMinimum(
@@ -82,10 +76,12 @@ export class BundleBudgetPlugin {
       if (threshold > size.size) {
         const sizeDifference = formatSize(threshold - size.size);
         messages.push(
-          new WebpackError(`budgets, minimum exceeded for ${size.label}. ` +
-            `Budget ${formatSize(
-              threshold
-            )} was not reached by ${sizeDifference}.`)
+          new WebpackError(
+            `budgets, minimum exceeded for ${size.label}. ` +
+              `Budget ${formatSize(
+                threshold
+              )} was not reached by ${sizeDifference}.`
+          )
         );
       }
     }
@@ -100,8 +96,12 @@ export class BundleBudgetPlugin {
       if (threshold < size.size) {
         const sizeDifference = formatSize(size.size - threshold);
         messages.push(
-          new WebpackError(`budgets, maximum exceeded for ${size.label}. ` +
-            `Budget ${formatSize(threshold)} was exceeded by ${sizeDifference}.`)
+          new WebpackError(
+            `budgets, maximum exceeded for ${size.label}. ` +
+              `Budget ${formatSize(
+                threshold
+              )} was exceeded by ${sizeDifference}.`
+          )
         );
       }
     }

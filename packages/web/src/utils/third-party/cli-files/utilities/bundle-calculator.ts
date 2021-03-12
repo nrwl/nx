@@ -5,7 +5,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-import type { Compilation } from 'webpack'
+import type { Compilation } from 'webpack';
 import { Budget } from '../../browser/schema';
 
 export interface Size {
@@ -60,9 +60,9 @@ class BundleCalculator extends Calculator {
  */
 class InitialCalculator extends Calculator {
   calculate() {
-    const initialChunks = Array.from(this.compilation.chunks.values()).filter((chunk) =>
-      chunk.isOnlyInitial()
-    );
+    const initialChunks = Array.from(
+      this.compilation.chunks.values()
+    ).filter((chunk) => chunk.isOnlyInitial());
     const size: number = initialChunks
       .reduce((files, chunk) => [...files, ...chunk.files], [])
       .filter((file: string) => !file.endsWith('.map'))

@@ -17,20 +17,14 @@ export interface CleanCssWebpackPluginOptions {
 
 function hook(
   compiler: Compiler,
-  action: (
-    compilation: Compilation,
-    chunks: Set<Chunk>
-  ) => Promise<void>
+  action: (compilation: Compilation, chunks: Set<Chunk>) => Promise<void>
 ) {
-  compiler.hooks.compilation.tap(
-    'cleancss-webpack-plugin',
-    (compilation) => {
-      compilation.hooks.optimizeChunkAssets.tapPromise(
-        'cleancss-webpack-plugin',
-        (chunks) => action(compilation, chunks)
-      );
-    }
-  );
+  compiler.hooks.compilation.tap('cleancss-webpack-plugin', (compilation) => {
+    compilation.hooks.optimizeChunkAssets.tapPromise(
+      'cleancss-webpack-plugin',
+      (chunks) => action(compilation, chunks)
+    );
+  });
 }
 
 // TODO This plugin probably doesn't work the same at all in Webpack 5.
@@ -49,7 +43,7 @@ export class CleanCssWebpackPlugin {
   apply(compiler: Compiler): void {
     hook(
       compiler,
-      (compilation, chunks):Promise<void> => {
+      (compilation, chunks): Promise<void> => {
         const cleancss = new CleanCSS({
           compatibility: 'ie9',
           level: {
@@ -124,8 +118,8 @@ export class CleanCssWebpackPlugin {
                 // tslint:disable-next-line: no-any
                 output.sourceMap.toString() as any,
                 content as string,
-              // TODO This map is not mapping as expected...
-              // @ts-ignore
+                // TODO This map is not mapping as expected...
+                // @ts-ignore
                 map
               );
             } else {
@@ -135,7 +129,7 @@ export class CleanCssWebpackPlugin {
             compilation.assets[file] = newSource;
           });
 
-        return Promise.all(actions).then(() => undefined)
+        return Promise.all(actions).then(() => undefined);
       }
     );
   }

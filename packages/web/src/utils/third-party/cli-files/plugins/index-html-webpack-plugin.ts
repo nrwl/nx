@@ -29,10 +29,7 @@ export interface IndexHtmlWebpackPluginOptions {
   crossOrigin?: CrossOriginValue;
 }
 
-function readFile(
-  filename: string,
-  compilation: Compilation
-): Promise<string> {
+function readFile(filename: string, compilation: Compilation): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     compilation.inputFileSystem.readFile(
       filename,
@@ -122,7 +119,9 @@ export class IndexHtmlWebpackPlugin {
         }
 
         // Add to compilation assets
-        compilation.assets[this._options.output] = new RawSource(indexSource) as never;  //TODO This is a hack as RawSource lacks Buffer, which is now in the webpack Source object
+        compilation.assets[this._options.output] = new RawSource(
+          indexSource
+        ) as never; //TODO This is a hack as RawSource lacks Buffer, which is now in the webpack Source object
       }
     );
   }

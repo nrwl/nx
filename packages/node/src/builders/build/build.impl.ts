@@ -79,7 +79,7 @@ function run(
     }),
     concatMap((config) =>
       // TODO  Likely @anguar-devkit needs to update typings for webpack 5
-      runWebpack(config, (context as never), {
+      runWebpack(config, context as never, {
         logging: (stats) => {
           context.logger.info(stats.toString(config.stats));
         },
