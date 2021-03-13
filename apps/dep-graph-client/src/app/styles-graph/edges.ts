@@ -1,23 +1,23 @@
 import { Stylesheet } from 'cytoscape';
-import { NrwlPallette } from './pallette';
+import { NrwlPalette } from './palette';
 
 const allEdges: Stylesheet = {
   selector: 'edge',
   style: {
     width: '1px',
-    'line-color': NrwlPallette.black,
+    'line-color': NrwlPalette.black,
     'curve-style': 'straight',
     'target-arrow-shape': 'triangle',
     'target-arrow-fill': 'filled',
-    'target-arrow-color': NrwlPallette.black,
+    'target-arrow-color': NrwlPalette.black,
   },
 };
 
 const affectedEdges: Stylesheet = {
   selector: 'edge.affected',
   style: {
-    'line-color': NrwlPallette.red,
-    'target-arrow-color': NrwlPallette.red,
+    'line-color': NrwlPalette.red,
+    'target-arrow-color': NrwlPalette.red,
   },
 };
 
