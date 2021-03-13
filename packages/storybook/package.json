@@ -36,7 +36,7 @@
     "semver": "6.3.0",
     "tree-kill": "1.2.2",
     "ts-loader": "5.4.5",
-    "tsconfig-paths-webpack-plugin": "3.2.0",
-    "webpack-node-externals": "1.7.2"
+    "tsconfig-paths-webpack-plugin": "3.4.1",
+    "webpack-node-externals": "2.5.2"
   }
 }
