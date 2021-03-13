@@ -1,4 +1,4 @@
-export enum NrwlPallette {
+export enum NrwlPalette {
   blue = '#48c4e5',
   lightBlue = '#96d8e9',
   gray = '#333333',

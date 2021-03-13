@@ -1,6 +1,6 @@
 import { Stylesheet } from 'cytoscape';
 import { FONTS } from './fonts';
-import { NrwlPallette } from './pallette';
+import { NrwlPalette } from './palette';
 
 const allNodes: Stylesheet = {
   selector: 'node',
@@ -8,14 +8,14 @@ const allNodes: Stylesheet = {
     'font-size': '32px',
     'font-family': FONTS,
     'border-style': 'solid',
-    'border-color': NrwlPallette.black,
+    'border-color': NrwlPalette.black,
     'border-width': '1px',
     'text-halign': 'center',
     'text-valign': 'center',
     'padding-left': '16px',
     label: 'data(id)',
     width: 'label',
-    backgroundColor: NrwlPallette.white,
+    backgroundColor: NrwlPalette.white,
   },
 };
 
@@ -43,15 +43,15 @@ const e2eNodes: Stylesheet = {
 const focusedNodes: Stylesheet = {
   selector: 'node.focused',
   style: {
-    color: NrwlPallette.twilight,
-    'border-color': NrwlPallette.twilight,
+    color: NrwlPalette.twilight,
+    'border-color': NrwlPalette.twilight,
   },
 };
 
 const affectedNodes: Stylesheet = {
   selector: 'node.affected',
   style: {
-    'border-color': NrwlPallette.red,
+    'border-color': NrwlPalette.red,
   },
 };
 
@@ -59,8 +59,8 @@ const parentNodes: Stylesheet = {
   selector: ':parent',
   style: {
     'background-opacity': 0.5,
-    'background-color': NrwlPallette.twilight,
-    'border-color': NrwlPallette.black,
+    'background-color': NrwlPalette.twilight,
+    'border-color': NrwlPalette.black,
     label: 'data(label)',
     'text-halign': 'center',
     'text-valign': 'top',
