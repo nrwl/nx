@@ -140,7 +140,7 @@ The `builder.json` file provides the description of your builder to the CLI.
 }
 ```
 
-Note that this `builder.json` file is naming our builder 'echo' for the CLI's purposes, and maping that name to the given implemetation file and schema.
+Note that this `builder.json` file is naming our builder 'echo' for the CLI's purposes, and mapping that name to the given implementation file and schema.
 
 ### package.json
 
