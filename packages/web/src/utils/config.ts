@@ -77,7 +77,7 @@ export function getBaseWebpackPartial(
           configFile: options.tsConfig,
           extensions,
           mainFields,
-        }) as never,
+        }),
       ],
       // Search closest node_modules first, and then fallback to to default node module resolution scheme.
       // This ensures we are pulling the correct versions of dependencies, such as `core-js`.

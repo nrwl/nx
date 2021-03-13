@@ -60,7 +60,7 @@ export function getBaseWebpackPartial(
           configFile: options.tsConfig,
           extensions,
           mainFields,
-        }) as never,
+        }),
       ],
       mainFields,
     },
