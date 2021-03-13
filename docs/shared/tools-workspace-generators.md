@@ -297,7 +297,7 @@ Running the generator without providing a value for the type will prompt the use
 
 ### With Visual Studio Code
 
-1. Open the Command Pallette and choose `Debug: Create JavaScript Debug Terminal`.
+1. Open the Command Palette and choose `Debug: Create JavaScript Debug Terminal`.
    This will open a terminal with debugging enabled.
 2. Set breakpoints in your code
 3. Run `nx workspace-generator my-generator` in the debug terminal.

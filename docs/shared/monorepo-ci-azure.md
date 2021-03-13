@@ -16,7 +16,7 @@ But they come with their own technical challenges. The more code you add into yo
 
 [This repo](https://github.com/nrwl/nx-azure-build) is an example Nx Workspace. It has two applications. Each app has 15 libraries, each of which consists of 30 components. The two applications also share code.
 
-If you run `nx dep-graph`, you will see somethign like this:
+If you run `nx dep-graph`, you will see something like this:
 
 ![dependency-graph](/shared/ci-graph.png)
 
@@ -91,7 +91,7 @@ jobs:
       - script: yarn nx affected --target=build --base=origin/master --prod --parallel
 ```
 
-This helps but it still has a ceiling. At some point, this won't be enough. A single agent is simply insufficent. You need to distribute CI across a grid of machines.
+This helps but it still has a ceiling. At some point, this won't be enough. A single agent is simply insufficient. You need to distribute CI across a grid of machines.
 
 ## Distributed CI
 
@@ -277,7 +277,7 @@ This example uses a fixed agent graph. This setup works without any problems for
 
 ## Summary
 
-1. Rebuilding/retesting/relinting everyting on every code change doesn't scale. **In this example it takes 45 minutes.**
+1. Rebuilding/retesting/relinting everything on every code change doesn't scale. **In this example it takes 45 minutes.**
 2. Nx lets you rebuild only what is affected, which drastically improves the average CI time, but it doesn't address the worst-case scenario.
 3. Nx helps you run multiple targets in parallel on the same machine.
 4. Nx provides `print-affected` and `run-many` which make implemented distributed CI simple. **In this example the time went down from 45 minutes to only 7**

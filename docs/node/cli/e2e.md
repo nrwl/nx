@@ -40,7 +40,7 @@ nx e2e myapp-e2e --watch
 
 ## Common Options
 
-The options below are common to the E2E commands used within an Nx workspace. Cypress and Protractor-specifc options are listed below.
+The options below are common to the E2E commands used within an Nx workspace. Cypress and Protractor-specific options are listed below.
 
 ### baseUrl
 
