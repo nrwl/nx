@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { execSync } from 'child_process';
+import { exec, execSync } from 'child_process';
 import { writeFileSync } from 'fs';
 import * as inquirer from 'inquirer';
 import * as path from 'path';
@@ -8,6 +8,8 @@ import { dirSync } from 'tmp';
 import * as yargsParser from 'yargs-parser';
 import { showNxWarning, unparse } from './shared';
 import { output } from './output';
+import * as ora from 'ora';
+
 import {
   getPackageManagerCommand,
   getPackageManagerVersion,
@@ -121,7 +123,7 @@ determineWorkspaceName(parsedArgs).then((name) => {
           return determineLinter(preset, parsedArgs).then((linter) => {
             return askAboutNxCloud(parsedArgs).then((nxCloud) => {
               const tmpDir = createSandbox(packageManager);
-              createApp(tmpDir, name, {
+              return createApp(tmpDir, name, {
                 ...parsedArgs,
                 cli,
                 preset,
@@ -129,9 +131,10 @@ determineWorkspaceName(parsedArgs).then((name) => {
                 style,
                 linter,
                 nxCloud,
+              }).then(() => {
+                showNxWarning(name);
+                pointToTutorialAndCourse(preset);
               });
-              showNxWarning(name);
-              pointToTutorialAndCourse(preset);
             });
           });
         });
@@ -444,7 +447,7 @@ function createSandbox(packageManager: string) {
   return tmpDir;
 }
 
-function createApp(tmpDir: string, name: string, parsedArgs: any) {
+async function createApp(tmpDir: string, name: string, parsedArgs: any) {
   const { _, cli, ...restArgs } = parsedArgs;
   const args = unparse(restArgs).join(' ');
 
@@ -466,12 +469,10 @@ function createApp(tmpDir: string, name: string, parsedArgs: any) {
     }
   }
   const fullCommand = `${pmc.exec} tao ${command}/collection.json --cli=${cli} --nxWorkspaceRoot=${nxWorkspaceRoot}`;
+  const spinner = ora('Creating your workspace').start();
 
   try {
-    execSync(fullCommand, {
-      stdio: ['ignore', 'ignore', 'ignore'],
-      cwd: tmpDir,
-    });
+    await execAndWait(fullCommand, tmpDir);
   } catch (e) {
     output.error({
       title:
@@ -481,6 +482,8 @@ function createApp(tmpDir: string, name: string, parsedArgs: any) {
       stdio: [0, 1, 2],
       cwd: tmpDir,
     });
+  } finally {
+    spinner.stop();
   }
 
   output.success({
@@ -494,6 +497,18 @@ function createApp(tmpDir: string, name: string, parsedArgs: any) {
       cwd: path.join(process.cwd(), name),
     });
   }
+}
+
+function execAndWait(command: string, cwd: string) {
+  return new Promise((res, rej) => {
+    exec(command, { cwd }, (error, stdout, stderr) => {
+      if (error) {
+        rej();
+      } else {
+        res(null);
+      }
+    });
+  });
 }
 
 async function askAboutNxCloud(parsedArgs: any) {
