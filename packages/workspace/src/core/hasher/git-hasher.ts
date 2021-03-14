@@ -6,7 +6,7 @@ function parseGitLsTree(output: string): Map<string, string> {
   const changes: Map<string, string> = new Map<string, string>();
   if (output) {
     const gitRegex: RegExp = /([0-9]{6})\s(blob|commit)\s([a-f0-9]{40})\s*(.*)/;
-    output.split('\n').forEach((line) => {
+    output.split('\0').forEach((line) => {
       if (line) {
         const matches: RegExpMatchArray | null = line.match(gitRegex);
         if (matches && matches[3] && matches[4]) {
@@ -27,31 +27,18 @@ function parseGitStatus(output: string): Map<string, string> {
   if (!output) {
     return changes;
   }
-  output
-    .trim()
-    .split('\n')
-    .forEach((line) => {
-      const [changeType, ...filenames] = line
-        .trim()
-        .match(/(?:[^\s"]+|"[^"]*")+/g)
-        .map((r) => (r.startsWith('"') ? r.substring(1, r.length - 1) : r))
-        .filter((r) => !!r);
 
-      if (changeType && filenames && filenames.length > 0) {
-        // the before filename we mark as deleted, so we remove it from the map
-        // changeType can be A/D/R/RM etc
-        // if it R and RM, we need to split the output into before and after
-        // the before part gets marked as deleted
-        if (changeType[0] === 'R') {
-          changes.set(filenames[0], 'D');
-          changes.set(filenames[filenames.length - 1], changeType);
-        } else if (changeType === '??') {
-          changes.set(filenames.join(' '), changeType);
-        } else {
-          changes.set(filenames[filenames.length - 1], changeType);
-        }
+  var chunks = output.split('\0');
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i];
+    if (chunk.length) {
+      const change = chunk[0];
+      if (change === 'R') {
+        changes.set(chunks[++i], 'D');
       }
-    });
+      changes.set(chunk.substring(2).trim(), change);
+    }
+  }
   return changes;
 }
 
@@ -92,7 +79,9 @@ function getGitHashForFiles(
 }
 
 function gitLsTree(path: string): Map<string, string> {
-  return parseGitLsTree(spawnProcess('git', ['ls-tree', 'HEAD', '-r'], path));
+  return parseGitLsTree(
+    spawnProcess('git', ['ls-tree', 'HEAD', '-r', '-z'], path)
+  );
 }
 
 function gitStatus(
@@ -101,7 +90,7 @@ function gitStatus(
   const deletedFiles: string[] = [];
   const filesToHash: string[] = [];
   parseGitStatus(
-    spawnProcess('git', ['status', '-s', '-u', '.'], path)
+    spawnProcess('git', ['status', '-s', '-u', '-z', '.'], path)
   ).forEach((changeType: string, filename: string) => {
     if (changeType !== 'D') {
       filesToHash.push(filename);
