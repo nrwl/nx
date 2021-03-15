@@ -5,15 +5,19 @@ import { getFileHashes } from './git-hasher';
 
 describe('git-hasher', () => {
   let dir;
+  const warnSpy = jest.spyOn(console, 'warn');
 
   beforeEach(() => {
     dir = dirSync().name;
     run(`git init`);
     run(`git config user.email "test@test.com"`);
     run(`git config user.name "test"`);
+
+    warnSpy.mockClear();
   });
 
   afterEach(() => {
+    expect(console.warn).not.toHaveBeenCalled();
     removeSync(dir);
   });
 
