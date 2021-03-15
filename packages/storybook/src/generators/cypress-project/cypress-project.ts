@@ -38,18 +38,10 @@ export async function cypressProjectGenerator(
 }
 
 function removeUnneededFiles(tree: Tree, projectName: string, js: boolean) {
-  safeFileDelete(
-    tree,
-    `${readProjectConfiguration(tree, projectName).sourceRoot}${
-      js ? '/integration/app.spec.js' : '/integration/app.spec.ts'
-    }`
-  );
-  safeFileDelete(
-    tree,
-    `${readProjectConfiguration(tree, projectName).sourceRoot}${
-      js ? '/support/app.po.js' : '/support/app.po.ts'
-    }`
-  );
+  const { sourceRoot } = readProjectConfiguration(tree, projectName);
+  const fileType = js ? 'js' : 'ts';
+  safeFileDelete(tree, `${sourceRoot}/integration/app.spec.${fileType}`);
+  safeFileDelete(tree, `${sourceRoot}/support/app.po.${fileType}`);
 }
 
 function addBaseUrlToCypressConfig(tree: Tree, projectName: string) {
