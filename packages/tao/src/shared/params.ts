@@ -5,6 +5,7 @@ import { logger } from './logger';
 
 type PropertyDescription = {
   type?: string;
+  enum?: string[];
   properties?: any;
   oneOf?: any;
   items?: any;
@@ -494,7 +495,12 @@ async function promptForValues(opts: Options, schema: Schema) {
 
       if (typeof v['x-prompt'] === 'string') {
         question.message = v['x-prompt'];
-        question.type = v.type === 'boolean' ? 'confirm' : 'string';
+        if (v.type === 'string' && v.enum && Array.isArray(v.enum)) {
+          question.type = 'list';
+          question.choices = v.enum;
+        } else {
+          question.type = v.type === 'boolean' ? 'confirm' : 'string';
+        }
       } else if (v['x-prompt'].type == 'number') {
         question.message = v['x-prompt'].message;
         question.type = 'number';
