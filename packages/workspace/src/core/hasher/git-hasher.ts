@@ -32,11 +32,16 @@ function parseGitStatus(output: string): Map<string, string> {
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i];
     if (chunk.length) {
-      const change = chunk[0];
-      if (change === 'R') {
+      // The XY is the two-letter status code.
+      // See: https://git-scm.com/docs/git-status#_short_format
+      const X = chunk[0].trim();
+      const Y = chunk[1].trim();
+      const filename = chunk.substring(3);
+      if (X === 'R') {
         changes.set(chunks[++i], 'D');
       }
-      changes.set(chunk.substring(2).trim(), change);
+      // If both present, Y shows the status of the working tree
+      changes.set(filename, Y || X);
     }
   }
   return changes;
@@ -49,7 +54,7 @@ function spawnProcess(command: string, args: string[], cwd: string): string {
       `Failed to run ${command} ${args.join(' ')}.\n${r.stdout}\n${r.stderr}`
     );
   }
-  return r.stdout.toString().trim();
+  return r.stdout.toString().trimEnd();
 }
 
 function getGitHashForFiles(
