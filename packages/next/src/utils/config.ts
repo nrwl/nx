@@ -114,7 +114,7 @@ export function createWebpackConfig(
   };
 }
 
-export function prepareConfig(
+export async function prepareConfig(
   phase:
     | typeof PHASE_PRODUCTION_BUILD
     | typeof PHASE_EXPORT
@@ -123,7 +123,7 @@ export function prepareConfig(
   options: NextBuildBuilderOptions,
   context: ExecutorContext
 ) {
-  const config = loadConfig(phase, options.root, null);
+  const config = await loadConfig(phase, options.root, null);
   const userWebpack = config.webpack;
   const userNextConfig = options.nextConfig
     ? require(options.nextConfig)

@@ -42,7 +42,7 @@ export default async function* serveExecutor(
     context
   );
   const root = resolve(context.root, buildOptions.root);
-  const config = prepareConfig(
+  const config = await prepareConfig(
     options.dev ? PHASE_DEVELOPMENT_SERVER : PHASE_PRODUCTION_SERVER,
     buildOptions,
     context

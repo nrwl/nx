@@ -35,7 +35,7 @@ export default async function exportExecutor(
     context
   );
   const root = resolve(context.root, buildOptions.root);
-  const config = prepareConfig(PHASE_EXPORT, buildOptions, context);
+  const config = await prepareConfig(PHASE_EXPORT, buildOptions, context);
 
   await exportApp(
     root,
