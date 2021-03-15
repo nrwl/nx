@@ -553,7 +553,6 @@ function requiresAddingOfPackages(packageJsonFile, deps, devDeps): boolean {
  * Updates the package.json given the passed deps and/or devDeps. Only updates
  * if the packages are not yet present
  *
- * @param host the schematic tree
  * @param deps the package.json dependencies to add
  * @param devDeps the package.json devDependencies to add
  * @param addInstall default `true`; set to false to avoid installs
