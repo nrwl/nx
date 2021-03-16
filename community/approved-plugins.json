@@ -143,5 +143,10 @@
     "name": "@jscutlery/semver",
     "description": "Nx plugin to automate semantic versioning and CHANGELOG generation.",
     "url": "https://github.com/jscutlery/semver"
+  },
+  {
+    "name": "ngx-deploy-npm",
+    "description": "Publish your libraries to NPM with just one command.",
+    "url": "https://github.com/bikecoders/ngx-deploy-npm"
   }
 ]
