@@ -19,4 +19,5 @@ export interface Schema {
   importPath?: string;
   js?: boolean;
   globalCss?: boolean;
+  strict?: boolean;
 }
