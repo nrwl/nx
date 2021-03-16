@@ -206,7 +206,7 @@ Default: `false`
 
 Type: `boolean`
 
-Generates a 'stats.json' file which can be analyzed using tools such as: #webpack-bundle-analyzer' or https://webpack.github.io/analyse.
+Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or <https://webpack.github.io/analyse>.
 
 ### styles
 
