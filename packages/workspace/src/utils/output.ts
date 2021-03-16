@@ -76,10 +76,7 @@ class CLIOutput {
       return;
     }
     this.addNewline();
-    bodyLines.forEach((bodyLine) =>
-      this.writeToStdOut(`  ${bodyLine}
-`)
-    );
+    bodyLines.forEach((bodyLine) => this.writeToStdOut(`  ${bodyLine}\n`));
   }
 
   addNewline() {
@@ -111,9 +108,8 @@ class CLIOutput {
       this.addNewline();
       this.writeToStdOut(
         `${chalk.grey(
-          '  ' + 'Learn more about this error: '
-        )}https://errors.nx.dev/${slug}
-`
+          '  Learn more about this error: '
+        )}https://errors.nx.dev/${slug}\n`
       );
     }
 
@@ -137,9 +133,8 @@ class CLIOutput {
       this.addNewline();
       this.writeToStdOut(
         `${chalk.grey(
-          '  ' + 'Learn more about this warning: '
-        )}https://errors.nx.dev/${slug}
-`
+          '  Learn more about this warning: '
+        )}https://errors.nx.dev/${slug}\n`
       );
     }
 
