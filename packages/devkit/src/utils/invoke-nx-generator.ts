@@ -1,6 +1,7 @@
 import { join, relative } from 'path';
 import { FileChange } from '@nrwl/tao/src/shared/tree';
 import { Generator, GeneratorCallback } from '@nrwl/tao/src/shared/workspace';
+import { readFileSync, statSync } from 'fs';
 
 class RunCallbackTask {
   constructor(private callback: GeneratorCallback) {}
@@ -93,7 +94,7 @@ class DevkitTreeFromAngularDevkitTree {
   }
 
   listChanges(): FileChange[] {
-    const fileChanges = [];
+    let fileChanges = [];
     for (const action of this.tree.actions) {
       if (action.kind === 'r') {
         fileChanges.push({
@@ -107,6 +108,23 @@ class DevkitTreeFromAngularDevkitTree {
           content: null,
         });
       } else if (action.kind === 'c' || action.kind === 'o') {
+        const actionPath = join(this.root, action.path);
+
+        // If the angular devkit tree is overwriting a file, we check if it already exists on disk
+        // If it does exist on disk and it is identical to what the angular devkit tree will overwrite the file with, we omit the file change
+        try {
+          if (
+            action.kind === 'o' &&
+            statSync(actionPath).isFile() &&
+            readFileSync(actionPath) &&
+            action.content.equals(readFileSync(actionPath))
+          ) {
+            // Remove all existing file changes.
+            fileChanges = fileChanges.filter((a) => a.path === action.path);
+            continue;
+          }
+        } catch (e) {}
+
         fileChanges.push({
           path: this.normalize(action.path),
           type: actionToFileChangeMap[action.kind],
