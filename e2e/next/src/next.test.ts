@@ -349,7 +349,9 @@ describe('Next.js Applications', () => {
 
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
 
-    runCLI(`generate @nrwl/react:lib ${libName} --no-interactive --style=none --js`);
+    runCLI(
+      `generate @nrwl/react:lib ${libName} --no-interactive --style=none --js`
+    );
 
     const mainPath = `apps/${appName}/pages/index.tsx`;
     updateFile(
