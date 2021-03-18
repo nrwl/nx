@@ -32,6 +32,7 @@ export interface CypressExecutorOptions extends Json {
   ignoreTestFiles?: string;
   reporter?: string;
   reporterOptions?: string;
+  skipServe: boolean;
 }
 
 try {
@@ -106,7 +107,7 @@ async function* startDevServer(
   context: ExecutorContext
 ) {
   // no dev server, return the provisioned base url
-  if (!opts.devServerTarget) {
+  if (!opts.devServerTarget || opts.skipServe) {
     yield opts.baseUrl;
     return;
   }

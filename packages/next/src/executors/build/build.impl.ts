@@ -21,7 +21,7 @@ export default async function buildExecutor(
   context: ExecutorContext
 ) {
   const root = resolve(context.root, options.root);
-  const config = prepareConfig(PHASE_PRODUCTION_BUILD, options, context);
+  const config = await prepareConfig(PHASE_PRODUCTION_BUILD, options, context);
 
   await build(root, config as any);
 

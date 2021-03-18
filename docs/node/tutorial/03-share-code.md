@@ -49,7 +49,7 @@ export type Todo = {
 
 If you're using [VS Code](https://code.visualstudio.com/) it may be necessary at this point to restart the TS server so that the new `@myorg/data` package is recognised. This needs to be done **every time a new workspace library is added**.
 
-Use the command pallette with a `*.ts` file open and choose `Restart TS Server`.
+Use the command palette with a `*.ts` file open and choose `Restart TS Server`.
 
 ## Refactor the Todos Service
 

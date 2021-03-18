@@ -25189,7 +25189,7 @@ export const mediumGraph: ProjectGraphCache = {
       type: 'npm',
       name: 'npm:@types/node',
       data: {
-        version: '~8.9.4',
+        version: '14.14.33',
         packageName: '@types/node',
         files: [],
       },

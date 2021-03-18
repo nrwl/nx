@@ -22,15 +22,17 @@ describe('Cypress builder', () => {
     record: false,
     baseUrl: undefined,
     watch: false,
+    skipServe: false,
   };
   let mockContext;
   let mockedInstalledCypressVersion: jest.Mock<
     ReturnType<typeof installedCypressVersion>
   > = installedCypressVersion as any;
   mockContext = { root: '/root', workspace: { projects: {} } } as any;
+  let runExecutor: any;
 
   beforeEach(async () => {
-    (devkit as any).runExecutor = jest.fn().mockReturnValue([
+    runExecutor = (devkit as any).runExecutor = jest.fn().mockReturnValue([
       {
         success: true,
         baseUrl: 'http://localhost:4200',
@@ -172,6 +174,7 @@ describe('Cypress builder', () => {
         record: false,
         baseUrl: undefined,
         watch: false,
+        skipServe: false,
       },
       mockContext
     );
@@ -258,6 +261,27 @@ describe('Cypress builder', () => {
     expect(success).toEqual(true);
     expect(cypressRun.calls.mostRecent().args[0].config.baseUrl).toBe(
       'http://localhost:4200'
+    );
+    done();
+  });
+
+  it('should call `Cypress.run` without serving the app', async (done) => {
+    const { success } = await cypressExecutor(
+      {
+        ...cypressOptions,
+        skipServe: true,
+        baseUrl: 'http://my-distant-host.com',
+      },
+      mockContext
+    );
+    expect(success).toEqual(true);
+    expect(runExecutor).not.toHaveBeenCalled();
+    expect(cypressRun).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        config: {
+          baseUrl: 'http://my-distant-host.com',
+        },
+      })
     );
     done();
   });

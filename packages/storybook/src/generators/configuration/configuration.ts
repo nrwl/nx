@@ -93,6 +93,9 @@ function createRootStorybookDir(
   js: boolean,
   workspaceStorybookVersion: string
 ) {
+  if (tree.exists('.storybook')) {
+    return;
+  }
   const { projectType } = readProjectConfiguration(tree, projectName);
   const projectDirectory = projectType === 'application' ? 'app' : 'lib';
   logger.debug(

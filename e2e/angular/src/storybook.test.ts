@@ -2,6 +2,7 @@ import {
   checkFilesExist,
   newProject,
   readFile,
+  removeProject,
   runCLI,
   supportUi,
   tmpProjPath,
@@ -10,10 +11,14 @@ import {
 import { mkdirSync, writeFileSync } from 'fs';
 
 describe('Storybook schematics', () => {
+  let proj: string;
+
+  beforeEach(() => (proj = newProject()));
+
+  afterEach(() => removeProject({ onlyOnCI: true }));
+
   describe('build storybook', () => {
     it('should execute e2e tests using Cypress running against Storybook', () => {
-      newProject();
-
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
 
@@ -145,8 +150,6 @@ describe('Storybook schematics', () => {
     }, 1000000);
 
     it('should build an Angular based storybook', () => {
-      newProject();
-
       const angularStorybookLib = uniq('test-ui-lib');
       createTestUILib(angularStorybookLib);
       runCLI(
@@ -162,8 +165,6 @@ describe('Storybook schematics', () => {
     }, 1000000);
 
     it('should build an Angular based storybook that references another lib', () => {
-      const proj = newProject();
-
       const angularStorybookLib = uniq('test-ui-lib');
       createTestUILib(angularStorybookLib);
       runCLI(

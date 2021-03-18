@@ -16,6 +16,7 @@ describe('lib', () => {
     unitTestRunner: 'jest',
     style: 'css',
     component: true,
+    strict: false,
   };
 
   beforeEach(() => {
@@ -576,6 +577,42 @@ describe('lib', () => {
       }
 
       expect.assertions(1);
+    });
+  });
+
+  describe('--strict', () => {
+    it('should update the projects tsconfig with strict true', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        strict: true,
+      });
+      const tsconfigJson = readJson(appTree, '/libs/my-lib/tsconfig.lib.json');
+
+      expect(tsconfigJson.compilerOptions.strict).toBeTruthy();
+      expect(
+        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
+      ).toBeTruthy();
+      expect(tsconfigJson.compilerOptions.noImplicitReturns).toBeTruthy();
+      expect(
+        tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
+      ).toBeTruthy();
+    });
+
+    it('should default to strict false', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        name: 'myLib',
+      });
+      const tsconfigJson = readJson(appTree, '/libs/my-lib/tsconfig.lib.json');
+
+      expect(tsconfigJson.compilerOptions.strict).not.toBeDefined();
+      expect(
+        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
+      ).not.toBeDefined();
+      expect(tsconfigJson.compilerOptions.noImplicitReturns).not.toBeDefined();
+      expect(
+        tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
+      ).not.toBeDefined();
     });
   });
 });

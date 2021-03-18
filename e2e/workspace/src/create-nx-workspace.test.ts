@@ -36,6 +36,8 @@ describe('create-nx-workspace', () => {
     runCreateWorkspace(wsName, {
       preset: 'oss',
     });
+
+    expectNoAngularDevkit();
   });
 
   it('should be able to create an angular workspace', () => {

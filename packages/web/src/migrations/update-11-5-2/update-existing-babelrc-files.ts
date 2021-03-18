@@ -1,16 +1,7 @@
 import { formatFiles, getProjects, Tree, updateJson } from '@nrwl/devkit';
 
-export async function updateBabelConfig(host: Tree) {
+export async function updateExistingBabelrcFiles(host: Tree) {
   const projects = getProjects(host);
-
-  if (host.exists('babel.config.json')) {
-    updateJson(host, 'babel.config.json', (json) => {
-      if (Array.isArray(json.presets)) {
-        json.presets = json.presets.filter((x) => x !== '@nrwl/web/babel');
-      }
-      return json;
-    });
-  }
 
   projects.forEach((p) => {
     const babelrcPath = `${p.root}/.babelrc`;
@@ -34,17 +25,10 @@ export async function updateBabelConfig(host: Tree) {
         }
         return json;
       });
-      // Non-buildable libraries might be included in applications that
-      // require .babelrc to exist and contain '@nrwl/web/babel' preset
-    } else if (p.projectType === 'library') {
-      host.write(
-        babelrcPath,
-        JSON.stringify({ presets: ['@nrwl/web/babel'] }, null, 2)
-      );
     }
   });
 
   await formatFiles(host);
 }
 
-export default updateBabelConfig;
+export default updateExistingBabelrcFiles;

@@ -392,7 +392,7 @@ export function createFile(f: string, content: string = ''): void {
 
 export function updateFile(
   f: string,
-  content: string | ((content: string) => void)
+  content: string | ((content: string) => string)
 ): void {
   ensureDirSync(path.dirname(tmpProjPath(f)));
   if (typeof content === 'string') {

@@ -1,20 +1,24 @@
 import { dirSync } from 'tmp';
-import { rmdirSync } from 'fs-extra';
+import { removeSync } from 'fs-extra';
 import { execSync } from 'child_process';
 import { getFileHashes } from './git-hasher';
 
 describe('git-hasher', () => {
   let dir;
+  const warnSpy = jest.spyOn(console, 'warn');
 
   beforeEach(() => {
     dir = dirSync().name;
     run(`git init`);
     run(`git config user.email "test@test.com"`);
     run(`git config user.name "test"`);
+
+    warnSpy.mockClear();
   });
 
   afterEach(() => {
-    rmdirSync(dir, { recursive: true });
+    expect(console.warn).not.toHaveBeenCalled();
+    removeSync(dir);
   });
 
   it('should work', () => {
@@ -110,6 +114,28 @@ describe('git-hasher', () => {
     run(`git add .`);
     run(`echo modified >> moda.txt`);
     expect([...getFileHashes(dir).keys()]).toEqual([`${dir}/moda.txt`]);
+  });
+
+  it('should handle special characters in filenames', () => {
+    run(`echo AAA > "a-ū".txt`);
+    run(`echo BBB > "b-ū".txt`);
+    run(`git add .`);
+    run(`git commit -am init`);
+    expect([...getFileHashes(dir).keys()]).toEqual([
+      `${dir}/a-ū.txt`,
+      `${dir}/b-ū.txt`,
+    ]);
+
+    run(`mv a-ū.txt moda-ū.txt`);
+    run(`git add .`);
+    run(`echo modified >> moda-ū.txt`);
+    expect([...getFileHashes(dir).keys()]).toEqual([
+      `${dir}/b-ū.txt`,
+      `${dir}/moda-ū.txt`,
+    ]);
+
+    run(`rm "moda-ū.txt"`);
+    expect([...getFileHashes(dir).keys()]).toEqual([`${dir}/b-ū.txt`]);
   });
 
   function run(command: string) {

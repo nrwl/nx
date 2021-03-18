@@ -5,6 +5,7 @@ import {
   getSelectedPackageManager,
   getSize,
   newProject,
+  removeProject,
   runCLI,
   runCLIAsync,
   tmpProjPath,
@@ -16,9 +17,9 @@ import { names } from '@nrwl/devkit';
 describe('Angular Package', () => {
   let proj: string;
 
-  beforeEach(() => {
-    proj = newProject();
-  });
+  beforeEach(() => (proj = newProject()));
+
+  afterEach(() => removeProject({ onlyOnCI: true }));
 
   it('should work', async () => {
     const myapp = uniq('myapp');

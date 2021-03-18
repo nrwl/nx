@@ -66,8 +66,8 @@ describe('Next.js webpack config builder', () => {
   });
 
   describe('prepareConfig', () => {
-    it('should set the dist and out directories', () => {
-      const config = prepareConfig(
+    it('should set the dist and out directories', async () => {
+      const config = await prepareConfig(
         PHASE_PRODUCTION_BUILD,
         {
           root: 'apps/wibble',
@@ -85,8 +85,8 @@ describe('Next.js webpack config builder', () => {
       );
     });
 
-    it('should support nextConfig option to customize the config', () => {
-      const config = prepareConfig(
+    it('should support nextConfig option to customize the config', async () => {
+      const config = await prepareConfig(
         PHASE_PRODUCTION_BUILD,
         {
           root: 'apps/wibble',

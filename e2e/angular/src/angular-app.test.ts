@@ -2,6 +2,7 @@ import {
   newProject,
   readFile,
   readJson,
+  removeProject,
   runCLI,
   uniq,
   updateFile,
@@ -52,6 +53,8 @@ describe('Angular Nrwl app builder', () => {
       '@nrwl/angular:webpack-browser';
     updateFile('angular.json', JSON.stringify(workspaceJson, null, 2));
   });
+
+  afterEach(() => removeProject({ onlyOnCI: true }));
 
   it('should build the dependent buildable lib as well as the app', () => {
     const libOutput = runCLI(`build ${app} --with-deps`);

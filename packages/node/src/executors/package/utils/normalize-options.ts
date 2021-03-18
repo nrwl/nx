@@ -1,6 +1,8 @@
-import { BuilderContext } from '@angular-devkit/architect';
+import { ExecutorContext } from '@nrwl/devkit';
+
 import * as glob from 'glob';
 import { basename, dirname, join, relative } from 'path';
+
 import {
   FileInputOutput,
   NodePackageBuilderOptions,
@@ -9,7 +11,7 @@ import {
 
 export default function normalizeOptions(
   options: NodePackageBuilderOptions,
-  context: BuilderContext,
+  context: ExecutorContext,
   libRoot: string
 ): NormalizedBuilderOptions {
   const outDir = options.outputPath;
@@ -25,26 +27,21 @@ export default function normalizeOptions(
 
   options.assets.forEach((asset) => {
     if (typeof asset === 'string') {
-      globbedFiles(asset, context.workspaceRoot).forEach((globbedFile) => {
+      globbedFiles(asset, context.root).forEach((globbedFile) => {
         files.push({
-          input: join(context.workspaceRoot, globbedFile),
-          output: join(context.workspaceRoot, outDir, basename(globbedFile)),
+          input: join(context.root, globbedFile),
+          output: join(context.root, outDir, basename(globbedFile)),
         });
       });
     } else {
       globbedFiles(
         asset.glob,
-        join(context.workspaceRoot, asset.input),
+        join(context.root, asset.input),
         asset.ignore
       ).forEach((globbedFile) => {
         files.push({
-          input: join(context.workspaceRoot, asset.input, globbedFile),
-          output: join(
-            context.workspaceRoot,
-            outDir,
-            asset.output,
-            globbedFile
-          ),
+          input: join(context.root, asset.input, globbedFile),
+          output: join(context.root, outDir, asset.output, globbedFile),
         });
       });
     }
@@ -63,6 +60,6 @@ export default function normalizeOptions(
     ...options,
     files,
     relativeMainFileOutput,
-    normalizedOutputPath: join(context.workspaceRoot, options.outputPath),
+    normalizedOutputPath: join(context.root, options.outputPath),
   };
 }
