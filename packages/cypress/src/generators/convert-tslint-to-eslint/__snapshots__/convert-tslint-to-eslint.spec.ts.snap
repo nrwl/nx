@@ -144,6 +144,97 @@ Object {
       ],
       "rules": Object {},
     },
+    Object {
+      "files": Array [
+        "*.ts",
+      ],
+      "plugins": Array [
+        "eslint-plugin-import",
+      ],
+      "rules": Object {
+        "@typescript-eslint/consistent-type-definitions": "error",
+        "@typescript-eslint/dot-notation": "off",
+        "@typescript-eslint/explicit-member-accessibility": Array [
+          "off",
+          Object {
+            "accessibility": "explicit",
+          },
+        ],
+        "@typescript-eslint/member-ordering": "error",
+        "@typescript-eslint/naming-convention": "error",
+        "@typescript-eslint/no-empty-function": "off",
+        "@typescript-eslint/no-empty-interface": "error",
+        "@typescript-eslint/no-inferrable-types": Array [
+          "error",
+          Object {
+            "ignoreParameters": true,
+          },
+        ],
+        "@typescript-eslint/no-misused-new": "error",
+        "@typescript-eslint/no-non-null-assertion": "error",
+        "@typescript-eslint/no-shadow": Array [
+          "error",
+          Object {
+            "hoist": "all",
+          },
+        ],
+        "@typescript-eslint/no-unused-expressions": "error",
+        "@typescript-eslint/prefer-function-type": "error",
+        "@typescript-eslint/unified-signatures": "error",
+        "arrow-body-style": "error",
+        "constructor-super": "error",
+        "eqeqeq": Array [
+          "error",
+          "smart",
+        ],
+        "guard-for-in": "error",
+        "id-blacklist": "off",
+        "id-match": "off",
+        "import/no-deprecated": "warn",
+        "no-bitwise": "error",
+        "no-caller": "error",
+        "no-console": Array [
+          "error",
+          Object {
+            "allow": Array [
+              "log",
+              "warn",
+              "dir",
+              "timeLog",
+              "assert",
+              "clear",
+              "count",
+              "countReset",
+              "group",
+              "groupEnd",
+              "table",
+              "dirxml",
+              "error",
+              "groupCollapsed",
+              "_buffer",
+              "_counters",
+              "_timers",
+              "_groupDepth",
+            ],
+          },
+        ],
+        "no-debugger": "error",
+        "no-empty": "off",
+        "no-eval": "error",
+        "no-fallthrough": "error",
+        "no-new-wrappers": "error",
+        "no-restricted-imports": Array [
+          "error",
+          "rxjs/Rx",
+        ],
+        "no-throw-literal": "error",
+        "no-undef-init": "error",
+        "no-underscore-dangle": "off",
+        "no-var": "error",
+        "prefer-const": "error",
+        "radix": "error",
+      },
+    },
   ],
   "plugins": Array [
     "@nrwl/nx",
@@ -157,7 +248,6 @@ Object {
   "extends": Array [
     "plugin:cypress/recommended",
     "../../.eslintrc.json",
-    "../../tools/eslint-configs/cypress.eslintrc.json",
   ],
   "ignorePatterns": Array [
     "!**/*",
@@ -187,97 +277,6 @@ Object {
   ],
   "rules": Object {
     "@typescript-eslint/no-empty-interface": "error",
-  },
-}
-`;
-
-exports[`convert-tslint-to-eslint should work for Cypress applications 5`] = `
-Object {
-  "plugins": Array [
-    "eslint-plugin-import",
-  ],
-  "rules": Object {
-    "@typescript-eslint/consistent-type-definitions": "error",
-    "@typescript-eslint/dot-notation": "off",
-    "@typescript-eslint/explicit-member-accessibility": Array [
-      "off",
-      Object {
-        "accessibility": "explicit",
-      },
-    ],
-    "@typescript-eslint/member-ordering": "error",
-    "@typescript-eslint/naming-convention": "error",
-    "@typescript-eslint/no-empty-function": "off",
-    "@typescript-eslint/no-empty-interface": "error",
-    "@typescript-eslint/no-inferrable-types": Array [
-      "error",
-      Object {
-        "ignoreParameters": true,
-      },
-    ],
-    "@typescript-eslint/no-misused-new": "error",
-    "@typescript-eslint/no-non-null-assertion": "error",
-    "@typescript-eslint/no-shadow": Array [
-      "error",
-      Object {
-        "hoist": "all",
-      },
-    ],
-    "@typescript-eslint/no-unused-expressions": "error",
-    "@typescript-eslint/prefer-function-type": "error",
-    "@typescript-eslint/unified-signatures": "error",
-    "arrow-body-style": "error",
-    "constructor-super": "error",
-    "eqeqeq": Array [
-      "error",
-      "smart",
-    ],
-    "guard-for-in": "error",
-    "id-blacklist": "off",
-    "id-match": "off",
-    "import/no-deprecated": "warn",
-    "no-bitwise": "error",
-    "no-caller": "error",
-    "no-console": Array [
-      "error",
-      Object {
-        "allow": Array [
-          "log",
-          "warn",
-          "dir",
-          "timeLog",
-          "assert",
-          "clear",
-          "count",
-          "countReset",
-          "group",
-          "groupEnd",
-          "table",
-          "dirxml",
-          "error",
-          "groupCollapsed",
-          "_buffer",
-          "_counters",
-          "_timers",
-          "_groupDepth",
-        ],
-      },
-    ],
-    "no-debugger": "error",
-    "no-empty": "off",
-    "no-eval": "error",
-    "no-fallthrough": "error",
-    "no-new-wrappers": "error",
-    "no-restricted-imports": Array [
-      "error",
-      "rxjs/Rx",
-    ],
-    "no-throw-literal": "error",
-    "no-undef-init": "error",
-    "no-underscore-dangle": "off",
-    "no-var": "error",
-    "prefer-const": "error",
-    "radix": "error",
   },
 }
 `;

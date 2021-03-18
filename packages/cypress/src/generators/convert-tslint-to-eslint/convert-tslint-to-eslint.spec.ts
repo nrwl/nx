@@ -157,14 +157,5 @@ describe('convert-tslint-to-eslint', () => {
      * The project's TSLint file should have been deleted
      */
     expect(host.exists(projectTSLintJsonPath)).toEqual(false);
-
-    /**
-     * There should be a new entry in tools/eslint-configs/ which is the
-     * converted form of the tslint.json that used to live at the root
-     * of the workspace.
-     */
-    expect(
-      readJson(host, `tools/eslint-configs/cypress.eslintrc.json`)
-    ).toMatchSnapshot();
   });
 });

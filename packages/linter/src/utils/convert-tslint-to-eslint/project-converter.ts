@@ -15,13 +15,16 @@ import {
   updateJson,
   updateProjectConfiguration,
   updateWorkspaceConfiguration,
-  writeJson,
 } from '@nrwl/devkit';
 import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 import { execSync } from 'child_process';
 import type { Linter } from 'eslint';
 import { tslintToEslintConfigVersion } from '../versions';
-import { convertTSLintConfig, ensureESLintPluginsAreInstalled } from './utils';
+import {
+  convertTSLintConfig,
+  ensureESLintPluginsAreInstalled,
+  deduplicateOverrides,
+} from './utils';
 
 /**
  * Common schema used by all implementations of convert-tslint-to-eslint generators
@@ -38,18 +41,15 @@ export interface ConvertTSLintToESLintSchema {
  *
  * The key structure of the converted ESLint support is as follows:
  *
- * - The user will end up with a workspace root .eslintrc.json which is the same as the one generated
- * for new workspaces (i.e. it is NOT a converted version of their root tslint.json). This allows us
+ * - We will first generate a workspace root .eslintrc.json which is the same as the one generated
+ * for new workspaces (i.e. it is NOT just a converted version of their root tslint.json). This allows us
  * to have a consistent base for all users, as well as standardized patterns around "overrides".
  *
  * - The user's original root tslint.json will be converted and any applicable settings will be stored
- * within a new shareable config for the current package type. For example, for @nrwl/angular, the
- * conversion will generate an ESLint config within `tools/eslint-configs/` and this will be used as an
- * extra source to extend from within the individual project ESLint config file.
+ * within ADDITIONAL override blocks within the root .eslintrc.json.
  *
  * - The user's project-level tslint.json file will be converted into a corresponding .eslintrc.json file
- * and it will extend from both the root workspace .eslintrc.json file and the new workspace shareable
- * config for the current package type.
+ * and it will extend from the root workspace .eslintrc.json file as normal.
  */
 export class ProjectConverter {
   private readonly projectConfig: ProjectConfiguration &
@@ -60,7 +60,6 @@ export class ProjectConverter {
   private readonly projectTSLintJson: Record<string, unknown>;
   private readonly host: Tree;
   private readonly projectName: string;
-  private readonly packageSpecificShareableConfigPath: string;
   private readonly eslintInitializer: (projectInfo: {
     projectName: string;
     projectConfig: ProjectConfiguration & NxJsonProjectConfiguration;
@@ -74,12 +73,10 @@ export class ProjectConverter {
    */
   constructor({
     host,
-    packageSpecificShareableConfigName,
     projectName,
     eslintInitializer,
   }: {
     host: Tree;
-    packageSpecificShareableConfigName: string;
     projectName: string;
     eslintInitializer: (projectInfo: {
       projectName: string;
@@ -89,7 +86,6 @@ export class ProjectConverter {
     this.host = host;
     this.projectName = projectName;
     this.eslintInitializer = eslintInitializer;
-    this.packageSpecificShareableConfigPath = `tools/eslint-configs/${packageSpecificShareableConfigName}`;
     this.projectConfig = readProjectConfiguration(this.host, this.projectName);
     this.projectTSLintJsonPath = joinPathFragments(
       this.projectConfig.root,
@@ -170,43 +166,35 @@ export class ProjectConverter {
    * the root tslint.json again (and this utility will return a noop task), and we instead just
    * focus on the project-level config conversion.
    */
-  async maybeConvertRootTSLintConfig(
+  async convertRootTSLintConfig(
     applyPackageSpecificModifications: (json: Linter.Config) => Linter.Config
   ): Promise<Exclude<GeneratorCallback, void>> {
-    const shouldConvertRootTSLintConfig = !this.host.exists(
-      this.packageSpecificShareableConfigPath
-    );
-
-    if (!shouldConvertRootTSLintConfig) {
-      return () => {};
-    }
-
     const convertedRoot = await convertTSLintConfig(
       this.rootTSLintJson,
       this.rootTSLintJsonPath,
       []
     );
-    const convertedPackageSpecificESLintConfig =
-      convertedRoot.convertedESLintConfig;
+    const convertedRootESLintConfig = convertedRoot.convertedESLintConfig;
 
     /**
      * Already set by Nx's shareable configs
      */
-    delete convertedPackageSpecificESLintConfig.env;
-    delete convertedPackageSpecificESLintConfig.parser;
-    delete convertedPackageSpecificESLintConfig.parserOptions;
-    convertedPackageSpecificESLintConfig.plugins = convertedPackageSpecificESLintConfig.plugins.filter(
+    delete convertedRootESLintConfig.env;
+    delete convertedRootESLintConfig.parser;
+    delete convertedRootESLintConfig.parserOptions;
+    convertedRootESLintConfig.plugins = convertedRootESLintConfig.plugins.filter(
       (p) =>
         !p.startsWith('@angular-eslint') && !p.startsWith('@typescript-eslint')
     );
 
     /**
      * The only piece of the converted root tslint.json that we need to pull out to
-     * apply to the root .eslintrc.json is the @nrwl/nx/enforce-module-boundaries rule.
+     * apply to the existing overrides within the root .eslintrc.json is the
+     * @nrwl/nx/enforce-module-boundaries rule.
      */
     const nxRuleName = '@nrwl/nx/enforce-module-boundaries';
     const nxEnforceModuleBoundariesRule =
-      convertedPackageSpecificESLintConfig.rules[nxRuleName];
+      convertedRootESLintConfig.rules[nxRuleName];
     if (nxEnforceModuleBoundariesRule) {
       updateJson(this.host, '.eslintrc.json', (json) => {
         if (!json.overrides) {
@@ -227,26 +215,34 @@ export class ProjectConverter {
        * Remove it once we've used it on the root, so that is isn't applied
        * to the package-specific shareable config
        */
-      delete convertedPackageSpecificESLintConfig.rules[nxRuleName];
+      delete convertedRootESLintConfig.rules[nxRuleName];
     }
 
     /**
-     * Apply any package-specific modifications to the converted config before
-     * writing to the config file.
+     * Update the root workspace .eslintrc.json with additional overrides
      */
-    const finalConvertedPackageSpecificESLintConfig = applyPackageSpecificModifications(
-      convertedPackageSpecificESLintConfig
+    const finalConvertedRootESLintConfig = applyPackageSpecificModifications(
+      convertedRootESLintConfig
     );
-
-    /**
-     * Create the package-specific shareable config that the project-level config
-     * will inherit from.
-     */
-    writeJson(
-      this.host,
-      this.packageSpecificShareableConfigPath,
-      finalConvertedPackageSpecificESLintConfig
-    );
+    updateJson(this.host, '.eslintrc.json', (json) => {
+      json.overrides = json.overrides || [];
+      if (
+        finalConvertedRootESLintConfig.overrides &&
+        finalConvertedRootESLintConfig.overrides.length
+      ) {
+        json.overrides = [
+          ...json.overrides,
+          ...finalConvertedRootESLintConfig.overrides,
+        ];
+      } else {
+        json.overrides.push({
+          files: ['*.ts'],
+          ...finalConvertedRootESLintConfig,
+        });
+      }
+      json.overrides = deduplicateOverrides(json.overrides);
+      return json;
+    });
 
     /**
      * Through converting the config we may encounter TSLint rules whose closest
@@ -297,13 +293,6 @@ export class ProjectConverter {
       if (typeof json.extends === 'string') {
         json.extends = [json.extends];
       }
-      // Extend from the package shareable config in addition to the workspace root config
-      json.extends = [
-        ...json.extends,
-        `${offsetFromRoot(this.projectConfig.root)}${
-          this.packageSpecificShareableConfigPath
-        }`,
-      ];
       // Custom extends from conversion
       if (
         Array.isArray(convertedProjectESLintConfig.extends) &&

@@ -31,7 +31,6 @@ export async function conversionGenerator(
    */
   const projectConverter = new ProjectConverter({
     host,
-    packageSpecificShareableConfigName: 'nest.eslintrc.json',
     projectName: options.project,
     eslintInitializer: async ({ projectName, projectConfig }) => {
       /**
@@ -72,9 +71,9 @@ export async function conversionGenerator(
   await projectConverter.initESLint();
 
   /**
-   * Convert the root tslint.json into a package-specific ESLint config, if applicable.
+   * Convert the root tslint.json and apply the converted rules to the root .eslintrc.json.
    */
-  const rootConfigInstallTask = await projectConverter.maybeConvertRootTSLintConfig(
+  const rootConfigInstallTask = await projectConverter.convertRootTSLintConfig(
     (json) => removeCodelyzerRelatedRules(json)
   );
 

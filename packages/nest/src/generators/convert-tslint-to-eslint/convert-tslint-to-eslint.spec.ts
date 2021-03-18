@@ -191,15 +191,6 @@ describe('convert-tslint-to-eslint', () => {
      * The project's TSLint file should have been deleted
      */
     expect(host.exists(appProjectTSLintJsonPath)).toEqual(false);
-
-    /**
-     * There should be a new entry in tools/eslint-configs/ which is the
-     * converted form of the tslint.json that used to live at the root
-     * of the workspace.
-     */
-    expect(
-      readJson(host, `tools/eslint-configs/nest.eslintrc.json`)
-    ).toMatchSnapshot();
   });
 
   it('should work for NestJS libraries', async () => {
@@ -240,14 +231,5 @@ describe('convert-tslint-to-eslint', () => {
      * The project's TSLint file should have been deleted
      */
     expect(host.exists(libProjectTSLintJsonPath)).toEqual(false);
-
-    /**
-     * There should be a new entry in tools/eslint-configs/ which is the
-     * converted form of the tslint.json that used to live at the root
-     * of the workspace.
-     */
-    expect(
-      readJson(host, `tools/eslint-configs/nest.eslintrc.json`)
-    ).toMatchSnapshot();
   });
 });

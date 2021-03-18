@@ -4,6 +4,7 @@ import {
   logger,
   Tree,
 } from '@nrwl/devkit';
+import type { Linter } from 'eslint';
 import type { TSLintRuleOptions } from 'tslint-to-eslint-config';
 import { convertTslintNxRuleToEslintNxRule } from './convert-nx-enforce-module-boundaries-rule';
 import { convertToESLintConfig } from './convert-to-eslint-config';
@@ -91,4 +92,45 @@ export async function convertTSLintConfig(
   );
 
   return convertedProject;
+}
+
+export function deduplicateOverrides(
+  overrides: Linter.Config['overrides'] = []
+) {
+  const map = new Map();
+  for (const override of overrides) {
+    const mapKey: string =
+      typeof override.files === 'string'
+        ? override.files
+        : override.files.join(',');
+    const existing: Set<Linter.ConfigOverride> = map.get(mapKey);
+    if (existing) {
+      existing.add(override);
+      map.set(mapKey, existing);
+      continue;
+    }
+    const set = new Set();
+    set.add(override);
+    map.set(mapKey, set);
+  }
+
+  let dedupedOverrides = [];
+
+  for (const [, overrides] of map.entries()) {
+    const overridesArr = Array.from(overrides);
+    if (overridesArr.length === 1) {
+      dedupedOverrides = [...dedupedOverrides, ...overridesArr];
+      continue;
+    }
+    let mergedOverride = {};
+    for (const override of overridesArr) {
+      mergedOverride = {
+        ...mergedOverride,
+        ...(override as any),
+      };
+    }
+    dedupedOverrides.push(mergedOverride);
+  }
+
+  return dedupedOverrides;
 }

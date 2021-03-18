@@ -71,7 +71,6 @@ describe('ProjectConverter', () => {
       () =>
         new ProjectConverter({
           host,
-          packageSpecificShareableConfigName: 'bar.eslintrc.json',
           projectName,
           eslintInitializer: () => undefined,
         })
@@ -88,7 +87,6 @@ describe('ProjectConverter', () => {
       () =>
         new ProjectConverter({
           host,
-          packageSpecificShareableConfigName: 'bar.eslintrc.json',
           projectName,
           eslintInitializer: () => undefined,
         })
@@ -105,7 +103,6 @@ describe('ProjectConverter', () => {
       () =>
         new ProjectConverter({
           host,
-          packageSpecificShareableConfigName: 'bar.eslintrc.json',
           projectName,
           eslintInitializer: () => undefined,
         })
@@ -117,7 +114,6 @@ describe('ProjectConverter', () => {
       () =>
         new ProjectConverter({
           host,
-          packageSpecificShareableConfigName: 'bar.eslintrc.json',
           projectName,
           eslintInitializer: () => undefined,
         })
@@ -131,7 +127,6 @@ describe('ProjectConverter', () => {
       () =>
         new ProjectConverter({
           host,
-          packageSpecificShareableConfigName: 'bar.eslintrc.json',
           projectName,
           eslintInitializer: () => undefined,
         })
@@ -146,7 +141,6 @@ describe('ProjectConverter', () => {
       () =>
         new ProjectConverter({
           host,
-          packageSpecificShareableConfigName: 'bar.eslintrc.json',
           projectName,
           eslintInitializer: () => undefined,
         })
@@ -160,7 +154,6 @@ describe('ProjectConverter', () => {
 
       const projectConverter = new ProjectConverter({
         host,
-        packageSpecificShareableConfigName: 'bar.eslintrc.json',
         projectName,
         eslintInitializer: () => undefined,
       });
@@ -200,7 +193,6 @@ describe('ProjectConverter', () => {
 
       const projectConverter = new ProjectConverter({
         host,
-        packageSpecificShareableConfigName: 'bar.eslintrc.json',
         projectName,
         eslintInitializer: () => undefined,
       });
@@ -249,7 +241,6 @@ describe('ProjectConverter', () => {
 
       const projectConverter = new ProjectConverter({
         host,
-        packageSpecificShareableConfigName: 'bar.eslintrc.json',
         projectName,
         eslintInitializer: () => undefined,
       });

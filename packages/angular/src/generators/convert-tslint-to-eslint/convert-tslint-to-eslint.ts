@@ -26,7 +26,6 @@ export async function conversionGenerator(
    */
   const projectConverter = new ProjectConverter({
     host,
-    packageSpecificShareableConfigName: 'angular.eslintrc.json',
     projectName: options.project,
     eslintInitializer: async ({ projectName, projectConfig }) => {
       await addLintingGenerator(host, {
@@ -50,9 +49,9 @@ export async function conversionGenerator(
    */
   await projectConverter.initESLint();
   /**
-   * Convert the root tslint.json into a package-specific ESLint config, if applicable
+   * Convert the root tslint.json and apply the converted rules to the root .eslintrc.json
    */
-  const rootConfigInstallTask = await projectConverter.maybeConvertRootTSLintConfig(
+  const rootConfigInstallTask = await projectConverter.convertRootTSLintConfig(
     (json) => {
       json.overrides = [
         { files: ['*.ts'], rules: {} },
@@ -165,6 +164,18 @@ function applyAngularRulesToCorrectOverrides(
       }
     }
   }
+
+  // It's possible that there are plugins to apply to the TS override
+  if (json.plugins) {
+    for (const override of json.overrides) {
+      if (override.files.includes('*.ts')) {
+        override.plugins = override.plugins || [];
+        override.plugins = [...override.plugins, ...json.plugins];
+      }
+    }
+    delete json.plugins;
+  }
+
   /**
    * We now no longer need the flat list of rules at the root of the config
    * because they have all been applied to an appropriate override.

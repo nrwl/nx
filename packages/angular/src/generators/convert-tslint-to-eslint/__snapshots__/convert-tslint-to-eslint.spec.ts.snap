@@ -148,78 +148,12 @@ Object {
       ],
       "rules": Object {},
     },
-  ],
-  "plugins": Array [
-    "@nrwl/nx",
-  ],
-  "root": true,
-}
-`;
-
-exports[`convert-tslint-to-eslint should work for Angular applications 4`] = `
-Object {
-  "extends": Array [
-    "../../.eslintrc.json",
-    "../../tools/eslint-configs/angular.eslintrc.json",
-  ],
-  "ignorePatterns": Array [
-    "!**/*",
-  ],
-  "overrides": Array [
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/angular",
-        "plugin:@angular-eslint/template/process-inline-templates",
-      ],
-      "files": Array [
-        "*.ts",
-      ],
-      "parserOptions": Object {
-        "project": Array [
-          "apps/angular-app-1/tsconfig.*?.json",
-        ],
-      },
-      "rules": Object {
-        "@angular-eslint/component-selector": Array [
-          "error",
-          Object {
-            "prefix": "angular-app",
-            "style": "kebab-case",
-            "type": "element",
-          },
-        ],
-        "@angular-eslint/directive-selector": Array [
-          "error",
-          Object {
-            "prefix": "angular-app",
-            "style": "camelCase",
-            "type": "attribute",
-          },
-        ],
-        "@typescript-eslint/no-empty-interface": "error",
-      },
-    },
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/angular-template",
-      ],
-      "files": Array [
-        "*.html",
-      ],
-      "rules": Object {
-        "@angular-eslint/template/banana-in-box": "error",
-      },
-    },
-  ],
-}
-`;
-
-exports[`convert-tslint-to-eslint should work for Angular applications 5`] = `
-Object {
-  "overrides": Array [
     Object {
       "files": Array [
         "*.ts",
+      ],
+      "plugins": Array [
+        "eslint-plugin-import",
       ],
       "rules": Object {
         "@angular-eslint/component-selector": Array [
@@ -342,7 +276,65 @@ Object {
     },
   ],
   "plugins": Array [
-    "eslint-plugin-import",
+    "@nrwl/nx",
+  ],
+  "root": true,
+}
+`;
+
+exports[`convert-tslint-to-eslint should work for Angular applications 4`] = `
+Object {
+  "extends": Array [
+    "../../.eslintrc.json",
+  ],
+  "ignorePatterns": Array [
+    "!**/*",
+  ],
+  "overrides": Array [
+    Object {
+      "extends": Array [
+        "plugin:@nrwl/nx/angular",
+        "plugin:@angular-eslint/template/process-inline-templates",
+      ],
+      "files": Array [
+        "*.ts",
+      ],
+      "parserOptions": Object {
+        "project": Array [
+          "apps/angular-app-1/tsconfig.*?.json",
+        ],
+      },
+      "rules": Object {
+        "@angular-eslint/component-selector": Array [
+          "error",
+          Object {
+            "prefix": "angular-app",
+            "style": "kebab-case",
+            "type": "element",
+          },
+        ],
+        "@angular-eslint/directive-selector": Array [
+          "error",
+          Object {
+            "prefix": "angular-app",
+            "style": "camelCase",
+            "type": "attribute",
+          },
+        ],
+        "@typescript-eslint/no-empty-interface": "error",
+      },
+    },
+    Object {
+      "extends": Array [
+        "plugin:@nrwl/nx/angular-template",
+      ],
+      "files": Array [
+        "*.html",
+      ],
+      "rules": Object {
+        "@angular-eslint/template/banana-in-box": "error",
+      },
+    },
   ],
 }
 `;
@@ -495,78 +487,12 @@ Object {
       ],
       "rules": Object {},
     },
-  ],
-  "plugins": Array [
-    "@nrwl/nx",
-  ],
-  "root": true,
-}
-`;
-
-exports[`convert-tslint-to-eslint should work for Angular libraries 4`] = `
-Object {
-  "extends": Array [
-    "../../.eslintrc.json",
-    "../../tools/eslint-configs/angular.eslintrc.json",
-  ],
-  "ignorePatterns": Array [
-    "!**/*",
-  ],
-  "overrides": Array [
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/angular",
-        "plugin:@angular-eslint/template/process-inline-templates",
-      ],
-      "files": Array [
-        "*.ts",
-      ],
-      "parserOptions": Object {
-        "project": Array [
-          "libs/angular-lib-1/tsconfig.*?.json",
-        ],
-      },
-      "rules": Object {
-        "@angular-eslint/component-selector": Array [
-          "error",
-          Object {
-            "prefix": "angular-app",
-            "style": "kebab-case",
-            "type": "element",
-          },
-        ],
-        "@angular-eslint/directive-selector": Array [
-          "error",
-          Object {
-            "prefix": "angular-app",
-            "style": "camelCase",
-            "type": "attribute",
-          },
-        ],
-        "@typescript-eslint/no-empty-interface": "error",
-      },
-    },
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/angular-template",
-      ],
-      "files": Array [
-        "*.html",
-      ],
-      "rules": Object {
-        "@angular-eslint/template/banana-in-box": "error",
-      },
-    },
-  ],
-}
-`;
-
-exports[`convert-tslint-to-eslint should work for Angular libraries 5`] = `
-Object {
-  "overrides": Array [
     Object {
       "files": Array [
         "*.ts",
+      ],
+      "plugins": Array [
+        "eslint-plugin-import",
       ],
       "rules": Object {
         "@angular-eslint/component-selector": Array [
@@ -689,7 +615,65 @@ Object {
     },
   ],
   "plugins": Array [
-    "eslint-plugin-import",
+    "@nrwl/nx",
+  ],
+  "root": true,
+}
+`;
+
+exports[`convert-tslint-to-eslint should work for Angular libraries 4`] = `
+Object {
+  "extends": Array [
+    "../../.eslintrc.json",
+  ],
+  "ignorePatterns": Array [
+    "!**/*",
+  ],
+  "overrides": Array [
+    Object {
+      "extends": Array [
+        "plugin:@nrwl/nx/angular",
+        "plugin:@angular-eslint/template/process-inline-templates",
+      ],
+      "files": Array [
+        "*.ts",
+      ],
+      "parserOptions": Object {
+        "project": Array [
+          "libs/angular-lib-1/tsconfig.*?.json",
+        ],
+      },
+      "rules": Object {
+        "@angular-eslint/component-selector": Array [
+          "error",
+          Object {
+            "prefix": "angular-app",
+            "style": "kebab-case",
+            "type": "element",
+          },
+        ],
+        "@angular-eslint/directive-selector": Array [
+          "error",
+          Object {
+            "prefix": "angular-app",
+            "style": "camelCase",
+            "type": "attribute",
+          },
+        ],
+        "@typescript-eslint/no-empty-interface": "error",
+      },
+    },
+    Object {
+      "extends": Array [
+        "plugin:@nrwl/nx/angular-template",
+      ],
+      "files": Array [
+        "*.html",
+      ],
+      "rules": Object {
+        "@angular-eslint/template/banana-in-box": "error",
+      },
+    },
   ],
 }
 `;
