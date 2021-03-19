@@ -27,7 +27,13 @@ const IGNORE_MATCHES = {
     'identity-obj-proxy',
     '@angular-devkit/schematics',
   ],
-  linter: ['eslint', '@angular-devkit/schematics', '@angular-devkit/architect'],
+  linter: [
+    'eslint',
+    '@angular-devkit/schematics',
+    '@angular-devkit/architect',
+    // Installed and uninstalled dynamically when the conversion generator runs
+    'tslint-to-eslint-config',
+  ],
   next: [
     '@angular-devkit/architect',
     '@nrwl/devkit',

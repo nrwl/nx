@@ -64,7 +64,7 @@ function addProject(host: Tree, options: CypressProjectSchema) {
   });
 }
 
-async function addLinter(host: Tree, options: CypressProjectSchema) {
+export async function addLinter(host: Tree, options: CypressProjectSchema) {
   const installTask = await lintProjectGenerator(host, {
     project: options.projectName,
     linter: options.linter,

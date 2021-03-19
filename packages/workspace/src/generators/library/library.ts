@@ -38,7 +38,7 @@ function addProject(tree: Tree, options: NormalizedSchema) {
   });
 }
 
-function addLint(
+export function addLint(
   tree: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {

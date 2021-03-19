@@ -91,6 +91,18 @@
       "factory": "./src/schematics/nestjs-schematics/nestjs-schematics#service",
       "schema": "./src/schematics/nestjs-schematics/schema.json",
       "description": "Run the 'service' NestJs generator with Nx project support"
+    },
+    "convert-tslint-to-eslint": {
+      "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionSchematic",
+      "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
+      "description": "Convert a project from TSLint to ESLint"
+    }
+  },
+  "generators": {
+    "convert-tslint-to-eslint": {
+      "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionGenerator",
+      "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
+      "description": "Convert a project from TSLint to ESLint"
     }
   }
 }

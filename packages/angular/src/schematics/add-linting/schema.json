@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "SchematicsAngularAddLinting",
+  "title": "Add linting to an Angular project",
+  "type": "object",
+  "properties": {
+    "prefix": {
+      "type": "string",
+      "format": "html-selector",
+      "description": "The prefix to apply to generated selectors."
+    },
+    "projectName": {
+      "type": "string",
+      "description": "The name of the selected project."
+    },
+    "projectType": {
+      "type": "string",
+      "enum": ["application", "library"]
+    },
+    "projectRoot": {
+      "type": "string",
+      "description": "The path to the root of the selected project."
+    },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["tslint", "eslint"],
+      "default": "eslint"
+    }
+  }
+}

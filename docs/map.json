@@ -444,6 +444,11 @@
             "file": "angular/api-angular/generators/upgrade-module"
           },
           {
+            "name": "convert-tslint-to-eslint",
+            "id": "convert-tslint-to-eslint",
+            "file": "angular/api-angular/generators/convert-tslint-to-eslint"
+          },
+          {
             "name": "package executor",
             "id": "package",
             "file": "angular/api-angular/executors/package"
@@ -747,6 +752,11 @@
             "name": "service generator",
             "id": "service",
             "file": "angular/api-nest/generators/service"
+          },
+          {
+            "name": "convert-tslint-to-eslint",
+            "id": "convert-tslint-to-eslint",
+            "file": "angular/api-nest/generators/convert-tslint-to-eslint"
           }
         ]
       },
@@ -1467,6 +1477,11 @@
             "file": "react/api-angular/generators/ngrx"
           },
           {
+            "name": "convert-tslint-to-eslint",
+            "id": "convert-tslint-to-eslint",
+            "file": "react/api-angular/generators/convert-tslint-to-eslint"
+          },
+          {
             "name": "stories generator",
             "id": "stories",
             "file": "react/api-angular/generators/stories"
@@ -1796,6 +1811,11 @@
             "name": "service generator",
             "id": "service",
             "file": "react/api-nest/generators/service"
+          },
+          {
+            "name": "convert-tslint-to-eslint",
+            "id": "convert-tslint-to-eslint",
+            "file": "react/api-nest/generators/convert-tslint-to-eslint"
           }
         ]
       },
@@ -2489,6 +2509,11 @@
             "file": "node/api-angular/generators/upgrade-module"
           },
           {
+            "name": "convert-tslint-to-eslint",
+            "id": "convert-tslint-to-eslint",
+            "file": "node/api-angular/generators/convert-tslint-to-eslint"
+          },
+          {
             "name": "package executor",
             "id": "package",
             "file": "node/api-angular/executors/package"
@@ -2791,6 +2816,11 @@
             "name": "service generator",
             "id": "service",
             "file": "node/api-nest/generators/service"
+          },
+          {
+            "name": "convert-tslint-to-eslint",
+            "id": "convert-tslint-to-eslint",
+            "file": "node/api-nest/generators/convert-tslint-to-eslint"
           }
         ]
       },

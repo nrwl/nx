@@ -30,7 +30,7 @@ import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-ser
 import { Schema } from './schema';
 import { initGenerator } from '../init/init';
 
-interface NormalizedSchema extends Schema {
+export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
   parsedTags: string[];
 }
@@ -157,6 +157,25 @@ function addProxy(tree: Tree, options: NormalizedSchema) {
   }
 }
 
+export async function addLintingToApplication(
+  tree: Tree,
+  options: NormalizedSchema
+): Promise<GeneratorCallback> {
+  const lintTask = await lintProjectGenerator(tree, {
+    linter: options.linter,
+    project: options.name,
+    tsConfigPaths: [
+      joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
+    ],
+    eslintFilePatterns: [
+      `${options.appProjectRoot}/**/*.${options.js ? 'js' : 'ts'}`,
+    ],
+    skipFormat: true,
+  });
+
+  return lintTask;
+}
+
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   const options = normalizeOptions(tree, schema);
 
@@ -171,15 +190,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
   addProject(tree, options);
 
   if (options.linter !== Linter.None) {
-    const lintTask = await lintProjectGenerator(tree, {
-      linter: options.linter,
-      project: options.name,
-      tsConfigPaths: [
-        joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-      ],
-      eslintFilePatterns: [`${options.appProjectRoot}/**/*.ts`],
-      skipFormat: true,
-    });
+    const lintTask = await addLintingToApplication(tree, options);
     tasks.push(lintTask);
   }
 

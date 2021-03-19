@@ -28,6 +28,8 @@
       "@nrwl/express": ["./packages/express"],
       "@nrwl/nest": ["./packages/nest"],
       "@nrwl/next": ["./packages/next"],
+      "@nrwl/node": ["./packages/node"],
+      "@nrwl/node/*": ["./packages/node/*"],
       "@nrwl/linter": ["./packages/linter"],
       "@nrwl/jest": ["./packages/jest"],
       "@nrwl/workspace/testing": ["./packages/workspace/testing"],

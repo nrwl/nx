@@ -8,12 +8,7 @@ import {
   SchematicsException,
   Tree,
 } from '@angular-devkit/schematics';
-import {
-  addLintFiles,
-  formatFiles,
-  Linter,
-  updateJsonInTree,
-} from '@nrwl/workspace';
+import { formatFiles, Linter, updateJsonInTree } from '@nrwl/workspace';
 import init, { addUnitTestRunner } from '../init/init';
 import { addModule } from './lib/add-module';
 import { normalizeOptions } from './lib/normalize-options';
@@ -22,11 +17,8 @@ import { updateProject } from './lib/update-project';
 import { updateTsConfig } from './lib/update-tsconfig';
 import { Schema } from './schema';
 import { enableStrictTypeChecking } from './lib/enable-strict-type-checking';
-import {
-  createAngularEslintJson,
-  extraEslintDependencies,
-} from '../../utils/lint';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import { NormalizedSchema } from './lib/normalized-schema';
 
 export default function (schema: Schema): Rule {
   return (host: Tree): Rule => {
@@ -49,17 +41,6 @@ export default function (schema: Schema): Rule {
       init({
         ...options,
         skipFormat: true,
-      }),
-      addLintFiles(options.projectRoot, options.linter, {
-        onlyGlobal: options.linter === Linter.TsLint,
-        localConfig:
-          options.linter === Linter.TsLint
-            ? undefined
-            : createAngularEslintJson(options.projectRoot, options.prefix),
-        extraPackageDeps:
-          options.linter === Linter.TsLint
-            ? undefined
-            : extraEslintDependencies,
       }),
       addUnitTestRunner(options),
       // TODO: Remove this after Angular 10.1.0
@@ -101,10 +82,37 @@ export default function (schema: Schema): Rule {
         : noop(),
       addModule(options),
       options.strict ? enableStrictTypeChecking(options) : noop(),
+      addLinting(options),
       formatFiles(options),
     ]);
   };
 }
+
+const addLinting = (options: NormalizedSchema) => () => {
+  return chain([
+    schematic('add-linting', {
+      linter: options.linter,
+      projectType: 'library',
+      projectName: options.name,
+      projectRoot: options.projectRoot,
+      prefix: options.prefix,
+    }),
+    /**
+     * I cannot explain why this extra rule is needed, the add-linting
+     * schematic applies the exact same host.delete() call but the main
+     * chain of this library schematic still preserves it...
+     */
+    (host) => {
+      if (
+        options.linter === Linter.EsLint &&
+        host.exists(`${options.projectRoot}/tslint.json`)
+      ) {
+        host.delete(`${options.projectRoot}/tslint.json`);
+      }
+    },
+  ]);
+};
+
 export const libraryGenerator = wrapAngularDevkitSchematic(
   '@nrwl/angular',
   'library'

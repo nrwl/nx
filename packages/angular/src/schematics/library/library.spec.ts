@@ -1164,6 +1164,7 @@ describe('lib', () => {
           { name: 'myLib', linter: 'eslint' },
           appTree
         );
+        expect(tree.exists('libs/my-lib/tslint.json')).toBe(false);
         const workspaceJson = readJsonInTree(tree, 'workspace.json');
         expect(workspaceJson.projects['my-lib'].architect.lint)
           .toMatchInlineSnapshot(`

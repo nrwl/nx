@@ -37,7 +37,10 @@ export { parseTargetString } from './src/executors/parse-target-string';
 export { readTargetOptions } from './src/executors/read-target-options';
 
 export { readJson, writeJson, updateJson } from './src/utils/json';
-export { addDependenciesToPackageJson } from './src/utils/package-json';
+export {
+  addDependenciesToPackageJson,
+  removeDependenciesFromPackageJson,
+} from './src/utils/package-json';
 export { installPackagesTask } from './src/tasks/install-packages-task';
 export { names } from './src/utils/names';
 export {

@@ -79,7 +79,7 @@
     },
     "nest": {
       "tags": [],
-      "implicitDependencies": ["node"]
+      "implicitDependencies": ["node", "linter"]
     },
     "linter": {
       "tags": [],
