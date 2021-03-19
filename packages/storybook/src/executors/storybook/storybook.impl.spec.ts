@@ -4,6 +4,7 @@ jest.mock('@storybook/core/server', () => ({
   buildDevStandalone: jest.fn().mockImplementation(() => Promise.resolve()),
 }));
 import { buildDevStandalone } from '@storybook/core/server';
+import * as fileUtils from '@nrwl/workspace/src/core/file-utils';
 
 import { vol } from 'memfs';
 jest.mock('fs', () => require('memfs').fs);
@@ -14,6 +15,13 @@ describe('@nrwl/storybook:storybook', () => {
   let context: ExecutorContext;
   let options: StorybookExecutorOptions;
   beforeEach(() => {
+    jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
+      devDependencies: {
+        '@storybook/addon-essentials': '^6.0.21',
+        '@storybook/angular': '^6.0.21',
+      },
+    });
+
     options = {
       uiFramework: '@storybook/angular',
       port: 4400,
