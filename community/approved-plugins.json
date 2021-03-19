@@ -5,6 +5,11 @@
     "url": "https://github.com/bennymeg/nx-electron"
   },
   {
+    "name": "nx-stylelint",
+    "description": "Nx plugin to use stylelint in a nx workspace",
+    "url": "https://github.com/Phillip9587/nx-stylelint"
+  },
+  {
     "name": "@nxtend/ionic-react",
     "description": "An Nx plugin for developing Ionic React applications and libraries",
     "url": "https://github.com/nxtend-team/nxtend/tree/main/packages/ionic-react"
