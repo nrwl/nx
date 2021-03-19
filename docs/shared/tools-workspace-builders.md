@@ -199,13 +199,13 @@ export default async function (
 
 ## Compiling and Running your Builder
 
-After your files are created, you can compile your builder with `tsc` (which should be available as long as you've installed Typescript globally: `npm i -g typescript`):
+After your files are created, you can compile your builder with `tsc` (which should be available as long as you've installed Typescript globally: `npm i -g typescript` or in your `package.json`'s `devDependencies`):
 
 ```sh
-tsc tools/builders/echo/impl
+npx tsc -p ./tools/tsconfig.tools.json
 ```
 
-This will create the `impl.js` file in your file directory, which will serve as the artifact used by the CLI.
+This will create the `*.js` file in `./tools` directory, which will serve as the artifact used by the CLI.
 
 Our last step is to add this builder to a given project’s `architect` object in your project's `workspace.json` or `angular.json` file. The example below adds this builder to a project named 'platform':
 
