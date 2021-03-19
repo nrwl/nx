@@ -102,3 +102,13 @@ Nx will a root tsconfig with something like this:
 ```
 
 This tsconfig isn't used for building or testing. It's only used to teach Nx how to resolve imports, so Nx can do its import source code analysis. If the path mappings are deduced incorrectly, feel free to chang them.
+
+## Real world examples of using add-nx-to-monorepo
+
+### Speeding Up Remotion Monorepo with Nx
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/TXySu4dZLp0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+### Speeding Up Storybook Monorepo with Nx
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/3o8w6jbDr4A" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
