@@ -86,17 +86,12 @@ function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
 
 function createFiles(tree: Tree, options: NormalizedSchema) {
   const nameFormats = names(options.name);
-  return generateFiles(
-    tree,
-    join(__dirname, './files/lib'),
-    options.projectRoot,
-    {
-      ...options,
-      ...nameFormats,
-      tmpl: '',
-      offsetFromRoot: offsetFromRoot(options.projectRoot),
-    }
-  );
+  generateFiles(tree, join(__dirname, './files/lib'), options.projectRoot, {
+    ...options,
+    ...nameFormats,
+    tmpl: '',
+    offsetFromRoot: offsetFromRoot(options.projectRoot),
+  });
 
   if (options.unitTestRunner === 'none') {
     tree.delete(
