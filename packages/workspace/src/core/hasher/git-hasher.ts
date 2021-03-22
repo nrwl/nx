@@ -54,7 +54,7 @@ function spawnProcess(command: string, args: string[], cwd: string): string {
       `Failed to run ${command} ${args.join(' ')}.\n${r.stdout}\n${r.stderr}`
     );
   }
-  return r.stdout.toString().trimEnd();
+  return r.stdout.toString().trimRight();
 }
 
 function getGitHashForFiles(
