@@ -4,7 +4,6 @@ import { NxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
 import {
   createProjectGraph,
   isWorkspaceProject,
-  onlyWorkspaceProjects,
   ProjectGraph,
   ProjectGraphNode,
   withDeps,

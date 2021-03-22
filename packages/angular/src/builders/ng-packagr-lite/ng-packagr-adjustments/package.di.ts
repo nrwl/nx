@@ -27,7 +27,6 @@ import {
 } from 'ng-packagr/lib/ng-package/entry-point/analyse-sources.di';
 import { NX_INIT_TS_CONFIG_TRANSFORM } from './init-tsconfig';
 import { NX_ENTRY_POINT_TRANSFORM_TOKEN } from './entry-point.di';
-import { PACKAGE_TRANSFORM } from 'ng-packagr/lib/ng-package/package.di';
 import { packageTransformFactory } from 'ng-packagr/lib/ng-package/package.transform';
 
 export const PACKAGE_TRANSFORM_TOKEN = new InjectionToken<Transform>(

@@ -24,7 +24,6 @@ import {
 import { formatFiles } from '@nrwl/workspace';
 import { names } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-import { of } from 'rxjs';
 
 /**
  * Rule to generate the Nx 'ngrx' Collection

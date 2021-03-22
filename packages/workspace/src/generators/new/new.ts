@@ -17,7 +17,6 @@ import { spawn, SpawnOptions } from 'child_process';
 
 import { workspaceGenerator } from '../workspace/workspace';
 import { nxVersion } from '../../utils/versions';
-import { reformattedWorkspaceJsonOrNull } from '@nrwl/tao/src/shared/workspace';
 
 export enum Preset {
   Empty = 'empty',

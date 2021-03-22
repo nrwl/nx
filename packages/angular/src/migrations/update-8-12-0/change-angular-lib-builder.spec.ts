@@ -1,7 +1,5 @@
 import { Tree } from '@angular-devkit/schematics';
 import { readWorkspace } from '@nrwl/workspace';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { runMigration } from '@nrwl/workspace/src/utils/testing';
 import {
   SchematicTestRunner,
   UnitTestTree,

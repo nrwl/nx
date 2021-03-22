@@ -5,7 +5,6 @@
  * since the incremental build packages are not intended for distribution
  */
 
-import { msg } from 'ng-packagr/lib/utils/log';
 import {
   Transform,
   transformFromPromise,

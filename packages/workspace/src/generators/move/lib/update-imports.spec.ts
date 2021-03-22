@@ -1,5 +1,4 @@
 import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { callRule, runSchematic } from '../../../utils/testing';
 import { Schema } from '../schema';
 import { updateImports } from './update-imports';
 import { libraryGenerator } from '../../library/library';

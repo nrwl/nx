@@ -10,7 +10,7 @@ import { runWebpack } from '@nrwl/workspace/src/utilities/run-webpack';
 
 import { map, tap } from 'rxjs/operators';
 import { eachValueFrom } from 'rxjs-for-await';
-import { join, resolve } from 'path';
+import { resolve } from 'path';
 
 import { getNodeWebpackConfig } from '../../utils/node.config';
 import { OUT_FILENAME } from '../../utils/config';
