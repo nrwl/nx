@@ -143,10 +143,7 @@ export class FsTree implements Tree {
     };
 
     // Delete directories when
-    if (
-      this.exists(dirname(this.rp(filePath))) &&
-      this.children(dirname(this.rp(filePath))).length < 1
-    ) {
+    if (this.children(dirname(this.rp(filePath))).length < 1) {
       this.delete(dirname(this.rp(filePath)));
     }
   }
