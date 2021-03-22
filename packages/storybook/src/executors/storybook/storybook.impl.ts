@@ -4,7 +4,7 @@ import { constants, copyFileSync, mkdtempSync, statSync } from 'fs';
 
 import { buildDevStandalone } from '@storybook/core/server';
 
-import { setStorybookAppProject } from '../utils';
+import { getStorybookFrameworkPath, setStorybookAppProject } from '../utils';
 import { ExecutorContext } from '@nrwl/devkit';
 
 export interface StorybookConfig {
@@ -37,7 +37,7 @@ export default async function* storybookExecutor(
   options: StorybookExecutorOptions,
   context: ExecutorContext
 ) {
-  const frameworkPath = `${options.uiFramework}/dist/server/options`;
+  let frameworkPath = getStorybookFrameworkPath(options.uiFramework);
 
   const frameworkOptions = (await import(frameworkPath)).default;
   const option = storybookOptionMapper(options, frameworkOptions, context);

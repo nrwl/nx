@@ -224,7 +224,7 @@
     "rxjs-for-await": "0.0.2",
     "sass": "1.26.3",
     "sass-loader": "8.0.2",
-    "semver": "6.3.0",
+    "semver": "7.3.4",
     "shelljs": "^0.8.3",
     "source-map": "0.7.3",
     "source-map-loader": "0.2.4",

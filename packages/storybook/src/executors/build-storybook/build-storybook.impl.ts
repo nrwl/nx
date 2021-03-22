@@ -4,7 +4,7 @@ import { constants, copyFileSync, mkdtempSync, statSync } from 'fs';
 
 import * as build from '@storybook/core/standalone';
 
-import { setStorybookAppProject } from '../utils';
+import { getStorybookFrameworkPath, setStorybookAppProject } from '../utils';
 import { ExecutorContext, logger } from '@nrwl/devkit';
 
 export interface StorybookConfig {
@@ -33,7 +33,8 @@ export default async function buildStorybookExecutor(
 ) {
   logger.info(`NX ui framework: ${options.uiFramework}`);
 
-  const frameworkPath = `${options.uiFramework}/dist/server/options`;
+  const frameworkPath = getStorybookFrameworkPath(options.uiFramework);
+
   const { default: frameworkOptions } = await import(frameworkPath);
   const option = storybookOptionMapper(options, frameworkOptions, context);
   logger.info(`NX Storybook builder starting ...`);
