@@ -1,5 +1,5 @@
 const { execSync } = require('child_process');
-import { readdirSync } from 'fs';
+import { readdirSync, writeFileSync } from 'fs';
 const { promisify } = require('util');
 const { spawn, exec } = require('child_process');
 const kill = require('tree-kill');
@@ -8,7 +8,7 @@ const asyncExec = promisify(exec);
 let localRegistryProcess;
 
 process.env.PUBLISHED_VERSION = `9999.0.2`;
-process.env.npm_config_registry = `http://localhost:4872/`;
+process.env.npm_config_registry = `http://localhost:4872`;
 process.env.YARN_REGISTRY = process.env.npm_config_registry;
 
 export const getDirectories = (source) =>
@@ -59,13 +59,26 @@ async function updateVersion(packagePath) {
   });
 }
 
-async function publishPackage(packagePath) {
+async function publishPackage(packagePath, npmMajorVersion: number) {
   if (process.env.npm_config_registry.indexOf('http://localhost') === -1) {
     throw Error(`
       ------------------
       💣 ERROR 💣 => $NPM_REGISTRY does not look like a local registry'
       ------------------
     `);
+  } // NPM@7 requires a token to publish, thus, is just a matter of fake a token to bypass npm.
+  // See: https://twitter.com/verdaccio_npm/status/1357798427283910660
+  if (npmMajorVersion === 7) {
+    console.log(packagePath);
+    writeFileSync(
+      `${packagePath}/.npmrc`,
+      `registry=${
+        process.env.npm_config_registry
+      }\n${process.env.npm_config_registry.replace(
+        'http:',
+        ''
+      )}/:_authToken=fake`
+    );
   }
   await asyncExec(`npm publish`, {
     cwd: packagePath,
@@ -74,12 +87,16 @@ async function publishPackage(packagePath) {
 }
 
 export async function setup() {
+  const npmMajorVersion = execSync(`npm --version`)
+    .toString('utf-8')
+    .trim()
+    .split('.')[0];
   // @ts-ignore
   await spawnLocalRegistry();
   await Promise.all(
     getDirectories('./build/packages').map(async (pkg) => {
       await updateVersion(`./build/packages/${pkg}`);
-      return await publishPackage(`./build/packages/${pkg}`);
+      return await publishPackage(`./build/packages/${pkg}`, +npmMajorVersion);
     })
   );
 }

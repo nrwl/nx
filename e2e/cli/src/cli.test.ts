@@ -147,7 +147,8 @@ forEachCli(() => {
     }, 120000);
   });
 
-  describe('migrate', () => {
+  // Does not work on legacy branch
+  xdescribe('migrate', () => {
     it('should run migrations', () => {
       newProject();
 
