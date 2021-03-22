@@ -105,7 +105,7 @@ export function createWebpackConfig(
         createCopyPlugin(
           normalizeAssets(assets, workspaceRoot, projectRoot).map((asset) => ({
             ...asset,
-            output: join('../public', asset.output),
+            output: join('../', asset.output),
           }))
         )
       );
