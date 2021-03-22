@@ -196,6 +196,7 @@ describe('Build Node apps', () => {
     );
   });
 });
+
 describe('Node Libraries', () => {
   it('should be able to generate a node library', async () => {
     newProject();
@@ -210,6 +211,8 @@ describe('Node Libraries', () => {
     expect(jestResult.combinedOutput).toContain(
       'Test Suites: 1 passed, 1 total'
     );
+
+    checkFilesDoNotExist(`libs/${nodelib}/package.json`);
   }, 60000);
 
   it('should be able to generate a publishable node library', async () => {
@@ -246,6 +249,31 @@ describe('Node Libraries', () => {
       main: 'src/index.js',
       typings: 'src/index.d.ts',
     });
+  }, 60000);
+
+  it('should support --js flag', async () => {
+    const proj = newProject();
+
+    const nodeLib = uniq('nodelib');
+    runCLI(
+      `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@${proj}/${nodeLib} --js`
+    );
+    checkFilesExist(
+      `libs/${nodeLib}/package.json`,
+      `libs/${nodeLib}/src/index.js`,
+      `libs/${nodeLib}/src/lib/${nodeLib}.js`,
+      `libs/${nodeLib}/src/lib/${nodeLib}.spec.js`
+    );
+    checkFilesDoNotExist(
+      `libs/${nodeLib}/src/index.ts`,
+      `libs/${nodeLib}/src/lib/${nodeLib}.ts`,
+      `libs/${nodeLib}/src/lib/${nodeLib}.spec.ts`
+    );
+    await runCLIAsync(`build ${nodeLib}`);
+    checkFilesExist(
+      `dist/libs/${nodeLib}/src/index.js`,
+      `dist/libs/${nodeLib}/package.json`
+    );
   }, 60000);
 
   it('should be able to copy assets', () => {
