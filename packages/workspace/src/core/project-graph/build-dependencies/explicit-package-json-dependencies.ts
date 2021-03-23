@@ -6,7 +6,6 @@ import {
 } from '../project-graph-models';
 import { FileRead } from '../../file-utils';
 import { parseJsonWithComments } from '@nrwl/workspace/src/utilities/fileutils';
-import { basename } from 'path';
 import { joinPathFragments } from '@nrwl/devkit';
 
 export function buildExplicitPackageJsonDependencies(

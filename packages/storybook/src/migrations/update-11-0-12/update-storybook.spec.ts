@@ -1,6 +1,5 @@
 import { Tree } from '@angular-devkit/schematics';
-import { readJsonInTree, readWorkspace } from '@nrwl/workspace';
-import { getFileContent } from '@nrwl/workspace/testing';
+import { readJsonInTree } from '@nrwl/workspace';
 
 import { runMigration } from '../../utils/testing';
 

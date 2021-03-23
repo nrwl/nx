@@ -1,5 +1,5 @@
 import { ProjectGraph, ProjectGraphNode } from '../core/project-graph';
-import { Environment, NxJson } from '../core/shared-interfaces';
+import { Environment } from '../core/shared-interfaces';
 import { Task } from '../tasks-runner/tasks-runner';
 import { createTask, getRunner } from '../tasks-runner/run-command';
 import { getCommandAsString, getOutputs } from '../tasks-runner/utils';

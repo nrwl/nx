@@ -145,7 +145,7 @@ determineWorkspaceName(parsedArgs).then((name) => {
 
 function showHelp() {
   const options = Object.values(Preset)
-    .map((preset) => '"' + preset + '"')
+    .map((preset) => `"${preset}"`)
     .join(', ');
 
   console.log(`

@@ -4,7 +4,6 @@ import { NxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
 import {
   createProjectGraph,
   isWorkspaceProject,
-  onlyWorkspaceProjects,
   ProjectGraph,
   ProjectGraphNode,
   withDeps,
@@ -93,7 +92,7 @@ function runnableForTarget(
   if (strict && notRunnable.length) {
     output.warn({
       title: `the following do not have configuration for "${target}"`,
-      bodyLines: notRunnable.map((p) => '- ' + p.name),
+      bodyLines: notRunnable.map((p) => `- ${p.name}`),
     });
   }
 

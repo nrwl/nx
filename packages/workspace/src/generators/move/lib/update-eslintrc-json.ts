@@ -35,7 +35,7 @@ export function updateEslintrcJson(
   const offset = offsetFromRoot(destination);
 
   updateJson<PartialEsLintRcJson>(tree, eslintRcPath, (eslintRcJson) => {
-    eslintRcJson.extends = offset + '.eslintrc.json';
+    eslintRcJson.extends = `${offset}.eslintrc.json`;
 
     return eslintRcJson;
   });

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { exec, execSync } from 'child_process';
+import { execSync } from 'child_process';
 import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import * as yargs from 'yargs';
 import { nxVersion } from '../utils/versions';

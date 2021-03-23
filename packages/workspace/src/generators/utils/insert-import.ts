@@ -44,9 +44,9 @@ export function insertImport(
 
   let text: string;
   if (namedImports.elements.hasTrailingComma) {
-    text = name + ',';
+    text = `${name},`;
   } else {
-    text = ',' + name;
+    text = `,${name}`;
   }
 
   const newContents = applyChangesToString(contents, [

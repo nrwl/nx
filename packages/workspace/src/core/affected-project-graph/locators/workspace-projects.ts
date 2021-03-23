@@ -17,7 +17,7 @@ export const getTouchedProjects: TouchedProjectLocator = (
     .map((f) => {
       return projectNames.find((projectName) => {
         const p = workspaceJson.projects[projectName];
-        const projectRoot = p.root.endsWith('/') ? p.root : p.root + '/';
+        const projectRoot = p.root.endsWith('/') ? p.root : `${p.root}/`;
         return f.file.startsWith(projectRoot);
       });
     })

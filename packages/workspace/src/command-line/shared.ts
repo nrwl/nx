@@ -1,6 +1,4 @@
 import { execSync } from 'child_process';
-import { createProjectGraph, ProjectGraphNode } from '../core/project-graph';
-import { NxJson } from '../core/shared-interfaces';
 import { readWorkspaceJson, TEN_MEGABYTES } from '../core/file-utils';
 import { NxArgs } from './utils';
 

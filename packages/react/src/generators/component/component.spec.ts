@@ -2,9 +2,6 @@ import { createApp, createLib } from '../../utils/testing-generators';
 import { readJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { componentGenerator } from './component';
-import applicationGenerator from '../application/application';
-import { Linter } from '@nrwl/linter';
-import { Schema } from './schema';
 
 describe('component', () => {
   let appTree: Tree;

@@ -30,7 +30,7 @@ export function getWebConfig(
     // Angular CLI uses an environment variable (NG_BUILD_DIFFERENTIAL_FULL)
     // to determine whether to use the scriptTargetOverride
     // or the tsConfig target
-    // We want to force the target if overriden
+    // We want to force the target if overridden
     tsConfig.options.target = ScriptTarget.ES5;
   }
 
@@ -112,7 +112,6 @@ function _getBaseWebpackPartial(
 function getCommonPartial(wco: any): Configuration {
   const commonConfig: Configuration = <Configuration>getCommonConfig(wco);
   delete commonConfig.entry;
-  // delete commonConfig.devtool;
   delete commonConfig.resolve.modules;
   delete commonConfig.resolve.extensions;
   delete commonConfig.output.path;
@@ -273,7 +272,7 @@ function getCSSModuleLocalIdent(context, localIdentName, localName, options) {
   // Use loaderUtils to find the file or folder name
   const className = interpolateName(
     context,
-    fileNameOrFolder + '_' + localName + '__' + hash,
+    `${fileNameOrFolder}_${localName}__${hash}`,
     options
   );
   // Remove the .module that appears in every classname when based on the file and replace all "." with "_".

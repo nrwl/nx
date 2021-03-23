@@ -1,12 +1,6 @@
-import {
-  chain,
-  Rule,
-  SchematicContext,
-  Tree,
-} from '@angular-devkit/schematics';
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { chain, Rule } from '@angular-devkit/schematics';
 import { formatFiles } from '@nrwl/workspace/src/utils/rules/format-files';
-import { readWorkspaceJson, updateWorkspaceInTree } from '@nrwl/workspace';
+import { updateWorkspaceInTree } from '@nrwl/workspace';
 
 export default function (): Rule {
   return chain([

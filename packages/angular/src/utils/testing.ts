@@ -1,10 +1,6 @@
 import { join } from 'path';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { Rule, Tree } from '@angular-devkit/schematics';
-import { MockBuilderContext } from '@nrwl/workspace/testing';
-import { TestingArchitectHost } from '@angular-devkit/architect/testing';
-import { schema } from '@angular-devkit/core';
-import { Architect } from '@angular-devkit/architect';
 import { names } from '@nrwl/devkit';
 
 const testRunner = new SchematicTestRunner(

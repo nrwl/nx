@@ -138,9 +138,9 @@ export async function parseJsonSchemaToOptions(
       ? current.required.indexOf(name) != -1
       : false;
     const aliases = json.isJsonArray(current.aliases)
-      ? [...current.aliases].map((x) => '' + x)
+      ? [...current.aliases].map((x) => `${x}`)
       : current.alias
-      ? ['' + current.alias]
+      ? [`${current.alias}`]
       : [];
     const format =
       typeof current.format == 'string' ? current.format : undefined;
@@ -157,7 +157,7 @@ export async function parseJsonSchemaToOptions(
     const option: any = {
       name,
       description:
-        '' + (current.description === undefined ? '' : current.description),
+        current.description === undefined ? '' : `${current.description}`,
       ...(types.length == 1 ? { type } : { type, types }),
       ...(defaultValue !== undefined ? { default: defaultValue } : {}),
       ...(enumValues && enumValues.length > 0 ? { enum: enumValues } : {}),

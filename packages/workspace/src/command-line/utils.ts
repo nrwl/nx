@@ -169,12 +169,13 @@ function printArgsWarning(options: NxArgs) {
     output.warn({
       title: `Running affected:* commands with --all can result in very slow builds.`,
       bodyLines: [
-        output.bold('--all') +
-          ' is not meant to be used for any sizable project or to be used in CI.',
+        `${output.bold(
+          '--all'
+        )} is not meant to be used for any sizable project or to be used in CI.`,
         '',
-        output.colors.gray(
+        `${output.colors.gray(
           'Learn more about checking only what is affected: '
-        ) + 'https://nx.dev/latest/angular/cli/affected#affected.',
+        )}https://nx.dev/latest/angular/cli/affected#affected.`,
       ],
     });
   }

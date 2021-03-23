@@ -1,4 +1,3 @@
-import * as path from 'path';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { readJson, Tree } from '@nrwl/devkit';
 import updateBabelConfig from './update-babel-config';

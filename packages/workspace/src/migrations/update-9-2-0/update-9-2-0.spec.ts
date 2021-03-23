@@ -2,7 +2,6 @@ import { chain, Tree } from '@angular-devkit/schematics';
 import { NxJson, readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { callRule, runMigration } from '../../utils/testing';
-import { updateWorkspace } from '@nrwl/workspace/src/utils/workspace';
 
 describe('Update 9.2.0', () => {
   let tree: Tree;

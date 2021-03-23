@@ -1,6 +1,5 @@
 import { getWebConfig as getWebPartial } from './web.config';
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
-import { createConsoleLogger } from '@angular-devkit/core/node';
 import * as ts from 'typescript';
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { join } from 'path';

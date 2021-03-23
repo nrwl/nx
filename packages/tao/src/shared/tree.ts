@@ -266,7 +266,7 @@ export class FsTree implements Tree {
 
   private filesForDir(path: string): string[] {
     return Object.keys(this.recordedChanges).filter(
-      (f) => f.startsWith(path + '/') && !this.recordedChanges[f].isDeleted
+      (f) => f.startsWith(`${path}/`) && !this.recordedChanges[f].isDeleted
     );
   }
 
@@ -278,8 +278,8 @@ export class FsTree implements Tree {
       );
     }
     Object.keys(this.recordedChanges).forEach((f) => {
-      if (f.startsWith(path + '/')) {
-        const [_, file] = f.split(path + '/');
+      if (f.startsWith(`${path}/`)) {
+        const [_, file] = f.split(`${path}/`);
         res[file.split('/')[0]] = true;
       }
     });

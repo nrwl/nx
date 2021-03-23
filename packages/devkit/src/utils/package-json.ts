@@ -10,8 +10,10 @@ import { GeneratorCallback } from '@nrwl/tao/src/shared/workspace';
  * For example, `addDependenciesToPackageJson(host, { react: 'latest' }, { jest: 'latest' })`
  * will add `react` and `jest` to the dependencies and devDependencies sections of package.json respectively
  *
+ * @param host Tree representing file system to modify
  * @param dependencies Dependencies to be added to the dependencies section of package.json
  * @param devDependencies Dependencies to be added to the devDependencies section of package.json
+ * @param packageJsonPath Path to package.json
  * @returns Callback to install dependencies only if necessary. undefined is returned if changes are not necessary.
  */
 export function addDependenciesToPackageJson(

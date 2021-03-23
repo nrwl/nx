@@ -115,7 +115,7 @@ export class TargetProjectLocator {
       const pkgName = this.npmProjects.find(
         (pkg) =>
           npmImport === pkg.data.packageName ||
-          npmImport.startsWith(pkg.data.packageName + '/')
+          npmImport.startsWith(`${pkg.data.packageName}/`)
       )?.name;
       this.npmResolutionCache.set(npmImport, pkgName);
       return pkgName;

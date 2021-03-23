@@ -92,7 +92,7 @@ export async function lintProjectGenerator(
       executor: '@angular-devkit/build-angular:tslint',
       options: {
         tsConfig: options.tsConfigPaths,
-        exclude: ['**/node_modules/**', '!' + projectConfig.root + '/**/*'],
+        exclude: ['**/node_modules/**', `!${projectConfig.root}/**/*`],
       },
     };
     createTsLintConfiguration(tree, projectConfig);

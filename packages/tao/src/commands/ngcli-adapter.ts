@@ -15,7 +15,7 @@ import * as fs from 'fs';
 import { readFileSync } from 'fs';
 import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 import { GenerateOptions } from './generate';
-import { FsTree, Tree } from '../shared/tree';
+import { Tree } from '../shared/tree';
 import {
   toNewFormatOrNull,
   toOldFormatOrNull,

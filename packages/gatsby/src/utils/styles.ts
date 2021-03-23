@@ -13,7 +13,6 @@ import {
   GeneratorCallback,
   updateJson,
 } from '@nrwl/devkit';
-import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 
 export const GATSBY_SPECIFIC_STYLE_DEPENDENCIES = {
   'styled-components': {

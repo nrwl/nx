@@ -28,7 +28,7 @@ function getNodePartial(options: BuildNodeBuilderOptions) {
       function (context, request, callback: Function) {
         if (options.externalDependencies.includes(request)) {
           // not bundled
-          return callback(null, 'commonjs ' + request);
+          return callback(null, `commonjs ${request}`);
         }
         // bundled
         callback();

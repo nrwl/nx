@@ -22,6 +22,8 @@ export function readJson<T = any>(host: Tree, path: string) {
 /**
  * Writes a JSON value to the file system tree
 
+ * @param host File system tree
+ * @param path Path of JSON file in the Tree
  * @param value Serializable value to write
  */
 export function writeJson<T = any>(host: Tree, path: string, value: T) {
@@ -31,6 +33,8 @@ export function writeJson<T = any>(host: Tree, path: string, value: T) {
 /**
  * Updates a JSON value to the file system tree
  *
+ * @param host File system tree
+ * @param path Path of JSON file in the Tree
  * @param updater Function that maps the current value of a JSON document to a new value to be written to the document
  */
 export function updateJson<T = any, U = T>(
