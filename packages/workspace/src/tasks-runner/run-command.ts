@@ -16,8 +16,6 @@ import { output } from '../utilities/output';
 
 type RunArgs = yargs.Arguments & ReporterArgs;
 
-function setParallelDefaults(options: NxArgs) {}
-
 export async function runCommand<T extends RunArgs>(
   projectsToRun: ProjectGraphNode[],
   projectGraph: ProjectGraph,
@@ -28,9 +26,6 @@ export async function runCommand<T extends RunArgs>(
   initiatingProject: string | null
 ) {
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
-  // we have to special parallel because they can be overwritten in nx.json
-  setParallelDefaults(runnerOptions);
-
   reporter.beforeRun(
     projectsToRun.map((p) => p.name),
     nxArgs,
