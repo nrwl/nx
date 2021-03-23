@@ -21,7 +21,7 @@ export interface StorybookExecutorOptions {
   host?: string;
   port?: number;
   quiet?: boolean;
-  ssl?: boolean;
+  https?: boolean;
   sslCert?: string;
   sslKey?: string;
   staticDir?: string[];

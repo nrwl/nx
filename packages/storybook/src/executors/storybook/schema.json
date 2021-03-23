@@ -20,7 +20,7 @@
       "description": "Host to listen on.",
       "default": "localhost"
     },
-    "ssl": {
+    "https": {
       "type": "boolean",
       "description": "Serve using HTTPS.",
       "default": false

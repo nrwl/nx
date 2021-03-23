@@ -22,6 +22,14 @@ Type: `string`
 
 Host to listen on.
 
+### https
+
+Default: `false`
+
+Type: `boolean`
+
+Serve using HTTPS.
+
 ### port
 
 Default: `9009`
@@ -43,14 +51,6 @@ Default: `true`
 Type: `boolean`
 
 Suppress verbose build output.
-
-### ssl
-
-Default: `false`
-
-Type: `boolean`
-
-Serve using HTTPS.
 
 ### sslCert
 
