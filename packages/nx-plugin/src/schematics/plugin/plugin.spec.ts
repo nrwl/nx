@@ -10,11 +10,7 @@ describe('NxPlugin plugin', () => {
   });
 
   it('should update the workspace.json file', async () => {
-    const tree = await runSchematic(
-      'plugin',
-      { name: 'myPlugin', importPath: '@proj/my-plugin' },
-      appTree
-    );
+    const tree = await runSchematic('plugin', { name: 'myPlugin' }, appTree);
     const workspace = await readWorkspace(tree);
     const project = workspace.projects['my-plugin'];
     expect(project.root).toEqual('libs/my-plugin');
@@ -68,7 +64,6 @@ describe('NxPlugin plugin', () => {
       {
         name: 'myPlugin',
         directory: 'plugins',
-        importPath: '@project/plugins-my-plugin',
       },
       appTree
     );
@@ -80,50 +75,28 @@ describe('NxPlugin plugin', () => {
   });
 
   it('should create schematic and builder files', async () => {
-    const tree = await runSchematic(
-      'plugin',
-      { name: 'myPlugin', importPath: '@proj/my-plugin' },
-      appTree
-    );
-    expect(tree.exists('libs/my-plugin/generators.json')).toBeTruthy();
-    expect(tree.exists('libs/my-plugin/executors.json')).toBeTruthy();
-    expect(
-      tree.exists('libs/my-plugin/src/generators/my-plugin/schema.d.ts')
-    ).toBeTruthy();
-    expect(
-      tree.exists('libs/my-plugin/src/generators/my-plugin/generator.ts')
-    ).toBeTruthy();
-    expect(
-      tree.exists('libs/my-plugin/src/generators/my-plugin/generator.spec.ts')
-    ).toBeTruthy();
-    expect(
-      tree.exists('libs/my-plugin/src/generators/my-plugin/schema.json')
-    ).toBeTruthy();
-    expect(
-      tree.exists('libs/my-plugin/src/generators/my-plugin/schema.d.ts')
-    ).toBeTruthy();
-    expect(
-      tree.exists(
-        'libs/my-plugin/src/generators/my-plugin/files/src/index.ts__template__'
-      )
-    ).toBeTruthy();
+    const tree = await runSchematic('plugin', { name: 'myPlugin' }, appTree);
+
+    [
+      'libs/my-plugin/generators.json',
+      'libs/my-plugin/executors.json',
+      'libs/my-plugin/src/generators/my-plugin/schema.d.ts',
+      'libs/my-plugin/src/generators/my-plugin/generator.ts',
+      'libs/my-plugin/src/generators/my-plugin/generator.spec.ts',
+      'libs/my-plugin/src/generators/my-plugin/schema.json',
+      'libs/my-plugin/src/generators/my-plugin/schema.d.ts',
+      'libs/my-plugin/src/generators/my-plugin/files/src/index.ts__template__',
+      'libs/my-plugin/src/executors/build/executor.ts',
+      'libs/my-plugin/src/executors/build/executor.spec.ts',
+      'libs/my-plugin/src/executors/build/schema.json',
+      'libs/my-plugin/src/executors/build/schema.d.ts',
+    ].forEach((path) => expect(tree.exists(path)).toBeTruthy());
+
     expect(
       tree.readContent(
         'libs/my-plugin/src/generators/my-plugin/files/src/index.ts__template__'
       )
     ).toContain('const variable = "<%= projectName %>";');
-    expect(
-      tree.exists('libs/my-plugin/src/executors/build/executor.ts')
-    ).toBeTruthy();
-    expect(
-      tree.exists('libs/my-plugin/src/executors/build/executor.spec.ts')
-    ).toBeTruthy();
-    expect(
-      tree.exists('libs/my-plugin/src/executors/build/schema.json')
-    ).toBeTruthy();
-    expect(
-      tree.exists('libs/my-plugin/src/executors/build/schema.d.ts')
-    ).toBeTruthy();
   });
 
   describe('--unitTestRunner', () => {
@@ -133,27 +106,20 @@ describe('NxPlugin plugin', () => {
           'plugin',
           {
             name: 'myPlugin',
-            importPath: '@proj/my-plugin',
             unitTestRunner: 'none',
           },
           appTree
         );
 
-        expect(
-          tree.exists('libs/my-plugin/src/generators/my-plugin/generator.ts')
-        ).toBeTruthy();
-        expect(
-          tree.exists(
-            'libs/my-plugin/src/generators/my-plugin/generator.spec.ts'
-          )
-        ).toBeFalsy();
+        [
+          'libs/my-plugin/src/generators/my-plugin/generator.ts',
+          'libs/my-plugin/src/executors/build/executor.ts',
+        ].forEach((path) => expect(tree.exists(path)).toBeTruthy());
 
-        expect(
-          tree.exists('libs/my-plugin/src/executors/build/executor.ts')
-        ).toBeTruthy();
-        expect(
-          tree.exists('libs/my-plugin/src/executors/build/executor.spec.ts')
-        ).toBeFalsy();
+        [
+          'libs/my-plugin/src/generators/my-plugin/generator.spec.ts',
+          'libs/my-plugin/src/executors/build/executor.spec.ts',
+        ].forEach((path) => expect(tree.exists(path)).toBeFalsy());
       });
     });
   });
