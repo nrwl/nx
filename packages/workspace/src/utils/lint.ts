@@ -105,29 +105,28 @@ export function addLintFiles(
 
     if (linter === 'eslint') {
       if (!host.exists('/.eslintrc.json')) {
-        chainedCommands.push((host: Tree) => {
-          host.create('/.eslintrc.json', globalESLint);
-
-          return addDepsToPackageJson(
-            {
-              ...(options.extraPackageDeps
-                ? options.extraPackageDeps.dependencies
-                : {}),
-            },
-            {
-              '@nrwl/linter': nxVersion,
-              '@nrwl/eslint-plugin-nx': nxVersion,
-              '@typescript-eslint/parser': typescriptESLintVersion,
-              '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
-              eslint: eslintVersion,
-              'eslint-config-prettier': eslintConfigPrettierVersion,
-              ...(options.extraPackageDeps
-                ? options.extraPackageDeps.devDependencies
-                : {}),
-            }
-          );
-        });
+        host.create('/.eslintrc.json', globalESLint);
       }
+      chainedCommands.push(
+        addDepsToPackageJson(
+          {
+            ...(options.extraPackageDeps
+              ? options.extraPackageDeps.dependencies
+              : {}),
+          },
+          {
+            '@nrwl/linter': nxVersion,
+            '@nrwl/eslint-plugin-nx': nxVersion,
+            '@typescript-eslint/parser': typescriptESLintVersion,
+            '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
+            eslint: eslintVersion,
+            'eslint-config-prettier': eslintConfigPrettierVersion,
+            ...(options.extraPackageDeps
+              ? options.extraPackageDeps.devDependencies
+              : {}),
+          }
+        )
+      );
 
       if (!options.onlyGlobal) {
         chainedCommands.push((host: Tree) => {
