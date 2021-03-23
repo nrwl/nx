@@ -83,18 +83,6 @@ export function createWebpackConfig(
               },
             ],
           },
-          // Fallback to plain URL loader.
-          {
-            use: [
-              {
-                loader: require.resolve('url-loader'),
-                options: {
-                  limit: 10000, // 10kB
-                  name: '[name].[hash:7].[ext]',
-                },
-              },
-            ],
-          },
         ],
       }
     );
