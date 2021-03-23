@@ -22,4 +22,6 @@ export function moveProject(
     tree.write(newFilePath, content);
     tree.delete(file);
   });
+
+  tree.delete(project.root);
 }
