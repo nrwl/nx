@@ -37,7 +37,7 @@ export class ProjectNode {
   }
 
   private getClasses(): string {
-    let classes = this.project.type ? this.project.type : '';
+    let classes = this.project.type ?? '';
 
     if (this.focused) {
       classes += ' focused';

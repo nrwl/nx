@@ -121,9 +121,7 @@ export function addLintFiles(
             '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
             eslint: eslintVersion,
             'eslint-config-prettier': eslintConfigPrettierVersion,
-            ...(options.extraPackageDeps
-              ? options.extraPackageDeps.devDependencies
-              : {}),
+            ...(options.extraPackageDeps?.devDependencies ?? {}),
           }
         )
       );

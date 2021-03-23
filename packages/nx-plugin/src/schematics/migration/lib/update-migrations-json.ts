@@ -12,7 +12,7 @@ export function updateMigrationsJson(options: NormalizedSchema): Rule {
         delete json.schematics;
       }
 
-      const generators = json.generators ? json.generators : {};
+      const generators = json.generators ?? {};
       generators[options.name] = {
         version: options.version,
         description: options.description,
@@ -22,9 +22,7 @@ export function updateMigrationsJson(options: NormalizedSchema): Rule {
       json.generators = generators;
 
       if (options.packageJsonUpdates) {
-        const packageJsonUpdatesObj = json.packageJsonUpdates
-          ? json.packageJsonUpdates
-          : {};
+        const packageJsonUpdatesObj = json.packageJsonUpdates ?? {};
         if (!packageJsonUpdatesObj[options.version]) {
           packageJsonUpdatesObj[options.version] = {
             version: options.version,

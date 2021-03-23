@@ -174,7 +174,7 @@ function connectAngularAndNest(host: Tree, options: Schema) {
   insertNgModuleImport(host, modulePath, 'HttpClientModule');
 
   const scope = options.npmScope;
-  const style = options.style ? options.style : 'css';
+  const style = options.style ?? 'css';
   host.write(
     `apps/${options.name}/src/app/app.component.ts`,
     `import { Component } from '@angular/core';

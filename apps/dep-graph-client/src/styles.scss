@@ -102,12 +102,11 @@ h5 {
 }
 
 .sidebar {
-  min-width: 200px;
+  min-width: 260px;
   max-width: calc(50% - 10px);
   z-index: 1;
   position: relative;
   height: 100%;
-  min-width: 260px;
   box-shadow: 2px 0 2px rgba(51, 51, 51, 0.1);
 }
 
@@ -176,13 +175,12 @@ html {
 }
 
 .tag {
-  padding: 0.4rem;
+  padding: 0.5rem;
   font-size: 0.75em;
   display: inline-block;
   border: 1px solid var(--color-nrwl-light-blue);
   text-transform: uppercase;
   color: var(--color-grey);
-  padding: 0.5rem;
   line-height: 1;
   letter-spacing: 0.5px;
   margin-right: 0.4em;

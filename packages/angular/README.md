@@ -1,4 +1,4 @@
-<p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx.png" width="600"></p>
+<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx.png" width="600" alt="Nx - Powerful, Extensible Dev Tools"></p>
 
 {{links}}
 
@@ -36,7 +36,7 @@ You can always add the Angular plugin to an existing workspace by installing `@n
 ## Quick Start Videos
 
 <a href="https://www.youtube.com/watch?v=mVKMse-gFBI" target="_blank">
-<p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-angular-video.png" width="350"></p>
+<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-angular-video.png" width="350"></p>
 </a>
 
 - [Nx Dev Tools for Monorepos, In-Depth Explainer](https://youtu.be/h5FIGDn5YM0)

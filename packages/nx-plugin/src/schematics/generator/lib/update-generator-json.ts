@@ -15,7 +15,7 @@ export function updateGeneratorJson(
   }
 
   return updateJsonInTree(generatorPath, (json) => {
-    let generators = json.generators ? json.generators : json.schematics;
+    let generators = json.generators ?? json.schematics;
     generators = generators || {};
     generators[options.name] = {
       factory: `./src/generators/${options.name}/generator`,

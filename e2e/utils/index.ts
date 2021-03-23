@@ -1,19 +1,19 @@
+import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 import { ChildProcess, exec, execSync } from 'child_process';
 import {
+  copySync,
+  createFileSync,
+  ensureDirSync,
+  moveSync,
   readdirSync,
   readFileSync,
+  removeSync,
   renameSync,
   statSync,
   writeFileSync,
-  ensureDirSync,
-  createFileSync,
-  moveSync,
-  copySync,
-  removeSync,
 } from 'fs-extra';
-import * as path from 'path';
-import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 import * as isCI from 'is-ci';
+import * as path from 'path';
 
 interface RunCmdOpts {
   silenceError?: boolean;
@@ -23,7 +23,7 @@ interface RunCmdOpts {
 }
 
 export function currentCli() {
-  return process.env.SELECTED_CLI ? process.env.SELECTED_CLI : 'nx';
+  return process.env.SELECTED_CLI ?? 'nx';
 }
 
 let projName: string;
@@ -359,16 +359,14 @@ function setMaxWorkers() {
     const workspace = readJson(workspaceFile);
 
     Object.keys(workspace.projects).forEach((appName) => {
-      const targets = workspace.projects[appName].targets
-        ? workspace.projects[appName].targets
-        : workspace.projects[appName].architect;
-      const build = targets.build;
+      const project = workspace.projects[appName];
+      const { build } = project.targets ?? project.architect;
 
       if (!build) {
         return;
       }
 
-      const executor = build.builder ? build.builder : build.executor;
+      const executor = build.builder ?? build.executor;
       if (
         executor.startsWith('@nrwl/node') ||
         executor.startsWith('@nrwl/web') ||

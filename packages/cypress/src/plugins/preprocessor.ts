@@ -36,7 +36,7 @@ export function getWebpackConfig(config: any) {
     module: {
       rules: [
         {
-          test: /\.(j|t)sx?$/,
+          test: /\.([jt])sx?$/,
           loader: require.resolve('ts-loader'),
           exclude: [/node_modules/],
           options: {

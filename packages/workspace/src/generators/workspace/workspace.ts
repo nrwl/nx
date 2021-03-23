@@ -51,7 +51,7 @@ function createAppsAndLibsFolders(host: Tree, options: Schema) {
 }
 
 function createFiles(host: Tree, options: Schema) {
-  const npmScope = options.npmScope ? options.npmScope : options.name;
+  const npmScope = options.npmScope ?? options.name;
   const formattedNames = names(options.name);
   generateFiles(host, pathJoin(__dirname, './files'), options.directory, {
     formattedNames,

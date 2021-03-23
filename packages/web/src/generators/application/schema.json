@@ -13,7 +13,7 @@
         "index": 0
       },
       "x-prompt": "What name would you like to use for the application?",
-      "pattern": "^[a-zA-Z]{1}.*$"
+      "pattern": "^[a-zA-Z].*$"
     },
     "directory": {
       "description": "The directory of the new application.",

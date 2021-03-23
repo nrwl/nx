@@ -53,7 +53,7 @@ export function createWebpackConfig(
 
     config.module.rules.push(
       {
-        test: /\.(j|t)sx?$/,
+        test: /\.([jt])sx?$/,
         exclude: /node_modules/,
         use: [defaultLoaders.babel],
       },

@@ -23,7 +23,7 @@
         "index": 0
       },
       "x-prompt": "What name would you like to use for the library?",
-      "pattern": "^[a-zA-Z]{1}.*$"
+      "pattern": "^[a-zA-Z].*$"
     },
     "directory": {
       "type": "string",

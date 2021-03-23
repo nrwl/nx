@@ -88,9 +88,7 @@ function addEntryComponentsToModule(options: Schema): Rule {
 }
 
 export default function (options: Schema): Rule {
-  const angularJsImport = options.angularJsImport
-    ? options.angularJsImport
-    : options.name;
+  const angularJsImport = options.angularJsImport ?? options.name;
 
   return chain([
     updateMain(angularJsImport, options),

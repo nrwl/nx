@@ -17,7 +17,7 @@ export class ProjectEdge {
         target: this.dep.target,
       },
     };
-    edge.classes = this.dep.type ? this.dep.type : '';
+    edge.classes = this.dep.type ?? '';
     if (this.affected) {
       edge.classes += ' affected';
     }

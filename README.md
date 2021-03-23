@@ -1,6 +1,6 @@
-<p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx.png" width="600"></p>
+<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx.png" width="600" alt="Nx - Powerful, Extensible Dev Tools"></p>
 
-<div align="center">
+<div style="text-align: center;">
 
 [![CircleCI](https://circleci.com/gh/nrwl/nx.svg?style=svg)](https://circleci.com/gh/nrwl/nx)
 [![License](https://img.shields.io/npm/l/@nrwl/workspace.svg?style=flat-square)]()
@@ -103,12 +103,12 @@ You are good to go!
   <tr>
     <td>    
       <a href="https://www.youtube.com/watch?v=mVKMse-gFBI" target="_blank">
-      <p align="center">Angular<br><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-angular-video.png" width="350"></p>
+      <p style="text-align: center;">Angular<br><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-angular-video.png" width="350"></p>
       </a>
     </td>
     <td>    
       <a href="https://www.youtube.com/watch?v=E188J7E_MDU" target="_blank">
-      <p align="center">React<br><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-react-video.png" width="350"></p>
+      <p style="text-align: center;">React<br><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-react-video.png" width="350"></p>
       </a>
     </td>
   </tr>
@@ -125,17 +125,17 @@ You are good to go!
   <tr>
     <td>
       <a href="https://egghead.io/playlists/scale-react-development-with-nx-4038" target="_blank">
-      <p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/EGH_ScalingReactNx.png" height="150px"></p>
+      <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/EGH_ScalingReactNx.png" height="150px"></p>
       </a>
     </td>
     <td>
       <a href="https://www.youtube.com/watch?v=2mYLe9Kp9VM&list=PLakNactNC1dH38AfqmwabvOszDmKriGco" target="_blank">
-        <p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-workspace-course.png" width="350"></p>
+        <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-workspace-course.png" width="350"></p>
       </a>
     </td>
     <td>  
       <a href="https://nxplaybook.com/p/advanced-nx-workspaces" target="_blank">
-      <p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/advanced-nx-workspace-course.png" width="350"></p>
+      <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/advanced-nx-workspace-course.png" width="350"></p>
       </a>
     </td>
   </tr>
@@ -193,7 +193,7 @@ You are good to go!
 If you want to file a bug or submit a PR, read up on our [guidelines for contributing](https://github.com/nrwl/nx/blob/master/CONTRIBUTING.md) and watch this video that will help you get started.
 
 <a href="https://www.youtube.com/watch?v=o11p0zSm0No&feature=youtu.be" target="_blank">
-<p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/how-to-contribute.png" width="600"></p>
+<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/how-to-contribute.png" width="600"></p>
 </a>
 
 ## Core Team

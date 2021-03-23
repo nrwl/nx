@@ -255,7 +255,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
   return {
     ...options,
-    prefix: options.prefix ? options.prefix : defaultPrefix,
+    prefix: options.prefix ?? defaultPrefix,
     name: names(options.name).fileName,
     projectName: appProjectName,
     appProjectRoot,

@@ -29,7 +29,7 @@ function normalizeOptions(
     name,
     path: options.path,
     sourceRoot,
-    spec: options.spec ? options.spec : options.unitTestRunner === 'jest',
+    spec: options.spec ?? options.unitTestRunner === 'jest',
   };
 }
 

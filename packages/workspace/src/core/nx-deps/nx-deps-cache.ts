@@ -69,7 +69,7 @@ export function readCache(): false | ProjectGraphCache {
 
   performance.mark('read cache:end');
   performance.measure('read cache', 'read cache:start', 'read cache:end');
-  return data ? data : false;
+  return data ?? false;
 }
 
 export function writeCache(
