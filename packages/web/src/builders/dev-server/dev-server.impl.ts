@@ -7,7 +7,10 @@ import { Configuration } from 'webpack';
 
 import { eachValueFrom } from 'rxjs-for-await';
 import { map, tap } from 'rxjs/operators';
-import { runWebpackDevServer } from '@nrwl/workspace/src/utilities/run-webpack';
+import {
+  getEmittedFiles,
+  runWebpackDevServer,
+} from '@nrwl/workspace/src/utilities/run-webpack';
 
 import { normalizeWebBuildOptions } from '../../utils/normalize';
 import { WebBuildBuilderOptions } from '../build/build.impl';
@@ -61,8 +64,8 @@ export default function devServerExecutor(
       }),
       map(({ baseUrl, stats }) => {
         return {
-          stats,
           baseUrl,
+          emittedFiles: getEmittedFiles(stats),
           success: !stats.hasErrors(),
         };
       })
