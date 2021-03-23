@@ -30,7 +30,7 @@ export function normalizeOptions(
 
   return {
     ...options,
-    prefix: options.prefix ? options.prefix : defaultPrefix,
+    prefix: options.prefix ?? defaultPrefix,
     name: projectName,
     projectRoot,
     entryFile: 'index',

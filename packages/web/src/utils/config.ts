@@ -242,7 +242,7 @@ export function createCopyPlugin(assets: AssetGlobPattern[]) {
             '.gitkeep',
             '**/.DS_Store',
             '**/Thumbs.db',
-            ...(asset.ignore ? asset.ignore : []),
+            ...(asset.ignore ?? []),
           ],
           dot: true,
         },

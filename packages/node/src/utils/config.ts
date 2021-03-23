@@ -35,7 +35,7 @@ export function getBaseWebpackPartial(
     module: {
       rules: [
         {
-          test: /\.(j|t)sx?$/,
+          test: /\.([jt])sx?$/,
           loader: require.resolve(`ts-loader`),
           exclude: /node_modules/,
           options: {
@@ -111,7 +111,7 @@ export function getBaseWebpackPartial(
               '.gitkeep',
               '**/.DS_Store',
               '**/Thumbs.db',
-              ...(asset.ignore ? asset.ignore : []),
+              ...(asset.ignore ?? []),
             ],
             dot: true,
           },

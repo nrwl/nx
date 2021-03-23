@@ -827,7 +827,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const defaultPrefix = getNpmScope(host);
   return {
     ...options,
-    prefix: options.prefix ? options.prefix : defaultPrefix,
+    prefix: options.prefix ?? defaultPrefix,
     name: appProjectName,
     appProjectRoot,
     e2eProjectRoot,

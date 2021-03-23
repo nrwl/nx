@@ -15,7 +15,7 @@ export function updateExecutorJson(
   }
 
   return updateJsonInTree(executorPath, (json) => {
-    let executors = json.executors ? json.executors : json.builders;
+    let executors = json.executors ?? json.builders;
     executors = executors || {};
     executors[options.name] = {
       implementation: `./src/executors/${options.name}/executor`,

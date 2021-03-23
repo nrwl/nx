@@ -322,9 +322,7 @@ export class Workspaces {
     const packageJson = JSON.parse(
       stripJsonComments(fs.readFileSync(packageJsonPath).toString())
     );
-    const executorsFile = packageJson.executors
-      ? packageJson.executors
-      : packageJson.builders;
+    const executorsFile = packageJson.executors ?? packageJson.builders;
 
     if (!executorsFile) {
       throw new Error(
@@ -364,9 +362,7 @@ export class Workspaces {
       const packageJson = JSON.parse(
         stripJsonComments(fs.readFileSync(packageJsonPath).toString())
       );
-      const generatorsFile = packageJson.generators
-        ? packageJson.generators
-        : packageJson.schematics;
+      const generatorsFile = packageJson.generators ?? packageJson.schematics;
 
       if (!generatorsFile) {
         throw new Error(
@@ -431,7 +427,7 @@ export function reformattedWorkspaceJsonOrNull(w: any) {
 
 export function toNewFormat(w: any): WorkspaceJsonConfiguration {
   const f = toNewFormatOrNull(w);
-  return f ? f : w;
+  return f ?? w;
 }
 
 export function toNewFormatOrNull(w: any) {

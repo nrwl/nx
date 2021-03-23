@@ -174,7 +174,7 @@ export function readWorkspaceConfig(opts: { format: 'angularCli' | 'nx' }) {
   const json = readWorkspaceJson();
   if (opts.format === 'angularCli') {
     const formatted = toOldFormatOrNull(json);
-    return formatted ? formatted : json;
+    return formatted ?? json;
   } else {
     return json;
   }

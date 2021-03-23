@@ -55,7 +55,7 @@ export function renamePackageImports(packageNameMapping: PackageNameMapping) {
       .forEach((projectDir) => {
         projectDir.visit((file) => {
           // only look at .(j|t)s(x) files
-          if (!/(j|t)sx?$/.test(file)) {
+          if (!/([jt])sx?$/.test(file)) {
             return;
           }
           // if it doesn't contain at least 1 reference to the packages to be renamed bail out

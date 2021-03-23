@@ -112,7 +112,7 @@ export function parseRunOneOptions(
     workspaceConfigJson.projects && workspaceConfigJson.projects[project];
   if (!p) return false;
 
-  const targets = p.architect ? p.architect : p.targets;
+  const targets = p.architect ?? p.targets;
   // for backwards compat we require targets to be set when use defaultProjectName
   if ((!targets || !targets[target]) && projectIsNotSetExplicitly) return false;
   if (invalidTargetNames.indexOf(target) > -1) return false;
