@@ -1,4 +1,4 @@
-import { createFileMap } from './file-map';
+import { createProjectFileMap } from './project-file-map';
 
 describe('createFileMap', () => {
   it('should map files to projects', () => {
@@ -27,7 +27,7 @@ describe('createFileMap', () => {
       { file: 'libs/ui/src/index.ts', hash: 'some-hash', ext: '.ts' },
     ];
 
-    const result = createFileMap(workspaceJson, files);
+    const result = createProjectFileMap(workspaceJson, files);
 
     expect(result).toEqual({
       demo: [{ file: 'apps/demo/src/main.ts', hash: 'some-hash', ext: '.ts' }],

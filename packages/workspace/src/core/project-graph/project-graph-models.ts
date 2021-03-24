@@ -1,4 +1,4 @@
-import { FileMap } from '../file-graph';
+import { ProjectFileMap } from '../file-graph';
 import { FileData } from '../file-utils';
 import { NxJson } from '../shared-interfaces';
 import { TargetConfiguration } from '@nrwl/tao/src/shared/workspace';
@@ -6,6 +6,9 @@ import { TargetConfiguration } from '@nrwl/tao/src/shared/workspace';
 export interface ProjectGraph {
   nodes: Record<string, ProjectGraphNode>;
   dependencies: Record<string, ProjectGraphDependency[]>;
+
+  // this is optional otherwise it might break folks who use project graph creation
+  allWorkspaceFiles?: FileData[];
 }
 
 export enum DependencyType {
@@ -44,7 +47,7 @@ export type AddProjectDependency = (
 export interface ProjectGraphContext {
   workspaceJson: any;
   nxJson: NxJson;
-  fileMap: FileMap;
+  fileMap: ProjectFileMap;
 }
 
 export enum ProjectType {

@@ -1,11 +1,14 @@
 import { FileData } from '../file-utils';
 
-export interface FileMap {
+export interface ProjectFileMap {
   [projectName: string]: FileData[];
 }
 
-export function createFileMap(workspaceJson: any, files: FileData[]): FileMap {
-  const fileMap: FileMap = {};
+export function createProjectFileMap(
+  workspaceJson: any,
+  files: FileData[]
+): ProjectFileMap {
+  const fileMap: ProjectFileMap = {};
   const seen = new Set();
   // Sorting here so `apps/client-e2e` comes before `apps/client` and has
   // a chance to match prefix first.

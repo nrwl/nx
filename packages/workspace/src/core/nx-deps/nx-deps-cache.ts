@@ -14,7 +14,7 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '../../utilities/fileutils';
-import { FileMap } from '@nrwl/workspace/src/core/file-graph';
+import { ProjectFileMap } from '@nrwl/workspace/src/core/file-graph';
 import { performance } from 'perf_hooks';
 import {
   cacheDirectory,
@@ -88,11 +88,11 @@ export function writeCache(
 }
 
 export function differentFromCache(
-  fileMap: FileMap,
+  fileMap: ProjectFileMap,
   c: ProjectGraphCache
 ): {
   noDifference: boolean;
-  filesDifferentFromCache: FileMap;
+  filesDifferentFromCache: ProjectFileMap;
   partiallyConstructedProjectGraph?: ProjectGraph;
 } {
   const currentProjects = Object.keys(fileMap).sort();
@@ -113,7 +113,7 @@ export function differentFromCache(
   }
 
   // Projects are same -> compute projects with file changes
-  const filesDifferentFromCache: FileMap = {};
+  const filesDifferentFromCache: ProjectFileMap = {};
   currentProjects.forEach((p) => {
     if (filesChanged(c.nodes[p].data.files, fileMap[p])) {
       filesDifferentFromCache[p] = fileMap[p];

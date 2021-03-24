@@ -1,7 +1,8 @@
 import { assertWorkspaceValidity } from '../assert-workspace-validity';
-import { createFileMap, FileMap } from '../file-graph';
+import { createProjectFileMap, ProjectFileMap } from '../file-graph';
 import {
   defaultFileRead,
+  FileData,
   FileRead,
   filesChanged,
   readNxJson,
@@ -44,12 +45,15 @@ export function createProjectGraph(
   const normalizedNxJson = normalizeNxJson(nxJson);
 
   const rootFiles = rootWorkspaceFileData();
-  const fileMap = createFileMap(workspaceJson, workspaceFiles);
+  const projectFileMap = createProjectFileMap(workspaceJson, workspaceFiles);
 
   if (cache && !filesChanged(rootFiles, cache.rootFiles)) {
-    const diff = differentFromCache(fileMap, cache);
+    const diff = differentFromCache(projectFileMap, cache);
     if (diff.noDifference) {
-      return diff.partiallyConstructedProjectGraph;
+      return addWorkspaceFiles(
+        diff.partiallyConstructedProjectGraph,
+        workspaceFiles
+      );
     }
 
     const ctx = {
@@ -65,23 +69,34 @@ export function createProjectGraph(
     if (shouldCache) {
       writeCache(rootFiles, projectGraph);
     }
-    return projectGraph;
+    return addWorkspaceFiles(projectGraph, workspaceFiles);
   } else {
     const ctx = {
       workspaceJson,
       nxJson: normalizedNxJson,
-      fileMap,
+      fileMap: projectFileMap,
     };
     const projectGraph = buildProjectGraph(ctx, fileRead, null);
     if (shouldCache) {
       writeCache(rootFiles, projectGraph);
     }
-    return projectGraph;
+    return addWorkspaceFiles(projectGraph, workspaceFiles);
   }
 }
 
+function addWorkspaceFiles(
+  projectGraph: ProjectGraph,
+  allWorkspaceFiles: FileData[]
+) {
+  return { ...projectGraph, allWorkspaceFiles };
+}
+
 function buildProjectGraph(
-  ctx: { nxJson: NxJson<string[]>; workspaceJson: any; fileMap: FileMap },
+  ctx: {
+    nxJson: NxJson<string[]>;
+    workspaceJson: any;
+    fileMap: ProjectFileMap;
+  },
   fileRead: FileRead,
   projectGraph: ProjectGraph
 ) {

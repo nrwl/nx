@@ -35,11 +35,11 @@ export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
 
   const touched = new Set<string>();
 
-  for (const [filePath, projects] of Object.entries(
+  for (const [pattern, projects] of Object.entries(
     nxJson.implicitDependencies
   )) {
     const implicitDependencyWasChanged = fileChanges.some((f) =>
-      minimatch(f.file, filePath)
+      minimatch(f.file, pattern)
     );
     if (!implicitDependencyWasChanged) {
       continue;
