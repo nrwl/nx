@@ -21,16 +21,16 @@ There is also a [repo](https://github.com/nrwl/nx-migrate-angularjs-example) tha
 To start migrating the Real World app, create an Nx workspace:
 
 ```bash
-npx create-nx-workspace@latest nx-migrate-angularjs
+npx create-nx-workspace@latest nx-migrate-angularjs --cli=angular
 ```
 
 When prompted choose the `empty` preset. The other presets use certain recommended defaults for the workspace configuration. Because you have existing code with specific requirements for configuration, starting with a blank workspace avoids resetting these defaults. This will give you the ability to customize the workspace for the incoming code.
 
-At the next prompt, choose `Angular CLI` for your workspace CLI. While you may not be using Angular now, this gives you the best option to upgrade to Angular later. The Angular CLI is also the best CLI option for using Karma and Protractor, the two testing suites most commonly used for AngularJS.
+At the next prompt, you can choose whether to use [Nx Cloud](https://nx.app) or not. By using Nx Cloud, you’ll be able to share the computation cache of operations like build, test or even your own commands with everyone working on the same project. Whether you choose to use it or not, the outcome of the migration won’t be affected and you can always change your choice later.
 
 ```bash
-? What to create in the new workspace empty             [an empty workspace]
-? CLI to power the Nx workspace       Angular CLI  [Extensible CLI for Angular applications. Recommended for Angular projects.]
+? What to create in the new workspace empty             [an empty workspace with a layout that works best for building apps]
+? Use Nx Cloud? (It's free and doesn't require registration.) Yes [Faster builds, run details, Github integration. Learn more at https://nx.app]
 ```
 
 ## Creating your app
@@ -38,19 +38,12 @@ At the next prompt, choose `Angular CLI` for your workspace CLI. While you may n
 Your new workspace won’t have much in it because of the `empty` preset. You’ll need to generate an application to have some structure created. Add the Angular capability to your workspace:
 
 ```bash
-ng add @nrwl/angular
-```
-
-When prompted, make a choice of unit test runner and e2e test runner:
-
-```bash
-? Which Unit Test Runner would you like to use for the application? Karma [ https://karma-runner.github.io ]
-? Which E2E Test Runner would you like to use? Protractor [ https://www.protractortest.org ]
+ng add @nrwl/angular  --unitTestRunner=karma --e2eTestRunner=protractor
 ```
 
 For this example, we will use Karma and Protractor, the most common unit test runner and e2e test runner for AngularJS.
 
-> Codebases with existing unit and e2e tests should continue to use whatever runner they need. We’ve chosen Karma and Protractor here because it’s the most common. If you’re going to be adding unit testing or e2e as part of this transition and are starting fresh, we recommend starting with Jest and Cypress.
+> Codebases with existing unit and e2e tests should continue to use whatever runner they need. We’ve chosen Karma and Protractor here because it’s the most common. If you’re going to be adding unit testing or e2e as part of this transition and are starting fresh, we recommend starting with Jest and Cypress (the default if no arguments are passed to the above command).
 
 With the Angular capability added, generate your application:
 
@@ -79,7 +72,8 @@ Your `package.json` should now look like this:
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "ng": "ng",
+    "ng": "nx",
+    "postinstall": "node ./decorate-angular-cli.js && ngcc --properties es2015 browser module main",
     "nx": "nx",
     "start": "ng serve",
     "build": "ng build",
@@ -97,66 +91,74 @@ Your `package.json` should now look like this:
     "format": "nx format:write",
     "format:write": "nx format:write",
     "format:check": "nx format:check",
-    "update": "ng update @nrwl/workspace",
+    "update": "nx migrate latest",
     "workspace-generator": "nx workspace-generator",
     "dep-graph": "nx dep-graph",
-    "help": "nx help",
-    "postinstall": "ngcc --properties es2015 browser module main --first-only --create-ivy-entry-points"
+    "help": "nx help"
   },
   "private": true,
   "dependencies": {
-    "@nrwl/angular": "^9.0.4",
-    "@angular/animations": "9.0.0",
-    "@angular/common": "9.0.0",
-    "@angular/compiler": "9.0.0",
-    "@angular/core": "9.0.0",
-    "@angular/forms": "9.0.0",
-    "@angular/platform-browser": "9.0.0",
-    "@angular/platform-browser-dynamic": "9.0.0",
-    "@angular/router": "9.0.0",
+    "@angular/animations": "^11.2.0",
+    "@angular/common": "^11.2.0",
+    "@angular/compiler": "^11.2.0",
+    "@angular/core": "^11.2.0",
+    "@angular/forms": "^11.2.0",
+    "@angular/platform-browser": "^11.2.0",
+    "@angular/platform-browser-dynamic": "^11.2.0",
+    "@angular/router": "^11.2.0",
+    "@nrwl/angular": "^11.5.1",
     "angular": "^1.5.0-rc.2",
     "angular-ui-router": "^0.4.2",
-    "core-js": "^2.5.4",
-    "rxjs": "~6.5.0",
+    "marked": "^0.3.5",
+    "rxjs": "~6.6.3",
+    "tslib": "^2.0.0",
     "zone.js": "^0.10.2"
   },
   "devDependencies": {
-    "@angular/cli": "9.0.1",
-    "@nrwl/workspace": "9.0.4",
-    "@types/node": "~8.9.4",
-    "dotenv": "6.2.0",
-    "ts-node": "~7.0.0",
-    "tslint": "~5.11.0",
-    "eslint": "6.1.0",
-    "typescript": "~3.7.4",
-    "prettier": "1.18.2",
-    "@angular/compiler-cli": "9.0.0",
-    "@angular/language-service": "9.0.0",
-    "@angular-devkit/build-angular": "0.900.1",
-    "codelyzer": "~5.0.1",
-    "karma": "~4.0.0",
-    "karma-chrome-launcher": "~2.2.0",
-    "karma-coverage-istanbul-reporter": "~2.0.1",
-    "karma-jasmine": "~1.1.2",
-    "karma-jasmine-html-reporter": "^0.2.2",
-    "jasmine-core": "~2.99.1",
-    "jasmine-spec-reporter": "~4.2.1",
-    "@types/jasmine": "~2.8.8",
-    "protractor": "~5.4.0",
+    "@angular-devkit/build-angular": "~0.1102.0",
+    "@angular-eslint/eslint-plugin": "~1.0.0",
+    "@angular-eslint/eslint-plugin-template": "~1.0.0",
+    "@angular-eslint/template-parser": "~1.0.0",
+    "@angular/cli": "~11.0.0",
+    "@angular/compiler-cli": "^11.2.0",
+    "@angular/language-service": "^11.2.0",
+    "@nrwl/cli": "11.5.1",
+    "@nrwl/eslint-plugin-nx": "11.5.1",
+    "@nrwl/linter": "11.5.1",
+    "@nrwl/nx-cloud": "latest",
+    "@nrwl/tao": "11.5.1",
+    "@nrwl/workspace": "11.5.1",
+    "@types/jasmine": "~3.5.0",
     "@types/jasminewd2": "~2.0.3",
+    "@types/node": "12.12.38",
+    "@typescript-eslint/eslint-plugin": "4.3.0",
+    "@typescript-eslint/parser": "4.3.0",
     "babel-preset-es2015": "^6.3.13",
     "babelify": "^7.2.0",
     "browser-sync": "^2.11.1",
     "browserify": "^13.0.0",
     "browserify-ngannotate": "^2.0.0",
+    "dotenv": "6.2.0",
+    "eslint": "7.10.0",
+    "eslint-config-prettier": "8.1.0",
     "gulp": "^3.9.1",
     "gulp-angular-templatecache": "^1.8.0",
     "gulp-notify": "^2.2.0",
     "gulp-rename": "^1.2.2",
     "gulp-uglify": "^1.5.3",
     "gulp-util": "^3.0.7",
-    "marked": "^0.3.5",
+    "jasmine-core": "~3.6.0",
+    "jasmine-spec-reporter": "~5.0.0",
+    "karma": "~5.0.0",
+    "karma-chrome-launcher": "~3.1.0",
+    "karma-coverage-istanbul-reporter": "~3.0.2",
+    "karma-jasmine": "~4.0.0",
+    "karma-jasmine-html-reporter": "^1.5.0",
     "merge-stream": "^1.0.0",
+    "prettier": "2.2.1",
+    "protractor": "~7.0.0",
+    "ts-node": "~9.1.1",
+    "typescript": "~4.0.3",
     "vinyl-source-stream": "^1.1.0"
   }
 }
@@ -177,7 +179,6 @@ apps
 |____realworld-e2e
 |____realworld
 | |____src
-| | |____index.html
 | | |____app
 | | | |____settings
 | | | |____home
@@ -189,12 +190,15 @@ apps
 | | | |____article
 | | | |____services
 | | | |____editor
-| | | |____app.js\
-| | |____styles.css
-| | |____environments
-| | |____main.ts
-| | |____test.ts
+| | | |____app.js
 | | |____assets
+| | |____environments
+| | |____favicon.ico
+| | |____index.html
+| | |____main.ts
+| | |____polyfills.ts
+| | |____styles.css
+| | |____test.ts
 ```
 
 > You most likely have your own AngularJS project written in JavaScript as well. While you’ll continue to use JavaScript through the rest of this example, we strongly recommend switching AngularJS projects to TypeScript, especially if you’re planning an upgrade to Angular.
@@ -206,14 +210,16 @@ Your generated application will also have an `index.html` provided. However, it�
 Your application also has a `main.ts` file which is responsible for bootstrapping your app. Again, you don’t need much from this file any more. Replace its contents with:
 
 ```typescript
-import ‘./app/app.js’;
+import './app/app.js';
 ```
 
 And re-name it to `main.js`. This will import the existing app.js file from the RealWorld app which will bootstrap the app.
 
 ## Adding existing build and serve processes
 
-If you’re looking at the example repo, the code for this section is available on branch `initial-migration`. This section is an interim step that continues to use gulp to build and serve the app locally. You’ll replace gulp in the next section. The RealWorld app uses gulp 3.9.1 to build. This version is not supported anymore and doesn’t run on any version of Node greater than 10.\*. To build this using gulp, you need to install an appropriate version of Node and make sure you re-install your dependencies. If this isn’t possible (or you just don’t want to), feel free to skip to the next section. The webpack build process should run in any modern Node version.
+If you’re looking at the example repo, the code for this section is available on branch `initial-migration`. This section is an interim step that continues to use gulp to build and serve the app locally, so we can validate everything works before continuing with the migration. You’ll replace gulp in the next section.
+
+> The RealWorld app uses gulp 3.9.1 to build. This version is not supported anymore and doesn’t run on any version of Node greater than 10.\*. To build this app using gulp, you need to install an appropriate version of Node and make sure you re-install your dependencies. If this isn’t possible (or you just don’t want to), feel free to skip to the next section. The webpack build process should run in any modern Node version.
 
 The RealWorld app uses gulp to build the application, as well as provide a development server. To verify that the migration has worked, stay with that build process for now.
 
@@ -323,7 +329,7 @@ You need to point your `build` and `serve` tasks at this gulp build process. Typ
 ```json
 ...
         "build": {
-          "builder": "@nrwl/workspace:run-commands",
+          "executor": "@nrwl/workspace:run-commands",
           "options": {
             "commands": [
               {
@@ -333,7 +339,7 @@ You need to point your `build` and `serve` tasks at this gulp build process. Typ
           }
         },
         "serve": {
-          "builder": "@nrwl/workspace:run-commands",
+          "executor": "@nrwl/workspace:run-commands",
           "options": {
             "commands": [
               {
@@ -345,7 +351,7 @@ You need to point your `build` and `serve` tasks at this gulp build process. Typ
 ...
 ```
 
-This sets up the `build` and `serve` commands to use the locally installed version of gulp to run `build` and `serve`. To see the RealWorld app working, run
+This sets up the `build` and `serve` commands to use the locally installed version of gulp to run `build` and `serve`. To see the RealWorld app working, run:
 
 ```bash
 ng serve realworld
@@ -353,19 +359,19 @@ ng serve realworld
 
 Navigate around the application and see that things work.
 
-> Your own project might not be using gulp. If you’re using webpack, you can follow the next section and substitute your own webpack configuration. If you’re using something else like grunt or a home-grown solution, you can follow the same steps here to use it. You’ll use the `run-commands` builder and substitute in the commands for your project.
+> Your own project might not be using gulp. If you’re using webpack, you can follow the next section and substitute your own webpack configuration. If you’re using something else like grunt or a home-grown solution, you can follow the same steps here to use it. You’ll use the `run-commands` executor and substitute in the commands for your project.
 
 ## Switching to webpack
 
 So far, you’ve mostly gotten already existing code and processes to work. This is the best way to get started with any migration: get existing code to work before you start making changes. This gives you a good, stable base to build on. It also means you having working code now rather than hoping you’ll have working code in the future!
 
-But migrating AngularJS code means we need to switch some of our tools to a more modern tool stack. Specifically, using webpack and babel is going to allow us to take advantage of Nx more easily. Becoming an expert in these build tools is outside the scope of this article, but I’ll address some AngularJS specific concerns. To get started, install a new dependency:
+But migrating AngularJS code means we need to switch some of our tools to a more modern tool stack. Specifically, using webpack and babel is going to allow us to take advantage of Nx more easily. Becoming an expert in these build tools is outside the scope of this article, but I’ll address some AngularJS specific concerns. To get started, install these new dependencies:
 
 ```bash
-npm install babel-plugin-angularjs-annotate
+npm install -D @nrwl/web babel-plugin-angularjs-annotate
 ```
 
-Nx already has most of what you need for webpack added as a dependency. `babel-plugin-angularjs-annotate` is going to accomplish the same thing that `browserify-ngannotate` previously did in gulp: add dependency injection annotations.
+Nx already has most of what you need for webpack added as a dependency. `@nrwl/web` contains the [executors](https://nx.dev/angular/core-concepts/nx-devkit#executors) we need to use to build and serve the application with webpack and `babel-plugin-angularjs-annotate` is going to accomplish the same thing that `browserify-ngannotate` previously did in gulp: add dependency injection annotations.
 
 Start with a `webpack.config.js` file in your application’s root directory:
 
@@ -404,11 +410,11 @@ To use webpack instead of gulp, go back to your `angular.json` file and modify t
 ```json
 ...
 "build": {
-  "builder": "@nrwl/web:build",
+  "executor": "@nrwl/web:build",
   "options": {
     "outputPath": "dist/apps/realworld",
     "index": "apps/realworld/src/index.html",
-    "main": "apps/realworld/src/main.ts",
+    "main": "apps/realworld/src/main.js",
     "polyfills": "apps/realworld/src/polyfills.ts",
     "tsConfig": "apps/realworld/tsconfig.app.json",
     "assets": [
@@ -446,7 +452,7 @@ To use webpack instead of gulp, go back to your `angular.json` file and modify t
   }
 },
 "serve": {
-  "builder": "@nrwl/web:dev-server",
+  "executor": "@nrwl/web:dev-server",
   "options": {
     "buildTarget": "realworld:build"
   }
@@ -502,6 +508,55 @@ Now, go through each component of the application and make this change. To make 
 
 > In an example like this, it’s easy enough to make this kind of change by hand. In a larger codebase, doing this manually could be very time-intensive. You’ll want to look into an automated tool to do this for you, such as js-codemod or generators.
 
+We also need to modify the `app.js` and remove the import of `config/app.templates.js`. Modify it like this:
+
+```javascript
+import angular from 'angular';
+
+// Import our app config files
+import constants from './config/app.constants';
+import appConfig from './config/app.config';
+import appRun from './config/app.run';
+import 'angular-ui-router';
+// Import our app functionaity
+import './layout';
+import './components';
+import './home';
+import './profile';
+import './article';
+import './services';
+import './auth';
+import './settings';
+import './editor';
+
+// Create and bootstrap application
+const requires = [
+  'ui.router',
+  'app.layout',
+  'app.components',
+  'app.home',
+  'app.profile',
+  'app.article',
+  'app.services',
+  'app.auth',
+  'app.settings',
+  'app.editor',
+];
+
+// Mount on window for testing
+window.app = angular.module('app', requires);
+
+angular.module('app').constant('AppConstants', constants);
+
+angular.module('app').config(appConfig);
+
+angular.module('app').run(appRun);
+
+angular.bootstrap(document, ['app'], {
+  strictDi: true,
+});
+```
+
 Run the application the same way as before:
 
 ```bash
@@ -515,7 +570,7 @@ Unit testing can be an important part of any code migration. If you migrate your
 You need a few dependencies for AngularJS unit testing that Nx doesn’t provide by default:
 
 ```bash
-npm install angular-mocks@1.5.11 karma-webpack
+npm install -D angular-mocks@1.5.11 karma-webpack
 ```
 
 Earlier, you configured this app to use Karma as its unit test runner. Nx has provided a Karma config file for you, but you’ll need to modify it to work with AngularJS:
@@ -569,6 +624,20 @@ module.exports = function (config) {
     concurrency: Infinity,
   });
 };
+```
+
+Next, rename the existing `apps/realworld/src/test.ts` to `apps/realworld/src/test.js` and modify its content to match the following:
+
+```javascript
+import 'angular';
+import 'angular-mocks';
+import 'angular-ui-router';
+
+// require all test files using special Webpack feature
+// https://webpack.github.io/docs/context.html#require-context
+const testsContext = require.context('./', true, /\.spec$/);
+
+testsContext.keys().forEach(testsContext);
 ```
 
 Now add a unit test for the comment component:
@@ -636,9 +705,10 @@ describe('workspace-project App', () => {
     page = new AppPage();
   });
 
-  it('should display app title', () => {
-    page.navigateTo();
-    expect(page.getTitleText()).toEqual('conduit');
+  it('should display app title', async () => {
+    await page.navigateTo();
+
+    expect(await page.getTitleText()).toEqual('conduit');
   });
 
   afterEach(async () => {
@@ -658,8 +728,8 @@ describe('workspace-project App', () => {
 import { browser, by, element } from 'protractor';
 
 export class AppPage {
-  navigateTo(): Promise<unknown> {
-    return browser.get(browser.baseUrl) as Promise<unknown>;
+  navigateTo(): Promise<string> {
+    return browser.get(browser.baseUrl) as Promise<string>;
   }
 
   getTitleText(): Promise<string> {
