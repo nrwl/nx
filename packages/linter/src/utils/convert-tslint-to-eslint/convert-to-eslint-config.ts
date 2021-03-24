@@ -48,9 +48,7 @@ function getConvertToEslintConfig() {
 export async function convertToESLintConfig(
   pathToTslintJson: string,
   tslintJson: Record<string, unknown>,
-  ignoreExtendsVals: string[],
-  /** For Testing only **/
-  convertToEslintConfig: any = getConvertToEslintConfig()
+  ignoreExtendsVals: string[]
 ): Promise<{
   convertedESLintConfig: ESLintLinter.Config;
   unconvertedTSLintRules: TSLintRuleOptions[];
@@ -66,7 +64,7 @@ export async function convertToESLintConfig(
     createESLintConfiguration,
     findReportedConfiguration,
     joinConfigConversionResults,
-  } = convertToEslintConfig;
+  } = getConvertToEslintConfig();
 
   const updatedTSLintJson = tslintJson;
   /**
