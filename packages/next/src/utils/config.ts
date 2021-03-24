@@ -114,9 +114,7 @@ export async function prepareConfig(
 ) {
   const config = await loadConfig(phase, options.root, null);
   const userWebpack = config.webpack;
-  const userNextConfig = options.nextConfig
-    ? require(options.nextConfig)
-    : (_, x) => x;
+  const userNextConfig = getConfigEnhancer(options.nextConfig, context.root);
   // Yes, these do have different capitalisation...
   config.outdir = `${offsetFromRoot(options.root)}${options.outputPath}`;
   config.distDir =
@@ -130,5 +128,37 @@ export async function prepareConfig(
       options.fileReplacements,
       options.assets
     )(userWebpack ? userWebpack(a, b) : a, b);
+
+  if (typeof userNextConfig !== 'function') {
+    throw new Error(
+      `Module specified by 'nextConfig' option does not export a function. It should be of form 'module.exports = (phase, config, options) => config;'`
+    );
+  }
+
   return userNextConfig(phase, config, { options });
+}
+
+function getConfigEnhancer(
+  pluginPath: undefined | string,
+  workspaceRoot: string
+) {
+  if (!pluginPath) {
+    return (_, x) => x;
+  }
+
+  let fullPath: string;
+
+  try {
+    fullPath = require.resolve(pluginPath);
+  } catch {
+    fullPath = join(workspaceRoot, pluginPath);
+  }
+
+  try {
+    return require(fullPath);
+  } catch {
+    throw new Error(
+      `Could not find file specified by 'nextConfig' option: ${fullPath}`
+    );
+  }
 }
