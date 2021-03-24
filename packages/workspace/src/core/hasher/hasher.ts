@@ -3,13 +3,15 @@ import { NxJson } from '../shared-interfaces';
 import { Task } from '../../tasks-runner/tasks-runner';
 import { readFileSync } from 'fs';
 import { rootWorkspaceFileNames } from '../file-utils';
-import { execSync } from 'child_process';
+import { exec, execSync } from 'child_process';
 import {
   defaultFileHasher,
   extractNameAndVersion,
   FileHasher,
 } from './file-hasher';
 import { defaultHashing, HashingImp } from './hashing-impl';
+import * as minimatch from 'minimatch';
+import { performance } from 'perf_hooks';
 
 const resolve = require('resolve');
 
@@ -61,14 +63,12 @@ export class Hasher {
       this.hashing = defaultHashing;
       this.fileHasher = defaultFileHasher;
     } else {
+      // this is only used for testing
       this.hashing = hashing;
       this.fileHasher = new FileHasher(hashing);
+      this.fileHasher.clear();
     }
-    this.projectHashes = new ProjectHasher(
-      this.projectGraph,
-      this.fileHasher,
-      this.hashing
-    );
+    this.projectHashes = new ProjectHasher(this.projectGraph, this.hashing);
   }
 
   async hashTasks(tasks: Task[]): Promise<Hash[]> {
@@ -117,6 +117,8 @@ export class Hasher {
   private async runtimeInputsHash(): Promise<RuntimeHashResult> {
     if (this.runtimeInputs) return this.runtimeInputs;
 
+    performance.mark('hasher:runtime inputs hash:start');
+
     const inputs =
       this.options && this.options.runtimeCacheInputs
         ? this.options.runtimeCacheInputs
@@ -124,16 +126,31 @@ export class Hasher {
     if (inputs.length > 0) {
       try {
         const values = (await Promise.all(
-          inputs.map(async (input) => {
-            const value = execSync(input).toString().trim();
-            return { input, value };
-          })
+          inputs.map(
+            (input) =>
+              new Promise((res, rej) => {
+                exec(input, (err, stdout, stderr) => {
+                  if (err) {
+                    rej(err);
+                  } else {
+                    res({ input, value: `${stdout}${stderr}`.trim() });
+                  }
+                });
+              })
+          )
         )) as any;
 
         const value = this.hashing.hashArray(values.map((v) => v.value));
         const runtime = values.reduce(
           (m, c) => ((m[c.input] = c.value), m),
           {}
+        );
+
+        performance.mark('hasher:runtime inputs hash:end');
+        performance.measure(
+          'hasher:runtime inputs hash',
+          'hasher:runtime inputs hash:start',
+          'hasher:runtime inputs hash:end'
         );
         return { value, runtime };
       } catch (e) {
@@ -151,8 +168,15 @@ export class Hasher {
   private async implicitDepsHash(): Promise<ImplicitHashResult> {
     if (this.implicitDependencies) return this.implicitDependencies;
 
+    performance.mark('hasher:implicit deps hash:start');
+
+    const patterns = Object.keys(this.nxJson.implicitDependencies || {});
+    const implicitDeps = (this.projectGraph.allWorkspaceFiles || [])
+      .filter((f) => !!patterns.find((pattern) => minimatch(f.file, pattern)))
+      .map((f) => f.file);
+
     const fileNames = [
-      ...Object.keys(this.nxJson.implicitDependencies || {}),
+      ...implicitDeps,
       ...rootWorkspaceFileNames(),
       'package-lock.json',
       'yarn.lock',
@@ -164,8 +188,16 @@ export class Hasher {
         const hash = this.fileHasher.hashFile(file);
         return { file, hash };
       });
+
       const combinedHash = this.hashing.hashArray(
         fileHashes.map((v) => v.hash)
+      );
+
+      performance.mark('hasher:implicit deps hash:end');
+      performance.measure(
+        'hasher:implicit deps hash',
+        'hasher:implicit deps hash:start',
+        'hasher:implicit deps hash:end'
       );
       return {
         value: combinedHash,
@@ -210,7 +242,6 @@ class ProjectHasher {
 
   constructor(
     private readonly projectGraph: ProjectGraph,
-    private readonly fileHasher: FileHasher,
     private readonly hashing: HashingImp
   ) {}
 
@@ -252,9 +283,7 @@ class ProjectHasher {
       this.sourceHashes[projectName] = new Promise(async (res) => {
         const p = this.projectGraph.nodes[projectName];
         const fileNames = p.data.files.map((f) => f.file);
-        const values = await Promise.all(
-          fileNames.map((f) => this.fileHasher.hashFile(f))
-        );
+        const values = p.data.files.map((f) => f.hash);
         res(this.hashing.hashArray([...fileNames, ...values]));
       });
     }

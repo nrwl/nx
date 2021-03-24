@@ -27,10 +27,15 @@ export class FileHasher {
     this.init();
   }
 
-  init() {
-    performance.mark('init hashing:start');
+  clear() {
     this.fileHashes = {};
     this.workspaceFiles = [];
+    this.usesGitForHashing = false;
+  }
+
+  init() {
+    performance.mark('init hashing:start');
+    this.clear();
     this.getHashesFromGit();
     this.usesGitForHashing = Object.keys(this.fileHashes).length > 0;
     performance.mark('init hashing:end');

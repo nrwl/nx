@@ -11,7 +11,7 @@ import {
   DependencyType,
 } from '../project-graph-models';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
-import { createFileMap } from '../../file-graph';
+import { createProjectFileMap } from '../../file-graph';
 import { readWorkspaceFiles } from '../../file-utils';
 import { appRootPath } from '../../../utils/app-root';
 import { string } from 'prop-types';
@@ -89,7 +89,7 @@ describe('explicit project dependencies', () => {
     ctx = {
       workspaceJson,
       nxJson,
-      fileMap: createFileMap(workspaceJson, readWorkspaceFiles()),
+      fileMap: createProjectFileMap(workspaceJson, readWorkspaceFiles()),
     };
 
     projects = {
