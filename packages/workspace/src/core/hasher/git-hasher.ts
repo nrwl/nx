@@ -22,11 +22,16 @@ function parseGitLsTree(output: string): Map<string, string> {
   return changes;
 }
 
-function parseGitStatus(output: string): Map<string, string> {
+function parseGitStatus(path: string): Map<string, string> {
+  const output = spawnProcess('git', ['status', '-s', '-u', '-z', '.'], path);
   const changes: Map<string, string> = new Map<string, string>();
   if (!output) {
     return changes;
   }
+
+  // Because `-z` doesn't respect the relative paths configuration,
+  // we need to manually strip the root path from the filenames.
+  const prefix = spawnProcess('git', ['rev-parse', '--show-prefix'], path);
 
   var chunks = output.split('\0');
   for (let i = 0; i < chunks.length; i++) {
@@ -36,7 +41,7 @@ function parseGitStatus(output: string): Map<string, string> {
       // See: https://git-scm.com/docs/git-status#_short_format
       const X = chunk[0].trim();
       const Y = chunk[1].trim();
-      const filename = chunk.substring(3);
+      const filename = chunk.substring(3).replace(new RegExp(`^${prefix}`), '');
       if (X === 'R') {
         changes.set(chunks[++i], 'D');
       }
@@ -94,9 +99,7 @@ function gitStatus(
 ): { status: Map<string, string>; deletedFiles: string[] } {
   const deletedFiles: string[] = [];
   const filesToHash: string[] = [];
-  parseGitStatus(
-    spawnProcess('git', ['status', '-s', '-u', '-z', '.'], path)
-  ).forEach((changeType: string, filename: string) => {
+  parseGitStatus(path).forEach((changeType: string, filename: string) => {
     if (changeType !== 'D') {
       filesToHash.push(filename);
     } else {

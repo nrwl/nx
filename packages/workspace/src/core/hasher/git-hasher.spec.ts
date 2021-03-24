@@ -1,5 +1,5 @@
 import { dirSync } from 'tmp';
-import { removeSync } from 'fs-extra';
+import { mkdirSync, removeSync } from 'fs-extra';
 import { execSync } from 'child_process';
 import { getFileHashes } from './git-hasher';
 
@@ -136,6 +136,22 @@ describe('git-hasher', () => {
 
     run(`rm "moda-ū.txt"`);
     expect([...getFileHashes(dir).keys()]).toEqual([`${dir}/b-ū.txt`]);
+  });
+
+  it('should work with sub-directories', () => {
+    const subDir = `${dir}/sub`;
+    mkdirSync(subDir);
+    run(`echo AAA > a.txt`);
+    run(`echo BBB > sub/b.txt`);
+    run(`git add --all`);
+    run(`git commit -am init`);
+    expect([...getFileHashes(subDir).keys()]).toEqual([`${subDir}/b.txt`]);
+
+    run(`echo CCC > sub/c.txt`);
+    expect([...getFileHashes(subDir).keys()]).toEqual([
+      `${subDir}/b.txt`,
+      `${subDir}/c.txt`,
+    ]);
   });
 
   function run(command: string) {
