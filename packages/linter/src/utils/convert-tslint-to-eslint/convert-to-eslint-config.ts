@@ -5,11 +5,52 @@ import type {
   TSLintRuleOptions,
   createESLintConfiguration as CreateESLintConfiguration,
 } from 'tslint-to-eslint-config';
+import { execSync } from 'child_process';
+import { tslintToEslintConfigVersion } from '../versions';
+import { dirSync } from 'tmp';
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
+
+let tslintToEslint;
+function getConvertToEslintConfig() {
+  if (tslintToEslint) {
+    return tslintToEslint;
+  }
+
+  try {
+    // This is usually not possible during runtime but makes it easy to mock in tests
+    return require('tslint-to-eslint-config');
+  } catch (e) {}
+
+  /**
+   * In order to avoid all users of Nx needing to have tslint-to-eslint-config (and therefore tslint)
+   * in their node_modules, we dynamically install and uninstall the library as part of the conversion
+   * process.
+   *
+   * NOTE: By taking this approach we have to sacrifice dry-run capabilities for this generator.
+   */
+  const tempDir = dirSync().name;
+  execSync(
+    `${
+      getPackageManagerCommand().addDev
+    } tslint-to-eslint-config@${tslintToEslintConfigVersion}`,
+    {
+      cwd: tempDir,
+      stdio: [0, 1, 2],
+    }
+  );
+
+  tslintToEslint = require(require.resolve('tslint-to-eslint-config', {
+    paths: [tempDir],
+  }));
+  return tslintToEslint;
+}
 
 export async function convertToESLintConfig(
   pathToTslintJson: string,
   tslintJson: Record<string, unknown>,
-  ignoreExtendsVals: string[]
+  ignoreExtendsVals: string[],
+  /** For Testing only **/
+  convertToEslintConfig: any = getConvertToEslintConfig()
 ): Promise<{
   convertedESLintConfig: ESLintLinter.Config;
   unconvertedTSLintRules: TSLintRuleOptions[];
@@ -25,7 +66,7 @@ export async function convertToESLintConfig(
     createESLintConfiguration,
     findReportedConfiguration,
     joinConfigConversionResults,
-  } = require('tslint-to-eslint-config');
+  } = convertToEslintConfig;
 
   const updatedTSLintJson = tslintJson;
   /**

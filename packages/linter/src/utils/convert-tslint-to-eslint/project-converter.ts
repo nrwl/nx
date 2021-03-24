@@ -1,6 +1,5 @@
 import {
   GeneratorCallback,
-  getPackageManagerCommand,
   getProjects,
   joinPathFragments,
   logger,
@@ -16,14 +15,11 @@ import {
   updateProjectConfiguration,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
-import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
-import { execSync } from 'child_process';
 import type { Linter } from 'eslint';
-import { tslintToEslintConfigVersion } from '../versions';
 import {
   convertTSLintConfig,
-  ensureESLintPluginsAreInstalled,
   deduplicateOverrides,
+  ensureESLintPluginsAreInstalled,
 } from './utils';
 
 /**
@@ -64,7 +60,6 @@ export class ProjectConverter {
     projectName: string;
     projectConfig: ProjectConfiguration & NxJsonProjectConfiguration;
   }) => Promise<void>;
-  private readonly pmc: ReturnType<typeof getPackageManagerCommand>;
 
   /**
    * Using an object as the argument to the constructor means we sacrifice some
@@ -109,9 +104,6 @@ export class ProjectConverter {
     this.rootTSLintJson = readJson(host, this.rootTSLintJsonPath);
     this.projectTSLintJson = readJson(host, this.projectTSLintJsonPath);
 
-    const pm = detectPackageManager();
-    this.pmc = getPackageManagerCommand(pm);
-
     /**
      * We are not able to support --dry-run in this generator, because we need to dynamically install
      * and use the tslint-to-eslint-config package within the same execution.
@@ -127,30 +119,6 @@ export class ProjectConverter {
         'NOTE: This generator does not support --dry-run. If you are running this in Nx Console, it should execute fine once you hit the "Run" button.\n'
       );
     }
-  }
-
-  /**
-   * In order to avoid all users of Nx needing to have tslint-to-eslint-config (and therefore tslint)
-   * in their node_modules, we dynamically install and uninstall the library as part of the conversion
-   * process.
-   *
-   * NOTE: By taking this approach we have to sacrifice dry-run capabilities for this generator.
-   */
-  installTSLintToESLintConfigPackage() {
-    execSync(
-      `${this.pmc.addDev} tslint-to-eslint-config@${tslintToEslintConfigVersion}`,
-      {
-        cwd: this.host.root,
-        stdio: [0, 1, 2],
-      }
-    );
-  }
-
-  uninstallTSLintToESLintConfigPackage() {
-    execSync(`${this.pmc.rm} tslint-to-eslint-config`, {
-      cwd: this.host.root,
-      stdio: [0, 1, 2],
-    });
   }
 
   async initESLint() {

@@ -38,11 +38,6 @@ export async function conversionGenerator(
   });
 
   /**
-   * Dynamically install tslint-to-eslint-config to assist with the conversion.
-   */
-  projectConverter.installTSLintToESLintConfigPackage();
-
-  /**
    * Create the standard (which is applicable to the current package) ESLint setup
    * for converting the project.
    */
@@ -89,7 +84,6 @@ export async function conversionGenerator(
   await formatFiles(host);
 
   return async () => {
-    projectConverter.uninstallTSLintToESLintConfigPackage();
     await rootConfigInstallTask();
     await projectConfigInstallTask();
     await uninstallTSLintTask();
