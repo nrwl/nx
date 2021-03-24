@@ -155,8 +155,7 @@ function applyAngularRulesToCorrectOverrides(
          */
         if (
           override.files.includes('*.ts') &&
-          !ruleName.startsWith('@angular-eslint/template') &&
-          !ruleName.startsWith('@typescript-eslint/tslint/config')
+          !ruleName.startsWith('@angular-eslint/template')
         ) {
           // Prioritize the converted rules over any base implementations from the original Nx generator
           override.rules[ruleName] = ruleConfig;
