@@ -13,6 +13,8 @@ describe('Hasher', () => {
     'pnpm-lock.yaml': 'pnpm-lock.yaml.hash',
     'tsconfig.base.json': 'tsconfig.base.json.hash',
     'workspace.json': 'workspace.json.hash',
+    global1: 'global1.hash',
+    global2: 'global2.hash',
   };
 
   function createHashing(): any {
@@ -32,7 +34,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: '',
-              files: [{ file: '/file', ext: '.ts', hash: 'some-hash' }],
+              files: [{ file: '/file', ext: '.ts', hash: 'file.hash' }],
             },
           },
         },
@@ -140,7 +142,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: '',
-              files: [{ file: '/filea', ext: '.ts', hash: 'some-hash' }],
+              files: [{ file: '/filea', ext: '.ts', hash: 'a.hash' }],
             },
           },
           child: {
@@ -148,7 +150,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: '',
-              files: [{ file: '/fileb', ext: '.ts', hash: 'some-hash' }],
+              files: [{ file: '/fileb', ext: '.ts', hash: 'b.hash' }],
             },
           },
         },
@@ -191,7 +193,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: '',
-              files: [{ file: '/filea', ext: '.ts', hash: 'some-hash' }],
+              files: [{ file: '/filea', ext: '.ts', hash: 'a.hash' }],
             },
           },
           projb: {
@@ -199,7 +201,7 @@ describe('Hasher', () => {
             type: 'lib',
             data: {
               root: '',
-              files: [{ file: '/fileb', ext: '.ts', hash: 'some-hash' }],
+              files: [{ file: '/fileb', ext: '.ts', hash: 'b.hash' }],
             },
           },
         },
@@ -213,7 +215,7 @@ describe('Hasher', () => {
       createHashing()
     );
 
-    const hasha = (
+    const tasksHash = (
       await hasher.hashTasks([
         {
           target: { project: 'proja', target: 'build' },
@@ -223,13 +225,13 @@ describe('Hasher', () => {
       ])
     )[0];
 
-    expect(hasha.value).toContain('yarn.lock.hash'); //implicits
-    expect(hasha.value).toContain('a.hash'); //project files
-    expect(hasha.value).toContain('b.hash'); //project files
-    expect(hasha.value).toContain('prop-value'); //overrides
-    expect(hasha.value).toContain('proj'); //project
-    expect(hasha.value).toContain('build'); //target
-    expect(hasha.details.sources).toEqual({
+    expect(tasksHash.value).toContain('yarn.lock.hash'); //implicits
+    expect(tasksHash.value).toContain('a.hash'); //project files
+    expect(tasksHash.value).toContain('b.hash'); //project files
+    expect(tasksHash.value).toContain('prop-value'); //overrides
+    expect(tasksHash.value).toContain('proj'); //project
+    expect(tasksHash.value).toContain('build'); //target
+    expect(tasksHash.details.sources).toEqual({
       proja: '/filea|a.hash',
       projb: '/fileb|b.hash',
     });
@@ -254,6 +256,60 @@ describe('Hasher', () => {
       proja: '/filea|a.hash',
       projb: '/fileb|b.hash',
     });
+
+    done();
+  });
+
+  it('should hash implicit deps', async (done) => {
+    hashes['/filea'] = 'a.hash';
+    hashes['/fileb'] = 'b.hash';
+    const hasher = new Hasher(
+      {
+        nodes: {
+          proja: {
+            name: 'proja',
+            type: 'lib',
+            data: {
+              root: '',
+              files: [],
+            },
+          },
+        },
+        dependencies: {},
+        allWorkspaceFiles: [
+          {
+            file: 'global1',
+            hash: 'hash1',
+            ext: '',
+          },
+          {
+            file: 'global2',
+            hash: 'hash2',
+            ext: '',
+          },
+        ],
+      },
+      {
+        implicitDependencies: {
+          'global*': '*',
+        },
+      } as any,
+      {},
+      createHashing()
+    );
+
+    const tasksHash = (
+      await hasher.hashTasks([
+        {
+          target: { project: 'proja', target: 'build' },
+          id: 'proja-build',
+          overrides: { prop: 'prop-value' },
+        },
+      ])
+    )[0];
+
+    expect(tasksHash.value).toContain('global1.hash');
+    expect(tasksHash.value).toContain('global2.hash');
 
     done();
   });

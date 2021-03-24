@@ -6,7 +6,7 @@ import {
   ProjectGraphContext,
   ProjectGraphNode,
 } from '../project-graph-models';
-import { createFileMap } from '../../file-graph';
+import { createProjectFileMap } from '../../file-graph';
 import { readWorkspaceFiles } from '../../file-utils';
 import { appRootPath } from '../../../utilities/app-root';
 
@@ -63,7 +63,7 @@ describe('explicit package json dependencies', () => {
     ctx = {
       workspaceJson,
       nxJson,
-      fileMap: createFileMap(workspaceJson, readWorkspaceFiles()),
+      fileMap: createProjectFileMap(workspaceJson, readWorkspaceFiles()),
     };
 
     projects = {
