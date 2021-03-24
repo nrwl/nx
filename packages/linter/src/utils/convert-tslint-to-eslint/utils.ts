@@ -74,16 +74,27 @@ export async function convertTSLintConfig(
     rawTSLintJson,
     ignoreExtendsVals
   );
+  convertedProject.convertedESLintConfig.rules =
+    convertedProject.convertedESLintConfig.rules || {};
 
   /**
    * Apply the custom converter for the nx-module-boundaries rule if applicable
    */
   const convertedNxRule = convertTslintNxRuleToEslintNxRule(rawTSLintJson);
   if (convertedNxRule) {
-    convertedProject.convertedESLintConfig.rules =
-      convertedProject.convertedESLintConfig.rules || {};
     convertedProject.convertedESLintConfig.rules[convertedNxRule.ruleName] =
       convertedNxRule.ruleConfig;
+  }
+
+  // Remove the `@typescript-eslint/tslint/config` rule
+  if (
+    convertedProject.convertedESLintConfig.rules[
+      '@typescript-eslint/tslint/config'
+    ]
+  ) {
+    delete convertedProject.convertedESLintConfig.rules[
+      '@typescript-eslint/tslint/config'
+    ];
   }
 
   warnInCaseOfUnconvertedRules(
