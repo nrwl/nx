@@ -2,6 +2,7 @@ import { PHASE_PRODUCTION_BUILD } from 'next/dist/next-server/lib/constants';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { createWebpackConfig, prepareConfig } from './config';
 import { NextBuildBuilderOptions } from '@nrwl/next';
+import { basename, dirname } from 'path';
 
 jest.mock('tsconfig-paths-webpack-plugin');
 jest.mock('next/dist/next-server/server/config', () => ({
@@ -74,7 +75,7 @@ describe('Next.js webpack config builder', () => {
           outputPath: 'dist/apps/wibble',
           fileReplacements: [],
         },
-        { workspaceRoot: '/root' } as any
+        { root: '/root' } as any
       );
 
       expect(config).toEqual(
@@ -86,22 +87,56 @@ describe('Next.js webpack config builder', () => {
     });
 
     it('should support nextConfig option to customize the config', async () => {
+      const fullPath = require.resolve('./config.fixture');
+      const rootPath = dirname(fullPath);
       const config = await prepareConfig(
         PHASE_PRODUCTION_BUILD,
         {
           root: 'apps/wibble',
           outputPath: 'dist/apps/wibble',
           fileReplacements: [],
-          nextConfig: require.resolve('./config.fixture'),
+          nextConfig: 'config.fixture',
           customValue: 'test',
         } as NextBuildBuilderOptions,
-        { workspaceRoot: '/root' } as any
+        { root: rootPath } as any
       );
 
       expect(config).toMatchObject({
         myPhase: 'phase-production-build',
         myCustomValue: 'test',
       });
+    });
+
+    it('should provide error message when nextConfig path is invalid', async () => {
+      await expect(() =>
+        prepareConfig(
+          PHASE_PRODUCTION_BUILD,
+          {
+            root: 'apps/wibble',
+            outputPath: 'dist/apps/wibble',
+            fileReplacements: [],
+            nextConfig: 'config-does-not-exist.fixture',
+            customValue: 'test',
+          } as NextBuildBuilderOptions,
+          { root: '/root' } as any
+        )
+      ).rejects.toThrow(/Could not find file/);
+    });
+
+    it('should provide error message when nextConfig does not export a function', async () => {
+      await expect(() =>
+        prepareConfig(
+          PHASE_PRODUCTION_BUILD,
+          {
+            root: 'apps/wibble',
+            outputPath: 'dist/apps/wibble',
+            fileReplacements: [],
+            nextConfig: require.resolve('./config-not-a-function.fixture'),
+            customValue: 'test',
+          } as NextBuildBuilderOptions,
+          { root: '/root' } as any
+        )
+      ).rejects.toThrow(/option does not export a function/);
     });
   });
 });

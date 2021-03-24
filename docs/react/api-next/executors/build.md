@@ -29,7 +29,7 @@ undefined
 
 Type: `string`
 
-Path to a function which takes phase, config, and builder options, and returns the resulting config.
+Path (relative to workspace root) to a function which takes phase, config, and builder options, and returns the resulting config. This is an advanced option and should not be used with a normal Next.js config file (i.e. next.config.js).
 
 ### outputPath
 
