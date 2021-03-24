@@ -163,7 +163,19 @@ function applyAngularRulesToCorrectOverrides(
     for (const override of json.overrides) {
       if (override.files.includes('*.ts')) {
         override.plugins = override.plugins || [];
-        override.plugins = [...override.plugins, ...json.plugins];
+        override.plugins = [
+          ...override.plugins,
+          ...json.plugins.filter(
+            (plugin) => plugin !== '@angular-eslint/eslint-plugin-template'
+          ),
+        ];
+      }
+
+      if (
+        override.files.includes('*.html') &&
+        json.plugins.includes('@angular-eslint/eslint-plugin-template')
+      ) {
+        override.plugins = ['@angular-eslint/eslint-plugin-template'];
       }
     }
     delete json.plugins;

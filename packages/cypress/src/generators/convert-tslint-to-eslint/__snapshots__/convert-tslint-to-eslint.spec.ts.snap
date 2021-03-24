@@ -150,6 +150,7 @@ Object {
       ],
       "plugins": Array [
         "eslint-plugin-import",
+        "@typescript-eslint",
       ],
       "rules": Object {
         "@typescript-eslint/consistent-type-definitions": "error",
@@ -274,6 +275,9 @@ Object {
         "no-undef": "off",
       },
     },
+  ],
+  "plugins": Array [
+    "@typescript-eslint",
   ],
   "rules": Object {
     "@typescript-eslint/no-empty-interface": "error",

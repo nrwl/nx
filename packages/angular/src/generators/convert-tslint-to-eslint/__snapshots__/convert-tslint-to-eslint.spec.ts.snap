@@ -154,6 +154,8 @@ Object {
       ],
       "plugins": Array [
         "eslint-plugin-import",
+        "@angular-eslint/eslint-plugin",
+        "@typescript-eslint",
       ],
       "rules": Object {
         "@angular-eslint/component-selector": Array [
@@ -269,6 +271,9 @@ Object {
       "files": Array [
         "*.html",
       ],
+      "plugins": Array [
+        "@angular-eslint/eslint-plugin-template",
+      ],
       "rules": Object {
         "@angular-eslint/template/banana-in-box": "error",
         "@angular-eslint/template/no-negated-async": "error",
@@ -304,6 +309,10 @@ Object {
           "apps/angular-app-1/tsconfig.*?.json",
         ],
       },
+      "plugins": Array [
+        "@angular-eslint/eslint-plugin",
+        "@typescript-eslint",
+      ],
       "rules": Object {
         "@angular-eslint/component-selector": Array [
           "error",
@@ -330,6 +339,9 @@ Object {
       ],
       "files": Array [
         "*.html",
+      ],
+      "plugins": Array [
+        "@angular-eslint/eslint-plugin-template",
       ],
       "rules": Object {
         "@angular-eslint/template/banana-in-box": "error",
@@ -493,6 +505,8 @@ Object {
       ],
       "plugins": Array [
         "eslint-plugin-import",
+        "@angular-eslint/eslint-plugin",
+        "@typescript-eslint",
       ],
       "rules": Object {
         "@angular-eslint/component-selector": Array [
@@ -608,6 +622,9 @@ Object {
       "files": Array [
         "*.html",
       ],
+      "plugins": Array [
+        "@angular-eslint/eslint-plugin-template",
+      ],
       "rules": Object {
         "@angular-eslint/template/banana-in-box": "error",
         "@angular-eslint/template/no-negated-async": "error",
@@ -643,6 +660,10 @@ Object {
           "libs/angular-lib-1/tsconfig.*?.json",
         ],
       },
+      "plugins": Array [
+        "@angular-eslint/eslint-plugin",
+        "@typescript-eslint",
+      ],
       "rules": Object {
         "@angular-eslint/component-selector": Array [
           "error",
@@ -669,6 +690,9 @@ Object {
       ],
       "files": Array [
         "*.html",
+      ],
+      "plugins": Array [
+        "@angular-eslint/eslint-plugin-template",
       ],
       "rules": Object {
         "@angular-eslint/template/banana-in-box": "error",

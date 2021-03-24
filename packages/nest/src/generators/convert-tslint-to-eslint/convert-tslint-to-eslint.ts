@@ -124,5 +124,11 @@ function removeCodelyzerRelatedRules(json: Linter.Config): Linter.Config {
       delete json.rules[ruleName];
     }
   }
+
+  if (json.plugins) {
+    json.plugins = json.plugins.filter(
+      (plugin) => !plugin.startsWith('@angular-eslint')
+    );
+  }
   return json;
 }
