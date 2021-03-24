@@ -86,7 +86,13 @@ describe('Hasher', () => {
   it('should throw an error when failed to execute runtimeCacheInputs', async () => {
     const hasher = new Hasher(
       {
-        nodes: {},
+        nodes: {
+          proj: {
+            name: 'proj',
+            type: 'lib',
+            data: { files: [{ file: '/file', ext: '.ts', hash: 'some-hash' }] },
+          },
+        },
         dependencies: {},
       },
       {} as any,
