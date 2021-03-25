@@ -151,8 +151,7 @@ export class ProjectConverter {
     delete convertedRootESLintConfig.parser;
     delete convertedRootESLintConfig.parserOptions;
     convertedRootESLintConfig.plugins = convertedRootESLintConfig.plugins.filter(
-      (p) =>
-        !p.startsWith('@angular-eslint') && !p.startsWith('@typescript-eslint')
+      (p) => p !== '@typescript-eslint/tslint'
     );
 
     /**
@@ -245,8 +244,7 @@ export class ProjectConverter {
     delete convertedProjectESLintConfig.parser;
     delete convertedProjectESLintConfig.parserOptions;
     convertedProjectESLintConfig.plugins = convertedProjectESLintConfig.plugins.filter(
-      (p) =>
-        !p.startsWith('@angular-eslint') && !p.startsWith('@typescript-eslint')
+      (p) => p !== '@typescript-eslint/tslint'
     );
 
     const projectESLintConfigPath = joinPathFragments(
@@ -280,7 +278,7 @@ export class ProjectConverter {
         convertedProjectESLintConfig.plugins.length
       ) {
         json.plugins = [
-          ...json.plugins,
+          ...(json.plugins ?? []),
           ...convertedProjectESLintConfig.plugins,
         ];
       }
