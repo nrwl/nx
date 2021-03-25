@@ -422,7 +422,6 @@ describe('lib', () => {
           outputPath: 'dist/libs/my-lib',
           project: 'libs/my-lib/package.json',
           tsConfig: 'libs/my-lib/tsconfig.lib.json',
-          babelConfig: '@nrwl/react/plugins/bundle-babel',
           rollupConfig: '@nrwl/react/plugins/bundle-rollup',
         },
       });

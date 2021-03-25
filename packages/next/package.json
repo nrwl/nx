@@ -32,7 +32,7 @@
     "next": "^10.0.9"
   },
   "dependencies": {
-    "@babel/plugin-proposal-decorators": "7.8.3",
+    "@babel/plugin-proposal-decorators": "7.12.13",
     "@nrwl/react": "*",
     "@nrwl/cypress": "*",
     "@nrwl/jest": "*",

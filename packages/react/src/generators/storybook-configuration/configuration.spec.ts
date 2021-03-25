@@ -3,6 +3,7 @@ import { Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import libraryGenerator from '../library/library';
 import { Linter } from '@nrwl/linter';
+import { logger } from '@nrwl/devkit';
 import applicationGenerator from '../application/application';
 import componentGenerator from '../component/component';
 import storybookConfigurationGenerator from './configuration';
@@ -17,6 +18,13 @@ describe('react:storybook-configuration', () => {
         '@storybook/react': '^6.0.21',
       },
     });
+
+    jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    jest.spyOn(logger, 'debug').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('should configure everything at once', async () => {
