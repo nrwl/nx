@@ -14,7 +14,7 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
-  workspaceConfigName,
+  updateWorkspaceConfig,
 } from '@nrwl/e2e/utils';
 
 function getData(): Promise<any> {
@@ -242,8 +242,22 @@ describe('Node Libraries', () => {
       `dist/libs/${nodeLib}/package.json`
     );
 
-    const packageJson = readJson(`dist/libs/${nodeLib}/package.json`);
-    expect(packageJson).toEqual({
+    expect(readJson(`dist/libs/${nodeLib}/package.json`)).toEqual({
+      name: `@${proj}/${nodeLib}`,
+      version: '0.0.1',
+      main: 'src/index.js',
+      typings: 'src/index.d.ts',
+    });
+
+    // Copying package.json from assets
+    updateWorkspaceConfig((workspace) => {
+      workspace.projects[nodeLib].targets.build.options.assets.push(
+        `libs/${nodeLib}/package.json`
+      );
+      return workspace;
+    });
+    await runCLIAsync(`build ${nodeLib}`);
+    expect(readJson(`dist/libs/${nodeLib}/package.json`)).toEqual({
       name: `@${proj}/${nodeLib}`,
       version: '0.0.1',
       main: 'src/index.js',
@@ -292,14 +306,15 @@ describe('Node Libraries', () => {
     runCLI(
       `generate @nrwl/angular:lib ${nglib} --publishable --importPath=@${proj}/${nglib}`
     );
-    const workspace = readJson(workspaceConfigName());
-    workspace.projects[nodelib].targets.build.options.assets.push({
-      input: `./dist/libs/${nglib}`,
-      glob: '**/*',
-      output: '.',
-    });
 
-    updateFile(workspaceConfigName(), JSON.stringify(workspace));
+    updateWorkspaceConfig((workspace) => {
+      workspace.projects[nodelib].targets.build.options.assets.push({
+        input: `./dist/libs/${nglib}`,
+        glob: '**/*',
+        output: '.',
+      });
+      return workspace;
+    });
 
     runCLI(`build ${nglib}`);
     runCLI(`build ${nodelib}`);
