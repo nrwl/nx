@@ -870,6 +870,10 @@
           "version": "8.2.0",
           "alwaysAddToPackageJson": false
         },
+        "typescript": {
+          "version": "4.1.4",
+          "alwaysAddToPackageJson": false
+        },
         "@types/node": {
           "version": "14.14.33",
           "alwaysAddToPackageJson": false
