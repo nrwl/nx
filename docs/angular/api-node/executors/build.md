@@ -108,11 +108,13 @@ Type: `boolean`
 
 Log progress to the console while building.
 
-### showCircularDependencies
+### ~~showCircularDependencies~~
 
 Default: `false`
 
 Type: `boolean`
+
+**Deprecated:** The recommended method to detect circular dependencies in project code is to use a either a lint rule or other external tooling.
 
 Show circular dependency warnings on builds.
 

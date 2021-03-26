@@ -25,11 +25,11 @@ Type: `string`
 
 A unique identifier for a run to enable grouping or parallelization.
 
-### copyFiles
+### ~~copyFiles~~
 
 Type: `string`
 
-DEPRECATED: A regex string that is used to choose what additional integration files to copy to the dist folder
+**Deprecated:** A regex string that is used to choose what additional integration files to copy to the dist folder
 
 ### cypressConfig
 

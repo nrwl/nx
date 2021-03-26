@@ -73,3 +73,19 @@ export function getNxPackageDependencies(
       : [],
   };
 }
+
+export function formatDeprecated(
+  description: string,
+  deprecated: boolean | string
+) {
+  if (!deprecated) {
+    return description;
+  }
+  return deprecated === true
+    ? `**Deprecated:** ${description}`
+    : `
+    **Deprecated:** ${deprecated}
+    
+    ${description}
+    `;
+}

@@ -185,11 +185,13 @@ Type: `array`
 
 External Scripts which will be included before the main application entry
 
-### showCircularDependencies
+### ~~showCircularDependencies~~
 
 Default: `false`
 
 Type: `boolean`
+
+**Deprecated:** The recommended method to detect circular dependencies in project code is to use a either a lint rule or other external tooling.
 
 Show circular dependency warnings on builds.
 
