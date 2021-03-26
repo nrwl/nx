@@ -97,6 +97,7 @@ describe('app', () => {
     expect(tsconfig).toMatchInlineSnapshot(`
       Object {
         "compilerOptions": Object {
+          "module": "commonjs",
           "outDir": "../../dist/out-tsc",
           "types": Array [
             "node",
