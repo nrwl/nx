@@ -203,11 +203,10 @@ export function readNxJson(): NxJsonConfiguration {
 
 export function workspaceLayout(): { appsDir: string; libsDir: string } {
   const nxJson = readNxJson();
-  const appsDir =
-    (nxJson.workspaceLayout && nxJson.workspaceLayout.appsDir) || 'apps';
-  const libsDir =
-    (nxJson.workspaceLayout && nxJson.workspaceLayout.libsDir) || 'libs';
-  return { appsDir, libsDir };
+  return {
+    appsDir: nxJson.workspaceLayout?.appsDir ?? 'apps',
+    libsDir: nxJson.workspaceLayout?.libsDir ?? 'libs',
+  };
 }
 
 // TODO: Make this list extensible

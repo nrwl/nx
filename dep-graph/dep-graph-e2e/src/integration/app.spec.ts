@@ -13,7 +13,7 @@ import {
 describe('dep-graph-client', () => {
   beforeEach(() => {
     cy.visit('/');
-    cy.get('[data-cy=project-select]').select('Medium');
+    cy.get('[data-cy=project-select]').select('Ocean');
   });
 
   it('should display message to select projects', () => {

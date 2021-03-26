@@ -1,6 +1,9 @@
 import { ProjectGraphNode } from '@nrwl/workspace';
 import { Subject } from 'rxjs';
-import { removeChildrenFromContainer } from '../util';
+import {
+  parseParentDirectoriesFromPilePath,
+  removeChildrenFromContainer,
+} from '../util';
 
 export class ProjectList {
   private focusProjectSubject = new Subject<string>();
@@ -54,25 +57,35 @@ export class ProjectList {
     const libProjects = this.getProjectsByType('lib');
     const e2eProjects = this.getProjectsByType('e2e');
 
+    const appDirectoryGroups = this.groupProjectsByDirectory(appProjects);
     const libDirectoryGroups = this.groupProjectsByDirectory(libProjects);
+    const e2eDirectoryGroups = this.groupProjectsByDirectory(e2eProjects);
+
+    const sortedAppDirectories = Object.keys(appDirectoryGroups).sort();
+    const sortedLibDirectories = Object.keys(libDirectoryGroups).sort();
+    const sortedE2EDirectories = Object.keys(e2eDirectoryGroups).sort();
 
     const appsHeader = document.createElement('h4');
     appsHeader.textContent = 'app projects';
     this.container.append(appsHeader);
-    this.createProjectList('apps', appProjects);
+
+    sortedAppDirectories.forEach((directoryName) => {
+      this.createProjectList(directoryName, appDirectoryGroups[directoryName]);
+    });
 
     const e2eHeader = document.createElement('h4');
     e2eHeader.textContent = 'e2e projects';
     this.container.append(e2eHeader);
-    this.createProjectList('e2e', e2eProjects);
+
+    sortedE2EDirectories.forEach((directoryName) => {
+      this.createProjectList(directoryName, e2eDirectoryGroups[directoryName]);
+    });
 
     const libHeader = document.createElement('h4');
     libHeader.textContent = 'lib projects';
     this.container.append(libHeader);
 
-    const sortedDirectories = Object.keys(libDirectoryGroups).sort();
-
-    sortedDirectories.forEach((directoryName) => {
+    sortedLibDirectories.forEach((directoryName) => {
       this.createProjectList(directoryName, libDirectoryGroups[directoryName]);
     });
   }
@@ -83,12 +96,19 @@ export class ProjectList {
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  private groupProjectsByDirectory(projects) {
+  private groupProjectsByDirectory(projects: ProjectGraphNode[]) {
     let groups = {};
 
     projects.forEach((project) => {
-      const split = project.data.root.split('/');
-      const directory = split.slice(1, -1).join('/');
+      const workspaceRoot =
+        project.type === 'app' || project.type === 'e2e'
+          ? window.workspaceLayout.appsDir
+          : window.workspaceLayout.libsDir;
+      const directories = parseParentDirectoriesFromPilePath(
+        project.data.root,
+        workspaceRoot
+      );
+      const directory = directories.join('/');
 
       if (!groups.hasOwnProperty(directory)) {
         groups[directory] = [];

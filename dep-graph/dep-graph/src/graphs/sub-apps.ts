@@ -1,4 +1,10 @@
 import { ProjectGraphCache } from '@nrwl/workspace';
+import { WorkspaceLayout } from '../app/models';
+
+export const subAppsWorkspaceLayout: WorkspaceLayout = {
+  appsDir: 'apps',
+  libsDir: 'libs',
+};
 
 export const subAppsGraph: ProjectGraphCache = {
   version: '2.0',
