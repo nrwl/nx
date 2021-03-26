@@ -387,7 +387,7 @@
         },
         "@ngrx/component-store": {
           "version": "11.0.0",
-          "alwaysAddToPackageJson": true
+          "alwaysAddToPackageJson": false
         },
         "ng-packagr": {
           "version": "^11.2.0",
