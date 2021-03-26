@@ -22,6 +22,12 @@ Possible values: `dependencies`, `peerDependencies`
 
 When updateBuildableProjectDepsInPackageJson is true, this adds dependencies to either `peerDependencies` or `dependencies`
 
+### cli
+
+Type: `boolean`
+
+Adds a CLI wrapper to main entry-point file.
+
 ### deleteOutputPath
 
 Default: `true`
