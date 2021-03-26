@@ -10,6 +10,7 @@ import compileTypeScriptFiles from './utils/compile-typescript-files';
 import updatePackageJson from './utils/update-package-json';
 import normalizeOptions from './utils/normalize-options';
 import copyAssetFiles from './utils/copy-asset-files';
+import addCliWrapper from './utils/cli';
 
 export async function packageExecutor(
   options: NodePackageBuilderOptions,
@@ -58,6 +59,10 @@ export async function packageExecutor(
       dependencies,
       normalizedOptions.buildableProjectDepsInPackageJsonType
     );
+  }
+
+  if (options.cli) {
+    addCliWrapper(normalizedOptions, context);
   }
 
   return {

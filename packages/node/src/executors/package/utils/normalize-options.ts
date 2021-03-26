@@ -1,4 +1,4 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext, normalizePath } from '@nrwl/devkit';
 
 import * as glob from 'glob';
 import { basename, dirname, join, relative } from 'path';
@@ -50,7 +50,10 @@ export default function normalizeOptions(
   const rootDir = libRoot || '';
   const mainFileDir = dirname(options.main);
 
-  const relativeMainFileOutput = relative(rootDir, mainFileDir);
+  // Always include a preceding dot to match format used for entry points
+  const relativeMainFileOutput = `./${normalizePath(
+    relative(rootDir, mainFileDir)
+  )}`;
 
   if (options.buildableProjectDepsInPackageJsonType == undefined) {
     options.buildableProjectDepsInPackageJsonType = 'dependencies';
