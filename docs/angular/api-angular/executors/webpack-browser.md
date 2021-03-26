@@ -252,7 +252,7 @@ Generates a service worker config for production builds.
 
 ### showCircularDependencies
 
-Default: `true`
+Default: `false`
 
 Type: `boolean`
 
