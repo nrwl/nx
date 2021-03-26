@@ -27,7 +27,7 @@
             "file": "angular/guides/cli-overview"
           },
           {
-            "name": "VS Code Plugin",
+            "name": "Nx Editor Plugins",
             "id": "console",
             "file": "shared/console"
           },
@@ -1074,7 +1074,7 @@
             "file": "react/guides/cli-overview"
           },
           {
-            "name": "VS Code Plugin",
+            "name": "Nx Editor Plugins",
             "id": "console",
             "file": "shared/console"
           },
@@ -2096,7 +2096,7 @@
             "file": "node/guides/cli-overview"
           },
           {
-            "name": "VS Code Plugin",
+            "name": "Nx Editor Plugins",
             "id": "console",
             "file": "shared/console"
           },
