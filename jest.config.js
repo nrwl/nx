@@ -19,6 +19,6 @@ module.exports = {
     '<rootDir>/packages/cli',
     '<rootDir>/packages/angular',
     '<rootDir>/packages/gatsby',
-    '<rootDir>/apps/dep-graph-client',
+    '<rootDir>/dep-graph/dep-graph-client',
   ],
 };

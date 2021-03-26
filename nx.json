@@ -21,7 +21,8 @@
     }
   },
   "workspaceLayout": {
-    "libsDir": "packages"
+    "libsDir": "",
+    "appsDir": ""
   },
   "projects": {
     "nx": {
@@ -157,15 +158,15 @@
       "tags": [],
       "implicitDependencies": ["workspace", "create-nx-workspace"]
     },
-    "dep-graph-client": {
-      "tags": ["core"]
-    },
-    "dep-graph-client-e2e": {
-      "tags": [],
-      "implicitDependencies": ["dep-graph-client"]
-    },
     "gatsby": {
       "tags": []
+    },
+    "dep-graph-dep-graph-e2e": {
+      "tags": [],
+      "implicitDependencies": ["dep-graph-dep-graph"]
+    },
+    "dep-graph-dep-graph": {
+      "tags": ["core"]
     }
   },
   "affected": {
