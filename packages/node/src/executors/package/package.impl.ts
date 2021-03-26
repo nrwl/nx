@@ -41,6 +41,9 @@ export async function packageExecutor(
     libRoot,
     dependencies
   );
+
+  await copyAssetFiles(normalizedOptions, context);
+
   updatePackageJson(normalizedOptions, context);
   if (
     dependencies.length > 0 &&
@@ -56,8 +59,6 @@ export async function packageExecutor(
       normalizedOptions.buildableProjectDepsInPackageJsonType
     );
   }
-
-  await copyAssetFiles(normalizedOptions, context);
 
   return {
     ...result,

@@ -41,6 +41,13 @@ export function workspaceConfigName() {
   return currentCli() === 'angular' ? 'angular.json' : 'workspace.json';
 }
 
+export function updateWorkspaceConfig(
+  callback: (json: { [key: string]: any }) => Object
+) {
+  const file = workspaceConfigName();
+  updateFile(file, JSON.stringify(callback(readJson(file)), null, 2));
+}
+
 export function runCreateWorkspace(
   name: string,
   {
