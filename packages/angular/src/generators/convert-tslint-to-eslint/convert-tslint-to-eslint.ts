@@ -84,6 +84,7 @@ export async function conversionGenerator(
     try {
       cypressInstallTask = await cypressConversionGenerator(host, {
         project: e2eProjectName,
+        discardExistingLintConfig: options.discardExistingLintConfig,
         /**
          * We can always set this to false, because it will already be handled by the next
          * step of this parent generator, if applicable

@@ -122,6 +122,7 @@ describe('convert-tslint-to-eslint', () => {
   it('should work for Cypress applications', async () => {
     await conversionGenerator(host, {
       project: projectName,
+      discardExistingLintConfig: false,
       removeTSLintIfNoMoreTSLintTargets: false,
     });
 
