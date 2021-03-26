@@ -32,6 +32,7 @@ export async function conversionGenerator(
   const projectConverter = new ProjectConverter({
     host,
     projectName: options.project,
+    discardExistingLintConfig: options.discardExistingLintConfig,
     eslintInitializer: async ({ projectName, projectConfig }) => {
       /**
        * Using .js is not an option with NestJS, so we always set it to false when

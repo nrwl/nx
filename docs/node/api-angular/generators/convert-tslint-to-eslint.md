@@ -32,6 +32,14 @@ nx g convert-tslint-to-eslint myapp
 
 ## Options
 
+### discardExistingLintConfig
+
+Default: `false`
+
+Type: `boolean`
+
+If true we will not use existing TSLint config as a reference, we will just reset the project with the latest recommended ESLint config
+
 ### project
 
 Type: `string`

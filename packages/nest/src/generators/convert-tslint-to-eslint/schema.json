@@ -21,6 +21,11 @@
       },
       "x-prompt": "Which NestJS project would you like to convert from TSLint to ESLint?"
     },
+    "discardExistingLintConfig": {
+      "type": "boolean",
+      "description": "If true we will not use existing TSLint config as a reference, we will just reset the project with the latest recommended ESLint config",
+      "default": false
+    },
     "removeTSLintIfNoMoreTSLintTargets": {
       "type": "boolean",
       "description": "If this conversion leaves no more TSLint usage in the workspace, it will remove TSLint and related dependencies and configuration",

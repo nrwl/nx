@@ -1,5 +1,48 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`ProjectConverter discardExistingLintConfig discardExistingLintConfig: false should use existing TSLint configs and merge their converted ESLint equivalents with recommended ESLint configs 1`] = `
+Object {
+  "overrides": Array [
+    Object {
+      "files": Array [
+        "*.ts",
+      ],
+      "rules": Object {
+        "some-converted-rule": "error",
+      },
+    },
+  ],
+  "rules": Object {
+    "some-recommended-root-eslint-rule": "error",
+  },
+}
+`;
+
+exports[`ProjectConverter discardExistingLintConfig discardExistingLintConfig: false should use existing TSLint configs and merge their converted ESLint equivalents with recommended ESLint configs 2`] = `
+Object {
+  "rules": Object {
+    "some-converted-rule": "error",
+    "some-recommended-project-eslint-rule": "error",
+  },
+}
+`;
+
+exports[`ProjectConverter discardExistingLintConfig discardExistingLintConfig: true should ignore existing TSLint configs and just reset the project to use recommended ESLint configs 1`] = `
+Object {
+  "rules": Object {
+    "some-recommended-root-eslint-rule": "error",
+  },
+}
+`;
+
+exports[`ProjectConverter discardExistingLintConfig discardExistingLintConfig: true should ignore existing TSLint configs and just reset the project to use recommended ESLint configs 2`] = `
+Object {
+  "rules": Object {
+    "some-recommended-project-eslint-rule": "error",
+  },
+}
+`;
+
 exports[`ProjectConverter removeTSLintFromWorkspace() should remove all relevant traces of TSLint from the workspace 1`] = `
 Object {
   "dependencies": Object {},

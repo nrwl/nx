@@ -27,6 +27,7 @@ export async function conversionGenerator(
   const projectConverter = new ProjectConverter({
     host,
     projectName: options.project,
+    discardExistingLintConfig: options.discardExistingLintConfig,
     eslintInitializer: async ({ projectName, projectConfig }) => {
       await addLintingGenerator(host, {
         linter: 'eslint',
