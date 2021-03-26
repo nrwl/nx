@@ -46,6 +46,12 @@ Type: `boolean`
 
 Enables '@angular-devkit/build-optimizer' optimizations when using the 'aot' option.
 
+### buildTarget
+
+Type: `string`
+
+Build target used for building the app after its dependencies have been built. If no target is configured, @angular-devkit/build-angular:browser is sheduled directly.
+
 ### commonChunk
 
 Default: `true`
