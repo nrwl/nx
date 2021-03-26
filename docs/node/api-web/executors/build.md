@@ -187,7 +187,7 @@ External Scripts which will be included before the main application entry
 
 ### showCircularDependencies
 
-Default: `true`
+Default: `false`
 
 Type: `boolean`
 

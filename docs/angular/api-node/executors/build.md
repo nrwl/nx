@@ -110,7 +110,7 @@ Log progress to the console while building.
 
 ### showCircularDependencies
 
-Default: `true`
+Default: `false`
 
 Type: `boolean`
 
