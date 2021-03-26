@@ -1,4 +1,6 @@
+import { ExecutorContext } from '@nrwl/devkit';
 import { exec, execSync } from 'child_process';
+import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
 
 export const LARGE_BUFFER = 1024 * 1000000;
@@ -57,7 +59,8 @@ export interface NormalizedRunCommandsBuilderOptions
 }
 
 export default async function (
-  options: RunCommandsBuilderOptions
+  options: RunCommandsBuilderOptions,
+  context: ExecutorContext
 ): Promise<{ success: boolean }> {
   loadEnvVars(options.envFile);
   const normalized = normalizeOptions(options);
@@ -70,8 +73,8 @@ export default async function (
 
   try {
     const success = options.parallel
-      ? await runInParallel(normalized)
-      : await runSerially(normalized);
+      ? await runInParallel(normalized, context)
+      : await runSerially(normalized, context);
     return { success };
   } catch (e) {
     throw new Error(
@@ -80,13 +83,16 @@ export default async function (
   }
 }
 
-async function runInParallel(options: NormalizedRunCommandsBuilderOptions) {
+async function runInParallel(
+  options: NormalizedRunCommandsBuilderOptions,
+  context: ExecutorContext
+) {
   const procs = options.commands.map((c) =>
     createProcess(
       c.command,
       options.readyWhen,
       options.color,
-      options.cwd
+      calculateCwd(options.cwd, context)
     ).then((result) => ({
       result,
       command: c.command,
@@ -142,9 +148,16 @@ function normalizeOptions(
   return options as any;
 }
 
-async function runSerially(options: NormalizedRunCommandsBuilderOptions) {
+async function runSerially(
+  options: NormalizedRunCommandsBuilderOptions,
+  context: ExecutorContext
+) {
   for (const c of options.commands) {
-    createSyncProcess(c.command, options.color, options.cwd);
+    createSyncProcess(
+      c.command,
+      options.color,
+      calculateCwd(options.cwd, context)
+    );
   }
   return true;
 }
@@ -164,7 +177,8 @@ function createProcess(
     /**
      * Ensure the child process is killed when the parent exits
      */
-    process.on('exit', () => childProcess.kill());
+    const processExitListener = () => childProcess.kill();
+    process.on('exit', processExitListener);
     childProcess.stdout.on('data', (data) => {
       process.stdout.write(data);
       if (readyWhen && data.toString().indexOf(readyWhen) > -1) {
@@ -181,6 +195,7 @@ function createProcess(
       if (!readyWhen) {
         res(code === 0);
       }
+      process.removeListener('exit', processExitListener);
     });
   });
 }
@@ -192,6 +207,15 @@ function createSyncProcess(command: string, color: boolean, cwd: string) {
     maxBuffer: LARGE_BUFFER,
     cwd,
   });
+}
+
+function calculateCwd(
+  cwd: string | undefined,
+  context: ExecutorContext
+): string {
+  if (!cwd) return context.root;
+  if (path.isAbsolute(cwd)) return cwd;
+  return path.join(context.root, cwd);
 }
 
 function processEnv(color: boolean) {
