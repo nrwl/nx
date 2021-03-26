@@ -30,7 +30,9 @@
     "help": "nx help"
   },
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "tslib": "^2.0.0"
+  },
   "devDependencies": {
      <% if(cli === 'angular') { %>"@angular/cli": "<%= angularCliVersion %>",<% } %>
     "@nrwl/tao": "<%= nxVersion %>",

@@ -10458,7 +10458,7 @@ export const smallGraph: ProjectGraphCache = {
       type: 'npm',
       name: 'npm:regenerator-runtime',
       data: {
-        version: '0.13.3',
+        version: '0.13.7',
         packageName: 'regenerator-runtime',
         files: [],
       },

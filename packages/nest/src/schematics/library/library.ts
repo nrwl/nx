@@ -28,6 +28,7 @@ import * as ts from 'typescript';
 import { libsDir, RemoveChange } from '@nrwl/workspace/src/utils/ast-utils';
 import { names, offsetFromRoot } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import { updateDependencies } from '../init/init';
 
 export interface NormalizedSchema extends Schema {
   name: string;
@@ -44,6 +45,7 @@ export default function (schema: NormalizedSchema): Rule {
 
     return chain([
       externalSchematic('@nrwl/node', 'lib', schema),
+      updateDependencies,
       createFiles(options),
       addExportsToBarrelFile(options),
       updateTsConfig(options),

@@ -28,6 +28,7 @@ function updateDependencies(tree: Tree) {
     {
       'core-js': '^3.6.5',
       'document-register-element': documentRegisterElementVersion,
+      'regenerator-runtime': '0.13.7',
       tslib: '^2.0.0',
     },
     {

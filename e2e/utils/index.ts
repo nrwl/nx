@@ -14,6 +14,7 @@ import {
 } from 'fs-extra';
 import * as isCI from 'is-ci';
 import * as path from 'path';
+import { dirSync } from 'tmp';
 
 interface RunCmdOpts {
   silenceError?: boolean;
@@ -25,6 +26,10 @@ interface RunCmdOpts {
 export function currentCli() {
   return process.env.SELECTED_CLI ?? 'nx';
 }
+
+export const e2eRoot = isCI ? dirSync({ prefix: 'nx-e2e-' }).name : `./tmp`;
+export const e2eCwd = `${e2eRoot}/${currentCli()}`;
+ensureDirSync(e2eCwd);
 
 let projName: string;
 
@@ -85,7 +90,7 @@ export function runCreateWorkspace(
   }
 
   const create = execSync(command, {
-    cwd: `./tmp/${currentCli()}`,
+    cwd: e2eCwd,
     stdio: [0, 1, 2],
     env: process.env,
   });
@@ -93,7 +98,7 @@ export function runCreateWorkspace(
 }
 
 export function packageInstall(pkg: string, projName?: string) {
-  const cwd = projName ? `./tmp/${currentCli()}/${projName}` : tmpProjPath();
+  const cwd = projName ? `${e2eCwd}/${projName}` : tmpProjPath();
   const pm = getPackageManagerCommand({ path: cwd });
   const install = execSync(`${pm.addDev} ${pkg}`, {
     cwd,
@@ -106,7 +111,7 @@ export function packageInstall(pkg: string, projName?: string) {
 
 export function runNgNew(): string {
   return execSync(`../../node_modules/.bin/ng new proj --no-interactive`, {
-    cwd: `./tmp/${currentCli()}`,
+    cwd: e2eCwd,
     env: process.env,
   }).toString();
 }
@@ -152,7 +157,7 @@ export function newProject({ name = uniq('proj') } = {}): string {
       packageInstall(packages.join(` `), projScope);
 
       if (useBackupProject) {
-        moveSync(`./tmp/${currentCli()}/proj`, `${tmpBackupProjPath()}`);
+        moveSync(`${e2eCwd}/proj`, `${tmpBackupProjPath()}`);
       }
     }
     projName = name;
@@ -468,15 +473,11 @@ export function getSize(filePath: string): number {
 }
 
 export function tmpProjPath(path?: string) {
-  return path
-    ? `./tmp/${currentCli()}/${projName}/${path}`
-    : `./tmp/${currentCli()}/${projName}`;
+  return path ? `${e2eCwd}/${projName}/${path}` : `${e2eCwd}/${projName}`;
 }
 
 function tmpBackupProjPath(path?: string) {
-  return path
-    ? `./tmp/${currentCli()}/proj-backup/${path}`
-    : `./tmp/${currentCli()}/proj-backup`;
+  return path ? `${e2eCwd}/proj-backup/${path}` : `${e2eCwd}/proj-backup`;
 }
 
 export function getPackageManagerCommand({
