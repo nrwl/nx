@@ -5,7 +5,7 @@ var_1: &working_directory ~/repo
 var_2:
   &nx_cli [
     'e2e-workspace',
-    'e2e-cli,e2e-nx-plugin,dep-graph-client-e2e',
+    'e2e-cli,e2e-nx-plugin,dep-graph-dep-graph-e2e',
     'e2e-cypress,e2e-jest',
     'e2e-react',
     'e2e-next,e2e-gatsby',
