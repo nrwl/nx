@@ -1,17 +1,10 @@
-# Nx Console
-
-![Nx Console logo](/shared/nx-console-logo.png)
+# Nx Editor Plugins
 
 **Spend less time looking up command line arguments and more time shipping incredible products.**
 
-- [Install from the VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console)
-- [Contribute on GitHub](https://github.com/nrwl/nx-console)
-
-![Nx Console screenshot](/shared/nx-console-screenshot.png)
-
 With Nx, you can get a full-stack application up and running in minutes, no need to figure out source maps, webpack, test runners. It all works out of the box. Nx also helps you enforce consistent development practices by generating components, services, and state management modules.
 
-## Why Nx Console?
+## Why use Nx Editor Plugins?
 
 Developers use both command-line tools and user interfaces. They commit in the terminal, but resolve conflicts in VSCode or WebStorm. They use the right tool for the job.
 
@@ -27,19 +20,38 @@ Nx Console does all that and more!
 
 ## Download
 
-For VSCode users, you can install the [Nx Console VSCode Plugin](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console) from Marketplace.
+### VSCode
 
-## True UI for Nx
+If you are using [VSCode](https://code.visualstudio.com/), you can install the [Nx Console VSCode Plugin](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console) from Marketplace. The Nx Console VSCode Plugin is **built and maintained by the Nx team**.
+
+### WebStorm
+
+If you are using [WebStorm](https://www.jetbrains.com/webstorm/), you can install one of the available plugins:
+[nx-webstorm](https://plugins.jetbrains.com/plugin/15000-nx-webstorm)
+[Nx Console Idea](https://plugins.jetbrains.com/plugin/15101-nx-console-idea)
+
+These plugins are **NOT** built or maintained by the Nx team. They are maintained by independent community contributors.
+
+## Nx Console for VS Code
+
+![Nx Console logo](/shared/nx-console-logo.png)
+
+- [Install from the VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console)
+- [Contribute on GitHub](https://github.com/nrwl/nx-console)
+
+![Nx Console screenshot](/shared/nx-console-screenshot.png)
+
+### True UI for Nx
 
 Nx Console is the UI for Nx. It will work for any generator or any architect commands. Nx Console does not have a specific UI for, say, generating a component. Instead, Nx Console does what the command-line version of Nx does--it analyzes the same meta information to create the needed UI. This means that anything you can do with Nx, you can do with Nx Console. After all, Nx Console is the UI for Nx.
 
-## Useful for Both Experts and Beginners
+### Useful for Both Experts and Beginners
 
 Even though we started building Nx Console as a tool for experts, we also aimed to make Nx Console a great tool for developers who are new to development or Nx. You can create projects, interact with your editor, run generators and commands, install extensions without ever touching the terminal or having to install any node packages globally. Also, Nx Console highlights the properties you are likely to use for built-in generators and commands, so if you haven't used the CLI, you don't get overwhelmed.
 
-## Documentation
+### Documentation
 
-### Generate
+#### Generate
 
 The `Generate` action allows you to choose a generator and then opens a form listing out all the options for that generator. As you make changes to the form, the generator is executed in `--dry-run` mode in a terminal so you can preview the results of running the generator in real time.
 
@@ -51,11 +63,11 @@ You can also launch the `Generate` action from the Command Palette (`⇧⌘P`) b
 
 <iframe width="560" height="420" src="https://www.youtube.com/embed/Sk2XjFwF8Zo?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-You can even construct the generator options while staying entirely within the Command Palette. Use `⇧⌘P` to open the Command Palette, then select `nx: generate`. After choosing a generator, select any of the listed options to modify the generator command. When you're satisfied with the constructed command, choose the `Execute` command at the top of the list.
+You can even construct the generator options while staying entirely within the Command Palette. Use `⇧⌘P` to open the Command Palette, then select `nx: generate`. After choosing a generator, select any of the listed options to modify the generator command. When you're satified with the constructed command, choose the `Execute` command at the top of the list.
 
 <iframe width="560" height="420" src="https://www.youtube.com/embed/q5NTTqRYq9c?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-### Run
+#### Run
 
 The `Run` action allows you to choose a builder command and then opens a form listing out all the options for that builder. The frequently used builder commands `build`, `serve`, `test`, `e2e` and `lint` also have their own dedicated actions.
 
@@ -63,17 +75,17 @@ The `Run` action allows you to choose a builder command and then opens a form li
 
 **From the Command Pallete**
 
-You can also construct the builder command options while staying entirely within the Command Palette. Use `⇧⌘P` to open the Command Palette, then select `nx: test`. After choosing a project, select any of the listed options to modify the builder command options. When you're satisfied with the constructed command, choose the `Execute` command at the top of the list.
+You can also construct the builder command options while staying entirely within the Command Palette. Use `⇧⌘P` to open the Command Palette, then select `nx: test`. After choosing a project, select any of the listed options to modify the builder command options. When you're satified with the constructed command, choose the `Execute` command at the top of the list.
 
 <iframe width="560" height="420" src="https://www.youtube.com/embed/CsUkSyQcxwQ?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-### Common Nx Commands
+#### Common Nx Commands
 
 You can also launch other common Nx commands with the options listed out in the Command Palette.
 
 <iframe width="560" height="420" src="https://www.youtube.com/embed/v6Tso0lB6S4?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-### Projects
+#### Projects
 
 Clicking on the name of any project will navigate to that project's definition in the `workspace.json` (or `angular.json`) file. Clicking on the name of any builder command will navigate to that builder command's definition in the `workspace.json` (or `angular.json`) file.
 
@@ -85,7 +97,7 @@ Clicking the [continue-light.svg] icon next to a builder command will execute th
 
 <iframe width="560" height="420" src="https://www.youtube.com/embed/ve_N3unDqAg?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-### Streamlining
+#### Streamlining
 
 If you find yourself running the same command many times, here are few tips to save yourself some key strokes.
 
