@@ -1,4 +1,5 @@
 import { Subject } from 'rxjs';
+import { removeChildrenFromContainer } from '../util';
 
 export interface TextFilterChangeEvent {
   text: string;
@@ -24,6 +25,8 @@ export class TextFilterPanel {
   }
 
   private render() {
+    removeChildrenFromContainer(this.container);
+
     const inputContainer = document.createElement('div');
     inputContainer.classList.add('flex');
 

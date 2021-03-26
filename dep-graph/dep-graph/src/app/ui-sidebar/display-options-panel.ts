@@ -1,4 +1,5 @@
 import { Subject } from 'rxjs';
+import { removeChildrenFromContainer } from '../util';
 
 export class DisplayOptionsPanel {
   private showAffected = false;
@@ -19,6 +20,8 @@ export class DisplayOptionsPanel {
   }
 
   render(container: HTMLElement) {
+    removeChildrenFromContainer(container);
+
     const header = document.createElement('h4');
     header.innerText = 'Display Options';
 

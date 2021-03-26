@@ -44,6 +44,7 @@
     </div>
 
     <div id="main-content">
+      <div id="debugger-panel" hidden></div>
       <div id="no-projects-chosen">
         <h4>Please select projects in the sidebar.</h4>
       </div>
@@ -52,12 +53,12 @@
   </div>
 
   <script>
-    window.projects = null;
-    window.graph = null;
-    window.affected = null;
+    window.projects = [];
+    window.graph = {};
+    window.affected = [];
     window.focusedProject = null;
     window.filteredProjects = [];
-    window.groupByFolder = null;
-    window.exclude = null;
+    window.groupByFolder = false;
+    window.exclude = [];
   </script>
 </body>

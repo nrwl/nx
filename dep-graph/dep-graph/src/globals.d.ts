@@ -1,4 +1,5 @@
 import { ProjectGraph, ProjectGraphNode } from '@nrwl/workspace';
+import { ProjectGraphList } from './graphs';
 
 export declare global {
   export interface Window {
@@ -11,6 +12,8 @@ export declare global {
     groupByFolder: boolean;
     focusProject: Function;
     excludeProject: Function;
+    projectGraphList: ProjectGraphList[];
+    selectedProjectGraph: string;
   }
 }
 

@@ -123,6 +123,22 @@ h5 {
   overflow: hidden;
 }
 
+#debugger-panel {
+  display: none;
+  width: 100%;
+  background-color: var(--color-nrwl-light-blue);
+  padding: 1.5em;
+  align-items: baseline;
+
+  & > * {
+    margin-right: 1em;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
 #apps,
 #libs,
 #e2e {
