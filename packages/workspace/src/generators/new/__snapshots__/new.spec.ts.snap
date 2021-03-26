@@ -4,6 +4,7 @@ exports[`new --preset angular should generate necessary npm dependencies 1`] = `
 Object {
   "dependencies": Object {
     "@nrwl/angular": "*",
+    "tslib": "^2.0.0",
   },
   "devDependencies": Object {
     "@nrwl/cli": "*",
@@ -47,7 +48,9 @@ Object {
 
 exports[`new --preset empty should generate necessary npm dependencies 1`] = `
 Object {
-  "dependencies": Object {},
+  "dependencies": Object {
+    "tslib": "^2.0.0",
+  },
   "devDependencies": Object {
     "@nrwl/cli": "*",
     "@nrwl/tao": "*",
@@ -90,7 +93,9 @@ Object {
 
 exports[`new --preset react should generate necessary npm dependencies 1`] = `
 Object {
-  "dependencies": Object {},
+  "dependencies": Object {
+    "tslib": "^2.0.0",
+  },
   "devDependencies": Object {
     "@nrwl/cli": "*",
     "@nrwl/react": "*",

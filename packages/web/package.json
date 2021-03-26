@@ -83,7 +83,7 @@
     "raw-loader": "3.1.0",
     "rxjs": "^6.5.4",
     "rxjs-for-await": "0.0.2",
-    "regenerator-runtime": "0.13.3",
+    "regenerator-runtime": "0.13.7",
     "rimraf": "^3.0.2",
     "rollup": "1.31.1",
     "rollup-plugin-copy": "^3.3.0",

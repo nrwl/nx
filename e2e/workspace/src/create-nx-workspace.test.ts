@@ -1,6 +1,7 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  e2eCwd,
   expectNoAngularDevkit,
   readJson,
   removeProject,
@@ -145,7 +146,7 @@ describe('create-nx-workspace', () => {
   it('should handle spaces in workspace path', () => {
     const wsName = uniq('empty');
 
-    const tmpDir = `./tmp/nx/with space`;
+    const tmpDir = `${e2eCwd}/with space`;
 
     mkdirSync(tmpDir);
 

@@ -49,6 +49,10 @@ jobs:
     - name: Run e2e tests
       run: yarn e2e ${{ matrix.packages }} affected
       env:
+        GIT_AUTHOR_NAME: test@test.com
+        GIT_AUTHOR_EMAIL: Test
+        GIT_COMMITTER_EMAIL: test@test.com
+        GIT_COMMITTER_NAME: Test
         NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.node_version }}-${{ matrix.package_manager }}
         NODE_OPTIONS: --max_old_space_size=8192
         SELECTED_PM: ${{ matrix.package_manager }}
