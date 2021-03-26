@@ -18,8 +18,8 @@ Type: `string`
 
 the target Nx Plugin project and build
 
-### tsSpecConfig
+### ~~tsSpecConfig~~
 
 Type: `string`
 
-[Deprecated] Spec tsconfig file
+**Deprecated:** Spec tsconfig file

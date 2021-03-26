@@ -25,7 +25,7 @@
     },
     "tsSpecConfig": {
       "type": "string",
-      "description": "[Deprecated] Spec tsconfig file",
+      "description": "Spec tsconfig file",
       "x-deprecated": true
     }
   },
