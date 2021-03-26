@@ -12,7 +12,10 @@ import {
   matchImportWithWildcard,
   onlyLoadChildren,
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
-import { TSESTree } from '@typescript-eslint/experimental-utils';
+import {
+  AST_NODE_TYPES,
+  TSESTree,
+} from '@typescript-eslint/experimental-utils';
 import { createESLintRule } from '../utils/create-eslint-rule';
 import { normalizePath } from '@nrwl/devkit';
 import {
@@ -119,173 +122,181 @@ export default createESLintRule<Options, MessageIds>({
     const targetProjectLocator = (global as any)
       .targetProjectLocator as TargetProjectLocator;
 
+    function run(node: TSESTree.ImportDeclaration | TSESTree.ImportExpression) {
+      const imp = (node.source as TSESTree.Literal).value as string;
+
+      const sourceFilePath = getSourceFilePath(
+        normalizePath(context.getFilename()),
+        projectPath
+      );
+
+      // whitelisted import
+      if (allow.some((a) => matchImportWithWildcard(a, imp))) {
+        return;
+      }
+
+      // check for relative and absolute imports
+      if (
+        isRelativeImportIntoAnotherProject(
+          imp,
+          projectPath,
+          projectGraph,
+          sourceFilePath
+        ) ||
+        isAbsoluteImportIntoAnotherProject(imp)
+      ) {
+        context.report({
+          node,
+          messageId: 'noRelativeOrAbsoluteImportsAcrossLibraries',
+          data: {
+            npmScope,
+          },
+        });
+        return;
+      }
+
+      const sourceProject = findSourceProject(projectGraph, sourceFilePath);
+      const targetProject = findProjectUsingImport(
+        projectGraph,
+        targetProjectLocator,
+        sourceFilePath,
+        imp,
+        npmScope
+      );
+
+      // If source or target are not part of an nx workspace, return.
+      if (!sourceProject || !targetProject) {
+        return;
+      }
+
+      // same project => allow
+      if (sourceProject === targetProject) {
+        return;
+      }
+
+      // project => npm package
+      if (isNpmProject(targetProject)) {
+        return;
+      }
+      // check constraints between libs and apps
+      // check for circular dependency
+      const circularPath = checkCircularPath(
+        projectGraph,
+        sourceProject,
+        targetProject
+      );
+      if (circularPath.length !== 0) {
+        context.report({
+          node,
+          messageId: 'noCircularDependencies',
+          data: {
+            sourceProjectName: sourceProject.name,
+            targetProjectName: targetProject.name,
+            path: circularPath.reduce(
+              (acc, v) => `${acc} -> ${v.name}`,
+              sourceProject.name
+            ),
+          },
+        });
+        return;
+      }
+
+      // cannot import apps
+      if (targetProject.type === ProjectType.app) {
+        context.report({
+          node,
+          messageId: 'noImportsOfApps',
+        });
+        return;
+      }
+
+      // cannot import e2e projects
+      if (targetProject.type === ProjectType.e2e) {
+        context.report({
+          node,
+          messageId: 'noImportsOfE2e',
+        });
+        return;
+      }
+
+      // buildable-lib is not allowed to import non-buildable-lib
+      if (
+        enforceBuildableLibDependency === true &&
+        sourceProject.type === ProjectType.lib &&
+        targetProject.type === ProjectType.lib
+      ) {
+        if (
+          hasBuildExecutor(sourceProject) &&
+          !hasBuildExecutor(targetProject)
+        ) {
+          context.report({
+            node,
+            messageId: 'noImportOfNonBuildableLibraries',
+          });
+          return;
+        }
+      }
+
+      // if we import a library using loadChildren, we should not import it using es6imports
+      if (
+        node.type === AST_NODE_TYPES.ImportDeclaration &&
+        node.importKind !== 'type' &&
+        onlyLoadChildren(
+          projectGraph,
+          sourceProject.name,
+          targetProject.name,
+          []
+        )
+      ) {
+        context.report({
+          node,
+          messageId: 'noImportsOfLazyLoadedLibraries',
+        });
+        return;
+      }
+
+      // check that dependency constraints are satisfied
+      if (depConstraints.length > 0) {
+        const constraints = findConstraintsFor(depConstraints, sourceProject);
+        // when no constrains found => error. Force the user to provision them.
+        if (constraints.length === 0) {
+          context.report({
+            node,
+            messageId: 'projectWithoutTagsCannotHaveDependencies',
+          });
+          return;
+        }
+
+        for (let constraint of constraints) {
+          if (
+            hasNoneOfTheseTags(
+              targetProject,
+              constraint.onlyDependOnLibsWithTags || []
+            )
+          ) {
+            const allowedTags = constraint.onlyDependOnLibsWithTags
+              .map((s) => `"${s}"`)
+              .join(', ');
+            context.report({
+              node,
+              messageId: 'tagConstraintViolation',
+              data: {
+                sourceTag: constraint.sourceTag,
+                allowedTags,
+              },
+            });
+            return;
+          }
+        }
+      }
+    }
+
     return {
       ImportDeclaration(node: TSESTree.ImportDeclaration) {
-        const imp = (node.source as TSESTree.Literal).value as string;
-
-        const sourceFilePath = getSourceFilePath(
-          normalizePath(context.getFilename()),
-          projectPath
-        );
-
-        // whitelisted import
-        if (allow.some((a) => matchImportWithWildcard(a, imp))) {
-          return;
-        }
-
-        // check for relative and absolute imports
-        if (
-          isRelativeImportIntoAnotherProject(
-            imp,
-            projectPath,
-            projectGraph,
-            sourceFilePath
-          ) ||
-          isAbsoluteImportIntoAnotherProject(imp)
-        ) {
-          context.report({
-            node,
-            messageId: 'noRelativeOrAbsoluteImportsAcrossLibraries',
-            data: {
-              npmScope,
-            },
-          });
-          return;
-        }
-
-        const sourceProject = findSourceProject(projectGraph, sourceFilePath);
-        const targetProject = findProjectUsingImport(
-          projectGraph,
-          targetProjectLocator,
-          sourceFilePath,
-          imp,
-          npmScope
-        );
-
-        // If source or target are not part of an nx workspace, return.
-        if (!sourceProject || !targetProject) {
-          return;
-        }
-
-        // same project => allow
-        if (sourceProject === targetProject) {
-          return;
-        }
-
-        // project => npm package
-        if (isNpmProject(targetProject)) {
-          return;
-        }
-        // check constraints between libs and apps
-        // check for circular dependency
-        const circularPath = checkCircularPath(
-          projectGraph,
-          sourceProject,
-          targetProject
-        );
-        if (circularPath.length !== 0) {
-          context.report({
-            node,
-            messageId: 'noCircularDependencies',
-            data: {
-              sourceProjectName: sourceProject.name,
-              targetProjectName: targetProject.name,
-              path: circularPath.reduce(
-                (acc, v) => `${acc} -> ${v.name}`,
-                sourceProject.name
-              ),
-            },
-          });
-          return;
-        }
-
-        // cannot import apps
-        if (targetProject.type === ProjectType.app) {
-          context.report({
-            node,
-            messageId: 'noImportsOfApps',
-          });
-          return;
-        }
-
-        // cannot import e2e projects
-        if (targetProject.type === ProjectType.e2e) {
-          context.report({
-            node,
-            messageId: 'noImportsOfE2e',
-          });
-          return;
-        }
-
-        // buildable-lib is not allowed to import non-buildable-lib
-        if (
-          enforceBuildableLibDependency === true &&
-          sourceProject.type === ProjectType.lib &&
-          targetProject.type === ProjectType.lib
-        ) {
-          if (
-            hasBuildExecutor(sourceProject) &&
-            !hasBuildExecutor(targetProject)
-          ) {
-            context.report({
-              node,
-              messageId: 'noImportOfNonBuildableLibraries',
-            });
-            return;
-          }
-        }
-
-        // if we import a library using loadChildren, we should not import it using es6imports
-        if (
-          node.importKind !== 'type' &&
-          onlyLoadChildren(
-            projectGraph,
-            sourceProject.name,
-            targetProject.name,
-            []
-          )
-        ) {
-          context.report({
-            node,
-            messageId: 'noImportsOfLazyLoadedLibraries',
-          });
-          return;
-        }
-
-        // check that dependency constraints are satisfied
-        if (depConstraints.length > 0) {
-          const constraints = findConstraintsFor(depConstraints, sourceProject);
-          // when no constrains found => error. Force the user to provision them.
-          if (constraints.length === 0) {
-            context.report({
-              node,
-              messageId: 'projectWithoutTagsCannotHaveDependencies',
-            });
-            return;
-          }
-
-          for (let constraint of constraints) {
-            if (
-              hasNoneOfTheseTags(
-                targetProject,
-                constraint.onlyDependOnLibsWithTags || []
-              )
-            ) {
-              const allowedTags = constraint.onlyDependOnLibsWithTags
-                .map((s) => `"${s}"`)
-                .join(', ');
-              context.report({
-                node,
-                messageId: 'tagConstraintViolation',
-                data: {
-                  sourceTag: constraint.sourceTag,
-                  allowedTags,
-                },
-              });
-              return;
-            }
-          }
-        }
+        run(node);
+      },
+      ImportExpression(node: TSESTree.ImportExpression) {
+        run(node);
       },
     };
   },
