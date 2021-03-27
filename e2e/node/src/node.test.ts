@@ -5,6 +5,7 @@ import * as treeKill from 'tree-kill';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  createFile,
   newProject,
   readFile,
   readJson,
@@ -256,6 +257,7 @@ describe('Node Libraries', () => {
       );
       return workspace;
     });
+    createFile(`dist/libs/${nodeLib}/_should_remove.txt`); // Output directory should be removed
     await runCLIAsync(`build ${nodeLib}`);
     expect(readJson(`dist/libs/${nodeLib}/package.json`)).toEqual({
       name: `@${proj}/${nodeLib}`,
@@ -263,6 +265,12 @@ describe('Node Libraries', () => {
       main: 'src/index.js',
       typings: 'src/index.d.ts',
     });
+    checkFilesDoNotExist(`dist/libs/${nodeLib}/_should_remove.txt`);
+
+    // Support not deleting output path before build
+    createFile(`dist/libs/${nodeLib}/_should_keep.txt`);
+    await runCLIAsync(`build ${nodeLib} --delete-output-path=false`);
+    checkFilesExist(`dist/libs/${nodeLib}/_should_keep.txt`);
   }, 60000);
 
   it('should support --js flag', async () => {

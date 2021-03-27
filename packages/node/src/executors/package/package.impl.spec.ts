@@ -81,6 +81,7 @@ describe('NodePackageBuilder', () => {
       tsConfig: 'libs/nodelib/tsconfig.lib.json',
       watch: false,
       sourceMap: false,
+      deleteOutputPath: true,
     };
   });
 

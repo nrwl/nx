@@ -59,7 +59,9 @@ export default async function compileTypeScriptFiles(
   libRoot: string,
   projectDependencies: DependentBuildableProjectNode[]
 ) {
-  removeSync(options.normalizedOutputPath);
+  if (options.deleteOutputPath) {
+    removeSync(options.normalizedOutputPath);
+  }
   let tsConfigPath = join(context.root, options.tsConfig);
   if (projectDependencies.length > 0) {
     tsConfigPath = createTmpTsConfig(
