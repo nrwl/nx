@@ -216,6 +216,7 @@ Object {
               "_counters",
               "_timers",
               "_groupDepth",
+              "Console",
             ],
           },
         ],
