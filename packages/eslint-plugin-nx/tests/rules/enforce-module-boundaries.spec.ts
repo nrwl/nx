@@ -1038,7 +1038,7 @@ describe('Enforce Module Boundaries', () => {
       );
 
       const message =
-        'Buildable libraries cannot import non-buildable libraries';
+        'Buildable libraries cannot import or export from non-buildable libraries';
       expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);
@@ -1051,8 +1051,8 @@ describe('Enforce Module Boundaries', () => {
         },
         `${process.cwd()}/proj/libs/buildableLib/src/main.ts`,
         `
-          import '@mycompany/nonBuildableLib';
-          import('@mycompany/nonBuildableLib');
+          import '@mycompany/anotherBuildableLib';
+          import('@mycompany/anotherBuildableLib');
         `,
         {
           nodes: {
@@ -1072,11 +1072,11 @@ describe('Enforce Module Boundaries', () => {
                 files: [createFile(`libs/buildableLib/src/main.ts`)],
               },
             },
-            nonBuildableLib: {
-              name: 'nonBuildableLib',
+            anotherBuildableLib: {
+              name: 'anotherBuildableLib',
               type: ProjectType.lib,
               data: {
-                root: 'libs/nonBuildableLib',
+                root: 'libs/anotherBuildableLib',
                 tags: [],
                 implicitDependencies: [],
                 architect: {
@@ -1085,7 +1085,7 @@ describe('Enforce Module Boundaries', () => {
                     builder: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
-                files: [createFile(`libs/nonBuildableLib/src/main.ts`)],
+                files: [createFile(`libs/anotherBuildableLib/src/main.ts`)],
               },
             },
           },
@@ -1133,6 +1133,256 @@ describe('Enforce Module Boundaries', () => {
         }
       );
 
+      expect(failures.length).toBe(0);
+    });
+
+    it('should error when exporting all from a non-buildable library', () => {
+      const failures = runRule(
+        {
+          enforceBuildableLibDependency: true,
+        },
+        `${process.cwd()}/proj/libs/buildableLib/src/main.ts`,
+        `
+          export * from '@nonBuildableScope/nonBuildableLib';
+        `,
+        {
+          nodes: {
+            buildableLib: {
+              name: 'buildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/buildableLib',
+                tags: [],
+                implicitDependencies: [],
+                targets: {
+                  build: {
+                    // defines a buildable lib
+                    executor: '@angular-devkit/build-ng-packagr:build',
+                  },
+                },
+                files: [createFile(`libs/buildableLib/src/main.ts`)],
+              },
+            },
+            nonBuildableLib: {
+              name: 'nonBuildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/nonBuildableLib',
+                tags: [],
+                implicitDependencies: [],
+                targets: {},
+                files: [createFile(`libs/nonBuildableLib/src/main.ts`)],
+              },
+            },
+          },
+          dependencies: {},
+        }
+      );
+
+      const message =
+        'Buildable libraries cannot import or export from non-buildable libraries';
+      expect(failures[0].message).toEqual(message);
+    });
+
+    it('should not error when exporting all from a buildable library', () => {
+      const failures = runRule(
+        {
+          enforceBuildableLibDependency: true,
+        },
+        `${process.cwd()}/proj/libs/buildableLib/src/main.ts`,
+        `
+          export * from '@mycompany/anotherBuildableLib';
+        `,
+        {
+          nodes: {
+            buildableLib: {
+              name: 'buildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/buildableLib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {
+                  build: {
+                    // defines a buildable lib
+                    builder: '@angular-devkit/build-ng-packagr:build',
+                  },
+                },
+                files: [createFile(`libs/buildableLib/src/main.ts`)],
+              },
+            },
+            anotherBuildableLib: {
+              name: 'anotherBuildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/anotherBuildableLib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {
+                  build: {
+                    // defines a buildable lib
+                    builder: '@angular-devkit/build-ng-packagr:build',
+                  },
+                },
+                files: [createFile(`libs/anotherBuildableLib/src/main.ts`)],
+              },
+            },
+          },
+          dependencies: {},
+        }
+      );
+
+      expect(failures.length).toBe(0);
+    });
+
+    it('should error when exporting a named resource from a non-buildable library', () => {
+      const failures = runRule(
+        {
+          enforceBuildableLibDependency: true,
+        },
+        `${process.cwd()}/proj/libs/buildableLib/src/main.ts`,
+        `
+          export { foo } from '@nonBuildableScope/nonBuildableLib';
+        `,
+        {
+          nodes: {
+            buildableLib: {
+              name: 'buildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/buildableLib',
+                tags: [],
+                implicitDependencies: [],
+                targets: {
+                  build: {
+                    // defines a buildable lib
+                    executor: '@angular-devkit/build-ng-packagr:build',
+                  },
+                },
+                files: [createFile(`libs/buildableLib/src/main.ts`)],
+              },
+            },
+            nonBuildableLib: {
+              name: 'nonBuildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/nonBuildableLib',
+                tags: [],
+                implicitDependencies: [],
+                targets: {},
+                files: [createFile(`libs/nonBuildableLib/src/main.ts`)],
+              },
+            },
+          },
+          dependencies: {},
+        }
+      );
+
+      const message =
+        'Buildable libraries cannot import or export from non-buildable libraries';
+      expect(failures[0].message).toEqual(message);
+    });
+
+    it('should not error when exporting a named resource from a buildable library', () => {
+      const failures = runRule(
+        {
+          enforceBuildableLibDependency: true,
+        },
+        `${process.cwd()}/proj/libs/buildableLib/src/main.ts`,
+        `
+          export { foo } from '@mycompany/anotherBuildableLib';
+        `,
+        {
+          nodes: {
+            buildableLib: {
+              name: 'buildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/buildableLib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {
+                  build: {
+                    // defines a buildable lib
+                    builder: '@angular-devkit/build-ng-packagr:build',
+                  },
+                },
+                files: [createFile(`libs/buildableLib/src/main.ts`)],
+              },
+            },
+            anotherBuildableLib: {
+              name: 'anotherBuildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/anotherBuildableLib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {
+                  build: {
+                    // defines a buildable lib
+                    builder: '@angular-devkit/build-ng-packagr:build',
+                  },
+                },
+                files: [createFile(`libs/anotherBuildableLib/src/main.ts`)],
+              },
+            },
+          },
+          dependencies: {},
+        }
+      );
+
+      expect(failures.length).toBe(0);
+    });
+
+    it('should not error when in-line exporting a named resource', () => {
+      const failures = runRule(
+        {
+          enforceBuildableLibDependency: true,
+        },
+        `${process.cwd()}/proj/libs/buildableLib/src/main.ts`,
+        `
+          export class Foo {};
+        `,
+        {
+          nodes: {
+            buildableLib: {
+              name: 'buildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/buildableLib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {
+                  build: {
+                    // defines a buildable lib
+                    builder: '@angular-devkit/build-ng-packagr:build',
+                  },
+                },
+                files: [createFile(`libs/buildableLib/src/main.ts`)],
+              },
+            },
+            anotherBuildableLib: {
+              name: 'anotherBuildableLib',
+              type: ProjectType.lib,
+              data: {
+                root: 'libs/anotherBuildableLib',
+                tags: [],
+                implicitDependencies: [],
+                architect: {
+                  build: {
+                    // defines a buildable lib
+                    builder: '@angular-devkit/build-ng-packagr:build',
+                  },
+                },
+                files: [createFile(`libs/anotherBuildableLib/src/main.ts`)],
+              },
+            },
+          },
+          dependencies: {},
+        }
+      );
+
+      console.log(failures);
       expect(failures.length).toBe(0);
     });
   });
