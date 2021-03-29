@@ -21,7 +21,7 @@ export class SidebarComponent {
   private groupByFolder = window.groupByFolder;
   private selectedProjects: string[] = [];
 
-  constructor(private affectedProjects: string[]) {
+  constructor(private affectedProjects: string[], showDebugger: boolean) {
     const showAffected = this.affectedProjects.length > 0;
 
     const displayOptionsPanelContainer = document.getElementById(

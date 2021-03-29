@@ -33,7 +33,9 @@ export class ProjectNodeToolTip {
   private createTags() {
     const wrapper = document.createElement('p');
     const tagLabel = document.createElement('strong');
-    const tags = document.createTextNode(this.node.attr('tags').join(', '));
+    const tags = document.createTextNode(
+      this.node.attr('tags')?.join(', ') ?? ''
+    );
 
     tagLabel.innerText = 'tags';
 

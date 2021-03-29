@@ -1,6 +1,6 @@
 import { ProjectGraphCache } from '@nrwl/workspace';
 
-export const graph: ProjectGraphCache = {
+export const subAppsGraph: ProjectGraphCache = {
   version: '2.0',
   rootFiles: [
     {

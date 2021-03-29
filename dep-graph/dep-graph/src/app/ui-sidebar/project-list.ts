@@ -1,5 +1,6 @@
 import { ProjectGraphNode } from '@nrwl/workspace';
 import { Subject } from 'rxjs';
+import { removeChildrenFromContainer } from '../util';
 
 export class ProjectList {
   private focusProjectSubject = new Subject<string>();
@@ -47,6 +48,8 @@ export class ProjectList {
   }
 
   private render() {
+    removeChildrenFromContainer(this.container);
+
     const appProjects = this.getProjectsByType('app');
     const libProjects = this.getProjectsByType('lib');
     const e2eProjects = this.getProjectsByType('e2e');

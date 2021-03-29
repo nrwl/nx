@@ -2059,8 +2059,8 @@
             "release": {
               "fileReplacements": [
                 {
-                  "replace": "dep-graph/dep-graph/src/main.ts",
-                  "with": "dep-graph/dep-graph/src/main.release.ts"
+                  "replace": "dep-graph/dep-graph/src/environments/environment.ts",
+                  "with": "dep-graph/dep-graph/src/environments/environment.release.ts"
                 }
               ],
               "optimization": true,

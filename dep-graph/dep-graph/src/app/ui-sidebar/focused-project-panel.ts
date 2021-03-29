@@ -1,9 +1,8 @@
 import { Subject } from 'rxjs';
+import { removeChildrenFromContainer } from '../util';
 
 export class FocusedProjectPanel {
   private unfocusSubject = new Subject<void>();
-  private header: HTMLHeadingElement;
-  private unfocusButton: HTMLButtonElement;
 
   set projectName(projectName: string) {
     this.render(projectName);
@@ -16,28 +15,24 @@ export class FocusedProjectPanel {
   }
 
   private render(projectName?: string) {
-    if (!this.header) {
-      this.header = document.createElement('h4');
-      this.container.appendChild(this.header);
-    }
+    removeChildrenFromContainer(this.container);
+
+    const header = document.createElement('h4');
+    this.container.appendChild(header);
 
     if (projectName && projectName !== '') {
-      this.header.innerText = `Focused on ${projectName}`;
+      header.innerText = `Focused on ${projectName}`;
       this.container.hidden = false;
     } else {
       this.container.hidden = true;
     }
 
-    if (!this.unfocusButton) {
-      this.unfocusButton = document.createElement('button');
-      this.unfocusButton.innerText = 'Unfocus';
+    const unfocusButton = document.createElement('button');
+    unfocusButton.innerText = 'Unfocus';
 
-      this.unfocusButton.dataset['cy'] = 'unfocusButton';
+    unfocusButton.dataset['cy'] = 'unfocusButton';
 
-      this.unfocusButton.addEventListener('click', () =>
-        this.unfocusSubject.next()
-      );
-      this.container.appendChild(this.unfocusButton);
-    }
+    unfocusButton.addEventListener('click', () => this.unfocusSubject.next());
+    this.container.appendChild(unfocusButton);
   }
 }

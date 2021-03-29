@@ -11,7 +11,10 @@ import {
 } from '../support/app.po';
 
 describe('dep-graph-client', () => {
-  beforeEach(() => cy.visit('/'));
+  beforeEach(() => {
+    cy.visit('/');
+    cy.get('[data-cy=project-select]').select('Medium');
+  });
 
   it('should display message to select projects', () => {
     getSelectProjectsMessage().should('be.visible');

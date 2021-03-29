@@ -3,6 +3,7 @@ import * as cy from 'cytoscape';
 import anywherePanning from 'cytoscape-anywhere-panning';
 import cytoscapeDagre from 'cytoscape-dagre';
 import popper from 'cytoscape-popper';
+import { Subject } from 'rxjs';
 import { Instance } from 'tippy.js';
 import { ProjectNodeToolTip } from './project-node-tooltip';
 import { edgeStyles, nodeStyles } from './styles-graph';
@@ -14,12 +15,20 @@ import {
   ProjectNode,
 } from './util-cytoscape';
 
+export interface GraphPerfReport {
+  renderTime: number;
+  numNodes: number;
+  numEdges: number;
+}
 export class GraphComponent {
   private graph: cy.Core;
   private openTooltip: Instance = null;
 
   affectedProjects: string[];
   projectGraph: ProjectGraph;
+
+  private renderTimesSubject = new Subject<GraphPerfReport>();
+  renderTimes$ = this.renderTimesSubject.asObservable();
 
   constructor(private tooltipService: GraphTooltipService) {
     cy.use(cytoscapeDagre);
@@ -28,9 +37,21 @@ export class GraphComponent {
   }
 
   render(selectedProjects: ProjectGraphNode[], groupByFolder: boolean) {
+    const time = Date.now();
+
     this.tooltipService.hideAll();
     this.generateCytoscapeLayout(selectedProjects, groupByFolder);
     this.listenForProjectNodeClicks();
+
+    const renderTime = Date.now() - time;
+
+    const report: GraphPerfReport = {
+      renderTime,
+      numNodes: this.graph.nodes().length,
+      numEdges: this.graph.edges().length,
+    };
+
+    this.renderTimesSubject.next(report);
   }
 
   private generateCytoscapeLayout(
