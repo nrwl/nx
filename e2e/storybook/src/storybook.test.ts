@@ -27,6 +27,20 @@ describe('Storybook schematics', () => {
       ).toContain(`<title>Storybook</title>`);
     }, 1000000);
 
+    it('should lint a React based storybook without errors', () => {
+      newProject();
+
+      const reactStorybookLib = uniq('test-ui-lib-react');
+      runCLI(`generate @nrwl/react:lib ${reactStorybookLib} --no-interactive`);
+      runCLI(
+        `generate @nrwl/react:storybook-configuration ${reactStorybookLib} --generateStories --no-interactive`
+      );
+
+      // build React lib
+      const output = runCLI(`run ${reactStorybookLib}:lint`);
+      expect(output).toContain('All files pass linting.');
+    }, 1000000);
+
     it('should build a React based storybook that references another lib', () => {
       const proj = newProject();
 
