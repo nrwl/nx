@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/devkit",
   "version": "0.0.1",
-  "description": "Extensible Dev Tools for Monorepos",
+  "description": "Powerful, Extensible Dev Tools",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nrwl/nx.git"

@@ -25,7 +25,7 @@ const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
  * be executed correctly.
  */
 export const commandsObject = yargs
-  .usage('Extensible Dev Tools for Monorepos')
+  .usage('Powerful, Extensible Dev Tools')
   .command(
     'run [project][:target][:configuration] [options, ...]',
     `
