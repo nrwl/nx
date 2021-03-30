@@ -2,6 +2,7 @@ import { green, red } from 'chalk';
 import * as shell from 'shelljs';
 import * as fs from 'fs';
 import * as parseLinks from 'parse-markdown-links';
+import * as path from 'path';
 
 const LOGGING_KEYS = [
   'LOG_DOC_TREE',
@@ -137,7 +138,7 @@ function isCategoryNode(
 
 function getDocumentMap(): DocumentTree[] {
   return JSON.parse(
-    fs.readFileSync(`${BASE_PATH}/map.json`, { encoding: 'utf-8' })
+    fs.readFileSync(path.join(BASE_PATH, 'map.json'), { encoding: 'utf-8' })
   ) as DocumentTree[];
 }
 
@@ -148,7 +149,7 @@ interface DocumentPaths {
 }
 
 function determineAnchors(filePath: string): string[] {
-  const fullPath = `${BASE_PATH}/${filePath}`;
+  const fullPath = path.join(BASE_PATH, filePath);
   const contents = readFileContents(fullPath).split('\n');
   const anchors = contents
     .filter((x) => x.startsWith('##'))
@@ -173,15 +174,17 @@ function buildMapOfExisitingDocumentPaths(
         treeNode.id,
       ]);
     } else {
-      acc[/*treeNode.file ||*/ `${ids.join('/')}/${treeNode.id}`] = {
-        relativeUrl: `${ids.join('/')}/${treeNode.id}`,
-        relativeFilePath: treeNode.file || `${ids.join('/')}/${treeNode.id}`,
-        anchors: determineAnchors(
-          `${treeNode.file || `${ids.join('/')}/${treeNode.id}`}.md`
-        ).reduce((acc, anchor) => {
-          acc[anchor] = true;
-          return acc;
-        }, {}),
+      const fullPath = path.join(path.join(...ids), treeNode.id);
+      acc[/*treeNode.file ||*/ fullPath] = {
+        relativeUrl: fullPath,
+        relativeFilePath: treeNode.file || fullPath,
+        anchors: determineAnchors(`${treeNode.file || fullPath}.md`).reduce(
+          (acc, anchor) => {
+            acc[anchor] = true;
+            return acc;
+          },
+          {}
+        ),
       };
     }
     return acc;
