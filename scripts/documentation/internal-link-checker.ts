@@ -82,12 +82,15 @@ function extractAllInternalLinks(): Record<string, string[]> {
       .filter((word) => word.startsWith(DIRECT_INTERNAL_LINK_SYMBOL))
       .map((word) => word.replace(DIRECT_INTERNAL_LINK_SYMBOL, ''))
       .filter((x) => !!x);
+
     const links = parseLinks(fileContents)
       .concat(directLinks)
       .filter(isLinkInternal)
       .filter(isNotAsset)
       .filter(isNotImage)
       .filter(isNotNxCommunityLink)
+      // `/latest/{{framework}}/...` are valid links too but we need to strip the version
+      .map((x) => x.replace(/^\/latest/, ''))
       .map(removeAnchors);
     if (links.length) {
       acc[path] = expandFrameworks(links);
