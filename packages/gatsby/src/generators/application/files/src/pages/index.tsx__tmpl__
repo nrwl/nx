@@ -5,8 +5,7 @@ import React from 'react';
   var wrapper = 'div';
 %>
 
-import styles from './index.module.<%= style %>';
-
+import * as styles from './index.module.<%= style %>';
 <% }
 %>
 
