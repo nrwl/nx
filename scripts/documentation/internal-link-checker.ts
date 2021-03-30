@@ -91,6 +91,8 @@ function extractAllInternalLinks(): Record<string, string[]> {
       .filter(isNotNxCommunityLink)
       // `/latest/{{framework}}/...` are valid links too but we need to strip the version
       .map((x) => x.replace(/^\/latest/, ''))
+      // `/{{ version }}/...` are valid links as well
+      .map((x) => x.replace(/^\/{{version}}/, ''))
       .map(removeAnchors);
     if (links.length) {
       acc[path] = expandFrameworks(links);
