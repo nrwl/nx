@@ -1,6 +1,7 @@
 # Setup incremental builds for Angular applications
 
-In this guide we’ll specifically look into which changes need to be made to enable [incremental builds](/angular/ci/incremental-builds) for Angular applications.
+In this guide we’ll specifically look into which changes need to be made to enable [incremental builds](/angular/ci/incremental-builds) for Angular applications.  
+Incremental builds require @nrwl/angular:webpack-browser, which requires Nx version 10.4.0 or later.
 
 ## Use buildable libraries
 
