@@ -1,10 +1,10 @@
 import { normalizeBuildOptions } from './normalize';
-import { BuildBuilderOptions } from './types';
+import { BuildNodeBuilderOptions } from './types';
 
 import * as fs from 'fs';
 
 describe('normalizeBuildOptions', () => {
-  let testOptions: BuildBuilderOptions;
+  let testOptions: BuildNodeBuilderOptions;
   let root: string;
   let sourceRoot: string;
   let projectRoot: string;
@@ -26,6 +26,7 @@ describe('normalizeBuildOptions', () => {
       ],
       assets: [],
       statsJson: false,
+      externalDependencies: 'all',
     };
     root = '/root';
     sourceRoot = 'apps/nodeapp/src';
@@ -76,7 +77,7 @@ describe('normalizeBuildOptions', () => {
       isDirectory: () => true,
     });
     const result = normalizeBuildOptions(
-      <BuildBuilderOptions>{
+      {
         ...testOptions,
         root,
         assets: [

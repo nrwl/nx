@@ -35,7 +35,7 @@ export interface BuildBuilderOptions {
   extractLicenses?: boolean;
   verbose?: boolean;
 
-  webpackConfig?: string;
+  webpackConfig?: string | string[];
 
   root?: string;
   sourceRoot?: string;
@@ -48,4 +48,9 @@ export interface BuildNodeBuilderOptions extends BuildBuilderOptions {
   externalDependencies: 'all' | 'none' | string[];
   buildLibsFromSource?: boolean;
   generatePackageJson?: boolean;
+}
+
+export interface NormalizedBuildNodeBuilderOptions
+  extends BuildNodeBuilderOptions {
+  webpackConfig: string[];
 }

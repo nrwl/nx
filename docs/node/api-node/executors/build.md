@@ -159,6 +159,6 @@ Run build when files change.
 
 ### webpackConfig
 
-Type: `string`
+Type: `array[] | string `
 
 Path to a function which takes a webpack config, context and returns the resulting webpack config

@@ -79,13 +79,12 @@ export function buildExecutor(
   if (options.generatePackageJson) {
     generatePackageJson(context.projectName, projGraph, options);
   }
-  let config = getNodeWebpackConfig(options);
-  if (options.webpackConfig) {
-    config = require(options.webpackConfig)(config, {
+  const config = options.webpackConfig.reduce((currentConfig, plugin) => {
+    return require(plugin)(currentConfig, {
       options,
       configuration: context.configurationName,
     });
-  }
+  }, getNodeWebpackConfig(options));
 
   return eachValueFrom(
     runWebpack(config, webpack).pipe(
