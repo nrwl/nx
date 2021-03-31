@@ -7,6 +7,9 @@ describe('assertWorkspaceValidity', () => {
 
   beforeEach(() => {
     mockNxJson = {
+      implicitDependencies: {
+        'nx.json': '*',
+      },
       projects: {
         app1: {
           tags: [],
@@ -122,6 +125,25 @@ describe('assertWorkspaceValidity', () => {
         `The following implicitDependencies specified in nx.json are invalid:
     app2
         invalidproj`,
+      ],
+    });
+    mockExit.mockRestore();
+  });
+
+  it('should throw for a project-level implicit dependency that is a string', () => {
+    spyOn(output, 'error');
+    mockNxJson.implicitDependencies['nx.json'] = 'invalidproj';
+
+    const mockExit = jest
+      .spyOn(process, 'exit')
+      .mockImplementation(((code?: number) => {}) as any);
+    assertWorkspaceValidity(mockWorkspaceJson, mockNxJson);
+
+    expect(mockExit).toHaveBeenCalledWith(1);
+    expect(output.error).toHaveBeenCalledWith({
+      title: 'Configuration Error',
+      bodyLines: [
+        'nx.json is not configured properly. "nx.json" is improperly configured to implicitly depend on "invalidproj" but should be an array of project names or "*".',
       ],
     });
     mockExit.mockRestore();
