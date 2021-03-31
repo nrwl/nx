@@ -1,5 +1,4 @@
 import {
-  normalizePath,
   readProjectConfiguration,
   Tree,
   visitNotIgnoredFiles,
@@ -8,7 +7,7 @@ import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { execSync } from 'child_process';
 import type { Linter as ESLintLinter } from 'eslint';
 import { mkdirSync, writeFileSync } from 'fs';
-import { dirname, join } from 'path';
+import { dirname } from 'path';
 import { dirSync } from 'tmp';
 import type {
   createESLintConfiguration as CreateESLintConfiguration,
@@ -197,19 +196,6 @@ export async function convertToESLintConfig(
 
 function likelyContainsTSLintComment(fileContent: string): boolean {
   return fileContent.includes('tslint:');
-}
-
-function allFilesInDirInTree(tree: Tree, dir: string): string[] {
-  let files: string[] = [];
-  tree.children(dir).forEach((child) => {
-    const childPath = normalizePath(join(dir, child));
-    if (tree.isFile(childPath)) {
-      files.push(childPath);
-      return;
-    }
-    files = [...files, ...allFilesInDirInTree(tree, childPath)];
-  });
-  return files;
 }
 
 export function convertTSLintDisableCommentsForProject(
