@@ -1,4 +1,9 @@
-import { normalizePath, readProjectConfiguration, Tree } from '@nrwl/devkit';
+import {
+  normalizePath,
+  readProjectConfiguration,
+  Tree,
+  visitNotIgnoredFiles,
+} from '@nrwl/devkit';
 import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { execSync } from 'child_process';
 import type { Linter as ESLintLinter } from 'eslint';
@@ -218,20 +223,18 @@ export function convertTSLintDisableCommentsForProject(
    * conversion generator).
    */
   const { convertFileComments } = getConvertToEslintConfig();
-
   const { root } = readProjectConfiguration(tree, projectName);
-  const allSourceFiles = allFilesInDirInTree(tree, root);
-  const allTypeScriptSourceFiles = allSourceFiles.filter((f) =>
-    f.endsWith('.ts')
-  );
 
-  for (const filePath of allTypeScriptSourceFiles) {
+  visitNotIgnoredFiles(tree, root, (filePath) => {
+    if (!filePath.endsWith('.ts')) {
+      return;
+    }
     const fileContent = tree.read(filePath)!.toString('utf-8');
     // Avoid updating files if we don't have to
     if (!likelyContainsTSLintComment(fileContent)) {
-      continue;
+      return;
     }
     const updatedFileContent = convertFileComments({ fileContent, filePath });
     tree.write(filePath, updatedFileContent);
-  }
+  });
 }
