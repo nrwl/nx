@@ -112,7 +112,17 @@
       "default": []
     },
     "webpackConfig": {
-      "type": "string",
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "string"
+        }
+      ],
       "description": "Path to a function which takes a webpack config, context and returns the resulting webpack config"
     },
     "buildLibsFromSource": {
