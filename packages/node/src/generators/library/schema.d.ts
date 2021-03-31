@@ -3,6 +3,7 @@ import { Linter } from '@nrwl/linter';
 export interface Schema {
   name: string;
   directory?: string;
+  simpleModuleName?: boolean;
   skipTsConfig?: boolean;
   skipFormat?: boolean;
   tags?: string;

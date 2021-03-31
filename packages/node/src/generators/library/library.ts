@@ -62,7 +62,7 @@ function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
     : name;
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
-  const fileName = projectName;
+  const fileName = options.simpleModuleName ? name : projectName;
   const projectRoot = joinPathFragments(libsDir, projectDirectory);
 
   const parsedTags = options.tags
@@ -85,7 +85,7 @@ function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
 }
 
 function createFiles(tree: Tree, options: NormalizedSchema) {
-  const nameFormats = names(options.name);
+  const nameFormats = names(options.fileName);
   generateFiles(tree, join(__dirname, './files/lib'), options.projectRoot, {
     ...options,
     ...nameFormats,
