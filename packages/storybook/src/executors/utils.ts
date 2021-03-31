@@ -1,6 +1,6 @@
 import { ExecutorContext } from '@nrwl/devkit';
-import { readPackageJson } from '@nrwl/workspace/src/core/file-utils';
 import { gte } from 'semver';
+import { join } from 'path';
 
 export interface NodePackage {
   name: string;
@@ -21,19 +21,10 @@ export function getStorybookFrameworkPath(uiFramework) {
 }
 
 function isStorybookV62onwards(uiFramework) {
-  const packageJsonContents = readPackageJson();
-  packageJsonContents.dependencies = packageJsonContents.dependencies || {};
-  packageJsonContents.devDependencies =
-    packageJsonContents.devDependencies || {};
+  const storybookPackageVersion = require(join(uiFramework, 'package.json'))
+    .version;
 
-  const storybookPackageVersion =
-    packageJsonContents.dependencies[uiFramework] ||
-    packageJsonContents.devDependencies[uiFramework];
-
-  return gte(
-    (storybookPackageVersion || '').replace('~', '').replace('^', ''),
-    '6.2.0-rc.4'
-  );
+  return gte(storybookPackageVersion, '6.2.0-rc.4');
 }
 
 // see: https://github.com/storybookjs/storybook/pull/12565
