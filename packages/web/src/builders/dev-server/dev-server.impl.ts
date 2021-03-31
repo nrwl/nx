@@ -7,6 +7,8 @@ import { Configuration } from 'webpack';
 
 import { eachValueFrom } from 'rxjs-for-await';
 import { map, tap } from 'rxjs/operators';
+import * as webpack from 'webpack';
+import * as WebpackDevServer from 'webpack-dev-server';
 import {
   getEmittedFiles,
   runWebpackDevServer,
@@ -58,7 +60,7 @@ export default function devServerExecutor(
   }
 
   return eachValueFrom(
-    runWebpackDevServer(webpackConfig).pipe(
+    runWebpackDevServer(webpackConfig, webpack, WebpackDevServer).pipe(
       tap(({ stats }) => {
         console.info(stats.toString(webpackConfig.stats));
       }),
