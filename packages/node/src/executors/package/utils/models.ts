@@ -9,6 +9,7 @@ export interface NodePackageBuilderOptions {
   updateBuildableProjectDepsInPackageJson?: boolean;
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
   srcRootForCompilationRoot?: string;
+  deleteOutputPath: boolean;
 }
 
 export interface NormalizedBuilderOptions extends NodePackageBuilderOptions {

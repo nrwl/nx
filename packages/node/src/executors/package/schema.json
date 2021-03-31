@@ -52,6 +52,11 @@
     "srcRootForCompilationRoot": {
       "type": "string",
       "description": "Sets the rootDir for TypeScript compilation. When not defined, it uses the project's root property"
+    },
+    "deleteOutputPath": {
+      "type": "boolean",
+      "description": "Delete the output path before building.",
+      "default": true
     }
   },
   "required": ["tsConfig", "main"],
