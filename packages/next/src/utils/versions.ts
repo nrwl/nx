@@ -1,6 +1,6 @@
 export const nxVersion = '*';
 
-export const nextVersion = '10.0.9';
+export const nextVersion = '10.1.2';
 export const zeitNextCss = '1.0.1';
 export const zeitNextSass = '1.0.1';
 export const nodeSass = '4.14.1';
