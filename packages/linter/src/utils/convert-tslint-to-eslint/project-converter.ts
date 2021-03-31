@@ -16,9 +16,9 @@ import {
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import type { Linter } from 'eslint';
+import { convertTSLintDisableCommentsForProject } from './convert-to-eslint-config';
 import {
   convertTSLintConfig,
-  convertTSLintDisableCommentsForProject,
   deduplicateOverrides,
   ensureESLintPluginsAreInstalled,
 } from './utils';

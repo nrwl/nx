@@ -2,16 +2,10 @@ import {
   addDependenciesToPackageJson,
   GeneratorCallback,
   logger,
-  normalizePath,
-  readProjectConfiguration,
   Tree,
 } from '@nrwl/devkit';
 import type { Linter } from 'eslint';
-import { join } from 'path';
-import {
-  convertFileComments,
-  TSLintRuleOptions,
-} from 'tslint-to-eslint-config';
+import type { TSLintRuleOptions } from 'tslint-to-eslint-config';
 import { convertTslintNxRuleToEslintNxRule } from './convert-nx-enforce-module-boundaries-rule';
 import { convertToESLintConfig } from './convert-to-eslint-config';
 
@@ -150,42 +144,4 @@ export function deduplicateOverrides(
   }
 
   return dedupedOverrides;
-}
-
-function likelyContainsTSLintComment(fileContent: string): boolean {
-  return fileContent.includes('tslint:');
-}
-
-function allFilesInDirInTree(tree: Tree, dir: string): string[] {
-  let files: string[] = [];
-  tree.children(dir).forEach((child) => {
-    const childPath = normalizePath(join(dir, child));
-    if (tree.isFile(childPath)) {
-      files.push(childPath);
-      return;
-    }
-    files = [...files, ...allFilesInDirInTree(tree, childPath)];
-  });
-  return files;
-}
-
-export function convertTSLintDisableCommentsForProject(
-  tree: Tree,
-  projectName: string
-) {
-  const { root } = readProjectConfiguration(tree, projectName);
-  const allSourceFiles = allFilesInDirInTree(tree, root);
-  const allTypeScriptSourceFiles = allSourceFiles.filter((f) =>
-    f.endsWith('.ts')
-  );
-
-  for (const filePath of allTypeScriptSourceFiles) {
-    const fileContent = tree.read(filePath)!.toString('utf-8');
-    // Avoid updating files if we don't have to
-    if (!likelyContainsTSLintComment(fileContent)) {
-      continue;
-    }
-    const updatedFileContent = convertFileComments({ fileContent, filePath });
-    tree.write(filePath, updatedFileContent);
-  }
 }
