@@ -1,4 +1,4 @@
-import { basename, dirname, join } from 'path';
+import * as path from 'path';
 import { installedCypressVersion } from '../../utils/cypress-version';
 import {
   ExecutorContext,
@@ -66,7 +66,7 @@ function normalizeOptions(
 ) {
   options.env = options.env || {};
   if (options.tsConfig) {
-    options.env.tsConfig = join(context.root, options.tsConfig);
+    options.env.tsConfig = path.join(context.root, options.tsConfig);
   }
   checkSupportedBrowser(options);
   return options;
@@ -142,10 +142,10 @@ async function* startDevServer(
  */
 async function runCypress(baseUrl: string, opts: CypressExecutorOptions) {
   // Cypress expects the folder where a `cypress.json` is present
-  const projectFolderPath = dirname(opts.cypressConfig);
+  const projectFolderPath = path.dirname(opts.cypressConfig);
   const options: any = {
     project: projectFolderPath,
-    configFile: basename(opts.cypressConfig),
+    configFile: path.basename(opts.cypressConfig),
   };
 
   // If not, will use the `baseUrl` normally from `cypress.json`

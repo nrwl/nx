@@ -6,8 +6,7 @@ import {
 } from '../project-graph';
 import { join } from 'path';
 import { appRootPath } from '../../utilities/app-root';
-import { existsSync } from 'fs';
-import * as fsExtra from 'fs-extra';
+import { ensureDirSync, existsSync } from 'fs-extra';
 import {
   directoryExists,
   fileExists,
@@ -37,7 +36,7 @@ export function readCache(): false | ProjectGraphCache {
   performance.mark('read cache:start');
   try {
     if (!existsSync(nxDepsDir)) {
-      fsExtra.ensureDirSync(nxDepsDir);
+      ensureDirSync(nxDepsDir);
     }
   } catch (e) {
     /*

@@ -15,7 +15,7 @@ import {
   typescriptVersion,
 } from '../../utils/versions';
 import { readFileSync } from 'fs';
-import { join, join as pathJoin } from 'path';
+import { join } from 'path';
 import { reformattedWorkspaceJsonOrNull } from '@nrwl/tao/src/shared/workspace';
 
 export const DEFAULT_NRWL_PRETTIER_CONFIG = {
@@ -24,7 +24,7 @@ export const DEFAULT_NRWL_PRETTIER_CONFIG = {
 
 function decorateAngularClI(host: Tree, options: Schema) {
   const decorateCli = readFileSync(
-    pathJoin(__dirname as any, '..', 'utils', 'decorate-angular-cli.js__tmpl__')
+    join(__dirname as any, '..', 'utils', 'decorate-angular-cli.js__tmpl__')
   ).toString();
   host.write(join(options.directory, 'decorate-angular-cli.js'), decorateCli);
 }
@@ -53,7 +53,7 @@ function createAppsAndLibsFolders(host: Tree, options: Schema) {
 function createFiles(host: Tree, options: Schema) {
   const npmScope = options.npmScope ?? options.name;
   const formattedNames = names(options.name);
-  generateFiles(host, pathJoin(__dirname, './files'), options.directory, {
+  generateFiles(host, join(__dirname, './files'), options.directory, {
     formattedNames,
     dot: '.',
     tmpl: '',

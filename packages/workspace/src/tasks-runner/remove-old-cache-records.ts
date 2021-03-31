@@ -1,5 +1,4 @@
-import * as fs from 'fs';
-import * as fsExtra from 'fs-extra';
+import { removeSync, readdirSync, statSync } from 'fs-extra';
 import * as path from 'path';
 
 const WEEK_IN_MS = 1000 * 60 * 60 * 24 * 7;
@@ -11,7 +10,7 @@ removeOld(cachedFiles());
 
 function terminalOutputs() {
   try {
-    return fs.readdirSync(path.join(folder, 'terminalOutputs'));
+    return readdirSync(path.join(folder, 'terminalOutputs'));
   } catch (e) {
     return [];
   }
@@ -19,7 +18,7 @@ function terminalOutputs() {
 
 function cachedFiles() {
   try {
-    return fs.readdirSync(folder).filter((f) => !f.endsWith('terminalOutputs'));
+    return readdirSync(folder).filter((f) => !f.endsWith('terminalOutputs'));
   } catch (e) {
     return [];
   }
@@ -32,14 +31,14 @@ function removeOld(records: string[]) {
     records.forEach((r) => {
       const child = path.join(folder, r);
       try {
-        const s = fs.statSync(child);
+        const s = statSync(child);
         if (time - s.mtimeMs > WEEK_IN_MS) {
           if (s.isDirectory()) {
             try {
-              fsExtra.removeSync(`${child}.commit`);
+              removeSync(`${child}.commit`);
             } catch (e) {}
           }
-          fsExtra.removeSync(child);
+          removeSync(child);
         }
       } catch (e) {}
     });
@@ -51,7 +50,7 @@ function mostRecentMTime(records: string[]) {
   records.forEach((r) => {
     const child = path.join(folder, r);
     try {
-      const s = fs.statSync(child);
+      const s = statSync(child);
       if (s.mtimeMs > mostRecentTime) {
         mostRecentTime = s.mtimeMs;
       }

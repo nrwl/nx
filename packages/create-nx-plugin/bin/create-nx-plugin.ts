@@ -4,7 +4,7 @@
 import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { output } from '@nrwl/workspace/src/utilities/output';
 import { execSync } from 'child_process';
-import { readFileSync, removeSync, writeFileSync } from 'fs-extra';
+import { readFileSync, writeFileSync, rmdirSync } from 'fs';
 import * as inquirer from 'inquirer';
 import * as path from 'path';
 import { dirSync } from 'tmp';
@@ -109,8 +109,8 @@ function updateWorkspace(workspaceName: string) {
 
   writeFileSync(nxJsonPath, JSON.stringify(nxJson, undefined, 2));
 
-  removeSync(path.join(workspaceName, 'apps'));
-  removeSync(path.join(workspaceName, 'libs'));
+  rmdirSync(path.join(workspaceName, 'apps'), { recursive: true });
+  rmdirSync(path.join(workspaceName, 'libs'), { recursive: true });
 }
 
 function commitChanges(workspaceName) {

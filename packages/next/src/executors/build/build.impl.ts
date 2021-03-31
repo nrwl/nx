@@ -3,7 +3,7 @@ import { ExecutorContext } from '@nrwl/devkit';
 import build from 'next/dist/build';
 import { PHASE_PRODUCTION_BUILD } from 'next/dist/next-server/lib/constants';
 
-import { join, resolve } from 'path';
+import * as path from 'path';
 import { copySync, mkdir } from 'fs-extra';
 
 import { prepareConfig } from '../../utils/config';
@@ -20,7 +20,7 @@ export default async function buildExecutor(
   options: NextBuildBuilderOptions,
   context: ExecutorContext
 ) {
-  const root = resolve(context.root, options.root);
+  const root = path.resolve(context.root, options.root);
   const config = await prepareConfig(PHASE_PRODUCTION_BUILD, options, context);
 
   await build(root, config as any);
@@ -32,7 +32,7 @@ export default async function buildExecutor(
   createPackageJson(options, context);
   createNextConfigFile(options, context);
 
-  copySync(join(root, 'public'), join(options.outputPath, 'public'));
+  copySync(path.join(root, 'public'), path.join(options.outputPath, 'public'));
 
   return { success: true };
 }

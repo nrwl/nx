@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import { statSync, readFileSync } from 'fs';
 import * as path from 'path';
 import * as stripJsonComments from 'strip-json-comments';
 import '../compat/compat';
@@ -129,7 +129,7 @@ export interface TargetConfiguration {
 
 export function workspaceConfigName(root: string) {
   try {
-    fs.statSync(path.join(root, 'angular.json'));
+    statSync(path.join(root, 'angular.json'));
     return 'angular.json';
   } catch (e) {
     return 'workspace.json';
@@ -232,9 +232,9 @@ export class Workspaces {
   readWorkspaceConfiguration(): WorkspaceJsonConfiguration {
     const w = JSON.parse(
       stripJsonComments(
-        fs
-          .readFileSync(path.join(this.root, workspaceConfigName(this.root)))
-          .toString()
+        readFileSync(
+          path.join(this.root, workspaceConfigName(this.root))
+        ).toString()
       )
     );
     return toNewFormat(w);
@@ -262,7 +262,7 @@ export class Workspaces {
       const executorsDir = path.dirname(executorsFilePath);
       const schemaPath = path.join(executorsDir, executorConfig.schema || '');
       const schema = JSON.parse(
-        stripJsonComments(fs.readFileSync(schemaPath).toString())
+        stripJsonComments(readFileSync(schemaPath).toString())
       );
       if (!schema.properties || typeof schema.properties !== 'object') {
         schema.properties = {};
@@ -293,7 +293,7 @@ export class Workspaces {
         generatorsJson.schematics?.[normalizedGeneratorName];
       const schemaPath = path.join(generatorsDir, generatorConfig.schema || '');
       const schema = JSON.parse(
-        stripJsonComments(fs.readFileSync(schemaPath).toString())
+        stripJsonComments(readFileSync(schemaPath).toString())
       );
       if (!schema.properties || typeof schema.properties !== 'object') {
         schema.properties = {};
@@ -320,7 +320,7 @@ export class Workspaces {
       paths: this.resolvePaths(),
     });
     const packageJson = JSON.parse(
-      stripJsonComments(fs.readFileSync(packageJsonPath).toString())
+      stripJsonComments(readFileSync(packageJsonPath).toString())
     );
     const executorsFile = packageJson.executors ?? packageJson.builders;
 
@@ -334,7 +334,7 @@ export class Workspaces {
       path.join(path.dirname(packageJsonPath), executorsFile)
     );
     const executorsJson = JSON.parse(
-      stripJsonComments(fs.readFileSync(executorsFilePath).toString())
+      stripJsonComments(readFileSync(executorsFilePath).toString())
     );
     const executorConfig =
       executorsJson.executors?.[executor] || executorsJson.builders?.[executor];
@@ -360,7 +360,7 @@ export class Workspaces {
         }
       );
       const packageJson = JSON.parse(
-        stripJsonComments(fs.readFileSync(packageJsonPath).toString())
+        stripJsonComments(readFileSync(packageJsonPath).toString())
       );
       const generatorsFile = packageJson.generators ?? packageJson.schematics;
 
@@ -375,7 +375,7 @@ export class Workspaces {
       );
     }
     const generatorsJson = JSON.parse(
-      stripJsonComments(fs.readFileSync(generatorsFilePath).toString())
+      stripJsonComments(readFileSync(generatorsFilePath).toString())
     );
 
     let normalizedGeneratorName =

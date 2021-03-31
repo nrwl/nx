@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 
 import { WorkspaceResults } from './workspace-results';
 import { serializeJson } from '../utilities/fileutils';

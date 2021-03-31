@@ -4,11 +4,12 @@ import {
   statSync,
   unlinkSync,
   writeFileSync,
-} from 'fs';
-import { mkdirpSync, rmdirSync } from 'fs-extra';
+  rmdirSync,
+  ensureDirSync,
+} from 'fs-extra';
 import { logger } from './logger';
 import { dirname, join, relative, sep } from 'path';
-const chalk = require('chalk');
+import * as chalk from 'chalk';
 
 /**
  * Virtual file system tree.
@@ -293,7 +294,7 @@ export function flushChanges(root: string, fileChanges: FileChange[]) {
   fileChanges.forEach((f) => {
     const fpath = join(root, f.path);
     if (f.type === 'CREATE') {
-      mkdirpSync(dirname(fpath));
+      ensureDirSync(dirname(fpath));
       writeFileSync(fpath, f.content);
     } else if (f.type === 'UPDATE') {
       writeFileSync(fpath, f.content);

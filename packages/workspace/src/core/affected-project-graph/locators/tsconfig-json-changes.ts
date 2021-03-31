@@ -1,5 +1,4 @@
 import { join } from 'path';
-
 import { WholeFileChange } from '../../file-utils';
 import {
   DiffType,

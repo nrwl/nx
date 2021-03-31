@@ -1,12 +1,12 @@
-import { join as pathJoin } from 'path';
+import { join } from 'path';
 import { readFileSync } from 'fs';
 import { Tree } from '@angular-devkit/schematics';
 
 export default function update() {
   return (host: Tree) => {
     const decorateCli = readFileSync(
-      pathJoin(
-        __dirname as any,
+      join(
+        __dirname,
         '..',
         '..',
         'generators',

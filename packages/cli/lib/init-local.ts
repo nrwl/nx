@@ -1,5 +1,5 @@
 import * as path from 'path';
-import * as fs from 'fs';
+import { readFileSync } from 'fs';
 import { Workspace } from './workspace';
 import { parseRunOneOptions } from './parse-run-one-options';
 
@@ -80,14 +80,12 @@ function runOneOptions(
 ): false | { project; target; configuration; parsedArgs } {
   try {
     const workspaceConfigJson = JSON.parse(
-      fs
-        .readFileSync(
-          path.join(
-            workspace.dir,
-            workspace.type === 'nx' ? 'workspace.json' : 'angular.json'
-          )
+      readFileSync(
+        path.join(
+          workspace.dir,
+          workspace.type === 'nx' ? 'workspace.json' : 'angular.json'
         )
-        .toString()
+      ).toString()
     );
 
     return parseRunOneOptions(

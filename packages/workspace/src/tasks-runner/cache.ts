@@ -1,14 +1,16 @@
 import { appRootPath } from '../utilities/app-root';
 import { Task } from './tasks-runner';
 import {
-  existsSync,
-  mkdirSync,
   readFileSync,
   writeFileSync,
+  existsSync,
+  removeSync,
+  mkdirSync,
   lstatSync,
-} from 'fs';
-import { join, resolve } from 'path';
-import * as fsExtra from 'fs-extra';
+  copySync,
+  ensureDirSync,
+} from 'fs-extra';
+import * as path from 'path';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { spawn } from 'child_process';
 import { cacheDirectory } from '../utilities/cache-directory';
@@ -85,31 +87,31 @@ export class Cache {
 
   async put(task: Task, terminalOutputPath: string, outputs: string[]) {
     const terminalOutput = readFileSync(terminalOutputPath).toString();
-    const td = join(this.cachePath, task.hash);
-    const tdCommit = join(this.cachePath, `${task.hash}.commit`);
+    const td = path.join(this.cachePath, task.hash);
+    const tdCommit = path.join(this.cachePath, `${task.hash}.commit`);
 
     // might be left overs from partially-completed cache invocations
     if (existsSync(tdCommit)) {
-      fsExtra.removeSync(tdCommit);
+      removeSync(tdCommit);
     }
     if (existsSync(td)) {
-      fsExtra.removeSync(td);
+      removeSync(td);
     }
 
     mkdirSync(td);
-    writeFileSync(join(td, 'terminalOutput'), terminalOutput);
+    writeFileSync(path.join(td, 'terminalOutput'), terminalOutput);
 
-    mkdirSync(join(td, 'outputs'));
+    mkdirSync(path.join(td, 'outputs'));
     outputs.forEach((f) => {
-      const src = join(this.root, f);
+      const src = path.join(this.root, f);
       if (existsSync(src)) {
-        const cached = join(td, 'outputs', f);
+        const cached = path.join(td, 'outputs', f);
         // Ensure parent directory is created if src is a file
         const isFile = lstatSync(src).isFile();
-        const directory = isFile ? resolve(cached, '..') : cached;
-        fsExtra.ensureDirSync(directory);
+        const directory = isFile ? path.resolve(cached, '..') : cached;
+        ensureDirSync(directory);
 
-        fsExtra.copySync(src, cached);
+        copySync(src, cached);
       }
     });
     // we need this file to account for partial writes to the cache folder.
@@ -125,37 +127,39 @@ export class Cache {
 
   copyFilesFromCache(cachedResult: CachedResult, outputs: string[]) {
     outputs.forEach((f) => {
-      const cached = join(cachedResult.outputsPath, f);
+      const cached = path.join(cachedResult.outputsPath, f);
       if (existsSync(cached)) {
         const isFile = lstatSync(cached).isFile();
-        const src = join(this.root, f);
+        const src = path.join(this.root, f);
         if (existsSync(src)) {
-          fsExtra.removeSync(src);
+          removeSync(src);
         }
         // Ensure parent directory is created if src is a file
-        const directory = isFile ? resolve(src, '..') : src;
-        fsExtra.ensureDirSync(directory);
-        fsExtra.copySync(cached, src);
+        const directory = isFile ? path.resolve(src, '..') : src;
+        ensureDirSync(directory);
+        copySync(cached, src);
       }
     });
   }
 
   temporaryOutputPath(task: Task) {
     if (this.cacheConfig.isCacheableTask(task)) {
-      return join(this.terminalOutputsDir, task.hash);
+      return path.join(this.terminalOutputsDir, task.hash);
     } else {
       return null;
     }
   }
 
   private getFromLocalDir(task: Task) {
-    const tdCommit = join(this.cachePath, `${task.hash}.commit`);
-    const td = join(this.cachePath, task.hash);
+    const tdCommit = path.join(this.cachePath, `${task.hash}.commit`);
+    const td = path.join(this.cachePath, task.hash);
 
     if (existsSync(tdCommit)) {
       return {
-        terminalOutput: readFileSync(join(td, 'terminalOutput')).toString(),
-        outputsPath: join(td, 'outputs'),
+        terminalOutput: readFileSync(
+          path.join(td, 'terminalOutput')
+        ).toString(),
+        outputsPath: path.join(td, 'outputs'),
       };
     } else {
       return null;
@@ -165,14 +169,14 @@ export class Cache {
   private createCacheDir() {
     const dir = cacheDirectory(this.root, this.options.cacheDirectory);
     if (!existsSync(dir)) {
-      fsExtra.ensureDirSync(dir);
+      ensureDirSync(dir);
     }
     return dir;
   }
 
   private createTerminalOutputsDir() {
-    const path = join(this.cachePath, 'terminalOutputs');
-    fsExtra.ensureDirSync(path);
-    return path;
+    const outputDir = path.join(this.cachePath, 'terminalOutputs');
+    ensureDirSync(outputDir);
+    return outputDir;
   }
 }

@@ -1,7 +1,7 @@
 import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import { ChildProcess, fork } from 'child_process';
 import * as dotenv from 'dotenv';
-import * as fs from 'fs';
+import { writeFileSync, readFileSync } from 'fs';
 import { ProjectGraph } from '../core/project-graph';
 import { appRootPath } from '../utilities/app-root';
 import { output } from '../utilities/output';
@@ -190,7 +190,7 @@ export class TaskOrchestrator {
             process.stdout.write(outWithErr.join(''));
           }
           if (outputPath) {
-            fs.writeFileSync(outputPath, outWithErr.join(''));
+            writeFileSync(outputPath, outWithErr.join(''));
             if (code === 0) {
               this.cache
                 .put(task, outputPath, taskOutputs)
@@ -248,7 +248,7 @@ export class TaskOrchestrator {
           if (!forwardOutput) {
             output.logCommand(commandLine);
             try {
-              process.stdout.write(fs.readFileSync(outputPath));
+              process.stdout.write(readFileSync(outputPath));
             } catch (e) {
               console.error(
                 `Nx could not find process's output. Run the command without --parallel.`
@@ -357,7 +357,7 @@ export class TaskOrchestrator {
 
 function parseEnv(path: string) {
   try {
-    const envContents = fs.readFileSync(path);
+    const envContents = readFileSync(path);
     return dotenv.parse(envContents);
   } catch (e) {}
 }

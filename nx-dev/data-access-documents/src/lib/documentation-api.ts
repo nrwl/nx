@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import { readFileSync } from 'fs';
 import { join } from 'path';
 import matter from 'gray-matter';
 import * as marked from 'marked';
@@ -15,7 +15,7 @@ export function getDocument(
 ): DocumentData {
   const segments = Array.isArray(_segments) ? [..._segments] : [_segments];
   const docPath = getFilePath(version, segments);
-  const file = matter(fs.readFileSync(docPath, 'utf8'));
+  const file = matter(readFileSync(docPath, 'utf8'));
 
   return {
     filePath: docPath,

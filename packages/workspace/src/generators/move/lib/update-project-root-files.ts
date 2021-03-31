@@ -1,11 +1,9 @@
 import * as path from 'path';
-
 import { ProjectConfiguration, Tree } from '@nrwl/devkit';
 
 import { appRootPath } from '../../../utilities/app-root';
 import { Schema } from '../schema';
 import { getDestination } from './utils';
-import { extname, join } from 'path';
 
 /**
  * Updates the files in the root of the project
@@ -39,12 +37,12 @@ export function updateProjectRootFiles(
   const regex = new RegExp(oldRelativeRoot.replace(dots, '\\.'), 'g');
 
   for (const file of tree.children(destination)) {
-    if (!extname(file).startsWith('.js')) {
+    if (!path.extname(file).startsWith('.js')) {
       continue;
     }
 
-    const oldContent = tree.read(join(destination, file)).toString();
+    const oldContent = tree.read(path.join(destination, file)).toString();
     const newContent = oldContent.replace(regex, newRelativeRoot);
-    tree.write(join(destination, file), newContent);
+    tree.write(path.join(destination, file), newContent);
   }
 }

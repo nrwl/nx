@@ -1,11 +1,9 @@
-import * as fs from 'fs';
-import { ensureDirSync } from 'fs-extra';
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as stripJsonComments from 'strip-json-comments';
-const ignore = require('ignore');
 
 export function writeToFile(filePath: string, str: string) {
-  ensureDirSync(path.dirname(filePath));
+  fs.ensureDirSync(path.dirname(filePath));
   fs.writeFileSync(filePath, str);
 }
 

@@ -13,7 +13,7 @@ import {
   writeFileSync,
 } from 'fs-extra';
 import isCI = require('is-ci');
-import * as path from 'path';
+import { dirname } from 'path';
 import { dirSync } from 'tmp';
 
 interface RunCmdOpts {
@@ -393,10 +393,10 @@ function setMaxWorkers() {
 }
 
 export function createFile(f: string, content: string = ''): void {
-  const path = tmpProjPath(f);
-  createFileSync(path);
+  const projPath = tmpProjPath(f);
+  createFileSync(projPath);
   if (content) {
-    updateFile(path, content);
+    updateFile(projPath, content);
   }
 }
 
@@ -404,7 +404,7 @@ export function updateFile(
   f: string,
   content: string | ((content: string) => string)
 ): void {
-  ensureDirSync(path.dirname(tmpProjPath(f)));
+  ensureDirSync(dirname(tmpProjPath(f)));
   if (typeof content === 'string') {
     writeFileSync(tmpProjPath(f), content);
   } else {
@@ -416,7 +416,7 @@ export function updateFile(
 }
 
 export function renameFile(f: string, newPath: string): void {
-  ensureDirSync(path.dirname(tmpProjPath(newPath)));
+  ensureDirSync(dirname(tmpProjPath(newPath)));
   renameSync(tmpProjPath(f), tmpProjPath(newPath));
 }
 

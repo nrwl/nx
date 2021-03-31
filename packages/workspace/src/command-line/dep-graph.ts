@@ -1,9 +1,15 @@
-import { exists, readFile, readFileSync, statSync, writeFileSync } from 'fs';
-import { copySync } from 'fs-extra';
+import {
+  exists,
+  readFile,
+  readFileSync,
+  statSync,
+  writeFileSync,
+  copySync,
+  ensureDirSync,
+} from 'fs-extra';
+import * as path from 'path';
 import * as http from 'http';
 import * as opn from 'opn';
-import { join, normalize, parse, dirname } from 'path';
-import { ensureDirSync } from 'fs-extra';
 import * as url from 'url';
 import {
   createProjectGraph,
@@ -41,7 +47,7 @@ function projectsToHtml(
   exclude: string[]
 ) {
   let f = readFileSync(
-    join(__dirname, '../core/dep-graph/index.html')
+    path.join(__dirname, '../core/dep-graph/index.html')
   ).toString();
 
   f = f
@@ -215,7 +221,7 @@ export function generateGraph(
 
       const assetsFolder = `${folder}/static`;
       const assets: string[] = [];
-      copySync(join(__dirname, '../core/dep-graph'), assetsFolder, {
+      copySync(path.join(__dirname, '../core/dep-graph'), assetsFolder, {
         filter: (src, dest) => {
           const isntHtml = !/index\.html/.test(dest);
           if (isntHtml && dest.includes('.')) {
@@ -239,7 +245,7 @@ export function generateGraph(
     } else if (ext === 'json') {
       filename = `${folder}/${filename}`;
 
-      ensureDirSync(dirname(filename));
+      ensureDirSync(path.dirname(filename));
 
       writeFileSync(
         filename,
@@ -279,11 +285,10 @@ function startServer(html: string, host: string, port = 4211) {
     // Avoid https://en.wikipedia.org/wiki/Directory_traversal_attack
     // e.g curl --path-as-is http://localhost:9000/../fileInDanger.txt
     // by limiting the path to current directory only
-    const sanitizePath = normalize(parsedUrl.pathname).replace(
-      /^(\.\.[\/\\])+/,
-      ''
-    );
-    let pathname = join(__dirname, '../core/dep-graph/', sanitizePath);
+    const sanitizePath = path
+      .normalize(parsedUrl.pathname)
+      .replace(/^(\.\.[\/\\])+/, '');
+    let pathname = path.join(__dirname, '../core/dep-graph/', sanitizePath);
 
     exists(pathname, function (exist) {
       if (!exist) {
@@ -308,7 +313,7 @@ function startServer(html: string, host: string, port = 4211) {
           res.end(`Error getting the file: ${err}.`);
         } else {
           // based on the URL path, extract the file extention. e.g. .js, .doc, ...
-          const ext = parse(pathname).ext;
+          const ext = path.parse(pathname).ext;
           // if the file is found, set Content-type and send data
           res.setHeader('Content-type', mimeType[ext] || 'text/plain');
           res.end(data);

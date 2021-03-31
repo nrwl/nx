@@ -1,8 +1,7 @@
 import { execSync } from 'child_process';
-import * as fs from 'fs';
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, unlinkSync } from 'fs-extra';
 import * as minimist from 'minimist';
-import { dirname, join } from 'path';
+import * as path from 'path';
 import { gt, lte } from 'semver';
 import * as stripJsonComments from 'strip-json-comments';
 import { dirSync } from 'tmp';
@@ -14,7 +13,6 @@ import {
 } from '../shared/package-manager';
 import { FsTree } from '../shared/tree';
 import { flushChanges } from './generate';
-import * as fsExtra from 'fs-extra';
 
 export type MigrationsJson = {
   version: string;
@@ -501,7 +499,7 @@ function createMigrationsFile(
   }[]
 ) {
   writeFileSync(
-    join(root, 'migrations.json'),
+    path.join(root, 'migrations.json'),
     JSON.stringify({ migrations }, null, 2)
   );
 }
@@ -512,7 +510,7 @@ function updatePackageJson(
     [p: string]: { version: string; alwaysAddToPackageJson: boolean };
   }
 ) {
-  const packageJsonPath = join(root, 'package.json');
+  const packageJsonPath = path.join(root, 'package.json');
   const packageJsonContent = readFileSync(packageJsonPath).toString();
   const endOfFile = packageJsonContent.substring(
     packageJsonContent.lastIndexOf('}') + 1,
@@ -651,7 +649,9 @@ async function runMigrations(
     version: string;
     cli?: 'nx' | 'angular';
   }[] = JSON.parse(
-    stripJsonComments(readFileSync(join(root, opts.runMigrations)).toString())
+    stripJsonComments(
+      readFileSync(path.join(root, opts.runMigrations)).toString()
+    )
   ).migrations;
 
   // TODO: reenable after removing devkit
@@ -687,7 +687,7 @@ async function runMigrations(
 
 async function runNxMigration(root: string, packageName: string, name: string) {
   const collectionPath = packageToMigrationsFilePath(packageName, root);
-  const collection = JSON.parse(fs.readFileSync(collectionPath).toString());
+  const collection = JSON.parse(readFileSync(collectionPath).toString());
   const g = collection.generators || collection.schematics;
   const implRelativePath = g[name].implementation || g[name].factory;
 
@@ -695,12 +695,12 @@ async function runNxMigration(root: string, packageName: string, name: string) {
 
   try {
     implPath = require.resolve(implRelativePath, {
-      paths: [dirname(collectionPath)],
+      paths: [path.dirname(collectionPath)],
     });
   } catch (e) {
     // workaround for a bug in node 12
     implPath = require.resolve(
-      `${dirname(collectionPath)}/${implRelativePath}`
+      `${path.dirname(collectionPath)}/${implRelativePath}`
     );
   }
 
@@ -713,9 +713,7 @@ async function runNxMigration(root: string, packageName: string, name: string) {
 
 function removeNxDepsIfCaseItsFormatChanged(root: string) {
   try {
-    fsExtra.unlinkSync(
-      join(root, 'node_modules', '.cache', 'nx', 'nxdeps.json')
-    );
+    unlinkSync(path.join(root, 'node_modules', '.cache', 'nx', 'nxdeps.json'));
   } catch (e) {}
 }
 

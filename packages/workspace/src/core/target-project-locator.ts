@@ -10,7 +10,7 @@ import {
   isWorkspaceProject,
 } from './project-graph';
 import { isRelativePath, parseJsonWithComments } from '../utilities/fileutils';
-import { dirname, join, posix } from 'path';
+import * as path from 'path';
 import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
 
 export class TargetProjectLocator {
@@ -30,7 +30,7 @@ export class TargetProjectLocator {
     );
   private npmProjects = this.sortedProjects.filter(isNpmProject);
   private tsConfigPath = this.getRootTsConfigPath();
-  private absTsConfigPath = join(appRootPath, this.tsConfigPath);
+  private absTsConfigPath = path.join(appRootPath, this.tsConfigPath);
   private paths = parseJsonWithComments(this.fileRead(this.tsConfigPath))
     ?.compilerOptions?.paths;
   private typescriptResolutionCache = new Map<string, string | null>();
@@ -60,8 +60,8 @@ export class TargetProjectLocator {
     const normalizedImportExpr = importExpr.split('#')[0];
 
     if (isRelativePath(normalizedImportExpr)) {
-      const resolvedModule = posix.join(
-        dirname(filePath),
+      const resolvedModule = path.posix.join(
+        path.dirname(filePath),
         normalizedImportExpr
       );
       return this.findProjectOfResolvedModule(resolvedModule);

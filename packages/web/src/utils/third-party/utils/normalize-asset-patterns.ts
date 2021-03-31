@@ -6,9 +6,9 @@
  * found in the LICENSE file at https://angular.io/license
  */
 import { normalizePath } from '@nrwl/devkit';
-import { basename, dirname, relative, join, resolve } from 'path';
+import * as path from 'path';
 import { AssetPattern, AssetPatternClass } from '../browser/schema';
-import { statSync } from 'fs-extra';
+import { statSync } from 'fs';
 
 export class MissingAssetSourceRootException extends Error {
   constructor(path: String) {
@@ -23,8 +23,8 @@ export function normalizeAssetPatterns(
   maybeSourceRoot: string | undefined
 ): AssetPatternClass[] {
   // When sourceRoot is not available, we default to ${projectRoot}/src.
-  const sourceRoot = maybeSourceRoot || join(projectRoot, 'src');
-  const resolvedSourceRoot = resolve(root, sourceRoot);
+  const sourceRoot = maybeSourceRoot || path.join(projectRoot, 'src');
+  const resolvedSourceRoot = path.resolve(root, sourceRoot);
 
   if (assetPatterns.length === 0) {
     return [];
@@ -34,7 +34,7 @@ export function normalizeAssetPatterns(
     // Normalize string asset patterns to objects.
     if (typeof assetPattern === 'string') {
       const assetPath = normalizePath(assetPattern);
-      const resolvedAssetPath = resolve(root, assetPath);
+      const resolvedAssetPath = path.resolve(root, assetPath);
 
       // Check if the string asset is within sourceRoot.
       if (!resolvedAssetPath.startsWith(resolvedSourceRoot)) {
@@ -55,13 +55,13 @@ export function normalizeAssetPatterns(
         input = assetPath;
       } else {
         // Files are their own glob.
-        glob = basename(assetPath);
+        glob = path.basename(assetPath);
         // Input directory is their original dirname.
-        input = dirname(assetPath);
+        input = path.dirname(assetPath);
       }
 
       // Output directory for both is the relative path from source root to input.
-      output = relative(resolvedSourceRoot, resolve(root, input));
+      output = path.relative(resolvedSourceRoot, path.resolve(root, input));
 
       // Return the asset pattern in object format.
       return { glob, input, output };

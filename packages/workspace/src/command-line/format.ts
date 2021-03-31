@@ -16,7 +16,7 @@ import {
   workspaceConfigName,
 } from '@nrwl/tao/src/shared/workspace';
 import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
-import { readFileSync, writeFileSync } from 'fs-extra';
+import { readFileSync, writeFileSync } from 'fs';
 import * as stripJsonComments from 'strip-json-comments';
 
 const PRETTIER_EXTENSIONS = [
