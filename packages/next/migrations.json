@@ -101,6 +101,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "11.6.1": {
+      "version": "11.6.1-beta.0",
+      "packages": {
+        "next": {
+          "version": "10.1.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
