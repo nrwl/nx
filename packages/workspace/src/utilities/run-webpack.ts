@@ -1,14 +1,15 @@
-import * as webpack from 'webpack';
-import { Stats, Configuration } from 'webpack';
-import * as WebpackDevServer from 'webpack-dev-server';
-import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
+import type { Stats, Configuration } from 'webpack';
+import type { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 
 import { Observable } from 'rxjs';
 
 import { extname } from 'path';
 import * as url from 'url';
 
-export function runWebpack(config: Configuration): Observable<Stats> {
+export function runWebpack(
+  config: Configuration,
+  webpack: typeof import('webpack')
+): Observable<Stats> {
   return new Observable((subscriber) => {
     const webpackCompiler = webpack(config);
 
@@ -36,7 +37,9 @@ export function runWebpack(config: Configuration): Observable<Stats> {
 }
 
 export function runWebpackDevServer(
-  config: Configuration
+  config: Configuration,
+  webpack: typeof import('webpack'),
+  WebpackDevServer: typeof import('webpack-dev-server')
 ): Observable<{ stats: Stats; baseUrl: string }> {
   return new Observable((subscriber) => {
     const webpackCompiler = webpack(config);
@@ -97,7 +100,7 @@ export interface EmittedFile {
   asset?: boolean;
 }
 
-export function getEmittedFiles(stats: webpack.Stats) {
+export function getEmittedFiles(stats: Stats) {
   const { compilation } = stats;
   const files: EmittedFile[] = [];
   // adds all chunks to the list of emitted files such as lazy loaded modules

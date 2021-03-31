@@ -7,6 +7,7 @@ import {
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { runWebpack } from '@nrwl/workspace/src/utilities/run-webpack';
+import * as webpack from 'webpack';
 
 import { map, tap } from 'rxjs/operators';
 import { eachValueFrom } from 'rxjs-for-await';
@@ -87,7 +88,7 @@ export function buildExecutor(
   }
 
   return eachValueFrom(
-    runWebpack(config).pipe(
+    runWebpack(config, webpack).pipe(
       tap((stats) => {
         console.info(stats.toString(config.stats));
       }),
