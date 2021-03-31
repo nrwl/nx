@@ -18,6 +18,7 @@ import {
 import type { Linter } from 'eslint';
 import {
   convertTSLintConfig,
+  convertTSLintDisableCommentsForProject,
   deduplicateOverrides,
   ensureESLintPluginsAreInstalled,
 } from './utils';
@@ -310,6 +311,12 @@ export class ProjectConverter {
       const finalJson = applyPackageSpecificModifications(json);
       return finalJson;
     });
+
+    /**
+     * Convert any instances of comment-based configuration in the source files
+     * of the project
+     */
+    convertTSLintDisableCommentsForProject(this.host, this.projectName);
 
     /**
      * Through converting the config we may encounter TSLint rules whose closest
