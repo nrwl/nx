@@ -56,7 +56,7 @@ myorg/
 └── tsconfig.base.json
 ```
 
-Nx makes it easy to split up your code into separate projects. Projects come in two varieties - applications and libraries.
+Nx helps split up your code into separate projects. Projects come in two varieties - applications and libraries.
 
 `/apps/` contains the application projects. This is the main entry point for a runnable application. We recommend keeping applications as light-weight as possible, with all the heavy lifting being done by libraries that are imported by each application.
 

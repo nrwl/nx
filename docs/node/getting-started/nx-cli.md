@@ -27,10 +27,10 @@ Nx creates and maintains a dependency graph between projects based on import sta
 **Invoke a generator:**
 
 ```bash
-nx generate app my-angular-app
+nx generate app my-node-app
 ```
 
-[This command](/{{framework}}/cli/generate) creates a new Angular app named `my-angular-app`.
+[This command](/{{framework}}/cli/generate) creates a new Node app named `my-node-app`.
 
 **Create a workspace generator:**
 
