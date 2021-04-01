@@ -1,74 +1,49 @@
 import * as ts from 'typescript';
-import { SchematicContext, Tree } from '@angular-devkit/schematics';
-import { getWorkspace } from '@nrwl/workspace';
+import {
+  chain,
+  SchematicContext,
+  Tree,
+  Rule,
+} from '@angular-devkit/schematics';
+import { getWorkspace, visitNotIgnoredFiles } from '@nrwl/workspace';
 import {
   findNodes,
   insert,
   ReplaceChange,
 } from '@nrwl/workspace/src/utils/ast-utils';
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { normalize } from '@angular-devkit/core';
 
 export interface PackageNameMapping {
   [packageName: string]: string;
 }
-
-const getProjectNamesWithDepsToRename = (
-  packageNameMapping: PackageNameMapping
-) => {
-  const packagesToRename = Object.entries(packageNameMapping);
-  const projectGraph = createProjectGraph(
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    false
-  );
-
-  return Object.entries(projectGraph.dependencies)
-    .filter(([, deps]) =>
-      deps.some(
-        (dep) =>
-          dep.type === 'static' &&
-          packagesToRename.some(
-            ([packageName]) => packageName === dep.target.replace('npm:', '')
-          )
-      )
-    )
-    .map(([projectName]) => projectName);
-};
 
 /**
  * Updates all the imports found in the workspace
  *
  * @param packageNameMapping The packageNameMapping provided to the schematic
  */
-export function renamePackageImports(packageNameMapping: PackageNameMapping) {
-  return async (tree: Tree, _context: SchematicContext): Promise<void> => {
+export function renamePackageImports(
+  packageNameMapping: PackageNameMapping
+): Rule {
+  return async (tree: Tree, _context: SchematicContext) => {
     const workspace = await getWorkspace(tree);
 
-    const projectNamesThatImportAPackageToRename = getProjectNamesWithDepsToRename(
-      packageNameMapping
-    );
-
-    const projectsThatImportPackage = [...workspace.projects].filter(([name]) =>
-      projectNamesThatImportAPackageToRename.includes(name)
-    );
-
-    projectsThatImportPackage
-      .map(([, definition]) => tree.getDir(definition.root))
-      .forEach((projectDir) => {
-        projectDir.visit((file) => {
-          // only look at .(j|t)s(x) files
+    const rules = [];
+    workspace.projects.forEach((project) => {
+      rules.push(
+        visitNotIgnoredFiles((file) => {
           if (!/([jt])sx?$/.test(file)) {
             return;
           }
-          // if it doesn't contain at least 1 reference to the packages to be renamed bail out
+
           const contents = tree.read(file).toString('utf-8');
-          if (
-            !Object.keys(packageNameMapping).some((packageName) =>
-              contents.includes(packageName)
-            )
-          ) {
+          const fileIncludesPackageToRename = Object.keys(
+            packageNameMapping
+          ).some((packageName) => {
+            return contents.includes(packageName);
+          });
+
+          if (!fileIncludesPackageToRename) {
             return;
           }
 
@@ -111,7 +86,10 @@ export function renamePackageImports(packageNameMapping: PackageNameMapping) {
             // update the file in the tree
             insert(tree, file, changes);
           }
-        });
-      });
+        }, normalize(project.root))
+      );
+    });
+
+    return chain(rules);
   };
 }

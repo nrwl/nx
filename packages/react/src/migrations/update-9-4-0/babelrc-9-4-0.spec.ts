@@ -3,6 +3,16 @@ import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import * as path from 'path';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { createApp, createLib, createWebApp } from '../utils/testing';
+import {
+  DependencyType,
+  ProjectGraph,
+} from '@nrwl/workspace/src/core/project-graph';
+
+let projectGraph: ProjectGraph;
+jest.mock('@nrwl/workspace/src/core/project-graph', () => ({
+  ...jest.requireActual('@nrwl/workspace/src/core/project-graph'),
+  createProjectGraph: jest.fn().mockImplementation(() => projectGraph),
+}));
 
 describe('Migrate babel setup', () => {
   let tree: Tree;
@@ -24,6 +34,51 @@ describe('Migrate babel setup', () => {
         },
       })
     );
+    projectGraph = {
+      nodes: {
+        demo: {
+          name: 'demo',
+          type: 'app',
+          data: {
+            root: 'apps/demo',
+            files: [],
+          },
+        },
+        ui: {
+          name: 'ui',
+          type: 'lib',
+          data: {
+            root: 'libs/ui',
+            files: [],
+          },
+        },
+        'npm:react': {
+          name: 'npm:react',
+          type: 'npm',
+          data: {
+            files: [],
+            packageName: 'react',
+          },
+        },
+      },
+      dependencies: {
+        demo: [
+          {
+            type: DependencyType.static,
+            source: 'demo',
+            target: 'npm:react',
+          },
+        ],
+        ui: [
+          {
+            type: DependencyType.static,
+            source: 'ui',
+            target: 'npm:react',
+          },
+        ],
+        'npm:react': [],
+      },
+    };
   });
 
   it(`should create .babelrc for projects without them`, async () => {
@@ -53,6 +108,8 @@ describe('Migrate babel setup', () => {
 
   it(`should not migrate non-React projects`, async () => {
     tree = await createWebApp(tree, 'demo');
+
+    projectGraph.dependencies.demo = [];
 
     tree = await schematicRunner
       .runSchematicAsync('babelrc-9.4.0', {}, tree)

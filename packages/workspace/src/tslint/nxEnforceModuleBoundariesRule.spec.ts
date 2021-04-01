@@ -1068,9 +1068,7 @@ function runRule(
     `${process.cwd()}/proj`,
     'mycompany',
     projectGraph,
-    new TargetProjectLocator(projectGraph.nodes, (path) =>
-      readFileSync(join('/root', path)).toString()
-    )
+    new TargetProjectLocator(projectGraph.nodes)
   );
   return rule.apply(sourceFile);
 }

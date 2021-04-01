@@ -40,13 +40,7 @@ function addHTMLPatternToBuilderConfig(
 }
 
 function updateProjectESLintConfigsAndBuilders(host: Tree): Rule {
-  const graph = createProjectGraph(
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    false
-  );
+  const graph = createProjectGraph(undefined, undefined, undefined, false);
 
   /**
    * Make sure user is already using ESLint and is up to date with

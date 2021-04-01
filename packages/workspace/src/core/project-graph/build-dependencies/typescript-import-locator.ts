@@ -2,14 +2,14 @@ import type * as ts from 'typescript';
 import * as path from 'path';
 import { DependencyType } from '../project-graph-models';
 import { stripSourceCode } from '../../../utilities/strip-source-code';
-import { FileRead } from '../../file-utils';
+import { defaultFileRead } from '../../file-utils';
 
 let tsModule: any;
 
 export class TypeScriptImportLocator {
   private readonly scanner: ts.Scanner;
 
-  constructor(private readonly fileRead: FileRead) {
+  constructor() {
     tsModule = require('typescript');
     this.scanner = tsModule.createScanner(tsModule.ScriptTarget.Latest, false);
   }
@@ -31,7 +31,7 @@ export class TypeScriptImportLocator {
     ) {
       return;
     }
-    const content = this.fileRead(filePath);
+    const content = defaultFileRead(filePath);
     const strippedContent = stripSourceCode(this.scanner, content);
     if (strippedContent !== '') {
       const tsFile = tsModule.createSourceFile(

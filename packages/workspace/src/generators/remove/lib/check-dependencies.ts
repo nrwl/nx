@@ -1,4 +1,3 @@
-import { Tree } from '@nrwl/devkit';
 import {
   createProjectGraph,
   onlyWorkspaceProjects,
@@ -12,13 +11,12 @@ import { Schema } from '../schema';
  *
  * Throws an error if the project is in use, unless the `--forceRemove` option is used.
  */
-export function checkDependencies(tree: Tree, schema: Schema) {
+export function checkDependencies(_, schema: Schema) {
   if (schema.forceRemove) {
     return;
   }
 
   const graph: ProjectGraph = createProjectGraph(
-    undefined,
     undefined,
     undefined,
     undefined,
@@ -29,15 +27,13 @@ export function checkDependencies(tree: Tree, schema: Schema) {
 
   const deps = reverseGraph.dependencies[schema.projectName] || [];
 
-  if (deps.length === 0) {
-    return;
+  if (deps.length > 0) {
+    throw new Error(
+      `${
+        schema.projectName
+      } is still depended on by the following projects:\n${deps
+        .map((x) => x.target)
+        .join('\n')}`
+    );
   }
-
-  throw new Error(
-    `${
-      schema.projectName
-    } is still depended on by the following projects:\n${deps
-      .map((x) => x.target)
-      .join('\n')}`
-  );
 }

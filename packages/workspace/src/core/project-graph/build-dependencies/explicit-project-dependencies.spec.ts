@@ -196,9 +196,7 @@ describe('explicit project dependencies', () => {
         }
       );
 
-    buildExplicitTypeScriptDependencies(ctx, projects, addDependency, (s) => {
-      return fs.readFileSync(`${appRootPath}/${s}`).toString();
-    });
+    buildExplicitTypeScriptDependencies(ctx, projects, addDependency);
 
     expect(dependencyMap).toEqual({
       proj1234: [

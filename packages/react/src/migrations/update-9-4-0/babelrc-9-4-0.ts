@@ -29,7 +29,6 @@ export default function update(): Rule {
       undefined,
       undefined,
       undefined,
-      undefined,
       false
     );
     if (host.exists('/babel.config.json')) {

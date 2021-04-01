@@ -7,6 +7,12 @@ import { Schema } from '../schema';
 import { checkDependencies } from './check-dependencies';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { libraryGenerator } from '../../library/library';
+import { DependencyType, ProjectGraph } from '../../../core/project-graph';
+let projectGraph: ProjectGraph;
+jest.mock('../../../core/project-graph', () => ({
+  ...jest.requireActual('../../../core/project-graph'),
+  createProjectGraph: jest.fn().mockImplementation(() => projectGraph),
+}));
 
 describe('checkDependencies', () => {
   let tree: Tree;
@@ -27,6 +33,36 @@ describe('checkDependencies', () => {
     await libraryGenerator(tree, {
       name: 'my-source',
     });
+
+    projectGraph = {
+      nodes: {
+        'my-source': {
+          name: 'my-source',
+          type: 'lib',
+          data: {
+            files: [],
+            root: 'libs/my-source',
+          },
+        },
+        'my-dependent': {
+          name: 'my-dependent',
+          type: 'lib',
+          data: {
+            files: [],
+            root: 'libs/my-dependent',
+          },
+        },
+      },
+      dependencies: {
+        'my-source': [
+          {
+            type: DependencyType.static,
+            source: 'my-dependent',
+            target: 'my-source',
+          },
+        ],
+      },
+    };
   });
 
   describe('static dependencies', () => {
@@ -90,6 +126,10 @@ describe('checkDependencies', () => {
   });
 
   it('should not error if there are no dependents', async () => {
+    projectGraph = {
+      nodes: projectGraph.nodes,
+      dependencies: {},
+    };
     expect(() => {
       checkDependencies(tree, schema);
     }).not.toThrow();

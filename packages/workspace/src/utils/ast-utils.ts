@@ -371,7 +371,7 @@ export function getProjectGraphFromHost(host: Tree): ProjectGraph {
  * @deprecated This method is deprecated and is synonymous to {@link createProjectGraph}()
  */
 export function getFullProjectGraphFromHost(host: Tree): ProjectGraph {
-  return createProjectGraph(undefined, undefined, undefined, undefined, false);
+  return createProjectGraph(undefined, undefined, undefined, false);
 }
 
 // TODO(v13): remove this deprecated method
