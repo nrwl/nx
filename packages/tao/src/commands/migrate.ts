@@ -560,37 +560,48 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 
     if (migrations.length > 0) {
       createMigrationsFile(root, migrations);
+    }
 
-      logger.info(`NX The migrate command has run successfully.`);
-      logger.info(`- package.json has been updated`);
+    logger.info(`NX The migrate command has run successfully.`);
+    logger.info(`- package.json has been updated`);
+    if (migrations.length > 0) {
       logger.info(`- migrations.json has been generated`);
-
-      logger.info(`NX Next steps:`);
-      logger.info(
-        `- Make sure package.json changes make sense and then run '${pmc.install}'`
-      );
-      logger.info(`- Run 'nx migrate --run-migrations'`);
-      logger.info(
-        `- To learn more go to https://nx.dev/latest/core-concepts/updating-nx`
-      );
     } else {
-      logger.info(`NX The migrate command has run successfully.`);
-      logger.info(`- package.json has been updated`);
       logger.info(
         `- there are no migrations to run, so migrations.json has not been created.`
       );
+    }
+    logger.info(`NX Next steps:`);
+    logger.info(
+      `- Make sure package.json changes make sense and then run '${pmc.install}'`
+    );
+    if (migrations.length > 0) {
+      logger.info(`- Run 'nx migrate --run-migrations'`);
+    }
+    logger.info(
+      `- To learn more go to https://nx.dev/latest/core-concepts/updating-nx`
+    );
 
-      logger.info(`NX Next steps:`);
+    if (showConnectToCloudMessage()) {
       logger.info(
-        `- Make sure package.json changes make sense and then run '${pmc.install}'`
-      );
-      logger.info(
-        `- To learn more go to https://nx.dev/latest/core-concepts/updating-nx`
+        `- You may run "nx connect-to-nx-cloud" to get faster builds, Github integration, and more. Check out https://nx.app`
       );
     }
   } catch (e) {
     logger.error(`NX The migrate command failed.`);
     throw e;
+  }
+}
+
+function showConnectToCloudMessage() {
+  try {
+    const nxJson = JSON.parse(readFileSync('nx.json').toString());
+    const defaultRunnerIsUsed = Object.values(nxJson.tasksRunnerOptions).find(
+      (r: any) => r.runner == '@nrwl/workspace/tasks-runners/default'
+    );
+    return !!defaultRunnerIsUsed;
+  } catch (e) {
+    return false;
   }
 }
 

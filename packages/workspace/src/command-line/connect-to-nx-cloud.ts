@@ -4,7 +4,7 @@ import { output } from '../utilities/output';
 import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { execSync } from 'child_process';
 
-export async function promptForNxCloud(scan: boolean) {
+export async function connectToNxCloudUsingScan(scan: boolean) {
   if (!scan) return;
 
   const nxJson = readNxJson();
@@ -13,7 +13,10 @@ export async function promptForNxCloud(scan: boolean) {
   );
   if (!defaultRunnerIsUsed) return;
 
-  const res = await askAboutNxCloud();
+  output.log({
+    title: '--scan requires the workspace to be connected to Nx Cloud.',
+  });
+  const res = await connectToNxCloudPrompt();
   if (res) {
     const pmc = getPackageManagerCommand();
     execSync(`${pmc.addDev} @nrwl/nx-cloud@latest`);
@@ -25,15 +28,33 @@ export async function promptForNxCloud(scan: boolean) {
   }
 }
 
-async function askAboutNxCloud() {
-  output.log({
-    title: '--scan requires the workspace to be connected to Nx Cloud.',
+export async function connectToNxCloudCommand() {
+  const nxJson = readNxJson();
+  const nxCloudUsed = Object.values(nxJson.tasksRunnerOptions).find(
+    (r) => r.runner == '@nrwl/nx-cloud'
+  );
+  if (nxCloudUsed) {
+    output.log({
+      title: 'This workspace is already connected to Nx Cloud.',
+    });
+    return;
+  }
+
+  const res = await connectToNxCloudPrompt();
+  if (!res) return;
+  const pmc = getPackageManagerCommand();
+  execSync(`${pmc.addDev} @nrwl/nx-cloud@latest`);
+  execSync(`${pmc.exec} nx g @nrwl/nx-cloud:init`, {
+    stdio: [0, 1, 2],
   });
+}
+
+async function connectToNxCloudPrompt() {
   return inquirer
     .prompt([
       {
         name: 'NxCloud',
-        message: `Use Nx Cloud? (It's free and doesn't require registration.)`,
+        message: `Connect to Nx Cloud? (It's free and doesn't require registration.)`,
         type: 'list',
         choices: [
           {

@@ -18,6 +18,7 @@ export const supportedNxCommands = [
   'migrate',
   'report',
   'run-many',
+  'connect-to-nx-cloud',
   'list',
   'help',
   '--help',

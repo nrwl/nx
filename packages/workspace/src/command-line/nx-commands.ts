@@ -14,6 +14,7 @@ import { runMany } from './run-many';
 import { writeFileSync } from 'fs';
 import { dirSync } from 'tmp';
 import * as path from 'path';
+import { connectToNxCloudCommand } from '@nrwl/workspace/src/command-line/connect-to-nx-cloud';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
@@ -199,6 +200,12 @@ export const commandsObject = yargs
   )
   .command(report)
   .command(list)
+  .command(
+    'connect-to-nx-cloud',
+    `Makes sure the workspace is connected to Nx Cloud`,
+    (yargs) => yargs,
+    () => connectToNxCloudCommand()
+  )
   .help('help')
   .version(nxVersion)
   .option('quiet', { type: 'boolean', hidden: true });
