@@ -82,7 +82,7 @@ function generateTemplate(
     Properties can be configured in ${filename} when defining the executor, or when invoking it.
     ${
       framework != 'angular'
-        ? `Read more about how to use executors and the CLI here: https://nx.dev/${framework}/getting-started/cli-overview#running-tasks.`
+        ? `Read more about how to use executors and the CLI here: https://nx.dev/${framework}/getting-started/nx-cli#running-tasks.`
         : ``
     }
     \n`;

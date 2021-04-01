@@ -57,13 +57,13 @@ The `Generate` action allows you to choose a generator and then opens a form lis
 
 <iframe width="560" height="420" src="https://www.youtube.com/embed/-nUr66MWRiE?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-**From the Command Pallete**
+**From the Command Palette**
 
 You can also launch the `Generate` action from the Command Palette (`⇧⌘P`) by selecting `nx: generate (ui)`.
 
 <iframe width="560" height="420" src="https://www.youtube.com/embed/Sk2XjFwF8Zo?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-You can even construct the generator options while staying entirely within the Command Palette. Use `⇧⌘P` to open the Command Palette, then select `nx: generate`. After choosing a generator, select any of the listed options to modify the generator command. When you're satified with the constructed command, choose the `Execute` command at the top of the list.
+You can even construct the generator options while staying entirely within the Command Palette. Use `⇧⌘P` to open the Command Palette, then select `nx: generate`. After choosing a generator, select any of the listed options to modify the generator command. When you're satisfied with the constructed command, choose the `Execute` command at the top of the list.
 
 <iframe width="560" height="420" src="https://www.youtube.com/embed/q5NTTqRYq9c?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
@@ -73,9 +73,9 @@ The `Run` action allows you to choose a builder command and then opens a form li
 
 <iframe width="560" height="420" src="https://www.youtube.com/embed/rNImFxo9gYs?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-**From the Command Pallete**
+**From the Command Palette**
 
-You can also construct the builder command options while staying entirely within the Command Palette. Use `⇧⌘P` to open the Command Palette, then select `nx: test`. After choosing a project, select any of the listed options to modify the builder command options. When you're satified with the constructed command, choose the `Execute` command at the top of the list.
+You can also construct the builder command options while staying entirely within the Command Palette. Use `⇧⌘P` to open the Command Palette, then select `nx: test`. After choosing a project, select any of the listed options to modify the builder command options. When you're satisfied with the constructed command, choose the `Execute` command at the top of the list.
 
 <iframe width="560" height="420" src="https://www.youtube.com/embed/CsUkSyQcxwQ?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
