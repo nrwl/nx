@@ -52,3 +52,7 @@ export interface NextExportBuilderOptions {
   silent: boolean;
   threads: number;
 }
+
+export interface WebpackConfigOptions {
+  svgr?: boolean;
+}
