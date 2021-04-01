@@ -197,6 +197,13 @@ export const commandsObject = yargs
   )
   .command(require('./report').report)
   .command(require('./list').list)
+  .command(
+    'connect-to-nx-cloud',
+    `Makes sure the workspace is connected to Nx Cloud`,
+    (yargs) => yargs,
+    async () =>
+      (await import('./connect-to-nx-cloud')).connectToNxCloudCommand()
+  )
   .help('help')
   .version(nxVersion)
   .option('quiet', { type: 'boolean', hidden: true });
@@ -424,7 +431,6 @@ function taoPath() {
   const packageManager = getPackageManagerCommand();
 
   const { dirSync } = require('tmp');
-
   const tmpDir = dirSync().name;
   writeFileSync(
     path.join(tmpDir, 'package.json'),

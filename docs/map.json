@@ -280,6 +280,11 @@
             "name": "workspace-generator",
             "id": "workspace-generator",
             "file": "angular/cli/workspace-generator"
+          },
+          {
+            "name": "connect-to-nx-cloud",
+            "id": "connect-to-nx-cloud",
+            "file": "angular/cli/connect-to-nx-cloud"
           }
         ]
       },
@@ -1327,6 +1332,11 @@
             "name": "workspace-generator",
             "id": "workspace-generator",
             "file": "react/cli/workspace-generator"
+          },
+          {
+            "name": "connect-to-nx-cloud",
+            "id": "connect-to-nx-cloud",
+            "file": "react/cli/connect-to-nx-cloud"
           }
         ]
       },
@@ -2333,6 +2343,11 @@
             "name": "workspace-generator",
             "id": "workspace-generator",
             "file": "node/cli/workspace-generator"
+          },
+          {
+            "name": "connect-to-nx-cloud",
+            "id": "connect-to-nx-cloud",
+            "file": "node/cli/connect-to-nx-cloud"
           }
         ]
       },
