@@ -16,11 +16,11 @@ Nx works especially well for [monorepos](/{{framework}}/core-concepts/why-monore
 
 ## Features
 
-- Nx tests (or builds or lints) only the projects [affected](/{{framework}}/cli/affected) by a code change.
-- Nx [caches](/{{framework}}/core-concepts/computation-caching) command output locally so that future runs on the same code happen in seconds. The paid [Nx Cloud](https://nx.app) offering allows this cache to be shared across every developer in your organization.
-- Nx provides a consistent syntax for [executing commands](/{{framework}}/executors/using-builders). `nx build my-app` works no matter what framework `my-app` uses.
-- Nx automates code modification tasks with [generators](/{{framework}}/cli/affected).
-- Nx fosters a thriving ecosystem of [plugins](/{{framework}}/generators/using-schematics) from Nrwl and the [community](/nx-community).
+- Test (or builds or lints) only the projects [affected](/{{framework}}/cli/affected) by a code change.
+- [Cache](/{{framework}}/core-concepts/computation-caching) command output locally so that future runs on the same code happen in seconds. The paid [Nx Cloud](https://nx.app) offering allows this cache to be shared across every developer in your organization.
+- Provide a consistent syntax for [executing commands](/{{framework}}/executors/using-builders). `nx build my-app` works no matter what framework `my-app` uses.
+- Automate code modification tasks with [generators](/{{framework}}/cli/affected).
+- Access a thriving ecosystem of [plugins](/{{framework}}/generators/using-schematics) from Nrwl and the [community](/nx-community).
 
 ## Learn Nx Fundamentals
 
