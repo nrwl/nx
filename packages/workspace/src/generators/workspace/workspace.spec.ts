@@ -39,15 +39,12 @@ describe('@nrwl/workspace:workspace', () => {
         defaultBase: 'master',
       },
       implicitDependencies: {
-        'workspace.json': '*',
         'package.json': {
           dependencies: '*',
           devDependencies: '*',
         },
-        'tsconfig.base.json': '*',
         'tslint.json': '*',
         '.eslintrc.json': '*',
-        'nx.json': '*',
       },
       tasksRunnerOptions: {
         default: {
