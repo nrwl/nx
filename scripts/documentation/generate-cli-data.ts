@@ -408,7 +408,7 @@ Promise.all(
     function getCommands(command) {
       return command.getCommandInstance().getCommandHandlers();
     }
-    function parseCommandInstance(name, command) {
+    async function parseCommandInstance(name, command) {
       // It is not a function return a strip down version of the command
       if (
         !(
@@ -424,7 +424,9 @@ Promise.all(
         };
       }
       // Show all the options we can get from yargs
-      const builder = command.builder(importFresh('yargs')().resetOptions());
+      const builder = await command.builder(
+        importFresh('yargs')().resetOptions()
+      );
       const builderDescriptions = builder.getUsageInstance().getDescriptions();
       const builderDefaultOptions = builder.getOptions().default;
       return {
@@ -503,9 +505,9 @@ Promise.all(
       Object.keys(nxCommands)
         .filter((name) => !sharedCommands.includes(name))
         .map((name) => parseCommandInstance(name, nxCommands[name]))
-        .map((command) => generateMarkdown(command))
-        .map((templateObject) =>
-          generateMarkdownFile(commandsOutputDirectory, templateObject)
+        .map(async (command) => generateMarkdown(await command))
+        .map(async (templateObject) =>
+          generateMarkdownFile(commandsOutputDirectory, await templateObject)
         )
     );
 

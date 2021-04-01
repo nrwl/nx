@@ -14,7 +14,7 @@ import { output } from '../utilities/output';
 import { projectHasTarget } from '../utilities/project-graph-utils';
 import { generateGraph } from './dep-graph';
 import { printAffected } from './print-affected';
-import { promptForNxCloud } from './prompt-for-nx-cloud';
+import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
 import { parseFiles } from './shared';
 import { NxArgs, RawNxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
 
@@ -30,7 +30,7 @@ export async function affected(
     }
   );
 
-  await promptForNxCloud(nxArgs.scan);
+  await connectToNxCloudUsingScan(nxArgs.scan);
 
   const projectGraph = createProjectGraph();
   let affectedGraph = nxArgs.all
