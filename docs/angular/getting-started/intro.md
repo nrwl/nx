@@ -10,7 +10,7 @@ Nx is a suite of powerful, extensible dev tools that help you develop, test, bui
 
 Nx is built on a technology agnostic core that maintains modular units of code and understands the dependency graph between them. Developers comprehend that your app contains two pages that each use a shared button component. Nx uses this same knowledge to provide insights and performance improvements. There's a whole ecosystem of plugins that build on this foundation.
 
-Nx becomes more valuable as you scale. Nx solves problems that are frustrating for small teams, but paralyzing for large teams.
+Nx becomes more valuable as you scale, solving problems that are frustrating for small teams, but paralyzing for large teams.
 
 Nx works especially well for [monorepos](/{{framework}}/core-concepts/why-monorepos). Each new app added to a monorepo provides more opportunities to share code and tooling but that often comes at the cost of a compounding slowdown in the CI pipeline. Nx ensures that adding another app to the repo does not increase the existing app’s test or build time.
 

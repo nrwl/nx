@@ -20,7 +20,7 @@ The Nx CLI provides commands that fall into three categories:
 
 ## Understanding the whole codebase
 
-Nx knows the dependency graph between projects and uses that information to run executors only on the [affected](/{{framework}}/cli/affected) projects in a codebase. A visual version of the [dependency graph](/{{framework}}/structure/dependency-graph) is also available to help developers understand the architecture of the codebase.
+Nx creates and maintains a dependency graph between projects based on import statements in your code and uses that information to run executors only on the [affected](/{{framework}}/cli/affected) projects in a codebase. A visual version of the [dependency graph](/{{framework}}/structure/dependency-graph) is also available to help developers understand the architecture of the codebase.
 
 ## Common Commands
 

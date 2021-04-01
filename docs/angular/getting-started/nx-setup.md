@@ -2,7 +2,7 @@
 
 ## Nx Setup with a New Project
 
-Creating an Nx workspace is easy. Run the following command to set up an Nx workspace with an Angular app in it.
+Creating an Nx workspace is done with a single command. Run the following command to set up an Nx workspace with an Angular app in it.
 
 ```bash
 npx create-nx-workspace --preset=angular
@@ -28,7 +28,7 @@ For more information on adding Nx to an existing repository see the [migration g
 
 [Jest](/{{framework}}/jest/overview), [Cypress](/{{framework}}/cypress/overview), [ESLint](/{{framework}}/linter/eslint) and [Storybook](/{{framework}}/storybook/overview), so these tools can be easily added to your repo without the initial cost of setting up configuration files. As new versions of these tools are released, [`nx migrate latest`](/{{framework}}/core-concepts/updating-nx) automatically updates your configuration files to work with the next version. There is a growing list of [community plugins](/nx-community) that support other tools.
 
-Need to customize your configuration somehow? Configuration files can be modified for the whole repository or at an individual project level. For instance, `libA` has a `tsconfig.json` file that extends the global `tsconfig.json` file:
+Need to customize your configuration somehow? Configuration files can be modified for the whole repository or at an individual project level. For instance, `libA` has a `tsconfig.json` file that extends the global `tsconfig.base.json` file:
 
 ```treeview
 myorg/
@@ -38,7 +38,7 @@ myorg/
 │       ├── src/
 │       └── tsconfig.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 ## Folder Structure
@@ -53,7 +53,7 @@ myorg/
 ├── workspace.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 Nx makes it easy to split up your code into separate projects. Projects come in two varieties - applications and libraries.
@@ -68,4 +68,4 @@ Nx makes it easy to split up your code into separate projects. Projects come in 
 
 `/nx.json` adds extra information about projects, including manually defined dependencies and tags that can be used to restrict the ways projects are allowed to depend on each other.
 
-`/tsconfig.json` sets up the global TypeScript settings and creates aliases for each library to aid when creating TypeScript imports.
+`/tsconfig.base.json` sets up the global TypeScript settings and creates aliases for each library to aid when creating TypeScript imports.

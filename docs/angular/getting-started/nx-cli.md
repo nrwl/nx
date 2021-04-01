@@ -20,7 +20,7 @@ The Nx CLI provides commands that fall into three categories:
 
 ## Understanding the whole codebase
 
-Nx knows the dependency graph between projects and uses that information to run executors only on the [affected](/{{framework}}/cli/affected) projects in a codebase. A visual version of the [dependency graph](/{{framework}}/structure/dependency-graph) is also available to help developers understand the architecture of the codebase.
+Nx creates and maintains a dependency graph between projects based on import statements in your code and uses that information to run executors only on the [affected](/{{framework}}/cli/affected) projects in a codebase. A visual version of the [dependency graph](/{{framework}}/structure/dependency-graph) is also available to help developers understand the architecture of the codebase.
 
 ## Common Commands
 
@@ -86,12 +86,12 @@ nx list
 
 ## Nx and Angular CLI
 
-Nx supports Angular Devkit. When you run `nx build myapp`, and the build target for `myapp` is implemented using Angular Devkit, Nx will do exactly the same as the Angular CLI. When you run `nx g component mycmp`, once again, Nx will invoke the same schematic. You can think of Nx wrapping the Angular CLI. The results of running commands will produce the same result, except that running `nx` will often be a lot faster.
+Nx supports Angular Devkit. When you run `nx build myapp`, and the build target for `myapp` is implemented using Angular Devkit, Nx behaves exactly the same as the Angular CLI. When you run `nx g component mycmp`, once again, Nx invokes the same schematic. You can think of Nx wrapping the Angular CLI. The results of running commands produces the same result, except that running `nx` is often a lot faster.
 
 How?
 
-Nx CLI uses advanced code analysis and computation caching to reuse previous computation results when possible. The Angular CLI doesn't do it. The `Nx CLI` also supports a lot more commands than the Angular CLI. It can run a target against many projects in parallel, run a target against a project and its dependencies, etc..
+Nx CLI uses advanced code analysis and computation caching to reuse previous computation results, when possible, and supports more commands than the Angular CLI. For example, it can run a target against many projects in parallel, run a target against a project and its dependencies, etc.
 
 ### Decorating the Angular CLI
 
-Since Nx does everything the Angular CLI does, but better, all workspaces have a `decorate-angular-cli.js` file. This file remaps `ng` to invoke `nx`, which at the end of the day still invokes the Angular CLI. In other words, calling `ng` will invoke the wrapped version.
+Because Nx does everything the Angular CLI does and more, all workspaces have a `decorate-angular-cli.js` file. This file remaps `ng` to invoke `nx`, which then invokes the Angular CLI with Nx's improvements. In other words, calling `ng` invokes the Nx-wrapped version of the Angular CLI.
