@@ -1,11 +1,15 @@
 import { formatFiles, getProjects, Tree } from '@nrwl/devkit';
-import { reverse } from '@nrwl/workspace/src/core/project-graph';
-import { createProjectGraphFromTree } from '@nrwl/workspace/src/utilities/create-project-graph-from-tree';
-import { hasDependentAppUsingWebBuild } from '@nrwl/web/src/migrations/update-11-5-2/utils';
+import {
+  createProjectGraph,
+  reverse,
+} from '@nrwl/workspace/src/core/project-graph';
+import { hasDependentAppUsingWebBuild } from './utils';
 
 export async function createBabelrcForWorkspaceLibs(host: Tree) {
   const projects = getProjects(host);
-  const graph = reverse(createProjectGraphFromTree(host));
+  const graph = reverse(
+    createProjectGraph(undefined, undefined, undefined, undefined, false)
+  );
 
   for (const [name, p] of projects.entries()) {
     if (!hasDependentAppUsingWebBuild(name, graph, projects)) {

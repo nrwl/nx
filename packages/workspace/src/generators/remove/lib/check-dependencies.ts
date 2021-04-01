@@ -1,11 +1,11 @@
 import { Tree } from '@nrwl/devkit';
 import {
+  createProjectGraph,
   onlyWorkspaceProjects,
   ProjectGraph,
   reverse,
 } from '../../../core/project-graph';
 import { Schema } from '../schema';
-import { createProjectGraphFromTree } from '../../../utilities/create-project-graph-from-tree';
 
 /**
  * Check whether the project to be removed is depended on by another project
@@ -17,7 +17,13 @@ export function checkDependencies(tree: Tree, schema: Schema) {
     return;
   }
 
-  const graph: ProjectGraph = createProjectGraphFromTree(tree);
+  const graph: ProjectGraph = createProjectGraph(
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    false
+  );
 
   const reverseGraph = onlyWorkspaceProjects(reverse(graph));
 

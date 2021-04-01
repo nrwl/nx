@@ -26,7 +26,7 @@ import {
   onlyWorkspaceProjects,
   ProjectGraph,
 } from '../core/project-graph';
-import { FileData, FileRead } from '../core/file-utils';
+import { FileData } from '../core/file-utils';
 import { extname, join, normalize, Path } from '@angular-devkit/core';
 import { NxJson, NxJsonProjectConfig } from '../core/shared-interfaces';
 import { addInstallTask } from './rules/add-install-task';
@@ -357,57 +357,27 @@ export function readJsonInTree<T = any>(host: Tree, path: string): T {
   }
 }
 
+// TODO(v13): remove this deprecated method
 /**
+ * @deprecated This method is deprecated and is synonymous to {@link onlyWorkspaceProjects}({@link createProjectGraph}())
  * Method for utilizing the project graph in schematics
  */
 export function getProjectGraphFromHost(host: Tree): ProjectGraph {
-  return onlyWorkspaceProjects(getFullProjectGraphFromHost(host));
+  return onlyWorkspaceProjects(createProjectGraph());
 }
 
+// TODO(v13): remove this deprecated method
+/**
+ * @deprecated This method is deprecated and is synonymous to {@link createProjectGraph}()
+ */
 export function getFullProjectGraphFromHost(host: Tree): ProjectGraph {
-  const workspaceJson = readJsonInTree(host, getWorkspacePath(host));
-  const nxJson = readJsonInTree<NxJson>(host, '/nx.json');
-
-  const fileRead: FileRead = (f: string) => {
-    try {
-      return host.read(f).toString();
-    } catch (e) {
-      throw new Error(`${f} does not exist`);
-    }
-  };
-
-  const workspaceFiles: FileData[] = [];
-
-  workspaceFiles.push(
-    ...allFilesInDirInHost(host, normalize(''), { recursive: false }).map((f) =>
-      getFileDataInHost(host, f)
-    )
-  );
-  workspaceFiles.push(
-    ...allFilesInDirInHost(host, normalize('tools')).map((f) =>
-      getFileDataInHost(host, f)
-    )
-  );
-
-  // Add files for workspace projects
-  Object.keys(workspaceJson.projects).forEach((projectName) => {
-    const project = workspaceJson.projects[projectName];
-    workspaceFiles.push(
-      ...allFilesInDirInHost(host, normalize(project.root)).map((f) =>
-        getFileDataInHost(host, f)
-      )
-    );
-  });
-
-  return createProjectGraph(
-    workspaceJson,
-    nxJson,
-    workspaceFiles,
-    fileRead,
-    false
-  );
+  return createProjectGraph(undefined, undefined, undefined, undefined, false);
 }
 
+// TODO(v13): remove this deprecated method
+/**
+ * @deprecated This method is deprecated
+ */
 export function getFileDataInHost(host: Tree, path: Path): FileData {
   return {
     file: path,

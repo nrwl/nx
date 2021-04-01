@@ -2,22 +2,27 @@ import * as ts from 'typescript';
 import { SchematicContext, Tree } from '@angular-devkit/schematics';
 import { getWorkspace } from '@nrwl/workspace';
 import {
-  getFullProjectGraphFromHost,
   findNodes,
   insert,
   ReplaceChange,
 } from '@nrwl/workspace/src/utils/ast-utils';
+import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 
 export interface PackageNameMapping {
   [packageName: string]: string;
 }
 
 const getProjectNamesWithDepsToRename = (
-  packageNameMapping: PackageNameMapping,
-  tree: Tree
+  packageNameMapping: PackageNameMapping
 ) => {
   const packagesToRename = Object.entries(packageNameMapping);
-  const projectGraph = getFullProjectGraphFromHost(tree);
+  const projectGraph = createProjectGraph(
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    false
+  );
 
   return Object.entries(projectGraph.dependencies)
     .filter(([, deps]) =>
@@ -42,8 +47,7 @@ export function renamePackageImports(packageNameMapping: PackageNameMapping) {
     const workspace = await getWorkspace(tree);
 
     const projectNamesThatImportAPackageToRename = getProjectNamesWithDepsToRename(
-      packageNameMapping,
-      tree
+      packageNameMapping
     );
 
     const projectsThatImportPackage = [...workspace.projects].filter(([name]) =>
