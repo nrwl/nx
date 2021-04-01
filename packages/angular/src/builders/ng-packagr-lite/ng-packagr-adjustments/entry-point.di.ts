@@ -4,10 +4,7 @@
  * where Nx takes over with Nx specific functions
  */
 
-import {
-  COMPILE_NGC_TOKEN,
-  COMPILE_NGC_TRANSFORM,
-} from 'ng-packagr/lib/ng-package/entry-point/compile-ngc.di';
+import { COMPILE_NGC_TOKEN } from 'ng-packagr/lib/ng-package/entry-point/compile-ngc.di';
 import {
   NX_WRITE_BUNDLES_TRANSFORM,
   NX_WRITE_BUNDLES_TRANSFORM_TOKEN,
@@ -23,6 +20,7 @@ import {
   TransformProvider,
 } from 'ng-packagr/lib/graph/transform.di';
 import { entryPointTransformFactory } from 'ng-packagr/lib/ng-package/entry-point/entry-point.transform';
+import { NX_COMPILE_NGC_TRANSFORM } from './compile-ngc';
 
 export const NX_ENTRY_POINT_TRANSFORM_TOKEN = new InjectionToken<Transform>(
   `nx.v1.entryPointTransform`
@@ -40,7 +38,7 @@ export const NX_ENTRY_POINT_TRANSFORM: TransformProvider = provideTransform({
 
 export const NX_ENTRY_POINT_PROVIDERS: Provider[] = [
   NX_ENTRY_POINT_TRANSFORM,
-  COMPILE_NGC_TRANSFORM,
+  NX_COMPILE_NGC_TRANSFORM,
   NX_WRITE_BUNDLES_TRANSFORM,
   WRITE_PACKAGE_TRANSFORM,
 ];
