@@ -1,4 +1,4 @@
-import { getDocument } from './documentation-api';
+import { getDocument } from './documents.api';
 
 describe('getDocument', () => {
   it('should retrieve documents that exist', () => {

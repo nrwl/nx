@@ -1,2 +1,2 @@
-export * from './lib/documentation-api';
-export * from './lib/models';
+export * from './lib/documents.api';
+export * from './lib/documents.models';

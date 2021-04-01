@@ -1,4 +1,4 @@
-import { getDocumentsRoot, getVersions } from './utils';
+import { getDocumentsRoot, getVersions } from './documents.utils';
 
 describe('getDocumentsPath', () => {
   it('should support preview', () => {

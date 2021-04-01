@@ -173,7 +173,7 @@
       "tags": ["scope:nx-dev", "type:e2e"],
       "implicitDependencies": ["nx-dev"]
     },
-    "nx-dev-ui-common": { "tags": ["scope:nx-dev", "type:ui"] },
+    "nx-dev-ui/common": { "tags": ["scope:nx-dev", "type:ui"] },
     "nx-dev-feature-doc-viewer": {
       "tags": ["scope:nx-dev", "type:feature"]
     },

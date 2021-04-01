@@ -1,5 +1,18 @@
 import React from 'react';
 
+export interface ItemList {
+  name: string;
+  id: string;
+  file?: string;
+  searchResultsName?: string;
+  itemList?: ItemList[];
+}
+
+export interface DocumentationMap {
+  id: string;
+  itemList: ItemList[];
+}
+
 /* eslint-disable-next-line */
 export interface SidebarProps {}
 

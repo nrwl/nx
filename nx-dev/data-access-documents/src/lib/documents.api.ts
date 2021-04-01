@@ -3,11 +3,12 @@ import { join } from 'path';
 import matter from 'gray-matter';
 import * as marked from 'marked';
 import {
+  documentsDataRoot,
   getDocumentsMap,
   getDocumentsRoot,
-  getVersions as _getVersions,
-} from './utils';
-import { DocumentData, VersionData } from './models';
+} from './documents.utils';
+import { DocumentData, VersionData } from './documents.models';
+import { readJsonFile } from '@nrwl/workspace';
 
 export function getDocument(
   version: string,
@@ -15,14 +16,20 @@ export function getDocument(
 ): DocumentData {
   const segments = Array.isArray(_segments) ? [..._segments] : [_segments];
   const docPath = getFilePath(version, segments);
-  const file = matter(fs.readFileSync(docPath, 'utf8'));
 
-  return {
-    filePath: docPath,
-    data: file.data,
-    content: marked.parse(file.content),
-    excerpt: file.excerpt,
-  };
+  try {
+    const file = matter(fs.readFileSync(docPath, 'utf8'));
+    return {
+      filePath: docPath,
+      data: file.data,
+      content: marked.parse(file.content),
+      excerpt: file.excerpt,
+    };
+  } catch {
+    throw new Error(
+      `Cannot find document matching path: ${segments.join('/')}`
+    );
+  }
 }
 
 export function getFilePath(version: string, segments: string[]): string {
@@ -34,32 +41,27 @@ export function getFilePath(version: string, segments: string[]): string {
       items = found.itemList;
     } else {
       throw new Error(
-        `Cannot find document matching segments: ${segments.join(',')}`
+        `Cannot find document matching path: ${segments.join('/')}`
       );
     }
   }
-  if (!found.file) {
-    throw new Error(
-      `Cannot find document matching segments: ${segments.join(',')}`
-    );
-  }
-  return join(getDocumentsRoot(version), `${found.file}.md`);
+
+  const file = found.file ?? `${segments.join('/')}`;
+  return join(getDocumentsRoot(version), `${file}.md`);
 }
 
 export function getAllDocumentsPaths(version: string) {
   const paths = [];
 
   function recur(curr, acc) {
-    if (curr.file) {
-      paths.push({
-        params: {
-          version,
-          flavor: acc[0],
-          segments: acc.slice(2).concat(curr.id),
-        },
-      });
-      return;
-    }
+    paths.push({
+      params: {
+        version,
+        flavor: acc[0],
+        segments: acc.slice(2).concat(curr.id),
+      },
+    });
+
     if (curr.itemList) {
       curr.itemList.forEach((ii) => {
         recur(ii, [...acc, curr.id]);
@@ -74,6 +76,10 @@ export function getAllDocumentsPaths(version: string) {
   return paths;
 }
 
+let versions: VersionData[];
 export function getVersions(): VersionData[] {
-  return _getVersions();
+  if (!versions) {
+    versions = readJsonFile(join(documentsDataRoot, 'versions.json'));
+  }
+  return versions;
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
-import { Header, Footer } from '@nrwl/nx-dev/ui-common';
+import { Header, Footer } from '@nrwl/nx-dev/ui/common';
 import './styles.css';
 
 export default function CustomApp({ Component, pageProps }: AppProps) {
