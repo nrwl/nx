@@ -15,9 +15,11 @@ export function getWorkspaceLayout(
   host: Tree
 ): { appsDir: string; libsDir: string; npmScope: string } {
   const nxJson = readJson<NxJsonConfiguration>(host, 'nx.json');
-  const layout = nxJson.workspaceLayout ?? { appsDir: 'apps', libsDir: 'libs' };
-  const npmScope = nxJson.npmScope;
-  return { ...layout, npmScope };
+  return {
+    appsDir: nxJson.workspaceLayout?.appsDir ?? 'apps',
+    libsDir: nxJson.workspaceLayout?.libsDir ?? 'libs',
+    npmScope: nxJson.npmScope,
+  };
 }
 
 export function getWorkspacePath(host: Tree) {
