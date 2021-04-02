@@ -31,6 +31,7 @@
     "yargs": "15.4.1",
     "yargs-parser": "20.0.0",
     "@nrwl/tao": "*",
-    "chalk": "4.1.0"
+    "chalk": "4.1.0",
+    "v8-compile-cache": "2.3.0"
   }
 }
