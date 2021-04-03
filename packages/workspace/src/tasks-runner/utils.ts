@@ -1,7 +1,7 @@
 import { Task } from './tasks-runner';
 import { ProjectGraphNode } from '../core/project-graph';
 import * as flatten from 'flat';
-import * as _ from 'lodash';
+import * as _template from 'lodash.template';
 
 const commonCommands = ['build', 'test', 'lint', 'e2e', 'deploy'];
 
@@ -66,7 +66,7 @@ export function getOutputsForTargetAndConfiguration(
 
   if (targets?.outputs) {
     return targets.outputs.map((output) =>
-      _.template(output, { interpolate: /{([\s\S]+?)}/g })({ options })
+      _template(output, { interpolate: /{([\s\S]+?)}/g })({ options })
     );
   }
 
