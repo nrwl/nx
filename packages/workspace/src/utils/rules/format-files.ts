@@ -13,15 +13,15 @@ import { appRootPath } from '../../utilities/app-root';
 import { reformattedWorkspaceJsonOrNull } from '@nrwl/tao/src/shared/workspace';
 import * as stripJsonComments from 'strip-json-comments';
 
-let prettier;
-try {
-  prettier = require('prettier');
-} catch (e) {}
-
 export function formatFiles(
   options: { skipFormat: boolean } = { skipFormat: false },
   directory: string = ''
 ): Rule {
+  let prettier;
+  try {
+    prettier = require('prettier');
+  } catch (e) {}
+
   if (options.skipFormat) {
     return noop();
   }

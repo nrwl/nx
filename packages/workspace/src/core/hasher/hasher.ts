@@ -72,7 +72,11 @@ export class Hasher {
   }
 
   async hashTasks(tasks: Task[]): Promise<Hash[]> {
-    return Promise.all(tasks.map((t) => this.hash(t)));
+    performance.mark('hasher:hash:start');
+    const r = await Promise.all(tasks.map((t) => this.hash(t)));
+    performance.mark('hasher:hash:end');
+    performance.measure('hasher:hash', 'hasher:hash:start', 'hasher:hash:end');
+    return r;
   }
 
   private async hash(task: Task): Promise<Hash> {

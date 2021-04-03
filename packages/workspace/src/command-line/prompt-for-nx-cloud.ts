@@ -1,4 +1,3 @@
-import * as inquirer from 'inquirer';
 import { readNxJson } from '../core/file-utils';
 import { output } from '../utilities/output';
 import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
@@ -29,7 +28,7 @@ async function askAboutNxCloud() {
   output.log({
     title: '--scan requires the workspace to be connected to Nx Cloud.',
   });
-  return inquirer
+  return await (await import('inquirer'))
     .prompt([
       {
         name: 'NxCloud',

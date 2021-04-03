@@ -5,16 +5,16 @@ import { getWorkspacePath } from '../utils/get-workspace-layout';
 import { reformattedWorkspaceJsonOrNull } from '@nrwl/tao/src/shared/workspace';
 import * as stripJsonComments from 'strip-json-comments';
 
-let prettier: typeof Prettier;
-try {
-  prettier = require('prettier');
-} catch (e) {}
-
 /**
  * Formats all the created or updated files using Prettier
  * @param host - the file system tree
  */
 export async function formatFiles(host: Tree) {
+  let prettier: typeof Prettier;
+  try {
+    prettier = require('prettier');
+  } catch (e) {}
+
   updateWorkspaceJsonToMatchFormatVersion(host);
 
   if (!prettier) return;

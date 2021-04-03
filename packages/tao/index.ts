@@ -2,7 +2,6 @@
 import { dirname, join } from 'path';
 
 const argv = require('yargs-parser')(process.argv.slice(2));
-import './src/compat/compat';
 import { existsSync } from 'fs-extra';
 
 export async function invokeCommand(
