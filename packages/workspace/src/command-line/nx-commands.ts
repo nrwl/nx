@@ -1,18 +1,8 @@
-#!/usr/bin/env node
 import { execSync } from 'child_process';
 import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import * as yargs from 'yargs';
 import { nxVersion } from '../utils/versions';
-import { generateGraph } from './dep-graph';
-import { format } from './format';
-import { workspaceLint } from './lint';
-import { list } from './list';
-import { report } from './report';
-import { workspaceGenerators } from './workspace-generators';
-import { affected } from './affected';
-import { runMany } from './run-many';
 import { writeFileSync } from 'fs';
-import { dirSync } from 'tmp';
 import * as path from 'path';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
@@ -45,30 +35,32 @@ export const commandsObject = yargs
     (e.g., nx generate @nrwl/web:app myapp).
     `
   )
+
   .command(
     'affected',
     'Run task for affected projects',
     (yargs) => withAffectedOptions(withParallel(withTarget(yargs))),
-    (args) => affected('affected', { ...args })
+    async (args) =>
+      (await import('./affected')).affected('affected', { ...args })
   )
   .command(
     'run-many',
     'Run task for multiple projects',
     (yargs) => withRunManyOptions(withParallel(withTarget(yargs))),
-    (args) => runMany({ ...args })
+    async (args) => (await import('./run-many')).runMany({ ...args })
   )
   .command(
     'affected:apps',
     'Print applications affected by changes',
     (yargs) => withAffectedOptions(withPlainOption(yargs)),
-    (args) => affected('apps', { ...args })
+    async (args) => (await import('./affected')).affected('apps', { ...args })
   )
   .command(
     'affected:libs',
     'Print libraries affected by changes',
     (yargs) => withAffectedOptions(withPlainOption(yargs)),
-    (args) =>
-      affected('libs', {
+    async (args) =>
+      (await import('./affected')).affected('libs', {
         ...args,
       })
   )
@@ -76,8 +68,8 @@ export const commandsObject = yargs
     'affected:build',
     'Build applications and publishable libraries affected by changes',
     (yargs) => withAffectedOptions(withParallel(yargs)),
-    (args) =>
-      affected('affected', {
+    async (args) =>
+      (await import('./affected')).affected('affected', {
         ...args,
         target: 'build',
       })
@@ -86,8 +78,8 @@ export const commandsObject = yargs
     'affected:test',
     'Test projects affected by changes',
     (yargs) => withAffectedOptions(withParallel(yargs)),
-    (args) =>
-      affected('affected', {
+    async (args) =>
+      (await import('./affected')).affected('affected', {
         ...args,
         target: 'test',
       })
@@ -96,8 +88,8 @@ export const commandsObject = yargs
     'affected:e2e',
     'Run e2e tests for the applications affected by changes',
     (yargs) => withAffectedOptions(withParallel(yargs)),
-    (args) =>
-      affected('affected', {
+    async (args) =>
+      (await import('./affected')).affected('affected', {
         ...args,
         target: 'e2e',
       })
@@ -106,8 +98,8 @@ export const commandsObject = yargs
     'affected:dep-graph',
     'Graph dependencies affected by changes',
     (yargs) => withAffectedOptions(withDepGraphOptions(yargs)),
-    (args) =>
-      affected('dep-graph', {
+    async (args) =>
+      (await import('./affected')).affected('dep-graph', {
         ...args,
       })
   )
@@ -115,17 +107,17 @@ export const commandsObject = yargs
     'print-affected',
     'Graph execution plan',
     (yargs) => withAffectedOptions(withPrintAffectedOptions(yargs)),
-    (args) =>
-      affected('print-affected', {
+    async (args) =>
+      (await import('./affected')).affected('print-affected', {
         ...args,
       })
   )
   .command(
     'affected:lint',
     'Lint projects affected by changes',
-    (yargs) => withAffectedOptions(withParallel(yargs)),
-    (args) =>
-      affected('affected', {
+    async (yargs) => withAffectedOptions(withParallel(yargs)),
+    async (args) =>
+      (await import('./affected')).affected('affected', {
         ...args,
         target: 'lint',
       })
@@ -134,26 +126,28 @@ export const commandsObject = yargs
     'dep-graph',
     'Graph dependencies within workspace',
     (yargs) => withDepGraphOptions(yargs),
-    (args) => generateGraph(args as any, [])
+    async (args) => (await import('./dep-graph')).generateGraph(args as any, [])
   )
+
   .command(
     'format:check',
     'Check for un-formatted files',
     withFormatOptions,
-    (args) => format('check', args)
+    async (args) => (await import('./format')).format('check', args)
   )
   .command(
     ['format:write', 'format'],
     'Overwrite un-formatted files',
     withFormatOptions,
-    (args) => format('write', args)
+    async (args) => (await import('./format')).format('write', args)
   )
   .command(
     'workspace-lint [files..]',
     'Lint workspace or list of files.  Note: To exclude files from this lint rule, you can add them to the ".nxignore" file',
     noop,
-    (_) => workspaceLint()
+    async (_) => (await import('./lint')).workspaceLint()
   )
+
   .command(
     ['workspace-generator [name]', 'workspace-schematic [name]'],
     'Runs a workspace generator from the tools/generators directory',
@@ -174,8 +168,12 @@ export const commandsObject = yargs
       }
       return yargs;
     },
-    () => workspaceGenerators(process.argv.slice(3))
+    async () =>
+      (await import('./workspace-generators')).workspaceGenerators(
+        process.argv.slice(3)
+      )
   )
+
   .command(
     'migrate',
     `Creates a migrations file or runs migrations from the migrations file.
@@ -197,8 +195,8 @@ export const commandsObject = yargs
       }
     }
   )
-  .command(report)
-  .command(list)
+  .command(require('./report').report)
+  .command(require('./list').list)
   .help('help')
   .version(nxVersion)
   .option('quiet', { type: 'boolean', hidden: true });
@@ -424,6 +422,8 @@ function withTarget(yargs: yargs.Argv): yargs.Argv {
 
 function taoPath() {
   const packageManager = getPackageManagerCommand();
+
+  const { dirSync } = require('tmp');
 
   const tmpDir = dirSync().name;
   writeFileSync(
