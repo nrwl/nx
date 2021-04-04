@@ -38,8 +38,14 @@ export class TaskOrchestrator {
     );
     performance.measure('nx-prep-work', 'init-local', 'task-execution-begins');
     const r1 = await this.applyCachedResults(cached);
-
     const r2 = await this.runRest(rest);
+    performance.mark('task-execution-ends');
+    performance.measure(
+      'command-execution',
+      'task-execution-begins',
+      'task-execution-ends'
+    );
+
     this.cache.removeOldCacheRecords();
     return [...r1, ...r2];
   }
