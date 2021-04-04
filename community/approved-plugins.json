@@ -67,7 +67,7 @@
   {
     "name": "@nx-tools/nx-docker",
     "description": "Nx plugin to build docker images of your affected apps",
-    "url": "https://github.com/gperdomor/nx-tools/tree/master/libs/nx-docker"
+    "url": "https://github.com/gperdomor/nx-tools/tree/main/packages/nx-docker"
   },
   {
     "name": "@angular-custom-builders/lite-serve",
