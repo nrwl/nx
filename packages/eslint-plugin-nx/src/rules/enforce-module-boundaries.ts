@@ -123,7 +123,12 @@ export default createESLintRule<Options, MessageIds>({
       .targetProjectLocator as TargetProjectLocator;
 
     function run(node: TSESTree.ImportDeclaration | TSESTree.ImportExpression) {
-      const imp = (node.source as TSESTree.Literal).value as string;
+      // accept only literals because template literals have no value
+      if (node.source.type !== AST_NODE_TYPES.Literal) {
+        return;
+      }
+
+      const imp = node.source.value as string;
 
       const sourceFilePath = getSourceFilePath(
         normalizePath(context.getFilename()),
