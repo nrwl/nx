@@ -1,6 +1,5 @@
 import {
   checkFilesExist,
-  getSelectedPackageManager,
   newProject,
   readJson,
   removeProject,
@@ -143,38 +142,30 @@ import { names } from '@nrwl/devkit';
       }
     });
 
-    // These fail with pnpm due to incompatibilities with ngcc for buildable libraries.
-    if (
-      getSelectedPackageManager() !== 'pnpm' ||
-      testConfig === 'publishable'
-    ) {
-      it('should build the library when it does not have any deps', () => {
-        runCLI(`build ${childLib}`);
+    it('should build the library when it does not have any deps', () => {
+      runCLI(`build ${childLib}`);
 
-        checkFilesExist(`dist/libs/${childLib}/package.json`);
-      });
+      checkFilesExist(`dist/libs/${childLib}/package.json`);
+    });
 
-      it('should properly add references to any dependency into the parent package.json', () => {
-        runCLI(`build ${childLib}`);
-        runCLI(`build ${childLib2}`);
-        runCLI(`build ${parentLib}`);
+    it('aaashould properly add references to any dependency into the parent package.json', () => {
+      runCLI(`build ${childLib}`);
+      runCLI(`build ${childLib2}`);
+      runCLI(`build ${parentLib}`);
 
-        checkFilesExist(
-          `dist/libs/${childLib}/package.json`,
-          `dist/libs/${childLib2}/package.json`,
-          `dist/libs/${parentLib}/package.json`
-        );
+      checkFilesExist(
+        `dist/libs/${childLib}/package.json`,
+        `dist/libs/${childLib2}/package.json`,
+        `dist/libs/${parentLib}/package.json`
+      );
 
-        const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
+      const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
 
-        expect(jsonFile.dependencies['tslib']).toEqual('^2.0.0');
-        expect(jsonFile.peerDependencies[`@${proj}/${childLib}`]).toBeDefined();
-        expect(
-          jsonFile.peerDependencies[`@${proj}/${childLib2}`]
-        ).toBeDefined();
-        expect(jsonFile.peerDependencies['@angular/common']).toBeDefined();
-        expect(jsonFile.peerDependencies['@angular/core']).toBeDefined();
-      });
-    }
+      expect(jsonFile.dependencies['tslib']).toEqual('^2.0.0');
+      expect(jsonFile.peerDependencies[`@${proj}/${childLib}`]).toBeDefined();
+      expect(jsonFile.peerDependencies[`@${proj}/${childLib2}`]).toBeDefined();
+      expect(jsonFile.peerDependencies['@angular/common']).toBeDefined();
+      expect(jsonFile.peerDependencies['@angular/core']).toBeDefined();
+    });
   });
 });

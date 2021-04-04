@@ -15,7 +15,7 @@ import {
   workspaceConfigName,
 } from '@nrwl/e2e/utils';
 
-describe('run-one', () => {
+describe('run-one tests', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
