@@ -1,7 +1,7 @@
 import { logger } from '@nrwl/devkit';
 import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 
-import * as opn from 'opn';
+import * as open from 'open';
 import * as url from 'url';
 import { readFileSync } from 'fs';
 import * as path from 'path';
@@ -68,9 +68,7 @@ function getDevServerPartial(
 
       logger.info(`NX Web Development Server is listening at ${serverUrl}`);
       if (options.open) {
-        opn(serverUrl, {
-          wait: false,
-        });
+        open(serverUrl);
       }
     },
     stats: false,
