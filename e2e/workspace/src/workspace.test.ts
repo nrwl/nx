@@ -1,6 +1,7 @@
 import { NxJson } from '@nrwl/workspace';
 import {
   getPackageManagerCommand,
+  getSelectedPackageManager,
   listFiles,
   newProject,
   readFile,
@@ -15,7 +16,7 @@ import {
   workspaceConfigName,
 } from '@nrwl/e2e/utils';
 
-describe('run-one tests', () => {
+describe('run-one', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
@@ -71,72 +72,75 @@ describe('run-many', () => {
 
   afterEach(() => removeProject({ onlyOnCI: true }));
 
-  it('should build specific and all projects', () => {
-    const appA = uniq('appa-rand');
-    const libA = uniq('liba-rand');
-    const libB = uniq('libb-rand');
-    const libC = uniq('libc-rand');
-    const libD = uniq('libd-rand');
+  // This fails with pnpm due to incompatibilities with ngcc for buildable libraries.
+  if (getSelectedPackageManager() !== 'pnpm') {
+    it('should build specific and all projects', () => {
+      const appA = uniq('appa-rand');
+      const libA = uniq('liba-rand');
+      const libB = uniq('libb-rand');
+      const libC = uniq('libc-rand');
+      const libD = uniq('libd-rand');
 
-    runCLI(`generate @nrwl/angular:app ${appA}`);
-    runCLI(`generate @nrwl/angular:lib ${libA} --buildable --defaults`);
-    runCLI(`generate @nrwl/angular:lib ${libB} --buildable --defaults`);
-    runCLI(`generate @nrwl/angular:lib ${libC} --buildable --defaults`);
-    runCLI(`generate @nrwl/angular:lib ${libD} --defaults`);
+      runCLI(`generate @nrwl/angular:app ${appA}`);
+      runCLI(`generate @nrwl/angular:lib ${libA} --buildable --defaults`);
+      runCLI(`generate @nrwl/angular:lib ${libB} --buildable --defaults`);
+      runCLI(`generate @nrwl/angular:lib ${libC} --buildable --defaults`);
+      runCLI(`generate @nrwl/angular:lib ${libD} --defaults`);
 
-    // libA depends on libC
-    updateFile(
-      `libs/${libA}/src/lib/${libA}.module.spec.ts`,
-      `
-              import '@${proj}/${libC}';
-              describe('sample test', () => {
-                it('should test', () => {
-                  expect(1).toEqual(1);
+      // libA depends on libC
+      updateFile(
+        `libs/${libA}/src/lib/${libA}.module.spec.ts`,
+        `
+                import '@${proj}/${libC}';
+                describe('sample test', () => {
+                  it('should test', () => {
+                    expect(1).toEqual(1);
+                  });
                 });
-              });
-            `
-    );
+              `
+      );
 
-    // testing run many starting'
-    const buildParallel = runCLI(
-      `run-many --target=build --projects="${libC},${libB}"`
-    );
-    expect(buildParallel).toContain(`Running target build for projects:`);
-    expect(buildParallel).not.toContain(`- ${libA}`);
-    expect(buildParallel).toContain(`- ${libB}`);
-    expect(buildParallel).toContain(`- ${libC}`);
-    expect(buildParallel).not.toContain(`- ${libD}`);
-    expect(buildParallel).toContain('Running target "build" succeeded');
+      // testing run many starting'
+      const buildParallel = runCLI(
+        `run-many --target=build --projects="${libC},${libB}"`
+      );
+      expect(buildParallel).toContain(`Running target build for projects:`);
+      expect(buildParallel).not.toContain(`- ${libA}`);
+      expect(buildParallel).toContain(`- ${libB}`);
+      expect(buildParallel).toContain(`- ${libC}`);
+      expect(buildParallel).not.toContain(`- ${libD}`);
+      expect(buildParallel).toContain('Running target "build" succeeded');
 
-    // testing run many --all starting
-    const buildAllParallel = runCLI(`run-many --target=build --all`);
-    expect(buildAllParallel).toContain(`Running target build for projects:`);
-    expect(buildAllParallel).toContain(`- ${libA}`);
-    expect(buildAllParallel).toContain(`- ${libB}`);
-    expect(buildAllParallel).toContain(`- ${libC}`);
-    expect(buildAllParallel).not.toContain(`- ${libD}`);
-    expect(buildAllParallel).toContain('Running target "build" succeeded');
+      // testing run many --all starting
+      const buildAllParallel = runCLI(`run-many --target=build --all`);
+      expect(buildAllParallel).toContain(`Running target build for projects:`);
+      expect(buildAllParallel).toContain(`- ${libA}`);
+      expect(buildAllParallel).toContain(`- ${libB}`);
+      expect(buildAllParallel).toContain(`- ${libC}`);
+      expect(buildAllParallel).not.toContain(`- ${libD}`);
+      expect(buildAllParallel).toContain('Running target "build" succeeded');
 
-    // testing run many --with-deps
-    const buildWithDeps = runCLI(
-      `run-many --target=build --projects="${libA}" --with-deps`
-    );
-    expect(buildWithDeps).toContain(`Running target build for projects:`);
-    expect(buildWithDeps).toContain(`- ${libA}`);
-    expect(buildWithDeps).toContain(`- ${libC}`);
-    expect(buildWithDeps).not.toContain(`- ${libB}`);
-    expect(buildWithDeps).not.toContain(`- ${libD}`);
-    expect(buildWithDeps).toContain('Running target "build" succeeded');
+      // testing run many --with-deps
+      const buildWithDeps = runCLI(
+        `run-many --target=build --projects="${libA}" --with-deps`
+      );
+      expect(buildWithDeps).toContain(`Running target build for projects:`);
+      expect(buildWithDeps).toContain(`- ${libA}`);
+      expect(buildWithDeps).toContain(`- ${libC}`);
+      expect(buildWithDeps).not.toContain(`- ${libB}`);
+      expect(buildWithDeps).not.toContain(`- ${libD}`);
+      expect(buildWithDeps).toContain('Running target "build" succeeded');
 
-    // testing run many --configuration
-    const buildConfig = runCLI(
-      `run-many --target=build --projects="${appA},${libA}" --prod`
-    );
-    expect(buildConfig).toContain(`Running target build for projects:`);
-    expect(buildConfig).toContain(`run ${appA}:build:production`);
-    expect(buildConfig).toContain(`run ${libA}:build:production`);
-    expect(buildConfig).toContain('Running target "build" succeeded');
-  }, 1000000);
+      // testing run many --configuration
+      const buildConfig = runCLI(
+        `run-many --target=build --projects="${appA},${libA}" --prod`
+      );
+      expect(buildConfig).toContain(`Running target build for projects:`);
+      expect(buildConfig).toContain(`run ${appA}:build:production`);
+      expect(buildConfig).toContain(`run ${libA}:build:production`);
+      expect(buildConfig).toContain('Running target "build" succeeded');
+    }, 1000000);
+  }
 
   it('should run only failed projects', () => {
     const myapp = uniq('myapp');
