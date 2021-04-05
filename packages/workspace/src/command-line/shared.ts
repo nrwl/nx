@@ -45,19 +45,21 @@ function getUntrackedFiles(): string[] {
 function getFilesUsingBaseAndHead(base: string, head: string): string[] {
   let mergeBase;
   try {
-    mergeBase = execSync(`git merge-base ${base} ${head}`, {
+    mergeBase = execSync(`git merge-base "${base}" "${head}"`, {
       maxBuffer: TEN_MEGABYTES,
     })
       .toString()
       .trim();
   } catch {
-    mergeBase = execSync(`git merge-base --fork-point ${base} ${head}`, {
+    mergeBase = execSync(`git merge-base --fork-point "${base}" "${head}"`, {
       maxBuffer: TEN_MEGABYTES,
     })
       .toString()
       .trim();
   }
-  return parseGitOutput(`git diff --name-only --relative ${mergeBase} ${head}`);
+  return parseGitOutput(
+    `git diff --name-only --relative "${mergeBase}" "${head}"`
+  );
 }
 
 function parseGitOutput(command: string): string[] {
