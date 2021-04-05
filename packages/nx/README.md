@@ -6,6 +6,8 @@
 
 # Nx CLI
 
+This is an alias of the [@nrwl/cli](https://www.npmjs.com/package/@nrwl/cli) package. Please see [@nrwl/cli](https://www.npmjs.com/package/@nrwl/cli) for more information.
+
 {{what-is-nx}}
 
 {{getting-started}}

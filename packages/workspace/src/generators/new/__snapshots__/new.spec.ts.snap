@@ -148,7 +148,6 @@ Object {
       "dependencies": "*",
       "devDependencies": "*",
     },
-    "tslint.json": "*",
   },
   "npmScope": "npmScope",
   "projects": Object {},

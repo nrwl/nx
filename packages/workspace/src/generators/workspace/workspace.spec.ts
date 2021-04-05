@@ -43,7 +43,6 @@ describe('@nrwl/workspace:workspace', () => {
           dependencies: '*',
           devDependencies: '*',
         },
-        'tslint.json': '*',
         '.eslintrc.json': '*',
       },
       tasksRunnerOptions: {
@@ -82,10 +81,7 @@ describe('@nrwl/workspace:workspace', () => {
       'proj/.vscode/extensions.json'
     ).recommendations;
 
-    expect(recommendations).toEqual([
-      'ms-vscode.vscode-typescript-tslint-plugin',
-      'esbenp.prettier-vscode',
-    ]);
+    expect(recommendations).toMatchSnapshot();
   });
 
   it('should recommend vscode extensions (angular)', async () => {
@@ -101,12 +97,7 @@ describe('@nrwl/workspace:workspace', () => {
       'proj/.vscode/extensions.json'
     ).recommendations;
 
-    expect(recommendations).toEqual([
-      'nrwl.angular-console',
-      'angular.ng-template',
-      'ms-vscode.vscode-typescript-tslint-plugin',
-      'esbenp.prettier-vscode',
-    ]);
+    expect(recommendations).toMatchSnapshot();
   });
 
   it('should add decorate-angular-cli when used with angular cli', async () => {

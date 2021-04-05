@@ -25,6 +25,17 @@ describe('Hasher', () => {
   }
 
   it('should create project hash', async (done) => {
+    fs.readFileSync = (file) => {
+      if (file === 'workspace.json') {
+        return JSON.stringify({
+          projects: { proj: 'proj-from-workspace.json' },
+        });
+      }
+      if (file === 'nx.json') {
+        return JSON.stringify({ projects: { proj: 'proj-from-nx.json' } });
+      }
+      return file;
+    };
     hashes['/file'] = 'file.hash';
     const hasher = new Hasher(
       {
@@ -69,16 +80,14 @@ describe('Hasher', () => {
 
     expect(hash.details.command).toEqual('proj|build||{"prop":"prop-value"}');
     expect(hash.details.sources).toEqual({
-      proj: '/file|file.hash',
+      proj: '/file|file.hash|"proj-from-workspace.json"|"proj-from-nx.json"',
     });
     expect(hash.details.implicitDeps).toEqual({
       'yarn.lock': 'yarn.lock.hash',
-      'nx.json': 'nx.json.hash',
+      'nx.json': '{}',
       'package-lock.json': 'package-lock.json.hash',
-      'package.json': 'package.json.hash',
       'pnpm-lock.yaml': 'pnpm-lock.yaml.hash',
       'tsconfig.base.json': 'tsconfig.base.json.hash',
-      'workspace.json': 'workspace.json.hash',
     });
     expect(hash.details.runtime).toEqual({
       'echo runtime123': 'runtime123',
@@ -175,8 +184,8 @@ describe('Hasher', () => {
 
     // note that the parent hash is based on parent source files only!
     expect(hash.details.sources).toEqual({
-      parent: '/filea|a.hash',
-      child: '/fileb|b.hash',
+      parent: '/filea|a.hash|""|""',
+      child: '/fileb|b.hash|""|""',
     });
 
     done();
@@ -232,8 +241,8 @@ describe('Hasher', () => {
     expect(tasksHash.value).toContain('proj'); //project
     expect(tasksHash.value).toContain('build'); //target
     expect(tasksHash.details.sources).toEqual({
-      proja: '/filea|a.hash',
-      projb: '/fileb|b.hash',
+      proja: '/filea|a.hash|""|""',
+      projb: '/fileb|b.hash|""|""',
     });
 
     const hashb = (
@@ -253,8 +262,8 @@ describe('Hasher', () => {
     expect(hashb.value).toContain('proj'); //project
     expect(hashb.value).toContain('build'); //target
     expect(hashb.details.sources).toEqual({
-      proja: '/filea|a.hash',
-      projb: '/fileb|b.hash',
+      proja: '/filea|a.hash|""|""',
+      projb: '/fileb|b.hash|""|""',
     });
 
     done();

@@ -22,12 +22,10 @@ import {
   onlyLoadChildren,
 } from '../utils/runtime-lint-utils';
 import { normalize } from 'path';
-import {
-  readNxJson,
-  readWorkspaceJson,
-} from '@nrwl/workspace/src/core/file-utils';
+import { readNxJson } from '@nrwl/workspace/src/core/file-utils';
 import { TargetProjectLocator } from '../core/target-project-locator';
 import { checkCircularPath } from '@nrwl/workspace/src/utils/graph-utils';
+import { readCurrentProjectGraph } from '@nrwl/workspace/src/core/project-graph/project-graph';
 
 export class Rule extends Lint.Rules.AbstractRule {
   constructor(
@@ -42,13 +40,9 @@ export class Rule extends Lint.Rules.AbstractRule {
     if (!projectPath) {
       this.projectPath = normalize(appRootPath);
       if (!(global as any).projectGraph) {
-        const workspaceJson = readWorkspaceJson();
         const nxJson = readNxJson();
         (global as any).npmScope = nxJson.npmScope;
-        (global as any).projectGraph = createProjectGraph(
-          workspaceJson,
-          nxJson
-        );
+        (global as any).projectGraph = readCurrentProjectGraph();
       }
       this.npmScope = (global as any).npmScope;
       this.projectGraph = (global as any).projectGraph;
@@ -63,6 +57,7 @@ export class Rule extends Lint.Rules.AbstractRule {
   }
 
   public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
+    if (!this.projectGraph) return [];
     return this.applyWithWalker(
       new EnforceModuleBoundariesWalker(
         sourceFile,

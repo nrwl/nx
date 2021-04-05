@@ -30,6 +30,7 @@ import {
 } from '@nrwl/workspace/src/core/file-utils';
 import { TargetProjectLocator } from '@nrwl/workspace/src/core/target-project-locator';
 import { checkCircularPath } from '@nrwl/workspace/src/utils/graph-utils';
+import { readCurrentProjectGraph } from '@nrwl/workspace/src/core/project-graph/project-graph';
 
 type Options = [
   {
@@ -106,10 +107,9 @@ export default createESLintRule<Options, MessageIds>({
       (global as any).projectPath || appRootPath
     );
     if (!(global as any).projectGraph) {
-      const workspaceJson = readWorkspaceJson();
       const nxJson = readNxJson();
       (global as any).npmScope = nxJson.npmScope;
-      (global as any).projectGraph = createProjectGraph(workspaceJson, nxJson);
+      (global as any).projectGraph = readCurrentProjectGraph();
     }
     const npmScope = (global as any).npmScope;
     const projectGraph = (global as any).projectGraph as ProjectGraph;
@@ -123,6 +123,8 @@ export default createESLintRule<Options, MessageIds>({
       .targetProjectLocator as TargetProjectLocator;
 
     function run(node: TSESTree.ImportDeclaration | TSESTree.ImportExpression) {
+      if (!projectGraph) return;
+
       // accept only literals because template literals have no value
       if (node.source.type !== AST_NODE_TYPES.Literal) {
         return;

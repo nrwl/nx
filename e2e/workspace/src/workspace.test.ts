@@ -787,19 +787,3 @@ describe('cache', () => {
     expect(matchingProjects).toEqual(expectedProjects);
   }
 });
-
-describe('workspace structure', () => {
-  beforeEach(() => newProject());
-
-  afterEach(() => removeProject({ onlyOnCI: true }));
-
-  it('should have a vscode/extensions.json file created', () => {
-    const extensions = readJson('.vscode/extensions.json');
-    expect(extensions).toEqual({
-      recommendations: [
-        'ms-vscode.vscode-typescript-tslint-plugin',
-        'esbenp.prettier-vscode',
-      ],
-    });
-  });
-});
