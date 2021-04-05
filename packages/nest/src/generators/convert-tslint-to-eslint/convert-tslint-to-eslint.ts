@@ -32,7 +32,7 @@ export async function conversionGenerator(
   const projectConverter = new ProjectConverter({
     host,
     projectName: options.project,
-    discardExistingLintConfig: options.discardExistingLintConfig,
+    ignoreExistingTslintConfig: options.ignoreExistingTslintConfig,
     eslintInitializer: async ({ projectName, projectConfig }) => {
       /**
        * Using .js is not an option with NestJS, so we always set it to false when
@@ -64,7 +64,7 @@ export async function conversionGenerator(
    * Create the standard (which is applicable to the current package) ESLint setup
    * for converting the project.
    */
-  await projectConverter.initESLint();
+  const eslintInitInstallTask = await projectConverter.initESLint();
 
   /**
    * Convert the root tslint.json and apply the converted rules to the root .eslintrc.json.
@@ -86,11 +86,15 @@ export async function conversionGenerator(
   projectConverter.removeProjectTSLintFile();
 
   /**
-   * Store user preference regarding removeTSLintIfNoMoreTSLintTargets for the collection
+   * Store user preferences for the collection
    */
   projectConverter.setDefaults(
     '@nrwl/nest',
     options.removeTSLintIfNoMoreTSLintTargets
+  );
+  projectConverter.setDefaults(
+    '@nrwl/nest',
+    options.ignoreExistingTslintConfig
   );
 
   /**
@@ -107,6 +111,7 @@ export async function conversionGenerator(
   await formatFiles(host);
 
   return async () => {
+    await eslintInitInstallTask();
     await rootConfigInstallTask();
     await projectConfigInstallTask();
     await uninstallTSLintTask();

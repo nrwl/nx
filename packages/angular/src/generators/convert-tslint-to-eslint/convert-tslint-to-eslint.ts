@@ -27,7 +27,7 @@ export async function conversionGenerator(
   const projectConverter = new ProjectConverter({
     host,
     projectName: options.project,
-    discardExistingLintConfig: options.discardExistingLintConfig,
+    ignoreExistingTslintConfig: options.ignoreExistingTslintConfig,
     eslintInitializer: async ({ projectName, projectConfig }) => {
       await addLintingGenerator(host, {
         linter: 'eslint',
@@ -43,7 +43,8 @@ export async function conversionGenerator(
    * Create the standard (which is applicable to the current package) ESLint setup
    * for converting the project.
    */
-  await projectConverter.initESLint();
+  const eslintInitInstallTask = await projectConverter.initESLint();
+
   /**
    * Convert the root tslint.json and apply the converted rules to the root .eslintrc.json
    */
@@ -68,11 +69,15 @@ export async function conversionGenerator(
   projectConverter.removeProjectTSLintFile();
 
   /**
-   * Store user preference regarding removeTSLintIfNoMoreTSLintTargets for the collection
+   * Store user preferences for the collection
    */
   projectConverter.setDefaults(
     '@nrwl/angular',
     options.removeTSLintIfNoMoreTSLintTargets
+  );
+  projectConverter.setDefaults(
+    '@nrwl/angular',
+    options.ignoreExistingTslintConfig
   );
 
   /**
@@ -84,7 +89,7 @@ export async function conversionGenerator(
     try {
       cypressInstallTask = await cypressConversionGenerator(host, {
         project: e2eProjectName,
-        discardExistingLintConfig: options.discardExistingLintConfig,
+        ignoreExistingTslintConfig: options.ignoreExistingTslintConfig,
         /**
          * We can always set this to false, because it will already be handled by the next
          * step of this parent generator, if applicable
@@ -112,6 +117,7 @@ export async function conversionGenerator(
   await formatFiles(host);
 
   return async () => {
+    await eslintInitInstallTask();
     await rootConfigInstallTask();
     await projectConfigInstallTask();
     await cypressInstallTask();

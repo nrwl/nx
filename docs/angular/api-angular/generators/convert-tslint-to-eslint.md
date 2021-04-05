@@ -32,7 +32,7 @@ nx g convert-tslint-to-eslint myapp
 
 ## Options
 
-### discardExistingLintConfig
+### ignoreExistingTslintConfig
 
 Default: `false`
 
@@ -44,7 +44,7 @@ If true we will not use existing TSLint config as a reference, we will just rese
 
 Type: `string`
 
-The name of the Angular project to convert.
+The name of the Angular project to convert. Please note, if the project is an Angular app with an associated Cypress e2e project, we will also attempt to convert that.
 
 ### removeTSLintIfNoMoreTSLintTargets
 

@@ -1,6 +1,7 @@
 import {
   GeneratorCallback,
   getProjects,
+  installPackagesTask,
   joinPathFragments,
   logger,
   NxJsonProjectConfiguration,
@@ -28,7 +29,7 @@ import {
 export interface ConvertTSLintToESLintSchema {
   project: string;
   // If true, we are effectively just "resetting" to ESLint, rather than converting from TSLint
-  discardExistingLintConfig: boolean;
+  ignoreExistingTslintConfig: boolean;
   removeTSLintIfNoMoreTSLintTargets: boolean;
 }
 
@@ -58,7 +59,7 @@ export class ProjectConverter {
   private readonly projectTSLintJson: Record<string, unknown>;
   private readonly host: Tree;
   private readonly projectName: string;
-  private readonly discardExistingLintConfig: boolean;
+  private readonly ignoreExistingTslintConfig: boolean;
   private readonly eslintInitializer: (projectInfo: {
     projectName: string;
     projectConfig: ProjectConfiguration & NxJsonProjectConfiguration;
@@ -72,12 +73,12 @@ export class ProjectConverter {
   constructor({
     host,
     projectName,
-    discardExistingLintConfig,
+    ignoreExistingTslintConfig,
     eslintInitializer,
   }: {
     host: Tree;
     projectName: string;
-    discardExistingLintConfig: boolean;
+    ignoreExistingTslintConfig: boolean;
     eslintInitializer: (projectInfo: {
       projectName: string;
       projectConfig: ProjectConfiguration & NxJsonProjectConfiguration;
@@ -85,7 +86,7 @@ export class ProjectConverter {
   }) {
     this.host = host;
     this.projectName = projectName;
-    this.discardExistingLintConfig = discardExistingLintConfig;
+    this.ignoreExistingTslintConfig = ignoreExistingTslintConfig;
     this.eslintInitializer = eslintInitializer;
     this.projectConfig = readProjectConfiguration(this.host, this.projectName);
     this.projectTSLintJsonPath = joinPathFragments(
@@ -127,11 +128,15 @@ export class ProjectConverter {
     }
   }
 
-  async initESLint() {
-    return this.eslintInitializer({
+  async initESLint(): Promise<GeneratorCallback> {
+    await this.eslintInitializer({
       projectName: this.projectName,
       projectConfig: this.projectConfig,
     });
+    // Ensure that all the dependencies added as part ESLint initialization are installed
+    return () => {
+      installPackagesTask(this.host);
+    };
   }
 
   /**
@@ -143,7 +148,7 @@ export class ProjectConverter {
   async convertRootTSLintConfig(
     applyPackageSpecificModifications: (json: Linter.Config) => Linter.Config
   ): Promise<Exclude<GeneratorCallback, void>> {
-    if (this.discardExistingLintConfig) {
+    if (this.ignoreExistingTslintConfig) {
       return Promise.resolve(() => {});
     }
 
@@ -239,7 +244,7 @@ export class ProjectConverter {
   async convertProjectConfig(
     applyPackageSpecificModifications: (json: Linter.Config) => Linter.Config
   ): Promise<GeneratorCallback> {
-    if (this.discardExistingLintConfig) {
+    if (this.ignoreExistingTslintConfig) {
       return Promise.resolve(() => {});
     }
 

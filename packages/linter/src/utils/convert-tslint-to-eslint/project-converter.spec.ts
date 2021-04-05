@@ -94,7 +94,7 @@ describe('ProjectConverter', () => {
         new ProjectConverter({
           host,
           projectName,
-          discardExistingLintConfig: false,
+          ignoreExistingTslintConfig: false,
           eslintInitializer: () => undefined,
         })
     ).toThrowErrorMatchingSnapshot();
@@ -111,7 +111,7 @@ describe('ProjectConverter', () => {
         new ProjectConverter({
           host,
           projectName,
-          discardExistingLintConfig: false,
+          ignoreExistingTslintConfig: false,
           eslintInitializer: () => undefined,
         })
     ).toThrowErrorMatchingSnapshot();
@@ -128,7 +128,7 @@ describe('ProjectConverter', () => {
         new ProjectConverter({
           host,
           projectName,
-          discardExistingLintConfig: false,
+          ignoreExistingTslintConfig: false,
           eslintInitializer: () => undefined,
         })
     ).toThrowErrorMatchingSnapshot();
@@ -140,7 +140,7 @@ describe('ProjectConverter', () => {
         new ProjectConverter({
           host,
           projectName,
-          discardExistingLintConfig: false,
+          ignoreExistingTslintConfig: false,
           eslintInitializer: () => undefined,
         })
     ).toThrowErrorMatchingSnapshot();
@@ -154,7 +154,7 @@ describe('ProjectConverter', () => {
         new ProjectConverter({
           host,
           projectName,
-          discardExistingLintConfig: false,
+          ignoreExistingTslintConfig: false,
           eslintInitializer: () => undefined,
         })
     ).toThrowErrorMatchingSnapshot();
@@ -169,14 +169,14 @@ describe('ProjectConverter', () => {
         new ProjectConverter({
           host,
           projectName,
-          discardExistingLintConfig: false,
+          ignoreExistingTslintConfig: false,
           eslintInitializer: () => undefined,
         })
     ).not.toThrow();
   });
 
-  describe('discardExistingLintConfig', () => {
-    describe('discardExistingLintConfig: false', () => {
+  describe('ignoreExistingTslintConfig', () => {
+    describe('ignoreExistingTslintConfig: false', () => {
       it('should use existing TSLint configs and merge their converted ESLint equivalents with recommended ESLint configs', async () => {
         const { convertTSLintConfig } = require('./utils');
         (convertTSLintConfig as jest.Mock).mockClear();
@@ -187,7 +187,7 @@ describe('ProjectConverter', () => {
         const projectConverterDiscardFalse = new ProjectConverter({
           host,
           projectName,
-          discardExistingLintConfig: false,
+          ignoreExistingTslintConfig: false,
           eslintInitializer: () => {
             writeJson(host, '.eslintrc.json', {
               rules: {
@@ -218,7 +218,7 @@ describe('ProjectConverter', () => {
       });
     });
 
-    describe('discardExistingLintConfig: true', () => {
+    describe('ignoreExistingTslintConfig: true', () => {
       it('should ignore existing TSLint configs and just reset the project to use recommended ESLint configs', async () => {
         const { convertTSLintConfig } = require('./utils');
         (convertTSLintConfig as jest.Mock).mockClear();
@@ -229,7 +229,7 @@ describe('ProjectConverter', () => {
         const projectConverterDiscardTrue = new ProjectConverter({
           host,
           projectName,
-          discardExistingLintConfig: true,
+          ignoreExistingTslintConfig: true,
           eslintInitializer: () => {
             writeJson(host, '.eslintrc.json', {
               rules: {
@@ -269,7 +269,7 @@ describe('ProjectConverter', () => {
       const projectConverter = new ProjectConverter({
         host,
         projectName,
-        discardExistingLintConfig: false,
+        ignoreExistingTslintConfig: false,
         eslintInitializer: () => undefined,
       });
 
@@ -309,7 +309,7 @@ describe('ProjectConverter', () => {
       const projectConverter = new ProjectConverter({
         host,
         projectName,
-        discardExistingLintConfig: false,
+        ignoreExistingTslintConfig: false,
         eslintInitializer: () => undefined,
       });
 
@@ -358,7 +358,7 @@ describe('ProjectConverter', () => {
       const projectConverter = new ProjectConverter({
         host,
         projectName,
-        discardExistingLintConfig: false,
+        ignoreExistingTslintConfig: false,
         eslintInitializer: () => undefined,
       });
 

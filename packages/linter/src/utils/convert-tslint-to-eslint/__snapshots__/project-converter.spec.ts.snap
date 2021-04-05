@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ProjectConverter discardExistingLintConfig discardExistingLintConfig: false should use existing TSLint configs and merge their converted ESLint equivalents with recommended ESLint configs 1`] = `
+exports[`ProjectConverter ignoreExistingTslintConfig ignoreExistingTslintConfig: false should use existing TSLint configs and merge their converted ESLint equivalents with recommended ESLint configs 1`] = `
 Object {
   "overrides": Array [
     Object {
@@ -18,7 +18,7 @@ Object {
 }
 `;
 
-exports[`ProjectConverter discardExistingLintConfig discardExistingLintConfig: false should use existing TSLint configs and merge their converted ESLint equivalents with recommended ESLint configs 2`] = `
+exports[`ProjectConverter ignoreExistingTslintConfig ignoreExistingTslintConfig: false should use existing TSLint configs and merge their converted ESLint equivalents with recommended ESLint configs 2`] = `
 Object {
   "rules": Object {
     "some-converted-rule": "error",
@@ -27,7 +27,7 @@ Object {
 }
 `;
 
-exports[`ProjectConverter discardExistingLintConfig discardExistingLintConfig: true should ignore existing TSLint configs and just reset the project to use recommended ESLint configs 1`] = `
+exports[`ProjectConverter ignoreExistingTslintConfig ignoreExistingTslintConfig: true should ignore existing TSLint configs and just reset the project to use recommended ESLint configs 1`] = `
 Object {
   "rules": Object {
     "some-recommended-root-eslint-rule": "error",
@@ -35,7 +35,7 @@ Object {
 }
 `;
 
-exports[`ProjectConverter discardExistingLintConfig discardExistingLintConfig: true should ignore existing TSLint configs and just reset the project to use recommended ESLint configs 2`] = `
+exports[`ProjectConverter ignoreExistingTslintConfig ignoreExistingTslintConfig: true should ignore existing TSLint configs and just reset the project to use recommended ESLint configs 2`] = `
 Object {
   "rules": Object {
     "some-recommended-project-eslint-rule": "error",

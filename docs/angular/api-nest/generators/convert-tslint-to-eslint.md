@@ -32,7 +32,7 @@ nx g convert-tslint-to-eslint myapp
 
 ## Options
 
-### discardExistingLintConfig
+### ignoreExistingTslintConfig
 
 Default: `false`
 

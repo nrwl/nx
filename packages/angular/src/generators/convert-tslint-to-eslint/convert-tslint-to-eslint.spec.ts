@@ -185,7 +185,7 @@ describe('convert-tslint-to-eslint', () => {
   it('should work for Angular applications', async () => {
     await conversionGenerator(host, {
       project: appProjectName,
-      discardExistingLintConfig: false,
+      ignoreExistingTslintConfig: false,
       removeTSLintIfNoMoreTSLintTargets: false,
     });
 
@@ -226,7 +226,7 @@ describe('convert-tslint-to-eslint', () => {
   it('should work for Angular libraries', async () => {
     await conversionGenerator(host, {
       project: libProjectName,
-      discardExistingLintConfig: false,
+      ignoreExistingTslintConfig: false,
       removeTSLintIfNoMoreTSLintTargets: false,
     });
 
