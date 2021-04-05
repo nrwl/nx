@@ -80,6 +80,11 @@ export function createProjectGraph(
   }
 }
 
+export function readCurrentProjectGraph(): ProjectGraph | null {
+  const cache = readCache();
+  return cache === false ? null : cache;
+}
+
 function addWorkspaceFiles(
   projectGraph: ProjectGraph,
   allWorkspaceFiles: FileData[]

@@ -1,5 +1,4 @@
 import { dirname, extname } from 'path';
-import * as ts from 'typescript';
 import defaultResolver from 'jest-resolve/build/defaultResolver';
 
 interface ResolveOptions {
@@ -11,6 +10,9 @@ interface ResolveOptions {
   extensions: string[];
   defaultResolver: typeof defaultResolver;
 }
+
+let compilerSetup;
+let ts;
 
 function getCompilerSetup(rootDir: string) {
   const tsConfigPath =
@@ -35,8 +37,6 @@ function getCompilerSetup(rootDir: string) {
   return { compilerOptions, host };
 }
 
-let compilerSetup;
-
 module.exports = function (path: string, options: ResolveOptions) {
   const ext = extname(path);
   if (
@@ -52,7 +52,14 @@ module.exports = function (path: string, options: ResolveOptions) {
   try {
     return defaultResolver(path, options);
   } catch (e) {
+    if (
+      path === 'jest-sequencer-@jest/test-sequencer' ||
+      path === '@jest/test-sequencer'
+    ) {
+      return;
+    }
     // Fallback to using typescript
+    ts = ts || require('typescript');
     compilerSetup = compilerSetup || getCompilerSetup(options.rootDir);
     const { compilerOptions, host } = compilerSetup;
     return ts.resolveModuleName(path, options.basedir, compilerOptions, host)

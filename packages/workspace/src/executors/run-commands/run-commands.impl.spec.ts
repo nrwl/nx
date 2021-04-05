@@ -3,6 +3,9 @@ import { relative } from 'path';
 import { dirSync, fileSync } from 'tmp';
 import runCommands, { LARGE_BUFFER } from './run-commands.impl';
 
+function normalize(p: string) {
+  return p.startsWith('/private') ? p.substring(8) : p;
+}
 function readFile(f: string) {
   return readFileSync(f).toString().replace(/\s/g, '');
 }
@@ -59,7 +62,7 @@ describe('Command Runner Builder', () => {
     });
   });
 
-  it('ssss should forward args by default when using commands (plural)', async () => {
+  it('should forward args by default when using commands (plural)', async () => {
     const exec = spyOn(require('child_process'), 'exec').and.callThrough();
 
     await runCommands(
@@ -285,7 +288,7 @@ describe('Command Runner Builder', () => {
       );
 
       expect(result).toEqual(jasmine.objectContaining({ success: true }));
-      expect(readFile(f)).toBe(root);
+      expect(normalize(readFile(f))).toBe(root);
     });
 
     it('should run the task in the specified cwd relative to the workspace root when cwd is not an absolute path', async () => {
@@ -308,7 +311,7 @@ describe('Command Runner Builder', () => {
       );
 
       expect(result).toEqual(jasmine.objectContaining({ success: true }));
-      expect(readFile(f)).toBe(childFolder);
+      expect(normalize(readFile(f))).toBe(childFolder);
     });
 
     it('should run the task in the specified absolute cwd', async () => {
@@ -330,7 +333,7 @@ describe('Command Runner Builder', () => {
       );
 
       expect(result).toEqual(jasmine.objectContaining({ success: true }));
-      expect(readFile(f)).toBe(childFolder);
+      expect(normalize(readFile(f))).toBe(childFolder);
     });
   });
 
