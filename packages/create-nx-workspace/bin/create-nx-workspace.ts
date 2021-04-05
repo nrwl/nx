@@ -89,6 +89,7 @@ const prettierVersion = 'PRETTIER_VERSION';
 
 const parsedArgs: any = yargsParser(process.argv.slice(2), {
   string: [
+    'name',
     'cli',
     'preset',
     'appName',
@@ -179,7 +180,9 @@ function showHelp() {
 }
 
 function determineWorkspaceName(parsedArgs: any): Promise<string> {
-  const workspaceName: string = parsedArgs._[0];
+  const workspaceName: string = parsedArgs._[0]
+    ? parsedArgs._[0]
+    : parsedArgs.name;
 
   if (workspaceName) {
     return Promise.resolve(workspaceName);
