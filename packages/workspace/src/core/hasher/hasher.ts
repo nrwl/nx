@@ -93,12 +93,12 @@ export class Hasher {
       ]),
       this.implicitDepsHash(),
       this.runtimeInputsHash(),
-      this.nodeModulesHash(),
+      // this.nodeModulesHash(),
     ])) as [
       ProjectHashResult,
       ImplicitHashResult,
-      RuntimeHashResult,
-      NodeModulesResult
+      RuntimeHashResult
+      // NodeModulesResult
     ];
 
     const value = this.hashing.hashArray([
@@ -174,13 +174,24 @@ export class Hasher {
 
     performance.mark('hasher:implicit deps hash:start');
 
-    const patterns = Object.keys(this.nxJson.implicitDependencies || {});
-    const implicitDeps = (this.projectGraph.allWorkspaceFiles || [])
-      .filter((f) => !!patterns.find((pattern) => minimatch(f.file, pattern)))
-      .map((f) => f.file);
+    const implicitDeps = Object.keys(this.nxJson.implicitDependencies || {});
+    const filesWithoutPatterns = implicitDeps.filter(
+      (p) => p.indexOf('*') === -1
+    );
+    const patterns = implicitDeps.filter((p) => p.indexOf('*') !== -1);
+
+    const implicitDepsFromPatterns =
+      patterns.length > 0
+        ? (this.projectGraph.allWorkspaceFiles || [])
+            .filter(
+              (f) => !!patterns.find((pattern) => minimatch(f.file, pattern))
+            )
+            .map((f) => f.file)
+        : [];
 
     const fileNames = [
-      ...implicitDeps,
+      ...filesWithoutPatterns,
+      ...implicitDepsFromPatterns,
       ...rootWorkspaceFileNames(),
       'package-lock.json',
       'yarn.lock',
