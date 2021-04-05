@@ -28,7 +28,7 @@
   "dependencies": {
     "@nrwl/tao": "*",
     "ejs": "^3.1.5",
-    "ignore": "^5.0.4",
+    "ignore": "^5.1.8",
     "semver": "7.3.4",
     "strip-json-comments": "2.0.1",
     "tslib": "^2.0.0"
