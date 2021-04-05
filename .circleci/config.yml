@@ -34,6 +34,13 @@ commands:
         type: string
     steps:
       - checkout
+      - when:
+          condition:
+            equal: [<< parameters.os >>, windows]
+          steps:
+            - run: nvm install 12.20
+            - run: nvm use 12.20
+            - run: npm install -g yarn@1.19.0
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
