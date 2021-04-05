@@ -5,11 +5,7 @@ import {
   addReduxStoreToMain,
   updateReduxStore,
 } from '../../utils/ast-utils';
-import {
-  reactReduxVersion,
-  reduxjsToolkitVersion,
-  typesReactReduxVersion,
-} from '../../utils/versions';
+import { reactReduxVersion, reduxjsToolkitVersion } from '../../utils/versions';
 import { NormalizedSchema, Schema } from './schema';
 import {
   addDependenciesToPackageJson,
@@ -61,9 +57,7 @@ function addReduxPackageDependencies(host: Tree) {
       '@reduxjs/toolkit': reduxjsToolkitVersion,
       'react-redux': reactReduxVersion,
     },
-    {
-      '@types/react-redux': typesReactReduxVersion,
-    }
+    {}
   );
 }
 

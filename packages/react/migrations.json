@@ -86,6 +86,12 @@
       "version": "12.0.0-beta.0",
       "description": "Update workspace to use `@emotion/babel-plugin` instead of `@emotion/babel-preset-css-prop` to support new jsx transform",
       "factory": "./src/migrations/update-12-0-0/update-emotion-setup"
+    },
+    "remove-react-redux-types-package-12.0.0": {
+      "cli": "nx",
+      "version": "12.0.0-beta.0",
+      "description": "Remove @types/react-redux from package.json since react-redux installs the package automatically now",
+      "factory": "./src/migrations/update-12-0-0/remove-react-redux-types-package"
     }
   },
   "packageJsonUpdates": {
@@ -486,10 +492,6 @@
         },
         "react-redux": {
           "version": "7.2.3",
-          "alwaysAddToPackageJson": false
-        },
-        "@types/react-redux": {
-          "version": "7.1.16",
           "alwaysAddToPackageJson": false
         },
         "eslint-plugin-react": {
