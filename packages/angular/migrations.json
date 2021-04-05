@@ -394,6 +394,23 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "11.6.2": {
+      "version": "11.6.2-beta.0",
+      "packages": {
+        "@angular-eslint/eslint-plugin": {
+          "version": "~2.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "~2.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "~2.0.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
