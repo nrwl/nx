@@ -49,26 +49,24 @@ export async function connectToNxCloudCommand() {
 }
 
 async function connectToNxCloudPrompt() {
-  return await (await import('inquirer'))
+  return await (await import('enquirer'))
     .prompt([
       {
         name: 'NxCloud',
         message: `Connect to Nx Cloud? (It's free and doesn't require registration.)`,
-        type: 'list',
+        type: 'select',
         choices: [
           {
-            value: 'yes',
-            name:
-              'Yes [Faster builds, run details, Github integration. Learn more at https://nx.app]',
+            name: 'Yes',
+            hint:
+              'Faster builds, run details, Github integration. Learn more at https://nx.app',
           },
-
           {
-            value: 'no',
             name: 'No',
           },
         ],
-        default: 'no',
+        initial: 'No' as any,
       },
     ])
-    .then((a: { NxCloud: 'yes' | 'no' }) => a.NxCloud === 'yes');
+    .then((a: { NxCloud: 'Yes' | 'No' }) => a.NxCloud === 'Yes');
 }

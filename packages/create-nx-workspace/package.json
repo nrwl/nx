@@ -29,9 +29,10 @@
   "dependencies": {
     "tmp": "0.0.33",
     "yargs-parser": "20.0.0",
-    "inquirer": "^6.3.1",
+    "enquirer": "~2.3.6",
     "flat": "^5.0.2",
     "chalk": "4.1.0",
-    "ora": "5.3.0"
+    "ora": "5.3.0",
+    "tslib": "^2.0.0"
   }
 }
