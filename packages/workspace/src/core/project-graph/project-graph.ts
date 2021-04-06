@@ -1,7 +1,19 @@
-import { assertWorkspaceValidity } from '../assert-workspace-validity';
-import { createProjectFileMap, ProjectFileMap } from '../file-graph';
-import {
+import type {
   FileData,
+  NxJsonProjectConfiguration,
+  ProjectConfiguration,
+  ProjectFileMap,
+  WorkspaceJsonConfiguration,
+  ProjectGraphProcessorContext,
+  NxPlugin,
+} from '@nrwl/devkit';
+
+import { ProjectGraphBuilder } from '@nrwl/devkit';
+
+import { appRootPath } from '../../utilities/app-root';
+import { assertWorkspaceValidity } from '../assert-workspace-validity';
+import { createProjectFileMap } from '../file-graph';
+import {
   filesChanged,
   readNxJson,
   readWorkspaceFiles,
@@ -20,7 +32,6 @@ import {
   buildNpmPackageNodes,
   buildWorkspaceProjectNodes,
 } from './build-nodes';
-import { ProjectGraphBuilder } from './project-graph-builder';
 import { ProjectGraph } from './project-graph-models';
 import {
   differentFromCache,
@@ -90,7 +101,7 @@ function addWorkspaceFiles(
 function buildProjectGraph(
   ctx: {
     nxJson: NxJson<string[]>;
-    workspaceJson: any;
+    workspaceJson: WorkspaceJsonConfiguration;
     fileMap: ProjectFileMap;
   },
   projectGraph: ProjectGraph
@@ -110,12 +121,47 @@ function buildProjectGraph(
   buildDependenciesFns.forEach((f) =>
     f(ctx, builder.nodes, builder.addDependency.bind(builder))
   );
-  const r = builder.build();
+  const r = builder.getProjectGraph();
+
+  const plugins = (ctx.nxJson.plugins || []).map((path) => {
+    const pluginPath = require.resolve(path, {
+      paths: [appRootPath],
+    });
+    return require(pluginPath) as NxPlugin;
+  });
+
+  const projects = Object.keys(ctx.workspaceJson.projects).reduce(
+    (map, projectName) => {
+      map[projectName] = {
+        ...ctx.workspaceJson.projects[projectName],
+        ...ctx.nxJson.projects[projectName],
+      };
+      return map;
+    },
+    {} as Record<string, ProjectConfiguration & NxJsonProjectConfiguration>
+  );
+  const context: ProjectGraphProcessorContext = {
+    workspace: {
+      ...ctx.workspaceJson,
+      ...ctx.nxJson,
+      projects,
+    },
+    fileMap: ctx.fileMap,
+  };
+
+  const result = plugins.reduce((graph, plugin) => {
+    if (!plugin.processProjectGraph) {
+      return graph;
+    }
+
+    return plugin.processProjectGraph(graph, context);
+  }, r);
+
   performance.mark('build project graph:end');
   performance.measure(
     'build project graph',
     'build project graph:start',
     'build project graph:end'
   );
-  return r;
+  return result;
 }

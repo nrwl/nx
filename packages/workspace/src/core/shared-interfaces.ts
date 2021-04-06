@@ -1,43 +1,22 @@
 import { WorkspaceResults } from '@nrwl/workspace/src/command-line/workspace-results';
-
-export type ImplicitDependencyEntry<T = '*' | string[]> = {
-  [key: string]: T | ImplicitJsonSubsetDependency<T>;
-};
-
-export interface ImplicitJsonSubsetDependency<T = '*' | string[]> {
-  [key: string]: T | ImplicitJsonSubsetDependency<T>;
-}
-
-export interface NxAffectedConfig {
-  defaultBase?: string;
-}
-
-export interface NxJson<T = '*' | string[]> {
-  implicitDependencies?: ImplicitDependencyEntry<T>;
-  npmScope: string;
-  affected?: NxAffectedConfig;
-  projects: {
-    [projectName: string]: NxJsonProjectConfig;
-  };
-  workspaceLayout?: {
-    libsDir?: string;
-    appsDir?: string;
-  };
-  tasksRunnerOptions?: {
-    [tasksRunnerName: string]: {
-      runner: string;
-      options?: object;
-    };
-  };
-}
-
-export interface NxJsonProjectConfig {
-  implicitDependencies?: string[];
-  tags?: string[];
-}
+import type {
+  ImplicitDependencyEntry,
+  ImplicitJsonSubsetDependency,
+  NxAffectedConfig,
+  NxJsonConfiguration,
+  NxJsonProjectConfiguration,
+} from '@nrwl/devkit';
 
 export interface Environment {
-  nxJson: NxJson;
+  nxJson: NxJsonConfiguration;
   workspaceJson: any;
   workspaceResults: WorkspaceResults;
 }
+
+export {
+  NxJsonProjectConfiguration as NxJsonProjectConfig,
+  NxJsonConfiguration as NxJson,
+  NxAffectedConfig,
+  ImplicitDependencyEntry,
+  ImplicitJsonSubsetDependency,
+};

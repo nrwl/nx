@@ -33,6 +33,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
       options?: any;
     };
   };
+  plugins?: string[];
 }
 
 export interface NxJsonProjectConfiguration {
