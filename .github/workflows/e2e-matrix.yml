@@ -44,7 +44,7 @@ jobs:
       if: ${{ matrix.package_manager == 'pnpm' }}
       uses: pnpm/action-setup@v1.2.1
       with:
-        version: latest
+        version: 5.18.9
 
     - name: Run e2e tests
       run: yarn e2e ${{ matrix.packages }} affected
