@@ -1,4 +1,5 @@
 import type { TargetDefinition } from '@angular-devkit/core/src/workspace';
+import { stringUtils } from '@nrwl/workspace';
 import { angularEslintVersion } from './versions';
 
 export function createAngularProjectESLintLintTarget(
@@ -41,11 +42,19 @@ export const createAngularEslintJson = (
       rules: {
         '@angular-eslint/directive-selector': [
           'error',
-          { type: 'attribute', prefix, style: 'camelCase' },
+          {
+            type: 'attribute',
+            prefix: stringUtils.camelize(prefix),
+            style: 'camelCase',
+          },
         ],
         '@angular-eslint/component-selector': [
           'error',
-          { type: 'element', prefix, style: 'kebab-case' },
+          {
+            type: 'element',
+            prefix: stringUtils.dasherize(prefix),
+            style: 'kebab-case',
+          },
         ],
       },
     },
