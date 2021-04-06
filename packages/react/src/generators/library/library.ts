@@ -18,7 +18,6 @@ import {
   reactVersion,
   typesReactRouterDomVersion,
 } from '../../utils/versions';
-import { join } from 'path';
 import { Schema } from './schema';
 import {
   addDependenciesToPackageJson,
@@ -83,7 +82,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
   createFiles(host, options);
 
   if (!options.skipTsConfig) {
-    updateTsConfig(host, options);
+    updateBaseTsConfig(host, options);
   }
 
   if (options.unitTestRunner === 'jest') {
@@ -217,23 +216,27 @@ function addProject(host: Tree, options: NormalizedSchema) {
   });
 }
 
-function updateLibTsConfig(tree: Tree, options: NormalizedSchema) {
-  updateJson(tree, join(options.projectRoot, 'tsconfig.lib.json'), (json) => {
-    if (options.strict) {
-      json.compilerOptions = {
-        ...json.compilerOptions,
-        forceConsistentCasingInFileNames: true,
-        strict: true,
-        noImplicitReturns: true,
-        noFallthroughCasesInSwitch: true,
-      };
-    }
+function updateTsConfig(tree: Tree, options: NormalizedSchema) {
+  updateJson(
+    tree,
+    joinPathFragments(options.projectRoot, 'tsconfig.json'),
+    (json) => {
+      if (options.strict) {
+        json.compilerOptions = {
+          ...json.compilerOptions,
+          forceConsistentCasingInFileNames: true,
+          strict: true,
+          noImplicitReturns: true,
+          noFallthroughCasesInSwitch: true,
+        };
+      }
 
-    return json;
-  });
+      return json;
+    }
+  );
 }
 
-function updateTsConfig(host: Tree, options: NormalizedSchema) {
+function updateBaseTsConfig(host: Tree, options: NormalizedSchema) {
   updateJson(host, 'tsconfig.base.json', (json) => {
     const c = json.compilerOptions;
     c.paths = c.paths || {};
@@ -263,7 +266,6 @@ function createFiles(host: Tree, options: NormalizedSchema) {
     {
       ...options,
       ...names(options.name),
-      strict: undefined,
       tmpl: '',
       offsetFromRoot: offsetFromRoot(options.projectRoot),
     }
@@ -277,7 +279,7 @@ function createFiles(host: Tree, options: NormalizedSchema) {
     toJS(host);
   }
 
-  updateLibTsConfig(host, options);
+  updateTsConfig(host, options);
 }
 
 function updateAppRoutes(host: Tree, options: NormalizedSchema) {
