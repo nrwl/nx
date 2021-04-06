@@ -21,7 +21,7 @@ const runOne = [
   'scan',
 ];
 
-const runMany = [...runOne, 'projects', 'quiet', 'all', 'verbose'];
+const runMany = [...runOne, 'projects', 'tags', 'quiet', 'all', 'verbose'];
 
 const runAffected = [
   ...runOne,
@@ -65,6 +65,7 @@ export interface NxArgs {
   withDeps?: boolean;
   'with-deps'?: boolean;
   projects?: string[];
+  tags?: string[];
   select?: string;
   skipNxCache?: boolean;
   'skip-nx-cache'?: boolean;
@@ -99,6 +100,13 @@ export function splitArgsIntoNxArgsAndOverrides(
       nxArgs.projects = [];
     } else {
       nxArgs.projects = (args.projects as string)
+        .split(',')
+        .map((p: string) => p.trim());
+    }
+    if (!nxArgs.tags) {
+      nxArgs.tags = [];
+    } else {
+      nxArgs.tags = (args.tags as string)
         .split(',')
         .map((p: string) => p.trim());
     }

@@ -348,6 +348,10 @@ const examples = {
       command: 'run-many --target=test --projects=proj1,proj2 --with-deps',
       description: 'Build proj1 and proj2 and all their dependencies.',
     },
+    {
+      command: 'run-many --target=test --tags=foo,bar',
+      description: 'Test all projects that are tagged with foo or bar.',
+    },
   ],
   migrate: [
     {

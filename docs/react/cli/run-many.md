@@ -36,6 +36,12 @@ Build proj1 and proj2 and all their dependencies.:
 nx run-many --target=test --projects=proj1,proj2 --with-deps
 ```
 
+Test all projects that are tagged with foo or bar.:
+
+```bash
+nx run-many --target=test --tags=foo,bar
+```
+
 ## Options
 
 ### all
@@ -77,6 +83,10 @@ Override the tasks runner in `nx.json`
 Default: `false`
 
 Rerun the tasks even when the results are available in the cache
+
+### tags
+
+Run projects having any of the given tags (comma delimited)
 
 ### target
 

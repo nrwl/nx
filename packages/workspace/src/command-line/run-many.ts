@@ -8,7 +8,7 @@ import {
   ProjectGraphNode,
   withDeps,
 } from '../core/project-graph';
-import { readEnvironment } from '../core/file-utils';
+import { readEnvironment, readNxJson } from '../core/file-utils';
 import { DefaultReporter } from '../tasks-runner/default-reporter';
 import { projectHasTarget } from '../utilities/project-graph-utils';
 import { output } from '../utilities/output';
@@ -43,14 +43,28 @@ export async function runMany(parsedArgs: yargs.Arguments) {
   );
 }
 
+function selectProjectsFromTags(tags: string[]): string[] {
+  let nxJson = readNxJson();
+  return Object.entries(nxJson.projects)
+    .filter(([name, project]) => {
+      let projectTags = project.tags || [];
+      return tags.some((tag) => projectTags.includes(tag));
+    })
+    .map(([name]) => name);
+}
+
 function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {
   const allProjects = Object.values(projectGraph.nodes);
   if (nxArgs.all) {
     return runnableForTarget(allProjects, nxArgs.target);
   } else {
+    let projects = nxArgs.projects;
+    if (projects.length === 0) {
+      projects = selectProjectsFromTags(nxArgs.tags);
+    }
     checkForInvalidProjects(nxArgs, allProjects);
     let selectedProjects = allProjects.filter(
-      (p) => nxArgs.projects.indexOf(p.name) > -1
+      (p) => projects.indexOf(p.name) > -1
     );
     if (nxArgs.withDeps) {
       selectedProjects = Object.values(

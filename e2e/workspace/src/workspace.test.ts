@@ -80,12 +80,19 @@ describe('run-many', () => {
       const libB = uniq('libb-rand');
       const libC = uniq('libc-rand');
       const libD = uniq('libd-rand');
+      const tagA = uniq('taga-rand');
 
       runCLI(`generate @nrwl/angular:app ${appA}`);
       runCLI(`generate @nrwl/angular:lib ${libA} --buildable --defaults`);
       runCLI(`generate @nrwl/angular:lib ${libB} --buildable --defaults`);
       runCLI(`generate @nrwl/angular:lib ${libC} --buildable --defaults`);
       runCLI(`generate @nrwl/angular:lib ${libD} --defaults`);
+
+      // Add tagA to libA and libB
+      const nxJson: NxJson = readJson('nx.json');
+      nxJson.projects[libA].tags = [tagA];
+      nxJson.projects[libB].tags = [tagA];
+      updateFile('nx.json', JSON.stringify(nxJson));
 
       // libA depends on libC
       updateFile(
@@ -110,6 +117,15 @@ describe('run-many', () => {
       expect(buildParallel).toContain(`- ${libC}`);
       expect(buildParallel).not.toContain(`- ${libD}`);
       expect(buildParallel).toContain('Running target "build" succeeded');
+
+      // testing run many tags starting
+      const buildTags = runCLI(`run-many --target=build --tags="${tagA}"`);
+      expect(buildTags).toContain(`Running target build for projects:`);
+      expect(buildTags).toContain(`- ${libA}`);
+      expect(buildTags).toContain(`- ${libB}`);
+      expect(buildTags).not.toContain(`- ${libC}`);
+      expect(buildTags).not.toContain(`- ${libD}`);
+      expect(buildTags).toContain('Running target "build" succeeded');
 
       // testing run many --all starting
       const buildAllParallel = runCLI(`run-many --target=build --all`);

@@ -320,15 +320,21 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       describe: 'Projects to run (comma delimited)',
       type: 'string',
     })
+    .option('tags', {
+      describe: 'Run projects having any of the given tags (comma delimited)',
+      type: 'string',
+    })
     .option('all', {
       describe: 'Run the target on all projects in the workspace',
       type: 'boolean',
       default: undefined,
     })
-    .check(({ all, projects }) => {
-      if ((all && projects) || (!all && !projects))
-        throw new Error('You must provide either --all or --projects');
-      return true;
+    .check(({ all, projects, tags }) => {
+      const suppliedArgs = +!!all + +!!projects + +!!tags;
+      if (suppliedArgs === 1) {
+        return true;
+      }
+      throw new Error('You must provide either --all or --projects or --tags');
     })
     .options('runner', {
       describe: 'Override the tasks runner in `nx.json`',
