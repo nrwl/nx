@@ -13,7 +13,7 @@ import enforceModuleBoundaries, {
 import { TargetProjectLocator } from '@nrwl/workspace/src/core/target-project-locator';
 import { readFileSync } from 'fs';
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('@nrwl/workspace/src/utils/app-root', () => ({
+jest.mock('../../../workspace/src/utilities/app-root', () => ({
   appRootPath: '/root',
 }));
 
@@ -1166,8 +1166,7 @@ function runRule(
   (global as any).npmScope = 'mycompany';
   (global as any).projectGraph = projectGraph;
   (global as any).targetProjectLocator = new TargetProjectLocator(
-    projectGraph.nodes,
-    (path) => readFileSync(join('/root', path)).toString()
+    projectGraph.nodes
   );
 
   const config = {

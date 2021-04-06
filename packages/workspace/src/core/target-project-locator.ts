@@ -1,5 +1,5 @@
 import { resolveModuleByImport } from '../utilities/typescript';
-import { defaultFileRead, FileRead, normalizedProjectRoot } from './file-utils';
+import { defaultFileRead, normalizedProjectRoot } from './file-utils';
 import {
   ProjectGraphNode,
   ProjectGraphNodeRecords,
@@ -31,15 +31,12 @@ export class TargetProjectLocator {
   private npmProjects = this.sortedProjects.filter(isNpmProject);
   private tsConfigPath = this.getRootTsConfigPath();
   private absTsConfigPath = join(appRootPath, this.tsConfigPath);
-  private paths = parseJsonWithComments(this.fileRead(this.tsConfigPath))
+  private paths = parseJsonWithComments(defaultFileRead(this.tsConfigPath))
     ?.compilerOptions?.paths;
   private typescriptResolutionCache = new Map<string, string | null>();
   private npmResolutionCache = new Map<string, string | null>();
 
-  constructor(
-    private nodes: ProjectGraphNodeRecords,
-    private fileRead: FileRead = defaultFileRead
-  ) {}
+  constructor(private nodes: ProjectGraphNodeRecords) {}
 
   /**
    * Find a project based on its import
@@ -132,7 +129,7 @@ export class TargetProjectLocator {
 
   private getRootTsConfigPath() {
     try {
-      this.fileRead('tsconfig.base.json');
+      defaultFileRead('tsconfig.base.json');
       return 'tsconfig.base.json';
     } catch (e) {
       return 'tsconfig.json';

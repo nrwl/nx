@@ -1,9 +1,7 @@
 import { assertWorkspaceValidity } from '../assert-workspace-validity';
 import { createProjectFileMap, ProjectFileMap } from '../file-graph';
 import {
-  defaultFileRead,
   FileData,
-  FileRead,
   filesChanged,
   readNxJson,
   readWorkspaceFiles,
@@ -37,7 +35,6 @@ export function createProjectGraph(
   workspaceJson = readWorkspaceJson(),
   nxJson = readNxJson(),
   workspaceFiles = readWorkspaceFiles(),
-  fileRead: FileRead = defaultFileRead,
   cache: false | ProjectGraphCache = readCache(),
   shouldCache: boolean = true
 ): ProjectGraph {
@@ -63,7 +60,6 @@ export function createProjectGraph(
     };
     const projectGraph = buildProjectGraph(
       ctx,
-      fileRead,
       diff.partiallyConstructedProjectGraph
     );
     if (shouldCache) {
@@ -76,7 +72,7 @@ export function createProjectGraph(
       nxJson: normalizedNxJson,
       fileMap: projectFileMap,
     };
-    const projectGraph = buildProjectGraph(ctx, fileRead, null);
+    const projectGraph = buildProjectGraph(ctx, null);
     if (shouldCache) {
       writeCache(rootFiles, projectGraph);
     }
@@ -97,13 +93,12 @@ function buildProjectGraph(
     workspaceJson: any;
     fileMap: ProjectFileMap;
   },
-  fileRead: FileRead,
   projectGraph: ProjectGraph
 ) {
   performance.mark('build project graph:start');
   const builder = new ProjectGraphBuilder(projectGraph);
   const buildNodesFns: BuildNodes[] = [
-    buildWorkspaceProjectNodes(fileRead),
+    buildWorkspaceProjectNodes,
     buildNpmPackageNodes,
   ];
   const buildDependenciesFns: BuildDependencies[] = [
@@ -111,9 +106,9 @@ function buildProjectGraph(
     buildImplicitProjectDependencies,
     buildExplicitPackageJsonDependencies,
   ];
-  buildNodesFns.forEach((f) => f(ctx, builder.addNode.bind(builder), fileRead));
+  buildNodesFns.forEach((f) => f(ctx, builder.addNode.bind(builder)));
   buildDependenciesFns.forEach((f) =>
-    f(ctx, builder.nodes, builder.addDependency.bind(builder), fileRead)
+    f(ctx, builder.nodes, builder.addDependency.bind(builder))
   );
   const r = builder.build();
   performance.mark('build project graph:end');

@@ -1,6 +1,16 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { readJson, Tree } from '@nrwl/devkit';
 import { createBabelrcForWorkspaceLibs } from './create-babelrc-for-workspace-libs';
+import {
+  DependencyType,
+  ProjectGraph,
+} from '@nrwl/workspace/src/core/project-graph';
+
+let projectGraph: ProjectGraph;
+jest.mock('@nrwl/workspace/src/core/project-graph', () => ({
+  ...jest.requireActual('@nrwl/workspace/src/core/project-graph'),
+  createProjectGraph: jest.fn().mockImplementation(() => projectGraph),
+}));
 
 describe('Create missing .babelrc files', () => {
   let tree: Tree;
@@ -52,6 +62,52 @@ describe('Create missing .babelrc files', () => {
       })
     );
     tree.write('apps/webapp/index.ts', `import '@proj/weblib';`);
+
+    projectGraph = {
+      nodes: {
+        webapp: {
+          name: 'webapp',
+          type: 'app',
+          data: {
+            files: [],
+            root: 'apps/webapp',
+          },
+        },
+        nodeapp: {
+          name: 'nodeapp',
+          type: 'app',
+          data: {
+            files: [],
+            root: 'apps/nodeapp',
+          },
+        },
+        weblib: {
+          name: 'weblib',
+          type: 'lib',
+          data: {
+            files: [],
+            root: 'libs/weblib',
+          },
+        },
+        nodelib: {
+          name: 'nodelib',
+          type: 'lib',
+          data: {
+            files: [],
+            root: 'libs/nodelib',
+          },
+        },
+      },
+      dependencies: {
+        webapp: [
+          {
+            type: DependencyType.static,
+            source: 'webapp',
+            target: 'weblib',
+          },
+        ],
+      },
+    };
 
     await createBabelrcForWorkspaceLibs(tree);
 

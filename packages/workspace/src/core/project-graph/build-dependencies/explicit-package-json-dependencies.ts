@@ -4,20 +4,19 @@ import {
   ProjectGraphContext,
   ProjectGraphNodeRecords,
 } from '../project-graph-models';
-import { FileRead } from '../../file-utils';
+import { defaultFileRead } from '../../file-utils';
 import { parseJsonWithComments } from '@nrwl/workspace/src/utilities/fileutils';
 import { joinPathFragments } from '@nrwl/devkit';
 
 export function buildExplicitPackageJsonDependencies(
   ctx: ProjectGraphContext,
   nodes: ProjectGraphNodeRecords,
-  addDependency: AddProjectDependency,
-  fileRead: FileRead
+  addDependency: AddProjectDependency
 ) {
   Object.keys(ctx.fileMap).forEach((source) => {
     Object.values(ctx.fileMap[source]).forEach((f) => {
       if (isPackageJsonAtProjectRoot(nodes, f.file)) {
-        processPackageJson(source, f.file, nodes, addDependency, fileRead);
+        processPackageJson(source, f.file, nodes, addDependency);
       }
     });
   });
@@ -38,11 +37,10 @@ function processPackageJson(
   sourceProject: string,
   fileName: string,
   nodes: ProjectGraphNodeRecords,
-  addDependency: AddProjectDependency,
-  fileRead: FileRead
+  addDependency: AddProjectDependency
 ) {
   try {
-    const deps = readDeps(parseJsonWithComments(fileRead(fileName)));
+    const deps = readDeps(parseJsonWithComments(defaultFileRead(fileName)));
     deps.forEach((d) => {
       // package.json refers to another project in the monorepo
       if (nodes[d]) {

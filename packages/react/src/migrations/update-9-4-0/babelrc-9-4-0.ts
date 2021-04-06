@@ -4,13 +4,13 @@ import {
   SchematicContext,
   Tree,
 } from '@angular-devkit/schematics';
-import { getFullProjectGraphFromHost } from '@nrwl/workspace/src/utils/ast-utils';
 import {
   stripIndent,
   stripIndents,
 } from '@angular-devkit/core/src/utils/literals';
 import { initRootBabelConfig } from '../utils/rules';
 import { addDepsToPackageJson, formatFiles } from '@nrwl/workspace';
+import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 
 let addedEmotionPreset = false;
 
@@ -25,7 +25,12 @@ export default function update(): Rule {
   return (host: Tree, context: SchematicContext) => {
     const updates = [];
     const conflicts: Array<[string, string]> = [];
-    const projectGraph = getFullProjectGraphFromHost(host);
+    const projectGraph = createProjectGraph(
+      undefined,
+      undefined,
+      undefined,
+      false
+    );
     if (host.exists('/babel.config.json')) {
       context.logger.info(
         `

@@ -6,6 +6,16 @@ import {
 } from '@nrwl/workspace';
 import { callRule, createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runMigration } from '../../utils/testing';
+import {
+  DependencyType,
+  ProjectGraph,
+} from '@nrwl/workspace/src/core/project-graph';
+
+let projectGraph: ProjectGraph;
+jest.mock('@nrwl/workspace/src/core/project-graph', () => ({
+  ...jest.requireActual('@nrwl/workspace/src/core/project-graph'),
+  createProjectGraph: jest.fn().mockImplementation(() => projectGraph),
+}));
 
 describe('add-template-support-and-presets-to-eslint', () => {
   describe('tslint-only workspace', () => {
@@ -71,6 +81,66 @@ describe('add-template-support-and-presets-to-eslint', () => {
         }),
         tree
       );
+
+      projectGraph = {
+        nodes: {
+          app1: {
+            name: 'app1',
+            type: 'app',
+            data: {
+              files: [],
+              root: 'apps/app1',
+            },
+          },
+          app2: {
+            name: 'app2',
+            type: 'app',
+            data: {
+              files: [],
+              root: 'apps/app2',
+            },
+          },
+          lib1: {
+            name: 'lib1',
+            type: 'app',
+            data: {
+              files: [],
+              root: 'apps/lib1',
+            },
+          },
+          'npm:@angular/core': {
+            name: 'npm:@angular/core',
+            type: 'npm',
+            data: {
+              files: [],
+            },
+          },
+        },
+        dependencies: {
+          app1: [
+            {
+              type: DependencyType.static,
+              source: 'app1',
+              target: 'npm:@angular/core',
+            },
+          ],
+          app2: [
+            {
+              type: DependencyType.static,
+              source: 'app2',
+              target: 'npm:@angular/core',
+            },
+          ],
+          lib1: [
+            {
+              type: DependencyType.static,
+              source: 'lib1',
+              target: 'npm:@angular/core',
+            },
+          ],
+          'npm:@angular/core': [],
+        },
+      };
     });
 
     it('should do nothing', async () => {

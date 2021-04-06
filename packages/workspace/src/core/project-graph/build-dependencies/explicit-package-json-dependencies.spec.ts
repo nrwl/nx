@@ -1,5 +1,5 @@
 import { buildExplicitPackageJsonDependencies } from '@nrwl/workspace/src/core/project-graph/build-dependencies/explicit-package-json-dependencies';
-import { fs, vol } from 'memfs';
+import { vol } from 'memfs';
 import {
   AddProjectDependency,
   DependencyType,
@@ -8,7 +8,6 @@ import {
 } from '../project-graph-models';
 import { createProjectFileMap } from '../../file-graph';
 import { readWorkspaceFiles } from '../../file-utils';
-import { appRootPath } from '../../../utilities/app-root';
 
 jest.mock('../../../utilities/app-root', () => ({
   appRootPath: '/root',
@@ -107,9 +106,7 @@ describe('explicit package json dependencies', () => {
         }
       );
 
-    buildExplicitPackageJsonDependencies(ctx, projects, addDependency, (s) => {
-      return fs.readFileSync(`${appRootPath}/${s}`).toString();
-    });
+    buildExplicitPackageJsonDependencies(ctx, projects, addDependency);
 
     expect(dependencyMap).toEqual({
       proj: [
