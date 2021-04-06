@@ -59,12 +59,13 @@ describe('Node Build Executor', () => {
           libraryTarget: 'commonjs',
           path: '/root/dist/apps/wibble',
         },
-      })
+      }),
+      expect.anything()
     );
   });
 
   describe('webpackConfig', () => {
-    it('sholud hanldle custom path', async () => {
+    it('should handle custom path', async () => {
       jest.mock(
         '/root/config.js',
         () => (options) => ({ ...options, prop: 'my-val' }),
@@ -80,11 +81,12 @@ describe('Node Build Executor', () => {
             path: '/root/dist/apps/wibble',
           },
           prop: 'my-val',
-        })
+        }),
+        expect.anything()
       );
     });
 
-    it('sholud hanldle multiple custom paths in order', async () => {
+    it('should handle multiple custom paths in order', async () => {
       jest.mock(
         '/root/config1.js',
         () => (o) => ({ ...o, prop1: 'my-val-1' }),
@@ -113,7 +115,8 @@ describe('Node Build Executor', () => {
           },
           prop1: 'my-val-1-my-val-2',
           prop2: 'my-val-2',
-        })
+        }),
+        expect.anything()
       );
     });
   });
