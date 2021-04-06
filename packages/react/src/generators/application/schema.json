@@ -135,6 +135,11 @@
       "type": "boolean",
       "description": "Default is false. When true, the component is generated with *.css/*.scss instead of *.module.css/*.module.scss",
       "default": false
+    },
+    "strict": {
+      "type": "boolean",
+      "description": "Creates an application with stricter type checking and build optimization options.",
+      "default": false
     }
   },
   "required": []

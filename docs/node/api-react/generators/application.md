@@ -142,6 +142,14 @@ Type: `boolean`
 
 Skip updating workspace.json with default options based on values provided to this app (e.g. babel, style).
 
+### strict
+
+Default: `false`
+
+Type: `boolean`
+
+Creates an application with stricter type checking and build optimization options.
+
 ### style
 
 Alias(es): s
