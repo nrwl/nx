@@ -138,7 +138,7 @@ Please follow the following guidelines:
 - Make sure you run `yarn format`
 - Update documentation with `yarn documentation`. For documentation, check for spelling and grammatical errors.
 - Update your commit message to follow the guidelines below (use `yarn commit` to automate compliance)
-  - `yarn check-commit` will check to make sure your commit messages are formatted correctly
+  - Github actions will check your commit/PR title when you submit your PR to make sure that your commit message is formatted correctly once you submit your PR. If you'd like to check your last commit manually, you can do so via the command: `yarn check-commit`.
 
 #### Commit Message Guidelines
 

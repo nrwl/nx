@@ -1,0 +1,43 @@
+name: "Validate PR Title"
+on:
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - synchronize
+
+jobs:
+  pr_title_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v3.4.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          validateSingleCommit: true
+          types: |
+            feat
+            fix
+            docs
+            cleanup
+            chore
+          scopes: |
+            angular
+            core
+            nxdev
+            nextjs
+            gatsby
+            nest
+            node
+            express
+            nx-plugin
+            react
+            web
+            linter
+            storybook
+            testing
+            repo
+            misc
+            devkit
+          requireScope: true
+        # Default: https://github.com/commitizen/conventional-commit-types
