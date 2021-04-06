@@ -30,7 +30,7 @@
   "homepage": "https://nx.dev",
   "dependencies": {
     "chalk": "4.1.0",
-    "inquirer": "^6.3.1",
+    "enquirer": "~2.3.6",
     "minimist": "^1.2.5",
     "rxjs": "^6.5.4",
     "strip-json-comments": "2.0.1",

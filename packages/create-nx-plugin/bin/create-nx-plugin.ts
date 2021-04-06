@@ -5,7 +5,7 @@ import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { output } from '@nrwl/workspace/src/utilities/output';
 import { execSync } from 'child_process';
 import { readFileSync, removeSync, writeFileSync } from 'fs-extra';
-import * as inquirer from 'inquirer';
+import * as enquirer from 'enquirer';
 import * as path from 'path';
 import { dirSync } from 'tmp';
 import { showNxWarning } from './shared';
@@ -131,15 +131,15 @@ function determineWorkspaceName(parsedArgs: any): Promise<string> {
     return Promise.resolve(workspaceName);
   }
 
-  return inquirer
+  return enquirer
     .prompt([
       {
         name: 'WorkspaceName',
         message: `Workspace name (e.g., org name)    `,
-        type: 'string',
+        type: 'input',
       },
     ])
-    .then((a) => {
+    .then((a: { WorkspaceName: string }) => {
       if (!a.WorkspaceName) {
         output.error({
           title: 'Invalid workspace name',
@@ -156,15 +156,15 @@ function determinePluginName(parsedArgs) {
     return Promise.resolve(parsedArgs.pluginName);
   }
 
-  return inquirer
+  return enquirer
     .prompt([
       {
         name: 'PluginName',
         message: `Plugin name                        `,
-        type: 'string',
+        type: 'input',
       },
     ])
-    .then((a) => {
+    .then((a: { PluginName: string }) => {
       if (!a.PluginName) {
         output.error({
           title: 'Invalid name',
