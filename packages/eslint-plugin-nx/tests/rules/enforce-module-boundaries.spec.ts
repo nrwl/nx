@@ -1382,7 +1382,6 @@ describe('Enforce Module Boundaries', () => {
         }
       );
 
-      console.log(failures);
       expect(failures.length).toBe(0);
     });
   });

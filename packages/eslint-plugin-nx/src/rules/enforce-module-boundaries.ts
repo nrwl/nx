@@ -134,7 +134,7 @@ export default createESLintRule<Options, MessageIds>({
       if (!node.source) {
         return;
       }
-        
+
       // accept only literals because template literals have no value
       if (node.source.type !== AST_NODE_TYPES.Literal) {
         return;
