@@ -25,6 +25,12 @@ function withNx(nextConfig = {} as any) {
     nextConfig.target = 'experimental-serverless-trace';
   }
 
+  if (nextConfig.future?.webpack5) {
+    throw new Error(
+      'withNx() plugin: using the "webpack5" option with Nx is not supported yet'
+    );
+  }
+
   const userWebpack = nextConfig.webpack || ((x) => x);
   return {
     ...nextConfig,

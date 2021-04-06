@@ -46,20 +46,20 @@ function projectsToHtml(
 
   f = f
     .replace(
-      `window.projects = null`,
+      `window.projects = []`,
       `window.projects = ${JSON.stringify(projects)}`
     )
-    .replace(`window.graph = null`, `window.graph = ${JSON.stringify(graph)}`)
+    .replace(`window.graph = {}`, `window.graph = ${JSON.stringify(graph)}`)
     .replace(
-      `window.affected = null`,
+      `window.affected = []`,
       `window.affected = ${JSON.stringify(affected)}`
     )
     .replace(
-      `window.groupByFolder = null`,
+      `window.groupByFolder = false`,
       `window.groupByFolder = ${!!groupByFolder}`
     )
     .replace(
-      `window.exclude = null`,
+      `window.exclude = []`,
       `window.exclude = ${JSON.stringify(exclude)}`
     );
 

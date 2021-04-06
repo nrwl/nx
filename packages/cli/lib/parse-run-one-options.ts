@@ -48,6 +48,7 @@ const invalidTargetNames = [
   'workspace-lint',
   'workspace-generator',
   'workspace-schematic',
+  'connect-to-nx-cloud',
   'report',
   'list',
 ];

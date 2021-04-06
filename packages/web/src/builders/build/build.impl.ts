@@ -167,7 +167,7 @@ export function run(options: WebBuildBuilderOptions, context: ExecutorContext) {
       mergeScan(
         (acc, config) => {
           if (!acc.hasErrors()) {
-            return runWebpack(config).pipe(
+            return runWebpack(config, webpack).pipe(
               tap((stats) => {
                 console.info(stats.toString(config.stats));
               })

@@ -1,6 +1,5 @@
 import { ParsedArgs } from 'minimist';
 import { TargetConfiguration, WorkspaceJsonConfiguration } from './workspace';
-import * as inquirer from 'inquirer';
 import { logger } from './logger';
 
 type PropertyDescription = {
@@ -530,7 +529,7 @@ async function promptForValues(opts: Options, schema: Schema) {
     }
   });
 
-  return await inquirer
+  return await (await import('inquirer'))
     .prompt(prompts)
     .then((values) => ({ ...opts, ...values }));
 }

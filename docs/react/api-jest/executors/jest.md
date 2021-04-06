@@ -3,7 +3,7 @@
 Run Jest unit tests
 
 Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/react/getting-started/cli-overview#running-tasks.
+Read more about how to use executors and the CLI here: https://nx.dev/react/getting-started/nx-cli#running-tasks.
 
 ## Properties
 
@@ -133,11 +133,11 @@ Type: `boolean`
 
 Run all tests serially in the current process (rather than creating a worker pool of child processes that run tests). This is sometimes useful for debugging, but such use cases are pretty rare. Useful for CI. (https://jestjs.io/docs/en/cli#runinband)
 
-### setupFile
+### ~~setupFile~~
 
 Type: `string`
 
-[Deprecated] The name of a setup file used by Jest. (use Jest config file https://jestjs.io/docs/en/configuration#setupfilesafterenv-array)
+**Deprecated:** The name of a setup file used by Jest. (use Jest config file https://jestjs.io/docs/en/configuration#setupfilesafterenv-array)
 
 ### showConfig
 
@@ -183,11 +183,11 @@ Type: `string`
 
 Node module that implements a custom results processor. (https://jestjs.io/docs/en/configuration#testresultsprocessor-string)
 
-### tsConfig
+### ~~tsConfig~~
 
 Type: `string`
 
-[Deprecated] The name of the Typescript configuration file. Set the tsconfig option in the jest config file.
+**Deprecated:** The name of the Typescript configuration file. Set the tsconfig option in the jest config file.
 
 ### updateSnapshot
 

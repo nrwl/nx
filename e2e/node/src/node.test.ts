@@ -5,6 +5,7 @@ import * as treeKill from 'tree-kill';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  createFile,
   newProject,
   readFile,
   readJson,
@@ -16,6 +17,7 @@ import {
   updateFile,
   updateWorkspaceConfig,
 } from '@nrwl/e2e/utils';
+import { accessSync, constants } from 'fs-extra';
 
 function getData(): Promise<any> {
   return new Promise((resolve) => {
@@ -245,8 +247,8 @@ describe('Node Libraries', () => {
     expect(readJson(`dist/libs/${nodeLib}/package.json`)).toEqual({
       name: `@${proj}/${nodeLib}`,
       version: '0.0.1',
-      main: 'src/index.js',
-      typings: 'src/index.d.ts',
+      main: './src/index.js',
+      typings: './src/index.d.ts',
     });
 
     // Copying package.json from assets
@@ -256,13 +258,46 @@ describe('Node Libraries', () => {
       );
       return workspace;
     });
+    createFile(`dist/libs/${nodeLib}/_should_remove.txt`); // Output directory should be removed
     await runCLIAsync(`build ${nodeLib}`);
     expect(readJson(`dist/libs/${nodeLib}/package.json`)).toEqual({
       name: `@${proj}/${nodeLib}`,
       version: '0.0.1',
-      main: 'src/index.js',
-      typings: 'src/index.d.ts',
+      main: './src/index.js',
+      typings: './src/index.d.ts',
     });
+  }, 60000);
+
+  it('should be able to generate a publishable node library with CLI wrapper', async () => {
+    const proj = newProject();
+
+    const nodeLib = uniq('nodelib');
+    runCLI(
+      `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@${proj}/${nodeLib}`
+    );
+
+    updateWorkspaceConfig((workspace) => {
+      workspace.projects[nodeLib].targets.build.options.cli = true;
+      return workspace;
+    });
+
+    await runCLIAsync(`build ${nodeLib}`);
+
+    const binFile = `dist/libs/${nodeLib}/index.bin.js`;
+    checkFilesExist(binFile);
+    expect(() =>
+      accessSync(tmpProjPath(binFile), constants.X_OK)
+    ).not.toThrow();
+
+    expect(readJson(`dist/libs/${nodeLib}/package.json`).bin).toEqual({
+      [nodeLib]: './index.bin.js',
+    });
+    checkFilesDoNotExist(`dist/libs/${nodeLib}/_should_remove.txt`);
+
+    // Support not deleting output path before build
+    createFile(`dist/libs/${nodeLib}/_should_keep.txt`);
+    await runCLIAsync(`build ${nodeLib} --delete-output-path=false`);
+    checkFilesExist(`dist/libs/${nodeLib}/_should_keep.txt`);
   }, 60000);
 
   it('should support --js flag', async () => {

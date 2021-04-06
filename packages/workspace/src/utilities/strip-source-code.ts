@@ -1,6 +1,11 @@
-import { Scanner, SyntaxKind } from 'typescript';
+import type { Scanner } from 'typescript';
 
+let SyntaxKind;
 export function stripSourceCode(scanner: Scanner, contents: string): string {
+  if (!SyntaxKind) {
+    SyntaxKind = require('typescript').SyntaxKind;
+  }
+
   if (contents.indexOf('loadChildren') > -1) {
     return contents;
   }

@@ -44,9 +44,10 @@ function invokeNxGenerator<T = any>(generator: Generator<T>, options: T) {
       engineHost.registerTaskExecutor(createRunCallbackTask());
     }
 
-    const root = context.engine.workflow
-      ? context.engine.workflow.engineHost.paths[1]
-      : tree.root.path;
+    const root =
+      context.engine.workflow && context.engine.workflow.engineHost.paths
+        ? context.engine.workflow.engineHost.paths[1]
+        : tree.root.path;
 
     const adapterTree = new DevkitTreeFromAngularDevkitTree(tree, root);
     const result = await generator(adapterTree, options);

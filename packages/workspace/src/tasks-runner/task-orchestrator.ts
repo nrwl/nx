@@ -9,6 +9,7 @@ import { Cache, TaskWithCachedResult } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { AffectedEventType, Task } from './tasks-runner';
 import { getOutputs, unparse } from './utils';
+import { performance } from 'perf_hooks';
 
 export class TaskOrchestrator {
   workspaceRoot = appRootPath;
@@ -29,8 +30,22 @@ export class TaskOrchestrator {
       tasksInStage
     );
 
+    performance.mark('task-execution-begins');
+    performance.measure(
+      'graph-creation',
+      'command-execution-begins',
+      'task-execution-begins'
+    );
+    performance.measure('nx-prep-work', 'init-local', 'task-execution-begins');
     const r1 = await this.applyCachedResults(cached);
     const r2 = await this.runRest(rest);
+    performance.mark('task-execution-ends');
+    performance.measure(
+      'command-execution',
+      'task-execution-begins',
+      'task-execution-ends'
+    );
+
     this.cache.removeOldCacheRecords();
     return [...r1, ...r2];
   }

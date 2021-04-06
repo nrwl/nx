@@ -3,7 +3,7 @@
 Run Cypress e2e tests
 
 Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/node/getting-started/cli-overview#running-tasks.
+Read more about how to use executors and the CLI here: https://nx.dev/node/getting-started/nx-cli#running-tasks.
 
 ## Properties
 
@@ -25,11 +25,11 @@ Type: `string`
 
 A unique identifier for a run to enable grouping or parallelization.
 
-### copyFiles
+### ~~copyFiles~~
 
 Type: `string`
 
-DEPRECATED: A regex string that is used to choose what additional integration files to copy to the dist folder
+**Deprecated:** A regex string that is used to choose what additional integration files to copy to the dist folder
 
 ### cypressConfig
 

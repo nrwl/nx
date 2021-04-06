@@ -12,7 +12,7 @@ import {
   statSync,
   writeFileSync,
 } from 'fs-extra';
-import * as isCI from 'is-ci';
+import isCI = require('is-ci');
 import * as path from 'path';
 import { dirSync } from 'tmp';
 
@@ -507,7 +507,7 @@ export function getPackageManagerCommand({
       createWorkspace: `npx create-nx-workspace@${process.env.PUBLISHED_VERSION}`,
       runNx: `npm run nx${scriptsPrependNodePathFlag} --`,
       runNxSilent: `npm run nx --silent${scriptsPrependNodePathFlag} --`,
-      addDev: `npm install -D`,
+      addDev: `npm install --legacy-peer-deps -D`,
       list: 'npm ls --depth 10',
     },
     yarn: {

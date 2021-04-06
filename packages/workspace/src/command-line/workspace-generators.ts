@@ -3,7 +3,7 @@ import { execSync } from 'child_process';
 import * as fs from 'fs';
 import { writeFileSync } from 'fs';
 import { copySync, removeSync } from 'fs-extra';
-import * as inquirer from 'inquirer';
+import type * as inquirer from 'inquirer';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
 import { appRootPath } from '../utilities/app-root';
@@ -17,7 +17,7 @@ import {
   writeJsonFile,
 } from '../utilities/fileutils';
 import { output } from '../utilities/output';
-import { CompilerOptions } from 'typescript';
+import type { CompilerOptions } from 'typescript';
 import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import { logger, normalizePath } from '@nrwl/devkit';
 
@@ -241,7 +241,7 @@ function createPromptProvider(): any {
       }
     });
 
-    return inquirer.prompt(questions);
+    return require('inquirer').prompt(questions);
   };
 }
 

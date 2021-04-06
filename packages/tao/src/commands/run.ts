@@ -230,6 +230,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
       );
     }
   } else {
+    require('../compat/compat');
     const observable = await (await import('./ngcli-adapter')).scheduleTarget(
       root,
       {

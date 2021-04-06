@@ -46,6 +46,12 @@ Type: `boolean`
 
 Enables '@angular-devkit/build-optimizer' optimizations when using the 'aot' option.
 
+### buildTarget
+
+Type: `string`
+
+Build target used for building the app after its dependencies have been built. If no target is configured, @angular-devkit/build-angular:browser is sheduled directly.
+
 ### commonChunk
 
 Default: `true`
@@ -116,21 +122,27 @@ Type: `boolean`
 
 Run the TypeScript type checker in a forked process.
 
-### i18nFile
+### ~~i18nFile~~
 
 Type: `string`
+
+**Deprecated:** Use 'locales' object in the project metadata instead.
 
 Localization file to use for i18n.
 
-### i18nFormat
+### ~~i18nFormat~~
 
 Type: `string`
+
+**Deprecated:** No longer needed as the format will be determined automatically.
 
 Format of the localization file specified with --i18n-file.
 
-### i18nLocale
+### ~~i18nLocale~~
 
 Type: `string`
+
+**Deprecated:** Use 'localize' instead.
 
 Locale to use for i18n.
 
@@ -150,9 +162,11 @@ Type: `string`
 
 Configures the generation of the application's HTML index.
 
-### lazyModules
+### ~~lazyModules~~
 
 Type: `array`
+
+**Deprecated:** 'SystemJsNgModuleLoader' is deprecated, and this is part of its usage. Use 'import()' syntax instead.
 
 List of additional NgModule files that will be lazy loaded. Lazy router modules will be discovered automatically.
 
@@ -250,11 +264,13 @@ Type: `boolean`
 
 Generates a service worker config for production builds.
 
-### showCircularDependencies
+### ~~showCircularDependencies~~
 
 Default: `false`
 
 Type: `boolean`
+
+**Deprecated:** The recommended method to detect circular dependencies in project code is to use a either a lint rule or other external tooling.
 
 Show circular dependency warnings on builds.
 

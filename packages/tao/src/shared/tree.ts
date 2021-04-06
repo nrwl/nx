@@ -228,7 +228,6 @@ export class FsTree implements Tree {
   }
 
   private fsReadDir(dirPath: string) {
-    if (!this.delegateToFs) return [];
     try {
       return readdirSync(join(this.root, dirPath));
     } catch (e) {
@@ -237,28 +236,21 @@ export class FsTree implements Tree {
   }
 
   private fsIsFile(filePath: string) {
-    if (!this.delegateToFs) return false;
     const stat = statSync(join(this.root, filePath));
     return stat.isFile();
   }
 
   private fsReadFile(filePath: string) {
-    if (!this.delegateToFs) return null;
     return readFileSync(join(this.root, filePath));
   }
 
   private fsExists(filePath: string): boolean {
-    if (!this.delegateToFs) return false;
     try {
       const stat = statSync(join(this.root, filePath));
       return stat.isFile() || stat.isDirectory();
     } catch (e) {
       return false;
     }
-  }
-
-  private delegateToFs(): boolean {
-    return this.root !== null;
   }
 
   private filesForDir(path: string): string[] {

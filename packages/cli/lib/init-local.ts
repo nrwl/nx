@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { Workspace } from './workspace';
 import { parseRunOneOptions } from './parse-run-one-options';
+import { performance } from 'perf_hooks';
 
 /**
  * Nx is being run inside a workspace.
@@ -11,8 +12,8 @@ import { parseRunOneOptions } from './parse-run-one-options';
 process.env.NX_CLI_SET = 'true';
 
 export function initLocal(workspace: Workspace) {
+  performance.mark('init-local');
   require('@nrwl/workspace/' + 'src/utilities/perf-logging');
-  require('@nrwl/tao/src/compat/compat.js');
 
   const supportedNxCommands = require('@nrwl/workspace/' +
     'src/command-line/supported-nx-commands').supportedNxCommands;

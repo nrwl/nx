@@ -1,5 +1,26 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`convertTSLintDisableCommentsForProject should replace tslint:disable comments with their ESLint equivalents in .ts files for the given project 1`] = `
+"
+      /* eslint-disable */
+      eval('');
+    "
+`;
+
+exports[`convertTSLintDisableCommentsForProject should replace tslint:disable comments with their ESLint equivalents in .ts files for the given project 2`] = `
+"
+      // eslint-disable-next-line
+      eval('');
+    "
+`;
+
+exports[`convertTSLintDisableCommentsForProject should replace tslint:disable comments with their ESLint equivalents in .ts files for the given project 3`] = `
+"
+      /* eslint-disable @typescript-eslint/quotes */
+      eval('');
+    "
+`;
+
 exports[`convertToESLintConfig() should work for a non-Angular project tslint.json file 1`] = `
 Object {
   "convertedESLintConfig": Object {
@@ -156,6 +177,7 @@ Object {
         "error",
         Object {
           "allow": Array [
+            "Console",
             "_buffer",
             "_counters",
             "_groupDepth",

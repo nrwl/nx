@@ -25,6 +25,11 @@
       "description": "A directory where the lib is placed",
       "alias": "d"
     },
+    "simpleModuleName": {
+      "description": "Keep the module name simple (when using --directory)",
+      "type": "boolean",
+      "default": false
+    },
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",

@@ -48,18 +48,30 @@ export function assertWorkspaceValidity(workspaceJson, nxJson: NxJson) {
     nxJson.implicitDependencies || {}
   )
     .reduce((acc, entry) => {
-      function recur(value, acc = []) {
+      function recur(value, acc = [], path: string[]) {
         if (value === '*') {
           // do nothing since '*' is calculated and always valid.
+        } else if (typeof value === 'string') {
+          // This is invalid because the only valid string is '*'
+
+          output.error({
+            title: 'Configuration Error',
+            bodyLines: [
+              `nx.json is not configured properly. "${path.join(
+                ' > '
+              )}" is improperly configured to implicitly depend on "${value}" but should be an array of project names or "*".`,
+            ],
+          });
+          process.exit(1);
         } else if (Array.isArray(value)) {
           acc.push([entry[0], value]);
         } else {
-          Object.values(value).forEach((v) => {
-            recur(v, acc);
+          Object.entries(value).forEach(([k, v]) => {
+            recur(v, acc, [...path, k]);
           });
         }
       }
-      recur(entry[1], acc);
+      recur(entry[1], acc, [entry[0]]);
       return acc;
     }, [])
     .reduce((map, [filename, projectNames]: [string, string[]]) => {

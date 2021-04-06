@@ -5,7 +5,7 @@ var_1: &working_directory ~/repo
 var_2:
   &nx_cli [
     'e2e-workspace',
-    'e2e-cli,e2e-nx-plugin,dep-graph-client-e2e',
+    'e2e-cli,e2e-nx-plugin,dep-graph-dep-graph-e2e',
     'e2e-cypress,e2e-jest',
     'e2e-react',
     'e2e-next,e2e-gatsby',
@@ -34,6 +34,13 @@ commands:
         type: string
     steps:
       - checkout
+      - when:
+          condition:
+            equal: [<< parameters.os >>, windows]
+          steps:
+            - run: nvm install 12.20
+            - run: nvm use 12.20
+            - run: npm install -g yarn@1.19.0
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
@@ -54,14 +61,14 @@ commands:
           steps:
             - run:
                 name: Install PNPM
-                command: npm install --prefix=$HOME/.local -g pnpm
+                command: npm install --prefix=$HOME/.local -g pnpm@5.18.9
       - when:
           condition:
             equal: [<< parameters.os >>, windows]
           steps:
             - run:
                 name: Install PNPM
-                command: npm install -g pnpm
+                command: npm install -g pnpm@5.18.9
 
 jobs:
   checks-and-unit-tests:

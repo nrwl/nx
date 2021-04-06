@@ -309,7 +309,7 @@
                 "command": "nx build-base workspace"
               },
               {
-                "command": "nx build-base dep-graph-client --configuration release"
+                "command": "nx build-base dep-graph-dep-graph --configuration release"
               },
               {
                 "command": "node ./scripts/copy-dep-graph.js"
@@ -1923,108 +1923,6 @@
         }
       }
     },
-    "dep-graph-client": {
-      "root": "apps/dep-graph-client",
-      "sourceRoot": "apps/dep-graph-client/src",
-      "projectType": "application",
-      "targets": {
-        "build-base": {
-          "executor": "@nrwl/web:build",
-          "options": {
-            "maxWorkers": 8,
-            "outputPath": "build/apps/dep-graph",
-            "index": "apps/dep-graph-client/src/index.html",
-            "main": "apps/dep-graph-client/src/main.ts",
-            "polyfills": "apps/dep-graph-client/src/polyfills.ts",
-            "tsConfig": "apps/dep-graph-client/tsconfig.app.json",
-            "assets": [
-              "apps/dep-graph-client/src/favicon.ico",
-              "apps/dep-graph-client/src/assets"
-            ],
-            "styles": ["apps/dep-graph-client/src/styles.scss"],
-            "scripts": []
-          },
-          "configurations": {
-            "release": {
-              "fileReplacements": [
-                {
-                  "replace": "apps/dep-graph-client/src/main.ts",
-                  "with": "apps/dep-graph-client/src/main.release.ts"
-                }
-              ],
-              "optimization": true,
-              "outputHashing": "none",
-              "sourceMap": false,
-              "extractCss": true,
-              "namedChunks": false,
-              "extractLicenses": true,
-              "vendorChunk": false,
-              "budgets": [
-                {
-                  "type": "initial",
-                  "maximumWarning": "2mb",
-                  "maximumError": "5mb"
-                }
-              ]
-            }
-          },
-          "outputs": ["{options.outputPath}"]
-        },
-        "serve": {
-          "executor": "@nrwl/web:dev-server",
-          "options": {
-            "buildTarget": "dep-graph-client:build-base"
-          },
-          "configurations": {
-            "release": {
-              "buildTarget": "dep-graph-client:build-base:release"
-            }
-          }
-        },
-        "lint": {
-          "executor": "@nrwl/linter:lint",
-          "options": {
-            "linter": "eslint",
-            "tsConfig": [
-              "apps/dep-graph-client/tsconfig.app.json",
-              "apps/dep-graph-client/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**", "!apps/dep-graph-client/**/*"]
-          }
-        },
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/apps/dep-graph-client"],
-          "options": {
-            "jestConfig": "apps/dep-graph-client/jest.config.js",
-            "passWithNoTests": true
-          }
-        }
-      }
-    },
-    "dep-graph-client-e2e": {
-      "root": "apps/dep-graph-client-e2e",
-      "sourceRoot": "apps/dep-graph-client-e2e/src",
-      "projectType": "application",
-      "targets": {
-        "e2e": {
-          "executor": "@nrwl/cypress:cypress",
-          "options": {
-            "cypressConfig": "apps/dep-graph-client-e2e/cypress.json",
-            "tsConfig": "apps/dep-graph-client-e2e/tsconfig.e2e.json",
-            "devServerTarget": "dep-graph-client:serve"
-          }
-        },
-        "lint": {
-          "executor": "@nrwl/linter:lint",
-          "options": {
-            "linter": "eslint",
-            "tsConfig": ["apps/dep-graph-client-e2e/tsconfig.e2e.json"],
-            "exclude": ["**/node_modules/**", "!apps/dep-graph-client-e2e/**/*"]
-          }
-        }
-      }
-    },
     "gatsby": {
       "root": "packages/gatsby",
       "sourceRoot": "packages/gatsby",
@@ -2109,6 +2007,243 @@
               "packages/gatsby/**/*.spec.jsx",
               "packages/gatsby/**/*.d.ts"
             ]
+          }
+        }
+      }
+    },
+    "dep-graph-dep-graph-e2e": {
+      "root": "dep-graph/dep-graph-e2e",
+      "sourceRoot": "dep-graph/dep-graph-e2e/src",
+      "projectType": "application",
+      "targets": {
+        "e2e": {
+          "executor": "@nrwl/cypress:cypress",
+          "options": {
+            "cypressConfig": "dep-graph/dep-graph-e2e/cypress.json",
+            "tsConfig": "dep-graph/dep-graph-e2e/tsconfig.e2e.json",
+            "devServerTarget": "dep-graph-dep-graph:serve"
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "tsConfig": ["dep-graph/dep-graph-e2e/tsconfig.e2e.json"],
+            "exclude": ["**/node_modules/**", "!dep-graph/dep-graph-e2e/**/*"]
+          }
+        }
+      }
+    },
+    "dep-graph-dep-graph": {
+      "root": "dep-graph/dep-graph",
+      "sourceRoot": "dep-graph/dep-graph/src",
+      "projectType": "application",
+      "targets": {
+        "build-base": {
+          "executor": "@nrwl/web:build",
+          "options": {
+            "maxWorkers": 8,
+            "outputPath": "build/apps/dep-graph",
+            "index": "dep-graph/dep-graph/src/index.html",
+            "main": "dep-graph/dep-graph/src/main.ts",
+            "polyfills": "dep-graph/dep-graph/src/polyfills.ts",
+            "tsConfig": "dep-graph/dep-graph/tsconfig.app.json",
+            "assets": [
+              "dep-graph/dep-graph/src/favicon.ico",
+              "dep-graph/dep-graph/src/assets"
+            ],
+            "styles": ["dep-graph/dep-graph/src/styles.scss"],
+            "scripts": []
+          },
+          "configurations": {
+            "release": {
+              "fileReplacements": [
+                {
+                  "replace": "dep-graph/dep-graph/src/environments/environment.ts",
+                  "with": "dep-graph/dep-graph/src/environments/environment.release.ts"
+                }
+              ],
+              "optimization": true,
+              "outputHashing": "none",
+              "sourceMap": false,
+              "extractCss": true,
+              "namedChunks": false,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                }
+              ]
+            }
+          },
+          "outputs": ["{options.outputPath}"]
+        },
+        "serve": {
+          "executor": "@nrwl/web:dev-server",
+          "options": {
+            "buildTarget": "dep-graph-dep-graph:build-base"
+          },
+          "configurations": {
+            "release": {
+              "buildTarget": "dep-graph-dep-graph:build-base:release"
+            }
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "tsConfig": [
+              "dep-graph/dep-graph/tsconfig.app.json",
+              "dep-graph/dep-graph/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**", "!dep-graph/dep-graph/**/*"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/dep-graph/dep-graph"],
+          "options": {
+            "jestConfig": "dep-graph/dep-graph/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "nx-dev": {
+      "root": "nx-dev/nx-dev",
+      "sourceRoot": "nx-dev/nx-dev",
+      "projectType": "application",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/next:build",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "root": "nx-dev/nx-dev",
+            "outputPath": "dist/nx-dev/nx-dev"
+          },
+          "configurations": { "production": {} }
+        },
+        "serve": {
+          "executor": "@nrwl/next:server",
+          "options": { "buildTarget": "nx-dev:build", "dev": true },
+          "configurations": {
+            "production": {
+              "buildTarget": "nx-dev:build:production",
+              "dev": false
+            }
+          }
+        },
+        "export": {
+          "executor": "@nrwl/next:export",
+          "options": { "buildTarget": "nx-dev:build:production" }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": ["nx-dev/nx-dev/**/*.{ts,tsx,js,jsx}"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/nx-dev/nx-dev"],
+          "options": {
+            "jestConfig": "nx-dev/nx-dev/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "nx-dev-e2e": {
+      "root": "nx-dev/nx-dev-e2e",
+      "sourceRoot": "nx-dev/nx-dev-e2e/src",
+      "projectType": "application",
+      "targets": {
+        "e2e": {
+          "executor": "@nrwl/cypress:cypress",
+          "options": {
+            "cypressConfig": "nx-dev/nx-dev-e2e/cypress.json",
+            "tsConfig": "nx-dev/nx-dev-e2e/tsconfig.e2e.json",
+            "devServerTarget": "nx-dev:serve"
+          },
+          "configurations": {
+            "production": {
+              "devServerTarget": "nx-dev:serve:production"
+            }
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": ["nx-dev/nx-dev-e2e/**/*.{js,ts}"]
+          }
+        }
+      }
+    },
+    "nx-dev-ui-common": {
+      "root": "nx-dev/ui-common",
+      "sourceRoot": "nx-dev/ui-common/src",
+      "projectType": "library",
+      "targets": {
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": ["nx-dev/ui-common/**/*.{ts,tsx,js,jsx}"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/nx-dev/ui-common"],
+          "options": {
+            "jestConfig": "nx-dev/ui-common/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "nx-dev-feature-doc-viewer": {
+      "root": "nx-dev/feature-doc-viewer",
+      "sourceRoot": "nx-dev/feature-doc-viewer/src",
+      "projectType": "library",
+      "targets": {
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "nx-dev/feature-doc-viewer/**/*.{ts,tsx,js,jsx}"
+            ]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/nx-dev/feature-doc-viewer"],
+          "options": {
+            "jestConfig": "nx-dev/feature-doc-viewer/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "nx-dev-data-access-documents": {
+      "root": "nx-dev/data-access-documents",
+      "sourceRoot": "nx-dev/data-access-documents/src",
+      "projectType": "library",
+      "targets": {
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": ["nx-dev/data-access-documents/**/*.ts"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/nx-dev/data-access-documents"],
+          "options": {
+            "jestConfig": "nx-dev/data-access-documents/jest.config.js",
+            "passWithNoTests": true
           }
         }
       }

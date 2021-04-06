@@ -94,6 +94,12 @@ export default function run(
     sourceRoot
   );
 
+  if (options.babelConfig) {
+    logger.warn(
+      `Deprecated option "babelConfig" used, please use the .babelrc file for ${context.projectName} instead.`
+    );
+  }
+
   if (options.watch) {
     const watcher = rollup.watch(rollupOptions);
     return eachValueFrom(
@@ -223,7 +229,13 @@ export function createRollupOptions(
             : require.resolve('babel-plugin-transform-async-to-promises'),
         ].filter(Boolean),
       }),
-      commonjs(),
+      commonjs({
+        namedExports: {
+          // This is needed because `react/jsx-runtime` exports `jsx` on the module export.
+          // Without this mapping the transformed import `import {jsx as _jsx} from 'react/jsx-runtime'` will fail.
+          'react/jsx-runtime': ['jsx'],
+        },
+      }),
       filesize(),
       json(),
     ];
