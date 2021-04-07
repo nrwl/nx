@@ -6,18 +6,25 @@ import {
   PHASE_PRODUCTION_SERVER,
 } from 'next/dist/next-server/lib/constants';
 import loadConfig from 'next/dist/next-server/server/config';
+import { NextConfig } from 'next/dist/next-server/server/config-shared';
 import { join, resolve } from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration } from 'webpack';
-import { FileReplacement, NextBuildBuilderOptions } from './types';
+import {
+  FileReplacement,
+  NextBuildBuilderOptions,
+  WebpackConfigOptions,
+} from './types';
 import { normalizeAssets } from '@nrwl/web/src/utils/normalize';
 import { createCopyPlugin } from '@nrwl/web/src/utils/config';
+import { WithNxOptions } from '../../plugins/with-nx';
 
 export function createWebpackConfig(
   workspaceRoot: string,
   projectRoot: string,
   fileReplacements: FileReplacement[] = [],
-  assets: any = null
+  assets: any = null,
+  nxConfigOptions: WebpackConfigOptions = {}
 ): (a, b) => Configuration {
   return function webpackConfig(
     config: Configuration,
@@ -31,6 +38,12 @@ export function createWebpackConfig(
       defaultLoaders: any;
     }
   ): Configuration {
+    // default `svgr` to `true`, as it used to be supported by default,
+    // before this option was introduced
+    if (typeof nxConfigOptions.svgr === 'undefined') {
+      nxConfigOptions.svgr = true;
+    }
+
     const mainFields = ['es2015', 'module', 'main'];
     const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
     config.resolve.plugins = [
@@ -51,13 +64,14 @@ export function createWebpackConfig(
         return alias;
       }, config.resolve.alias);
 
-    config.module.rules.push(
-      {
-        test: /\.([jt])sx?$/,
-        exclude: /node_modules/,
-        use: [defaultLoaders.babel],
-      },
-      {
+    config.module.rules.push({
+      test: /\.([jt])sx?$/,
+      exclude: /node_modules/,
+      use: [defaultLoaders.babel],
+    });
+
+    if (nxConfigOptions.svgr) {
+      config.module.rules.push({
         test: /\.svg$/,
         oneOf: [
           // If coming from JS/TS file, then transform into React component using SVGR.
@@ -84,8 +98,8 @@ export function createWebpackConfig(
             ],
           },
         ],
-      }
-    );
+      });
+    }
 
     // Copy (shared) assets to `public` folder during client-side compilation
     if (!isServer && Array.isArray(assets) && assets.length > 0) {
@@ -112,7 +126,8 @@ export async function prepareConfig(
   options: NextBuildBuilderOptions,
   context: ExecutorContext
 ) {
-  const config = await loadConfig(phase, options.root, null);
+  const config = (await loadConfig(phase, options.root, null)) as NextConfig &
+    WithNxOptions;
   const userWebpack = config.webpack;
   const userNextConfig = getConfigEnhancer(options.nextConfig, context.root);
   // Yes, these do have different capitalisation...
@@ -126,7 +141,8 @@ export async function prepareConfig(
       context.root,
       options.root,
       options.fileReplacements,
-      options.assets
+      options.assets,
+      config.nx
     )(userWebpack ? userWebpack(a, b) : a, b);
 
   if (typeof userNextConfig !== 'function') {
