@@ -59,9 +59,9 @@ export default function normalizeOptions(
   const mainFileDir = dirname(options.main);
 
   // Always include a preceding dot to match format used for entry points
-  const relativeMainFileOutput = `./${normalizePath(
-    relative(rootDir, mainFileDir)
-  )}`;
+  const relativeDir = normalizePath(relative(rootDir, mainFileDir));
+  const relativeMainFileOutput =
+    relativeDir === '' ? `./` : `./${relativeDir}/`;
 
   if (options.buildableProjectDepsInPackageJsonType == undefined) {
     options.buildableProjectDepsInPackageJsonType = 'dependencies';

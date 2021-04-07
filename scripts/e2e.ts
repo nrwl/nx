@@ -96,11 +96,12 @@ async function runTest() {
             .join(',');
   }
 
-  build(process.env.PUBLISHED_VERSION, '~10.0.0', '3.9.3', '2.1.2');
-
   if (process.argv[5] != '--rerun') {
+    removeSync('./build');
     removeSync(e2eRoot);
   }
+
+  build(process.env.PUBLISHED_VERSION, '~10.0.0', '3.9.3', '2.1.2');
 
   try {
     setup();

@@ -13,8 +13,8 @@
     "Storybook",
     "Cypress"
   ],
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "./index.js",
+  "typings": "./index.d.ts",
   "author": "Isaac Mann",
   "license": "MIT",
   "bugs": {
