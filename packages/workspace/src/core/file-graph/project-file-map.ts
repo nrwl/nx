@@ -1,8 +1,4 @@
-import { FileData } from '../file-utils';
-
-export interface ProjectFileMap {
-  [projectName: string]: FileData[];
-}
+import { FileData, ProjectFileMap } from '@nrwl/devkit';
 
 export function createProjectFileMap(
   workspaceJson: any,
@@ -36,3 +32,5 @@ export function createProjectFileMap(
     });
   return fileMap;
 }
+
+export { ProjectFileMap } from '@nrwl/devkit';

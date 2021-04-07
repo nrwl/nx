@@ -1,6 +1,8 @@
-import { NxJson } from './shared-interfaces';
+import { NxJsonConfiguration } from '@nrwl/devkit';
 
-export function normalizeNxJson(nxJson: NxJson): NxJson<string[]> {
+export function normalizeNxJson(
+  nxJson: NxJsonConfiguration
+): NxJsonConfiguration<string[]> {
   return nxJson.implicitDependencies
     ? {
         ...nxJson,
@@ -24,5 +26,5 @@ export function normalizeNxJson(nxJson: NxJson): NxJson<string[]> {
           }
         }, {}),
       }
-    : (nxJson as NxJson<string[]>);
+    : (nxJson as NxJsonConfiguration<string[]>);
 }

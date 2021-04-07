@@ -1,6 +1,13 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as stripJsonComments from 'strip-json-comments';
+import { NxJsonConfiguration, NxJsonProjectConfiguration } from './nx';
+
+export interface Workspace
+  extends WorkspaceJsonConfiguration,
+    NxJsonConfiguration {
+  projects: Record<string, ProjectConfiguration & NxJsonProjectConfiguration>;
+}
 
 /**
  * Workspace configuration

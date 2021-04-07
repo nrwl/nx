@@ -1,4 +1,5 @@
 import { toOldFormatOrNull, Workspaces } from '@nrwl/tao/src/shared/workspace';
+import { FileData, NxJsonConfiguration } from '@nrwl/devkit';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 import { readFileSync } from 'fs';
@@ -12,15 +13,9 @@ import { fileExists, readJsonFile } from '../utilities/fileutils';
 import { jsonDiff } from '../utilities/json-diff';
 import { defaultFileHasher } from './hasher/file-hasher';
 import { ProjectGraphNode } from './project-graph';
-import { Environment, NxJson } from './shared-interfaces';
+import { Environment } from './shared-interfaces';
 
 const ignore = require('ignore');
-
-export interface FileData {
-  file: string;
-  hash: string;
-  ext: string;
-}
 
 export interface Change {
   type: string;
@@ -198,8 +193,8 @@ export function readPackageJson(): any {
   return readJsonFile(`${appRootPath}/package.json`);
 }
 
-export function readNxJson(): NxJson {
-  const config = readJsonFile<NxJson>(`${appRootPath}/nx.json`);
+export function readNxJson(): NxJsonConfiguration {
+  const config = readJsonFile<NxJsonConfiguration>(`${appRootPath}/nx.json`);
   if (!config.npmScope) {
     throw new Error(`nx.json must define the npmScope property.`);
   }
@@ -298,3 +293,6 @@ export function filesChanged(a: FileData[], b: FileData[]) {
   }
   return false;
 }
+
+// Original Exports
+export { FileData };
