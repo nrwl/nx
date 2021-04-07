@@ -10,7 +10,8 @@
  */
 export default {
   settings: { react: { version: 'detect' } },
-  plugins: ['jsx-a11y', 'react', 'react-hooks'],
+  plugins: ['jsx-a11y', 'react'],
+  extends: ['plugin:react-hooks/recommended'],
   rules: {
     /**
      * React-specific rule configurations
@@ -58,11 +59,5 @@ export default {
     'jsx-a11y/role-has-required-aria-props': 'warn',
     'jsx-a11y/role-supports-aria-props': 'warn',
     'jsx-a11y/scope': 'warn',
-
-    /**
-     * React Hooks rule configurations
-     * https://github.com/facebook/react/tree/master/packages/eslint-plugin-react-hooks
-     */
-    'react-hooks/rules-of-hooks': 'error',
   },
 };
