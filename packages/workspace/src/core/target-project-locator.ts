@@ -91,6 +91,11 @@ export class TargetProjectLocator {
           this.absTsConfigPath
         );
 
+    // TODO: vsavkin temporary workaround. Remove it once we reworking handling of npm packages.
+    if (resolvedModule && resolvedModule.indexOf('/node_modules/') !== -1) {
+      return null;
+    }
+
     this.typescriptResolutionCache.set(normalizedImportExpr, resolvedModule);
     if (resolvedModule) {
       const resolvedProject = this.findProjectOfResolvedModule(resolvedModule);
