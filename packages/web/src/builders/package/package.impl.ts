@@ -217,6 +217,10 @@ export function createRollupOptions(
         extensions: fileExtensions,
       }),
       getBabelInputPlugin({
+        // Let's `@nrwl/web/babel` preset know that we are packaging.
+        caller: {
+          isNxPackage: true,
+        },
         cwd: join(context.root, sourceRoot),
         rootMode: 'upward',
         babelrc: true,
