@@ -5,6 +5,7 @@
 interface ReactBabelOptions {
   runtime?: string;
   importSource?: string;
+  useBuiltIns?: boolean | string;
 }
 
 module.exports = function (api: any, options: ReactBabelOptions) {
@@ -13,7 +14,7 @@ module.exports = function (api: any, options: ReactBabelOptions) {
 
   return {
     presets: [
-      '@nrwl/web/babel',
+      ['@nrwl/web/babel', { useBuiltIns: options.useBuiltIns }],
       [
         require.resolve('@babel/preset-react'),
         getReactPresetOptions({

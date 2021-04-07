@@ -1,8 +1,11 @@
+import { dirname } from 'path';
+
 /*
  * Babel preset to provide TypeScript support and module/nomodule for Nx.
  */
 
 interface NxReactBabelPresetOptions {
+  useBuiltIns?: boolean | string;
   decorators?: {
     decoratorsBeforeExport?: boolean;
     legacy?: boolean;
@@ -16,8 +19,13 @@ module.exports = function (api: any, options: NxReactBabelPresetOptions = {}) {
   api.assertVersion(7);
 
   const isModern = api.caller((caller) => caller?.isModern);
+
   // `isServer` is passed from `next-babel-loader`, when it compiles for the server
   const isServer = api.caller((caller) => caller?.isServer);
+
+  // This is set by `@nrwl/web:package` executor
+  const isNxPackage = api.caller((caller) => caller?.isNxPackage);
+
   const emitDecoratorMetadata = api.caller(
     (caller) => caller?.emitDecoratorMetadata ?? true
   );
@@ -35,7 +43,7 @@ module.exports = function (api: any, options: NxReactBabelPresetOptions = {}) {
           : {
               // Allow importing core-js in entrypoint and use browserlist to select polyfills.
               // This is needed for differential loading as well.
-              useBuiltIns: 'entry',
+              useBuiltIns: options.useBuiltIns ?? 'entry',
               corejs: 3,
               // Do not transform modules to CJS
               modules: false,
@@ -48,6 +56,20 @@ module.exports = function (api: any, options: NxReactBabelPresetOptions = {}) {
       require.resolve('@babel/preset-typescript'),
     ],
     plugins: [
+      !isNxPackage
+        ? [
+            require.resolve('@babel/plugin-transform-runtime'),
+            {
+              corejs: false,
+              helpers: true,
+              regenerator: true,
+              useESModules: isModern,
+              absoluteRuntime: dirname(
+                require.resolve('@babel/runtime/package.json')
+              ),
+            },
+          ]
+        : null,
       require.resolve('babel-plugin-macros'),
       emitDecoratorMetadata
         ? require.resolve('babel-plugin-transform-typescript-metadata')
