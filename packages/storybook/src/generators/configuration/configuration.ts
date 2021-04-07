@@ -62,8 +62,10 @@ export async function configurationGenerator(
   if (schema.configureCypress && projectType !== 'application') {
     const cypressTask = await cypressProjectGenerator(tree, {
       name: schema.name,
+      cypressName: schema.cypressName,
       js: schema.js,
       linter: schema.linter,
+      directory: schema.cypressDirectory,
     });
     tasks.push(cypressTask);
   } else {

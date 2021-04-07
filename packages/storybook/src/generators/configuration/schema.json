@@ -23,6 +23,14 @@
       "description": "Run the cypress-configure generator",
       "x-prompt": "Configure a cypress e2e app to run against the storybook instance?"
     },
+    "cypressDirectory": {
+      "type": "string",
+      "description": "A directory where the Cypress project will be placed. Added at root by default."
+    },
+    "cypressName": {
+      "type": "string",
+      "description": "A custom name for the Cypress project. Inferred from 'name' by default."
+    },
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",

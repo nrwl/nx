@@ -33,6 +33,7 @@ export interface CreateComponentSpecFileSchema {
   componentName: string;
   componentPath: string;
   componentFileName: string;
+  cypressProject?: string;
 }
 
 export function createComponentSpecFile({
@@ -41,10 +42,12 @@ export function createComponentSpecFile({
   componentName,
   componentPath,
   componentFileName,
+  cypressProject,
 }: CreateComponentSpecFileSchema): Rule {
   return (tree: Tree, context: SchematicContext): Rule => {
+    const e2eProjectName = cypressProject || `${projectName}-e2e`;
     const e2eLibIntegrationFolderPath = `${
-      getProjectConfig(tree, `${projectName}-e2e`).sourceRoot
+      getProjectConfig(tree, e2eProjectName).sourceRoot
     }/integration`;
     const fullComponentPath = join(
       normalize(libPath),
