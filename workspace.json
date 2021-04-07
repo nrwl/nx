@@ -12,7 +12,7 @@
             "outputPath": "build/packages/nx",
             "tsConfig": "packages/nx/tsconfig.lib.json",
             "packageJson": "packages/nx/package.json",
-            "main": "packages/nx/index.ts",
+            "main": "packages/nx/bin/nx.ts",
             "updateBuildableProjectDepsInPackageJson": false,
             "assets": [
               {
@@ -1296,7 +1296,7 @@
             "outputPath": "build/packages/eslint-plugin-nx",
             "tsConfig": "packages/eslint-plugin-nx/tsconfig.lib.json",
             "packageJson": "packages/eslint-plugin-nx/package.json",
-            "main": "packages/eslint-plugin-nx/index.ts",
+            "main": "packages/eslint-plugin-nx/src/index.ts",
             "updateBuildableProjectDepsInPackageJson": false,
             "assets": [
               {
@@ -1379,7 +1379,7 @@
             "outputPath": "build/packages/create-nx-workspace",
             "tsConfig": "packages/create-nx-workspace/tsconfig.lib.json",
             "packageJson": "packages/create-nx-workspace/package.json",
-            "main": "packages/create-nx-workspace/index.ts",
+            "main": "packages/create-nx-workspace/bin/create-nx-workspace.ts",
             "updateBuildableProjectDepsInPackageJson": false,
             "assets": [
               {
@@ -1465,7 +1465,7 @@
             "outputPath": "build/packages/create-nx-plugin",
             "tsConfig": "packages/create-nx-plugin/tsconfig.lib.json",
             "packageJson": "packages/create-nx-plugin/package.json",
-            "main": "packages/create-nx-plugin/index.ts",
+            "main": "packages/create-nx-plugin/bin/create-nx-plugin.ts",
             "updateBuildableProjectDepsInPackageJson": false,
             "assets": [
               {
@@ -1551,7 +1551,7 @@
             "outputPath": "build/packages/cli",
             "tsConfig": "packages/cli/tsconfig.lib.json",
             "packageJson": "packages/cli/package.json",
-            "main": "packages/cli/index.ts",
+            "main": "packages/cli/bin/nx.ts",
             "updateBuildableProjectDepsInPackageJson": false,
             "assets": [
               {
