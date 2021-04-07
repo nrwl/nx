@@ -1,3 +1,4 @@
+import { existsSync } from 'fs-extra';
 import { ExecutorContext, normalizePath } from '@nrwl/devkit';
 
 import * as glob from 'glob';
@@ -48,6 +49,13 @@ export default function normalizeOptions(
   });
 
   const rootDir = libRoot || '';
+
+  if (options.main && !existsSync(options.main)) {
+    throw new Error(
+      `Please verify that the "main" option for project "${context.projectName}" is valid.`
+    );
+  }
+
   const mainFileDir = dirname(options.main);
 
   // Always include a preceding dot to match format used for entry points
