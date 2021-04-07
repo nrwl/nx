@@ -14,8 +14,8 @@
     "ESLint",
     "CLI"
   ],
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "./index.js",
+  "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
