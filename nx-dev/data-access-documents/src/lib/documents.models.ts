@@ -5,7 +5,7 @@ export interface DocumentData {
   excerpt?: string;
 }
 
-export interface VersionData {
+export interface ArchiveVersionData {
   name: string;
   id: string;
   release: string;
@@ -13,9 +13,9 @@ export interface VersionData {
   default: boolean;
 }
 
-export interface Item {
+export interface DocumentMapItem {
   name: string;
   id: string;
   file?: string;
-  itemList?: Item[];
+  itemList?: DocumentMapItem[];
 }
