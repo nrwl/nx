@@ -56,7 +56,7 @@ xdescribe('Nrwl Convert to Nx Workspace', () => {
     expect(readJson('.vscode/extensions.json').recommendations).toEqual([
       'nrwl.angular-console',
       'angular.ng-template',
-      'ms-vscode.vscode-typescript-tslint-plugin',
+      'dbaeumer.vscode-eslint',
       'esbenp.prettier-vscode',
     ]);
 
@@ -276,7 +276,7 @@ xdescribe('Nrwl Convert to Nx Workspace', () => {
       'eamodio.gitlens',
       'angular.ng-template',
       'nrwl.angular-console',
-      'ms-vscode.vscode-typescript-tslint-plugin',
+      'dbaeumer.vscode-eslint',
       'esbenp.prettier-vscode',
     ]);
   });

@@ -1,4 +1,4 @@
-import { readJson, writeJson, Tree } from '@nrwl/devkit';
+import { readJson, Tree, writeJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { jestInitGenerator } from './init';
 
@@ -55,7 +55,7 @@ describe('jest', () => {
         recommendations: [
           'nrwl.angular-console',
           'angular.ng-template',
-          'ms-vscode.vscode-typescript-tslint-plugin',
+          'dbaeumer.vscode-eslint',
           'esbenp.prettier-vscode',
         ],
       });
@@ -69,7 +69,7 @@ describe('jest', () => {
           "recommendations": Array [
             "nrwl.angular-console",
             "angular.ng-template",
-            "ms-vscode.vscode-typescript-tslint-plugin",
+            "dbaeumer.vscode-eslint",
             "esbenp.prettier-vscode",
             "firsttris.vscode-jest-runner",
           ],

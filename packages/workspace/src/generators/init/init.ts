@@ -6,7 +6,9 @@ import {
   generateFiles,
   getWorkspacePath,
   installPackagesTask,
+  joinPathFragments,
   names,
+  normalizePath,
   offsetFromRoot,
   readJson,
   readProjectConfiguration,
@@ -17,20 +19,18 @@ import {
   updateWorkspaceConfiguration,
   visitNotIgnoredFiles,
   writeJson,
-  normalizePath,
-  joinPathFragments,
 } from '@nrwl/devkit';
+import { readFileSync } from 'fs';
 import { basename } from 'path';
-import { Schema } from './schema';
+import { serializeJson } from '../../utilities/fileutils';
+import { resolveUserExistingPrettierConfig } from '../../utilities/prettier';
 import {
   angularCliVersion,
   nxVersion,
   prettierVersion,
 } from '../../utils/versions';
 import { DEFAULT_NRWL_PRETTIER_CONFIG } from '../workspace/workspace';
-import { readFileSync } from 'fs';
-import { serializeJson } from '../../utilities/fileutils';
-import { resolveUserExistingPrettierConfig } from '../../utilities/prettier';
+import { Schema } from './schema';
 
 function updatePackageJson(tree) {
   updateJson(tree, 'package.json', (packageJson) => {
@@ -450,7 +450,7 @@ async function createAdditionalFiles(host: Tree, options: Schema) {
   const recommendations = [
     'nrwl.angular-console',
     'angular.ng-template',
-    'ms-vscode.vscode-typescript-tslint-plugin',
+    'dbaeumer.vscode-eslint',
     'esbenp.prettier-vscode',
   ];
   if (host.exists('.vscode/extensions.json')) {
