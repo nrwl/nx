@@ -21,8 +21,10 @@ module.exports = {
     '<rootDir>/packages/gatsby',
     '<rootDir>/dep-graph/dep-graph',
     '<rootDir>/nx-dev/nx-dev',
-    '<rootDir>/nx-dev/ui-common',
+    '<rootDir>/nx-dev/ui/layout',
     '<rootDir>/nx-dev/feature-doc-viewer',
     '<rootDir>/nx-dev/data-access-documents',
+    '<rootDir>//nx-dev/feature-sidebar',
+    '<rootDir>//nx-dev/feature-toc',
   ],
 };

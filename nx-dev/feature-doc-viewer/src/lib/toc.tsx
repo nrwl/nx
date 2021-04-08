@@ -1,5 +1,3 @@
-import React from 'react';
-
 /* eslint-disable-next-line */
 export interface TocProps {}
 
@@ -30,5 +28,3 @@ export function Toc(props: TocProps) {
     </div>
   );
 }
-
-export default Toc;

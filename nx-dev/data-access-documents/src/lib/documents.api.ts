@@ -2,12 +2,10 @@ import * as fs from 'fs';
 import { join } from 'path';
 import matter from 'gray-matter';
 import * as marked from 'marked';
-import {
-  getDocumentsMap,
-  getDocumentsRoot,
-  getVersions as _getVersions,
-} from './utils';
-import { DocumentData, VersionData } from './models';
+import { readJsonFile } from '@nrwl/workspace';
+
+import { archiveRootPath, getVersionRootPath } from './documents.paths';
+import { DocumentData, VersionEntry } from './documents.models';
 
 export function getDocument(
   version: string,
@@ -25,8 +23,26 @@ export function getDocument(
   };
 }
 
-export function getFilePath(version: string, segments: string[]): string {
-  let items = getDocumentsMap(version);
+export function getDocuments(version: string) {
+  try {
+    return readJsonFile(join(getVersionRootPath(version), 'map.json'));
+  } catch {
+    throw new Error(`Cannot find map.json for ${version}`);
+  }
+}
+
+export function getDocumentsByFlavor(version: string, flavor: string) {
+  const list = getDocuments(version);
+  const item = list.find((x) => x.id === flavor);
+  if (item) {
+    return item.itemList;
+  } else {
+    throw new Error(`Cannot find documents for ${flavor} at ${version}`);
+  }
+}
+
+function getFilePath(version: string, segments: string[]): string {
+  let items = getDocuments(version);
   let found;
   for (const segment of segments) {
     found = items.find((item) => item.id === segment);
@@ -43,10 +59,12 @@ export function getFilePath(version: string, segments: string[]): string {
       `Cannot find document matching segments: ${segments.join(',')}`
     );
   }
-  return join(getDocumentsRoot(version), `${found.file}.md`);
+  return join(getVersionRootPath(version), `${found.file}.md`);
 }
 
-export function getAllDocumentsPaths(version: string) {
+export function getStaticDocumentPaths(
+  version: string
+): Array<{ params: { version: string; flavor: string; segments: string[] } }> {
   const paths = [];
 
   function recur(curr, acc) {
@@ -67,13 +85,13 @@ export function getAllDocumentsPaths(version: string) {
     }
   }
 
-  getDocumentsMap(version).forEach((item) => {
+  getDocuments(version).forEach((item) => {
     recur(item, [item.id]);
   });
 
   return paths;
 }
 
-export function getVersions(): VersionData[] {
-  return _getVersions();
+export function getArchivedVersions(): VersionEntry[] {
+  return readJsonFile(join(archiveRootPath, 'versions.json'));
 }
