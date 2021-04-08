@@ -6,6 +6,7 @@ export const gatsbyPluginManifestVersion = '3.2.0';
 export const gatsbyPluginOfflineVersion = '4.2.0';
 export const gatsbyPluginReactHelmetVersion = '4.2.0';
 export const gatsbyPluginSharpVersion = '3.2.0';
+export const gatsbyPluginStyledJsx = '4.2.0';
 export const gatsbySourceFilesystemVersion = '3.2.0';
 export const gatsbyTransformerSharpVersion = '3.2.0';
 export const propTypesVersion = '15.7.2';

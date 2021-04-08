@@ -373,16 +373,13 @@ function determineStyle(preset: Preset, parsedArgs: any) {
         name: '@emotion/styled',
         message:
           'emotion           [ https://emotion.sh                       ]',
-      }
-    );
-    // TODO: Remove below if condition when Gatsby supports styled-jsx
-    if (Preset.Gatsby !== preset) {
-      choices.push({
+      },
+      {
         name: 'styled-jsx',
         message:
           'styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]',
-      });
-    }
+      }
+    );
   }
 
   if (!parsedArgs.style) {

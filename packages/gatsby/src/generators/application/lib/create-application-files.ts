@@ -8,6 +8,11 @@ import {
   Tree,
   updateTsConfigsToJs,
 } from '@nrwl/devkit';
+import {
+  createAppJsx,
+  createPageStyleContent,
+  createPageWrapperStyle,
+} from './create-application-files.helpers';
 
 export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   const isPnpm = host.exists('pnpm-lock.yaml');
@@ -17,6 +22,9 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     ...names(options.name),
     offsetFromRoot: offsetFromRoot(options.projectRoot),
     tmpl: '',
+    appContent: createAppJsx(options.name),
+    pageWrapperStyle: createPageWrapperStyle(),
+    pageStyleContent: createPageStyleContent(),
   };
 
   generateFiles(

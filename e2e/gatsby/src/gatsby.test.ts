@@ -43,7 +43,21 @@ describe('Gatsby Applications', () => {
     );
   }, 300000);
 
-  test('supports --js option', async () => {
+  it('should support styled-jsx', async () => {
+    const appName = uniq('app');
+
+    runCLI(`generate @nrwl/gatsby:app ${appName} --style styled-jsx`);
+
+    let result = runCLI(`build ${appName}`);
+    expect(result).toContain('Done building in');
+
+    result = runCLI(`lint ${appName}`);
+    expect(result).not.toMatch('Lint errors found in the listed files');
+
+    await expect(runCLIAsync(`test ${appName}`)).resolves.toBeTruthy();
+  }, 120000);
+
+  it('should support --js option', async () => {
     const app = uniq('app');
     runCLI(`generate @nrwl/gatsby:app ${app} --js`);
 
