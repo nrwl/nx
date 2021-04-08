@@ -92,7 +92,7 @@ function getIgnoredGlobs(root: string) {
   return ig;
 }
 
-export default async function (
+export default async function* fileServerExecutor(
   opts: FileServerOptions,
   context: ExecutorContext
 ) {
@@ -123,14 +123,16 @@ export default async function (
       setTimeout(() => run(), 1000);
     }
   }
+  run();
 
   const outputPath = getBuildTargetOutputPath(opts, context);
   const args = getHttpServerArgs(opts);
-  run();
 
   const serve = exec(`npx http-server ${outputPath} ${args.join(' ')}`, {
     cwd: context.root,
   });
+  const processExitListener = () => serve.kill();
+  process.on('exit', processExitListener);
   serve.stdout.on('data', (chunk) => {
     if (chunk.toString().indexOf('GET') === -1) {
       process.stdout.write(chunk);
@@ -139,6 +141,14 @@ export default async function (
   serve.stderr.on('data', (chunk) => {
     process.stderr.write(chunk);
   });
+  serve.on('close', () => {
+    process.removeListener('exit', processExitListener);
+  });
+
+  yield {
+    success: true,
+    baseUrl: `${opts.ssl ? 'https' : 'http'}://${opts.host}:${opts.port}`,
+  };
 
   return new Promise<{ success: boolean }>((res) => {
     serve.on('exit', (code) => {
