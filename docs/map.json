@@ -937,9 +937,14 @@
             "file": "shared/monorepo-tags"
           },
           {
-            "name": "Dependency Graph",
+            "name": "Project Graph",
             "id": "dependency-graph",
             "file": "shared/workspace/structure/dependency-graph"
+          },
+          {
+            "name": "Extending the Project Graph",
+            "id": "project-graph-plugins",
+            "file": "shared/workspace/project-graph-plugins"
           }
         ]
       },
@@ -1998,6 +2003,11 @@
             "name": "Dependency Graph",
             "id": "dependency-graph",
             "file": "shared/workspace/structure/dependency-graph"
+          },
+          {
+            "name": "Extending the Project Graph",
+            "id": "project-graph-plugins",
+            "file": "shared/workspace/project-graph-plugins"
           }
         ]
       },
@@ -3002,6 +3012,11 @@
             "name": "Dependency Graph",
             "id": "dependency-graph",
             "file": "shared/workspace/structure/dependency-graph"
+          },
+          {
+            "name": "Extending the Project Graph",
+            "id": "project-graph-plugins",
+            "file": "shared/workspace/project-graph-plugins"
           }
         ]
       },
