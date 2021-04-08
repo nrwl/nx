@@ -2,12 +2,13 @@ import * as fs from 'fs';
 import { join } from 'path';
 import matter from 'gray-matter';
 import * as marked from 'marked';
+import { archiveRootPath, previewRootPath } from './documents.utils';
 import {
-  getDocumentsMap,
-  getDocumentsRoot,
-  getVersions as _getVersions,
-} from './utils';
-import { DocumentData, VersionData } from './models';
+  DocumentData,
+  DocumentMapItem,
+  ArchiveVersionData,
+} from './documents.models';
+import { readJsonFile } from '@nrwl/workspace';
 
 export function getDocument(
   version: string,
@@ -25,8 +26,22 @@ export function getDocument(
   };
 }
 
+const mapCache = new Map<string, DocumentMapItem[]>();
+export function getDocuments(version: string) {
+  try {
+    let list = mapCache.get(version);
+    if (!list) {
+      list = readJsonFile(join(getDocumentsRoot(version), 'map.json'));
+      mapCache.set(version, list);
+    }
+    return list;
+  } catch {
+    throw new Error(`Cannot find map.json for ${version}`);
+  }
+}
+
 export function getFilePath(version: string, segments: string[]): string {
-  let items = getDocumentsMap(version);
+  let items = getDocuments(version);
   let found;
   for (const segment of segments) {
     found = items.find((item) => item.id === segment);
@@ -46,7 +61,7 @@ export function getFilePath(version: string, segments: string[]): string {
   return join(getDocumentsRoot(version), `${found.file}.md`);
 }
 
-export function getAllDocumentsPaths(version: string) {
+export function getStaticDocumentPaths(version: string) {
   const paths = [];
 
   function recur(curr, acc) {
@@ -67,13 +82,33 @@ export function getAllDocumentsPaths(version: string) {
     }
   }
 
-  getDocumentsMap(version).forEach((item) => {
+  getDocuments(version).forEach((item) => {
     recur(item, [item.id]);
   });
 
   return paths;
 }
 
-export function getVersions(): VersionData[] {
-  return _getVersions();
+const versionsData = readJsonFile(join(archiveRootPath, 'versions.json'));
+export function getDocumentsRoot(version: string): string {
+  if (version === 'preview') {
+    return previewRootPath;
+  }
+
+  if (version === 'latest' || version === 'previous') {
+    return join(
+      archiveRootPath,
+      versionsData.find((x) => x.id === version).path
+    );
+  }
+
+  throw new Error(`Cannot find root for ${version}`);
+}
+
+let versions: ArchiveVersionData[];
+export function getVersions(): ArchiveVersionData[] {
+  if (!versions) {
+    versions = readJsonFile(join(archiveRootPath, 'versions.json'));
+  }
+  return versions;
 }

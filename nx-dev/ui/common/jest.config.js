@@ -6,5 +6,5 @@ module.exports = {
     '^.+\\.[tj]sx?$': 'babel-jest',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/nx-dev/ui-common',
+  coverageDirectory: '../../../coverage/nx-dev/ui/common',
 };

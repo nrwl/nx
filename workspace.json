@@ -2184,21 +2184,21 @@
       }
     },
     "nx-dev-ui-common": {
-      "root": "nx-dev/ui-common",
-      "sourceRoot": "nx-dev/ui-common/src",
+      "root": "nx-dev/ui/common",
+      "sourceRoot": "nx-dev/ui/common/src",
       "projectType": "library",
       "targets": {
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "options": {
-            "lintFilePatterns": ["nx-dev/ui-common/**/*.{ts,tsx,js,jsx}"]
+            "lintFilePatterns": ["nx-dev/ui/common/**/*.{ts,tsx,js,jsx}"]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/nx-dev/ui-common"],
+          "outputs": ["coverage/nx-dev/ui/common"],
           "options": {
-            "jestConfig": "nx-dev/ui-common/jest.config.js",
+            "jestConfig": "nx-dev/ui/common/jest.config.js",
             "passWithNoTests": true
           }
         }

@@ -1,16 +1,16 @@
 import * as React from 'react';
 import {
   getDocument,
-  getAllDocumentsPaths,
+  getStaticDocumentPaths,
   DocumentData,
   getVersions,
-  VersionData,
+  ArchiveVersionData,
 } from '@nrwl/nx-dev/data-access-documents';
 import { DocViewer } from '@nrwl/nx-dev/feature-doc-viewer';
 
 interface DocumentationProps {
   document: DocumentData;
-  versions: VersionData[];
+  versions: ArchiveVersionData[];
 }
 
 interface DocumentationParams {
@@ -39,7 +39,7 @@ export async function getStaticPaths(props) {
   const versions = ['preview'].concat(getVersions().map((x) => x.id));
 
   const allPaths = versions.reduce((acc, v) => {
-    acc.push(...getAllDocumentsPaths(v));
+    acc.push(...getStaticDocumentPaths(v));
     return acc;
   }, []);
 
