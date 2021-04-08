@@ -138,7 +138,7 @@ describe('Next.js Applications', () => {
     });
   }, 120000);
 
-  fit('should compile when using a workspace and react lib written in TypeScript', async () => {
+  it('should compile when using a workspace and react lib written in TypeScript', async () => {
     const appName = uniq('app');
     const tsLibName = uniq('tslib');
     const tsxLibName = uniq('tsxlib');
