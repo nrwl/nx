@@ -13,7 +13,7 @@ export class <%= className %>Effects {
       return <%= className %>Actions.load<%= className %>Success({ <%= propertyName %>: [] });
     },
 
-    onError: (action: ReturnType<typeof <%= className %>Actions.init>>, error) => {
+    onError: (action: ReturnType<typeof <%= className %>Actions.init>, error) => {
       console.error('Error', error);
       return <%= className %>Actions.load<%= className %>Failure({ error });
     }
