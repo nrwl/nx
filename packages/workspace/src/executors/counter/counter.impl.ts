@@ -1,5 +1,5 @@
 async function wait() {
-  return new Promise((res) => {
+  return new Promise<void>((res) => {
     setTimeout(() => res(), 1000);
   });
 }

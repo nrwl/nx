@@ -72,7 +72,7 @@ function generatePreset(host: Tree, opts: Schema) {
     `--cli=${cliCommand}`,
     parsedArgs.interactive ? '--interactive=true' : '--interactive=false',
   ].filter((e) => !!e);
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     spawn(executable, args, spawnOptions).on('close', (code: number) => {
       if (code === 0) {
         resolve();
@@ -112,7 +112,7 @@ async function initializeGitRepo(
           : {}),
       },
     };
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       spawn('git', args, spawnOptions).on('close', (code) => {
         if (code === 0) {
           resolve();
