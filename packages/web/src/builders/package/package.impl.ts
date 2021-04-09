@@ -237,7 +237,7 @@ export function createRollupOptions(
         namedExports: {
           // This is needed because `react/jsx-runtime` exports `jsx` on the module export.
           // Without this mapping the transformed import `import {jsx as _jsx} from 'react/jsx-runtime'` will fail.
-          'react/jsx-runtime': ['jsx'],
+          'react/jsx-runtime': ['jsx', 'jsxs', 'Fragment'],
         },
       }),
       filesize(),
