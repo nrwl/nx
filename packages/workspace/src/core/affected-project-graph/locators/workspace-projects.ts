@@ -3,21 +3,31 @@ import { TouchedProjectLocator } from '../affected-project-graph-models';
 
 export const getTouchedProjects: TouchedProjectLocator = (
   touchedFiles,
-  workspaceJson
+  _workspaceJson,
+  _nxJson,
+  _packageJson,
+  graph
 ): string[] => {
-  // sort project names with the most nested first,
-  // e.g. ['libs/a/b/c', 'libs/a/b', 'libs/a']
-  const projectNames = Object.entries(workspaceJson.projects)
-    .sort(([name1, p1]: any, [name2, p2]: any) =>
-      p1.root.length > p2.root.length ? -1 : 1
-    )
-    .map(([name]) => name);
+  /**
+   * We use the graph as the source of truth because non-JS languages may have added
+   * to the project graph via a plugin, and there will not be a corresponding entry
+   * in the workspace.json.
+   *
+   * Sort project names with the most nested first,
+   * e.g. ['libs/a/b/c', 'libs/a/b', 'libs/a']
+   */
+  const projectNames = Object.values(graph.nodes)
+    .filter((p) => p.type !== 'npm')
+    .sort((p1, p2) => (p1.data.root.length > p2.data.root.length ? -1 : 1))
+    .map((p) => p.name);
 
   return touchedFiles
     .map((f) => {
       return projectNames.find((projectName) => {
-        const p = workspaceJson.projects[projectName];
-        const projectRoot = p.root.endsWith('/') ? p.root : `${p.root}/`;
+        const p = graph.nodes[projectName];
+        const projectRoot = p.data.root.endsWith('/')
+          ? p.data.root
+          : `${p.data.root}/`;
         return f.file.startsWith(projectRoot);
       });
     })

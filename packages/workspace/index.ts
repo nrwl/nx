@@ -24,6 +24,7 @@ export {
   readWorkspaceJson,
   readNxJson,
   readWorkspaceConfig,
+  getFileData,
 } from './src/core/file-utils';
 export { NxJson } from './src/core/shared-interfaces';
 export {

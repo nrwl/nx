@@ -13,6 +13,25 @@ function getFileChanges(files: string[]) {
   }));
 }
 
+function createGraphFromProjects(projects: {
+  [projectName: string]: { root: string };
+}) {
+  const nodes = {};
+  for (const [name, val] of Object.entries(projects)) {
+    nodes[name] = {
+      name,
+      type: 'lib',
+      data: {
+        root: val.root,
+      },
+    };
+  }
+  return {
+    nodes,
+    dependencies: {},
+  };
+}
+
 describe('getTouchedProjects', () => {
   it('should return a list of projects for the given changes', () => {
     const fileChanges = getFileChanges(['libs/a/index.ts', 'libs/b/index.ts']);
@@ -21,7 +40,15 @@ describe('getTouchedProjects', () => {
       b: { root: 'libs/b' },
       c: { root: 'libs/c' },
     };
-    expect(getTouchedProjects(fileChanges, { projects })).toEqual(['a', 'b']);
+    expect(
+      getTouchedProjects(
+        fileChanges,
+        undefined,
+        undefined,
+        undefined,
+        createGraphFromProjects(projects)
+      )
+    ).toEqual(['a', 'b']);
   });
 
   it('should return projects with the root matching a whole directory name in the file path', () => {
@@ -31,7 +58,15 @@ describe('getTouchedProjects', () => {
       abc: { root: 'libs/a-b-c' },
       ab: { root: 'libs/a-b' },
     };
-    expect(getTouchedProjects(fileChanges, { projects })).toEqual(['ab']);
+    expect(
+      getTouchedProjects(
+        fileChanges,
+        undefined,
+        undefined,
+        undefined,
+        createGraphFromProjects(projects)
+      )
+    ).toEqual(['ab']);
   });
 
   it('should return projects with the root matching a whole directory name in the file path', () => {
@@ -41,7 +76,15 @@ describe('getTouchedProjects', () => {
       abc: { root: 'libs/a-b-c' },
       ab: { root: 'libs/a-b' },
     };
-    expect(getTouchedProjects(fileChanges, { projects })).toEqual(['ab']);
+    expect(
+      getTouchedProjects(
+        fileChanges,
+        undefined,
+        undefined,
+        undefined,
+        createGraphFromProjects(projects)
+      )
+    ).toEqual(['ab']);
   });
 
   it('should return the most qualifying match with the file path', () => {
@@ -50,7 +93,15 @@ describe('getTouchedProjects', () => {
       aaaaa: { root: 'libs/a' },
       ab: { root: 'libs/a/b' },
     };
-    expect(getTouchedProjects(fileChanges, { projects })).toEqual(['ab']);
+    expect(
+      getTouchedProjects(
+        fileChanges,
+        undefined,
+        undefined,
+        undefined,
+        createGraphFromProjects(projects)
+      )
+    ).toEqual(['ab']);
   });
 });
 

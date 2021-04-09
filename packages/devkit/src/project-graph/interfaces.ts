@@ -58,7 +58,7 @@ export interface ProjectGraphNode<T = any> {
     /**
      * The project's root directory
      */
-    root?: string;
+    root: string;
     /**
      * Targets associated to the project
      */

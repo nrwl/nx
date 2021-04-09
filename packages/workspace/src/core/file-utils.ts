@@ -107,7 +107,7 @@ function defaultReadFileAtRevision(
   }
 }
 
-function getFileData(filePath: string): FileData {
+export function getFileData(filePath: string): FileData {
   const file = path.relative(appRootPath, filePath).split(path.sep).join('/');
   return {
     file,

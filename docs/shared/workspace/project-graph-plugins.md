@@ -2,17 +2,20 @@
 
 > This API is experimental and might change.
 
-Nx views the workspace as a graph of projects that depend on one another. It's able to infer most projects and dependencies automatically. Currently, this works best within the Javascript ecosystem but it can be extended to other languages and technologies as well.
+Nx views the workspace as a graph of projects that depend on one another. It's able to infer most projects and dependencies automatically. Currently, this works best within the JavaScript ecosystem but it can be extended to other languages and technologies as well.
 
 ## Defining Plugins to be used in a workspace
 
 In `nx.json`, add an array of plugins:
 
-```json
+```jsonc
 {
   ...,
   "plugins": [
-    "awesome-plugin"
+    // You can use npm packages
+    "awesome-plugin-package",
+    // Or implementations defined in your workspace (in JavaScript)
+    "./tools/nx-plugins/some-local-workspace-implementation.js"
   ]
 }
 ```
@@ -39,6 +42,7 @@ import {
   ProjectGraphProcessorContext,
   DependencyType,
 } from '@nrwl/devkit';
+import { getFileData } from '@nrwl/workspace';
 
 export function processProjectGraph(
   graph: ProjectGraph,
@@ -46,21 +50,36 @@ export function processProjectGraph(
 ): ProjectGraph {
   const builder = new ProjectGraphBuilder(graph);
 
-  // Add a new node
-  builder.addNode({
-    name: 'new-project',
-    type: 'lib',
-    data: {
-      files: [],
-    },
-  });
+  // ...
+  // Where "otherLanguageProjects" is created by you, e.g. using your custom language's toolchain/compiler APIs
+  // ...
 
-  // Add a new edge
-  builder.addDependency(
-    DependencyType.static,
-    'existing-project',
-    'new-project'
-  );
+  // First iterate through and add all the projects as nodes on the graph
+  for (const otherLanguageProject of otherLanguageProjects) {
+    builder.addNode({
+      name: otherLanguageProject.name, // (as an example of what your otherLanguageProject object might look like)
+      type: 'lib',
+      data: {
+        files: [
+          // Using getFileData will create a hash of the file contents using Nx's internal hashing alogrithm
+          getFileData('/some/file/from/another/language.foo'),
+          // ...more files for the project
+        ],
+      },
+    });
+  }
+
+  // Now that the projects exist as nodes, iterate through again and create all the dependency relationships between them
+  for (const otherLanguageProject of otherLanguageProjects) {
+    // (as an example of what your otherLanguageProject object might look like with a deps array)
+    for (const depProject of otherLanguageProject.deps) {
+      builder.addDependency(
+        DependencyType.static,
+        otherLanguageProject.name, // (as an example of what your otherLanguageProject object might look like)
+        depProject.name // (as an example of what your otherLanguageProject dep object might look like)
+      );
+    }
+  }
 
   return builder.getProjectGraph();
 }
