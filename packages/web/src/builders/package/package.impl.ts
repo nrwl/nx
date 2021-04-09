@@ -83,6 +83,12 @@ export default function run(
     throw new Error();
   }
 
+  if (rawOptions.babelConfig) {
+    logger.warn(
+      `Deprecated option "babelConfig" used, please use the .babelrc file for ${context.projectName} instead.`
+    );
+  }
+
   const options = normalizePackageOptions(rawOptions, context.root, sourceRoot);
   const packageJson = readJsonFile(options.project);
 
@@ -93,12 +99,6 @@ export default function run(
     packageJson,
     sourceRoot
   );
-
-  if (options.babelConfig) {
-    logger.warn(
-      `Deprecated option "babelConfig" used, please use the .babelrc file for ${context.projectName} instead.`
-    );
-  }
 
   if (options.watch) {
     const watcher = rollup.watch(rollupOptions);
@@ -268,9 +268,9 @@ export function createRollupOptions(
       plugins,
     };
 
-    return options.rollupConfig
-      ? require(options.rollupConfig)(rollupConfig, options)
-      : rollupConfig;
+    return options.rollupConfig.reduce((currentConfig, plugin) => {
+      return require(plugin)(currentConfig, options);
+    }, rollupConfig);
   });
 }
 
