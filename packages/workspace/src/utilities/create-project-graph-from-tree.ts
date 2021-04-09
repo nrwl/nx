@@ -6,5 +6,5 @@ import { createProjectGraph } from '../core/project-graph/project-graph';
  * @deprecated This method is deprecated and is synonymous to {@link createProjectGraph}()
  */
 export function createProjectGraphFromTree(tree: Tree) {
-  return createProjectGraph(undefined, undefined, undefined, false);
+  return createProjectGraph(undefined, undefined, undefined);
 }
