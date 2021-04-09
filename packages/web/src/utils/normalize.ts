@@ -17,6 +17,7 @@ export interface NormalizedBundleBuilderOptions extends PackageBuilderOptions {
   entryRoot: string;
   projectRoot: string;
   assets: AssetGlobPattern[];
+  rollupConfig: string[];
 }
 
 export function normalizePackageOptions(
@@ -36,8 +37,10 @@ export function normalizePackageOptions(
 
   return {
     ...options,
-    babelConfig: normalizePluginPath(options.babelConfig, root),
-    rollupConfig: normalizePluginPath(options.rollupConfig, root),
+    rollupConfig: []
+      .concat(options.rollupConfig)
+      .filter(Boolean)
+      .map((p) => normalizePluginPath(p, root)),
     assets: options.assets
       ? normalizeAssets(options.assets, root, sourceRoot)
       : undefined,

@@ -52,7 +52,7 @@ export interface PackageBuilderOptions {
   extractCss?: boolean;
   globals?: Globals[];
   external?: string[];
-  rollupConfig?: string;
+  rollupConfig?: string | string[];
   babelConfig?: string;
   watch?: boolean;
   assets?: any[];
