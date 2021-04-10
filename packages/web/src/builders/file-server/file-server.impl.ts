@@ -18,7 +18,8 @@ export interface FileServerOptions {
 }
 
 function getHttpServerArgs(opts: FileServerOptions) {
-  const args = [] as any[];
+  const args: string[] = [];
+
   if (opts.port) {
     args.push(`-p ${opts.port}`);
   }
@@ -128,9 +129,10 @@ export default async function* fileServerExecutor(
   const outputPath = getBuildTargetOutputPath(opts, context);
   const args = getHttpServerArgs(opts);
 
-  const serve = exec(`npx http-server ${outputPath} ${args.join(' ')}`, {
-    cwd: context.root,
-  });
+  const serve = exec(
+    `npx spa-http-server ${outputPath} ${args.join(' ')} --push-state`,
+    { cwd: context.root }
+  );
   const processExitListener = () => serve.kill();
   process.on('exit', processExitListener);
   serve.stdout.on('data', (chunk) => {
