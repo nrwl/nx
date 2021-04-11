@@ -111,6 +111,11 @@ export default createESLintRule<Options, MessageIds>({
       (global as any).npmScope = nxJson.npmScope;
       (global as any).projectGraph = readCurrentProjectGraph();
     }
+
+    if (!(global as any).projectGraph) {
+      return {};
+    }
+
     const npmScope = (global as any).npmScope;
     const projectGraph = (global as any).projectGraph as ProjectGraph;
 
@@ -123,8 +128,6 @@ export default createESLintRule<Options, MessageIds>({
       .targetProjectLocator as TargetProjectLocator;
 
     function run(node: TSESTree.ImportDeclaration | TSESTree.ImportExpression) {
-      if (!projectGraph) return;
-
       // accept only literals because template literals have no value
       if (node.source.type !== AST_NODE_TYPES.Literal) {
         return;
