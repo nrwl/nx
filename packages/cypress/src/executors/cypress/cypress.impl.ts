@@ -112,8 +112,6 @@ async function* startDevServer(
     return;
   }
 
-  console.log('VALUE....', parseTargetString(opts.devServerTarget));
-
   const { project, target, configuration } = parseTargetString(
     opts.devServerTarget
   );

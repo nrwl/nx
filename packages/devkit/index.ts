@@ -8,10 +8,14 @@ export {
   GeneratorCallback,
   Executor,
   ExecutorContext,
+  Workspace,
 } from '@nrwl/tao/src/shared/workspace';
 export {
+  ImplicitDependencyEntry,
+  ImplicitJsonSubsetDependency,
   NxJsonConfiguration,
   NxJsonProjectConfiguration,
+  NxAffectedConfig,
 } from '@nrwl/tao/src/shared/nx';
 export { logger } from '@nrwl/tao/src/shared/logger';
 export { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
@@ -35,6 +39,18 @@ export { visitNotIgnoredFiles } from './src/generators/visit-not-ignored-files';
 
 export { parseTargetString } from './src/executors/parse-target-string';
 export { readTargetOptions } from './src/executors/read-target-options';
+
+export {
+  ProjectFileMap,
+  FileData,
+  ProjectGraph,
+  ProjectGraphDependency,
+  DependencyType,
+  ProjectGraphNode,
+  NxPlugin,
+  ProjectGraphProcessorContext,
+} from './src/project-graph/interfaces';
+export { ProjectGraphBuilder } from './src/project-graph/utils';
 
 export { readJson, writeJson, updateJson } from './src/utils/json';
 export {

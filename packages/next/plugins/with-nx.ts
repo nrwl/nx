@@ -1,6 +1,13 @@
+import { WebpackConfigOptions } from '../src/utils/types';
+
 const { join } = require('path');
 const { appRootPath } = require('@nrwl/workspace/src/utilities/app-root');
 const { workspaceLayout } = require('@nrwl/workspace/src/core/file-utils');
+
+export interface WithNxOptions {
+  nx?: WebpackConfigOptions;
+  [key: string]: any;
+}
 
 function regexEqual(x, y) {
   return (
@@ -13,7 +20,7 @@ function regexEqual(x, y) {
   );
 }
 
-function withNx(nextConfig = {} as any) {
+function withNx(nextConfig = {} as WithNxOptions) {
   /**
    * In collaboration with Vercel themselves, we have been advised to set the "experimental-serverless-trace" target
    * if we detect that the build is running on Vercel to allow for the most ergonomic configuration for Vercel users.
@@ -23,6 +30,12 @@ function withNx(nextConfig = {} as any) {
       'withNx() plugin: Detected Vercel build environment, applying "experimental-serverless-trace" target'
     );
     nextConfig.target = 'experimental-serverless-trace';
+  }
+
+  if (nextConfig.future?.webpack5) {
+    throw new Error(
+      'withNx() plugin: using the "webpack5" option with Nx is not supported yet'
+    );
   }
 
   const userWebpack = nextConfig.webpack || ((x) => x);

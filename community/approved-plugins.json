@@ -67,7 +67,7 @@
   {
     "name": "@nx-tools/nx-docker",
     "description": "Nx plugin to build docker images of your affected apps",
-    "url": "https://github.com/gperdomor/nx-tools/tree/master/libs/nx-docker"
+    "url": "https://github.com/gperdomor/nx-tools/tree/main/packages/nx-docker"
   },
   {
     "name": "@angular-custom-builders/lite-serve",
@@ -148,5 +148,10 @@
     "name": "ngx-deploy-npm",
     "description": "Publish your libraries to NPM with just one command.",
     "url": "https://github.com/bikecoders/ngx-deploy-npm"
+  },
+  {
+    "name": "@trafilea/nx-shopify",
+    "description": "Nx plugin for developing performance-first Shopify themes",
+    "url": "https://github.com/trafilea/nx-shopify"
   }
 ]

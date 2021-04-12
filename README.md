@@ -16,7 +16,7 @@
 
 # What is Nx?
 
-🔎 **Extensible Dev Tools for Monorepos.**
+🔎 **Powerful, Extensible Dev Tools.**
 
 ## Nx Helps You
 

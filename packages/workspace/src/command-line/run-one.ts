@@ -4,7 +4,8 @@ import { readEnvironment } from '../core/file-utils';
 import { EmptyReporter } from '../tasks-runner/empty-reporter';
 import { splitArgsIntoNxArgsAndOverrides } from './utils';
 import { projectHasTarget } from '../utilities/project-graph-utils';
-import { promptForNxCloud } from './prompt-for-nx-cloud';
+import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
+import { performance } from 'perf_hooks';
 
 export async function runOne(opts: {
   project: string;
@@ -12,6 +13,12 @@ export async function runOne(opts: {
   configuration: string;
   parsedArgs: any;
 }) {
+  performance.mark('command-execution-begins');
+  performance.measure(
+    'code-loading-and-file-hashing',
+    'init-local',
+    'command-execution-begins'
+  );
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     {
       ...opts.parsedArgs,
@@ -21,7 +28,7 @@ export async function runOne(opts: {
     'run-one'
   );
 
-  await promptForNxCloud(nxArgs.scan);
+  await connectToNxCloudUsingScan(nxArgs.scan);
 
   const projectGraph = createProjectGraph();
   const { projects, projectsMap } = getProjects(

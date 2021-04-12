@@ -3,7 +3,7 @@
 Build a Node application
 
 Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/react/getting-started/cli-overview#running-tasks.
+Read more about how to use executors and the CLI here: https://nx.dev/react/getting-started/nx-cli#running-tasks.
 
 ## Properties
 
@@ -109,11 +109,13 @@ Type: `boolean`
 
 Log progress to the console while building.
 
-### showCircularDependencies
+### ~~showCircularDependencies~~
 
-Default: `true`
+Default: `false`
 
 Type: `boolean`
+
+**Deprecated:** The recommended method to detect circular dependencies in project code is to use a either a lint rule or other external tooling.
 
 Show circular dependency warnings on builds.
 
@@ -157,6 +159,6 @@ Run build when files change.
 
 ### webpackConfig
 
-Type: `string`
+Type: `array[] | string `
 
 Path to a function which takes a webpack config, context and returns the resulting webpack config

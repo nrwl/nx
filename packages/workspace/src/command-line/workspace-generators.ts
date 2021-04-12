@@ -3,7 +3,6 @@ import { execSync } from 'child_process';
 import * as fs from 'fs';
 import { writeFileSync } from 'fs';
 import { copySync, removeSync } from 'fs-extra';
-import * as inquirer from 'inquirer';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
 import { appRootPath } from '../utilities/app-root';
@@ -17,7 +16,7 @@ import {
   writeJsonFile,
 } from '../utilities/fileutils';
 import { output } from '../utilities/output';
-import { CompilerOptions } from 'typescript';
+import type { CompilerOptions } from 'typescript';
 import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import { logger, normalizePath } from '@nrwl/devkit';
 
@@ -202,14 +201,26 @@ function listGenerators(collectionFile: string) {
   return 0;
 }
 
-function createPromptProvider(): any {
+function createPromptProvider() {
+  interface Prompt {
+    name: string;
+    type: 'input' | 'select' | 'multiselect' | 'confirm' | 'numeral';
+    message: string;
+    initial?: any;
+    choices?: (string | { name: string; message: string })[];
+    validate?: (value: string) => boolean | string;
+  }
+
   return (definitions: Array<any>) => {
-    const questions: inquirer.Questions = definitions.map((definition) => {
-      const question: inquirer.Question = {
+    const questions: Prompt[] = definitions.map((definition) => {
+      const question: Prompt = {
         name: definition.id,
         message: definition.message,
-        default: definition.default,
-      };
+      } as any;
+
+      if (definition.default) {
+        question.initial = definition.default;
+      }
 
       const validator = definition.validator;
       if (validator) {
@@ -217,12 +228,20 @@ function createPromptProvider(): any {
       }
 
       switch (definition.type) {
+        case 'string':
+        case 'input':
+          return { ...question, type: 'input' };
+        case 'boolean':
         case 'confirmation':
+        case 'confirm':
           return { ...question, type: 'confirm' };
+        case 'number':
+        case 'numeral':
+          return { ...question, type: 'numeral' };
         case 'list':
           return {
             ...question,
-            type: !!definition.multiselect ? 'checkbox' : 'list',
+            type: !!definition.multiselect ? 'multiselect' : 'select',
             choices:
               definition.items &&
               definition.items.map((item) => {
@@ -230,8 +249,8 @@ function createPromptProvider(): any {
                   return item;
                 } else {
                   return {
-                    name: item.label,
-                    value: item.value,
+                    message: item.label,
+                    name: item.value,
                   };
                 }
               }),
@@ -241,7 +260,7 @@ function createPromptProvider(): any {
       }
     });
 
-    return inquirer.prompt(questions);
+    return require('enquirer').prompt(questions);
   };
 }
 

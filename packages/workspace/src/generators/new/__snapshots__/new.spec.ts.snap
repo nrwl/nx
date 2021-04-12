@@ -4,6 +4,7 @@ exports[`new --preset angular should generate necessary npm dependencies 1`] = `
 Object {
   "dependencies": Object {
     "@nrwl/angular": "*",
+    "tslib": "^2.0.0",
   },
   "devDependencies": Object {
     "@nrwl/cli": "*",
@@ -13,7 +14,7 @@ Object {
     "dotenv": "8.2.0",
     "prettier": "2.2.1",
     "ts-node": "~9.1.1",
-    "typescript": "~4.0.3",
+    "typescript": "~4.1.4",
   },
   "license": "MIT",
   "name": "my-workspace",
@@ -47,7 +48,9 @@ Object {
 
 exports[`new --preset empty should generate necessary npm dependencies 1`] = `
 Object {
-  "dependencies": Object {},
+  "dependencies": Object {
+    "tslib": "^2.0.0",
+  },
   "devDependencies": Object {
     "@nrwl/cli": "*",
     "@nrwl/tao": "*",
@@ -56,7 +59,7 @@ Object {
     "dotenv": "8.2.0",
     "prettier": "2.2.1",
     "ts-node": "~9.1.1",
-    "typescript": "~4.0.3",
+    "typescript": "~4.1.4",
   },
   "license": "MIT",
   "name": "my-workspace",
@@ -90,7 +93,9 @@ Object {
 
 exports[`new --preset react should generate necessary npm dependencies 1`] = `
 Object {
-  "dependencies": Object {},
+  "dependencies": Object {
+    "tslib": "^2.0.0",
+  },
   "devDependencies": Object {
     "@nrwl/cli": "*",
     "@nrwl/react": "*",
@@ -100,7 +105,7 @@ Object {
     "dotenv": "8.2.0",
     "prettier": "2.2.1",
     "ts-node": "~9.1.1",
-    "typescript": "~4.0.3",
+    "typescript": "~4.1.4",
   },
   "license": "MIT",
   "name": "my-workspace",
@@ -139,14 +144,10 @@ Object {
   },
   "implicitDependencies": Object {
     ".eslintrc.json": "*",
-    "nx.json": "*",
     "package.json": Object {
       "dependencies": "*",
       "devDependencies": "*",
     },
-    "tsconfig.base.json": "*",
-    "tslint.json": "*",
-    "workspace.json": "*",
   },
   "npmScope": "npmScope",
   "projects": Object {},

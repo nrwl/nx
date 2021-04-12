@@ -38,6 +38,7 @@ if (
 }
 
 module.exports = function (path, options) {
+  if (path === 'jest-sequencer-@jest/test-sequencer') return;
   const ext = path_1.extname(path);
   if (
     ext === '.css' ||

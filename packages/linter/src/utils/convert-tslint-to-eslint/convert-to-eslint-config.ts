@@ -1,14 +1,19 @@
+import {
+  readProjectConfiguration,
+  Tree,
+  visitNotIgnoredFiles,
+} from '@nrwl/devkit';
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
+import { execSync } from 'child_process';
 import type { Linter as ESLintLinter } from 'eslint';
 import { mkdirSync, writeFileSync } from 'fs';
 import { dirname } from 'path';
-import type {
-  TSLintRuleOptions,
-  createESLintConfiguration as CreateESLintConfiguration,
-} from 'tslint-to-eslint-config';
-import { execSync } from 'child_process';
-import { tslintToEslintConfigVersion } from '../versions';
 import { dirSync } from 'tmp';
-import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
+import type {
+  createESLintConfiguration as CreateESLintConfiguration,
+  TSLintRuleOptions,
+} from 'tslint-to-eslint-config';
+import { tslintToEslintConfigVersion } from '../versions';
 
 let tslintToEslint;
 function getConvertToEslintConfig() {
@@ -187,4 +192,35 @@ export async function convertToESLintConfig(
       (pluginName) => !expectedESLintPlugins.includes(pluginName)
     ),
   };
+}
+
+function likelyContainsTSLintComment(fileContent: string): boolean {
+  return fileContent.includes('tslint:');
+}
+
+export function convertTSLintDisableCommentsForProject(
+  tree: Tree,
+  projectName: string
+) {
+  /**
+   * We need to avoid a direct dependency on tslint-to-eslint-config
+   * and ensure we are only resolving the dependency from the user's
+   * node_modules on demand (it will be installed as part of the
+   * conversion generator).
+   */
+  const { convertFileComments } = getConvertToEslintConfig();
+  const { root } = readProjectConfiguration(tree, projectName);
+
+  visitNotIgnoredFiles(tree, root, (filePath) => {
+    if (!filePath.endsWith('.ts')) {
+      return;
+    }
+    const fileContent = tree.read(filePath)!.toString('utf-8');
+    // Avoid updating files if we don't have to
+    if (!likelyContainsTSLintComment(fileContent)) {
+      return;
+    }
+    const updatedFileContent = convertFileComments({ fileContent, filePath });
+    tree.write(filePath, updatedFileContent);
+  });
 }

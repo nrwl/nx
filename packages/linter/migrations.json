@@ -68,6 +68,23 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "11.6.0": {
+      "version": "11.6.0-beta.1",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "4.19.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "4.19.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint": {
+          "version": "7.22.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

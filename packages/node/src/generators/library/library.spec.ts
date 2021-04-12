@@ -238,6 +238,22 @@ describe('lib', () => {
         },
       ]);
     });
+
+    it('should generate filenames that do not contain directory with --simpleModuleName', async () => {
+      await libraryGenerator(tree, {
+        name: 'myLib',
+        directory: 'myDir',
+        simpleModuleName: true,
+      });
+      expect(tree.exists(`libs/my-dir/my-lib/jest.config.js`)).toBeTruthy();
+      expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
+      expect(tree.exists('libs/my-dir/my-lib/src/lib/my-lib.ts')).toBeTruthy();
+      expect(
+        tree.exists('libs/my-dir/my-lib/src/lib/my-lib.spec.ts')
+      ).toBeTruthy();
+      expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
+      expect(tree.exists(`libs/my-dir/my-lib/.eslintrc.json`)).toBeTruthy();
+    });
   });
 
   describe('--unit-test-runner none', () => {

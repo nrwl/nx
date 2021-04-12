@@ -1,6 +1,7 @@
 import { NxJson } from '@nrwl/workspace';
 import {
   getPackageManagerCommand,
+  getSelectedPackageManager,
   listFiles,
   newProject,
   readFile,
@@ -14,6 +15,7 @@ import {
   updateFile,
   workspaceConfigName,
 } from '@nrwl/e2e/utils';
+import { TaskCacheStatus } from '@nrwl/workspace/src/utilities/output';
 
 describe('run-one', () => {
   let proj: string;
@@ -71,72 +73,75 @@ describe('run-many', () => {
 
   afterEach(() => removeProject({ onlyOnCI: true }));
 
-  it('should build specific and all projects', () => {
-    const appA = uniq('appa-rand');
-    const libA = uniq('liba-rand');
-    const libB = uniq('libb-rand');
-    const libC = uniq('libc-rand');
-    const libD = uniq('libd-rand');
+  // This fails with pnpm due to incompatibilities with ngcc for buildable libraries.
+  if (getSelectedPackageManager() !== 'pnpm') {
+    it('should build specific and all projects', () => {
+      const appA = uniq('appa-rand');
+      const libA = uniq('liba-rand');
+      const libB = uniq('libb-rand');
+      const libC = uniq('libc-rand');
+      const libD = uniq('libd-rand');
 
-    runCLI(`generate @nrwl/angular:app ${appA}`);
-    runCLI(`generate @nrwl/angular:lib ${libA} --buildable --defaults`);
-    runCLI(`generate @nrwl/angular:lib ${libB} --buildable --defaults`);
-    runCLI(`generate @nrwl/angular:lib ${libC} --buildable --defaults`);
-    runCLI(`generate @nrwl/angular:lib ${libD} --defaults`);
+      runCLI(`generate @nrwl/angular:app ${appA}`);
+      runCLI(`generate @nrwl/angular:lib ${libA} --buildable --defaults`);
+      runCLI(`generate @nrwl/angular:lib ${libB} --buildable --defaults`);
+      runCLI(`generate @nrwl/angular:lib ${libC} --buildable --defaults`);
+      runCLI(`generate @nrwl/angular:lib ${libD} --defaults`);
 
-    // libA depends on libC
-    updateFile(
-      `libs/${libA}/src/lib/${libA}.module.spec.ts`,
-      `
-              import '@${proj}/${libC}';
-              describe('sample test', () => {
-                it('should test', () => {
-                  expect(1).toEqual(1);
+      // libA depends on libC
+      updateFile(
+        `libs/${libA}/src/lib/${libA}.module.spec.ts`,
+        `
+                import '@${proj}/${libC}';
+                describe('sample test', () => {
+                  it('should test', () => {
+                    expect(1).toEqual(1);
+                  });
                 });
-              });
-            `
-    );
+              `
+      );
 
-    // testing run many starting'
-    const buildParallel = runCLI(
-      `run-many --target=build --projects="${libC},${libB}"`
-    );
-    expect(buildParallel).toContain(`Running target build for projects:`);
-    expect(buildParallel).not.toContain(`- ${libA}`);
-    expect(buildParallel).toContain(`- ${libB}`);
-    expect(buildParallel).toContain(`- ${libC}`);
-    expect(buildParallel).not.toContain(`- ${libD}`);
-    expect(buildParallel).toContain('Running target "build" succeeded');
+      // testing run many starting'
+      const buildParallel = runCLI(
+        `run-many --target=build --projects="${libC},${libB}"`
+      );
+      expect(buildParallel).toContain(`Running target build for projects:`);
+      expect(buildParallel).not.toContain(`- ${libA}`);
+      expect(buildParallel).toContain(`- ${libB}`);
+      expect(buildParallel).toContain(`- ${libC}`);
+      expect(buildParallel).not.toContain(`- ${libD}`);
+      expect(buildParallel).toContain('Running target "build" succeeded');
 
-    // testing run many --all starting
-    const buildAllParallel = runCLI(`run-many --target=build --all`);
-    expect(buildAllParallel).toContain(`Running target build for projects:`);
-    expect(buildAllParallel).toContain(`- ${libA}`);
-    expect(buildAllParallel).toContain(`- ${libB}`);
-    expect(buildAllParallel).toContain(`- ${libC}`);
-    expect(buildAllParallel).not.toContain(`- ${libD}`);
-    expect(buildAllParallel).toContain('Running target "build" succeeded');
+      // testing run many --all starting
+      const buildAllParallel = runCLI(`run-many --target=build --all`);
+      expect(buildAllParallel).toContain(`Running target build for projects:`);
+      expect(buildAllParallel).toContain(`- ${libA}`);
+      expect(buildAllParallel).toContain(`- ${libB}`);
+      expect(buildAllParallel).toContain(`- ${libC}`);
+      expect(buildAllParallel).not.toContain(`- ${libD}`);
+      expect(buildAllParallel).toContain('Running target "build" succeeded');
 
-    // testing run many --with-deps
-    const buildWithDeps = runCLI(
-      `run-many --target=build --projects="${libA}" --with-deps`
-    );
-    expect(buildWithDeps).toContain(`Running target build for projects:`);
-    expect(buildWithDeps).toContain(`- ${libA}`);
-    expect(buildWithDeps).toContain(`- ${libC}`);
-    expect(buildWithDeps).not.toContain(`- ${libB}`);
-    expect(buildWithDeps).not.toContain(`- ${libD}`);
-    expect(buildWithDeps).toContain('Running target "build" succeeded');
+      // testing run many --with-deps
+      const buildWithDeps = runCLI(
+        `run-many --target=build --projects="${libA}" --with-deps`
+      );
+      expect(buildWithDeps).toContain(`Running target build for projects:`);
+      expect(buildWithDeps).toContain(`- ${libA}`);
+      expect(buildWithDeps).toContain(`- ${libC}`);
+      expect(buildWithDeps).not.toContain(`- ${libB}`);
+      expect(buildWithDeps).not.toContain(`- ${libD}`);
+      expect(buildWithDeps).toContain('Running target "build" succeeded');
 
-    // testing run many --configuration
-    const buildConfig = runCLI(
-      `run-many --target=build --projects="${appA},${libA}" --prod`
-    );
-    expect(buildConfig).toContain(`Running target build for projects:`);
-    expect(buildConfig).toContain(`run ${appA}:build:production`);
-    expect(buildConfig).toContain(`run ${libA}:build:production`);
-    expect(buildConfig).toContain('Running target "build" succeeded');
-  }, 1000000);
+      // testing run many --configuration
+      const buildConfig = runCLI(
+        `run-many --target=build --projects="${appA},${libA}" --prod`
+      );
+      expect(buildConfig).toContain(`Running target build for projects:`);
+      expect(buildConfig).toContain(`run ${appA}:build:production`);
+      expect(buildConfig).toContain(`run ${libA}:build:production`);
+      expect(buildConfig).toContain('Running target "build" succeeded');
+    }, 1000000);
+  }
 
   it('should run only failed projects', () => {
     const myapp = uniq('myapp');
@@ -633,7 +638,7 @@ describe('cache', () => {
     });
     const outputWithBuildApp2Cached = runCLI(`affected:build ${files}`);
     expect(outputWithBuildApp2Cached).toContain('read the output from cache');
-    expectCached(outputWithBuildApp2Cached, [myapp2]);
+    expectMatchedOutput(outputWithBuildApp2Cached, [myapp2]);
 
     // touch package.json
     // --------------------------------------------
@@ -647,13 +652,17 @@ describe('cache', () => {
 
     // build individual project with caching
     const individualBuildWithCache = runCLI(`build ${myapp1}`);
-    expect(individualBuildWithCache).toContain('from cache');
+    expect(individualBuildWithCache).toContain(
+      TaskCacheStatus.MatchedExistingOutput
+    );
 
     // skip caching when building individual projects
     const individualBuildWithSkippedCache = runCLI(
       `build ${myapp1} --skip-nx-cache`
     );
-    expect(individualBuildWithSkippedCache).not.toContain('from cache');
+    expect(individualBuildWithSkippedCache).not.toContain(
+      TaskCacheStatus.MatchedExistingOutput
+    );
 
     // run lint with caching
     // --------------------------------------------
@@ -664,7 +673,7 @@ describe('cache', () => {
     expect(outputWithBothLintTasksCached).toContain(
       'read the output from cache'
     );
-    expectCached(outputWithBothLintTasksCached, [
+    expectMatchedOutput(outputWithBothLintTasksCached, [
       myapp1,
       myapp2,
       `${myapp1}-e2e`,
@@ -743,35 +752,38 @@ describe('cache', () => {
     actualOutput: string,
     expectedCachedProjects: string[]
   ) {
-    const cachedProjects = [];
+    expectProjectMatchTaskCacheStatus(actualOutput, expectedCachedProjects);
+  }
+
+  function expectMatchedOutput(
+    actualOutput: string,
+    expectedMatchedOutputProjects: string[]
+  ) {
+    expectProjectMatchTaskCacheStatus(
+      actualOutput,
+      expectedMatchedOutputProjects,
+      TaskCacheStatus.MatchedExistingOutput
+    );
+  }
+
+  function expectProjectMatchTaskCacheStatus(
+    actualOutput: string,
+    expectedProjects: string[],
+    cacheStatus: TaskCacheStatus = TaskCacheStatus.RetrievedFromCache
+  ) {
+    const matchingProjects = [];
     const lines = actualOutput.split('\n');
-    lines.forEach((s, i) => {
+    lines.forEach((s) => {
       if (s.startsWith(`> nx run`)) {
         const projectName = s.split(`> nx run `)[1].split(':')[0].trim();
-        if (s.indexOf('from cache') > -1) {
-          cachedProjects.push(projectName);
+        if (s.indexOf(cacheStatus) > -1) {
+          matchingProjects.push(projectName);
         }
       }
     });
 
-    cachedProjects.sort((a, b) => a.localeCompare(b));
-    expectedCachedProjects.sort((a, b) => a.localeCompare(b));
-    expect(cachedProjects).toEqual(expectedCachedProjects);
+    matchingProjects.sort((a, b) => a.localeCompare(b));
+    expectedProjects.sort((a, b) => a.localeCompare(b));
+    expect(matchingProjects).toEqual(expectedProjects);
   }
-});
-
-describe('workspace structure', () => {
-  beforeEach(() => newProject());
-
-  afterEach(() => removeProject({ onlyOnCI: true }));
-
-  it('should have a vscode/extensions.json file created', () => {
-    const extensions = readJson('.vscode/extensions.json');
-    expect(extensions).toEqual({
-      recommendations: [
-        'ms-vscode.vscode-typescript-tslint-plugin',
-        'esbenp.prettier-vscode',
-      ],
-    });
-  });
 });

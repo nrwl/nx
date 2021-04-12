@@ -91,7 +91,6 @@ describe('Next.js Applications', () => {
     updateFile(
       `libs/${libName}/src/lib/${libName}.tsx`,
       `
-        import React from 'react';
         import styles from './style.module.css';
         export function Test() {
           return <div className={styles.container}>Hello</div>;
@@ -108,7 +107,7 @@ describe('Next.js Applications', () => {
     await checkApp(appName, {
       checkUnitTest: true,
       checkLint: true,
-      checkE2E: false,
+      checkE2E: true,
     });
   }, 120000);
 
@@ -160,7 +159,6 @@ describe('Next.js Applications', () => {
     updateFile(
       `libs/${tsxLibName}/src/lib/${tsxLibName}.tsx`,
       `
-        import React from 'react';
 
         interface TestComponentProps {
           text: string;
@@ -324,7 +322,6 @@ describe('Next.js Applications', () => {
     updateFile(
       `apps/${appName}/pages/index.tsx`,
       `
-        import React from 'react';
 
         export function Index() {
           let x = '';
@@ -362,7 +359,6 @@ describe('Next.js Applications', () => {
     updateFile(
       `libs/${libName}/src/lib/${libName}.js`,
       `
-        import React from 'react';
         import styles from './style.module.css';
         export function Test() {
           return <div className={styles.container}>Hello</div>;

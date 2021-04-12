@@ -1,4 +1,5 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import { existsSync } from 'fs-extra';
+import { ExecutorContext, normalizePath } from '@nrwl/devkit';
 
 import * as glob from 'glob';
 import { basename, dirname, join, relative } from 'path';
@@ -48,9 +49,19 @@ export default function normalizeOptions(
   });
 
   const rootDir = libRoot || '';
+
+  if (options.main && !existsSync(options.main)) {
+    throw new Error(
+      `Please verify that the "main" option for project "${context.projectName}" is valid.`
+    );
+  }
+
   const mainFileDir = dirname(options.main);
 
-  const relativeMainFileOutput = relative(rootDir, mainFileDir);
+  // Always include a preceding dot to match format used for entry points
+  const relativeDir = normalizePath(relative(rootDir, mainFileDir));
+  const relativeMainFileOutput =
+    relativeDir === '' ? `./` : `./${relativeDir}/`;
 
   if (options.buildableProjectDepsInPackageJsonType == undefined) {
     options.buildableProjectDepsInPackageJsonType = 'dependencies';

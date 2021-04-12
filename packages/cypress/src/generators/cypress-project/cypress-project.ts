@@ -136,11 +136,26 @@ export async function cypressProjectGenerator(host: Tree, schema: Schema) {
   return installTask;
 }
 
+export function getE2eProjectName({
+  name,
+  directory,
+}: {
+  name: string;
+  directory?: string;
+}) {
+  return `${directory ? filePathToProjectName(directory, name) : name}`;
+}
+
+function filePathToProjectName(directory: string, name: string) {
+  return `${names(directory).fileName}-${name}`.replace(
+    new RegExp('/', 'g'),
+    '-'
+  );
+}
+
 function normalizeOptions(host: Tree, options: Schema): CypressProjectSchema {
   const { appsDir } = getWorkspaceLayout(host);
-  const projectName = options.directory
-    ? `${names(options.directory).fileName}-${options.name}`
-    : options.name;
+  const projectName = getE2eProjectName(options);
   const projectRoot = options.directory
     ? joinPathFragments(
         appsDir,

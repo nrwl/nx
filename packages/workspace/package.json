@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/workspace",
   "version": "0.0.1",
-  "description": "Extensible Dev Tools for Monorepos",
+  "description": "Powerful, Extensible Dev Tools",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nrwl/nx.git"
@@ -17,8 +17,8 @@
     "Cypress",
     "CLI"
   ],
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "./index.js",
+  "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -73,9 +73,9 @@
     "chalk": "4.1.0",
     "axios": "0.21.1",
     "flat": "^5.0.2",
-    "lodash": "^4.17.20",
+    "lodash.template": "~4.5.0",
     "minimatch": "3.0.4",
-    "inquirer": "^6.3.1",
+    "enquirer": "~2.3.6",
     "resolve": "1.17.0",
     "tslib": "^2.0.0"
   }

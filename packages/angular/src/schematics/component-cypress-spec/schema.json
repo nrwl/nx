@@ -27,6 +27,10 @@
       "type": "string",
       "description": "Component file name without the .ts extension",
       "examples": ["awesome.component"]
+    },
+    "cypressProject": {
+      "type": "string",
+      "description": "The Cypress project to generate the stories under. By default, inferred from 'projectName'"
     }
   },
   "required": [

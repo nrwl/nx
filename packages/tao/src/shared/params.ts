@@ -1,6 +1,5 @@
 import { ParsedArgs } from 'minimist';
 import { TargetConfiguration, WorkspaceJsonConfiguration } from './workspace';
-import * as inquirer from 'inquirer';
 import { logger } from './logger';
 
 type PropertyDescription = {
@@ -485,25 +484,36 @@ function getGeneratorDefaults(
 }
 
 async function promptForValues(opts: Options, schema: Schema) {
-  const prompts = [];
+  interface Prompt {
+    name: string;
+    type: 'input' | 'select' | 'multiselect' | 'confirm' | 'numeral';
+    message: string;
+    initial?: any;
+    choices?: (string | { name: string; message: string })[];
+  }
+
+  const prompts: Prompt[] = [];
   Object.entries(schema.properties).forEach(([k, v]) => {
     if (v['x-prompt'] && opts[k] === undefined) {
-      const question = {
+      const question: Prompt = {
         name: k,
-        default: v.default,
       } as any;
+
+      if (v.default) {
+        question.initial = v.default;
+      }
 
       if (typeof v['x-prompt'] === 'string') {
         question.message = v['x-prompt'];
         if (v.type === 'string' && v.enum && Array.isArray(v.enum)) {
-          question.type = 'list';
+          question.type = 'select';
           question.choices = v.enum;
         } else {
-          question.type = v.type === 'boolean' ? 'confirm' : 'string';
+          question.type = v.type === 'boolean' ? 'confirm' : 'input';
         }
       } else if (v['x-prompt'].type == 'number') {
         question.message = v['x-prompt'].message;
-        question.type = 'number';
+        question.type = 'numeral';
       } else if (
         v['x-prompt'].type == 'confirmation' ||
         v['x-prompt'].type == 'confirm'
@@ -512,7 +522,7 @@ async function promptForValues(opts: Options, schema: Schema) {
         question.type = 'confirm';
       } else {
         question.message = v['x-prompt'].message;
-        question.type = v['x-prompt'].multiselect ? 'checkbox' : 'list';
+        question.type = v['x-prompt'].multiselect ? 'multiselect' : 'select';
         question.choices =
           v['x-prompt'].items &&
           v['x-prompt'].items.map((item) => {
@@ -520,8 +530,8 @@ async function promptForValues(opts: Options, schema: Schema) {
               return item;
             } else {
               return {
-                name: item.label,
-                value: item.value,
+                message: item.label,
+                name: item.value,
               };
             }
           });
@@ -530,9 +540,13 @@ async function promptForValues(opts: Options, schema: Schema) {
     }
   });
 
-  return await inquirer
+  return await (await import('enquirer'))
     .prompt(prompts)
-    .then((values) => ({ ...opts, ...values }));
+    .then((values) => ({ ...opts, ...values }))
+    .catch((e) => {
+      console.error(e);
+      process.exit(0);
+    });
 }
 
 /**

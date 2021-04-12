@@ -2,7 +2,7 @@
 
 import { exec, execSync } from 'child_process';
 import { writeFileSync } from 'fs';
-import * as inquirer from 'inquirer';
+import * as enquirer from 'enquirer';
 import * as path from 'path';
 import { dirSync } from 'tmp';
 import * as yargsParser from 'yargs-parser';
@@ -29,55 +29,58 @@ export enum Preset {
   Express = 'express',
 }
 
-const presetOptions: { value: Preset; name: string }[] = [
+const presetOptions: { name: Preset; message: string }[] = [
   {
-    value: Preset.Empty,
-    name:
+    name: Preset.Empty,
+    message:
       'empty             [an empty workspace with a layout that works best for building apps]',
   },
   {
-    value: Preset.React,
-    name: 'react             [a workspace with a single React application]',
+    name: Preset.React,
+    message: 'react             [a workspace with a single React application]',
   },
   {
-    value: Preset.Angular,
-    name: 'angular           [a workspace with a single Angular application]',
+    name: Preset.Angular,
+    message:
+      'angular           [a workspace with a single Angular application]',
   },
   {
-    value: Preset.NextJs,
-    name: 'next.js           [a workspace with a single Next.js application]',
+    name: Preset.NextJs,
+    message:
+      'next.js           [a workspace with a single Next.js application]',
   },
   // TODO: Re-enable when gatsby preset is implemented
   // {
-  //   value: Preset.Gatsby,
-  //   name: 'gatsby            [a workspace with a single Gatsby application]',
+  //   name: Preset.Gatsby,
+  //   message: 'gatsby            [a workspace with a single Gatsby application]',
   // },
   {
-    value: Preset.Nest,
-    name: 'nest              [a workspace with a single Nest application]',
+    name: Preset.Nest,
+    message: 'nest              [a workspace with a single Nest application]',
   },
   {
-    value: Preset.Express,
-    name: 'express           [a workspace with a single Express application]',
+    name: Preset.Express,
+    message:
+      'express           [a workspace with a single Express application]',
   },
   {
-    value: Preset.WebComponents,
-    name:
+    name: Preset.WebComponents,
+    message:
       'web components    [a workspace with a single app built using web components]',
   },
   {
-    value: Preset.ReactWithExpress,
-    name:
+    name: Preset.ReactWithExpress,
+    message:
       'react-express     [a workspace with a full stack application (React + Express)]',
   },
   {
-    value: Preset.AngularWithNest,
-    name:
+    name: Preset.AngularWithNest,
+    message:
       'angular-nest      [a workspace with a full stack application (Angular + Nest)]',
   },
   {
-    value: Preset.OSS,
-    name:
+    name: Preset.OSS,
+    message:
       'oss               [an empty workspace with a layout that works best for open-source projects]',
   },
 ];
@@ -89,6 +92,7 @@ const prettierVersion = 'PRETTIER_VERSION';
 
 const parsedArgs: any = yargsParser(process.argv.slice(2), {
   string: [
+    'name',
     'cli',
     'preset',
     'appName',
@@ -114,33 +118,38 @@ if (parsedArgs.help) {
   showHelp();
   process.exit(0);
 }
-const packageManager = parsedArgs.packageManager || 'npm';
-determineWorkspaceName(parsedArgs).then((name) => {
-  determinePreset(parsedArgs).then((preset) => {
-    return determineAppName(preset, parsedArgs).then((appName) => {
-      return determineStyle(preset, parsedArgs).then((style) => {
-        return determineCli(preset, parsedArgs).then((cli) => {
-          return determineLinter(preset, parsedArgs).then((linter) => {
-            return askAboutNxCloud(parsedArgs).then((nxCloud) => {
-              const tmpDir = createSandbox(packageManager);
-              return createApp(tmpDir, name, {
-                ...parsedArgs,
-                cli,
-                preset,
-                appName,
-                style,
-                linter,
-                nxCloud,
-              }).then(() => {
-                showNxWarning(name);
-                pointToTutorialAndCourse(preset);
-              });
-            });
-          });
-        });
-      });
-    });
+
+(async function main() {
+  const packageManager = parsedArgs.packageManager || 'npm';
+  const {
+    name,
+    cli,
+    preset,
+    appName,
+    style,
+    linter,
+    nxCloud,
+  } = await getConfiguration(parsedArgs);
+
+  const tmpDir = createSandbox(packageManager);
+  await createApp(tmpDir, name, packageManager, {
+    ...parsedArgs,
+    cli,
+    preset,
+    appName,
+    style,
+    linter,
+    nxCloud,
   });
+
+  showNxWarning(name);
+  pointToTutorialAndCourse(preset);
+})().catch((error) => {
+  const { version } = require('../package.json');
+  output.error({
+    title: `Something went wrong! v${version}`,
+  });
+  throw error;
 });
 
 function showHelp() {
@@ -178,22 +187,49 @@ function showHelp() {
 `);
 }
 
+async function getConfiguration(parsedArgs) {
+  try {
+    const name = await determineWorkspaceName(parsedArgs);
+    const preset = await determinePreset(parsedArgs);
+    const appName = await determineAppName(preset, parsedArgs);
+    const style = await determineStyle(preset, parsedArgs);
+    const cli = await determineCli(preset, parsedArgs);
+    const linter = await determineLinter(preset, parsedArgs);
+    const nxCloud = await askAboutNxCloud(parsedArgs);
+
+    return {
+      name,
+      preset,
+      appName,
+      style,
+      cli,
+      linter,
+      nxCloud,
+    };
+  } catch (e) {
+    console.error(e);
+    process.exit(1);
+  }
+}
+
 function determineWorkspaceName(parsedArgs: any): Promise<string> {
-  const workspaceName: string = parsedArgs._[0];
+  const workspaceName: string = parsedArgs._[0]
+    ? parsedArgs._[0]
+    : parsedArgs.name;
 
   if (workspaceName) {
     return Promise.resolve(workspaceName);
   }
 
-  return inquirer
+  return enquirer
     .prompt([
       {
         name: 'WorkspaceName',
         message: `Workspace name (e.g., org name)    `,
-        type: 'string',
+        type: 'input',
       },
     ])
-    .then((a) => {
+    .then((a: { WorkspaceName: string }) => {
       if (!a.WorkspaceName) {
         output.error({
           title: 'Invalid workspace name',
@@ -222,13 +258,13 @@ function determinePreset(parsedArgs: any): Promise<Preset> {
     }
   }
 
-  return inquirer
+  return enquirer
     .prompt([
       {
         name: 'Preset',
         message: `What to create in the new workspace`,
-        default: 'empty',
-        type: 'list',
+        initial: 'empty' as any,
+        type: 'select',
         choices: presetOptions,
       },
     ])
@@ -244,15 +280,15 @@ function determineAppName(preset: Preset, parsedArgs: any): Promise<string> {
     return Promise.resolve(parsedArgs.appName);
   }
 
-  return inquirer
+  return enquirer
     .prompt([
       {
         name: 'AppName',
         message: `Application name                   `,
-        type: 'string',
+        type: 'input',
       },
     ])
-    .then((a) => {
+    .then((a: { AppName: string }) => {
       if (!a.AppName) {
         output.error({
           title: 'Invalid name',
@@ -302,20 +338,20 @@ function determineStyle(preset: Preset, parsedArgs: any) {
 
   const choices = [
     {
-      value: 'css',
-      name: 'CSS',
+      name: 'css',
+      message: 'CSS',
     },
     {
-      value: 'scss',
-      name: 'SASS(.scss)  [ http://sass-lang.com   ]',
+      name: 'scss',
+      message: 'SASS(.scss)  [ http://sass-lang.com   ]',
     },
     {
-      value: 'styl',
-      name: 'Stylus(.styl)[ http://stylus-lang.com ]',
+      name: 'styl',
+      message: 'Stylus(.styl)[ http://stylus-lang.com ]',
     },
     {
-      value: 'less',
-      name: 'LESS         [ http://lesscss.org     ]',
+      name: 'less',
+      message: 'LESS         [ http://lesscss.org     ]',
     },
   ];
 
@@ -330,37 +366,38 @@ function determineStyle(preset: Preset, parsedArgs: any) {
   ) {
     choices.push(
       {
-        value: 'styled-components',
-        name: 'styled-components [ https://styled-components.com            ]',
+        name: 'styled-components',
+        message:
+          'styled-components [ https://styled-components.com            ]',
       },
       {
-        value: '@emotion/styled',
-        name: 'emotion           [ https://emotion.sh                       ]',
+        name: '@emotion/styled',
+        message:
+          'emotion           [ https://emotion.sh                       ]',
       },
       {
-        value: 'styled-jsx',
-        name: 'styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]',
+        name: 'styled-jsx',
+        message:
+          'styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]',
       }
     );
   }
 
   if (!parsedArgs.style) {
-    return inquirer
+    return enquirer
       .prompt([
         {
           name: 'style',
           message: `Default stylesheet format          `,
-          default: 'css',
-          type: 'list',
-          choices,
+          initial: 'css' as any,
+          type: 'select',
+          choices: choices,
         },
       ])
-      .then((a) => a.style);
+      .then((a: { style: string }) => a.style);
   }
 
-  const foundStyle = choices.find(
-    (choice) => choice.value === parsedArgs.style
-  );
+  const foundStyle = choices.find((choice) => choice.name === parsedArgs.style);
 
   if (foundStyle === undefined) {
     output.error({
@@ -368,7 +405,7 @@ function determineStyle(preset: Preset, parsedArgs: any) {
       bodyLines: [
         `It must be one of the following:`,
         '',
-        ...choices.map((choice) => choice.value),
+        ...choices.map((choice) => choice.name),
       ],
     });
 
@@ -381,26 +418,26 @@ function determineStyle(preset: Preset, parsedArgs: any) {
 function determineLinter(preset: Preset, parsedArgs: any) {
   if (!parsedArgs.linter) {
     if (preset === Preset.Angular || preset === Preset.AngularWithNest) {
-      return inquirer
+      return enquirer
         .prompt([
           {
             name: 'linter',
             message: `Default linter                     `,
-            default: 'eslint',
-            type: 'list',
+            initial: 'eslint' as any,
+            type: 'select',
             choices: [
               {
-                value: 'eslint',
-                name: 'ESLint [ Modern linting tool ]',
+                name: 'eslint',
+                message: 'ESLint [ Modern linting tool ]',
               },
               {
-                value: 'tslint',
-                name: 'TSLint [ Used by Angular CLI. Deprecated. ]',
+                name: 'tslint',
+                message: 'TSLint [ Used by Angular CLI. Deprecated. ]',
               },
             ],
           },
         ])
-        .then((a) => a.linter);
+        .then((a: { linter: string }) => a.linter);
     } else {
       return Promise.resolve('eslint');
     }
@@ -447,7 +484,12 @@ function createSandbox(packageManager: string) {
   return tmpDir;
 }
 
-async function createApp(tmpDir: string, name: string, parsedArgs: any) {
+async function createApp(
+  tmpDir: string,
+  name: string,
+  packageManager: string,
+  parsedArgs: any
+) {
   const { _, cli, ...restArgs } = parsedArgs;
   const args = unparse(restArgs).join(' ');
 
@@ -513,28 +555,27 @@ function execAndWait(command: string, cwd: string) {
 
 async function askAboutNxCloud(parsedArgs: any) {
   if (parsedArgs.nxCloud === undefined) {
-    return inquirer
+    return enquirer
       .prompt([
         {
           name: 'NxCloud',
           message: `Use Nx Cloud? (It's free and doesn't require registration.)`,
-          type: 'list',
+          type: 'select',
           choices: [
             {
-              value: 'yes',
-              name:
-                'Yes [Faster builds, run details, Github integration. Learn more at https://nx.app]',
+              name: 'Yes',
+              hint:
+                'Faster builds, run details, Github integration. Learn more at https://nx.app',
             },
 
             {
-              value: 'no',
               name: 'No',
             },
           ],
-          default: 'no',
+          initial: 'No' as any,
         },
       ])
-      .then((a: { NxCloud: 'yes' | 'no' }) => a.NxCloud === 'yes');
+      .then((a: { NxCloud: 'Yes' | 'No' }) => a.NxCloud === 'Yes');
   } else {
     return parsedArgs.nxCloud;
   }

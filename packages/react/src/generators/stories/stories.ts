@@ -16,6 +16,7 @@ export interface StorybookStoriesSchema {
   project: string;
   generateCypressSpecs: boolean;
   js?: boolean;
+  cypressProject?: string;
 }
 
 export function projectRootPath(
@@ -58,7 +59,8 @@ export async function createAllStories(
   tree: Tree,
   projectName: string,
   generateCypressSpecs: boolean,
-  js: boolean
+  js: boolean,
+  cypressProject?: string
 ) {
   const projects = getProjects(tree);
   const project = projects.get(projectName);
@@ -95,6 +97,7 @@ export async function createAllStories(
           project: projectName,
           componentPath: relativeCmpDir,
           js,
+          cypressProject,
         });
       }
     })
@@ -109,7 +112,8 @@ export async function storiesGenerator(
     host,
     schema.project,
     schema.generateCypressSpecs,
-    schema.js
+    schema.js,
+    schema.cypressProject
   );
 }
 

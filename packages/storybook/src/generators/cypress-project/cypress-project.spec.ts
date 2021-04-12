@@ -41,4 +41,16 @@ describe('@nrwl/storybook:cypress-project', () => {
       ci: { devServerTarget: `test-ui-lib:storybook:ci` },
     });
   });
+
+  it('should generate in the correct folder', async () => {
+    await cypressProjectGenerator(tree, {
+      name: 'test-ui-lib',
+      directory: 'one/two',
+      cypressName: 'other-e2e',
+      linter: Linter.EsLint,
+    });
+    const workspace = readJson(tree, 'workspace.json');
+    expect(workspace.projects['one-two-other-e2e']).toBeDefined();
+    expect(tree.exists('apps/one/two/other-e2e/cypress.json')).toBeTruthy();
+  });
 });

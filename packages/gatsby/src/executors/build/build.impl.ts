@@ -19,7 +19,7 @@ export function runGatsbyBuild(
   projectName: string,
   options: GatsbyPluginBuilderSchema
 ) {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     const cp = fork(
       require.resolve('gatsby-cli'),
       ['build', ...createGatsbyBuildOptions(options)],

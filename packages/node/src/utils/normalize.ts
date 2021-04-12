@@ -1,5 +1,8 @@
 import { resolve, dirname, relative, basename } from 'path';
-import { BuildBuilderOptions } from './types';
+import {
+  BuildNodeBuilderOptions,
+  NormalizedBuildNodeBuilderOptions,
+} from './types';
 import { statSync } from 'fs';
 
 export interface FileReplacement {
@@ -7,12 +10,12 @@ export interface FileReplacement {
   with: string;
 }
 
-export function normalizeBuildOptions<T extends BuildBuilderOptions>(
-  options: T,
+export function normalizeBuildOptions(
+  options: BuildNodeBuilderOptions,
   root: string,
   sourceRoot: string,
   projectRoot: string
-): T {
+): NormalizedBuildNodeBuilderOptions {
   return {
     ...options,
     root,
@@ -24,8 +27,10 @@ export function normalizeBuildOptions<T extends BuildBuilderOptions>(
     fileReplacements: normalizeFileReplacements(root, options.fileReplacements),
     assets: normalizeAssets(options.assets, root, sourceRoot),
     webpackConfig: options.webpackConfig
-      ? resolve(root, options.webpackConfig)
-      : options.webpackConfig,
+      ? []
+          .concat(options.webpackConfig)
+          .map((path) => normalizePluginPath(path, root))
+      : [],
   };
 }
 
@@ -34,6 +39,9 @@ function normalizeAssets(
   root: string,
   sourceRoot: string
 ): any[] {
+  if (!Array.isArray(assets)) {
+    return [];
+  }
   return assets.map((asset) => {
     if (typeof asset === 'string') {
       const resolvedAssetPath = resolve(root, asset);
@@ -82,4 +90,12 @@ function normalizeFileReplacements(
     replace: resolve(root, fileReplacement.replace),
     with: resolve(root, fileReplacement.with),
   }));
+}
+
+function normalizePluginPath(path: string, root: string) {
+  try {
+    return require.resolve(path);
+  } catch {
+    return resolve(root, path);
+  }
 }

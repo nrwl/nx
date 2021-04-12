@@ -10,7 +10,8 @@
  */
 export default {
   settings: { react: { version: 'detect' } },
-  plugins: ['jsx-a11y', 'react', 'react-hooks'],
+  plugins: ['jsx-a11y', 'react'],
+  extends: ['plugin:react-hooks/recommended'],
   rules: {
     /**
      * React-specific rule configurations
@@ -22,13 +23,13 @@ export default {
     'react/jsx-no-target-blank': 'warn',
     'react/jsx-no-undef': 'error',
     'react/jsx-pascal-case': ['warn', { allowAllCaps: true, ignore: [] }],
-    'react/jsx-uses-react': 'warn',
     'react/jsx-uses-vars': 'warn',
     'react/no-danger-with-children': 'warn',
     'react/no-direct-mutation-state': 'warn',
     'react/no-is-mounted': 'warn',
     'react/no-typos': 'error',
-    'react/react-in-jsx-scope': 'error',
+    'react/jsx-uses-react': 'off',
+    'react/react-in-jsx-scope': 'off',
     'react/require-render-return': 'error',
     'react/style-prop-object': 'warn',
     'react/jsx-no-useless-fragment': 'warn',
@@ -58,11 +59,5 @@ export default {
     'jsx-a11y/role-has-required-aria-props': 'warn',
     'jsx-a11y/role-supports-aria-props': 'warn',
     'jsx-a11y/scope': 'warn',
-
-    /**
-     * React Hooks rule configurations
-     * https://github.com/facebook/react/tree/master/packages/eslint-plugin-react-hooks
-     */
-    'react-hooks/rules-of-hooks': 'error',
   },
 };

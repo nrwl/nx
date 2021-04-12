@@ -3,6 +3,7 @@ import { Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import libraryGenerator from '../library/library';
 import { Linter } from '@nrwl/linter';
+import { logger } from '@nrwl/devkit';
 import applicationGenerator from '../application/application';
 import componentGenerator from '../component/component';
 import storybookConfigurationGenerator from './configuration';
@@ -17,6 +18,13 @@ describe('react:storybook-configuration', () => {
         '@storybook/react': '^6.0.21',
       },
     });
+
+    jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    jest.spyOn(logger, 'debug').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('should configure everything at once', async () => {
@@ -117,6 +125,37 @@ describe('react:storybook-configuration', () => {
         'apps/test-ui-app/src/app/my-component/my-component.stories.tsx'
       )
     ).toBeTruthy();
+  });
+
+  it('should generate cypress tests in the correct folder', async () => {
+    appTree = await createTestUILib('test-ui-lib');
+    await componentGenerator(appTree, {
+      name: 'my-component',
+      project: 'test-ui-lib',
+      style: 'css',
+    });
+    await storybookConfigurationGenerator(appTree, {
+      name: 'test-ui-lib',
+      generateStories: true,
+      configureCypress: true,
+      generateCypressSpecs: true,
+      cypressDirectory: 'one/two',
+      cypressName: 'app-test-e2e',
+    });
+    [
+      'apps/one/two/app-test-e2e/cypress.json',
+      'apps/one/two/app-test-e2e/src/fixtures/example.json',
+      'apps/one/two/app-test-e2e/src/plugins/index.js',
+      'apps/one/two/app-test-e2e/src/support/commands.ts',
+      'apps/one/two/app-test-e2e/src/support/index.ts',
+      'apps/one/two/app-test-e2e/tsconfig.e2e.json',
+      'apps/one/two/app-test-e2e/tsconfig.json',
+      'apps/one/two/app-test-e2e/.eslintrc.json',
+      'apps/one/two/app-test-e2e/src/integration/test-ui-lib/test-ui-lib.spec.ts',
+      'apps/one/two/app-test-e2e/src/integration/my-component/my-component.spec.ts',
+    ].forEach((file) => {
+      expect(appTree.exists(file)).toBeTruthy();
+    });
   });
 });
 

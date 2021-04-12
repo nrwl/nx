@@ -64,7 +64,7 @@ describe('app', () => {
         .read('apps/my-app/src/pages/index.tsx')
         .toString();
       expect(indexContent).toContain(
-        `import styles from './index.module.scss'`
+        `import * as styles from './index.module.scss'`
       );
 
       const workspaceJson = readJson(tree, '/workspace.json');
@@ -88,7 +88,7 @@ describe('app', () => {
         .read('apps/my-app/src/pages/index.tsx')
         .toString();
       expect(indexContent).toContain(
-        `import styles from './index.module.less'`
+        `import * as styles from './index.module.less'`
       );
 
       const workspaceJson = readJson(tree, '/workspace.json');
@@ -112,7 +112,7 @@ describe('app', () => {
         .read('apps/my-app/src/pages/index.tsx')
         .toString();
       expect(indexContent).toContain(
-        `import styles from './index.module.styl'`
+        `import * as styles from './index.module.styl'`
       );
 
       const workspaceJson = readJson(tree, '/workspace.json');
@@ -135,7 +135,9 @@ describe('app', () => {
       const indexContent = tree
         .read('apps/my-app/src/pages/index.tsx')
         .toString();
-      expect(indexContent).not.toContain(`import styles from './index.module`);
+      expect(indexContent).not.toContain(
+        `import * as styles from './index.module`
+      );
       expect(indexContent).toContain(`import styled from 'styled-components'`);
 
       const workspaceJson = readJson(tree, '/workspace.json');
@@ -158,7 +160,9 @@ describe('app', () => {
       const indexContent = tree
         .read('apps/my-app/src/pages/index.tsx')
         .toString();
-      expect(indexContent).not.toContain(`import styles from './index.module`);
+      expect(indexContent).not.toContain(
+        `import * as styles from './index.module`
+      );
       expect(indexContent).toContain(`import styled from '@emotion/styled'`);
 
       const workspaceJson = readJson(tree, '/workspace.json');
@@ -186,7 +190,9 @@ describe('app', () => {
         tree.exists('apps/my-app/src/pages/index.module.styled-jsx')
       ).toBeFalsy();
 
-      expect(indexContent).not.toContain(`import styles from './index.module`);
+      expect(indexContent).not.toContain(
+        `import * as styles from './index.module`
+      );
       expect(indexContent).not.toContain(
         `import styled from 'styled-components'`
       );

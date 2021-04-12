@@ -11,7 +11,7 @@ import {
 } from '@nrwl/workspace';
 import { join } from 'path';
 import { offsetFromRoot } from '@nrwl/devkit';
-import { getFullProjectGraphFromHost } from '@nrwl/workspace/src/utils/ast-utils';
+import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 
 /**
  * It was decided with Jason that we would do a simple replacement in this migration
@@ -40,7 +40,7 @@ function addHTMLPatternToBuilderConfig(
 }
 
 function updateProjectESLintConfigsAndBuilders(host: Tree): Rule {
-  const graph = getFullProjectGraphFromHost(host);
+  const graph = createProjectGraph(undefined, undefined, undefined, false);
 
   /**
    * Make sure user is already using ESLint and is up to date with

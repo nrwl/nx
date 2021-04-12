@@ -9,6 +9,7 @@ import {
   pathFormat,
 } from '@angular-devkit/schematics/src/formats';
 import {
+  formatDeprecated,
   generateJsonFile,
   generateMarkdownFile,
   sortAlphabeticallyFunction,
@@ -81,7 +82,7 @@ function generateTemplate(
     Properties can be configured in ${filename} when defining the executor, or when invoking it.
     ${
       framework != 'angular'
-        ? `Read more about how to use executors and the CLI here: https://nx.dev/${framework}/getting-started/cli-overview#running-tasks.`
+        ? `Read more about how to use executors and the CLI here: https://nx.dev/${framework}/getting-started/nx-cli#running-tasks.`
         : ``
     }
     \n`;
@@ -107,9 +108,9 @@ function generateTemplate(
               .join(', ')}\n`
           : ``;
         template += dedent`
-            ### ${option.name} ${option.required ? '(*__required__*)' : ''} ${
-          option.hidden ? '(__hidden__)' : ''
-        }
+            ### ${option.deprecated ? `~~${option.name}~~` : option.name} ${
+          option.required ? '(*__required__*)' : ''
+        } ${option.hidden ? '(__hidden__)' : ''}
             
             ${
               !!option.aliases.length
@@ -139,7 +140,7 @@ function generateTemplate(
 
         template += dedent`  
             ${enumStr} 
-            ${option.description}
+            ${formatDeprecated(option.description, option.deprecated)}
           `;
 
         if (option.arrayOfType && option.arrayOfValues) {

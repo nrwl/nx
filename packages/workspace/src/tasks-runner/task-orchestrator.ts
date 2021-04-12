@@ -4,11 +4,12 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { ProjectGraph } from '../core/project-graph';
 import { appRootPath } from '../utilities/app-root';
-import { output } from '../utilities/output';
+import { output, TaskCacheStatus } from '../utilities/output';
 import { Cache, TaskWithCachedResult } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { AffectedEventType, Task } from './tasks-runner';
 import { getOutputs, unparse } from './utils';
+import { performance } from 'perf_hooks';
 
 export class TaskOrchestrator {
   workspaceRoot = appRootPath;
@@ -29,8 +30,22 @@ export class TaskOrchestrator {
       tasksInStage
     );
 
+    performance.mark('task-execution-begins');
+    performance.measure(
+      'graph-creation',
+      'command-execution-begins',
+      'task-execution-begins'
+    );
+    performance.measure('nx-prep-work', 'init-local', 'task-execution-begins');
     const r1 = await this.applyCachedResults(cached);
     const r2 = await this.runRest(rest);
+    performance.mark('task-execution-ends');
+    performance.measure(
+      'command-execution',
+      'task-execution-begins',
+      'task-execution-ends'
+    );
+
     this.cache.removeOldCacheRecords();
     return [...r1, ...r2];
   }
@@ -100,17 +115,27 @@ export class TaskOrchestrator {
     tasks.forEach((t) => {
       this.options.lifeCycle.startTask(t.task);
 
+      const outputs = getOutputs(this.projectGraph.nodes, t.task);
+      const outputsMatchCache = this.cache.outputsMatchTask(t.task, outputs);
+      if (!outputsMatchCache) {
+        this.cache.removeOutputHashesFromNxOutputs(outputs);
+        this.cache.copyFilesFromCache(t.cachedResult, outputs);
+        this.cache.writeOutputHashesToNxOutputs(outputs, t.task.hash);
+      }
+
       if (
         !this.initiatingProject ||
         this.initiatingProject === t.task.target.project
       ) {
         const args = this.getCommandArgs(t.task);
-        output.logCommand(`nx ${args.join(' ')}`, true);
+        output.logCommand(
+          `nx ${args.join(' ')}`,
+          outputsMatchCache
+            ? TaskCacheStatus.MatchedExistingOutput
+            : TaskCacheStatus.RetrievedFromCache
+        );
         process.stdout.write(t.cachedResult.terminalOutput);
       }
-
-      const outputs = getOutputs(this.projectGraph.nodes, t.task);
-      this.cache.copyFilesFromCache(t.cachedResult, outputs);
 
       this.options.lifeCycle.endTask(t.task, 0);
     });
@@ -160,6 +185,7 @@ export class TaskOrchestrator {
         if (forwardOutput) {
           output.logCommand(commandLine);
         }
+        this.cache.removeOutputHashesFromNxOutputs(taskOutputs);
         const p = fork(this.getCommand(), args, {
           stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
           env,
@@ -195,6 +221,10 @@ export class TaskOrchestrator {
               this.cache
                 .put(task, outputPath, taskOutputs)
                 .then(() => {
+                  this.cache.writeOutputHashesToNxOutputs(
+                    taskOutputs,
+                    task.hash
+                  );
                   this.options.lifeCycle.endTask(task, code);
                   res(code);
                 })
@@ -202,10 +232,12 @@ export class TaskOrchestrator {
                   rej(e);
                 });
             } else {
+              this.cache.writeOutputHashesToNxOutputs(taskOutputs, task.hash);
               this.options.lifeCycle.endTask(task, code);
               res(code);
             }
           } else {
+            this.cache.writeOutputHashesToNxOutputs(taskOutputs, task.hash);
             this.options.lifeCycle.endTask(task, code);
             res(code);
           }
@@ -236,6 +268,7 @@ export class TaskOrchestrator {
         if (forwardOutput) {
           output.logCommand(commandLine);
         }
+        this.cache.removeOutputHashesFromNxOutputs(taskOutputs);
         const p = fork(this.getCommand(), args, {
           stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
           env,
@@ -260,6 +293,7 @@ export class TaskOrchestrator {
             this.cache
               .put(task, outputPath, taskOutputs)
               .then(() => {
+                this.cache.writeOutputHashesToNxOutputs(taskOutputs, task.hash);
                 this.options.lifeCycle.endTask(task, code);
                 res(code);
               })
@@ -267,6 +301,7 @@ export class TaskOrchestrator {
                 rej(e);
               });
           } else {
+            this.cache.writeOutputHashesToNxOutputs(taskOutputs, task.hash);
             this.options.lifeCycle.endTask(task, code);
             res(code);
           }

@@ -12,7 +12,7 @@ import { readEnvironment } from '../core/file-utils';
 import { DefaultReporter } from '../tasks-runner/default-reporter';
 import { projectHasTarget } from '../utilities/project-graph-utils';
 import { output } from '../utilities/output';
-import { promptForNxCloud } from './prompt-for-nx-cloud';
+import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
 
 export async function runMany(parsedArgs: yargs.Arguments) {
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
@@ -20,7 +20,7 @@ export async function runMany(parsedArgs: yargs.Arguments) {
     'run-many'
   );
 
-  await promptForNxCloud(nxArgs.scan);
+  await connectToNxCloudUsingScan(nxArgs.scan);
 
   const projectGraph = createProjectGraph();
   const projects = projectsToRun(nxArgs, projectGraph);

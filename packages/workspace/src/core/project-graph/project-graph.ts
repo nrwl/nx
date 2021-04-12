@@ -1,9 +1,19 @@
-import { assertWorkspaceValidity } from '../assert-workspace-validity';
-import { createProjectFileMap, ProjectFileMap } from '../file-graph';
-import {
-  defaultFileRead,
+import type {
   FileData,
-  FileRead,
+  NxJsonProjectConfiguration,
+  ProjectConfiguration,
+  ProjectFileMap,
+  WorkspaceJsonConfiguration,
+  ProjectGraphProcessorContext,
+  NxPlugin,
+} from '@nrwl/devkit';
+
+import { ProjectGraphBuilder } from '@nrwl/devkit';
+
+import { appRootPath } from '../../utilities/app-root';
+import { assertWorkspaceValidity } from '../assert-workspace-validity';
+import { createProjectFileMap } from '../file-graph';
+import {
   filesChanged,
   readNxJson,
   readWorkspaceFiles,
@@ -22,7 +32,6 @@ import {
   buildNpmPackageNodes,
   buildWorkspaceProjectNodes,
 } from './build-nodes';
-import { ProjectGraphBuilder } from './project-graph-builder';
 import { ProjectGraph } from './project-graph-models';
 import {
   differentFromCache,
@@ -37,7 +46,6 @@ export function createProjectGraph(
   workspaceJson = readWorkspaceJson(),
   nxJson = readNxJson(),
   workspaceFiles = readWorkspaceFiles(),
-  fileRead: FileRead = defaultFileRead,
   cache: false | ProjectGraphCache = readCache(),
   shouldCache: boolean = true
 ): ProjectGraph {
@@ -63,7 +71,6 @@ export function createProjectGraph(
     };
     const projectGraph = buildProjectGraph(
       ctx,
-      fileRead,
       diff.partiallyConstructedProjectGraph
     );
     if (shouldCache) {
@@ -76,12 +83,17 @@ export function createProjectGraph(
       nxJson: normalizedNxJson,
       fileMap: projectFileMap,
     };
-    const projectGraph = buildProjectGraph(ctx, fileRead, null);
+    const projectGraph = buildProjectGraph(ctx, null);
     if (shouldCache) {
       writeCache(rootFiles, projectGraph);
     }
     return addWorkspaceFiles(projectGraph, workspaceFiles);
   }
+}
+
+export function readCurrentProjectGraph(): ProjectGraph | null {
+  const cache = readCache();
+  return cache === false ? null : cache;
 }
 
 function addWorkspaceFiles(
@@ -94,16 +106,15 @@ function addWorkspaceFiles(
 function buildProjectGraph(
   ctx: {
     nxJson: NxJson<string[]>;
-    workspaceJson: any;
+    workspaceJson: WorkspaceJsonConfiguration;
     fileMap: ProjectFileMap;
   },
-  fileRead: FileRead,
   projectGraph: ProjectGraph
 ) {
   performance.mark('build project graph:start');
   const builder = new ProjectGraphBuilder(projectGraph);
   const buildNodesFns: BuildNodes[] = [
-    buildWorkspaceProjectNodes(fileRead),
+    buildWorkspaceProjectNodes,
     buildNpmPackageNodes,
   ];
   const buildDependenciesFns: BuildDependencies[] = [
@@ -111,16 +122,51 @@ function buildProjectGraph(
     buildImplicitProjectDependencies,
     buildExplicitPackageJsonDependencies,
   ];
-  buildNodesFns.forEach((f) => f(ctx, builder.addNode.bind(builder), fileRead));
+  buildNodesFns.forEach((f) => f(ctx, builder.addNode.bind(builder)));
   buildDependenciesFns.forEach((f) =>
-    f(ctx, builder.nodes, builder.addDependency.bind(builder), fileRead)
+    f(ctx, builder.nodes, builder.addDependency.bind(builder))
   );
-  const r = builder.build();
+  const r = builder.getProjectGraph();
+
+  const plugins = (ctx.nxJson.plugins || []).map((path) => {
+    const pluginPath = require.resolve(path, {
+      paths: [appRootPath],
+    });
+    return require(pluginPath) as NxPlugin;
+  });
+
+  const projects = Object.keys(ctx.workspaceJson.projects).reduce(
+    (map, projectName) => {
+      map[projectName] = {
+        ...ctx.workspaceJson.projects[projectName],
+        ...ctx.nxJson.projects[projectName],
+      };
+      return map;
+    },
+    {} as Record<string, ProjectConfiguration & NxJsonProjectConfiguration>
+  );
+  const context: ProjectGraphProcessorContext = {
+    workspace: {
+      ...ctx.workspaceJson,
+      ...ctx.nxJson,
+      projects,
+    },
+    fileMap: ctx.fileMap,
+  };
+
+  const result = plugins.reduce((graph, plugin) => {
+    if (!plugin.processProjectGraph) {
+      return graph;
+    }
+
+    return plugin.processProjectGraph(graph, context);
+  }, r);
+
   performance.mark('build project graph:end');
   performance.measure(
     'build project graph',
     'build project graph:start',
     'build project graph:end'
   );
-  return r;
+  return result;
 }

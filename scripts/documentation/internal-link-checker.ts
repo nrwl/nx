@@ -2,6 +2,32 @@ import { green, red } from 'chalk';
 import * as shell from 'shelljs';
 import * as fs from 'fs';
 import * as parseLinks from 'parse-markdown-links';
+import * as path from 'path';
+
+const LOGGING_KEYS = [
+  'LOG_DOC_TREE',
+  'LOG_ANCHORED_LINKS',
+  'LOG_INTERNAL_LINKS',
+] as const;
+type LoggingKey = typeof LOGGING_KEYS[number];
+
+function replaceAll(
+  target: string,
+  toReplace: string,
+  toReplaceWith: string
+): string {
+  let temp = target;
+  while (temp.includes(toReplace)) {
+    temp = temp.replace(toReplace, toReplaceWith);
+  }
+  return temp;
+}
+
+function log(environmentVariableName: LoggingKey, toLog: any) {
+  if (process.env[environmentVariableName]) {
+    console.log(toLog);
+  }
+}
 
 const BASE_PATH = 'docs';
 const FRAMEWORK_SYMBOL = '{{framework}}';
@@ -24,8 +50,16 @@ function isNotImage(linkPath: string): boolean {
   return !linkPath.endsWith('.png');
 }
 
+function isNotNxCommunityLink(linkPath: string): boolean {
+  return linkPath !== '/nx-community';
+}
+
 function removeAnchors(linkPath: string): string {
   return linkPath.split('#')[0];
+}
+
+function containsAnchor(linkPath: string): boolean {
+  return linkPath.includes('#');
 }
 
 function expandFrameworks(linkPaths: string[]): string[] {
@@ -49,12 +83,32 @@ function extractAllInternalLinks(): Record<string, string[]> {
       .filter((word) => word.startsWith(DIRECT_INTERNAL_LINK_SYMBOL))
       .map((word) => word.replace(DIRECT_INTERNAL_LINK_SYMBOL, ''))
       .filter((x) => !!x);
+
     const links = parseLinks(fileContents)
       .concat(directLinks)
       .filter(isLinkInternal)
       .filter(isNotAsset)
       .filter(isNotImage)
+      .filter(isNotNxCommunityLink)
+      // `/latest/{{framework}}/...` are valid links too but we need to strip the version
+      .map((x) => x.replace(/^\/latest/, ''))
+      // `/{{ version }}/...` are valid links as well
+      .map((x) => x.replace(/^\/{{version}}/, ''))
       .map(removeAnchors);
+    if (links.length) {
+      acc[path] = expandFrameworks(links);
+    }
+    return acc;
+  }, {});
+}
+
+function extractAllInternalLinksWithAnchors(): Record<string, string[]> {
+  return shell.ls(`${BASE_PATH}/**/*.md`).reduce((acc, path) => {
+    const links = parseLinks(readFileContents(path))
+      .filter(isLinkInternal)
+      .filter(isNotAsset)
+      .filter(isNotImage)
+      .filter(containsAnchor);
     if (links.length) {
       acc[path] = expandFrameworks(links);
     }
@@ -84,15 +138,35 @@ function isCategoryNode(
 
 function getDocumentMap(): DocumentTree[] {
   return JSON.parse(
-    fs.readFileSync(`${BASE_PATH}/map.json`, { encoding: 'utf-8' })
+    fs.readFileSync(path.join(BASE_PATH, 'map.json'), { encoding: 'utf-8' })
   ) as DocumentTree[];
+}
+
+interface DocumentPaths {
+  relativeUrl: string;
+  relativeFilePath: string;
+  anchors: Record<string, boolean>;
+}
+
+function determineAnchors(filePath: string): string[] {
+  const fullPath = path.join(BASE_PATH, filePath);
+  const contents = readFileContents(fullPath).split('\n');
+  const anchors = contents
+    .filter((x) => x.startsWith('##'))
+    .map((anchorLine) =>
+      replaceAll(anchorLine, '#', '')
+        .toLowerCase()
+        .replace(/[^\w]+/g, '-')
+        .replace('-', '')
+    );
+  return anchors;
 }
 
 function buildMapOfExisitingDocumentPaths(
   tree: DocumentTree[],
-  map: Record<string, boolean> = {},
+  map: Record<string, DocumentPaths> = {},
   ids: string[] = []
-): Record<string, boolean> {
+): Record<string, DocumentPaths> {
   return tree.reduce((acc, treeNode) => {
     if (isCategoryNode(treeNode)) {
       buildMapOfExisitingDocumentPaths(treeNode.itemList, acc, [
@@ -100,7 +174,18 @@ function buildMapOfExisitingDocumentPaths(
         treeNode.id,
       ]);
     } else {
-      acc[/*treeNode.file ||*/ `${ids.join('/')}/${treeNode.id}`] = true;
+      const fullPath = path.join(path.join(...ids), treeNode.id);
+      acc[/*treeNode.file ||*/ fullPath] = {
+        relativeUrl: fullPath,
+        relativeFilePath: treeNode.file || fullPath,
+        anchors: determineAnchors(`${treeNode.file || fullPath}.md`).reduce(
+          (acc, anchor) => {
+            acc[anchor] = true;
+            return acc;
+          },
+          {}
+        ),
+      };
     }
     return acc;
   }, map);
@@ -108,7 +193,7 @@ function buildMapOfExisitingDocumentPaths(
 
 function determineErroneousInternalLinks(
   internalLinks: Record<string, string[]>,
-  validInternalLinksMap: Record<string, boolean>
+  validInternalLinksMap: Record<string, DocumentPaths>
 ): Record<string, string[]> | undefined {
   let erroneousInternalLinks: Record<string, string[]> | undefined;
   for (const [docPath, links] of Object.entries(internalLinks)) {
@@ -128,17 +213,63 @@ function determineErroneousInternalLinks(
 const validInternalLinksMap = buildMapOfExisitingDocumentPaths(
   getDocumentMap()
 );
+log('LOG_DOC_TREE', validInternalLinksMap);
 
 const internalLinks = extractAllInternalLinks();
+log('LOG_INTERNAL_LINKS', internalLinks);
 
 const erroneousInternalLinks = determineErroneousInternalLinks(
   internalLinks,
   validInternalLinksMap
 );
 
+function checkInternalAnchoredLinks(
+  internalLinksMap: Record<string, DocumentPaths>
+): Record<string, string[]> | undefined {
+  const links = extractAllInternalLinksWithAnchors();
+  log('LOG_ANCHORED_LINKS', links);
+  let erroneousInternalLinks: Record<string, string[]> | undefined;
+  for (const [docPath, internalLinks] of Object.entries(links)) {
+    for (const link of internalLinks) {
+      const [fileKeyWithSlash, anchorKey] = link.split('#');
+      const fileKey = fileKeyWithSlash.replace('/', '');
+      if (!internalLinksMap[fileKey]) {
+        throw Error(
+          `Shouldn't be possible. The previous step would have failed.`
+        );
+      }
+      if (!internalLinksMap[fileKey].anchors[anchorKey]) {
+        if (!erroneousInternalLinks) {
+          erroneousInternalLinks = {};
+        }
+        if (!erroneousInternalLinks[docPath]) {
+          erroneousInternalLinks[docPath] = [];
+        }
+        erroneousInternalLinks[docPath].push(link);
+      }
+    }
+  }
+  return erroneousInternalLinks;
+}
+
 if (!erroneousInternalLinks) {
   console.log(green('All internal links appear to be valid!!'));
-  process.exit(0);
+  console.log('Moving on to check internal anchors...');
+  const erroneousAnchoredInternalLinks = checkInternalAnchoredLinks(
+    validInternalLinksMap
+  );
+  if (!erroneousAnchoredInternalLinks) {
+    console.log(green('All internal anchored links appear to be valid!!'));
+    process.exit(0);
+  } else {
+    console.log(
+      red(
+        'The following files appear to contain the following invalid anchored internal links:'
+      )
+    );
+    console.log(red(JSON.stringify(erroneousAnchoredInternalLinks, null, 2)));
+    process.exit(1);
+  }
 } else {
   console.log(
     red(

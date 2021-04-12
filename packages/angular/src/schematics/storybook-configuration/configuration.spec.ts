@@ -106,4 +106,20 @@ describe('schematic:configuration', () => {
     );
     expect(tree.files).toMatchSnapshot();
   });
+
+  it('should generate in the correct folder', async () => {
+    const tree = await runSchematic(
+      'storybook-configuration',
+      <StorybookConfigureSchema>{
+        name: 'test-ui-lib',
+        configureCypress: true,
+        generateCypressSpecs: true,
+        generateStories: true,
+        cypressDirectory: 'one/two',
+        cypressName: 'lib-test',
+      },
+      appTree
+    );
+    expect(tree.files).toMatchSnapshot();
+  });
 });

@@ -16,6 +16,7 @@ export interface CreateComponentSpecFileSchema {
   project: string;
   componentPath: string;
   js?: boolean;
+  cypressProject?: string;
 }
 
 export function componentCypressGenerator(
@@ -43,11 +44,12 @@ export function getKnobDefaultValue(property: ts.SyntaxKind): string {
 
 export function createComponentSpecFile(
   tree: Tree,
-  { project, componentPath, js }: CreateComponentSpecFileSchema
+  { project, componentPath, js, cypressProject }: CreateComponentSpecFileSchema
 ) {
+  const e2eProjectName = cypressProject || `${project}-e2e`;
   const projects = getProjects(tree);
   const e2eLibIntegrationFolderPath = `${
-    projects.get(`${project}-e2e`).sourceRoot
+    projects.get(e2eProjectName).sourceRoot
   }/integration`;
 
   const proj = projects.get(project);

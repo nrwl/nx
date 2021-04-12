@@ -55,6 +55,9 @@ describe('NodePackageBuilder', () => {
         return;
       }
     );
+    mocked(fs.existsSync).mockImplementation(
+      (path: string) => path === 'libs/nodelib/src/index.ts'
+    );
     context = {
       root: '/root',
       cwd: '/root',
@@ -81,6 +84,7 @@ describe('NodePackageBuilder', () => {
       tsConfig: 'libs/nodelib/tsconfig.lib.json',
       watch: false,
       sourceMap: false,
+      deleteOutputPath: true,
     };
   });
 
@@ -134,9 +138,17 @@ describe('NodePackageBuilder', () => {
         `${testOptions.outputPath}/package.json`,
         {
           name: 'nodelib',
-          main: 'src/index.js',
-          typings: 'src/index.d.ts',
+          main: './src/index.js',
+          typings: './src/index.d.ts',
         }
+      );
+    });
+
+    it('should throw an error if `main` entry point does not exist', async () => {
+      await expect(
+        packageExecutor({ ...testOptions, main: 'does/not/exist.ts' }, context)
+      ).rejects.toThrow(
+        `Please verify that the "main" option for project "nodelib" is valid.`
       );
     });
 

@@ -3,7 +3,7 @@
 Run any custom commands with Nx
 
 Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/node/getting-started/cli-overview#running-tasks.
+Read more about how to use executors and the CLI here: https://nx.dev/node/getting-started/nx-cli#running-tasks.
 
 ## Examples
 
@@ -191,7 +191,7 @@ Type: `array`
 
 Type: `string`
 
-Current working directory of the commands.
+Current working directory of the commands. If it's not specified the commands will run in the workspace root, if a relative path is specified the commands will run in that path relative to the workspace root and if it's an absolute path the commands will run in that path.
 
 ### envFile
 

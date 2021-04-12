@@ -2,18 +2,13 @@ import { ProjectGraph } from '../project-graph';
 import { NxJson } from '../shared-interfaces';
 import { Task } from '../../tasks-runner/tasks-runner';
 import { readFileSync } from 'fs';
-import { rootWorkspaceFileNames } from '../file-utils';
-import { exec, execSync } from 'child_process';
-import {
-  defaultFileHasher,
-  extractNameAndVersion,
-  FileHasher,
-} from './file-hasher';
+import { workspaceFileName } from '../file-utils';
+import { exec } from 'child_process';
+import { defaultFileHasher, FileHasher } from './file-hasher';
 import { defaultHashing, HashingImp } from './hashing-impl';
 import * as minimatch from 'minimatch';
 import { performance } from 'perf_hooks';
-
-const resolve = require('resolve');
+import * as stripJsonComments from 'strip-json-comments';
 
 export interface Hash {
   value: string;
@@ -47,7 +42,6 @@ interface NodeModulesResult {
 export class Hasher {
   static version = '1.0';
   private implicitDependencies: Promise<ImplicitHashResult>;
-  private nodeModules: Promise<NodeModulesResult>;
   private runtimeInputs: Promise<RuntimeHashResult>;
   private fileHasher: FileHasher;
   private projectHashes: ProjectHasher;
@@ -72,7 +66,11 @@ export class Hasher {
   }
 
   async hashTasks(tasks: Task[]): Promise<Hash[]> {
-    return Promise.all(tasks.map((t) => this.hash(t)));
+    performance.mark('hasher:hash:start');
+    const r = await Promise.all(tasks.map((t) => this.hash(t)));
+    performance.mark('hasher:hash:end');
+    performance.measure('hasher:hash', 'hasher:hash:start', 'hasher:hash:end');
+    return r;
   }
 
   private async hash(task: Task): Promise<Hash> {
@@ -89,12 +87,11 @@ export class Hasher {
       ]),
       this.implicitDepsHash(),
       this.runtimeInputsHash(),
-      this.nodeModulesHash(),
     ])) as [
       ProjectHashResult,
       ImplicitHashResult,
-      RuntimeHashResult,
-      NodeModulesResult
+      RuntimeHashResult
+      // NodeModulesResult
     ];
 
     const value = this.hashing.hashArray([
@@ -170,25 +167,40 @@ export class Hasher {
 
     performance.mark('hasher:implicit deps hash:start');
 
-    const patterns = Object.keys(this.nxJson.implicitDependencies || {});
-    const implicitDeps = (this.projectGraph.allWorkspaceFiles || [])
-      .filter((f) => !!patterns.find((pattern) => minimatch(f.file, pattern)))
-      .map((f) => f.file);
+    const implicitDeps = Object.keys(this.nxJson.implicitDependencies || {});
+    const filesWithoutPatterns = implicitDeps.filter(
+      (p) => p.indexOf('*') === -1
+    );
+    const patterns = implicitDeps.filter((p) => p.indexOf('*') !== -1);
+
+    const implicitDepsFromPatterns =
+      patterns.length > 0
+        ? (this.projectGraph.allWorkspaceFiles || [])
+            .filter(
+              (f) => !!patterns.find((pattern) => minimatch(f.file, pattern))
+            )
+            .map((f) => f.file)
+        : [];
 
     const fileNames = [
-      ...implicitDeps,
-      ...rootWorkspaceFileNames(),
+      ...filesWithoutPatterns,
+      ...implicitDepsFromPatterns,
+
+      //TODO: vsavkin move the special cases into explicit ts support
+      'tsconfig.base.json',
       'package-lock.json',
       'yarn.lock',
       'pnpm-lock.yaml',
     ];
 
     this.implicitDependencies = Promise.resolve().then(async () => {
-      const fileHashes = fileNames.map((file) => {
-        const hash = this.fileHasher.hashFile(file);
-        return { file, hash };
-      });
-
+      const fileHashes = [
+        ...fileNames.map((file) => {
+          const hash = this.fileHasher.hashFile(file);
+          return { file, hash };
+        }),
+        ...this.hashGlobalConfig(),
+      ];
       const combinedHash = this.hashing.hashArray(
         fileHashes.map((v) => v.hash)
       );
@@ -199,6 +211,7 @@ export class Hasher {
         'hasher:implicit deps hash:start',
         'hasher:implicit deps hash:end'
       );
+
       return {
         value: combinedHash,
         sources: fileHashes.reduce((m, c) => ((m[c.file] = c.hash), m), {}),
@@ -207,43 +220,36 @@ export class Hasher {
     return this.implicitDependencies;
   }
 
-  private async nodeModulesHash() {
-    if (this.nodeModules) return this.nodeModules;
-
-    this.nodeModules = Promise.resolve().then(async () => {
-      try {
-        const j = JSON.parse(readFileSync('package.json').toString());
-        const allPackages = [
-          ...Object.keys(j.dependencies),
-          ...Object.keys(j.devDependencies),
-        ];
-        const packageJsonHashes = allPackages.map((d) => {
+  private hashGlobalConfig() {
+    return [
+      {
+        hash: this.fileHasher.hashFile('nx.json', (file) => {
           try {
-            const path = resolve.sync(`${d}/package.json`, {
-              basedir: process.cwd(),
-            });
-            return this.fileHasher.hashFile(path, extractNameAndVersion);
+            const r = JSON.parse(stripJsonComments(file));
+            delete r.projects;
+            return JSON.stringify(r);
           } catch (e) {
             return '';
           }
-        });
-        return { value: this.hashing.hashArray(packageJsonHashes) };
-      } catch (e) {
-        return { value: '' };
-      }
-    });
-
-    return this.nodeModules;
+        }),
+        file: 'nx.json',
+      },
+    ];
   }
 }
 
 class ProjectHasher {
   private sourceHashes: { [projectName: string]: Promise<string> } = {};
+  private workspaceJson: any;
+  private nxJson: any;
 
   constructor(
     private readonly projectGraph: ProjectGraph,
     private readonly hashing: HashingImp
-  ) {}
+  ) {
+    this.workspaceJson = this.readConfigFile(workspaceFileName());
+    this.nxJson = this.readConfigFile('nx.json');
+  }
 
   async hashProject(
     projectName: string,
@@ -284,9 +290,32 @@ class ProjectHasher {
         const p = this.projectGraph.nodes[projectName];
         const fileNames = p.data.files.map((f) => f.file);
         const values = p.data.files.map((f) => f.hash);
-        res(this.hashing.hashArray([...fileNames, ...values]));
+
+        const workspaceJson = JSON.stringify(
+          this.workspaceJson.projects[projectName] || ''
+        );
+        const nxJson = JSON.stringify(this.nxJson.projects[projectName] || '');
+
+        res(
+          this.hashing.hashArray([
+            ...fileNames,
+            ...values,
+            workspaceJson,
+            nxJson,
+          ])
+        );
       });
     }
     return this.sourceHashes[projectName];
+  }
+
+  private readConfigFile(name: string) {
+    try {
+      const res = JSON.parse(stripJsonComments(readFileSync(name).toString()));
+      if (!res.projects) res.projects = {};
+      return res;
+    } catch (e) {
+      return { projects: {} };
+    }
   }
 }

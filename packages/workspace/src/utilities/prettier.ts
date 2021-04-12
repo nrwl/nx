@@ -1,4 +1,4 @@
-import { Options } from 'prettier';
+import type { Options } from 'prettier';
 import * as cosmiconfig from 'cosmiconfig';
 
 export interface ExistingPrettierConfig {

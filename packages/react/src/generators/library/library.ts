@@ -196,7 +196,6 @@ function addProject(host: Tree, options: NormalizedSchema) {
         project: `${options.projectRoot}/package.json`,
         entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
         external,
-        babelConfig: `@nrwl/react/plugins/bundle-babel`,
         rollupConfig: `@nrwl/react/plugins/bundle-rollup`,
         assets: [
           {

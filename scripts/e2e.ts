@@ -1,6 +1,7 @@
 import { execSync } from 'child_process';
 import { readdirSync } from 'fs';
-import { ensureDirSync, removeSync, writeFileSync } from 'fs-extra';
+import { removeSync, writeFileSync } from 'fs-extra';
+import { e2eRoot } from '../e2e/utils';
 const kill = require('tree-kill');
 import { build } from './package';
 
@@ -60,6 +61,10 @@ export function setup() {
     .trim()
     .split('.')[0];
 
+  // Remove previous packages with the same version
+  // before publishing the new ones
+  removeSync('./tmp/local-registry');
+
   getDirectories('./build/packages').map((pkg) => {
     updateVersion(`./build/packages/${pkg}`);
     publishPackage(`./build/packages/${pkg}`, +npmMajorVersion);
@@ -91,13 +96,12 @@ async function runTest() {
             .join(',');
   }
 
-  build(process.env.PUBLISHED_VERSION, '~10.0.0', '3.9.3', '2.1.2');
-
   if (process.argv[5] != '--rerun') {
-    removeSync(`tmp`);
-    ensureDirSync(`tmp/angular`);
-    ensureDirSync(`tmp/nx`);
+    removeSync('./build');
+    removeSync(e2eRoot);
   }
+
+  build(process.env.PUBLISHED_VERSION, '~10.0.0', '3.9.3', '2.1.2');
 
   try {
     setup();

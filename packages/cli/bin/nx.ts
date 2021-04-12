@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-
+import 'v8-compile-cache';
 // polyfill rxjs observable to avoid issues with multiple version fo Observable installed in node_modules
 // https://twitter.com/BenLesh/status/1192478226385428483?s=20
 if (!(Symbol as any).observable)
