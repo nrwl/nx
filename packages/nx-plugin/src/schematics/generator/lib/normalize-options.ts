@@ -17,7 +17,7 @@ export function normalizeOptions(
     options.project
   );
 
-  const npmPackageName = `@${npmScope}/${fileName}`;
+  const npmPackageName = `@${npmScope}/${options.project}`;
 
   const fileTemplate = getFileTemplate();
 
