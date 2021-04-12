@@ -134,8 +134,6 @@ describe('lib', () => {
               "files": Array [
                 "*.ts",
                 "*.tsx",
-                "*.js",
-                "*.jsx",
               ],
               "parserOptions": Object {
                 "project": Array [

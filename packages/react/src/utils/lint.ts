@@ -25,7 +25,7 @@ export const createReactEslintJson = (projectRoot: string): Linter.Config => ({
   ignorePatterns: ['!**/*'],
   overrides: [
     {
-      files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+      files: ['*.ts', '*.tsx'],
       parserOptions: {
         /**
          * In order to ensure maximum efficiency when typescript-eslint generates TypeScript Programs

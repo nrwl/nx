@@ -280,8 +280,6 @@ describe('app', () => {
                 "files": Array [
                   "*.ts",
                   "*.tsx",
-                  "*.js",
-                  "*.jsx",
                 ],
                 "parserOptions": Object {
                   "project": Array [
