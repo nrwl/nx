@@ -9,8 +9,9 @@ import { join } from 'path';
 jest.mock('tsconfig-paths-webpack-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 import { logger } from '@nrwl/devkit';
-jest.mock('opn');
-import * as opn from 'opn';
+import open = require('open');
+
+jest.mock('open');
 
 describe('getDevServerConfig', () => {
   let buildInput: WebBuildBuilderOptions;
@@ -135,7 +136,6 @@ describe('getDevServerConfig', () => {
         };
 
         spyOn(logger, 'info');
-        opn.mockImplementation(() => {});
       });
 
       it('should print out the URL of the server', () => {
@@ -163,7 +163,7 @@ describe('getDevServerConfig', () => {
 
         result.onListening(mockServer);
 
-        expect(opn).not.toHaveBeenCalled();
+        expect(open).not.toHaveBeenCalled();
       });
 
       it('should open the url if --open is passed', () => {
@@ -177,9 +177,7 @@ describe('getDevServerConfig', () => {
 
         result.onListening(mockServer);
 
-        expect(opn).toHaveBeenCalledWith('http://example.com:9999/', {
-          wait: false,
-        });
+        expect(open).toHaveBeenCalledWith('http://example.com:9999/');
       });
     });
   });
