@@ -1,7 +1,7 @@
 import { exists, readFile, readFileSync, statSync, writeFileSync } from 'fs';
 import { copySync } from 'fs-extra';
 import * as http from 'http';
-import * as opn from 'opn';
+import * as open from 'open';
 import { join, normalize, parse, dirname } from 'path';
 import { ensureDirSync } from 'fs-extra';
 import * as url from 'url';
@@ -331,7 +331,5 @@ function startServer(html: string, host: string, port = 4211) {
     title: `Dep graph started at http://${host}:${port}`,
   });
 
-  opn(`http://${host}:${port}`, {
-    wait: false,
-  });
+  open(`http://${host}:${port}`);
 }
