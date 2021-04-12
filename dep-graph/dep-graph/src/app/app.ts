@@ -1,5 +1,5 @@
 import { BehaviorSubject, combineLatest, fromEvent, Subject } from 'rxjs';
-import { startWith, takeUntil } from 'rxjs/operators';
+import { startWith, takeUntil, throwIfEmpty } from 'rxjs/operators';
 import { projectGraphs } from '../graphs';
 import { DebuggerPanel } from './debugger-panel';
 import { GraphComponent } from './graph';
@@ -28,9 +28,9 @@ export class AppComponent {
   }
 
   private onProjectGraphChange(projectGraphId: string) {
-    const projectGraph = projectGraphs.find(
-      (graph) => graph.id === projectGraphId
-    )?.graph;
+    const project = projectGraphs.find((graph) => graph.id === projectGraphId);
+    const projectGraph = project?.graph;
+    const workspaceLayout = project?.workspaceLayout;
 
     const nodes = Object.values(projectGraph.nodes).filter(
       (node) => node.type !== 'npm'
@@ -43,6 +43,7 @@ export class AppComponent {
     window.focusedProject = null;
     window.projectGraphList = projectGraphs;
     window.selectedProjectGraph = projectGraphId;
+    window.workspaceLayout = workspaceLayout;
 
     this.render();
   }

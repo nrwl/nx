@@ -101,7 +101,12 @@ export class GraphComponent {
     > = {};
 
     selectedProjects.forEach((project) => {
-      const projectNode = new ProjectNode(project);
+      const workspaceRoot =
+        project.type === 'app' || project.type === 'e2e'
+          ? window.workspaceLayout.appsDir
+          : window.workspaceLayout.libsDir;
+
+      const projectNode = new ProjectNode(project, workspaceRoot);
       projectNode.focused = project.name === window.focusedProject;
       projectNode.affected = this.affectedProjects.includes(project.name);
 

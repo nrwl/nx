@@ -1,10 +1,10 @@
 import { AppComponent } from './app/app';
 import { environment } from './environments/environment';
 import { projectGraphs } from './graphs';
-import { smallGraph } from './graphs/small';
+import { nxGraph } from './graphs/nx';
 
 if (!environment.release) {
-  const currentGraph = smallGraph;
+  const currentGraph = nxGraph;
 
   const nodes = Object.values(currentGraph.nodes).filter(
     (node) => node.type !== 'npm'
@@ -16,5 +16,6 @@ if (!environment.release) {
   window.exclude = [];
   window.projectGraphList = projectGraphs;
   window.selectedProjectGraph = projectGraphs[0].id;
+  window.workspaceLayout = projectGraphs[0].workspaceLayout;
 }
 setTimeout(() => new AppComponent(environment.appConfig));

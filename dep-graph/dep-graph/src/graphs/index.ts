@@ -1,28 +1,39 @@
-import { ProjectGraphCache } from '@nrwl/workspace';
-import { mediumGraph } from './medium';
-import { smallGraph } from './small';
-import { subAppsGraph } from './sub-apps';
-
-export interface ProjectGraphList {
-  id: string;
-  label: string;
-  graph: ProjectGraphCache;
-}
+import { ProjectGraphList } from '../app/models';
+import { oceanGraph, oceanWorkspaceLayout } from './ocean';
+import { nxGraph, nxWorkspaceLayout } from './nx';
+import { storybookGraph, storybookWorkspaceLayout } from './storybook';
+import { subAppsGraph, subAppsWorkspaceLayout } from './sub-apps';
+import { nxExamplesGraph, nxExamplesWorkspaceLayout } from './nx-examples';
 
 export const projectGraphs: ProjectGraphList[] = [
   {
-    id: 'small',
-    label: 'Small',
-    graph: smallGraph,
+    id: 'nx',
+    label: 'Nx',
+    graph: nxGraph,
+    workspaceLayout: nxWorkspaceLayout,
   },
   {
-    id: 'medium',
-    label: 'Medium',
-    graph: mediumGraph,
+    id: 'ocean',
+    label: 'Ocean',
+    graph: oceanGraph,
+    workspaceLayout: oceanWorkspaceLayout,
+  },
+  {
+    id: 'nx-examples',
+    label: 'Nx Examples',
+    graph: nxExamplesGraph,
+    workspaceLayout: nxExamplesWorkspaceLayout,
   },
   {
     id: 'sub-apps',
     label: 'Sub Apps',
     graph: subAppsGraph,
+    workspaceLayout: subAppsWorkspaceLayout,
+  },
+  {
+    id: 'storybook',
+    label: 'Storybook',
+    graph: storybookGraph,
+    workspaceLayout: storybookWorkspaceLayout,
   },
 ];

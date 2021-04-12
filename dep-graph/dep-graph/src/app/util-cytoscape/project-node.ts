@@ -1,5 +1,6 @@
 import { ProjectGraphNode } from '@nrwl/workspace';
 import * as cy from 'cytoscape';
+import { parseParentDirectoriesFromPilePath } from '../util';
 
 interface NodeDataDefinition extends cy.NodeDataDefinition {
   id: string;
@@ -7,11 +8,19 @@ interface NodeDataDefinition extends cy.NodeDataDefinition {
   tags: string[];
 }
 
+interface Ancestor {
+  id: string;
+  parentId: string;
+  label: string;
+}
 export class ProjectNode {
   affected = false;
   focused = false;
 
-  constructor(private project: ProjectGraphNode) {}
+  constructor(
+    private project: ProjectGraphNode,
+    private workspaceRoot: string
+  ) {}
 
   getCytoscapeNodeDef(groupByFolder: boolean): cy.NodeDefinition {
     return {
@@ -30,8 +39,8 @@ export class ProjectNode {
       type: this.project.type,
       tags: this.project.data.tags,
       parent:
-        groupByFolder && this.project.data.hasOwnProperty('sourceRoot')
-          ? this.getParentId(this.project.data.sourceRoot)
+        groupByFolder && this.project.data.hasOwnProperty('root')
+          ? this.getParentId()
           : null,
     };
   }
@@ -50,62 +59,39 @@ export class ProjectNode {
     return classes;
   }
 
-  private getParentId(sourceRoot: string): string | null {
-    const split = sourceRoot.split('/');
-    let directories = split.slice(1, -2);
+  private getParentId(): string | null {
+    const ancestors = this.getAncestors();
 
-    if (directories.length > 0) {
-      let directory = directories.join('/');
-      return `dir-${directory}`;
-    }
-
-    return null;
-  }
-
-  private getGrandParentId(sourceRoot: string): string | null {
-    const split = sourceRoot.split('/');
-    let directories = split.slice(1, -3);
-
-    if (directories.length > 0) {
-      let directory = directories.join('/');
-      return `dir-${directory}`;
-    }
-
-    return null;
-  }
-
-  public getAncestors(): { id: string; parentId: string; label: string }[] {
-    if (!this.project.data.sourceRoot) {
-      return [];
-    }
-    const split = this.project.data.sourceRoot.split('/');
-    let directories = split.slice(1, -2);
-
-    if (directories.length > 0) {
-      const ancestors: { id: string; parentId: string; label: string }[] = [
-        {
-          label: directories.join('/'),
-          id: this.getParentId(this.project.data.sourceRoot),
-          parentId: this.getGrandParentId(this.project.data.sourceRoot),
-        },
-      ];
-
-      while (directories.length > 1) {
-        const sourceRoot = directories.join('/');
-        const parentData = {
-          id: this.getParentId(sourceRoot),
-          parentId: this.getGrandParentId(this.project.data.sourceRoot),
-          label: sourceRoot,
-        };
-        ancestors.push(parentData);
-
-        const split = sourceRoot.split('/');
-        directories = split.slice(0, -1);
-      }
-
-      return ancestors;
+    if (ancestors.length > 0) {
+      return ancestors[ancestors.length - 1].id;
     } else {
+      return null;
+    }
+  }
+
+  public getAncestors(): Ancestor[] {
+    // if there's no root, we can't figure out the parent
+    if (!this.project.data.root) {
       return [];
     }
+
+    const directories = parseParentDirectoriesFromPilePath(
+      this.project.data.root,
+      this.workspaceRoot
+    );
+
+    return directories.map((directory, index, allDirectories) => {
+      const label = [...allDirectories].slice(0, index + 1).join('/');
+      const id = `dir-${label}`;
+      const parentId =
+        index > 0
+          ? `dir-${[...allDirectories].slice(0, index).join('/')}`
+          : null;
+      return {
+        label,
+        id,
+        parentId,
+      };
+    });
   }
 }

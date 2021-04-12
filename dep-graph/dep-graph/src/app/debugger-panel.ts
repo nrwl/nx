@@ -1,6 +1,6 @@
 import { Subject } from 'rxjs';
-import { ProjectGraphList } from '../graphs';
 import { GraphPerfReport } from './graph';
+import { ProjectGraphList } from './models';
 import { removeChildrenFromContainer } from './util';
 
 export class DebuggerPanel {
