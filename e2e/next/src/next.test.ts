@@ -153,6 +153,11 @@ describe('Next.js Applications', () => {
         export function testFn(): string {
           return 'Hello Nx';
         };
+
+        // testing whether async-await code in Node / Next.js api routes works as expected
+        export async function testAsyncFn() {
+          return await Promise.resolve('hell0');
+        }
         `
     );
 
@@ -165,7 +170,9 @@ describe('Next.js Applications', () => {
         }
 
         export const TestComponent = ({ text }: TestComponentProps) => {
-          return <span>{text}</span>;
+          // testing whether modern languages features like nullish coalescing work
+          const t = text ?? 'abc';
+          return <span>{t}</span>;
         };
 
         export default TestComponent;
@@ -174,6 +181,18 @@ describe('Next.js Applications', () => {
 
     const mainPath = `apps/${appName}/pages/index.tsx`;
     const content = readFile(mainPath);
+
+    updateFile(
+      `apps/${appName}/pages/api/hello.ts`,
+      `
+        import { testAsyncFn } from '@${proj}/${tsLibName}';
+
+        export default async function handler(_, res) {
+          const value = await testAsyncFn();
+          res.send(value);
+        }
+      `
+    );
 
     updateFile(
       mainPath,
@@ -191,10 +210,26 @@ describe('Next.js Applications', () => {
         )}`
     );
 
+    const e2eTestPath = `apps/${appName}-e2e/src/integration/app.spec.ts`;
+    const e2eContent = readFile(e2eTestPath);
+    updateFile(
+      e2eTestPath,
+      `
+      ${
+        e2eContent +
+        `
+        it('should successfully call async API route', () => {
+          cy.request('/api/hello').its('body').should('include', 'hell0');
+        });
+        `
+      }
+    `
+    );
+
     await checkApp(appName, {
       checkUnitTest: true,
       checkLint: true,
-      checkE2E: false,
+      checkE2E: true,
     });
   }, 120000);
 

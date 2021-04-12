@@ -20,9 +20,6 @@ module.exports = function (api: any, options: NxReactBabelPresetOptions = {}) {
 
   const isModern = api.caller((caller) => caller?.isModern);
 
-  // `isServer` is passed from `next-babel-loader`, when it compiles for the server
-  const isServer = api.caller((caller) => caller?.isServer);
-
   // This is set by `@nrwl/web:package` executor
   const isNxPackage = api.caller((caller) => caller?.isNxPackage);
 
@@ -38,7 +35,7 @@ module.exports = function (api: any, options: NxReactBabelPresetOptions = {}) {
         // For Jest tests, NODE_ENV is set as 'test' and we only want to set target as Node.
         // All other options will fail in Jest since Node does not support some ES features
         // such as import syntax.
-        isServer || process.env.NODE_ENV === 'test'
+        process.env.NODE_ENV === 'test'
           ? { targets: { node: 'current' } }
           : {
               // Allow importing core-js in entrypoint and use browserlist to select polyfills.
