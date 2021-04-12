@@ -27,6 +27,7 @@ export async function conversionGenerator(
   const projectConverter = new ProjectConverter({
     host,
     projectName: options.project,
+    ignoreExistingTslintConfig: options.ignoreExistingTslintConfig,
     eslintInitializer: async ({ projectName, projectConfig }) => {
       await addLintingGenerator(host, {
         linter: 'eslint',
@@ -42,7 +43,8 @@ export async function conversionGenerator(
    * Create the standard (which is applicable to the current package) ESLint setup
    * for converting the project.
    */
-  await projectConverter.initESLint();
+  const eslintInitInstallTask = await projectConverter.initESLint();
+
   /**
    * Convert the root tslint.json and apply the converted rules to the root .eslintrc.json
    */
@@ -66,13 +68,13 @@ export async function conversionGenerator(
    */
   projectConverter.removeProjectTSLintFile();
 
+  // Only project shouldn't be added as a default
+  const { project, ...defaults } = options;
+
   /**
-   * Store user preference regarding removeTSLintIfNoMoreTSLintTargets for the collection
+   * Store user preferences for the collection
    */
-  projectConverter.setDefaults(
-    '@nrwl/angular',
-    options.removeTSLintIfNoMoreTSLintTargets
-  );
+  projectConverter.setDefaults('@nrwl/angular', defaults);
 
   /**
    * If the Angular project is an app which has an e2e project, try and convert that as well.
@@ -83,6 +85,7 @@ export async function conversionGenerator(
     try {
       cypressInstallTask = await cypressConversionGenerator(host, {
         project: e2eProjectName,
+        ignoreExistingTslintConfig: options.ignoreExistingTslintConfig,
         /**
          * We can always set this to false, because it will already be handled by the next
          * step of this parent generator, if applicable
@@ -110,6 +113,7 @@ export async function conversionGenerator(
   await formatFiles(host);
 
   return async () => {
+    await eslintInitInstallTask();
     await rootConfigInstallTask();
     await projectConfigInstallTask();
     await cypressInstallTask();

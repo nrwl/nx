@@ -156,6 +156,7 @@ describe('convert-tslint-to-eslint', () => {
   it('should work for NestJS applications', async () => {
     await conversionGenerator(host, {
       project: appProjectName,
+      ignoreExistingTslintConfig: false,
       removeTSLintIfNoMoreTSLintTargets: false,
     });
 
@@ -196,6 +197,7 @@ describe('convert-tslint-to-eslint', () => {
   it('should work for NestJS libraries', async () => {
     await conversionGenerator(host, {
       project: libProjectName,
+      ignoreExistingTslintConfig: false,
       removeTSLintIfNoMoreTSLintTargets: false,
     });
 

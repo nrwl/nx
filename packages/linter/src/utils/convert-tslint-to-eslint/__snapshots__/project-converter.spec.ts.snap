@@ -1,5 +1,48 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`ProjectConverter ignoreExistingTslintConfig ignoreExistingTslintConfig: false should use existing TSLint configs and merge their converted ESLint equivalents with recommended ESLint configs 1`] = `
+Object {
+  "overrides": Array [
+    Object {
+      "files": Array [
+        "*.ts",
+      ],
+      "rules": Object {
+        "some-converted-rule": "error",
+      },
+    },
+  ],
+  "rules": Object {
+    "some-recommended-root-eslint-rule": "error",
+  },
+}
+`;
+
+exports[`ProjectConverter ignoreExistingTslintConfig ignoreExistingTslintConfig: false should use existing TSLint configs and merge their converted ESLint equivalents with recommended ESLint configs 2`] = `
+Object {
+  "rules": Object {
+    "some-converted-rule": "error",
+    "some-recommended-project-eslint-rule": "error",
+  },
+}
+`;
+
+exports[`ProjectConverter ignoreExistingTslintConfig ignoreExistingTslintConfig: true should ignore existing TSLint configs and just reset the project to use recommended ESLint configs 1`] = `
+Object {
+  "rules": Object {
+    "some-recommended-root-eslint-rule": "error",
+  },
+}
+`;
+
+exports[`ProjectConverter ignoreExistingTslintConfig ignoreExistingTslintConfig: true should ignore existing TSLint configs and just reset the project to use recommended ESLint configs 2`] = `
+Object {
+  "rules": Object {
+    "some-recommended-project-eslint-rule": "error",
+  },
+}
+`;
+
 exports[`ProjectConverter removeTSLintFromWorkspace() should remove all relevant traces of TSLint from the workspace 1`] = `
 Object {
   "dependencies": Object {},
@@ -172,7 +215,7 @@ Object {
 }
 `;
 
-exports[`ProjectConverter setDefaults() should set the default configuration for removeTSLintIfNoMoreTSLintTargets in workspace.json 1`] = `
+exports[`ProjectConverter setDefaults() should save in workspace.json 1`] = `
 Object {
   "generators": Object {
     "@nrwl/angular": Object {
@@ -218,7 +261,7 @@ Object {
 }
 `;
 
-exports[`ProjectConverter setDefaults() should set the default configuration for removeTSLintIfNoMoreTSLintTargets in workspace.json 2`] = `
+exports[`ProjectConverter setDefaults() should save in workspace.json 2`] = `
 Object {
   "generators": Object {
     "@nrwl/angular": Object {
@@ -226,6 +269,7 @@ Object {
         "linter": "tslint",
       },
       "convert-tslint-to-eslint": Object {
+        "ignoreExistingTslintConfig": true,
         "removeTSLintIfNoMoreTSLintTargets": true,
       },
       "library": Object {
@@ -267,7 +311,7 @@ Object {
 }
 `;
 
-exports[`ProjectConverter setDefaults() should set the default configuration for removeTSLintIfNoMoreTSLintTargets in workspace.json 3`] = `
+exports[`ProjectConverter setDefaults() should save in workspace.json 3`] = `
 Object {
   "generators": Object {
     "@nrwl/angular": Object {
@@ -275,6 +319,7 @@ Object {
         "linter": "tslint",
       },
       "convert-tslint-to-eslint": Object {
+        "ignoreExistingTslintConfig": false,
         "removeTSLintIfNoMoreTSLintTargets": false,
       },
       "library": Object {
