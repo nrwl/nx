@@ -68,17 +68,13 @@ export async function conversionGenerator(
    */
   projectConverter.removeProjectTSLintFile();
 
+  // Only project shouldn't be added as a default
+  const { project, ...defaults } = options;
+
   /**
    * Store user preferences for the collection
    */
-  projectConverter.setDefaults(
-    '@nrwl/angular',
-    options.removeTSLintIfNoMoreTSLintTargets
-  );
-  projectConverter.setDefaults(
-    '@nrwl/angular',
-    options.ignoreExistingTslintConfig
-  );
+  projectConverter.setDefaults('@nrwl/angular', defaults);
 
   /**
    * If the Angular project is an app which has an e2e project, try and convert that as well.

@@ -63,17 +63,13 @@ export async function conversionGenerator(
    */
   projectConverter.removeProjectTSLintFile();
 
+  // Only project shouldn't be added as a default
+  const { project, ...defaults } = options;
+
   /**
    * Store user preferences for the collection
    */
-  projectConverter.setDefaults(
-    '@nrwl/cypress',
-    options.removeTSLintIfNoMoreTSLintTargets
-  );
-  projectConverter.setDefaults(
-    '@nrwl/cypress',
-    options.ignoreExistingTslintConfig
-  );
+  projectConverter.setDefaults('@nrwl/cypress', defaults);
 
   /**
    * Based on user preference and remaining usage, remove TSLint from the workspace entirely.

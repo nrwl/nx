@@ -85,17 +85,13 @@ export async function conversionGenerator(
    */
   projectConverter.removeProjectTSLintFile();
 
+  // Only project shouldn't be added as a default
+  const { project, ...defaults } = options;
+
   /**
    * Store user preferences for the collection
    */
-  projectConverter.setDefaults(
-    '@nrwl/nest',
-    options.removeTSLintIfNoMoreTSLintTargets
-  );
-  projectConverter.setDefaults(
-    '@nrwl/nest',
-    options.ignoreExistingTslintConfig
-  );
+  projectConverter.setDefaults('@nrwl/nest', defaults);
 
   /**
    * Based on user preference and remaining usage, remove TSLint from the workspace entirely.

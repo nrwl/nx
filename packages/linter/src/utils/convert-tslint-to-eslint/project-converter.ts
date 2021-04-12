@@ -500,7 +500,7 @@ export class ProjectConverter {
 
   setDefaults(
     collectionName: string,
-    removeTSLintIfNoMoreTSLintTargets: ConvertTSLintToESLintSchema['removeTSLintIfNoMoreTSLintTargets']
+    defaults: Partial<ConvertTSLintToESLintSchema>
   ) {
     const workspace = readWorkspaceConfiguration(this.host);
 
@@ -514,7 +514,8 @@ export class ProjectConverter {
       [collectionName]: {
         ...prev,
         'convert-tslint-to-eslint': {
-          removeTSLintIfNoMoreTSLintTargets,
+          ...prev['convert-tslint-to-eslint'],
+          ...defaults,
         },
       },
     };
