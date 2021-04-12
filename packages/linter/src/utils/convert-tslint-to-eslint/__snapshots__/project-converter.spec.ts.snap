@@ -215,7 +215,7 @@ Object {
 }
 `;
 
-exports[`ProjectConverter setDefaults() should set the default configuration for removeTSLintIfNoMoreTSLintTargets in workspace.json 1`] = `
+exports[`ProjectConverter setDefaults() should save in workspace.json 1`] = `
 Object {
   "generators": Object {
     "@nrwl/angular": Object {
@@ -261,7 +261,7 @@ Object {
 }
 `;
 
-exports[`ProjectConverter setDefaults() should set the default configuration for removeTSLintIfNoMoreTSLintTargets in workspace.json 2`] = `
+exports[`ProjectConverter setDefaults() should save in workspace.json 2`] = `
 Object {
   "generators": Object {
     "@nrwl/angular": Object {
@@ -269,6 +269,7 @@ Object {
         "linter": "tslint",
       },
       "convert-tslint-to-eslint": Object {
+        "ignoreExistingTslintConfig": true,
         "removeTSLintIfNoMoreTSLintTargets": true,
       },
       "library": Object {
@@ -310,7 +311,7 @@ Object {
 }
 `;
 
-exports[`ProjectConverter setDefaults() should set the default configuration for removeTSLintIfNoMoreTSLintTargets in workspace.json 3`] = `
+exports[`ProjectConverter setDefaults() should save in workspace.json 3`] = `
 Object {
   "generators": Object {
     "@nrwl/angular": Object {
@@ -318,6 +319,7 @@ Object {
         "linter": "tslint",
       },
       "convert-tslint-to-eslint": Object {
+        "ignoreExistingTslintConfig": false,
         "removeTSLintIfNoMoreTSLintTargets": false,
       },
       "library": Object {

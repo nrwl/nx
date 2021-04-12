@@ -262,7 +262,7 @@ describe('ProjectConverter', () => {
   });
 
   describe('setDefaults()', () => {
-    it('should set the default configuration for removeTSLintIfNoMoreTSLintTargets in workspace.json', async () => {
+    it('should save in workspace.json', async () => {
       writeJson(host, 'tslint.json', {});
       writeJson(host, `${projectRoot}/tslint.json`, {});
 
@@ -289,12 +289,18 @@ describe('ProjectConverter', () => {
       // BEFORE - no entry for convert-tslint-to-eslint wthin @nrwl/angular generators
       expect(readJson(host, 'workspace.json')).toMatchSnapshot();
 
-      projectConverter.setDefaults('@nrwl/angular', true);
+      projectConverter.setDefaults('@nrwl/angular', {
+        ignoreExistingTslintConfig: true,
+        removeTSLintIfNoMoreTSLintTargets: true,
+      });
 
       // AFTER (1) - convert-tslint-to-eslint wthin @nrwl/angular generators has removeTSLintIfNoMoreTSLintTargets set to true
       expect(readJson(host, 'workspace.json')).toMatchSnapshot();
 
-      projectConverter.setDefaults('@nrwl/angular', false);
+      projectConverter.setDefaults('@nrwl/angular', {
+        ignoreExistingTslintConfig: false,
+        removeTSLintIfNoMoreTSLintTargets: false,
+      });
 
       // AFTER (2) - convert-tslint-to-eslint wthin @nrwl/angular generators has removeTSLintIfNoMoreTSLintTargets set to false
       expect(readJson(host, 'workspace.json')).toMatchSnapshot();
