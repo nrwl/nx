@@ -8,6 +8,7 @@ import {
 import { StorybookStoriesSchema } from '../stories/stories';
 import { StorybookConfigureSchema } from './schema';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import { getE2eProjectName } from '@nrwl/cypress';
 
 export default function (schema: StorybookConfigureSchema): Rule {
   if (schema.generateCypressSpecs && !schema.generateStories) {
@@ -22,6 +23,8 @@ export default function (schema: StorybookConfigureSchema): Rule {
       uiFramework: '@storybook/angular',
       configureCypress: schema.configureCypress,
       linter: schema.linter,
+      cypressDirectory: schema.cypressDirectory,
+      cypressName: schema.cypressName,
     }),
     schema.generateStories ? generateStories(schema) : noop(),
   ]);
@@ -29,10 +32,15 @@ export default function (schema: StorybookConfigureSchema): Rule {
 
 function generateStories(schema: StorybookConfigureSchema): Rule {
   return (tree, context) => {
+    const e2eProjectName = getE2eProjectName({
+      name: schema.cypressName || `${schema.name}-e2e`,
+      directory: schema.cypressDirectory,
+    });
     return schematic<StorybookStoriesSchema>('stories', {
       name: schema.name,
       generateCypressSpecs:
         schema.configureCypress && schema.generateCypressSpecs,
+      cypressProject: e2eProjectName,
     });
   };
 }

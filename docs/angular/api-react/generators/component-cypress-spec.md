@@ -30,6 +30,12 @@ Type: `string`
 
 Relative path to the component file from the library root?
 
+### cypressProject
+
+Type: `string`
+
+The Cypress project to generate the stories under. By default, inferred from 'project'
+
 ### js
 
 Default: `false`

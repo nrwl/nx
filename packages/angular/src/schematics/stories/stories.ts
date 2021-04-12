@@ -20,15 +20,23 @@ import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 export interface StorybookStoriesSchema {
   name: string;
   generateCypressSpecs: boolean;
+  cypressProject?: string;
 }
 
 export default function (schema: StorybookStoriesSchema): Rule {
-  return chain([createAllStories(schema.name, schema.generateCypressSpecs)]);
+  return chain([
+    createAllStories(
+      schema.name,
+      schema.generateCypressSpecs,
+      schema.cypressProject
+    ),
+  ]);
 }
 
 export function createAllStories(
   projectName: string,
-  generateCypressSpecs: boolean
+  generateCypressSpecs: boolean,
+  cypressProject?: string
 ): Rule {
   return (tree: Tree, context: SchematicContext) => {
     context.logger.debug('adding .storybook folder to lib');
@@ -224,6 +232,7 @@ export function createAllStories(
                       {
                         projectName,
                         libPath: modulePath,
+                        cypressProject,
                         componentName: info.name,
                         componentPath: info.path,
                         componentFileName: info.componentFileName,

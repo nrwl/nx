@@ -8,12 +8,17 @@ import {
 } from '@nrwl/devkit';
 
 import { Linter } from '@nrwl/linter';
-import { cypressProjectGenerator as _cypressProjectGenerator } from '@nrwl/cypress';
+import {
+  cypressProjectGenerator as _cypressProjectGenerator,
+  getE2eProjectName,
+} from '@nrwl/cypress';
 import { safeFileDelete } from '../../utils/utilities';
 
 export interface CypressConfigureSchema {
   name: string;
+  cypressName?: string;
   js?: boolean;
+  directory?: string;
   linter: Linter;
 }
 
@@ -21,16 +26,21 @@ export async function cypressProjectGenerator(
   tree: Tree,
   schema: CypressConfigureSchema
 ) {
-  const e2eProjectName = `${schema.name}-e2e`;
+  const e2eProjectName = schema.cypressName || `${schema.name}-e2e`;
   const installTask = await _cypressProjectGenerator(tree, {
     name: e2eProjectName,
     project: schema.name,
     js: schema.js,
     linter: schema.linter,
+    directory: schema.directory,
   });
-  removeUnneededFiles(tree, e2eProjectName, schema.js);
-  addBaseUrlToCypressConfig(tree, e2eProjectName);
-  updateAngularJsonBuilder(tree, e2eProjectName, schema.name);
+  const generatedCypressProjectName = getE2eProjectName({
+    name: e2eProjectName,
+    directory: schema.directory,
+  });
+  removeUnneededFiles(tree, generatedCypressProjectName, schema.js);
+  addBaseUrlToCypressConfig(tree, generatedCypressProjectName);
+  updateAngularJsonBuilder(tree, generatedCypressProjectName, schema.name);
 
   await formatFiles(tree);
 
