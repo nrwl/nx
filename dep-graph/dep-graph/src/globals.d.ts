@@ -1,3 +1,4 @@
+import { WorkspaceConfiguration } from '@nrwl/devkit';
 import { ProjectGraph, ProjectGraphNode } from '@nrwl/workspace';
 import { ProjectGraphList } from './graphs';
 
@@ -14,6 +15,10 @@ export declare global {
     excludeProject: Function;
     projectGraphList: ProjectGraphList[];
     selectedProjectGraph: string;
+    workspaceLayout: {
+      libsDir: string;
+      appsDir: string;
+    };
   }
 }
 

@@ -13,6 +13,7 @@ import {
 } from '../core/project-graph';
 import { appRootPath } from '../utilities/app-root';
 import { output } from '../utilities/output';
+import { workspaceLayout } from '../core/file-utils';
 
 // maps file extention to MIME types
 const mimeType = {
@@ -38,7 +39,8 @@ function projectsToHtml(
   affected: string[],
   focus: string,
   groupByFolder: boolean,
-  exclude: string[]
+  exclude: string[],
+  layout: { appsDir: string; libsDir: string }
 ) {
   let f = readFileSync(
     join(__dirname, '../core/dep-graph/index.html')
@@ -61,6 +63,10 @@ function projectsToHtml(
     .replace(
       `window.exclude = []`,
       `window.exclude = ${JSON.stringify(exclude)}`
+    )
+    .replace(
+      `window.workspaceLayout = null`,
+      `window.workspaceLayout = ${JSON.stringify(layout)}`
     );
 
   if (focus) {
@@ -149,6 +155,7 @@ export function generateGraph(
   affectedProjects: string[]
 ): void {
   let graph = onlyWorkspaceProjects(createProjectGraph());
+  const layout = workspaceLayout();
 
   const projects = Object.values(graph.nodes) as ProjectGraphNode[];
   projects.sort((a, b) => {
@@ -192,7 +199,8 @@ export function generateGraph(
       affectedProjects,
       args.focus || null,
       args.groupByFolder || false,
-      args.exclude || []
+      args.exclude || [],
+      layout
     );
   } else {
     graph = filterGraph(graph, args.focus || null, args.exclude || []);
