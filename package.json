@@ -1,6 +1,6 @@
 {
   "name": "@nrwl/nx-source",
-  "version": "12.0.2",
+  "version": "12.0.4",
   "description": "Powerful, Extensible Dev Tools",
   "homepage": "https://nx.dev",
   "private": true,
