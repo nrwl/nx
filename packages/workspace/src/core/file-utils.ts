@@ -160,13 +160,19 @@ function readFileIfExisting(path: string) {
     : '';
 }
 
-export function readWorkspaceJson(): any {
-  const ws = new Workspaces(appRootPath);
-  return ws.readWorkspaceConfiguration();
+export function readWorkspaceJson() {
+  return readWorkspaceConfig({
+    format: 'nx',
+    path: appRootPath,
+  });
 }
 
-export function readWorkspaceConfig(opts: { format: 'angularCli' | 'nx' }) {
-  const json = readWorkspaceJson();
+export function readWorkspaceConfig(opts: {
+  format: 'angularCli' | 'nx';
+  path?: string;
+}) {
+  const ws = new Workspaces(opts.path);
+  const json = ws.readWorkspaceConfiguration();
   if (opts.format === 'angularCli') {
     const formatted = toOldFormatOrNull(json);
     return formatted ?? json;
