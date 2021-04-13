@@ -8,17 +8,17 @@ import { Workspace } from './workspace';
  *
  * @param dir Directory to start searching with
  */
-export function findWorkspaceRoot(dir: string): Workspace {
-  if (path.dirname(dir) === dir) {
-    return null;
-  }
-
+export function findWorkspaceRoot(dir: string): Workspace | null {
   if (existsSync(path.join(dir, 'angular.json'))) {
     return { type: 'angular', dir };
   }
 
   if (existsSync(path.join(dir, 'workspace.json'))) {
     return { type: 'nx', dir };
+  }
+
+  if (path.dirname(dir) === dir) {
+    return null;
   }
 
   return findWorkspaceRoot(path.dirname(dir));
