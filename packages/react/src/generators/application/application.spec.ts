@@ -184,6 +184,25 @@ describe('app', () => {
     ).toContain('Welcome to my-app');
   });
 
+  it.each`
+    style
+    ${'styled-components'}
+    ${'styled-jsx'}
+    ${'@emotion/styled'}
+  `(
+    'should generate valid .babelrc JSON config for CSS-in-JS solutions',
+    async ({ style }) => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        style,
+      });
+
+      expect(() => {
+        JSON.parse(appTree.read(`apps/my-app/.babelrc`).toString());
+      }).not.toThrow();
+    }
+  );
+
   describe('--style scss', () => {
     it('should generate scss styles', async () => {
       await applicationGenerator(appTree, { ...schema, style: 'scss' });
