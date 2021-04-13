@@ -12,6 +12,7 @@ if [[ $NX_VERSION == "--local" ]]; then
     NX_VERSION="*"
 fi
 
+rm -rf build
 npx nx run-many --target=build --all --parallel || { echo 'Build failed' ; exit 1; }
 
 cd build/packages
