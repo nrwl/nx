@@ -614,4 +614,24 @@ describe('lib', () => {
       ).not.toBeDefined();
     });
   });
+
+  it.each`
+    style
+    ${'styled-components'}
+    ${'styled-jsx'}
+    ${'@emotion/styled'}
+  `(
+    'should generate valid .babelrc JSON config for CSS-in-JS solutions',
+    async ({ style }) => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        style,
+        name: 'myLib',
+      });
+
+      expect(() => {
+        JSON.parse(appTree.read(`libs/my-lib/.babelrc`).toString());
+      }).not.toThrow();
+    }
+  );
 });
