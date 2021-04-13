@@ -27,7 +27,7 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "tmp": "0.0.33",
+    "tmp": "~0.2.1",
     "yargs-parser": "20.0.0",
     "enquirer": "~2.3.6",
     "flat": "^5.0.2",

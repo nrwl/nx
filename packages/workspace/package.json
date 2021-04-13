@@ -67,7 +67,7 @@
     "rxjs": "^6.5.4",
     "semver": "7.3.4",
     "strip-json-comments": "2.0.1",
-    "tmp": "0.0.33",
+    "tmp": "~0.2.1",
     "yargs": "15.4.1",
     "yargs-parser": "20.0.0",
     "chalk": "4.1.0",

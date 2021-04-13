@@ -34,7 +34,6 @@
     "@angular-devkit/schematics": "~11.2.0",
     "fs-extra": "7.0.1",
     "rxjs": "^6.5.4",
-    "tmp": "0.0.33",
     "yargs": "15.4.1",
     "tslib": "^2.0.0"
   }
