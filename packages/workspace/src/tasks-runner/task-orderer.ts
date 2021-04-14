@@ -1,7 +1,12 @@
 import { ProjectGraph } from '../core/project-graph';
 import { Task } from './tasks-runner';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
-import { getPath } from '../utils/graph-utils';
+import { getDependencyConfigs } from './utils';
+
+interface TaskGraph {
+  tasks: Record<string, Task>;
+  dependencies: Record<string, string[]>;
+}
 
 export class TaskOrderer {
   constructor(
@@ -18,31 +23,89 @@ export class TaskOrderer {
     )
       return [tasks];
     if (tasks.length === 0) return [];
-    const res = [];
+    const stages: Task[][] = [];
+    const taskGraph = this.createTaskGraph(tasks);
     this.topologicallySortTasks(tasks).forEach((t) => {
-      const stageWithNoDeps = res.find(
-        (tasksInStage) => !this.taskDependsOnDeps(t, tasksInStage)
-      );
-      if (stageWithNoDeps) {
-        stageWithNoDeps.push(t);
+      const earliestStage = this.findEarliestStage(t, stages, taskGraph);
+      if (earliestStage) {
+        earliestStage.push(t);
       } else {
-        res.push([t]);
+        stages.push([t]);
       }
     });
-    return res;
+    return stages;
   }
 
-  private taskDependsOnDeps(task: Task, deps: Task[]) {
-    return !!deps.find(
-      (dep) =>
-        getPath(this.projectGraph, task.target.project, dep.target.project)
-          .length > 0
-    );
+  private createTaskGraph(tasks: Task[]): TaskGraph {
+    const graph: TaskGraph = {
+      tasks: {},
+      dependencies: {},
+    };
+    for (const task of tasks) {
+      graph.tasks[task.id] = task;
+      graph.dependencies[task.id] = [];
+      const dependencyConfigs = getDependencyConfigs(
+        task.target,
+        this.projectGraph
+      );
+      const projectDependencies = new Set(
+        this.projectGraph.dependencies[task.target.project].map(
+          (dependency) => dependency.target
+        )
+      );
+
+      if (!dependencyConfigs) {
+        for (const t of tasks) {
+          if (projectDependencies.has(t.target.project)) {
+            graph.dependencies[task.id].push(t.id);
+          }
+        }
+      } else {
+        for (const dependencyConfig of dependencyConfigs) {
+          if (dependencyConfig.projects === 'self') {
+            for (const t of tasks) {
+              if (
+                t.target.project === task.target.project &&
+                t.target.target === dependencyConfig.target
+              ) {
+                graph.dependencies[task.id].push(t.id);
+              }
+            }
+          } else if (dependencyConfig.projects === 'dependencies') {
+            for (const t of tasks) {
+              if (
+                projectDependencies.has(t.target.project) &&
+                t.target.target === dependencyConfig.target
+              ) {
+                graph.dependencies[task.id].push(t.id);
+              }
+            }
+          }
+        }
+      }
+    }
+    return graph;
+  }
+
+  private findEarliestStage(
+    task: Task,
+    stages: Task[][],
+    taskGraph: TaskGraph
+  ) {
+    const unseenDependencies = new Set(taskGraph.dependencies[task.id]);
+    for (const stage of stages) {
+      if (unseenDependencies.size === 0) {
+        return stage;
+      }
+      for (const taskInStage of stage) {
+        unseenDependencies.delete(taskInStage.id);
+      }
+    }
   }
 
   private topologicallySortTasks(tasks: Task[]) {
     const visited: { [k: string]: boolean } = {};
-    const sorted = [];
+    const sortedProjects: string[] = [];
 
     const visitNode = (id: string) => {
       if (visited[id]) return;
@@ -50,11 +113,22 @@ export class TaskOrderer {
       this.projectGraph.dependencies[id].forEach((d) => {
         visitNode(d.target);
       });
-      sorted.push(id);
+      sortedProjects.push(id);
     };
     tasks.forEach((t) => visitNode(t.target.project));
-    return sorted
-      .map((projectName) => tasks.find((t) => t.target.project === projectName))
-      .filter((t) => !!t);
+
+    return tasks.sort((a, b) => {
+      if (a.target.project === b.target.project) {
+        return this.projectGraph.nodes[a.target.project].data.targets.dependsOn
+          ?.target === a.target.target
+          ? -1
+          : 1;
+      } else {
+        return (
+          sortedProjects.indexOf(a.target.project) -
+          sortedProjects.indexOf(b.target.project)
+        );
+      }
+    });
   }
 }
