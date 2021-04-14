@@ -17,6 +17,42 @@ describe('Storybook schematics', () => {
 
   afterEach(() => removeProject({ onlyOnCI: true }));
 
+  it('aaashould not overwrite global storybook config files', () => {
+    const angularStorybookLib = uniq('test-ui-lib-angular');
+    runCLI(
+      `generate @nrwl/angular:lib ${angularStorybookLib} --no-interactive`
+    );
+    runCLI(
+      `generate @nrwl/angular:storybook-configuration ${angularStorybookLib} --generateStories --no-interactive`
+    );
+
+    checkFilesExist(`.storybook/main.js`);
+    writeFileSync(
+      tmpProjPath(`.storybook/main.js`),
+      `
+        module.exports = {
+          stories: [],
+          addons: ['@storybook/addon-knobs/register'],
+        };      
+
+        console.log('hi there');
+      `
+    );
+
+    // generate another lib with storybook config
+    const anotherAngularStorybookLib = uniq('test-ui-lib-angular2');
+    runCLI(
+      `generate @nrwl/angular:lib ${anotherAngularStorybookLib} --no-interactive`
+    );
+    runCLI(
+      `generate @nrwl/angular:storybook-configuration ${anotherAngularStorybookLib} --generateStories --no-interactive`
+    );
+
+    expect(readFile(`.storybook/main.js`)).toContain(
+      `console.log('hi there');`
+    );
+  });
+
   describe('build storybook', () => {
     it('should execute e2e tests using Cypress running against Storybook', () => {
       const myapp = uniq('myapp');

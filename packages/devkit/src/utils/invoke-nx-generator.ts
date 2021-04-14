@@ -86,7 +86,11 @@ class DevkitTreeFromAngularDevkitTree {
   }
 
   exists(filePath: string): boolean {
-    return this.tree.exists(filePath);
+    if (this.isFile(filePath)) {
+      return this.tree.exists(filePath);
+    } else {
+      return this.children(filePath).length > 0;
+    }
   }
 
   isFile(filePath: string): boolean {
