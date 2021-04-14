@@ -162,6 +162,44 @@ describe('lib', () => {
         }
       `);
     });
+
+    describe('jest.config.js behavior', () => {
+      it('should update jest.config.js if the projects property is an array', async (done) => {
+        const treeWithJestConfig = createTreeWithEmptyWorkspace();
+        treeWithJestConfig.write(
+          'jest.config.js',
+          `module.exports = {
+  projects: [],
+};`
+        );
+        await libraryGenerator(treeWithJestConfig, defaultSchema);
+        expect(treeWithJestConfig.read('jest.config.js').toString())
+          .toBe(`module.exports = {
+  projects: ["<rootDir>/libs/my-lib"],
+};`);
+        done();
+      });
+
+      it('should not update jest.config.js if the projects property does not exist', async (done) => {
+        const contents = `module.exports = {
+  testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
+  transform: {
+    '^.+\\.(ts|js|html)$': 'ts-jest',
+  },
+  resolver: '@nrwl/jest/plugins/resolver',
+  moduleFileExtensions: ['ts', 'js', 'html'],
+  coverageReporters: ['html'],
+  passWithNoTests: true,
+};`;
+        const treeWithJestConfig = createTreeWithEmptyWorkspace();
+        treeWithJestConfig.write('jest.config.js', contents);
+        await libraryGenerator(treeWithJestConfig, defaultSchema);
+        expect(treeWithJestConfig.read('jest.config.js').toString()).toBe(
+          contents
+        );
+        done();
+      });
+    });
   });
 
   describe('nested', () => {
