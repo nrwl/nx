@@ -13,7 +13,11 @@ import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { spawn } from 'child_process';
 import { cacheDirectory } from '../utilities/cache-directory';
 
-export type CachedResult = { terminalOutput: string; outputsPath: string };
+export type CachedResult = {
+  terminalOutput: string;
+  outputsPath: string;
+  code: number;
+};
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
 
 class CacheConfig {
@@ -83,8 +87,12 @@ export class Cache {
     }
   }
 
-  async put(task: Task, terminalOutputPath: string, outputs: string[]) {
-    const terminalOutput = readFileSync(terminalOutputPath).toString();
+  async put(
+    task: Task,
+    terminalOutput: string | null,
+    outputs: string[],
+    code: number
+  ) {
     const td = join(this.cachePath, task.hash);
     const tdCommit = join(this.cachePath, `${task.hash}.commit`);
 
@@ -97,7 +105,10 @@ export class Cache {
     }
 
     mkdirSync(td);
-    writeFileSync(join(td, 'terminalOutput'), terminalOutput);
+    writeFileSync(
+      join(td, 'terminalOutput'),
+      terminalOutput ?? 'no terminal output'
+    );
 
     mkdirSync(join(td, 'outputs'));
     outputs.forEach((f) => {
@@ -116,6 +127,7 @@ export class Cache {
     // creating this file is atomic, whereas creating a folder is not.
     // so if the process gets terminated while we are copying stuff into cache,
     // the cache entry won't be used.
+    writeFileSync(join(td, 'code'), code.toString());
     writeFileSync(tdCommit, 'true');
 
     if (this.options.remoteCache) {
@@ -123,7 +135,11 @@ export class Cache {
     }
   }
 
-  copyFilesFromCache(cachedResult: CachedResult, outputs: string[]) {
+  copyFilesFromCache(
+    hash: string,
+    cachedResult: CachedResult,
+    outputs: string[]
+  ) {
     outputs.forEach((f) => {
       const cached = join(cachedResult.outputsPath, f);
       if (existsSync(cached)) {
@@ -153,9 +169,17 @@ export class Cache {
     const td = join(this.cachePath, task.hash);
 
     if (existsSync(tdCommit)) {
+      const terminalOutput = readFileSync(
+        join(td, 'terminalOutput')
+      ).toString();
+      let code = 0;
+      try {
+        code = Number(readFileSync(join(td, 'code')).toString());
+      } catch (e) {}
       return {
-        terminalOutput: readFileSync(join(td, 'terminalOutput')).toString(),
+        terminalOutput,
         outputsPath: join(td, 'outputs'),
+        code,
       };
     } else {
       return null;

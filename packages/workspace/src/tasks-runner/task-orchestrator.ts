@@ -125,16 +125,16 @@ export class TaskOrchestrator {
       }
 
       const outputs = getOutputs(this.projectGraph.nodes, t.task);
-      this.cache.copyFilesFromCache(t.cachedResult, outputs);
+      this.cache.copyFilesFromCache(t.task.hash, t.cachedResult, outputs);
 
-      this.options.lifeCycle.endTask(t.task, 0);
+      this.options.lifeCycle.endTask(t.task, t.cachedResult.code);
     });
 
-    return tasks.reduce((m, c) => {
+    return tasks.reduce((m, t) => {
       m.push({
-        task: c.task,
+        task: t.task,
         type: AffectedEventType.TaskCacheRead,
-        success: true,
+        success: t.cachedResult.code === 0,
       });
       return m;
     }, []);
@@ -205,10 +205,11 @@ export class TaskOrchestrator {
             process.stdout.write(outWithErr.join(''));
           }
           if (outputPath) {
-            fs.writeFileSync(outputPath, outWithErr.join(''));
-            if (code === 0) {
+            const terminalOutput = outWithErr.join('');
+            fs.writeFileSync(outputPath, terminalOutput);
+            if (this.shouldCacheTask(outputPath, code)) {
               this.cache
-                .put(task, outputPath, taskOutputs)
+                .put(task, terminalOutput, taskOutputs, code)
                 .then(() => {
                   this.options.lifeCycle.endTask(task, code);
                   res(code);
@@ -259,21 +260,22 @@ export class TaskOrchestrator {
         p.on('exit', (code) => {
           if (code === null) code = 2;
           // we didn't print any output as we were running the command
-          // print all the collected output|
+          // print all the collected output
           if (!forwardOutput) {
             output.logCommand(commandLine);
-            try {
-              process.stdout.write(fs.readFileSync(outputPath));
-            } catch (e) {
+            const terminalOutput = this.readTerminalOutput(outputPath);
+            if (terminalOutput) {
+              process.stdout.write(terminalOutput);
+            } else {
               console.error(
                 `Nx could not find process's output. Run the command without --parallel.`
               );
             }
           }
           // we don't have to worry about this statement. code === 0 guarantees the file is there.
-          if (outputPath && code === 0) {
+          if (this.shouldCacheTask(outputPath, code)) {
             this.cache
-              .put(task, outputPath, taskOutputs)
+              .put(task, this.readTerminalOutput(outputPath), taskOutputs, code)
               .then(() => {
                 this.options.lifeCycle.endTask(task, code);
                 res(code);
@@ -291,6 +293,23 @@ export class TaskOrchestrator {
         rej(e);
       }
     });
+  }
+
+  private readTerminalOutput(outputPath: string) {
+    try {
+      return fs.readFileSync(outputPath).toString();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  private shouldCacheTask(outputPath: string | null, code: number) {
+    // TODO: vsavkin make caching failures the default in Nx 12.1
+    if (process.env.NX_CACHE_FAILURES == 'true') {
+      return outputPath;
+    } else {
+      return outputPath && code === 0;
+    }
   }
 
   private envForForkedProcess(
