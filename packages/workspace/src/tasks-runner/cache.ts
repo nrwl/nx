@@ -12,7 +12,6 @@ import * as fsExtra from 'fs-extra';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { spawn } from 'child_process';
 import { cacheDirectory } from '../utilities/cache-directory';
-import { readJsonFile, writeJsonFile } from '../utilities/fileutils';
 
 export type CachedResult = { terminalOutput: string; outputsPath: string };
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
@@ -39,7 +38,6 @@ export class Cache {
   root = appRootPath;
   cachePath = this.createCacheDir();
   terminalOutputsDir = this.createTerminalOutputsDir();
-  nxOutputsPath = this.ensureNxOutputsFile();
   cacheConfig = new CacheConfig(this.options);
 
   constructor(private readonly options: DefaultTasksRunnerOptions) {}
@@ -150,42 +148,6 @@ export class Cache {
     }
   }
 
-  removeOutputHashesFromNxOutputs(outputs: string[]): void {
-    if (outputs.length === 0) {
-      return;
-    }
-
-    const nxOutputs = readJsonFile(this.nxOutputsPath);
-    outputs.forEach((output) => {
-      delete nxOutputs[output];
-    });
-    writeJsonFile(this.nxOutputsPath, nxOutputs);
-  }
-
-  writeOutputHashesToNxOutputs(outputs: string[], hash: string): void {
-    if (outputs.length === 0) {
-      return;
-    }
-
-    const nxOutputs = readJsonFile(this.nxOutputsPath);
-    outputs.forEach((output) => {
-      nxOutputs[output] = hash;
-    });
-    writeJsonFile(this.nxOutputsPath, nxOutputs);
-  }
-
-  outputsMatchTask(task: Task, outputs: string[]): boolean {
-    if (outputs.length === 0) {
-      return true;
-    }
-
-    const nxOutputs = readJsonFile(this.nxOutputsPath);
-    return outputs.every(
-      (output) =>
-        existsSync(join(this.root, output)) && task.hash === nxOutputs[output]
-    );
-  }
-
   private getFromLocalDir(task: Task) {
     const tdCommit = join(this.cachePath, `${task.hash}.commit`);
     const td = join(this.cachePath, task.hash);
@@ -211,14 +173,6 @@ export class Cache {
   private createTerminalOutputsDir() {
     const path = join(this.cachePath, 'terminalOutputs');
     fsExtra.ensureDirSync(path);
-    return path;
-  }
-
-  private ensureNxOutputsFile() {
-    const path = join(this.cachePath, 'nx-outputs.json');
-    if (!existsSync(path)) {
-      writeJsonFile(path, {});
-    }
     return path;
   }
 }
