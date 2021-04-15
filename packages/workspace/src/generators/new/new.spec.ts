@@ -106,4 +106,19 @@ describe('new', () => {
     expect(readJson(tree, 'package.json')).toEqual(packageJson);
     expect(readJson(tree, '.eslintrc.json')).toEqual(eslintConfig);
   });
+
+  it('should throw an error when the directory is not empty', async () => {
+    tree.write('my-workspace/file.txt', '');
+
+    try {
+      await newGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-workspace',
+        directory: 'my-workspace',
+        npmScope: 'npmScope',
+        appName: 'app',
+      });
+      fail('Generating into a non-empty directory should error.');
+    } catch (e) {}
+  });
 });
