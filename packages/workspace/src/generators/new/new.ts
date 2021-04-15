@@ -171,6 +171,16 @@ export async function newGenerator(host: Tree, options: Schema) {
 
   options = normalizeOptions(options);
 
+  if (
+    host.exists(options.name) &&
+    !host.isFile(options.name) &&
+    host.children(options.name).length > 0
+  ) {
+    throw new Error(
+      `${join(host.root, options.name)} is not an empty directory.`
+    );
+  }
+
   const layout: 'packages' | 'apps-and-libs' =
     options.preset === 'oss' ? 'packages' : 'apps-and-libs';
   const workspaceOpts = {
