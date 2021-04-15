@@ -33,7 +33,7 @@
     "enquirer": "~2.3.6",
     "minimist": "^1.2.5",
     "rxjs": "^6.5.4",
-    "strip-json-comments": "2.0.1",
+    "strip-json-comments": "^3.1.1",
     "semver": "7.3.4",
     "tmp": "~0.2.1",
     "tslib": "^2.0.0",
