@@ -18,13 +18,19 @@ import {
 import { normalizeAssets } from '@nrwl/web/src/utils/normalize';
 import { createCopyPlugin } from '@nrwl/web/src/utils/config';
 import { WithNxOptions } from '../../plugins/with-nx';
+import {
+  computeCompilerOptionsPaths,
+  createTmpTsConfig,
+  DependentBuildableProjectNode,
+} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 
 export function createWebpackConfig(
   workspaceRoot: string,
   projectRoot: string,
   fileReplacements: FileReplacement[] = [],
   assets: any = null,
-  nxConfigOptions: WebpackConfigOptions = {}
+  nxConfigOptions: WebpackConfigOptions = {},
+  dependencies: DependentBuildableProjectNode[] = []
 ): (a, b) => Configuration {
   return function webpackConfig(
     config: Configuration,
@@ -46,9 +52,17 @@ export function createWebpackConfig(
 
     const mainFields = ['es2015', 'module', 'main'];
     const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
+    let tsConfigPath = join(projectRoot, 'tsconfig.json');
+    tsConfigPath = createTmpTsConfig(
+      join(workspaceRoot, tsConfigPath),
+      workspaceRoot,
+      projectRoot,
+      dependencies
+    );
+
     config.resolve.plugins = [
       new TsconfigPathsPlugin({
-        configFile: resolve(workspaceRoot, projectRoot, 'tsconfig.json'),
+        configFile: tsConfigPath,
         extensions,
         mainFields,
       }),
@@ -124,7 +138,8 @@ export async function prepareConfig(
     | typeof PHASE_DEVELOPMENT_SERVER
     | typeof PHASE_PRODUCTION_SERVER,
   options: NextBuildBuilderOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
+  dependencies: DependentBuildableProjectNode[]
 ) {
   const config = (await loadConfig(phase, options.root, null)) as NextConfig &
     WithNxOptions;
@@ -142,7 +157,8 @@ export async function prepareConfig(
       options.root,
       options.fileReplacements,
       options.assets,
-      config.nx
+      config.nx,
+      dependencies
     )(userWebpack ? userWebpack(a, b) : a, b);
 
   if (typeof userNextConfig !== 'function') {

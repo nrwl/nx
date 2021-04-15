@@ -73,36 +73,51 @@ describe('Next.js Applications', () => {
     );
   }, 120000);
 
-  it('should be able to consume a react lib', async () => {
+  it('should be able to consume a react libs (buildable and non-buildable)', async () => {
     const appName = uniq('app');
-    const libName = uniq('lib');
+    const buildableLibName = uniq('lib');
+    const nonBuildableLibName = uniq('lib');
 
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
-
-    runCLI(`generate @nrwl/react:lib ${libName} --no-interactive --style=none`);
+    runCLI(
+      `generate @nrwl/react:lib ${nonBuildableLibName} --no-interactive --style=none`
+    );
+    runCLI(
+      `generate @nrwl/react:lib ${buildableLibName} --no-interactive --style=none --buildable`
+    );
 
     const mainPath = `apps/${appName}/pages/index.tsx`;
     updateFile(
       mainPath,
-      `import '@${proj}/${libName}';\n${readFile(mainPath)}`
+      `
+import '@${proj}/${nonBuildableLibName}';
+import '@${proj}/${buildableLibName}';
+${readFile(mainPath)}
+`
     );
 
-    // Update lib to use css modules
+    // Update non-buildable lib to use css modules to test that next.js can compile it
     updateFile(
-      `libs/${libName}/src/lib/${libName}.tsx`,
+      `libs/${nonBuildableLibName}/src/lib/${nonBuildableLibName}.tsx`,
       `
         import styles from './style.module.css';
         export function Test() {
           return <div className={styles.container}>Hello</div>;
         }
+        export default Test;
       `
     );
     updateFile(
-      `libs/${libName}/src/lib/style.module.css`,
+      `libs/${nonBuildableLibName}/src/lib/style.module.css`,
       `
         .container {}
       `
     );
+
+    // Building the app throws if dependencies haven't been built yet
+    expect(() => {
+      runCLI(`build ${appName}`);
+    }).toThrow();
 
     await checkApp(appName, {
       checkUnitTest: true,
@@ -374,7 +389,7 @@ describe('Next.js Applications', () => {
     );
   }, 120000);
 
-  it('should be able to consume a react lib writen in JavaScript', async () => {
+  it('should be able to consume a react lib written in JavaScript', async () => {
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -419,6 +434,16 @@ async function checkApp(
   appName: string,
   opts: { checkUnitTest: boolean; checkLint: boolean; checkE2E: boolean }
 ) {
+  const buildResult = runCLI(`build ${appName} --withDeps`);
+  expect(buildResult).toContain(`Compiled successfully`);
+  checkFilesExist(`dist/apps/${appName}/.next/build-manifest.json`);
+  checkFilesExist(`dist/apps/${appName}/public/star.svg`);
+
+  const packageJson = readJson(`dist/apps/${appName}/package.json`);
+  expect(packageJson.dependencies.react).toBeDefined();
+  expect(packageJson.dependencies['react-dom']).toBeDefined();
+  expect(packageJson.dependencies.next).toBeDefined();
+
   if (opts.checkLint) {
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -435,16 +460,6 @@ async function checkApp(
     const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);
     expect(e2eResults).toContain('All specs passed!');
   }
-
-  const buildResult = runCLI(`build ${appName}`);
-  expect(buildResult).toContain(`Compiled successfully`);
-  checkFilesExist(`dist/apps/${appName}/.next/build-manifest.json`);
-  checkFilesExist(`dist/apps/${appName}/public/star.svg`);
-
-  const packageJson = readJson(`dist/apps/${appName}/package.json`);
-  expect(packageJson.dependencies.react).toBeDefined();
-  expect(packageJson.dependencies['react-dom']).toBeDefined();
-  expect(packageJson.dependencies.next).toBeDefined();
 
   runCLI(`export ${appName}`);
   checkFilesExist(`dist/apps/${appName}/exported/index.html`);

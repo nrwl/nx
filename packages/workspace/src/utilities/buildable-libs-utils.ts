@@ -185,6 +185,31 @@ export function checkDependentProjectsHaveBeenBuilt(
   targetName: string,
   projectDependencies: DependentBuildableProjectNode[]
 ): boolean {
+  const missing = findMissingBuildDependencies(
+    root,
+    projectName,
+    targetName,
+    projectDependencies
+  );
+  if (missing.length > 0) {
+    console.error(stripIndents`
+      Some of the project ${projectName}'s dependencies have not been built yet. Please build these libraries before:
+      ${missing.map((x) => ` - ${x.node.name}`).join('\n')}
+
+      Try: nx run ${projectName}:${targetName} --with-deps
+    `);
+    return false;
+  } else {
+    return true;
+  }
+}
+
+export function findMissingBuildDependencies(
+  root: string,
+  projectName: string,
+  targetName: string,
+  projectDependencies: DependentBuildableProjectNode[]
+): DependentBuildableProjectNode[] {
   const depLibsToBuildFirst: DependentBuildableProjectNode[] = [];
 
   // verify whether all dependent libraries have been built
@@ -200,18 +225,7 @@ export function checkDependentProjectsHaveBeenBuilt(
     }
   });
 
-  if (depLibsToBuildFirst.length > 0) {
-    console.error(stripIndents`
-      Some of the project ${projectName}'s dependencies have not been built yet. Please build these libraries before:
-      ${depLibsToBuildFirst.map((x) => ` - ${x.node.name}`).join('\n')}
-
-      Try: nx run ${projectName}:${targetName} --with-deps
-    `);
-
-    return false;
-  } else {
-    return true;
-  }
+  return depLibsToBuildFirst;
 }
 
 export function updatePaths(
