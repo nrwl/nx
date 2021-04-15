@@ -25,12 +25,7 @@ export default function update(): Rule {
   return (host: Tree, context: SchematicContext) => {
     const updates = [];
     const conflicts: Array<[string, string]> = [];
-    const projectGraph = createProjectGraph(
-      undefined,
-      undefined,
-      undefined,
-      false
-    );
+    const projectGraph = createProjectGraph(undefined, undefined, undefined);
     if (host.exists('/babel.config.json')) {
       context.logger.info(
         `

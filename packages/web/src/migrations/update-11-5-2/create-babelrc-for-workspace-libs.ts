@@ -7,9 +7,7 @@ import { hasDependentAppUsingWebBuild } from './utils';
 
 export async function createBabelrcForWorkspaceLibs(host: Tree) {
   const projects = getProjects(host);
-  const graph = reverse(
-    createProjectGraph(undefined, undefined, undefined, false)
-  );
+  const graph = reverse(createProjectGraph(undefined, undefined, undefined));
 
   for (const [name, p] of projects.entries()) {
     if (!hasDependentAppUsingWebBuild(name, graph, projects)) {

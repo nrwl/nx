@@ -19,8 +19,7 @@ export function checkDependencies(_, schema: Schema) {
   const graph: ProjectGraph = createProjectGraph(
     undefined,
     undefined,
-    undefined,
-    false
+    undefined
   );
 
   const reverseGraph = onlyWorkspaceProjects(reverse(graph));
