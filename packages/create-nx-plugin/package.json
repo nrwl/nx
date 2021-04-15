@@ -28,7 +28,7 @@
   "homepage": "https://nx.dev",
   "dependencies": {
     "@nrwl/workspace": "*",
-    "tmp": "0.0.33",
+    "tmp": "~0.2.1",
     "yargs": "15.4.1",
     "yargs-parser": "20.0.0",
     "enquirer": "~2.3.6",

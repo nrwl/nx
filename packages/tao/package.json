@@ -35,7 +35,7 @@
     "rxjs": "^6.5.4",
     "strip-json-comments": "2.0.1",
     "semver": "7.3.4",
-    "tmp": "0.0.33",
+    "tmp": "~0.2.1",
     "tslib": "^2.0.0",
     "yargs-parser": "20.0.0",
     "fs-extra": "7.0.1",
