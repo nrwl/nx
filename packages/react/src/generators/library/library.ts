@@ -200,7 +200,7 @@ function addProject(host: Tree, options: NormalizedSchema) {
         rollupConfig: `@nrwl/react/plugins/bundle-rollup`,
         assets: [
           {
-            glob: 'README.md',
+            glob: `${options.projectRoot}/README.md`,
             input: '.',
             output: '.',
           },
