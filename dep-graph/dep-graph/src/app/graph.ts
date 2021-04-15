@@ -1,6 +1,5 @@
 import { ProjectGraph, ProjectGraphNode } from '@nrwl/workspace';
 import * as cy from 'cytoscape';
-import anywherePanning from 'cytoscape-anywhere-panning';
 import cytoscapeDagre from 'cytoscape-dagre';
 import popper from 'cytoscape-popper';
 import { Subject } from 'rxjs';
@@ -14,6 +13,7 @@ import {
   ProjectEdge,
   ProjectNode,
 } from './util-cytoscape';
+import { VirtualElement } from '@popperjs/core';
 
 export interface GraphPerfReport {
   renderTime: number;
@@ -33,7 +33,6 @@ export class GraphComponent {
   constructor(private tooltipService: GraphTooltipService) {
     cy.use(cytoscapeDagre);
     cy.use(popper);
-    cy.use(anywherePanning);
   }
 
   render(selectedProjects: ProjectGraphNode[], groupByFolder: boolean) {
@@ -73,8 +72,6 @@ export class GraphComponent {
       boxSelectionEnabled: false,
       style: [...nodeStyles, ...edgeStyles],
     });
-
-    this.graph.anywherePanning();
 
     this.graph.on('zoom', () => {
       if (this.openTooltip) {
@@ -152,7 +149,7 @@ export class GraphComponent {
     this.graph.$('node:childless').on('click', (event) => {
       const node = event.target;
 
-      let ref = node.popperRef(); // used only for positioning
+      let ref: VirtualElement = node.popperRef(); // used only for positioning
 
       const content = new ProjectNodeToolTip(node).render();
 

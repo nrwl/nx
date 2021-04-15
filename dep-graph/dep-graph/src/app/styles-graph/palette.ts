@@ -5,6 +5,6 @@ export enum NrwlPalette {
   navy = '#143055',
   twilight = '#086c9f',
   black = '#231f20',
-  red = 'rgb(248, 84, 119)',
+  red = '#f85477',
   white = '#fff',
 }

@@ -2753,6 +2753,11 @@
     schema-utils "^2.6.5"
     source-map "^0.7.3"
 
+"@popperjs/core@^2.0.0", "@popperjs/core@^2.8.3", "@popperjs/core@^2.9.2":
+  version "2.9.2"
+  resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.9.2.tgz#adea7b6953cbb34651766b0548468e743c6a2353"
+  integrity sha512-VZMYa7+fXHdwIq1TDhSXoVmSPEGM/aa+6Aiq3nVVJ9bXr24zScr+NlKFKC3iPljA7ho/GAZr+d2jOf5GIRC30Q==
+
 "@popperjs/core@^2.5.4":
   version "2.9.1"
   resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.9.1.tgz#7f554e7368c9ab679a11f4a042ca17149d70cf12"
@@ -3540,7 +3545,7 @@
     "@types/node" "*"
     "@types/webpack" "*"
 
-"@types/cytoscape@^3.14.7":
+"@types/cytoscape@^3.14.12":
   version "3.14.12"
   resolved "https://registry.yarnpkg.com/@types/cytoscape/-/cytoscape-3.14.12.tgz#b46c445da97df76d486c5b3b25554f616deefd41"
   integrity sha512-Tf7ClW9H+8S0Sp/C4l5g7lLiANMMz7a8lPkANosqQQ4liku+0/aMRGFoZwV6bFm4aK//PF6ClPiTKBU3LhHhkw==
@@ -8705,29 +8710,24 @@ cypress@^6.0.1:
     url "^0.11.0"
     yauzl "^2.10.0"
 
-cytoscape-anywhere-panning@^0.5.5:
-  version "0.5.5"
-  resolved "https://registry.yarnpkg.com/cytoscape-anywhere-panning/-/cytoscape-anywhere-panning-0.5.5.tgz#d4b9d54cf532c51f7b06531d9a8967471f310d46"
-  integrity sha512-//p0NIp4EYZzPD9y0BFtwUxnCkGcYvBGPkc5ezDb5BZinhjtpB0U8xtOq4DRcppVXGIdwiudIcuwiJZx/vYUwA==
-
-cytoscape-dagre@^2.2.2:
+cytoscape-dagre@^2.3.2:
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/cytoscape-dagre/-/cytoscape-dagre-2.3.2.tgz#f83d4357642c86d3bd7530dd9c1dffc2e1079d3c"
   integrity sha512-dL9+RvGkatSlIdOKXiFwHpnpTo8ydFMqIYzZFkImJXNbDci3feyYxR46wFoaG9GFiWimc6XD9Lm0x29b1wvWpw==
   dependencies:
     dagre "^0.8.5"
 
-cytoscape-popper@^1.0.7:
-  version "1.0.7"
-  resolved "https://registry.yarnpkg.com/cytoscape-popper/-/cytoscape-popper-1.0.7.tgz#8154ff507d0cc1a17952f00643e71fc1f8ea9fae"
-  integrity sha512-b/vfoBL2u9GU+J7eceGT9cZ4hctn/ZzV7PXq4w6fk+45qQuOHtlhpP3WxGKpBXNqENhk7Dk0BwlIYROjYQmidQ==
+cytoscape-popper@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/cytoscape-popper/-/cytoscape-popper-2.0.0.tgz#d93917695a9b8af3dbda1d8ee433618ac4d4e359"
+  integrity sha512-b7WSOn8qXHWtdIXFNmrgc8qkaOs16tMY0EwtRXlxzvn8X+al6TAFrUwZoYATkYSlotfd/36ZMoeKMEoUck6feA==
   dependencies:
-    popper.js "^1.0.0"
+    "@popperjs/core" "^2.0.0"
 
-cytoscape@^3.15.2:
-  version "3.18.1"
-  resolved "https://registry.yarnpkg.com/cytoscape/-/cytoscape-3.18.1.tgz#58197622f748c0eb24db7bdc7313c7cd96e6a10a"
-  integrity sha512-XTGI9RPcufWOQ4itNm4lleILvnwBT2jY85eDxWVU6FsKk5Gahd6jl0QQcpzxsIbh86pd7XjEgXHdvi2Z4+g0hA==
+cytoscape@^3.18.2:
+  version "3.18.2"
+  resolved "https://registry.yarnpkg.com/cytoscape/-/cytoscape-3.18.2.tgz#e5a1b37de3b53946a6d8f8586eefa44a0978ade4"
+  integrity sha512-NRY3JTrUzx0fSn44LyMlPqC8/zuuOo8kbr2hFlfjiObRmtir+lnxVg08f8wUA4X/P80df9vSThKDASl39yH+Iw==
   dependencies:
     heap "^0.2.6"
     lodash.debounce "^4.0.8"
@@ -16905,11 +16905,6 @@ polished@^3.4.4:
   dependencies:
     "@babel/runtime" "^7.12.5"
 
-popper.js@^1.0.0, popper.js@^1.16.0:
-  version "1.16.1"
-  resolved "https://registry.yarnpkg.com/popper.js/-/popper.js-1.16.1.tgz#2a223cb3dc7b6213d740e40372be40de43e65b1b"
-  integrity sha512-Wb4p1J4zyFTbM+u6WuO4XstYx4Ky9Cewe4DWrel7B0w6VVICvPwdOpotjzcf6eD8TsckVnIMNONQyPIUFOUbCQ==
-
 portfinder@^1.0.25, portfinder@^1.0.26:
   version "1.0.28"
   resolved "https://registry.yarnpkg.com/portfinder/-/portfinder-1.0.28.tgz#67c4622852bd5374dd1dd900f779f53462fac778"
@@ -20903,12 +20898,12 @@ tinycolor2@^1.4.1:
   resolved "https://registry.yarnpkg.com/tinycolor2/-/tinycolor2-1.4.2.tgz#3f6a4d1071ad07676d7fa472e1fac40a719d8803"
   integrity sha512-vJhccZPs965sV/L2sU4oRQVAos0pQXwsvTLkWYdqJ+a8Q5kPFzJTuOFwy7UniPli44NKQGAglksjvOcpo95aZA==
 
-tippy.js@5.2.1:
-  version "5.2.1"
-  resolved "https://registry.yarnpkg.com/tippy.js/-/tippy.js-5.2.1.tgz#e08d7332c103a15e427124d710d881fca82365d6"
-  integrity sha512-66UT6JRVn3dXNCORE+0UvUK3JZqV/VhLlU6HTDm3FmrweUUFUxUGvT8tUQ7ycMp+uhuLAwQw6dBabyC+iKf/MA==
+tippy.js@^6.3.1:
+  version "6.3.1"
+  resolved "https://registry.yarnpkg.com/tippy.js/-/tippy.js-6.3.1.tgz#3788a007be7015eee0fd589a66b98fb3f8f10181"
+  integrity sha512-JnFncCq+rF1dTURupoJ4yPie5Cof978inW6/4S6kmWV7LL9YOSEVMifED3KdrVPEG+Z/TFH2CDNJcQEfaeuQww==
   dependencies:
-    popper.js "^1.16.0"
+    "@popperjs/core" "^2.8.3"
 
 tmp-promise@1.0.5:
   version "1.0.5"

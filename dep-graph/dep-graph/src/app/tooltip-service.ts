@@ -1,27 +1,20 @@
-import { Popper } from 'cytoscape-popper';
-import tippy, { Instance } from 'tippy.js';
-import { hideAll } from 'tippy.js';
+import { VirtualElement } from '@popperjs/core';
+import tippy, { Instance, hideAll } from 'tippy.js';
 
 export class GraphTooltipService {
-  open(ref: Popper.ReferenceObject, tooltipContent: HTMLElement): Instance {
-    // unfortunately, a dummy element must be passed as tippy only accepts a dom element as the target
-    // https://github.com/atomiks/tippyjs/issues/661
-    let dummyDomEle = document.createElement('div');
-
-    let tip = tippy(dummyDomEle, {
-      trigger: 'manual', // call show() and hide() yourself
-      lazy: false, // needed for onCreate()
+  open(ref: VirtualElement, tooltipContent: HTMLElement): Instance {
+    let instance = tippy(document.createElement('div'), {
+      trigger: 'manual',
+      theme: 'nx',
       interactive: true,
       appendTo: document.body,
-      onCreate: (instance) => {
-        instance.popperInstance.reference = ref;
-      }, // needed for `ref` positioning
       content: tooltipContent,
+      getReferenceClientRect: ref.getBoundingClientRect,
     });
 
-    tip.show();
+    instance.show();
 
-    return tip;
+    return instance;
   }
 
   hideAll() {
