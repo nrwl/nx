@@ -50,6 +50,7 @@ export default async function* storybookExecutor(
 }
 
 function runInstance(options: StorybookExecutorOptions) {
+  process.env.NODE_ENV = process.env.NODE_ENV ?? 'development';
   return buildDevStandalone({ ...options, ci: true });
 }
 
