@@ -35,7 +35,6 @@ import {
 import { ProjectGraph } from './project-graph-models';
 import {
   differentFromCache,
-  ProjectGraphCache,
   readCache,
   writeCache,
 } from '../nx-deps/nx-deps-cache';
@@ -45,10 +44,10 @@ import { performance } from 'perf_hooks';
 export function createProjectGraph(
   workspaceJson = readWorkspaceJson(),
   nxJson = readNxJson(),
-  workspaceFiles = readWorkspaceFiles(),
-  cache: false | ProjectGraphCache = readCache(),
-  shouldCache: boolean = true
+  workspaceFiles = readWorkspaceFiles()
 ): ProjectGraph {
+  const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
+  let cache = cacheEnabled ? readCache() : false;
   assertWorkspaceValidity(workspaceJson, nxJson);
   const normalizedNxJson = normalizeNxJson(nxJson);
 
@@ -73,7 +72,7 @@ export function createProjectGraph(
       ctx,
       diff.partiallyConstructedProjectGraph
     );
-    if (shouldCache) {
+    if (cacheEnabled) {
       writeCache(rootFiles, projectGraph);
     }
     return addWorkspaceFiles(projectGraph, workspaceFiles);
@@ -84,7 +83,7 @@ export function createProjectGraph(
       fileMap: projectFileMap,
     };
     const projectGraph = buildProjectGraph(ctx, null);
-    if (shouldCache) {
+    if (cacheEnabled) {
       writeCache(rootFiles, projectGraph);
     }
     return addWorkspaceFiles(projectGraph, workspaceFiles);
