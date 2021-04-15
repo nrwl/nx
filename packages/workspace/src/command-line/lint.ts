@@ -6,9 +6,15 @@ import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
 import { readWorkspaceFiles, workspaceLayout } from '../core/file-utils';
 import { output } from '../utilities/output';
 import * as path from 'path';
+import { existsSync, readFileSync } from 'fs';
+import { assertJestConfigValidity } from '../core/assert-jest-configuration';
 
 export function workspaceLint() {
   const graph = onlyWorkspaceProjects(createProjectGraph());
+
+  if (existsSync('jest.config.js')) {
+    assertJestConfigValidity(graph, readFileSync('jest.config.js').toString());
+  }
 
   const cliErrorOutputConfigs = new WorkspaceIntegrityChecks(
     graph,
