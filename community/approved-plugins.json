@@ -153,5 +153,10 @@
     "name": "@trafilea/nx-shopify",
     "description": "Nx plugin for developing performance-first Shopify themes",
     "url": "https://github.com/trafilea/nx-shopify"
+  },
+  {
+    "name": "nx-dotnet",
+    "description": "Nx plugin for developing and housing .NET projects within an Nx workspace.",
+    "url": "https://github.com/nx-dotnet/nx-dotnet"
   }
 ]
