@@ -301,6 +301,38 @@ describe('react:component-story', () => {
         export default Test
         `,
       },
+      {
+        name: 'direct export of component class new JSX transform',
+        src: `
+        export default class Test extends Component<TestProps> {
+          render() {
+            return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
+          }
+        }
+        `,
+      },
+      {
+        name: 'component class & then default export new JSX transform',
+        src: `
+        class Test extends Component<TestProps> {
+          render() {
+            return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
+          }
+        }
+        export default Test
+        `,
+      },
+      {
+        name: 'PureComponent class & then default export new JSX transform',
+        src: `
+        class Test extends PureComponent<TestProps> {
+          render() {
+            return <div><h1>Welcome to test component, {this.props.name}</h1></div>;
+          }
+        }
+        export default Test
+        `,
+      },
     ].forEach((config) => {
       describe(`React component defined as:${config.name}`, () => {
         beforeEach(async () => {

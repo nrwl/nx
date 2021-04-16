@@ -525,13 +525,12 @@ export function getComponentPropsInterface(
     const heritageClause = cmpDeclaration.heritageClauses[0];
 
     if (heritageClause) {
-      const propsTypeExpression = heritageClause.types.find(
-        (x) =>
-          (x.expression as ts.PropertyAccessExpression).name.text ===
-            'Component' ||
-          (x.expression as ts.PropertyAccessExpression).name.text ===
-            'PureComponent'
-      );
+      const propsTypeExpression = heritageClause.types.find((x) => {
+        const name =
+          (x.expression as ts.Identifier).escapedText ||
+          (x.expression as ts.PropertyAccessExpression).name.text;
+        return name === 'Component' || name === 'PureComponent';
+      });
 
       if (propsTypeExpression && propsTypeExpression.typeArguments) {
         propsTypeName = (propsTypeExpression
