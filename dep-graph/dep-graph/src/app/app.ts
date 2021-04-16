@@ -1,5 +1,5 @@
-import { BehaviorSubject, combineLatest, fromEvent, Subject } from 'rxjs';
-import { startWith, takeUntil, throwIfEmpty } from 'rxjs/operators';
+import { combineLatest, fromEvent, Subject } from 'rxjs';
+import { startWith, takeUntil } from 'rxjs/operators';
 import { projectGraphs } from '../graphs';
 import { DebuggerPanel } from './debugger-panel';
 import { GraphComponent } from './graph';
