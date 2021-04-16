@@ -4,6 +4,7 @@ import { join } from 'path';
 import {
   detectPackageManager,
   getPackageManagerCommand,
+  PackageManager,
 } from '@nrwl/tao/src/shared/package-manager';
 
 import { joinPathFragments } from '../utils/path';
@@ -21,7 +22,7 @@ export function installPackagesTask(
   host: Tree,
   alwaysRun: boolean = false,
   cwd: string = '',
-  packageManager?: string
+  packageManager?: PackageManager
 ) {
   const packageJsonValue = host
     .read(joinPathFragments(cwd, 'package.json'))

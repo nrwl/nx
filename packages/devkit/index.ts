@@ -18,7 +18,10 @@ export {
   NxAffectedConfig,
 } from '@nrwl/tao/src/shared/nx';
 export { logger } from '@nrwl/tao/src/shared/logger';
-export { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
+export {
+  getPackageManagerCommand,
+  PackageManager,
+} from '@nrwl/tao/src/shared/package-manager';
 export { runExecutor, Target } from '@nrwl/tao/src/commands/run';
 
 export { formatFiles } from './src/generators/format-files';

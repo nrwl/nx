@@ -9,6 +9,7 @@ import {
   names,
   getPackageManagerCommand,
   WorkspaceJsonConfiguration,
+  PackageManager,
 } from '@nrwl/devkit';
 
 import { join } from 'path';
@@ -46,7 +47,7 @@ export interface Schema {
   commit?: { name: string; email: string; message?: string };
   defaultBase: string;
   linter: 'tslint' | 'eslint';
-  packageManager?: 'npm' | 'yarn' | 'pnpm';
+  packageManager?: PackageManager;
 }
 
 function generatePreset(host: Tree, opts: Schema) {

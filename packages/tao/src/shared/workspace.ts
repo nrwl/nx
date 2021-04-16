@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as stripJsonComments from 'strip-json-comments';
 import { NxJsonConfiguration, NxJsonProjectConfiguration } from './nx';
+import { PackageManager } from './package-manager';
 
 export interface Workspace
   extends WorkspaceJsonConfiguration,
@@ -51,7 +52,7 @@ export interface WorkspaceJsonConfiguration {
    * Default generator collection. It is used when no collection is provided.
    */
   cli?: {
-    packageManager?: 'npm' | 'yarn' | 'pnpm';
+    packageManager?: PackageManager;
     defaultCollection?: string;
   };
 }

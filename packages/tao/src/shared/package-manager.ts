@@ -2,7 +2,9 @@ import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { join } from 'path';
 
-export function detectPackageManager(dir = '') {
+export type PackageManager = 'yarn' | 'pnpm' | 'npm';
+
+export function detectPackageManager(dir: string = ''): PackageManager {
   return existsSync(join(dir, 'yarn.lock'))
     ? 'yarn'
     : existsSync(join(dir, 'pnpm-lock.yaml'))
@@ -23,7 +25,7 @@ export function detectPackageManager(dir = '') {
  *
  */
 export function getPackageManagerCommand(
-  packageManager = detectPackageManager()
+  packageManager: PackageManager = detectPackageManager()
 ): {
   install: string;
   add: string;
@@ -70,7 +72,7 @@ export function getPackageManagerCommand(
 }
 
 export function getPackageManagerVersion(
-  packageManager: 'npm' | 'yarn' | 'pnpm'
+  packageManager: PackageManager
 ): string {
   return execSync(`${packageManager} --version`).toString('utf-8').trim();
 }

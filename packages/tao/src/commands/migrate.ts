@@ -11,6 +11,7 @@ import { convertToCamelCase, handleErrors } from '../shared/params';
 import {
   detectPackageManager,
   getPackageManagerCommand,
+  PackageManager,
 } from '../shared/package-manager';
 import { FsTree } from '../shared/tree';
 import { flushChanges } from './generate';
@@ -421,7 +422,7 @@ function versions(root: string, from: { [p: string]: string }) {
 }
 
 // testing-fetch-start
-function createFetcher(packageManager: string) {
+function createFetcher(packageManager: PackageManager) {
   const cache = {};
   return async function f(
     packageName: string,
