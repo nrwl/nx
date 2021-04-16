@@ -22,6 +22,12 @@ export interface CLISuccessMessageConfig {
   bodyLines?: string[];
 }
 
+export enum TaskCacheStatus {
+  NoCache = '[no cache]',
+  MatchedExistingOutput = '[existing outputs match the cache, left as is]',
+  RetrievedFromCache = '[retrieved from cache]',
+}
+
 /**
  * Automatically disable styling applied by chalk if CI=true
  */
@@ -177,13 +183,16 @@ class CLIOutput {
     this.addNewline();
   }
 
-  logCommand(message: string, isCached: boolean = false) {
+  logCommand(
+    message: string,
+    cacheStatus: TaskCacheStatus = TaskCacheStatus.NoCache
+  ) {
     this.addNewline();
 
     this.writeToStdOut(chalk.bold(`> ${message} `));
 
-    if (isCached) {
-      this.writeToStdOut(chalk.bold.grey(`[retrieved from cache]`));
+    if (cacheStatus !== TaskCacheStatus.NoCache) {
+      this.writeToStdOut(chalk.bold.grey(cacheStatus));
     }
 
     this.addNewline();

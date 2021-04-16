@@ -4,7 +4,7 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { ProjectGraph } from '../core/project-graph';
 import { appRootPath } from '../utilities/app-root';
-import { output } from '../utilities/output';
+import { output, TaskCacheStatus } from '../utilities/output';
 import { Cache, TaskWithCachedResult } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { AffectedEventType, Task } from './tasks-runner';
@@ -115,17 +115,28 @@ export class TaskOrchestrator {
     tasks.forEach((t) => {
       this.options.lifeCycle.startTask(t.task);
 
+      const outputs = getOutputs(this.projectGraph.nodes, t.task);
+      const shouldCopyOutputsFromCache = this.cache.shouldCopyOutputsFromCache(
+        t,
+        outputs
+      );
+      if (shouldCopyOutputsFromCache) {
+        this.cache.copyFilesFromCache(t, outputs);
+      }
+
       if (
         !this.initiatingProject ||
         this.initiatingProject === t.task.target.project
       ) {
         const args = this.getCommandArgs(t.task);
-        output.logCommand(`nx ${args.join(' ')}`, true);
+        output.logCommand(
+          `nx ${args.join(' ')}`,
+          shouldCopyOutputsFromCache
+            ? TaskCacheStatus.RetrievedFromCache
+            : TaskCacheStatus.MatchedExistingOutput
+        );
         process.stdout.write(t.cachedResult.terminalOutput);
       }
-
-      const outputs = getOutputs(this.projectGraph.nodes, t.task);
-      this.cache.copyFilesFromCache(t.task.hash, t.cachedResult, outputs);
 
       this.options.lifeCycle.endTask(t.task, t.cachedResult.code);
     });
@@ -175,6 +186,7 @@ export class TaskOrchestrator {
         if (forwardOutput) {
           output.logCommand(commandLine);
         }
+        this.cache.removeRecordedTaskHash(task, taskOutputs);
         const p = fork(this.getCommand(), args, {
           stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
           env,
@@ -211,6 +223,7 @@ export class TaskOrchestrator {
               this.cache
                 .put(task, terminalOutput, taskOutputs, code)
                 .then(() => {
+                  this.cache.recordTaskHash(task, taskOutputs);
                   this.options.lifeCycle.endTask(task, code);
                   res(code);
                 })
@@ -218,10 +231,12 @@ export class TaskOrchestrator {
                   rej(e);
                 });
             } else {
+              this.cache.recordTaskHash(task, taskOutputs);
               this.options.lifeCycle.endTask(task, code);
               res(code);
             }
           } else {
+            this.cache.recordTaskHash(task, taskOutputs);
             this.options.lifeCycle.endTask(task, code);
             res(code);
           }
@@ -252,6 +267,7 @@ export class TaskOrchestrator {
         if (forwardOutput) {
           output.logCommand(commandLine);
         }
+        this.cache.removeRecordedTaskHash(task, taskOutputs);
         const p = fork(this.getCommand(), args, {
           stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
           env,
@@ -277,6 +293,7 @@ export class TaskOrchestrator {
             this.cache
               .put(task, this.readTerminalOutput(outputPath), taskOutputs, code)
               .then(() => {
+                this.cache.recordTaskHash(task, taskOutputs);
                 this.options.lifeCycle.endTask(task, code);
                 res(code);
               })
@@ -284,6 +301,7 @@ export class TaskOrchestrator {
                 rej(e);
               });
           } else {
+            this.cache.recordTaskHash(task, taskOutputs);
             this.options.lifeCycle.endTask(task, code);
             res(code);
           }
