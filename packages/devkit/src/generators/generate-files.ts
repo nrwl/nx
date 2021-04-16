@@ -3,8 +3,6 @@ import * as path from 'path';
 import { Tree } from '@nrwl/tao/src/shared/tree';
 import { join, relative } from 'path';
 
-const ejs = require('ejs');
-
 const binaryExts = new Set([
   // // Image types originally from https://github.com/sindresorhus/image-type/blob/5541b6a/index.js
   '.jpg',
@@ -62,6 +60,7 @@ export function generateFiles(
   target: string,
   substitutions: { [k: string]: any }
 ) {
+  const ejs = require('ejs');
   allFilesInDir(srcFolder).forEach((filePath) => {
     let newContent: Buffer | string;
     const computedPath = computePath(
