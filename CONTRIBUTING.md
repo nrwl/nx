@@ -75,7 +75,7 @@ To publish packages to a local registry, do the following:
 To make sure your changes do not break any unit tests, run the following:
 
 ```bash
-yarn test
+nx affected --target=test
 ```
 
 For example, if you need to only run the tests for the jest package, run:
