@@ -527,9 +527,9 @@ export function getComponentPropsInterface(
     if (heritageClause) {
       const propsTypeExpression = heritageClause.types.find(
         (x) =>
-          (x.expression as ts.PropertyAccessExpression).name.text ===
+          (x.expression as ts.PropertyAccessExpression).escapedText ===
             'Component' ||
-          (x.expression as ts.PropertyAccessExpression).name.text ===
+          (x.expression as ts.PropertyAccessExpression).escapedText ===
             'PureComponent'
       );
 
