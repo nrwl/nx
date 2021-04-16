@@ -92,10 +92,13 @@ describe('app', () => {
       const tree = await runSchematic('app', { name: 'myApp' }, appTree);
 
       expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
-        `'jest-preset-angular/build/AngularSnapshotSerializer.js'`
+        `'jest-preset-angular/build/serializers/no-ng-attributes'`
       );
       expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
-        `'jest-preset-angular/build/HTMLCommentSerializer.js'`
+        `'jest-preset-angular/build/serializers/ng-snapshot'`
+      );
+      expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
+        `'jest-preset-angular/build/serializers/html-comment'`
       );
     });
 
@@ -507,13 +510,13 @@ describe('app', () => {
         const tree = await runSchematic('app', { name: 'myApp' }, appTree);
 
         expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
-          `'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js'`
+          `'jest-preset-angular/build/serializers/no-ng-attributes'`
         );
         expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
-          `'jest-preset-angular/build/AngularSnapshotSerializer.js'`
+          `'jest-preset-angular/build/serializers/ng-snapshot'`
         );
         expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
-          `'jest-preset-angular/build/HTMLCommentSerializer.js'`
+          `'jest-preset-angular/build/serializers/html-comment'`
         );
       });
     });
