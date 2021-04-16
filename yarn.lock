@@ -3190,6 +3190,7 @@
     url-loader "^4.0.0"
     util-deprecate "^1.0.2"
     webpack "^4.44.2"
+    
     webpack-dev-middleware "^3.7.0"
     webpack-filter-warnings-plugin "^1.2.1"
     webpack-hot-middleware "^2.25.0"

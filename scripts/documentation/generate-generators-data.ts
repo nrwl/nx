@@ -1,4 +1,5 @@
 import * as fs from 'fs-extra';
+import * as chalk from 'chalk';
 import * as path from 'path';
 import { dedent } from 'tslint/lib/utils';
 import { FileSystemSchematicJsonDescription } from '@angular-devkit/schematics/tools';
@@ -16,6 +17,7 @@ import {
   Configuration,
   getPackageConfigurations,
 } from './get-package-configurations';
+import { Framework } from './frameworks';
 import { parseJsonSchemaToOptions } from './json-parser';
 
 /**
@@ -61,7 +63,7 @@ function generateSchematicList(
 }
 
 function generateTemplate(
-  framework: string,
+  framework: Framework,
   schematic
 ): { name: string; template: string } {
   const cliCommand = 'nx';
@@ -163,43 +165,63 @@ function generateTemplate(
   return { name: schematic.name, template };
 }
 
-Promise.all(
-  getPackageConfigurations().map(({ framework, configs }) => {
-    return Promise.all(
-      configs
-        .filter((item) => item.hasSchematics)
-        .map((config) => {
-          return Promise.all(generateSchematicList(config, registry))
-            .then((schematicList) => {
-              return schematicList
-                .filter((s) => !s['hidden'])
-                .map((s) => generateTemplate(framework, s));
-            })
-            .then((markdownList) =>
-              Promise.all(
-                markdownList.map((template) =>
-                  generateMarkdownFile(config.schematicOutput, template)
-                )
-              )
-            )
-            .then(() => {
-              console.log(
-                `Documentation from ${config.root} generated to ${config.schematicOutput}`
-              );
-            });
-        })
-    );
-  })
-).then(() => {
-  console.log('Finished Generating Documentation for Generators');
-});
+export async function generateGeneratorsDocumentation() {
+  console.log(`\n${chalk.blue('i')} Generating Documentation for Generators\n`);
 
-getPackageConfigurations().forEach(async ({ framework, configs }) => {
-  const schematics = configs
-    .filter((item) => item.hasSchematics)
-    .map((item) => item.name);
-  await generateJsonFile(
-    path.join(__dirname, '../../docs', framework, 'generators.json'),
-    schematics
+  await Promise.all(
+    getPackageConfigurations().map(({ framework, configs }) => {
+      return Promise.all(
+        configs
+          .filter((item) => item.hasSchematics)
+          .map(async (config) => {
+            const schematicList = await Promise.all(
+              generateSchematicList(config, registry)
+            );
+
+            const markdownList = schematicList
+              .filter((s) => !s['hidden'])
+              .map((s_1) => generateTemplate(framework, s_1));
+
+            await Promise.all(
+              markdownList.map((template) =>
+                generateMarkdownFile(config.schematicOutput, template)
+              )
+            );
+
+            console.log(
+              ` - ${chalk.blue(
+                config.framework
+              )} Documentation for ${chalk.magenta(
+                path.relative(process.cwd(), config.root)
+              )} generated at ${chalk.grey(
+                path.relative(process.cwd(), config.schematicOutput)
+              )}`
+            );
+          })
+      );
+    })
   );
-});
+
+  console.log();
+  await Promise.all(
+    getPackageConfigurations().map(({ framework, configs }) => {
+      const schematics = configs
+        .filter((item) => item.hasSchematics)
+        .map((item) => item.name);
+      return generateJsonFile(
+        path.join(__dirname, '../../docs', framework, 'generators.json'),
+        schematics
+      ).then(() => {
+        console.log(
+          `${chalk.green('🗸')} Generated ${chalk.blue(
+            framework
+          )} generators.json at ${chalk.grey(
+            `docs/${framework}/generators.json`
+          )}`
+        );
+      });
+    })
+  );
+
+  console.log(`\n${chalk.green('🗸')} Generated Documentation for Generators`);
+}

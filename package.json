@@ -22,7 +22,7 @@
     "lint": "nx run-many --target=lint --all --parallel",
     "depcheck": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/depcheck",
     "local-registry": "./scripts/local-registry.sh",
-    "documentation": "./scripts/documentation/documentation.sh && ./scripts/documentation/check-documentation.sh && yarn check-documentation-map && yarn check-internal-links",
+    "documentation": "ts-node -P scripts/tsconfig.scripts.json ./scripts/documentation/documentation.ts && yarn check-documentation-map && yarn check-internal-links",
     "submit-plugin": "node ./scripts/submit-plugin.js"
   },
   "devDependencies": {
@@ -209,7 +209,6 @@
     "sass": "1.26.3",
     "sass-loader": "8.0.2",
     "semver": "7.3.4",
-    "shelljs": "^0.8.3",
     "source-map": "0.7.3",
     "source-map-loader": "0.2.4",
     "source-map-support": "0.5.16",
