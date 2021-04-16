@@ -41,7 +41,7 @@ describe('Gatsby Applications', () => {
     expect(testResults.combinedOutput).toContain(
       'Test Suites: 2 passed, 2 total'
     );
-  }, 120000);
+  }, 300000);
 
   test('supports --js option', async () => {
     const app = uniq('app');
@@ -55,5 +55,5 @@ describe('Gatsby Applications', () => {
 
     const result = runCLI(`build ${app}`);
     expect(result).toContain('Done building in');
-  }, 120000);
+  }, 300000);
 });

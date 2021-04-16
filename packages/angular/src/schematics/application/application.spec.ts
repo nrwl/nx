@@ -323,7 +323,7 @@ describe('app', () => {
 
   describe('--skipFormat', () => {
     it('should format files by default', async () => {
-      const spy = spyOn(prettier, 'getFileInfo').and.callThrough();
+      const spy = jest.spyOn(prettier, 'getFileInfo');
 
       appTree = await runSchematic('app', { name: 'myApp' }, appTree);
 
@@ -331,7 +331,7 @@ describe('app', () => {
     });
 
     it('should skip format when set to true', async () => {
-      const spy = spyOn(prettier, 'format').and.callThrough();
+      const spy = jest.spyOn(prettier, 'format');
 
       appTree = await runSchematic(
         'app',

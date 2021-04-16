@@ -48,7 +48,7 @@ describe('getWebConfig', () => {
       TsConfigPathsPlugin
     )).mockImplementation(function MockPathsPlugin() {});
 
-    spyOn(ts, 'readConfigFile').and.callFake(() => ({
+    jest.spyOn(ts, 'readConfigFile').mockImplementation(() => ({
       config: {
         compilerOptions: mockCompilerOptions,
       },

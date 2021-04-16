@@ -69,7 +69,7 @@ describe('update 12.1.0', () => {
     );
   });
 
-  it('should update the jest.config files', async (done) => {
+  it('should update the jest.config files', async () => {
     await schematicRunner
       .runSchematicAsync('update-jest-preset-angular-8-4-0', {}, initialTree)
       .toPromise();
@@ -84,11 +84,9 @@ describe('update 12.1.0', () => {
       'jest-preset-angular/build/serializers/ng-snapshot',
       'jest-preset-angular/build/serializers/html-comment',
     ]);
-
-    done();
   });
 
-  it('should update the test-setup files', async (done) => {
+  it('should update the test-setup files', async () => {
     await schematicRunner
       .runSchematicAsync('update-jest-preset-angular-8-4-0', {}, initialTree)
       .toPromise();
@@ -99,7 +97,5 @@ describe('update 12.1.0', () => {
       .trim();
 
     expect(testSetup).toEqual(`import 'jest-preset-angular/setup-jest';`);
-
-    done();
   });
 });

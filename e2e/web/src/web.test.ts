@@ -13,8 +13,8 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Web Components Applications', () => {
+  beforeEach(() => newProject());
   it('should be able to generate a web app', async () => {
-    newProject();
     const appName = uniq('app');
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
 
@@ -54,10 +54,9 @@ describe('Web Components Applications', () => {
       const e2eResults = runCLI(`e2e ${appName}-e2e`);
       expect(e2eResults).toContain('All specs passed!');
     }
-  }, 120000);
+  }, 500000);
 
   it('should remove previous output before building', async () => {
-    newProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -90,7 +89,6 @@ describe('Web Components Applications', () => {
   }, 120000);
 
   it('should do another build if differential loading is needed', async () => {
-    newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
@@ -110,7 +108,6 @@ describe('Web Components Applications', () => {
   }, 120000);
 
   it('should emit decorator metadata when it is enabled in tsconfig', async () => {
-    newProject();
     const appName = uniq('app');
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
 

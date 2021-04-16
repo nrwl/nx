@@ -91,11 +91,11 @@ describe('getBaseWebpackPartial', () => {
     });
 
     it('should include module and main in mainFields', () => {
-      spyOn(ts, 'parseJsonConfigFileContent').and.returnValue({
+      jest.spyOn(ts, 'parseJsonConfigFileContent').mockReturnValue({
         options: {
           target: 'es5',
         },
-      });
+      } as any);
 
       const result = getBaseWebpackPartial(input);
       expect(result.resolve.mainFields).toContain('module');
@@ -106,7 +106,7 @@ describe('getBaseWebpackPartial', () => {
       const result = getBaseWebpackPartial(input);
 
       expect(result.stats).toEqual(
-        jasmine.objectContaining({
+        expect.objectContaining({
           hash: true,
           timings: false,
           cached: false,
@@ -148,13 +148,13 @@ describe('getBaseWebpackPartial', () => {
     });
 
     it('should add the TsConfigPathsPlugin for resolving', () => {
-      spyOn(ts, 'parseJsonConfigFileContent').and.returnValue({
+      jest.spyOn(ts, 'parseJsonConfigFileContent').mockReturnValue({
         options: {
           paths: {
             '@npmScope/libraryName': ['libs/libraryName/src/index.ts'],
           },
         },
-      });
+      } as any);
       const result = getBaseWebpackPartial(input);
       expect(
         result.resolve.plugins.some(
@@ -171,9 +171,9 @@ describe('getBaseWebpackPartial', () => {
 
   describe('the file replacements option', () => {
     it('should set aliases', () => {
-      spyOn(ts, 'parseJsonConfigFileContent').and.returnValue({
+      jest.spyOn(ts, 'parseJsonConfigFileContent').mockReturnValue({
         options: {},
-      });
+      } as any);
 
       const result = getBaseWebpackPartial({
         ...input,
@@ -383,7 +383,7 @@ describe('getBaseWebpackPartial', () => {
         const result = getBaseWebpackPartial(input);
 
         expect(result.stats).toEqual(
-          jasmine.objectContaining({
+          expect.objectContaining({
             colors: true,
             chunks: true,
             assets: false,
@@ -406,7 +406,7 @@ describe('getBaseWebpackPartial', () => {
         const result = getBaseWebpackPartial(input);
 
         expect(result.stats).toEqual(
-          jasmine.objectContaining({
+          expect.objectContaining({
             colors: false,
             chunks: false,
             assets: true,

@@ -52,7 +52,7 @@ describe('update workspace that have web and angular lib builders', () => {
     );
   });
 
-  it('should add `buildableProjectDepsInPackageJsonType` to specific builders', async (done) => {
+  it('should add `buildableProjectDepsInPackageJsonType` to specific builders', async () => {
     const result = await schematicRunner
       .runSchematicAsync(
         'add-buildable-project-deps-in-package-json-type',
@@ -85,7 +85,5 @@ describe('update workspace that have web and angular lib builders', () => {
         "builder": "@nrwl/node:package",
       }
     `);
-
-    done();
   });
 });

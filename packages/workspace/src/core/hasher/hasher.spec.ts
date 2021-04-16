@@ -24,7 +24,7 @@ describe('Hasher', () => {
     };
   }
 
-  it('should create project hash', async (done) => {
+  it('should create project hash', async () => {
     fs.readFileSync = (file) => {
       if (file === 'workspace.json') {
         return JSON.stringify({
@@ -93,11 +93,9 @@ describe('Hasher', () => {
       'echo runtime123': 'runtime123',
       'echo runtime456': 'runtime456',
     });
-
-    done();
   });
 
-  it('should throw an error when failed to execute runtimeCacheInputs', async (done) => {
+  it('should throw an error when failed to execute runtimeCacheInputs', async () => {
     const hasher = new Hasher(
       {
         nodes: {
@@ -137,10 +135,9 @@ describe('Hasher', () => {
       expect(e.message).toContain('boom:');
       expect(e.message).toContain(' not found');
     }
-    done();
   });
 
-  it('should hash projects with dependencies', async (done) => {
+  it('should hash projects with dependencies', async () => {
     hashes['/filea'] = 'a.hash';
     hashes['/fileb'] = 'b.hash';
     const hasher = new Hasher(
@@ -187,11 +184,9 @@ describe('Hasher', () => {
       parent: '/filea|a.hash|""|""',
       child: '/fileb|b.hash|""|""',
     });
-
-    done();
   });
 
-  it('should hash when circular dependencies', async (done) => {
+  it('should hash when circular dependencies', async () => {
     hashes['/filea'] = 'a.hash';
     hashes['/fileb'] = 'b.hash';
     const hasher = new Hasher(
@@ -265,11 +260,9 @@ describe('Hasher', () => {
       proja: '/filea|a.hash|""|""',
       projb: '/fileb|b.hash|""|""',
     });
-
-    done();
   });
 
-  it('should hash implicit deps', async (done) => {
+  it('should hash implicit deps', async () => {
     hashes['/filea'] = 'a.hash';
     hashes['/fileb'] = 'b.hash';
     const hasher = new Hasher(
@@ -319,8 +312,6 @@ describe('Hasher', () => {
 
     expect(tasksHash.value).toContain('global1.hash');
     expect(tasksHash.value).toContain('global2.hash');
-
-    done();
   });
 
   describe('extractNameAndVersion', () => {

@@ -39,7 +39,7 @@ describe('Build storybook', () => {
   });
 
   it('should call the storybook static standalone build', async () => {
-    spyOn(logger, 'info');
+    jest.spyOn(logger, 'info');
     const uiFramework = '@storybook/angular';
     const outputPath = `${context.root}/dist/storybook`;
     const config = {
