@@ -48,7 +48,7 @@ describe('assertWorkspaceValidity', () => {
   });
 
   it('should throw for a missing project in workspace.json', () => {
-    spyOn(output, 'error');
+    jest.spyOn(output, 'error');
     delete mockWorkspaceJson.projects.app1;
 
     const mockExit = jest
@@ -67,7 +67,7 @@ describe('assertWorkspaceValidity', () => {
   });
 
   it('should throw for a missing project in nx.json', () => {
-    spyOn(output, 'error');
+    jest.spyOn(output, 'error');
 
     delete mockNxJson.projects.app1;
 
@@ -87,7 +87,7 @@ describe('assertWorkspaceValidity', () => {
   });
 
   it('should throw for an invalid top-level implicit dependency', () => {
-    spyOn(output, 'error');
+    jest.spyOn(output, 'error');
     mockNxJson.implicitDependencies = {
       'README.md': ['invalidproj'],
     };
@@ -110,7 +110,7 @@ describe('assertWorkspaceValidity', () => {
   });
 
   it('should throw for an invalid project-level implicit dependency', () => {
-    spyOn(output, 'error');
+    jest.spyOn(output, 'error');
     mockNxJson.projects.app2.implicitDependencies = ['invalidproj'];
 
     const mockExit = jest
@@ -131,7 +131,7 @@ describe('assertWorkspaceValidity', () => {
   });
 
   it('should throw for a project-level implicit dependency that is a string', () => {
-    spyOn(output, 'error');
+    jest.spyOn(output, 'error');
     mockNxJson.implicitDependencies['nx.json'] = 'invalidproj';
 
     const mockExit = jest

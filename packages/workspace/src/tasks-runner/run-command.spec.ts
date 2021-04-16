@@ -331,7 +331,9 @@ describe('createTasksForProjectToRun', () => {
   });
 
   it('should throw an error for an invalid target', () => {
-    spyOn(process, 'exit').and.throwError('');
+    jest.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error();
+    });
     try {
       createTasksForProjectToRun(
         [projectGraph.nodes.app1],
@@ -350,7 +352,9 @@ describe('createTasksForProjectToRun', () => {
   });
 
   it('should throw an error for an invalid configuration for the initiating project', () => {
-    spyOn(process, 'exit').and.throwError('');
+    jest.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error();
+    });
     try {
       createTasksForProjectToRun(
         [projectGraph.nodes.app1],
@@ -391,7 +395,9 @@ describe('createTasksForProjectToRun', () => {
       source: 'lib1',
       target: 'app1',
     });
-    spyOn(process, 'exit').and.throwError('');
+    jest.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error();
+    });
     try {
       createTasksForProjectToRun(
         [projectGraph.nodes.app1],
@@ -416,7 +422,9 @@ describe('createTasksForProjectToRun', () => {
         projects: 'self',
       },
     ];
-    spyOn(process, 'exit').and.throwError('');
+    jest.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error();
+    });
     try {
       const tasks = createTasksForProjectToRun(
         [projectGraph.nodes.app1],
@@ -447,7 +455,9 @@ describe('createTasksForProjectToRun', () => {
         projects: 'self',
       },
     ];
-    spyOn(process, 'exit').and.throwError('');
+    jest.spyOn(process, 'exit').mockImplementation(() => {
+      throw new Error();
+    });
     try {
       const tasks = createTasksForProjectToRun(
         [projectGraph.nodes.app1],

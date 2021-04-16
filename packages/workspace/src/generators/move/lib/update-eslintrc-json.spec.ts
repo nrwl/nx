@@ -54,7 +54,7 @@ describe('updateEslint', () => {
     expect(
       readJson(tree, '/libs/shared/my-destination/.eslintrc.json')
     ).toEqual(
-      jasmine.objectContaining({
+      expect.objectContaining({
         extends: '../../../.eslintrc.json',
       })
     );

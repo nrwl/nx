@@ -10,8 +10,9 @@ import {
 import { serializeJson } from '@nrwl/workspace';
 
 describe('file-server', () => {
-  it('should serve folder of files', async (done) => {
-    newProject();
+  beforeEach(() => newProject());
+
+  it('should serve folder of files', async () => {
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
@@ -25,8 +26,5 @@ describe('file-server', () => {
         output.indexOf('Built at') > -1 && output.indexOf('Available on') > -1
       );
     });
-
-    // success, nothing to do
-    done();
-  }, 30000);
+  }, 300000);
 });

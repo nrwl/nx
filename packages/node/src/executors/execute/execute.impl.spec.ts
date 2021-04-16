@@ -219,11 +219,11 @@ describe('NodeExecuteBuilder', () => {
       callback(new Error('Error Message'));
     });
 
-    const loggerError = spyOn(logger, 'error');
+    const loggerError = jest.spyOn(logger, 'error');
 
     for await (const event of executeExecutor(testOptions, context)) {
     }
-    expect(loggerError.calls.argsFor(0)).toEqual(['Error Message']);
+    expect(loggerError).toHaveBeenCalledWith('Error Message');
   });
 
   it('should log errors from killing the process on windows', async () => {
@@ -231,7 +231,7 @@ describe('NodeExecuteBuilder', () => {
       callback([new Error('error'), '', 'Error Message']);
     });
 
-    const loggerError = spyOn(logger, 'error');
+    const loggerError = jest.spyOn(logger, 'error');
 
     for await (const event of executeExecutor(
       {
@@ -241,7 +241,7 @@ describe('NodeExecuteBuilder', () => {
       context
     )) {
     }
-    expect(loggerError.calls.argsFor(0)).toEqual(['Error Message']);
+    expect(loggerError).toHaveBeenLastCalledWith('Error Message');
   });
 
   it('should build the application and start the built file with options', async () => {
@@ -263,7 +263,7 @@ describe('NodeExecuteBuilder', () => {
     buildOptions = {
       optimization: true,
     };
-    const loggerWarn = spyOn(logger, 'warn');
+    const loggerWarn = jest.spyOn(logger, 'warn');
     for await (const event of executeExecutor(
       {
         ...testOptions,

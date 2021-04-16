@@ -11,8 +11,9 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Nx Plugin', () => {
-  it('should be able to generate a Nx Plugin ', async (done) => {
-    newProject();
+  beforeEach(() => newProject());
+
+  it('should be able to generate a Nx Plugin ', async () => {
     const plugin = uniq('plugin');
 
     runCLI(
@@ -50,15 +51,13 @@ describe('Nx Plugin', () => {
         },
       }),
     });
-    done();
-  }, 45000);
+  }, 90000);
 
   // the test invoke ensureNxProject, which points to @nrwl/workspace collection
   // which walks up the directory to find it in the next repo itself, so it
   // doesn't use the collection we are building
   // we should change it to point to the right collection using relative path
-  it(`should run the plugin's e2e tests`, async (done) => {
-    newProject();
+  it(`should run the plugin's e2e tests`, async () => {
     const plugin = uniq('plugin-name');
     runCLI(
       `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --importPath=@proj/${plugin}`
@@ -69,12 +68,9 @@ describe('Nx Plugin', () => {
       expect(results.stdout).toContain('Compiling TypeScript files');
       expectTestsPass(results);
     }
-
-    done();
   }, 250000);
 
-  it('should be able to generate a migration', async (done) => {
-    newProject();
+  it('should be able to generate a migration', async () => {
     const plugin = uniq('plugin');
     const version = '1.0.0';
 
@@ -108,11 +104,9 @@ describe('Nx Plugin', () => {
         },
       }),
     });
-    done();
-  }, 45000);
+  }, 90000);
 
-  it('should be able to generate a generator', async (done) => {
-    newProject();
+  it('should be able to generate a generator', async () => {
     const plugin = uniq('plugin');
     const generator = uniq('generator');
 
@@ -150,11 +144,9 @@ describe('Nx Plugin', () => {
         },
       }),
     });
-    done();
-  }, 45000);
+  }, 90000);
 
-  it('should be able to generate a executor', async (done) => {
-    newProject();
+  it('should be able to generate a executor', async () => {
     const plugin = uniq('plugin');
     const executor = uniq('executor');
 
@@ -190,12 +182,10 @@ describe('Nx Plugin', () => {
         },
       }),
     });
-    done();
-  }, 45000);
+  }, 90000);
 
   describe('--directory', () => {
     it('should create a plugin in the specified directory', () => {
-      newProject();
       const plugin = uniq('plugin');
       runCLI(
         `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --directory subdir --importPath=@proj/${plugin}`
@@ -207,17 +197,16 @@ describe('Nx Plugin', () => {
         `libs/subdir/${plugin}`
       );
       expect(workspace.projects[`subdir-${plugin}-e2e`]).toBeTruthy();
-    }, 45000);
+    }, 90000);
   });
   describe('--tags', () => {
     it('should add tags to nx.json', async () => {
-      newProject();
       const plugin = uniq('plugin');
       runCLI(
         `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --tags=e2etag,e2ePackage --importPath=@proj/${plugin}`
       );
       const nxJson = readJson('nx.json');
       expect(nxJson.projects[plugin].tags).toEqual(['e2etag', 'e2ePackage']);
-    }, 45000);
+    }, 90000);
   });
 });

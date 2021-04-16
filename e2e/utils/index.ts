@@ -184,7 +184,9 @@ export function removeProject({ onlyOnCI = false } = {}) {
   if (onlyOnCI && !isCI) {
     return;
   }
-  removeSync(tmpProjPath());
+  try {
+    removeSync(tmpProjPath());
+  } catch (e) {}
 }
 
 export function runCypressTests() {

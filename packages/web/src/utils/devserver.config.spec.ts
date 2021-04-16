@@ -67,7 +67,7 @@ describe('getDevServerConfig', () => {
       target: 'es2015',
     };
 
-    spyOn(ts, 'readConfigFile').and.callFake(() => ({
+    jest.spyOn(ts, 'readConfigFile').mockImplementation(() => ({
       config: {
         compilerOptions: mockCompilerOptions,
       },
@@ -135,7 +135,7 @@ describe('getDevServerConfig', () => {
           },
         };
 
-        spyOn(logger, 'info');
+        jest.spyOn(logger, 'info');
       });
 
       it('should print out the URL of the server', () => {
@@ -149,7 +149,7 @@ describe('getDevServerConfig', () => {
         result.onListening(mockServer);
 
         expect(logger.info).toHaveBeenCalledWith(
-          jasmine.stringMatching(new RegExp('http://example.com:9999/'))
+          expect.stringMatching(new RegExp('http://example.com:9999/'))
         );
       });
 
@@ -365,7 +365,7 @@ describe('getDevServerConfig', () => {
       });
 
       it('should configure it with the key and cert provided when on', () => {
-        spyOn(fs, 'readFileSync').and.callFake((path) => {
+        jest.spyOn(fs, 'readFileSync').mockImplementation((path: string) => {
           if (path.endsWith('ssl.key')) {
             return 'sslKeyContents';
           } else if (path.endsWith('ssl.cert')) {

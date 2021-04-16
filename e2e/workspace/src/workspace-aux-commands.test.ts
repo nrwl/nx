@@ -238,7 +238,7 @@ describe('format', () => {
     expect(runCLI('format:check --all')).not.toContain(
       path.normalize(`apps/${myapp}/src/main.ts`)
     );
-  });
+  }, 90000);
 });
 
 describe('workspace-generator', () => {
@@ -449,7 +449,7 @@ describe('dep-graph', () => {
     const jsonFileContents = readJson('project-graph.json');
 
     expect(jsonFileContents.graph.dependencies).toEqual(
-      jasmine.objectContaining({
+      expect.objectContaining({
         [myapp3E2e]: [
           {
             source: myapp3E2e,

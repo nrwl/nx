@@ -90,7 +90,7 @@ describe('NodePackageBuilder', () => {
 
   describe('Without library dependencies', () => {
     beforeEach(() => {
-      spyOn(projectGraph, 'createProjectGraph').and.callFake(() => {
+      jest.spyOn(projectGraph, 'createProjectGraph').mockImplementation(() => {
         return {
           nodes: {
             nodelib: {
@@ -262,7 +262,7 @@ describe('NodePackageBuilder', () => {
   describe('building with dependencies', () => {
     beforeEach(() => {
       // fake that dep project has been built
-      spyOn(projectGraph, 'createProjectGraph').and.callFake(() => {
+      jest.spyOn(projectGraph, 'createProjectGraph').mockImplementation(() => {
         return {
           nodes: {
             nodelib: {

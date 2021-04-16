@@ -23,7 +23,7 @@ describe('react:component-story', () => {
         );
       });
 
-      it('should fail with a descriptive error message', async (done) => {
+      it('should fail with a descriptive error message', async () => {
         try {
           await componentStoryGenerator(appTree, {
             componentPath: 'lib/test-ui-lib.tsx',
@@ -33,7 +33,6 @@ describe('react:component-story', () => {
           expect(e.message).toContain(
             'Could not find any React component in file libs/test-ui-lib/src/lib/test-ui-lib.tsx'
           );
-          done();
         }
       });
     });

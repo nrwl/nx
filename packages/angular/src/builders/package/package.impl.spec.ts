@@ -152,7 +152,7 @@ describe('empty', () => {
 //       // assert
 //       expect(result.success).toBeTruthy();
 //       expect(ngPackagrMock.withTsConfig).toHaveBeenCalledWith(
-//         jasmine.objectContaining({
+//         expect.objectContaining({
 //           options: {
 //             paths: { '@proj/buildable-child': ['dist/libs/buildable-child'] },
 //           },
@@ -184,7 +184,7 @@ describe('empty', () => {
 //       expect(result.success).toBeTruthy();
 //       expect(fileUtils.writeJsonFile).toHaveBeenCalledWith(
 //         'dist/libs/buildable-parent/package.json',
-//         jasmine.objectContaining({
+//         expect.objectContaining({
 //           dependencies: {
 //             '@proj/buildable-child': '1.2.3',
 //           },

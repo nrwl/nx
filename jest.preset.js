@@ -4,6 +4,7 @@ process.env.npm_config_registry = `http://localhost:4872`;
 
 module.exports = {
   ...nxPreset,
+  testRunner: 'jest-circus/runner',
   testTimeout: 30000,
   testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
   transform: {

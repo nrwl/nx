@@ -14,12 +14,16 @@ describe('formatFiles', () => {
       '@nrwl/workspace',
       path.join(__dirname, '../../../collection.json')
     );
-    spyOn(prettier, 'format').and.callFake((input) => `formatted :: ${input}`);
+    jest
+      .spyOn(prettier, 'format')
+      .mockImplementation((input) => `formatted :: ${input}`);
     tree = Tree.empty();
   });
 
+  afterEach(() => jest.clearAllMocks());
+
   it('should format created files', async () => {
-    spyOn(prettier, 'resolveConfig').and.returnValue(
+    jest.spyOn(prettier, 'resolveConfig').mockReturnValue(
       Promise.resolve({
         printWidth: 80,
       })
@@ -36,7 +40,7 @@ describe('formatFiles', () => {
   });
 
   it('should not format deleted files', async () => {
-    spyOn(prettier, 'resolveConfig').and.returnValue(
+    jest.spyOn(prettier, 'resolveConfig').mockReturnValue(
       Promise.resolve({
         printWidth: 80,
       })
@@ -46,12 +50,14 @@ describe('formatFiles', () => {
     await schematicRunner.callRule(formatFiles(), tree).toPromise();
     expect(prettier.format).not.toHaveBeenCalledWith(
       'const b=b',
-      jasmine.anything()
+      expect.anything()
     );
   });
 
   it('should format overwritten files', async () => {
-    spyOn(prettier, 'resolveConfig').and.returnValue(Promise.resolve(null));
+    jest
+      .spyOn(prettier, 'resolveConfig')
+      .mockReturnValue(Promise.resolve(null));
     tree.create('a.ts', 'const a=a');
     tree.overwrite('a.ts', 'const a=b');
     const result = await schematicRunner
@@ -64,7 +70,9 @@ describe('formatFiles', () => {
   });
 
   it('should not format renamed files', async () => {
-    spyOn(prettier, 'resolveConfig').and.returnValue(Promise.resolve(null));
+    jest
+      .spyOn(prettier, 'resolveConfig')
+      .mockReturnValue(Promise.resolve(null));
     tree.create('a.ts', 'const a=a');
     tree.rename('a.ts', 'b.ts');
     const result = await schematicRunner
@@ -78,7 +86,7 @@ describe('formatFiles', () => {
 
   describe('--skip-format', () => {
     it('should not format created files', async () => {
-      spyOn(prettier, 'resolveConfig').and.returnValue(
+      jest.spyOn(prettier, 'resolveConfig').mockReturnValue(
         Promise.resolve({
           printWidth: 80,
         })

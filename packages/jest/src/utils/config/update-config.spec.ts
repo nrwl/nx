@@ -167,7 +167,7 @@ describe('Update jest.config.js', () => {
 
     describe('warnings', () => {
       beforeEach(() => {
-        spyOn(console, 'warn').and.callThrough();
+        jest.spyOn(console, 'warn');
       });
 
       it('should warn when trying to add a value to an already existing object without being dot delimited', () => {

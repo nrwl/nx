@@ -15,8 +15,11 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('React Applications', () => {
+  let proj: string;
+
+  beforeEach(() => (proj = newProject()));
+
   it('should be able to generate a react app + lib', async () => {
-    const proj = newProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -43,10 +46,9 @@ describe('React Applications', () => {
       checkLinter: true,
       checkE2E: true,
     });
-  }, 120000);
+  }, 500000);
 
   it('should support vendor sourcemaps', () => {
-    newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/react:app ${appName} --no-interactive`);
@@ -66,10 +68,9 @@ describe('React Applications', () => {
 
     runCLI(`build ${appName}`);
     checkFilesExist(`dist/apps/${appName}/vendor.js.map`);
-  }, 120000);
+  }, 250000);
 
   it('should be able to generate a publishable react lib', async () => {
-    const proj = newProject();
     const libName = uniq('lib');
 
     runCLI(
@@ -103,10 +104,9 @@ describe('React Applications', () => {
       `dist/libs/${libName}/${libName}.umd.css`,
       `dist/libs/${libName}/${libName}.umd.js`
     );
-  }, 120000);
+  }, 250000);
 
   it('should be able to generate a react lib with no components', async () => {
-    const proj = newProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -130,10 +130,9 @@ describe('React Applications', () => {
       checkLinter: false,
       checkE2E: false,
     });
-  }, 120000);
+  }, 250000);
 
   it('should not create a dist folder if there is an error', async () => {
-    const proj = newProject();
     const libName = uniq('lib');
 
     runCLI(
@@ -149,10 +148,9 @@ describe('React Applications', () => {
     expect(() => {
       checkFilesExist(`dist/libs/${libName}/package.json`);
     }).toThrow();
-  }, 120000);
+  }, 250000);
 
   it('should generate app with routing', async () => {
-    newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/react:app ${appName} --routing --no-interactive`);
@@ -163,11 +161,9 @@ describe('React Applications', () => {
       checkLinter: false,
       checkE2E: false,
     });
-  }, 120000);
+  }, 250000);
 
   it('should generate app with different style options', async () => {
-    newProject();
-
     const styledComponentsApp = uniq('app');
 
     runCLI(
@@ -245,10 +241,9 @@ describe('React Applications', () => {
     expect(readFile(`dist/apps/${noStylesApp}/index.html`)).not.toContain(
       `<link rel="stylesheet" href="styles.css">`
     );
-  }, 120000);
+  }, 250000);
 
   it('should generate app with legacy-ie support', async () => {
-    newProject();
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/react:app ${appName} --style=css --no-interactive`);
@@ -273,10 +268,9 @@ describe('React Applications', () => {
     expect(readFile(`dist/apps/${appName}/prod/index.html`)).toContain(
       `<script src="main.esm.js" type="module"></script><script src="main.es5.js" nomodule defer></script>`
     );
-  }, 120000);
+  }, 250000);
 
   it('should be able to add a redux slice', async () => {
-    newProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -294,10 +288,9 @@ describe('React Applications', () => {
     expect(libTestResults.combinedOutput).toContain(
       'Test Suites: 2 passed, 2 total'
     );
-  }, 120000);
+  }, 250000);
 
   it('should be able to use JSX', async () => {
-    const proj = newProject();
     const appName = uniq('app');
     const libName = uniq('lib');
 
@@ -339,7 +332,7 @@ describe('React Applications', () => {
       checkLinter: false,
       checkE2E: false,
     });
-  }, 30000);
+  }, 250000);
 
   async function testGeneratedApp(
     appName,
