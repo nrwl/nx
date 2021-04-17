@@ -53,12 +53,8 @@ export class TaskOrderer {
       sorted.push(id);
     };
     tasks.forEach((t) => visitNode(t.target.project));
-    const sortedTasks = [...tasks];
-    sortedTasks.sort((a, b) =>
-      sorted.indexOf(a.target.project) > sorted.indexOf(b.target.project)
-        ? 1
-        : -1
-    );
-    return sortedTasks;
+    return sorted
+      .map((projectName) => tasks.find((t) => t.target.project === projectName))
+      .filter((t) => !!t);
   }
 }
