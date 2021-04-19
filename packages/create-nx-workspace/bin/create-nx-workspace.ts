@@ -13,6 +13,7 @@ import * as ora from 'ora';
 import {
   getPackageManagerCommand,
   getPackageManagerVersion,
+  PackageManager,
 } from './package-manager';
 
 export enum Preset {
@@ -120,7 +121,7 @@ if (parsedArgs.help) {
 }
 
 (async function main() {
-  const packageManager = parsedArgs.packageManager || 'npm';
+  const packageManager: PackageManager = parsedArgs.packageManager || 'npm';
   const {
     name,
     cli,
@@ -500,7 +501,7 @@ function createSandbox(packageManager: string) {
 async function createApp(
   tmpDir: string,
   name: string,
-  packageManager: string,
+  packageManager: PackageManager,
   parsedArgs: any
 ) {
   const { _, cli, ...restArgs } = parsedArgs;

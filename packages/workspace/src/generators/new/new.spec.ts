@@ -1,5 +1,5 @@
 import { createTree } from '@nrwl/devkit/testing';
-import { readJson, Tree, writeJson } from '@nrwl/devkit';
+import { readJson, Tree, writeJson, PackageManager } from '@nrwl/devkit';
 import { newGenerator, Preset, Schema } from './new';
 import { Linter } from '../../utils/lint';
 
@@ -64,7 +64,7 @@ describe('new', () => {
   describe('--packageManager', () => {
     describe.each([['npm'], ['yarn'], ['pnpm']])(
       '%s',
-      (packageManager: 'npm' | 'yarn' | 'pnpm') => {
+      (packageManager: PackageManager) => {
         it('should set the packageManager in workspace.json', async () => {
           await newGenerator(tree, {
             ...defaultOptions,

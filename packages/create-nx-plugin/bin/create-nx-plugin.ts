@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 
 // we can't import from '@nrwl/workspace' because it will require typescript
-import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
+import {
+  getPackageManagerCommand,
+  PackageManager,
+} from '@nrwl/tao/src/shared/package-manager';
 import { output } from '@nrwl/workspace/src/utilities/output';
 import { execSync } from 'child_process';
 import { readFileSync, removeSync, writeFileSync } from 'fs-extra';
@@ -52,7 +55,7 @@ function createSandbox(packageManager: string) {
 
 function createWorkspace(
   tmpDir: string,
-  packageManager: string,
+  packageManager: PackageManager,
   parsedArgs: any,
   name: string
 ) {
@@ -197,7 +200,7 @@ if (parsedArgs.help) {
   process.exit(0);
 }
 
-const packageManager = parsedArgs.packageManager || 'npm';
+const packageManager: PackageManager = parsedArgs.packageManager || 'npm';
 determineWorkspaceName(parsedArgs).then((workspaceName) => {
   return determinePluginName(parsedArgs).then((pluginName) => {
     const tmpDir = createSandbox(packageManager);
