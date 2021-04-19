@@ -18,6 +18,8 @@ import {
   Configuration,
   getPackageConfigurations,
 } from './get-package-configurations';
+import { Framework } from './frameworks';
+import * as chalk from 'chalk';
 
 /**
  * @WhatItDoes: Generates default documentation from the builders' schema.
@@ -69,7 +71,7 @@ function generateSchematicList(
 }
 
 function generateTemplate(
-  framework,
+  framework: Framework,
   builder
 ): { name: string; template: string } {
   const filename = framework === 'angular' ? 'angular.json' : 'workspace.json';
@@ -160,41 +162,62 @@ function generateTemplate(
   return { name: builder.name, template };
 }
 
-Promise.all(
-  getPackageConfigurations().map(({ framework, configs }) => {
-    return Promise.all(
-      configs
-        .filter((item) => item.hasBuilders)
-        .map((config) => {
-          Promise.all(generateSchematicList(config, registry))
-            .then((builderList) =>
-              builderList.map((b) => generateTemplate(framework, b))
-            )
-            .then((markdownList) =>
-              Promise.all(
-                markdownList.map((template) =>
-                  generateMarkdownFile(config.builderOutput, template)
-                )
-              )
-            )
-            .then(() =>
-              console.log(
-                `Generated documentation for ${config.root} to ${config.output}`
+export async function generateExecutorsDocumentation() {
+  console.log(`\n${chalk.blue('i')} Generating Documentation for Executors\n`);
+
+  await Promise.all(
+    getPackageConfigurations().map(({ framework, configs }) => {
+      return Promise.all(
+        configs
+          .filter((item) => item.hasBuilders)
+          .map(async (config) => {
+            const buildersList = await Promise.all(
+              generateSchematicList(config, registry)
+            );
+
+            const markdownList = buildersList.map((b) =>
+              generateTemplate(framework, b)
+            );
+
+            await Promise.all(
+              markdownList.map((template) =>
+                generateMarkdownFile(config.builderOutput, template)
               )
             );
-        })
-    );
-  })
-).then(() => {
-  console.log('Done generating documentation for executors');
-});
 
-getPackageConfigurations().forEach(async ({ framework, configs }) => {
-  const builders = configs
-    .filter((item) => item.hasBuilders)
-    .map((item) => item.name);
-  await generateJsonFile(
-    path.join(__dirname, '../../docs', framework, 'executors.json'),
-    builders
+            console.log(
+              ` - ${chalk.blue(
+                config.framework
+              )} Documentation for ${chalk.magenta(
+                path.relative(process.cwd(), config.root)
+              )} generated at ${chalk.grey(
+                path.relative(process.cwd(), config.builderOutput)
+              )}`
+            );
+          })
+      );
+    })
   );
-});
+
+  console.log();
+  await Promise.all(
+    getPackageConfigurations().map(async ({ framework, configs }) => {
+      const builders = configs
+        .filter((item) => item.hasBuilders)
+        .map((item) => item.name);
+
+      await generateJsonFile(
+        path.join(__dirname, '../../docs', framework, 'executors.json'),
+        builders
+      );
+
+      console.log(
+        `${chalk.green('🗸')} Generated ${chalk.blue(
+          framework
+        )} executors.json at ${chalk.grey(`docs/${framework}/executors.json`)}`
+      );
+    })
+  );
+
+  console.log(`\n${chalk.green('🗸')} Generated Documentation for Executors`);
+}

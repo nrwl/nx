@@ -1,9 +1,10 @@
+import * as chalk from 'chalk';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { dedent } from 'tslint/lib/utils';
 import { commandsObject } from '../../packages/workspace';
+import { Framework, Frameworks } from './frameworks';
 import { generateMarkdownFile, sortAlphabeticallyFunction } from './utils';
-
 const importFresh = require('import-fresh');
 
 const examples = {
@@ -395,55 +396,59 @@ const sharedCommands = [
   'test',
 ];
 
-console.log('Generating Nx Commands Documentation');
-Promise.all(
-  ['angular', 'react', 'node'].map(async (framework) => {
-    const commandsOutputDirectory = path.join(
-      __dirname,
-      '../../docs/',
-      framework,
-      'cli'
-    );
-    fs.removeSync(commandsOutputDirectory);
-    function getCommands(command) {
-      return command.getCommandInstance().getCommandHandlers();
-    }
-    async function parseCommandInstance(name, command) {
-      // It is not a function return a strip down version of the command
-      if (
-        !(
-          command.builder &&
-          command.builder.constructor &&
-          command.builder.call &&
-          command.builder.apply
-        )
-      ) {
+export async function generateCLIDocumentation() {
+  console.log(`\n${chalk.blue('i')} Generating Documentation for Nx Commands`);
+
+  await Promise.all(
+    Frameworks.map(async (framework: Framework) => {
+      const commandsOutputDirectory = path.join(
+        __dirname,
+        '../../docs/',
+        framework,
+        'cli'
+      );
+      fs.removeSync(commandsOutputDirectory);
+      function getCommands(command) {
+        return command.getCommandInstance().getCommandHandlers();
+      }
+      async function parseCommandInstance(name, command) {
+        // It is not a function return a strip down version of the command
+        if (
+          !(
+            command.builder &&
+            command.builder.constructor &&
+            command.builder.call &&
+            command.builder.apply
+          )
+        ) {
+          return {
+            command: name,
+            description: command['description'],
+          };
+        }
+        // Show all the options we can get from yargs
+        const builder = await command.builder(
+          importFresh('yargs')().resetOptions()
+        );
+        const builderDescriptions = builder
+          .getUsageInstance()
+          .getDescriptions();
+        const builderDefaultOptions = builder.getOptions().default;
         return {
           command: name,
           description: command['description'],
+          options:
+            Object.keys(builderDescriptions).map((key) => ({
+              command: '--'.concat(key),
+              description: builderDescriptions[key]
+                ? builderDescriptions[key].replace('__yargsString__:', '')
+                : '',
+              default: builderDefaultOptions[key],
+            })) || null,
         };
       }
-      // Show all the options we can get from yargs
-      const builder = await command.builder(
-        importFresh('yargs')().resetOptions()
-      );
-      const builderDescriptions = builder.getUsageInstance().getDescriptions();
-      const builderDefaultOptions = builder.getOptions().default;
-      return {
-        command: name,
-        description: command['description'],
-        options:
-          Object.keys(builderDescriptions).map((key) => ({
-            command: '--'.concat(key),
-            description: builderDescriptions[key]
-              ? builderDescriptions[key].replace('__yargsString__:', '')
-              : '',
-            default: builderDefaultOptions[key],
-          })) || null,
-      };
-    }
-    function generateMarkdown(command) {
-      let template = dedent`
+      function generateMarkdown(command) {
+        let template = dedent`
       # ${command.command}
       ${command.description}
 
@@ -454,31 +459,31 @@ Promise.all(
 
       Install \`nx\` globally to invoke the command directly using \`nx\`, or use \`npm run nx\` or \`yarn nx\`.\n`;
 
-      if (examples[command.command] && examples[command.command].length > 0) {
-        template += `### Examples`;
-        examples[command.command].forEach((example) => {
-          template += dedent`
+        if (examples[command.command] && examples[command.command].length > 0) {
+          template += `### Examples`;
+          examples[command.command].forEach((example) => {
+            template += dedent`
         ${example.description}:
         \`\`\`bash
         nx ${example.command}
         \`\`\`
         `;
-        });
-      }
+          });
+        }
 
-      if (Array.isArray(command.options) && !!command.options.length) {
-        template += '\n## Options';
+        if (Array.isArray(command.options) && !!command.options.length) {
+          template += '\n## Options';
 
-        command.options
-          .sort((a, b) =>
-            sortAlphabeticallyFunction(
-              a.command.replace('--', ''),
-              b.command.replace('--', '')
+          command.options
+            .sort((a, b) =>
+              sortAlphabeticallyFunction(
+                a.command.replace('--', ''),
+                b.command.replace('--', '')
+              )
             )
-          )
-          .forEach(
-            (option) =>
-              (template += dedent`
+            .forEach(
+              (option) =>
+                (template += dedent`
             ### ${option.command.replace('--', '')}
             ${
               option.default === undefined || option.default === ''
@@ -487,56 +492,57 @@ Promise.all(
             }
             ${option.description}
           `)
-          );
+            );
+        }
+
+        return {
+          name: command.command
+            .replace(':', '-')
+            .replace(' ', '-')
+            .replace(/[\]\[.]+/gm, ''),
+          template,
+        };
       }
 
-      return {
-        name: command.command
-          .replace(':', '-')
-          .replace(' ', '-')
-          .replace(/[\]\[.]+/gm, ''),
-        template,
-      };
-    }
+      // TODO: Try to add option's type, examples, and group?
+      const nxCommands = getCommands(commandsObject);
+      await Promise.all(
+        Object.keys(nxCommands)
+          .filter((name) => !sharedCommands.includes(name))
+          .map((name) => parseCommandInstance(name, nxCommands[name]))
+          .map(async (command) => generateMarkdown(await command))
+          .map(async (templateObject) =>
+            generateMarkdownFile(commandsOutputDirectory, await templateObject)
+          )
+      );
 
-    // TODO: Try to add option's type, examples, and group?
-    const nxCommands = getCommands(commandsObject);
-    await Promise.all(
-      Object.keys(nxCommands)
-        .filter((name) => !sharedCommands.includes(name))
-        .map((name) => parseCommandInstance(name, nxCommands[name]))
-        .map(async (command) => generateMarkdown(await command))
-        .map(async (templateObject) =>
-          generateMarkdownFile(commandsOutputDirectory, await templateObject)
-        )
-    );
+      await Promise.all(
+        sharedCommands.map((command) => {
+          const sharedCommandsDirectory = path.join(
+            __dirname,
+            '../../docs/shared/cli'
+          );
+          const sharedCommandsOutputDirectory = path.join(
+            __dirname,
+            '../../docs/',
+            framework,
+            'cli'
+          );
+          const templateObject = {
+            name: command,
+            template: fs
+              .readFileSync(path.join(sharedCommandsDirectory, `${command}.md`))
+              .toString('utf-8'),
+          };
 
-    await Promise.all(
-      sharedCommands.map((command) => {
-        const sharedCommandsDirectory = path.join(
-          __dirname,
-          '../../docs/shared/cli'
-        );
-        const sharedCommandsOutputDirectory = path.join(
-          __dirname,
-          '../../docs/',
-          framework,
-          'cli'
-        );
-        const templateObject = {
-          name: command,
-          template: fs
-            .readFileSync(path.join(sharedCommandsDirectory, `${command}.md`))
-            .toString('utf-8'),
-        };
+          return generateMarkdownFile(
+            sharedCommandsOutputDirectory,
+            templateObject
+          );
+        })
+      );
+    })
+  );
 
-        return generateMarkdownFile(
-          sharedCommandsOutputDirectory,
-          templateObject
-        );
-      })
-    );
-  })
-).then(() => {
-  console.log('Finished generating Nx Commands Documentation');
-});
+  console.log(`${chalk.green('🗸')} Generated Documentation for Nx Commands`);
+}

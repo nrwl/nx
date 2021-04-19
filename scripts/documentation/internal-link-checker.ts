@@ -1,8 +1,10 @@
-import { green, red } from 'chalk';
-import * as shell from 'shelljs';
+import * as chalk from 'chalk';
 import * as fs from 'fs';
 import * as parseLinks from 'parse-markdown-links';
 import * as path from 'path';
+import * as glob from 'glob';
+
+console.log(`${chalk.blue('i')} Internal Link Check`);
 
 const LOGGING_KEYS = [
   'LOG_DOC_TREE',
@@ -76,7 +78,7 @@ function expandFrameworks(linkPaths: string[]): string[] {
 }
 
 function extractAllInternalLinks(): Record<string, string[]> {
-  return shell.ls(`${BASE_PATH}/**/*.md`).reduce((acc, path) => {
+  return glob.sync(`${BASE_PATH}/**/*.md`).reduce((acc, path) => {
     const fileContents = readFileContents(path);
     const directLinks = fileContents
       .split(/[ ,]+/)
@@ -103,7 +105,7 @@ function extractAllInternalLinks(): Record<string, string[]> {
 }
 
 function extractAllInternalLinksWithAnchors(): Record<string, string[]> {
-  return shell.ls(`${BASE_PATH}/**/*.md`).reduce((acc, path) => {
+  return glob.sync(`${BASE_PATH}/**/*.md`).reduce((acc, path) => {
     const links = parseLinks(readFileContents(path))
       .filter(isLinkInternal)
       .filter(isNotAsset)
@@ -138,7 +140,7 @@ function isCategoryNode(
 
 function getDocumentMap(): DocumentTree[] {
   return JSON.parse(
-    fs.readFileSync(path.join(BASE_PATH, 'map.json'), { encoding: 'utf-8' })
+    fs.readFileSync(path.join(BASE_PATH, 'map.json'), 'utf-8')
   ) as DocumentTree[];
 }
 
@@ -253,29 +255,27 @@ function checkInternalAnchoredLinks(
 }
 
 if (!erroneousInternalLinks) {
-  console.log(green('All internal links appear to be valid!!'));
-  console.log('Moving on to check internal anchors...');
+  console.log(`${chalk.green('🗸')} All internal links appear to be valid!`);
   const erroneousAnchoredInternalLinks = checkInternalAnchoredLinks(
     validInternalLinksMap
   );
   if (!erroneousAnchoredInternalLinks) {
-    console.log(green('All internal anchored links appear to be valid!!'));
+    console.log(
+      `${chalk.green('🗸')} All internal anchored links appear to be valid!`
+    );
     process.exit(0);
   } else {
-    console.log(
-      red(
-        'The following files appear to contain the following invalid anchored internal links:'
-      )
-    );
-    console.log(red(JSON.stringify(erroneousAnchoredInternalLinks, null, 2)));
+    console.log(`${chalk.red(
+      'ERROR'
+    )} The following files appear to contain the following invalid anchored internal links:
+    ${JSON.stringify(erroneousAnchoredInternalLinks, null, 2)}`);
     process.exit(1);
   }
 } else {
-  console.log(
-    red(
-      'The following files appear to contain the following invalid internal links:'
-    )
-  );
-  console.log(red(JSON.stringify(erroneousInternalLinks, null, 2)));
+  console.log(`${chalk.red(
+    'ERROR'
+  )} The following files appear to contain the following invalid internal links:
+  ${JSON.stringify(erroneousInternalLinks, null, 2)}`);
+
   process.exit(1);
 }
