@@ -119,6 +119,16 @@ function runGatsbyServe(
       { cwd: join(workspaceRoot, projectRoot) }
     );
 
+    childProcess.on('message', ({ action }: any) => {
+      if (
+        action?.type === 'LOG' &&
+        action?.payload?.text?.includes(options.host) &&
+        action?.payload?.text?.includes(options.port)
+      ) {
+        resolve(true);
+      }
+    });
+
     childProcess.on('error', (err) => {
       reject(err);
     });
