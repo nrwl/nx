@@ -1,5 +1,4 @@
-import * as webpack from 'webpack';
-import { Configuration, ProgressPlugin, Stats } from 'webpack';
+import { Configuration, ProgressPlugin, Stats, Plugin } from 'webpack';
 
 import * as ts from 'typescript';
 
@@ -7,7 +6,7 @@ import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
-import * as CopyWebpackPlugin from 'copy-webpack-plugin';
+import CopyWebpackPlugin = require('copy-webpack-plugin');
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { BuildBuilderOptions } from './types';
 
@@ -79,7 +78,7 @@ export function getBaseWebpackPartial(
     stats: getStatsConfig(options),
   };
 
-  const extraPlugins: webpack.Plugin[] = [];
+  const extraPlugins: Plugin[] = [];
 
   if (options.progress) {
     extraPlugins.push(new ProgressPlugin());
@@ -93,7 +92,7 @@ export function getBaseWebpackPartial(
         },
         perChunkOutput: false,
         outputFilename: `3rdpartylicenses.txt`,
-      }) as unknown) as webpack.Plugin
+      }) as unknown) as Plugin
     );
   }
 

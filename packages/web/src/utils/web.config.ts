@@ -13,8 +13,7 @@ import { IndexHtmlWebpackPlugin } from './third-party/cli-files/plugins/index-ht
 import { generateEntryPoints } from './third-party/cli-files/utilities/package-chunk-sort';
 import { ScriptTarget } from 'typescript';
 import { getHashDigest, interpolateName } from 'loader-utils';
-
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+import MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 export function getWebConfig(
   root,
@@ -264,7 +263,9 @@ function getCSSModuleLocalIdent(context, localIdentName, localName, options) {
     : '[name]';
   // Create a hash based on a the file location and class name. Will be unique across a project, and close to globally unique.
   const hash = getHashDigest(
-    posix.relative(context.rootContext, context.resourcePath) + localName,
+    Buffer.from(
+      posix.relative(context.rootContext, context.resourcePath) + localName
+    ),
     'md5',
     'base64',
     5

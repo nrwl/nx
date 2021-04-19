@@ -8,7 +8,7 @@ import { Configuration } from 'webpack';
 import { eachValueFrom } from 'rxjs-for-await';
 import { map, tap } from 'rxjs/operators';
 import * as webpack from 'webpack';
-import * as WebpackDevServer from 'webpack-dev-server';
+import WebpackDevServer = require('webpack-dev-server');
 import {
   getEmittedFiles,
   runWebpackDevServer,

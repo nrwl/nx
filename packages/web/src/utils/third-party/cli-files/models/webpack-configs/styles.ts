@@ -16,10 +16,9 @@ import {
 } from '../../plugins/webpack';
 import { WebpackConfigOptions } from '../build-options';
 import { getOutputHashFormat, normalizeExtraEntryPoints } from './utils';
-
-const autoprefixer = require('autoprefixer');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const postcssImports = require('postcss-import');
+import MiniCssExtractPlugin = require('mini-css-extract-plugin');
+import autoprefixer = require('autoprefixer');
+import postcssImports = require('postcss-import');
 
 /**
  * Enumerate loaders and their dependencies from this file to let the dependency validator

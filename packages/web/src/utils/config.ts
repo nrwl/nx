@@ -2,8 +2,8 @@ import * as webpack from 'webpack';
 import { Configuration, ProgressPlugin, Stats } from 'webpack';
 import { join, resolve } from 'path';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import * as CopyWebpackPlugin from 'copy-webpack-plugin';
-import * as TerserWebpackPlugin from 'terser-webpack-plugin';
+import CopyWebpackPlugin = require('copy-webpack-plugin');
+import TerserWebpackPlugin = require('terser-webpack-plugin');
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 
 import { AssetGlobPattern, BuildBuilderOptions } from './types';
@@ -160,9 +160,9 @@ export function createTerserPlugin(esm: boolean, sourceMap: boolean) {
   return new TerserWebpackPlugin({
     parallel: true,
     cache: true,
-    sourceMap,
     terserOptions: {
-      ecma: esm ? 8 : 5,
+      ecma: esm ? 2017 : 5,
+      sourceMap,
       // Don't remove safari 10 workaround for ES modules
       safari10: true,
       output: {

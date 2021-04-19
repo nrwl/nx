@@ -487,7 +487,7 @@ describe('getDevServerConfig', () => {
 
           const typeCheckerPlugin = result.plugins.find(
             (plugin) => plugin instanceof ForkTsCheckerWebpackPlugin
-          ) as ForkTsCheckerWebpackPlugin;
+          ) as any;
           expect(typeCheckerPlugin.options.memoryLimit).toEqual(1024);
         });
       });

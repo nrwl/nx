@@ -4,7 +4,7 @@ import * as ts from 'typescript';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-import * as CopyWebpackPlugin from 'copy-webpack-plugin';
+import CopyWebpackPlugin = require('copy-webpack-plugin');
 jest.mock('tsconfig-paths-webpack-plugin');
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import { ProgressPlugin } from 'webpack';
@@ -146,7 +146,7 @@ describe('getBaseWebpackPartial', () => {
 
       const typeCheckerPlugin = result.plugins.find(
         (plugin) => plugin instanceof ForkTsCheckerWebpackPlugin
-      ) as ForkTsCheckerWebpackPlugin;
+      ) as any;
       expect(typeCheckerPlugin.options.tsconfig).toBe('tsconfig.json');
     });
 
@@ -272,7 +272,7 @@ describe('getBaseWebpackPartial', () => {
 
       const typeCheckerPlugin = result.plugins.find(
         (plugin) => plugin instanceof ForkTsCheckerWebpackPlugin
-      ) as ForkTsCheckerWebpackPlugin;
+      ) as any;
       expect(typeCheckerPlugin.options.workers).toEqual(1);
     });
   });
@@ -286,7 +286,7 @@ describe('getBaseWebpackPartial', () => {
 
       const typeCheckerPlugin = result.plugins.find(
         (plugin) => plugin instanceof ForkTsCheckerWebpackPlugin
-      ) as ForkTsCheckerWebpackPlugin;
+      ) as any;
       expect(typeCheckerPlugin.options.memoryLimit).toEqual(512);
     });
   });
@@ -346,9 +346,10 @@ describe('getBaseWebpackPartial', () => {
         showCircularDependencies: true,
       });
 
-      const circularDependencyPlugin: CircularDependencyPlugin = result.plugins.find(
+      const circularDependencyPlugin = result.plugins.find(
         (plugin) => plugin instanceof CircularDependencyPlugin
-      );
+      ) as any;
+
       expect(circularDependencyPlugin.options.exclude).toEqual(
         /[\\\/]node_modules[\\\/]/
       );

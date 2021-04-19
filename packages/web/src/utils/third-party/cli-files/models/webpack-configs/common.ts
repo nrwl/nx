@@ -8,12 +8,12 @@
 import * as path from 'path';
 import { ScriptTarget } from 'typescript';
 import {
-  compilation,
   Compiler,
   Configuration,
   ContextReplacementPlugin,
   debug,
   HashedModuleIdsPlugin,
+  ProgressPlugin,
 } from 'webpack';
 import { RawSource } from 'webpack-sources';
 import { ExtraEntryPoint } from '../../../browser/schema';
@@ -30,6 +30,9 @@ import {
   getOutputHashFormat,
   normalizeExtraEntryPoints,
 } from './utils';
+import TerserPlugin = require('terser-webpack-plugin');
+import { TerserPluginOptions } from 'terser-webpack-plugin';
+import CircularDependencyPlugin = require('circular-dependency-plugin');
 
 export const GLOBAL_DEFS_FOR_TERSER = {
   ngDevMode: false,
@@ -40,10 +43,6 @@ export const GLOBAL_DEFS_FOR_TERSER_WITH_AOT = {
   ...GLOBAL_DEFS_FOR_TERSER,
   ngJitMode: false,
 };
-
-const ProgressPlugin = require('webpack/lib/ProgressPlugin');
-const CircularDependencyPlugin = require('circular-dependency-plugin');
-const TerserPlugin = require('terser-webpack-plugin');
 
 // tslint:disable-next-line:no-any
 const g: any = typeof global !== 'undefined' ? global : {};
@@ -326,67 +325,53 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
     // TODO: Investigate why this fails for some packages: wco.supportES2015 ? 6 : 5;
     const terserEcma = 5;
 
-    const terserOptions = {
-      warnings: !!buildOptions.verbose,
-      safari10: true,
-      output: {
-        ecma: terserEcma,
-        comments: false,
-        webkit: true,
+    const terserPluginOptions: TerserPluginOptions = {
+      sourceMap: scriptsSourceMap,
+      parallel: true,
+      cache: true,
+      exclude: globalScriptsByBundleName.map((s) => s.bundleName),
+      terserOptions: {
+        safari10: true,
+        output: {
+          ecma: terserEcma,
+          comments: false,
+          webkit: true,
+        },
+        // On server, we don't want to compress anything. We still set the ngDevMode = false for it
+        // to remove dev code, and ngI18nClosureMode to remove Closure compiler i18n code
+        compress:
+          buildOptions.platform == 'server'
+            ? {
+                ecma: terserEcma,
+                global_defs: angularGlobalDefinitions,
+                keep_fnames: true,
+              }
+            : {
+                ecma: terserEcma,
+                pure_getters: buildOptions.buildOptimizer,
+                // PURE comments work best with 3 passes.
+                // See https://github.com/webpack/webpack/issues/2899#issuecomment-317425926.
+                passes: buildOptions.buildOptimizer ? 3 : 1,
+                global_defs: angularGlobalDefinitions,
+              },
+        // We also want to avoid mangling on server.
+        // Name mangling is handled within the browser builder
+        mangle:
+          !manglingDisabled &&
+          buildOptions.platform !== 'server' &&
+          (!differentialLoadingNeeded ||
+            (differentialLoadingNeeded && fullDifferential)),
       },
-      // On server, we don't want to compress anything. We still set the ngDevMode = false for it
-      // to remove dev code, and ngI18nClosureMode to remove Closure compiler i18n code
-      compress:
-        buildOptions.platform == 'server'
-          ? {
-              ecma: terserEcma,
-              global_defs: angularGlobalDefinitions,
-              keep_fnames: true,
-            }
-          : {
-              ecma: terserEcma,
-              pure_getters: buildOptions.buildOptimizer,
-              // PURE comments work best with 3 passes.
-              // See https://github.com/webpack/webpack/issues/2899#issuecomment-317425926.
-              passes: buildOptions.buildOptimizer ? 3 : 1,
-              global_defs: angularGlobalDefinitions,
-            },
-      // We also want to avoid mangling on server.
-      // Name mangling is handled within the browser builder
-      mangle:
-        !manglingDisabled &&
-        buildOptions.platform !== 'server' &&
-        (!differentialLoadingNeeded ||
-          (differentialLoadingNeeded && fullDifferential)),
     };
 
     extraMinimizers.push(
-      new TerserPlugin({
-        sourceMap: scriptsSourceMap,
-        parallel: true,
-        cache: true,
-        chunkFilter: (chunk: compilation.Chunk) =>
-          !globalScriptsByBundleName.some((s) => s.bundleName === chunk.name),
-        terserOptions,
-      }),
+      new TerserPlugin(terserPluginOptions),
       // Script bundles are fully optimized here in one step since they are never downleveled.
       // They are shared between ES2015 & ES5 outputs so must support ES5.
       new TerserPlugin({
-        sourceMap: scriptsSourceMap,
-        parallel: true,
-        cache: true,
-        chunkFilter: (chunk: compilation.Chunk) =>
-          globalScriptsByBundleName.some((s) => s.bundleName === chunk.name),
+        ...terserPluginOptions,
         terserOptions: {
-          ...terserOptions,
-          compress: {
-            ...terserOptions.compress,
-            ecma: 5,
-          },
-          output: {
-            ...terserOptions.output,
-            ecma: 5,
-          },
+          ...terserPluginOptions.terserOptions,
           mangle: !manglingDisabled && buildOptions.platform !== 'server',
         },
       })

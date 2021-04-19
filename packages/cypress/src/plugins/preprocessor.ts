@@ -1,7 +1,7 @@
 import * as wp from '@cypress/webpack-preprocessor';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
-import * as nodeExternals from 'webpack-node-externals';
-import * as ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
+import nodeExternals = require('webpack-node-externals');
+import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 export function preprocessTypescript(
   config: any,

@@ -1,6 +1,6 @@
 import { Configuration } from 'webpack';
-import * as mergeWebpack from 'webpack-merge';
-import * as nodeExternals from 'webpack-node-externals';
+import mergeWebpack = require('webpack-merge');
+import nodeExternals = require('webpack-node-externals');
 
 import { getBaseWebpackPartial } from './config';
 import { BuildNodeBuilderOptions } from './types';
