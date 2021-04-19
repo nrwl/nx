@@ -2,6 +2,7 @@ import { ProjectGraph } from '../core/project-graph';
 import { Task } from './tasks-runner';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { getDependencyConfigs } from './utils';
+import { performance } from 'perf_hooks';
 
 interface TaskGraph {
   tasks: Record<string, Task>;
@@ -23,16 +24,56 @@ export class TaskOrderer {
     )
       return [tasks];
     if (tasks.length === 0) return [];
+
     const stages: Task[][] = [];
+    performance.mark('ordering tasks:start');
     const taskGraph = this.createTaskGraph(tasks);
-    this.topologicallySortTasks(tasks).forEach((t) => {
-      const earliestStage = this.findEarliestStage(t, stages, taskGraph);
-      if (earliestStage) {
-        earliestStage.push(t);
-      } else {
-        stages.push([t]);
+    const notStagedTaskIds = new Set<string>(tasks.map((t) => t.id));
+    let stageIndex = 0;
+
+    // Loop through tasks and try to stage them. As tasks are staged, they are removed from the loop
+    while (notStagedTaskIds.size > 0) {
+      const currentStage = (stages[stageIndex] = []);
+      for (const taskId of notStagedTaskIds) {
+        let ready = true;
+        for (const dependency of taskGraph.dependencies[taskId]) {
+          if (notStagedTaskIds.has(dependency)) {
+            // dependency has not been staged yet, this task is not ready to be staged.
+            ready = false;
+            break;
+          }
+        }
+
+        // Some dependency still has not been staged, skip it for now, it will be processed again
+        if (!ready) {
+          continue;
+        }
+
+        // All the dependencies have been staged, let's stage it.
+        const task = taskGraph.tasks[taskId];
+        currentStage.push(task);
       }
-    });
+
+      // Remove the entire new stage of tasks from the list
+      for (const task of currentStage) {
+        notStagedTaskIds.delete(task.id);
+      }
+      stageIndex++;
+    }
+    // this.topologicallySortTasks(tasks).forEach((t) => {
+    //   const earliestStage = this.findEarliestStage(t, stages, taskGraph);
+    //   if (earliestStage) {
+    //     earliestStage.push(t);
+    //   } else {
+    //     stages.push([t]);
+    //   }
+    // });
+    performance.mark('ordering tasks:end');
+    performance.measure(
+      'ordering tasks',
+      'ordering tasks:start',
+      'ordering tasks:end'
+    );
     return stages;
   }
 
@@ -94,6 +135,7 @@ export class TaskOrderer {
   ) {
     const unseenDependencies = new Set(taskGraph.dependencies[task.id]);
     for (const stage of stages) {
+      // The stage after seeing all the dependencies is the earliest stage
       if (unseenDependencies.size === 0) {
         return stage;
       }
@@ -101,6 +143,9 @@ export class TaskOrderer {
         unseenDependencies.delete(taskInStage.id);
       }
     }
+
+    // There is no stage after all of the dependencies
+    return null;
   }
 
   private topologicallySortTasks(tasks: Task[]) {
