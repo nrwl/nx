@@ -439,10 +439,23 @@ function createSandbox(packageManager: string) {
     })
   );
 
-  execSync(`${packageManager} install --silent`, {
-    cwd: tmpDir,
-    stdio: [0, 1, 2],
-  });
+  try {
+    execSync(`${packageManager} install --silent`, {
+      cwd: tmpDir,
+      stdio: 'ignore',
+    });
+  } catch (_) {
+    // Install failed so run again without --silent
+    try {
+      execSync(`${packageManager} install`, {
+        cwd: tmpDir,
+        stdio: [0, 1, 2],
+      });
+    } catch (e) {
+      // This will probably fail so we exit with the same status
+      process.exit(e.status);
+    }
+  }
 
   return tmpDir;
 }
