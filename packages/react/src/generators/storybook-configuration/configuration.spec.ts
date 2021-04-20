@@ -142,16 +142,16 @@ describe('react:storybook-configuration', () => {
       cypressDirectory: 'one/two',
     });
     [
-      'apps/one/two/app-test-e2e/cypress.json',
-      'apps/one/two/app-test-e2e/src/fixtures/example.json',
-      'apps/one/two/app-test-e2e/src/plugins/index.js',
-      'apps/one/two/app-test-e2e/src/support/commands.ts',
-      'apps/one/two/app-test-e2e/src/support/index.ts',
-      'apps/one/two/app-test-e2e/tsconfig.e2e.json',
-      'apps/one/two/app-test-e2e/tsconfig.json',
-      'apps/one/two/app-test-e2e/.eslintrc.json',
-      'apps/one/two/app-test-e2e/src/integration/test-ui-lib/test-ui-lib.spec.ts',
-      'apps/one/two/app-test-e2e/src/integration/my-component/my-component.spec.ts',
+      'apps/one/two/test-ui-lib-e2e/cypress.json',
+      'apps/one/two/test-ui-lib-e2e/src/fixtures/example.json',
+      'apps/one/two/test-ui-lib-e2e/src/plugins/index.js',
+      'apps/one/two/test-ui-lib-e2e/src/support/commands.ts',
+      'apps/one/two/test-ui-lib-e2e/src/support/index.ts',
+      'apps/one/two/test-ui-lib-e2e/tsconfig.e2e.json',
+      'apps/one/two/test-ui-lib-e2e/tsconfig.json',
+      'apps/one/two/test-ui-lib-e2e/.eslintrc.json',
+      'apps/one/two/test-ui-lib-e2e/src/integration/test-ui-lib/test-ui-lib.spec.ts',
+      'apps/one/two/test-ui-lib-e2e/src/integration/my-component/my-component.spec.ts',
     ].forEach((file) => {
       expect(appTree.exists(file)).toBeTruthy();
     });
