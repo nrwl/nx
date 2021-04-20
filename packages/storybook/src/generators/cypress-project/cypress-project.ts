@@ -31,9 +31,11 @@ export async function cypressProjectGenerator(
     linter: schema.linter,
     directory: schema.directory,
   });
+  const libConfig = readProjectConfiguration(tree, schema.name);
+  const libRoot = libConfig.root;
   const generatedCypressProjectName = getE2eProjectName(
-    tree,
     e2eProjectName,
+    libRoot,
     schema.directory
   );
   removeUnneededFiles(tree, generatedCypressProjectName, schema.js);

@@ -10,6 +10,7 @@ import { StorybookStoriesSchema } from '../stories/stories';
 import { StorybookConfigureSchema } from './schema';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { getE2eProjectName } from '@nrwl/cypress/src/utils/project-name';
+import { getWorkspace } from '@nrwl/workspace';
 
 export default function (schema: StorybookConfigureSchema): Rule {
   if (schema.generateCypressSpecs && !schema.generateStories) {
@@ -31,10 +32,12 @@ export default function (schema: StorybookConfigureSchema): Rule {
 }
 
 function generateStories(schema: StorybookConfigureSchema): Rule {
-  return (tree: Tree, context) => {
+  return async (tree: Tree, context) => {
+    const workspace = await getWorkspace(tree);
+    const project = workspace.projects[schema.name];
     const e2eProjectName = getE2eProjectName(
-      tree,
       schema.name,
+      project.root,
       schema.cypressDirectory
     );
     return schematic<StorybookStoriesSchema>('stories', {
