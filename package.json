@@ -1,6 +1,6 @@
 {
   "name": "@nrwl/nx-source",
-  "version": "12.1.0-beta.2",
+  "version": "12.1.0-beta.3",
   "description": "Powerful, Extensible Dev Tools",
   "homepage": "https://nx.dev",
   "private": true,
@@ -13,13 +13,10 @@
     "check-internal-links": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts",
     "check-versions": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/check-versions.ts",
     "check-documentation-map": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/map-link-checker.ts",
-    "e2e-registry": "yarn verdaccio --config ./scripts/local-registry/config.yml --listen 4872",
-    "e2e-tests": "ts-node -P ./scripts/tsconfig.e2e.json ./scripts/e2e.ts",
-    "e2e": "run-p -r e2e-registry \"e2e-tests {@}\" --",
+    "e2e-start-local-registry": "ts-node -P ./scripts/tsconfig.e2e.json scripts/e2e-start-local-registry.ts",
+    "e2e-build-package-publish": "ts-node -P ./scripts/tsconfig.e2e.json scripts/e2e-build-package-publish.ts",
     "format": "nx format",
     "nx-release": "./scripts/nx-release.js",
-    "test": "nx run-many --target=test --all --parallel",
-    "lint": "nx run-many --target=lint --all --parallel",
     "depcheck": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/depcheck",
     "local-registry": "./scripts/local-registry.sh",
     "documentation": "ts-node -P scripts/tsconfig.scripts.json ./scripts/documentation/documentation.ts && yarn check-documentation-map && yarn check-internal-links",
@@ -59,17 +56,17 @@
     "@ngrx/schematics": "11.1.0",
     "@ngrx/store": "11.1.0",
     "@ngrx/store-devtools": "11.1.0",
-    "@nrwl/cli": "12.0.0",
-    "@nrwl/cypress": "12.0.0",
-    "@nrwl/eslint-plugin-nx": "12.0.0",
-    "@nrwl/jest": "12.0.0",
-    "@nrwl/linter": "12.0.0",
-    "@nrwl/next": "12.0.0",
-    "@nrwl/node": "12.0.0",
-    "@nrwl/nx-cloud": "11.2.0",
-    "@nrwl/tao": "12.0.0",
-    "@nrwl/web": "12.0.0",
-    "@nrwl/workspace": "12.0.0",
+    "@nrwl/cli": "12.1.0-beta.6",
+    "@nrwl/cypress": "12.1.0-beta.6",
+    "@nrwl/eslint-plugin-nx": "12.1.0-beta.6",
+    "@nrwl/jest": "12.1.0-beta.6",
+    "@nrwl/linter": "12.1.0-beta.6",
+    "@nrwl/next": "12.1.0-beta.6",
+    "@nrwl/node": "12.1.0-beta.6",
+    "@nrwl/nx-cloud": "12.0.0-beta.26",
+    "@nrwl/tao": "12.1.0-beta.6",
+    "@nrwl/web": "12.1.0-beta.6",
+    "@nrwl/workspace": "12.1.0-beta.6",
     "@popperjs/core": "^2.9.2",
     "@reduxjs/toolkit": "1.5.0",
     "@rollup/plugin-babel": "5.0.2",
@@ -158,8 +155,8 @@
     "jasmine-core": "~2.99.1",
     "jasmine-marbles": "~0.6.0",
     "jasmine-spec-reporter": "~4.2.1",
-    "jest": "26.2.2",
-    "jest-preset-angular": "8.2.1",
+    "jest": "26.6.3",
+    "jest-preset-angular": "8.4.0",
     "karma": "~4.0.0",
     "karma-chrome-launcher": "~2.2.0",
     "karma-coverage-istanbul-reporter": "~2.0.1",
@@ -254,7 +251,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-push": "yarn check-commit && yarn documentation && pretty-quick --check"
+      "pre-push": "yarn check-commit && yarn documentation"
     }
   },
   "dependencies": {
@@ -263,7 +260,8 @@
     "gray-matter": "^4.0.2",
     "marked": "^2.0.1",
     "react": "17.0.2",
-    "react-dom": "17.0.2"
+    "react-dom": "17.0.2",
+    "weak-napi": "^2.0.2"
   },
   "resolutions": {
     "ng-packagr/rxjs": "6.6.3"

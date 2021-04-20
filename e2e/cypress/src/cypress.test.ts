@@ -4,7 +4,7 @@ import {
   readFile,
   readJson,
   runCLI,
-  supportUi,
+  runCypressTests,
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
@@ -35,7 +35,7 @@ describe('Cypress E2E Test runner', () => {
     }, 1000000);
   });
 
-  if (supportUi()) {
+  if (runCypressTests()) {
     describe('running Cypress', () => {
       it('should execute e2e tests using Cypress', () => {
         newProject();

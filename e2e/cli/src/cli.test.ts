@@ -86,14 +86,13 @@ describe('Cli', () => {
     expect(affectedHelp).toContain('Run task for affected projects');
 
     const version = runCLI(`--version`);
-    expect(version).toContain(process.env.PUBLISHED_VERSION); // stub value
+    expect(version).toContain('9999.0.2'); // stub value
   }, 120000);
 });
 
 describe('report', () => {
   it(`should report package versions`, async () => {
     newProject();
-
     const reportOutput = runCLI('report');
 
     packagesWeCareAbout.forEach((p) => {

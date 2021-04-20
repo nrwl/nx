@@ -1,3 +1,4 @@
+// nx-ignore-next-line
 const { Linter } = require('@nrwl/linter');
 
 export interface Schema {

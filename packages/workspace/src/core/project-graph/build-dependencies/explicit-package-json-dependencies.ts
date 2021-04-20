@@ -48,7 +48,7 @@ function processPackageJson(
       }
     });
   } catch (e) {
-    if (process.env.NX_VERBOSE_LOGGING) {
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
       console.log(e);
     }
   }

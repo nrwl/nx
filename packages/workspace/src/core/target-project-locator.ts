@@ -64,11 +64,6 @@ export class TargetProjectLocator {
       return this.findProjectOfResolvedModule(resolvedModule);
     }
 
-    const npmProject = this.findNpmPackage(importExpr);
-    if (npmProject) {
-      return npmProject;
-    }
-
     if (this.paths && this.paths[normalizedImportExpr]) {
       for (let p of this.paths[normalizedImportExpr]) {
         const maybeResolvedProject = this.findProjectOfResolvedModule(p);
@@ -78,36 +73,39 @@ export class TargetProjectLocator {
       }
     }
 
-    const resolvedModule = this.typescriptResolutionCache.has(
-      normalizedImportExpr
-    )
-      ? this.typescriptResolutionCache.get(normalizedImportExpr)
-      : resolveModuleByImport(
-          normalizedImportExpr,
-          filePath,
-          this.absTsConfigPath
-        );
-
-    // TODO: vsavkin temporary workaround. Remove it once we reworking handling of npm packages.
-    if (resolvedModule && resolvedModule.indexOf('/node_modules/') !== -1) {
-      return null;
+    let resolvedModule: string;
+    if (this.typescriptResolutionCache.has(normalizedImportExpr)) {
+      resolvedModule = this.typescriptResolutionCache.get(normalizedImportExpr);
+    } else {
+      resolvedModule = resolveModuleByImport(
+        normalizedImportExpr,
+        filePath,
+        this.absTsConfigPath
+      );
+      this.typescriptResolutionCache.set(
+        normalizedImportExpr,
+        resolvedModule ? resolvedModule : null
+      );
     }
 
-    this.typescriptResolutionCache.set(normalizedImportExpr, resolvedModule);
-    if (resolvedModule) {
+    // TODO: vsavkin temporary workaround. Remove it once we reworking handling of npm packages.
+    if (resolvedModule && resolvedModule.indexOf('/node_modules/') === -1) {
       const resolvedProject = this.findProjectOfResolvedModule(resolvedModule);
-
       if (resolvedProject) {
         return resolvedProject;
       }
     }
-
     const importedProject = this.sortedWorkspaceProjects.find((p) => {
       const projectImport = `@${npmScope}/${p.data.normalizedRoot}`;
-      return normalizedImportExpr.startsWith(projectImport);
+      return (
+        normalizedImportExpr === projectImport ||
+        normalizedImportExpr.startsWith(`${projectImport}/`)
+      );
     });
+    if (importedProject) return importedProject.name;
 
-    return importedProject?.name;
+    const npmProject = this.findNpmPackage(importExpr);
+    return npmProject ? npmProject : null;
   }
 
   private findNpmPackage(npmImport: string) {

@@ -1,3 +1,5 @@
+process.env.SELECTED_CLI = 'angular';
+
 import {
   getSelectedPackageManager,
   newProject,

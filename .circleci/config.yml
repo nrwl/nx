@@ -2,17 +2,6 @@ version: 2.1
 
 # Variables
 var_1: &working_directory ~/repo
-var_2:
-  &nx_cli [
-    'e2e-workspace',
-    'e2e-cli,e2e-nx-plugin,dep-graph-dep-graph-e2e',
-    'e2e-cypress,e2e-jest',
-    'e2e-react',
-    'e2e-next,e2e-gatsby',
-    'e2e-node',
-    'e2e-web,e2e-linter,e2e-storybook',
-  ]
-var_3: &ng_cli ['e2e-angular']
 
 executors:
   linux:
@@ -36,7 +25,7 @@ commands:
       - checkout
       - when:
           condition:
-            equal: [<< parameters.os >>, windows]
+            equal: [ << parameters.os >>, windows ]
           steps:
             - run: nvm install 12.20
             - run: nvm use 12.20
@@ -57,32 +46,66 @@ commands:
 
       - when:
           condition:
-            equal: [<< parameters.os >>, linux]
+            equal: [ << parameters.os >>, linux ]
           steps:
             - run:
                 name: Install PNPM
                 command: npm install --prefix=$HOME/.local -g pnpm@5.18.9
       - when:
           condition:
-            equal: [<< parameters.os >>, windows]
+            equal: [ << parameters.os >>, windows ]
           steps:
             - run:
                 name: Install PNPM
                 command: npm install -g pnpm@5.18.9
 
 jobs:
-  checks-and-unit-tests:
+  agent:
     parameters:
       os:
         type: string
         default: 'linux'
+      cli:
+        type: string
+        default: ''
+      pm:
+        type: string
+        default: pnpm
     executor: << parameters.os >>
+    environment:
+      GIT_AUTHOR_NAME: test@test.com
+      GIT_AUTHOR_EMAIL: Test
+      GIT_COMMITTER_EMAIL: test@test.com
+      GIT_COMMITTER_NAME: Test
+      NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
+      SELECTED_PM: << parameters.pm >>
+      SELECTED_CLI: << parameters.cli >>
     steps:
       - setup:
           os: << parameters.os >>
       - run:
-          name: Run Unit Tests
-          command: yarn test
+          name: Agent
+          command: npx nx-cloud start-agent
+          no_output_timeout: 45m
+  pr-main:
+    parameters:
+      os:
+        type: string
+        default: 'linux'
+      cli:
+        type: string
+        default: ''
+      pm:
+        type: string
+        default: pnpm
+    executor: << parameters.os >>
+    environment:
+      NX_CLOUD_DISTRIBUTED_EXECUTION: "true"
+      SELECTED_CLI: << parameters.cli >>
+      NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
+    steps:
+      - setup:
+          os: << parameters.os >>
       - run:
           name: Check Documentation
           command: yarn documentation
@@ -93,20 +116,29 @@ jobs:
           name: Check Formatting
           command: yarn check-format
       - run:
-          name: Run linting
-          command: yarn lint
-      - run:
-          name: Check Commit Message Format
-          command: yarn check-commit
-      - run:
           name: Check Package dependencies
           command: yarn depcheck
-  e2e:
+      - run:
+          name: Run Builds
+          command: npx nx affected --target=build 
+      - run:
+          name: Run Unit Tests
+          command: npx nx affected --target=test
+      - run:
+          name: Run Lint Checks
+          command: npx nx affected --target=lint
+      - run:
+          name: Run E2E Tests
+          command: npx nx affected --target=e2e
+          no_output_timeout: 45m
+      - run:
+          name: Stop All Running Agents for This CI Run
+          command: npx nx-cloud stop-all-agents
+  trunk-main:
     parameters:
       os:
         type: string
-      packages:
-        type: string
+        default: 'linux'
       cli:
         type: string
         default: ''
@@ -114,55 +146,49 @@ jobs:
         type: string
         default: pnpm
     executor: << parameters.os >>
+    environment:
+      NX_CLOUD_DISTRIBUTED_EXECUTION: "true"
+      SELECTED_CLI: << parameters.cli >>
+      NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
     steps:
       - setup:
           os: << parameters.os >>
       - run:
-          name: Run E2E tests - << parameters.packages >>
-          command: yarn e2e << parameters.packages >> affected
-          no_output_timeout: 30m
-    environment:
-      GIT_AUTHOR_NAME: test@test.com
-      GIT_AUTHOR_EMAIL: Test
-      GIT_COMMITTER_EMAIL: test@test.com
-      GIT_COMMITTER_NAME: Test
-      NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
-      SELECTED_PM: << parameters.pm >>
-      SELECTED_CLI: << parameters.cli >>
-
+          name: Run Builds
+          command: npx nx affected --target=build --base=HEAD~1
+      - run:
+          name: Run Unit Tests
+          command: npx nx affected --target=test --base=HEAD~1
+      - run:
+          name: Run Lint Checks
+          command: npx nx affected --target=lint --base=HEAD~1
+      - run:
+          name: Run E2E Tests
+          command: npx nx affected --target=e2e --base=HEAD~1
+          no_output_timeout: 45m
+      - run:
+          name: Stop All Running Agents for This CI Run
+          command: npx nx-cloud stop-all-agents
 workflows:
   build:
     jobs:
-      - checks-and-unit-tests
-      - e2e:
-          matrix:
-            parameters:
-              os: ['linux']
-              packages: *nx_cli
-      - e2e:
-          matrix:
-            parameters:
-              os: ['linux']
-              packages: *ng_cli
-          cli: 'angular'
-
-  build-windows:
-    triggers:
-      - schedule:
-          cron: '0 0 * * *'
+      - agent:
+          name: 'agent1'
+      - agent:
+          name: 'agent2'
+      - agent:
+          name: 'agent3'
+      - agent:
+          name: 'agent4'
+      - agent:
+          name: 'agent5'
+      - agent:
+          name: 'agent6'
+      - trunk-main:
           filters:
             branches:
-              only:
-                - master
-    jobs:
-      - e2e:
-          matrix:
-            parameters:
-              os: ['windows']
-              packages: *nx_cli
-      - e2e:
-          matrix:
-            parameters:
-              os: ['windows']
-              packages: *ng_cli
-          cli: 'angular'
+              only: master
+      - pr-main:
+          filters:
+            branches:
+              ignore: master

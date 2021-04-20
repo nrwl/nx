@@ -77,6 +77,9 @@ export default async function (
       : await runSerially(normalized, context);
     return { success };
   } catch (e) {
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      console.error(e);
+    }
     throw new Error(
       `ERROR: Something went wrong in @nrwl/run-commands - ${e.message}`
     );

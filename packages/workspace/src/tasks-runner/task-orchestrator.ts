@@ -100,7 +100,7 @@ export class TaskOrchestrator {
       await Promise.all(
         tasks.map(async (task) => {
           const cachedResult = await this.cache.get(task);
-          if (cachedResult) {
+          if (cachedResult && cachedResult.code === 0) {
             cached.push({ task, cachedResult });
           } else {
             rest.push(task);

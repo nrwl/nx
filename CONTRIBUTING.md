@@ -75,7 +75,7 @@ To publish packages to a local registry, do the following:
 To make sure your changes do not break any unit tests, run the following:
 
 ```bash
-yarn test
+nx affected --target=test
 ```
 
 For example, if you need to only run the tests for the jest package, run:
@@ -89,13 +89,13 @@ nx test jest
 To make sure your changes do not break any E2E tests, run:
 
 ```bash
-yarn e2e
+nx e2e e2e-cli # or any other project here
 ```
 
 Running E2E tests can take some time, so it is often useful to run a single test. To run a single suite of tests, run:
 
 ```bash
-yarn e2e e2e-cli
+nx e2e e2e-cli -t versions # I often add qqqq to my test name so I can use -t qqqq
 ```
 
 ### Developing on Windows

@@ -187,16 +187,16 @@ export function removeProject({ onlyOnCI = false } = {}) {
   removeSync(tmpProjPath());
 }
 
-export function supportUi() {
+export function runCypressTests() {
+  // temporary disable
   return false;
-  // return !process.env.NO_CHROME;
 }
 
 export function runCommandAsync(
   command: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: process.env,
+    env: null,
   }
 ): Promise<{ stdout: string; stderr: string; combinedOutput: string }> {
   return new Promise((resolve, reject) => {
@@ -204,7 +204,7 @@ export function runCommandAsync(
       command,
       {
         cwd: tmpProjPath(),
-        env: { ...process.env, FORCE_COLOR: 'false' },
+        env: { ...(opts.env || process.env), FORCE_COLOR: 'false' },
       },
       (err, stdout, stderr) => {
         if (!opts.silenceError && err) {
@@ -272,7 +272,7 @@ export function runNgAdd(
   command?: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: process.env,
+    env: null,
     cwd: tmpProjPath(),
   }
 ): string {
@@ -282,7 +282,7 @@ export function runNgAdd(
       `./node_modules/.bin/ng g @nrwl/workspace:ng-add ${command}`,
       {
         cwd: tmpProjPath(),
-        env: opts.env as any,
+        env: opts.env || process.env,
       }
     )
       .toString()
@@ -304,20 +304,21 @@ export function runCLI(
   command?: string,
   opts: RunCmdOpts = {
     silenceError: false,
-    env: process.env,
+    env: null,
   }
 ): string {
   try {
     const pm = getPackageManagerCommand();
     let r = execSync(`${pm.runNx} ${command}`, {
       cwd: opts.cwd || tmpProjPath(),
-      env: opts.env,
+      env: opts.env || process.env,
     }).toString();
     r = r.replace(
       /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
       ''
     );
     if (process.env.VERBOSE_OUTPUT) {
+      console.log('result of running:', command);
       console.log(r);
     }
 
@@ -329,7 +330,7 @@ export function runCLI(
     return r;
   } catch (e) {
     if (opts.silenceError) {
-      return e.stdout.toString();
+      return e.stdout.toString() + e.stderr?.toString();
     } else {
       console.log('original command', command);
       console.log(e.stdout?.toString(), e.stderr?.toString());
@@ -504,7 +505,7 @@ export function getPackageManagerCommand({
 
   return {
     npm: {
-      createWorkspace: `npx create-nx-workspace@${process.env.PUBLISHED_VERSION}`,
+      createWorkspace: `npx create-nx-workspace@9999.0.2`,
       runNx: `npm run nx${scriptsPrependNodePathFlag} --`,
       runNxSilent: `npm run nx --silent${scriptsPrependNodePathFlag} --`,
       addDev: `npm install --legacy-peer-deps -D`,
@@ -512,14 +513,14 @@ export function getPackageManagerCommand({
     },
     yarn: {
       // `yarn create nx-workspace` is failing due to wrong global path
-      createWorkspace: `yarn global add create-nx-workspace@${process.env.PUBLISHED_VERSION} && create-nx-workspace`,
+      createWorkspace: `yarn global add create-nx-workspace@9999.0.2 && create-nx-workspace`,
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
       addDev: `yarn add -D`,
       list: 'npm ls --depth 10',
     },
     pnpm: {
-      createWorkspace: `pnpx create-nx-workspace@${process.env.PUBLISHED_VERSION}`,
+      createWorkspace: `pnpx create-nx-workspace@9999.0.2`,
       runNx: `pnpm run nx --`,
       runNxSilent: `pnpm run nx --silent --`,
       addDev: `pnpm add -D`,
