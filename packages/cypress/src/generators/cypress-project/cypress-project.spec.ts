@@ -1,6 +1,6 @@
 import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { cypressProjectGenerator, getE2eProjectName } from './cypress-project';
+import { cypressProjectGenerator } from './cypress-project';
 import { Schema } from './schema';
 import { Linter } from '@nrwl/linter';
 
@@ -295,17 +295,5 @@ describe('schematic:cypress-project', () => {
         'apps/one/two/other-e2e/src/integration/app.spec.ts',
       ].forEach((path) => expect(tree.exists(path)).toBeTruthy());
     });
-    test.each`
-      name         | directory    | projectName
-      ${'app-e2e'} | ${'one/two'} | ${'one-two-app-e2e'}
-      ${'app-e2e'} | ${'one'}     | ${'one-app-e2e'}
-      ${'app-e2e'} | ${undefined} | ${'app-e2e'}
-      ${'app'}     | ${undefined} | ${'app'}
-    `(
-      'name $name and directory $directory should result in project name $projectName',
-      ({ name, directory, projectName }) => {
-        expect(getE2eProjectName({ name, directory })).toEqual(projectName);
-      }
-    );
   });
 });
