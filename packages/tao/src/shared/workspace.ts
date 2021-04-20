@@ -106,6 +106,21 @@ export interface ProjectConfiguration {
   generators?: { [collectionName: string]: { [generatorName: string]: any } };
 }
 
+export interface TargetDependencyConfig {
+  /**
+   * This the projects that the targets belong to
+   *
+   * 'self': This target depends on another target of the same project
+   * 'deps': This target depends on targets of the projects of it's deps.
+   */
+  projects: 'self' | 'dependencies';
+
+  /**
+   * The name of the target
+   */
+  target: string;
+}
+
 /**
  * Target's configuration
  */
@@ -118,6 +133,17 @@ export interface TargetConfiguration {
   executor: string;
 
   /**
+   * List of the target's outputs. The outputs will be cached by the Nx computation
+   * caching engine.
+   */
+  outputs?: string[];
+
+  /**
+   * This describes other targets that a target depends on.
+   */
+  dependsOn?: [TargetDependencyConfig];
+
+  /**
    * Target's options. They are passed in to the executor.
    */
   options?: any;
@@ -126,12 +152,6 @@ export interface TargetConfiguration {
    * Sets of options
    */
   configurations?: { [config: string]: any };
-
-  /**
-   * List of the target's outputs. The outputs will be cached by the Nx computation
-   * caching engine.
-   */
-  outputs?: string[];
 }
 
 export function workspaceConfigName(root: string) {

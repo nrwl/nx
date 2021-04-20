@@ -3,7 +3,11 @@ import { join } from 'path';
 import { appRootPath } from '../utilities/app-root';
 import { ReporterArgs } from './default-reporter';
 import * as yargs from 'yargs';
-import { ProjectGraph, ProjectGraphNode } from '../core/project-graph';
+import {
+  ProjectGraph,
+  ProjectGraphNode,
+  TargetDependencyConfig,
+} from '@nrwl/devkit';
 import { Environment, NxJson } from '../core/shared-interfaces';
 import { NxArgs } from '@nrwl/workspace/src/command-line/utils';
 import { isRelativePath } from '../utilities/fileutils';
@@ -13,6 +17,7 @@ import {
   projectHasTargetAndConfiguration,
 } from '../utilities/project-graph-utils';
 import { output } from '../utilities/output';
+import { getDependencyConfigs } from './utils';
 
 type RunArgs = yargs.Arguments & ReporterArgs;
 
@@ -32,15 +37,16 @@ export async function runCommand<T extends RunArgs>(
     overrides
   );
 
-  const tasks: Task[] = projectsToRun.map((project) => {
-    return createTask({
-      project,
+  const tasks = createTasksForProjectToRun(
+    projectsToRun,
+    {
       target: nxArgs.target,
       configuration: nxArgs.configuration,
       overrides,
-      errorIfCannotFindConfiguration: project.name === initiatingProject,
-    });
-  });
+    },
+    projectGraph,
+    initiatingProject
+  );
 
   const hasher = new Hasher(projectGraph, nxJson, runnerOptions);
   const res = await hasher.hashTasks(tasks);
@@ -96,6 +102,71 @@ interface TaskParams {
   errorIfCannotFindConfiguration: boolean;
 }
 
+export function createTasksForProjectToRun(
+  projectsToRun: ProjectGraphNode[],
+  params: Omit<TaskParams, 'project' | 'errorIfCannotFindConfiguration'>,
+  projectGraph: ProjectGraph,
+  initiatingProject: string | null
+) {
+  const tasksMap: Map<string, Task> = new Map<string, Task>();
+
+  for (const project of projectsToRun) {
+    addTasksForProjectTarget(
+      {
+        project,
+        ...params,
+        errorIfCannotFindConfiguration: project.name === initiatingProject,
+      },
+      projectGraph,
+      tasksMap,
+      []
+    );
+  }
+  return Array.from(tasksMap.values());
+}
+
+function addTasksForProjectTarget(
+  {
+    project,
+    target,
+    configuration,
+    overrides,
+    errorIfCannotFindConfiguration,
+  }: TaskParams,
+  projectGraph: ProjectGraph,
+  tasksMap: Map<string, Task>,
+  path: string[]
+) {
+  const dependencyConfigs = getDependencyConfigs(
+    { project: project.name, target },
+    projectGraph
+  );
+
+  if (dependencyConfigs) {
+    for (const dependencyConfig of dependencyConfigs) {
+      addTasksForProjectDependencyConfig(
+        project,
+        {
+          target,
+          configuration,
+        },
+        dependencyConfig,
+        projectGraph,
+        tasksMap,
+        path
+      );
+    }
+  }
+  const task = createTask({
+    project,
+    target,
+    configuration,
+    overrides,
+    errorIfCannotFindConfiguration,
+  });
+  tasksMap.set(task.id, task);
+}
+
 export function createTask({
   project,
   target,
@@ -136,6 +207,67 @@ export function createTask({
     projectRoot: project.data.root,
     overrides: interpolateOverrides(overrides, project.name, project.data),
   };
+}
+
+function addTasksForProjectDependencyConfig(
+  project: ProjectGraphNode,
+  { target, configuration }: Pick<TaskParams, 'target' | 'configuration'>,
+  dependencyConfig: TargetDependencyConfig,
+  projectGraph: ProjectGraph,
+  tasksMap: Map<string, Task>,
+  path: string[]
+) {
+  const targetIdentifier = getId({
+    project: project.name,
+    target,
+    configuration,
+  });
+
+  if (path.includes(targetIdentifier)) {
+    output.error({
+      title: `Could not execute ${path[0]} because it has a circular dependency`,
+      bodyLines: [`${[...path, targetIdentifier].join(' --> ')}`],
+    });
+    process.exit(1);
+  }
+
+  if (tasksMap.has(targetIdentifier)) {
+    return;
+  }
+
+  if (dependencyConfig.projects === 'dependencies') {
+    const dependencies = projectGraph.dependencies[project.name];
+    for (const dep of dependencies) {
+      const depProject = projectGraph.nodes[dep.target];
+      if (projectHasTarget(depProject, dependencyConfig.target)) {
+        addTasksForProjectTarget(
+          {
+            project: projectGraph.nodes[dep.target],
+            target: dependencyConfig.target,
+            configuration,
+            overrides: {},
+            errorIfCannotFindConfiguration: false,
+          },
+          projectGraph,
+          tasksMap,
+          [...path, targetIdentifier]
+        );
+      }
+    }
+  } else {
+    addTasksForProjectTarget(
+      {
+        project,
+        target: dependencyConfig.target,
+        configuration,
+        overrides: {},
+        errorIfCannotFindConfiguration: true,
+      },
+      projectGraph,
+      tasksMap,
+      [...path, targetIdentifier]
+    );
+  }
 }
 
 function getId({

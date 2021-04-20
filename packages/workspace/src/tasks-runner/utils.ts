@@ -1,7 +1,12 @@
+import {
+  ProjectGraph,
+  ProjectGraphNode,
+  TargetDependencyConfig,
+} from '@nrwl/devkit';
 import { Task } from './tasks-runner';
-import { ProjectGraphNode } from '../core/project-graph';
 import * as flatten from 'flat';
 import * as _template from 'lodash.template';
+import { output } from '@nrwl/workspace/src/utilities/output';
 
 const commonCommands = ['build', 'test', 'lint', 'e2e', 'deploy'];
 
@@ -44,6 +49,34 @@ export function getCommand(cliCommand: string, isYarn: boolean, task: Task) {
       ...args,
     ];
   }
+}
+
+export function getDependencyConfigs(
+  { project, target }: { project: string; target: string },
+  projectGraph: ProjectGraph
+): TargetDependencyConfig[] | undefined {
+  const dependencyConfigs =
+    projectGraph.nodes[project].data?.targets[target]?.dependsOn;
+
+  if (!dependencyConfigs) {
+    return dependencyConfigs;
+  }
+
+  for (const dependencyConfig of dependencyConfigs) {
+    if (
+      dependencyConfig.projects !== 'dependencies' &&
+      dependencyConfig.projects !== 'self'
+    ) {
+      output.error({
+        title: `dependsOn is improperly configured for ${project}:${target}`,
+        bodyLines: [
+          `dependsOn.projects is ${dependencyConfig.projects} but should be "self" or "dependencies"`,
+        ],
+      });
+      process.exit(1);
+    }
+  }
+  return dependencyConfigs;
 }
 
 export function getOutputs(p: Record<string, ProjectGraphNode>, task: Task) {

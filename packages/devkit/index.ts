@@ -1,6 +1,7 @@
 export { Tree, FileChange } from '@nrwl/tao/src/shared/tree';
 export {
   WorkspaceJsonConfiguration,
+  TargetDependencyConfig,
   TargetConfiguration,
   ProjectConfiguration,
   ProjectType,
