@@ -72,9 +72,13 @@ This will fetch the specified version of `@nrwl/workspace`, analyze the dependen
 
 At this point, no packages have been installed, and no other files have been touched.
 
-Now, you can inspect `package.json` to see if the changes make sense. Sometimes the migration can update some package to the version that is either not allowed or conflicts with with another package. After you are satisfied, run `npm install`, `yarn`, or `pnpm install`.
+Now, you can inspect `package.json` to see if the changes make sense. Sometimes the migration can update some package to the version that is either not allowed or conflicts with with another package. Feel free to manually apply the desired adjustments.
 
-### Step 2: Running migrations
+### Step 2: Install the packages
+
+After you are satisfied, make sure to actuall install the packages by running `npm install`, `yarn`, or `pnpm install`.
+
+### Step 3: Running migrations
 
 Next, we need to update the repo to match the updated `package.json` and `node_modules`. Every Nx plugin comes with a set of migrations that describe how to update the workspace to make it work with the new version of the plugin. During Step 1 Nx looked at all of the packages being updated and collected their migrations into `migrations.json`. It's important to note that because Nx knows the from and to versions of every package, the `migrations.json` file only contains the relevant migrations.
 
@@ -93,7 +97,7 @@ For small projects, running all the migrations at once often succeeds without an
 
 Since you can run `nx migrate --run-migrations=migrations.json` as many times as you want, you can achieve all of that by commenting out and reordering items in `migrations.json`. The migrate process can take a long time, sometimes a day, so it can be useful to commit the migrations file with the partially-updated repo.
 
-### Step 3: Cleaning up
+### Step 4: Cleaning up
 
 After you run all the migrations, you can remove `migration.json` and commit the changes.
 
