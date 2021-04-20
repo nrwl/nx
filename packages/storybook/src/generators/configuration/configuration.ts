@@ -24,9 +24,6 @@ import { cypressProjectGenerator } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';
 import { storybookVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
-//TODO-R consider moving this in here
-import { getUnscopedLibName } from '@nrwl/cypress/src/utils/project-name';
-import { getWorkspace } from '@nrwl/workspace';
 
 export async function configurationGenerator(
   tree: Tree,
