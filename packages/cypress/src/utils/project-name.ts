@@ -1,24 +1,20 @@
-import { Tree } from '@nrwl/tao/src/shared/tree';
-import { names, readProjectConfiguration } from '@nrwl/devkit';
+import { names } from '@nrwl/devkit';
 
-export function getUnscopedLibName(host: Tree, projectName: string) {
-  const libConfig = readProjectConfiguration(host, projectName);
-  const libRoot = libConfig.root;
+export function getUnscopedLibName(libRoot: string) {
   return libRoot.substr(libRoot.lastIndexOf('/') + 1);
 }
 
 export function getE2eProjectName(
-  host: Tree,
-  projectName: string,
-  cypressDirectory: string
+  targetProjectName: string,
+  targetLibRoot: string,
+  cypressDirectory?: string
 ) {
   if (cypressDirectory) {
     return `${filePathPrefix(cypressDirectory)}-${getUnscopedLibName(
-      host,
-      projectName
+      targetLibRoot
     )}-e2e`;
   }
-  return `${projectName}-e2e`;
+  return `${targetProjectName}-e2e`;
 }
 
 export function filePathPrefix(directory: string) {
