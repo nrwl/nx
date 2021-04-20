@@ -12,6 +12,9 @@ import {
   NextBuildBuilderOptions,
   NextExportBuilderOptions,
 } from '../../utils/types';
+import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { calculateProjectDependencies } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
 
 try {
   require('dotenv').config();
@@ -21,6 +24,17 @@ export default async function exportExecutor(
   options: NextExportBuilderOptions,
   context: ExecutorContext
 ) {
+  const projGraph = createProjectGraph();
+  const { dependencies } = calculateProjectDependencies(
+    projGraph,
+    context.root,
+    context.projectName,
+    context.targetName,
+    context.configurationName
+  );
+
+  assertDependentProjectsHaveBeenBuilt(dependencies, context);
+
   const buildTarget = parseTargetString(options.buildTarget);
   const build = await runExecutor(buildTarget, {}, context);
 
@@ -35,7 +49,12 @@ export default async function exportExecutor(
     context
   );
   const root = resolve(context.root, buildOptions.root);
-  const config = await prepareConfig(PHASE_EXPORT, buildOptions, context);
+  const config = await prepareConfig(
+    PHASE_EXPORT,
+    buildOptions,
+    context,
+    dependencies
+  );
 
   await exportApp(
     root,

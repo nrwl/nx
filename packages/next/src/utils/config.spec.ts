@@ -2,7 +2,7 @@ import { PHASE_PRODUCTION_BUILD } from 'next/dist/next-server/lib/constants';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { createWebpackConfig, prepareConfig } from './config';
 import { NextBuildBuilderOptions } from '@nrwl/next';
-import { basename, dirname } from 'path';
+import { dirname } from 'path';
 
 jest.mock('tsconfig-paths-webpack-plugin');
 jest.mock('next/dist/next-server/server/config', () => ({
@@ -11,6 +11,7 @@ jest.mock('next/dist/next-server/server/config', () => ({
     webpack: () => ({}),
   }),
 }));
+jest.mock('fs', () => require('memfs').fs);
 
 describe('Next.js webpack config builder', () => {
   beforeEach(() => {
@@ -27,7 +28,7 @@ describe('Next.js webpack config builder', () => {
       );
 
       expect(TsconfigPathsPlugin).toHaveBeenCalledWith({
-        configFile: '/root/apps/wibble/tsconfig.json',
+        configFile: expect.stringMatching(/tsconfig/),
         extensions: ['.ts', '.tsx', '.mjs', '.js', '.jsx'],
         mainFields: ['es2015', 'module', 'main'],
       });
@@ -109,7 +110,8 @@ describe('Next.js webpack config builder', () => {
           outputPath: 'dist/apps/wibble',
           fileReplacements: [],
         },
-        { root: '/root' } as any
+        { root: '/root' } as any,
+        []
       );
 
       expect(config).toEqual(
@@ -132,7 +134,8 @@ describe('Next.js webpack config builder', () => {
           nextConfig: 'config.fixture',
           customValue: 'test',
         } as NextBuildBuilderOptions,
-        { root: rootPath } as any
+        { root: rootPath } as any,
+        []
       );
 
       expect(config).toMatchObject({
@@ -152,7 +155,8 @@ describe('Next.js webpack config builder', () => {
             nextConfig: 'config-does-not-exist.fixture',
             customValue: 'test',
           } as NextBuildBuilderOptions,
-          { root: '/root' } as any
+          { root: '/root' } as any,
+          []
         )
       ).rejects.toThrow(/Could not find file/);
     });
@@ -168,7 +172,8 @@ describe('Next.js webpack config builder', () => {
             nextConfig: require.resolve('./config-not-a-function.fixture'),
             customValue: 'test',
           } as NextBuildBuilderOptions,
-          { root: '/root' } as any
+          { root: '/root' } as any,
+          []
         )
       ).rejects.toThrow(/option does not export a function/);
     });
