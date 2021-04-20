@@ -4,7 +4,7 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],<% } %><% if (transformer === 'ts-jest') { %>
   globals: {
     'ts-jest': {
-      tsConfig: '<rootDir>/tsconfig.spec.json',<%if (setupFile === 'angular') { %>
+      tsconfig: '<rootDir>/tsconfig.spec.json',<%if (setupFile === 'angular') { %>
       stringifyContentPathRegex: '\\.(html|svg)$',
       astTransformers: {
         before: [

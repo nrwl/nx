@@ -219,7 +219,7 @@
     "tippy.js": "^6.3.1",
     "tmp": "~0.2.1",
     "tree-kill": "1.2.2",
-    "ts-jest": "26.4.0",
+    "ts-jest": "26.5.5",
     "ts-loader": "5.4.5",
     "ts-node": "9.1.1",
     "tsconfig-paths": "^3.9.0",

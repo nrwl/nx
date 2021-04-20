@@ -64,6 +64,11 @@
       "version": "12.1.0-beta.1",
       "description": "Update jest-preset-angular to version 8.4.0",
       "factory": "./src/migrations/update-12-1-0/update-jest-preset-angular"
+    },
+    "update-ts-jest-6-5-5": {
+      "version": "12.1.0-beta.1",
+      "description": "Replace tsConfig with tsconfig for ts-jest in jest.config.js",
+      "factory": "./src/migrations/update-12-1-0/update-ts-jest"
     }
   },
   "packageJsonUpdates": {
@@ -136,6 +141,10 @@
       "packages": {
         "jest-preset-angular": {
           "version": "8.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ts-jest": {
+          "version": "26.5.5",
           "alwaysAddToPackageJson": false
         }
       }

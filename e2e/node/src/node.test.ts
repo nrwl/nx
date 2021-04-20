@@ -387,7 +387,7 @@ describe('nest libraries', function () {
                 preset: '../../jest.preset.js',
                 globals: {
                   'ts-jest': {
-                  tsConfig: '<rootDir>/tsconfig.spec.json',
+                  tsconfig: '<rootDir>/tsconfig.spec.json',
                   },
                 },
                 testEnvironment: 'node',

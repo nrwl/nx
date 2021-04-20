@@ -270,7 +270,7 @@ describe('jestProject', () => {
 
       expect(jestConfig.globals).toEqual({
         'ts-jest': {
-          tsConfig: '<rootDir>/tsconfig.spec.json',
+          tsconfig: '<rootDir>/tsconfig.spec.json',
         },
       });
     });

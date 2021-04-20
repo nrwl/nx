@@ -5,7 +5,7 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   globals: {
-    'ts-jest': { tsConfig: '<rootDir>/tsconfig.spec.json' },
+    'ts-jest': { tsconfig: '<rootDir>/tsconfig.spec.json' },
   },
   displayName: 'storybook',
 };
