@@ -1,4 +1,5 @@
 import {
+  NxJsonConfiguration,
   ProjectGraph,
   ProjectGraphNode,
   TargetDependencyConfig,
@@ -51,15 +52,45 @@ export function getCommand(cliCommand: string, isYarn: boolean, task: Task) {
   }
 }
 
+export function getDefaultDependencyConfigs(
+  nxJson: NxJsonConfiguration,
+  runnerOptions?: {
+    strictlyOrderedTargets?: string[];
+  }
+): Record<string, TargetDependencyConfig[]> {
+  const defaults: Record<string, TargetDependencyConfig[]> =
+    nxJson.targetDependencies ?? {};
+
+  const strictlyOrderedTargets = runnerOptions
+    ? runnerOptions.strictlyOrderedTargets ?? ['build']
+    : [];
+  // Strictly Ordered Targets depend on their dependencies
+  for (const target of strictlyOrderedTargets) {
+    defaults[target] = defaults[target] || [];
+    defaults[target].push({
+      target,
+      projects: 'dependencies',
+    });
+  }
+
+  return defaults;
+}
+
 export function getDependencyConfigs(
   { project, target }: { project: string; target: string },
+  defaultDependencyConfigs: Record<string, TargetDependencyConfig[]>,
   projectGraph: ProjectGraph
 ): TargetDependencyConfig[] | undefined {
-  const dependencyConfigs =
+  const dependencyConfigs = new Set<TargetDependencyConfig>(
+    defaultDependencyConfigs[target] ?? []
+  );
+  const projectDependencyConfigs =
     projectGraph.nodes[project].data?.targets[target]?.dependsOn;
 
-  if (!dependencyConfigs) {
-    return dependencyConfigs;
+  if (projectDependencyConfigs) {
+    for (const dependencyConfig of projectDependencyConfigs) {
+      dependencyConfigs.add(dependencyConfig);
+    }
   }
 
   for (const dependencyConfig of dependencyConfigs) {
@@ -76,7 +107,7 @@ export function getDependencyConfigs(
       process.exit(1);
     }
   }
-  return dependencyConfigs;
+  return Array.from(dependencyConfigs);
 }
 
 export function getOutputs(p: Record<string, ProjectGraphNode>, task: Task) {

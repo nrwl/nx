@@ -14,18 +14,6 @@ Array [
       },
     },
     Object {
-      "id": "common2:build",
-      "overrides": Object {},
-      "projectRoot": "common2-root",
-      "target": Object {
-        "configuration": undefined,
-        "project": "common2",
-        "target": "build",
-      },
-    },
-  ],
-  Array [
-    Object {
       "id": "app1:prebuild",
       "overrides": Object {},
       "projectRoot": "app1-root",
@@ -33,6 +21,16 @@ Array [
         "configuration": undefined,
         "project": "app1",
         "target": "prebuild",
+      },
+    },
+    Object {
+      "id": "common2:build",
+      "overrides": Object {},
+      "projectRoot": "common2-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "common2",
+        "target": "build",
       },
     },
     Object {
