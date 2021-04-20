@@ -18,7 +18,7 @@ import { join, normalize } from '@angular-devkit/core';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export interface CreateComponentStoriesFileSchema {
-  libPath: string;
+  projectPath: string;
   componentName: string;
   componentPath: string;
   componentFileName: string;
@@ -29,7 +29,7 @@ export default function (schema: CreateComponentStoriesFileSchema): Rule {
 }
 
 export function createComponentStoriesFile({
-  libPath,
+  projectPath,
   componentName,
   componentPath,
   componentFileName,
@@ -37,7 +37,7 @@ export function createComponentStoriesFile({
   return (tree: Tree, context: SchematicContext): Rule => {
     const props = getInputDescriptors(
       tree,
-      join(normalize(libPath), componentPath, `${componentFileName}.ts`)
+      join(normalize(projectPath), componentPath, `${componentFileName}.ts`)
     );
     return applyWithSkipExisting(url('./files'), [
       template({
@@ -46,7 +46,7 @@ export function createComponentStoriesFile({
         props,
         tmpl: '',
       }),
-      move(`${libPath}/${componentPath}`),
+      move(`${projectPath}/${componentPath}`),
     ]);
   };
 }

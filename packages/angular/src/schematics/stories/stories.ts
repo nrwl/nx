@@ -39,12 +39,12 @@ export function createAllStories(
   cypressProject?: string
 ): Rule {
   return (tree: Tree, context: SchematicContext) => {
-    context.logger.debug('adding .storybook folder to lib');
+    context.logger.debug('adding .storybook folder to project');
 
-    const libPath = projectRootPath(tree, projectName);
+    const projectPath = projectRootPath(tree, projectName);
 
     let moduleFilePaths = [] as string[];
-    tree.getDir(libPath).visit((filePath) => {
+    tree.getDir(projectPath).visit((filePath) => {
       if (!filePath.endsWith('.module.ts')) {
         return;
       }
@@ -221,7 +221,7 @@ export function createAllStories(
             .map((info) =>
               chain([
                 schematic<CreateComponentStoriesFileSchema>('component-story', {
-                  libPath: modulePath,
+                  projectPath: modulePath,
                   componentName: info.name,
                   componentPath: info.path,
                   componentFileName: info.componentFileName,
@@ -231,7 +231,7 @@ export function createAllStories(
                       'component-cypress-spec',
                       {
                         projectName,
-                        libPath: modulePath,
+                        projectPath: modulePath,
                         cypressProject,
                         componentName: info.name,
                         componentPath: info.path,

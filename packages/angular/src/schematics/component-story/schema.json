@@ -3,9 +3,9 @@
   "id": "component-story",
   "type": "object",
   "properties": {
-    "libPath": {
+    "projectPath": {
       "type": "string",
-      "description": "Path to the library",
+      "description": "Path to the project",
       "examples": ["libs/ui-samples"]
     },
     "moduleFileName": {
@@ -27,7 +27,7 @@
     },
     "componentPath": {
       "type": "string",
-      "description": "Relative path to the component file from the library root",
+      "description": "Relative path to the component file from the project root",
       "examples": ["awesome"]
     },
     "componentFileName": {
@@ -36,5 +36,10 @@
       "examples": ["awesome.component"]
     }
   },
-  "required": ["libPath", "componentName", "componentPath", "componentFileName"]
+  "required": [
+    "projectPath",
+    "componentName",
+    "componentPath",
+    "componentFileName"
+  ]
 }

@@ -5,12 +5,12 @@
   "properties": {
     "projectName": {
       "type": "string",
-      "description": "Name of the library from angular.json",
+      "description": "Name of the project from angular.json",
       "examples": ["ui-samples"]
     },
-    "libPath": {
+    "projectPath": {
       "type": "string",
-      "description": "Path to the library",
+      "description": "Path to the project",
       "examples": ["libs/ui-samples"]
     },
     "componentName": {
@@ -20,7 +20,7 @@
     },
     "componentPath": {
       "type": "string",
-      "description": "Relative path to the component file from the library root",
+      "description": "Relative path to the component file from the project root",
       "examples": ["awesome"]
     },
     "componentFileName": {
@@ -35,7 +35,7 @@
   },
   "required": [
     "projectName",
-    "libPath",
+    "projectPath",
     "componentName",
     "componentPath",
     "componentFileName"
