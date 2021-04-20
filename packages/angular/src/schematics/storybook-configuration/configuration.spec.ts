@@ -116,7 +116,6 @@ describe('schematic:configuration', () => {
         generateCypressSpecs: true,
         generateStories: true,
         cypressDirectory: 'one/two',
-        cypressName: 'lib-test',
       },
       appTree
     );

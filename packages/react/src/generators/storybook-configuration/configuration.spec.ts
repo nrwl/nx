@@ -140,7 +140,6 @@ describe('react:storybook-configuration', () => {
       configureCypress: true,
       generateCypressSpecs: true,
       cypressDirectory: 'one/two',
-      cypressName: 'app-test-e2e',
     });
     [
       'apps/one/two/app-test-e2e/cypress.json',

@@ -46,7 +46,6 @@ describe('@nrwl/storybook:cypress-project', () => {
     await cypressProjectGenerator(tree, {
       name: 'test-ui-lib',
       directory: 'one/two',
-      cypressName: 'other-e2e',
       linter: Linter.EsLint,
     });
     const workspace = readJson(tree, 'workspace.json');
