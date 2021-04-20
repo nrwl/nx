@@ -49,5 +49,7 @@
       "type": "string",
       "description": "URL to proxy unhandled requests to."
     }
-  }
+  },
+  "additionalProperties": false,
+  "required": ["buildTarget"]
 }

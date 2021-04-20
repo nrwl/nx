@@ -1,46 +1,17 @@
-import watch from 'node-watch';
-import { exec, execSync } from 'child_process';
-import { ExecutorContext } from '@nrwl/devkit';
+import { execSync } from 'child_process';
+import { ExecutorContext, logger } from '@nrwl/devkit';
 import ignore from 'ignore';
-import { readFileSync } from 'fs-extra';
+import { readFileSync, existsSync, statSync } from 'fs';
+import { watch } from 'chokidar';
+import { Server, createServer } from 'http';
+import { createServer as createHttpsServer } from 'https';
+import * as connect from 'connect';
+import { createProxyMiddleware } from 'http-proxy-middleware';
+import * as serveStatic from 'serve-static';
+import { Schema } from './schema';
+import { join } from 'path';
 
-export interface FileServerOptions {
-  host: string;
-  port: number;
-  ssl: boolean;
-  sslKey?: string;
-  sslCert?: string;
-  proxyUrl?: string;
-  buildTarget: string;
-  parallel: boolean;
-  maxParallel: number;
-  withDeps: boolean;
-}
-
-function getHttpServerArgs(opts: FileServerOptions) {
-  const args = [] as any[];
-  if (opts.port) {
-    args.push(`-p ${opts.port}`);
-  }
-  if (opts.host) {
-    args.push(`-a ${opts.host}`);
-  }
-  if (opts.ssl) {
-    args.push(`-S`);
-  }
-  if (opts.sslCert) {
-    args.push(`-C ${opts.sslCert}`);
-  }
-  if (opts.sslKey) {
-    args.push(`-K ${opts.sslKey}`);
-  }
-  if (opts.proxyUrl) {
-    args.push(`-P ${opts.proxyUrl}`);
-  }
-  return args;
-}
-
-function getBuildTargetCommand(opts: FileServerOptions) {
+function getBuildTargetCommand(opts: Schema) {
   const cmd = [`npx nx run ${opts.buildTarget}`];
   if (opts.withDeps) {
     cmd.push(`--with-deps`);
@@ -54,27 +25,24 @@ function getBuildTargetCommand(opts: FileServerOptions) {
   return cmd.join(' ');
 }
 
-function getBuildTargetOutputPath(
-  opts: FileServerOptions,
-  context: ExecutorContext
-) {
+function getBuildTargetOutputPath(options: Schema, context: ExecutorContext) {
   let buildOpts;
   try {
-    const [project, target, config] = opts.buildTarget.split(':');
+    const [project, target, config] = options.buildTarget.split(':');
 
     const buildTarget = context.workspace.projects[project].targets[target];
     buildOpts = config
       ? { ...buildTarget.options, ...buildTarget.configurations[config] }
       : buildTarget.options;
   } catch (e) {
-    throw new Error(`Invalid buildTarget: ${opts.buildTarget}`);
+    throw new Error(`Invalid buildTarget: ${options.buildTarget}`);
   }
 
   // TODO: vsavkin we should also check outputs
   const outputPath = buildOpts.outputPath;
   if (!outputPath) {
     throw new Error(
-      `Invalid buildTarget: ${opts.buildTarget}. The target must contain outputPath property.`
+      `Invalid buildTarget: ${options.buildTarget}. The target must contain outputPath property.`
     );
   }
 
@@ -92,20 +60,29 @@ function getIgnoredGlobs(root: string) {
   return ig;
 }
 
+function createFileWatcher(root: string, changeHandler: () => void) {
+  const ignoredGlobs = getIgnoredGlobs(root);
+
+  const watcher = watch(['./apps/**', './libs/**'], {
+    ignoreInitial: true,
+    persistent: true,
+    cwd: root,
+  });
+  watcher.on('all', (_event: string, path: string) => {
+    if (ignoredGlobs.ignores(path)) return;
+    changeHandler();
+  });
+  return { close: () => watcher.close() };
+}
+
 export default async function* fileServerExecutor(
-  opts: FileServerOptions,
+  options: Schema,
   context: ExecutorContext
 ) {
   let changed = true;
   let running = false;
 
-  const fileFilter = getIgnoredGlobs(context.root).createFilter();
-  // TODO: vsavkin create a transitive closure of all deps and watch src of all the packages in the closure
-  watch('libs', { recursive: true, filter: fileFilter }, () => {
-    changed = true;
-    run();
-  });
-  watch('apps', { recursive: true, filter: fileFilter }, () => {
+  const watcher = createFileWatcher(context.root, () => {
     changed = true;
     run();
   });
@@ -115,7 +92,7 @@ export default async function* fileServerExecutor(
       changed = false;
       running = true;
       try {
-        execSync(getBuildTargetCommand(opts), {
+        execSync(getBuildTargetCommand(options), {
           stdio: [0, 1, 2],
         });
       } catch (e) {}
@@ -125,38 +102,78 @@ export default async function* fileServerExecutor(
   }
   run();
 
-  const outputPath = getBuildTargetOutputPath(opts, context);
-  const args = getHttpServerArgs(opts);
+  const outputPath = getBuildTargetOutputPath(options, context);
 
-  const serve = exec(`npx http-server ${outputPath} ${args.join(' ')}`, {
-    cwd: context.root,
-  });
-  const processExitListener = () => serve.kill();
-  process.on('exit', processExitListener);
-  serve.stdout.on('data', (chunk) => {
-    if (chunk.toString().indexOf('GET') === -1) {
-      process.stdout.write(chunk);
+  const app = connect();
+
+  app.use(serveStatic(outputPath, { fallthrough: true }));
+
+  if (options.proxyUrl) {
+    app.use(createProxyMiddleware({ target: options.proxyUrl }));
+  } else {
+    // SPA Fallback to index.html
+    app.use((_req, res, next) => {
+      const path = join(outputPath, 'index.html');
+
+      if (existsSync(path) && statSync(path).isFile()) {
+        const content = readFileSync(path, { encoding: 'utf-8' });
+
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'text/html');
+        res.end(content);
+      } else {
+        next();
+      }
+    });
+  }
+
+  let server: Server;
+
+  if (!options.ssl) {
+    server = createServer(app);
+  } else {
+    if (!options.sslCert) {
+      throw new Error('No SSL Certificate provided!');
     }
+    if (!options.sslKey) {
+      throw new Error('No SSL Key provided!');
+    }
+
+    server = createHttpsServer(
+      {
+        cert: readFileSync(options.sslCert),
+        key: readFileSync(options.sslKey),
+      },
+      app
+    );
+  }
+
+  const serverUrl = `${options.ssl ? 'https' : 'http'}://${options.host}:${
+    options.port
+  }`;
+
+  server.listen(options.port, options.host, () => {
+    logger.info(`NX File Server is listening at ${serverUrl}`);
   });
-  serve.stderr.on('data', (chunk) => {
-    process.stderr.write(chunk);
-  });
-  serve.on('close', () => {
+
+  const processExitListener = () => {
+    server.close();
+    watcher.close();
+  };
+  process.on('exit', processExitListener);
+
+  server.on('close', () => {
     process.removeListener('exit', processExitListener);
   });
 
   yield {
     success: true,
-    baseUrl: `${opts.ssl ? 'https' : 'http'}://${opts.host}:${opts.port}`,
+    baseUrl: serverUrl,
   };
 
-  return new Promise<{ success: boolean }>((res) => {
-    serve.on('exit', (code) => {
-      if (code == 0) {
-        res({ success: true });
-      } else {
-        res({ success: false });
-      }
+  return new Promise<{ success: boolean }>((resolve) => {
+    server.on('exit', () => {
+      return resolve({ success: true });
     });
   });
 }

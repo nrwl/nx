@@ -22,7 +22,8 @@ describe('file-server', () => {
 
     await runCommandUntil(`serve ${appName}`, (output) => {
       return (
-        output.indexOf('Built at') > -1 && output.indexOf('Available on') > -1
+        output.indexOf('Built at') > -1 &&
+        output.indexOf('File Server is listening at') > -1
       );
     });
 
