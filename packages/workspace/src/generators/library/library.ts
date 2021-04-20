@@ -16,7 +16,9 @@ import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-ser
 import { join } from 'path';
 import { Schema } from './schema';
 
+// nx-ignore-next-line
 const { jestProjectGenerator } = require('@nrwl/jest');
+// nx-ignore-next-line
 const { lintProjectGenerator, Linter } = require('@nrwl/linter');
 
 export interface NormalizedSchema extends Schema {

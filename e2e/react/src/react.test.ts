@@ -8,6 +8,7 @@ import {
   renameFile,
   runCLI,
   runCLIAsync,
+  runCypressTests,
   uniq,
   updateFile,
   workspaceConfigName,
@@ -399,7 +400,7 @@ describe('React Applications', () => {
       'Test Suites: 1 passed, 1 total'
     );
 
-    if (opts.checkE2E) {
+    if (opts.checkE2E && runCypressTests()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`);
       expect(e2eResults).toContain('All specs passed!');
     }

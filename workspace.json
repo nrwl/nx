@@ -49,15 +49,7 @@
           "executor": "@nrwl/workspace:run-commands",
           "outputs": ["build/packages/nx"],
           "options": {
-            "commands": [
-              {
-                "command": "nx build-base nx"
-              },
-              {
-                "command": "node ./scripts/copy-readme.js nx"
-              }
-            ],
-            "parallel": false
+            "command": "node ./scripts/copy-readme.js nx"
           }
         },
         "lint": {
@@ -133,9 +125,6 @@
           "outputs": ["build/packages/tao"],
           "options": {
             "commands": [
-              {
-                "command": "nx build-base tao"
-              },
               {
                 "command": "node ./scripts/chmod build/packages/tao/index.js"
               },
@@ -217,15 +206,7 @@
           "executor": "@nrwl/workspace:run-commands",
           "outputs": ["build/packages/devkit"],
           "options": {
-            "commands": [
-              {
-                "command": "nx build-base devkit"
-              },
-              {
-                "command": "node ./scripts/copy-readme.js devkit"
-              }
-            ],
-            "parallel": false
+            "command": "node ./scripts/copy-readme.js devkit"
           }
         },
         "lint": {
@@ -305,9 +286,6 @@
           "outputs": ["build/packages/workspace"],
           "options": {
             "commands": [
-              {
-                "command": "nx build-base workspace"
-              },
               {
                 "command": "nx build-base dep-graph-dep-graph --configuration release"
               },
@@ -397,15 +375,7 @@
           "executor": "@nrwl/workspace:run-commands",
           "outputs": ["build/packages/web"],
           "options": {
-            "commands": [
-              {
-                "command": "nx build-base web"
-              },
-              {
-                "command": "node ./scripts/copy-readme.js web"
-              }
-            ],
-            "parallel": false
+            "command": "node ./scripts/copy-readme.js web"
           }
         },
         "lint": {
@@ -480,15 +450,7 @@
           "executor": "@nrwl/workspace:run-commands",
           "outputs": ["build/packages/cypress"],
           "options": {
-            "commands": [
-              {
-                "command": "nx build-base cypress"
-              },
-              {
-                "command": "node ./scripts/copy-readme.js cypress"
-              }
-            ],
-            "parallel": false
+            "command": "node ./scripts/copy-readme.js cypress"
           }
         },
         "lint": {
@@ -562,15 +524,7 @@
           "executor": "@nrwl/workspace:run-commands",
           "outputs": ["build/packages/jest"],
           "options": {
-            "commands": [
-              {
-                "command": "nx build-base jest"
-              },
-              {
-                "command": "node ./scripts/copy-readme.js jest"
-              }
-            ],
-            "parallel": false
+            "command": "node ./scripts/copy-readme.js jest"
           }
         },
         "lint": {
@@ -654,15 +608,7 @@
           "executor": "@nrwl/workspace:run-commands",
           "outputs": ["build/packages/storybook"],
           "options": {
-            "commands": [
-              {
-                "command": "nx build-base storybook"
-              },
-              {
-                "command": "node ./scripts/copy-readme.js storybook"
-              }
-            ],
-            "parallel": false
+            "command": "node ./scripts/copy-readme.js storybook"
           }
         },
         "lint": {
@@ -747,15 +693,7 @@
           "executor": "@nrwl/workspace:run-commands",
           "outputs": ["build/packages/react"],
           "options": {
-            "commands": [
-              {
-                "command": "nx build-base react"
-              },
-              {
-                "command": "node ./scripts/copy-readme.js react"
-              }
-            ],
-            "parallel": false
+            "command": "node ./scripts/copy-readme.js react"
           }
         },
         "lint": {
@@ -830,15 +768,7 @@
           "executor": "@nrwl/workspace:run-commands",
           "outputs": ["build/packages/nx-plugin"],
           "options": {
-            "commands": [
-              {
-                "command": "nx build-base nx-plugin"
-              },
-              {
-                "command": "node ./scripts/copy-readme.js nx-plugin"
-              }
-            ],
-            "parallel": false
+            "command": "node ./scripts/copy-readme.js nx-plugin"
           }
         },
         "lint": {
@@ -913,15 +843,7 @@
           "executor": "@nrwl/workspace:run-commands",
           "outputs": ["build/packages/node"],
           "options": {
-            "commands": [
-              {
-                "command": "nx build-base node"
-              },
-              {
-                "command": "node ./scripts/copy-readme.js node"
-              }
-            ],
-            "parallel": false
+            "command": "node ./scripts/copy-readme.js node"
           }
         },
         "lint": {
@@ -1001,15 +923,7 @@
           "executor": "@nrwl/workspace:run-commands",
           "outputs": ["build/packages/next"],
           "options": {
-            "commands": [
-              {
-                "command": "nx build-base next"
-              },
-              {
-                "command": "node ./scripts/copy-readme.js next"
-              }
-            ],
-            "parallel": false
+            "command": "node ./scripts/copy-readme.js next"
           }
         },
         "lint": {
@@ -1084,15 +998,7 @@
           "executor": "@nrwl/workspace:run-commands",
           "outputs": ["build/packages/nest"],
           "options": {
-            "commands": [
-              {
-                "command": "nx build-base nest"
-              },
-              {
-                "command": "node ./scripts/copy-readme.js nest"
-              }
-            ],
-            "parallel": false
+            "command": "node ./scripts/copy-readme.js nest"
           }
         },
         "lint": {
@@ -1167,15 +1073,7 @@
           "executor": "@nrwl/workspace:run-commands",
           "outputs": ["build/packages/linter"],
           "options": {
-            "commands": [
-              {
-                "command": "nx build-base linter"
-              },
-              {
-                "command": "node ./scripts/copy-readme.js linter"
-              }
-            ],
-            "parallel": false
+            "command": "node ./scripts/copy-readme.js linter"
           }
         },
         "lint": {
@@ -1250,15 +1148,7 @@
           "executor": "@nrwl/workspace:run-commands",
           "outputs": ["build/packages/express"],
           "options": {
-            "commands": [
-              {
-                "command": "nx build-base express"
-              },
-              {
-                "command": "node ./scripts/copy-readme.js express"
-              }
-            ],
-            "parallel": false
+            "command": "node ./scripts/copy-readme.js express"
           }
         },
         "lint": {
@@ -1333,15 +1223,7 @@
           "executor": "@nrwl/workspace:run-commands",
           "outputs": ["build/packages/eslint-plugin-nx"],
           "options": {
-            "commands": [
-              {
-                "command": "nx build-base eslint-plugin-nx"
-              },
-              {
-                "command": "node ./scripts/copy-readme.js eslint-plugin-nx"
-              }
-            ],
-            "parallel": false
+            "command": "node ./scripts/copy-readme.js eslint-plugin-nx"
           }
         },
         "lint": {
@@ -1417,9 +1299,6 @@
           "outputs": ["build/packages/create-nx-workspace"],
           "options": {
             "commands": [
-              {
-                "command": "nx build-base create-nx-workspace"
-              },
               {
                 "command": "node ./scripts/chmod build/packages/create-nx-workspace/bin/create-nx-workspace.js"
               },
@@ -1504,13 +1383,10 @@
           "options": {
             "commands": [
               {
-                "command": "nx build-base create-nx-plugin"
-              },
-              {
                 "command": "node ./scripts/chmod build/packages/create-nx-plugin/bin/create-nx-plugin.js"
               },
               {
-                "command": "node ./scripts/copy-readme.js create-nx-workspace"
+                "command": "node ./scripts/copy-readme.js create-nx-plugin"
               }
             ],
             "parallel": false
@@ -1589,9 +1465,6 @@
           "outputs": ["build/packages/cli"],
           "options": {
             "commands": [
-              {
-                "command": "nx build-base cli"
-              },
               {
                 "command": "node ./scripts/chmod build/packages/cli/bin/nx.js"
               },
@@ -1681,9 +1554,6 @@
           "options": {
             "commands": [
               {
-                "command": "nx build-base angular"
-              },
-              {
                 "command": "node ./scripts/build-angular"
               },
               {
@@ -1721,6 +1591,23 @@
       "projectType": "application",
       "targets": {
         "e2e": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {
+                "command": "yarn e2e-start-local-registry"
+              },
+              {
+                "command": "yarn e2e-build-package-publish"
+              },
+              {
+                "command": "nx run-e2e-tests e2e-cli"
+              }
+            ],
+            "parallel": false
+          }
+        },
+        "run-e2e-tests": {
           "executor": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "e2e/cli/jest.config.js",
@@ -1737,6 +1624,23 @@
       "projectType": "application",
       "targets": {
         "e2e": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {
+                "command": "yarn e2e-start-local-registry"
+              },
+              {
+                "command": "yarn e2e-build-package-publish"
+              },
+              {
+                "command": "nx run-e2e-tests e2e-angular"
+              }
+            ],
+            "parallel": false
+          }
+        },
+        "run-e2e-tests": {
           "executor": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "e2e/angular/jest.config.js",
@@ -1753,6 +1657,23 @@
       "projectType": "application",
       "targets": {
         "e2e": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {
+                "command": "yarn e2e-start-local-registry"
+              },
+              {
+                "command": "yarn e2e-build-package-publish"
+              },
+              {
+                "command": "nx run-e2e-tests e2e-cypress"
+              }
+            ],
+            "parallel": false
+          }
+        },
+        "run-e2e-tests": {
           "executor": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "e2e/cypress/jest.config.js",
@@ -1769,6 +1690,23 @@
       "projectType": "application",
       "targets": {
         "e2e": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {
+                "command": "yarn e2e-start-local-registry"
+              },
+              {
+                "command": "yarn e2e-build-package-publish"
+              },
+              {
+                "command": "nx run-e2e-tests e2e-jest"
+              }
+            ],
+            "parallel": false
+          }
+        },
+        "run-e2e-tests": {
           "executor": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "e2e/jest/jest.config.js",
@@ -1785,6 +1723,23 @@
       "projectType": "application",
       "targets": {
         "e2e": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {
+                "command": "yarn e2e-start-local-registry"
+              },
+              {
+                "command": "yarn e2e-build-package-publish"
+              },
+              {
+                "command": "nx run-e2e-tests e2e-linter"
+              }
+            ],
+            "parallel": false
+          }
+        },
+        "run-e2e-tests": {
           "executor": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "e2e/linter/jest.config.js",
@@ -1801,6 +1756,23 @@
       "projectType": "application",
       "targets": {
         "e2e": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {
+                "command": "yarn e2e-start-local-registry"
+              },
+              {
+                "command": "yarn e2e-build-package-publish"
+              },
+              {
+                "command": "nx run-e2e-tests e2e-next"
+              }
+            ],
+            "parallel": false
+          }
+        },
+        "run-e2e-tests": {
           "executor": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "e2e/next/jest.config.js",
@@ -1817,6 +1789,23 @@
       "projectType": "application",
       "targets": {
         "e2e": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {
+                "command": "yarn e2e-start-local-registry"
+              },
+              {
+                "command": "yarn e2e-build-package-publish"
+              },
+              {
+                "command": "nx run-e2e-tests e2e-node"
+              }
+            ],
+            "parallel": false
+          }
+        },
+        "run-e2e-tests": {
           "executor": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "e2e/node/jest.config.js",
@@ -1833,6 +1822,23 @@
       "projectType": "application",
       "targets": {
         "e2e": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {
+                "command": "yarn e2e-start-local-registry"
+              },
+              {
+                "command": "yarn e2e-build-package-publish"
+              },
+              {
+                "command": "nx run-e2e-tests e2e-react"
+              }
+            ],
+            "parallel": false
+          }
+        },
+        "run-e2e-tests": {
           "executor": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "e2e/react/jest.config.js",
@@ -1849,6 +1855,23 @@
       "projectType": "application",
       "targets": {
         "e2e": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {
+                "command": "yarn e2e-start-local-registry"
+              },
+              {
+                "command": "yarn e2e-build-package-publish"
+              },
+              {
+                "command": "nx run-e2e-tests e2e-storybook"
+              }
+            ],
+            "parallel": false
+          }
+        },
+        "run-e2e-tests": {
           "executor": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "e2e/storybook/jest.config.js",
@@ -1865,6 +1888,23 @@
       "projectType": "application",
       "targets": {
         "e2e": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {
+                "command": "yarn e2e-start-local-registry"
+              },
+              {
+                "command": "yarn e2e-build-package-publish"
+              },
+              {
+                "command": "nx run-e2e-tests e2e-web"
+              }
+            ],
+            "parallel": false
+          }
+        },
+        "run-e2e-tests": {
           "executor": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "e2e/web/jest.config.js",
@@ -1881,6 +1921,23 @@
       "projectType": "application",
       "targets": {
         "e2e": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {
+                "command": "yarn e2e-start-local-registry"
+              },
+              {
+                "command": "yarn e2e-build-package-publish"
+              },
+              {
+                "command": "nx run-e2e-tests e2e-workspace"
+              }
+            ],
+            "parallel": false
+          }
+        },
+        "run-e2e-tests": {
           "executor": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "e2e/workspace/jest.config.js",
@@ -1897,6 +1954,23 @@
       "projectType": "application",
       "targets": {
         "e2e": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {
+                "command": "yarn e2e-start-local-registry"
+              },
+              {
+                "command": "yarn e2e-build-package-publish"
+              },
+              {
+                "command": "nx run-e2e-tests e2e-nx-plugin"
+              }
+            ],
+            "parallel": false
+          }
+        },
+        "run-e2e-tests": {
           "executor": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "e2e/nx-plugin/jest.config.js",
@@ -1913,6 +1987,23 @@
       "projectType": "application",
       "targets": {
         "e2e": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {
+                "command": "yarn e2e-start-local-registry"
+              },
+              {
+                "command": "yarn e2e-build-package-publish"
+              },
+              {
+                "command": "nx run-e2e-tests e2e-gatsby"
+              }
+            ],
+            "parallel": false
+          }
+        },
+        "run-e2e-tests": {
           "executor": "@nrwl/jest:jest",
           "options": {
             "jestConfig": "e2e/gatsby/jest.config.js",
@@ -1985,9 +2076,6 @@
           "outputs": ["build/packages/gatsby"],
           "options": {
             "commands": [
-              {
-                "command": "nx build-base gatsby"
-              },
               {
                 "command": "node ./scripts/copy-readme.js gatsby"
               }
@@ -2118,18 +2206,23 @@
       "sourceRoot": "nx-dev/nx-dev",
       "projectType": "application",
       "targets": {
-        "build": {
+        "build-nx-dev": {
           "executor": "@nrwl/next:build",
           "outputs": ["{options.outputPath}"],
           "options": {
             "root": "nx-dev/nx-dev",
             "outputPath": "dist/nx-dev/nx-dev"
           },
-          "configurations": { "production": {} }
+          "configurations": {
+            "production": {}
+          }
         },
         "serve": {
           "executor": "@nrwl/next:server",
-          "options": { "buildTarget": "nx-dev:build", "dev": true },
+          "options": {
+            "buildTarget": "nx-dev:build-nx-dev",
+            "dev": true
+          },
           "configurations": {
             "production": {
               "buildTarget": "nx-dev:build:production",
@@ -2139,7 +2232,9 @@
         },
         "export": {
           "executor": "@nrwl/next:export",
-          "options": { "buildTarget": "nx-dev:build:production" }
+          "options": {
+            "buildTarget": "nx-dev:build-nx-dev:production"
+          }
         },
         "lint": {
           "executor": "@nrwl/linter:eslint",
@@ -2162,7 +2257,7 @@
       "sourceRoot": "nx-dev/nx-dev-e2e/src",
       "projectType": "application",
       "targets": {
-        "e2e": {
+        "e2e-disabled": {
           "executor": "@nrwl/cypress:cypress",
           "options": {
             "cypressConfig": "nx-dev/nx-dev-e2e/cypress.json",
@@ -2251,72 +2346,5 @@
   },
   "cli": {
     "defaultCollection": "@nrwl/workspace"
-  },
-  "generators": {
-    "@nrwl/workspace": {
-      "library": {
-        "linter": "eslint"
-      }
-    },
-    "@nrwl/cypress": {
-      "cypress-project": {
-        "linter": "eslint"
-      }
-    },
-    "@nrwl/react": {
-      "application": {
-        "linter": "eslint"
-      },
-      "library": {
-        "linter": "eslint"
-      },
-      "storybook-configuration": {
-        "linter": "eslint"
-      }
-    },
-    "@nrwl/next": {
-      "application": {
-        "linter": "eslint"
-      }
-    },
-    "@nrwl/web": {
-      "application": {
-        "linter": "eslint"
-      }
-    },
-    "@nrwl/node": {
-      "application": {
-        "linter": "eslint"
-      },
-      "library": {
-        "linter": "eslint"
-      }
-    },
-    "@nrwl/nx-plugin": {
-      "plugin": {
-        "linter": "eslint"
-      }
-    },
-    "@nrwl/nest": {
-      "application": {
-        "linter": "eslint"
-      }
-    },
-    "@nrwl/express": {
-      "application": {
-        "linter": "eslint"
-      },
-      "library": {
-        "linter": "eslint"
-      }
-    },
-    "@nrwl/gatsby": {
-      "application": {
-        "linter": "eslint"
-      },
-      "library": {
-        "linter": "eslint"
-      }
-    }
   }
 }

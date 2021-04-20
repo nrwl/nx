@@ -13,20 +13,23 @@ process.env.NX_CLI_SET = 'true';
 
 export function initLocal(workspace: Workspace) {
   performance.mark('init-local');
-  require('@nrwl/workspace/' + 'src/utilities/perf-logging');
+  //nx-ignore-next-line
+  require('@nrwl/workspace/src/utilities/perf-logging');
 
-  const supportedNxCommands = require('@nrwl/workspace/' +
-    'src/command-line/supported-nx-commands').supportedNxCommands;
+  //nx-ignore-next-line
+  const supportedNxCommands = require('@nrwl/workspace/src/command-line/supported-nx-commands')
+    .supportedNxCommands;
 
   const runOpts = runOneOptions(workspace);
   const running = runOpts !== false;
 
   if (supportedNxCommands.includes(process.argv[2])) {
     // required to make sure nrwl/workspace import works
-    require('@nrwl/workspace' + '/src/command-line/nx-commands').commandsObject
-      .argv;
+    //nx-ignore-next-line
+    require('@nrwl/workspace/src/command-line/nx-commands').commandsObject.argv;
   } else if (running) {
-    require('@nrwl/workspace' + '/src/command-line/run-one').runOne(runOpts);
+    //nx-ignore-next-line
+    require('@nrwl/workspace/src/command-line/run-one').runOne(runOpts);
   } else if (generating()) {
     loadCli(workspace, '@nrwl/tao/index.js');
   } else {

@@ -780,27 +780,27 @@ describe('cache', () => {
 
     // cache task failures
     // --------------------------------------------
-    updateFile('workspace.json', (c) => {
-      const workspaceJson = JSON.parse(c);
-      workspaceJson.projects[myapp1].targets.lint = {
-        executor: '@nrwl/workspace:run-commands',
-        options: {
-          command: 'echo hi && exit 1',
-        },
-      };
-      return JSON.stringify(workspaceJson, null, 2);
-    });
-    const failingRun = runCLI(`lint ${myapp1}`, {
-      silenceError: true,
-      env: { ...process.env, NX_CACHE_FAILURES: 'true' },
-    });
-    expect(failingRun).not.toContain('[retrieved from cache]');
-
-    const cachedFailingRun = runCLI(`lint ${myapp1}`, {
-      silenceError: true,
-      env: { ...process.env, NX_CACHE_FAILURES: 'true' },
-    });
-    expect(cachedFailingRun).toContain('[retrieved from cache]');
+    // updateFile('workspace.json', (c) => {
+    //   const workspaceJson = JSON.parse(c);
+    //   workspaceJson.projects[myapp1].targets.lint = {
+    //     executor: '@nrwl/workspace:run-commands',
+    //     options: {
+    //       command: 'echo hi && exit 1',
+    //     },
+    //   };
+    //   return JSON.stringify(workspaceJson, null, 2);
+    // });
+    // const failingRun = runCLI(`lint ${myapp1}`, {
+    //   silenceError: true,
+    //   env: { ...process.env, NX_CACHE_FAILURES: 'true' },
+    // });
+    // expect(failingRun).not.toContain('[retrieved from cache]');
+    //
+    // const cachedFailingRun = runCLI(`lint ${myapp1}`, {
+    //   silenceError: true,
+    //   env: { ...process.env, NX_CACHE_FAILURES: 'true' },
+    // });
+    // expect(cachedFailingRun).toContain('[retrieved from cache]');
 
     // run without caching
     // --------------------------------------------

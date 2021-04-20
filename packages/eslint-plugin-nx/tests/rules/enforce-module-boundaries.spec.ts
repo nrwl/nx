@@ -714,7 +714,7 @@ describe('Enforce Module Boundaries', () => {
       `${process.cwd()}/proj/libs/mylib/src/main.ts`,
       `
         import '@mycompany/myapp';
-        import('@mycompany/myappa');
+        import('@mycompany/myapp');
       `,
       {
         nodes: {
@@ -800,7 +800,7 @@ describe('Enforce Module Boundaries', () => {
       `${process.cwd()}/proj/libs/anotherlib/src/main.ts`,
       `
         import '@mycompany/mylib';
-        import('@mycompany/mylibe');
+        import('@mycompany/mylib');
       `,
       {
         nodes: {

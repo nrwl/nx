@@ -1,6 +1,7 @@
 import { NxJsonConfiguration, readJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
+// nx-ignore-next-line
 import { applicationGenerator as angularApplicationGenerator } from '@nrwl/angular/generators';
 import { Schema } from './schema';
 import { applicationGenerator } from './application';

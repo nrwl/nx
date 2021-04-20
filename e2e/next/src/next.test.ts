@@ -6,6 +6,7 @@ import {
   readJson,
   runCLI,
   runCLIAsync,
+  runCypressTests,
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
@@ -35,7 +36,7 @@ describe('Next.js Applications', () => {
       `
         describe('next-app', () => {
           beforeEach(() => cy.visit('/'));
-        
+
           it('should ', () => {
             cy.get('h1').contains('Hello Next.js!');
           });
@@ -50,16 +51,16 @@ describe('Next.js Applications', () => {
 
         export const Index = () => {
           const [greeting, setGreeting] = useState('');
-        
+
           useEffect(() => {
             fetch('/external-api/hello')
               .then(r => r.text())
               .then(setGreeting);
           }, []);
-        
+
           return <h1>{greeting}</h1>;
         };
-        export default Index;        
+        export default Index;
       `
     );
 
@@ -68,7 +69,7 @@ describe('Next.js Applications', () => {
       `
         export default (_req, res) => {
           res.status(200).send('Hello Next.js!');
-        };            
+        };
       `
     );
   }, 120000);
@@ -90,28 +91,28 @@ describe('Next.js Applications', () => {
     updateFile(
       mainPath,
       `
-import '@${proj}/${nonBuildableLibName}';
-import '@${proj}/${buildableLibName}';
-${readFile(mainPath)}
-`
+  import '@${proj}/${nonBuildableLibName}';
+  import '@${proj}/${buildableLibName}';
+  ${readFile(mainPath)}
+  `
     );
 
     // Update non-buildable lib to use css modules to test that next.js can compile it
     updateFile(
       `libs/${nonBuildableLibName}/src/lib/${nonBuildableLibName}.tsx`,
       `
-        import styles from './style.module.css';
-        export function Test() {
-          return <div className={styles.container}>Hello</div>;
-        }
-        export default Test;
-      `
+          import styles from './style.module.css';
+          export function Test() {
+            return <div className={styles.container}>Hello</div>;
+          }
+          export default Test;
+        `
     );
     updateFile(
       `libs/${nonBuildableLibName}/src/lib/style.module.css`,
       `
-        .container {}
-      `
+          .container {}
+        `
     );
 
     // Building the app throws if dependencies haven't been built yet
@@ -137,13 +138,13 @@ ${readFile(mainPath)}
     updateFile(
       mainPath,
       `
-        import dynamic from 'next/dynamic';
-        const DynamicComponent = dynamic(
-            () => import('@${proj}/${libName}').then(d => d.${stringUtils.capitalize(
+          import dynamic from 'next/dynamic';
+          const DynamicComponent = dynamic(
+              () => import('@${proj}/${libName}').then(d => d.${stringUtils.capitalize(
         libName
       )})
-          );
-      ${readFile(mainPath)}`
+            );
+        ${readFile(mainPath)}`
     );
 
     await checkApp(appName, {
@@ -165,33 +166,33 @@ ${readFile(mainPath)}
     updateFile(
       `libs/${tsLibName}/src/lib/${tsLibName}.ts`,
       `
-        export function testFn(): string {
-          return 'Hello Nx';
-        };
+          export function testFn(): string {
+            return 'Hello Nx';
+          };
 
-        // testing whether async-await code in Node / Next.js api routes works as expected
-        export async function testAsyncFn() {
-          return await Promise.resolve('hell0');
-        }
-        `
+          // testing whether async-await code in Node / Next.js api routes works as expected
+          export async function testAsyncFn() {
+            return await Promise.resolve('hell0');
+          }
+          `
     );
 
     updateFile(
       `libs/${tsxLibName}/src/lib/${tsxLibName}.tsx`,
       `
 
-        interface TestComponentProps {
-          text: string;
-        }
+          interface TestComponentProps {
+            text: string;
+          }
 
-        export const TestComponent = ({ text }: TestComponentProps) => {
-          // testing whether modern languages features like nullish coalescing work
-          const t = text ?? 'abc';
-          return <span>{t}</span>;
-        };
+          export const TestComponent = ({ text }: TestComponentProps) => {
+            // testing whether modern languages features like nullish coalescing work
+            const t = text ?? 'abc';
+            return <span>{t}</span>;
+          };
 
-        export default TestComponent;
-        `
+          export default TestComponent;
+          `
     );
 
     const mainPath = `apps/${appName}/pages/index.tsx`;
@@ -200,29 +201,29 @@ ${readFile(mainPath)}
     updateFile(
       `apps/${appName}/pages/api/hello.ts`,
       `
-        import { testAsyncFn } from '@${proj}/${tsLibName}';
+          import { testAsyncFn } from '@${proj}/${tsLibName}';
 
-        export default async function handler(_, res) {
-          const value = await testAsyncFn();
-          res.send(value);
-        }
-      `
+          export default async function handler(_, res) {
+            const value = await testAsyncFn();
+            res.send(value);
+          }
+        `
     );
 
     updateFile(
       mainPath,
       `
-        import { testFn } from '@${proj}/${tsLibName}';
-        import { TestComponent } from '@${proj}/${tsxLibName}';\n\n
-        ${content.replace(
-          `</h2>`,
-          `</h2>
-              <div>
-                {testFn()}
-                <TestComponent text="Hello Next.JS" />
-              </div>
-            `
-        )}`
+          import { testFn } from '@${proj}/${tsLibName}';
+          import { TestComponent } from '@${proj}/${tsxLibName}';\n\n
+          ${content.replace(
+            `</h2>`,
+            `</h2>
+                <div>
+                  {testFn()}
+                  <TestComponent text="Hello Next.JS" />
+                </div>
+              `
+          )}`
     );
 
     const e2eTestPath = `apps/${appName}-e2e/src/integration/app.spec.ts`;
@@ -230,15 +231,15 @@ ${readFile(mainPath)}
     updateFile(
       e2eTestPath,
       `
-      ${
-        e2eContent +
-        `
-        it('should successfully call async API route', () => {
-          cy.request('/api/hello').its('body').should('include', 'hell0');
-        });
-        `
-      }
-    `
+        ${
+          e2eContent +
+          `
+          it('should successfully call async API route', () => {
+            cy.request('/api/hello').its('body').should('include', 'hell0');
+          });
+          `
+        }
+      `
     );
 
     await checkApp(appName, {
@@ -339,8 +340,8 @@ ${readFile(mainPath)}
     updateFile(
       `apps/${appName}/next.config.js`,
       `
-    module.exports = {}
-    `
+      module.exports = {}
+      `
     );
 
     runCLI(`build ${appName}`);
@@ -373,19 +374,19 @@ ${readFile(mainPath)}
       `apps/${appName}/pages/index.tsx`,
       `
 
-        export function Index() {
-          let x = '';
-          // below is an intentional TS error
-          x = 3;
-          return <div />;
-        }
+          export function Index() {
+            let x = '';
+            // below is an intentional TS error
+            x = 3;
+            return <div />;
+          }
 
-        export default Index;
-        `
+          export default Index;
+          `
     );
 
     expect(() => runCLI(`build ${appName}`)).toThrowError(
-      `Type error: Type 'number' is not assignable to type 'string'.`
+      `Type 'number' is not assignable to type 'string'.`
     );
   }, 120000);
 
@@ -409,17 +410,17 @@ ${readFile(mainPath)}
     updateFile(
       `libs/${libName}/src/lib/${libName}.js`,
       `
-        import styles from './style.module.css';
-        export function Test() {
-          return <div className={styles.container}>Hello</div>;
-        }
-      `
+          import styles from './style.module.css';
+          export function Test() {
+            return <div className={styles.container}>Hello</div>;
+          }
+        `
     );
     updateFile(
       `libs/${libName}/src/lib/style.module.css`,
       `
-        .container {}
-      `
+          .container {}
+        `
     );
 
     await checkApp(appName, {
@@ -456,7 +457,7 @@ async function checkApp(
     );
   }
 
-  if (opts.checkE2E) {
+  if (opts.checkE2E && runCypressTests()) {
     const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);
     expect(e2eResults).toContain('All specs passed!');
   }

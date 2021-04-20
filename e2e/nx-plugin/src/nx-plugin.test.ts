@@ -5,6 +5,7 @@ import {
   readJson,
   runCLI,
   runCLIAsync,
+  runCypressTests,
   uniq,
   workspaceConfigName,
 } from '@nrwl/e2e/utils';
@@ -62,9 +63,12 @@ describe('Nx Plugin', () => {
     runCLI(
       `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --importPath=@proj/${plugin}`
     );
-    const results = await runCLIAsync(`e2e ${plugin}-e2e`);
-    expect(results.stdout).toContain('Compiling TypeScript files');
-    expectTestsPass(results);
+
+    if (runCypressTests()) {
+      const results = await runCLIAsync(`e2e ${plugin}-e2e`);
+      expect(results.stdout).toContain('Compiling TypeScript files');
+      expectTestsPass(results);
+    }
 
     done();
   }, 250000);

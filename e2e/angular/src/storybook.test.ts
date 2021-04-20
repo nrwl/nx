@@ -1,10 +1,12 @@
+process.env.SELECTED_CLI = 'angular';
+
 import {
   checkFilesExist,
   newProject,
   readFile,
   removeProject,
   runCLI,
-  supportUi,
+  runCypressTests,
   tmpProjPath,
   uniq,
 } from '@nrwl/e2e/utils';
@@ -17,7 +19,7 @@ describe('Storybook schematics', () => {
 
   afterEach(() => removeProject({ onlyOnCI: true }));
 
-  it('aaashould not overwrite global storybook config files', () => {
+  it('should not overwrite global storybook config files', () => {
     const angularStorybookLib = uniq('test-ui-lib-angular');
     runCLI(
       `generate @nrwl/angular:lib ${angularStorybookLib} --no-interactive`
@@ -171,7 +173,7 @@ describe('Storybook schematics', () => {
         `
       );
 
-      if (supportUi()) {
+      if (runCypressTests()) {
         expect(runCLI(`run ${mylib}-e2e:e2e --no-watch`)).toContain(
           'All specs passed!'
         );

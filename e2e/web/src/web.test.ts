@@ -7,6 +7,7 @@ import {
   readJson,
   runCLI,
   runCLIAsync,
+  runCypressTests,
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
@@ -49,8 +50,10 @@ describe('Web Components Applications', () => {
     const lintE2eResults = runCLI(`lint ${appName}-e2e`);
     expect(lintE2eResults).toContain('All files pass linting.');
 
-    const e2eResults = runCLI(`e2e ${appName}-e2e`);
-    expect(e2eResults).toContain('All specs passed!');
+    if (runCypressTests()) {
+      const e2eResults = runCLI(`e2e ${appName}-e2e`);
+      expect(e2eResults).toContain('All specs passed!');
+    }
   }, 120000);
 
   it('should remove previous output before building', async () => {

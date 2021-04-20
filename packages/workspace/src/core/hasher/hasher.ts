@@ -116,48 +116,52 @@ export class Hasher {
 
     performance.mark('hasher:runtime inputs hash:start');
 
-    const inputs =
-      this.options && this.options.runtimeCacheInputs
-        ? this.options.runtimeCacheInputs
-        : [];
-    if (inputs.length > 0) {
-      try {
-        const values = (await Promise.all(
-          inputs.map(
-            (input) =>
-              new Promise((res, rej) => {
-                exec(input, (err, stdout, stderr) => {
-                  if (err) {
-                    rej(err);
-                  } else {
-                    res({ input, value: `${stdout}${stderr}`.trim() });
-                  }
-                });
-              })
-          )
-        )) as any;
+    this.runtimeInputs = new Promise(async (res, rej) => {
+      const inputs =
+        this.options && this.options.runtimeCacheInputs
+          ? this.options.runtimeCacheInputs
+          : [];
+      if (inputs.length > 0) {
+        try {
+          const values = (await Promise.all(
+            inputs.map(
+              (input) =>
+                new Promise((res, rej) => {
+                  exec(input, (err, stdout, stderr) => {
+                    if (err) {
+                      rej(err);
+                    } else {
+                      res({ input, value: `${stdout}${stderr}`.trim() });
+                    }
+                  });
+                })
+            )
+          )) as any;
 
-        const value = this.hashing.hashArray(values.map((v) => v.value));
-        const runtime = values.reduce(
-          (m, c) => ((m[c.input] = c.value), m),
-          {}
-        );
+          const value = this.hashing.hashArray(values.map((v) => v.value));
+          const runtime = values.reduce(
+            (m, c) => ((m[c.input] = c.value), m),
+            {}
+          );
 
-        performance.mark('hasher:runtime inputs hash:end');
-        performance.measure(
-          'hasher:runtime inputs hash',
-          'hasher:runtime inputs hash:start',
-          'hasher:runtime inputs hash:end'
-        );
-        return { value, runtime };
-      } catch (e) {
-        throw new Error(
-          `Nx failed to execute runtimeCacheInputs defined in nx.json failed:\n${e.message}`
-        );
+          performance.mark('hasher:runtime inputs hash:end');
+          performance.measure(
+            'hasher:runtime inputs hash',
+            'hasher:runtime inputs hash:start',
+            'hasher:runtime inputs hash:end'
+          );
+          res({ value, runtime });
+        } catch (e) {
+          rej(
+            new Error(
+              `Nx failed to execute runtimeCacheInputs defined in nx.json failed:\n${e.message}`
+            )
+          );
+        }
+      } else {
+        res({ value: '', runtime: {} });
       }
-    } else {
-      this.runtimeInputs = Promise.resolve({ value: '', runtime: {} });
-    }
+    });
 
     return this.runtimeInputs;
   }
@@ -167,33 +171,33 @@ export class Hasher {
 
     performance.mark('hasher:implicit deps hash:start');
 
-    const implicitDeps = Object.keys(this.nxJson.implicitDependencies || {});
-    const filesWithoutPatterns = implicitDeps.filter(
-      (p) => p.indexOf('*') === -1
-    );
-    const patterns = implicitDeps.filter((p) => p.indexOf('*') !== -1);
+    this.implicitDependencies = new Promise((res) => {
+      const implicitDeps = Object.keys(this.nxJson.implicitDependencies || {});
+      const filesWithoutPatterns = implicitDeps.filter(
+        (p) => p.indexOf('*') === -1
+      );
+      const patterns = implicitDeps.filter((p) => p.indexOf('*') !== -1);
 
-    const implicitDepsFromPatterns =
-      patterns.length > 0
-        ? (this.projectGraph.allWorkspaceFiles || [])
-            .filter(
-              (f) => !!patterns.find((pattern) => minimatch(f.file, pattern))
-            )
-            .map((f) => f.file)
-        : [];
+      const implicitDepsFromPatterns =
+        patterns.length > 0
+          ? (this.projectGraph.allWorkspaceFiles || [])
+              .filter(
+                (f) => !!patterns.find((pattern) => minimatch(f.file, pattern))
+              )
+              .map((f) => f.file)
+          : [];
 
-    const fileNames = [
-      ...filesWithoutPatterns,
-      ...implicitDepsFromPatterns,
+      const fileNames = [
+        ...filesWithoutPatterns,
+        ...implicitDepsFromPatterns,
 
-      //TODO: vsavkin move the special cases into explicit ts support
-      'tsconfig.base.json',
-      'package-lock.json',
-      'yarn.lock',
-      'pnpm-lock.yaml',
-    ];
+        //TODO: vsavkin move the special cases into explicit ts support
+        'tsconfig.base.json',
+        'package-lock.json',
+        'yarn.lock',
+        'pnpm-lock.yaml',
+      ];
 
-    this.implicitDependencies = Promise.resolve().then(async () => {
       const fileHashes = [
         ...fileNames.map((file) => {
           const hash = this.fileHasher.hashFile(file);
@@ -212,11 +216,12 @@ export class Hasher {
         'hasher:implicit deps hash:end'
       );
 
-      return {
+      res({
         value: combinedHash,
         sources: fileHashes.reduce((m, c) => ((m[c.file] = c.hash), m), {}),
-      };
+      });
     });
+
     return this.implicitDependencies;
   }
 
