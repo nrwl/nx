@@ -2,13 +2,14 @@ import { StorybookConfigureSchema } from './schema';
 import storiesGenerator from '../stories/stories';
 import { convertNxGenerator, Tree } from '@nrwl/devkit';
 import { configurationGenerator } from '@nrwl/storybook';
-import { getE2eProjectName } from '@nrwl/cypress';
+import { getE2eProjectName } from '@nrwl/cypress/src/utils/project-name';
 
 async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
-  const cypressProject = getE2eProjectName({
-    name: schema.cypressName || `${schema.name}-e2e`,
-    directory: schema.cypressDirectory,
-  });
+  const cypressProject = getE2eProjectName(
+    host,
+    schema.name,
+    schema.cypressDirectory
+  );
   await storiesGenerator(host, {
     project: schema.name,
     generateCypressSpecs:
@@ -29,7 +30,6 @@ export async function storybookConfigurationGenerator(
     js: schema.js,
     linter: schema.linter,
     cypressDirectory: schema.cypressDirectory,
-    cypressName: schema.cypressName,
   });
 
   if (schema.generateStories) {

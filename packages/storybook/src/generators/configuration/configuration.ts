@@ -24,6 +24,8 @@ import { cypressProjectGenerator } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';
 import { storybookVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
+//TODO-R consider moving this in here
+import { getUnscopedLibName } from '@nrwl/cypress/src/utils/project-name';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -60,9 +62,11 @@ export async function configurationGenerator(
   updateLintConfig(tree, schema);
   addStorybookTask(tree, schema.name, schema.uiFramework);
   if (schema.configureCypress && projectType !== 'application') {
+    const cypressProjectName = schema.cypressDirectory
+      ? getUnscopedLibName(tree, schema.name)
+      : schema.name;
     const cypressTask = await cypressProjectGenerator(tree, {
-      name: schema.name,
-      cypressName: schema.cypressName,
+      name: cypressProjectName,
       js: schema.js,
       linter: schema.linter,
       directory: schema.cypressDirectory,

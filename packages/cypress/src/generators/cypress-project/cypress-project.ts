@@ -8,6 +8,7 @@ import {
   joinPathFragments,
   names,
   offsetFromRoot,
+  readProjectConfiguration,
   toJS,
   Tree,
   updateJson,
@@ -19,6 +20,7 @@ import { join } from 'path';
 // app
 import { Schema } from './schema';
 import { eslintPluginCypressVersion } from '../../utils/versions';
+import { filePathPrefix } from '../../utils/project-name';
 
 export interface CypressProjectSchema extends Schema {
   projectName: string;
@@ -136,26 +138,11 @@ export async function cypressProjectGenerator(host: Tree, schema: Schema) {
   return installTask;
 }
 
-export function getE2eProjectName({
-  name,
-  directory,
-}: {
-  name: string;
-  directory?: string;
-}) {
-  return `${directory ? filePathToProjectName(directory, name) : name}`;
-}
-
-function filePathToProjectName(directory: string, name: string) {
-  return `${names(directory).fileName}-${name}`.replace(
-    new RegExp('/', 'g'),
-    '-'
-  );
-}
-
 function normalizeOptions(host: Tree, options: Schema): CypressProjectSchema {
   const { appsDir } = getWorkspaceLayout(host);
-  const projectName = getE2eProjectName(options);
+  const projectName = options.directory
+    ? `${filePathPrefix(options.directory)}-${options.name}`
+    : options.name;
   const projectRoot = options.directory
     ? joinPathFragments(
         appsDir,
