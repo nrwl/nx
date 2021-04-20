@@ -36,12 +36,6 @@ Type: `string`
 
 A directory where the Cypress project will be placed. Added at root by default.
 
-### cypressName
-
-Type: `string`
-
-A custom name for the Cypress project. Inferred from 'name' by default.
-
 ### js
 
 Default: `false`

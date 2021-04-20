@@ -24,12 +24,6 @@ nx g cypress-project ... --dry-run
 
 ## Options
 
-### cypressName
-
-Type: `string`
-
-The name of the Cypress project. Inferred from 'name' by default
-
 ### directory
 
 Type: `string`
