@@ -9,7 +9,10 @@ import {
 
 import { Linter } from '@nrwl/linter';
 import { cypressProjectGenerator as _cypressProjectGenerator } from '@nrwl/cypress';
-import { getE2eProjectName } from '@nrwl/cypress/src/utils/project-name';
+import {
+  getE2eProjectName,
+  getUnscopedLibName,
+} from '@nrwl/cypress/src/utils/project-name';
 import { safeFileDelete } from '../../utils/utilities';
 
 export interface CypressConfigureSchema {
@@ -23,18 +26,20 @@ export async function cypressProjectGenerator(
   tree: Tree,
   schema: CypressConfigureSchema
 ) {
-  const e2eProjectName = `${schema.name}-e2e`;
+  const libConfig = readProjectConfiguration(tree, schema.name);
+  const libRoot = libConfig.root;
+  const cypressProjectName = `${
+    schema.directory ? getUnscopedLibName(libRoot) : schema.name
+  }-e2e`;
   const installTask = await _cypressProjectGenerator(tree, {
-    name: e2eProjectName,
+    name: cypressProjectName,
     project: schema.name,
     js: schema.js,
     linter: schema.linter,
     directory: schema.directory,
   });
-  const libConfig = readProjectConfiguration(tree, schema.name);
-  const libRoot = libConfig.root;
   const generatedCypressProjectName = getE2eProjectName(
-    e2eProjectName,
+    schema.name,
     libRoot,
     schema.directory
   );

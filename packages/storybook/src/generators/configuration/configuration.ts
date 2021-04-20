@@ -63,13 +63,8 @@ export async function configurationGenerator(
   updateLintConfig(tree, schema);
   addStorybookTask(tree, schema.name, schema.uiFramework);
   if (schema.configureCypress && projectType !== 'application') {
-    const libConfig = readProjectConfiguration(tree, schema.name);
-    const libRoot = libConfig.root;
-    const cypressProjectName = schema.cypressDirectory
-      ? getUnscopedLibName(libRoot)
-      : schema.name;
     const cypressTask = await cypressProjectGenerator(tree, {
-      name: cypressProjectName,
+      name: schema.name,
       js: schema.js,
       linter: schema.linter,
       directory: schema.cypressDirectory,

@@ -34,7 +34,7 @@ export default function (schema: StorybookConfigureSchema): Rule {
 function generateStories(schema: StorybookConfigureSchema): Rule {
   return async (tree: Tree, context) => {
     const workspace = await getWorkspace(tree);
-    const project = workspace.projects[schema.name];
+    const project = workspace.projects.get(schema.name);
     const e2eProjectName = getE2eProjectName(
       schema.name,
       project.root,
