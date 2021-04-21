@@ -1,4 +1,6 @@
 import {
+  chunkArray,
+  chunkArrayBetweenNodes,
   getOutputsForTargetAndConfiguration,
   unparse,
 } from '@nrwl/workspace/src/tasks-runner/utils';
@@ -254,6 +256,32 @@ describe('utils', () => {
         '--string2="one two"',
         '--string3="one two three"',
       ]);
+    });
+  });
+
+  describe('chunkArray', () => {
+    it('should chunk an array evenly', () => {
+      expect(chunkArray([0, 1, 2, 3, 4, 5, 6, 7, 8], 3)).toEqual([
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+      ]);
+    });
+
+    it('should chunk an array unevenly', () => {
+      expect(chunkArray([0, 1, 2, 3, 4, 5, 6, 7, 8], 4)).toEqual([
+        [0, 1, 2, 3],
+        [4, 5, 6, 7],
+        [8],
+      ]);
+    });
+  });
+
+  describe('chunkArrayBetweenNodes', () => {
+    it('should return the chunk for a node', () => {
+      expect(
+        chunkArrayBetweenNodes([0, 1, 2, 3, 4, 5, 6, 7, 8], 3, 0)
+      ).toEqual([0, 1, 2]);
     });
   });
 });

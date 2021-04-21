@@ -152,3 +152,24 @@ function unparseOption(key: string, value: any, unparsed: string[]) {
     unparsed.push(`--${key}=${value}`);
   }
 }
+
+export function chunkArray<T>(arr: T[] = [], chunkSize: number = 1): T[][] {
+  if (!arr) {
+    return [];
+  }
+  const tmp = [...arr];
+  const chunked = [];
+  if (chunkSize <= 0) return [arr];
+  while (tmp.length) chunked.push(tmp.splice(0, chunkSize));
+  return chunked;
+}
+
+export function chunkArrayBetweenNodes<T>(
+  projectsToRun: T[],
+  nodes: number,
+  currentNode: number
+): T[] {
+  const size = Math.ceil(projectsToRun.length / nodes);
+
+  return chunkArray(projectsToRun, size)[currentNode];
+}

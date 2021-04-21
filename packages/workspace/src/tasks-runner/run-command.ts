@@ -17,6 +17,7 @@ import {
   projectHasTargetAndConfiguration,
 } from '../utilities/project-graph-utils';
 import { output } from '../utilities/output';
+import { chunkArrayBetweenNodes } from '@nrwl/workspace/src/tasks-runner/utils';
 import { getDependencyConfigs } from './utils';
 
 type RunArgs = yargs.Arguments & ReporterArgs;
@@ -38,7 +39,11 @@ export async function runCommand<T extends RunArgs>(
   );
 
   const tasks = createTasksForProjectToRun(
-    projectsToRun,
+    chunkArrayBetweenNodes(
+      projectsToRun,
+      nxArgs.nodes,
+      nxArgs.currentNode
+    ),
     {
       target: nxArgs.target,
       configuration: nxArgs.configuration,

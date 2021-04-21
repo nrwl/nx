@@ -45,6 +45,8 @@ export interface NxArgs {
   target?: string;
   configuration?: string;
   runner?: string;
+  nodes?: number;
+  currentNode?: number;
   parallel?: boolean;
   maxParallel?: number;
   'max-parallel'?: number;
@@ -133,6 +135,13 @@ export function splitArgsIntoNxArgsAndOverrides(
 
   if (!nxArgs.skipNxCache) {
     nxArgs.skipNxCache = false;
+  }
+
+  if (!nxArgs.nodes || nxArgs < 1) {
+    nxArgs.nodes = 1;
+    nxArgs.currentNode = 0;
+  } else if (!nxArgs.currentNode || nxArgs.currentNode < 0) {
+    nxArgs.currentNode = 0;
   }
 
   return { nxArgs, overrides };
