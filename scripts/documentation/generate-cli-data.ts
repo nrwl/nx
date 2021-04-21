@@ -1,5 +1,5 @@
 import * as chalk from 'chalk';
-import * as fs from 'fs-extra';
+import { removeSync, readFileSync } from 'fs-extra';
 import * as path from 'path';
 import { dedent } from 'tslint/lib/utils';
 import { commandsObject } from '../../packages/workspace';
@@ -407,7 +407,7 @@ export async function generateCLIDocumentation() {
         framework,
         'cli'
       );
-      fs.removeSync(commandsOutputDirectory);
+      removeSync(commandsOutputDirectory);
       function getCommands(command) {
         return command.getCommandInstance().getCommandHandlers();
       }
@@ -530,9 +530,10 @@ export async function generateCLIDocumentation() {
           );
           const templateObject = {
             name: command,
-            template: fs
-              .readFileSync(path.join(sharedCommandsDirectory, `${command}.md`))
-              .toString('utf-8'),
+            template: readFileSync(
+              path.join(sharedCommandsDirectory, `${command}.md`),
+              'utf-8'
+            ),
           };
 
           return generateMarkdownFile(

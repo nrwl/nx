@@ -1,4 +1,4 @@
-import * as fs from 'fs-extra';
+import { removeSync, readJsonSync, readFileSync } from 'fs-extra';
 import * as path from 'path';
 import { parseJsonSchemaToOptions } from './json-parser';
 import { dedent } from 'tslint/lib/utils';
@@ -34,9 +34,9 @@ registry.addFormat(htmlSelectorFormat);
 
 function readExecutorsJson(root: string) {
   try {
-    return fs.readJsonSync(path.join(root, 'builders.json')).builders;
+    return readJsonSync(path.join(root, 'builders.json')).builders;
   } catch (e) {
-    return fs.readJsonSync(path.join(root, 'executors.json')).executors;
+    return readJsonSync(path.join(root, 'executors.json')).executors;
   }
 }
 
@@ -44,7 +44,7 @@ function generateSchematicList(
   config: Configuration,
   registry: CoreSchemaRegistry
 ): Promise<FileSystemSchematicJsonDescription>[] {
-  fs.removeSync(config.builderOutput);
+  removeSync(config.builderOutput);
   const builderCollection = readExecutorsJson(config.root);
   return Object.keys(builderCollection).map((builderName) => {
     const schemaPath = path.join(
@@ -54,7 +54,7 @@ function generateSchematicList(
     let builder = {
       name: builderName,
       ...builderCollection[builderName],
-      rawSchema: fs.readJsonSync(schemaPath),
+      rawSchema: readJsonSync(schemaPath),
     };
     if (builder.rawSchema.examplesFile) {
       builder.examplesFileFullPath = path.join(
@@ -91,8 +91,7 @@ function generateTemplate(
 
   if (builder.examplesFileFullPath) {
     template += `## Examples\n`;
-    let examples = fs
-      .readFileSync(builder.examplesFileFullPath)
+    let examples = readFileSync(builder.examplesFileFullPath)
       .toString()
       .replace(/<%= cli %>/gm, cliCommand);
     template += dedent`${examples}`;

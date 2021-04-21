@@ -1,10 +1,8 @@
 import { toOldFormatOrNull, Workspaces } from '@nrwl/tao/src/shared/workspace';
 import { FileData, NxJsonConfiguration } from '@nrwl/devkit';
 import { execSync } from 'child_process';
-import * as fs from 'fs';
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync, existsSync, statSync } from 'fs';
 import * as path from 'path';
-import { extname, join } from 'path';
 import { performance } from 'perf_hooks';
 import { NxArgs } from '../command-line/utils';
 import { WorkspaceResults } from '../command-line/workspace-results';
@@ -47,7 +45,7 @@ export function calculateFileChanges(
   }
 
   return files.map((f) => {
-    const ext = extname(f);
+    const ext = path.extname(f);
     const hash = defaultFileHasher.hashFile(f);
 
     return {
@@ -96,7 +94,7 @@ function defaultReadFileAtRevision(
       .split(path.sep)
       .join('/');
     return !revision
-      ? readFileSync(file).toString()
+      ? readFileSync(file, 'utf-8')
       : execSync(`git show ${revision}:${filePathInGitRepository}`, {
           maxBuffer: TEN_MEGABYTES,
         })
@@ -128,13 +126,13 @@ export function allFilesInDir(
 
   let res = [];
   try {
-    fs.readdirSync(dirName).forEach((c) => {
+    readdirSync(dirName).forEach((c) => {
       const child = path.join(dirName, c);
       if (ignoredGlobs.ignores(path.relative(appRootPath, child))) {
         return;
       }
       try {
-        const s = fs.statSync(child);
+        const s = statSync(child);
         if (!s.isDirectory()) {
           // add starting with "apps/myapp/..." or "libs/mylib/..."
           res.push(getFileData(child));
@@ -155,9 +153,7 @@ function getIgnoredGlobs() {
 }
 
 function readFileIfExisting(path: string) {
-  return fs.existsSync(path)
-    ? fs.readFileSync(path, { encoding: 'utf-8' }).toString()
-    : '';
+  return existsSync(path) ? readFileSync(path, 'utf-8') : '';
 }
 
 export function readWorkspaceJson() {
@@ -192,7 +188,7 @@ export function workspaceFileName() {
 export type FileRead = (s: string) => string;
 
 export function defaultFileRead(filePath: string): string | null {
-  return readFileSync(join(appRootPath, filePath), { encoding: 'utf-8' });
+  return readFileSync(path.join(appRootPath, filePath), 'utf-8');
 }
 
 export function readPackageJson(): any {

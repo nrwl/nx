@@ -1,5 +1,5 @@
 import * as chalk from 'chalk';
-import * as fs from 'fs';
+import { readFileSync, readJsonSync } from 'fs-extra';
 import * as parseLinks from 'parse-markdown-links';
 import * as path from 'path';
 import * as glob from 'glob';
@@ -36,8 +36,7 @@ const FRAMEWORK_SYMBOL = '{{framework}}';
 const DIRECT_INTERNAL_LINK_SYMBOL = 'https://nx.dev';
 
 function readFileContents(path: string): string {
-  const buffer = fs.readFileSync(path, { encoding: 'utf-8' });
-  return buffer.toString();
+  return readFileSync(path, 'utf-8');
 }
 
 function isLinkInternal(linkPath: string): boolean {
@@ -139,9 +138,7 @@ function isCategoryNode(
 }
 
 function getDocumentMap(): DocumentTree[] {
-  return JSON.parse(
-    fs.readFileSync(path.join(BASE_PATH, 'map.json'), 'utf-8')
-  ) as DocumentTree[];
+  return readJsonSync(path.join(BASE_PATH, 'map.json'));
 }
 
 interface DocumentPaths {

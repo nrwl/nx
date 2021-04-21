@@ -16,7 +16,7 @@ import {
   CrossOriginValue,
   FileInfo,
 } from './augment-index-html';
-import { readFileSync, writeFileSync } from 'fs-extra';
+import { readFileSync, writeFileSync } from 'fs';
 
 type ExtensionFilter = '.js' | '.css';
 

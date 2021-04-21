@@ -1,4 +1,4 @@
-import * as fs from 'fs-extra';
+import { outputFileSync, readJsonSync } from 'fs-extra';
 import * as path from 'path';
 import { format, resolveConfig } from 'prettier';
 
@@ -20,7 +20,7 @@ export async function generateMarkdownFile(
   templateObject: { name: string; template: string }
 ): Promise<void> {
   const filePath = path.join(outputDirectory, `${templateObject.name}.md`);
-  fs.outputFileSync(
+  outputFileSync(
     filePath,
     await formatWithPrettier(filePath, templateObject.template)
   );
@@ -30,7 +30,7 @@ export async function generateJsonFile(
   filePath: string,
   json: unknown
 ): Promise<void> {
-  fs.outputFileSync(
+  outputFileSync(
     filePath,
     await formatWithPrettier(filePath, JSON.stringify(json))
   );
@@ -54,7 +54,7 @@ export async function formatWithPrettier(filePath: string, content: string) {
 export function getNxPackageDependencies(
   packageJsonPath: string
 ): { name: string; dependencies: string[]; peerDependencies: string[] } {
-  const packageJson = fs.readJsonSync(packageJsonPath);
+  const packageJson = readJsonSync(packageJsonPath);
   if (!packageJson) {
     console.log(`No package.json found at: ${packageJsonPath}`);
     return null;

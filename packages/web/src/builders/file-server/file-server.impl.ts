@@ -2,7 +2,7 @@ import watch from 'node-watch';
 import { exec, execSync } from 'child_process';
 import { ExecutorContext } from '@nrwl/devkit';
 import ignore from 'ignore';
-import { readFileSync } from 'fs-extra';
+import { readFileSync } from 'fs';
 
 export interface FileServerOptions {
   host: string;
