@@ -1,7 +1,7 @@
 import { runCommand } from '../tasks-runner/run-command';
 import { createProjectGraph, ProjectGraph } from '../core/project-graph';
 import { readEnvironment } from '../core/file-utils';
-import { EmptyReporter } from '../tasks-runner/empty-reporter';
+import { RunOneReporter } from '../tasks-runner/run-one-reporter';
 import { splitArgsIntoNxArgsAndOverrides } from './utils';
 import { projectHasTarget } from '../utilities/project-graph-utils';
 import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
@@ -38,11 +38,7 @@ export async function runOne(opts: {
     opts.target
   );
   const env = readEnvironment(opts.target, projectsMap);
-  const reporter = nxArgs.withDeps
-    ? new (require(`../tasks-runner/run-one-reporter`).RunOneReporter)(
-        opts.project
-      )
-    : new EmptyReporter();
+  const reporter = new RunOneReporter(opts.project);
 
   runCommand(
     projects,

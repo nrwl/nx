@@ -1,4 +1,4 @@
-import { Observable } from 'rxjs';
+import type { Observable } from 'rxjs';
 
 import { ProjectGraph } from '../core/project-graph';
 import { NxJson } from '../core/shared-interfaces';

@@ -1,18 +1,23 @@
 import { output } from '../utilities/output';
+import { Reporter, ReporterArgs } from './reporter';
+import { Task } from './tasks-runner';
 
-export interface ReporterArgs {
-  target?: string;
-  configuration?: string;
-  onlyFailed?: boolean;
-}
-
-export class RunOneReporter {
+export class RunOneReporter implements Reporter {
   private projectNames: string[];
   constructor(private readonly initiatingProject: string) {}
 
-  beforeRun(projectNames: string[], args: ReporterArgs, taskOverrides: any) {
+  beforeRun(
+    projectNames: string[],
+    tasks: Task[],
+    args: ReporterArgs,
+    taskOverrides: any
+  ) {
+    // Silent for a single task
+    if (tasks.length === 1) {
+      return;
+    }
     this.projectNames = projectNames;
-    const numberOfDeps = projectNames.length - 1;
+    const numberOfDeps = tasks.length - 1;
 
     if (numberOfDeps > 0) {
       output.log({
@@ -20,7 +25,10 @@ export class RunOneReporter {
           args.target
         } ${output.colors.gray('for project')} ${
           this.initiatingProject
-        } ${output.colors.gray(`and its ${numberOfDeps} deps.`)}`,
+        } ${output.colors.gray(
+          `and`
+        )} ${numberOfDeps} task(s) ${output.colors.gray(`that it depends on.`)}
+        `,
       });
       output.addVerticalSeparatorWithoutNewLines();
     }
@@ -30,17 +38,23 @@ export class RunOneReporter {
     args: ReporterArgs,
     failedProjectNames: string[],
     startedWithFailedProjects: boolean,
-    cachedProjectNames: string[]
+    tasks: Task[],
+    failedTasks: Task[],
+    cachedTasks: Task[]
   ) {
+    // Silent for a single task
+    if (tasks.length === 1) {
+      return;
+    }
     output.addNewline();
     output.addVerticalSeparatorWithoutNewLines();
 
     if (failedProjectNames.length === 0) {
       const bodyLines =
-        cachedProjectNames.length > 0
+        cachedTasks.length > 0
           ? [
               output.colors.gray(
-                `Nx read the output from cache instead of running the command for ${cachedProjectNames.length} out of ${this.projectNames.length} projects.`
+                `Nx read the output from cache instead of running the command for ${cachedTasks.length} out of ${tasks.length} tasks.`
               ),
             ]
           : [];
@@ -64,11 +78,9 @@ export class RunOneReporter {
       }
     } else {
       const bodyLines = [
-        output.colors.gray('Failed projects:'),
+        output.colors.gray('Failed tasks:'),
         '',
-        ...failedProjectNames.map(
-          (project) => `${output.colors.gray('-')} ${project}`
-        ),
+        ...failedTasks.map((task) => `${output.colors.gray('-')} ${task.id}`),
       ];
       output.error({
         title: `Running target "${args.target}" failed`,
