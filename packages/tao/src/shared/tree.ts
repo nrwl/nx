@@ -2,13 +2,13 @@ import {
   readdirSync,
   readFileSync,
   statSync,
-  unlinkSync,
   writeFileSync,
-} from 'fs';
-import { mkdirpSync, rmdirSync } from 'fs-extra';
+  ensureDirSync,
+  removeSync,
+} from 'fs-extra';
 import { logger } from './logger';
 import { dirname, join, relative, sep } from 'path';
-const chalk = require('chalk');
+import * as chalk from 'chalk';
 
 /**
  * Virtual file system tree.
@@ -158,7 +158,7 @@ export class FsTree implements Tree {
       } else {
         return this.fsExists(filePath);
       }
-    } catch (err) {
+    } catch {
       return false;
     }
   }
@@ -179,7 +179,7 @@ export class FsTree implements Tree {
       } else {
         return this.fsIsFile(filePath);
       }
-    } catch (err) {
+    } catch {
       return false;
     }
   }
@@ -230,17 +230,17 @@ export class FsTree implements Tree {
   private fsReadDir(dirPath: string) {
     try {
       return readdirSync(join(this.root, dirPath));
-    } catch (e) {
+    } catch {
       return [];
     }
   }
 
-  private fsIsFile(filePath: string) {
+  private fsIsFile(filePath: string): boolean {
     const stat = statSync(join(this.root, filePath));
     return stat.isFile();
   }
 
-  private fsReadFile(filePath: string) {
+  private fsReadFile(filePath: string): Buffer {
     return readFileSync(join(this.root, filePath));
   }
 
@@ -248,7 +248,7 @@ export class FsTree implements Tree {
     try {
       const stat = statSync(join(this.root, filePath));
       return stat.isFile() || stat.isDirectory();
-    } catch (e) {
+    } catch {
       return false;
     }
   }
@@ -276,33 +276,26 @@ export class FsTree implements Tree {
     return Object.keys(res);
   }
 
-  private rp(pp: string) {
+  private rp(pp: string): string {
     return pp.startsWith('/') ? pp.substring(1) : pp;
   }
 }
 
-export function flushChanges(root: string, fileChanges: FileChange[]) {
+export function flushChanges(root: string, fileChanges: FileChange[]): void {
   fileChanges.forEach((f) => {
     const fpath = join(root, f.path);
     if (f.type === 'CREATE') {
-      mkdirpSync(dirname(fpath));
+      ensureDirSync(dirname(fpath));
       writeFileSync(fpath, f.content);
     } else if (f.type === 'UPDATE') {
       writeFileSync(fpath, f.content);
     } else if (f.type === 'DELETE') {
-      try {
-        const stat = statSync(fpath);
-        if (stat.isDirectory()) {
-          rmdirSync(fpath, { recursive: true });
-        } else {
-          unlinkSync(fpath);
-        }
-      } catch (e) {}
+      removeSync(fpath);
     }
   });
 }
 
-export function printChanges(fileChanges: FileChange[]) {
+export function printChanges(fileChanges: FileChange[]): void {
   fileChanges.forEach((f) => {
     if (f.type === 'CREATE') {
       console.log(`${chalk.green('CREATE')} ${f.path}`);

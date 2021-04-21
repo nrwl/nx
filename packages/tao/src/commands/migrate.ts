@@ -1,6 +1,5 @@
 import { execSync } from 'child_process';
-import * as fs from 'fs';
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, removeSync } from 'fs-extra';
 import * as minimist from 'minimist';
 import { dirname, join } from 'path';
 import { gt, lte } from 'semver';
@@ -15,7 +14,6 @@ import {
 } from '../shared/package-manager';
 import { FsTree } from '../shared/tree';
 import { flushChanges } from './generate';
-import * as fsExtra from 'fs-extra';
 
 export type MigrationsJson = {
   version: string;
@@ -413,8 +411,9 @@ function versions(root: string, from: { [p: string]: string }) {
       const packageJsonPath = require.resolve(`${packageName}/package.json`, {
         paths: [root],
       });
-      const content = readFileSync(packageJsonPath);
-      return JSON.parse(stripJsonComments(content.toString()))['version'];
+      return JSON.parse(
+        stripJsonComments(readFileSync(packageJsonPath, 'utf-8'))
+      )['version'];
     } catch (e) {
       return null;
     }
@@ -442,14 +441,14 @@ function createFetcher(packageManager: PackageManager) {
         paths: [dir],
       });
       const json = JSON.parse(
-        stripJsonComments(readFileSync(packageJsonPath).toString())
+        stripJsonComments(readFileSync(packageJsonPath, 'utf-8'))
       );
       // packageVersion can be a tag, resolvedVersion works with semver
       const resolvedVersion = json.version;
 
       if (migrationsFilePath) {
         const json = JSON.parse(
-          stripJsonComments(readFileSync(migrationsFilePath).toString())
+          stripJsonComments(readFileSync(migrationsFilePath, 'utf-8'))
         );
         cache[`${packageName}-${packageVersion}`] = {
           version: resolvedVersion,
@@ -473,7 +472,7 @@ function packageToMigrationsFilePath(packageName: string, dir: string) {
     paths: [dir],
   });
   const json = JSON.parse(
-    stripJsonComments(readFileSync(packageJsonPath).toString())
+    stripJsonComments(readFileSync(packageJsonPath, 'utf-8'))
   );
   let migrationsFile = json['nx-migrations'] || json['ng-update'];
 
@@ -514,7 +513,7 @@ function updatePackageJson(
   }
 ) {
   const packageJsonPath = join(root, 'package.json');
-  const packageJsonContent = readFileSync(packageJsonPath).toString();
+  const packageJsonContent = readFileSync(packageJsonPath, 'utf-8');
   const endOfFile = packageJsonContent.substring(
     packageJsonContent.lastIndexOf('}') + 1,
     packageJsonContent.length
@@ -596,7 +595,9 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 
 function showConnectToCloudMessage() {
   try {
-    const nxJson = JSON.parse(readFileSync('nx.json').toString());
+    const nxJson = JSON.parse(
+      stripJsonComments(readFileSync('nx.json', 'utf-8'))
+    );
     const defaultRunnerIsUsed = Object.values(nxJson.tasksRunnerOptions).find(
       (r: any) => r.runner == '@nrwl/workspace/tasks-runners/default'
     );
@@ -663,7 +664,7 @@ async function runMigrations(
     version: string;
     cli?: 'nx' | 'angular';
   }[] = JSON.parse(
-    stripJsonComments(readFileSync(join(root, opts.runMigrations)).toString())
+    stripJsonComments(readFileSync(join(root, opts.runMigrations), 'utf-8'))
   ).migrations;
 
   // TODO: reenable after removing devkit
@@ -699,7 +700,7 @@ async function runMigrations(
 
 async function runNxMigration(root: string, packageName: string, name: string) {
   const collectionPath = packageToMigrationsFilePath(packageName, root);
-  const collection = JSON.parse(fs.readFileSync(collectionPath).toString());
+  const collection = JSON.parse(readFileSync(collectionPath, 'utf-8'));
   const g = collection.generators || collection.schematics;
   const implRelativePath = g[name].implementation || g[name].factory;
 
@@ -724,11 +725,7 @@ async function runNxMigration(root: string, packageName: string, name: string) {
 }
 
 function removeNxDepsIfCaseItsFormatChanged(root: string) {
-  try {
-    fsExtra.unlinkSync(
-      join(root, 'node_modules', '.cache', 'nx', 'nxdeps.json')
-    );
-  } catch (e) {}
+  removeSync(join(root, 'node_modules', '.cache', 'nx', 'nxdeps.json'));
 }
 
 export async function migrate(root: string, args: string[], isVerbose = false) {

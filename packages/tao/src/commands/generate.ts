@@ -8,13 +8,11 @@ import {
 } from '../shared/params';
 import { printHelp } from '../shared/print-help';
 import { WorkspaceJsonConfiguration, Workspaces } from '../shared/workspace';
-import { statSync, unlinkSync, writeFileSync } from 'fs';
-import { mkdirpSync, rmdirSync } from 'fs-extra';
+import { removeSync, ensureDirSync, writeFileSync } from 'fs-extra';
 import * as path from 'path';
 import { FileChange, FsTree } from '../shared/tree';
 import { logger } from '../shared/logger';
-
-const chalk = require('chalk');
+import * as chalk from 'chalk';
 
 export interface GenerateOptions {
   collectionName: string;
@@ -137,19 +135,12 @@ export function flushChanges(root: string, fileChanges: FileChange[]) {
   fileChanges.forEach((f) => {
     const fpath = path.join(root, f.path);
     if (f.type === 'CREATE') {
-      mkdirpSync(path.dirname(fpath));
+      ensureDirSync(path.dirname(fpath));
       writeFileSync(fpath, f.content);
     } else if (f.type === 'UPDATE') {
       writeFileSync(fpath, f.content);
     } else if (f.type === 'DELETE') {
-      try {
-        const stat = statSync(fpath);
-        if (stat.isDirectory()) {
-          rmdirSync(fpath, { recursive: true });
-        } else {
-          unlinkSync(fpath);
-        }
-      } catch (e) {}
+      removeSync(fpath);
     }
   });
 }
