@@ -6,14 +6,12 @@ import {
   readFileSync,
   writeFileSync,
   lstatSync,
-  unlinkSync,
 } from 'fs';
 import { join, resolve } from 'path';
 import * as fsExtra from 'fs-extra';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { spawn } from 'child_process';
 import { cacheDirectory } from '../utilities/cache-directory';
-import { writeToFile } from '../utilities/fileutils';
 
 export type CachedResult = {
   terminalOutput: string;
@@ -44,7 +42,6 @@ export class Cache {
   root = appRootPath;
   cachePath = this.createCacheDir();
   terminalOutputsDir = this.createTerminalOutputsDir();
-  latestTasksHashesDir = this.ensureLatestTasksHashesDir();
   cacheConfig = new CacheConfig(this.options);
 
   constructor(private readonly options: DefaultTasksRunnerOptions) {}
@@ -139,12 +136,12 @@ export class Cache {
   }
 
   copyFilesFromCache(
-    taskWithCachedResult: TaskWithCachedResult,
+    hash: string,
+    cachedResult: CachedResult,
     outputs: string[]
   ) {
-    this.removeRecordedTaskHash(taskWithCachedResult.task, outputs);
     outputs.forEach((f) => {
-      const cached = join(taskWithCachedResult.cachedResult.outputsPath, f);
+      const cached = join(cachedResult.outputsPath, f);
       if (existsSync(cached)) {
         const isFile = lstatSync(cached).isFile();
         const src = join(this.root, f);
@@ -157,7 +154,6 @@ export class Cache {
         fsExtra.copySync(cached, src);
       }
     });
-    this.recordTaskHash(taskWithCachedResult.task, outputs);
   }
 
   temporaryOutputPath(task: Task) {
@@ -166,72 +162,6 @@ export class Cache {
     } else {
       return null;
     }
-  }
-
-  removeRecordedTaskHash(task: Task, outputs: string[]): void {
-    if (outputs.length === 0) {
-      return;
-    }
-
-    const hashFile = this.getFileNameWithLatestRecordedHashForTask(task);
-    try {
-      unlinkSync(hashFile);
-    } catch (e) {}
-  }
-
-  recordTaskHash(task: Task, outputs: string[]): void {
-    if (outputs.length === 0) {
-      return;
-    }
-
-    const hashFile = this.getFileNameWithLatestRecordedHashForTask(task);
-    writeToFile(hashFile, task.hash);
-  }
-
-  shouldCopyOutputsFromCache(
-    taskWithCachedResult: TaskWithCachedResult,
-    outputs: string[]
-  ): boolean {
-    if (outputs.length === 0) {
-      return false;
-    }
-
-    if (
-      this.getLatestRecordedHashForTask(taskWithCachedResult.task) !==
-      taskWithCachedResult.task.hash
-    ) {
-      return true;
-    }
-
-    return this.isAnyOutputMissing(taskWithCachedResult.cachedResult, outputs);
-  }
-
-  private getLatestRecordedHashForTask(task: Task): string | null {
-    try {
-      return readFileSync(
-        this.getFileNameWithLatestRecordedHashForTask(task)
-      ).toString();
-    } catch (e) {
-      return null;
-    }
-  }
-
-  private isAnyOutputMissing(
-    cachedResult: CachedResult,
-    outputs: string[]
-  ): boolean {
-    return outputs.some(
-      (output) =>
-        existsSync(join(cachedResult.outputsPath, output)) &&
-        !existsSync(join(this.root, output))
-    );
-  }
-
-  private getFileNameWithLatestRecordedHashForTask(task: Task): string {
-    return join(
-      this.latestTasksHashesDir,
-      `${task.target.project}-${task.target.target}.hash`
-    );
   }
 
   private getFromLocalDir(task: Task) {
@@ -266,12 +196,6 @@ export class Cache {
 
   private createTerminalOutputsDir() {
     const path = join(this.cachePath, 'terminalOutputs');
-    fsExtra.ensureDirSync(path);
-    return path;
-  }
-
-  private ensureLatestTasksHashesDir() {
-    const path = join(this.cachePath, 'latestTasksHashes');
     fsExtra.ensureDirSync(path);
     return path;
   }
