@@ -11,8 +11,7 @@ import {
 } from '@angular-devkit/core';
 import * as chalk from 'chalk';
 import { createConsoleLogger, NodeJsSyncHost } from '@angular-devkit/core/node';
-import * as fs from 'fs';
-import { readFileSync } from 'fs';
+import { readFileSync, Stats } from 'fs';
 import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 import { GenerateOptions } from './generate';
 import { Tree } from '../shared/tree';
@@ -21,8 +20,7 @@ import {
   toOldFormatOrNull,
   workspaceConfigName,
 } from '@nrwl/tao/src/shared/workspace';
-import * as path from 'path';
-import { dirname, extname, resolve } from 'path';
+import { dirname, extname, resolve, join } from 'path';
 import * as stripJsonComments from 'strip-json-comments';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 import { Observable, of } from 'rxjs';
@@ -69,7 +67,7 @@ export async function scheduleTarget(
 }
 
 function createWorkflow(
-  fsHost: virtualFs.Host<fs.Stats>,
+  fsHost: virtualFs.Host<Stats>,
   root: string,
   opts: any
 ) {
@@ -551,13 +549,13 @@ export async function runMigration(
       } else {
         let packageJsonPath;
         try {
-          packageJsonPath = require.resolve(path.join(name, 'package.json'), {
+          packageJsonPath = require.resolve(join(name, 'package.json'), {
             paths: [process.cwd()],
           });
         } catch (e) {
           // workaround for a bug in node 12
           packageJsonPath = require.resolve(
-            path.join(process.cwd(), name, 'package.json')
+            join(process.cwd(), name, 'package.json')
           );
         }
 
