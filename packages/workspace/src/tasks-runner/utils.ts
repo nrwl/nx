@@ -81,17 +81,11 @@ export function getDependencyConfigs(
   defaultDependencyConfigs: Record<string, TargetDependencyConfig[]>,
   projectGraph: ProjectGraph
 ): TargetDependencyConfig[] | undefined {
-  const dependencyConfigs = new Set<TargetDependencyConfig>(
-    defaultDependencyConfigs[target] ?? []
-  );
-  const projectDependencyConfigs =
-    projectGraph.nodes[project].data?.targets[target]?.dependsOn;
-
-  if (projectDependencyConfigs) {
-    for (const dependencyConfig of projectDependencyConfigs) {
-      dependencyConfigs.add(dependencyConfig);
-    }
-  }
+  // DependencyConfigs configured in workspace.json override configurations at the root.
+  const dependencyConfigs =
+    projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
+    defaultDependencyConfigs[target] ??
+    [];
 
   for (const dependencyConfig of dependencyConfigs) {
     if (
@@ -107,7 +101,7 @@ export function getDependencyConfigs(
       process.exit(1);
     }
   }
-  return Array.from(dependencyConfigs);
+  return dependencyConfigs;
 }
 
 export function getOutputs(p: Record<string, ProjectGraphNode>, task: Task) {
