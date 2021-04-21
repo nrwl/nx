@@ -215,10 +215,8 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
       {
         loader: require.resolve('postcss-loader'),
         options: {
-          postcssOptions: {
-            implementation: require('postcss'),
-            postcssOptions: postcssOptionsCreator(componentsSourceMap),
-          },
+          implementation: require('postcss'),
+          postcssOptions: postcssOptionsCreator(componentsSourceMap),
         },
       },
       ...(use as webpack.Loader[]),
