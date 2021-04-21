@@ -9,6 +9,7 @@ import { ProjectGraph } from '../core/project-graph';
 import { NxJson } from '../core/shared-interfaces';
 import { TaskOrderer } from './task-orderer';
 import { TaskOrchestrator } from './task-orchestrator';
+import { getDefaultDependencyConfigs } from './utils';
 
 export interface RemoteCache {
   retrieve: (hash: string, cacheDirectory: string) => Promise<boolean>;
@@ -75,16 +76,18 @@ async function runAllTasks(
   tasks: Task[],
   options: DefaultTasksRunnerOptions,
   context: {
-    target: string;
     initiatingProject?: string;
     projectGraph: ProjectGraph;
     nxJson: NxJson;
   }
 ): Promise<Array<{ task: Task; type: any; success: boolean }>> {
+  const defaultTargetDependencies = getDefaultDependencyConfigs(
+    context.nxJson,
+    options
+  );
   const stages = new TaskOrderer(
-    options,
-    context.target,
-    context.projectGraph
+    context.projectGraph,
+    defaultTargetDependencies
   ).splitTasksIntoStages(tasks);
 
   const orchestrator = new TaskOrchestrator(

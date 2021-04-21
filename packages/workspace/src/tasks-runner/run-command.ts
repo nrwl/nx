@@ -17,7 +17,7 @@ import {
   projectHasTargetAndConfiguration,
 } from '../utilities/project-graph-utils';
 import { output } from '../utilities/output';
-import { getDependencyConfigs } from './utils';
+import { getDefaultDependencyConfigs, getDependencyConfigs } from './utils';
 
 type RunArgs = yargs.Arguments & ReporterArgs;
 
@@ -37,6 +37,7 @@ export async function runCommand<T extends RunArgs>(
     overrides
   );
 
+  const defaultDependencyConfigs = getDefaultDependencyConfigs(nxJson);
   const tasks = createTasksForProjectToRun(
     projectsToRun,
     {
@@ -45,7 +46,8 @@ export async function runCommand<T extends RunArgs>(
       overrides,
     },
     projectGraph,
-    initiatingProject
+    initiatingProject,
+    defaultDependencyConfigs
   );
 
   const hasher = new Hasher(projectGraph, nxJson, runnerOptions);
@@ -106,7 +108,8 @@ export function createTasksForProjectToRun(
   projectsToRun: ProjectGraphNode[],
   params: Omit<TaskParams, 'project' | 'errorIfCannotFindConfiguration'>,
   projectGraph: ProjectGraph,
-  initiatingProject: string | null
+  initiatingProject: string | null,
+  defaultDependencyConfigs: Record<string, TargetDependencyConfig[]> = {}
 ) {
   const tasksMap: Map<string, Task> = new Map<string, Task>();
 
@@ -117,6 +120,7 @@ export function createTasksForProjectToRun(
         ...params,
         errorIfCannotFindConfiguration: project.name === initiatingProject,
       },
+      defaultDependencyConfigs,
       projectGraph,
       tasksMap,
       []
@@ -133,12 +137,14 @@ function addTasksForProjectTarget(
     overrides,
     errorIfCannotFindConfiguration,
   }: TaskParams,
+  defaultDependencyConfigs: Record<string, TargetDependencyConfig[]> = {},
   projectGraph: ProjectGraph,
   tasksMap: Map<string, Task>,
   path: string[]
 ) {
   const dependencyConfigs = getDependencyConfigs(
     { project: project.name, target },
+    defaultDependencyConfigs,
     projectGraph
   );
 
@@ -151,6 +157,7 @@ function addTasksForProjectTarget(
           configuration,
         },
         dependencyConfig,
+        defaultDependencyConfigs,
         projectGraph,
         tasksMap,
         path
@@ -213,6 +220,7 @@ function addTasksForProjectDependencyConfig(
   project: ProjectGraphNode,
   { target, configuration }: Pick<TaskParams, 'target' | 'configuration'>,
   dependencyConfig: TargetDependencyConfig,
+  defaultDependencyConfigs: Record<string, TargetDependencyConfig[]>,
   projectGraph: ProjectGraph,
   tasksMap: Map<string, Task>,
   path: string[]
@@ -248,6 +256,7 @@ function addTasksForProjectDependencyConfig(
             overrides: {},
             errorIfCannotFindConfiguration: false,
           },
+          defaultDependencyConfigs,
           projectGraph,
           tasksMap,
           [...path, targetIdentifier]
@@ -263,6 +272,7 @@ function addTasksForProjectDependencyConfig(
         overrides: {},
         errorIfCannotFindConfiguration: true,
       },
+      defaultDependencyConfigs,
       projectGraph,
       tasksMap,
       [...path, targetIdentifier]
