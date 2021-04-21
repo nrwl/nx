@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Tree } from '@nrwl/tao/src/shared/tree';
 import { join, relative } from 'path';
+import { logger } from '@nrwl/tao/src/shared/logger';
 
 const binaryExts = new Set([
   // // Image types originally from https://github.com/sindresorhus/image-type/blob/5541b6a/index.js
@@ -74,7 +75,12 @@ export function generateFiles(
       newContent = fs.readFileSync(filePath);
     } else {
       const template = fs.readFileSync(filePath).toString();
-      newContent = ejs.render(template, substitutions, {});
+      try {
+        newContent = ejs.render(template, substitutions, {});
+      } catch (e) {
+        logger.error(`Error in ${filePath.replace(`${host.root}/`, '')}:`);
+        throw e;
+      }
     }
 
     host.write(computedPath, newContent);
