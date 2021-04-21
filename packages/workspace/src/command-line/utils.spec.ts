@@ -23,6 +23,8 @@ describe('splitArgs', () => {
       base: 'sha1',
       head: 'sha2',
       skipNxCache: false,
+      currentNode: 0,
+      nodes: 1,
     });
   });
 
@@ -53,6 +55,8 @@ describe('splitArgs', () => {
     ).toEqual({
       base: 'master',
       skipNxCache: false,
+      currentNode: 0,
+      nodes: 1,
     });
   });
 
@@ -76,6 +80,8 @@ describe('splitArgs', () => {
     ).toEqual({
       base: 'develop',
       skipNxCache: false,
+      currentNode: 0,
+      nodes: 1,
     });
   });
 
@@ -96,6 +102,8 @@ describe('splitArgs', () => {
     ).toEqual({
       base: 'master',
       skipNxCache: false,
+      currentNode: 0,
+      nodes: 1,
     });
   });
 
@@ -130,6 +138,8 @@ describe('splitArgs', () => {
       base: 'sha1',
       head: 'sha2',
       skipNxCache: false,
+      currentNode: 0,
+      nodes: 1,
     });
     expect(overrides).toEqual({
       notNxArg: true,
@@ -149,6 +159,8 @@ describe('splitArgs', () => {
 
     expect(nxArgs).toEqual({
       skipNxCache: false,
+      currentNode: 0,
+      nodes: 1,
     });
     expect(overrides).toEqual({
       notNxArg: true,

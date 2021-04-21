@@ -39,11 +39,7 @@ export async function runCommand<T extends RunArgs>(
   );
 
   const tasks = createTasksForProjectToRun(
-    chunkArrayBetweenNodes(
-      projectsToRun,
-      nxArgs.nodes,
-      nxArgs.currentNode
-    ),
+    chunkArrayBetweenNodes(projectsToRun, nxArgs.nodes, nxArgs.currentNode),
     {
       target: nxArgs.target,
       configuration: nxArgs.configuration,
