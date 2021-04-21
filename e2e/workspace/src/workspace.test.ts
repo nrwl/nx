@@ -19,50 +19,150 @@ import {
 describe('run-one', () => {
   let proj: string;
 
-  beforeEach(() => (proj = newProject()));
+  beforeAll(() => (proj = newProject()));
 
-  afterEach(() => removeProject({ onlyOnCI: true }));
+  afterAll(() => removeProject({ onlyOnCI: true }));
 
-  it('should build specific project', () => {
-    const myapp = uniq('myapp');
-    const mylib1 = uniq('mylib1');
-    const mylib2 = uniq('mylib1');
+  it('should build a specific project', () => {
+    const myapp = uniq('app');
     runCLI(`generate @nrwl/react:app ${myapp}`);
-    runCLI(`generate @nrwl/react:lib ${mylib1} --buildable`);
-    runCLI(`generate @nrwl/react:lib ${mylib2} --buildable`);
 
-    updateFile(
-      `apps/${myapp}/src/main.ts`,
-      `
-          import "@${proj}/${mylib1}";
-          import "@${proj}/${mylib2}";
-        `
-    );
+    runCLI(`build ${myapp}`);
+  }, 10000);
 
-    // configuration has to be valid for the initiating project
-    expect(() => runCLI(`build ${myapp} -c=invalid`)).toThrow();
+  it('should build a specific project', () => {
+    const myapp = uniq('app');
+    runCLI(`generate @nrwl/react:app ${myapp}`);
+
+    runCLI(`build ${myapp}`);
+  }, 10000);
+
+  it('should build the project when within the project root', () => {
+    const myapp = uniq('app');
+    runCLI(`generate @nrwl/react:app ${myapp}`);
+
+    // Should work within the project directory
     expect(runCommand(`cd apps/${myapp}-e2e/src && npx nx lint`)).toContain(
       `nx run ${myapp}-e2e:lint`
     );
+  }, 10000);
 
-    // configuration doesn't have to exists for deps (here only the app has production)
-    const buildWithDeps = runCLI(`build ${myapp} --with-deps --prod`);
-    expect(buildWithDeps).toContain(`Running target "build" succeeded`);
-    expect(buildWithDeps).toContain(`nx run ${myapp}:build:production`);
-    expect(buildWithDeps).toContain(`nx run ${mylib1}:build`);
-    expect(buildWithDeps).toContain(`nx run ${mylib2}:build`);
+  it('should error for invalid configurations', () => {
+    const myapp = uniq('app');
+    runCLI(`generate @nrwl/react:app ${myapp}`);
+    // configuration has to be valid for the initiating project
+    expect(() => runCLI(`build ${myapp} -c=invalid`)).toThrow();
+  }, 10000);
 
-    const testsWithDeps = runCLI(`test ${myapp} --with-deps`);
-    expect(testsWithDeps).toContain(
-      `NX  Running target test for project ${myapp} and its 2 deps`
-    );
-    expect(testsWithDeps).toContain(myapp);
-    expect(testsWithDeps).toContain(mylib1);
-    expect(testsWithDeps).toContain(mylib2);
+  describe('--with-deps', () => {
+    let myapp;
+    let mylib1;
+    let mylib2;
+    beforeAll(() => {
+      myapp = uniq('myapp');
+      mylib1 = uniq('mylib1');
+      mylib2 = uniq('mylib1');
+      runCLI(`generate @nrwl/react:app ${myapp}`);
+      runCLI(`generate @nrwl/react:lib ${mylib1} --buildable`);
+      runCLI(`generate @nrwl/react:lib ${mylib2} --buildable`);
 
-    const testsWithoutDeps = runCLI(`test ${myapp}`);
-    expect(testsWithoutDeps).not.toContain(mylib1);
-  }, 1000000);
+      updateFile(
+        `apps/${myapp}/src/main.ts`,
+        `
+          import "@${proj}/${mylib1}";
+          import "@${proj}/${mylib2}";
+        `
+      );
+    });
+
+    it('should include deps', () => {
+      const output = runCLI(`test ${myapp} --with-deps`);
+      expect(output).toContain(
+        `NX  Running target test for project ${myapp} and 2 task(s) that it depends on.`
+      );
+      expect(output).toContain(myapp);
+      expect(output).toContain(mylib1);
+      expect(output).toContain(mylib2);
+    }, 10000);
+
+    it('should include deps without the configuration if it does not exist', () => {
+      const buildWithDeps = runCLI(`build ${myapp} --with-deps --prod`);
+      expect(buildWithDeps).toContain(`Running target "build" succeeded`);
+      expect(buildWithDeps).toContain(`nx run ${myapp}:build:production`);
+      expect(buildWithDeps).toContain(`nx run ${mylib1}:build`);
+      expect(buildWithDeps).toContain(`nx run ${mylib2}:build`);
+      expect(buildWithDeps).not.toContain(`nx run ${mylib1}:build:production`);
+      expect(buildWithDeps).not.toContain(`nx run ${mylib2}:build:production`);
+    }, 10000);
+  });
+
+  describe('target dependencies', () => {
+    let myapp;
+    let mylib1;
+    let mylib2;
+    beforeAll(() => {
+      myapp = uniq('myapp');
+      mylib1 = uniq('mylib1');
+      mylib2 = uniq('mylib1');
+      runCLI(`generate @nrwl/react:app ${myapp}`);
+      runCLI(`generate @nrwl/react:lib ${mylib1} --buildable`);
+      runCLI(`generate @nrwl/react:lib ${mylib2} --buildable`);
+
+      updateFile(
+        `apps/${myapp}/src/main.ts`,
+        `
+          import "@${proj}/${mylib1}";
+          import "@${proj}/${mylib2}";
+        `
+      );
+    });
+
+    it('should be able to include deps using target dependencies', () => {
+      const originalWorkspace = readFile('workspace.json');
+      const workspace = readJson('workspace.json');
+      workspace.projects[myapp].targets.build.dependsOn = [
+        {
+          target: 'build',
+          projects: 'dependencies',
+        },
+      ];
+      updateFile('workspace.json', JSON.stringify(workspace));
+
+      const output = runCLI(`build ${myapp}`);
+      expect(output).toContain(
+        `NX  Running target build for project ${myapp} and 2 task(s) that it depends on.`
+      );
+      expect(output).toContain(myapp);
+      expect(output).toContain(mylib1);
+      expect(output).toContain(mylib2);
+
+      updateFile('workspace.json', originalWorkspace);
+    }, 10000);
+
+    it('should be able to include deps using target dependencies defined at the root', () => {
+      const originalNxJson = readFile('nx.json');
+      const nxJson = readJson('nx.json');
+      nxJson.targetDependencies = {
+        build: [
+          {
+            target: 'build',
+            projects: 'dependencies',
+          },
+        ],
+      };
+      updateFile('nx.json', JSON.stringify(nxJson));
+
+      const output = runCLI(`build ${myapp}`);
+      expect(output).toContain(
+        `NX  Running target build for project ${myapp} and 2 task(s) that it depends on.`
+      );
+      expect(output).toContain(myapp);
+      expect(output).toContain(mylib1);
+      expect(output).toContain(mylib2);
+
+      updateFile('nx.json', originalNxJson);
+    }, 10000);
+  });
 });
 
 describe('run-many', () => {
@@ -104,7 +204,7 @@ describe('run-many', () => {
       const buildParallel = runCLI(
         `run-many --target=build --projects="${libC},${libB}"`
       );
-      expect(buildParallel).toContain(`Running target build for projects:`);
+      expect(buildParallel).toContain(`Running target build for 2 project(s):`);
       expect(buildParallel).not.toContain(`- ${libA}`);
       expect(buildParallel).toContain(`- ${libB}`);
       expect(buildParallel).toContain(`- ${libC}`);
@@ -113,7 +213,10 @@ describe('run-many', () => {
 
       // testing run many --all starting
       const buildAllParallel = runCLI(`run-many --target=build --all`);
-      expect(buildAllParallel).toContain(`Running target build for projects:`);
+      expect(buildAllParallel).toContain(
+        `Running target build for 4 project(s):`
+      );
+      expect(buildAllParallel).toContain(`- ${appA}`);
       expect(buildAllParallel).toContain(`- ${libA}`);
       expect(buildAllParallel).toContain(`- ${libB}`);
       expect(buildAllParallel).toContain(`- ${libC}`);
@@ -124,7 +227,7 @@ describe('run-many', () => {
       const buildWithDeps = runCLI(
         `run-many --target=build --projects="${libA}" --with-deps`
       );
-      expect(buildWithDeps).toContain(`Running target build for projects:`);
+      expect(buildWithDeps).toContain(`Running target build for 2 project(s):`);
       expect(buildWithDeps).toContain(`- ${libA}`);
       expect(buildWithDeps).toContain(`- ${libC}`);
       expect(buildWithDeps).not.toContain(`- ${libB}`);
@@ -135,7 +238,7 @@ describe('run-many', () => {
       const buildConfig = runCLI(
         `run-many --target=build --projects="${appA},${libA}" --prod`
       );
-      expect(buildConfig).toContain(`Running target build for projects:`);
+      expect(buildConfig).toContain(`Running target build for 2 project(s):`);
       expect(buildConfig).toContain(`run ${appA}:build:production`);
       expect(buildConfig).toContain(`run ${libA}:build:production`);
       expect(buildConfig).toContain('Running target "build" succeeded');
@@ -163,7 +266,7 @@ describe('run-many', () => {
     const failedTests = runCLI(`run-many --target=test --all`, {
       silenceError: true,
     });
-    expect(failedTests).toContain(`Running target test for projects:`);
+    expect(failedTests).toContain(`Running target test for 2 project(s):`);
     expect(failedTests).toContain(`- ${myapp}`);
     expect(failedTests).toContain(`- ${myapp2}`);
     expect(failedTests).toContain(`Failed projects:`);
@@ -185,7 +288,7 @@ describe('run-many', () => {
     );
 
     const isolatedTests = runCLI(`run-many --target=test --all --only-failed`);
-    expect(isolatedTests).toContain(`Running target test for projects`);
+    expect(isolatedTests).toContain(`Running target test for 1 project(s)`);
     expect(isolatedTests).toContain(`- ${myapp}`);
     expect(isolatedTests).not.toContain(`- ${myapp2}`);
 
@@ -295,7 +398,7 @@ describe('affected:*', () => {
     const build = runCLI(
       `affected:build --files="libs/${mylib}/src/index.ts" --parallel`
     );
-    expect(build).toContain(`Running target build for projects:`);
+    expect(build).toContain(`Running target build for 2 project(s):`);
     expect(build).toContain(`- ${myapp}`);
     expect(build).toContain(`- ${mypublishablelib}`);
     expect(build).not.toContain('is not registered with the build command');
@@ -304,7 +407,7 @@ describe('affected:*', () => {
     const buildExcluded = runCLI(
       `affected:build --files="libs/${mylib}/src/index.ts" --exclude ${myapp}`
     );
-    expect(buildExcluded).toContain(`Running target build for projects:`);
+    expect(buildExcluded).toContain(`Running target build for 1 project(s):`);
     expect(buildExcluded).toContain(`- ${mypublishablelib}`);
 
     // test
@@ -320,7 +423,7 @@ describe('affected:*', () => {
       `affected:test --files="libs/${mylib}/src/index.ts"`,
       { silenceError: true }
     );
-    expect(failedTests).toContain(`Running target test for projects:`);
+    expect(failedTests).toContain(`Running target test for 3 project(s):`);
     expect(failedTests).toContain(`- ${mylib}`);
     expect(failedTests).toContain(`- ${myapp}`);
     expect(failedTests).toContain(`- ${mypublishablelib}`);
@@ -349,7 +452,7 @@ describe('affected:*', () => {
     const isolatedTests = runCLI(
       `affected:test --files="libs/${mylib}/src/index.ts" --only-failed`
     );
-    expect(isolatedTests).toContain(`Running target test for projects`);
+    expect(isolatedTests).toContain(`Running target test for 1 project(s)`);
     expect(isolatedTests).toContain(`- ${myapp}`);
 
     const interpolatedTests = runCLI(

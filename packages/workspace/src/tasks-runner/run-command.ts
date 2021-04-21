@@ -1,7 +1,7 @@
 import { AffectedEventType, Task, TasksRunner } from './tasks-runner';
 import { join } from 'path';
 import { appRootPath } from '../utilities/app-root';
-import { ReporterArgs } from './default-reporter';
+import { Reporter, ReporterArgs } from './reporter';
 import * as yargs from 'yargs';
 import {
   ProjectGraph,
@@ -27,15 +27,10 @@ export async function runCommand<T extends RunArgs>(
   { nxJson, workspaceResults }: Environment,
   nxArgs: NxArgs,
   overrides: any,
-  reporter: any,
+  reporter: Reporter,
   initiatingProject: string | null
 ) {
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
-  reporter.beforeRun(
-    projectsToRun.map((p) => p.name),
-    nxArgs,
-    overrides
-  );
 
   const defaultDependencyConfigs = getDefaultDependencyConfigs(nxJson);
   const tasks = createTasksForProjectToRun(
@@ -50,13 +45,21 @@ export async function runCommand<T extends RunArgs>(
     defaultDependencyConfigs
   );
 
+  reporter.beforeRun(
+    projectsToRun.map((p) => p.name),
+    tasks,
+    nxArgs,
+    overrides
+  );
+
   const hasher = new Hasher(projectGraph, nxJson, runnerOptions);
   const res = await hasher.hashTasks(tasks);
   for (let i = 0; i < res.length; ++i) {
     tasks[i].hash = res[i].value;
     tasks[i].hashDetails = res[i].details;
   }
-  const cached = [];
+  const cachedTasks: Task[] = [];
+  const failedTasks: Task[] = [];
   tasksRunner(tasks, runnerOptions, {
     initiatingProject,
     target: nxArgs.target,
@@ -66,12 +69,38 @@ export async function runCommand<T extends RunArgs>(
     next: (event: any) => {
       switch (event.type) {
         case AffectedEventType.TaskComplete: {
-          workspaceResults.setResult(event.task.target.project, event.success);
+          if (
+            projectsToRun
+              .map((project) => project.name)
+              .includes(event.task.target.project) &&
+            event.task.target.target === nxArgs.target
+          ) {
+            workspaceResults.setResult(
+              event.task.target.project,
+              event.success
+            );
+          }
+          if (!event.success) {
+            failedTasks.push(event.task);
+          }
           break;
         }
         case AffectedEventType.TaskCacheRead: {
-          workspaceResults.setResult(event.task.target.project, event.success);
-          cached.push(event.task.target.project);
+          if (
+            projectsToRun
+              .map((project) => project.name)
+              .includes(event.task.target.project) &&
+            event.task.target.target === nxArgs.target
+          ) {
+            workspaceResults.setResult(
+              event.task.target.project,
+              event.success
+            );
+          }
+          cachedTasks.push(event.task);
+          if (!event.success) {
+            failedTasks.push(event.task);
+          }
           break;
         }
       }
@@ -86,7 +115,9 @@ export async function runCommand<T extends RunArgs>(
         nxArgs,
         workspaceResults.failedProjects,
         workspaceResults.startedWithFailedProjects,
-        cached
+        tasks,
+        failedTasks,
+        cachedTasks
       );
 
       if (workspaceResults.hasFailure) {

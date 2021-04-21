@@ -1,15 +1,16 @@
 import { output } from '../utilities/output';
+import { Task } from './tasks-runner';
+import { Reporter, ReporterArgs } from './reporter';
 
-export interface ReporterArgs {
-  target?: string;
-  configuration?: string;
-  onlyFailed?: boolean;
-}
-
-export class DefaultReporter {
+export class DefaultReporter implements Reporter {
   private projectNames: string[];
 
-  beforeRun(projectNames: string[], args: ReporterArgs, taskOverrides: any) {
+  beforeRun(
+    projectNames: string[],
+    tasks: Task[],
+    args: ReporterArgs,
+    taskOverrides: any
+  ) {
     this.projectNames = projectNames;
 
     if (projectNames.length <= 0) {
@@ -32,10 +33,19 @@ export class DefaultReporter {
         .forEach((arg) => bodyLines.push(arg));
     }
 
+    let title = `${output.colors.gray('Running target')} ${
+      args.target
+    } ${output.colors.gray(`for`)} ${projectNames.length} project(s)`;
+    const dependentTasksCount = tasks.length - projectNames.length;
+    if (dependentTasksCount > 0) {
+      title += ` ${output.colors.gray(`and`)} ${
+        tasks.length - projectNames.length
+      } task(s) ${output.colors.gray(`they depend on`)}`;
+    }
+    title += ':';
+
     output.log({
-      title: `${output.colors.gray('Running target')} ${
-        args.target
-      } ${output.colors.gray('for projects:')}`,
+      title,
       bodyLines,
     });
 
@@ -46,17 +56,19 @@ export class DefaultReporter {
     args: ReporterArgs,
     failedProjectNames: string[],
     startedWithFailedProjects: boolean,
-    cachedProjectNames: string[]
+    tasks: Task[],
+    failedTasks: Task[],
+    cachedTasks: Task[]
   ) {
     output.addNewline();
     output.addVerticalSeparatorWithoutNewLines();
 
     if (failedProjectNames.length === 0) {
       const bodyLines =
-        cachedProjectNames.length > 0
+        cachedTasks.length > 0
           ? [
               output.colors.gray(
-                `Nx read the output from cache instead of running the command for ${cachedProjectNames.length} out of ${this.projectNames.length} projects.`
+                `Nx read the output from cache instead of running the command for ${cachedTasks.length} out of ${tasks.length} tasks.`
               ),
             ]
           : [];
@@ -85,6 +97,10 @@ export class DefaultReporter {
         ...failedProjectNames.map(
           (project) => `${output.colors.gray('-')} ${project}`
         ),
+        '',
+        output.colors.gray('Failed tasks:'),
+        '',
+        ...failedTasks.map((task) => `${output.colors.gray('-')} ${task.id}`),
       ];
       if (!args.onlyFailed && !startedWithFailedProjects) {
         bodyLines.push('');
