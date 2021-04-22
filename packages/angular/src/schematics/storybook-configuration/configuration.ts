@@ -4,11 +4,13 @@ import {
   Rule,
   schematic,
   noop,
+  Tree,
 } from '@angular-devkit/schematics';
 import { StorybookStoriesSchema } from '../stories/stories';
 import { StorybookConfigureSchema } from './schema';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-import { getE2eProjectName } from '@nrwl/cypress';
+import { getE2eProjectName } from '@nrwl/cypress/src/utils/project-name';
+import { getWorkspace } from '@nrwl/workspace';
 
 export default function (schema: StorybookConfigureSchema): Rule {
   if (schema.generateCypressSpecs && !schema.generateStories) {
@@ -24,18 +26,20 @@ export default function (schema: StorybookConfigureSchema): Rule {
       configureCypress: schema.configureCypress,
       linter: schema.linter,
       cypressDirectory: schema.cypressDirectory,
-      cypressName: schema.cypressName,
     }),
     schema.generateStories ? generateStories(schema) : noop(),
   ]);
 }
 
 function generateStories(schema: StorybookConfigureSchema): Rule {
-  return (tree, context) => {
-    const e2eProjectName = getE2eProjectName({
-      name: schema.cypressName || `${schema.name}-e2e`,
-      directory: schema.cypressDirectory,
-    });
+  return async (tree: Tree, context) => {
+    const workspace = await getWorkspace(tree);
+    const project = workspace.projects.get(schema.name);
+    const e2eProjectName = getE2eProjectName(
+      schema.name,
+      project.root,
+      schema.cypressDirectory
+    );
     return schematic<StorybookStoriesSchema>('stories', {
       name: schema.name,
       generateCypressSpecs:
