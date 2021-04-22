@@ -102,6 +102,14 @@ Type: `string`
 
 undefined
 
+### generateIndexHtml
+
+Default: `true`
+
+Type: `boolean`
+
+Write an `index.html` file based on the `index` option. False may be useful when using a separate plugin to generate HTML such as html-webpack-plugin
+
 ### index
 
 Type: `string`
