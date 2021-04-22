@@ -1,8 +1,9 @@
 import * as chalk from 'chalk';
-import * as fs from 'fs';
+import { readFileSync } from 'fs';
+import { readJsonSync } from 'fs-extra';
 import * as parseLinks from 'parse-markdown-links';
-import * as path from 'path';
 import * as glob from 'glob';
+import { join } from 'path';
 
 console.log(`${chalk.blue('i')} Internal Link Check`);
 
@@ -36,8 +37,7 @@ const FRAMEWORK_SYMBOL = '{{framework}}';
 const DIRECT_INTERNAL_LINK_SYMBOL = 'https://nx.dev';
 
 function readFileContents(path: string): string {
-  const buffer = fs.readFileSync(path, { encoding: 'utf-8' });
-  return buffer.toString();
+  return readFileSync(path, 'utf-8');
 }
 
 function isLinkInternal(linkPath: string): boolean {
@@ -139,9 +139,7 @@ function isCategoryNode(
 }
 
 function getDocumentMap(): DocumentTree[] {
-  return JSON.parse(
-    fs.readFileSync(path.join(BASE_PATH, 'map.json'), 'utf-8')
-  ) as DocumentTree[];
+  return readJsonSync(join(BASE_PATH, 'map.json'));
 }
 
 interface DocumentPaths {
@@ -151,7 +149,7 @@ interface DocumentPaths {
 }
 
 function determineAnchors(filePath: string): string[] {
-  const fullPath = path.join(BASE_PATH, filePath);
+  const fullPath = join(BASE_PATH, filePath);
   const contents = readFileContents(fullPath).split('\n');
   const anchors = contents
     .filter((x) => x.startsWith('##'))
@@ -176,7 +174,7 @@ function buildMapOfExisitingDocumentPaths(
         treeNode.id,
       ]);
     } else {
-      const fullPath = path.join(path.join(...ids), treeNode.id);
+      const fullPath = join(join(...ids), treeNode.id);
       acc[/*treeNode.file ||*/ fullPath] = {
         relativeUrl: fullPath,
         relativeFilePath: treeNode.file || fullPath,

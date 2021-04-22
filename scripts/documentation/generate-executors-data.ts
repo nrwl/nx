@@ -1,5 +1,6 @@
-import * as fs from 'fs-extra';
-import * as path from 'path';
+import { readFileSync } from 'fs';
+import { removeSync, readJsonSync } from 'fs-extra';
+import { join, relative } from 'path';
 import { parseJsonSchemaToOptions } from './json-parser';
 import { dedent } from 'tslint/lib/utils';
 import { FileSystemSchematicJsonDescription } from '@angular-devkit/schematics/tools';
@@ -34,9 +35,9 @@ registry.addFormat(htmlSelectorFormat);
 
 function readExecutorsJson(root: string) {
   try {
-    return fs.readJsonSync(path.join(root, 'builders.json')).builders;
+    return readJsonSync(join(root, 'builders.json')).builders;
   } catch (e) {
-    return fs.readJsonSync(path.join(root, 'executors.json')).executors;
+    return readJsonSync(join(root, 'executors.json')).executors;
   }
 }
 
@@ -44,20 +45,20 @@ function generateSchematicList(
   config: Configuration,
   registry: CoreSchemaRegistry
 ): Promise<FileSystemSchematicJsonDescription>[] {
-  fs.removeSync(config.builderOutput);
+  removeSync(config.builderOutput);
   const builderCollection = readExecutorsJson(config.root);
   return Object.keys(builderCollection).map((builderName) => {
-    const schemaPath = path.join(
+    const schemaPath = join(
       config.root,
       builderCollection[builderName]['schema']
     );
     let builder = {
       name: builderName,
       ...builderCollection[builderName],
-      rawSchema: fs.readJsonSync(schemaPath),
+      rawSchema: readJsonSync(schemaPath),
     };
     if (builder.rawSchema.examplesFile) {
-      builder.examplesFileFullPath = path.join(
+      builder.examplesFileFullPath = join(
         schemaPath.replace('schema.json', ''),
         builder.rawSchema.examplesFile
       );
@@ -91,8 +92,7 @@ function generateTemplate(
 
   if (builder.examplesFileFullPath) {
     template += `## Examples\n`;
-    let examples = fs
-      .readFileSync(builder.examplesFileFullPath)
+    let examples = readFileSync(builder.examplesFileFullPath)
       .toString()
       .replace(/<%= cli %>/gm, cliCommand);
     template += dedent`${examples}`;
@@ -189,9 +189,9 @@ export async function generateExecutorsDocumentation() {
               ` - ${chalk.blue(
                 config.framework
               )} Documentation for ${chalk.magenta(
-                path.relative(process.cwd(), config.root)
+                relative(process.cwd(), config.root)
               )} generated at ${chalk.grey(
-                path.relative(process.cwd(), config.builderOutput)
+                relative(process.cwd(), config.builderOutput)
               )}`
             );
           })
@@ -207,7 +207,7 @@ export async function generateExecutorsDocumentation() {
         .map((item) => item.name);
 
       await generateJsonFile(
-        path.join(__dirname, '../../docs', framework, 'executors.json'),
+        join(__dirname, '../../docs', framework, 'executors.json'),
         builders
       );
 

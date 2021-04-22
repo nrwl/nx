@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import { readFileSync, readdirSync, statSync } from 'fs';
 import * as path from 'path';
 import { Tree } from '@nrwl/tao/src/shared/tree';
 import { join, relative } from 'path';
@@ -72,9 +72,9 @@ export function generateFiles(
     );
 
     if (binaryExts.has(path.extname(filePath))) {
-      newContent = fs.readFileSync(filePath);
+      newContent = readFileSync(filePath);
     } else {
-      const template = fs.readFileSync(filePath).toString();
+      const template = readFileSync(filePath, 'utf-8');
       try {
         newContent = ejs.render(template, substitutions, {});
       } catch (e) {
@@ -107,10 +107,10 @@ function computePath(
 function allFilesInDir(parent: string) {
   let res = [];
   try {
-    fs.readdirSync(parent).forEach((c) => {
+    readdirSync(parent).forEach((c) => {
       const child = join(parent, c);
       try {
-        const s = fs.statSync(child);
+        const s = statSync(child);
         if (!s.isDirectory()) {
           res.push(child);
         } else if (s.isDirectory()) {

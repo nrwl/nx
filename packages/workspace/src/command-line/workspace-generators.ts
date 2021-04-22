@@ -1,7 +1,12 @@
 import * as chalk from 'chalk';
 import { execSync } from 'child_process';
-import * as fs from 'fs';
-import { writeFileSync } from 'fs';
+import {
+  writeFileSync,
+  readdirSync,
+  readFileSync,
+  statSync,
+  unlinkSync,
+} from 'fs';
 import { copySync, removeSync } from 'fs-extra';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
@@ -110,7 +115,7 @@ function compileToolsDir(outDir: string) {
 
 function constructCollection() {
   const generators = {};
-  fs.readdirSync(generatorsDir()).forEach((c) => {
+  readdirSync(generatorsDir()).forEach((c) => {
     const childDir = path.join(generatorsDir(), c);
     if (exists(path.join(childDir, 'schema.json'))) {
       generators[c] = {
@@ -177,7 +182,7 @@ function listGenerators(collectionFile: string) {
   try {
     const bodyLines: string[] = [];
 
-    const collection = JSON.parse(fs.readFileSync(collectionFile).toString());
+    const collection = JSON.parse(readFileSync(collectionFile).toString());
 
     bodyLines.push(chalk.bold(chalk.green('WORKSPACE GENERATORS')));
     bodyLines.push('');
@@ -422,7 +427,7 @@ function parseOptions(args: string[], outDir: string): { [k: string]: any } {
 
 function exists(file: string): boolean {
   try {
-    return !!fs.statSync(file);
+    return !!statSync(file);
   } catch (e) {
     return false;
   }
@@ -462,7 +467,7 @@ function createTmpTsConfig(
 function cleanupTmpTsConfigFile(tmpTsConfigPath) {
   try {
     if (tmpTsConfigPath) {
-      fs.unlinkSync(tmpTsConfigPath);
+      unlinkSync(tmpTsConfigPath);
     }
   } catch (e) {}
 }

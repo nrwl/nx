@@ -1,7 +1,7 @@
 import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import { ChildProcess, fork } from 'child_process';
 import * as dotenv from 'dotenv';
-import * as fs from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { ProjectGraph } from '../core/project-graph';
 import { appRootPath } from '../utilities/app-root';
 import { output } from '../utilities/output';
@@ -206,7 +206,7 @@ export class TaskOrchestrator {
           }
           if (outputPath) {
             const terminalOutput = outWithErr.join('');
-            fs.writeFileSync(outputPath, terminalOutput);
+            writeFileSync(outputPath, terminalOutput);
             if (this.shouldCacheTask(outputPath, code)) {
               this.cache
                 .put(task, terminalOutput, taskOutputs, code)
@@ -297,7 +297,7 @@ export class TaskOrchestrator {
 
   private readTerminalOutput(outputPath: string) {
     try {
-      return fs.readFileSync(outputPath).toString();
+      return readFileSync(outputPath).toString();
     } catch (e) {
       return null;
     }
@@ -391,7 +391,7 @@ export class TaskOrchestrator {
 
 function parseEnv(path: string) {
   try {
-    const envContents = fs.readFileSync(path);
+    const envContents = readFileSync(path);
     return dotenv.parse(envContents);
   } catch (e) {}
 }

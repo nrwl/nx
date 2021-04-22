@@ -1,10 +1,8 @@
 import { toOldFormatOrNull, Workspaces } from '@nrwl/tao/src/shared/workspace';
 import { FileData, NxJsonConfiguration } from '@nrwl/devkit';
 import { execSync } from 'child_process';
-import * as fs from 'fs';
-import { readFileSync } from 'fs';
-import * as path from 'path';
-import { extname, join } from 'path';
+import { readFileSync, readdirSync, existsSync, statSync } from 'fs';
+import { extname, join, relative, sep } from 'path';
 import { performance } from 'perf_hooks';
 import { NxArgs } from '../command-line/utils';
 import { WorkspaceResults } from '../command-line/workspace-results';
@@ -87,16 +85,15 @@ function defaultReadFileAtRevision(
   revision: void | string
 ): string {
   try {
-    const fileFullPath = `${appRootPath}${path.sep}${file}`;
+    const fileFullPath = `${appRootPath}${sep}${file}`;
     const gitRepositoryPath = execSync('git rev-parse --show-toplevel')
       .toString()
       .trim();
-    const filePathInGitRepository = path
-      .relative(gitRepositoryPath, fileFullPath)
-      .split(path.sep)
+    const filePathInGitRepository = relative(gitRepositoryPath, fileFullPath)
+      .split(sep)
       .join('/');
     return !revision
-      ? readFileSync(file).toString()
+      ? readFileSync(file, 'utf-8')
       : execSync(`git show ${revision}:${filePathInGitRepository}`, {
           maxBuffer: TEN_MEGABYTES,
         })
@@ -108,11 +105,11 @@ function defaultReadFileAtRevision(
 }
 
 function getFileData(filePath: string): FileData {
-  const file = path.relative(appRootPath, filePath).split(path.sep).join('/');
+  const file = relative(appRootPath, filePath).split(sep).join('/');
   return {
     file,
     hash: defaultFileHasher.hashFile(filePath),
-    ext: path.extname(filePath),
+    ext: extname(filePath),
   };
 }
 
@@ -121,20 +118,20 @@ export function allFilesInDir(
   recurse: boolean = true
 ): FileData[] {
   const ignoredGlobs = getIgnoredGlobs();
-  const relDirName = path.relative(appRootPath, dirName);
+  const relDirName = relative(appRootPath, dirName);
   if (relDirName && ignoredGlobs.ignores(relDirName)) {
     return [];
   }
 
   let res = [];
   try {
-    fs.readdirSync(dirName).forEach((c) => {
-      const child = path.join(dirName, c);
-      if (ignoredGlobs.ignores(path.relative(appRootPath, child))) {
+    readdirSync(dirName).forEach((c) => {
+      const child = join(dirName, c);
+      if (ignoredGlobs.ignores(relative(appRootPath, child))) {
         return;
       }
       try {
-        const s = fs.statSync(child);
+        const s = statSync(child);
         if (!s.isDirectory()) {
           // add starting with "apps/myapp/..." or "libs/mylib/..."
           res.push(getFileData(child));
@@ -155,9 +152,7 @@ function getIgnoredGlobs() {
 }
 
 function readFileIfExisting(path: string) {
-  return fs.existsSync(path)
-    ? fs.readFileSync(path, { encoding: 'utf-8' }).toString()
-    : '';
+  return existsSync(path) ? readFileSync(path, 'utf-8') : '';
 }
 
 export function readWorkspaceJson() {
@@ -192,7 +187,7 @@ export function workspaceFileName() {
 export type FileRead = (s: string) => string;
 
 export function defaultFileRead(filePath: string): string | null {
-  return readFileSync(join(appRootPath, filePath), { encoding: 'utf-8' });
+  return readFileSync(join(appRootPath, filePath), 'utf-8');
 }
 
 export function readPackageJson(): any {

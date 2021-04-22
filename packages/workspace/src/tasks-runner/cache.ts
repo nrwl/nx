@@ -7,8 +7,8 @@ import {
   writeFileSync,
   lstatSync,
 } from 'fs';
+import { removeSync, ensureDirSync, copySync } from 'fs-extra';
 import { join, resolve } from 'path';
-import * as fsExtra from 'fs-extra';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { spawn } from 'child_process';
 import { cacheDirectory } from '../utilities/cache-directory';
@@ -97,12 +97,8 @@ export class Cache {
     const tdCommit = join(this.cachePath, `${task.hash}.commit`);
 
     // might be left overs from partially-completed cache invocations
-    if (existsSync(tdCommit)) {
-      fsExtra.removeSync(tdCommit);
-    }
-    if (existsSync(td)) {
-      fsExtra.removeSync(td);
-    }
+    removeSync(tdCommit);
+    removeSync(td);
 
     mkdirSync(td);
     writeFileSync(
@@ -118,9 +114,9 @@ export class Cache {
         // Ensure parent directory is created if src is a file
         const isFile = lstatSync(src).isFile();
         const directory = isFile ? resolve(cached, '..') : cached;
-        fsExtra.ensureDirSync(directory);
+        ensureDirSync(directory);
 
-        fsExtra.copySync(src, cached);
+        copySync(src, cached);
       }
     });
     // we need this file to account for partial writes to the cache folder.
@@ -145,13 +141,12 @@ export class Cache {
       if (existsSync(cached)) {
         const isFile = lstatSync(cached).isFile();
         const src = join(this.root, f);
-        if (existsSync(src)) {
-          fsExtra.removeSync(src);
-        }
+        removeSync(src);
+
         // Ensure parent directory is created if src is a file
         const directory = isFile ? resolve(src, '..') : src;
-        fsExtra.ensureDirSync(directory);
-        fsExtra.copySync(cached, src);
+        ensureDirSync(directory);
+        copySync(cached, src);
       }
     });
   }
@@ -169,12 +164,10 @@ export class Cache {
     const td = join(this.cachePath, task.hash);
 
     if (existsSync(tdCommit)) {
-      const terminalOutput = readFileSync(
-        join(td, 'terminalOutput')
-      ).toString();
+      const terminalOutput = readFileSync(join(td, 'terminalOutput'), 'utf-8');
       let code = 0;
       try {
-        code = Number(readFileSync(join(td, 'code')).toString());
+        code = Number(readFileSync(join(td, 'code'), 'utf-8'));
       } catch (e) {}
       return {
         terminalOutput,
@@ -188,15 +181,13 @@ export class Cache {
 
   private createCacheDir() {
     const dir = cacheDirectory(this.root, this.options.cacheDirectory);
-    if (!existsSync(dir)) {
-      fsExtra.ensureDirSync(dir);
-    }
+    ensureDirSync(dir);
     return dir;
   }
 
   private createTerminalOutputsDir() {
     const path = join(this.cachePath, 'terminalOutputs');
-    fsExtra.ensureDirSync(path);
+    ensureDirSync(path);
     return path;
   }
 }

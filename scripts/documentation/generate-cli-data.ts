@@ -1,6 +1,7 @@
 import * as chalk from 'chalk';
-import * as fs from 'fs-extra';
-import * as path from 'path';
+import { readFileSync } from 'fs';
+import { removeSync } from 'fs-extra';
+import { join } from 'path';
 import { dedent } from 'tslint/lib/utils';
 import { commandsObject } from '../../packages/workspace';
 import { Framework, Frameworks } from './frameworks';
@@ -401,13 +402,13 @@ export async function generateCLIDocumentation() {
 
   await Promise.all(
     Frameworks.map(async (framework: Framework) => {
-      const commandsOutputDirectory = path.join(
+      const commandsOutputDirectory = join(
         __dirname,
         '../../docs/',
         framework,
         'cli'
       );
-      fs.removeSync(commandsOutputDirectory);
+      removeSync(commandsOutputDirectory);
       function getCommands(command) {
         return command.getCommandInstance().getCommandHandlers();
       }
@@ -518,11 +519,11 @@ export async function generateCLIDocumentation() {
 
       await Promise.all(
         sharedCommands.map((command) => {
-          const sharedCommandsDirectory = path.join(
+          const sharedCommandsDirectory = join(
             __dirname,
             '../../docs/shared/cli'
           );
-          const sharedCommandsOutputDirectory = path.join(
+          const sharedCommandsOutputDirectory = join(
             __dirname,
             '../../docs/',
             framework,
@@ -530,9 +531,10 @@ export async function generateCLIDocumentation() {
           );
           const templateObject = {
             name: command,
-            template: fs
-              .readFileSync(path.join(sharedCommandsDirectory, `${command}.md`))
-              .toString('utf-8'),
+            template: readFileSync(
+              join(sharedCommandsDirectory, `${command}.md`),
+              'utf-8'
+            ),
           };
 
           return generateMarkdownFile(

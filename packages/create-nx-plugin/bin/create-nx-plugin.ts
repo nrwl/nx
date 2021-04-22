@@ -103,7 +103,7 @@ function createNxPlugin(
 function updateWorkspace(workspaceName: string) {
   const nxJsonPath = path.join(workspaceName, 'nx.json');
 
-  const nxJson = JSON.parse(readFileSync(nxJsonPath).toString('utf-8'));
+  const nxJson = JSON.parse(readFileSync(nxJsonPath, 'utf-8'));
 
   nxJson['workspaceLayout'] = {
     appsDir: 'e2e',

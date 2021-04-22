@@ -1,4 +1,4 @@
-import * as fs from 'fs-extra';
+import { removeSync, readJsonSync } from 'fs-extra';
 import * as chalk from 'chalk';
 import * as path from 'path';
 import { dedent } from 'tslint/lib/utils';
@@ -36,9 +36,8 @@ function generateSchematicList(
   registry: CoreSchemaRegistry
 ): Promise<FileSystemSchematicJsonDescription>[] {
   const schematicCollectionFile = path.join(config.root, 'collection.json');
-  fs.removeSync(config.schematicOutput);
-  const schematicCollection = fs.readJsonSync(schematicCollectionFile)
-    .schematics;
+  removeSync(config.schematicOutput);
+  const schematicCollection = readJsonSync(schematicCollectionFile).schematics;
   return Object.keys(schematicCollection).map((schematicName) => {
     const schematic = {
       name: schematicName,
@@ -47,7 +46,7 @@ function generateSchematicList(
       alias: schematicCollection[schematicName].hasOwnProperty('aliases')
         ? schematicCollection[schematicName]['aliases'][0]
         : null,
-      rawSchema: fs.readJsonSync(
+      rawSchema: readJsonSync(
         path.join(config.root, schematicCollection[schematicName]['schema'])
       ),
     };

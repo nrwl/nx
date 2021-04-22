@@ -1,14 +1,13 @@
-import * as fs from 'fs';
 import {
   directoryExists,
   readJsonFile,
   writeJsonFile,
 } from '../utilities/fileutils';
 import { existsSync, unlinkSync } from 'fs';
+import { ensureDirSync } from 'fs-extra';
 import { ProjectGraphNode } from '../core/project-graph';
 import { join } from 'path';
 import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
-import * as fsExtra from 'fs-extra';
 import {
   cacheDirectory,
   readCacheDirectoryProperty,
@@ -46,7 +45,7 @@ export class WorkspaceResults {
     private command: string,
     private projects: Record<string, ProjectGraphNode>
   ) {
-    const resultsExists = fs.existsSync(resultsFile);
+    const resultsExists = existsSync(resultsFile);
     this.startedWithFailedProjects = false;
     if (resultsExists) {
       try {
@@ -73,7 +72,7 @@ export class WorkspaceResults {
   saveResults() {
     try {
       if (!existsSync(resultsDir)) {
-        fsExtra.ensureDirSync(resultsDir);
+        ensureDirSync(resultsDir);
       }
     } catch (e) {
       if (!directoryExists(resultsDir)) {
@@ -82,7 +81,7 @@ export class WorkspaceResults {
     }
     if (Object.values<boolean>(this.commandResults.results).includes(false)) {
       writeJsonFile(resultsFile, this.commandResults);
-    } else if (fs.existsSync(resultsFile)) {
+    } else if (existsSync(resultsFile)) {
       unlinkSync(resultsFile);
     }
   }
