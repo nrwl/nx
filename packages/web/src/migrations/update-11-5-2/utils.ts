@@ -9,7 +9,13 @@ export function hasDependentAppUsingWebBuild(
   reversedProjectGraph: ProjectGraph,
   projects: ReturnType<typeof getProjects>
 ) {
+  const seen = new Set<string>();
   function walk(currProject: string) {
+    if (seen.has(currProject)) {
+      return false;
+    }
+    seen.add(currProject);
+
     if (cache.has(currProject)) {
       return cache.get(currProject);
     }
