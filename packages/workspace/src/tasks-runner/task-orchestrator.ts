@@ -320,9 +320,9 @@ export class TaskOrchestrator {
   ) {
     const envsFromFiles = {
       ...parseEnv('.env'),
-      ...parseEnv('.local.env'),
+      ...parseEnv(`${task.target.target === 'test' ? '.test.env' : '.local.env'}`),
       ...parseEnv(`${task.projectRoot}/.env`),
-      ...parseEnv(`${task.projectRoot}/.local.env`),
+      ...parseEnv(`${task.projectRoot}/${task.target.target === 'test' ? '.test.env' : '.local.env'}`),
     };
 
     const env: NodeJS.ProcessEnv = {
