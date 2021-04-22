@@ -73,7 +73,6 @@
     "chalk": "4.1.0",
     "axios": "0.21.1",
     "flat": "^5.0.2",
-    "lodash.template": "~4.5.0",
     "minimatch": "3.0.4",
     "enquirer": "~2.3.6",
     "resolve": "1.17.0",
