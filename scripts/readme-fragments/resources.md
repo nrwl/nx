@@ -14,17 +14,17 @@
   <tr>
     <td>
       <a href="https://egghead.io/playlists/scale-react-development-with-nx-4038" target="_blank">
-      <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/EGH_ScalingReactNx.png" height="150px"></p>
+      <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/EGH_ScalingReactNx.png" height="150px" alt="Nx - Scale React Development with Nx video course"></p>
       </a>
     </td>
     <td>
       <a href="https://www.youtube.com/watch?v=2mYLe9Kp9VM&list=PLakNactNC1dH38AfqmwabvOszDmKriGco" target="_blank">
-        <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-workspace-course.png" width="350"></p>
+        <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-workspace-course.png" width="350" alt="Nx Workspaces video course"></p>
       </a>
     </td>
     <td>  
       <a href="https://nxplaybook.com/p/advanced-nx-workspaces" target="_blank">
-      <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/advanced-nx-workspace-course.png" width="350"></p>
+      <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/advanced-nx-workspace-course.png" width="350" alt="Nx Advanced Workspaces video course"></p>
       </a>
     </td>
   </tr>
