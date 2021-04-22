@@ -144,14 +144,13 @@ export class Cache {
         removeSync(src);
 
         // Ensure parent directory is created if src is a file
-        const directory = isFile ? resolve(src, '..') : src;
-        ensureDirSync(directory);
+        ensureDirSync(isFile ? resolve(src, '..') : src);
         copySync(cached, src);
       }
     });
   }
 
-  temporaryOutputPath(task: Task) {
+  temporaryOutputPath(task: Task): string | null {
     if (this.cacheConfig.isCacheableTask(task)) {
       return join(this.terminalOutputsDir, task.hash);
     } else {
@@ -168,7 +167,7 @@ export class Cache {
       let code = 0;
       try {
         code = Number(readFileSync(join(td, 'code'), 'utf-8'));
-      } catch (e) {}
+      } catch {}
       return {
         terminalOutput,
         outputsPath: join(td, 'outputs'),

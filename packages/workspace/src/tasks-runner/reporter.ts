@@ -6,15 +6,15 @@ export interface ReporterArgs {
   onlyFailed?: boolean;
 }
 
-export abstract class Reporter {
-  abstract beforeRun(
+export interface Reporter {
+  beforeRun(
     projectNames: string[],
     tasks: Task[],
     args: ReporterArgs,
     taskOverrides: any
   ): void;
 
-  abstract printResults(
+  printResults(
     nxArgs: ReporterArgs,
     failedProjects: string[],
     startedWithFailedProjects: boolean,

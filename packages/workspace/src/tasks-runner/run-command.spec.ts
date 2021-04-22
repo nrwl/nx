@@ -1,8 +1,11 @@
 import { TasksRunner } from './tasks-runner';
 import defaultTaskRunner from './default-tasks-runner';
 import { createTasksForProjectToRun, getRunner } from './run-command';
-import { NxJson } from '../core/shared-interfaces';
-import { DependencyType, ProjectGraph } from '@nrwl/devkit';
+import {
+  DependencyType,
+  ProjectGraph,
+  NxJsonConfiguration,
+} from '@nrwl/devkit';
 
 describe('createTasksForProjectToRun', () => {
   let projectGraph: ProjectGraph;
@@ -366,7 +369,7 @@ describe('createTasksForProjectToRun', () => {
         projectGraph.nodes.app1.name
       );
       fail();
-    } catch (e) {
+    } catch {
       expect(process.exit).toHaveBeenCalledWith(1);
     }
   });
@@ -380,7 +383,7 @@ describe('createTasksForProjectToRun', () => {
     ];
     spyOn(process, 'exit').and.throwError('');
     try {
-      const tasks = createTasksForProjectToRun(
+      createTasksForProjectToRun(
         [projectGraph.nodes.app1],
         {
           target: 'serve',
@@ -391,7 +394,7 @@ describe('createTasksForProjectToRun', () => {
         projectGraph.nodes.app1.name
       );
       fail();
-    } catch (e) {
+    } catch {
       expect(process.exit).toHaveBeenCalledWith(1);
     }
   });
@@ -411,7 +414,7 @@ describe('createTasksForProjectToRun', () => {
     ];
     spyOn(process, 'exit').and.throwError('');
     try {
-      const tasks = createTasksForProjectToRun(
+      createTasksForProjectToRun(
         [projectGraph.nodes.app1],
         {
           target: 'build',
@@ -422,16 +425,15 @@ describe('createTasksForProjectToRun', () => {
         null
       );
       fail();
-    } catch (e) {
+    } catch {
       expect(process.exit).toHaveBeenCalledWith(1);
     }
   });
 });
 
 describe('getRunner', () => {
-  let nxJson: NxJson;
+  let nxJson: NxJsonConfiguration;
   let mockRunner: TasksRunner;
-  let overrides: any;
 
   beforeEach(() => {
     nxJson = {
@@ -442,13 +444,13 @@ describe('getRunner', () => {
   });
 
   it('gets a default runner when runner is not defined in the nx json', () => {
-    const { tasksRunner, runnerOptions } = getRunner({}, nxJson);
+    const { tasksRunner } = getRunner({}, nxJson);
 
     expect(tasksRunner).toEqual(defaultTaskRunner);
   });
 
   it('gets a default runner when default options are not configured', () => {
-    const { tasksRunner, runnerOptions } = getRunner({}, nxJson);
+    const { tasksRunner } = getRunner({}, nxJson);
 
     expect(tasksRunner).toEqual(defaultTaskRunner);
   });
@@ -464,10 +466,7 @@ describe('getRunner', () => {
       },
     };
 
-    const { tasksRunner, runnerOptions } = getRunner(
-      { runner: 'custom' },
-      nxJson
-    );
+    const { tasksRunner } = getRunner({ runner: 'custom' }, nxJson);
 
     expect(tasksRunner).toEqual(mockRunner);
   });

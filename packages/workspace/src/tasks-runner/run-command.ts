@@ -7,9 +7,10 @@ import {
   ProjectGraph,
   ProjectGraphNode,
   TargetDependencyConfig,
+  NxJsonConfiguration,
 } from '@nrwl/devkit';
-import { Environment, NxJson } from '../core/shared-interfaces';
-import { NxArgs } from '@nrwl/workspace/src/command-line/utils';
+import { Environment } from '../core/shared-interfaces';
+import { NxArgs } from '../command-line/utils';
 import { isRelativePath } from '../utilities/fileutils';
 import { Hasher } from '../core/hasher/hasher';
 import {
@@ -329,7 +330,7 @@ function getId({
 
 export function getRunner(
   nxArgs: NxArgs,
-  nxJson: NxJson
+  nxJson: NxJsonConfiguration
 ): {
   tasksRunner: TasksRunner;
   runnerOptions: unknown;

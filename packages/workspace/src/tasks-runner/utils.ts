@@ -5,9 +5,9 @@ import {
   TargetDependencyConfig,
 } from '@nrwl/devkit';
 import { Task } from './tasks-runner';
-import * as flatten from 'flat';
+import { flatten } from 'flat';
 import * as _template from 'lodash.template';
-import { output } from '@nrwl/workspace/src/utilities/output';
+import { output } from '../utilities/output';
 
 const commonCommands = ['build', 'test', 'lint', 'e2e', 'deploy'];
 
@@ -163,7 +163,7 @@ function unparseOption(key: string, value: any, unparsed: string[]) {
   } else if (Array.isArray(value)) {
     value.forEach((item) => unparseOption(key, item, unparsed));
   } else if (Object.prototype.toString.call(value) === '[object Object]') {
-    const flattened = flatten(value, { safe: true });
+    const flattened = flatten<unknown, any>(value, { safe: true });
     for (const flattenedKey in flattened) {
       unparseOption(
         `${key}.${flattenedKey}`,

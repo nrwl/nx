@@ -2,7 +2,7 @@ import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import { ChildProcess, fork } from 'child_process';
 import * as dotenv from 'dotenv';
 import { readFileSync, writeFileSync } from 'fs';
-import { ProjectGraph } from '../core/project-graph';
+import { ProjectGraph } from '@nrwl/devkit';
 import { appRootPath } from '../utilities/app-root';
 import { output } from '../utilities/output';
 import { Cache, TaskWithCachedResult } from './cache';
@@ -37,7 +37,7 @@ export class TaskOrchestrator {
       'task-execution-begins'
     );
     performance.measure('nx-prep-work', 'init-local', 'task-execution-begins');
-    const r1 = await this.applyCachedResults(cached);
+    const r1 = this.applyCachedResults(cached);
     const r2 = await this.runRest(rest);
     performance.mark('task-execution-ends');
     performance.measure(
@@ -140,7 +140,7 @@ export class TaskOrchestrator {
     }, []);
   }
 
-  private pipeOutputCapture(task: Task) {
+  private pipeOutputCapture(task: Task): boolean {
     try {
       const p = this.projectGraph.nodes[task.target.project];
       const b = p.data.targets[task.target.target].executor;
@@ -149,7 +149,7 @@ export class TaskOrchestrator {
       const w = new Workspaces(this.workspaceRoot);
       const x = w.readExecutor(nodeModule, executor);
       return x.schema.outputCapture === 'pipe';
-    } catch (e) {
+    } catch {
       return false;
     }
   }
@@ -295,10 +295,10 @@ export class TaskOrchestrator {
     });
   }
 
-  private readTerminalOutput(outputPath: string) {
+  private readTerminalOutput(outputPath: string): string | null {
     try {
-      return readFileSync(outputPath).toString();
-    } catch (e) {
+      return readFileSync(outputPath, 'utf-8');
+    } catch {
       return null;
     }
   }
@@ -317,7 +317,7 @@ export class TaskOrchestrator {
     outputPath: string,
     forwardOutput: boolean,
     forceColor: string
-  ) {
+  ): NodeJS.ProcessEnv {
     const envsFromFiles = {
       ...parseEnv('.env'),
       ...parseEnv('.local.env'),
@@ -350,7 +350,10 @@ export class TaskOrchestrator {
     return env;
   }
 
-  private shouldForwardOutput(outputPath: string | undefined, task: Task) {
+  private shouldForwardOutput(
+    outputPath: string | undefined,
+    task: Task
+  ): boolean {
     if (!outputPath) return true;
     if (!this.options.parallel) return true;
     if (task.target.project === this.initiatingProject) return true;
@@ -393,5 +396,5 @@ function parseEnv(path: string) {
   try {
     const envContents = readFileSync(path);
     return dotenv.parse(envContents);
-  } catch (e) {}
+  } catch {}
 }

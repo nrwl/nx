@@ -1,7 +1,5 @@
 import type { Observable } from 'rxjs';
-
-import { ProjectGraph } from '../core/project-graph';
-import { NxJson } from '../core/shared-interfaces';
+import { ProjectGraph, NxJsonConfiguration } from '@nrwl/devkit';
 
 export interface Task {
   id: string;
@@ -39,6 +37,6 @@ export type TasksRunner<T = unknown> = (
     target?: string;
     initiatingProject?: string | null;
     projectGraph: ProjectGraph;
-    nxJson: NxJson;
+    nxJson: NxJsonConfiguration;
   }
 ) => Observable<AffectedEvent>;

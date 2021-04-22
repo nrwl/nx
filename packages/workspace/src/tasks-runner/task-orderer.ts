@@ -1,9 +1,7 @@
-import { ProjectGraph } from '../core/project-graph';
+import { ProjectGraph, TargetDependencyConfig } from '@nrwl/devkit';
 import { Task } from './tasks-runner';
-import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { getDependencyConfigs } from './utils';
 import { performance } from 'perf_hooks';
-import { TargetDependencyConfig } from '@nrwl/tao/src/shared/workspace';
 
 interface TaskGraph {
   tasks: Record<string, Task>;
@@ -19,7 +17,7 @@ export class TaskOrderer {
     >
   ) {}
 
-  splitTasksIntoStages(tasks: Task[]) {
+  splitTasksIntoStages(tasks: Task[]): Task[][] {
     if (tasks.length === 0) return [];
 
     const stages: Task[][] = [];

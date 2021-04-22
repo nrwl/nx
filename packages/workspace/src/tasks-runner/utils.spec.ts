@@ -1,7 +1,4 @@
-import {
-  getOutputsForTargetAndConfiguration,
-  unparse,
-} from '@nrwl/workspace/src/tasks-runner/utils';
+import { getOutputsForTargetAndConfiguration, unparse } from './utils';
 
 describe('utils', () => {
   describe('getOutputsForTargetAndConfiguration', () => {

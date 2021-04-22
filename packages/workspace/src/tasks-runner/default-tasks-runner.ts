@@ -5,8 +5,7 @@ import {
   TaskCompleteEvent,
   TasksRunner,
 } from './tasks-runner';
-import { ProjectGraph } from '../core/project-graph';
-import { NxJson } from '../core/shared-interfaces';
+import { ProjectGraph, NxJsonConfiguration } from '@nrwl/devkit';
 import { TaskOrderer } from './task-orderer';
 import { TaskOrchestrator } from './task-orchestrator';
 import { getDefaultDependencyConfigs } from './utils';
@@ -18,14 +17,12 @@ export interface RemoteCache {
 
 export interface LifeCycle {
   startTask(task: Task): void;
-
   endTask(task: Task, code: number): void;
 }
 
 class NoopLifeCycle implements LifeCycle {
-  startTask(task: Task): void {}
-
-  endTask(task: Task, code: number): void {}
+  startTask(_task: Task): void {}
+  endTask(_task: Task, _code: number): void {}
 }
 
 export interface DefaultTasksRunnerOptions {
@@ -49,7 +46,7 @@ export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
     target: string;
     initiatingProject?: string;
     projectGraph: ProjectGraph;
-    nxJson: NxJson;
+    nxJson: NxJsonConfiguration;
   }
 ): Observable<TaskCompleteEvent> => {
   if (!options.lifeCycle) {
@@ -78,7 +75,7 @@ async function runAllTasks(
   context: {
     initiatingProject?: string;
     projectGraph: ProjectGraph;
-    nxJson: NxJson;
+    nxJson: NxJsonConfiguration;
   }
 ): Promise<Array<{ task: Task; type: any; success: boolean }>> {
   const defaultTargetDependencies = getDefaultDependencyConfigs(

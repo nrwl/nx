@@ -1,7 +1,6 @@
 import { TaskOrderer } from './task-orderer';
-import { DependencyType } from '../core/project-graph';
 import { createTasksForProjectToRun } from './run-command';
-import { ProjectGraph } from '@nrwl/devkit';
+import { ProjectGraph, DependencyType } from '@nrwl/devkit';
 
 describe('TaskStages', () => {
   it('should return empty for an empty array', () => {

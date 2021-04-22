@@ -3,16 +3,12 @@ import { Task } from './tasks-runner';
 import { Reporter, ReporterArgs } from './reporter';
 
 export class DefaultReporter implements Reporter {
-  private projectNames: string[];
-
   beforeRun(
     projectNames: string[],
     tasks: Task[],
     args: ReporterArgs,
     taskOverrides: any
   ) {
-    this.projectNames = projectNames;
-
     if (projectNames.length <= 0) {
       let description = `with "${args.target}"`;
       if (args.configuration) {

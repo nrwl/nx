@@ -1,4 +1,4 @@
-import * as flatten from 'flat';
+import { flatten } from 'flat';
 import * as minimatch from 'minimatch';
 import { WholeFileChange } from '../../file-utils';
 import {
@@ -60,7 +60,9 @@ function getTouchedProjects(
   path: string[],
   implicitDependencyConfig: any
 ): string[] {
-  const flatConfig = flatten(implicitDependencyConfig, { safe: true });
+  const flatConfig = flatten<unknown, any>(implicitDependencyConfig, {
+    safe: true,
+  });
   const flatPath = path.join('.');
 
   for (let [key, value] of Object.entries(flatConfig)) {

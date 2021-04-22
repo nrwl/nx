@@ -3,20 +3,18 @@ import { Reporter, ReporterArgs } from './reporter';
 import { Task } from './tasks-runner';
 
 export class RunOneReporter implements Reporter {
-  private projectNames: string[];
   constructor(private readonly initiatingProject: string) {}
 
   beforeRun(
-    projectNames: string[],
+    _projectNames: string[],
     tasks: Task[],
     args: ReporterArgs,
-    taskOverrides: any
+    _taskOverrides: any
   ) {
     // Silent for a single task
     if (tasks.length === 1) {
       return;
     }
-    this.projectNames = projectNames;
     const numberOfDeps = tasks.length - 1;
 
     if (numberOfDeps > 0) {
