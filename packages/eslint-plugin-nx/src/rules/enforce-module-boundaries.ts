@@ -86,7 +86,7 @@ export default createESLintRule<Options, MessageIds>({
       noImportsOfApps: 'Imports of apps are forbidden',
       noImportsOfE2e: 'Imports of e2e projects are forbidden',
       noImportOfNonBuildableLibraries:
-        'Buildable libraries cannot import non-buildable libraries',
+        'Buildable libraries cannot import or export from non-buildable libraries',
       noImportsOfLazyLoadedLibraries: `Imports of lazy-loaded libraries are forbidden`,
       projectWithoutTagsCannotHaveDependencies: `A project without tags cannot depend on any libraries`,
       tagConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{allowedTags}}`,
@@ -127,7 +127,19 @@ export default createESLintRule<Options, MessageIds>({
     const targetProjectLocator = (global as any)
       .targetProjectLocator as TargetProjectLocator;
 
-    function run(node: TSESTree.ImportDeclaration | TSESTree.ImportExpression) {
+    function run(
+      node:
+        | TSESTree.ImportDeclaration
+        | TSESTree.ImportExpression
+        | TSESTree.ExportAllDeclaration
+        | TSESTree.ExportNamedDeclaration
+    ) {
+      // Ignoring ExportNamedDeclarations like:
+      // export class Foo {}
+      if (!node.source) {
+        return;
+      }
+
       // accept only literals because template literals have no value
       if (node.source.type !== AST_NODE_TYPES.Literal) {
         return;
@@ -306,6 +318,12 @@ export default createESLintRule<Options, MessageIds>({
         run(node);
       },
       ImportExpression(node: TSESTree.ImportExpression) {
+        run(node);
+      },
+      ExportAllDeclaration(node: TSESTree.ExportAllDeclaration) {
+        run(node);
+      },
+      ExportNamedDeclaration(node: TSESTree.ExportNamedDeclaration) {
         run(node);
       },
     };
