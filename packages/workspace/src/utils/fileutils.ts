@@ -1,10 +1,20 @@
-import * as fs from 'fs-extra';
-import * as path from 'path';
 import * as stripJsonComments from 'strip-json-comments';
+import {
+  createReadStream,
+  createWriteStream,
+  existsSync,
+  readFileSync,
+  writeFileSync,
+  mkdirSync,
+  renameSync as fsRenameSync,
+  statSync,
+} from 'fs';
+import { ensureDirSync } from 'fs-extra';
+import { basename, dirname, resolve } from 'path';
 
 export function writeToFile(filePath: string, str: string) {
-  fs.ensureDirSync(path.dirname(filePath));
-  fs.writeFileSync(filePath, str);
+  ensureDirSync(dirname(filePath));
+  writeFileSync(filePath, str);
 }
 
 /**
@@ -33,7 +43,7 @@ export function serializeJson(json: any): string {
  * @param path Path of the JSON file on the filesystem
  */
 export function readJsonFile<T = any>(path: string): T {
-  return parseJsonWithComments<T>(fs.readFileSync(path, 'utf-8'));
+  return parseJsonWithComments<T>(readFileSync(path, 'utf-8'));
 }
 
 export function parseJsonWithComments<T = any>(content: string): T {
@@ -45,16 +55,16 @@ export function writeJsonFile(path: string, json: any) {
 }
 
 export function copyFile(file: string, target: string) {
-  const f = path.basename(file);
-  const source = fs.createReadStream(file);
-  const dest = fs.createWriteStream(path.resolve(target, f));
+  const f = basename(file);
+  const source = createReadStream(file);
+  const dest = createWriteStream(resolve(target, f));
   source.pipe(dest);
   source.on('error', (e) => console.error(e));
 }
 
 export function directoryExists(name) {
   try {
-    return fs.statSync(name).isDirectory();
+    return statSync(name).isDirectory();
   } catch (e) {
     return false;
   }
@@ -62,19 +72,19 @@ export function directoryExists(name) {
 
 export function fileExists(filePath: string): boolean {
   try {
-    return fs.statSync(filePath).isFile();
+    return statSync(filePath).isFile();
   } catch (err) {
     return false;
   }
 }
 
 export function createDirectory(directoryPath: string) {
-  const parentPath = path.resolve(directoryPath, '..');
+  const parentPath = resolve(directoryPath, '..');
   if (!directoryExists(parentPath)) {
     createDirectory(parentPath);
   }
   if (!directoryExists(directoryPath)) {
-    fs.mkdirSync(directoryPath);
+    mkdirSync(directoryPath);
   }
 }
 
@@ -84,17 +94,17 @@ export function renameSync(
   cb: (err: Error | null) => void
 ) {
   try {
-    if (!fs.existsSync(from)) {
+    if (!existsSync(from)) {
       throw new Error(`Path: ${from} does not exist`);
-    } else if (fs.existsSync(to)) {
+    } else if (existsSync(to)) {
       throw new Error(`Path: ${to} already exists`);
     }
 
     // Make sure parent path exists
-    const parentPath = path.resolve(to, '..');
+    const parentPath = resolve(to, '..');
     createDirectory(parentPath);
 
-    fs.renameSync(from, to);
+    fsRenameSync(from, to);
     cb(null);
   } catch (e) {
     cb(e);

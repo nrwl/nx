@@ -1,5 +1,5 @@
 import { outputFileSync, readJsonSync } from 'fs-extra';
-import * as path from 'path';
+import { join } from 'path';
 import { format, resolveConfig } from 'prettier';
 
 export function sortAlphabeticallyFunction(a: string, b: string): number {
@@ -19,7 +19,7 @@ export async function generateMarkdownFile(
   outputDirectory: string,
   templateObject: { name: string; template: string }
 ): Promise<void> {
-  const filePath = path.join(outputDirectory, `${templateObject.name}.md`);
+  const filePath = join(outputDirectory, `${templateObject.name}.md`);
   outputFileSync(
     filePath,
     await formatWithPrettier(filePath, templateObject.template)

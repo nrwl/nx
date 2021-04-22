@@ -2,7 +2,8 @@ import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
 import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { execSync } from 'child_process';
 import { dirname } from 'path';
-import { ensureDirSync, readFileSync, writeFileSync } from 'fs-extra';
+import { readFileSync, writeFileSync } from 'fs';
+import { ensureDirSync } from 'fs-extra';
 import { tmpProjPath } from './paths';
 import { cleanup } from './utils';
 

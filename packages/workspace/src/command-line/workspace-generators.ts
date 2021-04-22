@@ -1,14 +1,13 @@
 import * as chalk from 'chalk';
 import { execSync } from 'child_process';
 import {
-  copySync,
-  removeSync,
   writeFileSync,
   readdirSync,
   readFileSync,
   statSync,
   unlinkSync,
-} from 'fs-extra';
+} from 'fs';
+import { copySync, removeSync } from 'fs-extra';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
 import { appRootPath } from '../utilities/app-root';

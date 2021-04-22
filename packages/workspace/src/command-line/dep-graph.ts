@@ -1,12 +1,5 @@
-import {
-  exists,
-  readFile,
-  readFileSync,
-  statSync,
-  writeFileSync,
-  copySync,
-  ensureDirSync,
-} from 'fs-extra';
+import { exists, readFile, readFileSync, statSync, writeFileSync } from 'fs';
+import { copySync, ensureDirSync } from 'fs-extra';
 import * as http from 'http';
 import * as open from 'open';
 import { join, normalize, parse, dirname } from 'path';

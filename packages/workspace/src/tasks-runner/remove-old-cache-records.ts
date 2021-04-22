@@ -1,5 +1,6 @@
-import { readdirSync, removeSync, statSync } from 'fs-extra';
-import * as path from 'path';
+import { readdirSync, statSync } from 'fs';
+import { removeSync } from 'fs-extra';
+import { join } from 'path';
 
 const WEEK_IN_MS = 1000 * 60 * 60 * 24 * 7;
 
@@ -10,7 +11,7 @@ removeOld(cachedFiles());
 
 function terminalOutputs() {
   try {
-    return readdirSync(path.join(folder, 'terminalOutputs'));
+    return readdirSync(join(folder, 'terminalOutputs'));
   } catch (e) {
     return [];
   }
@@ -29,7 +30,7 @@ function removeOld(records: string[]) {
     const time = mostRecentMTime(records);
 
     records.forEach((r) => {
-      const child = path.join(folder, r);
+      const child = join(folder, r);
       try {
         const s = statSync(child);
         if (time - s.mtimeMs > WEEK_IN_MS) {
@@ -48,7 +49,7 @@ function removeOld(records: string[]) {
 function mostRecentMTime(records: string[]) {
   let mostRecentTime = 0;
   records.forEach((r) => {
-    const child = path.join(folder, r);
+    const child = join(folder, r);
     try {
       const s = statSync(child);
       if (s.mtimeMs > mostRecentTime) {

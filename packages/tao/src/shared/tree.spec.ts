@@ -1,10 +1,5 @@
-import {
-  removeSync,
-  lstatSync,
-  readFileSync,
-  writeFileSync,
-  ensureDirSync,
-} from 'fs-extra';
+import { lstatSync, readFileSync, writeFileSync } from 'fs';
+import { removeSync, ensureDirSync } from 'fs-extra';
 import { dirSync } from 'tmp';
 import * as path from 'path';
 import { FileChange, FsTree, flushChanges } from './tree';

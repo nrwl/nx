@@ -1,8 +1,9 @@
 import * as chalk from 'chalk';
-import { readFileSync, readJsonSync } from 'fs-extra';
+import { readFileSync } from 'fs';
+import { readJsonSync } from 'fs-extra';
 import * as parseLinks from 'parse-markdown-links';
-import * as path from 'path';
 import * as glob from 'glob';
+import { join } from 'path';
 
 console.log(`${chalk.blue('i')} Internal Link Check`);
 
@@ -138,7 +139,7 @@ function isCategoryNode(
 }
 
 function getDocumentMap(): DocumentTree[] {
-  return readJsonSync(path.join(BASE_PATH, 'map.json'));
+  return readJsonSync(join(BASE_PATH, 'map.json'));
 }
 
 interface DocumentPaths {
@@ -148,7 +149,7 @@ interface DocumentPaths {
 }
 
 function determineAnchors(filePath: string): string[] {
-  const fullPath = path.join(BASE_PATH, filePath);
+  const fullPath = join(BASE_PATH, filePath);
   const contents = readFileContents(fullPath).split('\n');
   const anchors = contents
     .filter((x) => x.startsWith('##'))
@@ -173,7 +174,7 @@ function buildMapOfExisitingDocumentPaths(
         treeNode.id,
       ]);
     } else {
-      const fullPath = path.join(path.join(...ids), treeNode.id);
+      const fullPath = join(join(...ids), treeNode.id);
       acc[/*treeNode.file ||*/ fullPath] = {
         relativeUrl: fullPath,
         relativeFilePath: treeNode.file || fullPath,

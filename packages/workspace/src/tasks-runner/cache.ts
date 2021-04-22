@@ -6,10 +6,8 @@ import {
   readFileSync,
   writeFileSync,
   lstatSync,
-  removeSync,
-  ensureDirSync,
-  copySync,
-} from 'fs-extra';
+} from 'fs';
+import { removeSync, ensureDirSync, copySync } from 'fs-extra';
 import { join, resolve } from 'path';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { spawn } from 'child_process';

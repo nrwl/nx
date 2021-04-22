@@ -6,7 +6,8 @@ import {
 } from '../project-graph';
 import { join } from 'path';
 import { appRootPath } from '../../utilities/app-root';
-import { existsSync, ensureDirSync } from 'fs-extra';
+import { existsSync } from 'fs';
+import { ensureDirSync } from 'fs-extra';
 import {
   directoryExists,
   fileExists,

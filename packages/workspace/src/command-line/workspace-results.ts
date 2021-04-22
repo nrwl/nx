@@ -3,7 +3,8 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '../utilities/fileutils';
-import { existsSync, unlinkSync, ensureDirSync } from 'fs-extra';
+import { existsSync, unlinkSync } from 'fs';
+import { ensureDirSync } from 'fs-extra';
 import { ProjectGraphNode } from '../core/project-graph';
 import { join } from 'path';
 import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
