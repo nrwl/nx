@@ -6,8 +6,7 @@ import {
 } from '@nrwl/devkit';
 import { Task } from './tasks-runner';
 import * as flatten from 'flat';
-import * as _template from 'lodash.template';
-import { output } from '@nrwl/workspace/src/utilities/output';
+import { output } from '../utilities/output';
 
 const commonCommands = ['build', 'test', 'lint', 'e2e', 'deploy'];
 
@@ -123,8 +122,8 @@ export function getOutputsForTargetAndConfiguration(
   };
 
   if (targets?.outputs) {
-    return targets.outputs.map((output) =>
-      _template(output, { interpolate: /{([\s\S]+?)}/g })({ options })
+    return targets.outputs.map((output: string) =>
+      interpolateOutputs(output, options)
     );
   }
 
@@ -176,4 +175,19 @@ function unparseOption(key: string, value: any, unparsed: string[]) {
   } else if (value != null) {
     unparsed.push(`--${key}=${value}`);
   }
+}
+
+function interpolateOutputs(template: string, data: any): string {
+  return template.replace(/{([\s\S]+?)}/g, (match: string) => {
+    let value = data;
+    let path = match.slice(1, -1).trim().split('.').slice(1);
+    for (let idx = 0; idx < path.length; idx++) {
+      if (!value[path[idx]]) {
+        throw new Error(`Could not interpolate output {${match}}!`);
+      }
+      value = value[path[idx]];
+    }
+
+    return value;
+  });
 }
