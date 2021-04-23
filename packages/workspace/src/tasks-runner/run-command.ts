@@ -173,6 +173,14 @@ function addTasksForProjectTarget(
   tasksMap: Map<string, Task>,
   path: string[]
 ) {
+  const task = createTask({
+    project,
+    target,
+    configuration,
+    overrides,
+    errorIfCannotFindConfiguration,
+  });
+
   const dependencyConfigs = getDependencyConfigs(
     { project: project.name, target },
     defaultDependencyConfigs,
@@ -195,13 +203,6 @@ function addTasksForProjectTarget(
       );
     }
   }
-  const task = createTask({
-    project,
-    target,
-    configuration,
-    overrides,
-    errorIfCannotFindConfiguration,
-  });
   tasksMap.set(task.id, task);
 }
 
@@ -229,7 +230,7 @@ export function createTask({
 
   if (errorIfCannotFindConfiguration && configuration && !config) {
     output.error({
-      title: `Cannot find configuration '${configuration}' for project '${project.name}'`,
+      title: `Cannot find configuration '${configuration}' for project '${project.name}:${target}'`,
     });
     process.exit(1);
   }
