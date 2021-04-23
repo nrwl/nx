@@ -15,7 +15,6 @@ const runOne = [
   'exclude',
   'only-failed',
   'help',
-  'version',
   'with-deps',
   'skip-nx-cache',
   'scan',
