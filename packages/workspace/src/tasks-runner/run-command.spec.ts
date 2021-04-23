@@ -330,6 +330,44 @@ describe('createTasksForProjectToRun', () => {
     ]);
   });
 
+  it('should throw an error for an invalid target', () => {
+    spyOn(process, 'exit').and.throwError('');
+    try {
+      createTasksForProjectToRun(
+        [projectGraph.nodes.app1],
+        {
+          target: 'invalid',
+          configuration: undefined,
+          overrides: {},
+        },
+        projectGraph,
+        null
+      );
+      fail();
+    } catch (e) {
+      expect(process.exit).toHaveBeenCalledWith(1);
+    }
+  });
+
+  it('should throw an error for an invalid configuration for the initiating project', () => {
+    spyOn(process, 'exit').and.throwError('');
+    try {
+      createTasksForProjectToRun(
+        [projectGraph.nodes.app1],
+        {
+          target: 'serve',
+          configuration: 'invalid',
+          overrides: {},
+        },
+        projectGraph,
+        'app1'
+      );
+      fail();
+    } catch (e) {
+      expect(process.exit).toHaveBeenCalledWith(1);
+    }
+  });
+
   it('should throw an error for circular dependencies', () => {
     projectGraph.nodes.app1.data.targets.build.dependsOn = [
       {
