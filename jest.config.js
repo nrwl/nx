@@ -24,5 +24,6 @@ module.exports = {
     '<rootDir>/nx-dev/ui/common',
     '<rootDir>/nx-dev/feature-doc-viewer',
     '<rootDir>/nx-dev/data-access-documents',
+    '<rootDir>/nx-dev/data-access-menu',
   ],
 };

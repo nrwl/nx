@@ -110,9 +110,7 @@
     "e2e-workspace": {
       "implicitDependencies": ["create-nx-workspace"]
     },
-    "gatsby": {
-      "tags": []
-    },
+    "gatsby": { "tags": [] },
     "dep-graph-dep-graph-e2e": {
       "implicitDependencies": ["dep-graph-dep-graph"]
     },
@@ -134,9 +132,8 @@
     },
     "nx-dev-data-access-documents": {
       "tags": ["scope:nx-dev", "type:data-access"]
-    }
+    },
+    "nx-dev-data-access-menu": { "tags": ["scope:nx-dev", "type:data-access"] }
   },
-  "affected": {
-    "defaultBase": "master"
-  }
+  "affected": { "defaultBase": "master" }
 }

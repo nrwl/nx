@@ -4,9 +4,9 @@ import matter from 'gray-matter';
 import * as marked from 'marked';
 import { archiveRootPath, previewRootPath } from './documents.utils';
 import {
+  VersionMetadata,
   DocumentData,
-  DocumentMapItem,
-  ArchiveVersionData,
+  DocumentMetadata,
 } from './documents.models';
 import { readJsonFile } from '@nrwl/workspace';
 
@@ -24,20 +24,6 @@ export function getDocument(
     content: marked.parse(file.content),
     excerpt: file.excerpt,
   };
-}
-
-const mapCache = new Map<string, DocumentMapItem[]>();
-export function getDocuments(version: string) {
-  try {
-    let list = mapCache.get(version);
-    if (!list) {
-      list = readJsonFile(join(getDocumentsRoot(version), 'map.json'));
-      mapCache.set(version, list);
-    }
-    return list;
-  } catch {
-    throw new Error(`Cannot find map.json for ${version}`);
-  }
 }
 
 export function getFilePath(version: string, segments: string[]): string {
@@ -59,6 +45,20 @@ export function getFilePath(version: string, segments: string[]): string {
     );
   }
   return join(getDocumentsRoot(version), `${found.file}.md`);
+}
+
+const documentsCache = new Map<string, DocumentMetadata[]>();
+export function getDocuments(version: string) {
+  try {
+    let list = documentsCache.get(version);
+    if (!list) {
+      list = readJsonFile(join(getDocumentsRoot(version), 'map.json'));
+      documentsCache.set(version, list);
+    }
+    return list;
+  } catch {
+    throw new Error(`Cannot find map.json for ${version}`);
+  }
 }
 
 export function getStaticDocumentPaths(version: string) {
@@ -105,8 +105,8 @@ export function getDocumentsRoot(version: string): string {
   throw new Error(`Cannot find root for ${version}`);
 }
 
-let versions: ArchiveVersionData[];
-export function getVersions(): ArchiveVersionData[] {
+let versions: VersionMetadata[];
+export function getVersions(): VersionMetadata[] {
   if (!versions) {
     versions = readJsonFile(join(archiveRootPath, 'versions.json'));
   }

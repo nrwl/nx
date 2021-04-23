@@ -5,7 +5,13 @@ import DocViewer from './doc-viewer';
 
 describe('DocViewer', () => {
   it('should render successfully', () => {
-    const { baseElement } = render(<DocViewer content="" sidebar="" toc="" />);
+    const { baseElement } = render(
+      <DocViewer
+        content=""
+        menu={{ version: 'preview', flavor: 'react', sections: [] }}
+        toc=""
+      />
+    );
     expect(baseElement).toBeTruthy();
   });
 });

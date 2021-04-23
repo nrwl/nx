@@ -5,7 +5,9 @@ import Sidebar from './sidebar';
 
 describe('Sidebar', () => {
   it('should render successfully', () => {
-    const { baseElement } = render(<Sidebar />);
+    const { baseElement } = render(
+      <Sidebar menu={{ version: 'preview', flavor: 'react', sections: [] }} />
+    );
     expect(baseElement).toBeTruthy();
   });
 });

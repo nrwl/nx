@@ -8,7 +8,7 @@ function getProjectNameWithTag(projectsJson, tag) {
       ...projectsJson.projects[projectName],
       name: projectName,
     }))
-    .filter((project) => project.tags.includes(tag))
+    .filter((project) => project.tags && project.tags.includes(tag))
     .map((project) => project.name);
 }
 

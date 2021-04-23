@@ -4,23 +4,23 @@ import {
   getStaticDocumentPaths,
   DocumentData,
   getVersions,
-  ArchiveVersionData,
+  VersionMetadata,
 } from '@nrwl/nx-dev/data-access-documents';
 import { DocViewer } from '@nrwl/nx-dev/feature-doc-viewer';
+import { getMenu, Menu } from '@nrwl/nx-dev/data-access-menu';
 
 interface DocumentationProps {
   document: DocumentData;
-  versions: ArchiveVersionData[];
+  versions: VersionMetadata[];
+  menu: Menu;
 }
 
 interface DocumentationParams {
   params: { version: string; flavor: string; segments: string | string[] };
 }
 
-export function Documentation(props: DocumentationProps) {
-  return (
-    <DocViewer content={props.document.content} sidebar={null} toc={null} />
-  );
+export function Documentation({ document, menu }: DocumentationProps) {
+  return <DocViewer content={document.content} menu={menu} toc={null} />;
 }
 
 export async function getStaticProps({ params }: DocumentationParams) {
@@ -31,6 +31,7 @@ export async function getStaticProps({ params }: DocumentationParams) {
         params.flavor,
         ...params.segments,
       ]),
+      menu: getMenu(params.version, params.flavor),
     },
   };
 }
