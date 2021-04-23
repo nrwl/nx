@@ -59,6 +59,11 @@
       "version": "10.3.1-beta.1",
       "description": "Fix ts-jest migration",
       "factory": "./src/migrations/update-10-3-0/update-ts-jest"
+    },
+    "update-jest-preset-angular-8-4-0": {
+      "version": "12.1.0-beta.1",
+      "description": "Update jest-preset-angular to version 8.4.0",
+      "factory": "./src/migrations/update-12-1-0/update-jest-preset-angular"
     }
   },
   "packageJsonUpdates": {
