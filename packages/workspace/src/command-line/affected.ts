@@ -17,11 +17,13 @@ import { printAffected } from './print-affected';
 import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
 import { parseFiles } from './shared';
 import { NxArgs, RawNxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
+import { performance } from 'perf_hooks';
 
 export async function affected(
   command: 'apps' | 'libs' | 'dep-graph' | 'print-affected' | 'affected',
   parsedArgs: yargs.Arguments & RawNxArgs
 ) {
+  performance.mark('command-execution-begins');
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     parsedArgs,
     'affected',

@@ -13,8 +13,10 @@ import { DefaultReporter } from '../tasks-runner/default-reporter';
 import { projectHasTarget } from '../utilities/project-graph-utils';
 import { output } from '../utilities/output';
 import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
+import { performance } from 'perf_hooks';
 
 export async function runMany(parsedArgs: yargs.Arguments) {
+  performance.mark('command-execution-begins');
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     parsedArgs,
     'run-many'
