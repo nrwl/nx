@@ -2,7 +2,7 @@ name: E2E matrix
 
 on:
   schedule:
-  - cron: "0 0 * * *"
+    - cron: 0 0 * * *
 
 jobs:
   e2e:
@@ -12,7 +12,7 @@ jobs:
         node_version:
           # - 12.x
           - 14.x
-          - 15.x
+          - 16.x
         package_manager:
           - npm
           - yarn
@@ -30,30 +30,30 @@ jobs:
 
     name: Node v${{ matrix.node_version }} (${{ matrix.package_manager }}) - ${{ matrix.packages }}
     steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
-    - name: Install dependencies
-      uses: actions/setup-node@v2
-      with:
-        node-version: ${{ matrix.node_version }}
-    - run: yarn install
+      - name: Install dependencies
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node_version }}
+      - run: yarn install
 
-    - name: Install PNPM
-      if: ${{ matrix.package_manager == 'pnpm' }}
-      uses: pnpm/action-setup@v1.2.1
-      with:
-        version: 5.18.9
+      - name: Install PNPM
+        if: ${{ matrix.package_manager == 'pnpm' }}
+        uses: pnpm/action-setup@v1.2.1
+        with:
+          version: 5.18.9
 
-    - name: Run e2e tests
-      run: yarn e2e ${{ matrix.packages }} affected
-      env:
-        GIT_AUTHOR_NAME: test@test.com
-        GIT_AUTHOR_EMAIL: Test
-        GIT_COMMITTER_EMAIL: test@test.com
-        GIT_COMMITTER_NAME: Test
-        NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.node_version }}-${{ matrix.package_manager }}
-        NODE_OPTIONS: --max_old_space_size=8192
-        SELECTED_PM: ${{ matrix.package_manager }}
-        SELECTED_CLI: ${{ matrix.packages == 'e2e-angular' && 'angular' || 'nx' }}
+      - name: Run e2e tests
+        run: yarn e2e ${{ matrix.packages }} affected
+        env:
+          GIT_AUTHOR_NAME: test@test.com
+          GIT_AUTHOR_EMAIL: Test
+          GIT_COMMITTER_EMAIL: test@test.com
+          GIT_COMMITTER_NAME: Test
+          NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.node_version }}-${{ matrix.package_manager }}
+          NODE_OPTIONS: --max_old_space_size=8192
+          SELECTED_PM: ${{ matrix.package_manager }}
+          SELECTED_CLI: ${{ matrix.packages == 'e2e-angular' && 'angular' || 'nx' }}
