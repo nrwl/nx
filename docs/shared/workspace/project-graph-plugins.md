@@ -88,6 +88,18 @@ builder.addNode({
 
 > Note: You can designate any type for the node. This differentiates third party projects from projects in the workspace. Also, like before, retrieving these projects might be easiest within their native language. Therefore, spawning a new process may also be a common approach here.
 
+## Incrementally Reprocessing
+
+Workspaces can have _a lot_ of files and finding dependencies for every file can be expensive. Nx incrementally recalculates the `ProjectGraph` by only looking at files that have changed. Let's take a look at how this works.
+
+Remember that the `ProjectGraph` that is passed into the `processProjectGraph` function is a graph that already has nodes and dependencies. These nodes and dependencies are not _only_ those from prior plugins, but might also be a cached part of the graph that does not need to be recalculated. If files have not been modified since the last calculation, they do not need to be processed again. How do we know which files we _need_ to reprocess?
+
+`ProjectGraphProcessorContext.fileMap` contains only the files that need to be processed. You should, if possible, definitely take advantage of this subset of files to make it cheaper to reprocess the graph.
+
 ## Visualizing the Project Graph
 
 You can then visualize the project graph as described [here](/{{framework}}/structure/dependency-graph). However, there is a cache that Nx uses to avoid recalculating the project graph as much as possible. As you develop your project graph plugin, it might be a good idea to set the following environment variable to disable the project graph cache: `NX_CACHE_PROJECT_GRAPH=false`.
+
+## Example Project Graph Plugin
+
+The [nrwl/nx-go-project-graph-plugin](https://github.com/nrwl/nx-go-project-graph-plugin) repo contains an example project graph plugin which adds [Go](https://golang.org/) dependencies to the Nx Project Graph! A similar approach can be used for other languages.
