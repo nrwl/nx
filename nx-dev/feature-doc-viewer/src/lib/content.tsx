@@ -1,8 +1,7 @@
 import React from 'react';
 
-/* eslint-disable-next-line */
 export interface ContentProps {
-  data: any;
+  data: string;
 }
 
 export function Content(props: ContentProps) {

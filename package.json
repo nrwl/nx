@@ -254,6 +254,7 @@
     }
   },
   "dependencies": {
+    "classnames": "^2.3.1",
     "core-js": "^3.6.5",
     "document-register-element": "^1.13.1",
     "gray-matter": "^4.0.2",
