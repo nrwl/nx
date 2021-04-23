@@ -1,7 +1,6 @@
 {
   "npmScope": "nrwl",
   "implicitDependencies": {
-    "tslint.json": "*",
     ".eslintrc.json": "*"
   },
   "tasksRunnerOptions": {
