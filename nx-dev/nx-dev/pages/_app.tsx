@@ -2,8 +2,7 @@ import React from 'react';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { Header, Footer } from '@nrwl/nx-dev/ui/common';
-import 'tailwindcss/tailwind.css';
-import './styles.css';
+import '../styles/main.css';
 
 export default function CustomApp({ Component, pageProps }: AppProps) {
   return (
