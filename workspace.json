@@ -2206,7 +2206,13 @@
       "sourceRoot": "nx-dev/nx-dev",
       "projectType": "application",
       "targets": {
-        "build-nx-dev": {
+        "build": {
+          "dependsOn": [
+            {
+              "target": "build",
+              "projects": "dependencies"
+            }
+          ],
           "executor": "@nrwl/next:build",
           "outputs": ["{options.outputPath}"],
           "options": {
@@ -2220,7 +2226,7 @@
         "serve": {
           "executor": "@nrwl/next:server",
           "options": {
-            "buildTarget": "nx-dev:build-nx-dev",
+            "buildTarget": "nx-dev:build",
             "dev": true
           },
           "configurations": {
@@ -2233,7 +2239,7 @@
         "export": {
           "executor": "@nrwl/next:export",
           "options": {
-            "buildTarget": "nx-dev:build-nx-dev:production"
+            "buildTarget": "nx-dev:build:production"
           }
         },
         "lint": {
