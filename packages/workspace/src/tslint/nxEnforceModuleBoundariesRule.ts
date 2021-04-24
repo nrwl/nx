@@ -47,7 +47,7 @@ export class Rule extends Lint.Rules.AbstractRule {
       this.npmScope = (global as any).npmScope;
       this.projectGraph = (global as any).projectGraph;
 
-      if (!(global as any).targetProjectLocator) {
+      if (!(global as any).targetProjectLocator && this.projectGraph) {
         (global as any).targetProjectLocator = new TargetProjectLocator(
           this.projectGraph.nodes
         );
