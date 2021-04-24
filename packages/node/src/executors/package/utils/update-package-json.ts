@@ -16,7 +16,13 @@ export default function updatePackageJson(
   const mainJsFile = `${mainFile}.js`;
   const packageJson = readJsonFile(join(context.root, options.packageJson));
 
-  packageJson.main = `${options.relativeMainFileOutput}${mainJsFile}`;
-  packageJson.typings = `${options.relativeMainFileOutput}${typingsFile}`;
+  if (!packageJson.main) {
+    packageJson.main = `${options.relativeMainFileOutput}${mainJsFile}`;
+  }
+
+  if (!packageJson.typings) {
+    packageJson.typings = `${options.relativeMainFileOutput}${typingsFile}`;
+  }
+
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
 }
