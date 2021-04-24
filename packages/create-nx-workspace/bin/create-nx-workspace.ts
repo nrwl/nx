@@ -524,19 +524,16 @@ async function createApp(
       nxWorkspaceRoot = `\\"${nxWorkspaceRoot.slice(1, -1)}\\"`;
     }
   }
-  const fullCommand = `${pmc.exec} tao ${command}/collection.json --cli=${cli} --nxWorkspaceRoot=${nxWorkspaceRoot}`;
+  const fullCommandWithoutWorkspaceRoot = `${pmc.exec} tao ${command}/collection.json --cli=${cli}`;
   const spinner = ora('Creating your workspace').start();
 
   try {
+    const fullCommand = `${fullCommandWithoutWorkspaceRoot} --nxWorkspaceRoot=${nxWorkspaceRoot}`;
     await execAndWait(fullCommand, tmpDir);
   } catch (e) {
     output.error({
-      title:
-        'Something went wrong. Rerunning the command with verbose logging.',
-    });
-    execSync(fullCommand, {
-      stdio: [0, 1, 2],
-      cwd: tmpDir,
+      title: `Nx failed to create a workspace.`,
+      bodyLines: [`Exit code: ${e.code}`, `Log file: ${e.logFile}`],
     });
   } finally {
     spinner.stop();
@@ -559,7 +556,9 @@ function execAndWait(command: string, cwd: string) {
   return new Promise((res, rej) => {
     exec(command, { cwd }, (error, stdout, stderr) => {
       if (error) {
-        rej();
+        const logFile = path.join(cwd, 'error.log');
+        writeFileSync(logFile, `${stdout}\n${stderr}`);
+        rej({ code: error.code, logFile });
       } else {
         res(null);
       }
