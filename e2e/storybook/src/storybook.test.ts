@@ -3,12 +3,32 @@ import {
   newProject,
   readFile,
   runCLI,
+  runCommandUntil,
   tmpProjPath,
   uniq,
 } from '@nrwl/e2e/utils';
 import { writeFileSync } from 'fs';
 
 describe('Storybook schematics', () => {
+  describe('serve storybook', () => {
+    it('should run a React based Storybook setup', async (done) => {
+      newProject();
+
+      const reactStorybookLib = uniq('test-ui-lib-react');
+      runCLI(`generate @nrwl/react:lib ${reactStorybookLib} --no-interactive`);
+      runCLI(
+        `generate @nrwl/react:storybook-configuration ${reactStorybookLib} --generateStories --no-interactive`
+      );
+
+      // serve the storybook
+      await runCommandUntil(`run ${reactStorybookLib}:storybook`, (output) => {
+        return /Storybook.*started/gi.test(output);
+      });
+
+      done();
+    }, 30000);
+  });
+
   describe('build storybook', () => {
     it('should build a React based storybook', () => {
       newProject();
