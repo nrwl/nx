@@ -55,7 +55,7 @@ describe('Node Applications', () => {
     expect(result).toContain('Hello World!');
   }, 60000);
 
-  it('should be able to generate an express application', async () => {
+  xit('should be able to generate an express application', async () => {
     const nodeapp = uniq('nodeapp');
 
     runCLI(`generate @nrwl/express:app ${nodeapp} --linter=eslint`);
@@ -86,35 +86,35 @@ describe('Node Applications', () => {
       `dist/apps/${nodeapp}/main.js.map`
     );
 
+    // checking build
     const server = exec(`node ./dist/apps/${nodeapp}/main.js`, {
       cwd: tmpProjPath(),
     });
+
     await new Promise((resolve) => {
       server.stdout.on('data', async (data) => {
         expect(data.toString()).toContain('Listening at http://localhost:3333');
         const result = await getData();
 
         expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
-        treeKill(server.pid, 'SIGTERM', (err) => {
-          expect(err).toBeFalsy();
-          resolve(true);
-        });
+
+        console.log('kill server');
+        server.kill();
+        resolve(null);
       });
     });
-
-    const { process } = await runCommandUntil(
-      `serve ${nodeapp}`,
-      (output) => output.includes('Listening at http://localhost:3333'),
-      { kill: false }
+    // checking serve
+    const p = await runCommandUntil(`serve ${nodeapp}`, (output) =>
+      output.includes('Listening at http://localhost:3333')
     );
     const result = await getData();
     expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
-    treeKill(process.pid, 'SIGTERM', (err) => {
+    treeKill(p.pid, 'SIGTERM', (err) => {
       expect(err).toBeFalsy();
     });
   }, 120000);
 
-  it('should be able to generate a nest application', async () => {
+  xit('should be able to generate a nest application', async () => {
     const nestapp = uniq('nestapp');
     runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
 
@@ -140,6 +140,7 @@ describe('Node Applications', () => {
     });
     expect(server).toBeTruthy();
 
+    // checking build
     await new Promise((resolve) => {
       server.stdout.on('data', async (data) => {
         const message = data.toString();
@@ -147,22 +148,19 @@ describe('Node Applications', () => {
           const result = await getData();
 
           expect(result.message).toEqual(`Welcome to ${nestapp}!`);
-          treeKill(server.pid, 'SIGTERM', (err) => {
-            expect(err).toBeFalsy();
-            resolve(true);
-          });
+          server.kill();
+          resolve(null);
         }
       });
     });
 
-    const { process } = await runCommandUntil(
-      `serve ${nestapp}`,
-      (output) => output.includes('Listening at http://localhost:3333'),
-      { kill: false }
+    // checking serve
+    const p = await runCommandUntil(`serve ${nestapp}`, (output) =>
+      output.includes('Listening at http://localhost:3333')
     );
     const result = await getData();
     expect(result.message).toEqual(`Welcome to ${nestapp}!`);
-    treeKill(process.pid, 'SIGTERM', (err) => {
+    treeKill(p.pid, 'SIGTERM', (err) => {
       expect(err).toBeFalsy();
     });
   }, 120000);

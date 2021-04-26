@@ -65,7 +65,7 @@ describe('update 12.1.0', () => {
     );
   });
 
-  it('should update the jest.config files by renaming tsConfig', async (done) => {
+  it('should update the jest.config files by renaming tsConfig', async () => {
     await schematicRunner
       .runSchematicAsync('update-ts-jest-6-5-5', {}, initialTree)
       .toPromise();
@@ -79,7 +79,5 @@ describe('update 12.1.0', () => {
       '<rootDir>/tsconfig.spec.json'
     );
     expect(jestObject.globals['ts-jest']['tsConfig']).toBeUndefined();
-
-    done();
   });
 });

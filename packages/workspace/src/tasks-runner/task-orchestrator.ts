@@ -196,8 +196,8 @@ export class TaskOrchestrator {
           outWithErr.push(chunk.toString());
         });
 
-        p.on('exit', (code) => {
-          if (code === null) code = 2;
+        p.on('exit', (code, signal) => {
+          if (code === null) code = this.signalToCode(signal);
           // we didn't print any output as we were running the command
           // print all the collected output|
           if (!forwardOutput) {
@@ -257,8 +257,8 @@ export class TaskOrchestrator {
           env,
         });
         this.processes.push(p);
-        p.on('exit', (code) => {
-          if (code === null) code = 2;
+        p.on('exit', (code, signal) => {
+          if (code === null) code = this.signalToCode(signal);
           // we didn't print any output as we were running the command
           // print all the collected output
           if (!forwardOutput) {
@@ -379,13 +379,34 @@ export class TaskOrchestrator {
   }
 
   private setupOnProcessExitListener() {
-    // Forward SIGINTs to all forked processes
-    process.addListener('SIGINT', () => {
+    process.on('SIGINT', () => {
       this.processes.forEach((p) => {
-        p.kill('SIGINT');
+        p.kill('SIGTERM');
       });
+      // we exit here because we don't need to write anything to cache.
       process.exit();
     });
+    process.on('SIGTERM', () => {
+      this.processes.forEach((p) => {
+        p.kill('SIGTERM');
+      });
+      // no exit here because we expect child processes to terminate which
+      // will store results to the cache and will terminate this process
+    });
+    process.on('SIGHUP', () => {
+      this.processes.forEach((p) => {
+        p.kill('SIGTERM');
+      });
+      // no exit here because we expect child processes to terminate which
+      // will store results to the cache and will terminate this process
+    });
+  }
+
+  private signalToCode(signal: string) {
+    if (signal === 'SIGHUP') return 128 + 1;
+    if (signal === 'SIGINT') return 128 + 2;
+    if (signal === 'SIGTERM') return 128 + 15;
+    return 128;
   }
 }
 

@@ -15,6 +15,7 @@ import {
 import isCI = require('is-ci');
 import * as path from 'path';
 import { dirSync } from 'tmp';
+import * as killPort from 'kill-port';
 
 interface RunCmdOpts {
   silenceError?: boolean;
@@ -132,6 +133,11 @@ export function getSelectedPackageManager(): 'npm' | 'yarn' | 'pnpm' {
  * for the currently selected CLI.
  */
 export function newProject({ name = uniq('proj') } = {}): string {
+  // potential leftovers from other e2e tests
+  // there are a lot of reasons for why sigterm sometime fails
+  killPort(4200);
+  killPort(3333);
+
   const packageManager = getSelectedPackageManager();
 
   try {
@@ -191,7 +197,7 @@ export function removeProject({ onlyOnCI = false } = {}) {
 
 export function runCypressTests() {
   // temporary disable
-  return false;
+  return true;
 }
 
 export function runCommandAsync(
@@ -220,37 +226,33 @@ export function runCommandAsync(
 
 export function runCommandUntil(
   command: string,
-  criteria: (output: string) => boolean,
-  { kill = true } = {}
-): Promise<{ process: ChildProcess }> {
+  criteria: (output: string) => boolean
+): Promise<ChildProcess> {
   const pm = getPackageManagerCommand();
   const p = exec(`${pm.runNx} ${command}`, {
     cwd: tmpProjPath(),
     env: { ...process.env, FORCE_COLOR: 'false' },
   });
-
   return new Promise((res, rej) => {
     let output = '';
     let complete = false;
 
     function checkCriteria(c) {
       output += c.toString();
-      if (criteria(output)) {
+      if (criteria(output) && !complete) {
         complete = true;
-        res({ process: p });
-        if (kill) {
-          p.kill();
-        }
+        res(p);
       }
     }
 
     p.stdout.on('data', checkCriteria);
     p.stderr.on('data', checkCriteria);
     p.on('exit', (code) => {
-      if (code !== 0 && !complete) {
-        console.log(output);
+      if (!complete) {
+        rej(`Exited with ${code}`);
+      } else {
+        res(p);
       }
-      rej(`Exited with ${code}`);
     });
   });
 }

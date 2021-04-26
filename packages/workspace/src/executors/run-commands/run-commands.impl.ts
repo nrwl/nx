@@ -182,6 +182,7 @@ function createProcess(
      */
     const processExitListener = () => childProcess.kill();
     process.on('exit', processExitListener);
+    process.on('SIGTERM', processExitListener);
     childProcess.stdout.on('data', (data) => {
       process.stdout.write(data);
       if (readyWhen && data.toString().indexOf(readyWhen) > -1) {
@@ -194,11 +195,10 @@ function createProcess(
         res(true);
       }
     });
-    childProcess.on('close', (code) => {
+    childProcess.on('exit', (code) => {
       if (!readyWhen) {
         res(code === 0);
       }
-      process.removeListener('exit', processExitListener);
     });
   });
 }

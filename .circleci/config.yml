@@ -86,7 +86,7 @@ jobs:
       - run:
           name: Agent
           command: npx nx-cloud start-agent
-          no_output_timeout: 45m
+          no_output_timeout: 60m
   pr-main:
     parameters:
       os:

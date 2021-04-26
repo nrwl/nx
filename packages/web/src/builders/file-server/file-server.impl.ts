@@ -133,6 +133,7 @@ export default async function* fileServerExecutor(
   });
   const processExitListener = () => serve.kill();
   process.on('exit', processExitListener);
+  process.on('SIGTERM', processExitListener);
   serve.stdout.on('data', (chunk) => {
     if (chunk.toString().indexOf('GET') === -1) {
       process.stdout.write(chunk);
@@ -140,9 +141,6 @@ export default async function* fileServerExecutor(
   });
   serve.stderr.on('data', (chunk) => {
     process.stderr.write(chunk);
-  });
-  serve.on('close', () => {
-    process.removeListener('exit', processExitListener);
   });
 
   yield {

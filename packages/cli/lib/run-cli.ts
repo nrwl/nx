@@ -80,8 +80,4 @@ function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
       writeFileSync(process.env.NX_TERMINAL_OUTPUT_PATH, outWithErr.join(''));
     }
   });
-
-  process.on('SIGTERM', () => {
-    process.exit(15);
-  });
 }

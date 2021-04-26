@@ -13,6 +13,7 @@ import { stripIndents } from '@nrwl/devkit';
 import { getOutputsForTargetAndConfiguration } from '@nrwl/workspace/src/tasks-runner/utils';
 import * as ts from 'typescript';
 import { unlinkSync } from 'fs';
+import { output } from './output';
 
 function isBuildable(target: string, node: ProjectGraphNode): boolean {
   return (
@@ -109,6 +110,15 @@ function readTsConfigWithRemappedPaths(
     tsConfig,
     dependencies
   );
+
+  if (process.env.NX_VERBOSE_LOGGING === 'true') {
+    output.log({
+      title: 'TypeScript path mappings have been rewritten.',
+      bodyLines: [
+        JSON.stringify(generatedTsConfig.compilerOptions.paths, null, 2),
+      ],
+    });
+  }
   return generatedTsConfig;
 }
 
@@ -156,17 +166,7 @@ export function createTmpTsConfig(
     tmpTsConfigPath,
     dependencies
   );
-  process.on('exit', () => {
-    cleanupTmpTsConfigFile(tmpTsConfigPath);
-  });
-  process.on('SIGTERM', () => {
-    cleanupTmpTsConfigFile(tmpTsConfigPath);
-    process.exit(0);
-  });
-  process.on('SIGINT', () => {
-    cleanupTmpTsConfigFile(tmpTsConfigPath);
-    process.exit(0);
-  });
+  process.on('exit', () => cleanupTmpTsConfigFile(tmpTsConfigPath));
   writeJsonFile(tmpTsConfigPath, parsedTSConfig);
   return join(tmpTsConfigPath);
 }
