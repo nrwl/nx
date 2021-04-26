@@ -7,7 +7,9 @@ describe('DocViewer', () => {
   it('should render successfully', () => {
     const { baseElement } = render(
       <DocViewer
-        content=""
+        version="1.0.0"
+        flavor="react"
+        document={{ content: '', data: {}, excerpt: '', filePath: '' }}
         menu={{ version: 'preview', flavor: 'react', sections: [] }}
         toc=""
       />
