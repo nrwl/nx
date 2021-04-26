@@ -40,6 +40,14 @@ export async function* executeExecutor(
   options: NodeExecuteBuilderOptions,
   context: ExecutorContext
 ) {
+  process.on('SIGTERM', () => {
+    subProcess?.kill();
+    process.exit(128 + 15);
+  });
+  process.on('exit', (code) => {
+    process.exit(code);
+  });
+
   if (options.waitUntilTargets && options.waitUntilTargets.length > 0) {
     const results = await runWaitUntilTargets(options, context);
     for (const [i, result] of results.entries()) {

@@ -6,8 +6,10 @@ process.env.PUBLISHED_VERSION = `9999.0.2`;
 process.env.npm_config_registry = `http://localhost:4872`;
 process.env.YARN_REGISTRY = process.env.npm_config_registry;
 
-export function buildPackagePublish() {
+export function buildPackagePublishAndCleanPorts() {
   removeSync('./build');
+  removeSync('./tmp/nx/proj-backup');
+  removeSync('./tmp/angular/proj-backup');
   removeSync('./tmp/local-registry');
 
   build(process.env.PUBLISHED_VERSION, '3.9.3', '2.1.2');
@@ -145,4 +147,4 @@ function build(nxVersion, typescriptVersion, prettierVersion) {
   });
 }
 
-buildPackagePublish();
+buildPackagePublishAndCleanPorts();

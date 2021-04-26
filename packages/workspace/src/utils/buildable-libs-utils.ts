@@ -150,14 +150,6 @@ export function createTmpTsConfig(
   process.on('exit', () => {
     cleanupTmpTsConfigFile(tmpTsConfigPath);
   });
-  process.on('SIGTERM', () => {
-    cleanupTmpTsConfigFile(tmpTsConfigPath);
-    process.exit(0);
-  });
-  process.on('SIGINT', () => {
-    cleanupTmpTsConfigFile(tmpTsConfigPath);
-    process.exit(0);
-  });
   writeJsonFile(tmpTsConfigPath, parsedTSConfig);
   return join(tmpTsConfigPath);
 }

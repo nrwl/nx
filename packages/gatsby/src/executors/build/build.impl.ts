@@ -29,7 +29,8 @@ export function runGatsbyBuild(
     );
 
     // Ensure the child process is killed when the parent exits
-    process.on('exit', (code) => cp.kill(code));
+    process.on('exit', () => cp.kill());
+    process.on('SIGTERM', () => cp.kill());
 
     cp.on('error', (err) => {
       reject(err);

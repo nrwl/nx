@@ -446,19 +446,7 @@ function createTmpTsConfig(
     ...originalTSConfig,
     ...updateConfig,
   };
-
-  process.on('exit', () => {
-    cleanupTmpTsConfigFile(tmpTsConfigPath);
-  });
-  process.on('SIGTERM', () => {
-    cleanupTmpTsConfigFile(tmpTsConfigPath);
-    process.exit(0);
-  });
-  process.on('SIGINT', () => {
-    cleanupTmpTsConfigFile(tmpTsConfigPath);
-    process.exit(0);
-  });
-
+  process.on('exit', () => cleanupTmpTsConfigFile(tmpTsConfigPath));
   writeJsonFile(tmpTsConfigPath, generatedTSConfig);
 
   return tmpTsConfigPath;

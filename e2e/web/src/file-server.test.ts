@@ -10,9 +10,8 @@ import {
 import { serializeJson } from '@nrwl/workspace';
 
 describe('file-server', () => {
-  beforeEach(() => newProject());
-
   it('should serve folder of files', async () => {
+    newProject({ name: uniq('fileserver') });
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
@@ -21,10 +20,11 @@ describe('file-server', () => {
       '@nrwl/web:file-server';
     updateFile(workspaceConfigName(), serializeJson(workspaceJson));
 
-    await runCommandUntil(`serve ${appName}`, (output) => {
+    const p = await runCommandUntil(`serve ${appName}`, (output) => {
       return (
         output.indexOf('Built at') > -1 && output.indexOf('Available on') > -1
       );
     });
+    p.kill();
   }, 300000);
 });

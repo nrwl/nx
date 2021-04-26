@@ -11,7 +11,7 @@ import { writeFileSync } from 'fs';
 
 describe('Storybook schematics', () => {
   describe('serve storybook', () => {
-    it('should run a React based Storybook setup', async (done) => {
+    it('should run a React based Storybook setup', async () => {
       newProject();
 
       const reactStorybookLib = uniq('test-ui-lib-react');
@@ -21,12 +21,14 @@ describe('Storybook schematics', () => {
       );
 
       // serve the storybook
-      await runCommandUntil(`run ${reactStorybookLib}:storybook`, (output) => {
-        return /Storybook.*started/gi.test(output);
-      });
-
-      done();
-    }, 30000);
+      const p = await runCommandUntil(
+        `run ${reactStorybookLib}:storybook`,
+        (output) => {
+          return /Storybook.*started/gi.test(output);
+        }
+      );
+      p.kill();
+    }, 1000000);
   });
 
   describe('build storybook', () => {
