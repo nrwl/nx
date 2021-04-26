@@ -33,7 +33,7 @@ exports[`jestProject --setup-file should have setupFilesAfterEnv and globals.ts-
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   globals: {
     'ts-jest': {
-      tsConfig: '<rootDir>/tsconfig.spec.json',
+      tsconfig: '<rootDir>/tsconfig.spec.json',
       stringifyContentPathRegex: '\\\\\\\\.(html|svg)$',
       astTransformers: {
         before: [
@@ -59,7 +59,7 @@ exports[`jestProject should create a jest.config.js 1`] = `
   preset: '../../jest.preset.js',
   globals: {
     'ts-jest': {
-      tsConfig: '<rootDir>/tsconfig.spec.json',
+      tsconfig: '<rootDir>/tsconfig.spec.json',
     }
   },
   coverageDirectory: '../../coverage/libs/lib1',
