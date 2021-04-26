@@ -13,7 +13,7 @@ export class RunOneReporter implements Reporter {
     taskOverrides: any
   ) {
     // Silent for a single task
-    if (tasks.length === 1) {
+    if (tasks.length === 1 && process.env.NX_INVOKED_BY_RUNNER) {
       return;
     }
     this.projectNames = projectNames;
@@ -43,7 +43,7 @@ export class RunOneReporter implements Reporter {
     cachedTasks: Task[]
   ) {
     // Silent for a single task
-    if (tasks.length === 1) {
+    if (tasks.length === 1 && process.env.NX_INVOKED_BY_RUNNER) {
       return;
     }
     output.addNewline();
