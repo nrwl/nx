@@ -1,0 +1,6 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+yarn check-commit
+yarn documentation
+yarn pretty-quick --check
