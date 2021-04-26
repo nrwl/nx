@@ -30,6 +30,12 @@
       "version": "11.5.3-beta.1",
       "description": "Update react storybook lint config",
       "factory": "./src/migrations/update-11-5-3/update-lint-ignores"
+    },
+    "update-12-1-0": {
+      "version": "12.1.0-beta.7",
+      "cli": "nx",
+      "description": "Update react storybook tsconfig to avoid VSCode errors",
+      "factory": "./src/migrations/update-12-1-0/fix-storybook-tsconfig"
     }
   },
   "packageJsonUpdates": {
