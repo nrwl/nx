@@ -15,6 +15,7 @@ import {
   updateFile,
   workspaceConfigName,
 } from '@nrwl/e2e/utils';
+import { TaskCacheStatus } from '@nrwl/workspace/src/utilities/output';
 
 describe('run-one', () => {
   let proj: string;
@@ -740,7 +741,7 @@ describe('cache', () => {
     });
     const outputWithBuildApp2Cached = runCLI(`affected:build ${files}`);
     expect(outputWithBuildApp2Cached).toContain('read the output from cache');
-    expectCached(outputWithBuildApp2Cached, [myapp2]);
+    expectMatchedOutput(outputWithBuildApp2Cached, [myapp2]);
 
     // touch package.json
     // --------------------------------------------
@@ -754,13 +755,17 @@ describe('cache', () => {
 
     // build individual project with caching
     const individualBuildWithCache = runCLI(`build ${myapp1}`);
-    expect(individualBuildWithCache).toContain('from cache');
+    expect(individualBuildWithCache).toContain(
+      TaskCacheStatus.MatchedExistingOutput
+    );
 
     // skip caching when building individual projects
     const individualBuildWithSkippedCache = runCLI(
       `build ${myapp1} --skip-nx-cache`
     );
-    expect(individualBuildWithSkippedCache).not.toContain('from cache');
+    expect(individualBuildWithSkippedCache).not.toContain(
+      TaskCacheStatus.MatchedExistingOutput
+    );
 
     // run lint with caching
     // --------------------------------------------
@@ -771,7 +776,7 @@ describe('cache', () => {
     expect(outputWithBothLintTasksCached).toContain(
       'read the output from cache'
     );
-    expectCached(outputWithBothLintTasksCached, [
+    expectMatchedOutput(outputWithBothLintTasksCached, [
       myapp1,
       myapp2,
       `${myapp1}-e2e`,
@@ -874,19 +879,38 @@ describe('cache', () => {
     actualOutput: string,
     expectedCachedProjects: string[]
   ) {
-    const cachedProjects = [];
+    expectProjectMatchTaskCacheStatus(actualOutput, expectedCachedProjects);
+  }
+
+  function expectMatchedOutput(
+    actualOutput: string,
+    expectedMatchedOutputProjects: string[]
+  ) {
+    expectProjectMatchTaskCacheStatus(
+      actualOutput,
+      expectedMatchedOutputProjects,
+      TaskCacheStatus.MatchedExistingOutput
+    );
+  }
+
+  function expectProjectMatchTaskCacheStatus(
+    actualOutput: string,
+    expectedProjects: string[],
+    cacheStatus: TaskCacheStatus = TaskCacheStatus.RetrievedFromCache
+  ) {
+    const matchingProjects = [];
     const lines = actualOutput.split('\n');
-    lines.forEach((s, i) => {
+    lines.forEach((s) => {
       if (s.startsWith(`> nx run`)) {
         const projectName = s.split(`> nx run `)[1].split(':')[0].trim();
-        if (s.indexOf('from cache') > -1) {
-          cachedProjects.push(projectName);
+        if (s.indexOf(cacheStatus) > -1) {
+          matchingProjects.push(projectName);
         }
       }
     });
 
-    cachedProjects.sort((a, b) => a.localeCompare(b));
-    expectedCachedProjects.sort((a, b) => a.localeCompare(b));
-    expect(cachedProjects).toEqual(expectedCachedProjects);
+    matchingProjects.sort((a, b) => a.localeCompare(b));
+    expectedProjects.sort((a, b) => a.localeCompare(b));
+    expect(matchingProjects).toEqual(expectedProjects);
   }
 });
