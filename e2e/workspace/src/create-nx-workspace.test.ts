@@ -75,6 +75,18 @@ describe('create-nx-workspace', () => {
     expectNoAngularDevkit();
   });
 
+  it('should be able to create an gatsby workspace', () => {
+    const wsName = uniq('gatsby');
+    const appName = uniq('app');
+    runCreateWorkspace(wsName, {
+      preset: 'next',
+      style: 'css',
+      appName,
+    });
+
+    expectNoAngularDevkit();
+  });
+
   it('should be able to create an web-components workspace', () => {
     const wsName = uniq('web-components');
     const appName = uniq('app');
