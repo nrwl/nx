@@ -165,6 +165,13 @@ describe('Next.js Applications', () => {
     runCLI(`generate @nrwl/react:lib ${tsxLibName} --no-interactive`);
     runCLI(`generate @nrwl/workspace:lib ${tsLibName} --no-interactive`);
 
+    // create a css file in node_modules so that it can be imported in a lib
+    // to test that it works as expected
+    updateFile(
+      'node_modules/@nrwl/next/test-styles.css',
+      'h1 { background-color: red; }'
+    );
+
     updateFile(
       `libs/${tsLibName}/src/lib/${tsLibName}.ts`,
       `
@@ -182,6 +189,7 @@ describe('Next.js Applications', () => {
     updateFile(
       `libs/${tsxLibName}/src/lib/${tsxLibName}.tsx`,
       `
+          import '@nrwl/next/test-styles.css';
 
           interface TestComponentProps {
             text: string;
