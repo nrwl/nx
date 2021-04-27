@@ -103,4 +103,21 @@ describe('@nrwl/workspace:library', () => {
 
     runCLI(`test ${consumerLib}`);
   });
+
+  it('should be able to be built when it is buildable', () => {
+    const buildableLib = uniq('buildable');
+
+    runCLI(`generate @nrwl/workspace:lib ${buildableLib} --buildable`);
+
+    const result = runCLI(`build ${buildableLib}`);
+
+    expect(result).toContain(
+      `Compiling TypeScript files for project "${buildableLib}"...`
+    );
+    expect(result).toContain(
+      `Done compiling TypeScript files for project "${buildableLib}".`
+    );
+    expect(result).toContain('Copying asset files...');
+    expect(result).toContain('Done copying asset files.');
+  });
 });

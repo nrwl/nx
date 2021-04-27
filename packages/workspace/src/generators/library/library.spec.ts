@@ -132,6 +132,7 @@ describe('lib', () => {
       expect(tree.exists('libs/my-lib/src/lib/my-lib.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/lib/my-lib.spec.ts')).toBeTruthy();
       expect(tree.exists('libs/my-lib/README.md')).toBeTruthy();
+      expect(tree.exists('libs/my-lib/package.json')).toBeFalsy();
 
       const ReadmeContent = tree.read('libs/my-lib/README.md').toString();
       expect(ReadmeContent).toContain('nx test my-lib');
@@ -210,6 +211,7 @@ describe('lib', () => {
       ).toBeTruthy();
       expect(tree.exists('libs/my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists(`libs/my-dir/my-lib/.eslintrc.json`)).toBeTruthy();
+      expect(tree.exists(`libs/my-dir/my-lib/package.json`)).toBeFalsy();
     });
 
     it('should update workspace.json', async () => {
@@ -771,6 +773,33 @@ describe('lib', () => {
         name: 'myLib',
       });
       expect(tree.exists('libs/my-lib/.babelrc')).toBeTruthy();
+    });
+  });
+
+  describe('--buildable', () => {
+    it('should add build target to workspace.json', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        buildable: true,
+      });
+      const workspaceJson = readJson(tree, '/workspace.json');
+
+      expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
+      expect(workspaceJson.projects['my-lib'].architect.build).toBeTruthy();
+      expect(workspaceJson.projects['my-lib'].architect.build.builder).toBe(
+        '@nrwl/workspace:tsc'
+      );
+    });
+
+    it('should generate a package.json file', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        buildable: true,
+      });
+
+      expect(tree.exists('libs/my-lib/package.json')).toBeTruthy();
     });
   });
 });
