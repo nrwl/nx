@@ -332,6 +332,11 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "angular/api-workspace/executors/run-script"
+          },
+          {
+            "name": "tsc executor",
+            "id": "tsc",
+            "file": "angular/api-workspace/executors/tsc"
           }
         ]
       },
@@ -1389,6 +1394,11 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "react/api-workspace/executors/run-script"
+          },
+          {
+            "name": "tsc executor",
+            "id": "tsc",
+            "file": "react/api-workspace/executors/tsc"
           }
         ]
       },
@@ -2405,6 +2415,11 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "node/api-workspace/executors/run-script"
+          },
+          {
+            "name": "tsc executor",
+            "id": "tsc",
+            "file": "node/api-workspace/executors/tsc"
           }
         ]
       },

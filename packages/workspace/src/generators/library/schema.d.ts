@@ -17,4 +17,5 @@ export interface Schema {
   pascalCaseFiles?: boolean;
   strict?: boolean;
   skipBabelrc?: boolean;
+  buildable?: boolean;
 }

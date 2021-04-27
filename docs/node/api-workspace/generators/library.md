@@ -44,6 +44,14 @@ Type: `boolean`
 
 Use babel instead ts-jest
 
+### buildable
+
+Default: `false`
+
+Type: `boolean`
+
+Generate a buildable library.
+
 ### directory
 
 Type: `string`

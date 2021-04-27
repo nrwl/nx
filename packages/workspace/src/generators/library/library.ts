@@ -11,6 +11,8 @@ import {
   updateJson,
   GeneratorCallback,
   joinPathFragments,
+  ProjectConfiguration,
+  NxJsonProjectConfiguration,
 } from '@nrwl/devkit';
 import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { join } from 'path';
@@ -31,13 +33,30 @@ export interface NormalizedSchema extends Schema {
 }
 
 function addProject(tree: Tree, options: NormalizedSchema) {
-  addProjectConfiguration(tree, options.name, {
+  const projectConfiguration: ProjectConfiguration &
+    NxJsonProjectConfiguration = {
     root: options.projectRoot,
     sourceRoot: joinPathFragments(options.projectRoot, 'src'),
     projectType: 'library',
     targets: {},
     tags: options.parsedTags,
-  });
+  };
+
+  if (options.buildable) {
+    const { libsDir } = getWorkspaceLayout(tree);
+    projectConfiguration.targets.build = {
+      executor: '@nrwl/workspace:tsc',
+      outputs: ['{options.outputPath}'],
+      options: {
+        outputPath: `dist/${libsDir}/${options.projectDirectory}`,
+        main: `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),
+        tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
+        assets: [`${options.projectRoot}/*.md`],
+      },
+    };
+  }
+
+  addProjectConfiguration(tree, options.name, projectConfiguration);
 }
 
 export function addLint(
@@ -126,6 +145,10 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
 
   if (options.js) {
     toJS(tree);
+  }
+
+  if (!options.buildable) {
+    tree.delete(join(options.projectRoot, 'package.json'));
   }
 
   updateLibTsConfig(tree, options);
