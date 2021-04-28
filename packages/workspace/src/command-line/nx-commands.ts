@@ -356,6 +356,12 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'boolean',
       default: false,
     })
+    .option('exclude', {
+      describe: 'Exclude certain projects from being processed',
+      type: 'array',
+      coerce: parseCSV,
+      default: [],
+    })
     .option('verbose', {
       describe: 'Print additional error stack trace on failure',
     })

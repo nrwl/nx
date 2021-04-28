@@ -2,6 +2,7 @@ import {
   ExecutorContext,
   parseTargetString,
   readTargetOptions,
+  joinPathFragments,
 } from '@nrwl/devkit';
 import { Configuration } from 'webpack';
 
@@ -17,6 +18,11 @@ import {
 import { normalizeWebBuildOptions } from '../../utils/normalize';
 import { WebBuildBuilderOptions } from '../build/build.impl';
 import { getDevServerConfig } from '../../utils/devserver.config';
+import {
+  calculateProjectDependencies,
+  createTmpTsConfig,
+} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 
 export interface WebDevServerOptions {
   host: string;
@@ -57,6 +63,23 @@ export default function devServerExecutor(
       buildOptions,
       configuration: serveOptions.buildTarget.split(':')[2],
     });
+  }
+
+  if (!buildOptions.buildLibsFromSource) {
+    const projGraph = createProjectGraph();
+    const { target, dependencies } = calculateProjectDependencies(
+      projGraph,
+      context.root,
+      context.projectName,
+      'build', // should be generalized
+      context.configurationName
+    );
+    buildOptions.tsConfig = createTmpTsConfig(
+      joinPathFragments(context.root, buildOptions.tsConfig),
+      context.root,
+      target.data.root,
+      dependencies
+    );
   }
 
   return eachValueFrom(

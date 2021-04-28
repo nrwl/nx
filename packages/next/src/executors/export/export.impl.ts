@@ -29,7 +29,7 @@ export default async function exportExecutor(
     projGraph,
     context.root,
     context.projectName,
-    context.targetName,
+    'build', // this should be generalized
     context.configurationName
   );
 

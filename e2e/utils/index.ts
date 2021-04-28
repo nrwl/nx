@@ -212,7 +212,11 @@ export function runCommandAsync(
       command,
       {
         cwd: tmpProjPath(),
-        env: { ...(opts.env || process.env), FORCE_COLOR: 'false' },
+        env: {
+          ...(opts.env || process.env),
+          FORCE_COLOR: 'false',
+          NX_INVOKED_BY_RUNNER: undefined,
+        },
       },
       (err, stdout, stderr) => {
         if (!opts.silenceError && err) {
@@ -231,7 +235,11 @@ export function runCommandUntil(
   const pm = getPackageManagerCommand();
   const p = exec(`${pm.runNx} ${command}`, {
     cwd: tmpProjPath(),
-    env: { ...process.env, FORCE_COLOR: 'false' },
+    env: {
+      ...process.env,
+      FORCE_COLOR: 'false',
+      NX_INVOKED_BY_RUNNER: undefined,
+    },
   });
   return new Promise((res, rej) => {
     let output = '';
@@ -286,7 +294,7 @@ export function runNgAdd(
       `./node_modules/.bin/ng g @nrwl/workspace:ng-add ${command}`,
       {
         cwd: tmpProjPath(),
-        env: opts.env || process.env,
+        env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
       }
     )
       .toString()
@@ -315,7 +323,7 @@ export function runCLI(
     const pm = getPackageManagerCommand();
     let r = execSync(`${pm.runNx} ${command}`, {
       cwd: opts.cwd || tmpProjPath(),
-      env: opts.env || process.env,
+      env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
     }).toString();
     r = r.replace(
       /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
@@ -353,7 +361,11 @@ export function runCommand(command: string): string {
     const r = execSync(command, {
       cwd: tmpProjPath(),
       stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env, FORCE_COLOR: 'false' },
+      env: {
+        ...process.env,
+        FORCE_COLOR: 'false',
+        NX_INVOKED_BY_RUNNER: undefined,
+      },
     }).toString();
     if (process.env.VERBOSE_OUTPUT) {
       console.log(r);

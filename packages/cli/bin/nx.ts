@@ -53,10 +53,11 @@ if (localNx === require.resolve('@nrwl/cli/bin/nx.js')) {
     output.warn({
       title: `Running global Nx CLI with PNPM may have issues.`,
       bodyLines: [
-        `Prefer to use "pnpm run" (https://pnpm.js.org/en/cli/run') to execute commands in this workspace.`,
+        `Prefer to use "pnpm run" (https://pnpm.js.org/en/cli/run) to execute commands in this workspace.`,
         `${chalk.reset.inverse.bold.cyan(
           ' TIP '
         )} create a shortcut such as: ${chalk.bold.white(tip)}`,
+        ``,
       ],
     });
   }

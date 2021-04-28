@@ -20,7 +20,8 @@ export class TaskOrchestrator {
   constructor(
     private readonly initiatingProject: string | undefined,
     private readonly projectGraph: ProjectGraph,
-    private readonly options: DefaultTasksRunnerOptions
+    private readonly options: DefaultTasksRunnerOptions,
+    private readonly hideCachedOutput: boolean
   ) {
     this.setupOnProcessExitListener();
   }
@@ -125,8 +126,9 @@ export class TaskOrchestrator {
       }
 
       if (
-        !this.initiatingProject ||
-        this.initiatingProject === t.task.target.project
+        (!this.initiatingProject ||
+          this.initiatingProject === t.task.target.project) &&
+        !this.hideCachedOutput
       ) {
         const args = this.getCommandArgs(t.task);
         output.logCommand(
