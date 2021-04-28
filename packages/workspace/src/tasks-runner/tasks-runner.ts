@@ -40,5 +40,6 @@ export type TasksRunner<T = unknown> = (
     initiatingProject?: string | null;
     projectGraph: ProjectGraph;
     nxJson: NxJson;
+    hideCachedOutput?: boolean;
   }
 ) => Observable<AffectedEvent>;

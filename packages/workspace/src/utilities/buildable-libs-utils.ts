@@ -114,10 +114,10 @@ function readTsConfigWithRemappedPaths(
   if (process.env.NX_VERBOSE_LOGGING === 'true') {
     output.log({
       title: 'TypeScript path mappings have been rewritten.',
-      bodyLines: [
-        JSON.stringify(generatedTsConfig.compilerOptions.paths, null, 2),
-      ],
     });
+    console.log(
+      JSON.stringify(generatedTsConfig.compilerOptions.paths, null, 2)
+    );
   }
   return generatedTsConfig;
 }

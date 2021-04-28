@@ -50,6 +50,7 @@ export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
     initiatingProject?: string;
     projectGraph: ProjectGraph;
     nxJson: NxJson;
+    hideCachedOutput?: boolean;
   }
 ): Observable<TaskCompleteEvent> => {
   if (!options.lifeCycle) {
@@ -79,6 +80,7 @@ async function runAllTasks(
     initiatingProject?: string;
     projectGraph: ProjectGraph;
     nxJson: NxJson;
+    hideCachedOutput?: boolean;
   }
 ): Promise<Array<{ task: Task; type: any; success: boolean }>> {
   const defaultTargetDependencies = getDefaultDependencyConfigs(
@@ -93,7 +95,8 @@ async function runAllTasks(
   const orchestrator = new TaskOrchestrator(
     context.initiatingProject,
     context.projectGraph,
-    options
+    options,
+    context.hideCachedOutput
   );
 
   const res = [];

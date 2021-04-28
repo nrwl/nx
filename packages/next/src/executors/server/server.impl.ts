@@ -51,7 +51,7 @@ export default async function* serveExecutor(
     projGraph,
     context.root,
     context.projectName,
-    context.targetName,
+    'build', // should be generalized
     context.configurationName
   );
 
