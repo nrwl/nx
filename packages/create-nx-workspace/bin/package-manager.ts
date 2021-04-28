@@ -65,9 +65,9 @@ export function getPackageManagerCommand(
 
     case 'npm':
       return {
-        install: 'npm install --legacy-peer-deps',
-        add: 'npm install --legacy-peer-deps',
-        addDev: 'npm install --legacy-peer-deps -D',
+        install: 'npm install',
+        add: 'npm install',
+        addDev: 'npm install -D',
         rm: 'npm rm',
         exec: 'npx',
         run: (script: string, args: string) => `npm run ${script} -- ${args}`,
