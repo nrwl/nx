@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync, removeSync } from 'fs-extra';
-import * as minimist from 'minimist';
+import * as yargsParser from 'yargs-parser';
 import { dirname, join } from 'path';
 import { gt, lte } from 'semver';
 import * as stripJsonComments from 'strip-json-comments';
@@ -367,7 +367,7 @@ export function parseMigrationsOptions(
   args: string[]
 ): GenerateMigrations | RunMigrations {
   const options = convertToCamelCase(
-    minimist(args, {
+    yargsParser(args, {
       string: ['runMigrations', 'from', 'to'],
       alias: {
         runMigrations: 'run-migrations',

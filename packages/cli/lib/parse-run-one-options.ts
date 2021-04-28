@@ -1,4 +1,4 @@
-import yargsParser = require('yargs-parser');
+import * as yargsParser from 'yargs-parser';
 
 function calculateDefaultProjectName(cwd: string, root: string, wc: any) {
   let relativeCwd = cwd.replace(/\\/g, '/').split(root.replace(/\\/g, '/'))[1];
@@ -69,6 +69,9 @@ export function parseRunOneOptions(
     string: ['configuration', 'project'],
     alias: {
       c: 'configuration',
+    },
+    configuration: {
+      'strip-dashed': true,
     },
   });
 

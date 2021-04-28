@@ -32,7 +32,6 @@
     "chalk": "4.1.0",
     "enquirer": "~2.3.6",
     "fs-extra": "^9.1.0",
-    "minimist": "^1.2.5",
     "rxjs": "^6.5.4",
     "rxjs-for-await": "0.0.2",
     "semver": "7.3.4",
