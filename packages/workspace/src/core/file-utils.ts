@@ -166,7 +166,7 @@ export function readWorkspaceConfig(opts: {
   format: 'angularCli' | 'nx';
   path?: string;
 }) {
-  const ws = new Workspaces(opts.path);
+  const ws = new Workspaces(opts.path || process.cwd());
   const json = ws.readWorkspaceConfiguration();
   if (opts.format === 'angularCli') {
     const formatted = toOldFormatOrNull(json);

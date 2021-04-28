@@ -5,3 +5,4 @@ export {
 export { jestConfigObjectAst } from './src/utils/config/functions';
 export { jestProjectGenerator } from './src/generators/jest-project/jest-project';
 export { jestInitGenerator } from './src/generators/init/init';
+export { getJestProjects } from './src/utils/config/get-jest-projects';
