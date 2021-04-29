@@ -13,7 +13,6 @@ import { createNextConfigFile } from './lib/create-next-config-file';
 import { directoryExists } from '@nrwl/workspace/src/utilities/fileutils';
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import { calculateProjectDependencies } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
 
 try {
   require('dotenv').config();
@@ -35,8 +34,6 @@ export default async function buildExecutor(
     context.targetName,
     context.configurationName
   );
-
-  assertDependentProjectsHaveBeenBuilt(dependencies, context);
 
   const config = await prepareConfig(
     PHASE_PRODUCTION_BUILD,

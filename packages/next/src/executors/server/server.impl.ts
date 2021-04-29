@@ -25,7 +25,6 @@ import { customServer } from './lib/custom-server';
 import { defaultServer } from './lib/default-server';
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import { calculateProjectDependencies } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
 
 try {
   require('dotenv').config();
@@ -54,8 +53,6 @@ export default async function* serveExecutor(
     'build', // should be generalized
     context.configurationName
   );
-
-  assertDependentProjectsHaveBeenBuilt(dependencies, context);
 
   const config = await prepareConfig(
     options.dev ? PHASE_DEVELOPMENT_SERVER : PHASE_PRODUCTION_SERVER,

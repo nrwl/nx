@@ -5,7 +5,7 @@ import { getCommonConfig } from './third-party/cli-files/models/webpack-configs/
 import { getStylesConfig } from './third-party/cli-files/models/webpack-configs/styles';
 import { Configuration } from 'webpack';
 import { basename, resolve, posix } from 'path';
-import { WebBuildBuilderOptions } from '../builders/build/build.impl';
+import { WebBuildBuilderOptions } from '../executors/build/build.impl';
 import { convertBuildOptions } from './normalize';
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { getBaseWebpackPartial } from './config';

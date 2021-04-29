@@ -3,8 +3,8 @@ import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import * as ts from 'typescript';
 import * as fs from 'fs';
 import { HotModuleReplacementPlugin } from 'webpack';
-import { WebBuildBuilderOptions } from '../builders/build/build.impl';
-import { WebDevServerOptions } from '../builders/dev-server/dev-server.impl';
+import { WebBuildBuilderOptions } from '../executors/build/build.impl';
+import { WebDevServerOptions } from '../executors/dev-server/dev-server.impl';
 import { join } from 'path';
 
 jest.mock('tsconfig-paths-webpack-plugin');

@@ -14,7 +14,6 @@ import {
 } from '../../utils/types';
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import { calculateProjectDependencies } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
 
 try {
   require('dotenv').config();
@@ -32,8 +31,6 @@ export default async function exportExecutor(
     'build', // this should be generalized
     context.configurationName
   );
-
-  assertDependentProjectsHaveBeenBuilt(dependencies, context);
 
   const buildTarget = parseTargetString(options.buildTarget);
   const build = await runExecutor(buildTarget, {}, context);

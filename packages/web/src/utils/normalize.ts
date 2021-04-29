@@ -1,4 +1,4 @@
-import { WebBuildBuilderOptions } from '../builders/build/build.impl';
+import { WebBuildBuilderOptions } from '../executors/build/build.impl';
 import { normalizePath } from '@nrwl/devkit';
 import { resolve, dirname, relative, basename } from 'path';
 import {
