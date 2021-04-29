@@ -16,6 +16,13 @@ export default {
     node: true,
   },
   plugins: ['@angular-eslint'],
-  extends: ['plugin:@angular-eslint/recommended'],
+  extends: [
+    'plugin:@angular-eslint/recommended',
+    /**
+     * TODO: Consider dropping this extends and explicitly carrying over rules we care about
+     * into our typescript preset in v13
+     */
+    'plugin:@angular-eslint/recommended--extra',
+  ],
   rules: {},
 };
