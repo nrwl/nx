@@ -20,7 +20,7 @@ const runOne = [
   'scan',
 ];
 
-const runMany = [...runOne, 'projects', 'quiet', 'all', 'verbose'];
+const runMany = [...runOne, 'projects', 'all', 'verbose'];
 
 const runAffected = [
   ...runOne,
@@ -30,7 +30,6 @@ const runAffected = [
   'base',
   'head',
   'files',
-  'quiet',
   'plain',
   'select',
   'verbose',
@@ -59,7 +58,6 @@ export interface NxArgs {
   verbose?: boolean;
   help?: boolean;
   version?: boolean;
-  quiet?: boolean;
   plain?: boolean;
   withDeps?: boolean;
   'with-deps'?: boolean;

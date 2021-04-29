@@ -205,8 +205,7 @@ export const commandsObject = yargs
       (await import('./connect-to-nx-cloud')).connectToNxCloudCommand()
   )
   .help('help')
-  .version(nxVersion)
-  .option('quiet', { type: 'boolean', hidden: true });
+  .version(nxVersion);
 
 function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
   return withAffectedOptions(yargs)
