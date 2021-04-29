@@ -2,7 +2,11 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import matter from 'gray-matter';
 import * as marked from 'marked';
-import { archiveRootPath, previewRootPath } from './documents.utils';
+import {
+  archiveRootPath,
+  extractTitle,
+  previewRootPath,
+} from './documents.utils';
 import {
   VersionMetadata,
   DocumentData,
@@ -16,7 +20,14 @@ export function getDocument(
 ): DocumentData {
   const segments = Array.isArray(_segments) ? [..._segments] : [_segments];
   const docPath = getFilePath(version, segments);
-  const file = matter(readFileSync(docPath, 'utf8'));
+  const originalContent = readFileSync(docPath, 'utf8');
+  const file = matter(originalContent);
+
+  // Set default title if not provided in front-matter section.
+  if (!file.data.title) {
+    file.data.title =
+      extractTitle(originalContent) ?? segments[segments.length - 1];
+  }
 
   return {
     filePath: docPath,
@@ -35,16 +46,12 @@ export function getFilePath(version: string, segments: string[]): string {
       items = found.itemList;
     } else {
       throw new Error(
-        `Cannot find document matching segments: ${segments.join(',')}`
+        `Cannot find document matching segments: ${JSON.stringify(segments)}`
       );
     }
   }
-  if (!found.file) {
-    throw new Error(
-      `Cannot find document matching segments: ${segments.join(',')}`
-    );
-  }
-  return join(getDocumentsRoot(version), `${found.file}.md`);
+  const file = found.file ?? segments.join('/');
+  return join(getDocumentsRoot(version), `${file}.md`);
 }
 
 const documentsCache = new Map<string, DocumentMetadata[]>();
@@ -65,25 +72,24 @@ export function getStaticDocumentPaths(version: string) {
   const paths = [];
 
   function recur(curr, acc) {
-    if (curr.file) {
-      paths.push({
-        params: {
-          version,
-          flavor: acc[0],
-          segments: acc.slice(2).concat(curr.id),
-        },
-      });
-      return;
-    }
     if (curr.itemList) {
       curr.itemList.forEach((ii) => {
         recur(ii, [...acc, curr.id]);
       });
+      return;
     }
+
+    paths.push({
+      params: {
+        version,
+        flavor: acc[0],
+        segments: acc.slice(1).concat(curr.id),
+      },
+    });
   }
 
   getDocuments(version).forEach((item) => {
-    recur(item, [item.id]);
+    recur(item, []);
   });
 
   return paths;

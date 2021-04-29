@@ -10,6 +10,8 @@ import { DocViewer } from '@nrwl/nx-dev/feature-doc-viewer';
 import { getMenu, Menu } from '@nrwl/nx-dev/data-access-menu';
 
 interface DocumentationProps {
+  version: string;
+  flavor: string;
   document: DocumentData;
   versions: VersionMetadata[];
   menu: Menu;
@@ -19,13 +21,28 @@ interface DocumentationParams {
   params: { version: string; flavor: string; segments: string | string[] };
 }
 
-export function Documentation({ document, menu }: DocumentationProps) {
-  return <DocViewer content={document.content} menu={menu} toc={null} />;
+export function Documentation({
+  document,
+  menu,
+  version,
+  flavor,
+}: DocumentationProps) {
+  return (
+    <DocViewer
+      version={version}
+      flavor={flavor}
+      document={document}
+      menu={menu}
+      toc={null}
+    />
+  );
 }
 
 export async function getStaticProps({ params }: DocumentationParams) {
   return {
     props: {
+      version: params.version,
+      flavor: params.flavor,
       versions: getVersions(),
       document: getDocument(params.version, [
         params.flavor,
