@@ -13,7 +13,7 @@ export type AssetGlob = FileInputOutput & {
 };
 
 export function assetGlobsToFiles(
-  assets: AssetGlob[],
+  assets: Array<AssetGlob | string>,
   rootDir: string,
   outDir: string
 ): FileInputOutput[] {
@@ -53,7 +53,7 @@ export function assetGlobsToFiles(
 }
 
 export function copyAssets(
-  assets: AssetGlob[],
+  assets: Array<AssetGlob | string>,
   rootDir: string,
   outDir: string
 ): Promise<{ success: boolean; error?: string }> {

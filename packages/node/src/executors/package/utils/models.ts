@@ -1,3 +1,8 @@
+import {
+  AssetGlob,
+  FileInputOutput,
+} from '@nrwl/workspace/src/utilities/assets';
+
 export interface NodePackageBuilderOptions {
   main: string;
   tsConfig: string;
@@ -18,12 +23,3 @@ export interface NormalizedBuilderOptions extends NodePackageBuilderOptions {
   normalizedOutputPath: string;
   relativeMainFileOutput: string;
 }
-
-export type FileInputOutput = {
-  input: string;
-  output: string;
-};
-export type AssetGlob = FileInputOutput & {
-  glob: string;
-  ignore: string[];
-};
