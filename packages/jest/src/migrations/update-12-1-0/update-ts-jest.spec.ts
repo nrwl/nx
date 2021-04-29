@@ -80,4 +80,34 @@ describe('update 12.1.0', () => {
     );
     expect(jestObject.globals['ts-jest']['tsConfig']).toBeUndefined();
   });
+
+  it('should ignore migration if the jest config does not have a globals prop', async () => {
+    getJestObjectMock.mockImplementation((path: string): any => {
+      if (path.includes('apps/products')) {
+        // return empty jest config without globals
+        return {};
+      }
+    });
+
+    await expect(
+      schematicRunner
+        .runSchematicAsync('update-ts-jest-6-5-5', {}, initialTree)
+        .toPromise()
+    ).resolves.not.toThrowError();
+  });
+
+  it('should ignore migration if the jest config does not have a tsconfig prop', async () => {
+    getJestObjectMock.mockImplementation((path: string): any => {
+      if (path.includes('apps/products')) {
+        // return empty jest config without tsconfig
+        return { globals: { 'ts-jest': {} } };
+      }
+    });
+
+    await expect(
+      schematicRunner
+        .runSchematicAsync('update-ts-jest-6-5-5', {}, initialTree)
+        .toPromise()
+    ).resolves.not.toThrowError();
+  });
 });

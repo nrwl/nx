@@ -26,9 +26,9 @@ function updateJestConfig(): Rule {
 
         const jestConfigPath = target.options.jestConfig as string;
         const config = getJestObject(join(appRootPath, jestConfigPath));
-        const tsJestConfig = config.globals['ts-jest'];
+        const tsJestConfig = config.globals && config.globals['ts-jest'];
 
-        if (!tsJestConfig.tsConfig) {
+        if (!(tsJestConfig && tsJestConfig.tsConfig)) {
           continue;
         }
 
