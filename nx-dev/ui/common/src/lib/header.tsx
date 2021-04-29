@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { AlgoliaSearch } from '@nrwl/nx-dev/feature-search';
 
 /* eslint-disable-next-line */
 export interface headerProps {}
@@ -46,39 +47,7 @@ export function Header(props: headerProps) {
           </a>
         </div>
         {/*SEARCH*/}
-        <button
-          type="button"
-          className="group leading-6 font-medium hidden sm:flex items-center justify-center space-x-3 sm:space-x-4 text-gray-500 hover:text-gray-600 transition-colors duration-200 w-full py-2"
-        >
-          <svg
-            width="24"
-            height="24"
-            fill="none"
-            className="text-gray-400 group-hover:text-gray-500 transition-colors duration-200"
-          >
-            <path
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <span>
-            Search <span className="hidden lg:inline">for something</span>
-          </span>
-          <span className="hidden md:block text-gray-400 text-sm leading-5 py-0.5 px-1.5 border border-gray-300 rounded-md">
-            <span className="sr-only">Press </span>
-            <kbd className="font-sans">
-              <abbr title="Command" className="no-underline">
-                ⌘
-              </abbr>
-            </kbd>
-            <span className="sr-only"> and </span>
-            <kbd className="font-sans">K</kbd>
-            <span className="sr-only"> to search</span>
-          </span>
-        </button>
+        <AlgoliaSearch />
         {/*NAVIGATION*/}
         <div className="text-sm flex-shrink-0">
           <nav className="flex items-justified justify-center space-x-1">

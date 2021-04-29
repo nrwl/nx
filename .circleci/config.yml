@@ -25,7 +25,7 @@ commands:
       - checkout
       - when:
           condition:
-            equal: [ << parameters.os >>, windows ]
+            equal: [<< parameters.os >>, windows]
           steps:
             - run: nvm install 12.20
             - run: nvm use 12.20
@@ -46,14 +46,14 @@ commands:
 
       - when:
           condition:
-            equal: [ << parameters.os >>, linux ]
+            equal: [<< parameters.os >>, linux]
           steps:
             - run:
                 name: Install PNPM
                 command: npm install --prefix=$HOME/.local -g pnpm@5.18.9
       - when:
           condition:
-            equal: [ << parameters.os >>, windows ]
+            equal: [<< parameters.os >>, windows]
           steps:
             - run:
                 name: Install PNPM
@@ -100,7 +100,7 @@ jobs:
         default: pnpm
     executor: << parameters.os >>
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: "true"
+      NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
       SELECTED_CLI: << parameters.cli >>
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
     steps:
@@ -120,7 +120,7 @@ jobs:
           command: yarn depcheck
       - run:
           name: Run Builds
-          command: npx nx affected --target=build 
+          command: npx nx affected --target=build
       - run:
           name: Run Unit Tests
           command: npx nx affected --target=test
@@ -147,7 +147,7 @@ jobs:
         default: pnpm
     executor: << parameters.os >>
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: "true"
+      NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
       SELECTED_CLI: << parameters.cli >>
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
     steps:
