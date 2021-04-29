@@ -10,7 +10,7 @@ import {
   tmpProjPath,
   uniq,
 } from '@nrwl/e2e/utils';
-import { mkdirSync, writeFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 
 describe('Storybook schematics', () => {
   let proj: string;
@@ -60,15 +60,15 @@ describe('Storybook schematics', () => {
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
 
-      const mylib = uniq('test-ui-lib');
-      createTestUILib(mylib);
-      const mylib2 = uniq('test-ui-lib-react');
-      runCLI(`generate @nrwl/react:lib ${mylib2} --no-interactive`);
+      const myAngularLib = uniq('test-ui-lib');
+      createTestUILib(myAngularLib);
+      const myReactLib = uniq('test-ui-lib-react');
+      runCLI(`generate @nrwl/react:lib ${myReactLib} --no-interactive`);
       runCLI(
-        `generate @nrwl/react:component Button --project=${mylib2} --no-interactive`
+        `generate @nrwl/react:component Button --project=${myReactLib} --no-interactive`
       );
       writeFileSync(
-        tmpProjPath(`libs/${mylib2}/src/lib/button.tsx`),
+        tmpProjPath(`libs/${myReactLib}/src/lib/button.tsx`),
         `
           import React from 'react';
 
@@ -95,7 +95,7 @@ describe('Storybook schematics', () => {
             `
       );
       writeFileSync(
-        tmpProjPath(`libs/${mylib2}/src/lib/button.stories.tsx`),
+        tmpProjPath(`libs/${myReactLib}/src/lib/button.stories.tsx`),
         `
             import React from 'react';
             import { Button, ButtonStyle } from './button';
@@ -117,18 +117,18 @@ describe('Storybook schematics', () => {
       );
 
       runCLI(
-        `generate @nrwl/angular:storybook-configuration ${mylib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
+        `generate @nrwl/angular:storybook-configuration ${myAngularLib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
       );
       runCLI(
-        `generate @nrwl/angular:stories ${mylib} --generateCypressSpecs --no-interactive`
+        `generate @nrwl/angular:stories ${myAngularLib} --generateCypressSpecs --no-interactive`
       );
 
       writeFileSync(
         tmpProjPath(
-          `apps/${mylib}-e2e/src/integration/test-button/test-button.component.spec.ts`
+          `apps/${myAngularLib}-e2e/src/integration/test-button/test-button.component.spec.ts`
         ),
         `
-            describe('test-ui-lib3726865', () => {
+            describe('${myAngularLib}', () => {
 
           it('should render the component', () => {
             cy.visit('/iframe.html?id=testbuttoncomponent--primary&knob-buttonType=button&knob-style=default&knob-age&knob-isDisabled=false');
@@ -148,12 +148,17 @@ describe('Storybook schematics', () => {
       );
 
       runCLI(
-        `generate @nrwl/react:storybook-configuration ${mylib2} --configureCypress --no-interactive`
+        `generate @nrwl/react:storybook-configuration ${myReactLib} --configureCypress --no-interactive`
       );
 
-      mkdirSync(tmpProjPath(`apps/${mylib2}-e2e/src/integration`));
+      // The following line (mkdirSync...) is not needed,
+      // since the above schematic creates this directory.
+      // So, if we leave it there, there's an error saying the directory exists.
+      // I am not sure how it worked as it was :/
+
+      // mkdirSync(tmpProjPath(`apps/${myReactLib}-e2e/src/integration`));
       writeFileSync(
-        tmpProjPath(`apps/${mylib2}-e2e/src/integration/button.spec.ts`),
+        tmpProjPath(`apps/${myReactLib}-e2e/src/integration/button.spec.ts`),
         `
         describe('react-ui', () => {
           it('should render the component', () => {
@@ -174,15 +179,15 @@ describe('Storybook schematics', () => {
       );
 
       if (runCypressTests()) {
-        expect(runCLI(`run ${mylib}-e2e:e2e --no-watch`)).toContain(
+        expect(runCLI(`run ${myAngularLib}-e2e:e2e --no-watch`)).toContain(
           'All specs passed!'
         );
       }
 
-      runCLI(`run ${mylib}:build-storybook`);
+      runCLI(`run ${myAngularLib}:build-storybook`);
 
-      checkFilesExist(`dist/storybook/${mylib}/index.html`);
-      expect(readFile(`dist/storybook/${mylib}/index.html`)).toContain(
+      checkFilesExist(`dist/storybook/${myAngularLib}/index.html`);
+      expect(readFile(`dist/storybook/${myAngularLib}/index.html`)).toContain(
         `<title>Storybook</title>`
       );
     }, 1000000);
@@ -234,6 +239,7 @@ describe('Storybook schematics', () => {
 
             export default {
               title: 'My Test Cmp',
+              component: MyTestCmpComponent,
             };
             
             let x = 'hi';
@@ -242,7 +248,6 @@ describe('Storybook schematics', () => {
               moduleMetadata: {
                 imports: [],
               },
-              component: MyTestCmpComponent,
               props: {},
             });
         `

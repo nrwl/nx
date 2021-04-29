@@ -66,10 +66,10 @@ export async function createAllStories(
   const project = projects.get(projectName);
 
   const { sourceRoot, projectType } = project;
-  const libPath = projectRootPath(tree, sourceRoot, projectType);
+  const projectPath = projectRootPath(tree, sourceRoot, projectType);
 
   let componentPaths: string[] = [];
-  visitNotIgnoredFiles(tree, libPath, (path) => {
+  visitNotIgnoredFiles(tree, projectPath, (path) => {
     if (
       (path.endsWith('.tsx') && !path.endsWith('.spec.tsx')) ||
       (path.endsWith('.js') && !path.endsWith('.spec.js')) ||

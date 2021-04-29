@@ -42,12 +42,7 @@ export async function configurationGenerator(
   });
   tasks.push(initTask);
 
-  createRootStorybookDir(
-    tree,
-    schema.name,
-    schema.js,
-    workspaceStorybookVersion
-  );
+  createRootStorybookDir(tree, schema.js, workspaceStorybookVersion);
   createProjectStorybookDir(
     tree,
     schema.name,
@@ -90,18 +85,15 @@ function normalizeSchema(schema: StorybookConfigureSchema) {
 
 function createRootStorybookDir(
   tree: Tree,
-  projectName: string,
   js: boolean,
   workspaceStorybookVersion: string
 ) {
   if (tree.exists('.storybook')) {
     return;
   }
-  const { projectType } = readProjectConfiguration(tree, projectName);
-  const projectDirectory = projectType === 'application' ? 'app' : 'lib';
   logger.debug(
-    `adding .storybook folder to ${projectDirectory} -\n
-  based on the Storybook version installed: ${workspaceStorybookVersion}, we'll bootstrap a scaffold for that particular version.`
+    `adding .storybook folder to the root directory - 
+     based on the Storybook version installed (v${workspaceStorybookVersion}), we'll bootstrap a scaffold for that particular version.`
   );
   const templatePath = join(
     __dirname,
