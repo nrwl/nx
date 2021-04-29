@@ -1,7 +1,7 @@
 import { getWebConfig as getWebPartial } from './web.config';
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import * as ts from 'typescript';
-import { WebBuildBuilderOptions } from '../builders/build/build.impl';
+import { WebBuildBuilderOptions } from '../executors/build/build.impl';
 import { join } from 'path';
 
 jest.mock('tsconfig-paths-webpack-plugin');

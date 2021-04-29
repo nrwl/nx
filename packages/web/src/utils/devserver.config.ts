@@ -8,8 +8,8 @@ import * as path from 'path';
 
 import { getWebConfig } from './web.config';
 import { Configuration, HotModuleReplacementPlugin } from 'webpack';
-import { WebBuildBuilderOptions } from '../builders/build/build.impl';
-import { WebDevServerOptions } from '../builders/dev-server/dev-server.impl';
+import { WebBuildBuilderOptions } from '../executors/build/build.impl';
+import { WebDevServerOptions } from '../executors/dev-server/dev-server.impl';
 import { buildServePath } from './serve-path';
 import { OptimizationOptions } from './types';
 
