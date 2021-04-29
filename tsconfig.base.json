@@ -27,6 +27,7 @@
       "@nrwl/cypress": ["./packages/cypress"],
       "@nrwl/cypress/*": ["./packages/cypress/*"],
       "@nrwl/express": ["./packages/express"],
+      "@nrwl/gatsby": ["./packages/gatsby"],
       "@nrwl/nest": ["./packages/nest"],
       "@nrwl/next": ["./packages/next"],
       "@nrwl/node": ["./packages/node"],

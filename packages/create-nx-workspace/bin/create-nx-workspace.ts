@@ -50,11 +50,10 @@ const presetOptions: { name: Preset; message: string }[] = [
     message:
       'next.js           [a workspace with a single Next.js application]',
   },
-  // TODO: Re-enable when gatsby preset is implemented
-  // {
-  //   name: Preset.Gatsby,
-  //   message: 'gatsby            [a workspace with a single Gatsby application]',
-  // },
+  {
+    name: Preset.Gatsby,
+    message: 'gatsby            [a workspace with a single Gatsby application]',
+  },
   {
     name: Preset.Nest,
     message: 'nest              [a workspace with a single Nest application]',
@@ -361,8 +360,7 @@ function determineStyle(preset: Preset, parsedArgs: any) {
       Preset.ReactWithExpress,
       Preset.React,
       Preset.NextJs,
-      // TODO: Re-enable when gatsby preset is implemented
-      // Preset.Gatsby,
+      Preset.Gatsby,
     ].includes(preset)
   ) {
     choices.push(
@@ -375,13 +373,16 @@ function determineStyle(preset: Preset, parsedArgs: any) {
         name: '@emotion/styled',
         message:
           'emotion           [ https://emotion.sh                       ]',
-      },
-      {
+      }
+    );
+    // TODO: Remove below if condition when Gatsby supports styled-jsx
+    if (Preset.Gatsby !== preset) {
+      choices.push({
         name: 'styled-jsx',
         message:
           'styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]',
-      }
-    );
+      });
+    }
   }
 
   if (!parsedArgs.style) {
@@ -600,8 +601,7 @@ function pointToTutorialAndCourse(preset: Preset) {
     case Preset.React:
     case Preset.ReactWithExpress:
     case Preset.NextJs:
-      // TODO: Re-enable when gatsby preset is implemented
-      // case Preset.Gatsby:
+    case Preset.Gatsby:
       output.addVerticalSeparator();
       output.note({
         title,

@@ -140,4 +140,19 @@ describe('preset', () => {
     expect(tree.exists('apps/proj/src/main.ts')).toBe(true);
     expect(tree.exists('apps/proj/.eslintrc.json')).toBe(true);
   });
+
+  it('should create files (preset = gatsby)', async () => {
+    await presetGenerator(tree, {
+      name: 'proj',
+      preset: 'gatsby',
+      style: 'css',
+      linter: 'eslint',
+      cli: 'nx',
+    });
+
+    expect(tree.exists('/apps/proj/src/pages/index.tsx')).toBe(true);
+    expect(readJson(tree, '/workspace.json').cli.defaultCollection).toBe(
+      '@nrwl/gatsby'
+    );
+  });
 });

@@ -154,6 +154,16 @@ async function createPreset(tree: Tree, options: Schema) {
       linter: options.linter,
     });
     setDefaultCollection(tree, '@nrwl/express');
+  } else if (options.preset === 'gatsby') {
+    const {
+      applicationGenerator: gatsbyApplicationGenerator,
+    } = require('@nrwl' + '/gatsby');
+    await gatsbyApplicationGenerator(tree, {
+      name: options.name,
+      linter: options.linter,
+      style: options.style,
+    });
+    setDefaultCollection(tree, '@nrwl/gatsby');
   } else {
     throw new Error(`Invalid preset ${options.preset}`);
   }

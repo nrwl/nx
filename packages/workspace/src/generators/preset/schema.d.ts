@@ -10,6 +10,7 @@ export interface Schema {
     | 'angular'
     | 'react'
     | 'next'
+    | 'gatsby'
     | 'web-components'
     | 'angular-nest'
     | 'react-express'
