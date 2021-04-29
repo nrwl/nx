@@ -319,7 +319,7 @@ describe('NodePackageBuilder', () => {
         '/root',
         'tmp',
         'libs/nodelib',
-        'tsconfig.generated.json'
+        'tsconfig.lib.generated.json'
       );
 
       const tsConfigSpy = jest.spyOn(tsUtils, 'readTsConfig');

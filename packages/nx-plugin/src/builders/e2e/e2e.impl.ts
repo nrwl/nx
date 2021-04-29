@@ -26,10 +26,14 @@ export function runNxPluginE2EBuilder(
   return buildTarget(context, options.target).pipe(
     switchMap(() => {
       return from(
-        context.scheduleBuilder('@nrwl/jest:jest', {
-          jestConfig: options.jestConfig,
-          watch: false,
-        })
+        context.scheduleBuilder(
+          '@nrwl/jest:jest',
+          {
+            jestConfig: options.jestConfig,
+            watch: false,
+          },
+          { target: context.target }
+        )
       ).pipe(concatMap((run) => run.output));
     })
   );

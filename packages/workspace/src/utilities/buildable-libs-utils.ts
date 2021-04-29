@@ -3,17 +3,18 @@ import {
   ProjectGraphNode,
   ProjectType,
 } from '../core/project-graph';
-import { join, resolve, dirname, relative } from 'path';
+import { join, resolve, dirname, relative, parse } from 'path';
+import { fileExists, readJsonFile, writeJsonFile } from './fileutils';
+import { stripIndents, TargetDependencyConfig } from '@nrwl/devkit';
 import {
-  fileExists,
-  readJsonFile,
-  writeJsonFile,
-} from '@nrwl/workspace/src/utilities/fileutils';
-import { stripIndents } from '@nrwl/devkit';
-import { getOutputsForTargetAndConfiguration } from '@nrwl/workspace/src/tasks-runner/utils';
+  getDefaultDependencyConfigs,
+  getDependencyConfigs,
+  getOutputsForTargetAndConfiguration,
+} from '../tasks-runner/utils';
 import * as ts from 'typescript';
 import { unlinkSync } from 'fs';
 import { output } from './output';
+import { readNxJson } from '../core/file-utils';
 
 function isBuildable(target: string, node: ProjectGraphNode): boolean {
   return (
@@ -96,6 +97,124 @@ function recursivelyCollectDependencies(
   return acc;
 }
 
+export function calculateProjectTargetDependencies(
+  projectGraph: ProjectGraph,
+  workspaceRoot: string,
+  projectName: string,
+  targetName: string,
+  configurationName: string
+): { target: ProjectGraphNode; dependencies: DependentBuildableProjectNode[] } {
+  const nxJson = readNxJson();
+  const defaultDependencyConfigs = getDefaultDependencyConfigs(nxJson);
+  const dependencies = recursivelyCollectProjectTargetDependencies(
+    projectName,
+    targetName,
+    projectGraph,
+    defaultDependencyConfigs,
+    []
+  )
+    .map(({ dependencyName, targetName: depTargetName }) =>
+      toDependentBuildableProjectNode(
+        dependencyName,
+        projectName,
+        depTargetName,
+        configurationName,
+        workspaceRoot,
+        projectGraph
+      )
+    )
+    .filter((x) => !!x);
+
+  return { target: projectGraph.nodes[projectName], dependencies };
+}
+
+function recursivelyCollectProjectTargetDependencies(
+  projectName: string,
+  targetName: string,
+  projectGraph: ProjectGraph,
+  defaultDependencyConfigs: Record<string, TargetDependencyConfig[]>,
+  deps: Array<{ dependencyName: string; targetName: string }>
+): Array<{ dependencyName: string; targetName: string }> {
+  const dependencyConfigs = getDependencyConfigs(
+    { project: projectName, target: targetName },
+    defaultDependencyConfigs,
+    projectGraph
+  );
+  dependencyConfigs.forEach((depConfig) => {
+    if (depConfig.projects === 'dependencies') {
+      projectGraph.dependencies[projectName].forEach((dep) => {
+        const projectNode = projectGraph.nodes[dep.target];
+        if (!deps.some((d) => d.dependencyName === dep.target)) {
+          deps.push({
+            dependencyName: dep.target,
+            targetName: depConfig.target,
+          });
+        }
+        if (projectNode.type !== 'lib') {
+          return;
+        }
+        deps = recursivelyCollectProjectTargetDependencies(
+          dep.target,
+          depConfig.target,
+          projectGraph,
+          defaultDependencyConfigs,
+          deps
+        );
+      });
+    } else {
+      deps = recursivelyCollectProjectTargetDependencies(
+        projectName,
+        depConfig.target,
+        projectGraph,
+        defaultDependencyConfigs,
+        deps
+      );
+    }
+  });
+
+  return deps;
+}
+
+function toDependentBuildableProjectNode(
+  dependency: string,
+  projectName: string,
+  targetName: string,
+  configurationName: string,
+  workspaceRoot: string,
+  projectGraph: ProjectGraph
+): DependentBuildableProjectNode {
+  const depNode = projectGraph.nodes[dependency];
+  if (depNode.type === 'lib') {
+    const libPackageJson = readJsonFile(
+      join(workspaceRoot, depNode.data.root, 'package.json')
+    );
+
+    return {
+      name: libPackageJson.name,
+      outputs: getOutputsForTargetAndConfiguration(
+        {
+          overrides: {},
+          target: {
+            project: projectName,
+            target: targetName,
+            configuration: configurationName,
+          },
+        },
+        depNode
+      ),
+      node: depNode,
+    };
+  } else if (depNode.type === 'npm') {
+    return {
+      name: depNode.data.packageName,
+      outputs: [],
+      node: depNode,
+    };
+  } else {
+    return null;
+  }
+}
+
 function readTsConfigWithRemappedPaths(
   tsConfig: string,
   generatedTsConfigPath: string,
@@ -155,26 +274,65 @@ export function createTmpTsConfig(
   projectRoot: string,
   dependencies: DependentBuildableProjectNode[]
 ) {
-  const tmpTsConfigPath = join(
+  const tmpTsConfigPath = generateTmpFilePathFromFile(
+    tsconfigPath,
     workspaceRoot,
-    'tmp',
-    projectRoot,
-    'tsconfig.generated.json'
+    projectRoot
   );
   const parsedTSConfig = readTsConfigWithRemappedPaths(
     tsconfigPath,
     tmpTsConfigPath,
     dependencies
   );
-  process.on('exit', () => cleanupTmpTsConfigFile(tmpTsConfigPath));
+  process.on('exit', () => removeFile(tmpTsConfigPath));
   writeJsonFile(tmpTsConfigPath, parsedTSConfig);
   return join(tmpTsConfigPath);
 }
 
-function cleanupTmpTsConfigFile(tmpTsConfigPath) {
+export function createTmpJestConfig(
+  workspaceRoot: string,
+  projectRoot: string,
+  jestConfig: any
+): string {
+  const tmpJestConfigPath = generateTmpFilePathFromFile(
+    'jest.config.js',
+    workspaceRoot,
+    projectRoot,
+    '.json'
+  );
+  process.on('exit', () => removeFile(tmpJestConfigPath));
+  writeJsonFile(tmpJestConfigPath, jestConfig);
+  return join(tmpJestConfigPath);
+}
+
+export function getTmpProjectRoot(
+  workspaceRoot: string,
+  projectRoot: string
+): string {
+  return join(workspaceRoot, 'tmp', projectRoot);
+}
+
+export function generateTmpFilePathFromFile(
+  file: string,
+  workspaceRoot: string,
+  projectRoot: string,
+  newExt?: string
+): string {
+  const { name, ext } = parse(file);
+  let tmpExt = newExt ?? ext;
+  if (tmpExt.startsWith('.')) {
+    tmpExt = tmpExt.slice(1);
+  }
+  return join(
+    getTmpProjectRoot(workspaceRoot, projectRoot),
+    `${name}.generated.${tmpExt}`
+  );
+}
+
+function removeFile(filePath: string): void {
   try {
-    if (tmpTsConfigPath) {
-      unlinkSync(tmpTsConfigPath);
+    if (filePath) {
+      unlinkSync(filePath);
     }
   } catch (e) {}
 }
@@ -234,7 +392,7 @@ export function updatePaths(
 ) {
   const pathsKeys = Object.keys(paths);
   dependencies.forEach((dep) => {
-    if (dep.outputs && dep.outputs.length > 0) {
+    if (shouldUpdateDependencyPaths(dep)) {
       paths[dep.name] = dep.outputs;
       // check for secondary entrypoints, only available for ng-packagr projects
       for (const path of pathsKeys) {
@@ -245,6 +403,12 @@ export function updatePaths(
       }
     }
   });
+}
+
+export function shouldUpdateDependencyPaths(
+  dependency: DependentBuildableProjectNode
+): boolean {
+  return dependency.outputs && dependency.outputs.length > 0;
 }
 
 /**
