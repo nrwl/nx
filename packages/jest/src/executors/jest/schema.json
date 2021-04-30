@@ -155,6 +155,10 @@
     "testLocationInResults": {
       "description": "Adds a location field to test results.  Used to report location of a test in a reporter. { \"column\": 4, \"line\": 5 } (https://jestjs.io/docs/en/cli#testlocationinresults)",
       "type": "boolean"
+    },
+    "testTimeout": {
+      "description": "Default timeout of a test in milliseconds. Default value: 5000. (https://jestjs.io/docs/cli#--testtimeoutnumber)",
+      "type": "number"
     }
   },
   "required": ["jestConfig"]
