@@ -15,6 +15,9 @@ const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
  * be executed correctly.
  */
 export const commandsObject = yargs
+  .parserConfiguration({
+    'strip-dashed': true,
+  })
   .usage('Powerful, Extensible Dev Tools')
   .command(
     'run [project][:target][:configuration] [options, ...]',

@@ -1,4 +1,4 @@
-import { ParsedArgs } from 'minimist';
+import * as yargsParser from 'yargs-parser';
 import {
   coerceTypesInOptions,
   convertAliases,
@@ -137,33 +137,39 @@ describe('params', () => {
   describe('convertToCamelCase', () => {
     it('should convert dash case to camel case', () => {
       expect(
-        convertToCamelCase({
-          _: undefined,
-          'one-two': 1,
-        } as ParsedArgs)
+        convertToCamelCase(
+          yargsParser(['--one-two', '1'], {
+            number: ['oneTwo'],
+          })
+        )
       ).toEqual({
+        _: [],
         oneTwo: 1,
       });
     });
 
     it('should not convert camel case', () => {
       expect(
-        convertToCamelCase({
-          _: undefined,
-          oneTwo: 1,
-        })
+        convertToCamelCase(
+          yargsParser(['--oneTwo', '1'], {
+            number: ['oneTwo'],
+          })
+        )
       ).toEqual({
+        _: [],
         oneTwo: 1,
       });
     });
 
     it('should handle mixed case', () => {
       expect(
-        convertToCamelCase({
-          _: undefined,
-          'one-Two': 1,
-        })
+        convertToCamelCase(
+          yargsParser(['--one-Two', '1'], {
+            number: ['oneTwo'],
+          })
+        )
       ).toEqual({
+        _: [],
         oneTwo: 1,
       });
     });

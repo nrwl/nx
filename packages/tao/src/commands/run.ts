@@ -1,4 +1,4 @@
-import * as minimist from 'minimist';
+import * as yargsParser from 'yargs-parser';
 import {
   combineOptionsForExecutor,
   convertToCamelCase,
@@ -42,7 +42,7 @@ function parseRunOpts(
   defaultProjectName: string | null
 ): RunOptions {
   const runOptions = convertToCamelCase(
-    minimist(args, {
+    yargsParser(args, {
       boolean: ['help', 'prod'],
       string: ['configuration', 'project'],
       alias: {

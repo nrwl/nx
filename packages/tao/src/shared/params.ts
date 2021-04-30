@@ -1,4 +1,4 @@
-import { ParsedArgs } from 'minimist';
+import type { Arguments } from 'yargs-parser';
 import { TargetConfiguration, WorkspaceJsonConfiguration } from './workspace';
 import { logger } from './logger';
 
@@ -67,7 +67,7 @@ function camelCase(input: string): string {
   }
 }
 
-export function convertToCamelCase(parsed: ParsedArgs): Options {
+export function convertToCamelCase(parsed: Arguments): Options {
   return Object.keys(parsed).reduce(
     (m, c) => ({ ...m, [camelCase(c)]: parsed[c] }),
     {}

@@ -1,4 +1,4 @@
-import * as minimist from 'minimist';
+import * as yargsParser from 'yargs-parser';
 import {
   combineOptionsForGenerator,
   convertToCamelCase,
@@ -38,7 +38,7 @@ function parseGenerateOpts(
   defaultCollection: string | null
 ): GenerateOptions {
   const generatorOptions = convertToCamelCase(
-    minimist(args, {
+    yargsParser(args, {
       boolean: ['help', 'dryRun', 'debug', 'force', 'interactive', 'defaults'],
       alias: {
         dryRun: 'dry-run',
