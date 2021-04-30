@@ -129,7 +129,7 @@ async function runAllTasks(
 
     // any task failed, we need to skip further stages
     if (statuses.find((s) => !s.success)) {
-      res.push(...markStagesAsNotSuccessful(stages.splice(i + 1)));
+      res.push(...markStagesWithFailingPrequisite(stages.splice(i + 1)));
       return res;
     }
   }
@@ -137,15 +137,17 @@ async function runAllTasks(
   return res;
 }
 
-function markStagesAsNotSuccessful(stages: Task[][]) {
-  return stages.reduce((m, c) => [...m, ...tasksToStatuses(c, false)], []);
+function markStagesWithFailingPrequisite(stages: Task[][]) {
+  return stages.reduce(
+    (m, c) => [...m, ...createTaskWithFailingprerequisite(c)],
+    []
+  );
 }
 
-function tasksToStatuses(tasks: Task[], success: boolean) {
+function createTaskWithFailingprerequisite(tasks: Task[]) {
   return tasks.map((task) => ({
     task,
-    type: AffectedEventType.TaskComplete,
-    success,
+    type: AffectedEventType.TaskDependencyFailed,
   }));
 }
 

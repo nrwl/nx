@@ -35,10 +35,10 @@ export class RunOneReporter implements Reporter {
 
   printResults(
     args: ReporterArgs,
-    failedProjectNames: string[],
     startedWithFailedProjects: boolean,
     tasks: Task[],
     failedTasks: Task[],
+    tasksWithFailedDependencies: Task[],
     cachedTasks: Task[]
   ) {
     // Silent for a single task
@@ -48,7 +48,7 @@ export class RunOneReporter implements Reporter {
     output.addNewline();
     output.addVerticalSeparatorWithoutNewLines();
 
-    if (failedProjectNames.length === 0) {
+    if (failedTasks.length === 0) {
       const bodyLines =
         cachedTasks.length > 0
           ? [
@@ -82,7 +82,7 @@ export class RunOneReporter implements Reporter {
         ...failedTasks.map((task) => `${output.colors.gray('-')} ${task.id}`),
       ];
       output.error({
-        title: `Running target "${args.target}" failed`,
+        title: `Running target "${this.initiatingProject}:${args.target}" failed`,
         bodyLines,
       });
     }

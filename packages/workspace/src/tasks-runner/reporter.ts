@@ -16,10 +16,10 @@ export abstract class Reporter {
 
   abstract printResults(
     nxArgs: ReporterArgs,
-    failedProjects: string[],
     startedWithFailedProjects: boolean,
     tasks: Task[],
     failedTasks: Task[],
+    tasksWithFailedDependencies: Task[],
     cachedTasks: Task[]
   ): void;
 }
