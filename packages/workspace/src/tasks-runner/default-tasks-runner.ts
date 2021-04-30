@@ -10,6 +10,7 @@ import { NxJson } from '../core/shared-interfaces';
 import { TaskOrderer } from './task-orderer';
 import { TaskOrchestrator } from './task-orchestrator';
 import { getDefaultDependencyConfigs } from './utils';
+import { performance } from 'perf_hooks';
 
 export interface RemoteCache {
   retrieve: (hash: string, cacheDirectory: string) => Promise<boolean>;
@@ -73,6 +74,18 @@ export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
   });
 };
 
+function printTaskExecution(orchestrator: TaskOrchestrator) {
+  if (process.env.NX_PERF_LOGGING) {
+    console.log('Task Execution Timings:');
+    const timings = {};
+    Object.keys(orchestrator.timings).forEach((p) => {
+      const t = orchestrator.timings[p];
+      timings[p] = t.end ? t.end - t.start : null;
+    });
+    console.log(JSON.stringify(timings, null, 2));
+  }
+}
+
 async function runAllTasks(
   tasks: Task[],
   options: DefaultTasksRunnerOptions,
@@ -91,6 +104,15 @@ async function runAllTasks(
     context.projectGraph,
     defaultTargetDependencies
   ).splitTasksIntoStages(tasks);
+
+  performance.mark('task-orderer-done');
+
+  performance.measure('nx-prep-work', 'init-local', 'task-orderer-done');
+  performance.measure(
+    'graph-creation',
+    'command-execution-begins',
+    'task-orderer-done'
+  );
 
   const orchestrator = new TaskOrchestrator(
     context.initiatingProject,
@@ -111,6 +133,7 @@ async function runAllTasks(
       return res;
     }
   }
+  printTaskExecution(orchestrator);
   return res;
 }
 
