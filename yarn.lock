@@ -2049,6 +2049,16 @@
   resolved "https://registry.yarnpkg.com/@hapi/hoek/-/hoek-9.1.1.tgz#9daf5745156fd84b8e9889a2dc721f0c58e894aa"
   integrity sha512-CAEbWH7OIur6jEOzaai83jq3FmKmv4PmX1JYfs9IrYcGEVI/lyL1EXJGCj7eFVJ0bg5QR8LMxBlEtA+xKiLpFw==
 
+"@headlessui/react@^1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@headlessui/react/-/react-1.1.1.tgz#71ecb3444eb21947ceefe768a25efaba4f8eceb0"
+  integrity sha512-fxNKxRrjNXdNYNMhAVrv1nz0gIMX3JhFizTA9lNrEC8+aY3JR00GZTPhuG785RZGvnHXCdYCGHeAhqw9uRNRrA==
+
+"@heroicons/react@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@heroicons/react/-/react-1.0.1.tgz#66d25f6441920bd5c2146ea27fd33995885452dd"
+  integrity sha512-uikw2gKCmqnvjVxitecWfFLMOKyL9BTFcU4VM3hHj9OMwpkCr5Ke+MRMyY2/aQVmsYs4VTq7NCFX05MYwAHi3g==
+
 "@icons/material@^0.2.4":
   version "0.2.4"
   resolved "https://registry.yarnpkg.com/@icons/material/-/material-0.2.4.tgz#e90c9f71768b3736e76d7dd6783fc6c2afa88bc8"

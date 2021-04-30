@@ -118,3 +118,9 @@ export function getVersions(): VersionMetadata[] {
   }
   return versions;
 }
+
+export const flavorList: { label: string; value: string }[] = [
+  { label: 'Angular', value: 'angular' },
+  { label: 'React', value: 'react' },
+  { label: 'Node', value: 'node' },
+];
