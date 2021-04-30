@@ -1,4 +1,9 @@
-import angularEslintPlugin from '@angular-eslint/eslint-plugin';
+import type AngularEslintPlugin from '@angular-eslint/eslint-plugin';
+
+let angularEslintPlugin: typeof AngularEslintPlugin;
+try {
+  angularEslintPlugin = require('@angular-eslint/eslint-plugin');
+} catch {}
 
 /**
  * This configuration is intended to be applied to ALL .ts files in Angular

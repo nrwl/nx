@@ -53,7 +53,7 @@
     "nest": {
       "implicitDependencies": ["node", "linter"]
     },
-    "linter": {},
+    "linter": { "implicitDependencies": ["eslint-plugin-nx"] },
     "express": {
       "implicitDependencies": ["node"]
     },
