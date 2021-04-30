@@ -74,7 +74,7 @@ export function migrateDefaultsGenerator(
 }
 
 export function migrateAllStorybookInstances(tree: Tree, keepOld: boolean) {
-  logger.debug('adding .storybook folder to lib');
+  logger.debug('adding .storybook folder to project');
   const projects = getProjects(tree);
   const projectsThatHaveStorybookConfiguration: {
     name: string;

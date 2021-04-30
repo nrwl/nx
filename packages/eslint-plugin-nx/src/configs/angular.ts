@@ -1,3 +1,10 @@
+import type AngularEslintPlugin from '@angular-eslint/eslint-plugin';
+
+let angularEslintPlugin: typeof AngularEslintPlugin;
+try {
+  angularEslintPlugin = require('@angular-eslint/eslint-plugin');
+} catch {}
+
 /**
  * This configuration is intended to be applied to ALL .ts files in Angular
  * projects within an Nx workspace.
@@ -16,6 +23,15 @@ export default {
     node: true,
   },
   plugins: ['@angular-eslint'],
-  extends: ['plugin:@angular-eslint/recommended'],
+  extends: [
+    'plugin:@angular-eslint/recommended',
+    /**
+     * TODO: Consider dropping this extends and explicitly carrying over rules we care about
+     * into our typescript preset in v13
+     */
+    ...(angularEslintPlugin?.configs?.['recommended--extra']
+      ? ['plugin:@angular-eslint/recommended--extra']
+      : []),
+  ],
   rules: {},
 };

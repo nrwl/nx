@@ -65,6 +65,7 @@ export async function runCommand<T extends RunArgs>(
     target: nxArgs.target,
     projectGraph,
     nxJson,
+    hideCachedOutput: nxArgs.hideCachedOutput,
   }).subscribe({
     next: (event: any) => {
       switch (event.type) {

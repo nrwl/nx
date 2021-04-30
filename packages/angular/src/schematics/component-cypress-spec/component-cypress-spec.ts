@@ -29,7 +29,7 @@ export default function (schema: CreateComponentSpecFileSchema): Rule {
 
 export interface CreateComponentSpecFileSchema {
   projectName: string;
-  libPath: string;
+  projectPath: string;
   componentName: string;
   componentPath: string;
   componentFileName: string;
@@ -38,7 +38,7 @@ export interface CreateComponentSpecFileSchema {
 
 export function createComponentSpecFile({
   projectName,
-  libPath,
+  projectPath,
   componentName,
   componentPath,
   componentFileName,
@@ -50,7 +50,7 @@ export function createComponentSpecFile({
       getProjectConfig(tree, e2eProjectName).sourceRoot
     }/integration`;
     const fullComponentPath = join(
-      normalize(libPath),
+      normalize(projectPath),
       componentPath,
       `${componentFileName}.ts`
     );

@@ -530,24 +530,24 @@ describe('with dependencies', () => {
     const childLibOutput = runCLI(`build ${childLib}`);
 
     expect(childLibOutput).toContain(
-      `Done compiling TypeScript files for library ${childLib}`
+      `Done compiling TypeScript files for project "${childLib}"`
     );
   });
 
   it('should build a parent library if the dependent libraries have been built before', () => {
     const childLibOutput = runCLI(`build ${childLib}`);
     expect(childLibOutput).toContain(
-      `Done compiling TypeScript files for library ${childLib}`
+      `Done compiling TypeScript files for project "${childLib}"`
     );
 
     const childLib2Output = runCLI(`build ${childLib2}`);
     expect(childLib2Output).toContain(
-      `Done compiling TypeScript files for library ${childLib2}`
+      `Done compiling TypeScript files for project "${childLib2}"`
     );
 
     const parentLibOutput = runCLI(`build ${parentLib}`);
     expect(parentLibOutput).toContain(
-      `Done compiling TypeScript files for library ${parentLib}`
+      `Done compiling TypeScript files for project "${parentLib}"`
     );
 
     //   assert package.json deps have been set

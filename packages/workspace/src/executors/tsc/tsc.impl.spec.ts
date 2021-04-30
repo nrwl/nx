@@ -14,9 +14,9 @@ jest.mock('../../utilities/fileutils', () => ({
 }));
 const readJsonFileMock = readJsonFile as jest.Mock<any>;
 jest.mock('../../utilities/typescript/compilation');
-const compileTypeScriptMock = compileTypeScript as jest.Mock<
-  Promise<{ success: boolean }>
->;
+const compileTypeScriptMock = compileTypeScript as jest.Mock<{
+  success: boolean;
+}>;
 jest.mock('../../utilities/assets');
 
 describe('executor: tsc', () => {
@@ -60,7 +60,7 @@ describe('executor: tsc', () => {
 
   it('should return typescript compilation result', async () => {
     const expectedResult = { success: true };
-    compileTypeScriptMock.mockReturnValue(Promise.resolve(expectedResult));
+    compileTypeScriptMock.mockReturnValue(expectedResult);
 
     const result = await tscExecutor(options, context);
 
@@ -69,9 +69,7 @@ describe('executor: tsc', () => {
 
   describe('copy assets', () => {
     it('should not copy assets when typescript compilation is not successful', async () => {
-      compileTypeScriptMock.mockReturnValue(
-        Promise.resolve({ success: false })
-      );
+      compileTypeScriptMock.mockReturnValue({ success: false });
 
       await tscExecutor(options, context);
 
@@ -79,7 +77,7 @@ describe('executor: tsc', () => {
     });
 
     it('should copy assets when typescript compilation is successful', async () => {
-      compileTypeScriptMock.mockReturnValue(Promise.resolve({ success: true }));
+      compileTypeScriptMock.mockReturnValue({ success: true });
 
       await tscExecutor(options, context);
 
@@ -93,9 +91,7 @@ describe('executor: tsc', () => {
 
   describe('update package.json', () => {
     it('should not update package.json when typescript compilation is not successful', async () => {
-      compileTypeScriptMock.mockReturnValue(
-        Promise.resolve({ success: false })
-      );
+      compileTypeScriptMock.mockReturnValue({ success: false });
 
       await tscExecutor(options, context);
 
@@ -103,7 +99,7 @@ describe('executor: tsc', () => {
     });
 
     it('should update the package.json when typescript compilation is successful and both main and typings are missing', async () => {
-      compileTypeScriptMock.mockReturnValue(Promise.resolve({ success: true }));
+      compileTypeScriptMock.mockReturnValue({ success: true });
 
       await tscExecutor(options, context);
 
@@ -118,7 +114,7 @@ describe('executor: tsc', () => {
     });
 
     it('should update the package.json when typescript compilation is successful and only main is missing', async () => {
-      compileTypeScriptMock.mockReturnValue(Promise.resolve({ success: true }));
+      compileTypeScriptMock.mockReturnValue({ success: true });
       const packageJson = {
         ...defaultPackageJson,
         typings: './src/index.d.ts',
@@ -137,7 +133,7 @@ describe('executor: tsc', () => {
     });
 
     it('should update the package.json when typescript compilation is successful and only typings is missing', async () => {
-      compileTypeScriptMock.mockReturnValue(Promise.resolve({ success: true }));
+      compileTypeScriptMock.mockReturnValue({ success: true });
       const packageJson = {
         ...defaultPackageJson,
         main: './src/index.js',
@@ -156,7 +152,7 @@ describe('executor: tsc', () => {
     });
 
     it('should not update the package.json when typescript compilation is successful and both main and typings are specified', async () => {
-      compileTypeScriptMock.mockReturnValue(Promise.resolve({ success: true }));
+      compileTypeScriptMock.mockReturnValue({ success: true });
       readJsonFileMock.mockReturnValue({
         ...defaultPackageJson,
         main: './src/index.js',

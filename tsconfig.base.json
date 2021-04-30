@@ -27,6 +27,7 @@
       "@nrwl/cypress": ["./packages/cypress"],
       "@nrwl/cypress/*": ["./packages/cypress/*"],
       "@nrwl/express": ["./packages/express"],
+      "@nrwl/gatsby": ["./packages/gatsby"],
       "@nrwl/nest": ["./packages/nest"],
       "@nrwl/next": ["./packages/next"],
       "@nrwl/node": ["./packages/node"],
@@ -52,7 +53,8 @@
       ],
       "@nrwl/nx-dev/data-access-menu": [
         "./nx-dev/data-access-menu/src/index.ts"
-      ]
+      ],
+      "@nrwl/nx-dev/feature-search": ["./nx-dev/feature-search/src/index.ts"]
     }
   }
 }

@@ -1,52 +1,23 @@
-import { existsSync } from 'fs-extra';
 import { ExecutorContext, normalizePath } from '@nrwl/devkit';
-
-import * as glob from 'glob';
-import { basename, dirname, join, relative } from 'path';
-
 import {
+  assetGlobsToFiles,
   FileInputOutput,
-  NodePackageBuilderOptions,
-  NormalizedBuilderOptions,
-} from './models';
+} from '@nrwl/workspace/src/utilities/assets';
+import { existsSync } from 'fs-extra';
+import { dirname, join, relative } from 'path';
+import { NodePackageBuilderOptions, NormalizedBuilderOptions } from './models';
 
 export default function normalizeOptions(
   options: NodePackageBuilderOptions,
   context: ExecutorContext,
   libRoot: string
 ): NormalizedBuilderOptions {
-  const outDir = options.outputPath;
-  const files: FileInputOutput[] = [];
-
-  const globbedFiles = (pattern: string, input = '', ignore: string[] = []) => {
-    return glob.sync(pattern, {
-      cwd: input,
-      nodir: true,
-      ignore,
-    });
-  };
-
-  options.assets.forEach((asset) => {
-    if (typeof asset === 'string') {
-      globbedFiles(asset, context.root).forEach((globbedFile) => {
-        files.push({
-          input: join(context.root, globbedFile),
-          output: join(context.root, outDir, basename(globbedFile)),
-        });
-      });
-    } else {
-      globbedFiles(
-        asset.glob,
-        join(context.root, asset.input),
-        asset.ignore
-      ).forEach((globbedFile) => {
-        files.push({
-          input: join(context.root, asset.input, globbedFile),
-          output: join(context.root, outDir, asset.output, globbedFile),
-        });
-      });
-    }
-  });
+  const outDir = join(context.root, options.outputPath);
+  const files: FileInputOutput[] = assetGlobsToFiles(
+    options.assets,
+    context.root,
+    outDir
+  );
 
   const rootDir = libRoot || '';
 

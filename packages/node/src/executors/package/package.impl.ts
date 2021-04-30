@@ -1,5 +1,6 @@
 import { ExecutorContext } from '@nrwl/devkit';
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { copyAssetFiles } from '@nrwl/workspace/src/utilities/assets';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
@@ -9,7 +10,6 @@ import { NodePackageBuilderOptions } from './utils/models';
 import compileTypeScriptFiles from './utils/compile-typescript-files';
 import updatePackageJson from './utils/update-package-json';
 import normalizeOptions from './utils/normalize-options';
-import copyAssetFiles from './utils/copy-asset-files';
 import addCliWrapper from './utils/cli';
 
 export async function packageExecutor(
@@ -43,7 +43,7 @@ export async function packageExecutor(
     dependencies
   );
 
-  await copyAssetFiles(normalizedOptions, context);
+  await copyAssetFiles(normalizedOptions.files);
 
   updatePackageJson(normalizedOptions, context);
   if (

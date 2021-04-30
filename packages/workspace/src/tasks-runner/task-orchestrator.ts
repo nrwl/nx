@@ -14,13 +14,15 @@ import { performance } from 'perf_hooks';
 export class TaskOrchestrator {
   workspaceRoot = appRootPath;
   cache = new Cache(this.options);
+  timings: { [target: string]: { start: number; end: number } } = {};
 
   private processes: ChildProcess[] = [];
 
   constructor(
     private readonly initiatingProject: string | undefined,
     private readonly projectGraph: ProjectGraph,
-    private readonly options: DefaultTasksRunnerOptions
+    private readonly options: DefaultTasksRunnerOptions,
+    private readonly hideCachedOutput: boolean
   ) {
     this.setupOnProcessExitListener();
   }
@@ -31,12 +33,6 @@ export class TaskOrchestrator {
     );
 
     performance.mark('task-execution-begins');
-    performance.measure(
-      'graph-creation',
-      'command-execution-begins',
-      'task-execution-begins'
-    );
-    performance.measure('nx-prep-work', 'init-local', 'task-execution-begins');
     const r1 = await this.applyCachedResults(cached);
     const r2 = await this.runRest(rest);
     performance.mark('task-execution-ends');
@@ -59,11 +55,13 @@ export class TaskOrchestrator {
     function takeFromQueue() {
       if (left.length > 0) {
         const task = left.pop();
+        that.storeStartTime(task);
         const p = that.pipeOutputCapture(task)
           ? that.forkProcessPipeOutputCapture(task)
           : that.forkProcessDirectOutputCapture(task);
         return p
           .then((code) => {
+            that.storeEndTime(task);
             res.push({
               task,
               success: code === 0,
@@ -113,8 +111,8 @@ export class TaskOrchestrator {
 
   private applyCachedResults(tasks: TaskWithCachedResult[]) {
     tasks.forEach((t) => {
+      this.storeStartTime(t.task);
       this.options.lifeCycle.startTask(t.task);
-
       const outputs = getOutputs(this.projectGraph.nodes, t.task);
       const shouldCopyOutputsFromCache = this.cache.shouldCopyOutputsFromCache(
         t,
@@ -123,10 +121,10 @@ export class TaskOrchestrator {
       if (shouldCopyOutputsFromCache) {
         this.cache.copyFilesFromCache(t.task.hash, t.cachedResult, outputs);
       }
-
       if (
-        !this.initiatingProject ||
-        this.initiatingProject === t.task.target.project
+        (!this.initiatingProject ||
+          this.initiatingProject === t.task.target.project) &&
+        !this.hideCachedOutput
       ) {
         const args = this.getCommandArgs(t.task);
         output.logCommand(
@@ -137,8 +135,8 @@ export class TaskOrchestrator {
         );
         process.stdout.write(t.cachedResult.terminalOutput);
       }
-
       this.options.lifeCycle.endTask(t.task, t.cachedResult.code);
+      this.storeEndTime(t.task);
     });
 
     return tasks.reduce((m, t) => {
@@ -149,6 +147,19 @@ export class TaskOrchestrator {
       });
       return m;
     }, []);
+  }
+
+  private storeStartTime(t: Task) {
+    this.timings[`${t.target.project}:${t.target.target}`] = {
+      start: new Date().getTime(),
+      end: undefined,
+    };
+  }
+
+  private storeEndTime(t: Task) {
+    this.timings[
+      `${t.target.project}:${t.target.target}`
+    ].end = new Date().getTime();
   }
 
   private pipeOutputCapture(task: Task) {

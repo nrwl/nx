@@ -30,9 +30,9 @@
     "@angular-devkit/build-webpack": "~0.1102.0",
     "@angular-devkit/core": "~11.2.0",
     "@angular-devkit/schematics": "~11.2.0",
-    "@angular-eslint/eslint-plugin": "~2.0.2",
-    "@angular-eslint/eslint-plugin-template": "~2.0.2",
-    "@angular-eslint/template-parser": "~2.0.2",
+    "@angular-eslint/eslint-plugin": "~4.2.0",
+    "@angular-eslint/eslint-plugin-template": "~4.2.0",
+    "@angular-eslint/template-parser": "~4.2.0",
     "@angular/cli": "~11.2.0",
     "@angular/common": "~11.2.0",
     "@angular/compiler": "~11.2.0",
@@ -250,6 +250,9 @@
     }
   },
   "dependencies": {
+    "@docsearch/react": "^1.0.0-alpha.14",
+    "@headlessui/react": "^1.1.1",
+    "@heroicons/react": "^1.0.1",
     "classnames": "^2.3.1",
     "core-js": "^3.6.5",
     "document-register-element": "^1.13.1",

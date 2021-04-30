@@ -1,0 +1,13 @@
+@tailwind base;
+
+/*! purgecss start ignore */
+@import 'nx-dev/feature-search/src/lib/algolia-search.global.css';
+/*! purgecss end ignore */
+
+@tailwind components;
+@tailwind utilities;
+
+svg {
+  shape-rendering: crispEdges;
+  text-rendering: optimizeLegibility;
+}

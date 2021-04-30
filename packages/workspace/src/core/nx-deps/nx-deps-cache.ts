@@ -33,6 +33,7 @@ const nxDepsDir = cacheDirectory(
   readCacheDirectoryProperty(appRootPath)
 );
 const nxDepsPath = join(nxDepsDir, 'nxdeps.json');
+
 export function readCache(): false | ProjectGraphCache {
   performance.mark('read cache:start');
   try {
@@ -95,7 +96,9 @@ export function differentFromCache(
   filesDifferentFromCache: ProjectFileMap;
   partiallyConstructedProjectGraph?: ProjectGraph;
 } {
-  const currentProjects = Object.keys(fileMap).sort();
+  const currentProjects = Object.keys(fileMap)
+    .sort()
+    .filter((name) => fileMap[name].length > 0);
   const previousProjects = Object.keys(c.nodes)
     .sort()
     .filter((name) => c.nodes[name].data.files.length > 0);

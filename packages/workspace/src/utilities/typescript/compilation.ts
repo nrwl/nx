@@ -13,9 +13,9 @@ export interface TypeScriptCompilationOptions {
   watch?: boolean;
 }
 
-export async function compileTypeScript(
+export function compileTypeScript(
   options: TypeScriptCompilationOptions
-): Promise<{ success: boolean }> {
+): { success: boolean } {
   const normalizedOptions = normalizeOptions(options);
 
   if (normalizedOptions.deleteOutputPath) {
@@ -33,10 +33,10 @@ export async function compileTypeScript(
   }
 }
 
-async function createProgram(
+function createProgram(
   tsconfig: ts.ParsedCommandLine,
   projectName: string
-) {
+): { success: boolean } {
   const host = ts.createCompilerHost(tsconfig.options);
   const program = ts.createProgram({
     rootNames: tsconfig.fileNames,
@@ -64,7 +64,9 @@ async function createProgram(
   }
 }
 
-function createWatchProgram(tsconfig: ts.ParsedCommandLine) {
+function createWatchProgram(
+  tsconfig: ts.ParsedCommandLine
+): { success: boolean } {
   const host = ts.createWatchCompilerHost(
     tsconfig.fileNames,
     tsconfig.options,

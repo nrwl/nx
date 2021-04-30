@@ -1,8 +1,9 @@
 import * as React from 'react';
 import {
+  DocumentData,
+  flavorList,
   getDocument,
   getStaticDocumentPaths,
-  DocumentData,
   getVersions,
   VersionMetadata,
 } from '@nrwl/nx-dev/data-access-documents';
@@ -10,8 +11,9 @@ import { DocViewer } from '@nrwl/nx-dev/feature-doc-viewer';
 import { getMenu, Menu } from '@nrwl/nx-dev/data-access-menu';
 
 interface DocumentationProps {
-  version: string;
-  flavor: string;
+  version: VersionMetadata;
+  flavor: { label: string; value: string };
+  flavors: { label: string; value: string }[];
   document: DocumentData;
   versions: VersionMetadata[];
   menu: Menu;
@@ -25,12 +27,16 @@ export function Documentation({
   document,
   menu,
   version,
+  versions,
   flavor,
+  flavors,
 }: DocumentationProps) {
   return (
     <DocViewer
       version={version}
+      versionList={versions}
       flavor={flavor}
+      flavorList={flavors}
       document={document}
       menu={menu}
       toc={null}
@@ -39,11 +45,18 @@ export function Documentation({
 }
 
 export async function getStaticProps({ params }: DocumentationParams) {
+  const versions = getVersions();
   return {
     props: {
-      version: params.version,
-      flavor: params.flavor,
-      versions: getVersions(),
+      version:
+        versions.find((item) => item.id === params.version) ||
+        ({ name: 'Latest', id: 'latest' } as any),
+      flavor: flavorList.find((item) => item.value === params.flavor) || {
+        label: 'React',
+        value: 'react',
+      },
+      flavors: flavorList,
+      versions: versions,
       document: getDocument(params.version, [
         params.flavor,
         ...params.segments,
