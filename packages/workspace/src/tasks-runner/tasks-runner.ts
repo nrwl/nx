@@ -20,6 +20,7 @@ export interface Task {
 export enum AffectedEventType {
   TaskComplete = '[Task] Complete',
   TaskCacheRead = '[Task] CacheRead',
+  TaskDependencyFailed = '[Task] DependencyFailed',
 }
 
 export interface AffectedEvent {

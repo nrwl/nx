@@ -11,10 +11,10 @@ export class EmptyReporter implements Reporter {
 
   printResults(
     args: ReporterArgs,
-    failedProjectNames: string[],
     startedWithFailedProjects: boolean,
     tasks: Task[],
     failedTasks: Task[],
+    tasksWithFailedDependencies: Task[],
     cachedTasks: Task[]
   ) {}
 }

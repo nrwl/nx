@@ -54,16 +54,16 @@ export class DefaultReporter implements Reporter {
 
   printResults(
     args: ReporterArgs,
-    failedProjectNames: string[],
     startedWithFailedProjects: boolean,
     tasks: Task[],
     failedTasks: Task[],
+    tasksWithFailedDependencies: Task[],
     cachedTasks: Task[]
   ) {
     output.addNewline();
     output.addVerticalSeparatorWithoutNewLines();
 
-    if (failedProjectNames.length === 0) {
+    if (failedTasks.length === 0) {
       const bodyLines =
         cachedTasks.length > 0
           ? [
@@ -92,10 +92,10 @@ export class DefaultReporter implements Reporter {
       }
     } else {
       const bodyLines = [
-        output.colors.gray('Failed projects:'),
+        output.colors.gray('Tasks not run because earlier stages failed:'),
         '',
-        ...failedProjectNames.map(
-          (project) => `${output.colors.gray('-')} ${project}`
+        ...tasksWithFailedDependencies.map(
+          (task) => `${output.colors.gray('-')} ${task.id}`
         ),
         '',
         output.colors.gray('Failed tasks:'),

@@ -270,7 +270,7 @@ describe('run-many', () => {
     expect(failedTests).toContain(`Running target test for 2 project(s):`);
     expect(failedTests).toContain(`- ${myapp}`);
     expect(failedTests).toContain(`- ${myapp2}`);
-    expect(failedTests).toContain(`Failed projects:`);
+    expect(failedTests).toContain(`Failed tasks:`);
     expect(readJson('node_modules/.cache/nx/results.json')).toEqual({
       command: 'test',
       results: {
@@ -428,7 +428,7 @@ describe('affected:*', () => {
     expect(failedTests).toContain(`- ${mylib}`);
     expect(failedTests).toContain(`- ${myapp}`);
     expect(failedTests).toContain(`- ${mypublishablelib}`);
-    expect(failedTests).toContain(`Failed projects:`);
+    expect(failedTests).toContain(`Failed tasks:`);
     expect(failedTests).toContain(
       'You can isolate the above projects by passing: --only-failed'
     );

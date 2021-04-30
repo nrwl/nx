@@ -60,6 +60,7 @@ export async function runCommand<T extends RunArgs>(
   }
   const cachedTasks: Task[] = [];
   const failedTasks: Task[] = [];
+  const tasksWithFailedDependencies: Task[] = [];
   tasksRunner(tasks, runnerOptions, {
     initiatingProject,
     target: nxArgs.target,
@@ -84,6 +85,10 @@ export async function runCommand<T extends RunArgs>(
           if (!event.success) {
             failedTasks.push(event.task);
           }
+          break;
+        }
+        case AffectedEventType.TaskDependencyFailed: {
+          tasksWithFailedDependencies.push(event.task);
           break;
         }
         case AffectedEventType.TaskCacheRead: {
@@ -114,10 +119,10 @@ export async function runCommand<T extends RunArgs>(
       workspaceResults.saveResults();
       reporter.printResults(
         nxArgs,
-        workspaceResults.failedProjects,
         workspaceResults.startedWithFailedProjects,
         tasks,
         failedTasks,
+        tasksWithFailedDependencies,
         cachedTasks
       );
 
