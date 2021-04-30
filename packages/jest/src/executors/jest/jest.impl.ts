@@ -58,6 +58,7 @@ export function jestConfigParser(
     testLocationInResults: options.testLocationInResults,
     testNamePattern: options.testNamePattern,
     testPathPattern: options.testPathPattern,
+    testTimeout: options.testTimeout,
     colors: options.colors,
     verbose: options.verbose,
     testResultsProcessor: options.testResultsProcessor,

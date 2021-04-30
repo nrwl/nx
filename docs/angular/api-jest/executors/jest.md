@@ -182,6 +182,12 @@ Type: `string`
 
 Node module that implements a custom results processor. (https://jestjs.io/docs/en/configuration#testresultsprocessor-string)
 
+### testTimeout
+
+Type: `number`
+
+Default timeout of a test in milliseconds. Default value: 5000. (https://jestjs.io/docs/cli#--testtimeoutnumber)
+
 ### ~~tsConfig~~
 
 Type: `string`
