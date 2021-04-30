@@ -451,16 +451,12 @@ export function readNxJsonInTree(host: Tree) {
 
 export function libsDir(host: Tree) {
   const json = readJsonInTree<NxJson>(host, 'nx.json');
-  return json && json.workspaceLayout && json.workspaceLayout.libsDir
-    ? json.workspaceLayout.libsDir
-    : 'libs';
+  return json?.workspaceLayout?.libsDir ?? 'libs';
 }
 
 export function appsDir(host: Tree) {
   const json = readJsonInTree<NxJson>(host, 'nx.json');
-  return json && json.workspaceLayout && json.workspaceLayout.appsDir
-    ? json.workspaceLayout.appsDir
-    : 'apps';
+  return json?.workspaceLayout?.appsDir ?? 'apps';
 }
 
 export function updateNxJsonInTree(
