@@ -415,7 +415,7 @@ export function createFile(f: string, content: string = ''): void {
   const path = tmpProjPath(f);
   createFileSync(path);
   if (content) {
-    updateFile(path, content);
+    updateFile(f, content);
   }
 }
 
