@@ -442,16 +442,18 @@ describe('getBaseWebpackPartial', () => {
       });
     });
 
-    it('should support envName overrides', () => {
+    it('should set envName to production when script optimization is enabled', () => {
+      const esm = true;
+      const isScriptOptimizeOn = true;
+      const emitDecoratorMetadata = true;
       const result = getBaseWebpackPartial(
         {
           ...input,
           progress: true,
         },
-        true,
-        true,
-        true,
-        'production'
+        esm,
+        isScriptOptimizeOn,
+        emitDecoratorMetadata
       );
 
       const rule = result.module.rules.find(
@@ -461,6 +463,32 @@ describe('getBaseWebpackPartial', () => {
         rootMode: 'upward',
         cwd: '/root/root/src',
         envName: 'production',
+        babelrc: true,
+      });
+    });
+
+    it('should override envName when script optimization is disabled', () => {
+      const esm = true;
+      const isScriptOptimizeOn = false;
+      const emitDecoratorMetadata = true;
+      const result = getBaseWebpackPartial(
+        {
+          ...input,
+          progress: true,
+        },
+        esm,
+        isScriptOptimizeOn,
+        emitDecoratorMetadata,
+        'staging'
+      );
+
+      const rule = result.module.rules.find(
+        (r) => typeof r.loader === 'string' && r.loader.match(/babel-loader/)
+      );
+      expect(rule.options).toMatchObject({
+        rootMode: 'upward',
+        cwd: '/root/root/src',
+        envName: 'staging',
         babelrc: true,
       });
     });
