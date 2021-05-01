@@ -15,6 +15,7 @@ import {
 } from '../utilities/index-file/augment-index-html';
 import { IndexHtmlTransform } from '../utilities/index-file/write-index-html';
 import { stripBom } from '../utilities/strip-bom';
+import { interpolateEnvironmentVariablesToIndex } from '../../../interpolate-env-variables-to-index';
 
 export interface IndexHtmlWebpackPluginOptions {
   input: string;
@@ -102,7 +103,7 @@ export class IndexHtmlWebpackPlugin {
           compilation.assets[name].source();
         let indexSource = await augmentIndexHtml({
           input: this._options.input,
-          inputContent,
+          inputContent: interpolateEnvironmentVariablesToIndex(inputContent),
           baseHref: this._options.baseHref,
           deployUrl: this._options.deployUrl,
           sri: this._options.sri,
