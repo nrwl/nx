@@ -84,7 +84,11 @@ export function splitArgsIntoNxArgsAndOverrides(
     mode === 'run-one' ? runOne : mode === 'run-many' ? runMany : runAffected;
 
   const nxArgs: RawNxArgs = {};
-  const overrides = yargsParser(args._ as string[]);
+  const overrides = yargsParser(args._ as string[], {
+    configuration: {
+      'strip-dashed': true,
+    },
+  });
   delete overrides._;
 
   Object.entries(args).forEach(([key, value]) => {
