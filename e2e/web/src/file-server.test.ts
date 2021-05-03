@@ -1,4 +1,5 @@
 import {
+  killPorts,
   newProject,
   readJson,
   runCLI,
@@ -10,6 +11,8 @@ import {
 import { serializeJson } from '@nrwl/workspace';
 
 describe('file-server', () => {
+  afterEach(() => killPorts());
+
   it('should serve folder of files', async () => {
     newProject({ name: uniq('fileserver') });
     const appName = uniq('app');

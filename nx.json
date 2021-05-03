@@ -1,6 +1,7 @@
 {
   "npmScope": "nrwl",
   "implicitDependencies": {
+    "package.json": "*",
     ".eslintrc.json": "*"
   },
   "tasksRunnerOptions": {

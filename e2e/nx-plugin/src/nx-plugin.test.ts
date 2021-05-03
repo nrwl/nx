@@ -1,6 +1,7 @@
 import {
   checkFilesExist,
   expectTestsPass,
+  killPorts,
   newProject,
   readJson,
   runCLI,
@@ -12,6 +13,7 @@ import {
 
 describe('Nx Plugin', () => {
   beforeEach(() => newProject());
+  afterEach(() => killPorts());
 
   it('should be able to generate a Nx Plugin ', async () => {
     const plugin = uniq('plugin');

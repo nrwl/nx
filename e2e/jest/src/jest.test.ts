@@ -1,5 +1,6 @@
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import {
+  killPorts,
   newProject,
   runCLI,
   runCLIAsync,
@@ -9,6 +10,7 @@ import {
 
 describe('Jest', () => {
   beforeEach(() => newProject());
+  afterEach(() => killPorts());
 
   it('should be able test projects using jest', async () => {
     const mylib = uniq('mylib');

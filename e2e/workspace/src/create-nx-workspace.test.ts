@@ -3,6 +3,7 @@ import {
   checkFilesExist,
   e2eCwd,
   expectNoAngularDevkit,
+  killPorts,
   readJson,
   removeProject,
   runCreateWorkspace,
@@ -13,6 +14,7 @@ import { execSync } from 'child_process';
 
 describe('create-nx-workspace', () => {
   afterEach(() => removeProject({ onlyOnCI: true }));
+  afterEach(() => killPorts());
 
   it('should be able to create an empty workspace', () => {
     const wsName = uniq('empty');

@@ -2,6 +2,7 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   createFile,
+  killPorts,
   newProject,
   readFile,
   readJson,
@@ -14,6 +15,8 @@ import {
 
 describe('Web Components Applications', () => {
   beforeEach(() => newProject());
+  afterEach(() => killPorts());
+
   it('should be able to generate a web app', async () => {
     const appName = uniq('app');
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);

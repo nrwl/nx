@@ -8,9 +8,12 @@ import {
   uniq,
   packageInstall,
   removeProject,
+  killPorts,
 } from '@nrwl/e2e/utils';
 
 describe('custom workspace layout', () => {
+  afterEach(() => killPorts());
+
   it('should work', async () => {
     const proj = uniq('custom-layout-proj');
     runCreateWorkspace(proj, { preset: 'oss' });

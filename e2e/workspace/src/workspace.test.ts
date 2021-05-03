@@ -2,6 +2,7 @@ import { NxJson } from '@nrwl/workspace';
 import {
   getPackageManagerCommand,
   getSelectedPackageManager,
+  killPorts,
   listFiles,
   newProject,
   readFile,
@@ -23,6 +24,7 @@ describe('run-one', () => {
   beforeAll(() => (proj = newProject()));
 
   afterAll(() => removeProject({ onlyOnCI: true }));
+  afterEach(() => killPorts());
 
   it('should build a specific project', () => {
     const myapp = uniq('app');
