@@ -29,6 +29,7 @@ export function setDefaults(host: Tree, options: NormalizedSchema) {
       application: {
         style: options.style,
         linter: options.linter,
+        strict: options.strict,
         ...prev.application,
       },
       component: {
@@ -38,6 +39,7 @@ export function setDefaults(host: Tree, options: NormalizedSchema) {
       library: {
         style: options.style,
         linter: options.linter,
+        strict: options.strict,
         ...prev.library,
       },
     },
