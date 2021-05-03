@@ -1,6 +1,7 @@
 import { stringUtils } from '@nrwl/workspace';
 import {
   checkFilesExist,
+  killPorts,
   newProject,
   readFile,
   readJson,
@@ -15,6 +16,7 @@ describe('Next.js Applications', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
+  afterEach(() => killPorts());
 
   it('should be able to serve with a proxy configuration', async () => {
     const appName = uniq('app');

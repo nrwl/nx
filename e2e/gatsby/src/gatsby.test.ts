@@ -1,5 +1,6 @@
 import {
   checkFilesExist,
+  killPorts,
   newProject,
   runCLI,
   runCLIAsync,
@@ -11,6 +12,7 @@ describe('Gatsby Applications', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
+  afterEach(() => killPorts());
 
   it('should generate a valid gatsby application', async () => {
     const appName = uniq('app');

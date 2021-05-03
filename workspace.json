@@ -2104,7 +2104,7 @@
       "sourceRoot": "dep-graph/dep-graph-e2e/src",
       "projectType": "application",
       "targets": {
-        "e2e": {
+        "e2e-disabled": {
           "executor": "@nrwl/cypress:cypress",
           "options": {
             "cypressConfig": "dep-graph/dep-graph-e2e/cypress.json",

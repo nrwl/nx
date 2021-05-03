@@ -6,6 +6,7 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   createFile,
+  killPorts,
   newProject,
   readFile,
   readJson,
@@ -36,6 +37,7 @@ function getData(): Promise<any> {
 
 describe('Node Applications', () => {
   beforeEach(() => newProject());
+  afterEach(() => killPorts());
 
   it('should be able to generate an empty application', async () => {
     const nodeapp = uniq('nodeapp');

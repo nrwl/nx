@@ -1,5 +1,6 @@
 import {
   checkFilesExist,
+  killPorts,
   newProject,
   readFile,
   runCLI,
@@ -10,8 +11,10 @@ import {
 import { writeFileSync } from 'fs';
 
 describe('Storybook schematics', () => {
+  afterEach(() => killPorts());
+
   describe('serve storybook', () => {
-    it('should run a React based Storybook setup', async () => {
+    xit('should run a React based Storybook setup', async () => {
       newProject();
 
       const reactStorybookLib = uniq('test-ui-lib-react');

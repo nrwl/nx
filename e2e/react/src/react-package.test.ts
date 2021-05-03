@@ -1,6 +1,7 @@
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  killPorts,
   newProject,
   readFile,
   readJson,
@@ -117,6 +118,7 @@ describe('Build React libraries and apps', () => {
       return JSON.stringify(json, null, 2);
     });
   });
+  afterEach(() => killPorts());
 
   describe('Publishable libraries', () => {
     it('should throw an error if the dependent library has not been built before building the parent lib', () => {

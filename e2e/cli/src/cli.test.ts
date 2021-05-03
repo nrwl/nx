@@ -1,6 +1,7 @@
 import { packagesWeCareAbout } from '@nrwl/workspace/src/command-line/report';
 import { renameSync } from 'fs';
 import {
+  killPorts,
   newProject,
   readFile,
   readJson,
@@ -13,6 +14,8 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Cli', () => {
+  afterEach(() => killPorts());
+
   it('should execute long running tasks', () => {
     newProject();
     const myapp = uniq('myapp');

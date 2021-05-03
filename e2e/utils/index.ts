@@ -133,11 +133,6 @@ export function getSelectedPackageManager(): 'npm' | 'yarn' | 'pnpm' {
  * for the currently selected CLI.
  */
 export function newProject({ name = uniq('proj') } = {}): string {
-  // potential leftovers from other e2e tests
-  // there are a lot of reasons for why sigterm sometime fails
-  killPort(4200);
-  killPort(3333);
-
   const packageManager = getSelectedPackageManager();
 
   try {
@@ -185,19 +180,28 @@ export function newProject({ name = uniq('proj') } = {}): string {
   }
 }
 
+export async function killPorts() {
+  // potential leftovers from other e2e tests
+  // there are a lot of reasons for why sigterm sometime fails
+  await killPort(4200);
+  await killPort(3333);
+}
+
 // Useful in order to cleanup space during CI to prevent `No space left on device` exceptions
-export function removeProject({ onlyOnCI = false } = {}) {
+export async function removeProject({ onlyOnCI = false } = {}) {
   if (onlyOnCI && !isCI) {
     return;
   }
   try {
     removeSync(tmpProjPath());
   } catch (e) {}
+
+  await killPorts();
 }
 
 export function runCypressTests() {
   // temporary disable
-  return true;
+  return false;
 }
 
 export function runCommandAsync(
