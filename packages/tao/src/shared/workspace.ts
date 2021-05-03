@@ -152,6 +152,13 @@ export interface TargetConfiguration {
    * Sets of options
    */
   configurations?: { [config: string]: any };
+
+  /**
+   * Default configuration for the target.
+   *
+   * Example: 'production'
+   */
+  defaultConfiguration?: string;
 }
 
 export function workspaceConfigName(root: string) {
