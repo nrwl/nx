@@ -9,6 +9,7 @@ module.exports = {
     <% if (style === 'styl') { %>'gatsby-plugin-stylus',<% } %>
     <% if (style === 'styled-components') { %>'gatsby-plugin-styled-components',<% } %>
     <% if (style === '@emotion/styled') { %>'gatsby-plugin-emotion',<% } %>
+    <% if (style === 'styled-jsx') { %>'gatsby-plugin-styled-jsx',<% } %>
     <% if (isPnpm) { %>
     {
       resolve: 'gatsby-plugin-pnpm',
