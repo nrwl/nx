@@ -91,11 +91,11 @@ The command is also aliased to the previous `workspace-schematic` command, so th
 nx workspace-schematic my-schematic mylib
 ```
 
-## Creating custom rules with @angular-devkit
+## Creating files with a generator
 
-Generators provide an API for managing files within your workspace. You can use schematics to do things such as create, update, move, and delete files. Files with static or dynamic content can also be created.
+Generators provide an API for managing files within your workspace. You can use generators to do things such as create, update, move, and delete files. Files with static or dynamic content can also be created.
 
-The schematic below shows you how to generate a library, and then scaffold out additional files with the newly created library.
+The generator below shows you how to generate a library, and then scaffold out additional files with the newly created library.
 
 First, you define a folder to store your static or dynamic templates used to generated files. This is commonly done in a `files` folder.
 
@@ -104,8 +104,8 @@ happynrwl/
 ├── apps/
 ├── libs/
 ├── tools/
-│   ├── schematics
-│   |   └── my-schematic/
+│   ├── generators
+│   |   └── my-generator/
 │   |   |    └── files
 │   |   |        └── NOTES.md
 │   |   |    ├── index.ts
@@ -115,85 +115,69 @@ happynrwl/
 └── tsconfig.json
 ```
 
-Next, update the `index.ts` file for the schematic, and create different rules for generating a library, and generating the new files. Both rules have access to the available options provided for the schematic.
+Next, update the `index.ts` file for the generator, and generate the new files.
 
 ```typescript
 import {
-  apply,
-  chain,
-  mergeWith,
-  move,
-  Rule,
-  SchematicContext,
   Tree,
-  url,
-  externalSchematic,
-} from '@angular-devkit/schematics';
-import { getProjectConfig } from '@nrwl/workspace';
+  formatFiles,
+  installPackagesTask,
+  generateFiles,
+  joinPathFragments,
+} from '@nrwl/devkit';
+import { libraryGenerator, getProjectConfig } from '@nrwl/workspace';
 
-function generateLibrary(schema: any): Rule {
-  return externalSchematic('@nrwl/workspace', 'lib', {
-    name: schema.name,
-  });
-}
-
-function generateFiles(schema: any): Rule {
-  return (tree: Tree, context: SchematicContext) => {
-    context.logger.info('adding NOTES.md to lib');
-
-    const templateSource = apply(url('./files'), [
-      move(getProjectConfig(tree, schema.name).root),
-    ]);
-
-    return chain([mergeWith(templateSource)])(tree, context);
-  };
-}
-
-export default function (schema: any): Rule {
-  return (tree: Tree, context: SchematicContext) => {
-    return chain([generateLibrary(schema), generateFiles(schema)])(
-      tree,
-      context
-    );
+export default async function (tree: Tree, schema: any) {
+  await libraryGenerator(tree, { name: schema.name });
+  const libraryRoot = getProjectConfig(tree, schema.name).root;
+  generateFiles(
+    tree, // the virtual file system
+    joinPathFragments(__dirname, './files'), // path to the file templates
+    libraryRoot, // destination path of the files
+    schema // config object to replace variable in file templates
+  );
+  await formatFiles(tree);
+  return () => {
+    installPackagesTask(tree);
   };
 }
 ```
 
-The exported function calls the two rules, first creating the library, then creating the additional files in the new library's folder.
+The exported function first creates the library, then creates the additional files in the new library's folder.
 
-Next, run the schematic:
+Next, run the generator:
 
 > Use the `-d` or `--dry-run` flag to see your changes without applying them.
 
 ```sh
-nx workspace-generator my-schematic mylib
+nx workspace-generator my-generator mylib
 ```
 
 The following information will be displayed.
 
 ```sh
->  NX  Executing your local schematic: my-schematic
-
-CREATE libs/mylib/tslint.json (48 bytes)
-CREATE libs/mylib/README.md (164 bytes)
-CREATE libs/mylib/tsconfig.json (123 bytes)
-CREATE libs/mylib/tsconfig.lib.json (172 bytes)
-CREATE libs/mylib/src/index.ts (29 bytes)
-CREATE libs/mylib/src/lib/mylib.ts (0 bytes)
-CREATE libs/mylib/tsconfig.spec.json (273 bytes)
-CREATE libs/mylib/jest.config.js (234 bytes)
-CREATE libs/mylib/NOTES.md (15 bytes)
-UPDATE tsconfig.json (582 bytes)
-UPDATE angular.json (4751 bytes)
-UPDATE nx.json (438 bytes)
-UPDATE package.json (1959 bytes)
+CREATE libs/mylib/README.md
+CREATE libs/mylib/.babelrc
+CREATE libs/mylib/src/index.ts
+CREATE libs/mylib/src/lib/mylib.spec.ts
+CREATE libs/mylib/src/lib/mylib.ts
+CREATE libs/mylib/tsconfig.json
+CREATE libs/mylib/tsconfig.lib.json
+UPDATE tsconfig.base.json
+UPDATE workspace.json
+UPDATE nx.json
+CREATE libs/mylib/.eslintrc.json
+CREATE libs/mylib/jest.config.js
+CREATE libs/mylib/tsconfig.spec.json
+UPDATE jest.config.js
+CREATE libs/mylib/NOTES.md
 ```
 
 ## Customizing generator options
 
 ### Adding a TypeScript schema
 
-To create a TypeScript schema to use in your generator function, define a TypeScript file next to your schema.json named schema.ts. Inside the schema.ts, define an interface to match the properties in your schema.json file, and whether they are required.
+To create a TypeScript schema to use in your generator function, define a TypeScript file next to your schema.json named `schema.ts`. Inside the `schema.ts`, define an interface to match the properties in your schema.json file, and whether they are required.
 
 ```typescript
 export interface SchematicOptions {
