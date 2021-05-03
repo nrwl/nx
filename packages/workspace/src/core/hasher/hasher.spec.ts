@@ -1,7 +1,6 @@
 import { Hasher } from './hasher';
-import { extractNameAndVersion } from '@nrwl/workspace/src/core/hasher/file-hasher';
+import fs = require('fs');
 
-const fs = require('fs');
 jest.mock('fs');
 
 describe('Hasher', () => {
@@ -312,18 +311,5 @@ describe('Hasher', () => {
 
     expect(tasksHash.value).toContain('global1.hash');
     expect(tasksHash.value).toContain('global2.hash');
-  });
-
-  describe('extractNameAndVersion', () => {
-    it('should work', () => {
-      const nameAndVersion = extractNameAndVersion(`
-      {
-        "name": "myname",
-        "somethingElse": "123",
-        "version": "1.1.1"
-      }
-    `);
-      expect(nameAndVersion).toEqual(`myname1.1.1`);
-    });
   });
 });
