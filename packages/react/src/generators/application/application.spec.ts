@@ -20,6 +20,7 @@ describe('app', () => {
     name: 'myApp',
     linter: Linter.EsLint,
     style: 'css',
+    strict: false,
   };
 
   beforeEach(() => {
@@ -75,6 +76,14 @@ describe('app', () => {
           path: './tsconfig.spec.json',
         },
       ]);
+      expect(tsconfig.compilerOptions.strict).not.toBeDefined();
+      expect(
+        tsconfig.compilerOptions.forceConsistentCasingInFileNames
+      ).not.toBeDefined();
+      expect(tsconfig.compilerOptions.noImplicitReturns).not.toBeDefined();
+      expect(
+        tsconfig.compilerOptions.noFallthroughCasesInSwitch
+      ).not.toBeDefined();
 
       const tsconfigApp = JSON.parse(
         stripJsonComments(
@@ -667,6 +676,42 @@ describe('app', () => {
 
       expect(appTree.exists('/apps/my-app/src/app/app.js')).toBe(true);
       expect(appTree.exists('/apps/my-app/src/main.js')).toBe(true);
+    });
+  });
+
+  describe('--strict', () => {
+    it('should update tsconfig.json', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        strict: true,
+      });
+      const tsconfigJson = readJson(appTree, '/apps/my-app/tsconfig.json');
+
+      expect(tsconfigJson.compilerOptions.strict).toBeTruthy();
+      expect(
+        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
+      ).toBeTruthy();
+      expect(tsconfigJson.compilerOptions.noImplicitReturns).toBeTruthy();
+      expect(
+        tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
+      ).toBeTruthy();
+    });
+
+    it('should update budgets in workspace.json', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        strict: true,
+      });
+      const workspaceJson = getProjects(appTree);
+      const targetConfig = workspaceJson.get('my-app').targets;
+
+      expect(targetConfig.build.configurations.production.budgets).toEqual([
+        {
+          type: 'initial',
+          maximumWarning: '500kb',
+          maximumError: '1mb',
+        },
+      ]);
     });
   });
 });
