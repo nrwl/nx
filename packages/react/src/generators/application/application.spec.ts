@@ -253,7 +253,7 @@ describe('app', () => {
       scripts: [],
       styles: ['apps/my-app/src/styles.css'],
       tsConfig: 'apps/my-app/tsconfig.app.json',
-      webpackConfig: '@nrwl/react/plugins/webpack',
+      webpackConfig: '@nrwl/react/plugins/webpack-v2',
     });
     expect(targetConfig.build.configurations.production).toEqual({
       optimization: true,
@@ -627,7 +627,7 @@ describe('app', () => {
 
     expect(
       workspaceJson.get('my-app').targets.build.options.webpackConfig
-    ).toEqual('@nrwl/react/plugins/webpack');
+    ).toEqual('@nrwl/react/plugins/webpack-v2');
   });
 
   it('should add required polyfills for core-js and regenerator', async () => {
