@@ -522,6 +522,10 @@ async function createApp(
       nxWorkspaceRoot = `\\"${nxWorkspaceRoot.slice(1, -1)}\\"`;
     }
   }
+  // For gatsby, when doing npm install, it does not require the flag --legacy-peer-deps
+  if (parsedArgs.preset === Preset.Gatsby && packageManager === 'npm') {
+    process.env.npm_config_legacy_peer_deps = 'false';
+  }
   const fullCommandWithoutWorkspaceRoot = `${pmc.exec} tao ${command}/collection.json --cli=${cli}`;
   const spinner = ora('Creating your workspace').start();
 
