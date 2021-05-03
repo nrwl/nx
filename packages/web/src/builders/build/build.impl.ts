@@ -36,6 +36,7 @@ export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   budgets?: any[];
   baseHref?: string;
   deployUrl?: string;
+  publicUrl?: string;
 
   extractCss?: boolean;
   crossOrigin?: CrossOriginValue;
@@ -198,6 +199,7 @@ export function run(options: WebBuildBuilderOptions, context: ExecutorContext) {
             deployUrl: options.deployUrl,
             scripts: options.scripts,
             styles: options.styles,
+            publicUrl: options.publicUrl,
           });
         }
         return { success, emittedFiles: [...emittedFiles1, ...emittedFiles2] };

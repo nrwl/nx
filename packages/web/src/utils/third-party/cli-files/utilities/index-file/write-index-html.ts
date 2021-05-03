@@ -17,7 +17,7 @@ import {
   FileInfo,
 } from './augment-index-html';
 import { readFileSync, writeFileSync } from 'fs';
-import { interpolateEnvironmentVariablesToIndex } from '@nrwl/web/src/utils/interpolate-env-variables-to-index';
+import { interpolateEnvironmentVariablesToIndex } from '../../../../interpolate-env-variables-to-index';
 
 type ExtensionFilter = '.js' | '.css';
 
@@ -34,6 +34,7 @@ export interface WriteIndexHtmlOptions {
   styles?: ExtraEntryPoint[];
   postTransform?: IndexHtmlTransform;
   crossOrigin?: CrossOriginValue;
+  publicUrl?: string;
 }
 
 export type IndexHtmlTransform = (content: string) => Promise<string>;
@@ -51,12 +52,13 @@ export async function writeIndexHtml({
   styles = [],
   postTransform,
   crossOrigin,
+  publicUrl,
 }: WriteIndexHtmlOptions) {
   let content = readFileSync(indexPath).toString();
   content = stripBom(content);
   content = augmentIndexHtml({
     input: outputPath,
-    inputContent: interpolateEnvironmentVariablesToIndex(content),
+    inputContent: interpolateEnvironmentVariablesToIndex(content, publicUrl),
     baseHref,
     deployUrl,
     crossOrigin,

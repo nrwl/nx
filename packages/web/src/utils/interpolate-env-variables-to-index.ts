@@ -1,7 +1,8 @@
 export function interpolateEnvironmentVariablesToIndex(
-  contents: string
+  contents: string,
+  publicUrl?: string
 ): string {
-  const environmentVariables = getClientEnvironment('');
+  const environmentVariables = getClientEnvironment(publicUrl || '');
   return interpolateEnvironmentVariables(contents, environmentVariables as any);
 }
 
@@ -21,7 +22,7 @@ function getClientEnvironment(publicUrl: string) {
       },
       {
         NODE_ENV: process.env.NODE_ENV || 'development',
-        PUBLIC_URL: publicUrl,
+        PUBLIC_URL: publicUrl || process.env.PUBLIC_URL || '',
         FAST_REFRESH: process.env.FAST_REFRESH !== 'false',
       }
     );

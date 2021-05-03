@@ -23,6 +23,7 @@ export interface IndexHtmlWebpackPluginOptions {
   baseHref?: string;
   entrypoints: string[];
   deployUrl?: string;
+  publicUrl?: string;
   sri: boolean;
   noModuleEntrypoints: string[];
   moduleEntrypoints: string[];
@@ -103,7 +104,10 @@ export class IndexHtmlWebpackPlugin {
           compilation.assets[name].source();
         let indexSource = await augmentIndexHtml({
           input: this._options.input,
-          inputContent: interpolateEnvironmentVariablesToIndex(inputContent),
+          inputContent: interpolateEnvironmentVariablesToIndex(
+            inputContent,
+            this._options.publicUrl
+          ),
           baseHref: this._options.baseHref,
           deployUrl: this._options.deployUrl,
           sri: this._options.sri,
