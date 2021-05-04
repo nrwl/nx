@@ -29,6 +29,7 @@ export function normalizeOptions(
   assertValidStyle(options.style);
 
   options.routing = options.routing ?? false;
+  options.strict = options.strict ?? true;
   options.classComponent = options.classComponent ?? false;
   options.unitTestRunner = options.unitTestRunner ?? 'jest';
   options.e2eTestRunner = options.e2eTestRunner ?? 'cypress';

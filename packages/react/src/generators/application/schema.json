@@ -139,7 +139,7 @@
     "strict": {
       "type": "boolean",
       "description": "Creates an application with stricter type checking and build optimization options.",
-      "default": false
+      "default": true
     }
   },
   "required": []
