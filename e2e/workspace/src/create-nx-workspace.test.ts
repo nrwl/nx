@@ -119,6 +119,8 @@ describe('create-nx-workspace', () => {
       style: 'css',
       appName,
     });
+
+    expectNoAngularDevkit();
   });
 
   it('should be able to create an express workspace', () => {
@@ -129,6 +131,8 @@ describe('create-nx-workspace', () => {
       style: 'css',
       appName,
     });
+
+    expectNoAngularDevkit();
   });
 
   it('should be able to create a workspace with a custom base branch and HEAD', () => {
