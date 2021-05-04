@@ -114,6 +114,22 @@ function withNx(nextConfig = {} as WithNxOptions) {
         nextErrorCssModuleLoader.exclude = includes;
       }
 
+      /**
+       * 4. Modify css loader to allow global css from node_modules to be imported from workspace libs
+       */
+      const nextGlobalCssLoader = nextCssLoaders.oneOf.find((rule) =>
+        rule.include?.and?.find((include) =>
+          regexEqual(include, /node_modules/)
+        )
+      );
+      // Might not be found if Next.js webpack config changes in the future
+      if (nextGlobalCssLoader) {
+        nextGlobalCssLoader.issuer.or = nextGlobalCssLoader.issuer.and
+          ? nextGlobalCssLoader.issuer.and.concat(includes)
+          : includes;
+        delete nextGlobalCssLoader.issuer.and;
+      }
+
       return userWebpack(config, options);
     },
   };
