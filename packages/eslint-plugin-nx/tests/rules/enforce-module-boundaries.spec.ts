@@ -850,7 +850,7 @@ describe('Enforce Module Boundaries', () => {
     );
 
     const message =
-      'Only relative imports are allowed within the project. Absolute import found @mycompany/mylib';
+      'Only relative imports are allowed within the project. Absolute import found: @mycompany/mylib';
     expect(failures.length).toEqual(2);
     expect(failures[0].message).toEqual(message);
     expect(failures[1].message).toEqual(message);
