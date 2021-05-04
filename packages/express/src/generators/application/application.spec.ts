@@ -1,29 +1,25 @@
-import { Tree } from '@angular-devkit/schematics';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { runSchematic } from '../../utils/testing';
-import { readJsonInTree } from '@nrwl/workspace';
+import { readJson, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
-import { Schema } from './schema.d';
+import { applicationGenerator } from './application';
+import { Schema } from './schema';
 
 describe('app', () => {
   let appTree: Tree;
 
   beforeEach(() => {
-    appTree = Tree.empty();
-    appTree = createEmptyWorkspace(appTree);
+    appTree = createTreeWithEmptyWorkspace();
   });
 
   it('should generate files', async () => {
-    const tree = await runSchematic(
-      'app',
-      { name: 'myNodeApp' } as Schema,
-      appTree
-    );
+    await applicationGenerator(appTree, {
+      name: 'myNodeApp',
+    } as Schema);
 
-    const mainFile = tree.readContent('apps/my-node-app/src/main.ts');
+    const mainFile = appTree.read('apps/my-node-app/src/main.ts').toString();
     expect(mainFile).toContain(`import * as express from 'express';`);
 
-    const tsconfig = readJsonInTree(tree, 'apps/my-node-app/tsconfig.json');
+    const tsconfig = readJson(appTree, 'apps/my-node-app/tsconfig.json');
     expect(tsconfig).toMatchInlineSnapshot(`
       Object {
         "extends": "../../tsconfig.base.json",
@@ -40,10 +36,7 @@ describe('app', () => {
       }
     `);
 
-    const eslintrcJson = readJsonInTree(
-      tree,
-      'apps/my-node-app/.eslintrc.json'
-    );
+    const eslintrcJson = readJson(appTree, 'apps/my-node-app/.eslintrc.json');
     expect(eslintrcJson).toMatchInlineSnapshot(`
       Object {
         "extends": Array [
@@ -87,12 +80,10 @@ describe('app', () => {
   });
 
   it('should add types to the tsconfig.app.json', async () => {
-    const tree = await runSchematic(
-      'app',
-      { name: 'myNodeApp' } as Schema,
-      appTree
-    );
-    const tsconfig = readJsonInTree(tree, 'apps/my-node-app/tsconfig.app.json');
+    await applicationGenerator(appTree, {
+      name: 'myNodeApp',
+    } as Schema);
+    const tsconfig = readJson(appTree, 'apps/my-node-app/tsconfig.app.json');
     expect(tsconfig.compilerOptions.types).toContain('express');
     expect(tsconfig).toMatchInlineSnapshot(`
       Object {
@@ -117,27 +108,23 @@ describe('app', () => {
 
   describe('--js flag', () => {
     it('should generate js files instead of ts files', async () => {
-      const tree = await runSchematic(
-        'app',
-        {
-          name: 'myNodeApp',
-          js: true,
-        } as Schema,
-        appTree
-      );
+      await applicationGenerator(appTree, {
+        name: 'myNodeApp',
+        js: true,
+      } as Schema);
 
-      expect(tree.exists('apps/my-node-app/src/main.js')).toBeTruthy();
-      expect(tree.readContent('apps/my-node-app/src/main.js')).toContain(
+      expect(appTree.exists('apps/my-node-app/src/main.js')).toBeTruthy();
+      expect(appTree.read('apps/my-node-app/src/main.js').toString()).toContain(
         `import * as express from 'express';`
       );
 
-      const tsConfig = readJsonInTree(tree, 'apps/my-node-app/tsconfig.json');
+      const tsConfig = readJson(appTree, 'apps/my-node-app/tsconfig.json');
       expect(tsConfig.compilerOptions).toEqual({
         allowJs: true,
       });
 
-      const tsConfigApp = readJsonInTree(
-        tree,
+      const tsConfigApp = readJson(
+        appTree,
         'apps/my-node-app/tsconfig.app.json'
       );
       expect(tsConfigApp.include).toEqual(['**/*.ts', '**/*.js']);

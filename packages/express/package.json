@@ -32,7 +32,6 @@
     "@nrwl/devkit": "*",
     "@nrwl/node": "*",
     "@nrwl/jest": "*",
-    "@angular-devkit/core": "~11.2.0",
-    "@angular-devkit/schematics": "~11.2.0"
+    "@nrwl/workspace": "*"
   }
 }

@@ -1,5 +1,5 @@
 import { UnitTestRunner } from '../../utils/test-runners';
-import { Linter } from '@nrwl/workspace';
+import type { Linter } from '@nrwl/linter';
 
 export interface Schema {
   name: string;
