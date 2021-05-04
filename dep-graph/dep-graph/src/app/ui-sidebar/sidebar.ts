@@ -1,8 +1,11 @@
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, from, fromEvent, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { DisplayOptionsPanel } from './display-options-panel';
 import { FocusedProjectPanel } from './focused-project-panel';
 import { ProjectList } from './project-list';
 import { TextFilterPanel } from './text-filter-panel';
+
+declare var ResizeObserver;
 
 export class SidebarComponent {
   private selectedProjectsChangedSubject = new BehaviorSubject<string[]>([]);
@@ -21,7 +24,11 @@ export class SidebarComponent {
   private groupByFolder = window.groupByFolder;
   private selectedProjects: string[] = [];
 
-  constructor(private affectedProjects: string[], showDebugger: boolean) {
+  constructor(
+    private destroy$: Subject<void>,
+    private affectedProjects: string[],
+    showDebugger: boolean
+  ) {
     const showAffected = this.affectedProjects.length > 0;
 
     const displayOptionsPanelContainer = document.getElementById(
@@ -73,6 +80,32 @@ export class SidebarComponent {
   }
 
   listenForDOMEvents() {
+    const sidebarElement = document.getElementById('sidebar');
+    const sidebarToggleButton = document.getElementById(
+      'sidebar-toggle-button'
+    );
+    sidebarToggleButton.style.left = `${sidebarElement.clientWidth - 1}px`;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      entries.forEach((entry) => {
+        sidebarToggleButton.style.left = `${entry.contentRect.width - 1}px`;
+      });
+    });
+    resizeObserver.observe(sidebarElement);
+
+    fromEvent(sidebarToggleButton, 'click')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((x) => {
+        sidebarElement.classList.toggle('hidden');
+        if (sidebarElement.classList.contains('hidden')) {
+          sidebarElement.style.marginLeft = `-${
+            sidebarElement.clientWidth + 1
+          }px`;
+        } else {
+          sidebarElement.style.marginLeft = `0px`;
+        }
+      });
+
     this.displayOptionsPanel.selectAll$.subscribe(() => {
       this.selectAllProjects();
     });

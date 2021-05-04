@@ -21,6 +21,7 @@ export class AppComponent {
 
   private windowResize$ = fromEvent(window, 'resize').pipe(startWith({}));
   private render$ = new Subject<void>();
+  private destroy$ = new Subject<void>();
 
   constructor(private config: AppConfig = DEFAULT_CONFIG) {
     this.render$.subscribe(() => this.render());
@@ -28,6 +29,9 @@ export class AppComponent {
   }
 
   private onProjectGraphChange(projectGraphId: string) {
+    // reset previous listeners as we're re-rendering
+    this.destroy$.next();
+
     const project = projectGraphs.find((graph) => graph.id === projectGraphId);
     const projectGraph = project?.graph;
     const workspaceLayout = project?.workspaceLayout;
@@ -72,6 +76,7 @@ export class AppComponent {
 
     this.graph.affectedProjects = affectedProjects;
     this.sidebar = new SidebarComponent(
+      this.destroy$,
       affectedProjects,
       this.config.showDebugger
     );

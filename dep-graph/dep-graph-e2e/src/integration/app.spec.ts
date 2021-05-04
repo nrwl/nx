@@ -16,6 +16,12 @@ describe('dep-graph-client', () => {
     cy.get('[data-cy=project-select]').select('Ocean');
   });
 
+  it('should toggle the sidebar', () => {
+    cy.get('#sidebar').should('be.visible');
+    cy.get('#sidebar-toggle-button').click();
+    cy.get('#sidebar').should('not.be.visible');
+  });
+
   it('should display message to select projects', () => {
     getSelectProjectsMessage().should('be.visible');
   });
