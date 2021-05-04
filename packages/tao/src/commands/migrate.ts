@@ -222,6 +222,7 @@ export class Migrator {
           '@nrwl/devkit',
           '@nrwl/eslint-plugin-nx',
           '@nrwl/express',
+          '@nrwl/gatsby',
           '@nrwl/jest',
           '@nrwl/linter',
           '@nrwl/nest',

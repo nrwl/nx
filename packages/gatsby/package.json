@@ -36,6 +36,6 @@
     "@nrwl/node": "*",
     "@nrwl/react": "*",
     "@nrwl/workspace": "*",
-    "gatsby-cli": "^3.2.0"
+    "gatsby-cli": "^3.5.0"
   }
 }
