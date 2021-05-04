@@ -192,7 +192,19 @@ describe('CLI - Environment Variables', () => {
       'NX_APP_LOCAL_ENV=app-local-env\nNX_SHARED_ENV=shared-in-app-local-env'
     );
     const main = `apps/${appName}/src/main.ts`;
-    const newCode = `const envVars = [process.env.NODE_ENV, process.env.NX_BUILD, process.env.NX_API, process.env.NX_WS_BASE, process.env.NX_WS_ENV_LOCAL, process.env.NX_WS_LOCAL_ENV, process.env.NX_APP_BASE, process.env.NX_APP_ENV_LOCAL, process.env.NX_APP_LOCAL_ENV, process.env.NX_SHARED_ENV];`;
+    const newCode = `
+      const envVars = [process.env.NODE_ENV, process.env.NX_BUILD, process.env.NX_API, process.env.NX_WS_BASE, process.env.NX_WS_ENV_LOCAL, process.env.NX_WS_LOCAL_ENV, process.env.NX_APP_BASE, process.env.NX_APP_ENV_LOCAL, process.env.NX_APP_LOCAL_ENV, process.env.NX_SHARED_ENV];
+      const nodeEnv = process.env.NODE_ENV;
+      const nxBuild = process.env.NX_BUILD;
+      const nxApi = process.env.NX_API;
+      const nxWsBase = process.env.NX_WS_BASE;
+      const nxWsEnvLocal = process.env.NX_WS_ENV_LOCAL;
+      const nxWsLocalEnv = process.env.NX_WS_LOCAL_ENV;
+      const nxAppBase = process.env.NX_APP_BASE;
+      const nxAppEnvLocal = process.env.NX_APP_ENV_LOCAL;
+      const nxAppLocalEnv = process.env.NX_APP_LOCAL_ENV;
+      const nxSharedEnv = process.env.NX_SHARED_ENV;
+      `;
 
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
 
@@ -232,10 +244,10 @@ describe('CLI - Environment Variables', () => {
       },
     });
     expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
-      'const envVars = ["test", "52", "QA", "ws-base", "ws-env-local", "ws-local-env", "app-base", "app-env-local", "app-local-env", "shared-in-app-local-env"];'
+      'const envVars = ["test", "52", "QA", "ws-base", "ws-env-local", "ws-local-env", "app-base", "app-env-local", "app-local-env", "shared-in-app-env-local"];'
     );
     expect(readFile(`dist/apps/${appName2}/main.js`)).toContain(
-      'const envVars = ["test", "52", "QA", "ws-base", "ws-env-local", "ws-local-env", "app2-base", "app2-env-local", "app2-local-env", "shared2-in-app-local-env"];'
+      'const envVars = ["test", "52", "QA", "ws-base", "ws-env-local", "ws-local-env", "app2-base", "app2-env-local", "app2-local-env", "shared2-in-app-env-local"];'
     );
   });
 });
