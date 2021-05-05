@@ -7,6 +7,7 @@ const IGNORE_MATCHES = {
     '@angular-devkit/architect',
     '@angular-devkit/build-angular',
     '@angular-devkit/core',
+    '@angular/compiler',
     '@angular/compiler-cli',
     '@angular/core',
     '@angular/router',
