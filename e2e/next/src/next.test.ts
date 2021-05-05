@@ -350,7 +350,12 @@ describe('Next.js Applications', () => {
     updateFile(
       `apps/${appName}/next.config.js`,
       `
-      module.exports = {}
+      module.exports = {
+        future: {
+          // Nx doesn't support webpack 5 yet
+          webpack5: false,
+        }
+      }
       `
     );
 
