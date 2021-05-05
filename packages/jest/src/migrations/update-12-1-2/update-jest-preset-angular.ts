@@ -28,45 +28,44 @@ function updateJestConfig(): Rule {
           join(appRootPath, target.options.jestConfig as string)
         );
 
+        // migrate serializers
         if (
-          !config.snapshotSerializers ||
-          !Array.isArray(config.snapshotSerializers)
+          config.snapshotSerializers &&
+          Array.isArray(config.snapshotSerializers)
         ) {
-          continue;
-        }
-
-        const snapshotSerializers = config.snapshotSerializers.map(
-          (snapshotSerializer) => {
-            switch (snapshotSerializer) {
-              case 'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js':
-                return 'jest-preset-angular/build/serializers/no-ng-attributes';
-              case 'jest-preset-angular/build/AngularSnapshotSerializer.js':
-                return 'jest-preset-angular/build/serializers/ng-snapshot';
-              case 'jest-preset-angular/build/HTMLCommentSerializer.js':
-                return 'jest-preset-angular/build/serializers/html-comment';
-              default:
-                return snapshotSerializer;
+          const snapshotSerializers = config.snapshotSerializers.map(
+            (snapshotSerializer) => {
+              switch (snapshotSerializer) {
+                case 'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js':
+                  return 'jest-preset-angular/build/serializers/no-ng-attributes';
+                case 'jest-preset-angular/build/AngularSnapshotSerializer.js':
+                  return 'jest-preset-angular/build/serializers/ng-snapshot';
+                case 'jest-preset-angular/build/HTMLCommentSerializer.js':
+                  return 'jest-preset-angular/build/serializers/html-comment';
+                default:
+                  return snapshotSerializer;
+              }
             }
-          }
-        );
+          );
 
-        try {
-          removePropertyFromJestConfig(
-            host,
-            target.options.jestConfig as string,
-            'snapshotSerializers'
-          );
-          addPropertyToJestConfig(
-            host,
-            target.options.jestConfig as string,
-            'snapshotSerializers',
-            snapshotSerializers
-          );
-        } catch {
-          context.logger.error(
-            stripIndents`Unable to update snapshotSerializers for project ${projectName}.
+          try {
+            removePropertyFromJestConfig(
+              host,
+              target.options.jestConfig as string,
+              'snapshotSerializers'
+            );
+            addPropertyToJestConfig(
+              host,
+              target.options.jestConfig as string,
+              'snapshotSerializers',
+              snapshotSerializers
+            );
+          } catch {
+            context.logger.error(
+              stripIndents`Unable to update snapshotSerializers for project ${projectName}.
             More information you can check online documentation https://github.com/thymikee/jest-preset-angular/blob/master/CHANGELOG.md#840-2021-03-04`
-          );
+            );
+          }
         }
 
         try {
