@@ -1,9 +1,10 @@
 import { exec, execSync } from 'child_process';
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext, joinPathFragments } from '@nrwl/devkit';
 import ignore from 'ignore';
 import { readFileSync } from 'fs';
 import { Schema } from './schema';
 import { watch } from 'chokidar';
+import { workspaceLayout } from '@nrwl/workspace/src/core/file-utils';
 
 function getHttpServerArgs(options: Schema) {
   const args = [] as any[];
@@ -79,10 +80,18 @@ function getIgnoredGlobs(root: string) {
 
 function createFileWatcher(root: string, changeHandler: () => void) {
   const ignoredGlobs = getIgnoredGlobs(root);
+  const layout = workspaceLayout();
 
-  const watcher = watch(['./apps/**', './libs/**'], {
-    cwd: root,
-  });
+  const watcher = watch(
+    [
+      joinPathFragments(layout.appsDir, '**'),
+      joinPathFragments(layout.libsDir, '**'),
+    ],
+    {
+      cwd: root,
+      ignoreInitial: true,
+    }
+  );
   watcher.on('all', (_event: string, path: string) => {
     if (ignoredGlobs.ignores(path)) return;
     changeHandler();
@@ -96,7 +105,7 @@ export default async function* fileServerExecutor(
 ) {
   let running = false;
 
-  const watcher = createFileWatcher(context.root, () => {
+  const run = () => {
     if (!running) {
       running = true;
       try {
@@ -106,7 +115,12 @@ export default async function* fileServerExecutor(
       } catch {}
       running = false;
     }
-  });
+  };
+
+  const watcher = createFileWatcher(context.root, run);
+
+  // perform initial run
+  run();
 
   const outputPath = getBuildTargetOutputPath(options, context);
   const args = getHttpServerArgs(options);
