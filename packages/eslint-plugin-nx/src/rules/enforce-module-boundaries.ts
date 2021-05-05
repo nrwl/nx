@@ -34,6 +34,7 @@ type Options = [
     allow: string[];
     depConstraints: DepConstraint[];
     enforceBuildableLibDependency: boolean;
+    allowCircularSelfDependency: boolean;
   }
 ];
 export type MessageIds =
@@ -96,9 +97,20 @@ export default createESLintRule<Options, MessageIds>({
       allow: [],
       depConstraints: [],
       enforceBuildableLibDependency: false,
+      allowCircularSelfDependency: false,
     },
   ],
-  create(context, [{ allow, depConstraints, enforceBuildableLibDependency }]) {
+  create(
+    context,
+    [
+      {
+        allow,
+        depConstraints,
+        enforceBuildableLibDependency,
+        allowCircularSelfDependency,
+      },
+    ]
+  ) {
     /**
      * Globally cached info about workspace
      */
@@ -193,7 +205,7 @@ export default createESLintRule<Options, MessageIds>({
       // same project => allow
       if (sourceProject === targetProject) {
         // we only allow relative paths within the same project
-        if (!isRelativePath(imp)) {
+        if (!allowCircularSelfDependency && !isRelativePath(imp)) {
           context.report({
             node,
             messageId: 'noSelfCircularDependencies',
