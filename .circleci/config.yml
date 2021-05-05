@@ -78,6 +78,7 @@ jobs:
       GIT_COMMITTER_EMAIL: test@test.com
       GIT_COMMITTER_NAME: Test
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
+      NX_VERBOSE_LOGGING: 'true'
       SELECTED_PM: << parameters.pm >>
       SELECTED_CLI: << parameters.cli >>
     steps:
@@ -106,18 +107,6 @@ jobs:
     steps:
       - setup:
           os: << parameters.os >>
-      - run:
-          name: Check Documentation
-          command: yarn documentation
-      - run:
-          name: Check Imports
-          command: yarn check-imports
-      - run:
-          name: Check Formatting
-          command: yarn check-format
-      - run:
-          name: Check Package dependencies
-          command: yarn depcheck
       - run:
           name: Run Builds
           command: npx nx affected --target=build

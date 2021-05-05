@@ -2622,10 +2622,10 @@
     webpack-merge "4.2.1"
     webpack-node-externals "1.7.2"
 
-"@nrwl/nx-cloud@12.0.2":
-  version "12.0.2"
-  resolved "https://registry.yarnpkg.com/@nrwl/nx-cloud/-/nx-cloud-12.0.2.tgz#c1aae9f479e2f977b8c1ca1369e078725bf4bc94"
-  integrity sha512-CbzdraCIsROUywbt96OnxEZ4WKPHLhdkX+hFg4LE1xzktuzet9sp169AdIu6/Kz07FVRE3xfx20eylX1kDVIjw==
+"@nrwl/nx-cloud@12.1.0-beta.7":
+  version "12.1.0-beta.7"
+  resolved "https://registry.yarnpkg.com/@nrwl/nx-cloud/-/nx-cloud-12.1.0-beta.7.tgz#43162fc5e99c63c3f38a038c872984d070645b4d"
+  integrity sha512-6kZXaOlV7yvo4LfK3XH2LXGt3kV//wzrBCm5x4tlOsV2SuxCVbcgWEbfUjYdkf4bpBQsnqpmIrRtLMSsLt9dhA==
   dependencies:
     axios "^0.21.1"
     chalk "4.1.0"
