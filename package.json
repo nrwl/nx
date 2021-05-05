@@ -64,7 +64,7 @@
     "@nrwl/linter": "12.1.0-rc.1",
     "@nrwl/next": "12.1.0-rc.1",
     "@nrwl/node": "12.1.0-rc.1",
-    "@nrwl/nx-cloud": "12.1.0",
+    "@nrwl/nx-cloud": "12.1.1-beta.1",
     "@nrwl/tao": "12.1.0-rc.1",
     "@nrwl/web": "12.1.0-rc.1",
     "@nrwl/workspace": "12.1.0-rc.1",
