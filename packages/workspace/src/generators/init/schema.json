@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "SchematicsNxNgAdd",
+  "title": "Init Workspace",
+  "cli": true,
+  "description": "NOTE: Does not work in the --dry-run mode",
+  "type": "object",
+  "properties": {
+    "npmScope": {
+      "type": "string",
+      "description": "Npm scope for importing libs."
+    },
+    "defaultBase": {
+      "type": "string",
+      "description": "Default base branch for affected.",
+      "default": "master"
+    },
+    "skipInstall": {
+      "type": "boolean",
+      "description": "Skip installing after adding @nrwl/workspace",
+      "default": false
+    },
+    "preserveAngularCLILayout": {
+      "type": "boolean",
+      "description": "Preserve the Angular CLI layout instead of moving the app into apps.",
+      "default": false
+    },
+    "name": {
+      "type": "string",
+      "description": "Project name.",
+      "$default": {
+        "$source": "projectName"
+      }
+    }
+  }
+}

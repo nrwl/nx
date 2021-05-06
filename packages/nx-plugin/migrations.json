@@ -1,0 +1,19 @@
+{
+  "schematics": {
+    "update-10.2.0": {
+      "version": "10.2.0",
+      "description": "Remove deprecated jest builder options",
+      "factory": "./src/migrations/update-10-2-0/update-10-2-0"
+    },
+    "rename-ng-update-into-nx-migrate": {
+      "version": "11.0.0-beta.4",
+      "description": "Rename ng-update into nx-migrate",
+      "factory": "./src/migrations/update-11-0-0/rename-ng-update-into-nx-migrate"
+    },
+    "update-schema-version-for-executors-and-generators": {
+      "version": "11.0.17",
+      "description": "Update schema versions for executors and generators",
+      "factory": "./src/migrations/update-11-0-0/update-schema-version-for-executors-and-generators"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "extends": "../../.eslintrc",
+  "rules": {},
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "parserOptions": {
+        "project": ["packages/workspace/tsconfig.*?.json"]
+      },
+      "rules": {}
+    },
+    {
+      "files": ["**/*.ts"],
+      "excludedFiles": ["./src/migrations/**", "./src/utils/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          "@nrwl/workspace",
+          "@angular-devkit/core",
+          "@angular-devkit/architect",
+          "@angular-devkit/schematics"
+        ]
+      }
+    }
+  ],
+  "ignorePatterns": ["!**/*"]
+}

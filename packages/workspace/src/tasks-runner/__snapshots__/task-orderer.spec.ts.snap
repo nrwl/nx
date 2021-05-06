@@ -1,0 +1,261 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TaskStages (tasks with dependency configurations) should split tasks into stages  (builds depend on build of dependencies and prebuild of self) 1`] = `
+Array [
+  Array [
+    Object {
+      "id": "common1:build",
+      "overrides": Object {},
+      "projectRoot": "common1-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "common1",
+        "target": "build",
+      },
+    },
+    Object {
+      "id": "app1:prebuild",
+      "overrides": Object {},
+      "projectRoot": "app1-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "app1",
+        "target": "prebuild",
+      },
+    },
+    Object {
+      "id": "common2:build",
+      "overrides": Object {},
+      "projectRoot": "common2-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "common2",
+        "target": "build",
+      },
+    },
+    Object {
+      "id": "app2:prebuild",
+      "overrides": Object {},
+      "projectRoot": "app2-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "app2",
+        "target": "prebuild",
+      },
+    },
+  ],
+  Array [
+    Object {
+      "id": "app1:build",
+      "overrides": Object {},
+      "projectRoot": "app1-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "app1",
+        "target": "build",
+      },
+    },
+    Object {
+      "id": "app2:build",
+      "overrides": Object {},
+      "projectRoot": "app2-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "app2",
+        "target": "build",
+      },
+    },
+  ],
+]
+`;
+
+exports[`TaskStages (tasks with dependency configurations) should split tasks into stages  (builds depend on build of dependencies and prebuild of self, prebuilds depends on build of dependencies) 1`] = `
+Array [
+  Array [
+    Object {
+      "id": "common1:build",
+      "overrides": Object {},
+      "projectRoot": "common1-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "common1",
+        "target": "build",
+      },
+    },
+    Object {
+      "id": "common2:build",
+      "overrides": Object {},
+      "projectRoot": "common2-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "common2",
+        "target": "build",
+      },
+    },
+  ],
+  Array [
+    Object {
+      "id": "app1:prebuild",
+      "overrides": Object {},
+      "projectRoot": "app1-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "app1",
+        "target": "prebuild",
+      },
+    },
+    Object {
+      "id": "app2:prebuild",
+      "overrides": Object {},
+      "projectRoot": "app2-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "app2",
+        "target": "prebuild",
+      },
+    },
+  ],
+  Array [
+    Object {
+      "id": "app1:build",
+      "overrides": Object {},
+      "projectRoot": "app1-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "app1",
+        "target": "build",
+      },
+    },
+    Object {
+      "id": "app2:build",
+      "overrides": Object {},
+      "projectRoot": "app2-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "app2",
+        "target": "build",
+      },
+    },
+  ],
+]
+`;
+
+exports[`TaskStages (tasks with dependency configurations) should split tasks into stages  (builds depend on build of dependencies, builds depend on prebuilds) 1`] = `
+Array [
+  Array [
+    Object {
+      "id": "common1:prebuild",
+      "overrides": Object {},
+      "projectRoot": "common1-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "common1",
+        "target": "prebuild",
+      },
+    },
+    Object {
+      "id": "common2:prebuild",
+      "overrides": Object {},
+      "projectRoot": "common2-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "common2",
+        "target": "prebuild",
+      },
+    },
+  ],
+  Array [
+    Object {
+      "id": "common1:build",
+      "overrides": Object {},
+      "projectRoot": "common1-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "common1",
+        "target": "build",
+      },
+    },
+    Object {
+      "id": "common2:build",
+      "overrides": Object {},
+      "projectRoot": "common2-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "common2",
+        "target": "build",
+      },
+    },
+  ],
+  Array [
+    Object {
+      "id": "app1:build",
+      "overrides": Object {},
+      "projectRoot": "app1-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "app1",
+        "target": "build",
+      },
+    },
+    Object {
+      "id": "app2:build",
+      "overrides": Object {},
+      "projectRoot": "app2-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "app2",
+        "target": "build",
+      },
+    },
+  ],
+]
+`;
+
+exports[`TaskStages (tasks with dependency configurations) should split tasks into stages (builds depend on build of dependencies) 1`] = `
+Array [
+  Array [
+    Object {
+      "id": "common1:build",
+      "overrides": Object {},
+      "projectRoot": "common1-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "common1",
+        "target": "build",
+      },
+    },
+    Object {
+      "id": "common2:build",
+      "overrides": Object {},
+      "projectRoot": "common2-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "common2",
+        "target": "build",
+      },
+    },
+  ],
+  Array [
+    Object {
+      "id": "app1:build",
+      "overrides": Object {},
+      "projectRoot": "app1-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "app1",
+        "target": "build",
+      },
+    },
+    Object {
+      "id": "app2:build",
+      "overrides": Object {},
+      "projectRoot": "app2-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "app2",
+        "target": "build",
+      },
+    },
+  ],
+]
+`;

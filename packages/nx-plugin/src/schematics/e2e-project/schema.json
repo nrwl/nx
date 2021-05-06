@@ -1,0 +1,33 @@
+{
+  "id": "NxPluginE2E",
+  "title": "Create an e2e app for a Nx Plugin",
+  "type": "object",
+  "properties": {
+    "pluginName": {
+      "type": "string",
+      "description": "the name of the plugin to be tested"
+    },
+    "projectDirectory": {
+      "type": "string",
+      "description": "the directory where the plugin is placed"
+    },
+    "npmPackageName": {
+      "type": "string",
+      "description": "the name of the package that would be published to NPM"
+    },
+    "pluginOutputPath": {
+      "type": "string",
+      "description": "the output path of the plugin after it builds"
+    },
+    "jestConfig": {
+      "type": "string",
+      "description": "Jest config file"
+    },
+    "tsSpecConfig": {
+      "type": "string",
+      "description": "Spec tsconfig file",
+      "x-deprecated": true
+    }
+  },
+  "required": ["pluginName", "npmPackageName"]
+}

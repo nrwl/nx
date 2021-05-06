@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "title": "ESLint Lint Target",
+  "description": "ESLint Lint Target",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "eslintConfig": {
+      "type": "string",
+      "description": "The name of the ESLint configuration file."
+    },
+    "lintFilePatterns": {
+      "type": "array",
+      "description": "One or more files/dirs/globs to pass directly to ESLint's lintFiles() method.",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
+    },
+    "format": {
+      "type": "string",
+      "description": "ESLint Output formatter (https://eslint.org/docs/user-guide/formatters).",
+      "default": "stylish",
+      "anyOf": [
+        {
+          "enum": [
+            "stylish",
+            "compact",
+            "codeframe",
+            "unix",
+            "visualstudio",
+            "table",
+            "checkstyle",
+            "html",
+            "jslint-xml",
+            "json",
+            "json-with-metadata",
+            "junit",
+            "tap"
+          ]
+        },
+        { "minLength": 1 }
+      ]
+    },
+    "force": {
+      "type": "boolean",
+      "description": "Succeeds even if there was linting errors.",
+      "default": false
+    },
+    "silent": {
+      "type": "boolean",
+      "description": "Hide output text.",
+      "default": false
+    },
+    "fix": {
+      "type": "boolean",
+      "description": "Fixes linting errors (may overwrite linted files).",
+      "default": false
+    },
+    "cache": {
+      "type": "boolean",
+      "description": "Only check changed files.",
+      "default": false
+    },
+    "cacheLocation": {
+      "type": "string",
+      "description": "Path to the cache file or directory."
+    },
+    "outputFile": {
+      "type": "string",
+      "description": "File to write report to."
+    },
+    "maxWarnings": {
+      "type": "number",
+      "description": "Number of warnings to trigger nonzero exit code - default: -1",
+      "default": -1
+    },
+    "quiet": {
+      "type": "boolean",
+      "description": "Report errors only - default: false",
+      "default": false
+    },
+    "ignorePath": {
+      "type": "string",
+      "description": "The path of the .eslintignore file."
+    },
+    "noEslintrc": {
+      "type": "boolean",
+      "description": "The equivalent of the --no-eslintrc flag on the ESLint CLI, it is false by default",
+      "default": false
+    }
+  },
+  "additionalProperties": false,
+  "required": ["lintFilePatterns"]
+}

@@ -1,0 +1,41 @@
+{
+  "name": "@nrwl/jest",
+  "version": "0.0.1",
+  "description": "Jest plugin for Nx",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nrwl/nx.git"
+  },
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Unit Testing",
+    "CLI"
+  ],
+  "main": "./index.js",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./collection.json",
+  "builders": "./executors.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "dependencies": {
+    "@nrwl/devkit": "*",
+    "jest-resolve": "^26.6.2",
+    "rxjs": "^6.5.4",
+    "strip-json-comments": "^3.1.1",
+    "tslib": "^2.0.0"
+  }
+}

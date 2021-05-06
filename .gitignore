@@ -1,0 +1,13 @@
+node_modules
+.idea
+/.vscode
+dist
+/build
+/coverage
+test
+.DS_Store
+tmp
+*.log
+jest.debug.config.js
+.tool-versions
+/.verdaccio/build/local-registry

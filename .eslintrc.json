@@ -1,0 +1,17 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "./tsconfig.*?.json"
+  },
+  "env": {
+    "node": true
+  },
+  "ignorePatterns": ["**/*.ts"],
+  "plugins": ["@typescript-eslint"],
+  "extends": [],
+  "rules": {
+    "@typescript-eslint/explicit-module-boundary-types": "off"
+  },
+  "overrides": []
+}

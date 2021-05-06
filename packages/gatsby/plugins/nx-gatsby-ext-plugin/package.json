@@ -1,0 +1,6 @@
+{
+  "name": "nx-gatsby-ext-plugin",
+  "version": "1.0.0",
+  "main": "gatsby-config.js",
+  "license": "MIT"
+}

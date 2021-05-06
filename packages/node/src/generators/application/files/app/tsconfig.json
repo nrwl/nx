@@ -1,0 +1,10 @@
+{
+  "extends": "<%= offset %>tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ]
+}

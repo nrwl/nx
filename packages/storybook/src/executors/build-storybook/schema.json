@@ -1,0 +1,55 @@
+{
+  "title": "Storybook Builder",
+  "cli": "nx",
+  "description": "Build storybook in production mode",
+  "type": "object",
+  "properties": {
+    "uiFramework": {
+      "type": "string",
+      "description": "Storybook framework npm package",
+      "default": "@storybook/angular",
+      "hidden": true
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "The output path of the generated files."
+    },
+    "projectBuildConfig": {
+      "type": "string",
+      "description": "Workspace project where Storybook reads the Webpack config from"
+    },
+    "config": {
+      "type": "object",
+      "description": ".storybook configuration",
+      "properties": {
+        "configFolder": {
+          "type": "string",
+          "description": "Directory where to load Storybook configurations from"
+        },
+        "pluginPath": {
+          "type": "string",
+          "description": "Path to storybook plugin.js file."
+        },
+        "configPath": {
+          "type": "string",
+          "description": "Path to storybook preview.js file."
+        },
+        "srcRoot": {
+          "type": "string",
+          "description": "Project source path."
+        }
+      }
+    },
+    "docsMode": {
+      "type": "boolean",
+      "description": "Build a documentation-only site using addon-docs.",
+      "default": false
+    },
+    "quiet": {
+      "type": "boolean",
+      "description": "Suppress verbose build output.",
+      "default": true
+    }
+  },
+  "required": ["uiFramework", "config"]
+}

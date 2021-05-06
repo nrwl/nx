@@ -1,0 +1,44 @@
+import {
+  convertNxGenerator,
+  formatFiles,
+  readProjectConfiguration,
+  Tree,
+} from '@nrwl/devkit';
+
+import { checkDestination } from './lib/check-destination';
+import { moveProject } from './lib/move-project';
+import { updateCypressJson } from './lib/update-cypress-json';
+import { updateImports } from './lib/update-imports';
+import { updateJestConfig } from './lib/update-jest-config';
+import { updateStorybookConfig } from './lib/update-storybook-config';
+import { updateImplicitDependencies } from './lib/update-implicit-dependencies';
+import { updateProjectRootFiles } from './lib/update-project-root-files';
+import { updateDefaultProject } from './lib/update-default-project';
+import { Schema } from './schema';
+import { updateEslintrcJson } from './lib/update-eslintrc-json';
+import { moveProjectConfiguration } from './lib/move-project-configuration';
+import { updateBuildTargets } from './lib/update-build-targets';
+
+export async function moveGenerator(tree: Tree, schema: Schema) {
+  const projectConfig = readProjectConfiguration(tree, schema.projectName);
+  checkDestination(tree, schema, projectConfig);
+  moveProject(tree, schema, projectConfig); // we MUST move the project first, if we don't we get a "This should never happen" error 🤦‍♀️
+  updateImports(tree, schema, projectConfig);
+  updateProjectRootFiles(tree, schema, projectConfig);
+  updateCypressJson(tree, schema, projectConfig);
+  updateJestConfig(tree, schema, projectConfig);
+  updateStorybookConfig(tree, schema, projectConfig);
+  updateEslintrcJson(tree, schema, projectConfig);
+  moveProjectConfiguration(tree, schema, projectConfig);
+  updateBuildTargets(tree, schema);
+  updateDefaultProject(tree, schema);
+  updateImplicitDependencies(tree, schema);
+
+  if (!schema.skipFormat) {
+    await formatFiles(tree);
+  }
+}
+
+export default moveGenerator;
+
+export const moveSchematic = convertNxGenerator(moveGenerator);

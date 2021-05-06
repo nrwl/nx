@@ -1,0 +1,10 @@
+{
+  "$schema": "@angular-devkit/architect/src/builders-schema.json",
+  "builders": {
+    "e2e": {
+      "implementation": "./src/builders/e2e/e2e.impl",
+      "schema": "./src/builders/e2e/schema.json",
+      "description": "Creates and runs an e2e for a Nx Plugin"
+    }
+  }
+}

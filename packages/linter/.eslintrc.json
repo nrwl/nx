@@ -1,0 +1,21 @@
+{
+  "extends": "../../.eslintrc",
+  "rules": {},
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "parserOptions": {
+        "project": ["packages/linter/tsconfig.*?.json"]
+      },
+      "rules": {}
+    },
+    {
+      "files": ["**/*.ts"],
+      "excludedFiles": ["./src/migrations/**"],
+      "rules": {
+        "no-restricted-imports": ["error", "@nrwl/workspace"]
+      }
+    }
+  ],
+  "ignorePatterns": ["!**/*"]
+}

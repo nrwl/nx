@@ -1,0 +1,13 @@
+/// <reference types="next" />
+/// <reference types="next/types/global" />
+<% if (style === 'less') { %>
+declare module '*.module.less' {
+  const classes: { readonly [key: string]: string };
+  export default classes;
+}
+<% } else if (style === 'styl') { %>
+declare module '*.module.styl' {
+  const classes: { readonly [key: string]: string };
+  export default classes;
+}
+<% } %>

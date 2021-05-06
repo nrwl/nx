@@ -1,0 +1,44 @@
+import {TestBed, async} from '@angular/core/testing';
+
+import {Observable} from 'rxjs';
+
+import { EffectsModule } from '@ngrx/effects';
+import {StoreModule} from '@ngrx/store';
+import {provideMockActions} from '@ngrx/effects/testing';
+
+import { NxModule, <% if (useDataPersistence) { %>DataPersistence<% } %> } from '@nrwl/angular';
+import { hot } from '@nrwl/angular/testing';
+
+import { <%= className %>Effects } from './<%= fileName %>.effects';
+import { Load<%= className %>, <%= className %>Loaded } from './<%= fileName %>.actions';
+
+describe('<%= className %>Effects', () => {
+  let actions: Observable<any>;
+  let effects: <%= className %>Effects;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [
+        NxModule.forRoot(),
+        StoreModule.forRoot({}),
+        EffectsModule.forRoot([])
+      ],
+      providers: [
+        <%= className %>Effects,
+        <% if (useDataPersistence) { %>DataPersistence,<% } %>
+        provideMockActions(() => actions)
+      ],
+    });
+
+    effects = TestBed.inject(<%= className %>Effects);
+  });
+
+  describe('load<%= className %>$', () => {
+    it('should work', () => {
+      actions = hot('-a-|', {a: new Load<%= className %>()});
+      expect(effects.load<%= className %>$).toBeObservable(
+        hot('-a-|', {a: new <%= className %>Loaded([])})
+      );
+    });
+  });
+});

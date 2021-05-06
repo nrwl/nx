@@ -1,0 +1,43 @@
+import { TestBed, async } from '@angular/core/testing';
+
+import { Observable } from 'rxjs';
+
+import { provideMockActions } from '@ngrx/effects/testing';
+import { provideMockStore } from '@ngrx/store/testing';
+
+import { NxModule, DataPersistence } from '@nrwl/angular';
+import { hot } from '@nrwl/angular/testing';
+
+import { <%= className %>Effects } from './<%= fileName %>.effects';
+import * as <%= className %>Actions from './<%= fileName %>.actions';
+
+describe('<%= className %>Effects', () => {
+  let actions: Observable<any>;
+  let effects: <%= className %>Effects;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [
+        NxModule.forRoot(),
+      ],
+      providers: [
+        <%= className %>Effects,
+        DataPersistence,
+        provideMockActions(() => actions),
+        provideMockStore()
+      ],
+    });
+
+    effects = TestBed.inject(<%= className %>Effects);
+  });
+
+  describe('init$', () => {
+    it('should work', () => {
+      actions = hot('-a-|', {a: <%= className %>Actions.init()});
+
+      const expected = hot('-a-|', { a: <%= className %>Actions.load<%= className %>Success({ <%= propertyName %>: [] }) });
+
+      expect(effects.init$).toBeObservable(expected);
+    });
+  });
+});

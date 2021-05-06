@@ -1,0 +1,120 @@
+{
+  "name": "Nx Angular",
+  "version": "0.1",
+  "extends": ["@schematics/angular", "@nrwl/workspace"],
+  "schematics": {
+    "init": {
+      "factory": "./src/schematics/init/init",
+      "schema": "./src/schematics/init/schema.json",
+      "description": "Initialize the @nrwl/angular plugin",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+
+    "application": {
+      "factory": "./src/schematics/application/application",
+      "schema": "./src/schematics/application/schema.json",
+      "aliases": ["app"],
+      "description": "Create an Angular application"
+    },
+
+    "library": {
+      "factory": "./src/schematics/library/library",
+      "schema": "./src/schematics/library/schema.json",
+      "aliases": ["lib"],
+      "description": "Create an Angular library"
+    },
+
+    "karma": {
+      "factory": "./src/schematics/karma/karma",
+      "schema": "./src/schematics/karma/schema.json",
+      "description": "Add karma configuration to a workspace"
+    },
+
+    "karma-project": {
+      "factory": "./src/schematics/karma-project/karma-project",
+      "schema": "./src/schematics/karma-project/schema.json",
+      "description": "Add karma testing to a project"
+    },
+
+    "ngrx": {
+      "factory": "./src/schematics/ngrx/ngrx",
+      "schema": "./src/schematics/ngrx/schema.json",
+      "description": "Add an ngrx config to a project"
+    },
+
+    "downgrade-module": {
+      "factory": "./src/schematics/downgrade-module/downgrade-module",
+      "schema": "./src/schematics/downgrade-module/schema.json",
+      "description": "Setup Downgrade Module"
+    },
+
+    "upgrade-module": {
+      "factory": "./src/schematics/upgrade-module/upgrade-module",
+      "schema": "./src/schematics/upgrade-module/schema.json",
+      "description": "Add an upgrade module"
+    },
+
+    "storybook-configuration": {
+      "factory": "./src/schematics/storybook-configuration/configuration",
+      "schema": "./src/schematics/storybook-configuration/schema.json",
+      "description": "Create stories/specs for all components declared in a library",
+      "hidden": false
+    },
+
+    "storybook-migrate-defaults-5-to-6": {
+      "factory": "./src/schematics/storybook-migrate-defaults-5-to-6/migrate-defaults-5-to-6",
+      "schema": "./src/schematics/storybook-migrate-defaults-5-to-6/schema.json",
+      "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
+      "hidden": false
+    },
+
+    "stories": {
+      "factory": "./src/schematics/stories/stories",
+      "schema": "./src/schematics/stories/schema.json",
+      "description": "Create stories/specs for all components declared in a library",
+      "hidden": false
+    },
+
+    "component-cypress-spec": {
+      "factory": "./src/schematics/component-cypress-spec/component-cypress-spec",
+      "schema": "./src/schematics/component-cypress-spec/schema.json",
+      "description": "Create a cypress spec for a ui component that has a story",
+      "hidden": true
+    },
+
+    "component-story": {
+      "factory": "./src/schematics/component-story/component-story",
+      "schema": "./src/schematics/component-story/schema.json",
+      "description": "Create a stories.ts file for a component",
+      "hidden": true
+    },
+
+    "move": {
+      "factory": "./src/schematics/move/move",
+      "schema": "./src/schematics/move/schema.json",
+      "aliases": ["mv"],
+      "description": "Move an Angular application or library to another folder"
+    },
+
+    "add-linting": {
+      "factory": "./src/schematics/add-linting/add-linting",
+      "schema": "./src/schematics/add-linting/schema.json",
+      "description": "Add linting configuration to an Angular project",
+      "hidden": true
+    },
+
+    "convert-tslint-to-eslint": {
+      "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionSchematic",
+      "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
+      "description": "Convert a project from TSLint to ESLint"
+    }
+  },
+  "generators": {
+    "convert-tslint-to-eslint": {
+      "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionGenerator",
+      "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
+      "description": "Convert a project from TSLint to ESLint"
+    }
+  }
+}

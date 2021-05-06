@@ -1,0 +1,36 @@
+{
+  "name": "@nrwl/cli",
+  "version": "0.0.1",
+  "description": "Powerful, Extensible Dev Tools",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nrwl/nx.git"
+  },
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "bin": {
+    "nx": "./bin/nx.js"
+  },
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "dependencies": {
+    "yargs": "15.4.1",
+    "yargs-parser": "20.0.0",
+    "@nrwl/tao": "*",
+    "chalk": "4.1.0",
+    "v8-compile-cache": "2.3.0"
+  }
+}
