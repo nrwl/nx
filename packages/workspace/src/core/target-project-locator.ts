@@ -1,9 +1,6 @@
 import { resolveModuleByImport } from '../utilities/typescript';
 import { defaultFileRead, normalizedProjectRoot } from './file-utils';
-import {
-  ProjectGraphNode,
-  ProjectGraphNodeRecords,
-} from './project-graph/project-graph-models';
+import { ProjectGraphNode } from './project-graph/project-graph-models';
 import {
   getSortedProjectNodes,
   isNpmProject,
@@ -36,7 +33,7 @@ export class TargetProjectLocator {
   private typescriptResolutionCache = new Map<string, string | null>();
   private npmResolutionCache = new Map<string, string | null>();
 
-  constructor(private nodes: ProjectGraphNodeRecords) {}
+  constructor(private readonly nodes: Record<string, ProjectGraphNode>) {}
 
   /**
    * Find a project based on its import
@@ -127,7 +124,7 @@ export class TargetProjectLocator {
       return resolvedModule.startsWith(p.data.root);
     });
 
-    return importedProject?.name;
+    return importedProject ? importedProject.name : void 0;
   }
 
   private getRootTsConfigPath() {
