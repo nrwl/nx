@@ -13,7 +13,7 @@ const jestObject = {
   globals: { 'ts-jest': { tsConfig: '<rootDir>/tsconfig.spec.json' } },
 };
 
-describe('update 12.1.0', () => {
+describe('update 12.1.2', () => {
   let initialTree: Tree;
   let schematicRunner: SchematicTestRunner;
   const jestConfig = String.raw`
