@@ -39,6 +39,15 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       `${options.projectRoot}/src/pages/index.module.${options.style}`
     );
   }
+  if (options.style === 'none') {
+    host.delete(`${options.projectRoot}/src/pages/index.tsx`);
+    host.rename(
+      `${options.projectRoot}/src/pages/index.none.tsx`,
+      `${options.projectRoot}/src/pages/index.tsx`
+    );
+  } else {
+    host.delete(`${options.projectRoot}/src/pages/index.none.tsx`);
+  }
   if (options.js) {
     toJS(host);
     updateTsConfigsToJs(host, { projectRoot: options.projectRoot });
