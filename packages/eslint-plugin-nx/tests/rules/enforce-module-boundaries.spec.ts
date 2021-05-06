@@ -6,12 +6,11 @@ import {
 import { TSESLint } from '@typescript-eslint/experimental-utils';
 import * as parser from '@typescript-eslint/parser';
 import { vol } from 'memfs';
-import { extname, join } from 'path';
+import { extname } from 'path';
 import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from '../../src/rules/enforce-module-boundaries';
 import { TargetProjectLocator } from '@nrwl/workspace/src/core/target-project-locator';
-import { readFileSync } from 'fs';
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('../../../workspace/src/utilities/app-root', () => ({
   appRootPath: '/root',
@@ -792,6 +791,130 @@ describe('Enforce Module Boundaries', () => {
     expect(failures.length).toEqual(2);
     expect(failures[0].message).toEqual(message);
     expect(failures[1].message).toEqual(message);
+  });
+
+  it('should error when absolute path within project detected', () => {
+    const failures = runRule(
+      {},
+      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+      `
+        import '@mycompany/mylib';
+        import('@mycompany/mylib');
+      `,
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/mylib/src/main.ts`)],
+            },
+          },
+          anotherlibName: {
+            name: 'anotherlibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/anotherlib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/anotherlib/src/main.ts`)],
+            },
+          },
+          myappName: {
+            name: 'myappName',
+            type: ProjectType.app,
+            data: {
+              root: 'apps/myapp',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`apps/myapp/src/index.ts`)],
+            },
+          },
+        },
+        dependencies: {
+          mylibName: [
+            {
+              source: 'mylibName',
+              target: 'anotherlibName',
+              type: DependencyType.static,
+            },
+          ],
+        },
+      }
+    );
+
+    const message =
+      'Only relative imports are allowed within the project. Absolute import found: @mycompany/mylib';
+    expect(failures.length).toEqual(2);
+    expect(failures[0].message).toEqual(message);
+    expect(failures[1].message).toEqual(message);
+  });
+
+  it('should ignore detected absolute path within project if allowCircularSelfDependency flag is set', () => {
+    const failures = runRule(
+      {
+        allowCircularSelfDependency: true,
+      },
+      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+      `
+        import '@mycompany/mylib';
+        import('@mycompany/mylib');
+      `,
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/mylib/src/main.ts`)],
+            },
+          },
+          anotherlibName: {
+            name: 'anotherlibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/anotherlib',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`libs/anotherlib/src/main.ts`)],
+            },
+          },
+          myappName: {
+            name: 'myappName',
+            type: ProjectType.app,
+            data: {
+              root: 'apps/myapp',
+              tags: [],
+              implicitDependencies: [],
+              architect: {},
+              files: [createFile(`apps/myapp/src/index.ts`)],
+            },
+          },
+        },
+        dependencies: {
+          mylibName: [
+            {
+              source: 'mylibName',
+              target: 'anotherlibName',
+              type: DependencyType.static,
+            },
+          ],
+        },
+      }
+    );
+
+    expect(failures.length).toBe(0);
   });
 
   it('should error when circular dependency detected', () => {

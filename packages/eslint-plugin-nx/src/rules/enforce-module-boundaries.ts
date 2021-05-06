@@ -19,28 +19,27 @@ import {
 import { createESLintRule } from '../utils/create-eslint-rule';
 import { normalizePath } from '@nrwl/devkit';
 import {
-  createProjectGraph,
   isNpmProject,
   ProjectGraph,
   ProjectType,
 } from '@nrwl/workspace/src/core/project-graph';
-import {
-  readNxJson,
-  readWorkspaceJson,
-} from '@nrwl/workspace/src/core/file-utils';
+import { readNxJson } from '@nrwl/workspace/src/core/file-utils';
 import { TargetProjectLocator } from '@nrwl/workspace/src/core/target-project-locator';
 import { checkCircularPath } from '@nrwl/workspace/src/utils/graph-utils';
 import { readCurrentProjectGraph } from '@nrwl/workspace/src/core/project-graph/project-graph';
+import { isRelativePath } from '@nrwl/workspace/src/utilities/fileutils';
 
 type Options = [
   {
     allow: string[];
     depConstraints: DepConstraint[];
     enforceBuildableLibDependency: boolean;
+    allowCircularSelfDependency: boolean;
   }
 ];
 export type MessageIds =
   | 'noRelativeOrAbsoluteImportsAcrossLibraries'
+  | 'noSelfCircularDependencies'
   | 'noCircularDependencies'
   | 'noImportsOfApps'
   | 'noImportsOfE2e'
@@ -83,6 +82,7 @@ export default createESLintRule<Options, MessageIds>({
     messages: {
       noRelativeOrAbsoluteImportsAcrossLibraries: `Libraries cannot be imported by a relative or absolute path, and must begin with a npm scope`,
       noCircularDependencies: `Circular dependency between "{{sourceProjectName}}" and "{{targetProjectName}}" detected: {{path}}`,
+      noSelfCircularDependencies: `Only relative imports are allowed within the project. Absolute import found: {{imp}}`,
       noImportsOfApps: 'Imports of apps are forbidden',
       noImportsOfE2e: 'Imports of e2e projects are forbidden',
       noImportOfNonBuildableLibraries:
@@ -97,9 +97,20 @@ export default createESLintRule<Options, MessageIds>({
       allow: [],
       depConstraints: [],
       enforceBuildableLibDependency: false,
+      allowCircularSelfDependency: false,
     },
   ],
-  create(context, [{ allow, depConstraints, enforceBuildableLibDependency }]) {
+  create(
+    context,
+    [
+      {
+        allow,
+        depConstraints,
+        enforceBuildableLibDependency,
+        allowCircularSelfDependency,
+      },
+    ]
+  ) {
     /**
      * Globally cached info about workspace
      */
@@ -193,6 +204,16 @@ export default createESLintRule<Options, MessageIds>({
 
       // same project => allow
       if (sourceProject === targetProject) {
+        // we only allow relative paths within the same project
+        if (!allowCircularSelfDependency && !isRelativePath(imp)) {
+          context.report({
+            node,
+            messageId: 'noSelfCircularDependencies',
+            data: {
+              imp,
+            },
+          });
+        }
         return;
       }
 
