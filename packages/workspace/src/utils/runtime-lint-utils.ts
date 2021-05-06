@@ -5,9 +5,9 @@ import {
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphNode,
-} from '../core/project-graph';
+  normalizePath,
+} from '@nrwl/devkit';
 import { TargetProjectLocator } from '../core/target-project-locator';
-import { normalizePath } from '@nrwl/devkit';
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 export type DepConstraint = {
@@ -19,7 +19,7 @@ export function hasNoneOfTheseTags(proj: ProjectGraphNode, tags: string[]) {
   return tags.filter((allowedTag) => hasTag(proj, allowedTag)).length === 0;
 }
 
-function hasTag(proj: ProjectGraphNode, tag: string) {
+function hasTag(proj: ProjectGraphNode<{ tags?: string[] }>, tag: string) {
   return (proj.data.tags || []).indexOf(tag) > -1 || tag === '*';
 }
 

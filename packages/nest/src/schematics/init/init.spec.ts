@@ -18,6 +18,13 @@ describe('init', () => {
     expect(packageJson.dependencies['@nrwl/nest']).toBeUndefined();
     expect(packageJson.devDependencies['@nrwl/nest']).toBeDefined();
     expect(packageJson.dependencies['@nestjs/core']).toBeDefined();
+    expect(packageJson.dependencies['@nestjs/common']).toBeDefined();
+    expect(packageJson.dependencies['@nestjs/platform-express']).toBeDefined();
+    expect(packageJson.devDependencies['@nestjs/schematics']).toBeDefined();
+    expect(packageJson.devDependencies['@nestjs/testing']).toBeDefined();
+    expect(packageJson.dependencies['reflect-metadata']).toBeDefined();
+    expect(packageJson.dependencies['rxjs']).toBeDefined();
+    expect(packageJson.dependencies['tslib']).toBeDefined();
   });
 
   describe('defaultCollection', () => {

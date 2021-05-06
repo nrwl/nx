@@ -276,7 +276,7 @@ describe('TaskStages', () => {
   });
 
   describe('(tasks with dependency configurations)', () => {
-    let projectGraph: ProjectGraph;
+    let projectGraph: ProjectGraph<any>;
     beforeEach(() => {
       projectGraph = {
         nodes: {

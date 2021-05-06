@@ -6,7 +6,7 @@ export const oceanWorkspaceLayout: WorkspaceLayout = {
   appsDir: 'apps',
 };
 
-export const oceanGraph: ProjectGraphCache = {
+export const oceanGraph: ProjectGraphCache<any> = {
   version: '2.0',
   rootFiles: [
     {

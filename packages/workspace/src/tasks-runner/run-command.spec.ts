@@ -16,9 +16,15 @@ describe('createTasksForProjectToRun', () => {
             root: 'app1-root',
             files: [],
             targets: {
-              prebuild: {},
-              build: {},
-              serve: {},
+              prebuild: {
+                executor: '',
+              },
+              build: {
+                executor: '',
+              },
+              serve: {
+                executor: '',
+              },
             },
           },
         },
@@ -29,7 +35,9 @@ describe('createTasksForProjectToRun', () => {
             root: 'lib1-root',
             files: [],
             targets: {
-              build: {},
+              build: {
+                executor: '',
+              },
             },
           },
         },
@@ -270,7 +278,7 @@ describe('createTasksForProjectToRun', () => {
   });
 
   it('should create tasks for multiple sets of dependencies', () => {
-    projectGraph.nodes.app1.data.targets.build.dependsOn = [
+    (projectGraph.nodes.app1.data as any).targets.build.dependsOn = [
       {
         target: 'prebuild',
         projects: 'self',

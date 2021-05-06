@@ -5,7 +5,7 @@ export const nxExamplesWorkspaceLayout = {
   appsDir: 'apps',
 };
 
-export const nxExamplesGraph: ProjectGraphCache = {
+export const nxExamplesGraph: ProjectGraphCache<any> = {
   version: '2.0',
   rootFiles: [
     {

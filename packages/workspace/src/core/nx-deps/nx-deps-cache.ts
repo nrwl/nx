@@ -2,8 +2,9 @@ import { FileData, filesChanged } from '../file-utils';
 import {
   ProjectGraph,
   ProjectGraphDependency,
+  ProjectGraphExternalNode,
   ProjectGraphNode,
-} from '../project-graph';
+} from '@nrwl/devkit';
 import { join } from 'path';
 import { appRootPath } from '../../utilities/app-root';
 import { existsSync } from 'fs';
@@ -14,17 +15,20 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '../../utilities/fileutils';
-import { ProjectFileMap } from '@nrwl/workspace/src/core/file-graph';
+import { ProjectFileMap } from '../file-graph';
 import { performance } from 'perf_hooks';
 import {
   cacheDirectory,
   readCacheDirectoryProperty,
 } from '../../utilities/cache-directory';
 
-export interface ProjectGraphCache {
+export interface ProjectGraphCache<T = unknown> {
   version: string;
   rootFiles: FileData[];
-  nodes: Record<string, ProjectGraphNode>;
+  nodes: Record<
+    string,
+    ProjectGraphNode | ProjectGraphExternalNode | ProjectGraphNode<T>
+  >;
   dependencies: Record<string, ProjectGraphDependency[]>;
 }
 

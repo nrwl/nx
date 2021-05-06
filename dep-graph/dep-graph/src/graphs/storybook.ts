@@ -5,7 +5,7 @@ export const storybookWorkspaceLayout = {
   appsDir: '',
 };
 
-export const storybookGraph: ProjectGraphCache = {
+export const storybookGraph: ProjectGraphCache<any> = {
   version: '2.0',
   rootFiles: [
     {

@@ -51,10 +51,15 @@ export {
   ProjectGraphDependency,
   DependencyType,
   ProjectGraphNode,
+  ProjectGraphExternalNode,
   NxPlugin,
   ProjectGraphProcessorContext,
 } from './src/project-graph/interfaces';
-export { ProjectGraphBuilder } from './src/project-graph/utils';
+export {
+  ProjectGraphBuilder,
+  isProjectGraphNode,
+  isProjectGraphExternalNode,
+} from './src/project-graph/utils';
 
 export { readJson, writeJson, updateJson } from './src/utils/json';
 export {

@@ -14,7 +14,7 @@ describe('ProjectNode', () => {
             prefix: 'sub-app',
             tags: [],
             files: [],
-          },
+          } as any,
         },
         'apps'
       );
@@ -36,7 +36,7 @@ describe('ProjectNode', () => {
             prefix: 'app',
             tags: [],
             files: [],
-          },
+          } as any,
         },
         'apps'
       );
@@ -58,7 +58,7 @@ describe('ProjectNode', () => {
             prefix: 'sub-app',
             tags: [],
             files: [],
-          },
+          } as any,
         },
         'apps'
       );
@@ -80,7 +80,7 @@ describe('ProjectNode', () => {
             sourceRoot: 'libs/sub/lib/src',
             projectType: 'library',
             files: [],
-          },
+          } as any,
         },
         'libs'
       );
@@ -100,7 +100,7 @@ describe('ProjectNode', () => {
             sourceRoot: 'libs/lib/src',
             projectType: 'library',
             files: [],
-          },
+          } as any,
         },
         'libs'
       );
@@ -120,7 +120,7 @@ describe('ProjectNode', () => {
             sourceRoot: 'libs/sub/lib/src',
             projectType: 'library',
             files: [],
-          },
+          } as any,
         },
         'libs'
       );

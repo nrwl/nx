@@ -1,8 +1,6 @@
-import { fs, vol } from 'memfs';
-import {
-  ProjectGraphContext,
-  ProjectGraphNode,
-} from './project-graph/project-graph-models';
+import { vol } from 'memfs';
+import { ProjectGraphNode, ProjectGraphExternalNode } from '@nrwl/devkit';
+import { ProjectGraphContext } from './project-graph/project-graph-models';
 import { TargetProjectLocator } from './target-project-locator';
 
 jest.mock('../utilities/app-root', () => ({
@@ -12,7 +10,7 @@ jest.mock('fs', () => require('memfs').fs);
 
 describe('findTargetProjectWithImport', () => {
   let ctx: ProjectGraphContext;
-  let projects: Record<string, ProjectGraphNode>;
+  let projects: Record<string, ProjectGraphNode | ProjectGraphExternalNode>;
   let fsJson;
   let targetProjectLocator: TargetProjectLocator;
   beforeEach(() => {

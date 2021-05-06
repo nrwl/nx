@@ -2,6 +2,8 @@ import {
   ProjectGraph,
   ProjectGraphNode,
   ProjectType,
+  ProjectGraphExternalNode,
+  isProjectGraphExternalNode,
 } from '../core/project-graph';
 import { BuilderContext } from '@angular-devkit/architect';
 import { join, resolve, dirname, relative } from 'path';
@@ -9,9 +11,9 @@ import {
   fileExists,
   readJsonFile,
   writeJsonFile,
-} from '@nrwl/workspace/src/utilities/fileutils';
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { getOutputsForTargetAndConfiguration } from '@nrwl/workspace/src/tasks-runner/utils';
+} from '../utilities/fileutils';
+import { stripIndents } from '@nrwl/devkit';
+import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
 import * as ts from 'typescript';
 import { unlinkSync } from 'fs';
 
@@ -26,7 +28,7 @@ function isBuildable(target: string, node: ProjectGraphNode): boolean {
 export type DependentBuildableProjectNode = {
   name: string;
   outputs: string[];
-  node: ProjectGraphNode;
+  node: ProjectGraphNode | ProjectGraphExternalNode;
 };
 
 export function calculateProjectDependencies(
@@ -61,7 +63,10 @@ export function calculateProjectDependencies(
           ),
           node: depNode,
         };
-      } else if (depNode.type === 'npm') {
+      } else if (
+        depNode.type === 'npm' &&
+        isProjectGraphExternalNode(depNode)
+      ) {
         return {
           name: depNode.data.packageName,
           outputs: [],
@@ -237,25 +242,27 @@ export function updateBuildableProjectPackageJsonDependencies(
   );
 
   const packageJsonPath = `${outputs[0]}/package.json`;
-  let packageJson;
-  let workspacePackageJson;
+  let packageJson: any;
+  let workspacePackageJson: any;
   try {
     packageJson = readJsonFile(packageJsonPath);
     workspacePackageJson = readJsonFile(
       `${context.workspaceRoot}/package.json`
     );
-  } catch (e) {
+  } catch {
     // cannot find or invalid package.json
     return;
   }
 
-  packageJson.dependencies = packageJson.dependencies || {};
-  packageJson.peerDependencies = packageJson.peerDependencies || {};
+  packageJson.dependencies = packageJson.dependencies ?? {};
+  packageJson.peerDependencies = packageJson.peerDependencies ?? {};
 
   let updatePackageJson = false;
   dependencies.forEach((entry) => {
     const packageName =
-      entry.node.type === 'npm' ? entry.node.data.packageName : entry.name;
+      entry.node.type === 'npm' && isProjectGraphExternalNode(entry.node)
+        ? entry.node.data.packageName
+        : entry.name;
 
     if (
       !hasDependency(packageJson, 'dependencies', packageName) &&
@@ -281,7 +288,10 @@ export function updateBuildableProjectPackageJsonDependencies(
           depVersion = readJsonFile(depPackageJsonPath).version;
 
           packageJson[typeOfDependency][packageName] = depVersion;
-        } else if (entry.node.type === 'npm') {
+        } else if (
+          entry.node.type === 'npm' &&
+          isProjectGraphExternalNode(entry.node)
+        ) {
           // If an npm dep is part of the workspace devDependencies, do not include it the library
           if (
             !!workspacePackageJson.devDependencies?.[

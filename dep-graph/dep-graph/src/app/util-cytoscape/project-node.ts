@@ -18,7 +18,7 @@ export class ProjectNode {
   focused = false;
 
   constructor(
-    private project: ProjectGraphNode,
+    private project: ProjectGraphNode<{ tags?: string[] }>,
     private workspaceRoot: string
   ) {}
 
@@ -37,7 +37,7 @@ export class ProjectNode {
     return {
       id: this.project.name,
       type: this.project.type,
-      tags: this.project.data.tags,
+      tags: this.project.data.tags ?? [],
       parent:
         groupByFolder && this.project.data.hasOwnProperty('root')
           ? this.getParentId()

@@ -2,6 +2,7 @@ import {
   DependencyType,
   ProjectGraph,
   ProjectGraphDependency,
+  ProjectGraphExternalNode,
   ProjectGraphNode,
 } from './interfaces';
 
@@ -80,4 +81,21 @@ export class ProjectGraphBuilder {
       }, {} as ProjectGraph['dependencies']),
     };
   }
+}
+
+export function isProjectGraphNode(node: any): node is ProjectGraphNode {
+  return (
+    node.name !== undefined &&
+    node.type !== undefined &&
+    node.data !== undefined
+  );
+}
+
+export function isProjectGraphExternalNode(
+  node: any
+): node is ProjectGraphExternalNode {
+  return (
+    isProjectGraphNode(node) &&
+    (node as ProjectGraphExternalNode).data.packageName !== undefined
+  );
 }

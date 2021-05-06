@@ -5,7 +5,7 @@ export const nxWorkspaceLayout = {
   appsDir: '',
 };
 
-export const nxGraph: ProjectGraphCache = {
+export const nxGraph: ProjectGraphCache<any> = {
   version: '2.0',
   rootFiles: [
     {

@@ -5,6 +5,7 @@ import {
   JsonChange,
 } from '../../../utilities/json-diff';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
+import { isProjectGraphExternalNode } from '@nrwl/devkit';
 
 export const getTouchedNpmPackages: TouchedProjectLocator<
   WholeFileChange | JsonChange
@@ -37,7 +38,11 @@ export const getTouchedNpmPackages: TouchedProjectLocator<
         break;
       } else {
         touched.push(
-          npmPackages.find((pkg) => pkg.data.packageName === c.path[1]).name
+          npmPackages.find(
+            (pkg) =>
+              isProjectGraphExternalNode(pkg) &&
+              pkg.data.packageName === c.path[1]
+          ).name
         );
       }
     } else if (isWholeFileChange(c)) {

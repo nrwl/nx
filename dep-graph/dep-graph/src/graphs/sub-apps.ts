@@ -6,7 +6,7 @@ export const subAppsWorkspaceLayout: WorkspaceLayout = {
   libsDir: 'libs',
 };
 
-export const subAppsGraph: ProjectGraphCache = {
+export const subAppsGraph: ProjectGraphCache<any> = {
   version: '2.0',
   rootFiles: [
     {

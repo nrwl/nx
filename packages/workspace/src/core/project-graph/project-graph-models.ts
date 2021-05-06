@@ -8,7 +8,10 @@ export {
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphNode,
+  ProjectGraphExternalNode,
   DependencyType,
+  isProjectGraphNode,
+  isProjectGraphExternalNode,
 } from '@nrwl/devkit';
 
 /**
@@ -19,7 +22,7 @@ export type ProjectGraphNodeRecords = Record<string, ProjectGraphNode>;
 /**
  * @deprecated
  */
-export type AddProjectNode = (node: ProjectGraphNode) => void;
+export type AddProjectNode = (node: ProjectGraphNode<any>) => void;
 
 /**
  * @deprecated

@@ -1,4 +1,8 @@
-import { ProjectGraph } from '../core/project-graph';
+import {
+  ProjectGraphExternalNode,
+  ProjectGraph,
+  isProjectGraphExternalNode,
+} from '@nrwl/devkit';
 import { readJsonFile } from './fileutils';
 
 /**
@@ -58,7 +62,7 @@ function findAllNpmDeps(
 
   const node = graph.nodes[projectName];
 
-  if (node.type === 'npm') {
+  if (node.type === 'npm' && isProjectGraphExternalNode(node)) {
     list[node.data.packageName] = node.data.version;
     recursivelyCollectPeerDependencies(node.name, graph, list);
   }
@@ -73,34 +77,30 @@ function recursivelyCollectPeerDependencies(
   projectName: string,
   graph: ProjectGraph,
   list: { [packageName: string]: string } = {},
-  seen = new Set<string>()
+  seen: Set<string> = new Set<string>()
 ) {
+  const projectNode = graph.nodes[projectName];
   if (
-    !graph.nodes[projectName] ||
-    graph.nodes[projectName].type !== 'npm' ||
-    seen.has(projectName)
+    projectNode &&
+    projectNode.type === 'npm' &&
+    !seen.has(projectName) &&
+    isProjectGraphExternalNode(projectNode)
   ) {
-    return list;
+    seen.add(projectName);
+    const packageName = projectNode.data.packageName;
+    try {
+      const packageJson = require(`${packageName}/package.json`);
+      if (packageJson.peerDependencies) {
+        Object.keys(packageJson.peerDependencies)
+          .map((dependencyName) => `npm:${dependencyName}`)
+          .map((dependency) => graph.nodes[dependency])
+          .filter(Boolean)
+          .forEach((node: ProjectGraphExternalNode) => {
+            list[node.data.packageName] = node.data.version;
+            recursivelyCollectPeerDependencies(node.name, graph, list, seen);
+          });
+      }
+    } catch {}
   }
-
-  seen.add(projectName);
-  const packageName = graph.nodes[projectName].data.packageName;
-  try {
-    const packageJson = require(`${packageName}/package.json`);
-    if (!packageJson.peerDependencies) {
-      return list;
-    }
-
-    Object.keys(packageJson.peerDependencies)
-      .map((dependencyName) => `npm:${dependencyName}`)
-      .map((dependency) => graph.nodes[dependency])
-      .filter(Boolean)
-      .forEach((node) => {
-        list[node.data.packageName] = node.data.version;
-        recursivelyCollectPeerDependencies(node.name, graph, list, seen);
-      });
-    return list;
-  } catch (e) {
-    return list;
-  }
+  return list;
 }

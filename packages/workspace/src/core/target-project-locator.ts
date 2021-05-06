@@ -3,15 +3,13 @@ import { defaultFileRead, normalizedProjectRoot } from './file-utils';
 import {
   ProjectGraphNode,
   ProjectGraphNodeRecords,
-} from './project-graph/project-graph-models';
-import {
   getSortedProjectNodes,
   isNpmProject,
   isWorkspaceProject,
 } from './project-graph';
 import { isRelativePath, parseJsonWithComments } from '../utilities/fileutils';
 import { dirname, join, posix } from 'path';
-import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
+import { appRootPath } from '../utilities/app-root';
 
 export class TargetProjectLocator {
   private sortedProjects = getSortedProjectNodes(this.nodes);
@@ -95,13 +93,15 @@ export class TargetProjectLocator {
         return resolvedProject;
       }
     }
-    const importedProject = this.sortedWorkspaceProjects.find((p) => {
-      const projectImport = `@${npmScope}/${p.data.normalizedRoot}`;
-      return (
-        normalizedImportExpr === projectImport ||
-        normalizedImportExpr.startsWith(`${projectImport}/`)
-      );
-    });
+    const importedProject = this.sortedWorkspaceProjects.find(
+      (p: ProjectGraphNode<{ normalizedRoot: string }>) => {
+        const projectImport = `@${npmScope}/${p.data.normalizedRoot}`;
+        return (
+          normalizedImportExpr === projectImport ||
+          normalizedImportExpr.startsWith(`${projectImport}/`)
+        );
+      }
+    );
     if (importedProject) return importedProject.name;
 
     const npmProject = this.findNpmPackage(importExpr);

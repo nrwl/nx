@@ -1048,7 +1048,7 @@ function runRule(
   ruleArguments: any,
   contentPath: string,
   content: string,
-  projectGraph: ProjectGraph
+  projectGraph: ProjectGraph<any>
 ): RuleFailure[] {
   const options: any = {
     ruleArguments: [ruleArguments],

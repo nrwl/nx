@@ -1,4 +1,4 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext, isProjectGraphExternalNode } from '@nrwl/devkit';
 
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import { writeJsonFile } from '@nrwl/workspace/src/utilities/fileutils';
@@ -24,7 +24,7 @@ export function createPackageJson(
   }
   const nrwlWorkspaceNode = depGraph.nodes['npm:@nrwl/workspace'];
 
-  if (nrwlWorkspaceNode) {
+  if (nrwlWorkspaceNode && isProjectGraphExternalNode(nrwlWorkspaceNode)) {
     packageJson.devDependencies['@nrwl/workspace'] =
       nrwlWorkspaceNode.data.version;
   }
