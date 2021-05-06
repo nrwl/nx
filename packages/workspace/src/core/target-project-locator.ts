@@ -86,7 +86,7 @@ export class TargetProjectLocator {
     }
 
     // TODO: vsavkin temporary workaround. Remove it once we reworking handling of npm packages.
-    if (resolvedModule && resolvedModule.indexOf('/node_modules/') === -1) {
+    if (resolvedModule && resolvedModule.indexOf('node_modules/') === -1) {
       const resolvedProject = this.findProjectOfResolvedModule(resolvedModule);
       if (resolvedProject) {
         return resolvedProject;
