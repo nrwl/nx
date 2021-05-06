@@ -78,9 +78,9 @@ export function isRelativeImportIntoAnotherProject(
 }
 
 export function findProjectUsingFile(projectGraph: ProjectGraph, file: string) {
-  return Object.values(projectGraph.nodes).filter((n) =>
+  return Object.values(projectGraph.nodes).find((n) =>
     containsFile(n.data.files, file)
-  )[0];
+  );
 }
 
 export function findSourceProject(
