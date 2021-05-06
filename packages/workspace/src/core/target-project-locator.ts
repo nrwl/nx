@@ -92,6 +92,7 @@ export class TargetProjectLocator {
         return resolvedProject;
       }
     }
+    // TODO: meeroslav this block should be probably removed
     const importedProject = this.sortedWorkspaceProjects.find((p) => {
       const projectImport = `@${npmScope}/${p.data.normalizedRoot}`;
       return (
@@ -99,7 +100,9 @@ export class TargetProjectLocator {
         normalizedImportExpr.startsWith(`${projectImport}/`)
       );
     });
-    if (importedProject) return importedProject.name;
+    if (importedProject) {
+      return importedProject.name;
+    }
 
     const npmProject = this.findNpmPackage(importExpr);
     return npmProject ? npmProject : null;
@@ -109,11 +112,12 @@ export class TargetProjectLocator {
     if (this.npmResolutionCache.has(npmImport)) {
       return this.npmResolutionCache.get(npmImport);
     } else {
-      const pkgName = this.npmProjects.find(
+      const pkg = this.npmProjects.find(
         (pkg) =>
           npmImport === pkg.data.packageName ||
           npmImport.startsWith(`${pkg.data.packageName}/`)
-      )?.name;
+      );
+      const pkgName = pkg ? pkg.name : void 0;
       this.npmResolutionCache.set(npmImport, pkgName);
       return pkgName;
     }
