@@ -2,7 +2,7 @@
 
 Creating Executors for your workspace standardizes scripts that are run during your development/building/deploying tasks in order to enable Nx's `affected` command and caching capabilities.
 
-This guide will show you how to create, run, and customize executors within your Nx workspace. In the examples, we'll use the trivial use-case of an `echo` command.
+This guide shows you how to create, run, and customize executors within your Nx workspace. The examples use the trivial use-case of an `echo` command.
 
 ## Creating an executor
 
@@ -26,7 +26,7 @@ happynrwl/
 
 ### schema.json
 
-This file will describe the options being sent to the executor (very similar to the `schema.json` file of generators). Setting the `cli` property to `nx` indicates that you're using the Nx Devkit to make this executor.
+This file describes the options being sent to the executor (very similar to the `schema.json` file of generators). Setting the `cli` property to `nx` indicates that you're using the Nx Devkit to make this executor.
 
 ```json
 {
@@ -42,7 +42,7 @@ This file will describe the options being sent to the executor (very similar to 
 }
 ```
 
-This example describes a single option for the executor that is a `string` called `textToEcho`. When using this executor, we'll specify a `textToEcho` property inside the options.
+This example describes a single option for the executor that is a `string` called `textToEcho`. When using this executor, specify a `textToEcho` property inside the options.
 
 In our `impl.ts` file, we're creating an `Options` interface that matches the json object being described here.
 
@@ -81,7 +81,7 @@ Also note that [Node’s `childProcess`](https://nodejs.org/api/child_process.ht
 
 Part of the power of the executor API is the ability to compose executors via existing targets. This way you can combine other executors from your workspace into one which could be helpful when the process you’re scripting is a combination of other existing executors provided by the CLI or other custom executors in your workspace.
 
-Here's an example of this (from a hypothetical project), that will serve an api (project name: "api") in watch mode, then serve a frontend app (project name: "web-client") in watch mode:
+Here's an example of this (from a hypothetical project), that serves an api (project name: "api") in watch mode, then serves a frontend app (project name: "web-client") in watch mode:
 
 ```typescript
 import { ExecutorContext, runExecutor } from '@nrwl/devkit';
@@ -114,7 +114,7 @@ export default async function multipleExecutor(
 
 For other ideas on how to create your own executors, you can always check out Nx's own open-source executors as well!
 
-(e.g. our [cypress executor](https://github.com/nrwl/nx/blob/master/packages/cypress/src/executors/cypress/cypress.impl.ts))
+(For example, our [cypress executor](https://github.com/nrwl/nx/blob/master/packages/cypress/src/executors/cypress/cypress.impl.ts))
 
 ### executor.json
 
@@ -146,7 +146,7 @@ This is all that’s required from the `package.json` file:
 
 ## Compiling and Running your Executor
 
-After your files are created, you can compile your executor with `tsc` (which is available locally in any Nx workspace):
+After your files are created, compile your executor with `tsc` (which is available locally in any Nx workspace):
 
 ```sh
 npx tsc tools/executors/echo/impl
@@ -186,7 +186,7 @@ Our last step is to add this executor to a given project’s `targets` object in
 
 Note that the format of the `executor` string here is: `${Path to directory containing the executor's package.json}:${executor name}`.
 
-Finally, we may run our executor via the CLI as follows:
+Finally, you run the executor via the CLI as follows:
 
 ```sh
 nx run platform:echo
