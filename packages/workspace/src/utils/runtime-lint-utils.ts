@@ -27,7 +27,11 @@ function containsFile(
   files: FileData[],
   targetFileWithoutExtension: string
 ): boolean {
-  return files.some((f) => removeExt(f.file) === targetFileWithoutExtension);
+  return files.some((f) => trimExt(f) === targetFileWithoutExtension);
+}
+
+function trimExt(file: FileData) {
+  return file.ext ? file.file.slice(0, -file.ext.length) : file.file;
 }
 
 function removeExt(file: string): string {
