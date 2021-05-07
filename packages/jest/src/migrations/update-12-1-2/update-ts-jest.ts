@@ -1,59 +1,52 @@
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import {
-  chain,
-  Rule,
-  SchematicContext,
-  Tree,
-} from '@angular-devkit/schematics';
-import { formatFiles, getWorkspace } from '@nrwl/workspace';
-import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
+import { formatFiles, logger, stripIndents, Tree } from '@nrwl/devkit';
 import { join } from 'path';
+
+import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+import { JestExecutorOptions } from '../../executors/jest/schema';
 import { getJestObject } from '../update-10-0-0/require-jest-config';
 import {
   addPropertyToJestConfig,
   removePropertyFromJestConfig,
-} from '../utils/config/legacy/update-config';
+} from '../../utils/config/update-config';
 
-function updateJestConfig(): Rule {
-  return async (host: Tree, context: SchematicContext) => {
-    const workspace = await getWorkspace(host);
+function updateJestConfig(tree: Tree) {
+  forEachExecutorOptions<JestExecutorOptions>(
+    tree,
+    '@nrwl/jest:jest',
+    (options, project) => {
+      if (!options.jestConfig) {
+        return;
+      }
 
-    for (const [projectName, project] of workspace.projects) {
-      for (const [, target] of project.targets) {
-        if (target.builder !== '@nrwl/jest:jest') {
-          continue;
-        }
+      const jestConfigPath = options.jestConfig;
+      const config = getJestObject(join(tree.root, jestConfigPath));
+      const tsJestConfig = config.globals?.['ts-jest'];
+      if (!(tsJestConfig && tsJestConfig.tsConfig)) {
+        return;
+      }
 
-        const jestConfigPath = target.options.jestConfig as string;
-        const config = getJestObject(join(appRootPath, jestConfigPath));
-        const tsJestConfig = config.globals && config.globals['ts-jest'];
-
-        if (!(tsJestConfig && tsJestConfig.tsConfig)) {
-          continue;
-        }
-
-        try {
-          removePropertyFromJestConfig(
-            host,
-            jestConfigPath,
-            'globals.ts-jest.tsConfig'
-          );
-          addPropertyToJestConfig(
-            host,
-            jestConfigPath,
-            'globals.ts-jest.tsconfig',
-            tsJestConfig.tsConfig
-          );
-        } catch {
-          context.logger.error(
-            stripIndents`Unable to update jest.config.js for project ${projectName}.`
-          );
-        }
+      try {
+        removePropertyFromJestConfig(
+          tree,
+          jestConfigPath,
+          'globals.ts-jest.tsConfig'
+        );
+        addPropertyToJestConfig(
+          tree,
+          jestConfigPath,
+          'globals.ts-jest.tsconfig',
+          tsJestConfig.tsConfig
+        );
+      } catch {
+        logger.error(
+          stripIndents`Unable to update jest.config.js for project ${project}.`
+        );
       }
     }
-  };
+  );
 }
 
-export default function update(): Rule {
-  return chain([updateJestConfig(), formatFiles()]);
+export default async function update(tree: Tree) {
+  updateJestConfig(tree);
+  await formatFiles(tree);
 }
