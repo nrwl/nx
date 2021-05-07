@@ -4,7 +4,7 @@ module.exports = {
   displayName: 'nx-dev-data-access-menu',
   globals: {
     'ts-jest': {
-      tsConfig: '<rootDir>/tsconfig.spec.json',
+      tsconfig: '<rootDir>/tsconfig.spec.json',
     },
   },
   transform: {
