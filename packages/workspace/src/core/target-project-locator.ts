@@ -70,6 +70,12 @@ export class TargetProjectLocator {
       }
     }
 
+    // try to find npm package before using expensive typescript resolution
+    const npmProject = this.findNpmPackage(importExpr);
+    if (npmProject || this.npmResolutionCache.has(importExpr)) {
+      return npmProject;
+    }
+
     let resolvedModule: string;
     if (this.typescriptResolutionCache.has(normalizedImportExpr)) {
       resolvedModule = this.typescriptResolutionCache.get(normalizedImportExpr);
@@ -104,11 +110,12 @@ export class TargetProjectLocator {
       return importedProject.name;
     }
 
-    const npmProject = this.findNpmPackage(importExpr);
-    return npmProject ? npmProject : null;
+    // nothing found, cache for later
+    this.npmResolutionCache.set(importExpr, undefined);
+    return null;
   }
 
-  private findNpmPackage(npmImport: string) {
+  private findNpmPackage(npmImport: string): string | undefined {
     if (this.npmResolutionCache.has(npmImport)) {
       return this.npmResolutionCache.get(npmImport);
     } else {
@@ -117,9 +124,10 @@ export class TargetProjectLocator {
           npmImport === pkg.data.packageName ||
           npmImport.startsWith(`${pkg.data.packageName}/`)
       );
-      const pkgName = pkg ? pkg.name : void 0;
-      this.npmResolutionCache.set(npmImport, pkgName);
-      return pkgName;
+      if (pkg) {
+        this.npmResolutionCache.set(npmImport, pkg.name);
+        return pkg.name;
+      }
     }
   }
 
