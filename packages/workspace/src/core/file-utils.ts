@@ -190,6 +190,10 @@ export function defaultFileRead(filePath: string): string | null {
   return readFileSync(join(appRootPath, filePath), 'utf-8');
 }
 
+export function defaultFileExists(filePath: string): boolean {
+  return existsSync(join(appRootPath, filePath));
+}
+
 export function readPackageJson(): any {
   return readJsonFile(`${appRootPath}/package.json`);
 }

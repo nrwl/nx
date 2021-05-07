@@ -1,5 +1,9 @@
 import { resolveModuleByImport } from '../utilities/typescript';
-import { defaultFileRead, normalizedProjectRoot } from './file-utils';
+import {
+  defaultFileExists,
+  defaultFileRead,
+  normalizedProjectRoot,
+} from './file-utils';
 import { ProjectGraphNode } from './project-graph/project-graph-models';
 import {
   getSortedProjectNodes,
@@ -141,8 +145,9 @@ export class TargetProjectLocator {
 
   private getRootTsConfigPath() {
     try {
-      defaultFileRead('tsconfig.base.json');
-      return 'tsconfig.base.json';
+      return defaultFileExists('tsconfig.base.json')
+        ? 'tsconfig.base.json'
+        : 'tsconfig.json';
     } catch (e) {
       return 'tsconfig.json';
     }

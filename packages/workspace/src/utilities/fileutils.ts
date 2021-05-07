@@ -47,7 +47,11 @@ export function readJsonFile<T = any>(path: string): T {
 }
 
 export function parseJsonWithComments<T = any>(content: string): T {
-  return JSON.parse(stripJsonComments(content));
+  try {
+    return JSON.parse(content);
+  } catch {
+    return JSON.parse(stripJsonComments(content));
+  }
 }
 
 export function writeJsonFile(path: string, json: any) {
