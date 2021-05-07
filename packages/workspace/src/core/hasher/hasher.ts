@@ -12,6 +12,7 @@ import {
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { resolveNewFormatWithInlineProjects } from '@nrwl/tao/src/shared/workspace';
+import { TsconfigJsonConfiguration } from '@nrwl/tao/src/shared/tsconfig';
 
 export interface Hash {
   value: string;
@@ -210,7 +211,6 @@ export class Hasher {
         ...implicitDepsFromPatterns,
 
         //TODO: vsavkin move the special cases into explicit ts support
-        'tsconfig.base.json',
         'package-lock.json',
         'yarn.lock',
         'pnpm-lock.yaml',
@@ -220,13 +220,11 @@ export class Hasher {
         '.nxignore',
       ];
 
-      const fileHashes = [
-        ...fileNames.map((file) => {
-          const hash = this.fileHasher.hashFile(file);
-          return { file, hash };
-        }),
-        ...this.hashGlobalConfig(),
-      ];
+      const fileHashes = fileNames.map((file) => {
+        const hash = this.fileHasher.hashFile(file);
+        return { file, hash };
+      });
+
       const combinedHash = this.hashing.hashArray(
         fileHashes.map((v) => v.hash)
       );
@@ -269,6 +267,7 @@ class ProjectHasher {
   private sourceHashes: { [projectName: string]: Promise<string> } = {};
   private workspaceJson: WorkspaceJsonConfiguration;
   private nxJson: NxJsonConfiguration;
+  private tsConfigJson: TsconfigJsonConfiguration;
 
   constructor(
     private readonly projectGraph: ProjectGraph,
@@ -276,6 +275,7 @@ class ProjectHasher {
   ) {
     this.workspaceJson = this.readWorkspaceConfigFile(workspaceFileName());
     this.nxJson = this.readNxJsonConfigFile('nx.json');
+    this.tsConfigJson = this.readTsConfig();
   }
 
   async hashProject(
@@ -323,17 +323,41 @@ class ProjectHasher {
         );
         const nxJson = JSON.stringify(this.nxJson.projects[projectName] ?? '');
 
+        const { paths, ...compilerOptions } = this.tsConfigJson.compilerOptions;
+
+        const tsConfig = JSON.stringify({
+          compilerOptions: {
+            ...compilerOptions,
+            paths: {
+              [projectName]: paths[projectName] ?? [],
+            },
+          },
+        });
+
         res(
           this.hashing.hashArray([
             ...fileNames,
             ...values,
             workspaceJson,
             nxJson,
+            tsConfig,
           ])
         );
       });
     }
     return this.sourceHashes[projectName];
+  }
+
+  private readTsConfig() {
+    try {
+      const res = readJsonFile('tsconfig.base.json');
+      res.compilerOptions.paths ??= {};
+      return res;
+    } catch {
+      return {
+        compilerOptions: { paths: {} },
+      };
+    }
   }
 
   private readWorkspaceConfigFile(path: string): WorkspaceJsonConfiguration {
