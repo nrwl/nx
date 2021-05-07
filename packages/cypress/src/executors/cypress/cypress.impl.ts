@@ -4,6 +4,7 @@ import {
   ExecutorContext,
   logger,
   parseTargetString,
+  readTargetOptions,
   runExecutor,
   stripIndents,
 } from '@nrwl/devkit';
@@ -115,14 +116,23 @@ async function* startDevServer(
   const { project, target, configuration } = parseTargetString(
     opts.devServerTarget
   );
+  const devServerTargetOpts = readTargetOptions(
+    { project, target, configuration },
+    context
+  );
+  const targetSupportsWatchOpt = Object.keys(devServerTargetOpts).includes(
+    'watch'
+  );
+
   for await (const output of await runExecutor<{
     success: boolean;
     baseUrl?: string;
   }>(
     { project, target, configuration },
-    {
-      watch: opts.watch,
-    },
+    // @NOTE: Do not forward watch option if not supported by the target dev server,
+    // this is relevant for running Cypress against dev server target that does not support this option,
+    // for instance @nguniversal/builders:ssr-dev-server.
+    targetSupportsWatchOpt ? { watch: opts.watch } : {},
     context
   )) {
     if (!output.success && !opts.watch)
