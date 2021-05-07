@@ -151,7 +151,7 @@ function getIgnoredGlobs() {
   return ig;
 }
 
-function readFileIfExisting(path: string) {
+export function readFileIfExisting(path: string) {
   return existsSync(path) ? readFileSync(path, 'utf-8') : '';
 }
 
@@ -188,10 +188,6 @@ export type FileRead = (s: string) => string;
 
 export function defaultFileRead(filePath: string): string | null {
   return readFileSync(join(appRootPath, filePath), 'utf-8');
-}
-
-export function defaultFileExists(filePath: string): boolean {
-  return existsSync(join(appRootPath, filePath));
 }
 
 export function readPackageJson(): any {

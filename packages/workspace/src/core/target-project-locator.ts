@@ -1,9 +1,5 @@
 import { resolveModuleByImport } from '../utilities/typescript';
-import {
-  defaultFileExists,
-  defaultFileRead,
-  normalizedProjectRoot,
-} from './file-utils';
+import { normalizedProjectRoot, readFileIfExisting } from './file-utils';
 import { ProjectGraphNode } from './project-graph/project-graph-models';
 import {
   getSortedProjectNodes,
@@ -30,10 +26,8 @@ export class TargetProjectLocator {
         } as ProjectGraphNode)
     );
   private npmProjects = this.sortedProjects.filter(isNpmProject);
-  private tsConfigPath = this.getRootTsConfigPath();
-  private absTsConfigPath = join(appRootPath, this.tsConfigPath);
-  private paths = parseJsonWithComments(defaultFileRead(this.tsConfigPath))
-    ?.compilerOptions?.paths;
+  private tsConfig = this.getRootTsConfig();
+  private paths = this.tsConfig.config?.compilerOptions?.paths;
   private typescriptResolutionCache = new Map<string, string | null>();
   private npmResolutionCache = new Map<string, string | null>();
 
@@ -87,7 +81,7 @@ export class TargetProjectLocator {
       resolvedModule = resolveModuleByImport(
         normalizedImportExpr,
         filePath,
-        this.absTsConfigPath
+        this.tsConfig.absolutePath
       );
       this.typescriptResolutionCache.set(
         normalizedImportExpr,
@@ -143,13 +137,15 @@ export class TargetProjectLocator {
     return importedProject ? importedProject.name : void 0;
   }
 
-  private getRootTsConfigPath() {
-    try {
-      return defaultFileExists('tsconfig.base.json')
-        ? 'tsconfig.base.json'
-        : 'tsconfig.json';
-    } catch (e) {
-      return 'tsconfig.json';
+  private getRootTsConfig() {
+    let path = 'tsconfig.base.json';
+    let absolutePath = join(appRootPath, path);
+    let content = readFileIfExisting(absolutePath);
+    if (!content) {
+      path = 'tsconfig.json';
+      absolutePath = join(appRootPath, path);
+      content = readFileIfExisting(absolutePath);
     }
+    return { path, absolutePath, config: parseJsonWithComments(content) };
   }
 }
