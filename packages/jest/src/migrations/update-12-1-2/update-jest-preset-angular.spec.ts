@@ -1,10 +1,10 @@
-import { Tree } from '@angular-devkit/schematics';
-import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import { serializeJson } from '@nrwl/workspace';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import * as path from 'path';
+import { addProjectConfiguration, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+
+import update from './update-jest-preset-angular';
+
 import { getJestObject } from '../update-10-0-0/require-jest-config';
-import { jestConfigObject } from '../utils/config/legacy/functions';
+import { jestConfigObject } from '../../utils/config/functions';
 
 jest.mock('../update-10-0-0/require-jest-config');
 const getJestObjectMock = getJestObject as jest.Mock<typeof getJestObject>;
@@ -18,8 +18,7 @@ const jestObject = {
 };
 
 describe('update 12.1.2', () => {
-  let initialTree: Tree;
-  let schematicRunner: SchematicTestRunner;
+  let tree: Tree;
   const jestConfig = String.raw`
     module.exports = ${JSON.stringify(jestObject, null, 2)}
   `;
@@ -31,53 +30,35 @@ describe('update 12.1.2', () => {
       }
     });
 
-    initialTree = createEmptyWorkspace(Tree.empty());
+    tree = createTreeWithEmptyWorkspace();
 
-    initialTree.create('apps/products/jest.config.js', jestConfig);
-    initialTree.create(
+    tree.write('apps/products/jest.config.js', jestConfig);
+    tree.write(
       'apps/products/src/test-setup.ts',
       `import 'jest-preset-angular';`
     );
-    initialTree.overwrite(
-      'workspace.json',
-      serializeJson({
-        version: 1,
-        projects: {
-          products: {
-            root: 'apps/products',
-            sourceRoot: 'apps/products/src',
-            architect: {
-              build: {
-                builder: '@angular-devkit/build-angular:browser',
-              },
-              test: {
-                builder: '@nrwl/jest:jest',
-                options: {
-                  jestConfig: 'apps/products/jest.config.js',
-                  passWithNoTests: true,
-                },
-              },
-            },
+    addProjectConfiguration(tree, 'products', {
+      root: 'apps/products',
+      sourceRoot: 'apps/products/src',
+      targets: {
+        build: {
+          executor: '@angular-devkit/build-angular:browser',
+        },
+        test: {
+          executor: '@nrwl/jest:jest',
+          options: {
+            jestConfig: 'apps/products/jest.config.js',
+            passWithNoTests: true,
           },
         },
-      })
-    );
-
-    schematicRunner = new SchematicTestRunner(
-      '@nrwl/jest',
-      path.join(__dirname, '../../../migrations.json')
-    );
+      },
+    });
   });
 
   it('should update the jest.config files', async () => {
-    await schematicRunner
-      .runSchematicAsync('update-jest-preset-angular-8-4-0', {}, initialTree)
-      .toPromise();
+    await update(tree);
 
-    const jestObject = jestConfigObject(
-      initialTree,
-      'apps/products/jest.config.js'
-    );
+    const jestObject = jestConfigObject(tree, 'apps/products/jest.config.js');
 
     expect(jestObject.snapshotSerializers).toEqual([
       'jest-preset-angular/build/serializers/no-ng-attributes',
@@ -87,11 +68,9 @@ describe('update 12.1.2', () => {
   });
 
   it('should update the test-setup files', async () => {
-    await schematicRunner
-      .runSchematicAsync('update-jest-preset-angular-8-4-0', {}, initialTree)
-      .toPromise();
+    await update(tree);
 
-    const testSetup = initialTree
+    const testSetup = tree
       .read('apps/products/src/test-setup.ts')
       .toString('utf-8')
       .trim();
