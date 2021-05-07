@@ -85,7 +85,7 @@ function getServeConfig(options: NormalizedSchema): TargetConfiguration {
 function addProject(tree: Tree, options: NormalizedSchema) {
   const project: ProjectConfiguration & NxJsonProjectConfiguration = {
     root: options.appProjectRoot,
-    sourceRoot: join(options.appProjectRoot, 'src'),
+    sourceRoot: joinPathFragments(options.appProjectRoot, 'src'),
     projectType: 'application',
     targets: {},
     tags: options.parsedTags,
