@@ -67,38 +67,18 @@ describe('executor: tsc', () => {
     expect(result).toBe(expectedResult);
   });
 
-  describe('copy assets', () => {
-    it('should not copy assets when typescript compilation is not successful', async () => {
-      compileTypeScriptMock.mockReturnValue({ success: false });
+  it('should copy assets before typescript compilation', async () => {
+    await tscExecutor(options, context);
 
-      await tscExecutor(options, context);
-
-      expect(copyAssets).not.toHaveBeenCalled();
-    });
-
-    it('should copy assets when typescript compilation is successful', async () => {
-      compileTypeScriptMock.mockReturnValue({ success: true });
-
-      await tscExecutor(options, context);
-
-      expect(copyAssets).toHaveBeenCalledWith(
-        assets,
-        context.root,
-        normalizedOptions.outputPath
-      );
-    });
+    expect(copyAssets).toHaveBeenCalledWith(
+      assets,
+      context.root,
+      normalizedOptions.outputPath
+    );
   });
 
   describe('update package.json', () => {
-    it('should not update package.json when typescript compilation is not successful', async () => {
-      compileTypeScriptMock.mockReturnValue({ success: false });
-
-      await tscExecutor(options, context);
-
-      expect(writeJsonFile).not.toHaveBeenCalled();
-    });
-
-    it('should update the package.json when typescript compilation is successful and both main and typings are missing', async () => {
+    it('should update the package.json when both main and typings are missing', async () => {
       compileTypeScriptMock.mockReturnValue({ success: true });
 
       await tscExecutor(options, context);
@@ -113,7 +93,7 @@ describe('executor: tsc', () => {
       );
     });
 
-    it('should update the package.json when typescript compilation is successful and only main is missing', async () => {
+    it('should update the package.json when only main is missing', async () => {
       compileTypeScriptMock.mockReturnValue({ success: true });
       const packageJson = {
         ...defaultPackageJson,
@@ -132,7 +112,7 @@ describe('executor: tsc', () => {
       );
     });
 
-    it('should update the package.json when typescript compilation is successful and only typings is missing', async () => {
+    it('should update the package.json when only typings is missing', async () => {
       compileTypeScriptMock.mockReturnValue({ success: true });
       const packageJson = {
         ...defaultPackageJson,
@@ -151,7 +131,7 @@ describe('executor: tsc', () => {
       );
     });
 
-    it('should not update the package.json when typescript compilation is successful and both main and typings are specified', async () => {
+    it('should not update the package.json when both main and typings are specified', async () => {
       compileTypeScriptMock.mockReturnValue({ success: true });
       readJsonFileMock.mockReturnValue({
         ...defaultPackageJson,

@@ -15,7 +15,7 @@ export interface TypeScriptCompilationOptions {
 
 export function compileTypeScript(
   options: TypeScriptCompilationOptions
-): { success: boolean } {
+): { success: boolean } | Promise<any> {
   const normalizedOptions = normalizeOptions(options);
 
   if (normalizedOptions.deleteOutputPath) {
@@ -64,16 +64,14 @@ function createProgram(
   }
 }
 
-function createWatchProgram(
-  tsconfig: ts.ParsedCommandLine
-): { success: boolean } {
+function createWatchProgram(tsconfig: ts.ParsedCommandLine): Promise<any> {
   const host = ts.createWatchCompilerHost(
     tsconfig.fileNames,
     tsconfig.options,
     ts.sys
   );
   ts.createWatchProgram(host);
-  return { success: true };
+  return new Promise(() => {});
 }
 
 function normalizeOptions(
