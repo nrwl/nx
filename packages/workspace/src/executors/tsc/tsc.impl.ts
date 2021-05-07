@@ -12,23 +12,19 @@ export async function tscExecutor(
   const normalizedOptions = normalizeOptions(options, context);
   const projectRoot = context.workspace.projects[context.projectName].root;
 
-  const result = compileTypeScript({
+  await copyAssets(
+    normalizedOptions.assets,
+    context.root,
+    normalizedOptions.outputPath
+  );
+  updatePackageJson(normalizedOptions, projectRoot);
+
+  return compileTypeScript({
     outputPath: normalizedOptions.outputPath,
     projectName: context.projectName,
     projectRoot,
     tsConfig: normalizedOptions.tsConfig,
   });
-
-  if (result.success) {
-    await copyAssets(
-      normalizedOptions.assets,
-      context.root,
-      normalizedOptions.outputPath
-    );
-    updatePackageJson(normalizedOptions, projectRoot);
-  }
-
-  return result;
 }
 
 function getMainFileDirRelativeToProjectRoot(
