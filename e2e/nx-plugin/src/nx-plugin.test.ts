@@ -92,7 +92,6 @@ describe('Nx Plugin', () => {
     expect(buildResults).toContain('Done compiling TypeScript files');
     checkFilesExist(
       `dist/libs/${plugin}/src/migrations/update-${version}/update-${version}.js`,
-      `dist/libs/${plugin}/src/migrations/update-${version}/update-${version}.ts`,
       `libs/${plugin}/src/migrations/update-${version}/update-${version}.ts`
     );
     const migrationsJson = readJson(`libs/${plugin}/migrations.json`);
@@ -133,8 +132,7 @@ describe('Nx Plugin', () => {
       `libs/${plugin}/src/generators/${generator}/generator.spec.ts`,
       `dist/libs/${plugin}/src/generators/${generator}/schema.d.ts`,
       `dist/libs/${plugin}/src/generators/${generator}/schema.json`,
-      `dist/libs/${plugin}/src/generators/${generator}/generator.js`,
-      `dist/libs/${plugin}/src/generators/${generator}/generator.spec.ts`
+      `dist/libs/${plugin}/src/generators/${generator}/generator.js`
     );
     const generatorJson = readJson(`libs/${plugin}/generators.json`);
     expect(generatorJson).toMatchObject({
@@ -171,8 +169,7 @@ describe('Nx Plugin', () => {
       `libs/${plugin}/src/executors/${executor}/executor.spec.ts`,
       `dist/libs/${plugin}/src/executors/${executor}/schema.d.ts`,
       `dist/libs/${plugin}/src/executors/${executor}/schema.json`,
-      `dist/libs/${plugin}/src/executors/${executor}/executor.js`,
-      `dist/libs/${plugin}/src/executors/${executor}/executor.spec.ts`
+      `dist/libs/${plugin}/src/executors/${executor}/executor.js`
     );
     const executorsJson = readJson(`libs/${plugin}/executors.json`);
     expect(executorsJson).toMatchObject({
