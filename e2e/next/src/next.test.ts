@@ -354,14 +354,22 @@ describe('Next.js Applications', () => {
         future: {
           // Nx doesn't support webpack 5 yet
           webpack5: false,
+        },
+        webpack: (c) => {
+          console.log('NODE_ENV is', process.env.NODE_ENV);
+          return c;
         }
       }
       `
     );
-
-    runCLI(`build ${appName}`);
+    // deleting `NODE_ENV` value, so that it's `undefined`, and not `"test"`
+    // by the time it reaches the build executor.
+    // this simulates existing behaviour of running a next.js build executor via Nx
+    delete process.env.NODE_ENV;
+    const result = runCLI(`build ${appName}`);
 
     checkFilesExist(`dist/apps/${appName}/next.config.js`);
+    expect(result).toContain('NODE_ENV is production');
   }, 120000);
 
   it('should support --js flag', async () => {
