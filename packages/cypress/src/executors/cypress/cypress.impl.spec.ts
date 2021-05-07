@@ -29,6 +29,9 @@ describe('Cypress builder', () => {
     ReturnType<typeof installedCypressVersion>
   > = installedCypressVersion as any;
   mockContext = { root: '/root', workspace: { projects: {} } } as any;
+  (devkit as any).readTargetOptions = jest.fn().mockReturnValue({
+    watch: true,
+  });
   let runExecutor: any;
 
   beforeEach(async () => {
@@ -284,5 +287,39 @@ describe('Cypress builder', () => {
         },
       })
     );
+  });
+
+  it('should not forward watch option to devServerTarget when not supported', async () => {
+    // Simulate a dev server target that does not support watch option.
+    (devkit as any).readTargetOptions = jest.fn().mockReturnValue({});
+
+    const { success } = await cypressExecutor(cypressOptions, mockContext);
+
+    expect(success).toEqual(true);
+    expect((devkit as any).readTargetOptions.mock.calls[0][0]).toEqual(
+      expect.objectContaining({
+        project: 'my-app',
+        target: 'serve',
+      })
+    );
+    expect(Object.keys(runExecutor.mock.calls[0][1])).not.toContain('watch');
+  });
+
+  it('should forward watch option to devServerTarget when supported', async () => {
+    // Simulate a dev server target that support watch option.
+    (devkit as any).readTargetOptions = jest
+      .fn()
+      .mockReturnValue({ watch: true });
+
+    const { success } = await cypressExecutor(cypressOptions, mockContext);
+
+    expect(success).toEqual(true);
+    expect((devkit as any).readTargetOptions.mock.calls[0][0]).toEqual(
+      expect.objectContaining({
+        project: 'my-app',
+        target: 'serve',
+      })
+    );
+    expect(Object.keys(runExecutor.mock.calls[0][1])).toContain('watch');
   });
 });
