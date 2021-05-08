@@ -369,9 +369,14 @@
         "type": "string"
       },
       "default": []
+    },
+    "targetBuilder": {
+      "description": "Override default Angular browser builder",
+      "type": "string",
+      "default": "@angular-devkit/build-angular:browser"
     }
   },
-  "additionalProperties": false,
+  "additionalProperties": true,
   "required": ["outputPath", "index", "main", "tsConfig"],
   "definitions": {
     "assetPattern": {
