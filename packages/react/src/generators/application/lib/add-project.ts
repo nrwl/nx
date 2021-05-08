@@ -64,7 +64,7 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
               ),
             ],
       scripts: [],
-      webpackConfig: '@nrwl/react/plugins/webpack',
+      webpackConfig: '@nrwl/react/plugins/webpack-v2',
     },
     configurations: {
       production: {
