@@ -26,6 +26,14 @@ Type: `string`
 
 Target which builds the application
 
+### hmr
+
+Default: `false`
+
+Type: `boolean`
+
+Enable hot module replacement.
+
 ### host
 
 Default: `localhost`

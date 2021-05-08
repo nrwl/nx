@@ -7,7 +7,7 @@ import { readFileSync } from 'fs';
 import * as path from 'path';
 
 import { getWebConfig } from './web.config';
-import { Configuration } from 'webpack';
+import { Configuration, HotModuleReplacementPlugin } from 'webpack';
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { WebDevServerOptions } from '../builders/dev-server/dev-server.impl';
 import { buildServePath } from './serve-path';
@@ -31,6 +31,10 @@ export function getDevServerConfig(
     serveOptions,
     buildOptions
   );
+  webpackConfig.plugins = [
+    ...(webpackConfig.plugins || []),
+    getHmrPlugin(serveOptions),
+  ].filter(Boolean);
 
   return webpackConfig;
 }
@@ -85,7 +89,8 @@ function getDevServerPartial(
     publicPath: servePath,
     contentBase: false,
     allowedHosts: [],
-    liveReload: options.liveReload,
+    liveReload: options.hmr ? false : options.liveReload, // disable liveReload if hmr is enabled
+    hot: options.hmr,
   };
 
   if (options.ssl && options.sslKey && options.sslCert) {
@@ -113,4 +118,8 @@ function getSslConfig(root: string, options: WebDevServerOptions) {
 function getProxyConfig(root: string, options: WebDevServerOptions) {
   const proxyPath = path.resolve(root, options.proxyConfig as string);
   return require(proxyPath);
+}
+
+function getHmrPlugin(options: WebDevServerOptions) {
+  return options.hmr && new HotModuleReplacementPlugin();
 }

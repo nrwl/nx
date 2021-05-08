@@ -278,9 +278,11 @@ describe('app', () => {
     expect(targetConfig.serve.executor).toEqual('@nrwl/web:dev-server');
     expect(targetConfig.serve.options).toEqual({
       buildTarget: 'my-app:build',
+      hmr: true,
     });
     expect(targetConfig.serve.configurations.production).toEqual({
       buildTarget: 'my-app:build:production',
+      hmr: false,
     });
   });
 

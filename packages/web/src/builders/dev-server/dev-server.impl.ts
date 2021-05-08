@@ -35,6 +35,7 @@ export interface WebDevServerOptions {
   buildTarget: string;
   open: boolean;
   liveReload: boolean;
+  hmr: boolean;
   watch: boolean;
   allowedHosts: string;
   maxWorkers?: number;
