@@ -9,6 +9,7 @@ import {
 } from '../core/project-graph';
 import { Rule } from './nxEnforceModuleBoundariesRule';
 import { TargetProjectLocator } from '../core/target-project-locator';
+import { mapProjectGraphFiles } from '../utils/runtime-lint-utils';
 
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('../utilities/app-root', () => ({ appRootPath: '/root' }));
@@ -1181,7 +1182,7 @@ function runRule(
     options,
     `${process.cwd()}/proj`,
     'mycompany',
-    projectGraph,
+    mapProjectGraphFiles(projectGraph),
     new TargetProjectLocator(projectGraph.nodes)
   );
   return rule.apply(sourceFile);

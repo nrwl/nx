@@ -1,9 +1,5 @@
 import { ProjectGraphBuilder } from './project-graph-builder';
-import {
-  ProjectGraph,
-  ProjectGraphNode,
-  ProjectGraphNodeRecords,
-} from './project-graph-models';
+import { ProjectGraph, ProjectGraphNode } from './project-graph-models';
 
 const reverseMemo = new Map<ProjectGraph, ProjectGraph>();
 
@@ -49,19 +45,21 @@ export function filterNodes(
   };
 }
 
-export function isWorkspaceProject(project: ProjectGraphNode) {
+export function isWorkspaceProject(project: ProjectGraphNode<any, any>) {
   return (
     project.type === 'app' || project.type === 'lib' || project.type === 'e2e'
   );
 }
 
 export function isNpmProject(
-  project: ProjectGraphNode
+  project: ProjectGraphNode<any, any>
 ): project is ProjectGraphNode<{ packageName: string; version: string }> {
   return project.type === 'npm';
 }
 
-export function getSortedProjectNodes(nodes: ProjectGraphNodeRecords) {
+export function getSortedProjectNodes(
+  nodes: Record<string, ProjectGraphNode<any, any>>
+) {
   return Object.values(nodes).sort((nodeA, nodeB) => {
     // If a or b is not a nx project, leave them in the same spot
     if (!isWorkspaceProject(nodeA) && !isWorkspaceProject(nodeB)) {

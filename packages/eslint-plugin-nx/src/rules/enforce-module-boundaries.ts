@@ -9,6 +9,7 @@ import {
   hasNoneOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
   isRelativeImportIntoAnotherProject,
+  mapProjectGraphFiles,
   matchImportWithWildcard,
   onlyLoadChildren,
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
@@ -17,7 +18,7 @@ import {
   TSESTree,
 } from '@typescript-eslint/experimental-utils';
 import { createESLintRule } from '../utils/create-eslint-rule';
-import { normalizePath } from '@nrwl/devkit';
+import { normalizePath, FileData } from '@nrwl/devkit';
 import {
   isNpmProject,
   ProjectGraph,
@@ -129,7 +130,9 @@ export default createESLintRule<Options, MessageIds>({
     }
 
     const npmScope = (global as any).npmScope;
-    const projectGraph = (global as any).projectGraph as ProjectGraph;
+    const projectGraph = mapProjectGraphFiles(
+      (global as any).projectGraph as ProjectGraph
+    );
 
     if (!(global as any).targetProjectLocator) {
       (global as any).targetProjectLocator = new TargetProjectLocator(

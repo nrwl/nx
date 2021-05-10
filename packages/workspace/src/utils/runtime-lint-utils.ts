@@ -15,23 +15,15 @@ export type DepConstraint = {
   onlyDependOnLibsWithTags: string[];
 };
 
-export function hasNoneOfTheseTags(proj: ProjectGraphNode, tags: string[]) {
+export function hasNoneOfTheseTags(
+  proj: ProjectGraphNode<any, any>,
+  tags: string[]
+) {
   return tags.filter((allowedTag) => hasTag(proj, allowedTag)).length === 0;
 }
 
 function hasTag(proj: ProjectGraphNode, tag: string) {
   return (proj.data.tags || []).indexOf(tag) > -1 || tag === '*';
-}
-
-function containsFile(
-  files: FileData[],
-  targetFileWithoutExtension: string
-): boolean {
-  return files.some((f) => trimExt(f) === targetFileWithoutExtension);
-}
-
-function trimExt(file: FileData) {
-  return file.ext ? file.file.slice(0, -file.ext.length) : file.file;
 }
 
 function removeExt(file: string): string {
@@ -67,9 +59,9 @@ export function isRelative(s: string) {
 export function isRelativeImportIntoAnotherProject(
   imp: string,
   projectPath: string,
-  projectGraph: ProjectGraph,
+  projectGraph: ProjectGraph<any, any>,
   sourceFilePath: string,
-  sourceProject: ProjectGraphNode
+  sourceProject: ProjectGraphNode<any, any>
 ): boolean {
   if (!isRelative(imp)) return false;
 
@@ -81,14 +73,15 @@ export function isRelativeImportIntoAnotherProject(
   return sourceProject && targetProject && sourceProject !== targetProject;
 }
 
-export function findProjectUsingFile(projectGraph: ProjectGraph, file: string) {
-  return Object.values(projectGraph.nodes).find((n) =>
-    containsFile(n.data.files, file)
-  );
+export function findProjectUsingFile(
+  projectGraph: ProjectGraph<any, Record<string, FileData>>,
+  file: string
+): ProjectGraphNode<any, Record<string, FileData>> {
+  return Object.values(projectGraph.nodes).find((n) => n.data.files[file]);
 }
 
 export function findSourceProject(
-  projectGraph: ProjectGraph,
+  projectGraph: ProjectGraph<any, Record<string, FileData>>,
   sourceFilePath: string
 ) {
   const targetFile = removeExt(sourceFilePath);
@@ -96,7 +89,7 @@ export function findSourceProject(
 }
 
 export function findTargetProject(
-  projectGraph: ProjectGraph,
+  projectGraph: ProjectGraph<any, Record<string, FileData>>,
   targetFile: string
 ) {
   let targetProject = findProjectUsingFile(projectGraph, targetFile);
@@ -126,7 +119,7 @@ export function isAbsoluteImportIntoAnotherProject(imp: string) {
 }
 
 export function findProjectUsingImport(
-  projectGraph: ProjectGraph,
+  projectGraph: ProjectGraph<any, Record<string, FileData>>,
   targetProjectLocator: TargetProjectLocator,
   filePath: string,
   imp: string,
@@ -142,13 +135,13 @@ export function findProjectUsingImport(
 
 export function findConstraintsFor(
   depConstraints: DepConstraint[],
-  sourceProject: ProjectGraphNode
+  sourceProject: ProjectGraphNode<any, any>
 ) {
   return depConstraints.filter((f) => hasTag(sourceProject, f.sourceTag));
 }
 
 export function onlyLoadChildren(
-  graph: ProjectGraph,
+  graph: ProjectGraph<any, any>,
   sourceProjectName: string,
   targetProjectName: string,
   visited: string[]
@@ -174,11 +167,45 @@ export function getSourceFilePath(sourceFileName: string, projectPath: string) {
  * Verifies whether the given node has an architect builder attached
  * @param projectGraph the node to verify
  */
-export function hasBuildExecutor(projectGraph: ProjectGraphNode): boolean {
+export function hasBuildExecutor(
+  projectGraph: ProjectGraphNode<any, any>
+): boolean {
   return (
     // can the architect not be defined? real use case?
     projectGraph.data.targets &&
     projectGraph.data.targets.build &&
     projectGraph.data.targets.build.executor !== ''
   );
+}
+
+export function mapProjectGraphFiles<T>(
+  projectGraph: ProjectGraph<T>
+): ProjectGraph<T, Record<string, FileData>> {
+  if (!projectGraph) {
+    return;
+  }
+  const nodes = Object.entries(projectGraph.nodes).reduce(
+    (acc, [name, node]) => ({
+      ...acc,
+      [name]: {
+        ...node,
+        data: {
+          ...node.data,
+          files: node.data.files.reduce(
+            (files, { file, hash, ext }) => ({
+              ...files,
+              [file.slice(0, -ext.length)]: { file, hash, ext },
+            }),
+            {}
+          ),
+        },
+      },
+    }),
+    {}
+  );
+
+  return {
+    ...projectGraph,
+    nodes,
+  };
 }

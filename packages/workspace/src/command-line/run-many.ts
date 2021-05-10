@@ -80,7 +80,7 @@ function applyExclude(
 }
 
 function applyOnlyFailed(
-  projectsNotExcluded: Record<string, ProjectGraphNode<any>>,
+  projectsNotExcluded: Record<string, ProjectGraphNode>,
   nxArgs: NxArgs,
   env: Environment
 ) {

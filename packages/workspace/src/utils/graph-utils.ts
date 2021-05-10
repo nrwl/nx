@@ -5,7 +5,7 @@ import {
 import { isWorkspaceProject } from '../core/project-graph/operators';
 
 interface Reach {
-  graph: ProjectGraph;
+  graph: ProjectGraph<any, any>;
   matrix: Record<string, Array<string>>;
   adjList: Record<string, Array<string>>;
 }
@@ -16,7 +16,7 @@ const reach: Reach = {
   adjList: null,
 };
 
-function buildMatrix(graph: ProjectGraph) {
+function buildMatrix(graph: ProjectGraph<any, any>) {
   const dependencies = graph.dependencies;
   const nodes = Object.keys(graph.nodes).filter((s) =>
     isWorkspaceProject(graph.nodes[s])
@@ -65,10 +65,10 @@ function buildMatrix(graph: ProjectGraph) {
 }
 
 export function getPath(
-  graph: ProjectGraph,
+  graph: ProjectGraph<any, any>,
   sourceProjectName: string,
   targetProjectName: string
-): Array<ProjectGraphNode> {
+): Array<ProjectGraphNode<any, any>> {
   if (sourceProjectName === targetProjectName) return [];
 
   if (reach.graph !== graph) {
@@ -109,10 +109,10 @@ export function getPath(
 }
 
 export function checkCircularPath(
-  graph: ProjectGraph,
-  sourceProject: ProjectGraphNode,
-  targetProject: ProjectGraphNode
-): Array<ProjectGraphNode> {
+  graph: ProjectGraph<any, any>,
+  sourceProject: ProjectGraphNode<any, any>,
+  targetProject: ProjectGraphNode<any, any>
+): Array<ProjectGraphNode<any, any>> {
   if (!graph.nodes[targetProject.name]) return [];
   return getPath(graph, targetProject.name, sourceProject.name);
 }

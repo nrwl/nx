@@ -149,7 +149,7 @@ function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {
 }
 
 function applyExclude(
-  projects: Record<string, ProjectGraphNode<any>>,
+  projects: Record<string, ProjectGraphNode>,
   nxArgs: NxArgs
 ) {
   return Object.keys(projects)
@@ -161,7 +161,7 @@ function applyExclude(
 }
 
 function applyOnlyFailed(
-  projectsNotExcluded: Record<string, ProjectGraphNode<any>>,
+  projectsNotExcluded: Record<string, ProjectGraphNode>,
   nxArgs: NxArgs,
   env: Environment
 ) {

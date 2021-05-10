@@ -13,11 +13,12 @@ import {
   hasNoneOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
   isRelativeImportIntoAnotherProject,
+  mapProjectGraphFiles,
   matchImportWithWildcard,
   onlyLoadChildren,
 } from '../utils/runtime-lint-utils';
 import { normalize } from 'path';
-import { readNxJson } from '@nrwl/workspace/src/core/file-utils';
+import { FileData, readNxJson } from '@nrwl/workspace/src/core/file-utils';
 import { TargetProjectLocator } from '../core/target-project-locator';
 import { checkCircularPath } from '@nrwl/workspace/src/utils/graph-utils';
 import { readCurrentProjectGraph } from '@nrwl/workspace/src/core/project-graph/project-graph';
@@ -28,7 +29,7 @@ export class Rule extends Lint.Rules.AbstractRule {
     options: IOptions,
     private readonly projectPath?: string,
     private readonly npmScope?: string,
-    private readonly projectGraph?: ProjectGraph,
+    private readonly projectGraph?: ProjectGraph<any, Record<string, FileData>>,
     private readonly targetProjectLocator?: TargetProjectLocator
   ) {
     super(options);
@@ -41,7 +42,9 @@ export class Rule extends Lint.Rules.AbstractRule {
         (global as any).projectGraph = readCurrentProjectGraph();
       }
       this.npmScope = (global as any).npmScope;
-      this.projectGraph = (global as any).projectGraph;
+      this.projectGraph = mapProjectGraphFiles(
+        (global as any).projectGraph as ProjectGraph
+      );
 
       if (!(global as any).targetProjectLocator && this.projectGraph) {
         (global as any).targetProjectLocator = new TargetProjectLocator(
@@ -78,7 +81,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     options: IOptions,
     private readonly projectPath: string,
     private readonly npmScope: string,
-    private readonly projectGraph: ProjectGraph,
+    private readonly projectGraph: ProjectGraph<any, Record<string, FileData>>,
     private readonly targetProjectLocator: TargetProjectLocator
   ) {
     super(sourceFile, options);
