@@ -1,16 +1,15 @@
 import { ProjectGraph } from '../core/project-graph';
 import { Task } from './tasks-runner';
-import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { getDependencyConfigs } from './utils';
-import { performance } from 'perf_hooks';
 import { TargetDependencyConfig } from '@nrwl/tao/src/shared/workspace';
 
-interface TaskGraph {
+export interface TaskGraph {
+  roots: string[];
   tasks: Record<string, Task>;
   dependencies: Record<string, string[]>;
 }
 
-export class TaskOrderer {
+export class TaskGraphCreator {
   constructor(
     private readonly projectGraph: ProjectGraph,
     private readonly defaultTargetDependencies: Record<
@@ -19,55 +18,9 @@ export class TaskOrderer {
     >
   ) {}
 
-  splitTasksIntoStages(tasks: Task[]) {
-    if (tasks.length === 0) return [];
-
-    const stages: Task[][] = [];
-    performance.mark('ordering tasks:start');
-    const taskGraph = this.createTaskGraph(tasks);
-    const notStagedTaskIds = new Set<string>(tasks.map((t) => t.id));
-    let stageIndex = 0;
-
-    // Loop through tasks and try to stage them. As tasks are staged, they are removed from the loop
-    while (notStagedTaskIds.size > 0) {
-      const currentStage = (stages[stageIndex] = []);
-      for (const taskId of notStagedTaskIds) {
-        let ready = true;
-        for (const dependency of taskGraph.dependencies[taskId]) {
-          if (notStagedTaskIds.has(dependency)) {
-            // dependency has not been staged yet, this task is not ready to be staged.
-            ready = false;
-            break;
-          }
-        }
-
-        // Some dependency still has not been staged, skip it for now, it will be processed again
-        if (!ready) {
-          continue;
-        }
-
-        // All the dependencies have been staged, let's stage it.
-        const task = taskGraph.tasks[taskId];
-        currentStage.push(task);
-      }
-
-      // Remove the entire new stage of tasks from the list
-      for (const task of currentStage) {
-        notStagedTaskIds.delete(task.id);
-      }
-      stageIndex++;
-    }
-    performance.mark('ordering tasks:end');
-    performance.measure(
-      'ordering tasks',
-      'ordering tasks:start',
-      'ordering tasks:end'
-    );
-    return stages;
-  }
-
-  private createTaskGraph(tasks: Task[]): TaskGraph {
+  createTaskGraph(tasks: Task[]): TaskGraph {
     const graph: TaskGraph = {
+      roots: [],
       tasks: {},
       dependencies: {},
     };
@@ -112,6 +65,11 @@ export class TaskOrderer {
         }
       }
     }
+
+    graph.roots = Object.keys(graph.dependencies).filter(
+      (k) => graph.dependencies[k].length === 0
+    );
+
     return graph;
   }
 }

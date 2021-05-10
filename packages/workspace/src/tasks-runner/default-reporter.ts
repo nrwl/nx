@@ -91,20 +91,27 @@ export class DefaultReporter implements Reporter {
         });
       }
     } else {
-      const bodyLines = [
-        output.colors.gray('Tasks not run because earlier stages failed:'),
-        '',
-        ...tasksWithFailedDependencies.map(
-          (task) => `${output.colors.gray('-')} ${task.id}`
-        ),
-        '',
+      const bodyLines = [];
+      if (tasksWithFailedDependencies.length > 0) {
+        bodyLines.push(
+          output.colors.gray(
+            'Tasks not run because their dependencies failed:'
+          ),
+          '',
+          ...tasksWithFailedDependencies.map(
+            (task) => `${output.colors.gray('-')} ${task.id}`
+          ),
+          ''
+        );
+      }
+      bodyLines.push(
         output.colors.gray('Failed tasks:'),
         '',
-        ...failedTasks.map((task) => `${output.colors.gray('-')} ${task.id}`),
-      ];
+        ...failedTasks.map((task) => `${output.colors.gray('-')} ${task.id}`)
+      );
       if (!args.onlyFailed && !startedWithFailedProjects) {
-        bodyLines.push('');
         bodyLines.push(
+          '',
           `${output.colors.gray(
             'You can isolate the above projects by passing:'
           )} ${output.bold('--only-failed')}`

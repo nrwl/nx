@@ -54,6 +54,7 @@ function createValidRunBuilderOptions(
     maxWarnings: -1,
     noEslintrc: false,
     quiet: false,
+    hasTypeAwareRules: false,
     ...additionalOptions,
   };
 }

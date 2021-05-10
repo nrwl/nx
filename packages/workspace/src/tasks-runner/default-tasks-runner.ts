@@ -7,10 +7,11 @@ import {
 } from './tasks-runner';
 import { ProjectGraph } from '../core/project-graph';
 import { NxJson } from '../core/shared-interfaces';
-import { TaskOrderer } from './task-orderer';
 import { TaskOrchestrator } from './task-orchestrator';
 import { getDefaultDependencyConfigs } from './utils';
 import { performance } from 'perf_hooks';
+import { TaskGraphCreator } from './task-graph-creator';
+import { Hasher } from '@nrwl/workspace/src/core/hasher/hasher';
 
 export interface RemoteCache {
   retrieve: (hash: string, cacheDirectory: string) => Promise<boolean>;
@@ -100,55 +101,35 @@ async function runAllTasks(
     context.nxJson,
     options
   );
-  const stages = new TaskOrderer(
+
+  const taskGraph = new TaskGraphCreator(
     context.projectGraph,
     defaultTargetDependencies
-  ).splitTasksIntoStages(tasks);
+  ).createTaskGraph(tasks);
 
-  performance.mark('task-orderer-done');
+  performance.mark('task-graph-created');
 
-  performance.measure('nx-prep-work', 'init-local', 'task-orderer-done');
+  performance.measure('nx-prep-work', 'init-local', 'task-graph-created');
   performance.measure(
     'graph-creation',
     'command-execution-begins',
-    'task-orderer-done'
+    'task-graph-created'
   );
 
+  const hasher = new Hasher(context.projectGraph, context.nxJson, options);
+
   const orchestrator = new TaskOrchestrator(
+    hasher,
     context.initiatingProject,
     context.projectGraph,
+    taskGraph,
     options,
     context.hideCachedOutput
   );
 
-  const res = [];
-  for (let i = 0; i < stages.length; ++i) {
-    const tasksInStage = stages[i];
-    const statuses = await orchestrator.run(tasksInStage);
-    res.push(...statuses);
-
-    // any task failed, we need to skip further stages
-    if (statuses.find((s) => !s.success)) {
-      res.push(...markStagesWithFailingPrequisite(stages.splice(i + 1)));
-      return res;
-    }
-  }
+  const res = await orchestrator.run();
   printTaskExecution(orchestrator);
   return res;
-}
-
-function markStagesWithFailingPrequisite(stages: Task[][]) {
-  return stages.reduce(
-    (m, c) => [...m, ...createTaskWithFailingprerequisite(c)],
-    []
-  );
-}
-
-function createTaskWithFailingprerequisite(tasks: Task[]) {
-  return tasks.map((task) => ({
-    task,
-    type: AffectedEventType.TaskDependencyFailed,
-  }));
 }
 
 export default defaultTasksRunner;

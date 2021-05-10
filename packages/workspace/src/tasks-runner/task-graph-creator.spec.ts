@@ -1,22 +1,25 @@
-import { TaskOrderer } from './task-orderer';
-import { DependencyType } from '../core/project-graph';
 import { createTasksForProjectToRun } from './run-command';
-import { ProjectGraph } from '@nrwl/devkit';
+import { DependencyType, ProjectGraph } from '@nrwl/devkit';
+import { TaskGraphCreator } from './task-graph-creator';
 
-describe('TaskStages', () => {
+describe('TaskGraphCreator', () => {
   it('should return empty for an empty array', () => {
-    const stages = new TaskOrderer(
+    const empty = new TaskGraphCreator(
       {
         nodes: {},
         dependencies: {},
       },
       {}
-    ).splitTasksIntoStages([]);
-    expect(stages).toEqual([]);
+    ).createTaskGraph([]);
+    expect(empty).toEqual({
+      roots: [],
+      tasks: {},
+      dependencies: {},
+    });
   });
 
-  it('should split tasks into stages based on their dependencies', () => {
-    const stages = new TaskOrderer(
+  it('should order tasks based on project dependencies', () => {
+    const taskGraph = new TaskGraphCreator(
       {
         nodes: {
           child1: { type: 'lib' },
@@ -56,7 +59,7 @@ describe('TaskStages', () => {
           },
         ],
       }
-    ).splitTasksIntoStages([
+    ).createTaskGraph([
       {
         id: 'parent:build',
         target: { project: 'parent', target: 'build' },
@@ -75,34 +78,25 @@ describe('TaskStages', () => {
       },
     ] as any);
 
-    expect(stages).toEqual([
-      [
-        {
-          id: 'child1:build',
-          target: { project: 'child1', target: 'build' },
-        },
-        {
-          id: 'child2:build',
-          target: { project: 'child2', target: 'build' },
-        },
-      ],
-      [
-        {
-          id: 'parent:build',
-          target: { project: 'parent', target: 'build' },
-        },
-      ],
-      [
-        {
-          id: 'grandparent:build',
-          target: { project: 'grandparent', target: 'build' },
-        },
-      ],
+    expect(taskGraph.roots).toEqual(['child1:build', 'child2:build']);
+
+    expect(Object.keys(taskGraph.tasks)).toEqual([
+      'parent:build',
+      'child1:build',
+      'child2:build',
+      'grandparent:build',
     ]);
+
+    expect(taskGraph.dependencies).toEqual({
+      'child1:build': [],
+      'child2:build': [],
+      'grandparent:build': ['parent:build'],
+      'parent:build': ['child1:build', 'child2:build'],
+    });
   });
 
   it('should support custom targets that require strict ordering', () => {
-    const stages = new TaskOrderer(
+    const taskGraph = new TaskGraphCreator(
       {
         nodes: {
           child1: { type: 'lib', data: { targets: { custom: {} } } },
@@ -127,7 +121,7 @@ describe('TaskStages', () => {
           },
         ],
       }
-    ).splitTasksIntoStages([
+    ).createTaskGraph([
       {
         id: 'parent:custom',
         target: { project: 'parent', target: 'custom' },
@@ -138,22 +132,19 @@ describe('TaskStages', () => {
       },
     ] as any);
 
-    expect(stages).toEqual([
-      [
-        {
-          id: 'child1:custom',
-          target: { project: 'child1', target: 'custom' },
-        },
-      ],
-      [
-        {
-          id: 'parent:custom',
-          target: { project: 'parent', target: 'custom' },
-        },
-      ],
+    expect(taskGraph.roots).toEqual(['child1:custom']);
+
+    expect(Object.keys(taskGraph.tasks)).toEqual([
+      'parent:custom',
+      'child1:custom',
     ]);
 
-    const noStages = new TaskOrderer(
+    expect(taskGraph.dependencies).toEqual({
+      'child1:custom': [],
+      'parent:custom': ['child1:custom'],
+    });
+
+    const noDeps = new TaskGraphCreator(
       {
         nodes: {
           child1: { type: 'lib', data: { targets: { custom: {} } } },
@@ -171,7 +162,7 @@ describe('TaskStages', () => {
         },
       },
       {}
-    ).splitTasksIntoStages([
+    ).createTaskGraph([
       {
         id: 'parent:custom',
         target: { project: 'parent', target: 'custom' },
@@ -182,97 +173,7 @@ describe('TaskStages', () => {
       },
     ] as any);
 
-    expect(noStages).toEqual([
-      [
-        {
-          id: 'parent:custom',
-          target: { project: 'parent', target: 'custom' },
-        },
-        {
-          id: 'child1:custom',
-          target: { project: 'child1', target: 'custom' },
-        },
-      ],
-    ]);
-  });
-
-  it('should split tasks into stages based on their dependencies when there are unrelated packages', () => {
-    const stages = new TaskOrderer(
-      {
-        nodes: {
-          app1: { type: 'lib' },
-          app2: { type: 'lib' },
-          common1: { type: 'lib' },
-          common2: { type: 'lib' },
-        } as any,
-        dependencies: {
-          app1: [
-            {
-              source: 'app1',
-              target: 'common1',
-              type: DependencyType.static,
-            },
-          ],
-          app2: [
-            {
-              source: 'app2',
-              target: 'common2',
-              type: DependencyType.static,
-            },
-          ],
-          common1: [],
-          common2: [],
-        },
-      },
-      {
-        build: [
-          {
-            target: 'build',
-            projects: 'dependencies',
-          },
-        ],
-      }
-    ).splitTasksIntoStages([
-      {
-        id: 'app1:build',
-        target: { project: 'app1', target: 'build' },
-      },
-      {
-        id: 'app2:build',
-        target: { project: 'app2', target: 'build' },
-      },
-      {
-        id: 'common1:build',
-        target: { project: 'common1', target: 'build' },
-      },
-      {
-        id: 'common2:build',
-        target: { project: 'common2', target: 'build' },
-      },
-    ] as any);
-
-    expect(stages).toEqual([
-      [
-        {
-          id: 'common1:build',
-          target: { project: 'common1', target: 'build' },
-        },
-        {
-          id: 'common2:build',
-          target: { project: 'common2', target: 'build' },
-        },
-      ],
-      [
-        {
-          id: 'app1:build',
-          target: { project: 'app1', target: 'build' },
-        },
-        {
-          id: 'app2:build',
-          target: { project: 'app2', target: 'build' },
-        },
-      ],
-    ]);
+    expect(noDeps.roots).toEqual(['parent:custom', 'child1:custom']);
   });
 
   describe('(tasks with dependency configurations)', () => {
@@ -374,7 +275,7 @@ describe('TaskStages', () => {
       };
     });
 
-    it('should split tasks into stages (builds depend on build of dependencies)', () => {
+    it('should create task graph (builds depend on build of dependencies)', () => {
       const tasks = createTasksForProjectToRun(
         [projectGraph.nodes.app1, projectGraph.nodes.app2],
         {
@@ -386,16 +287,14 @@ describe('TaskStages', () => {
         null
       );
 
-      const stages = new TaskOrderer(projectGraph, {}).splitTasksIntoStages(
+      const taskGraph = new TaskGraphCreator(projectGraph, {}).createTaskGraph(
         tasks
       );
 
-      // lib builds should be in their own stage
-      // app builds should be in a later stage
-      expect(stages).toMatchSnapshot();
+      expect(taskGraph).toMatchSnapshot();
     });
 
-    it('should split tasks into stages  (builds depend on build of dependencies and prebuild of self)', () => {
+    it('should create task graph (builds depend on build of dependencies and prebuild of self)', () => {
       projectGraph.nodes.app1.data.targets.prebuild = {};
       projectGraph.nodes.app2.data.targets.prebuild = {};
       projectGraph.nodes.app1.data.targets.build.dependsOn.push({
@@ -416,16 +315,14 @@ describe('TaskStages', () => {
         projectGraph,
         null
       );
-      const stages = new TaskOrderer(projectGraph, {}).splitTasksIntoStages(
+      const taskGraph = new TaskGraphCreator(projectGraph, {}).createTaskGraph(
         tasks
       );
 
-      // lib builds with the prebuild tasks in a stage
-      // app builds should be in a later stage
-      expect(stages).toMatchSnapshot();
+      expect(taskGraph).toMatchSnapshot();
     });
 
-    it('should split tasks into stages  (builds depend on build of dependencies and prebuild of self, prebuilds depends on build of dependencies)', () => {
+    it('should create task graph (builds depend on build of dependencies, builds depend on prebuilds)', () => {
       projectGraph.nodes.app1.data.targets.prebuild = {
         dependsOn: [
           {
@@ -460,17 +357,14 @@ describe('TaskStages', () => {
         projectGraph,
         null
       );
-      const stages = new TaskOrderer(projectGraph, {}).splitTasksIntoStages(
+      const taskGraph = new TaskGraphCreator(projectGraph, {}).createTaskGraph(
         tasks
       );
 
-      // lib builds in the first stage
-      // app prebuilds in the next stage
-      // app builds in the last stage
-      expect(stages).toMatchSnapshot();
+      expect(taskGraph).toMatchSnapshot();
     });
 
-    it('should split tasks into stages  (builds depend on build of dependencies, builds depend on prebuilds)', () => {
+    it('should create task graph (builds depend on build of dependencies, builds depend on prebuilds)', () => {
       projectGraph.nodes.common1.data.targets = projectGraph.nodes.common2.data.targets = {
         prebuild: {},
         build: {
@@ -507,14 +401,11 @@ describe('TaskStages', () => {
         null
       );
 
-      const stages = new TaskOrderer(projectGraph, {}).splitTasksIntoStages(
+      const taskGraph = new TaskGraphCreator(projectGraph, {}).createTaskGraph(
         tasks
       );
 
-      // lib prebuilds in the first stage
-      // lib builds in the next stage
-      // app builds in the last stage
-      expect(stages).toMatchSnapshot();
+      expect(taskGraph).toMatchSnapshot();
     });
   });
 });
