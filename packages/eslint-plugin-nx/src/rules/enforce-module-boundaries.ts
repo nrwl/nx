@@ -170,12 +170,14 @@ export default createESLintRule<Options, MessageIds>({
       }
 
       // check for relative and absolute imports
+      const sourceProject = findSourceProject(projectGraph, sourceFilePath);
       if (
         isRelativeImportIntoAnotherProject(
           imp,
           projectPath,
           projectGraph,
-          sourceFilePath
+          sourceFilePath,
+          sourceProject
         ) ||
         isAbsoluteImportIntoAnotherProject(imp)
       ) {
@@ -189,7 +191,6 @@ export default createESLintRule<Options, MessageIds>({
         return;
       }
 
-      const sourceProject = findSourceProject(projectGraph, sourceFilePath);
       const targetProject = findProjectUsingImport(
         projectGraph,
         targetProjectLocator,

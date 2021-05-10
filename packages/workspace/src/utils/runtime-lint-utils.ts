@@ -68,7 +68,8 @@ export function isRelativeImportIntoAnotherProject(
   imp: string,
   projectPath: string,
   projectGraph: ProjectGraph,
-  sourceFilePath: string
+  sourceFilePath: string,
+  sourceProject: ProjectGraphNode
 ): boolean {
   if (!isRelative(imp)) return false;
 
@@ -76,7 +77,6 @@ export function isRelativeImportIntoAnotherProject(
     path.resolve(path.join(projectPath, path.dirname(sourceFilePath)), imp)
   ).substring(projectPath.length + 1);
 
-  const sourceProject = findSourceProject(projectGraph, sourceFilePath);
   const targetProject = findTargetProject(projectGraph, targetFile);
   return sourceProject && targetProject && sourceProject !== targetProject;
 }

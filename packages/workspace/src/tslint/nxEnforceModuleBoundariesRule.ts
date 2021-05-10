@@ -109,16 +109,20 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       return;
     }
 
+    const filePath = getSourceFilePath(
+      this.getSourceFile().fileName,
+      this.projectPath
+    );
+    const sourceProject = findSourceProject(this.projectGraph, filePath);
+
     // check for relative and absolute imports
     if (
       isRelativeImportIntoAnotherProject(
         imp,
         this.projectPath,
         this.projectGraph,
-        getSourceFilePath(
-          normalize(this.getSourceFile().fileName),
-          this.projectPath
-        )
+        filePath,
+        sourceProject
       ) ||
       isAbsoluteImportIntoAnotherProject(imp)
     ) {
@@ -130,12 +134,6 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       return;
     }
 
-    const filePath = getSourceFilePath(
-      this.getSourceFile().fileName,
-      this.projectPath
-    );
-
-    const sourceProject = findSourceProject(this.projectGraph, filePath);
     const targetProject = findProjectUsingImport(
       this.projectGraph,
       this.targetProjectLocator,
