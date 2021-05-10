@@ -160,7 +160,7 @@ export default createESLintRule<Options, MessageIds>({
       const imp = node.source.value as string;
 
       const sourceFilePath = getSourceFilePath(
-        normalizePath(context.getFilename()),
+        context.getFilename(),
         projectPath
       );
 
