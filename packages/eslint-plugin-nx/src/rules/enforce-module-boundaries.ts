@@ -159,15 +159,15 @@ export default createESLintRule<Options, MessageIds>({
 
       const imp = node.source.value as string;
 
-      const sourceFilePath = getSourceFilePath(
-        context.getFilename(),
-        projectPath
-      );
-
       // whitelisted import
       if (allow.some((a) => matchImportWithWildcard(a, imp))) {
         return;
       }
+
+      const sourceFilePath = getSourceFilePath(
+        context.getFilename(),
+        projectPath
+      );
 
       // check for relative and absolute imports
       const sourceProject = findSourceProject(projectGraph, sourceFilePath);
