@@ -1,6 +1,5 @@
-import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
+import type { ProjectGraph, ProjectGraphNode, Task } from '@nrwl/devkit';
 import type { Environment } from '../core/shared-interfaces';
-import type { Task } from '../tasks-runner/tasks-runner';
 import { createTask } from '../tasks-runner/run-command';
 import { getCommandAsString, getOutputs } from '../tasks-runner/utils';
 import * as yargs from 'yargs';

@@ -9,8 +9,10 @@ export type {
   GeneratorCallback,
   Executor,
   ExecutorContext,
+  TaskGraphExecutor,
   Workspace,
 } from '@nrwl/tao/src/shared/workspace';
+export type { Task, TaskGraph } from '@nrwl/tao/src/shared/tasks';
 export type {
   ImplicitDependencyEntry,
   ImplicitJsonSubsetDependency,

@@ -8,6 +8,7 @@ import {
 } from '../shared/params';
 import { printHelp } from '../shared/print-help';
 import {
+  Executor,
   ExecutorContext,
   ProjectConfiguration,
   TargetConfiguration,
@@ -220,7 +221,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
   );
 
   if (ws.isNxExecutor(nodeModule, executor)) {
-    const implementation = implementationFactory();
+    const implementation = implementationFactory() as Executor<any>;
     const r = implementation(combinedOptions, {
       root,
       target: targetConfig,

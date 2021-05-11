@@ -1,6 +1,6 @@
 import { output } from '../utilities/output';
 import { Reporter, ReporterArgs } from './reporter';
-import { Task } from './tasks-runner';
+import type { Task } from '@nrwl/devkit';
 
 export class RunOneReporter implements Reporter {
   constructor(private readonly initiatingProject: string) {}

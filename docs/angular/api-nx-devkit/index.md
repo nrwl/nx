@@ -34,6 +34,8 @@
 - [Target](../../angular/nx-devkit/index#target)
 - [TargetConfiguration](../../angular/nx-devkit/index#targetconfiguration)
 - [TargetDependencyConfig](../../angular/nx-devkit/index#targetdependencyconfig)
+- [Task](../../angular/nx-devkit/index#task)
+- [TaskGraph](../../angular/nx-devkit/index#taskgraph)
 - [Tree](../../angular/nx-devkit/index#tree)
 - [Workspace](../../angular/nx-devkit/index#workspace)
 - [WorkspaceJsonConfiguration](../../angular/nx-devkit/index#workspacejsonconfiguration)
@@ -47,6 +49,7 @@
 - [PackageManager](../../angular/nx-devkit/index#packagemanager)
 - [ProjectType](../../angular/nx-devkit/index#projecttype)
 - [StringChange](../../angular/nx-devkit/index#stringchange)
+- [TaskGraphExecutor](../../angular/nx-devkit/index#taskgraphexecutor)
 - [WorkspaceConfiguration](../../angular/nx-devkit/index#workspaceconfiguration)
 
 ### Variables
@@ -295,6 +298,22 @@ Target's configuration
 
 ---
 
+### Task
+
+• **Task**: _object_
+
+A representation of the invocation of an Executor
+
+---
+
+### TaskGraph
+
+• **TaskGraph**: _object_
+
+Graph of Tasks to be executed
+
+---
+
 ### Tree
 
 • **Tree**: _object_
@@ -418,6 +437,35 @@ Type of project supported
 Ƭ **StringChange**: [_StringInsertion_](../../angular/nx-devkit/index#stringinsertion) \| [_StringDeletion_](../../angular/nx-devkit/index#stringdeletion)
 
 A change to be made to a string
+
+---
+
+### TaskGraphExecutor
+
+Ƭ **TaskGraphExecutor**<T\>: (`taskGraph`: [_TaskGraph_](../../angular/nx-devkit/index#taskgraph), `options`: _Record_<string, T\>, `overrides`: T, `context`: [_ExecutorContext_](../../angular/nx-devkit/index#executorcontext)) => _Promise_<Record<string, { `success`: _boolean_ ; `terminalOutput`: _string_ }\>\>
+
+Implementation of a target of a project that handles multiple projects to be batched
+
+#### Type parameters
+
+| Name | Default |
+| :--- | :------ |
+| `T`  | _any_   |
+
+#### Type declaration
+
+▸ (`taskGraph`: [_TaskGraph_](../../angular/nx-devkit/index#taskgraph), `options`: _Record_<string, T\>, `overrides`: T, `context`: [_ExecutorContext_](../../angular/nx-devkit/index#executorcontext)): _Promise_<Record<string, { `success`: _boolean_ ; `terminalOutput`: _string_ }\>\>
+
+#### Parameters
+
+| Name        | Type                                                               |
+| :---------- | :----------------------------------------------------------------- |
+| `taskGraph` | [_TaskGraph_](../../angular/nx-devkit/index#taskgraph)             |
+| `options`   | _Record_<string, T\>                                               |
+| `overrides` | T                                                                  |
+| `context`   | [_ExecutorContext_](../../angular/nx-devkit/index#executorcontext) |
+
+**Returns:** _Promise_<Record<string, { `success`: _boolean_ ; `terminalOutput`: _string_ }\>\>
 
 ---
 

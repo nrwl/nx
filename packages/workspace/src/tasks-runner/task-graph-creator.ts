@@ -1,12 +1,10 @@
-import type { ProjectGraph, TargetDependencyConfig } from '@nrwl/devkit';
-import { Task } from './tasks-runner';
+import type {
+  ProjectGraph,
+  TargetDependencyConfig,
+  Task,
+  TaskGraph,
+} from '@nrwl/devkit';
 import { getDependencyConfigs } from './utils';
-
-export interface TaskGraph {
-  roots: string[];
-  tasks: Record<string, Task>;
-  dependencies: Record<string, string[]>;
-}
 
 export class TaskGraphCreator {
   constructor(

@@ -1,5 +1,5 @@
 import { appRootPath } from '../utilities/app-root';
-import { Task } from './tasks-runner';
+import { Task } from '@nrwl/devkit';
 import {
   existsSync,
   mkdirSync,

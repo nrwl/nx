@@ -1,5 +1,4 @@
-import { Task } from '@nrwl/workspace/src/tasks-runner/tasks-runner';
-import { TaskGraph } from '@nrwl/workspace/src/tasks-runner/task-graph-creator';
+import { Task, TaskGraph } from '@nrwl/devkit';
 import { Hash, Hasher } from '@nrwl/workspace/src/core/hasher/hasher';
 import { readJsonFile } from '@nrwl/workspace/src/utilities/fileutils';
 import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
