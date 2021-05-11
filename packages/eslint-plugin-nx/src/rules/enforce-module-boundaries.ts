@@ -64,6 +64,7 @@ export default createESLintRule<Options, MessageIds>({
         type: 'object',
         properties: {
           enforceBuildableLibDependency: { type: 'boolean' },
+          allowCircularSelfDependency: { type: 'boolean' },
           allow: [{ type: 'string' }],
           depConstraints: [
             {
