@@ -305,6 +305,14 @@ Type: `boolean`
 
 Enables the use of subresource integrity validation.
 
+### targetBuilder
+
+Default: `@angular-devkit/build-angular:browser`
+
+Type: `string`
+
+Override default Angular browser builder
+
 ### tsConfig
 
 Type: `string`
