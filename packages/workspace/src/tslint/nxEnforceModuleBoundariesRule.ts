@@ -1,12 +1,7 @@
 import * as Lint from 'tslint';
 import { IOptions } from 'tslint';
 import * as ts from 'typescript';
-import {
-  createProjectGraph,
-  isNpmProject,
-  ProjectGraph,
-  ProjectType,
-} from '../core/project-graph';
+import { isNpmProject, ProjectGraph, ProjectType } from '../core/project-graph';
 import { appRootPath } from '../utilities/app-root';
 import {
   DepConstraint,
@@ -26,6 +21,7 @@ import { readNxJson } from '@nrwl/workspace/src/core/file-utils';
 import { TargetProjectLocator } from '../core/target-project-locator';
 import { checkCircularPath } from '@nrwl/workspace/src/utils/graph-utils';
 import { readCurrentProjectGraph } from '@nrwl/workspace/src/core/project-graph/project-graph';
+import { isRelativePath } from '../utilities/fileutils';
 
 export class Rule extends Lint.Rules.AbstractRule {
   constructor(
@@ -75,6 +71,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
   private readonly allow: string[];
   private readonly enforceBuildableLibDependency: boolean = false; // for backwards compat
   private readonly depConstraints: DepConstraint[];
+  private readonly allowCircularSelfDependency: boolean = false;
 
   constructor(
     sourceFile: ts.SourceFile,
@@ -96,6 +93,9 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
 
     this.enforceBuildableLibDependency =
       this.getOptions()[0].enforceBuildableLibDependency === true;
+
+    this.allowCircularSelfDependency =
+      this.getOptions()[0].allowCircularSelfDependency === true;
   }
 
   public visitImportDeclaration(node: ts.ImportDeclaration) {
@@ -152,7 +152,12 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
 
     // same project => allow
     if (sourceProject === targetProject) {
-      super.visitImportDeclaration(node);
+      if (!this.allowCircularSelfDependency && !isRelativePath(imp)) {
+        const error = `Only relative imports are allowed within the project. Absolute import found: ${imp}`;
+        this.addFailureAt(node.getStart(), node.getWidth(), error);
+      } else {
+        super.visitImportDeclaration(node);
+      }
       return;
     }
 
