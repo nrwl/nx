@@ -24,11 +24,15 @@ describe('getDocumentsPath', () => {
   });
 
   it('should support latest', () => {
-    expect(getDocumentsRoot('latest')).toMatch(/archive\/\d+\.\d+\.\d+/);
+    expect(getDocumentsRoot('latest')).toMatch(
+      /nx-dev\/nx-dev\/public\/documentation\/\d+\.\d+\.\d+/
+    );
   });
 
   it('should support previous', () => {
-    expect(getDocumentsRoot('previous')).toMatch(/archive\/\d+\.\d+\.\d+/);
+    expect(getDocumentsRoot('previous')).toMatch(
+      /nx-dev\/nx-dev\/public\/documentation\/\d+\.\d+\.\d+/
+    );
   });
 });
 

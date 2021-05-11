@@ -50,7 +50,11 @@ export async function getStaticProps({ params }: DocumentationParams) {
     props: {
       version:
         versions.find((item) => item.id === params.version) ||
-        ({ name: 'Latest', id: 'latest' } as any),
+        ({
+          name: 'Preview',
+          id: 'preview',
+          path: 'preview',
+        } as VersionMetadata),
       flavor: flavorList.find((item) => item.value === params.flavor) || {
         label: 'React',
         value: 'react',
