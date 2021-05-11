@@ -19,12 +19,16 @@ export interface RemoteCache {
 }
 
 export interface LifeCycle {
+  scheduleTask?(task: Task): void;
+
   startTask(task: Task): void;
 
   endTask(task: Task, code: number): void;
 }
 
 class NoopLifeCycle implements LifeCycle {
+  scheduleTask(task: Task): void {}
+
   startTask(task: Task): void {}
 
   endTask(task: Task, code: number): void {}

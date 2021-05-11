@@ -8,30 +8,31 @@ export default async function run(
   taskGraph: TaskGraph,
   hasher: Hasher
 ): Promise<Hash> {
-  if (task.overrides['hasTypeAwareRules'] === true) {
-    return hasher.hashTaskWithDepsAndContext(task);
-  }
-  const sources = await hasher.hashSource(task);
-  const deps = allDeps(task.id, taskGraph);
-  const nxJson = readJsonFile('nx.json');
-  const tags = deps
-    .map((d) => (nxJson.projects[d].tags || []).join('|'))
-    .join('|');
-  const context = await hasher.hashContext();
-  return {
-    value: hasher.hashArray([
-      sources,
-      tags,
-      context.implicitDeps.value,
-      context.runtime.value,
-    ]),
-    details: {
-      command: null,
-      runtime: context.runtime.runtime,
-      implicitDeps: context.implicitDeps.sources,
-      sources: { [task.target.project]: sources },
-    },
-  };
+  return hasher.hashTaskWithDepsAndContext(task);
+  // if (task.overrides['hasTypeAwareRules'] === true) {
+  //   return hasher.hashTaskWithDepsAndContext(task);
+  // }
+  // const sources = await hasher.hashSource(task);
+  // const deps = allDeps(task.id, taskGraph);
+  // const nxJson = readJsonFile('nx.json');
+  // const tags = deps
+  //   .map((d) => (nxJson.projects[d].tags || []).join('|'))
+  //   .join('|');
+  // const context = await hasher.hashContext();
+  // return {
+  //   value: hasher.hashArray([
+  //     sources,
+  //     tags,
+  //     context.implicitDeps.value,
+  //     context.runtime.value,
+  //   ]),
+  //   details: {
+  //     command: null,
+  //     runtime: context.runtime.runtime,
+  //     implicitDeps: context.implicitDeps.sources,
+  //     sources: { [task.target.project]: sources },
+  //   },
+  // };
 }
 
 function allDeps(taskId: string, taskGraph: TaskGraph) {

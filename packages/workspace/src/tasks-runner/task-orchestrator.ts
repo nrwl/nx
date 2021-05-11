@@ -20,10 +20,10 @@ export class TaskOrchestrator {
   completedTasks: {
     [id: string]: 'success' | 'failure' | 'skipped' | 'cache';
   } = {};
-  scheduledTasks: {
+  inProgressTasks: {
     [id: string]: boolean;
   } = {};
-  availableTasks: string[] = [];
+  scheduledTasks: string[] = [];
   waitingForTasks: Function[] = [];
   reverseTaskDeps: Record<string, string[]> = {};
 
@@ -43,7 +43,7 @@ export class TaskOrchestrator {
   async run() {
     this.calculateReverseDeps();
     for (let root of this.taskGraph.roots) {
-      await this.pushAvailableTask(root);
+      await this.scheduleTask(root);
     }
     performance.mark('task-execution-begins');
     const res = await this.runTasks();
@@ -69,9 +69,9 @@ export class TaskOrchestrator {
     });
   }
 
-  private nextAvailableTask() {
-    if (this.availableTasks.length > 0) {
-      return this.taskGraph.tasks[this.availableTasks.pop()];
+  private nextTask() {
+    if (this.scheduledTasks.length > 0) {
+      return this.taskGraph.tasks[this.scheduledTasks.pop()];
     } else {
       return null;
     }
@@ -86,9 +86,9 @@ export class TaskOrchestrator {
       const everyTaskDependingOnTaskId = this.reverseTaskDeps[taskId];
       for (let t of everyTaskDependingOnTaskId) {
         if (this.allDepsAreSuccessful(t)) {
-          await this.pushAvailableTask(t);
+          await this.scheduleTask(t);
         } else if (this.allDepsAreCompleted(t)) {
-          await this.complete(taskId, 'skipped');
+          await this.complete(t, 'skipped');
         }
       }
     }
@@ -97,24 +97,18 @@ export class TaskOrchestrator {
     this.waitingForTasks.length = 0;
   }
 
-  private async pushAvailableTask(taskId: string) {
-    if (!this.scheduledTasks[taskId]) {
-      this.scheduledTasks[taskId] = true;
+  private async scheduleTask(taskId: string) {
+    if (!this.inProgressTasks[taskId]) {
+      this.inProgressTasks[taskId] = true;
       const task = this.taskGraph.tasks[taskId];
       const { value, details } = await this.hashTask(task);
       task.hash = value;
       task.hashDetails = details;
 
-      const doNotSkipCache =
-        this.options.skipNxCache === false ||
-        this.options.skipNxCache === undefined;
-
-      const cachedResult = await this.cache.get(task);
-      if (cachedResult && cachedResult.code === 0 && doNotSkipCache) {
-        this.applyCachedResult({ task, cachedResult });
-        await this.complete(taskId, 'cache');
-      } else {
-        this.availableTasks.push(taskId);
+      this.scheduledTasks.push(taskId);
+      // TODO vsavkin: remove the if statement after Nx 14 is out
+      if (this.options.lifeCycle.scheduleTask) {
+        this.options.lifeCycle.scheduleTask(task);
       }
     }
   }
@@ -158,13 +152,25 @@ export class TaskOrchestrator {
         return null;
       }
 
-      const task = that.nextAvailableTask();
+      const task = that.nextTask();
       if (!task) {
         // block until some other task completes, then try again
         return new Promise((res) => that.waitingForTasks.push(res)).then(
           takeFromQueue
         );
       }
+
+      const doNotSkipCache =
+        that.options.skipNxCache === false ||
+        that.options.skipNxCache === undefined;
+
+      const cachedResult = await that.cache.get(task);
+      if (cachedResult && cachedResult.code === 0 && doNotSkipCache) {
+        that.applyCachedResult({ task, cachedResult });
+        await that.complete(task.id, 'cache');
+        return takeFromQueue();
+      }
+
       that.storeStartTime(task);
       try {
         const code = that.pipeOutputCapture(task)
@@ -275,7 +281,8 @@ export class TaskOrchestrator {
       const f = this.readExecutor(task).hasherFactory;
       return f ? f() : null;
     } catch (e) {
-      return null;
+      console.error(e);
+      throw new Error(`Unable to load hasher for task "${task.id}"`);
     }
   }
 
