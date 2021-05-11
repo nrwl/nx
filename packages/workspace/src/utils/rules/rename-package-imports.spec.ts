@@ -1,6 +1,7 @@
 import { Tree } from '@angular-devkit/schematics';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
+import { writeJsonInTree } from '../ast-utils';
 import { callRule, runSchematic, runExternalSchematic } from '../testing';
 import { renamePackageImports } from './rename-package-imports';
 
@@ -10,14 +11,11 @@ describe('renamePackageImports Rule', () => {
   beforeEach(async () => {
     tree = new UnitTestTree(Tree.empty());
     tree = createEmptyWorkspace(tree) as UnitTestTree;
-    tree.overwrite(
-      'package.json',
-      JSON.stringify({
-        dependencies: {
-          'package-to-rename': '1.2.3',
-        },
-      })
-    );
+    writeJsonInTree(tree, 'package.json', {
+      dependencies: {
+        'package-to-rename': '1.2.3',
+      },
+    });
   });
 
   it('should rename package imports', async () => {

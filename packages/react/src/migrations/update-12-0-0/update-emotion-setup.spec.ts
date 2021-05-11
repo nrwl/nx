@@ -1,5 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { readJson, Tree } from '@nrwl/devkit';
+import { readJson, writeJson, Tree } from '@nrwl/devkit';
 import { updateEmotionSetup } from './update-emotion-setup';
 
 describe('Update babel config for emotion', () => {
@@ -10,60 +10,45 @@ describe('Update babel config for emotion', () => {
   });
 
   it(`should add web babel preset if it does not exist`, async () => {
-    tree.write(
-      'workspace.json',
-      JSON.stringify({
-        projects: {
-          'no-emotion-app': {
-            root: 'apps/no-emotion-app',
-            projectType: 'application',
-          },
-          'plain-react-app': {
-            root: 'apps/plain-react-app',
-            projectType: 'application',
-          },
-          'emotion-app': {
-            root: 'apps/emotion-app',
-            projectType: 'application',
-          },
-          'emotion-with-options-app': {
-            root: 'apps/emotion-with-options-app',
-            projectType: 'application',
-          },
+    writeJson(tree, 'workspace.json', {
+      projects: {
+        'no-emotion-app': {
+          root: 'apps/no-emotion-app',
+          projectType: 'application',
         },
-      })
-    );
-    tree.write(
-      'nx.json',
-      JSON.stringify({
-        projects: {
-          'no-emotion-app': {},
-          'plain-react-app': {},
-          'emotion-app': {},
-          'emotion-with-options-app': {},
+        'plain-react-app': {
+          root: 'apps/plain-react-app',
+          projectType: 'application',
         },
-      })
-    );
-    tree.write('apps/no-emotion-app/.babelrc', JSON.stringify({}));
-    tree.write(
-      'apps/plain-react-app/.babelrc',
-      JSON.stringify({
-        presets: ['@nrwl/react/babel'],
-        plugins: ['@babel/whatever'],
-      })
-    );
-    tree.write(
-      'apps/emotion-app/.babelrc',
-      JSON.stringify({ presets: ['@emotion/babel-preset-css-prop'] })
-    );
-    tree.write(
-      'apps/emotion-with-options-app/.babelrc',
-      JSON.stringify({
-        presets: [
-          ['@emotion/babel-preset-css-prop', { autoLabel: 'dev-only' }],
-        ],
-      })
-    );
+        'emotion-app': {
+          root: 'apps/emotion-app',
+          projectType: 'application',
+        },
+        'emotion-with-options-app': {
+          root: 'apps/emotion-with-options-app',
+          projectType: 'application',
+        },
+      },
+    });
+    writeJson(tree, 'nx.json', {
+      projects: {
+        'no-emotion-app': {},
+        'plain-react-app': {},
+        'emotion-app': {},
+        'emotion-with-options-app': {},
+      },
+    });
+    writeJson(tree, 'apps/no-emotion-app/.babelrc', {});
+    writeJson(tree, 'apps/plain-react-app/.babelrc', {
+      presets: ['@nrwl/react/babel'],
+      plugins: ['@babel/whatever'],
+    });
+    writeJson(tree, 'apps/emotion-app/.babelrc', {
+      presets: ['@emotion/babel-preset-css-prop'],
+    });
+    writeJson(tree, 'apps/emotion-with-options-app/.babelrc', {
+      presets: [['@emotion/babel-preset-css-prop', { autoLabel: 'dev-only' }]],
+    });
 
     await updateEmotionSetup(tree);
 
@@ -83,18 +68,15 @@ describe('Update babel config for emotion', () => {
   });
 
   it('should remove `@emotion/babel-preset-css-prop` and add `@emotion/babel-plugin@11.2.0` in `devDependencies', async () => {
-    tree.write(
-      'package.json',
-      JSON.stringify({
-        devDependencies: {
-          '@emotion/babel-preset-css-prop': '11.0.0',
-        },
-      })
-    );
+    writeJson(tree, 'package.json', {
+      devDependencies: {
+        '@emotion/babel-preset-css-prop': '11.0.0',
+      },
+    });
 
     await updateEmotionSetup(tree);
 
-    const json = JSON.parse(tree.read('package.json').toString());
+    const json = readJson(tree, 'package.json');
     expect(json).toEqual({
       devDependencies: {
         '@emotion/babel-plugin': '11.2.0',
@@ -103,18 +85,15 @@ describe('Update babel config for emotion', () => {
   });
 
   it('should remove `@emotion/babel-preset-css-prop` and add `@emotion/babel-plugin@11.2.0` in `dependencies', async () => {
-    tree.write(
-      'package.json',
-      JSON.stringify({
-        dependencies: {
-          '@emotion/babel-preset-css-prop': '11.0.0',
-        },
-      })
-    );
+    writeJson(tree, 'package.json', {
+      dependencies: {
+        '@emotion/babel-preset-css-prop': '11.0.0',
+      },
+    });
 
     await updateEmotionSetup(tree);
 
-    const json = JSON.parse(tree.read('package.json').toString());
+    const json = readJson(tree, 'package.json');
     expect(json).toEqual({
       dependencies: {
         '@emotion/babel-plugin': '11.2.0',

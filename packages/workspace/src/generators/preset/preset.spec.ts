@@ -50,9 +50,9 @@ describe('preset', () => {
     expect(tree.children('apps/proj/src/')).toMatchSnapshot();
     expect(tree.children('apps/proj/src/app')).toMatchSnapshot();
 
-    expect(
-      JSON.parse(tree.read('/workspace.json').toString()).cli.defaultCollection
-    ).toBe('@nrwl/angular');
+    expect(readJson(tree, '/workspace.json').cli.defaultCollection).toBe(
+      '@nrwl/angular'
+    );
   });
 
   it('should create files (preset = web-components)', async () => {

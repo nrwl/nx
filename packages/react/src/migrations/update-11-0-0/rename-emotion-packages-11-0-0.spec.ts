@@ -1,6 +1,6 @@
 import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import { readJsonInTree } from '@nrwl/workspace';
+import { readJsonInTree, writeJsonInTree } from '@nrwl/workspace';
 import * as path from 'path';
 import { createEmptyWorkspace, runSchematic } from '@nrwl/workspace/testing';
 import { emotionReactVersion } from '../../utils/versions';
@@ -16,14 +16,11 @@ describe('Rename Emotion Packages 11.0.0', () => {
       '@nrwl/react',
       path.join(__dirname, '../../../migrations.json')
     );
-    tree.overwrite(
-      'package.json',
-      JSON.stringify({
-        dependencies: {
-          '@emotion/core': '10.1.1',
-        },
-      })
-    );
+    writeJsonInTree(tree, 'package.json', {
+      dependencies: {
+        '@emotion/core': '10.1.1',
+      },
+    });
   });
 
   it(`should update emotion, if used, to the new package names`, async () => {

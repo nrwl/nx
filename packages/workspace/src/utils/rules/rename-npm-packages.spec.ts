@@ -1,14 +1,13 @@
 import { Tree } from '@angular-devkit/schematics';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
-import { readJsonInTree } from '../ast-utils';
+import { readJsonInTree, writeJsonInTree } from '../ast-utils';
 import {
   callRule,
   runSchematic,
   runExternalSchematic,
 } from '../../utils/testing';
 import { createEmptyWorkspace } from '../../../testing';
-
-import { renameNpmPackages, PackageRenameMapping } from './rename-npm-packages';
+import { renameNpmPackages } from './rename-npm-packages';
 
 describe('renameNpmPackages Rule', () => {
   let tree: UnitTestTree;
@@ -19,14 +18,11 @@ describe('renameNpmPackages Rule', () => {
   });
 
   it('should rename an npm package in both package.json and any file that imports it', async () => {
-    tree.overwrite(
-      'package.json',
-      JSON.stringify({
-        dependencies: {
-          'package-to-rename': '1.2.3',
-        },
-      })
-    );
+    writeJsonInTree(tree, 'package.json', {
+      dependencies: {
+        'package-to-rename': '1.2.3',
+      },
+    });
     tree = await runSchematic('lib', { name: 'library-1' }, tree);
 
     const moduleThatImports = 'libs/library-1/src/importer.ts';
@@ -56,14 +52,11 @@ describe('renameNpmPackages Rule', () => {
   });
 
   it('should accept a new version that will also be updated in the package.json when renamed', async () => {
-    tree.overwrite(
-      'package.json',
-      JSON.stringify({
-        dependencies: {
-          'package-to-rename': '1.2.3',
-        },
-      })
-    );
+    writeJsonInTree(tree, 'package.json', {
+      dependencies: {
+        'package-to-rename': '1.2.3',
+      },
+    });
 
     tree = (await callRule(
       renameNpmPackages({ 'package-to-rename': ['@package/renamed', '9.9.9'] }),
@@ -79,17 +72,14 @@ describe('renameNpmPackages Rule', () => {
   });
 
   it('should rename multiple npm packages if more are passed in the PackageRenameMapping', async () => {
-    tree.overwrite(
-      'package.json',
-      JSON.stringify({
-        dependencies: {
-          'package-to-rename': '1.2.3',
-        },
-        devDependencies: {
-          '@old/packageName': '0.0.1',
-        },
-      })
-    );
+    writeJsonInTree(tree, 'package.json', {
+      dependencies: {
+        'package-to-rename': '1.2.3',
+      },
+      devDependencies: {
+        '@old/packageName': '0.0.1',
+      },
+    });
 
     tree = await runSchematic('lib', { name: 'library-1' }, tree);
     tree = await runSchematic('lib', { name: 'library-2' }, tree);
@@ -177,14 +167,11 @@ describe('renameNpmPackages Rule', () => {
   });
 
   it('should only update libs / apps that import the npm package as a dep', async () => {
-    tree.overwrite(
-      'package.json',
-      JSON.stringify({
-        dependencies: {
-          'package-to-rename': '1.2.3',
-        },
-      })
-    );
+    writeJsonInTree(tree, 'package.json', {
+      dependencies: {
+        'package-to-rename': '1.2.3',
+      },
+    });
 
     tree = await runSchematic('lib', { name: 'library-1' }, tree);
     tree = await runSchematic('lib', { name: 'library-2' }, tree);
@@ -220,17 +207,14 @@ describe('renameNpmPackages Rule', () => {
   });
 
   it('should do nothing if the packages are not found in the package.json', async () => {
-    tree.overwrite(
-      'package.json',
-      JSON.stringify({
-        dependencies: {
-          'not-me': '1.0.0',
-        },
-        devDependencies: {
-          'nor-me': '0.0.2',
-        },
-      })
-    );
+    writeJsonInTree(tree, 'package.json', {
+      dependencies: {
+        'not-me': '1.0.0',
+      },
+      devDependencies: {
+        'nor-me': '0.0.2',
+      },
+    });
 
     tree = (await callRule(
       renameNpmPackages({

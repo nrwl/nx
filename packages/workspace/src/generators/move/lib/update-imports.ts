@@ -8,6 +8,7 @@ import {
   Tree,
   visitNotIgnoredFiles,
   writeJson,
+  readJson,
 } from '@nrwl/devkit';
 import { findNodes } from '../../../utilities/typescript/find-nodes';
 import * as ts from 'typescript';
@@ -38,7 +39,7 @@ export function updateImports(
   let tsConfig: any;
   let fromPath: string;
   if (tree.exists(tsConfigPath)) {
-    tsConfig = JSON.parse(tree.read(tsConfigPath).toString('utf-8'));
+    tsConfig = readJson(tree, tsConfigPath);
     fromPath = Object.keys(tsConfig.compilerOptions.paths).find((path) =>
       tsConfig.compilerOptions.paths[path].some((x) =>
         x.startsWith(project.sourceRoot)

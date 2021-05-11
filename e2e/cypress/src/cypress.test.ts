@@ -2,12 +2,12 @@ import {
   checkFilesExist,
   killPorts,
   newProject,
-  readFile,
   readJson,
   runCLI,
   runCypressTests,
   uniq,
   updateFile,
+  updateJsonFile,
 } from '@nrwl/e2e/utils';
 
 describe('Cypress E2E Test runner', () => {
@@ -51,14 +51,9 @@ describe('Cypress E2E Test runner', () => {
           'All specs passed!'
         );
 
-        const originalContents = JSON.parse(
-          readFile(`apps/${myapp}-e2e/cypress.json`)
-        );
+        const originalContents = readJson(`apps/${myapp}-e2e/cypress.json`);
         delete originalContents.fixturesFolder;
-        updateFile(
-          `apps/${myapp}-e2e/cypress.json`,
-          JSON.stringify(originalContents)
-        );
+        updateJsonFile(`apps/${myapp}-e2e/cypress.json`, originalContents);
 
         expect(runCLI(`e2e ${myapp}-e2e --headless --no-watch`)).toContain(
           'All specs passed!'

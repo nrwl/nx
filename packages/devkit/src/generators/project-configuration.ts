@@ -4,7 +4,7 @@ import {
   toNewFormat,
   WorkspaceJsonConfiguration,
 } from '@nrwl/tao/src/shared/workspace';
-import { readJson, updateJson } from '../utils/json';
+import { readJson, updateJson, writeJson } from '../utils/json';
 import {
   NxJsonConfiguration,
   NxJsonProjectConfiguration,
@@ -253,7 +253,7 @@ function addProjectToWorkspaceJson(
     );
   }
   workspaceJson.projects[projectName] = project;
-  host.write(path, JSON.stringify(workspaceJson, null, 2));
+  writeJson(host, path, workspaceJson);
 }
 
 function addProjectToNxJson(
@@ -273,7 +273,7 @@ function addProjectToNxJson(
       ...(config || {}),
     };
   }
-  host.write('nx.json', JSON.stringify(nxJson, null, 2));
+  writeJson(host, 'nx.json', nxJson);
 }
 
 function readWorkspace(host: Tree): WorkspaceJsonConfiguration {

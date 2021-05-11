@@ -1,6 +1,10 @@
 import { Tree } from '@angular-devkit/schematics';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
-import { readJsonInTree, updateJsonInTree } from '../ast-utils';
+import {
+  readJsonInTree,
+  updateJsonInTree,
+  writeJsonInTree,
+} from '../ast-utils';
 import { callRule } from '../testing';
 import { setDefaultCollection } from './workspace';
 import {
@@ -17,10 +21,11 @@ describe('Workspace', () => {
   beforeEach(() => {
     _test_addWorkspaceFile('workspace.json', WorkspaceFormat.JSON);
     tree = new UnitTestTree(Tree.empty());
-    tree.create(
-      '/workspace.json',
-      JSON.stringify({ version: 1, projects: {}, newProjectRoot: '' })
-    );
+    writeJsonInTree(tree, '/workspace.json', {
+      version: 1,
+      projects: {},
+      newProjectRoot: '',
+    });
   });
 
   describe('setDefaultCollection', () => {

@@ -11,6 +11,7 @@ import {
   ProjectGraphNode,
 } from '../core/project-graph';
 import { appRootPath } from '../utilities/app-root';
+import { writeJsonFile } from '../utilities/fileutils';
 import { output } from '../utilities/output';
 import { workspaceLayout } from '../core/file-utils';
 
@@ -248,18 +249,11 @@ export function generateGraph(
 
       ensureDirSync(dirname(filename));
 
-      writeFileSync(
-        filename,
-        JSON.stringify(
-          {
-            graph,
-            affectedProjects,
-            criticalPath: affectedProjects,
-          },
-          null,
-          2
-        )
-      );
+      writeJsonFile(filename, {
+        graph,
+        affectedProjects,
+        criticalPath: affectedProjects,
+      });
 
       output.success({
         title: `JSON output created in ${folder}`,

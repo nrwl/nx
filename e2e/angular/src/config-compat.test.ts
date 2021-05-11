@@ -10,6 +10,7 @@ import {
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
+import { updateJsonFile } from '../../utils';
 
 describe('new config format', () => {
   beforeEach(() => newProject());
@@ -28,7 +29,7 @@ describe('new config format', () => {
     );
     workspaceJson.generators = workspaceJson.schematics;
     delete workspaceJson.schematics;
-    updateFile('angular.json', JSON.stringify(workspaceJson, null, 2));
+    updateJsonFile('angular.json', workspaceJson);
 
     const myapp2 = uniq('myapp');
     runCLI(`generate @nrwl/angular:app ${myapp2} --no-interactive`);

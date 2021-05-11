@@ -4,6 +4,7 @@ import {
   killPorts,
   newProject,
   readJson,
+  readNxJson,
   runCLI,
   runCLIAsync,
   runCypressTests,
@@ -41,7 +42,7 @@ describe('Nx Plugin', () => {
       `dist/libs/${plugin}/src/executors/build/schema.d.ts`,
       `dist/libs/${plugin}/src/executors/build/schema.json`
     );
-    const nxJson = readJson('nx.json');
+    const nxJson = readNxJson();
     expect(nxJson).toMatchObject({
       projects: expect.objectContaining({
         [plugin]: {
@@ -204,7 +205,7 @@ describe('Nx Plugin', () => {
       runCLI(
         `generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint --tags=e2etag,e2ePackage --importPath=@proj/${plugin}`
       );
-      const nxJson = readJson('nx.json');
+      const nxJson = readNxJson();
       expect(nxJson.projects[plugin].tags).toEqual(['e2etag', 'e2ePackage']);
     }, 90000);
   });

@@ -1,8 +1,11 @@
 import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
+import {
+  readJsonFile,
+  writeJsonFile,
+} from '@nrwl/workspace/src/utilities/fileutils';
 import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { execSync } from 'child_process';
 import { dirname } from 'path';
-import { readFileSync, writeFileSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import { tmpProjPath } from './paths';
 import { cleanup } from './utils';
@@ -26,9 +29,10 @@ export function patchPackageJsonForPlugin(
   npmPackageName: string,
   distPath: string
 ) {
-  const p = JSON.parse(readFileSync(tmpProjPath('package.json'), 'utf-8'));
+  const path = tmpProjPath('package.json');
+  const p = readJsonFile(path);
   p.devDependencies[npmPackageName] = `file:${appRootPath}/${distPath}`;
-  writeFileSync(tmpProjPath('package.json'), JSON.stringify(p, null, 2));
+  writeJsonFile(path, p);
 }
 
 /**

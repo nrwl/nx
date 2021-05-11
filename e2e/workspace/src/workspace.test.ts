@@ -1,4 +1,3 @@
-import { NxJson } from '@nrwl/workspace';
 import {
   getPackageManagerCommand,
   getSelectedPackageManager,
@@ -7,6 +6,7 @@ import {
   newProject,
   readFile,
   readJson,
+  readNxJson,
   removeProject,
   rmDist,
   runCLI,
@@ -15,6 +15,7 @@ import {
   uniq,
   updateFile,
   workspaceConfigName,
+  updateJsonFile,
 } from '@nrwl/e2e/utils';
 import { TaskCacheStatus } from '@nrwl/workspace/src/utilities/output';
 
@@ -129,7 +130,7 @@ describe('run-one', () => {
           projects: 'dependencies',
         },
       ];
-      updateFile('workspace.json', JSON.stringify(workspace));
+      updateJsonFile('workspace.json', workspace);
 
       const output = runCLI(`build ${myapp}`);
       expect(output).toContain(
@@ -144,7 +145,7 @@ describe('run-one', () => {
 
     it('should be able to include deps using target dependencies defined at the root', () => {
       const originalNxJson = readFile('nx.json');
-      const nxJson = readJson('nx.json');
+      const nxJson = readNxJson();
       nxJson.targetDependencies = {
         build: [
           {
@@ -153,7 +154,7 @@ describe('run-one', () => {
           },
         ],
       };
-      updateFile('nx.json', JSON.stringify(nxJson));
+      updateJsonFile('nx.json', nxJson);
 
       const output = runCLI(`build ${myapp}`);
       expect(output).toContain(
@@ -475,11 +476,11 @@ describe('affected (with git)', () => {
   afterAll(() => removeProject({ onlyOnCI: true }));
 
   it('should not affect other projects by generating a new project', () => {
-    const nxJson: NxJson = readJson('nx.json');
+    const nxJson = readNxJson();
 
     delete nxJson.implicitDependencies;
 
-    updateFile('nx.json', JSON.stringify(nxJson));
+    updateJsonFile('nx.json', nxJson);
     runCommand(`git init`);
     runCommand(`git config user.email "test@test.com"`);
     runCommand(`git config user.name "Test"`);
@@ -503,10 +504,10 @@ describe('affected (with git)', () => {
   }, 1000000);
 
   it('should detect changes to projects based on the nx.json', () => {
-    const nxJson: NxJson = readJson('nx.json');
+    const nxJson = readNxJson();
 
     nxJson.projects[myapp].tags = ['tag'];
-    updateFile('nx.json', JSON.stringify(nxJson));
+    updateJsonFile('nx.json', nxJson);
     expect(runCLI('affected:apps')).toContain(myapp);
     expect(runCLI('affected:apps')).not.toContain(myapp2);
     expect(runCLI('affected:libs')).not.toContain(mylib);
@@ -517,7 +518,7 @@ describe('affected (with git)', () => {
     const workspaceJson = readJson(workspaceConfigName());
 
     workspaceJson.projects[myapp].prefix = 'my-app';
-    updateFile(workspaceConfigName(), JSON.stringify(workspaceJson));
+    updateJsonFile(workspaceConfigName(), workspaceJson);
     expect(runCLI('affected:apps')).toContain(myapp);
     expect(runCLI('affected:apps')).not.toContain(myapp2);
     expect(runCLI('affected:libs')).not.toContain(mylib);
@@ -527,11 +528,11 @@ describe('affected (with git)', () => {
   it('should affect all projects by removing projects', () => {
     const workspaceJson = readJson(workspaceConfigName());
     delete workspaceJson.projects[mylib];
-    updateFile(workspaceConfigName(), JSON.stringify(workspaceJson));
+    updateJsonFile(workspaceConfigName(), workspaceJson);
 
-    const nxJson = readJson('nx.json');
+    const nxJson = readNxJson();
     delete nxJson.projects[mylib];
-    updateFile('nx.json', JSON.stringify(nxJson));
+    updateJsonFile('nx.json', nxJson);
 
     expect(runCLI('affected:apps')).toContain(myapp);
     expect(runCLI('affected:apps')).toContain(myapp2);
@@ -744,10 +745,9 @@ describe('cache', () => {
 
     // touch package.json
     // --------------------------------------------
-    updateFile(`package.json`, (c) => {
-      const r = JSON.parse(c);
+    updateJsonFile(`package.json`, (r) => {
       r.description = 'different';
-      return JSON.stringify(r);
+      return r;
     });
     const outputWithNoBuildCached = runCLI(`affected:build ${files}`);
     expect(outputWithNoBuildCached).not.toContain('read the output from cache');
@@ -811,8 +811,7 @@ describe('cache', () => {
 
     // disable caching
     // --------------------------------------------
-    updateFile('nx.json', (c) => {
-      const nxJson = JSON.parse(c);
+    updateJsonFile('nx.json', (nxJson) => {
       nxJson.tasksRunnerOptions = {
         default: {
           options: {
@@ -820,7 +819,7 @@ describe('cache', () => {
           },
         },
       };
-      return JSON.stringify(nxJson, null, 2);
+      return nxJson;
     });
 
     const outputWithoutCachingEnabled1 = runCLI(`affected:build ${files}`);
@@ -857,7 +856,7 @@ describe('cache', () => {
         parallel: false,
       },
     };
-    updateFile(workspaceConfigName(), JSON.stringify(workspaceJson));
+    updateJsonFile(workspaceConfigName(), workspaceJson);
 
     // run build with caching
     // --------------------------------------------

@@ -1,12 +1,12 @@
 import { AddProjectNode, ProjectGraphContext } from '../project-graph-models';
 import { defaultFileRead } from '../../file-utils';
+import { parseJsonWithComments } from '../../../utilities/fileutils';
 
 function convertNpmScriptsToTargets(projectRoot: string) {
   try {
-    const packageJsonString = defaultFileRead(
-      `${projectRoot}/package.json`
-    ).toString();
-    const parsedPackagedJson = JSON.parse(packageJsonString);
+    const parsedPackagedJson = parseJsonWithComments(
+      defaultFileRead(`${projectRoot}/package.json`).toString()
+    );
     const res = {};
     // handle no scripts
     Object.keys(parsedPackagedJson.scripts || {}).forEach((script) => {
@@ -18,7 +18,7 @@ function convertNpmScriptsToTargets(projectRoot: string) {
       };
     });
     return res;
-  } catch (e) {
+  } catch {
     return undefined;
   }
 }

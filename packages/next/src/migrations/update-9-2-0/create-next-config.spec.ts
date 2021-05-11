@@ -2,6 +2,7 @@ import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import * as path from 'path';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
+import { writeJsonInTree } from '@nrwl/workspace';
 
 describe('create-next-config-9.2.0', () => {
   let tree: Tree;
@@ -17,45 +18,42 @@ describe('create-next-config-9.2.0', () => {
   });
 
   it('should create next.config.js if it does not exist', async () => {
-    tree.overwrite(
-      '/workspace.json',
-      JSON.stringify({
-        version: 1,
-        projects: {
-          demo1: {
-            root: 'apps/demo1',
-            sourceRoot: 'apps/demo1/src',
-            architect: {
-              build: {
-                builder: '@nrwl/next:build',
-                options: {},
-              },
-            },
-          },
-          demo2: {
-            root: 'apps/demo2',
-            sourceRoot: 'apps/demo2/src',
-            architect: {
-              build: {
-                builder: '@nrwl/react:build',
-                options: {},
-              },
-            },
-          },
-          demo3: {
-            root: 'apps/demo3',
-            sourceRoot: 'apps/demo3/src',
-            architect: {
-              build: {
-                builder: '@nrwl/next:build',
-                options: {},
-              },
+    writeJsonInTree(tree, '/workspace.json', {
+      version: 1,
+      projects: {
+        demo1: {
+          root: 'apps/demo1',
+          sourceRoot: 'apps/demo1/src',
+          architect: {
+            build: {
+              builder: '@nrwl/next:build',
+              options: {},
             },
           },
         },
-        newProjectRoot: '',
-      })
-    );
+        demo2: {
+          root: 'apps/demo2',
+          sourceRoot: 'apps/demo2/src',
+          architect: {
+            build: {
+              builder: '@nrwl/react:build',
+              options: {},
+            },
+          },
+        },
+        demo3: {
+          root: 'apps/demo3',
+          sourceRoot: 'apps/demo3/src',
+          architect: {
+            build: {
+              builder: '@nrwl/next:build',
+              options: {},
+            },
+          },
+        },
+      },
+      newProjectRoot: '',
+    });
 
     tree = await schematicRunner
       .runSchematicAsync('create-next-config-9.2.0', {}, tree)
@@ -73,25 +71,22 @@ describe('create-next-config-9.2.0', () => {
   });
 
   it('should keep existing next.config.js', async () => {
-    tree.overwrite(
-      '/workspace.json',
-      JSON.stringify({
-        version: 1,
-        projects: {
-          demo: {
-            root: 'apps/demo',
-            sourceRoot: 'apps/demo/src',
-            architect: {
-              build: {
-                builder: '@nrwl/next:build',
-                options: {},
-              },
+    writeJsonInTree(tree, '/workspace.json', {
+      version: 1,
+      projects: {
+        demo: {
+          root: 'apps/demo',
+          sourceRoot: 'apps/demo/src',
+          architect: {
+            build: {
+              builder: '@nrwl/next:build',
+              options: {},
             },
           },
         },
-        newProjectRoot: '',
-      })
-    );
+      },
+      newProjectRoot: '',
+    });
 
     tree.create('apps/demo/next.config.js', `module.exports = {};`);
 

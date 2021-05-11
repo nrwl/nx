@@ -1,4 +1,4 @@
-import { Tree } from '@nrwl/devkit';
+import { Tree, readJson, writeJson } from '@nrwl/devkit';
 import * as path from 'path';
 import { Schema } from '../schema';
 import { getDestination } from './utils';
@@ -30,9 +30,7 @@ export function updateCypressJson(
     return tree;
   }
 
-  const cypressJson = JSON.parse(
-    tree.read(cypressJsonPath).toString('utf-8')
-  ) as PartialCypressJson;
+  const cypressJson = readJson<PartialCypressJson>(tree, cypressJsonPath);
   cypressJson.videosFolder = cypressJson.videosFolder.replace(
     project.root,
     destination
@@ -42,5 +40,5 @@ export function updateCypressJson(
     destination
   );
 
-  tree.write(cypressJsonPath, JSON.stringify(cypressJson));
+  writeJson(tree, cypressJsonPath, cypressJson);
 }

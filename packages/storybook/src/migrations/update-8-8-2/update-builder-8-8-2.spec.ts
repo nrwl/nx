@@ -1,13 +1,10 @@
 import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import {
-  updateJsonInTree,
   readJsonInTree,
-  updateWorkspaceInTree,
   readWorkspace,
-  getWorkspacePath,
+  writeJsonInTree,
 } from '@nrwl/workspace';
-
 import * as path from 'path';
 
 describe('Update 8-8-2', () => {
@@ -23,53 +20,50 @@ describe('Update 8-8-2', () => {
   });
 
   it(`should remove headless/watch as options for e2e builder`, async () => {
-    tree.create(
-      'workspace.json',
-      JSON.stringify({
-        projects: {
-          ['home-ui']: {
-            projectType: 'library',
-            root: 'libs/home/ui',
-            sourceRoot: 'libs/home/ui/src',
-            prefix: 'app',
-            architect: {
-              storybook: {
-                builder: '@nrwl/storybook:storybook',
-                options: {
-                  uiFramework: '@storybook/angular',
-                  port: 4400,
-                  config: {
-                    configFolder: 'libs/home/ui/.storybook',
-                  },
-                },
-              },
-            },
-          },
-          ['home-ui-e2e']: {
-            root: 'apps/home-ui-e2e',
-            sourceRoot: 'apps/home-ui-e2e/src',
-            architect: {
-              e2e: {
-                builder: '@nrwl/cypress:cypress',
-                options: {
-                  cypressConfig: 'apps/home-ui-e2e/cypress.json',
-                  tsConfig: 'apps/home-ui-e2e/tsconfig.e2e.json',
-                  devServerTarget: 'home-ui:storybook',
-                  headless: false,
-                  watch: true,
-                },
-                configurations: {
-                  headless: {
-                    devServerTarget: 'home-ui:storybook:ci',
-                    headless: true,
-                  },
+    writeJsonInTree(tree, 'workspace.json', {
+      projects: {
+        ['home-ui']: {
+          projectType: 'library',
+          root: 'libs/home/ui',
+          sourceRoot: 'libs/home/ui/src',
+          prefix: 'app',
+          architect: {
+            storybook: {
+              builder: '@nrwl/storybook:storybook',
+              options: {
+                uiFramework: '@storybook/angular',
+                port: 4400,
+                config: {
+                  configFolder: 'libs/home/ui/.storybook',
                 },
               },
             },
           },
         },
-      })
-    );
+        ['home-ui-e2e']: {
+          root: 'apps/home-ui-e2e',
+          sourceRoot: 'apps/home-ui-e2e/src',
+          architect: {
+            e2e: {
+              builder: '@nrwl/cypress:cypress',
+              options: {
+                cypressConfig: 'apps/home-ui-e2e/cypress.json',
+                tsConfig: 'apps/home-ui-e2e/tsconfig.e2e.json',
+                devServerTarget: 'home-ui:storybook',
+                headless: false,
+                watch: true,
+              },
+              configurations: {
+                headless: {
+                  devServerTarget: 'home-ui:storybook:ci',
+                  headless: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    });
 
     tree = await schematicRunner
       .runSchematicAsync('update-builder-8.8.2', {}, tree)
@@ -88,61 +82,55 @@ describe('Update 8-8-2', () => {
   });
 
   it(`should add emitDecoratorMetadata to storybook tsconfig.json`, async () => {
-    tree.create(
-      'libs/home/ui/.storybook/tsconfig.json',
-      JSON.stringify({
-        extends: '../tsconfig.json',
-        exclude: ['../src/test.ts', '../**/*.spec.ts'],
-        include: ['../src/**/*'],
-      })
-    );
-    tree.create(
-      'workspace.json',
-      JSON.stringify({
-        projects: {
-          ['home-ui']: {
-            projectType: 'library',
-            root: 'libs/home/ui',
-            sourceRoot: 'libs/home/ui/src',
-            prefix: 'app',
-            architect: {
-              storybook: {
-                builder: '@nrwl/storybook:storybook',
-                options: {
-                  uiFramework: '@storybook/angular',
-                  port: 4400,
-                  config: {
-                    configFolder: 'libs/home/ui/.storybook',
-                  },
-                },
-              },
-            },
-          },
-          ['home-ui-e2e']: {
-            root: 'apps/home-ui-e2e',
-            sourceRoot: 'apps/home-ui-e2e/src',
-            architect: {
-              e2e: {
-                builder: '@nrwl/cypress:cypress',
-                options: {
-                  cypressConfig: 'apps/home-ui-e2e/cypress.json',
-                  tsConfig: 'apps/home-ui-e2e/tsconfig.e2e.json',
-                  devServerTarget: 'home-ui:storybook',
-                  headless: false,
-                  watch: true,
-                },
-                configurations: {
-                  headless: {
-                    devServerTarget: 'home-ui:storybook:ci',
-                    headless: true,
-                  },
+    writeJsonInTree(tree, 'libs/home/ui/.storybook/tsconfig.json', {
+      extends: '../tsconfig.json',
+      exclude: ['../src/test.ts', '../**/*.spec.ts'],
+      include: ['../src/**/*'],
+    });
+    writeJsonInTree(tree, 'workspace.json', {
+      projects: {
+        ['home-ui']: {
+          projectType: 'library',
+          root: 'libs/home/ui',
+          sourceRoot: 'libs/home/ui/src',
+          prefix: 'app',
+          architect: {
+            storybook: {
+              builder: '@nrwl/storybook:storybook',
+              options: {
+                uiFramework: '@storybook/angular',
+                port: 4400,
+                config: {
+                  configFolder: 'libs/home/ui/.storybook',
                 },
               },
             },
           },
         },
-      })
-    );
+        ['home-ui-e2e']: {
+          root: 'apps/home-ui-e2e',
+          sourceRoot: 'apps/home-ui-e2e/src',
+          architect: {
+            e2e: {
+              builder: '@nrwl/cypress:cypress',
+              options: {
+                cypressConfig: 'apps/home-ui-e2e/cypress.json',
+                tsConfig: 'apps/home-ui-e2e/tsconfig.e2e.json',
+                devServerTarget: 'home-ui:storybook',
+                headless: false,
+                watch: true,
+              },
+              configurations: {
+                headless: {
+                  devServerTarget: 'home-ui:storybook:ci',
+                  headless: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    });
 
     tree = await schematicRunner
       .runSchematicAsync('update-builder-8.8.2', {}, tree)

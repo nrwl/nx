@@ -3,7 +3,7 @@ import * as path from 'path';
 import type * as Prettier from 'prettier';
 import { getWorkspacePath } from '../utils/get-workspace-layout';
 import { reformattedWorkspaceJsonOrNull } from '@nrwl/tao/src/shared/workspace';
-import * as stripJsonComments from 'strip-json-comments';
+import { readJson, writeJson } from '../utils/json';
 
 /**
  * Formats all the created or updated files using Prettier
@@ -62,12 +62,10 @@ function updateWorkspaceJsonToMatchFormatVersion(host: Tree) {
   }
 
   try {
-    const workspaceJson = JSON.parse(
-      stripJsonComments(host.read(path).toString())
-    );
+    const workspaceJson = readJson(host, path);
     const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
     if (reformatted) {
-      host.write(path, JSON.stringify(reformatted, null, 2));
+      writeJson(host, path, reformatted);
     }
   } catch (e) {
     console.error(`Failed to format: ${path}`);

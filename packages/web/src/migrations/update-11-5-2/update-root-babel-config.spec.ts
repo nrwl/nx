@@ -1,5 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { readJson, Tree } from '@nrwl/devkit';
+import { readJson, Tree, writeJson } from '@nrwl/devkit';
 import { updateRootBabelConfig } from './update-root-babel-config';
 
 describe('Update root babel config', () => {
@@ -10,12 +10,9 @@ describe('Update root babel config', () => {
   });
 
   it(`should add web babel preset if it does not exist`, async () => {
-    tree.write(
-      'babel.config.json',
-      JSON.stringify({
-        presets: ['@nrwl/web/babel'],
-      })
-    );
+    writeJson(tree, 'babel.config.json', {
+      presets: ['@nrwl/web/babel'],
+    });
 
     await updateRootBabelConfig(tree);
 

@@ -5,6 +5,8 @@ import {
   readJson,
   runCLI,
   killPorts,
+  readNxJson,
+  updateJsonFile,
 } from '@nrwl/e2e/utils';
 
 describe('Nx Plugins', () => {
@@ -14,9 +16,9 @@ describe('Nx Plugins', () => {
   afterEach(() => killPorts());
 
   it('should use plugins defined in nx.json', () => {
-    const nxJson = readJson('nx.json');
+    const nxJson = readNxJson();
     nxJson.plugins = ['./tools/plugin'];
-    updateFile('nx.json', JSON.stringify(nxJson));
+    updateJsonFile('nx.json', nxJson);
     updateFile(
       'tools/plugin.js',
       `

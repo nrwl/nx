@@ -11,6 +11,7 @@ import {
   updateFile,
 } from '@nrwl/e2e/utils';
 import { names } from '@nrwl/devkit';
+import { updateJsonFile } from '../../utils';
 
 describe('Angular Nrwl app builder', () => {
   let app;
@@ -58,7 +59,7 @@ describe('Angular Nrwl app builder', () => {
       const workspaceJson = readJson(`angular.json`);
       workspaceJson.projects[app].architect.build.builder =
         '@nrwl/angular:webpack-browser';
-      updateFile('angular.json', JSON.stringify(workspaceJson, null, 2));
+      updateJsonFile('angular.json', workspaceJson);
     });
 
     afterEach(() => removeProject({ onlyOnCI: true }));

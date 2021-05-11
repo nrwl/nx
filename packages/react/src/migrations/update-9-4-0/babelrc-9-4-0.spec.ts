@@ -7,6 +7,7 @@ import {
   DependencyType,
   ProjectGraph,
 } from '@nrwl/workspace/src/core/project-graph';
+import { writeJsonInTree } from '@nrwl/workspace';
 
 let projectGraph: ProjectGraph;
 jest.mock('@nrwl/workspace/src/core/project-graph', () => ({
@@ -25,15 +26,12 @@ describe('Migrate babel setup', () => {
       '@nrwl/react',
       path.join(__dirname, '../../../migrations.json')
     );
-    tree.overwrite(
-      'package.json',
-      JSON.stringify({
-        dependencies: {
-          react: '16.13.1',
-          'react-dom': '16.13.1',
-        },
-      })
-    );
+    writeJsonInTree(tree, 'package.json', {
+      dependencies: {
+        react: '16.13.1',
+        'react-dom': '16.13.1',
+      },
+    });
     projectGraph = {
       nodes: {
         demo: {

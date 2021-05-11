@@ -1,5 +1,6 @@
 import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
+import { readJsonInTree, writeJsonInTree } from '@nrwl/workspace';
 import { runMigration } from '../../utils/testing';
 
 function createAngularCLIPoweredWorkspace() {
@@ -39,18 +40,15 @@ describe('Remove ngcc flags from postinstall script', () => {
     it(`should adjust ngcc for: "${testEntry.test}"`, async () => {
       const tree = createAngularCLIPoweredWorkspace();
 
-      tree.overwrite(
-        '/package.json',
-        JSON.stringify({
-          scripts: {
-            postinstall: testEntry.test,
-          },
-        })
-      );
+      writeJsonInTree(tree, '/package.json', {
+        scripts: {
+          postinstall: testEntry.test,
+        },
+      });
 
       const result = await runMigration('update-ngcc-postinstall', {}, tree);
 
-      const packageJson = JSON.parse(result.read('/package.json').toString());
+      const packageJson = readJsonInTree(result, '/package.json');
       expect(packageJson.scripts.postinstall).toEqual(testEntry.expected);
     });
   });

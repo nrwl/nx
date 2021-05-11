@@ -1,7 +1,7 @@
 import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import { runSchematic, createApp } from '../../utils/testing';
-import { readJsonInTree } from '@nrwl/workspace';
+import { readJsonInTree, writeJsonInTree } from '@nrwl/workspace';
 
 describe('downgrade-module', () => {
   let appTree: Tree;
@@ -47,14 +47,11 @@ describe('downgrade-module', () => {
   });
 
   it('should update package.json by default', async () => {
-    appTree.overwrite(
-      `/package.json`,
-      JSON.stringify({
-        dependencies: {
-          '@angular/core': '4.4.4',
-        },
-      })
-    );
+    writeJsonInTree(appTree, `/package.json`, {
+      dependencies: {
+        '@angular/core': '4.4.4',
+      },
+    });
 
     const tree = await runSchematic(
       'downgrade-module',
@@ -71,14 +68,11 @@ describe('downgrade-module', () => {
   });
 
   it('should not package.json when --skipPackageJson=true', async () => {
-    appTree.overwrite(
-      `/package.json`,
-      JSON.stringify({
-        dependencies: {
-          '@angular/core': '4.4.4',
-        },
-      })
-    );
+    writeJsonInTree(appTree, `/package.json`, {
+      dependencies: {
+        '@angular/core': '4.4.4',
+      },
+    });
 
     const tree = await runSchematic(
       'downgrade-module',

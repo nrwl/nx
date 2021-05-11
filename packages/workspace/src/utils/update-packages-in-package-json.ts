@@ -1,16 +1,16 @@
 import { chain, noop } from '@angular-devkit/schematics';
 import { updateJsonInTree } from './ast-utils';
-import { readFileSync } from 'fs';
 import { checkAndCleanWithSemver } from './version-utils';
 import { lt } from 'semver';
 import { addInstallTask } from './rules/add-install-task';
+import { readJsonFile } from '../utilities/fileutils';
 
 export function updatePackagesInPackageJson(
   migrationFilePath: string,
   versionName: string,
   options: { skipInstall: boolean } = { skipInstall: false }
 ) {
-  const migrations = JSON.parse(readFileSync(migrationFilePath).toString());
+  const migrations = readJsonFile(migrationFilePath);
   const packageJsonUpdates = migrations.packageJsonUpdates[versionName];
 
   // should never happen

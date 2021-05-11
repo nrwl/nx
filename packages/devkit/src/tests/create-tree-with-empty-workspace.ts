@@ -1,4 +1,5 @@
 import { FsTree } from '@nrwl/tao/src/shared/tree';
+import { writeJson } from '../utils/json';
 
 /**
  * Creates a host for testing.
@@ -6,38 +7,29 @@ import { FsTree } from '@nrwl/tao/src/shared/tree';
 export function createTreeWithEmptyWorkspace() {
   const tree = new FsTree('/virtual', false);
 
-  tree.write('/workspace.json', JSON.stringify({ version: 1, projects: {} }));
-  tree.write('./.prettierrc', '{"singleQuote": true}');
-  tree.write(
-    '/package.json',
-    JSON.stringify({
-      name: 'test-name',
-      dependencies: {},
-      devDependencies: {},
-    })
-  );
-  tree.write(
-    '/nx.json',
-    JSON.stringify({
-      npmScope: 'proj',
-      projects: {},
-      affected: {
-        defaultBase: 'master',
-      },
-      tasksRunnerOptions: {
-        default: {
-          runner: '@nrwl/workspace/tasks-runners/default',
-          options: {
-            cacheableOperations: ['build', 'lint', 'test', 'e2e'],
-          },
+  writeJson(tree, '/workspace.json', { version: 1, projects: {} });
+  writeJson(tree, './.prettierrc', { singleQuote: true });
+  writeJson(tree, '/package.json', {
+    name: 'test-name',
+    dependencies: {},
+    devDependencies: {},
+  });
+  writeJson(tree, '/nx.json', {
+    npmScope: 'proj',
+    projects: {},
+    affected: {
+      defaultBase: 'master',
+    },
+    tasksRunnerOptions: {
+      default: {
+        runner: '@nrwl/workspace/tasks-runners/default',
+        options: {
+          cacheableOperations: ['build', 'lint', 'test', 'e2e'],
         },
       },
-    })
-  );
-  tree.write(
-    '/tsconfig.base.json',
-    JSON.stringify({ compilerOptions: { paths: {} } })
-  );
+    },
+  });
+  writeJson(tree, '/tsconfig.base.json', { compilerOptions: { paths: {} } });
 
   return tree;
 }

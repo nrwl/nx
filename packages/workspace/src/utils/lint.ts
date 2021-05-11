@@ -5,7 +5,7 @@ import {
   Tree,
   SchematicContext,
 } from '@angular-devkit/schematics';
-import { addDepsToPackageJson } from './ast-utils';
+import { addDepsToPackageJson, writeJsonInTree } from './ast-utils';
 import {
   eslintVersion,
   typescriptESLintVersion,
@@ -76,17 +76,14 @@ export function addLintFiles(
           host.create('/tslint.json', globalTsLint);
         }
         if (!options.onlyGlobal) {
-          host.create(
-            join(projectRoot as any, `tslint.json`),
-            JSON.stringify({
-              extends: `${offsetFromRoot(projectRoot)}tslint.json`,
-              // Include project files to be linted since the global one excludes all files.
-              linterOptions: {
-                exclude: ['!**/*'],
-              },
-              rules: {},
-            })
-          );
+          writeJsonInTree(host, join(projectRoot as any, `tslint.json`), {
+            extends: `${offsetFromRoot(projectRoot)}tslint.json`,
+            // Include project files to be linted since the global one excludes all files.
+            linterOptions: {
+              exclude: ['!**/*'],
+            },
+            rules: {},
+          });
         }
       });
 
@@ -105,7 +102,7 @@ export function addLintFiles(
 
     if (linter === 'eslint') {
       if (!host.exists('/.eslintrc.json')) {
-        host.create('/.eslintrc.json', globalESLint);
+        writeJsonInTree(host, '/.eslintrc.json', globalESLint);
       }
       chainedCommands.push(
         addDepsToPackageJson(
@@ -189,9 +186,10 @@ export function addLintFiles(
             };
           }
 
-          host.create(
+          writeJsonInTree(
+            host,
             join(projectRoot as any, `.eslintrc.json`),
-            JSON.stringify(configJson)
+            configJson
           );
         });
       }
@@ -269,7 +267,7 @@ const globalTsLint = `
 }
 `;
 
-const globalESLint = JSON.stringify({
+const globalESLint = {
   root: true,
   ignorePatterns: ['**/*'],
   plugins: ['@nrwl/nx'],
@@ -329,4 +327,4 @@ const globalESLint = JSON.stringify({
       rules: {},
     },
   ],
-});
+};

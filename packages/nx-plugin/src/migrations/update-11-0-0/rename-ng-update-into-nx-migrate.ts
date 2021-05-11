@@ -1,4 +1,4 @@
-import { readJsonInTree } from '@nrwl/workspace';
+import { readJsonInTree, writeJsonInTree } from '@nrwl/workspace';
 
 export default function () {
   return (host: any) => {
@@ -7,6 +7,6 @@ export default function () {
       p['nx-migrations'] = p['ng-update'];
       delete p['ng-update'];
     }
-    host.overwrite('package.json', JSON.stringify(p, null, 2));
+    writeJsonInTree(host, 'package.json', p);
   };
 }

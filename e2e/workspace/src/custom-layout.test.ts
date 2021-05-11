@@ -9,6 +9,7 @@ import {
   packageInstall,
   removeProject,
   killPorts,
+  readNxJson,
 } from '@nrwl/e2e/utils';
 
 describe('custom workspace layout', () => {
@@ -19,7 +20,7 @@ describe('custom workspace layout', () => {
     runCreateWorkspace(proj, { preset: 'oss' });
     packageInstall('@nrwl/react @nrwl/angular @nrwl/express');
 
-    const nxJson = readJson('nx.json');
+    const nxJson = readNxJson();
     expect(nxJson.workspaceLayout).toEqual({
       libsDir: 'packages',
       appsDir: 'packages',

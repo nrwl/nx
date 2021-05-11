@@ -8,6 +8,7 @@ import {
   runCLI,
   uniq,
   updateFile,
+  updateJsonFile,
 } from '@nrwl/e2e/utils';
 import { names } from '@nrwl/devkit';
 
@@ -89,12 +90,11 @@ describe('Build React libraries and apps', () => {
     );
 
     // Add assets to child lib
-    updateFile('workspace.json', (c) => {
-      const json = JSON.parse(c);
+    updateJsonFile('workspace.json', (json) => {
       json.projects[childLib].targets.build.options.assets = [
         `libs/${childLib}/src/assets`,
       ];
-      return JSON.stringify(json, null, 2);
+      return json;
     });
     updateFile(`libs/${childLib}/src/assets/hello.txt`, 'Hello World!');
 
@@ -112,10 +112,9 @@ describe('Build React libraries and apps', () => {
     createDep(buildableParentLib, [buildableChildLib, buildableChildLib2]);
 
     // we are setting paths to {} to make sure built libs are read from dist
-    updateFile('tsconfig.base.json', (c) => {
-      const json = JSON.parse(c);
+    updateJsonFile('tsconfig.base.json', (json) => {
       json.compilerOptions.paths = {};
-      return JSON.stringify(json, null, 2);
+      return json;
     });
   });
   afterEach(() => killPorts());
@@ -163,15 +162,12 @@ describe('Build React libraries and apps', () => {
         `;
       });
 
-      updateFile(`libs/${myLib}/tsconfig.json`, (content) => {
-        const json = JSON.parse(content);
-
+      updateJsonFile(`libs/${myLib}/tsconfig.json`, (json) => {
         /**
          * Set target as es3!!
          */
-
         json.compilerOptions.target = 'es3';
-        return JSON.stringify(json, null, 2);
+        return json;
       });
       // What we're testing
       runCLI(`build ${myLib}`);

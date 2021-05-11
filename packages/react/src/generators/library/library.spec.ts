@@ -621,7 +621,7 @@ describe('lib', () => {
       });
 
       expect(() => {
-        JSON.parse(appTree.read(`libs/my-lib/.babelrc`).toString());
+        readJson(appTree, 'libs/my-lib/.babelrc');
       }).not.toThrow();
     }
   );

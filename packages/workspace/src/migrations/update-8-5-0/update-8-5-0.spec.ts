@@ -1,7 +1,7 @@
 import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { join } from 'path';
-import { readJsonInTree } from '@nrwl/workspace';
+import { readJsonInTree, writeJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { createLibWithTests } from '../../utils/testing';
 
@@ -29,10 +29,7 @@ describe('Update 8.5.0', () => {
       const exclude = [`src/test.ts`, '**/*.spec.ts'];
 
       tree = await createLibWithTests(tree, lib, nonJestBuilder, 'test.ts');
-      tree.create(
-        `/libs/${lib}/tsconfig.lib.json`,
-        JSON.stringify({ exclude })
-      );
+      writeJsonInTree(tree, `/libs/${lib}/tsconfig.lib.json`, { exclude });
 
       const result = await schematicRunner
         .runSchematicAsync(schematicName, {}, tree)
@@ -51,10 +48,7 @@ describe('Update 8.5.0', () => {
       const expected = ['src/test-setup.ts', '**/*.spec.ts'];
 
       tree = await createLibWithTests(tree, lib, jestBuilder, 'test-setup.ts');
-      tree.create(
-        `/libs/${lib}/tsconfig.lib.json`,
-        JSON.stringify({ exclude })
-      );
+      writeJsonInTree(tree, `/libs/${lib}/tsconfig.lib.json`, { exclude });
 
       const result = await schematicRunner
         .runSchematicAsync(schematicName, {}, tree)
@@ -78,10 +72,7 @@ describe('Update 8.5.0', () => {
         jestBuilder,
         'test-modified.ts.ts'
       );
-      tree.create(
-        `/libs/${lib}/tsconfig.lib.json`,
-        JSON.stringify({ exclude })
-      );
+      writeJsonInTree(tree, `/libs/${lib}/tsconfig.lib.json`, { exclude });
 
       const result = await schematicRunner
         .runSchematicAsync(schematicName, {}, tree)

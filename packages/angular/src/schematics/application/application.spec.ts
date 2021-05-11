@@ -1,7 +1,11 @@
 import { Tree } from '@angular-devkit/schematics';
-import { NxJson, readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
+import {
+  NxJson,
+  readJsonInTree,
+  updateJsonInTree,
+  serializeJson,
+} from '@nrwl/workspace';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
-import * as stripJsonComments from 'strip-json-comments';
 import { callRule, runSchematic } from '../../utils/testing';
 
 const prettier = require('prettier');
@@ -68,22 +72,17 @@ describe('app', () => {
         path: './tsconfig.editor.json',
       });
 
-      const tsconfigApp = JSON.parse(
-        stripJsonComments(getFileContent(tree, 'apps/my-app/tsconfig.app.json'))
-      );
+      const tsconfigApp = readJsonInTree(tree, 'apps/my-app/tsconfig.app.json');
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
-      const eslintrcJson = JSON.parse(
-        stripJsonComments(getFileContent(tree, 'apps/my-app/.eslintrc.json'))
-      );
+      const eslintrcJson = readJsonInTree(tree, 'apps/my-app/.eslintrc.json');
       expect(eslintrcJson.extends).toEqual(['../../.eslintrc.json']);
 
       expect(tree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
-      const tsconfigE2E = JSON.parse(
-        stripJsonComments(
-          getFileContent(tree, 'apps/my-app-e2e/tsconfig.e2e.json')
-        )
+      const tsconfigE2E = readJsonInTree(
+        tree,
+        'apps/my-app-e2e/tsconfig.e2e.json'
       );
       expect(tsconfigE2E.extends).toEqual('./tsconfig.json');
     });
@@ -124,9 +123,7 @@ describe('app', () => {
       let appE2eSpec = noPrefix
         .read('apps/my-app-e2e/src/app.e2e-spec.ts')
         .toString();
-      let workspaceJson = JSON.parse(
-        noPrefix.read('workspace.json').toString()
-      );
+      let workspaceJson = readJsonInTree(noPrefix, 'workspace.json');
       let myAppPrefix = workspaceJson.projects['my-app'].prefix;
 
       expect(myAppPrefix).toEqual('proj');
@@ -137,7 +134,7 @@ describe('app', () => {
       appE2eSpec = withPrefix
         .read('apps/my-app-e2e/src/app.e2e-spec.ts')
         .toString();
-      workspaceJson = JSON.parse(withPrefix.read('workspace.json').toString());
+      workspaceJson = readJsonInTree(withPrefix, 'workspace.json');
       myAppPrefix = workspaceJson.projects['my-app-with-prefix'].prefix;
 
       expect(myAppPrefix).toEqual('custom');
@@ -198,8 +195,7 @@ describe('app', () => {
 
     it('should generate files', async () => {
       const hasJsonValue = ({ path, expectedValue, lookupFn }) => {
-        const content = getFileContent(tree, path);
-        const config = JSON.parse(stripJsonComments(content));
+        const config = readJsonInTree(tree, path);
 
         expect(lookupFn(config)).toEqual(expectedValue);
       };
@@ -665,16 +661,12 @@ describe('app', () => {
           appTree
         );
 
-        const proxyConfContent = JSON.stringify(
-          {
-            '/customer-api': {
-              target: 'http://localhost:3333',
-              secure: false,
-            },
+        const proxyConfContent = serializeJson({
+          '/customer-api': {
+            target: 'http://localhost:3333',
+            secure: false,
           },
-          null,
-          2
-        );
+        });
 
         expect(tree.exists('apps/customer-ui/proxy.conf.json')).toBeTruthy();
         expect(tree.readContent('apps/customer-ui/proxy.conf.json')).toContain(
@@ -725,8 +717,9 @@ describe('app', () => {
       ];
 
       for (const configFile of configFiles) {
-        const { compilerOptions, angularCompilerOptions } = JSON.parse(
-          tree.readContent(configFile)
+        const { compilerOptions, angularCompilerOptions } = readJsonInTree(
+          tree,
+          configFile
         );
 
         // check that the TypeScript compiler options have been updated

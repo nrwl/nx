@@ -2,7 +2,6 @@ import { execSync } from 'child_process';
 import * as path from 'path';
 import * as resolve from 'resolve';
 import { getProjectRoots, parseFiles } from './shared';
-import { fileExists } from '../utilities/fileutils';
 import {
   createProjectGraph,
   onlyWorkspaceProjects,
@@ -15,9 +14,12 @@ import {
   reformattedWorkspaceJsonOrNull,
   workspaceConfigName,
 } from '@nrwl/tao/src/shared/workspace';
-import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
-import { readFileSync, writeFileSync } from 'fs-extra';
-import * as stripJsonComments from 'strip-json-comments';
+import { appRootPath } from '../utilities/app-root';
+import {
+  fileExists,
+  readJsonFile,
+  writeJsonFile,
+} from '../utilities/fileutils';
 
 const PRETTIER_EXTENSIONS = [
   'ts',
@@ -134,18 +136,12 @@ function prettierPath() {
 }
 
 function updateWorkspaceJsonToMatchFormatVersion() {
+  const workspaceConfig = workspaceConfigName(appRootPath);
   try {
-    const workspaceJson = JSON.parse(
-      stripJsonComments(
-        readFileSync(workspaceConfigName(appRootPath)).toString()
-      )
-    );
+    const workspaceJson = readJsonFile(workspaceConfig);
     const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
     if (reformatted) {
-      writeFileSync(
-        workspaceConfigName(appRootPath),
-        JSON.stringify(reformatted, null, 2)
-      );
+      writeJsonFile(workspaceConfig, reformatted);
     }
   } catch (e) {
     console.error(`Failed to format: ${path}`);

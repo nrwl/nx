@@ -24,19 +24,21 @@ describe('calculateFileChanges', () => {
         head: 'sha2',
       },
       (path, revision) => {
-        return revision === 'sha1'
-          ? JSON.stringify({
-              dependencies: {
-                'happy-nrwl': '0.0.1',
-                'not-awesome-nrwl': '0.0.1',
-              },
-            })
-          : JSON.stringify({
-              dependencies: {
-                'happy-nrwl': '0.0.2',
-                'awesome-nrwl': '0.0.1',
-              },
-            });
+        return JSON.stringify(
+          revision === 'sha1'
+            ? {
+                dependencies: {
+                  'happy-nrwl': '0.0.1',
+                  'not-awesome-nrwl': '0.0.1',
+                },
+              }
+            : {
+                dependencies: {
+                  'happy-nrwl': '0.0.2',
+                  'awesome-nrwl': '0.0.1',
+                },
+              }
+        );
       }
     );
 

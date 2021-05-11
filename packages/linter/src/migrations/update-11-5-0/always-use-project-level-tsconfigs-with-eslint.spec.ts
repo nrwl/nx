@@ -1,4 +1,9 @@
-import { addProjectConfiguration, readJson, Tree } from '@nrwl/devkit';
+import {
+  addProjectConfiguration,
+  readJson,
+  writeJson,
+  Tree,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import updateTsConfigsWithEslint from './always-use-project-level-tsconfigs-with-eslint';
 
@@ -62,7 +67,7 @@ describe('Always use project level tsconfigs with eslint', () => {
       ],
     };
 
-    tree.write('.eslintrc.json', JSON.stringify(rootEslintConfig));
+    writeJson(tree, '.eslintrc.json', rootEslintConfig);
 
     await updateTsConfigsWithEslint(tree);
 
@@ -135,10 +140,7 @@ describe('Always use project level tsconfigs with eslint', () => {
         'jsx-a11y/anchor-is-valid': ['off'],
       },
     };
-    tree.write(
-      'apps/react-app/.eslintrc.json',
-      JSON.stringify(projectEslintConfig1)
-    );
+    writeJson(tree, 'apps/react-app/.eslintrc.json', projectEslintConfig1);
 
     // Has overrides array, but no parserOptions.project anywhere - add it for them
     const projectEslintConfig2 = {
@@ -153,10 +155,7 @@ describe('Always use project level tsconfigs with eslint', () => {
         },
       ],
     };
-    tree.write(
-      'libs/workspace-lib/.eslintrc.json',
-      JSON.stringify(projectEslintConfig2)
-    );
+    writeJson(tree, 'libs/workspace-lib/.eslintrc.json', projectEslintConfig2);
 
     // parserOptions.project already set manually by the user at some point, leave it alone
     const projectEslintConfig3 = {
@@ -172,10 +171,7 @@ describe('Always use project level tsconfigs with eslint', () => {
         },
       ],
     };
-    tree.write(
-      'libs/some-lib/.eslintrc.json',
-      JSON.stringify(projectEslintConfig3)
-    );
+    writeJson(tree, 'libs/some-lib/.eslintrc.json', projectEslintConfig3);
 
     await updateTsConfigsWithEslint(tree);
 
@@ -285,10 +281,7 @@ describe('Always use project level tsconfigs with eslint', () => {
         'jsx-a11y/anchor-is-valid': ['off'],
       },
     };
-    tree.write(
-      'apps/next-app/.eslintrc.json',
-      JSON.stringify(projectEslintConfig1)
-    );
+    writeJson(tree, 'apps/next-app/.eslintrc.json', projectEslintConfig1);
 
     await updateTsConfigsWithEslint(tree);
 

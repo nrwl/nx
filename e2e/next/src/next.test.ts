@@ -10,6 +10,7 @@ import {
   runCypressTests,
   uniq,
   updateFile,
+  updateJsonFile,
 } from '@nrwl/e2e/utils';
 
 describe('Next.js Applications', () => {
@@ -31,7 +32,7 @@ describe('Next.js Applications', () => {
         },
       },
     };
-    updateFile(`apps/${appName}/proxy.conf.json`, JSON.stringify(proxyConf));
+    updateJsonFile(`apps/${appName}/proxy.conf.json`, proxyConf);
 
     updateFile(
       `apps/${appName}-e2e/src/integration/app.spec.ts`,
@@ -321,8 +322,7 @@ describe('Next.js Applications', () => {
 
     // Shared assets
     const sharedLib = uniq('sharedLib');
-    updateFile('workspace.json', (c) => {
-      const json = JSON.parse(c);
+    updateJsonFile('workspace.json', (json) => {
       json.projects[appName].targets.build.options.assets = [
         {
           glob: '**/*',
@@ -330,7 +330,7 @@ describe('Next.js Applications', () => {
           output: 'shared/ui',
         },
       ];
-      return JSON.stringify(json, null, 2);
+      return json;
     });
     updateFile(`libs/${sharedLib}/src/assets/hello.txt`, 'Hello World!');
 

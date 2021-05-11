@@ -1,6 +1,7 @@
 import { join } from 'path';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { Rule, Tree } from '@angular-devkit/schematics';
+import { writeJsonInTree } from '@nrwl/workspace';
 import { names } from '@nrwl/devkit';
 
 const testRunner = new SchematicTestRunner(
@@ -131,41 +132,32 @@ export function createApp(
       .catch(err => console.log(err));
   `
   );
-  tree.create(
-    `/apps/${appName}/tsconfig.app.json`,
-    JSON.stringify({
-      include: ['**/*.ts'],
-    })
-  );
-  tree.create(
-    `/apps/${appName}-e2e/tsconfig.e2e.json`,
-    JSON.stringify({
-      include: ['../**/*.ts'],
-    })
-  );
-  tree.overwrite(
-    '/workspace.json',
-    JSON.stringify({
-      newProjectRoot: '',
-      version: 1,
-      projects: {
-        [appName]: {
-          root: `apps/${appName}`,
-          sourceRoot: `apps/${appName}/src`,
-          architect: {
-            build: {
-              options: {
-                main: `apps/${appName}/src/main.ts`,
-              },
+  writeJsonInTree(tree, `/apps/${appName}/tsconfig.app.json`, {
+    include: ['**/*.ts'],
+  });
+  writeJsonInTree(tree, `/apps/${appName}-e2e/tsconfig.e2e.json`, {
+    include: ['../**/*.ts'],
+  });
+  writeJsonInTree(tree, '/workspace.json', {
+    newProjectRoot: '',
+    version: 1,
+    projects: {
+      [appName]: {
+        root: `apps/${appName}`,
+        sourceRoot: `apps/${appName}/src`,
+        architect: {
+          build: {
+            options: {
+              main: `apps/${appName}/src/main.ts`,
             },
-            serve: {
-              options: {},
-            },
+          },
+          serve: {
+            options: {},
           },
         },
       },
-    })
-  );
+    },
+  });
   return tree;
 }
 

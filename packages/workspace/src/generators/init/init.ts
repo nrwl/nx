@@ -525,7 +525,7 @@ function checkCanConvertToWorkspace(host: Tree) {
 }
 
 function createNxJson(host: Tree) {
-  const json = JSON.parse(host.read('angular.json').toString());
+  const json = readJson(host, 'angular.json');
   const projects = json.projects || {};
   const hasLibraries = Object.keys(projects).find(
     (project) =>

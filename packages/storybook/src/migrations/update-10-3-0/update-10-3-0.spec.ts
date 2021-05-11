@@ -1,5 +1,5 @@
 import { Tree } from '@angular-devkit/schematics';
-import { readWorkspace } from '@nrwl/workspace';
+import { readWorkspace, writeJsonInTree } from '@nrwl/workspace';
 import { getFileContent } from '@nrwl/workspace/testing';
 
 import { runMigration } from '../../utils/testing';
@@ -11,136 +11,115 @@ describe('Update 10-3-0', () => {
     tree = Tree.empty();
 
     // create workspace
-    tree.create(
-      'workspace.json',
-      JSON.stringify({
-        projects: {
-          ['home-ui-angular']: {
-            projectType: 'library',
-            root: 'libs/home/ui-angular',
-            sourceRoot: 'libs/home/ui-angular/src',
-            prefix: 'app',
-            architect: {
-              lint: {
-                builder: '@nrwl/linter:lint',
-                options: {
-                  linter: 'eslint',
-                  config: 'libs/home/ui-angular/.eslintrc',
-                  tsConfig: [
-                    'libs/home/ui-angular/tsconfig.lib.json',
-                    'libs/home/ui-angular/tsconfig.spec.json',
-                  ],
-                  exclude: ['**/node_modules/**'],
-                },
-              },
-              storybook: {
-                builder: '@nrwl/storybook:storybook',
-                options: {
-                  uiFramework: '@storybook/angular',
-                  port: 4400,
-                  config: {
-                    configFolder: 'libs/home/ui-angular/.storybook',
-                  },
-                },
+    writeJsonInTree(tree, 'workspace.json', {
+      projects: {
+        ['home-ui-angular']: {
+          projectType: 'library',
+          root: 'libs/home/ui-angular',
+          sourceRoot: 'libs/home/ui-angular/src',
+          prefix: 'app',
+          architect: {
+            lint: {
+              builder: '@nrwl/linter:lint',
+              options: {
+                linter: 'eslint',
+                config: 'libs/home/ui-angular/.eslintrc',
+                tsConfig: [
+                  'libs/home/ui-angular/tsconfig.lib.json',
+                  'libs/home/ui-angular/tsconfig.spec.json',
+                ],
+                exclude: ['**/node_modules/**'],
               },
             },
-          },
-          ['home-ui-react']: {
-            projectType: 'library',
-            root: 'libs/home/ui-react',
-            sourceRoot: 'libs/home/ui-react/src',
-            architect: {
-              lint: {
-                builder: '@nrwl/linter:lint',
-                options: {
-                  linter: 'eslint',
-                  config: 'libs/home/ui-react/.eslintrc',
-                  tsConfig: [
-                    'libs/home/ui-react/tsconfig.lib.json',
-                    'libs/home/ui-react/tsconfig.spec.json',
-                  ],
-                  exclude: ['**/node_modules/**'],
-                },
-              },
-              storybook: {
-                builder: '@nrwl/storybook:storybook',
-                options: {
-                  uiFramework: '@storybook/react',
-                  port: 4400,
-                  config: {
-                    configFolder: 'libs/home/ui-react/.storybook',
-                  },
+            storybook: {
+              builder: '@nrwl/storybook:storybook',
+              options: {
+                uiFramework: '@storybook/angular',
+                port: 4400,
+                config: {
+                  configFolder: 'libs/home/ui-angular/.storybook',
                 },
               },
             },
           },
         },
-      })
-    );
+        ['home-ui-react']: {
+          projectType: 'library',
+          root: 'libs/home/ui-react',
+          sourceRoot: 'libs/home/ui-react/src',
+          architect: {
+            lint: {
+              builder: '@nrwl/linter:lint',
+              options: {
+                linter: 'eslint',
+                config: 'libs/home/ui-react/.eslintrc',
+                tsConfig: [
+                  'libs/home/ui-react/tsconfig.lib.json',
+                  'libs/home/ui-react/tsconfig.spec.json',
+                ],
+                exclude: ['**/node_modules/**'],
+              },
+            },
+            storybook: {
+              builder: '@nrwl/storybook:storybook',
+              options: {
+                uiFramework: '@storybook/react',
+                port: 4400,
+                config: {
+                  configFolder: 'libs/home/ui-react/.storybook',
+                },
+              },
+            },
+          },
+        },
+      },
+    });
 
     // create angular lib
-    tree.create(
-      'libs/home/ui-angular/tsconfig.json',
-      JSON.stringify({
-        extends: '../../tsconfig.base.json',
-        references: [
-          {
-            path: './tsconfig.lib.json',
-          },
-          {
-            path: './tsconfig.spec.json',
-          },
-        ],
-      })
-    );
-    tree.create(
-      'libs/home/ui-angular/tsconfig.lib.json',
-      JSON.stringify({
-        extends: './tsconfig.json',
-        exclude: ['**/*.spec.ts'],
-        include: ['**/*.ts'],
-      })
-    );
-    tree.create(
-      'libs/home/ui-angular/.storybook/tsconfig.json',
-      JSON.stringify({
-        extends: '../tsconfig.json',
-        exclude: ['../**/*.spec.ts'],
-        include: ['../src/**/*'],
-      })
-    );
+    writeJsonInTree(tree, 'libs/home/ui-angular/tsconfig.json', {
+      extends: '../../tsconfig.base.json',
+      references: [
+        {
+          path: './tsconfig.lib.json',
+        },
+        {
+          path: './tsconfig.spec.json',
+        },
+      ],
+    });
+    writeJsonInTree(tree, 'libs/home/ui-angular/tsconfig.lib.json', {
+      extends: './tsconfig.json',
+      exclude: ['**/*.spec.ts'],
+      include: ['**/*.ts'],
+    });
+    writeJsonInTree(tree, 'libs/home/ui-angular/.storybook/tsconfig.json', {
+      extends: '../tsconfig.json',
+      exclude: ['../**/*.spec.ts'],
+      include: ['../src/**/*'],
+    });
 
     // create react lib
-    tree.create(
-      'libs/home/ui-react/tsconfig.json',
-      JSON.stringify({
-        extends: '../../tsconfig.base.json',
-        references: [
-          {
-            path: './tsconfig.lib.json',
-          },
-          {
-            path: './tsconfig.spec.json',
-          },
-        ],
-      })
-    );
-    tree.create(
-      'libs/home/ui-react/tsconfig.lib.json',
-      JSON.stringify({
-        extends: './tsconfig.json',
-        exclude: ['**/*.spec.ts', '**/*.spec.tsx'],
-        include: ['**/*.ts', '**/*.tsx'],
-      })
-    );
-    tree.create(
-      'libs/home/ui-react/.storybook/tsconfig.json',
-      JSON.stringify({
-        extends: '../tsconfig.json',
-        exclude: ['../**/*.spec.ts'],
-        include: ['../src/**/*'],
-      })
-    );
+    writeJsonInTree(tree, 'libs/home/ui-react/tsconfig.json', {
+      extends: '../../tsconfig.base.json',
+      references: [
+        {
+          path: './tsconfig.lib.json',
+        },
+        {
+          path: './tsconfig.spec.json',
+        },
+      ],
+    });
+    writeJsonInTree(tree, 'libs/home/ui-react/tsconfig.lib.json', {
+      extends: './tsconfig.json',
+      exclude: ['**/*.spec.ts', '**/*.spec.tsx'],
+      include: ['**/*.ts', '**/*.tsx'],
+    });
+    writeJsonInTree(tree, 'libs/home/ui-react/.storybook/tsconfig.json', {
+      extends: '../tsconfig.json',
+      exclude: ['../**/*.spec.ts'],
+      include: ['../src/**/*'],
+    });
   });
 
   it(`should add storybook tsconfig to lint target and update tsconfigs in project for Angular project`, async () => {

@@ -13,6 +13,7 @@ import {
   uniq,
   updateFile,
   workspaceConfigName,
+  updateJsonFile,
 } from '@nrwl/e2e/utils';
 
 describe('React Applications', () => {
@@ -59,13 +60,12 @@ describe('React Applications', () => {
     runCLI(`build ${appName}`);
 
     // Turn vendor sourcemaps on
-    updateFile(`workspace.json`, (content) => {
-      const json = JSON.parse(content);
+    updateJsonFile(`workspace.json`, (json) => {
       json.projects[appName].targets.build.options.sourceMap = {
         scripts: true,
         vendor: true,
       };
-      return JSON.stringify(json, null, 2);
+      return json;
     });
 
     runCLI(`build ${appName}`);
@@ -173,29 +173,22 @@ describe('React Applications', () => {
     );
 
     // Checking that we can enable displayName just for development.
-    updateFile(
-      `apps/${styledComponentsApp}/.babelrc`,
-      JSON.stringify(
-        {
-          presets: ['@nrwl/react/babel'],
+    updateJsonFile(`apps/${styledComponentsApp}/.babelrc`, {
+      presets: ['@nrwl/react/babel'],
+      plugins: [
+        ['styled-components', { pure: true, ssr: true, displayName: true }],
+      ],
+      env: {
+        production: {
           plugins: [
-            ['styled-components', { pure: true, ssr: true, displayName: true }],
+            [
+              'styled-components',
+              { pure: true, ssr: true, displayName: false },
+            ],
           ],
-          env: {
-            production: {
-              plugins: [
-                [
-                  'styled-components',
-                  { pure: true, ssr: true, displayName: false },
-                ],
-              ],
-            },
-          },
         },
-        null,
-        2
-      )
-    );
+      },
+    });
 
     await testGeneratedApp(styledComponentsApp, {
       checkStyles: false,

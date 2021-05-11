@@ -6,6 +6,7 @@ import {
   updateWorkspaceInTree,
   readWorkspace,
   getWorkspacePath,
+  writeJsonInTree,
 } from '@nrwl/workspace';
 
 import * as path from 'path';
@@ -23,21 +24,18 @@ describe('Update 8-5-0', () => {
   });
 
   it(`should remove babel schematic defaults`, async () => {
-    tree.create(
-      'workspace.json',
-      JSON.stringify({
-        schematics: {
-          '@nrwl/react': {
-            application: {
-              babel: true,
-            },
-          },
-          '@nrwl/react:application': {
+    writeJsonInTree(tree, 'workspace.json', {
+      schematics: {
+        '@nrwl/react': {
+          application: {
             babel: true,
           },
         },
-      })
-    );
+        '@nrwl/react:application': {
+          babel: true,
+        },
+      },
+    });
 
     tree = await schematicRunner
       .runSchematicAsync('update-workspace-8.5.0', {}, tree)

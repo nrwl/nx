@@ -1,12 +1,6 @@
 import * as chalk from 'chalk';
 import { execSync } from 'child_process';
-import {
-  writeFileSync,
-  readdirSync,
-  readFileSync,
-  statSync,
-  unlinkSync,
-} from 'fs';
+import { readdirSync, statSync, unlinkSync } from 'fs';
 import { copySync, removeSync } from 'fs-extra';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
@@ -134,10 +128,7 @@ function constructCollection() {
 }
 
 function saveCollection(dir: string, collection: any) {
-  writeFileSync(
-    path.join(dir, 'workspace-generators.json'),
-    JSON.stringify(collection)
-  );
+  writeJsonFile(path.join(dir, 'workspace-generators.json'), collection);
 }
 
 function generatorsDir() {
@@ -182,7 +173,7 @@ function listGenerators(collectionFile: string) {
   try {
     const bodyLines: string[] = [];
 
-    const collection = JSON.parse(readFileSync(collectionFile).toString());
+    const collection = readJsonFile(collectionFile);
 
     bodyLines.push(chalk.bold(chalk.green('WORKSPACE GENERATORS')));
     bodyLines.push('');

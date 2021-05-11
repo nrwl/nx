@@ -18,8 +18,7 @@ import {
   Tree,
 } from '@angular-devkit/schematics';
 import * as ts from 'typescript';
-import * as stripJsonComments from 'strip-json-comments';
-import { serializeJson } from '../utilities/fileutils';
+import { serializeJson, parseJsonWithComments } from '../utilities/fileutils';
 import { getWorkspacePath } from './cli-config-utils';
 import {
   createProjectGraph,
@@ -349,11 +348,24 @@ export function readJsonInTree<T = any>(host: Tree, path: string): T {
   if (!host.exists(path)) {
     throw new Error(`Cannot find ${path}`);
   }
-  const contents = stripJsonComments(host.read(path)!.toString('utf-8'));
   try {
-    return JSON.parse(contents);
+    return parseJsonWithComments(host.read(path)!.toString('utf-8'));
   } catch (e) {
     throw new Error(`Cannot parse ${path}: ${e.message}`);
+  }
+}
+
+/**
+ * This method is specifically for writing JSON files in a Tree
+ * @param host The host tree
+ * @param path The path to the JSON file
+ * @param value Serializable value to write
+ */
+export function writeJsonInTree(host: Tree, path: string, value: any): void {
+  if (!host.exists(path)) {
+    host.create(path, serializeJson(value));
+  } else {
+    host.overwrite(path, serializeJson(value));
   }
 }
 

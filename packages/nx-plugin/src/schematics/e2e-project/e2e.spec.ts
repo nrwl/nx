@@ -1,6 +1,11 @@
 import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { updateWorkspace, readWorkspace, getWorkspace } from '@nrwl/workspace';
+import {
+  updateWorkspace,
+  readWorkspace,
+  getWorkspace,
+  readJsonInTree,
+} from '@nrwl/workspace';
 import { runSchematic } from '../../utils/testing';
 
 describe('NxPlugin e2e-project', () => {
@@ -81,7 +86,7 @@ describe('NxPlugin e2e-project', () => {
       },
       appTree
     );
-    expect(JSON.parse(tree.readContent('nx.json'))).toMatchObject({
+    expect(readJsonInTree(tree, 'nx.json')).toMatchObject({
       projects: {
         'my-plugin-e2e': {
           tags: [],

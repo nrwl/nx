@@ -8,6 +8,7 @@ import {
   runCLI,
   uniq,
   updateFile,
+  updateJsonFile,
 } from '@nrwl/e2e/utils';
 
 describe('Linter', () => {
@@ -25,7 +26,7 @@ describe('Linter', () => {
         override.rules['no-console'] = 'error';
       }
     });
-    updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
+    updateJsonFile('.eslintrc.json', eslintrc);
 
     updateFile(`apps/${myapp}/src/main.ts`, `console.log("should fail");`);
 
@@ -45,7 +46,7 @@ describe('Linter', () => {
         override.rules['no-console'] = 'error';
       }
     });
-    updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
+    updateJsonFile('.eslintrc.json', eslintrc);
 
     updateFile(`apps/${myapp}/src/main.ts`, `console.log("should fail");`);
 
@@ -64,7 +65,7 @@ describe('Linter', () => {
         override.rules['no-console'] = undefined;
       }
     });
-    updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
+    updateJsonFile('.eslintrc.json', eslintrc);
 
     updateFile(`apps/${myapp}/src/main.ts`, `console.log("should fail");`);
 
@@ -92,7 +93,7 @@ describe('Linter', () => {
         exclude: ['**/node_modules/**', `!apps/${myapp}/**/*`],
       },
     };
-    updateFile('workspace.json', JSON.stringify(workspaceJson, null, 2));
+    updateJsonFile('workspace.json', workspaceJson);
 
     const eslintrc = readJson('.eslintrc.json');
     eslintrc.overrides.forEach((override) => {
@@ -100,7 +101,7 @@ describe('Linter', () => {
         override.rules['no-console'] = undefined;
       }
     });
-    updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
+    updateJsonFile('.eslintrc.json', eslintrc);
 
     updateFile(`apps/${myapp}/src/main.ts`, `console.log("should fail");`);
 
@@ -165,7 +166,7 @@ describe('Linter', () => {
         override.rules['no-console'] = 'error';
       }
     });
-    updateFile('.eslintrc.json', JSON.stringify(eslintrc, null, 2));
+    updateJsonFile('.eslintrc.json', eslintrc);
     updateFile(`apps/${myapp}/src/main.ts`, `console.log("should fail");`);
 
     const outputFile = 'a/b/c/lint-output.json';
@@ -180,7 +181,7 @@ describe('Linter', () => {
     );
     expect(stdout).not.toContain('Unexpected console statement');
     expect(() => checkFilesExist(outputFile)).not.toThrow();
-    const outputContents = JSON.parse(readFile(outputFile));
+    const outputContents = readJson(outputFile);
     const outputForApp: any = Object.values(
       outputContents
     ).filter((result: any) =>

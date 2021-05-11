@@ -1,6 +1,6 @@
 import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import { serializeJson } from '@nrwl/workspace';
+import { readJsonInTree, writeJsonInTree } from '@nrwl/workspace';
 
 import * as path from 'path';
 
@@ -10,12 +10,9 @@ describe('Update 8.1.0', () => {
 
   beforeEach(() => {
     initialTree = Tree.empty();
-    initialTree.create(
-      'package.json',
-      serializeJson({
-        scripts: {},
-      })
-    );
+    writeJsonInTree(initialTree, 'package.json', {
+      scripts: {},
+    });
     schematicRunner = new SchematicTestRunner(
       '@nrwl/cypress',
       path.join(__dirname, '../../../migrations.json')
@@ -27,7 +24,7 @@ describe('Update 8.1.0', () => {
       .runSchematicAsync('update-8.1.0', {}, initialTree)
       .toPromise();
 
-    const { devDependencies } = JSON.parse(result.readContent('package.json'));
+    const { devDependencies } = readJsonInTree(result, 'package.json');
 
     expect(devDependencies.cypress).toEqual('~3.3.1');
   });

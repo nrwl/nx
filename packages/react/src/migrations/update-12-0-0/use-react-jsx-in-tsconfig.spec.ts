@@ -1,5 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { readJson, Tree } from '@nrwl/devkit';
+import { readJson, writeJson, Tree } from '@nrwl/devkit';
 import { useReactJsxInTsconfig } from './use-react-jsx-in-tsconfig';
 
 describe('Update tsconfig for React apps', () => {
@@ -10,44 +10,36 @@ describe('Update tsconfig for React apps', () => {
   });
 
   it(`should add web babel preset if it does not exist`, async () => {
-    tree.write(
-      'workspace.json',
-      JSON.stringify({
-        projects: {
-          'web-app': {
-            root: 'apps/web-app',
-            projectType: 'application',
-          },
-          'react-app': {
-            root: 'apps/react-app',
-            projectType: 'application',
-          },
-          'preserve-jsx-app': {
-            root: 'apps/preserve-jsx-app',
-            projectType: 'application',
-          },
+    writeJson(tree, 'workspace.json', {
+      projects: {
+        'web-app': {
+          root: 'apps/web-app',
+          projectType: 'application',
         },
-      })
-    );
-    tree.write(
-      'nx.json',
-      JSON.stringify({
-        projects: {
-          'web-app': {},
-          'react-app': {},
-          'preserve-jsx-app': {},
+        'react-app': {
+          root: 'apps/react-app',
+          projectType: 'application',
         },
-      })
-    );
-    tree.write('apps/web-app/tsconfig.json', JSON.stringify({}));
-    tree.write(
-      'apps/react-app/tsconfig.json',
-      JSON.stringify({ compilerOptions: { jsx: 'react' } })
-    );
-    tree.write(
-      'apps/preserve-jsx-app/tsconfig.json',
-      JSON.stringify({ compilerOptions: { jsx: 'preserve' } })
-    );
+        'preserve-jsx-app': {
+          root: 'apps/preserve-jsx-app',
+          projectType: 'application',
+        },
+      },
+    });
+    writeJson(tree, 'nx.json', {
+      projects: {
+        'web-app': {},
+        'react-app': {},
+        'preserve-jsx-app': {},
+      },
+    });
+    writeJson(tree, 'apps/web-app/tsconfig.json', {});
+    writeJson(tree, 'apps/react-app/tsconfig.json', {
+      compilerOptions: { jsx: 'react' },
+    });
+    writeJson(tree, 'apps/preserve-jsx-app/tsconfig.json', {
+      compilerOptions: { jsx: 'preserve' },
+    });
 
     await useReactJsxInTsconfig(tree);
 

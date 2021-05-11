@@ -1,9 +1,12 @@
 import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
+import {
+  readJsonInTree,
+  updateJsonInTree,
+  writeJsonInTree,
+} from '@nrwl/workspace';
 import * as path from 'path';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { join } from 'path';
 import { callRule } from '../utils/testing';
 
 describe('Update 8-10-0', () => {
@@ -20,23 +23,20 @@ describe('Update 8-10-0', () => {
 
     schematicRunner.registerCollection(
       '@nrwl/cypress',
-      join(__dirname, '../../../../cypress/collection.json')
+      path.join(__dirname, '../../../../cypress/collection.json')
     );
   });
 
   it(`should update libs`, async () => {
-    tree.overwrite(
-      'package.json',
-      JSON.stringify({
-        dependencies: {
-          '@emotion/core': '10.0.23',
-          '@emotion/styled': '10.0.23',
-        },
-        devDependencies: {
-          '@types/react': '16.9.13',
-        },
-      })
-    );
+    writeJsonInTree(tree, 'package.json', {
+      dependencies: {
+        '@emotion/core': '10.0.23',
+        '@emotion/styled': '10.0.23',
+      },
+      devDependencies: {
+        '@types/react': '16.9.13',
+      },
+    });
 
     tree = await schematicRunner
       .runSchematicAsync('update-8.10.0', {}, tree)
@@ -62,12 +62,12 @@ describe('Update 8-10-0', () => {
 
     reactRunner.registerCollection(
       '@nrwl/jest',
-      join(__dirname, '../../../../jest/collection.json')
+      path.join(__dirname, '../../../../jest/collection.json')
     );
 
     reactRunner.registerCollection(
       '@nrwl/cypress',
-      join(__dirname, '../../../../cypress/collection.json')
+      path.join(__dirname, '../../../../cypress/collection.json')
     );
     tree = await reactRunner
       .runSchematicAsync('app', { name: 'demo' }, tree)
@@ -92,14 +92,12 @@ describe('Update 8-10-0', () => {
       .runSchematicAsync('update-8.10.0', {}, tree)
       .toPromise();
 
-    let tsConfig = JSON.parse(tree.read(`apps/demo/tsconfig.json`).toString());
+    let tsConfig = readJsonInTree(tree, `apps/demo/tsconfig.json`);
     expect(tsConfig.files).toContain(
       '../../node_modules/@nrwl/react/typings/image.d.ts'
     );
 
-    tsConfig = JSON.parse(
-      tree.read(`apps/nested/nested-app/tsconfig.json`).toString()
-    );
+    tsConfig = readJsonInTree(tree, `apps/nested/nested-app/tsconfig.json`);
     expect(tsConfig.files).toContain(
       '../../../node_modules/@nrwl/react/typings/image.d.ts'
     );
@@ -121,7 +119,7 @@ describe('Update 8-10-0', () => {
         },
       },
     };
-    tree.overwrite('/workspace.json', JSON.stringify(workspaceJson));
+    writeJsonInTree(tree, '/workspace.json', workspaceJson);
 
     tree = await schematicRunner
       .runSchematicAsync('update-8.10.0', {}, tree)

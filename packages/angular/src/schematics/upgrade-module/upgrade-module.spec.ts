@@ -1,7 +1,7 @@
 import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import { createApp, runSchematic } from '../../utils/testing';
-import { readJsonInTree } from '@nrwl/workspace';
+import { readJsonInTree, writeJsonInTree } from '@nrwl/workspace';
 
 describe('upgrade-module', () => {
   let appTree: Tree;
@@ -35,14 +35,11 @@ describe('upgrade-module', () => {
   });
 
   it('should update package.json by default', async () => {
-    appTree.overwrite(
-      `/package.json`,
-      JSON.stringify({
-        dependencies: {
-          '@angular/core': '4.4.4',
-        },
-      })
-    );
+    writeJsonInTree(appTree, `/package.json`, {
+      dependencies: {
+        '@angular/core': '4.4.4',
+      },
+    });
 
     const tree = await runSchematic(
       'upgrade-module',
@@ -59,14 +56,11 @@ describe('upgrade-module', () => {
   });
 
   it('should not package.json when --skipPackageJson=true', async () => {
-    appTree.overwrite(
-      `/package.json`,
-      JSON.stringify({
-        dependencies: {
-          '@angular/core': '4.4.4',
-        },
-      })
-    );
+    writeJsonInTree(appTree, `/package.json`, {
+      dependencies: {
+        '@angular/core': '4.4.4',
+      },
+    });
 
     const tree = await runSchematic(
       'upgrade-module',

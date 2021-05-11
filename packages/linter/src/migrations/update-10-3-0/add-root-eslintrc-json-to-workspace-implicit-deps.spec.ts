@@ -1,36 +1,34 @@
 import { runMigration } from '../../utils/testing';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
 import { Tree } from '@angular-devkit/schematics';
-import { readJsonInTree } from '@nrwl/workspace';
+import { readJsonInTree, writeJsonInTree } from '@nrwl/workspace';
 
 describe('Update implicitDependencies within nx.json to include root .eslintrc.json', () => {
   let tree: UnitTestTree;
   beforeEach(() => {
     tree = new UnitTestTree(Tree.empty());
-    tree.create(
-      'nx.json',
-      JSON.stringify({
-        npmScope: 'nrwl',
-        implicitDependencies: {
-          'workspace.json': '*',
-          'package.json': {
-            dependencies: '*',
-            devDependencies: '*',
-          },
-          'tsconfig.base.json': '*',
-          'tslint.json': '*',
-          'nx.json': '*',
+
+    writeJsonInTree(tree, 'nx.json', {
+      npmScope: 'nrwl',
+      implicitDependencies: {
+        'workspace.json': '*',
+        'package.json': {
+          dependencies: '*',
+          devDependencies: '*',
         },
-        tasksRunnerOptions: {},
-        workspaceLayout: {
-          libsDir: 'packages',
-        },
-        projects: {},
-        affected: {
-          defaultBase: 'master',
-        },
-      })
-    );
+        'tsconfig.base.json': '*',
+        'tslint.json': '*',
+        'nx.json': '*',
+      },
+      tasksRunnerOptions: {},
+      workspaceLayout: {
+        libsDir: 'packages',
+      },
+      projects: {},
+      affected: {
+        defaultBase: 'master',
+      },
+    });
   });
 
   it('should add the root .eslintrc.json file to the implicitDependencies in nx.json', async () => {

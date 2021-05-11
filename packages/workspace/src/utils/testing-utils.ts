@@ -9,6 +9,7 @@ import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 import { json, JsonObject } from '@angular-devkit/core';
 import { ScheduleOptions } from '@angular-devkit/architect/src/api';
 import { LoggerApi, LogLevel } from '@angular-devkit/core/src/logger';
+import { writeJsonInTree } from './ast-utils';
 
 export function getFileContent(tree: Tree, path: string): string {
   const fileEntry = tree.get(path);
@@ -23,55 +24,46 @@ export function getFileContent(tree: Tree, path: string): string {
 export function createEmptyWorkspace(tree: Tree): Tree {
   _test_addWorkspaceFile('workspace.json', WorkspaceFormat.JSON);
 
-  tree.create(
-    '/workspace.json',
-    JSON.stringify({ version: 1, projects: {}, newProjectRoot: '' })
-  );
-  tree.create(
-    '/package.json',
-    JSON.stringify({
-      name: 'test-name',
-      dependencies: {},
-      devDependencies: {},
-    })
-  );
-  tree.create(
-    '/nx.json',
-    JSON.stringify(<NxJson>{
-      npmScope: 'proj',
-      projects: {},
-      affected: {
-        defaultBase: 'master',
-      },
-      tasksRunnerOptions: {
-        default: {
-          runner: '@nrwl/workspace/tasks-runners/default',
-          options: {
-            cacheableOperations: ['build', 'lint', 'test', 'e2e'],
-          },
+  writeJsonInTree(tree, '/workspace.json', {
+    version: 1,
+    projects: {},
+    newProjectRoot: '',
+  });
+  writeJsonInTree(tree, '/package.json', {
+    name: 'test-name',
+    dependencies: {},
+    devDependencies: {},
+  });
+  writeJsonInTree(tree, '/nx.json', <NxJson>{
+    npmScope: 'proj',
+    projects: {},
+    affected: {
+      defaultBase: 'master',
+    },
+    tasksRunnerOptions: {
+      default: {
+        runner: '@nrwl/workspace/tasks-runners/default',
+        options: {
+          cacheableOperations: ['build', 'lint', 'test', 'e2e'],
         },
       },
-    })
-  );
-  tree.create(
-    '/tsconfig.base.json',
-    JSON.stringify({ compilerOptions: { paths: {} } })
-  );
-  tree.create(
-    '/tslint.json',
-    JSON.stringify({
-      rules: {
-        'nx-enforce-module-boundaries': [
-          true,
-          {
-            npmScope: '<%= npmScope %>',
-            lazyLoad: [],
-            allow: [],
-          },
-        ],
-      },
-    })
-  );
+    },
+  });
+  writeJsonInTree(tree, '/tsconfig.base.json', {
+    compilerOptions: { paths: {} },
+  });
+  writeJsonInTree(tree, '/tslint.json', {
+    rules: {
+      'nx-enforce-module-boundaries': [
+        true,
+        {
+          npmScope: '<%= npmScope %>',
+          lazyLoad: [],
+          allow: [],
+        },
+      ],
+    },
+  });
   return tree;
 }
 

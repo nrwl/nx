@@ -1,5 +1,5 @@
 import { Tree } from '@angular-devkit/schematics';
-import { readJsonInTree } from '@nrwl/workspace';
+import { readJsonInTree, writeJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { runMigration } from '../../utils/testing';
 
@@ -196,7 +196,7 @@ describe('Update root ESLint config to use overrides', () => {
 
   testCases.forEach((tc, i) => {
     it(`should update the existing root .eslintrc.json file to use overrides, CASE ${i}`, async () => {
-      tree.create('.eslintrc.json', JSON.stringify(tc.input));
+      writeJsonInTree(tree, '.eslintrc.json', tc.input);
 
       const result = await runMigration(
         'update-root-eslint-config-to-use-overrides',

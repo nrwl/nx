@@ -16,9 +16,11 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
+  updateJsonFile,
   updateWorkspaceConfig,
 } from '@nrwl/e2e/utils';
 import { accessSync, constants } from 'fs-extra';
+import { updateJson } from '@nrwl/devkit';
 
 function getData(): Promise<any> {
   return new Promise((resolve) => {
@@ -179,9 +181,7 @@ describe('Build Node apps', () => {
     await runCLIAsync(`build ${nestapp} --generatePackageJson`);
 
     checkFilesExist(`dist/apps/${nestapp}/package.json`);
-    const packageJson = JSON.parse(
-      readFile(`dist/apps/${nestapp}/package.json`)
-    );
+    const packageJson = readJson(`dist/apps/${nestapp}/package.json`);
     expect(packageJson).toEqual(
       expect.objectContaining({
         dependencies: {
@@ -508,10 +508,9 @@ describe('with dependencies', () => {
     );
 
     // we are setting paths to {} to make sure built libs are read from dist
-    updateFile('tsconfig.base.json', (c) => {
-      const json = JSON.parse(c);
+    updateJsonFile('tsconfig.base.json', (json) => {
       json.compilerOptions.paths = {};
-      return JSON.stringify(json, null, 2);
+      return json;
     });
   });
 

@@ -11,6 +11,7 @@ import {
   runCypressTests,
   uniq,
   updateFile,
+  updateJsonFile,
 } from '@nrwl/e2e/utils';
 
 describe('Web Components Applications', () => {
@@ -150,10 +151,9 @@ describe('Web Components Applications', () => {
     );
 
     // Turn off decorator metadata
-    updateFile(`apps/${appName}/tsconfig.app.json`, (content) => {
-      const json = JSON.parse(content);
+    updateJsonFile(`apps/${appName}/tsconfig.app.json`, (json) => {
       json.compilerOptions.emitDecoratorMetadata = false;
-      return JSON.stringify(json);
+      return json;
     });
 
     runCLI(`build ${appName}`);
@@ -315,7 +315,7 @@ describe('Build Options', () => {
       },
     ];
 
-    updateFile(workspacePath, JSON.stringify(workspaceConfig));
+    updateJsonFile(workspacePath, workspaceConfig);
 
     runCLI(`build ${appName}`);
 

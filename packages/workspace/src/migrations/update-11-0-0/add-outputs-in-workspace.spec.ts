@@ -1,5 +1,5 @@
 import { Tree } from '@angular-devkit/schematics';
-import { readWorkspace } from '@nrwl/workspace';
+import { readWorkspace, writeJsonInTree } from '@nrwl/workspace';
 import {
   SchematicTestRunner,
   UnitTestTree,
@@ -20,38 +20,35 @@ describe('add `outputs` in workspace', () => {
   });
 
   it('based on the builder', async () => {
-    tree.create(
-      'workspace.json',
-      JSON.stringify({
-        projects: {
-          products: {
-            root: 'apps/products',
-            architect: {
-              build: {
-                builder: '@nrwl/jest:jest',
-              },
-              serve: {
-                builder: 'whatever',
-              },
+    writeJsonInTree(tree, 'workspace.json', {
+      projects: {
+        products: {
+          root: 'apps/products',
+          architect: {
+            build: {
+              builder: '@nrwl/jest:jest',
             },
-          },
-          cart: {
-            architect: {
-              build: {
-                builder: '@nrwl/web:build',
-              },
-              buildWithOutputsDefined: {
-                builder: '@nrwl/web:build',
-                outputs: ['test/dir'],
-              },
+            serve: {
+              builder: 'whatever',
             },
-          },
-          noArchitect: {
-            projectType: 'library',
           },
         },
-      })
-    );
+        cart: {
+          architect: {
+            build: {
+              builder: '@nrwl/web:build',
+            },
+            buildWithOutputsDefined: {
+              builder: '@nrwl/web:build',
+              outputs: ['test/dir'],
+            },
+          },
+        },
+        noArchitect: {
+          projectType: 'library',
+        },
+      },
+    });
 
     await schematicRunner
       .runSchematicAsync('add-outputs-in-workspace', {}, tree)

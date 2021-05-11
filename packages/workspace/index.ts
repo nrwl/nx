@@ -34,6 +34,7 @@ export {
 export { ProjectGraphCache } from './src/core/nx-deps/nx-deps-cache';
 export {
   readJsonInTree,
+  writeJsonInTree,
   updateJsonInTree,
   updateWorkspaceInTree,
   insert,

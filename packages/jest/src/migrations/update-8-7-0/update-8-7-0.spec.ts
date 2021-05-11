@@ -1,5 +1,5 @@
 import { Tree } from '@angular-devkit/schematics';
-import { readJsonInTree } from '@nrwl/workspace/src/utils/ast-utils';
+import { readJsonInTree, writeJsonInTree } from '@nrwl/workspace';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import * as path from 'path';
 
@@ -16,33 +16,30 @@ describe('Update 8.7.0', () => {
   });
 
   it('should convert testPathPattern option to an array', async () => {
-    tree.create(
-      'angular.json',
-      JSON.stringify({
-        version: 1,
-        projects: {
-          test: {
-            architect: {
-              jest1: {
-                builder: '@nrwl/jest:jest',
-                options: {
-                  testPathPattern: 'some/test/path',
-                },
+    writeJsonInTree(tree, 'angular.json', {
+      version: 1,
+      projects: {
+        test: {
+          architect: {
+            jest1: {
+              builder: '@nrwl/jest:jest',
+              options: {
+                testPathPattern: 'some/test/path',
               },
-              jest2: {
-                builder: '@nrwl/jest:jest',
-                options: {
-                  foo: 'bar',
-                },
+            },
+            jest2: {
+              builder: '@nrwl/jest:jest',
+              options: {
+                foo: 'bar',
               },
-              jest3: {
-                builder: '@nrwl/jest:jest',
-              },
+            },
+            jest3: {
+              builder: '@nrwl/jest:jest',
             },
           },
         },
-      })
-    );
+      },
+    });
 
     await schematicRunner
       .runSchematicAsync('update-8.7.0', {}, tree)

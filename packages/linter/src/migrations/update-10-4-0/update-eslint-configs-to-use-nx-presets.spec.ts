@@ -1,5 +1,9 @@
 import { Tree } from '@angular-devkit/schematics';
-import { readJsonInTree, updateWorkspace } from '@nrwl/workspace';
+import {
+  readJsonInTree,
+  updateWorkspace,
+  writeJsonInTree,
+} from '@nrwl/workspace';
 import { callRule, createEmptyWorkspace } from '@nrwl/workspace/testing';
 import type { Linter } from 'eslint';
 import { runMigration } from '../../utils/testing';
@@ -52,51 +56,48 @@ describe('Update ESLint config files to use preset configs which eslint-plugin-n
   });
 
   it('should update the current (v10.3.0) root .eslintrc.json file to the use the eslint-plugin-nx shared config', async () => {
-    tree.create(
-      '.eslintrc.json',
-      JSON.stringify({
-        root: true,
-        parser: '@typescript-eslint/parser',
-        parserOptions: {
-          ecmaVersion: 2018,
-          sourceType: 'module',
-          project: './tsconfig.*?.json',
-        },
-        ignorePatterns: ['**/*'],
-        plugins: ['@typescript-eslint', '@nrwl/nx'],
-        extends: [
-          'eslint:recommended',
-          'plugin:@typescript-eslint/eslint-recommended',
-          'plugin:@typescript-eslint/recommended',
-          'prettier',
-          'prettier/@typescript-eslint',
-        ],
-        rules: {
-          '@typescript-eslint/explicit-member-accessibility': 'off',
-          '@typescript-eslint/explicit-module-boundary-types': 'off',
-          '@typescript-eslint/explicit-function-return-type': 'off',
-          '@typescript-eslint/no-parameter-properties': 'off',
-          '@nrwl/nx/enforce-module-boundaries': [
-            'error',
-            {
-              enforceBuildableLibDependency: true,
-              allow: [],
-              depConstraints: [
-                { sourceTag: '*', onlyDependOnLibsWithTags: ['*'] },
-              ],
-            },
-          ],
-        },
-        overrides: [
+    writeJsonInTree(tree, '.eslintrc.json', {
+      root: true,
+      parser: '@typescript-eslint/parser',
+      parserOptions: {
+        ecmaVersion: 2018,
+        sourceType: 'module',
+        project: './tsconfig.*?.json',
+      },
+      ignorePatterns: ['**/*'],
+      plugins: ['@typescript-eslint', '@nrwl/nx'],
+      extends: [
+        'eslint:recommended',
+        'plugin:@typescript-eslint/eslint-recommended',
+        'plugin:@typescript-eslint/recommended',
+        'prettier',
+        'prettier/@typescript-eslint',
+      ],
+      rules: {
+        '@typescript-eslint/explicit-member-accessibility': 'off',
+        '@typescript-eslint/explicit-module-boundary-types': 'off',
+        '@typescript-eslint/explicit-function-return-type': 'off',
+        '@typescript-eslint/no-parameter-properties': 'off',
+        '@nrwl/nx/enforce-module-boundaries': [
+          'error',
           {
-            files: ['*.tsx'],
-            rules: {
-              '@typescript-eslint/no-unused-vars': 'off',
-            },
+            enforceBuildableLibDependency: true,
+            allow: [],
+            depConstraints: [
+              { sourceTag: '*', onlyDependOnLibsWithTags: ['*'] },
+            ],
           },
         ],
-      })
-    );
+      },
+      overrides: [
+        {
+          files: ['*.tsx'],
+          rules: {
+            '@typescript-eslint/no-unused-vars': 'off',
+          },
+        },
+      ],
+    });
 
     const result = await runMigration(
       'update-eslint-configs-to-use-nx-presets',
@@ -400,24 +401,20 @@ describe('Update ESLint config files to use preset configs which eslint-plugin-n
       },
     };
 
-    tree.create(
-      'apps/reactapp/.eslintrc.json',
-      JSON.stringify(reactESLintConfig)
-    );
+    writeJsonInTree(tree, 'apps/reactapp/.eslintrc.json', reactESLintConfig);
 
-    tree.create(
+    writeJsonInTree(
+      tree,
       'apps/notreactapp/.eslintrc.json',
-      JSON.stringify(notReactESLintConfig)
+      notReactESLintConfig
     );
 
-    tree.create(
-      'libs/reactlib/.eslintrc.json',
-      JSON.stringify(reactESLintConfig)
-    );
+    writeJsonInTree(tree, 'libs/reactlib/.eslintrc.json', reactESLintConfig);
 
-    tree.create(
+    writeJsonInTree(
+      tree,
       'libs/notreactlib/.eslintrc.json',
-      JSON.stringify(notReactESLintConfig)
+      notReactESLintConfig
     );
 
     const result = await runMigration(

@@ -9,7 +9,11 @@ import {
   stripIndents,
 } from '@angular-devkit/core/src/utils/literals';
 import { initRootBabelConfig } from '../utils/rules';
-import { addDepsToPackageJson, formatFiles } from '@nrwl/workspace';
+import {
+  addDepsToPackageJson,
+  formatFiles,
+  writeJsonInTree,
+} from '@nrwl/workspace';
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 
 let addedEmotionPreset = false;
@@ -115,7 +119,7 @@ function createBabelrc(host, context, babelrcPath, deps) {
     );
   }
 
-  host.create(babelrcPath, JSON.stringify(babelrc, null, 2));
+  writeJsonInTree(host, babelrcPath, babelrc);
 }
 
 const addEmotionPresetPackage = addDepsToPackageJson(

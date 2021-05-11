@@ -1,5 +1,5 @@
 import { Tree } from '@angular-devkit/schematics';
-import { readJsonInTree } from '../../utils/ast-utils';
+import { readJsonInTree, writeJsonInTree } from '../../utils/ast-utils';
 import { runMigration } from '../../utils/testing';
 import {
   _test_addWorkspaceFile,
@@ -17,45 +17,37 @@ describe('Add update-enforce-boundary-lint rule', () => {
     // customize the linter being used
     _test_addWorkspaceFile('workspace.json', WorkspaceFormat.JSON);
 
-    tree.create(
-      '/workspace.json',
-      JSON.stringify({ version: 1, projects: {}, newProjectRoot: '' })
-    );
-    tree.create(
-      '/package.json',
-      JSON.stringify({
-        name: 'test-name',
-        dependencies: {},
-        devDependencies: {},
-      })
-    );
-    tree.create(
-      '/nx.json',
-      JSON.stringify(<NxJson>{ npmScope: 'proj', projects: {} })
-    );
-    tree.create(
-      '/tsconfig.json',
-      JSON.stringify({ compilerOptions: { paths: {} } })
-    );
+    writeJsonInTree(tree, '/workspace.json', {
+      version: 1,
+      projects: {},
+      newProjectRoot: '',
+    });
+    writeJsonInTree(tree, '/package.json', {
+      name: 'test-name',
+      dependencies: {},
+      devDependencies: {},
+    });
+    writeJsonInTree(tree, '/nx.json', <NxJson>{
+      npmScope: 'proj',
+      projects: {},
+    });
+    writeJsonInTree(tree, '/tsconfig.json', { compilerOptions: { paths: {} } });
   });
 
   describe('when using tslint', () => {
     beforeEach(() => {
-      tree.create(
-        '/tslint.json',
-        JSON.stringify({
-          rules: {
-            'nx-enforce-module-boundaries': [
-              true,
-              {
-                npmScope: '<%= npmScope %>',
-                lazyLoad: [],
-                allow: [],
-              },
-            ],
-          },
-        })
-      );
+      writeJsonInTree(tree, '/tslint.json', {
+        rules: {
+          'nx-enforce-module-boundaries': [
+            true,
+            {
+              npmScope: '<%= npmScope %>',
+              lazyLoad: [],
+              allow: [],
+            },
+          ],
+        },
+      });
     });
 
     it('should add the proper enforceBuildableLibDependency flag', async () => {
@@ -75,21 +67,18 @@ describe('Add update-enforce-boundary-lint rule', () => {
 
   describe('when using eslint', () => {
     beforeEach(() => {
-      tree.create(
-        '/.eslintrc',
-        JSON.stringify({
-          rules: {
-            '@nrwl/nx/enforce-module-boundaries': [
-              true,
-              {
-                npmScope: '<%= npmScope %>',
-                lazyLoad: [],
-                allow: [],
-              },
-            ],
-          },
-        })
-      );
+      writeJsonInTree(tree, '/.eslintrc', {
+        rules: {
+          '@nrwl/nx/enforce-module-boundaries': [
+            true,
+            {
+              npmScope: '<%= npmScope %>',
+              lazyLoad: [],
+              allow: [],
+            },
+          ],
+        },
+      });
     });
 
     it('should add the proper enforceBuildableLibDependency flag', async () => {

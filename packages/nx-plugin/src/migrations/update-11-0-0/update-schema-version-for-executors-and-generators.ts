@@ -1,5 +1,9 @@
 import { basename } from 'path';
-import { visitNotIgnoredFiles, readJsonInTree } from '@nrwl/workspace';
+import {
+  visitNotIgnoredFiles,
+  readJsonInTree,
+  writeJsonInTree,
+} from '@nrwl/workspace';
 
 export default function () {
   return visitNotIgnoredFiles((file, host) => {
@@ -12,7 +16,7 @@ export default function () {
         p.$schema = 'http://json-schema.org/schema';
         delete p.$id;
       }
-      host.overwrite(file, JSON.stringify(p, null, 2));
+      writeJsonInTree(host, file, p);
     }
   });
 }

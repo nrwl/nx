@@ -6,6 +6,7 @@ import {
   newProject,
   readFile,
   readJson,
+  readNxJson,
   removeProject,
   renameFile,
   runCLI,
@@ -14,8 +15,8 @@ import {
   uniq,
   updateFile,
   workspaceConfigName,
+  updateJsonFile,
 } from '@nrwl/e2e/utils';
-import { NxJson } from '@nrwl/workspace';
 import { classify } from '@nrwl/workspace/src/utils/strings';
 
 let proj: string;
@@ -50,7 +51,7 @@ describe('lint', () => {
       ...eslint.overrides[0].rules['@nrwl/nx/enforce-module-boundaries'][1]
         .depConstraints,
     ];
-    updateFile('.eslintrc.json', JSON.stringify(eslint, null, 2));
+    updateJsonFile('.eslintrc.json', eslint);
 
     const tsConfig = readJson('tsconfig.base.json');
 
@@ -66,7 +67,7 @@ describe('lint', () => {
     tsConfig.compilerOptions.paths[`@secondScope/${lazylib}`] =
       tsConfig.compilerOptions.paths[`@${proj}/${lazylib}`];
     delete tsConfig.compilerOptions.paths[`@${proj}/${lazylib}`];
-    updateFile('tsconfig.base.json', JSON.stringify(tsConfig, null, 2));
+    updateJsonFile('tsconfig.base.json', tsConfig);
 
     updateFile(
       `apps/${myapp}/src/main.ts`,
@@ -316,7 +317,7 @@ describe('workspace-generator', () => {
       type: 'boolean',
       description: 'skip changes to tsconfig',
     };
-    updateFile(`tools/generators/${custom}/schema.json`, JSON.stringify(json));
+    updateJsonFile(`tools/generators/${custom}/schema.json`, json);
 
     const indexFile = readFile(`tools/generators/${custom}/index.ts`);
     updateFile(
@@ -345,10 +346,7 @@ describe('workspace-generator', () => {
     const jsonFailing = readJson(`tools/generators/${failing}/schema.json`);
     jsonFailing.properties = {};
     jsonFailing.required = [];
-    updateFile(
-      `tools/generators/${failing}/schema.json`,
-      JSON.stringify(jsonFailing)
-    );
+    updateJsonFile(`tools/generators/${failing}/schema.json`, jsonFailing);
 
     updateFile(
       `tools/generators/${failing}/index.ts`,
@@ -379,9 +377,9 @@ describe('workspace-generator', () => {
     json.properties = {};
     json.required = [];
     delete json.cli;
-    updateFile(
+    updateJsonFile(
       `tools/generators/${angularDevkitSchematic}/schema.json`,
-      JSON.stringify(json)
+      json
     );
 
     updateFile(
@@ -758,9 +756,9 @@ describe('Move Project', () => {
      */
 
     runCLI(`generate @nrwl/workspace:lib ${lib3}`);
-    let nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    let nxJson = readNxJson();
     nxJson.projects[lib3].implicitDependencies = [`${lib1}-data-access`];
-    updateFile(`nx.json`, JSON.stringify(nxJson));
+    updateJsonFile(`nx.json`, nxJson);
 
     /**
      * Now try to move lib1
@@ -817,7 +815,7 @@ describe('Move Project', () => {
     checkFilesExist(rootClassPath);
 
     expect(moveOutput).toContain('UPDATE nx.json');
-    nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    nxJson = readNxJson();
     expect(nxJson.projects[`${lib1}-data-access`]).toBeUndefined();
     expect(nxJson.projects[newName]).toEqual({
       tags: [],
@@ -894,9 +892,9 @@ describe('Move Project', () => {
      */
 
     runCLI(`generate @nrwl/workspace:lib ${lib3}`);
-    let nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    let nxJson = readNxJson();
     nxJson.projects[lib3].implicitDependencies = [`${lib1}-data-access`];
-    updateFile(`nx.json`, JSON.stringify(nxJson));
+    updateJsonFile(`nx.json`, nxJson);
 
     /**
      * Now try to move lib1
@@ -953,7 +951,7 @@ describe('Move Project', () => {
     checkFilesExist(rootClassPath);
 
     expect(moveOutput).toContain('UPDATE nx.json');
-    nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    nxJson = readNxJson();
     expect(nxJson.projects[`${lib1}-data-access`]).toBeUndefined();
     expect(nxJson.projects[newName]).toEqual({
       tags: [],
@@ -999,9 +997,9 @@ describe('Move Project', () => {
     const lib2 = uniq('mylib');
     const lib3 = uniq('mylib');
 
-    let nxJson = readJson('nx.json');
-    nxJson.workspaceLayout = { libsDir: 'packages' };
-    updateFile('nx.json', JSON.stringify(nxJson));
+    let nxJson = readNxJson();
+    nxJson.workspaceLayout = { libsDir: 'packages', appsDir: '' };
+    updateJsonFile('nx.json', nxJson);
 
     runCLI(`generate @nrwl/workspace:lib ${lib1}/data-access`);
 
@@ -1033,9 +1031,9 @@ describe('Move Project', () => {
      */
 
     runCLI(`generate @nrwl/workspace:lib ${lib3}`);
-    nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    nxJson = readNxJson();
     nxJson.projects[lib3].implicitDependencies = [`${lib1}-data-access`];
-    updateFile(`nx.json`, JSON.stringify(nxJson));
+    updateJsonFile(`nx.json`, nxJson);
 
     /**
      * Now try to move lib1
@@ -1092,7 +1090,7 @@ describe('Move Project', () => {
     checkFilesExist(rootClassPath);
 
     expect(moveOutput).toContain('UPDATE nx.json');
-    nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    nxJson = readNxJson();
     expect(nxJson.projects[`${lib1}-data-access`]).toBeUndefined();
     expect(nxJson.projects[newName]).toEqual({
       tags: [],
@@ -1130,9 +1128,9 @@ describe('Move Project', () => {
       `import { fromLibOne } from '@${proj}/shared/${lib1}/data-access';`
     );
 
-    nxJson = readJson('nx.json');
+    nxJson = readNxJson();
     delete nxJson.workspaceLayout;
-    updateFile('nx.json', JSON.stringify(nxJson));
+    updateJsonFile('nx.json', nxJson);
   });
 });
 
@@ -1153,9 +1151,9 @@ describe('Remove Project', () => {
      */
 
     runCLI(`generate @nrwl/workspace:lib ${lib2}`);
-    let nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    let nxJson = readNxJson();
     nxJson.projects[lib2].implicitDependencies = [lib1];
-    updateFile(`nx.json`, JSON.stringify(nxJson));
+    updateJsonFile(`nx.json`, nxJson);
 
     /**
      * Try removing the project (should fail)
@@ -1185,7 +1183,7 @@ describe('Remove Project', () => {
     expect(exists(tmpProjPath(`libs/${lib1}`))).toBeFalsy();
 
     expect(removeOutputForced).toContain(`UPDATE nx.json`);
-    nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    nxJson = readNxJson();
     expect(nxJson.projects[`${lib1}`]).toBeUndefined();
     expect(nxJson.projects[lib2].implicitDependencies).toEqual([]);
 

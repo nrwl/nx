@@ -1,4 +1,4 @@
-import { readJson, Tree } from '@nrwl/devkit';
+import { readJson, writeJson, Tree } from '@nrwl/devkit';
 import { createTree } from '@nrwl/devkit/testing';
 import { initGenerator } from './init';
 
@@ -11,53 +11,50 @@ describe('workspace', () => {
 
   describe('move to nx layout', () => {
     beforeEach(() => {
-      tree.write('/package.json', JSON.stringify({}));
-      tree.write(
-        '/angular.json',
-        JSON.stringify({
-          version: 1,
-          defaultProject: 'myApp',
-          projects: {
-            myApp: {
-              root: '',
-              sourceRoot: 'src',
-              architect: {
-                build: {
-                  options: {
-                    tsConfig: 'tsconfig.app.json',
-                  },
-                  configurations: {},
+      writeJson(tree, '/package.json', {});
+      writeJson(tree, '/angular.json', {
+        version: 1,
+        defaultProject: 'myApp',
+        projects: {
+          myApp: {
+            root: '',
+            sourceRoot: 'src',
+            architect: {
+              build: {
+                options: {
+                  tsConfig: 'tsconfig.app.json',
                 },
-                test: {
-                  options: {
-                    tsConfig: 'tsconfig.spec.json',
-                  },
+                configurations: {},
+              },
+              test: {
+                options: {
+                  tsConfig: 'tsconfig.spec.json',
                 },
-                lint: {
-                  options: {
-                    tsConfig: 'tsconfig.app.json',
-                  },
+              },
+              lint: {
+                options: {
+                  tsConfig: 'tsconfig.app.json',
                 },
-                e2e: {
-                  options: {
-                    protractorConfig: 'e2e/protractor.conf.js',
-                  },
+              },
+              e2e: {
+                options: {
+                  protractorConfig: 'e2e/protractor.conf.js',
                 },
               },
             },
           },
-        })
-      );
-      tree.write(
-        '/tsconfig.app.json',
-        '{"extends": "../tsconfig.json", "compilerOptions": {}}'
-      );
-      tree.write(
-        '/tsconfig.spec.json',
-        '{"extends": "../tsconfig.json", "compilerOptions": {}}'
-      );
-      tree.write('/tsconfig.json', '{"compilerOptions": {}}');
-      tree.write('/tslint.json', '{"rules": {}}');
+        },
+      });
+      writeJson(tree, '/tsconfig.app.json', {
+        extends: '../tsconfig.json',
+        compilerOptions: {},
+      });
+      writeJson(tree, '/tsconfig.spec.json', {
+        extends: '../tsconfig.json',
+        compilerOptions: {},
+      });
+      writeJson(tree, '/tsconfig.json', { compilerOptions: {} });
+      writeJson(tree, '/tslint.json', { rules: {} });
       tree.write('/e2e/protractor.conf.js', '// content');
       tree.write('/src/app/app.module.ts', '// content');
     });
@@ -95,17 +92,14 @@ describe('workspace', () => {
       });
 
       it('should error if the angular.json specifies more than one app', async () => {
-        tree.write(
-          '/angular.json',
-          JSON.stringify({
-            projects: {
-              proj1: {},
-              'proj1-e2e': {},
-              proj2: {},
-              'proj2-e2e': {},
-            },
-          })
-        );
+        writeJson(tree, '/angular.json', {
+          projects: {
+            proj1: {},
+            'proj1-e2e': {},
+            proj2: {},
+            'proj2-e2e': {},
+          },
+        });
         try {
           await initGenerator(tree, { name: 'myApp' });
         } catch (e) {
@@ -115,16 +109,13 @@ describe('workspace', () => {
     });
 
     it('should error if the angular.json has only one library', async () => {
-      tree.write(
-        '/angular.json',
-        JSON.stringify({
-          projects: {
-            proj1: {
-              projectType: 'library',
-            },
+      writeJson(tree, '/angular.json', {
+        projects: {
+          proj1: {
+            projectType: 'library',
           },
-        })
-      );
+        },
+      });
       try {
         await initGenerator(tree, { name: 'myApp' });
       } catch (e) {
@@ -161,96 +152,90 @@ describe('workspace', () => {
     });
 
     it('should work with nested (sub-dir) tsconfig files', async () => {
-      tree.write(
-        '/angular.json',
-        JSON.stringify({
-          version: 1,
-          defaultProject: 'myApp',
-          projects: {
-            myApp: {
-              sourceRoot: 'src',
-              architect: {
-                build: {
-                  options: {
-                    tsConfig: 'src/tsconfig.app.json',
-                  },
-                  configurations: {},
+      writeJson(tree, '/angular.json', {
+        version: 1,
+        defaultProject: 'myApp',
+        projects: {
+          myApp: {
+            sourceRoot: 'src',
+            architect: {
+              build: {
+                options: {
+                  tsConfig: 'src/tsconfig.app.json',
                 },
-                test: {
-                  options: {
-                    tsConfig: 'src/tsconfig.spec.json',
-                  },
+                configurations: {},
+              },
+              test: {
+                options: {
+                  tsConfig: 'src/tsconfig.spec.json',
                 },
-                lint: {
-                  options: {
-                    tsConfig: 'src/tsconfig.app.json',
-                  },
+              },
+              lint: {
+                options: {
+                  tsConfig: 'src/tsconfig.app.json',
                 },
-                e2e: {
-                  options: {
-                    protractorConfig: 'e2e/protractor.conf.js',
-                  },
+              },
+              e2e: {
+                options: {
+                  protractorConfig: 'e2e/protractor.conf.js',
                 },
               },
             },
           },
-        })
-      );
+        },
+      });
       tree.delete('tsconfig.app.json');
-      tree.write(
-        '/src/tsconfig.app.json',
-        '{"extends": "../tsconfig.json", "compilerOptions": {}}'
-      );
+      writeJson(tree, '/src/tsconfig.app.json', {
+        extends: '../tsconfig.json',
+        compilerOptions: {},
+      });
       tree.delete('tsconfig.spec.json');
-      tree.write(
-        '/src/tsconfig.spec.json',
-        '{"extends": "../tsconfig.json", "compilerOptions": {}}'
-      );
+      writeJson(tree, '/src/tsconfig.spec.json', {
+        extends: '../tsconfig.json',
+        compilerOptions: {},
+      });
       await initGenerator(tree, { name: 'myApp' });
       expect(tree.exists('/apps/myApp/tsconfig.app.json')).toBe(true);
     });
 
     it('should work with initial project outside of src', async () => {
-      tree.write(
-        '/angular.json',
-        JSON.stringify({
-          version: 1,
-          defaultProject: 'myApp',
-          newProjectRoot: 'projects',
-          projects: {
-            myApp: {
-              root: 'projects/myApp',
-              sourceRoot: 'projects/myApp/src',
-              architect: {
-                build: {
-                  options: {
-                    tsConfig: 'projects/myApp/tsconfig.app.json',
-                  },
-                  configurations: {},
+      writeJson(tree, '/angular.json', {
+        version: 1,
+        defaultProject: 'myApp',
+        newProjectRoot: 'projects',
+        projects: {
+          myApp: {
+            root: 'projects/myApp',
+            sourceRoot: 'projects/myApp/src',
+            architect: {
+              build: {
+                options: {
+                  tsConfig: 'projects/myApp/tsconfig.app.json',
                 },
-                test: {
-                  options: {
-                    tsConfig: 'projects/myApp/tsconfig.spec.json',
-                  },
+                configurations: {},
+              },
+              test: {
+                options: {
+                  tsConfig: 'projects/myApp/tsconfig.spec.json',
                 },
-                lint: {
-                  options: {
-                    tsConfig: [
-                      'projects/myApp/tslint.json',
-                      'projects/myApp/tsconfig.app.json',
-                    ],
-                  },
+              },
+              lint: {
+                options: {
+                  tsConfig: [
+                    'projects/myApp/tslint.json',
+                    'projects/myApp/tsconfig.app.json',
+                  ],
                 },
-                e2e: {
-                  options: {
-                    protractorConfig: 'projects/myApp/e2e/protractor.conf.js',
-                  },
+              },
+              e2e: {
+                options: {
+                  protractorConfig: 'projects/myApp/e2e/protractor.conf.js',
                 },
               },
             },
           },
-        })
-      );
+        },
+      });
       tree.write('/projects/myApp/tslint.json', '{"rules": {}}');
       tree.write('/projects/myApp/tsconfig.app.json', '{}');
       tree.write('/projects/myApp/tsconfig.spec.json', '{}');
@@ -266,27 +251,24 @@ describe('workspace', () => {
     });
 
     it('should work with missing e2e, lint, or test targets', async () => {
-      tree.write(
-        '/angular.json',
-        JSON.stringify({
-          version: 1,
-          defaultProject: 'myApp',
-          projects: {
-            myApp: {
-              root: '',
-              sourceRoot: 'src',
-              architect: {
-                build: {
-                  options: {
-                    tsConfig: 'tsconfig.app.json',
-                  },
-                  configurations: {},
+      writeJson(tree, '/angular.json', {
+        version: 1,
+        defaultProject: 'myApp',
+        projects: {
+          myApp: {
+            root: '',
+            sourceRoot: 'src',
+            architect: {
+              build: {
+                options: {
+                  tsConfig: 'tsconfig.app.json',
                 },
+                configurations: {},
               },
             },
           },
-        })
-      );
+        },
+      });
       tree.write('/karma.conf.js', '// content');
 
       await initGenerator(tree, { name: 'myApp' });
@@ -323,8 +305,8 @@ describe('workspace', () => {
 
   describe('preserve angular cli layout', () => {
     beforeEach(() => {
-      tree.write('/package.json', JSON.stringify({ devDependencies: {} }));
-      tree.write('/angular.json', JSON.stringify({ projects: { myproj: {} } }));
+      writeJson(tree, '/package.json', { devDependencies: {} });
+      writeJson(tree, '/angular.json', { projects: { myproj: {} } });
     });
 
     it('should update package.json', async () => {

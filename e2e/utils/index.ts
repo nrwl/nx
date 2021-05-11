@@ -1,4 +1,5 @@
 import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
+import { NxJsonConfiguration } from '@nrwl/devkit';
 import { ChildProcess, exec, execSync } from 'child_process';
 import {
   copySync,
@@ -46,7 +47,7 @@ export function updateWorkspaceConfig(
   callback: (json: { [key: string]: any }) => Object
 ) {
   const file = workspaceConfigName();
-  updateFile(file, JSON.stringify(callback(readJson(file)), null, 2));
+  updateJsonFile(file, callback(readJson(file)));
 }
 
 export function runCreateWorkspace(
@@ -409,8 +410,12 @@ function setMaxWorkers() {
       }
     });
 
-    updateFile(workspaceFile, JSON.stringify(workspace));
+    updateJsonFile(workspaceFile, workspace);
   }
+}
+
+export function readNxJson(): NxJsonConfiguration {
+  return readJson('nx.json');
 }
 
 export function createFile(f: string, content: string = ''): void {
@@ -433,6 +438,17 @@ export function updateFile(
       tmpProjPath(f),
       content(readFileSync(tmpProjPath(f)).toString())
     );
+  }
+}
+
+export function updateJsonFile<T = any>(
+  f: string,
+  content: T | ((content: T) => T)
+): void {
+  if (content instanceof Function) {
+    updateFile(f, (c) => JSON.stringify(content(JSON.parse(c))));
+  } else {
+    updateFile(f, JSON.stringify(content));
   }
 }
 

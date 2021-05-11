@@ -1,4 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { readJson } from '@nrwl/devkit';
 import runCommands from './run-commands';
 import { libraryGenerator } from '../library/library';
 
@@ -19,8 +20,8 @@ describe('run-commands', () => {
 
     await runCommands(tree, opts);
 
-    const customTarget = JSON.parse(tree.read('workspace.json').toString())
-      .projects['lib'].architect['custom'];
+    const customTarget = readJson(tree, 'workspace.json').projects['lib']
+      .architect['custom'];
     expect(customTarget).toEqual({
       builder: '@nrwl/workspace:run-commands',
       outputs: ['/dist/a', '/dist/b', '/dist/c'],

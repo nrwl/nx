@@ -88,7 +88,7 @@ function formatWorkspaceJson(host: Tree, options: Schema) {
     updateJson(host, path, (workspaceJson) => {
       const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
       if (reformatted) {
-        host.write(path, JSON.stringify(reformatted, null, 2));
+        writeJson(host, path, reformatted);
       }
     });
   } catch (e) {

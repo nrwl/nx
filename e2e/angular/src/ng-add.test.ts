@@ -3,12 +3,14 @@ process.env.SELECTED_CLI = 'angular';
 import {
   checkFilesExist,
   readJson,
+  readNxJson,
   runCLI,
   runCommand,
   runNgAdd,
   runNgNew,
   updateFile,
 } from '@nrwl/e2e/utils';
+import { updateJsonFile } from '../../utils';
 
 xdescribe('Nrwl Convert to Nx Workspace', () => {
   it('should generate a workspace', () => {
@@ -17,7 +19,7 @@ xdescribe('Nrwl Convert to Nx Workspace', () => {
     // update package.json
     const packageJson = readJson('package.json');
     packageJson.description = 'some description';
-    updateFile('package.json', JSON.stringify(packageJson, null, 2));
+    updateJsonFile('package.json', packageJson);
     // confirm that @nrwl and @ngrx dependencies do not exist yet
     expect(packageJson.devDependencies['@nrwl/workspace']).not.toBeDefined();
     expect(packageJson.dependencies['@ngrx/store']).not.toBeDefined();
@@ -30,7 +32,7 @@ xdescribe('Nrwl Convert to Nx Workspace', () => {
     // update tsconfig.json
     const tsconfigJson = readJson('tsconfig.base.json');
     tsconfigJson.compilerOptions.paths = { a: ['b'] };
-    updateFile('tsconfig.json', JSON.stringify(tsconfigJson, null, 2));
+    updateJsonFile('tsconfig.json', tsconfigJson);
 
     updateFile('src/scripts.ts', '');
 
@@ -42,7 +44,7 @@ xdescribe('Nrwl Convert to Nx Workspace', () => {
     angularCLIJson.projects.proj.architect.test.options.styles = [
       'src/styles.css',
     ];
-    updateFile('angular.json', JSON.stringify(angularCLIJson, null, 2));
+    updateJsonFile('angular.json', angularCLIJson);
 
     // run the command
     runNgAdd('--npmScope projscope');
@@ -94,7 +96,7 @@ xdescribe('Nrwl Convert to Nx Workspace', () => {
     expect(updatedPackageJson.devDependencies['@nrwl/workspace']).toBeDefined();
     expect(updatedPackageJson.devDependencies['@angular/cli']).toBeDefined();
 
-    const nxJson = readJson('nx.json');
+    const nxJson = readNxJson();
     expect(nxJson).toEqual({
       npmScope: 'projscope',
       implicitDependencies: {
@@ -251,14 +253,11 @@ xdescribe('Nrwl Convert to Nx Workspace', () => {
     existingPackageJson.dependencies['@ngrx/effects'] = ngrxVersion;
     existingPackageJson.dependencies['@ngrx/router-store'] = ngrxVersion;
     existingPackageJson.devDependencies['@ngrx/store-devtools'] = ngrxVersion;
-    updateFile('package.json', JSON.stringify(existingPackageJson, null, 2));
+    updateJsonFile('package.json', existingPackageJson);
 
-    updateFile(
-      '.vscode/extensions.json',
-      JSON.stringify({
-        recommendations: ['eamodio.gitlens', 'angular.ng-template'],
-      })
-    );
+    updateJsonFile('.vscode/extensions.json', {
+      recommendations: ['eamodio.gitlens', 'angular.ng-template'],
+    });
     // run the command
     runNgAdd('--npmScope projscope --skip-install');
 

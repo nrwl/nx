@@ -2,7 +2,7 @@ import { join } from 'path';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { Rule, Tree } from '@angular-devkit/schematics';
 import { updateWorkspace } from '@nrwl/workspace/src/utils/workspace';
-import { readJsonInTree } from '@nrwl/workspace';
+import { readJsonInTree, writeJsonInTree } from '@nrwl/workspace';
 import { names } from '@nrwl/devkit';
 
 const testRunner = new SchematicTestRunner(
@@ -29,9 +29,9 @@ export function callRule(rule: Rule, tree: Tree) {
   return testRunner.callRule(rule, tree).toPromise();
 }
 
-export function updateNxJson(tree, update: (json: any) => any) {
+export function updateNxJson(tree: Tree, update: (json: any) => any) {
   const updated = update(readJsonInTree(tree, '/nx.json'));
-  tree.overwrite('/nx.json', JSON.stringify(updated));
+  writeJsonInTree(tree, '/nx.json', updated);
 }
 
 export function createApp(tree: Tree, appName: string): Promise<Tree> {

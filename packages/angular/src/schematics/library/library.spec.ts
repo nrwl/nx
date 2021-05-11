@@ -3,7 +3,6 @@ import { Tree } from '@angular-devkit/schematics';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
 import { NxJson, readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
-import * as stripJsonComments from 'strip-json-comments';
 import { createApp, runSchematic, callRule } from '../../utils/testing';
 
 describe('lib', () => {
@@ -335,9 +334,7 @@ describe('lib', () => {
     it('should default the prefix to npmScope', async () => {
       const noPrefix = await runSchematic('lib', { name: 'myLib' }, appTree);
       expect(
-        JSON.parse(noPrefix.read('workspace.json').toString()).projects[
-          'my-lib'
-        ].prefix
+        readJsonInTree(noPrefix, 'workspace.json').projects['my-lib'].prefix
       ).toEqual('proj');
 
       const withPrefix = await runSchematic(
@@ -346,7 +343,7 @@ describe('lib', () => {
         appTree
       );
       expect(
-        JSON.parse(withPrefix.read('workspace.json').toString()).projects[
+        readJsonInTree(withPrefix, 'workspace.json').projects[
           'my-lib-with-prefix'
         ].prefix
       ).toEqual('custom');
@@ -677,10 +674,9 @@ describe('lib', () => {
           ),
       }`);
 
-        const tsConfigAppJson = JSON.parse(
-          stripJsonComments(
-            getFileContent(tree, 'apps/myapp/tsconfig.app.json')
-          )
+        const tsConfigAppJson = readJsonInTree(
+          tree,
+          'apps/myapp/tsconfig.app.json'
         );
         expect(tsConfigAppJson.include).toEqual([
           '**/*.ts',
@@ -721,10 +717,9 @@ describe('lib', () => {
           ),
       }`);
 
-        const tsConfigAppJson2 = JSON.parse(
-          stripJsonComments(
-            getFileContent(tree2, 'apps/myapp/tsconfig.app.json')
-          )
+        const tsConfigAppJson2 = readJsonInTree(
+          tree2,
+          'apps/myapp/tsconfig.app.json'
         );
         expect(tsConfigAppJson2.include).toEqual([
           '**/*.ts',
@@ -773,10 +768,9 @@ describe('lib', () => {
           import('@proj/my-dir/my-lib3').then((module) => module.MyLib3Module),
       }`);
 
-        const tsConfigAppJson3 = JSON.parse(
-          stripJsonComments(
-            getFileContent(tree3, 'apps/myapp/tsconfig.app.json')
-          )
+        const tsConfigAppJson3 = readJsonInTree(
+          tree3,
+          'apps/myapp/tsconfig.app.json'
         );
         expect(tsConfigAppJson3.include).toEqual([
           '**/*.ts',
@@ -1133,8 +1127,9 @@ describe('lib', () => {
         appTree
       );
 
-      const { compilerOptions, angularCompilerOptions } = JSON.parse(
-        tree.readContent('libs/my-lib/tsconfig.json')
+      const { compilerOptions, angularCompilerOptions } = readJsonInTree(
+        tree,
+        'libs/my-lib/tsconfig.json'
       );
 
       // check that the TypeScript compiler options have been updated

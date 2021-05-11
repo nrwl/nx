@@ -19,6 +19,8 @@ import {
   updateProjectConfiguration,
   updateTsConfigsToJs,
   updateWorkspaceConfiguration,
+  writeJson,
+  readJson,
 } from '@nrwl/devkit';
 
 import { join } from 'path';
@@ -125,32 +127,25 @@ function addProxy(tree: Tree, options: NormalizedSchema) {
     projectConfig.targets.serve.options.proxyConfig = pathToProxyFile;
 
     if (!tree.exists(pathToProxyFile)) {
-      tree.write(
-        pathToProxyFile,
-        JSON.stringify(
-          {
-            '/api': {
-              target: 'http://localhost:3333',
-              secure: false,
-            },
-          },
-          null,
-          2
-        )
-      );
+      writeJson(tree, pathToProxyFile, {
+        '/api': {
+          target: 'http://localhost:3333',
+          secure: false,
+        },
+      });
     } else {
       //add new entry to existing config
-      const proxyFileContent = tree.read(pathToProxyFile).toString();
+      const proxyFileContent = readJson(tree, pathToProxyFile);
 
       const proxyModified = {
-        ...JSON.parse(proxyFileContent),
+        ...proxyFileContent,
         [`/${options.name}-api`]: {
           target: 'http://localhost:3333',
           secure: false,
         },
       };
 
-      tree.write(pathToProxyFile, JSON.stringify(proxyModified, null, 2));
+      writeJson(tree, pathToProxyFile, proxyModified);
     }
 
     updateProjectConfiguration(tree, options.frontendProject, projectConfig);

@@ -1,6 +1,6 @@
 import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import { readJsonInTree } from '@nrwl/workspace';
+import { readJsonInTree, writeJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import * as path from 'path';
 
@@ -15,14 +15,11 @@ describe('Move @types/react-redux Package 11.2.0', () => {
       '@nrwl/react',
       path.join(__dirname, '../../../migrations.json')
     );
-    tree.overwrite(
-      'package.json',
-      JSON.stringify({
-        dependencies: {
-          '@types/react-redux': '10.1.1',
-        },
-      })
-    );
+    writeJsonInTree(tree, 'package.json', {
+      dependencies: {
+        '@types/react-redux': '10.1.1',
+      },
+    });
   });
 
   it(`should move @types/react-redux, if in deps, to the devDeps in package.json`, async () => {

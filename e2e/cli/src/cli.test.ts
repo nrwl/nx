@@ -11,6 +11,7 @@ import {
   uniq,
   updateFile,
   workspaceConfigName,
+  updateJsonFile,
 } from '@nrwl/e2e/utils';
 
 describe('Cli', () => {
@@ -21,15 +22,14 @@ describe('Cli', () => {
     const myapp = uniq('myapp');
     runCLI(`generate @nrwl/web:app ${myapp}`);
 
-    updateFile(workspaceConfigName(), (c) => {
-      const w = JSON.parse(c);
+    updateJsonFile(workspaceConfigName(), (w) => {
       w.projects[myapp].targets['counter'] = {
         executor: '@nrwl/workspace:counter',
         options: {
           to: 2,
         },
       };
-      return JSON.stringify(w);
+      return w;
     });
 
     const success = runCLI(`counter ${myapp} --result=true`);
@@ -44,19 +44,15 @@ describe('Cli', () => {
     const mylib = uniq('mylib');
     runCLI(`generate @nrwl/node:lib ${mylib}`);
 
-    updateFile(workspaceConfigName(), (c) => {
-      const j = JSON.parse(c);
+    updateJsonFile(workspaceConfigName(), (j) => {
       delete j.projects[mylib].targets;
-      return JSON.stringify(j);
+      return j;
     });
 
-    updateFile(
-      `libs/${mylib}/package.json`,
-      JSON.stringify({
-        name: 'mylib1',
-        scripts: { echo: `echo ECHOED` },
-      })
-    );
+    updateJsonFile(`libs/${mylib}/package.json`, {
+      name: 'mylib1',
+      scripts: { echo: `echo ECHOED` },
+    });
 
     const { stdout } = await runCLIAsync(`echo ${mylib} --a=123`, {
       silent: true,
@@ -165,31 +161,25 @@ describe('migrate', () => {
   it('should run migrations', () => {
     newProject();
 
-    updateFile(
-      `./node_modules/migrate-parent-package/package.json`,
-      JSON.stringify({
-        version: '1.0.0',
-        'nx-migrations': './migrations.json',
-      })
-    );
+    updateJsonFile(`./node_modules/migrate-parent-package/package.json`, {
+      version: '1.0.0',
+      'nx-migrations': './migrations.json',
+    });
 
-    updateFile(
-      `./node_modules/migrate-parent-package/migrations.json`,
-      JSON.stringify({
-        schematics: {
-          run11: {
-            version: '1.1.0',
-            description: '1.1.0',
-            factory: './run11',
-          },
-          run20: {
-            version: '2.0.0',
-            description: '2.0.0',
-            implementation: './run20',
-          },
+    updateJsonFile(`./node_modules/migrate-parent-package/migrations.json`, {
+      schematics: {
+        run11: {
+          version: '1.1.0',
+          description: '1.1.0',
+          factory: './run11',
         },
-      })
-    );
+        run20: {
+          version: '2.0.0',
+          description: '2.0.0',
+          implementation: './run20',
+        },
+      },
+    });
 
     updateFile(
       `./node_modules/migrate-parent-package/run11.js`,
@@ -211,12 +201,9 @@ describe('migrate', () => {
         `
     );
 
-    updateFile(
-      `./node_modules/migrate-child-package/package.json`,
-      JSON.stringify({
-        version: '1.0.0',
-      })
-    );
+    updateJsonFile(`./node_modules/migrate-child-package/package.json`, {
+      version: '1.0.0',
+    });
 
     updateFile(
       './node_modules/@nrwl/tao/src/commands/migrate.js',

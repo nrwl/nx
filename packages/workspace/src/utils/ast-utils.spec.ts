@@ -3,13 +3,14 @@ import {
   renameSyncInTree,
   renameDirSyncInTree,
   addDepsToPackageJson,
+  writeJsonInTree,
 } from './ast-utils';
 import {
   SchematicTestRunner,
   UnitTestTree,
 } from '@angular-devkit/schematics/testing';
 import { join } from 'path';
-import { Tree, SchematicContext, TaskId } from '@angular-devkit/schematics';
+import { Tree } from '@angular-devkit/schematics';
 import { serializeJson } from '../utilities/fileutils';
 import { createEmptyWorkspace } from './testing-utils';
 
@@ -149,15 +150,12 @@ describe('addDepsToPackageJson', () => {
       '@nrwl/jest': '1.2.3',
     };
 
-    appTree.overwrite(
-      '/package.json',
-      JSON.stringify({
-        dependencies: {},
-        devDependencies: {
-          ...devDeps,
-        },
-      })
-    );
+    writeJsonInTree(appTree, '/package.json', {
+      dependencies: {},
+      devDependencies: {
+        ...devDeps,
+      },
+    });
 
     const testRunner = new SchematicTestRunner(
       '@nrwl/jest',
@@ -181,15 +179,12 @@ describe('addDepsToPackageJson', () => {
       '@nrwl/workspace': '1.1.1',
     };
 
-    appTree.overwrite(
-      '/package.json',
-      JSON.stringify({
-        dependencies: {},
-        devDependencies: {
-          '@nrwl/jest': '1.2.3',
-        },
-      })
-    );
+    writeJsonInTree(appTree, '/package.json', {
+      dependencies: {},
+      devDependencies: {
+        '@nrwl/jest': '1.2.3',
+      },
+    });
 
     const testRunner = new SchematicTestRunner(
       '@nrwl/jest',

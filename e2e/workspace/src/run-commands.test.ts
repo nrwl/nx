@@ -7,6 +7,7 @@ import {
   uniq,
   updateFile,
   workspaceConfigName,
+  updateJsonFile,
 } from '@nrwl/e2e/utils';
 
 describe('Run Commands', () => {
@@ -40,7 +41,7 @@ describe('Run Commands', () => {
     config.projects[
       nodeapp
     ].targets.echoEnvVariables.options.command += ` ${command}`;
-    updateFile(workspaceConfigName(), JSON.stringify(config, null, 2));
+    updateJsonFile(workspaceConfigName(), config);
 
     const result = runCLI('echoEnvVariables');
     expect(result).toContain('shared-root-value');
@@ -65,7 +66,7 @@ describe('Run Commands', () => {
         varCamelCase: 'd',
       },
     };
-    updateFile(workspaceConfigName(), JSON.stringify(config));
+    updateJsonFile(workspaceConfigName(), config);
 
     const result = runCLI(`run ${myapp}:echo`, { silent: true });
     expect(result).toContain(
@@ -90,7 +91,7 @@ describe('Run Commands', () => {
         ],
       },
     };
-    updateFile(workspaceConfigName(), JSON.stringify(config));
+    updateJsonFile(workspaceConfigName(), config);
 
     const result = runCLI(
       `run ${myapp}:echo --var1=a --var2=b --var-hyphen=c --varCamelCase=d`
@@ -121,7 +122,7 @@ describe('Run Commands', () => {
         command: `exit 1`,
       },
     };
-    updateFile(workspaceConfigName(), JSON.stringify(config));
+    updateJsonFile(workspaceConfigName(), config);
 
     try {
       runCLI(`run ${myapp}:error`);

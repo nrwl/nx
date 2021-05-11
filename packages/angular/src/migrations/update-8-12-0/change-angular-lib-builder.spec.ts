@@ -1,5 +1,5 @@
 import { Tree } from '@angular-devkit/schematics';
-import { readWorkspace } from '@nrwl/workspace';
+import { readWorkspace, writeJsonInTree } from '@nrwl/workspace';
 import {
   SchematicTestRunner,
   UnitTestTree,
@@ -20,33 +20,30 @@ describe('Update Angular library builder', () => {
   });
 
   it('should overwrite the usual builder with @nrwl/angular:package', async () => {
-    tree.create(
-      'workspace.json',
-      JSON.stringify({
-        projects: {
-          ['buildable-lib']: {
-            projectType: 'library',
-            architect: {
-              build: {
-                builder: '@angular-devkit/build-ng-packagr:build',
-              },
+    writeJsonInTree(tree, 'workspace.json', {
+      projects: {
+        ['buildable-lib']: {
+          projectType: 'library',
+          architect: {
+            build: {
+              builder: '@angular-devkit/build-ng-packagr:build',
             },
-          },
-          ['anotherbuildable-lib']: {
-            projectType: 'library',
-            architect: {
-              build: {
-                builder: '@angular-devkit/build-ng-packagr:build',
-              },
-            },
-          },
-          ['nonbuildable-lib']: {
-            projectType: 'library',
-            architect: {},
           },
         },
-      })
-    );
+        ['anotherbuildable-lib']: {
+          projectType: 'library',
+          architect: {
+            build: {
+              builder: '@angular-devkit/build-ng-packagr:build',
+            },
+          },
+        },
+        ['nonbuildable-lib']: {
+          projectType: 'library',
+          architect: {},
+        },
+      },
+    });
 
     await schematicRunner
       .runSchematicAsync('change-angular-lib-builder', {}, tree)

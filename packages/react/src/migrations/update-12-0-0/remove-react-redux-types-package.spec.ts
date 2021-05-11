@@ -1,4 +1,4 @@
-import { readJson, Tree } from '@nrwl/devkit';
+import { readJson, Tree, writeJson } from '@nrwl/devkit';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import * as path from 'path';
 import { removeReactReduxTypesFromPackageJson } from './remove-react-redux-types-package';
@@ -18,17 +18,14 @@ describe('Remove @types/react-redux Package from package.json 12.0.0', () => {
   });
 
   it(`should remove @types/react-redux from deps and/or from devDeps in package.json`, async () => {
-    tree.write(
-      'package.json',
-      JSON.stringify({
-        dependencies: {
-          '@types/react-redux': '10.1.1',
-        },
-        devDependencies: {
-          '@types/react-redux': '10.1.1',
-        },
-      })
-    );
+    writeJson(tree, 'package.json', {
+      dependencies: {
+        '@types/react-redux': '10.1.1',
+      },
+      devDependencies: {
+        '@types/react-redux': '10.1.1',
+      },
+    });
     await removeReactReduxTypesFromPackageJson(tree);
 
     const packageJson = readJson(tree, '/package.json');
