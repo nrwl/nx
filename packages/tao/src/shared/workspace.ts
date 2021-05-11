@@ -4,6 +4,7 @@ import { appRootPath } from '../utils/app-root';
 import { readJsonFile } from '../utils/fileutils';
 import type { NxJsonConfiguration, NxJsonProjectConfiguration } from './nx';
 import type { PackageManager } from './package-manager';
+import { TaskGraph } from './tasks';
 
 export interface Workspace
   extends WorkspaceJsonConfiguration,
@@ -186,6 +187,13 @@ export type Generator<T = unknown> = (
   schema: T
 ) => void | GeneratorCallback | Promise<void | GeneratorCallback>;
 
+export interface ExecutorConfig {
+  schema: any;
+  hasherFactory?: () => any;
+  implementationFactory: () => Executor;
+  batchImplementationFactory?: () => TaskGraphExecutor;
+}
+
 /**
  * Implementation of a target of a project
  */
@@ -198,6 +206,25 @@ export type Executor<T = any> = (
 ) =>
   | Promise<{ success: boolean }>
   | AsyncIterableIterator<{ success: boolean }>;
+
+/**
+ * Implementation of a target of a project that handles multiple projects to be batched
+ */
+export type TaskGraphExecutor<T = any> = (
+  /**
+   * Graph of Tasks to be executed
+   */
+  taskGraph: TaskGraph,
+  /**
+   * Map of Task IDs to options for the task
+   */
+  options: Record<string, T>,
+  /**
+   * Set of overrides for the overall execution
+   */
+  overrides: T,
+  context: ExecutorContext
+) => Promise<Record<string, { success: boolean; terminalOutput: string }>>;
 
 /**
  * Context that is passed into an executor
@@ -283,14 +310,7 @@ export class Workspaces {
     return schema['cli'] === 'nx';
   }
 
-  readExecutor(
-    nodeModule: string,
-    executor: string
-  ): {
-    schema: any;
-    implementationFactory: () => Executor;
-    hasherFactory?: () => any;
-  } {
+  readExecutor(nodeModule: string, executor: string): ExecutorConfig {
     try {
       const { executorsFilePath, executorConfig } = this.readExecutorsJson(
         nodeModule,
@@ -302,23 +322,31 @@ export class Workspaces {
       if (!schema.properties || typeof schema.properties !== 'object') {
         schema.properties = {};
       }
-      const [modulePath, exportName] = executorConfig.implementation.split('#');
-      const implementationFactory = () => {
-        const module = require(path.join(executorsDir, modulePath));
-        return module[exportName || 'default'] as Executor;
-      };
+      const implementationFactory = this.getImplementationFactory<Executor>(
+        executorConfig.implementation,
+        executorsDir
+      );
 
-      const hasherFactory = executorConfig.hasher
-        ? () => {
-            const module = require(path.join(
-              executorsDir,
-              executorConfig.hasher
-            ));
-            return module[exportName || 'default'];
-          }
+      const batchImplementationFactory = executorConfig.batchImplementation
+        ? this.getImplementationFactory<TaskGraphExecutor>(
+            executorConfig.batchImplementation,
+            executorsDir
+          )
         : null;
 
-      return { schema, implementationFactory, hasherFactory };
+      const hasherFactory = executorConfig.hasher
+        ? this.getImplementationFactory<Function>(
+            executorConfig.hasher,
+            executorsDir
+          )
+        : null;
+
+      return {
+        schema,
+        implementationFactory,
+        batchImplementationFactory,
+        hasherFactory,
+      };
     } catch (e) {
       throw new Error(
         `Unable to resolve ${nodeModule}:${executor}.\n${e.message}`
@@ -341,18 +369,28 @@ export class Workspaces {
       }
       generatorConfig.implementation =
         generatorConfig.implementation || generatorConfig.factory;
-      const [modulePath, exportName] =
-        generatorConfig.implementation.split('#');
-      const implementationFactory = () => {
-        const module = require(path.join(generatorsDir, modulePath));
-        return module[exportName || 'default'] as Generator;
-      };
+      const implementationFactory = this.getImplementationFactory<Generator>(
+        generatorConfig.implementation,
+        generatorsDir
+      );
       return { normalizedGeneratorName, schema, implementationFactory };
     } catch (e) {
       throw new Error(
         `Unable to resolve ${collectionName}:${generatorName}.\n${e.message}`
       );
     }
+  }
+
+  private getImplementationFactory<T>(
+    implementation: string,
+    directory: string
+  ): () => T {
+    const [implementationModulePath, implementationExportName] =
+      implementation.split('#');
+    return () => {
+      const module = require(path.join(directory, implementationModulePath));
+      return module[implementationExportName || 'default'] as T;
+    };
   }
 
   private readExecutorsJson(nodeModule: string, executor: string) {
@@ -372,7 +410,12 @@ export class Workspaces {
       path.join(path.dirname(packageJsonPath), executorsFile)
     );
     const executorsJson = readJsonFile(executorsFilePath);
-    const executorConfig =
+    const executorConfig: {
+      implementation: string;
+      batchImplementation?: string;
+      schema: string;
+      hasher?: string;
+    } =
       executorsJson.executors?.[executor] || executorsJson.builders?.[executor];
     if (!executorConfig) {
       throw new Error(

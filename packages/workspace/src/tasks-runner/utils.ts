@@ -2,8 +2,9 @@ import {
   ProjectGraph,
   ProjectGraphNode,
   TargetDependencyConfig,
+  Task,
+  TaskGraph,
 } from '@nrwl/devkit';
-import { Task } from './tasks-runner';
 import { flatten } from 'flat';
 import { output } from '../utilities/output';
 import { Workspaces } from '@nrwl/tao/src/shared/workspace';
@@ -176,13 +177,68 @@ function interpolateOutputs(template: string, data: any): string {
   });
 }
 
-export function getExecutorForTask(task: Task, workspace: Workspaces) {
+export function getExecutorNameForTask(task: Task, workspace: Workspaces) {
   const project =
     workspace.readWorkspaceConfiguration().projects[task.target.project];
-  const executor = project.targets[task.target.target].executor;
+  return project.targets[task.target.target].executor;
+}
+
+export function getExecutorForTask(task: Task, workspace: Workspaces) {
+  const executor = getExecutorNameForTask(task, workspace);
   const [nodeModule, executorName] = executor.split(':');
 
   return workspace.readExecutor(nodeModule, executorName);
+}
+
+export function getCustomHasher(task: Task, workspace: Workspaces) {
+  try {
+    const factory = getExecutorForTask(task, workspace).hasherFactory;
+    return factory ? factory() : null;
+  } catch (e) {
+    console.error(e);
+    throw new Error(`Unable to load hasher for task "${task.id}"`);
+  }
+}
+
+export function removeTasksFromTaskGraph(
+  graph: TaskGraph,
+  ids: string[]
+): TaskGraph {
+  const tasks = {};
+  const dependencies = {};
+  const removedSet = new Set(ids);
+  for (let taskId of Object.keys(graph.tasks)) {
+    if (!removedSet.has(taskId)) {
+      tasks[taskId] = graph.tasks[taskId];
+      dependencies[taskId] = graph.dependencies[taskId].filter(
+        (depTaskId) => !removedSet.has(depTaskId)
+      );
+    }
+  }
+  return {
+    tasks,
+    dependencies: dependencies,
+    roots: Object.keys(dependencies).filter(
+      (k) => dependencies[k].length === 0
+    ),
+  };
+}
+
+export function calculateReverseDeps(
+  taskGraph: TaskGraph
+): Record<string, string[]> {
+  const reverseTaskDeps: Record<string, string[]> = {};
+  Object.keys(taskGraph.tasks).forEach((t) => {
+    reverseTaskDeps[t] = [];
+  });
+
+  Object.keys(taskGraph.dependencies).forEach((taskId) => {
+    taskGraph.dependencies[taskId].forEach((d) => {
+      reverseTaskDeps[d].push(taskId);
+    });
+  });
+
+  return reverseTaskDeps;
 }
 
 export function getCliPath(workspaceRoot: string) {

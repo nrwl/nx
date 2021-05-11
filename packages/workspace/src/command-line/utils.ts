@@ -21,7 +21,7 @@ const runOne: string[] = [
   'hide-cached-output',
 ];
 
-const runMany: string[] = [...runOne, 'projects', 'all', 'verbose'];
+const runMany: string[] = [...runOne, 'projects', 'all'];
 
 const runAffected: string[] = [
   ...runOne,
@@ -33,7 +33,6 @@ const runAffected: string[] = [
   'files',
   'plain',
   'select',
-  'verbose',
 ];
 
 export interface RawNxArgs extends NxArgs {

@@ -1,4 +1,4 @@
-import { Task } from './tasks-runner';
+import { Task } from '@nrwl/devkit';
 import { Reporter, ReporterArgs } from './reporter';
 
 export class EmptyReporter implements Reporter {

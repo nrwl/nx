@@ -5,16 +5,95 @@ import { appRootPath } from '../utilities/app-root';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { Task } from './tasks-runner';
 import { output } from '../utilities/output';
-import { getCliPath, getCommandArgsForTask, unparse } from './utils';
+import { getCliPath, getCommandArgsForTask } from './utils';
+import { Batch } from '@nrwl/workspace/src/tasks-runner/tasks-schedule';
+import { join } from 'path';
+import {
+  BatchMessage,
+  BatchMessageType,
+  BatchResults,
+} from '@nrwl/workspace/src/tasks-runner/batch-messages';
 
+const workerPath = join(__dirname, './batch-worker.js');
 export class ForkedProcessTaskRunner {
   workspaceRoot = appRootPath;
   cliPath = getCliPath(this.workspaceRoot);
 
-  private processes: ChildProcess[] = [];
+  private processes = new Set<ChildProcess>();
 
   constructor(private readonly options: DefaultTasksRunnerOptions) {
     this.setupOnProcessExitListener();
+  }
+
+  public forkProcessForBatch({ executorName, taskGraph }: Batch) {
+    return new Promise<BatchResults>((res, rej) => {
+      try {
+        const env = this.envForForkedProcess(
+          process.env.FORCE_COLOR === undefined
+            ? 'true'
+            : process.env.FORCE_COLOR
+        );
+        const count = Object.keys(taskGraph.tasks).length;
+        if (count > 1) {
+          output.logSingleLine(
+            `Running ${output.bold()} ${output.bold(
+              'tasks'
+            )} with ${output.bold(executorName)}`
+          );
+        } else {
+          const args = getCommandArgsForTask(Object.values(taskGraph.tasks)[0]);
+          const commandLine = `nx ${args.join(' ')}`;
+
+          output.logCommand(commandLine);
+        }
+
+        const p = fork(workerPath, {
+          stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+          env,
+        });
+        this.processes.add(p);
+        p.stdout.on('data', (chunk) => {
+          process.stdout.write(chunk);
+        });
+        p.stderr.on('data', (chunk) => {
+          process.stderr.write(chunk);
+        });
+
+        p.once('exit', (code, signal) => {
+          if (code === null) code = this.signalToCode(signal);
+          if (code !== 0) {
+            const results: BatchResults = {};
+            for (const rootTaskId of taskGraph.roots) {
+              results[rootTaskId] = {
+                success: false,
+              };
+            }
+            rej(
+              new Error(
+                `"${executorName}" exited unexpectedly with code: ${code}`
+              )
+            );
+          }
+        });
+
+        p.on('message', (message: BatchMessage) => {
+          switch (message.type) {
+            case BatchMessageType.Complete: {
+              res(message.results);
+            }
+          }
+        });
+
+        // Start the tasks
+        p.send({
+          type: BatchMessageType.Tasks,
+          taskGraph,
+          executorName,
+        });
+      } catch (e) {
+        rej(e);
+      }
+    });
   }
 
   public forkProcessPipeOutputCapture(
@@ -23,13 +102,13 @@ export class ForkedProcessTaskRunner {
   ) {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
       try {
-        const env = this.envForForkedProcess(
+        const env = this.envForForkedProcessForTask(
           task,
-          undefined,
-          forwardOutput,
           process.env.FORCE_COLOR === undefined
             ? 'true'
-            : process.env.FORCE_COLOR
+            : process.env.FORCE_COLOR,
+          undefined,
+          forwardOutput
         );
         const args = getCommandArgsForTask(task);
         const commandLine = `nx ${args.join(' ')}`;
@@ -41,7 +120,7 @@ export class ForkedProcessTaskRunner {
           stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
           env,
         });
-        this.processes.push(p);
+        this.processes.add(p);
         let out = [];
         let outWithErr = [];
         p.stdout.on('data', (chunk) => {
@@ -85,11 +164,11 @@ export class ForkedProcessTaskRunner {
   ) {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
       try {
-        const env = this.envForForkedProcess(
+        const env = this.envForForkedProcessForTask(
           task,
+          undefined,
           temporaryOutputPath,
-          forwardOutput,
-          undefined
+          forwardOutput
         );
         const args = getCommandArgsForTask(task);
         const commandLine = `nx ${args.join(' ')}`;
@@ -101,7 +180,7 @@ export class ForkedProcessTaskRunner {
           stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
           env,
         });
-        this.processes.push(p);
+        this.processes.add(p);
         p.on('exit', (code, signal) => {
           if (code === null) code = this.signalToCode(signal);
           // we didn't print any output as we were running the command
@@ -138,25 +217,20 @@ export class ForkedProcessTaskRunner {
   }
 
   private envForForkedProcess(
-    task: Task,
-    outputPath: string,
-    forwardOutput: boolean,
-    forceColor: string
+    forceColor: string,
+    outputPath?: string,
+    forwardOutput?: boolean
   ) {
     const envsFromFiles = {
       ...parseEnv('.env'),
       ...parseEnv('.local.env'),
       ...parseEnv('.env.local'),
-      ...parseEnv(`${task.projectRoot}/.env`),
-      ...parseEnv(`${task.projectRoot}/.local.env`),
-      ...parseEnv(`${task.projectRoot}/.env.local`),
     };
 
     const env: NodeJS.ProcessEnv = {
       ...envsFromFiles,
       FORCE_COLOR: forceColor,
       ...process.env,
-      NX_TASK_HASH: task.hash,
       NX_INVOKED_BY_RUNNER: 'true',
       NX_WORKSPACE_ROOT: this.workspaceRoot,
     };
@@ -166,13 +240,40 @@ export class ForkedProcessTaskRunner {
       if (this.options.captureStderr) {
         env.NX_TERMINAL_CAPTURE_STDERR = 'true';
       }
-      // TODO: remove this once we have a reasonable way to configure it
-      if (task.target.target === 'test') {
-        env.NX_TERMINAL_CAPTURE_STDERR = 'true';
-      }
       if (forwardOutput) {
         env.NX_FORWARD_OUTPUT = 'true';
       }
+    }
+
+    return env;
+  }
+
+  private envForForkedProcessForTask(
+    task: Task,
+    forceColor: string,
+    outputPath: string,
+    forwardOutput: boolean
+  ) {
+    let env: NodeJS.ProcessEnv = this.envForForkedProcess(
+      forceColor,
+      outputPath,
+      forwardOutput
+    );
+    const envsFromFiles = {
+      ...parseEnv(`${task.projectRoot}/.env`),
+      ...parseEnv(`${task.projectRoot}/.local.env`),
+      ...parseEnv(`${task.projectRoot}/.env.local`),
+    };
+
+    env = {
+      ...env,
+      ...envsFromFiles,
+      NX_TASK_HASH: task.hash,
+    };
+
+    // TODO: remove this once we have a reasonable way to configure it
+    if (task.target.target === 'test') {
+      env.NX_TERMINAL_CAPTURE_STDERR = 'true';
     }
     return env;
   }

@@ -1,4 +1,4 @@
-import { AffectedEventType, Task, TasksRunner } from './tasks-runner';
+import { AffectedEventType, TasksRunner } from './tasks-runner';
 import { join } from 'path';
 import { appRootPath } from '../utilities/app-root';
 import { Reporter, ReporterArgs } from './reporter';
@@ -8,6 +8,7 @@ import type {
   ProjectGraphNode,
   TargetDependencyConfig,
   NxJsonConfiguration,
+  Task,
 } from '@nrwl/devkit';
 import { Environment } from '../core/shared-interfaces';
 import { NxArgs } from '@nrwl/workspace/src/command-line/utils';

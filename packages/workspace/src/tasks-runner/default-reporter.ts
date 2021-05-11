@@ -1,5 +1,5 @@
 import { output } from '../utilities/output';
-import { Task } from './tasks-runner';
+import type { Task } from '@nrwl/devkit';
 import { Reporter, ReporterArgs } from './reporter';
 
 export class DefaultReporter implements Reporter {

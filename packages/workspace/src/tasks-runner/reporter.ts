@@ -1,4 +1,4 @@
-import { Task } from './tasks-runner';
+import { Task } from '@nrwl/devkit';
 
 export interface ReporterArgs {
   target?: string;

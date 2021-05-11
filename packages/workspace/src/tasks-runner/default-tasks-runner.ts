@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
-import { Task, TaskCompleteEvent, TasksRunner } from './tasks-runner';
-import type { ProjectGraph, NxJsonConfiguration } from '@nrwl/devkit';
+import { TaskCompleteEvent, TasksRunner } from './tasks-runner';
+import type { ProjectGraph, NxJsonConfiguration, Task } from '@nrwl/devkit';
 import { TaskOrchestrator } from './task-orchestrator';
 import { performance } from 'perf_hooks';
 import { TaskGraphCreator } from './task-graph-creator';
@@ -17,6 +17,10 @@ export interface LifeCycle {
   startTask(task: Task): void;
 
   endTask(task: Task, code: number): void;
+
+  startTasks?(task: Task[]): void;
+
+  endTasks?(taskResults: Array<{ task: Task; code: number }>): void;
 }
 
 class NoopLifeCycle implements LifeCycle {
@@ -25,6 +29,10 @@ class NoopLifeCycle implements LifeCycle {
   startTask(task: Task): void {}
 
   endTask(task: Task, code: number): void {}
+
+  startTasks(task: Task[]): void {}
+
+  endTasks(taskResults: Array<{ task: Task; code: number }>): void {}
 }
 
 export interface DefaultTasksRunnerOptions {
@@ -95,10 +103,12 @@ async function runAllTasks(
 ): Promise<Array<{ task: Task; type: any; success: boolean }>> {
   const defaultTargetDependencies = context.nxJson.targetDependencies ?? {};
 
-  const taskGraph = new TaskGraphCreator(
+  const taskGraphCreator = new TaskGraphCreator(
     context.projectGraph,
     defaultTargetDependencies
-  ).createTaskGraph(tasks);
+  );
+
+  const taskGraph = taskGraphCreator.createTaskGraph(tasks);
 
   performance.mark('task-graph-created');
 
