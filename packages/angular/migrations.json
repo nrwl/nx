@@ -65,7 +65,7 @@
       "cli": "nx",
       "version": "12.4.0-beta.0",
       "description": "Remove deprecated options and update others according to new defaults. It syncs with the v12 migration of Angular builders.",
-      "factory": "./src/migrations/update-12-2-0/update-webpack-browser-config"
+      "factory": "./src/migrations/update-12-4-0/update-webpack-browser-config"
     }
   },
   "packageJsonUpdates": {
