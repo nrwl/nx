@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "NxWorkspaceMove",
+  "$id": "NxWorkspaceMove",
   "cli": "nx",
   "title": "Nx Move",
   "description": "Move a project to another folder in the workspace",

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "component-story",
+  "$id": "NxAngularComponentStory",
   "type": "object",
   "properties": {
     "projectPath": {

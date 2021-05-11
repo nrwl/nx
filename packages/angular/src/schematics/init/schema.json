@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "SchematicsAngularModuleInit",
+  "$id": "SchematicsAngularModuleInit",
   "title": "Init Angular Plugin",
   "description": "NOTE: Does not work in the --dry-run mode",
   "type": "object",
@@ -30,7 +30,7 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["tslint", "eslint"],
+      "enum": ["eslint", "none"],
       "default": "eslint"
     }
   }

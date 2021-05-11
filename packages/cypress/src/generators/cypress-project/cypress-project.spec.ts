@@ -89,6 +89,18 @@ describe('schematic:cypress-project', () => {
       });
     });
 
+    it('should not add lint target when "none" is passed', async () => {
+      await cypressProjectGenerator(tree, {
+        name: 'my-app-e2e',
+        project: 'my-app',
+        linter: Linter.None,
+      });
+      const workspaceJson = readJson(tree, 'workspace.json');
+      const project = workspaceJson.projects['my-app-e2e'];
+
+      expect(project.architect.lint).toBeUndefined();
+    });
+
     it('should update nx.json', async () => {
       await cypressProjectGenerator(tree, {
         name: 'my-app-e2e',

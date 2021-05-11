@@ -52,7 +52,6 @@ export default function (schema: Schema): Rule {
       externalSchematic('@schematics/angular', 'library', {
         name: options.name,
         prefix: options.prefix,
-        style: options.style,
         entryFile: 'index',
         skipPackageJson: !(options.publishable || options.buildable),
         skipTsConfig: true,
@@ -82,7 +81,7 @@ export default function (schema: Schema): Rule {
         : noop(),
       addModule(options),
       options.strict ? enableStrictTypeChecking(options) : noop(),
-      addLinting(options),
+      options.linter !== Linter.None ? addLinting(options) : noop(),
       formatFiles(options),
     ]);
   };
@@ -97,19 +96,6 @@ const addLinting = (options: NormalizedSchema) => () => {
       projectRoot: options.projectRoot,
       prefix: options.prefix,
     }),
-    /**
-     * I cannot explain why this extra rule is needed, the add-linting
-     * schematic applies the exact same host.delete() call but the main
-     * chain of this library schematic still preserves it...
-     */
-    (host) => {
-      if (
-        options.linter === Linter.EsLint &&
-        host.exists(`${options.projectRoot}/tslint.json`)
-      ) {
-        host.delete(`${options.projectRoot}/tslint.json`);
-      }
-    },
   ]);
 };
 

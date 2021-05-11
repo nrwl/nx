@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "NxPluginGenerator",
+  "$id": "NxPluginGenerator",
   "title": "Create a Generator for an Nx Plugin",
   "type": "object",
   "examples": [

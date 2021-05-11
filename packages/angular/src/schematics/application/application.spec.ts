@@ -441,65 +441,15 @@ describe('app', () => {
       });
     });
 
-    describe('tslint', () => {
-      it('should add an architect target for lint', async () => {
+    describe('none', () => {
+      it('should not add an architect target for lint', async () => {
         const tree = await runSchematic(
           'app',
-          { name: 'myApp', linter: 'tslint' },
+          { name: 'myApp', linter: 'none' },
           appTree
         );
         const workspaceJson = readJsonInTree(tree, 'workspace.json');
-        expect(workspaceJson.projects['my-app'].architect.lint)
-          .toMatchInlineSnapshot(`
-            Object {
-              "builder": "@angular-devkit/build-angular:tslint",
-              "options": Object {
-                "exclude": Array [
-                  "**/node_modules/**",
-                  "!apps/my-app/**/*",
-                ],
-                "tsConfig": Array [
-                  "apps/my-app/tsconfig.app.json",
-                  "apps/my-app/tsconfig.spec.json",
-                  "apps/my-app/tsconfig.editor.json",
-                ],
-              },
-            }
-          `);
-      });
-
-      it('should add valid tslint JSON configuration', async () => {
-        const tree = await runSchematic(
-          'app',
-          { name: 'myApp', linter: 'tslint' },
-          appTree
-        );
-
-        const tslintConfig = readJsonInTree(tree, 'apps/my-app/tslint.json');
-        expect(tslintConfig).toMatchInlineSnapshot(`
-            Object {
-              "extends": "../../tslint.json",
-              "linterOptions": Object {
-                "exclude": Array [
-                  "!**/*",
-                ],
-              },
-              "rules": Object {
-                "component-selector": Array [
-                  true,
-                  "element",
-                  "proj",
-                  "kebab-case",
-                ],
-                "directive-selector": Array [
-                  true,
-                  "attribute",
-                  "proj",
-                  "camelCase",
-                ],
-              },
-            }
-          `);
+        expect(workspaceJson.projects['my-app'].architect.lint).toBeUndefined();
       });
     });
   });
@@ -586,14 +536,17 @@ describe('app', () => {
             e2e: {
               builder: '@angular-devkit/build-angular:protractor',
               options: {
-                devServerTarget: 'my-app:serve',
                 protractorConfig: 'apps/my-app-e2e/protractor.conf.js',
               },
               configurations: {
+                development: {
+                  devServerTarget: 'my-app:serve:development',
+                },
                 production: {
                   devServerTarget: 'my-app:serve:production',
                 },
               },
+              defaultConfiguration: 'development',
             },
             lint: {
               builder: '@nrwl/linter:eslint',

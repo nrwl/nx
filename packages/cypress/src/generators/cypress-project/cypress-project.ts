@@ -8,7 +8,6 @@ import {
   joinPathFragments,
   names,
   offsetFromRoot,
-  readProjectConfiguration,
   toJS,
   Tree,
   updateJson,
@@ -67,6 +66,10 @@ function addProject(host: Tree, options: CypressProjectSchema) {
 }
 
 export async function addLinter(host: Tree, options: CypressProjectSchema) {
+  if (options.linter === Linter.None) {
+    return () => {};
+  }
+
   const installTask = await lintProjectGenerator(host, {
     project: options.projectName,
     linter: options.linter,

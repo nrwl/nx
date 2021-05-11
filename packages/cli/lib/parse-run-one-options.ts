@@ -97,11 +97,6 @@ export function parseRunOneOptions(
     project = defaultProjectName;
   }
 
-  if (parsedArgs.configuration) {
-    configuration = parsedArgs.configuration;
-  } else if (parsedArgs.prod) {
-    configuration = 'production';
-  }
   if (parsedArgs.project) {
     project = parsedArgs.project;
   }
@@ -120,6 +115,14 @@ export function parseRunOneOptions(
   // for backwards compat we require targets to be set when use defaultProjectName
   if ((!targets || !targets[target]) && projectIsNotSetExplicitly) return false;
   if (invalidTargetNames.indexOf(target) > -1) return false;
+
+  if (parsedArgs.configuration) {
+    configuration = parsedArgs.configuration;
+  } else if (targets[target].defaultConfiguration) {
+    configuration = targets[target].defaultConfiguration;
+  } else if (parsedArgs.prod) {
+    configuration = 'production';
+  }
 
   const res = { project, target, configuration, parsedArgs };
   delete parsedArgs['c'];

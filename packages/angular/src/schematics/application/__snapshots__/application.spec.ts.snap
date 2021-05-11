@@ -6,36 +6,38 @@ Object {
     "build": Object {
       "builder": "@angular-devkit/build-angular:browser",
       "configurations": Object {
+        "development": Object {
+          "buildOptimizer": false,
+          "extractLicenses": false,
+          "namedChunks": true,
+          "optimization": false,
+          "sourceMap": true,
+          "vendorChunk": true,
+        },
         "production": Object {
           "budgets": Array [
             Object {
-              "maximumError": "5mb",
-              "maximumWarning": "2mb",
+              "maximumError": "1mb",
+              "maximumWarning": "500kb",
               "type": "initial",
             },
             Object {
-              "maximumError": "10kb",
-              "maximumWarning": "6kb",
+              "maximumError": "4kb",
+              "maximumWarning": "2kb",
               "type": "anyComponentStyle",
             },
           ],
-          "buildOptimizer": true,
-          "extractLicenses": true,
           "fileReplacements": Array [
             Object {
               "replace": "apps/my-dir/my-app/src/environments/environment.ts",
               "with": "apps/my-dir/my-app/src/environments/environment.prod.ts",
             },
           ],
-          "namedChunks": false,
-          "optimization": true,
           "outputHashing": "all",
-          "sourceMap": false,
-          "vendorChunk": false,
         },
       },
+      "defaultConfiguration": "production",
       "options": Object {
-        "aot": true,
         "assets": Array [
           "apps/my-dir/my-app/src/favicon.ico",
           "apps/my-dir/my-app/src/assets",
@@ -69,13 +71,14 @@ Object {
     "serve": Object {
       "builder": "@angular-devkit/build-angular:dev-server",
       "configurations": Object {
+        "development": Object {
+          "browserTarget": "my-dir-my-app:build:development",
+        },
         "production": Object {
           "browserTarget": "my-dir-my-app:build:production",
         },
       },
-      "options": Object {
-        "browserTarget": "my-dir-my-app:build",
-      },
+      "defaultConfiguration": "development",
     },
     "test": Object {
       "builder": "@nrwl/jest:jest",
@@ -132,36 +135,38 @@ Object {
     "build": Object {
       "builder": "@angular-devkit/build-angular:browser",
       "configurations": Object {
+        "development": Object {
+          "buildOptimizer": false,
+          "extractLicenses": false,
+          "namedChunks": true,
+          "optimization": false,
+          "sourceMap": true,
+          "vendorChunk": true,
+        },
         "production": Object {
           "budgets": Array [
             Object {
-              "maximumError": "5mb",
-              "maximumWarning": "2mb",
+              "maximumError": "1mb",
+              "maximumWarning": "500kb",
               "type": "initial",
             },
             Object {
-              "maximumError": "10kb",
-              "maximumWarning": "6kb",
+              "maximumError": "4kb",
+              "maximumWarning": "2kb",
               "type": "anyComponentStyle",
             },
           ],
-          "buildOptimizer": true,
-          "extractLicenses": true,
           "fileReplacements": Array [
             Object {
               "replace": "apps/my-app/src/environments/environment.ts",
               "with": "apps/my-app/src/environments/environment.prod.ts",
             },
           ],
-          "namedChunks": false,
-          "optimization": true,
           "outputHashing": "all",
-          "sourceMap": false,
-          "vendorChunk": false,
         },
       },
+      "defaultConfiguration": "production",
       "options": Object {
-        "aot": true,
         "assets": Array [
           "apps/my-app/src/favicon.ico",
           "apps/my-app/src/assets",
@@ -195,13 +200,14 @@ Object {
     "serve": Object {
       "builder": "@angular-devkit/build-angular:dev-server",
       "configurations": Object {
+        "development": Object {
+          "browserTarget": "my-app:build:development",
+        },
         "production": Object {
           "browserTarget": "my-app:build:production",
         },
       },
-      "options": Object {
-        "browserTarget": "my-app:build",
-      },
+      "defaultConfiguration": "development",
     },
     "test": Object {
       "builder": "@nrwl/jest:jest",

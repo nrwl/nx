@@ -1,5 +1,5 @@
 {
-  "id": "NxPluginE2E",
+  "$id": "NxPluginE2E",
   "title": "Create an e2e app for a Nx Plugin",
   "type": "object",
   "properties": {

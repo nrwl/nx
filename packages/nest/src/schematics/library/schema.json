@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "NxNestLibrary",
+  "$id": "NxNestLibrary",
   "title": "Create a Nest Library for Nx",
   "type": "object",
   "examples": [

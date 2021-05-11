@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
-  "id": "NxReactApp",
+  "$id": "NxGatsbyReactPage",
   "title": "Create a React Page for Gatsby",
   "type": "object",
   "examples": [

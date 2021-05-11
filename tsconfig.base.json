@@ -12,6 +12,7 @@
     "types": ["node", "jest"],
     "lib": ["es2018"],
     "declaration": true,
+    "resolveJsonModule": true,
     "baseUrl": ".",
     "rootDir": ".",
     "paths": {

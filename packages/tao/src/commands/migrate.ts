@@ -482,8 +482,8 @@ function packageToMigrationsFilePath(packageName: string, dir: string) {
   }
   try {
     if (migrationsFile && typeof migrationsFile === 'string') {
-      return require.resolve(`${packageName}/${migrationsFile}`, {
-        paths: [dir],
+      return require.resolve(migrationsFile, {
+        paths: [dirname(packageJsonPath)],
       });
     } else {
       return null;
