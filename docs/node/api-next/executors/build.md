@@ -7,24 +7,6 @@ Read more about how to use executors and the CLI here: https://nx.dev/node/getti
 
 ## Properties
 
-### fileReplacements
-
-Type: `object[]`
-
-Replace files with other files in the build.
-
-#### replace
-
-Type: `string`
-
-undefined
-
-#### with
-
-Type: `string`
-
-undefined
-
 ### nextConfig
 
 Type: `string`
