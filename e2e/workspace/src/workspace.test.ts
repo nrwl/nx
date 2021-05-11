@@ -619,7 +619,6 @@ describe('print-affected', () => {
       command: `${runNx} test ${myapp}`,
       outputs: [`coverage/apps/${myapp}`],
     });
-    expect(resWithTarget.tasks[0].hash).toBeDefined();
     compareTwoArrays(resWithTarget.projects, [`${myapp}-e2e`, myapp]);
 
     const resWithDeps = JSON.parse(
@@ -641,7 +640,6 @@ describe('print-affected', () => {
       command: `${runNx} build ${myapp}`,
       outputs: [`dist/apps/${myapp}`],
     });
-    expect(resWithDeps.tasks[0].hash).toBeDefined();
 
     expect(resWithDeps.tasks[1]).toMatchObject({
       id: `${mypublishablelib}:build`,
@@ -653,7 +651,6 @@ describe('print-affected', () => {
       command: `${runNx} build ${mypublishablelib}`,
       outputs: [`dist/libs/${mypublishablelib}`],
     });
-    expect(resWithDeps.tasks[1].hash).toBeDefined();
 
     compareTwoArrays(resWithDeps.projects, [
       mylib,

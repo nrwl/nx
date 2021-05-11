@@ -12,10 +12,11 @@ import {
   ProjectGraph,
 } from '@nrwl/devkit';
 import { readJsonFile } from '../../utilities/fileutils';
+import { TaskGraph } from '@nrwl/workspace/src/tasks-runner/task-graph-creator';
 
 export interface Hash {
   value: string;
-  details: {
+  details?: {
     command: string;
     sources: { [projectName: string]: string };
     implicitDeps: { [key: string]: string };
@@ -38,12 +39,8 @@ interface RuntimeHashResult {
   runtime: { [input: string]: string };
 }
 
-interface NodeModulesResult {
-  value: string;
-}
-
 export class Hasher {
-  static version = '1.0';
+  static version = '2.0';
   private implicitDependencies: Promise<ImplicitHashResult>;
   private runtimeInputs: Promise<RuntimeHashResult>;
   private fileHasher: FileHasher;
@@ -68,15 +65,7 @@ export class Hasher {
     this.projectHashes = new ProjectHasher(this.projectGraph, this.hashing);
   }
 
-  async hashTasks(tasks: Task[]): Promise<Hash[]> {
-    performance.mark('hasher:hash:start');
-    const r = await Promise.all(tasks.map((t) => this.hash(t)));
-    performance.mark('hasher:hash:end');
-    performance.measure('hasher:hash', 'hasher:hash:start', 'hasher:hash:end');
-    return r;
-  }
-
-  private async hash(task: Task): Promise<Hash> {
+  async hashTaskWithDepsAndContext(task: Task): Promise<Hash> {
     const command = this.hashing.hashArray([
       task.target.project ?? '',
       task.target.target ?? '',
@@ -112,6 +101,29 @@ export class Hasher {
         runtime: values[2].runtime,
       },
     };
+  }
+
+  async hashContext(): Promise<{
+    implicitDeps: ImplicitHashResult;
+    runtime: RuntimeHashResult;
+  }> {
+    const values = (await Promise.all([
+      this.implicitDepsHash(),
+      this.runtimeInputsHash(),
+    ])) as [ImplicitHashResult, RuntimeHashResult];
+
+    return {
+      implicitDeps: values[0],
+      runtime: values[1],
+    };
+  }
+
+  async hashSource(task: Task): Promise<string> {
+    return this.projectHashes.hashProjectNodeSource(task.target.project);
+  }
+
+  hashArray(values: string[]): string {
+    return this.hashing.hashArray(values);
   }
 
   private async runtimeInputsHash(): Promise<RuntimeHashResult> {
@@ -292,7 +304,7 @@ class ProjectHasher {
     });
   }
 
-  private async hashProjectNodeSource(projectName: string) {
+  async hashProjectNodeSource(projectName: string) {
     if (!this.sourceHashes[projectName]) {
       this.sourceHashes[projectName] = new Promise(async (res) => {
         const p = this.projectGraph.nodes[projectName];

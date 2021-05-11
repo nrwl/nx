@@ -11,7 +11,6 @@ import {
 import { Environment, NxJson } from '../core/shared-interfaces';
 import { NxArgs } from '@nrwl/workspace/src/command-line/utils';
 import { isRelativePath } from '../utilities/fileutils';
-import { Hasher } from '../core/hasher/hasher';
 import {
   projectHasTarget,
   projectHasTargetAndConfiguration,
@@ -52,12 +51,6 @@ export async function runCommand<T extends RunArgs>(
     overrides
   );
 
-  const hasher = new Hasher(projectGraph, nxJson, runnerOptions);
-  const res = await hasher.hashTasks(tasks);
-  for (let i = 0; i < res.length; ++i) {
-    tasks[i].hash = res[i].value;
-    tasks[i].hashDetails = res[i].details;
-  }
   const cachedTasks: Task[] = [];
   const failedTasks: Task[] = [];
   const tasksWithFailedDependencies: Task[] = [];

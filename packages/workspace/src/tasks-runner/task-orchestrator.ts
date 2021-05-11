@@ -10,143 +10,243 @@ import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { AffectedEventType, Task } from './tasks-runner';
 import { getOutputs, unparse } from './utils';
 import { performance } from 'perf_hooks';
+import { TaskGraph } from './task-graph-creator';
+import { Hasher } from '../core/hasher/hasher';
 
 export class TaskOrchestrator {
   workspaceRoot = appRootPath;
   cache = new Cache(this.options);
   timings: { [target: string]: { start: number; end: number } } = {};
+  completedTasks: {
+    [id: string]: 'success' | 'failure' | 'skipped' | 'cache';
+  } = {};
+  scheduledTasks: {
+    [id: string]: boolean;
+  } = {};
+  availableTasks: string[] = [];
+  waitingForTasks: Function[] = [];
+  reverseTaskDeps: Record<string, string[]> = {};
 
   private processes: ChildProcess[] = [];
 
   constructor(
+    private readonly hasher: Hasher,
     private readonly initiatingProject: string | undefined,
     private readonly projectGraph: ProjectGraph,
+    private readonly taskGraph: TaskGraph,
     private readonly options: DefaultTasksRunnerOptions,
     private readonly hideCachedOutput: boolean
   ) {
     this.setupOnProcessExitListener();
   }
 
-  async run(tasksInStage: Task[]) {
-    const { cached, rest } = await this.splitTasksIntoCachedAndNotCached(
-      tasksInStage
-    );
-
+  async run() {
+    this.calculateReverseDeps();
+    for (let root of this.taskGraph.roots) {
+      await this.pushAvailableTask(root);
+    }
     performance.mark('task-execution-begins');
-    const r1 = await this.applyCachedResults(cached);
-    const r2 = await this.runRest(rest);
+    const res = await this.runTasks();
     performance.mark('task-execution-ends');
     performance.measure(
       'command-execution',
       'task-execution-begins',
       'task-execution-ends'
     );
-
     this.cache.removeOldCacheRecords();
-    return [...r1, ...r2];
+    return res;
   }
 
-  private async runRest(tasks: Task[]) {
-    const left = [...tasks];
-    const res = [];
+  private calculateReverseDeps() {
+    Object.keys(this.taskGraph.tasks).forEach((t) => {
+      this.reverseTaskDeps[t] = [];
+    });
 
+    Object.keys(this.taskGraph.dependencies).forEach((taskId) => {
+      this.taskGraph.dependencies[taskId].forEach((d) => {
+        this.reverseTaskDeps[d].push(taskId);
+      });
+    });
+  }
+
+  private nextAvailableTask() {
+    if (this.availableTasks.length > 0) {
+      return this.taskGraph.tasks[this.availableTasks.pop()];
+    } else {
+      return null;
+    }
+  }
+
+  private async complete(
+    taskId: string,
+    status: 'success' | 'failure' | 'skipped' | 'cache'
+  ) {
+    if (this.completedTasks[taskId] === undefined) {
+      this.completedTasks[taskId] = status;
+      const everyTaskDependingOnTaskId = this.reverseTaskDeps[taskId];
+      for (let t of everyTaskDependingOnTaskId) {
+        if (this.allDepsAreSuccessful(t)) {
+          await this.pushAvailableTask(t);
+        } else if (this.allDepsAreCompleted(t)) {
+          await this.complete(taskId, 'skipped');
+        }
+      }
+    }
+    // release blocked threads
+    this.waitingForTasks.forEach((f) => f(null));
+    this.waitingForTasks.length = 0;
+  }
+
+  private async pushAvailableTask(taskId: string) {
+    if (!this.scheduledTasks[taskId]) {
+      this.scheduledTasks[taskId] = true;
+      const task = this.taskGraph.tasks[taskId];
+      const { value, details } = await this.hashTask(task);
+      task.hash = value;
+      task.hashDetails = details;
+
+      const doNotSkipCache =
+        this.options.skipNxCache === false ||
+        this.options.skipNxCache === undefined;
+
+      const cachedResult = await this.cache.get(task);
+      if (cachedResult && cachedResult.code === 0 && doNotSkipCache) {
+        this.applyCachedResult({ task, cachedResult });
+        await this.complete(taskId, 'cache');
+      } else {
+        this.availableTasks.push(taskId);
+      }
+    }
+  }
+
+  private allDepsAreSuccessful(taskId: string) {
+    for (let t of this.taskGraph.dependencies[taskId]) {
+      if (
+        this.completedTasks[t] !== 'success' &&
+        this.completedTasks[t] !== 'cache'
+      )
+        return false;
+    }
+    return true;
+  }
+
+  private allDepsAreCompleted(taskId: string) {
+    for (let t of this.taskGraph.dependencies[taskId]) {
+      if (this.completedTasks[t] === undefined) return false;
+    }
+    return true;
+  }
+
+  private async hashTask(task: Task) {
+    const hasher = this.customHasher(task);
+    if (hasher) {
+      return hasher(task, this.taskGraph, this.hasher);
+    } else {
+      return this.hasher.hashTaskWithDepsAndContext(task);
+    }
+  }
+
+  private async runTasks() {
     const that = this;
 
-    function takeFromQueue() {
-      if (left.length > 0) {
-        const task = left.pop();
-        that.storeStartTime(task);
-        const p = that.pipeOutputCapture(task)
-          ? that.forkProcessPipeOutputCapture(task)
-          : that.forkProcessDirectOutputCapture(task);
-        return p
-          .then((code) => {
-            that.storeEndTime(task);
-            res.push({
-              task,
-              success: code === 0,
-              type: AffectedEventType.TaskComplete,
-            });
-          })
-          .then(takeFromQueue)
-          .catch(takeFromQueue);
-      } else {
-        return Promise.resolve(null);
+    async function takeFromQueue() {
+      // completed all the tasks
+      if (
+        Object.keys(that.completedTasks).length ===
+        Object.keys(that.taskGraph.tasks).length
+      ) {
+        return null;
+      }
+
+      const task = that.nextAvailableTask();
+      if (!task) {
+        // block until some other task completes, then try again
+        return new Promise((res) => that.waitingForTasks.push(res)).then(
+          takeFromQueue
+        );
+      }
+      that.storeStartTime(task);
+      try {
+        const code = that.pipeOutputCapture(task)
+          ? await that.forkProcessPipeOutputCapture(task)
+          : await that.forkProcessDirectOutputCapture(task);
+
+        that.storeEndTime(task);
+        await that.complete(task.id, code === 0 ? 'success' : 'failure');
+        return takeFromQueue();
+      } catch {
+        await that.complete(task.id, 'failure');
+        return takeFromQueue();
       }
     }
 
     const wait = [];
-    // initial seeding
+    // // initial seeding
     const maxParallel = this.options.parallel
       ? this.options.maxParallel || 3
       : 1;
     for (let i = 0; i < maxParallel; ++i) {
       wait.push(takeFromQueue());
     }
+
     await Promise.all(wait);
-    return res;
-  }
 
-  private async splitTasksIntoCachedAndNotCached(
-    tasks: Task[]
-  ): Promise<{ cached: TaskWithCachedResult[]; rest: Task[] }> {
-    if (this.options.skipNxCache || this.options.skipNxCache === undefined) {
-      return { cached: [], rest: tasks };
-    } else {
-      const cached: TaskWithCachedResult[] = [];
-      const rest: Task[] = [];
-      await Promise.all(
-        tasks.map(async (task) => {
-          const cachedResult = await this.cache.get(task);
-          if (cachedResult && cachedResult.code === 0) {
-            cached.push({ task, cachedResult });
-          } else {
-            rest.push(task);
-          }
-        })
-      );
-      return { cached, rest };
-    }
-  }
-
-  private applyCachedResults(tasks: TaskWithCachedResult[]) {
-    tasks.forEach((t) => {
-      this.storeStartTime(t.task);
-      this.options.lifeCycle.startTask(t.task);
-      const outputs = getOutputs(this.projectGraph.nodes, t.task);
-      const shouldCopyOutputsFromCache = this.cache.shouldCopyOutputsFromCache(
-        t,
-        outputs
-      );
-      if (shouldCopyOutputsFromCache) {
-        this.cache.copyFilesFromCache(t.task.hash, t.cachedResult, outputs);
+    return Object.keys(this.completedTasks).map((taskId) => {
+      if (this.completedTasks[taskId] === 'cache') {
+        return {
+          task: this.taskGraph.tasks[taskId],
+          type: AffectedEventType.TaskCacheRead,
+          success: true,
+        };
+      } else if (this.completedTasks[taskId] === 'success') {
+        return {
+          task: this.taskGraph.tasks[taskId],
+          type: AffectedEventType.TaskComplete,
+          success: true,
+        };
+      } else if (this.completedTasks[taskId] === 'failure') {
+        return {
+          task: this.taskGraph.tasks[taskId],
+          type: AffectedEventType.TaskComplete,
+          success: false,
+        };
+      } else if (this.completedTasks[taskId] === 'skipped') {
+        return {
+          task: this.taskGraph.tasks[taskId],
+          type: AffectedEventType.TaskDependencyFailed,
+          success: false,
+        };
       }
-      if (
-        (!this.initiatingProject ||
-          this.initiatingProject === t.task.target.project) &&
-        !this.hideCachedOutput
-      ) {
-        const args = this.getCommandArgs(t.task);
-        output.logCommand(
-          `nx ${args.join(' ')}`,
-          shouldCopyOutputsFromCache
-            ? TaskCacheStatus.RetrievedFromCache
-            : TaskCacheStatus.MatchedExistingOutput
-        );
-        process.stdout.write(t.cachedResult.terminalOutput);
-      }
-      this.options.lifeCycle.endTask(t.task, t.cachedResult.code);
-      this.storeEndTime(t.task);
     });
+  }
 
-    return tasks.reduce((m, t) => {
-      m.push({
-        task: t.task,
-        type: AffectedEventType.TaskCacheRead,
-        success: t.cachedResult.code === 0,
-      });
-      return m;
-    }, []);
+  private applyCachedResult(t: TaskWithCachedResult) {
+    this.storeStartTime(t.task);
+    this.options.lifeCycle.startTask(t.task);
+    const outputs = getOutputs(this.projectGraph.nodes, t.task);
+    const shouldCopyOutputsFromCache = this.cache.shouldCopyOutputsFromCache(
+      t,
+      outputs
+    );
+    if (shouldCopyOutputsFromCache) {
+      this.cache.copyFilesFromCache(t.task.hash, t.cachedResult, outputs);
+    }
+    if (
+      (!this.initiatingProject ||
+        this.initiatingProject === t.task.target.project) &&
+      !this.hideCachedOutput
+    ) {
+      const args = this.getCommandArgs(t.task);
+      output.logCommand(
+        `nx ${args.join(' ')}`,
+        shouldCopyOutputsFromCache
+          ? TaskCacheStatus.RetrievedFromCache
+          : TaskCacheStatus.MatchedExistingOutput
+      );
+      process.stdout.write(t.cachedResult.terminalOutput);
+    }
+    this.options.lifeCycle.endTask(t.task, t.cachedResult.code);
+    this.storeEndTime(t.task);
   }
 
   private storeStartTime(t: Task) {
@@ -164,16 +264,28 @@ export class TaskOrchestrator {
 
   private pipeOutputCapture(task: Task) {
     try {
-      const p = this.projectGraph.nodes[task.target.project];
-      const b = p.data.targets[task.target.target].executor;
-      const [nodeModule, executor] = b.split(':');
-
-      const w = new Workspaces(this.workspaceRoot);
-      const x = w.readExecutor(nodeModule, executor);
-      return x.schema.outputCapture === 'pipe';
+      return this.readExecutor(task).schema.outputCapture === 'pipe';
     } catch (e) {
       return false;
     }
+  }
+
+  private customHasher(task: Task) {
+    try {
+      const f = this.readExecutor(task).hasherFactory;
+      return f ? f() : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  private readExecutor(task: Task) {
+    const p = this.projectGraph.nodes[task.target.project];
+    const b = p.data.targets[task.target.target].executor;
+    const [nodeModule, executor] = b.split(':');
+
+    const w = new Workspaces(this.workspaceRoot);
+    return w.readExecutor(nodeModule, executor);
   }
 
   private forkProcessPipeOutputCapture(task: Task) {

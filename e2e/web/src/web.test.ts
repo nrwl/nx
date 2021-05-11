@@ -17,7 +17,7 @@ describe('Web Components Applications', () => {
   beforeEach(() => newProject());
   afterEach(() => killPorts());
 
-  it('should be able to generate a web app', async () => {
+  it('aaashould be able to generate a web app', async () => {
     const appName = uniq('app');
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
 

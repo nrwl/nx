@@ -12,6 +12,9 @@ export default async function run(
   options: Schema,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
+  // this is only used for the hasher
+  delete options.hasTypeAwareRules;
+
   const systemRoot = context.root;
   process.chdir(context.cwd);
 
