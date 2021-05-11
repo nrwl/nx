@@ -20,7 +20,7 @@
     "eslint": {
       "implementation": "./src/executors/eslint/lint.impl",
       "schema": "./src/executors/eslint/schema.json",
-      "hasher": "./src/executors/lint/hasher",
+      "hasher": "./src/executors/eslint/hasher",
       "description": "Run ESLint on a project"
     }
   }
