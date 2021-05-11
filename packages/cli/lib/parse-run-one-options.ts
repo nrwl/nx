@@ -118,10 +118,10 @@ export function parseRunOneOptions(
 
   if (parsedArgs.configuration) {
     configuration = parsedArgs.configuration;
-  } else if (targets[target].defaultConfiguration) {
-    configuration = targets[target].defaultConfiguration;
   } else if (parsedArgs.prod) {
     configuration = 'production';
+  } else if (targets[target].defaultConfiguration) {
+    configuration = targets[target].defaultConfiguration;
   }
 
   const res = { project, target, configuration, parsedArgs };
