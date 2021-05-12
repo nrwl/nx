@@ -31,6 +31,11 @@
       "description": "Update react storybook lint config",
       "factory": "./src/migrations/update-11-5-3/update-lint-ignores"
     },
+    "update-11-6-0": {
+      "version": "11.6.0",
+      "description": "Update storybook if installed and above 6 but below 6.2.7",
+      "factory": "./src/migrations/update-11-6-0/update-storybook"
+    },
     "update-12-1-0": {
       "version": "12.1.0-beta.7",
       "cli": "nx",
