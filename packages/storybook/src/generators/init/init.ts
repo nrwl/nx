@@ -15,7 +15,6 @@ import {
   storybookVersion,
   svgrVersion,
   urlLoaderVersion,
-  webpackTypesVersion,
 } from '../../utils/versions';
 import { isFramework } from '../../utils/utilities';
 import { Schema } from './schema';
@@ -29,7 +28,6 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
 
   // base deps
   devDependencies['@nrwl/storybook'] = nxVersion;
-  devDependencies['@types/webpack'] = webpackTypesVersion;
 
   /**
    * If Storybook already exists, do NOT update it to the latest version.
