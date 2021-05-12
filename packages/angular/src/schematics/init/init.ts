@@ -51,6 +51,9 @@ export function addUnitTestRunner(
     case UnitTestRunner.Karma:
       return schematic('karma', {});
     case UnitTestRunner.Jest:
+      // TODO: remove this when we use `jest-preset-angular@9.0.0`
+      process.env.npm_config_legacy_peer_deps = 'true';
+
       return chain([
         addDepsToPackageJson(
           {},
