@@ -88,7 +88,7 @@ function run(
     projGraph,
     context
   );
-
+  console.log('hello');
   options.tsConfig = createTmpTsConfig(
     join(context.workspaceRoot, options.tsConfig),
     context.workspaceRoot,
