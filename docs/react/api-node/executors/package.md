@@ -7,6 +7,12 @@ Read more about how to use executors and the CLI here: https://nx.dev/react/gett
 
 ## Properties
 
+### assets
+
+Type: `array`
+
+List of static library assets.
+
 ### buildableProjectDepsInPackageJsonType
 
 Default: `dependencies`

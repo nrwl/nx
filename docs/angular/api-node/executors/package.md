@@ -6,6 +6,12 @@ Properties can be configured in angular.json when defining the executor, or when
 
 ## Properties
 
+### assets
+
+Type: `array`
+
+List of static library assets.
+
 ### buildableProjectDepsInPackageJsonType
 
 Default: `dependencies`

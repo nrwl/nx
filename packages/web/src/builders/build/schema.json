@@ -232,10 +232,12 @@
         "type": "object",
         "properties": {
           "replace": {
-            "type": "string"
+            "type": "string",
+            "description": "The file to be replaced."
           },
           "with": {
-            "type": "string"
+            "type": "string",
+            "description": "The file to replace with."
           }
         },
         "additionalProperties": false,

@@ -75,17 +75,8 @@ export async function parseJsonSchemaToOptions(
           case 'boolean':
           case 'number':
           case 'string':
-            return true;
           case 'array':
-            if (
-              json.isJsonObject(current.items) &&
-              typeof current.items.type == 'string' &&
-              ['boolean', 'number', 'string'].includes(current.items.type)
-            ) {
-              return true;
-            }
-
-            return false;
+            return true;
 
           default:
             return false;

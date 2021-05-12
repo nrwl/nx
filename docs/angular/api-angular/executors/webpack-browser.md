@@ -20,11 +20,23 @@ Type: `boolean`
 
 Build using Ahead of Time compilation.
 
+### assets
+
+Type: `array`
+
+List of static application assets.
+
 ### baseHref
 
 Type: `string`
 
 Base url for the application being built.
+
+### budgets
+
+Type: `array`
+
+Budget thresholds to ensure parts of your application stay within boundaries which you set.
 
 ### buildOptimizer
 
@@ -90,6 +102,12 @@ Type: `boolean`
 
 Extract all licenses in a separate file.
 
+### fileReplacements
+
+Type: `array`
+
+Replace compilation source files with other compilation source files in the build.
+
 ### i18nMissingTranslation
 
 Default: `warning`
@@ -118,7 +136,7 @@ The stylesheet language to use for the application's inline component styles.
 
 ### localize
 
-Type: `boolean`
+Type: `boolean | boolean[] `
 
 Translate the bundles in one or more locales.
 
@@ -200,6 +218,12 @@ Type: `string`
 
 The path where style resources will be placed, relative to outputPath.
 
+### scripts
+
+Type: `array`
+
+Global scripts to be included in the build.
+
 ### serviceWorker
 
 Default: `false`
@@ -233,6 +257,12 @@ Default: `false`
 Type: `boolean`
 
 Generates a 'stats.json' file which can be analyzed using tools such as 'webpack-bundle-analyzer'.
+
+### styles
+
+Type: `array`
+
+Global styles to be included in the build.
 
 ### subresourceIntegrity
 
