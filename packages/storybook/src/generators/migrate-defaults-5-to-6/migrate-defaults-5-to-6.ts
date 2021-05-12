@@ -232,6 +232,7 @@ function migrateProjectLevelStorybookInstance(
       uiFramework,
       offsetFromRoot: offsetFromRoot(root),
       projectType: projectDirectory,
+      useWebpack5: uiFramework === '@storybook/angular',
     }
   );
 }

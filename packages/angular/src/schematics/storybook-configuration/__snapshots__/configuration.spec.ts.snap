@@ -1,5 +1,18 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`schematic:configuration should configure storybook to use webpack 5 1`] = `
+"const rootMain = require('../../../.storybook/main');
+
+rootMain.core = { ...rootMain.core, builder: 'webpack5' };
+
+// Use the following syntax to add addons!
+// rootMain.addons.push('');
+rootMain.stories.push(...['../src/lib/**/*.stories.mdx', '../src/lib/**/*.stories.@(js|jsx|ts|tsx)'])
+
+module.exports = rootMain;
+"
+`;
+
 exports[`schematic:configuration should generate in the correct folder 1`] = `
 Array [
   "/workspace.json",

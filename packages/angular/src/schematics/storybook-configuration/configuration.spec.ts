@@ -55,6 +55,22 @@ describe('schematic:configuration', () => {
     ).toBeFalsy();
   });
 
+  it('should configure storybook to use webpack 5', async () => {
+    const tree = await runSchematic(
+      'storybook-configuration',
+      <StorybookConfigureSchema>{
+        name: 'test-ui-lib',
+        configureCypress: false,
+        generateCypressSpecs: false,
+        generateStories: false,
+      },
+      appTree
+    );
+    expect(
+      tree.readContent('libs/test-ui-lib/.storybook/main.js')
+    ).toMatchSnapshot();
+  });
+
   it('should configure everything at once', async () => {
     const tree = await runSchematic(
       'storybook-configuration',

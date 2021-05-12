@@ -140,6 +140,7 @@ function createProjectStorybookDir(
     uiFramework,
     offsetFromRoot: offsetFromRoot(root),
     projectType: projectDirectory,
+    useWebpack5: uiFramework === '@storybook/angular',
   });
 
   if (js) {

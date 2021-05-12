@@ -66,6 +66,12 @@
       "version": "12.4.0-beta.0",
       "description": "Remove deprecated options and update others according to new defaults. It syncs with the v12 migration of Angular builders.",
       "factory": "./src/migrations/update-12-4-0/update-webpack-browser-config"
+    },
+    "update-storybook": {
+      "cli": "nx",
+      "version": "12.4.0-beta.0",
+      "description": "Updates storybook configurations to support webpack 5",
+      "factory": "./src/migrations/update-12-4-0/update-storybook"
     }
   },
   "packageJsonUpdates": {
