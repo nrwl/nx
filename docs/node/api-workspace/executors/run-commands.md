@@ -187,6 +187,8 @@ Command to run in child process
 
 Type: `array`
 
+Commands to run in child process
+
 ### cwd
 
 Type: `string`
