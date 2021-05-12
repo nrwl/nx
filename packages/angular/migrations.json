@@ -478,67 +478,67 @@
       "version": "12.3.0-rc.1",
       "packages": {
         "@angular/cli": {
-          "version": "^12.0.0-rc.3",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/build-angular": {
-          "version": "^12.0.0-rc.3",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/build-optimizer": {
-          "version": "^0.1200.0-rc.3",
+          "version": "^0.1200.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/core": {
-          "version": "^12.0.0-rc.3",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/common": {
-          "version": "^12.0.0-rc.3",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/forms": {
-          "version": "^12.0.0-rc.3",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/elements": {
-          "version": "^12.0.0-rc.3",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/compiler": {
-          "version": "^12.0.0-rc.3",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/compiler-cli": {
-          "version": "^12.0.0-rc.3",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/platform-browser": {
-          "version": "^12.0.0-rc.3",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/platform-browser-dynamic": {
-          "version": "^12.0.0-rc.3",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/router": {
-          "version": "^12.0.0-rc.3",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/upgrade": {
-          "version": "^12.0.0-rc.3",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/language-service": {
-          "version": "^12.0.0-rc.3",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/animations": {
-          "version": "^12.0.0-rc.3",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/service-worker": {
-          "version": "^12.0.0-rc.3",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         },
         "zone.js": {
@@ -546,7 +546,7 @@
           "alwaysAddToPackageJson": false
         },
         "ng-packagr": {
-          "version": "^12.0.0-rc.3",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         },
         "typescript": {
@@ -566,31 +566,31 @@
           "alwaysAddToPackageJson": false
         },
         "@ngrx/store": {
-          "version": "^12.0.0-rc.0",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@ngrx/effects": {
-          "version": "^12.0.0-rc.0",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@ngrx/entity": {
-          "version": "^12.0.0-rc.0",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@ngrx/router-store": {
-          "version": "^12.0.0-rc.0",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@ngrx/schematics": {
-          "version": "^12.0.0-rc.0",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@ngrx/store-devtools": {
-          "version": "^12.0.0-rc.0",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@ngrx/component-store": {
-          "version": "^12.0.0-rc.0",
+          "version": "^12.0.0",
           "alwaysAddToPackageJson": false
         }
       }

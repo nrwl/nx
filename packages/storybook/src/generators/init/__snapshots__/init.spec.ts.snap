@@ -11,7 +11,6 @@ Object {
     "@storybook/addon-knobs": "^6.2.7",
     "@storybook/angular": "^6.2.7",
     "@storybook/builder-webpack5": "^6.2.7",
-    "@types/webpack": "4.41.21",
     "existing": "1.0.0",
   },
   "name": "test-name",
