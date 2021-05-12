@@ -22,4 +22,4 @@ export const gatsbyPluginLessVersion = '5.2.0';
 export const gatsbyPluginStylusVersion = '3.2.0';
 export const nodeSassVersion = '5.0.0';
 export const gatsbyPluginSvgrVersion = '3.0.0-beta.0';
-export const gatsbyPluginPnpm = '1.2.5';
+export const gatsbyPluginPnpm = '1.2.6';
