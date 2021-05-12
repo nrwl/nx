@@ -560,6 +560,34 @@
         "@angular-eslint/template-parser": {
           "version": "~12.0.0-alpha.0",
           "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store": {
+          "version": "^12.0.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/effects": {
+          "version": "^12.0.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/entity": {
+          "version": "^12.0.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/router-store": {
+          "version": "^12.0.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/schematics": {
+          "version": "^12.0.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store-devtools": {
+          "version": "^12.0.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/component-store": {
+          "version": "^12.0.0-rc.0",
+          "alwaysAddToPackageJson": false
         }
       }
     }
