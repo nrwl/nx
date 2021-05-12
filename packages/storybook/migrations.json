@@ -32,7 +32,8 @@
       "factory": "./src/migrations/update-11-5-3/update-lint-ignores"
     },
     "update-11-6-0": {
-      "version": "11.6.0",
+      "version": "11.6.4",
+      "cli": "nx",
       "description": "Update storybook if installed and above 6 but below 6.2.7",
       "factory": "./src/migrations/update-11-6-0/update-storybook"
     },
@@ -41,6 +42,12 @@
       "cli": "nx",
       "description": "Update react storybook tsconfig to avoid VSCode errors",
       "factory": "./src/migrations/update-12-1-0/fix-storybook-tsconfig"
+    },
+    "update-12-3-0": {
+      "version": "12.3.0-rc.1",
+      "cli": "nx",
+      "description": "Update storybook if installed and above 6 but below 6.2.7",
+      "factory": "./src/migrations/update-11-6-0/update-storybook"
     }
   },
   "packageJsonUpdates": {

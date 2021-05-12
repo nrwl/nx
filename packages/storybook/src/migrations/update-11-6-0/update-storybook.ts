@@ -1,53 +1,57 @@
-import { chain, SchematicContext, Tree } from '@angular-devkit/schematics';
-import {
-  addInstallTask,
-  checkAndCleanWithSemver,
-  formatFiles,
-  updateJsonInTree,
-} from '@nrwl/workspace';
+import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
 
 import { gte, lt } from 'semver';
+import {
+  formatFiles,
+  installPackagesTask,
+  Tree,
+  updateJson,
+} from '@nrwl/devkit';
+
 let needsInstall = false;
 
-const maybeUpdateVersion = updateJsonInTree('package.json', (json) => {
-  json.dependencies = json.dependencies || {};
-  json.devDependencies = json.devDependencies || {};
+function maybeUpdateVersion(tree: Tree) {
+  updateJson(tree, 'package.json', (json) => {
+    json.dependencies = json.dependencies || {};
+    json.devDependencies = json.devDependencies || {};
 
-  const storybookPackages = [
-    '@storybook/angular',
-    '@storybook/react',
-    '@storybook/addon-knobs',
-  ];
-  storybookPackages.forEach((storybookPackageName) => {
-    if (json.dependencies[storybookPackageName]) {
-      const version = checkAndCleanWithSemver(
-        storybookPackageName,
-        json.dependencies[storybookPackageName]
-      );
-      if (gte(version, '6.0.0') && lt(version, '6.2.7')) {
-        json.dependencies[storybookPackageName] = '^6.2.7';
-        needsInstall = true;
+    const storybookPackages = [
+      '@storybook/angular',
+      '@storybook/react',
+      '@storybook/addon-knobs',
+    ];
+    storybookPackages.forEach((storybookPackageName) => {
+      if (json.dependencies[storybookPackageName]) {
+        const version = checkAndCleanWithSemver(
+          storybookPackageName,
+          json.dependencies[storybookPackageName]
+        );
+        if (gte(version, '6.0.0') && lt(version, '6.2.7')) {
+          json.dependencies[storybookPackageName] = '^6.2.7';
+          needsInstall = true;
+        }
       }
-    }
-    if (json.devDependencies[storybookPackageName]) {
-      const version = checkAndCleanWithSemver(
-        storybookPackageName,
-        json.devDependencies[storybookPackageName]
-      );
-      if (gte(version, '6.0.0') && lt(version, '6.2.7')) {
-        json.devDependencies[storybookPackageName] = '^6.2.7';
-        needsInstall = true;
+      if (json.devDependencies[storybookPackageName]) {
+        const version = checkAndCleanWithSemver(
+          storybookPackageName,
+          json.devDependencies[storybookPackageName]
+        );
+        if (gte(version, '6.0.0') && lt(version, '6.2.7')) {
+          json.devDependencies[storybookPackageName] = '^6.2.7';
+          needsInstall = true;
+        }
       }
-    }
+    });
+
+    return json;
   });
+}
 
-  return json;
-});
+export default async function (tree: Tree) {
+  maybeUpdateVersion(tree);
+  await formatFiles(tree);
 
-export default function (tree: Tree, context: SchematicContext) {
-  return chain([
-    maybeUpdateVersion,
-    formatFiles(),
-    addInstallTask({ skipInstall: !needsInstall }),
-  ]);
+  return () => {
+    installPackagesTask(tree);
+  };
 }

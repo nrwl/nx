@@ -1,69 +1,54 @@
-import { Tree } from '@angular-devkit/schematics';
-import { readJsonInTree } from '@nrwl/workspace';
+import { Tree, readJson, writeJson } from '@nrwl/devkit';
+import { createTree } from '@nrwl/devkit/testing';
 
-import { runMigration } from '../../utils/testing';
+import updateStorybook from './update-storybook';
 
-describe('Update 11-6-0', () => {
+describe('Update 11-6-0/12-3-0', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = Tree.empty();
+    tree = createTree();
   });
 
   it('should update storybook versions if storybook is already above 6 but below 6.2.7', async () => {
-    tree.create(
-      'package.json',
-      JSON.stringify({
-        devDependencies: {
-          '@storybook/angular': '^6.0.0',
-          '@storybook/react': '^6.0.0',
-          '@storybook/addon-knobs': '^6.0.0',
-        },
-      })
-    );
-    const result = await runMigration('update-11-6-0', {}, tree);
+    writeJson(tree, 'package.json', {
+      devDependencies: {
+        '@storybook/angular': '^6.0.0',
+        '@storybook/react': '^6.0.0',
+        '@storybook/addon-knobs': '^6.0.0',
+      },
+    });
+    await updateStorybook(tree);
     expect(
-      readJsonInTree(result, 'package.json').devDependencies[
-        '@storybook/angular'
-      ]
+      readJson(tree, 'package.json').devDependencies['@storybook/angular']
     ).toBe('^6.2.7');
   });
 
   it('should not update storybook versions if storybook is already above 6.2.7', async () => {
-    tree.create(
-      'package.json',
-      JSON.stringify({
-        devDependencies: {
-          '@storybook/angular': '6.2.8',
-          '@storybook/react': '6.2.8',
-          '@storybook/addon-knobs': '6.2.8',
-        },
-      })
-    );
-    const result = await runMigration('update-11-6-0', {}, tree);
+    writeJson(tree, 'package.json', {
+      devDependencies: {
+        '@storybook/angular': '6.2.8',
+        '@storybook/react': '6.2.8',
+        '@storybook/addon-knobs': '6.2.8',
+      },
+    });
+    await updateStorybook(tree);
     expect(
-      readJsonInTree(result, 'package.json').devDependencies[
-        '@storybook/angular'
-      ]
+      readJson(tree, 'package.json').devDependencies['@storybook/angular']
     ).toBe('6.2.8');
   });
 
   it('should not update storybook versions if storybook is below 6', async () => {
-    tree.create(
-      'package.json',
-      JSON.stringify({
-        devDependencies: {
-          '@storybook/angular': '^5.0.0',
-          '@storybook/react': '^5.0.0',
-          '@storybook/addon-knobs': '^5.0.0',
-        },
-      })
-    );
-    const result = await runMigration('update-11-6-0', {}, tree);
+    writeJson(tree, 'package.json', {
+      devDependencies: {
+        '@storybook/angular': '^5.0.0',
+        '@storybook/react': '^5.0.0',
+        '@storybook/addon-knobs': '^5.0.0',
+      },
+    });
+    await updateStorybook(tree);
     expect(
-      readJsonInTree(result, 'package.json').devDependencies[
-        '@storybook/angular'
-      ]
+      readJson(tree, 'package.json').devDependencies['@storybook/angular']
     ).toBe('^5.0.0');
   });
 });
