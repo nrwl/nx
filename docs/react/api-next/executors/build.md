@@ -7,6 +7,24 @@ Read more about how to use executors and the CLI here: https://nx.dev/react/gett
 
 ## Properties
 
+### fileReplacements
+
+Type: `object[]`
+
+Replace files with other files in the build.
+
+#### replace
+
+Type: `string`
+
+The file to be replaced.
+
+#### with
+
+Type: `string`
+
+The file to replace with.
+
 ### nextConfig
 
 Type: `string`

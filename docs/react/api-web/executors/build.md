@@ -7,6 +7,12 @@ Read more about how to use executors and the CLI here: https://nx.dev/react/gett
 
 ## Properties
 
+### assets
+
+Type: `array`
+
+List of static application assets.
+
 ### baseHref
 
 Default: `/`
@@ -14,6 +20,12 @@ Default: `/`
 Type: `string`
 
 Base url for the application being built.
+
+### budgets
+
+Type: `array`
+
+Budget thresholds to ensure parts of your application stay within boundaries which you set.
 
 ### buildLibsFromSource
 
@@ -72,6 +84,24 @@ Default: `false`
 Type: `boolean`
 
 Extract all licenses in a separate file, in the case of production builds only.
+
+### fileReplacements
+
+Type: `object[]`
+
+Replace files with other files in the build.
+
+#### replace
+
+Type: `string`
+
+The file to be replaced.
+
+#### with
+
+Type: `string`
+
+The file to replace with.
 
 ### index
 
@@ -149,6 +179,12 @@ Type: `boolean`
 
 Use a separate bundle containing the runtime.
 
+### scripts
+
+Type: `array`
+
+External Scripts which will be included before the main application entry
+
 ### ~~showCircularDependencies~~
 
 Default: `false`
@@ -174,6 +210,12 @@ Default: `false`
 Type: `boolean`
 
 Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or <https://webpack.github.io/analyse>.
+
+### styles
+
+Type: `array`
+
+External Styles which will be included with the application
 
 ### subresourceIntegrity
 
