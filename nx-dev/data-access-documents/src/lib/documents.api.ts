@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-import { join } from 'path';
+import { join, relative } from 'path';
 import matter from 'gray-matter';
 import { readJsonFile } from '@nrwl/workspace';
 import {
@@ -29,7 +29,10 @@ export function getDocument(
   }
 
   return {
-    filePath: docPath,
+    filePath: relative(
+      version === 'preview' ? previewRootPath : archiveRootPath,
+      docPath
+    ),
     data: file.data,
     content: file.content,
     excerpt: file.excerpt,

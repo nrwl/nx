@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import autolinkHeadings from 'rehype-autolink-headings';
 import gfm from 'remark-gfm';
 import slug from 'rehype-slug';
+import { DocumentData } from '@nrwl/nx-dev/data-access-documents';
 
 import { transformLinkPath } from './renderers/transform-link-path';
 import { transformImagePath } from './renderers/transform-image-path';
@@ -10,7 +11,7 @@ import { renderIframes } from './renderers/render-iframe';
 import { CodeBlock } from './code-block';
 
 export interface ContentProps {
-  data: string;
+  document: DocumentData;
   flavor: string;
   version: string;
 }
@@ -41,12 +42,15 @@ export function Content(props: ContentProps) {
       <ReactMarkdown
         remarkPlugins={[gfm]}
         rehypePlugins={[slug, autolinkHeadings, renderIframes]}
-        children={props.data}
+        children={props.document.content}
         transformLinkUri={transformLinkPath({
           flavor: props.flavor,
           version: props.version,
         })}
-        transformImageUri={transformImagePath(props.version)}
+        transformImageUri={transformImagePath({
+          version: props.version,
+          document: props.document,
+        })}
         className="prose max-w-none"
         components={components}
       />
