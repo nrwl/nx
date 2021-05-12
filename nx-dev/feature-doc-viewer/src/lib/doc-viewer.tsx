@@ -48,7 +48,7 @@ export function DocViewer({
             className="min-w-0 w-full flex-auto lg:static lg:max-h-full lg:overflow-visible"
           >
             <Content
-              data={document.content}
+              document={document}
               flavor={flavor.value}
               version={version.path}
             />
