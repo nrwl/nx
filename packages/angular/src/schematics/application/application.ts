@@ -466,12 +466,6 @@ function updateProject(options: NormalizedSchema): Rule {
               ...json.compilerOptions,
               outDir: `${offsetFromRoot(options.appProjectRoot)}dist/out-tsc`,
             },
-            exclude: options.enableIvy
-              ? undefined
-              : options.unitTestRunner === 'jest'
-              ? ['src/test-setup.ts', '**/*.spec.ts']
-              : ['src/test.ts', '**/*.spec.ts'],
-            include: options.enableIvy ? undefined : ['src/**/*.d.ts'],
           };
         }
       ),
@@ -601,20 +595,6 @@ function addEditorTsConfigReference(options: NormalizedSchema): Rule {
         return json;
       }
     ),
-    updateWorkspace((workspace) => {
-      const projectConfig = workspace.projects.get(options.name);
-      const lintTarget = projectConfig.targets.get('lint');
-
-      const isUsingTSLint =
-        lintTarget?.builder === '@angular-devkit/build-angular:tslint';
-
-      if (isUsingTSLint) {
-        const tsConfigs = lintTarget.options.tsConfig as string[];
-        tsConfigs.push(
-          join(normalize(options.appProjectRoot), 'tsconfig.editor.json')
-        );
-      }
-    }),
   ]);
 }
 
@@ -634,7 +614,10 @@ function addProxyConfig(options: NormalizedSchema): Rule {
           };
         }),
         updateWorkspaceInTree((json) => {
-          projectConfig.architect.serve.options.proxyConfig = pathToProxyFile;
+          projectConfig.architect.serve.options = {
+            ...projectConfig.architect.serve.options,
+            proxyConfig: pathToProxyFile,
+          };
           json.projects[options.name] = projectConfig;
           return json;
         }),
@@ -703,6 +686,19 @@ function enableStrictTypeChecking(schema: Schema): Rule {
   };
 }
 
+function addProtractor(
+  options: NormalizedSchema,
+  e2eProjectRoot: string
+): Rule {
+  return chain([
+    externalSchematic('@schematics/angular', 'e2e', {
+      relatedAppName: options.name,
+      rootSelector: `${options.prefix}-root`,
+    }),
+    move(e2eProjectRoot, options.e2eProjectRoot),
+  ]);
+}
+
 export default function (schema: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
     const options = normalizeOptions(host, schema);
@@ -731,14 +727,13 @@ export default function (schema: Schema): Rule {
         skipTests: options.skipTests,
         style: options.style,
         viewEncapsulation: options.viewEncapsulation,
-        enableIvy: options.enableIvy,
         routing: false,
         skipInstall: true,
         skipPackageJson: false,
       }),
       addSchematicFiles(appProjectRoot, options),
       options.e2eTestRunner === 'protractor'
-        ? move(e2eProjectRoot, options.e2eProjectRoot)
+        ? addProtractor(options, e2eProjectRoot)
         : removeE2e(options, e2eProjectRoot),
       options.e2eTestRunner === 'protractor'
         ? updateE2eProject(options)
@@ -749,7 +744,7 @@ export default function (schema: Schema): Rule {
       updateComponentStyles(options),
       options.unitTestRunner !== 'none' ? updateComponentSpec(options) : noop(),
       options.routing ? addRouterRootConfiguration(options) : noop(),
-      addLinting(options),
+      options.linter === Linter.EsLint ? addLinting(options) : noop(),
       options.unitTestRunner === 'jest'
         ? externalSchematic('@nrwl/jest', 'jest-project', {
             project: options.name,
@@ -784,25 +779,11 @@ export default function (schema: Schema): Rule {
 const addLinting = (options: NormalizedSchema) => () => {
   return chain([
     schematic('add-linting', {
-      linter: options.linter,
       projectType: 'application',
       projectName: options.name,
       projectRoot: options.appProjectRoot,
       prefix: options.prefix,
     }),
-    /**
-     * I cannot explain why this extra rule is needed, the add-linting
-     * schematic applies the exact same host.delete() call but the main
-     * chain of this schematic still preserves it...
-     */
-    (host) => {
-      if (
-        options.linter === Linter.EsLint &&
-        host.exists(`${options.appProjectRoot}/tslint.json`)
-      ) {
-        host.delete(`${options.appProjectRoot}/tslint.json`);
-      }
-    },
   ]);
 };
 

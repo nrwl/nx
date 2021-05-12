@@ -152,6 +152,11 @@ export interface TargetConfiguration {
    * Sets of options
    */
   configurations?: { [config: string]: any };
+
+  /**
+   * A default named configuration to use when a target configuration is not provided.
+   */
+  defaultConfiguration?: string;
 }
 
 export function workspaceConfigName(root: string) {

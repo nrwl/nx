@@ -15,17 +15,11 @@ A list of CommonJS packages that are allowed to be used without a build time war
 
 ### aot
 
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 
 Build using Ahead of Time compilation.
-
-### assets
-
-Type: `array`
-
-List of static application assets.
 
 ### baseHref
 
@@ -33,15 +27,9 @@ Type: `string`
 
 Base url for the application being built.
 
-### budgets
-
-Type: `array`
-
-Budget thresholds to ensure parts of your application stay within boundaries which you set.
-
 ### buildOptimizer
 
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 
@@ -59,7 +47,7 @@ Default: `true`
 
 Type: `boolean`
 
-Use a separate bundle containing code used across multiple bundles.
+Generate a seperate bundle containing code used across multiple bundles.
 
 ### crossOrigin
 
@@ -85,67 +73,23 @@ Type: `string`
 
 URL where files will be deployed.
 
-### experimentalRollupPass
-
-Default: `false`
-
-Type: `boolean`
-
-Concatenate modules with Rollup before bundling them with Webpack.
-
-### extractCss
-
-Default: `false`
-
-Type: `boolean`
-
-Extract css from global styles into css files instead of js ones.
-
-### extractLicenses
-
-Default: `false`
-
-Type: `boolean`
-
-Extract all licenses in a separate file.
-
-### fileReplacements
-
-Type: `array`
-
-Replace compilation source files with other compilation source files in the build.
-
-### forkTypeChecker
+### ~~extractCss~~
 
 Default: `true`
 
 Type: `boolean`
 
-Run the TypeScript type checker in a forked process.
+**Deprecated:** Deprecated since version 11.0. No longer required to disable CSS extraction for HMR.
 
-### ~~i18nFile~~
+Extract CSS from global styles into '.css' files instead of '.js'.
 
-Type: `string`
+### extractLicenses
 
-**Deprecated:** Use 'locales' object in the project metadata instead.
+Default: `true`
 
-Localization file to use for i18n.
+Type: `boolean`
 
-### ~~i18nFormat~~
-
-Type: `string`
-
-**Deprecated:** No longer needed as the format will be determined automatically.
-
-Format of the localization file specified with --i18n-file.
-
-### ~~i18nLocale~~
-
-Type: `string`
-
-**Deprecated:** Use 'localize' instead.
-
-Locale to use for i18n.
+Extract all licenses in a separate file.
 
 ### i18nMissingTranslation
 
@@ -163,17 +107,21 @@ Type: `string`
 
 Configures the generation of the application's HTML index.
 
-### ~~lazyModules~~
+### inlineStyleLanguage
 
-Type: `array`
+Default: `css`
 
-**Deprecated:** 'SystemJsNgModuleLoader' is deprecated, and this is part of its usage. Use 'import()' syntax instead.
+Type: `string`
 
-List of additional NgModule files that will be lazy loaded. Lazy router modules will be discovered automatically.
+Possible values: `css`, `less`, `sass`, `scss`
+
+The stylesheet language to use for the application's inline component styles.
 
 ### localize
 
-Type: `boolean | boolean[] `
+Type: `boolean`
+
+Translate the bundles in one or more locales.
 
 ### main
 
@@ -183,7 +131,7 @@ The full path for the main entry point to the app, relative to the current works
 
 ### namedChunks
 
-Default: `true`
+Default: `false`
 
 Type: `boolean`
 
@@ -197,11 +145,11 @@ Path to ngsw-config.json.
 
 ### optimization
 
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 
-Enables optimization of the build output.
+Enables optimization of the build output. Including minification of scripts and styles, tree-shaking, dead-code elimination, inlining of critical CSS and fonts inlining. For more information, see https://angular.io/guide/workspace-config#optimization-configuration.
 
 ### outputHashing
 
@@ -241,6 +189,8 @@ Do not use the real path when resolving modules. If unset then will default to `
 
 ### progress
 
+Default: `true`
+
 Type: `boolean`
 
 Log progress to the console while building.
@@ -250,12 +200,6 @@ Log progress to the console while building.
 Type: `string`
 
 The path where style resources will be placed, relative to outputPath.
-
-### scripts
-
-Type: `array`
-
-Global scripts to be included in the build.
 
 ### serviceWorker
 
@@ -271,17 +215,17 @@ Default: `false`
 
 Type: `boolean`
 
-**Deprecated:** The recommended method to detect circular dependencies in project code is to use a either a lint rule or other external tooling.
+**Deprecated:** The recommended method to detect circular dependencies in project code is to use either a lint rule or other external tooling.
 
 Show circular dependency warnings on builds.
 
 ### sourceMap
 
-Default: `true`
+Default: `false`
 
 Type: `boolean`
 
-Output sourcemaps.
+Output source maps for scripts and styles. For more information, see https://angular.io/guide/workspace-config#source-map-configuration.
 
 ### statsJson
 
@@ -290,12 +234,6 @@ Default: `false`
 Type: `boolean`
 
 Generates a 'stats.json' file which can be analyzed using tools such as 'webpack-bundle-analyzer'.
-
-### styles
-
-Type: `array`
-
-Global styles to be included in the build.
 
 ### subresourceIntegrity
 
@@ -321,11 +259,11 @@ The full path for the TypeScript configuration file, relative to the current wor
 
 ### vendorChunk
 
-Default: `true`
+Default: `false`
 
 Type: `boolean`
 
-Use a separate bundle containing only vendor libraries.
+Generate a seperate bundle containing only vendor libraries. This option should only used for development.
 
 ### verbose
 

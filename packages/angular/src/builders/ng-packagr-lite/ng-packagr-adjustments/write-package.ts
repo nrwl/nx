@@ -23,13 +23,15 @@ import { NgPackage } from 'ng-packagr/lib/ng-package/package';
 import {
   copyFile,
   exists,
-  rimraf,
+  rmdir,
   stat,
   writeFile,
 } from 'ng-packagr/lib/utils/fs';
 import { globFiles } from 'ng-packagr/lib/utils/glob';
 import { ensureUnixPath } from 'ng-packagr/lib/utils/path';
 import * as path from 'path';
+
+type CompilationMode = 'partial' | 'full' | undefined;
 
 export const nxWritePackageTransform: Transform = transformFromPromise(
   async (graph) => {
@@ -104,7 +106,7 @@ export const nxWritePackageTransform: Transform = transformFromPromise(
       const relativeUnixFromDestPath = (filePath: string) =>
         ensureUnixPath(path.relative(ngEntryPoint.destinationPath, filePath));
 
-      const isIvy = !!entryPoint.data.tsConfig.options.enableIvy;
+      const { enableIvy, compilationMode } = entryPoint.data.tsConfig.options;
 
       await writePackageJson(
         ngEntryPoint,
@@ -114,13 +116,14 @@ export const nxWritePackageTransform: Transform = transformFromPromise(
           esm2015: relativeUnixFromDestPath(destinationFiles.esm2015),
           typings: relativeUnixFromDestPath(destinationFiles.declarations),
           // Ivy doesn't generate metadata files
-          metadata: isIvy
+          metadata: enableIvy
             ? undefined
             : relativeUnixFromDestPath(destinationFiles.metadata),
           // webpack v4+ specific flag to enable advanced optimizations and code splitting
           sideEffects: ngEntryPoint.sideEffects,
         },
-        isIvy
+        !!enableIvy,
+        compilationMode as CompilationMode
       );
     } catch (error) {
       throw error;
@@ -150,7 +153,8 @@ async function writePackageJson(
   entryPoint: NgEntryPoint,
   pkg: NgPackage,
   additionalProperties: { [key: string]: string | boolean | string[] },
-  isIvy: boolean
+  isIvy: boolean,
+  compilationMode: CompilationMode
 ): Promise<void> {
   // set additional properties
   const packageJson = { ...entryPoint.packageJson, ...additionalProperties };
@@ -198,7 +202,7 @@ async function writePackageJson(
   try {
     checkNonPeerDependencies(packageJson, 'dependencies', allowedList);
   } catch (e) {
-    await rimraf(entryPoint.destinationPath);
+    await rmdir(entryPoint.destinationPath, { recursive: true });
     throw e;
   }
 
@@ -216,12 +220,16 @@ async function writePackageJson(
     }
   }
 
-  if (isIvy && !entryPoint.isSecondaryEntryPoint) {
+  if (
+    isIvy &&
+    !entryPoint.isSecondaryEntryPoint &&
+    compilationMode !== 'partial'
+  ) {
     const scripts = packageJson.scripts || (packageJson.scripts = {});
     scripts.prepublishOnly =
       'node --eval "console.error(\'' +
-      'ERROR: Trying to publish a package that has been compiled by Ivy. This is not allowed.\\n' +
-      'Please delete and rebuild the package, without compiling with Ivy, before attempting to publish.\\n' +
+      'ERROR: Trying to publish a package that has been compiled by Ivy in full compilation mode. This is not allowed.\\n' +
+      'Please delete and rebuild the package with Ivy partial compilation mode, before attempting to publish.\\n' +
       '\')" ' +
       '&& exit 1';
   }

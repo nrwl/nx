@@ -561,17 +561,17 @@ export async function runMigration(
 
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const packageJson = require(packageJsonPath);
-        let pkgJsonSchematics = packageJson['nx-migrations'];
+        let pkgJsonSchematics =
+          packageJson['nx-migrations'] ?? packageJson['ng-update'];
         if (!pkgJsonSchematics) {
-          pkgJsonSchematics = packageJson['ng-update'];
-          if (!pkgJsonSchematics) {
-            throw new Error(`Could not find migrations in package: "${name}"`);
-          }
+          throw new Error(`Could not find migrations in package: "${name}"`);
         }
         if (typeof pkgJsonSchematics != 'string') {
           pkgJsonSchematics = pkgJsonSchematics.migrations;
         }
-        collectionPath = resolve(dirname(packageJsonPath), pkgJsonSchematics);
+        collectionPath = require.resolve(pkgJsonSchematics, {
+          paths: [dirname(packageJsonPath)],
+        });
       }
 
       try {

@@ -6,12 +6,6 @@ Properties can be configured in angular.json when defining the executor, or when
 
 ## Properties
 
-### assets
-
-Type: `array`
-
-List of static assets.
-
 ### ~~babelConfig~~
 
 Type: `string`
@@ -58,24 +52,6 @@ Type: `boolean`
 
 CSS files will be extracted to the output folder.
 
-### globals
-
-Type: `object[]`
-
-A mapping of node modules to their UMD global names. Used by the UMD bundle
-
-#### moduleId
-
-Type: `string`
-
-The node module to map from (e.g. `react-dom`).
-
-#### global
-
-Type: `string`
-
-The global name to map to (e.g. `ReactDOM`).
-
 ### outputPath
 
 Type: `string`
@@ -90,7 +66,7 @@ The path to package.json file.
 
 ### rollupConfig
 
-Type: `array[] | string `
+Type: `string`
 
 Path to a function which takes a rollup config and returns an updated rollup config
 

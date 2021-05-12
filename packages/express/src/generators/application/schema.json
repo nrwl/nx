@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
-  "id": "SchematicsNxExpressApp",
+  "$id": "SchematicsNxExpressApp",
   "title": "Nx Application Options Schema",
   "type": "object",
   "properties": {

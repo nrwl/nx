@@ -230,34 +230,22 @@ describe('init', () => {
       });
     });
 
-    describe('tslint', () => {
-      it('should set the default to tslint', async () => {
+    describe('none', () => {
+      it('should set the default to none', async () => {
         const tree = await runSchematic(
           'init',
           {
-            linter: 'tslint',
+            linter: 'none',
           },
           appTree
         );
         const workspaceJson = readJsonInTree(tree, 'workspace.json');
         expect(
           workspaceJson.schematics['@nrwl/angular:application'].linter
-        ).toEqual('tslint');
+        ).toEqual('none');
         expect(
           workspaceJson.schematics['@nrwl/angular:library'].linter
-        ).toEqual('tslint');
-      });
-
-      it('should add codelyzer', async () => {
-        const tree = await runSchematic(
-          'init',
-          {
-            linter: 'tslint',
-          },
-          appTree
-        );
-        const { devDependencies } = readJsonInTree(tree, 'package.json');
-        expect(devDependencies['codelyzer']).toBeDefined();
+        ).toEqual('none');
       });
     });
   });

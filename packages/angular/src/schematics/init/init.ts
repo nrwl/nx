@@ -13,10 +13,8 @@ import {
   setDefaultCollection,
   updateJsonInTree,
   updateWorkspace,
-  Linter,
 } from '@nrwl/workspace';
 import {
-  angularDevkitVersion,
   angularVersion,
   jestPresetAngularVersion,
   rxjsVersion,
@@ -24,7 +22,7 @@ import {
 import { Schema } from './schema';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 
-const updateDependencies = (options: Pick<Schema, 'linter'>): Rule =>
+const updateDependencies = (): Rule =>
   addDepsToPackageJson(
     {
       '@angular/animations': angularVersion,
@@ -37,13 +35,12 @@ const updateDependencies = (options: Pick<Schema, 'linter'>): Rule =>
       '@angular/router': angularVersion,
       rxjs: rxjsVersion,
       tslib: '^2.0.0',
-      'zone.js': '^0.10.2',
+      'zone.js': '~0.11.4',
     },
     {
       '@angular/compiler-cli': angularVersion,
       '@angular/language-service': angularVersion,
-      '@angular-devkit/build-angular': angularDevkitVersion,
-      codelyzer: options.linter === Linter.TsLint ? '^6.0.0' : undefined,
+      '@angular-devkit/build-angular': angularVersion,
     }
   );
 
@@ -54,6 +51,9 @@ export function addUnitTestRunner(
     case UnitTestRunner.Karma:
       return schematic('karma', {});
     case UnitTestRunner.Jest:
+      // TODO: remove this when we use `jest-preset-angular@9.0.0`
+      process.env.npm_config_legacy_peer_deps = 'true';
+
       return chain([
         addDepsToPackageJson(
           {},
@@ -163,7 +163,7 @@ export default function (options: Schema): Rule {
     setDefaults(options),
     // TODO: Remove this when ngcc can be run in parallel
     addPostinstall(),
-    updateDependencies(options),
+    updateDependencies(),
     addUnitTestRunner(options),
     addE2eTestRunner(options),
     formatFiles(options),

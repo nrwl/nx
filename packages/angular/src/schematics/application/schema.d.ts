@@ -9,13 +9,12 @@ export interface Schema {
   inlineTemplate?: boolean;
   viewEncapsulation?: 'Emulated' | 'Native' | 'None';
   routing?: boolean;
-  enableIvy?: boolean;
   prefix?: string;
   style?: string;
   skipTests?: boolean;
   directory?: string;
   tags?: string;
-  linter: Linter;
+  linter: Exclude<Linter, Linter.TsLint>;
   unitTestRunner: UnitTestRunner;
   e2eTestRunner: E2eTestRunner;
   backendProject?: string;

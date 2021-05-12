@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "storybook-migrate-defaults-5-to-6",
+  "$id": "storybook-migrate-defaults-5-to-6",
   "type": "object",
   "properties": {
     "all": {

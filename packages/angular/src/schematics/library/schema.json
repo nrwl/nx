@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "SchematicsAngularLibrary",
+  "$id": "SchematicsAngularLibrary",
   "title": "Create a library",
   "type": "object",
   "properties": {
@@ -59,33 +59,6 @@
       "default": false,
       "description": "Do not update tsconfig.json for development experience."
     },
-    "style": {
-      "description": "The file extension to be used for style files.",
-      "type": "string",
-      "default": "css",
-      "x-prompt": {
-        "message": "Which stylesheet format would you like to use?",
-        "type": "list",
-        "items": [
-          {
-            "value": "css",
-            "label": "CSS"
-          },
-          {
-            "value": "scss",
-            "label": "SASS(.scss)  [ http://sass-lang.com   ]"
-          },
-          {
-            "value": "styl",
-            "label": "Stylus(.styl)[ http://stylus-lang.com ]"
-          },
-          {
-            "value": "less",
-            "label": "LESS         [ http://lesscss.org     ]"
-          }
-        ]
-      }
-    },
     "routing": {
       "type": "boolean",
       "default": false,
@@ -122,7 +95,7 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["tslint", "eslint"],
+      "enum": ["eslint", "none"],
       "default": "eslint"
     },
     "enableIvy": {

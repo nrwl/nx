@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "Nx Cypress Project Generator Schema",
+  "$id": "NxCypressProjectGeneratorSchema",
   "cli": "nx",
   "title": "Create Cypress Configuration for the workspace",
   "type": "object",
@@ -28,7 +28,7 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["eslint", "tslint"],
+      "enum": ["eslint", "tslint", "none"],
       "default": "eslint"
     },
     "js": {

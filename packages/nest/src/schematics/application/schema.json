@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "SchematicsNxNestApp",
+  "$id": "SchematicsNxNestApp",
   "title": "Nx Application Options Schema",
   "type": "object",
   "properties": {

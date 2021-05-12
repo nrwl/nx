@@ -268,7 +268,7 @@ export function readEnvironment(
   const workspaceJson = readWorkspaceJson();
   const workspaceResults = new WorkspaceResults(target, projects);
 
-  return { nxJson, workspaceJson, workspaceResults };
+  return { nxJson, workspaceJson, workspaceResults } as any;
 }
 
 export function normalizedProjectRoot(p: ProjectGraphNode): string {

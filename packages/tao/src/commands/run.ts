@@ -188,6 +188,9 @@ async function runExecutorInternal<T extends { success: boolean }>(
       `NX Cannot find target '${target}' for project '${project}'`
     );
   }
+
+  configuration = configuration ?? targetConfig.defaultConfiguration;
+
   const [nodeModule, executor] = targetConfig.executor.split(':');
   const { schema, implementationFactory } = ws.readExecutor(
     nodeModule,

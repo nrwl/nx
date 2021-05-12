@@ -1,4 +1,5 @@
 import { json } from '@angular-devkit/core';
+import { SchemaFlattener } from './schema-flattener';
 
 export enum OptionType {
   Any = 'any',
@@ -27,7 +28,7 @@ function _getEnumFromValue<E, T extends E[keyof E]>(
 }
 
 export async function parseJsonSchemaToOptions(
-  registry: json.schema.SchemaRegistry,
+  flattener: SchemaFlattener,
   schema: json.JsonObject
 ): Promise<any[]> {
   const options: any[] = [];
@@ -74,8 +75,17 @@ export async function parseJsonSchemaToOptions(
           case 'boolean':
           case 'number':
           case 'string':
-          case 'array':
             return true;
+          case 'array':
+            if (
+              json.isJsonObject(current.items) &&
+              typeof current.items.type == 'string' &&
+              ['boolean', 'number', 'string'].includes(current.items.type)
+            ) {
+              return true;
+            }
+
+            return false;
 
           default:
             return false;
@@ -190,7 +200,7 @@ export async function parseJsonSchemaToOptions(
     options.push(option);
   }
 
-  const flattenedSchema = await registry.flatten(schema).toPromise();
+  const flattenedSchema = flattener.flatten(schema);
   json.schema.visitJsonSchema(flattenedSchema, visitor);
 
   // Sort by positional.

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "SchematicsNxUpgradeModule",
+  "$id": "SchematicsNxUpgradeModule",
   "title": "Generates UpgradeModule setup",
   "type": "object",
   "properties": {

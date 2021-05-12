@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "storybook-stories",
+  "$id": "NxAngularStorybookStories",
   "type": "object",
   "properties": {
     "name": {

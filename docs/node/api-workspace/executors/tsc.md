@@ -7,12 +7,6 @@ Read more about how to use executors and the CLI here: https://nx.dev/node/getti
 
 ## Properties
 
-### assets
-
-Type: `array`
-
-List of static assets.
-
 ### main
 
 Type: `string`

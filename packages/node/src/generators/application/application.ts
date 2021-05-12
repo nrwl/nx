@@ -122,7 +122,10 @@ function addProxy(tree: Tree, options: NormalizedSchema) {
   const projectConfig = readProjectConfiguration(tree, options.frontendProject);
   if (projectConfig.targets && projectConfig.targets.serve) {
     const pathToProxyFile = `${projectConfig.root}/proxy.conf.json`;
-    projectConfig.targets.serve.options.proxyConfig = pathToProxyFile;
+    projectConfig.targets.serve.options = {
+      ...projectConfig.targets.serve.options,
+      proxyConfig: pathToProxyFile,
+    };
 
     if (!tree.exists(pathToProxyFile)) {
       tree.write(

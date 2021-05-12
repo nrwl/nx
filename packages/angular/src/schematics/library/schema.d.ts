@@ -16,7 +16,6 @@ export interface Schema {
   flat?: boolean;
   commonModule?: boolean;
 
-  style?: string;
   prefix?: string;
   routing?: boolean;
   lazy?: boolean;
@@ -24,7 +23,7 @@ export interface Schema {
   tags?: string;
   strict?: boolean;
 
-  linter: Linter;
+  linter: Exclude<Linter, Linter.TsLint>;
   unitTestRunner: UnitTestRunner;
 
   enableIvy: boolean;

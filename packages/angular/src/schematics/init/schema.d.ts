@@ -7,5 +7,5 @@ export interface Schema {
   skipFormat: boolean;
   skipInstall?: boolean;
   style?: string;
-  linter: Linter;
+  linter: Exclude<Linter, Linter.TsLint>;
 }

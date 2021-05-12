@@ -183,10 +183,6 @@ Type: `string`
 
 Command to run in child process
 
-### commands
-
-Type: `array`
-
 ### cwd
 
 Type: `string`
@@ -201,7 +197,7 @@ You may specify a custom .env file path
 
 ### outputPath
 
-Type: `string | string[] `
+Type: `string`
 
 Allows you to specify where the build artifacts are stored. This allows Nx Cloud to pick them up correctly, in the case that the build artifacts are placed somewhere other than the top level dist folder.
 
