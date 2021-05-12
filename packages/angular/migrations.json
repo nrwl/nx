@@ -63,13 +63,13 @@
     },
     "update-webpack-browser-config": {
       "cli": "nx",
-      "version": "12.3.0-rc.0",
+      "version": "12.3.0-rc.1",
       "description": "Remove deprecated options and update others according to new defaults. It syncs with the v12 migration of Angular builders.",
       "factory": "./src/migrations/update-12-3-0/update-webpack-browser-config"
     },
     "update-storybook": {
       "cli": "nx",
-      "version": "12.3.0-rc.0",
+      "version": "12.3.0-rc.1",
       "description": "Updates storybook configurations to support webpack 5",
       "factory": "./src/migrations/update-12-3-0/update-storybook"
     }
@@ -474,8 +474,8 @@
         }
       }
     },
-    "12.3.0-rc.0": {
-      "version": "12.3.0-rc.0",
+    "12.3.0-rc.1": {
+      "version": "12.3.0-rc.1",
       "packages": {
         "@angular/cli": {
           "version": "^12.0.0-rc.3",
@@ -539,6 +539,10 @@
         },
         "@angular/service-worker": {
           "version": "^12.0.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "zone.js": {
+          "version": "~0.11.4",
           "alwaysAddToPackageJson": false
         },
         "ng-packagr": {
