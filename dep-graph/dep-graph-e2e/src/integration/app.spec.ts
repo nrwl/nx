@@ -1,13 +1,13 @@
 import {
-  getDeselectAllButton,
-  getUnfocusProjectButton,
-  getProjectCheckboxes,
   getCheckedProjectCheckboxes,
+  getDeselectAllButton,
+  getIncludeProjectsInPathButton,
+  getProjectCheckboxes,
   getSelectAllButton,
   getSelectProjectsMessage,
-  getTextFilterInput,
   getTextFilterButton,
-  getIncludeProjectsInPathButton,
+  getTextFilterInput,
+  getUnfocusProjectButton,
 } from '../support/app.po';
 
 describe('dep-graph-client', () => {
@@ -24,6 +24,22 @@ describe('dep-graph-client', () => {
 
   it('should display message to select projects', () => {
     getSelectProjectsMessage().should('be.visible');
+  });
+
+  describe('selecting a different project', () => {
+    it('should change the available projects', () => {
+      getProjectCheckboxes().should('have.length', 133);
+      cy.get('[data-cy=project-select]').select('Nx');
+      getProjectCheckboxes().should('have.length', 42);
+    });
+
+    it("should restore sidebar if it's been hidden", () => {
+      cy.get('#sidebar').should('be.visible');
+      cy.get('#sidebar-toggle-button').click();
+      cy.get('#sidebar').should('not.be.visible');
+      cy.get('[data-cy=project-select]').select('Nx');
+      cy.get('#sidebar').should('be.visible');
+    });
   });
 
   describe('select all button', () => {

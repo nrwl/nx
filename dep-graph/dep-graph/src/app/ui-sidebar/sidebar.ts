@@ -29,6 +29,8 @@ export class SidebarComponent {
     private affectedProjects: string[],
     showDebugger: boolean
   ) {
+    this.resetSidebarVisibility();
+
     const showAffected = this.affectedProjects.length > 0;
 
     const displayOptionsPanelContainer = document.getElementById(
@@ -76,6 +78,15 @@ export class SidebarComponent {
 
     if (window.exclude.length > 0) {
       window.exclude.forEach((project) => this.excludeProject(project));
+    }
+  }
+
+  private resetSidebarVisibility() {
+    const sidebarElement = document.getElementById('sidebar');
+
+    if (sidebarElement.classList.contains('hidden')) {
+      sidebarElement.classList.remove('hidden');
+      sidebarElement.style.marginLeft = `0px`;
     }
   }
 
