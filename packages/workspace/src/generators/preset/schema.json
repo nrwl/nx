@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "NxWorkspacePreset",
+  "$id": "NxWorkspacePreset",
   "cli": "nx",
   "title": "Creates applications in a new workspace",
   "type": "object",

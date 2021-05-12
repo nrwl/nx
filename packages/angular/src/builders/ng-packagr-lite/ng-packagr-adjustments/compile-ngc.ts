@@ -5,6 +5,7 @@
  * since these libraries will be compiled by the ngtsc.
  */
 
+import { InjectionToken } from 'injection-js';
 import {
   Transform,
   transformFromPromise,
@@ -13,7 +14,6 @@ import {
   provideTransform,
   TransformProvider,
 } from 'ng-packagr/lib/graph/transform.di';
-import { COMPILE_NGC_TOKEN } from 'ng-packagr/lib/ng-package/entry-point/compile-ngc.di';
 import {
   EntryPointNode,
   isEntryPoint,
@@ -26,7 +26,7 @@ import { setDependenciesTsConfigPaths } from 'ng-packagr/lib/ts/tsconfig';
 import * as path from 'path';
 import * as ts from 'typescript';
 
-export const compileNgcTransformFactory = (
+export const nxCompileNgcTransformFactory = (
   StylesheetProcessor: typeof StylesheetProcessorClass
 ): Transform => {
   return transformFromPromise(async (graph) => {
@@ -73,8 +73,11 @@ export const compileNgcTransformFactory = (
   });
 };
 
+export const NX_COMPILE_NGC_TOKEN = new InjectionToken<Transform>(
+  `nx.v1.compileNgc`
+);
 export const NX_COMPILE_NGC_TRANSFORM: TransformProvider = provideTransform({
-  provide: COMPILE_NGC_TOKEN,
-  useFactory: compileNgcTransformFactory,
+  provide: NX_COMPILE_NGC_TOKEN,
+  useFactory: nxCompileNgcTransformFactory,
   deps: [STYLESHEET_PROCESSOR_TOKEN],
 });

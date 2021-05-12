@@ -1,5 +1,5 @@
 import { vol } from 'memfs';
-import { extname, join } from 'path';
+import { extname } from 'path';
 import { RuleFailure } from 'tslint';
 import * as ts from 'typescript';
 import {
@@ -9,7 +9,6 @@ import {
 } from '../core/project-graph';
 import { Rule } from './nxEnforceModuleBoundariesRule';
 import { TargetProjectLocator } from '../core/target-project-locator';
-import { readFileSync } from 'fs';
 
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('../utilities/app-root', () => ({ appRootPath: '/root' }));
@@ -724,6 +723,121 @@ describe('Enforce Module Boundaries', () => {
     expect(failures[0].getFailure()).toEqual(
       'imports of e2e projects are forbidden'
     );
+  });
+
+  it('should error when absolute path within project detected', () => {
+    const failures = runRule(
+      {},
+      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+      'import "@mycompany/mylib"',
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+              files: [createFile(`libs/mylib/src/main.ts`)],
+            },
+          },
+          anotherlibName: {
+            name: 'anotherlibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/anotherlib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+              files: [createFile(`libs/anotherlib/src/main.ts`)],
+            },
+          },
+          myappName: {
+            name: 'myappName',
+            type: ProjectType.app,
+            data: {
+              root: 'apps/myapp',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+              files: [createFile(`apps/myapp/src/index.ts`)],
+            },
+          },
+        },
+        dependencies: {
+          mylibName: [
+            {
+              source: 'mylibName',
+              target: 'anotherlibName',
+              type: DependencyType.static,
+            },
+          ],
+        },
+      }
+    );
+    const message =
+      'Only relative imports are allowed within the project. Absolute import found: @mycompany/mylib';
+    expect(failures.length).toEqual(1);
+    expect(failures[0].getFailure()).toEqual(message);
+  });
+
+  it('should ignore detected absolute path within project if allowCircularSelfDependency flag is set', () => {
+    const failures = runRule(
+      {
+        allowCircularSelfDependency: true,
+      },
+      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+      'import "@mycompany/mylib"',
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+              files: [createFile(`libs/mylib/src/main.ts`)],
+            },
+          },
+          anotherlibName: {
+            name: 'anotherlibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/anotherlib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+              files: [createFile(`libs/anotherlib/src/main.ts`)],
+            },
+          },
+          myappName: {
+            name: 'myappName',
+            type: ProjectType.app,
+            data: {
+              root: 'apps/myapp',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+              files: [createFile(`apps/myapp/src/index.ts`)],
+            },
+          },
+        },
+        dependencies: {
+          mylibName: [
+            {
+              source: 'mylibName',
+              target: 'anotherlibName',
+              type: DependencyType.static,
+            },
+          ],
+        },
+      }
+    );
+    expect(failures.length).toEqual(0);
   });
 
   it('should error when circular dependency detected', () => {

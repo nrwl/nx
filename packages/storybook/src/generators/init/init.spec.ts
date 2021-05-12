@@ -25,6 +25,8 @@ describe('@nrwl/storybook:init', () => {
       });
       const packageJson = readJson(tree, 'package.json');
 
+      expect(packageJson).toMatchSnapshot();
+
       // general deps
       expect(packageJson.devDependencies['@nrwl/storybook']).toBeDefined();
       expect(packageJson.dependencies['@nrwl/storybook']).toBeUndefined();

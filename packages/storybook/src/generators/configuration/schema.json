@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
-  "id": "storybook-configure",
+  "$id": "NxStorybookConfigure",
   "type": "object",
   "properties": {
     "name": {
@@ -30,7 +30,7 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["eslint", "tslint"],
+      "enum": ["eslint", "tslint", "none"],
       "default": "eslint"
     },
     "js": {

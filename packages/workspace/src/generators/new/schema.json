@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "NxWorkspaceNew",
+  "$id": "NxWorkspaceNew",
   "title": "Create an empty workspace",
   "type": "object",
   "cli": "nx",

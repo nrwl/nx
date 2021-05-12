@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "SchematicsRunCommands",
+  "$id": "SchematicsRunCommands",
   "title": "Create a custom target to run any command",
   "type": "object",
   "cli": "nx",

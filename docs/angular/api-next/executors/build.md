@@ -6,24 +6,6 @@ Properties can be configured in angular.json when defining the executor, or when
 
 ## Properties
 
-### fileReplacements
-
-Type: `object[]`
-
-Replace files with other files in the build.
-
-#### replace
-
-Type: `string`
-
-undefined
-
-#### with
-
-Type: `string`
-
-undefined
-
 ### nextConfig
 
 Type: `string`

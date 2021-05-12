@@ -83,16 +83,12 @@ if (!!mapMissList.length) {
   scriptError = true;
 } else {
   console.log(
-    console.log(
-      `${chalk.green(
-        '🗸'
-      )} The 'map.json' file and the documentation files are in sync.`
-    )
+    `${chalk.green(
+      '🗸'
+    )} The 'map.json' file and the documentation files are in sync.`
   );
 }
 
 if (scriptError) {
   process.exit(1);
-} else {
-  process.exit(0);
 }

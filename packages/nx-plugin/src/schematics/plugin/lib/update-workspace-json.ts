@@ -12,7 +12,12 @@ export function updateWorkspaceJson(options: NormalizedSchema): Rule {
         ...[
           {
             input: `./${options.projectRoot}/src`,
-            glob: '**/*.!(ts)',
+            glob: '**/!(*.ts)',
+            output: './src',
+          },
+          {
+            input: `./${options.projectRoot}/src`,
+            glob: '**/*.d.ts',
             output: './src',
           },
           {

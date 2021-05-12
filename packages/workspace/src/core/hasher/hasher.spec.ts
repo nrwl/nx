@@ -1,7 +1,6 @@
 import { Hasher } from './hasher';
-import { extractNameAndVersion } from '@nrwl/workspace/src/core/hasher/file-hasher';
+import fs = require('fs');
 
-const fs = require('fs');
 jest.mock('fs');
 
 describe('Hasher', () => {
@@ -60,15 +59,11 @@ describe('Hasher', () => {
       createHashing()
     );
 
-    const hash = (
-      await hasher.hashTasks([
-        {
-          target: { project: 'proj', target: 'build' },
-          id: 'proj-build',
-          overrides: { prop: 'prop-value' },
-        },
-      ])
-    )[0];
+    const hash = await hasher.hashTaskWithDepsAndContext({
+      target: { project: 'proj', target: 'build' },
+      id: 'proj-build',
+      overrides: { prop: 'prop-value' },
+    });
 
     expect(hash.value).toContain('yarn.lock.hash'); //implicits
     expect(hash.value).toContain('file.hash'); //project files
@@ -120,13 +115,11 @@ describe('Hasher', () => {
     );
 
     try {
-      await hasher.hashTasks([
-        {
-          target: { project: 'proj', target: 'build' },
-          id: 'proj-build',
-          overrides: {},
-        },
-      ]);
+      await hasher.hashTaskWithDepsAndContext({
+        target: { project: 'proj', target: 'build' },
+        id: 'proj-build',
+        overrides: {},
+      });
       fail('Should not be here');
     } catch (e) {
       expect(e.message).toContain(
@@ -169,15 +162,11 @@ describe('Hasher', () => {
       createHashing()
     );
 
-    const hash = (
-      await hasher.hashTasks([
-        {
-          target: { project: 'parent', target: 'build' },
-          id: 'parent-build',
-          overrides: { prop: 'prop-value' },
-        },
-      ])
-    )[0];
+    const hash = await hasher.hashTaskWithDepsAndContext({
+      target: { project: 'parent', target: 'build' },
+      id: 'parent-build',
+      overrides: { prop: 'prop-value' },
+    });
 
     // note that the parent hash is based on parent source files only!
     expect(hash.details.sources).toEqual({
@@ -219,15 +208,11 @@ describe('Hasher', () => {
       createHashing()
     );
 
-    const tasksHash = (
-      await hasher.hashTasks([
-        {
-          target: { project: 'proja', target: 'build' },
-          id: 'proja-build',
-          overrides: { prop: 'prop-value' },
-        },
-      ])
-    )[0];
+    const tasksHash = await hasher.hashTaskWithDepsAndContext({
+      target: { project: 'proja', target: 'build' },
+      id: 'proja-build',
+      overrides: { prop: 'prop-value' },
+    });
 
     expect(tasksHash.value).toContain('yarn.lock.hash'); //implicits
     expect(tasksHash.value).toContain('a.hash'); //project files
@@ -240,15 +225,11 @@ describe('Hasher', () => {
       projb: '/fileb|b.hash|""|""',
     });
 
-    const hashb = (
-      await hasher.hashTasks([
-        {
-          target: { project: 'projb', target: 'build' },
-          id: 'projb-build',
-          overrides: { prop: 'prop-value' },
-        },
-      ])
-    )[0];
+    const hashb = await hasher.hashTaskWithDepsAndContext({
+      target: { project: 'projb', target: 'build' },
+      id: 'projb-build',
+      overrides: { prop: 'prop-value' },
+    });
 
     expect(hashb.value).toContain('yarn.lock.hash'); //implicits
     expect(hashb.value).toContain('a.hash'); //project files
@@ -300,30 +281,13 @@ describe('Hasher', () => {
       createHashing()
     );
 
-    const tasksHash = (
-      await hasher.hashTasks([
-        {
-          target: { project: 'proja', target: 'build' },
-          id: 'proja-build',
-          overrides: { prop: 'prop-value' },
-        },
-      ])
-    )[0];
+    const tasksHash = await hasher.hashTaskWithDepsAndContext({
+      target: { project: 'proja', target: 'build' },
+      id: 'proja-build',
+      overrides: { prop: 'prop-value' },
+    });
 
     expect(tasksHash.value).toContain('global1.hash');
     expect(tasksHash.value).toContain('global2.hash');
-  });
-
-  describe('extractNameAndVersion', () => {
-    it('should work', () => {
-      const nameAndVersion = extractNameAndVersion(`
-      {
-        "name": "myname",
-        "somethingElse": "123",
-        "version": "1.1.1"
-      }
-    `);
-      expect(nameAndVersion).toEqual(`myname1.1.1`);
-    });
   });
 });

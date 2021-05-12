@@ -97,7 +97,6 @@ const parsedArgs: any = yargsParser(process.argv.slice(2), {
     'preset',
     'appName',
     'style',
-    'linter',
     'defaultBase',
     'packageManager',
   ],
@@ -121,15 +120,9 @@ if (parsedArgs.help) {
 
 (async function main() {
   const packageManager: PackageManager = parsedArgs.packageManager || 'npm';
-  const {
-    name,
-    cli,
-    preset,
-    appName,
-    style,
-    linter,
-    nxCloud,
-  } = await getConfiguration(parsedArgs);
+  const { name, cli, preset, appName, style, nxCloud } = await getConfiguration(
+    parsedArgs
+  );
 
   const tmpDir = createSandbox(packageManager);
   await createApp(tmpDir, name, packageManager, {
@@ -138,7 +131,6 @@ if (parsedArgs.help) {
     preset,
     appName,
     style,
-    linter,
     nxCloud,
   });
 
@@ -174,8 +166,6 @@ function showHelp() {
     
     style                     Default style option to be used when a non-empty preset is selected 
                               options: ("css", "scss", "styl", "less") for React/Next.js also ("styled-components", "@emotion/styled")    
-                              
-    linter                    Default linter. Options: "eslint", "tslint".
 
     interactive               Enable interactive mode when using presets (boolean)
 
@@ -194,7 +184,6 @@ async function getConfiguration(parsedArgs) {
     const appName = await determineAppName(preset, parsedArgs);
     const style = await determineStyle(preset, parsedArgs);
     const cli = await determineCli(preset, parsedArgs);
-    const linter = await determineLinter(preset, parsedArgs);
     const nxCloud = await askAboutNxCloud(parsedArgs);
 
     return {
@@ -203,7 +192,6 @@ async function getConfiguration(parsedArgs) {
       appName,
       style,
       cli,
-      linter,
       nxCloud,
     };
   } catch (e) {
@@ -373,16 +361,13 @@ function determineStyle(preset: Preset, parsedArgs: any) {
         name: '@emotion/styled',
         message:
           'emotion           [ https://emotion.sh                       ]',
-      }
-    );
-    // TODO: Remove below if condition when Gatsby supports styled-jsx
-    if (Preset.Gatsby !== preset) {
-      choices.push({
+      },
+      {
         name: 'styled-jsx',
         message:
           'styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]',
-      });
-    }
+      }
+    );
   }
 
   if (!parsedArgs.style) {
@@ -415,45 +400,6 @@ function determineStyle(preset: Preset, parsedArgs: any) {
   }
 
   return Promise.resolve(parsedArgs.style);
-}
-
-function determineLinter(preset: Preset, parsedArgs: any) {
-  if (!parsedArgs.linter) {
-    if (preset === Preset.Angular || preset === Preset.AngularWithNest) {
-      return enquirer
-        .prompt([
-          {
-            name: 'linter',
-            message: `Default linter                     `,
-            initial: 'eslint' as any,
-            type: 'select',
-            choices: [
-              {
-                name: 'eslint',
-                message: 'ESLint [ Modern linting tool ]',
-              },
-              {
-                name: 'tslint',
-                message: 'TSLint [ Used by Angular CLI. Deprecated. ]',
-              },
-            ],
-          },
-        ])
-        .then((a: { linter: string }) => a.linter);
-    } else {
-      return Promise.resolve('eslint');
-    }
-  } else {
-    if (parsedArgs.linter !== 'eslint' && parsedArgs.linter !== 'tslint') {
-      output.error({
-        title: 'Invalid linter',
-        bodyLines: [`It must be one of the following:`, '', 'eslint', 'tslint'],
-      });
-      process.exit(1);
-    } else {
-      return Promise.resolve(parsedArgs.linter);
-    }
-  }
 }
 
 function createSandbox(packageManager: string) {
@@ -524,6 +470,10 @@ async function createApp(
     if (pmVersion < 7) {
       nxWorkspaceRoot = `\\"${nxWorkspaceRoot.slice(1, -1)}\\"`;
     }
+  }
+  // For gatsby, when doing npm install, it does not require the flag --legacy-peer-deps
+  if (parsedArgs.preset === Preset.Gatsby && packageManager === 'npm') {
+    process.env.npm_config_legacy_peer_deps = 'false';
   }
   const fullCommandWithoutWorkspaceRoot = `${pmc.exec} tao ${command}/collection.json --cli=${cli}`;
   const spinner = ora('Creating your workspace').start();

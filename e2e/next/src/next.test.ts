@@ -165,6 +165,13 @@ describe('Next.js Applications', () => {
     runCLI(`generate @nrwl/react:lib ${tsxLibName} --no-interactive`);
     runCLI(`generate @nrwl/workspace:lib ${tsLibName} --no-interactive`);
 
+    // create a css file in node_modules so that it can be imported in a lib
+    // to test that it works as expected
+    updateFile(
+      'node_modules/@nrwl/next/test-styles.css',
+      'h1 { background-color: red; }'
+    );
+
     updateFile(
       `libs/${tsLibName}/src/lib/${tsLibName}.ts`,
       `
@@ -182,6 +189,7 @@ describe('Next.js Applications', () => {
     updateFile(
       `libs/${tsxLibName}/src/lib/${tsxLibName}.tsx`,
       `
+          import '@nrwl/next/test-styles.css';
 
           interface TestComponentProps {
             text: string;
@@ -342,13 +350,26 @@ describe('Next.js Applications', () => {
     updateFile(
       `apps/${appName}/next.config.js`,
       `
-      module.exports = {}
+      module.exports = {
+        future: {
+          // Nx doesn't support webpack 5 yet
+          webpack5: false,
+        },
+        webpack: (c) => {
+          console.log('NODE_ENV is', process.env.NODE_ENV);
+          return c;
+        }
+      }
       `
     );
-
-    runCLI(`build ${appName}`);
+    // deleting `NODE_ENV` value, so that it's `undefined`, and not `"test"`
+    // by the time it reaches the build executor.
+    // this simulates existing behaviour of running a next.js build executor via Nx
+    delete process.env.NODE_ENV;
+    const result = runCLI(`build ${appName}`);
 
     checkFilesExist(`dist/apps/${appName}/next.config.js`);
+    expect(result).toContain('NODE_ENV is production');
   }, 120000);
 
   it('should support --js flag', async () => {

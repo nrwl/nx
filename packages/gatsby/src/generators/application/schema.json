@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
-  "id": "NxGatsbyApp",
+  "$id": "NxGatsbyApp",
   "title": "",
   "type": "object",
   "properties": {
@@ -68,6 +68,10 @@
           {
             "value": "@emotion/styled",
             "label": "emotion           [ https://emotion.sh            ]"
+          },
+          {
+            "value": "styled-jsx",
+            "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
           },
           {
             "value": "none",

@@ -3,7 +3,6 @@ import * as chalk from 'chalk';
 import * as path from 'path';
 import { dedent } from 'tslint/lib/utils';
 import { FileSystemSchematicJsonDescription } from '@angular-devkit/schematics/tools';
-import { CoreSchemaRegistry } from '@angular-devkit/core/src/json/schema';
 import {
   htmlSelectorFormat,
   pathFormat,
@@ -19,6 +18,7 @@ import {
 } from './get-package-configurations';
 import { Framework } from './frameworks';
 import { parseJsonSchemaToOptions } from './json-parser';
+import { createSchemaFlattener, SchemaFlattener } from './schema-flattener';
 
 /**
  * @WhatItDoes: Generates default documentation from the schematics' schema.
@@ -27,13 +27,11 @@ import { parseJsonSchemaToOptions } from './json-parser';
  *    parsable in order to be used in a rendering process using template. This
  *    in order to generate a markdown file for each available schematic.
  */
-const registry = new CoreSchemaRegistry();
-registry.addFormat(pathFormat);
-registry.addFormat(htmlSelectorFormat);
+const flattener = createSchemaFlattener([pathFormat, htmlSelectorFormat]);
 
 function generateSchematicList(
   config: Configuration,
-  registry: CoreSchemaRegistry
+  flattener: SchemaFlattener
 ): Promise<FileSystemSchematicJsonDescription>[] {
   const schematicCollectionFile = path.join(config.root, 'collection.json');
   removeSync(config.schematicOutput);
@@ -51,11 +49,11 @@ function generateSchematicList(
       ),
     };
 
-    return parseJsonSchemaToOptions(registry, schematic.rawSchema)
+    return parseJsonSchemaToOptions(flattener, schematic.rawSchema)
       .then((options) => ({ ...schematic, options }))
       .catch((error) =>
         console.error(
-          `Can't parse schema option of ${schematic.name}:\n${error}`
+          `Can't parse schema option of ${schematic.name} | ${schematic.collectionName}:\n${error}`
         )
       );
   });
@@ -174,11 +172,11 @@ export async function generateGeneratorsDocumentation() {
           .filter((item) => item.hasSchematics)
           .map(async (config) => {
             const schematicList = await Promise.all(
-              generateSchematicList(config, registry)
+              generateSchematicList(config, flattener)
             );
 
             const markdownList = schematicList
-              .filter((s) => !s['hidden'])
+              .filter((s) => s != null && !s['hidden'])
               .map((s_1) => generateTemplate(framework, s_1));
 
             await Promise.all(

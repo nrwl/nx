@@ -1244,64 +1244,15 @@ describe('lib', () => {
       });
     });
 
-    describe('tslint', () => {
-      it('should add an architect target for lint', async () => {
+    describe('none', () => {
+      it('should not add an architect target for lint', async () => {
         const tree = await runSchematic(
           'lib',
-          { name: 'myLib', linter: 'tslint' },
+          { name: 'myLib', linter: 'none' },
           appTree
         );
         const workspaceJson = readJsonInTree(tree, 'workspace.json');
-        expect(workspaceJson.projects['my-lib'].architect.lint)
-          .toMatchInlineSnapshot(`
-          Object {
-            "builder": "@angular-devkit/build-angular:tslint",
-            "options": Object {
-              "exclude": Array [
-                "**/node_modules/**",
-                "!libs/my-lib/**/*",
-              ],
-              "tsConfig": Array [
-                "libs/my-lib/tsconfig.lib.json",
-                "libs/my-lib/tsconfig.spec.json",
-              ],
-            },
-          }
-        `);
-      });
-
-      it('should add valid tslint JSON configuration', async () => {
-        const tree = await runSchematic(
-          'lib',
-          { name: 'myLib', linter: 'tslint' },
-          appTree
-        );
-
-        const tslintConfig = readJsonInTree(tree, 'libs/my-lib/tslint.json');
-        expect(tslintConfig).toMatchInlineSnapshot(`
-          Object {
-            "extends": "../../tslint.json",
-            "linterOptions": Object {
-              "exclude": Array [
-                "!**/*",
-              ],
-            },
-            "rules": Object {
-              "component-selector": Array [
-                true,
-                "element",
-                "proj",
-                "kebab-case",
-              ],
-              "directive-selector": Array [
-                true,
-                "attribute",
-                "proj",
-                "camelCase",
-              ],
-            },
-          }
-        `);
+        expect(workspaceJson.projects['my-lib'].architect.lint).toBeUndefined();
       });
     });
   });

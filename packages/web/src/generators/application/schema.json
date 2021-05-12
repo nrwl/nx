@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "cli": "nx",
-  "id": "NxWebApp",
+  "$id": "NxWebApp",
   "title": "Create a Web Application for Nx",
   "type": "object",
   "properties": {

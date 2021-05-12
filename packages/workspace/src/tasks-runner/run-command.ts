@@ -11,13 +11,13 @@ import {
 import { Environment, NxJson } from '../core/shared-interfaces';
 import { NxArgs } from '@nrwl/workspace/src/command-line/utils';
 import { isRelativePath } from '../utilities/fileutils';
-import { Hasher } from '../core/hasher/hasher';
 import {
   projectHasTarget,
   projectHasTargetAndConfiguration,
 } from '../utilities/project-graph-utils';
 import { output } from '../utilities/output';
 import { getDefaultDependencyConfigs, getDependencyConfigs } from './utils';
+import { Hasher } from '../core/hasher/hasher';
 
 type RunArgs = yargs.Arguments & ReporterArgs;
 
@@ -52,12 +52,16 @@ export async function runCommand<T extends RunArgs>(
     overrides
   );
 
+  // TODO: vsavkin remove hashing after Nx 13
   const hasher = new Hasher(projectGraph, nxJson, runnerOptions);
-  const res = await hasher.hashTasks(tasks);
+  const res = await Promise.all(
+    tasks.map((t) => hasher.hashTaskWithDepsAndContext(t))
+  );
   for (let i = 0; i < res.length; ++i) {
     tasks[i].hash = res[i].value;
     tasks[i].hashDetails = res[i].details;
   }
+
   const cachedTasks: Task[] = [];
   const failedTasks: Task[] = [];
   const tasksWithFailedDependencies: Task[] = [];

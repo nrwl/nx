@@ -1,7 +1,7 @@
 {
   "cli": "nx",
   "title": "Add Storybook Configuration to the workspace",
-  "id": "Init Storybook Plugin",
+  "$id": "init-storybook-plugin",
   "type": "object",
   "properties": {
     "uiFramework": {

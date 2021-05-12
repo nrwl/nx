@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "NxPluginMigration",
+  "$id": "NxPluginMigration",
   "title": "Create a Migration for an Nx Plugin",
   "type": "object",
   "examples": [

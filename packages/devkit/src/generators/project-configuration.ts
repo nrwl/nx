@@ -253,7 +253,7 @@ function addProjectToWorkspaceJson(
     );
   }
   workspaceJson.projects[projectName] = project;
-  host.write(path, JSON.stringify(workspaceJson));
+  host.write(path, JSON.stringify(workspaceJson, null, 2));
 }
 
 function addProjectToNxJson(
@@ -273,7 +273,7 @@ function addProjectToNxJson(
       ...(config || {}),
     };
   }
-  host.write('nx.json', JSON.stringify(nxJson));
+  host.write('nx.json', JSON.stringify(nxJson, null, 2));
 }
 
 function readWorkspace(host: Tree): WorkspaceJsonConfiguration {

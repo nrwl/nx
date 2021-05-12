@@ -51,6 +51,12 @@ Type: `string`
 
 ESLint Output formatter (https://eslint.org/docs/user-guide/formatters).
 
+### hasTypeAwareRules
+
+Type: `boolean`
+
+When set to true, the linter will invalidate its cache when any of its dependencies changes.
+
 ### ignorePath
 
 Type: `string`

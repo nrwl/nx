@@ -154,9 +154,7 @@ export interface TargetConfiguration {
   configurations?: { [config: string]: any };
 
   /**
-   * Default configuration for the target.
-   *
-   * Example: 'production'
+   * A default named configuration to use when a target configuration is not provided.
    */
   defaultConfiguration?: string;
 }
@@ -287,7 +285,11 @@ export class Workspaces {
   readExecutor(
     nodeModule: string,
     executor: string
-  ): { schema: any; implementationFactory: () => Executor } {
+  ): {
+    schema: any;
+    implementationFactory: () => Executor;
+    hasherFactory?: () => any;
+  } {
     try {
       const { executorsFilePath, executorConfig } = this.readExecutorsJson(
         nodeModule,
@@ -306,7 +308,18 @@ export class Workspaces {
         const module = require(path.join(executorsDir, modulePath));
         return module[exportName || 'default'] as Executor;
       };
-      return { schema, implementationFactory };
+
+      const hasherFactory = executorConfig.hasher
+        ? () => {
+            const module = require(path.join(
+              executorsDir,
+              executorConfig.hasher
+            ));
+            return module[exportName || 'default'];
+          }
+        : null;
+
+      return { schema, implementationFactory, hasherFactory };
     } catch (e) {
       throw new Error(
         `Unable to resolve ${nodeModule}:${executor}.\n${e.message}`

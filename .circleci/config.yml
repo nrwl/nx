@@ -120,13 +120,10 @@ jobs:
           command: yarn depcheck
       - run:
           name: Run Builds
-          command: npx nx affected --target=build
+          command: npx nx affected --target=build --parallel --max-parallel=3
       - run:
           name: Run Unit Tests
-          command: npx nx affected --target=test
-      - run:
-          name: Run Lint Checks
-          command: npx nx affected --target=lint
+          command: npx nx affected --target=test --parallel --max-parallel=2
       - run:
           name: Run E2E Tests
           command: npx nx affected --target=e2e
@@ -155,13 +152,10 @@ jobs:
           os: << parameters.os >>
       - run:
           name: Run Builds
-          command: npx nx affected --target=build --base=HEAD~1
+          command: npx nx affected --target=build --base=HEAD~1 --parallel --max-parallel=3
       - run:
           name: Run Unit Tests
-          command: npx nx affected --target=test --base=HEAD~1
-      - run:
-          name: Run Lint Checks
-          command: npx nx affected --target=lint --base=HEAD~1
+          command: npx nx affected --target=test --base=HEAD~1 --parallel --max-parallel=2
       - run:
           name: Run E2E Tests
           command: npx nx affected --target=e2e --base=HEAD~1

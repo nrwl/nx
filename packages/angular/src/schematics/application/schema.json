@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "SchematicsNxApp",
+  "$id": "SchematicsNxApp",
   "title": "Nx Application Options Schema",
   "type": "object",
   "properties": {
@@ -68,11 +68,6 @@
       "enum": ["Emulated", "Native", "None"],
       "type": "string"
     },
-    "enableIvy": {
-      "description": "Create a new app that uses the Ivy rendering engine.",
-      "type": "boolean",
-      "default": true
-    },
     "prefix": {
       "type": "string",
       "format": "html-selector",
@@ -114,7 +109,7 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["tslint", "eslint"],
+      "enum": ["eslint", "none"],
       "default": "eslint"
     },
     "backendProject": {

@@ -11,8 +11,22 @@ import { StorybookConfigureSchema } from './schema';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { getE2eProjectName } from '@nrwl/cypress/src/utils/project-name';
 import { getWorkspace } from '@nrwl/workspace';
+import { lt } from 'semver';
+
+function assertCompatibleStorybookVersion() {
+  let storybookVersion: string;
+  try {
+    require(require.resolve('@storybook/angular/package.json')).version;
+  } catch {}
+
+  if (storybookVersion && lt(storybookVersion, '6.2.0')) {
+    throw new Error('Incompatible Storybook Version');
+  }
+}
 
 export default function (schema: StorybookConfigureSchema): Rule {
+  assertCompatibleStorybookVersion();
+
   if (schema.generateCypressSpecs && !schema.generateStories) {
     throw new Error(
       'Cannot set generateCypressSpecs to true when generateStories is set to false.'

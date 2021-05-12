@@ -5,6 +5,6 @@ export interface StorybookConfigureSchema {
   configureCypress: boolean;
   generateStories: boolean;
   generateCypressSpecs: boolean;
-  linter: Linter;
+  linter: Exclude<Linter, Linter.TsLint>;
   cypressDirectory?: string;
 }

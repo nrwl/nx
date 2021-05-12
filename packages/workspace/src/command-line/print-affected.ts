@@ -16,16 +16,12 @@ export async function printAffected(
   nxArgs: NxArgs,
   overrides: yargs.Arguments
 ) {
-  const { runnerOptions } = getRunner(nxArgs, nxJson);
-
   const projectNames = affectedProjects.map((p) => p.name);
-  const hasher = new Hasher(projectGraph, nxJson, runnerOptions);
   const tasksJson = await createTasks(
     affectedProjectsWithTargetAndConfig,
     projectGraph,
     nxArgs,
-    overrides,
-    hasher
+    overrides
   );
   const result = {
     tasks: tasksJson,
@@ -43,8 +39,7 @@ async function createTasks(
   affectedProjectsWithTargetAndConfig: ProjectGraphNode[],
   projectGraph: ProjectGraph,
   nxArgs: NxArgs,
-  overrides: yargs.Arguments,
-  hasher: Hasher
+  overrides: yargs.Arguments
 ) {
   const tasks: Task[] = affectedProjectsWithTargetAndConfig.map(
     (affectedProject) =>
@@ -57,7 +52,6 @@ async function createTasks(
       })
   );
 
-  const taskHashes = await hasher.hashTasks(tasks);
   const pm = detectPackageManager();
   const isYarn = pm === 'yarn';
   return tasks.map((task, index) => ({
@@ -70,7 +64,6 @@ async function createTasks(
       task
     )}`,
     outputs: getOutputs(projectGraph.nodes, task),
-    hash: taskHashes[index].value,
   }));
 }
 

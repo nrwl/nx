@@ -1,18 +1,22 @@
-import { ProjectGraph } from '../project-graph';
-import { NxJson } from '../shared-interfaces';
 import { Task } from '../../tasks-runner/tasks-runner';
-import { readFileSync } from 'fs';
 import { workspaceFileName } from '../file-utils';
 import { exec } from 'child_process';
 import { defaultFileHasher, FileHasher } from './file-hasher';
-import { defaultHashing, HashingImp } from './hashing-impl';
+import { defaultHashing, HashingImpl } from './hashing-impl';
 import * as minimatch from 'minimatch';
 import { performance } from 'perf_hooks';
 import * as stripJsonComments from 'strip-json-comments';
+import {
+  NxJsonConfiguration,
+  WorkspaceJsonConfiguration,
+  ProjectGraph,
+} from '@nrwl/devkit';
+import { readJsonFile } from '../../utilities/fileutils';
+import { TaskGraph } from '@nrwl/workspace/src/tasks-runner/task-graph-creator';
 
 export interface Hash {
   value: string;
-  details: {
+  details?: {
     command: string;
     sources: { [projectName: string]: string };
     implicitDeps: { [key: string]: string };
@@ -35,23 +39,19 @@ interface RuntimeHashResult {
   runtime: { [input: string]: string };
 }
 
-interface NodeModulesResult {
-  value: string;
-}
-
 export class Hasher {
-  static version = '1.0';
+  static version = '2.0';
   private implicitDependencies: Promise<ImplicitHashResult>;
   private runtimeInputs: Promise<RuntimeHashResult>;
   private fileHasher: FileHasher;
   private projectHashes: ProjectHasher;
-  private hashing: HashingImp;
+  private hashing: HashingImpl;
 
   constructor(
     private readonly projectGraph: ProjectGraph,
-    private readonly nxJson: NxJson,
+    private readonly nxJson: NxJsonConfiguration,
     private readonly options: any,
-    hashing: HashingImp = undefined
+    hashing: HashingImpl = undefined
   ) {
     if (!hashing) {
       this.hashing = defaultHashing;
@@ -65,19 +65,11 @@ export class Hasher {
     this.projectHashes = new ProjectHasher(this.projectGraph, this.hashing);
   }
 
-  async hashTasks(tasks: Task[]): Promise<Hash[]> {
-    performance.mark('hasher:hash:start');
-    const r = await Promise.all(tasks.map((t) => this.hash(t)));
-    performance.mark('hasher:hash:end');
-    performance.measure('hasher:hash', 'hasher:hash:start', 'hasher:hash:end');
-    return r;
-  }
-
-  private async hash(task: Task): Promise<Hash> {
+  async hashTaskWithDepsAndContext(task: Task): Promise<Hash> {
     const command = this.hashing.hashArray([
-      task.target.project || '',
-      task.target.target || '',
-      task.target.configuration || '',
+      task.target.project ?? '',
+      task.target.target ?? '',
+      task.target.configuration ?? '',
       JSON.stringify(task.overrides),
     ]);
 
@@ -109,6 +101,29 @@ export class Hasher {
         runtime: values[2].runtime,
       },
     };
+  }
+
+  async hashContext(): Promise<{
+    implicitDeps: ImplicitHashResult;
+    runtime: RuntimeHashResult;
+  }> {
+    const values = (await Promise.all([
+      this.implicitDepsHash(),
+      this.runtimeInputsHash(),
+    ])) as [ImplicitHashResult, RuntimeHashResult];
+
+    return {
+      implicitDeps: values[0],
+      runtime: values[1],
+    };
+  }
+
+  async hashSource(task: Task): Promise<string> {
+    return this.projectHashes.hashProjectNodeSource(task.target.project);
+  }
+
+  hashArray(values: string[]): string {
+    return this.hashing.hashArray(values);
   }
 
   private async runtimeInputsHash(): Promise<RuntimeHashResult> {
@@ -172,7 +187,7 @@ export class Hasher {
     performance.mark('hasher:implicit deps hash:start');
 
     this.implicitDependencies = new Promise((res) => {
-      const implicitDeps = Object.keys(this.nxJson.implicitDependencies || {});
+      const implicitDeps = Object.keys(this.nxJson.implicitDependencies ?? {});
       const filesWithoutPatterns = implicitDeps.filter(
         (p) => p.indexOf('*') === -1
       );
@@ -180,7 +195,7 @@ export class Hasher {
 
       const implicitDepsFromPatterns =
         patterns.length > 0
-          ? (this.projectGraph.allWorkspaceFiles || [])
+          ? (this.projectGraph.allWorkspaceFiles ?? [])
               .filter(
                 (f) => !!patterns.find((pattern) => minimatch(f.file, pattern))
               )
@@ -233,7 +248,7 @@ export class Hasher {
             const r = JSON.parse(stripJsonComments(file));
             delete r.projects;
             return JSON.stringify(r);
-          } catch (e) {
+          } catch {
             return '';
           }
         }),
@@ -245,12 +260,12 @@ export class Hasher {
 
 class ProjectHasher {
   private sourceHashes: { [projectName: string]: Promise<string> } = {};
-  private workspaceJson: any;
-  private nxJson: any;
+  private workspaceJson: WorkspaceJsonConfiguration;
+  private nxJson: NxJsonConfiguration;
 
   constructor(
     private readonly projectGraph: ProjectGraph,
-    private readonly hashing: HashingImp
+    private readonly hashing: HashingImpl
   ) {
     this.workspaceJson = this.readConfigFile(workspaceFileName());
     this.nxJson = this.readConfigFile('nx.json');
@@ -261,7 +276,7 @@ class ProjectHasher {
     visited: string[]
   ): Promise<ProjectHashResult> {
     return Promise.resolve().then(async () => {
-      const deps = this.projectGraph.dependencies[projectName] || [];
+      const deps = this.projectGraph.dependencies[projectName] ?? [];
       const depHashes = (
         await Promise.all(
           deps.map(async (d) => {
@@ -289,7 +304,7 @@ class ProjectHasher {
     });
   }
 
-  private async hashProjectNodeSource(projectName: string) {
+  async hashProjectNodeSource(projectName: string) {
     if (!this.sourceHashes[projectName]) {
       this.sourceHashes[projectName] = new Promise(async (res) => {
         const p = this.projectGraph.nodes[projectName];
@@ -297,9 +312,9 @@ class ProjectHasher {
         const values = p.data.files.map((f) => f.hash);
 
         const workspaceJson = JSON.stringify(
-          this.workspaceJson.projects[projectName] || ''
+          this.workspaceJson.projects[projectName] ?? ''
         );
-        const nxJson = JSON.stringify(this.nxJson.projects[projectName] || '');
+        const nxJson = JSON.stringify(this.nxJson.projects[projectName] ?? '');
 
         res(
           this.hashing.hashArray([
@@ -314,12 +329,12 @@ class ProjectHasher {
     return this.sourceHashes[projectName];
   }
 
-  private readConfigFile(name: string) {
+  private readConfigFile(path: string) {
     try {
-      const res = JSON.parse(stripJsonComments(readFileSync(name).toString()));
-      if (!res.projects) res.projects = {};
+      const res = readJsonFile(path);
+      res.projects ??= {};
       return res;
-    } catch (e) {
+    } catch {
       return { projects: {} };
     }
   }

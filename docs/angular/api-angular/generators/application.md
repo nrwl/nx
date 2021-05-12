@@ -50,14 +50,6 @@ Possible values: `protractor`, `cypress`, `none`
 
 Test runner to use for end to end (e2e) tests
 
-### enableIvy
-
-Default: `true`
-
-Type: `boolean`
-
-Create a new app that uses the Ivy rendering engine.
-
 ### inlineStyle
 
 Alias(es): s
@@ -84,7 +76,7 @@ Default: `eslint`
 
 Type: `string`
 
-Possible values: `tslint`, `eslint`
+Possible values: `eslint`, `none`
 
 The tool to use for running lint checks.
 

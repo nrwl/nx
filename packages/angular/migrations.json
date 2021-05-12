@@ -60,6 +60,18 @@
       "version": "12.0.0-beta.0",
       "description": "adjusts the ngcc postinstall command to just leave 'ngcc' in there. This fixes Ivy in Jest tests and Storybooks",
       "factory": "./src/migrations/update-12-0-0/update-ngcc-postinstall"
+    },
+    "update-webpack-browser-config": {
+      "cli": "nx",
+      "version": "12.3.0-rc.0",
+      "description": "Remove deprecated options and update others according to new defaults. It syncs with the v12 migration of Angular builders.",
+      "factory": "./src/migrations/update-12-3-0/update-webpack-browser-config"
+    },
+    "update-storybook": {
+      "cli": "nx",
+      "version": "12.3.0-rc.0",
+      "description": "Updates storybook configurations to support webpack 5",
+      "factory": "./src/migrations/update-12-3-0/update-storybook"
     }
   },
   "packageJsonUpdates": {
@@ -458,6 +470,95 @@
         },
         "@angular-eslint/template-parser": {
           "version": "~4.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "12.3.0-rc.0": {
+      "version": "12.3.0-rc.0",
+      "packages": {
+        "@angular/cli": {
+          "version": "^12.0.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "^12.0.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-optimizer": {
+          "version": "^0.1200.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "^12.0.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/common": {
+          "version": "^12.0.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/forms": {
+          "version": "^12.0.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/elements": {
+          "version": "^12.0.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/compiler": {
+          "version": "^12.0.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/compiler-cli": {
+          "version": "^12.0.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-browser": {
+          "version": "^12.0.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-browser-dynamic": {
+          "version": "^12.0.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/router": {
+          "version": "^12.0.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/upgrade": {
+          "version": "^12.0.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/language-service": {
+          "version": "^12.0.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/animations": {
+          "version": "^12.0.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/service-worker": {
+          "version": "^12.0.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "^12.0.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "typescript": {
+          "version": "~4.2.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin": {
+          "version": "~12.0.0-alpha.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "~12.0.0-alpha.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "~12.0.0-alpha.0",
           "alwaysAddToPackageJson": false
         }
       }

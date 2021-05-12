@@ -19,7 +19,7 @@ export function getInstalledPluginsFromPackageJson(
     ...Object.keys(packageJson.devDependencies || {}),
   ]);
 
-  return [...plugins]
+  return Array.from(plugins.values())
     .filter((name) => {
       try {
         // Check for `package.json` existence instead of requiring the module itself

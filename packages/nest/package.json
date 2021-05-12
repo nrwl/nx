@@ -33,8 +33,8 @@
     "@nrwl/linter": "*",
     "@nrwl/node": "*",
     "@nrwl/jest": "*",
-    "@angular-devkit/core": "~11.2.0",
-    "@angular-devkit/schematics": "~11.2.0",
+    "@angular-devkit/core": "~12.0.0-rc.3",
+    "@angular-devkit/schematics": "~12.0.0-rc.3",
     "@nestjs/schematics": "^7.0.0"
   }
 }

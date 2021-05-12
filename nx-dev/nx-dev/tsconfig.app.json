@@ -5,5 +5,5 @@
     "types": ["node", "jest"]
   },
   "exclude": ["**/*.spec.ts", "**/*.spec.tsx"],
-  "include": ["**/*.ts", "**/*.tsx", "next-env.d.ts"]
+  "include": ["**/*.js", "**/*.ts", "**/*.tsx", "next-env.d.ts"]
 }

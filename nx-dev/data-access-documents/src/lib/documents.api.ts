@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
-import { join } from 'path';
+import { join, relative } from 'path';
 import matter from 'gray-matter';
-import * as marked from 'marked';
+import { readJsonFile } from '@nrwl/workspace';
 import {
   archiveRootPath,
   extractTitle,
@@ -12,7 +12,6 @@ import {
   DocumentData,
   DocumentMetadata,
 } from './documents.models';
-import { readJsonFile } from '@nrwl/workspace';
 
 export function getDocument(
   version: string,
@@ -30,9 +29,12 @@ export function getDocument(
   }
 
   return {
-    filePath: docPath,
+    filePath: relative(
+      version === 'preview' ? previewRootPath : archiveRootPath,
+      docPath
+    ),
     data: file.data,
-    content: marked.parse(file.content),
+    content: file.content,
     excerpt: file.excerpt,
   };
 }

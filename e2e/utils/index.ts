@@ -73,11 +73,9 @@ export function runCreateWorkspace(
 
   const pm = getPackageManagerCommand({ packageManager });
 
-  const linterArg =
-    preset === 'angular' || preset === 'angular-nest' ? ' --linter=tslint' : '';
   let command = `${pm.createWorkspace} ${name} --cli=${
     cli || currentCli()
-  } --preset=${preset} ${linterArg} --no-nxCloud --no-interactive`;
+  } --preset=${preset} --no-nxCloud --no-interactive`;
   if (appName) {
     command += ` --appName=${appName}`;
   }

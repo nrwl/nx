@@ -6,12 +6,6 @@ Properties can be configured in angular.json when defining the executor, or when
 
 ## Properties
 
-### assets
-
-Type: `array`
-
-List of static application assets.
-
 ### buildLibsFromSource
 
 Default: `true`
@@ -24,7 +18,7 @@ Read buildable libraries from source instead of building them separately.
 
 Default: `all`
 
-Type: `string | string[] `
+Type: `string`
 
 Dependencies to keep external to the bundle. ("all" (default), "none", or an array of module names)
 
@@ -35,24 +29,6 @@ Default: `false`
 Type: `boolean`
 
 Extract all licenses in a separate file, in the case of production builds only.
-
-### fileReplacements
-
-Type: `object[]`
-
-Replace files with other files in the build.
-
-#### replace
-
-Type: `string`
-
-undefined
-
-#### with
-
-Type: `string`
-
-undefined
 
 ### generatePackageJson
 
@@ -158,6 +134,6 @@ Run build when files change.
 
 ### webpackConfig
 
-Type: `array[] | string `
+Type: `string`
 
 Path to a function which takes a webpack config, context and returns the resulting webpack config

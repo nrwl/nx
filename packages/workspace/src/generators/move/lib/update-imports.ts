@@ -60,7 +60,7 @@ export function updateImports(
   if (schema.updateImportPath) {
     const replaceProjectRef = new RegExp(projectRef.from, 'g');
 
-    for (const [name, definition] of projects.entries()) {
+    for (const [name, definition] of Array.from(projects.entries())) {
       if (name === schema.projectName) {
         continue;
       }

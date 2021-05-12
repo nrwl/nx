@@ -1,80 +1,66 @@
-import watch from 'node-watch';
 import { exec, execSync } from 'child_process';
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext, joinPathFragments } from '@nrwl/devkit';
 import ignore from 'ignore';
 import { readFileSync } from 'fs';
+import { Schema } from './schema';
+import { watch } from 'chokidar';
+import { workspaceLayout } from '@nrwl/workspace/src/core/file-utils';
 
-export interface FileServerOptions {
-  host: string;
-  port: number;
-  ssl: boolean;
-  sslKey?: string;
-  sslCert?: string;
-  proxyUrl?: string;
-  buildTarget: string;
-  parallel: boolean;
-  maxParallel: number;
-  withDeps: boolean;
-}
-
-function getHttpServerArgs(opts: FileServerOptions) {
+function getHttpServerArgs(options: Schema) {
   const args = [] as any[];
-  if (opts.port) {
-    args.push(`-p ${opts.port}`);
+  if (options.port) {
+    args.push(`-p ${options.port}`);
   }
-  if (opts.host) {
-    args.push(`-a ${opts.host}`);
+  if (options.host) {
+    args.push(`-a ${options.host}`);
   }
-  if (opts.ssl) {
+  if (options.ssl) {
     args.push(`-S`);
   }
-  if (opts.sslCert) {
-    args.push(`-C ${opts.sslCert}`);
+  if (options.sslCert) {
+    args.push(`-C ${options.sslCert}`);
   }
-  if (opts.sslKey) {
-    args.push(`-K ${opts.sslKey}`);
+  if (options.sslKey) {
+    args.push(`-K ${options.sslKey}`);
   }
-  if (opts.proxyUrl) {
-    args.push(`-P ${opts.proxyUrl}`);
+  if (options.proxyUrl) {
+    args.push(`-P ${options.proxyUrl}`);
   }
   return args;
 }
 
-function getBuildTargetCommand(opts: FileServerOptions) {
-  const cmd = [`npx nx run ${opts.buildTarget}`];
-  if (opts.withDeps) {
+function getBuildTargetCommand(options: Schema) {
+  const cmd = [`npx nx run ${options.buildTarget}`];
+  if (options.withDeps) {
     cmd.push(`--with-deps`);
   }
-  if (opts.parallel) {
+  if (options.parallel) {
     cmd.push(`--parallel`);
   }
-  if (opts.maxParallel) {
-    cmd.push(`--maxParallel=${opts.maxParallel}`);
+  if (options.maxParallel) {
+    cmd.push(`--maxParallel=${options.maxParallel}`);
   }
   return cmd.join(' ');
 }
 
-function getBuildTargetOutputPath(
-  opts: FileServerOptions,
-  context: ExecutorContext
-) {
-  let buildOpts;
+function getBuildTargetOutputPath(options: Schema, context: ExecutorContext) {
+  let buildOptions;
   try {
-    const [project, target, config] = opts.buildTarget.split(':');
+    const [project, target, config] = options.buildTarget.split(':');
 
     const buildTarget = context.workspace.projects[project].targets[target];
-    buildOpts = config
+    buildOptions = config
       ? { ...buildTarget.options, ...buildTarget.configurations[config] }
       : buildTarget.options;
   } catch (e) {
-    throw new Error(`Invalid buildTarget: ${opts.buildTarget}`);
+    throw new Error(`Invalid buildTarget: ${options.buildTarget}`);
   }
 
   // TODO: vsavkin we should also check outputs
-  const outputPath = buildOpts.outputPath;
+  const outputPath = buildOptions.outputPath;
   if (!outputPath) {
     throw new Error(
-      `Invalid buildTarget: ${opts.buildTarget}. The target must contain outputPath property.`
+      `Invalid buildTarget: ${options.buildTarget}. The target must contain outputPath property.`
     );
   }
 
@@ -84,54 +70,68 @@ function getBuildTargetOutputPath(
 function getIgnoredGlobs(root: string) {
   const ig = ignore();
   try {
-    ig.add(readFileSync(`${root}/.gitignore`).toString());
-  } catch (e) {}
+    ig.add(readFileSync(`${root}/.gitignore`, 'utf-8'));
+  } catch {}
   try {
-    ig.add(readFileSync(`${root}/.nxignore`).toString());
-  } catch (e) {}
+    ig.add(readFileSync(`${root}/.nxignore`, 'utf-8'));
+  } catch {}
   return ig;
 }
 
+function createFileWatcher(root: string, changeHandler: () => void) {
+  const ignoredGlobs = getIgnoredGlobs(root);
+  const layout = workspaceLayout();
+
+  const watcher = watch(
+    [
+      joinPathFragments(layout.appsDir, '**'),
+      joinPathFragments(layout.libsDir, '**'),
+    ],
+    {
+      cwd: root,
+      ignoreInitial: true,
+    }
+  );
+  watcher.on('all', (_event: string, path: string) => {
+    if (ignoredGlobs.ignores(path)) return;
+    changeHandler();
+  });
+  return { close: () => watcher.close() };
+}
+
 export default async function* fileServerExecutor(
-  opts: FileServerOptions,
+  options: Schema,
   context: ExecutorContext
 ) {
-  let changed = true;
   let running = false;
 
-  const fileFilter = getIgnoredGlobs(context.root).createFilter();
-  // TODO: vsavkin create a transitive closure of all deps and watch src of all the packages in the closure
-  watch('libs', { recursive: true, filter: fileFilter }, () => {
-    changed = true;
-    run();
-  });
-  watch('apps', { recursive: true, filter: fileFilter }, () => {
-    changed = true;
-    run();
-  });
-
-  function run() {
-    if (changed && !running) {
-      changed = false;
+  const run = () => {
+    if (!running) {
       running = true;
       try {
-        execSync(getBuildTargetCommand(opts), {
+        execSync(getBuildTargetCommand(options), {
           stdio: [0, 1, 2],
         });
-      } catch (e) {}
+      } catch {}
       running = false;
-      setTimeout(() => run(), 1000);
     }
-  }
+  };
+
+  const watcher = createFileWatcher(context.root, run);
+
+  // perform initial run
   run();
 
-  const outputPath = getBuildTargetOutputPath(opts, context);
-  const args = getHttpServerArgs(opts);
+  const outputPath = getBuildTargetOutputPath(options, context);
+  const args = getHttpServerArgs(options);
 
   const serve = exec(`npx http-server ${outputPath} ${args.join(' ')}`, {
     cwd: context.root,
   });
-  const processExitListener = () => serve.kill();
+  const processExitListener = () => {
+    serve.kill();
+    watcher.close();
+  };
   process.on('exit', processExitListener);
   process.on('SIGTERM', processExitListener);
   serve.stdout.on('data', (chunk) => {
@@ -145,7 +145,9 @@ export default async function* fileServerExecutor(
 
   yield {
     success: true,
-    baseUrl: `${opts.ssl ? 'https' : 'http'}://${opts.host}:${opts.port}`,
+    baseUrl: `${options.ssl ? 'https' : 'http'}://${options.host}:${
+      options.port
+    }`,
   };
 
   return new Promise<{ success: boolean }>((res) => {

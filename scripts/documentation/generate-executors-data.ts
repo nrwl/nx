@@ -4,7 +4,6 @@ import { join, relative } from 'path';
 import { parseJsonSchemaToOptions } from './json-parser';
 import { dedent } from 'tslint/lib/utils';
 import { FileSystemSchematicJsonDescription } from '@angular-devkit/schematics/tools';
-import { CoreSchemaRegistry } from '@angular-devkit/core/src/json/schema';
 import {
   htmlSelectorFormat,
   pathFormat,
@@ -21,6 +20,7 @@ import {
 } from './get-package-configurations';
 import { Framework } from './frameworks';
 import * as chalk from 'chalk';
+import { createSchemaFlattener, SchemaFlattener } from './schema-flattener';
 
 /**
  * @WhatItDoes: Generates default documentation from the builders' schema.
@@ -29,9 +29,7 @@ import * as chalk from 'chalk';
  *    parsable in order to be used in a rendering process using template. This
  *    in order to generate a markdown file for each available schematic.
  */
-const registry = new CoreSchemaRegistry();
-registry.addFormat(pathFormat);
-registry.addFormat(htmlSelectorFormat);
+const flattener = createSchemaFlattener([pathFormat, htmlSelectorFormat]);
 
 function readExecutorsJson(root: string) {
   try {
@@ -43,7 +41,7 @@ function readExecutorsJson(root: string) {
 
 function generateSchematicList(
   config: Configuration,
-  registry: CoreSchemaRegistry
+  flattener: SchemaFlattener
 ): Promise<FileSystemSchematicJsonDescription>[] {
   removeSync(config.builderOutput);
   const builderCollection = readExecutorsJson(config.root);
@@ -63,7 +61,7 @@ function generateSchematicList(
         builder.rawSchema.examplesFile
       );
     }
-    return parseJsonSchemaToOptions(registry, builder.rawSchema)
+    return parseJsonSchemaToOptions(flattener, builder.rawSchema)
       .then((options) => ({ ...builder, options }))
       .catch((error) =>
         console.error(`Can't parse schema option of ${builder.name}:\n${error}`)
@@ -172,7 +170,7 @@ export async function generateExecutorsDocumentation() {
           .filter((item) => item.hasBuilders)
           .map(async (config) => {
             const buildersList = await Promise.all(
-              generateSchematicList(config, registry)
+              generateSchematicList(config, flattener)
             );
 
             const markdownList = buildersList.map((b) =>
