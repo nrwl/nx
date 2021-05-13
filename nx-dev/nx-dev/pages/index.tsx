@@ -9,7 +9,7 @@ export function Index() {
         <div className="max-w-7xl mx-auto py-3 px-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between flex-wrap">
             <div className="w-0 flex-1 flex items-center">
-              <span className="flex p-2 rounded-lg bg-blue-800">
+              <span className="flex p-2 rounded-lg bg-blue-nx">
                 <svg
                   className="h-6 w-6 text-white"
                   fill="none"
