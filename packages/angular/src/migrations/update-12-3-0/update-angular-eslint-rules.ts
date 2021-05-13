@@ -10,7 +10,7 @@ import { basename } from 'path';
 import type { Linter } from 'eslint';
 
 export default async function (tree: Tree) {
-  visitNotIgnoredFiles(tree, '.', (file) => {
+  visitNotIgnoredFiles(tree, '', (file) => {
     if (basename(file) !== '.eslintrc.json') {
       return;
     }
