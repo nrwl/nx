@@ -14,9 +14,9 @@ interface DocumentationProps {
   version: VersionMetadata;
   flavor: { label: string; value: string };
   flavors: { label: string; value: string }[];
-  document: DocumentData;
   versions: VersionMetadata[];
   menu: Menu;
+  document?: DocumentData;
 }
 
 interface DocumentationParams {
@@ -44,30 +44,58 @@ export function Documentation({
   );
 }
 
+const defaultVersion = {
+  name: 'Preview',
+  id: 'preview',
+  path: 'preview',
+} as VersionMetadata;
+
+const defaultFlavor = {
+  label: 'React',
+  value: 'react',
+};
+
 export async function getStaticProps({ params }: DocumentationParams) {
-  const versions = getVersions();
-  return {
-    props: {
-      version:
-        versions.find((item) => item.id === params.version) ||
-        ({
-          name: 'Preview',
-          id: 'preview',
-          path: 'preview',
-        } as VersionMetadata),
-      flavor: flavorList.find((item) => item.value === params.flavor) || {
-        label: 'React',
-        value: 'react',
+  let versions: VersionMetadata[];
+  let version: VersionMetadata;
+  let flavor: { label: string; value: string };
+  let menu: Menu;
+  let document: DocumentData;
+
+  /*
+   * Try to find the document matching segments. If the document isn't found, then:
+   *
+   * - Try to get menu for current flavor+version, if found then redirect to first page in menu.
+   * - Otherwise, redirect to the root.
+   */
+  try {
+    versions = getVersions();
+    version =
+      versions.find((item) => item.id === params.version) || defaultVersion;
+    flavor =
+      flavorList.find((item) => item.value === params.flavor) || defaultFlavor;
+    menu = getMenu(params.version, params.flavor);
+    document = getDocument(params.version, [params.flavor, ...params.segments]);
+
+    return {
+      props: {
+        version,
+        flavor,
+        flavors: flavorList,
+        versions: versions,
+        menu,
+        document,
       },
-      flavors: flavorList,
-      versions: versions,
-      document: getDocument(params.version, [
-        params.flavor,
-        ...params.segments,
-      ]),
-      menu: getMenu(params.version, params.flavor),
-    },
-  };
+    };
+  } catch {
+    const firstPagePath = menu?.sections[0].itemList?.[0].itemList?.[0].path;
+    return {
+      redirect: {
+        destination: firstPagePath ?? '/',
+        permanent: false,
+      },
+    };
+  }
 }
 
 export async function getStaticPaths(props) {
@@ -80,7 +108,12 @@ export async function getStaticPaths(props) {
 
   return {
     paths: allPaths,
-    fallback: false,
+    /*
+     * Block rendering until the page component resolves with either:
+     * 1. The content of the document if it exists.
+     * 2. A redirect to another page if document is not found.
+     */
+    fallback: 'blocking',
   };
 }
 
