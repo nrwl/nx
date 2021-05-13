@@ -271,9 +271,9 @@ Nx provides helpers several functions for writing generators:
 - `addDependenciesToPackageJson` -- Add dependencies and dev dependencies to package.json
 - `installPackagesTask` -- Runs `npm install`/`yarn install`/`pnpm install` depending on what is used by the workspaces.
 - `names` -- Util function to generate different strings based off the provided name.
-- `getWorkspaceLayout` -- Tells where new libs and should be generated.
+- `getWorkspaceLayout` -- Tells where new libs and apps should be generated.
 - `offestFromRoot` -- Calculates an offset from the root of the workspace, which is useful for constructing relative URLs.
-- `stripIndents` -- Strips indents form a multiline string.
+- `stripIndents` -- Strips indents from a multiline string.
 - `normalizePath` -- Coverts an os specific path to a unix style path.
 - `joinPathFragments` -- Normalize fragments and joins them with a /.
 - `toJS` -- Coverts a TypeScript file to JavaScript. Useful for generators that support both.
