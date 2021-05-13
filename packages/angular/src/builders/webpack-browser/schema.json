@@ -363,6 +363,17 @@
         "type": "string"
       },
       "default": []
+    },
+    "customWebpackConfig": {
+      "description": "Options for additional webpack configurations",
+      "type": "object",
+      "properties": {
+        "path": {
+          "description": "Path to additional webpack configuration. Paths will be resolved to workspace root.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,
