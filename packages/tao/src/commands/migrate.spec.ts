@@ -312,6 +312,7 @@ describe('Migration', () => {
             alwaysAddToPackageJson: false,
           },
           '@nrwl/express': { version: '2.0.0', alwaysAddToPackageJson: false },
+          '@nrwl/gatsby': { version: '2.0.0', alwaysAddToPackageJson: false },
           '@nrwl/jest': { version: '2.0.0', alwaysAddToPackageJson: false },
           '@nrwl/linter': { version: '2.0.0', alwaysAddToPackageJson: false },
           '@nrwl/nest': { version: '2.0.0', alwaysAddToPackageJson: false },

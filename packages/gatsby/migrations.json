@@ -80,6 +80,71 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "12.3.0": {
+      "version": "12.3.0-beta.0",
+      "packages": {
+        "gatsby": {
+          "version": "3.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-image": {
+          "version": "3.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-manifest": {
+          "version": "3.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-offline": {
+          "version": "4.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-react-helmet": {
+          "version": "4.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-sharp": {
+          "version": "3.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-styled-jsx": {
+          "version": "4.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-source-filesystem": {
+          "version": "3.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-transformer-sharp": {
+          "version": "3.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-typescript": {
+          "version": "3.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-emotion": {
+          "version": "6.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-styled-components": {
+          "version": "4.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-sass": {
+          "version": "4.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-less": {
+          "version": "5.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-stylus": {
+          "version": "3.5.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
