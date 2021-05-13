@@ -13,7 +13,8 @@ import {
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utils/buildable-libs-utils';
-import { join, normalize } from 'path';
+import { joinPathFragments } from '@nrwl/devkit';
+import { join } from 'path';
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import { Schema } from '@angular-devkit/build-angular/src/browser/schema';
 import { switchMap } from 'rxjs/operators';
@@ -22,8 +23,8 @@ import { merge } from 'webpack-merge';
 
 type BrowserBuilderSchema = Schema &
   JsonObject & {
-    buildTarget: string;
-    customWebpackConfig: {
+    buildTarget?: string;
+    customWebpackConfig?: {
       path: string;
     };
   };
@@ -31,18 +32,40 @@ type BrowserBuilderSchema = Schema &
 function buildApp(
   options: BrowserBuilderSchema,
   context: BuilderContext
-): Promise<BuilderRun> {
+): Observable<BuilderOutput> {
   const { buildTarget, ...delegateOptions } = options;
+
+  // If we don't have a third-party builder being used
+  // And there is a path to custom webpack config
+  // Invoke our own support for custom webpack config
+  if (options.customWebpackConfig && options.customWebpackConfig.path) {
+    const pathToWebpackConfig = joinPathFragments(
+      context.workspaceRoot,
+      options.customWebpackConfig.path
+    );
+
+    if (existsSync(pathToWebpackConfig)) {
+      return buildAppWithCustomWebpackConfiguration(
+        options,
+        context,
+        pathToWebpackConfig
+      );
+    } else {
+      // TODO: Throw bad config error
+    }
+  }
+
+  let scheduledBuilder: Promise<BuilderRun>;
 
   if (buildTarget) {
     const target = targetFromTargetString(buildTarget);
-    return context.scheduleTarget(target, delegateOptions, {
+    scheduledBuilder = context.scheduleTarget(target, delegateOptions, {
       target: context.target,
       logger: context.logger as any,
     });
   } else {
     delegateOptions.customWebpackConfig = undefined;
-    return context.scheduleBuilder(
+    scheduledBuilder = context.scheduleBuilder(
       '@angular-devkit/build-angular:browser',
       delegateOptions,
       {
@@ -51,6 +74,8 @@ function buildApp(
       }
     );
   }
+
+  return from(scheduledBuilder).pipe(switchMap((x) => x.result));
 }
 
 function buildAppWithCustomWebpackConfiguration(
@@ -86,41 +111,10 @@ function run(
     dependencies
   );
 
-  // If we don't have a third-party builder being used
-  // And there is a path to custom webpack config
-  // Invoke our own support for custom webpack config
-  let runBuildWithCustomWebpackConfig = { shouldRun: false, pathToConfig: '' };
-  if (
-    !options.targetBuilder &&
-    options.customWebpackConfig &&
-    options.customWebpackConfig.path
-  ) {
-    const pathToWebpackConfig = normalize(
-      join(context.workspaceRoot, options.customWebpackConfig.path)
-    );
-
-    if (existsSync(pathToWebpackConfig)) {
-      runBuildWithCustomWebpackConfig = {
-        shouldRun: true,
-        pathToConfig: pathToWebpackConfig,
-      };
-    }
-  }
-
   return of(checkDependentProjectsHaveBeenBuilt(context, dependencies)).pipe(
     switchMap((result) => {
       if (result) {
-        if (runBuildWithCustomWebpackConfig.shouldRun) {
-          return buildAppWithCustomWebpackConfiguration(
-            options,
-            context,
-            runBuildWithCustomWebpackConfig.pathToConfig
-          );
-        } else {
-          return from(buildApp(options, context)).pipe(
-            switchMap((x) => x.result)
-          );
-        }
+        return buildApp(options, context);
       } else {
         // just pass on the result
         return of({ success: false });

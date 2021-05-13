@@ -40,6 +40,6 @@
     "@nrwl/linter": "*",
     "@schematics/angular": "~12.0.0",
     "jasmine-marbles": "~0.6.0",
-    "webpack-merge": "4.2.1"
+    "webpack-merge": "5.7.3"
   }
 }
