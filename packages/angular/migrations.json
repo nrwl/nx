@@ -63,15 +63,21 @@
     },
     "update-webpack-browser-config": {
       "cli": "nx",
-      "version": "12.3.0-rc.1",
+      "version": "12.3.1",
       "description": "Remove deprecated options and update others according to new defaults. It syncs with the v12 migration of Angular builders.",
       "factory": "./src/migrations/update-12-3-0/update-webpack-browser-config"
     },
     "update-storybook": {
       "cli": "nx",
-      "version": "12.3.0-rc.1",
+      "version": "12.3.1",
       "description": "Updates storybook configurations to support webpack 5",
       "factory": "./src/migrations/update-12-3-0/update-storybook"
+    },
+    "update-angular-eslint-rules": {
+      "cli": "nx",
+      "version": "12.3.1",
+      "description": "Migrates some rules that have changed in Angular EsLint",
+      "factory": "./src/migrations/update-12-3-0/update-angular-eslint-rules"
     }
   },
   "packageJsonUpdates": {
@@ -474,8 +480,8 @@
         }
       }
     },
-    "12.3.0-rc.1": {
-      "version": "12.3.0-rc.1",
+    "12.3.1": {
+      "version": "12.3.1",
       "packages": {
         "@angular/cli": {
           "version": "^12.0.0",
@@ -554,15 +560,15 @@
           "alwaysAddToPackageJson": false
         },
         "@angular-eslint/eslint-plugin": {
-          "version": "~12.0.0-alpha.0",
+          "version": "~12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-eslint/eslint-plugin-template": {
-          "version": "~12.0.0-alpha.0",
+          "version": "~12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-eslint/template-parser": {
-          "version": "~12.0.0-alpha.0",
+          "version": "~12.0.0",
           "alwaysAddToPackageJson": false
         },
         "@ngrx/store": {
