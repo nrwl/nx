@@ -8,30 +8,29 @@ import { performance } from 'perf_hooks';
 import * as stripJsonComments from 'strip-json-comments';
 import {
   NxJsonConfiguration,
-  WorkspaceJsonConfiguration,
   ProjectGraph,
+  WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { readJsonFile } from '../../utilities/fileutils';
-import { TaskGraph } from '@nrwl/workspace/src/tasks-runner/task-graph-creator';
 
 export interface Hash {
   value: string;
-  details?: {
+  details: {
     command: string;
-    sources: { [projectName: string]: string };
-    implicitDeps: { [key: string]: string };
+    nodes: { [name: string]: string };
+    implicitDeps: { [fileName: string]: string };
     runtime: { [input: string]: string };
   };
 }
 
 interface ProjectHashResult {
   value: string;
-  sources: { [projectName: string]: string };
+  nodes: { [name: string]: string };
 }
 
 interface ImplicitHashResult {
   value: string;
-  sources: { [fileName: string]: string };
+  files: { [fileName: string]: string };
 }
 
 interface RuntimeHashResult {
@@ -66,12 +65,7 @@ export class Hasher {
   }
 
   async hashTaskWithDepsAndContext(task: Task): Promise<Hash> {
-    const command = this.hashing.hashArray([
-      task.target.project ?? '',
-      task.target.target ?? '',
-      task.target.configuration ?? '',
-      JSON.stringify(task.overrides),
-    ]);
+    const command = this.hashCommand(task);
 
     const values = (await Promise.all([
       this.projectHashes.hashProject(task.target.project, [
@@ -96,11 +90,20 @@ export class Hasher {
       value,
       details: {
         command,
-        sources: values[0].sources,
-        implicitDeps: values[1].sources,
+        nodes: values[0].nodes,
+        implicitDeps: values[1].files,
         runtime: values[2].runtime,
       },
     };
+  }
+
+  hashCommand(task: Task) {
+    return this.hashing.hashArray([
+      task.target.project ?? '',
+      task.target.target ?? '',
+      task.target.configuration ?? '',
+      JSON.stringify(task.overrides),
+    ]);
   }
 
   async hashContext(): Promise<{
@@ -233,7 +236,7 @@ export class Hasher {
 
       res({
         value: combinedHash,
-        sources: fileHashes.reduce((m, c) => ((m[c.file] = c.hash), m), {}),
+        files: fileHashes.reduce((m, c) => ((m[c.file] = c.hash), m), {}),
       });
     });
 
@@ -290,9 +293,9 @@ class ProjectHasher {
         )
       ).filter((r) => !!r);
       const projectHash = await this.hashProjectNodeSource(projectName);
-      const sources = depHashes.reduce(
+      const nodes = depHashes.reduce(
         (m, c) => {
-          return { ...m, ...c.sources };
+          return { ...m, ...c.nodes };
         },
         { [projectName]: projectHash }
       );
@@ -300,7 +303,7 @@ class ProjectHasher {
         ...depHashes.map((d) => d.value),
         projectHash,
       ]);
-      return { value, sources };
+      return { value, nodes };
     });
   }
 

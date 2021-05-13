@@ -74,7 +74,7 @@ describe('Hasher', () => {
     expect(hash.value).toContain('runtime456'); //target
 
     expect(hash.details.command).toEqual('proj|build||{"prop":"prop-value"}');
-    expect(hash.details.sources).toEqual({
+    expect(hash.details.nodes).toEqual({
       proj: '/file|file.hash|"proj-from-workspace.json"|"proj-from-nx.json"',
     });
     expect(hash.details.implicitDeps).toEqual({
@@ -169,7 +169,7 @@ describe('Hasher', () => {
     });
 
     // note that the parent hash is based on parent source files only!
-    expect(hash.details.sources).toEqual({
+    expect(hash.details.nodes).toEqual({
       parent: '/filea|a.hash|""|""',
       child: '/fileb|b.hash|""|""',
     });
@@ -220,7 +220,7 @@ describe('Hasher', () => {
     expect(tasksHash.value).toContain('prop-value'); //overrides
     expect(tasksHash.value).toContain('proj'); //project
     expect(tasksHash.value).toContain('build'); //target
-    expect(tasksHash.details.sources).toEqual({
+    expect(tasksHash.details.nodes).toEqual({
       proja: '/filea|a.hash|""|""',
       projb: '/fileb|b.hash|""|""',
     });
@@ -237,7 +237,7 @@ describe('Hasher', () => {
     expect(hashb.value).toContain('prop-value'); //overrides
     expect(hashb.value).toContain('proj'); //project
     expect(hashb.value).toContain('build'); //target
-    expect(hashb.details.sources).toEqual({
+    expect(hashb.details.nodes).toEqual({
       proja: '/filea|a.hash|""|""',
       projb: '/fileb|b.hash|""|""',
     });
