@@ -1,6 +1,5 @@
 import { execSync } from 'child_process';
 import * as path from 'path';
-import * as resolve from 'resolve';
 import { getProjectRoots, parseFiles } from './shared';
 import { fileExists } from '../utilities/fileutils';
 import {
@@ -127,10 +126,10 @@ function check(patterns: string[]) {
 }
 
 function prettierPath() {
-  const basePath = path.dirname(
-    resolve.sync('prettier', { basedir: __dirname })
+  return path.join(
+    require.resolve('prettier/bin-prettier.js'),
+    'bin-prettier.js'
   );
-  return path.join(basePath, 'bin-prettier.js');
 }
 
 function updateWorkspaceJsonToMatchFormatVersion() {

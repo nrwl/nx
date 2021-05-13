@@ -77,7 +77,6 @@
     "flat": "^5.0.2",
     "minimatch": "3.0.4",
     "enquirer": "~2.3.6",
-    "resolve": "1.17.0",
     "tslib": "^2.0.0"
   }
 }
