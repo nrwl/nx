@@ -28,7 +28,13 @@ module.exports = {
   ],
   darkMode: false, // or 'media' or 'class'
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        blue: {
+          nx: 'rgba(3, 47, 86, 1)',
+        },
+      },
+    },
   },
   variants: {
     extend: {},
