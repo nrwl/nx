@@ -2,6 +2,8 @@ import { Task } from '@nrwl/workspace/src/tasks-runner/tasks-runner';
 import { TaskGraph } from '@nrwl/workspace/src/tasks-runner/task-graph-creator';
 import { Hash, Hasher } from '@nrwl/workspace/src/core/hasher/hasher';
 import { readJsonFile } from '@nrwl/workspace/src/utilities/fileutils';
+import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
+import { join } from 'path';
 
 export default async function run(
   task: Task,
@@ -13,7 +15,7 @@ export default async function run(
   }
   const sources = await hasher.hashSource(task);
   const deps = allDeps(task.id, taskGraph);
-  const nxJson = readJsonFile('nx.json');
+  const nxJson = readJsonFile(join(appRootPath, 'nx.json'));
   const tags = deps
     .map((d) => (nxJson.projects[d].tags || []).join('|'))
     .join('|');
