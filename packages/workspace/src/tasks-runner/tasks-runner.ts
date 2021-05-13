@@ -9,8 +9,8 @@ export interface Task {
   projectRoot?: string;
   hashDetails?: {
     command: string;
-    sources: { [projectName: string]: string };
-    implicitDeps: { [key: string]: string };
+    nodes: { [name: string]: string };
+    implicitDeps: { [fileName: string]: string };
     runtime: { [input: string]: string };
   };
 }
