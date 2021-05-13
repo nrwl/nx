@@ -192,11 +192,11 @@ export default async function (tree: Tree, options: Schema) {
   generateFiles(
     tree,
     path.join(__dirname, 'files'),
-    path.join('tools/generators', schema.name),
+    path.join('tools/generators', options.name),
     options
   );
 
-  if (!schema.skipFormat) {
+  if (!options.skipFormat) {
     await formatFiles(tree);
   }
 
