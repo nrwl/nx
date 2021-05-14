@@ -11,6 +11,7 @@ import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from '../../src/rules/enforce-module-boundaries';
 import { TargetProjectLocator } from '@nrwl/workspace/src/core/target-project-locator';
+import { mapProjectGraphFiles } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('../../../workspace/src/utilities/app-root', () => ({
   appRootPath: '/root',
@@ -72,7 +73,7 @@ const fileSys = {
   './tsconfig.base.json': JSON.stringify(tsconfig),
 };
 
-describe('Enforce Module Boundaries', () => {
+describe('Enforce Module Boundaries (eslint)', () => {
   beforeEach(() => {
     vol.fromJSON(fileSys, '/root');
   });
@@ -1536,7 +1537,7 @@ function runRule(
 ): TSESLint.Linter.LintMessage[] {
   (global as any).projectPath = `${process.cwd()}/proj`;
   (global as any).npmScope = 'mycompany';
-  (global as any).projectGraph = projectGraph;
+  (global as any).projectGraph = mapProjectGraphFiles(projectGraph);
   (global as any).targetProjectLocator = new TargetProjectLocator(
     projectGraph.nodes
   );

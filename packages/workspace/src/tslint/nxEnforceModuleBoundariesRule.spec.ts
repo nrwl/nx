@@ -70,7 +70,7 @@ const fileSys = {
   './tsconfig.base.json': JSON.stringify(tsconfig),
 };
 
-describe('Enforce Module Boundaries', () => {
+describe('Enforce Module Boundaries (tslint)', () => {
   beforeEach(() => {
     vol.fromJSON(fileSys, '/root');
   });

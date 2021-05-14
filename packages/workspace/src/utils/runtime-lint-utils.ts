@@ -184,25 +184,16 @@ export function mapProjectGraphFiles<T>(
   if (!projectGraph) {
     return;
   }
-  const nodes = Object.entries(projectGraph.nodes).reduce(
-    (acc, [name, node]) => ({
-      ...acc,
-      [name]: {
-        ...node,
-        data: {
-          ...node.data,
-          files: node.data.files.reduce(
-            (files, { file, hash, ext }) => ({
-              ...files,
-              [file.slice(0, -ext.length)]: { file, hash, ext },
-            }),
-            {}
-          ),
-        },
-      },
-    }),
-    {}
-  );
+  const nodes = {};
+  Object.entries(projectGraph.nodes).forEach(([name, node]) => {
+    const files = {};
+    node.data.files.forEach(({ file, hash, ext }) => {
+      files[file.slice(0, -ext.length)] = { file, hash, ext };
+    });
+    const data = { ...node.data, files };
+
+    nodes[name] = { ...node, data };
+  });
 
   return {
     ...projectGraph,

@@ -39,12 +39,15 @@ export class Rule extends Lint.Rules.AbstractRule {
       if (!(global as any).projectGraph) {
         const nxJson = readNxJson();
         (global as any).npmScope = nxJson.npmScope;
-        (global as any).projectGraph = readCurrentProjectGraph();
+        (global as any).projectGraph = mapProjectGraphFiles(
+          readCurrentProjectGraph()
+        );
       }
       this.npmScope = (global as any).npmScope;
-      this.projectGraph = mapProjectGraphFiles(
-        (global as any).projectGraph as ProjectGraph
-      );
+      this.projectGraph = (global as any).projectGraph as ProjectGraph<
+        any,
+        Record<string, FileData>
+      >;
 
       if (!(global as any).targetProjectLocator && this.projectGraph) {
         (global as any).targetProjectLocator = new TargetProjectLocator(
