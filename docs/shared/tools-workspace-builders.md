@@ -77,45 +77,6 @@ export default async function echoExecutor(
 }
 ```
 
-Also note that [Node’s `childProcess`](https://nodejs.org/api/child_process.html) is likely to be used in most cases.
-
-Part of the power of the executor API is the ability to compose executors via existing targets. This way you can combine other executors from your workspace into one which could be helpful when the process you’re scripting is a combination of other existing executors provided by the CLI or other custom executors in your workspace.
-
-Here's an example of this (from a hypothetical project), that serves an api (project name: "api") in watch mode, then serves a frontend app (project name: "web-client") in watch mode:
-
-```typescript
-import { ExecutorContext, runExecutor } from '@nrwl/devkit';
-
-export interface MultipleExecutorOptions {}
-
-export default async function multipleExecutor(
-  options: MultipleExecutorOptions,
-  context: ExecutorContext
-) {
-  const result = await Promise.race([
-    await runExecutor(
-      { project: 'api', target: 'serve' },
-      { watch: true },
-      context
-    ),
-    await runExecutor(
-      { project: 'web-client', target: 'serve' },
-      { watch: true },
-      context
-    ),
-  ]);
-  for await (const res of result) {
-    if (!res.success) return res;
-  }
-
-  return { success: true };
-}
-```
-
-For other ideas on how to create your own executors, you can always check out Nx's own open-source executors as well!
-
-(For example, our [cypress executor](https://github.com/nrwl/nx/blob/master/packages/cypress/src/executors/cypress/cypress.impl.ts))
-
 ### executor.json
 
 The `executor.json` file provides the description of your executor to the CLI.
@@ -214,3 +175,44 @@ As part of Nx's computation cache process, Nx forks the node process, which can 
 ```bash
 nx run platform:echo
 ```
+
+## Using Node Child Process
+
+[Node’s `childProcess`](https://nodejs.org/api/child_process.html) is often useful in executors.
+
+Part of the power of the executor API is the ability to compose executors via existing targets. This way you can combine other executors from your workspace into one which could be helpful when the process you’re scripting is a combination of other existing executors provided by the CLI or other custom executors in your workspace.
+
+Here's an example of this (from a hypothetical project), that serves an api (project name: "api") in watch mode, then serves a frontend app (project name: "web-client") in watch mode:
+
+```typescript
+import { ExecutorContext, runExecutor } from '@nrwl/devkit';
+
+export interface MultipleExecutorOptions {}
+
+export default async function multipleExecutor(
+  options: MultipleExecutorOptions,
+  context: ExecutorContext
+) {
+  const result = await Promise.race([
+    await runExecutor(
+      { project: 'api', target: 'serve' },
+      { watch: true },
+      context
+    ),
+    await runExecutor(
+      { project: 'web-client', target: 'serve' },
+      { watch: true },
+      context
+    ),
+  ]);
+  for await (const res of result) {
+    if (!res.success) return res;
+  }
+
+  return { success: true };
+}
+```
+
+For other ideas on how to create your own executors, you can always check out Nx's own open-source executors as well!
+
+(For example, our [cypress executor](https://github.com/nrwl/nx/blob/master/packages/cypress/src/executors/cypress/cypress.impl.ts))
