@@ -109,7 +109,6 @@
     "angular": "1.8.0",
     "app-root-path": "^2.0.1",
     "autoprefixer": "^10.2.5",
-    "axios": "0.21.1",
     "babel-jest": "26.2.2",
     "caniuse-lite": "^1.0.30001030",
     "chalk": "4.1.0",

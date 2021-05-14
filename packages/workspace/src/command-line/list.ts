@@ -41,8 +41,16 @@ async function listHandler(args: YargsListArgs) {
   if (args.plugin) {
     listPluginCapabilities(args.plugin);
   } else {
-    const corePlugins = await fetchCorePlugins();
-    const communityPlugins = await fetchCommunityPlugins();
+    const corePlugins = fetchCorePlugins();
+    const communityPlugins = await fetchCommunityPlugins().catch(() => {
+      output.warn({
+        title: `Community plugins:`,
+        bodyLines: [`Error fetching plugins.`],
+      });
+
+      return [];
+    });
+
     const installedPlugins = getInstalledPluginsFromPackageJson(
       appRootPath,
       corePlugins,
