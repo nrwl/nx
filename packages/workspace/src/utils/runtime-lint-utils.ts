@@ -7,7 +7,22 @@ import {
   ProjectGraphNode,
 } from '../core/project-graph';
 import { TargetProjectLocator } from '../core/target-project-locator';
-import { normalizePath } from '@nrwl/devkit';
+import { normalizePath, TargetConfiguration } from '@nrwl/devkit';
+
+export interface MappedProjectGraphNode<T = any> {
+  type: string;
+  name: string;
+  data: T & {
+    root?: string;
+    targets?: { [targetName: string]: TargetConfiguration };
+    files: Record<string, FileData>;
+  };
+}
+export interface MappedProjectGraph<T = any> {
+  nodes: Record<string, MappedProjectGraphNode<T>>;
+  dependencies: Record<string, ProjectGraphDependency[]>;
+  allWorkspaceFiles?: FileData[];
+}
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 export type DepConstraint = {
@@ -16,7 +31,7 @@ export type DepConstraint = {
 };
 
 export function hasNoneOfTheseTags(
-  proj: ProjectGraphNode<any, any>,
+  proj: ProjectGraphNode<any>,
   tags: string[]
 ) {
   return tags.filter((allowedTag) => hasTag(proj, allowedTag)).length === 0;
@@ -59,9 +74,9 @@ export function isRelative(s: string) {
 export function isRelativeImportIntoAnotherProject(
   imp: string,
   projectPath: string,
-  projectGraph: ProjectGraph<any, any>,
+  projectGraph: ProjectGraph,
   sourceFilePath: string,
-  sourceProject: ProjectGraphNode<any, any>
+  sourceProject: ProjectGraphNode
 ): boolean {
   if (!isRelative(imp)) return false;
 
@@ -73,15 +88,15 @@ export function isRelativeImportIntoAnotherProject(
   return sourceProject && targetProject && sourceProject !== targetProject;
 }
 
-export function findProjectUsingFile(
-  projectGraph: ProjectGraph<any, Record<string, FileData>>,
+export function findProjectUsingFile<T>(
+  projectGraph: MappedProjectGraph<T>,
   file: string
-): ProjectGraphNode<any, Record<string, FileData>> {
+): MappedProjectGraphNode {
   return Object.values(projectGraph.nodes).find((n) => n.data.files[file]);
 }
 
 export function findSourceProject(
-  projectGraph: ProjectGraph<any, Record<string, FileData>>,
+  projectGraph: MappedProjectGraph,
   sourceFilePath: string
 ) {
   const targetFile = removeExt(sourceFilePath);
@@ -89,7 +104,7 @@ export function findSourceProject(
 }
 
 export function findTargetProject(
-  projectGraph: ProjectGraph<any, Record<string, FileData>>,
+  projectGraph: ProjectGraph,
   targetFile: string
 ) {
   let targetProject = findProjectUsingFile(projectGraph, targetFile);
@@ -119,7 +134,7 @@ export function isAbsoluteImportIntoAnotherProject(imp: string) {
 }
 
 export function findProjectUsingImport(
-  projectGraph: ProjectGraph<any, Record<string, FileData>>,
+  projectGraph: ProjectGraph,
   targetProjectLocator: TargetProjectLocator,
   filePath: string,
   imp: string,
@@ -135,13 +150,13 @@ export function findProjectUsingImport(
 
 export function findConstraintsFor(
   depConstraints: DepConstraint[],
-  sourceProject: ProjectGraphNode<any, any>
+  sourceProject: ProjectGraphNode
 ) {
   return depConstraints.filter((f) => hasTag(sourceProject, f.sourceTag));
 }
 
 export function onlyLoadChildren(
-  graph: ProjectGraph<any, any>,
+  graph: ProjectGraph,
   sourceProjectName: string,
   targetProjectName: string,
   visited: string[]
@@ -167,9 +182,7 @@ export function getSourceFilePath(sourceFileName: string, projectPath: string) {
  * Verifies whether the given node has an architect builder attached
  * @param projectGraph the node to verify
  */
-export function hasBuildExecutor(
-  projectGraph: ProjectGraphNode<any, any>
-): boolean {
+export function hasBuildExecutor(projectGraph: ProjectGraphNode): boolean {
   return (
     // can the architect not be defined? real use case?
     projectGraph.data.targets &&
@@ -180,13 +193,13 @@ export function hasBuildExecutor(
 
 export function mapProjectGraphFiles<T>(
   projectGraph: ProjectGraph<T>
-): ProjectGraph<T, Record<string, FileData>> {
+): MappedProjectGraph | null {
   if (!projectGraph) {
-    return;
+    return null;
   }
-  const nodes = {};
+  const nodes: Record<string, MappedProjectGraphNode> = {};
   Object.entries(projectGraph.nodes).forEach(([name, node]) => {
-    const files = {};
+    const files: Record<string, FileData> = {};
     node.data.files.forEach(({ file, hash, ext }) => {
       files[file.slice(0, -ext.length)] = { file, hash, ext };
     });

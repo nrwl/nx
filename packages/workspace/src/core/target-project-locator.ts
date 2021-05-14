@@ -31,9 +31,7 @@ export class TargetProjectLocator {
   private typescriptResolutionCache = new Map<string, string | null>();
   private npmResolutionCache = new Map<string, string | null>();
 
-  constructor(
-    private readonly nodes: Record<string, ProjectGraphNode<any, any>>
-  ) {}
+  constructor(private readonly nodes: Record<string, ProjectGraphNode>) {}
 
   /**
    * Find a project based on its import

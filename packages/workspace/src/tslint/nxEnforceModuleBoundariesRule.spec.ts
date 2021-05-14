@@ -1178,12 +1178,14 @@ function runRule(
     true
   );
 
+  const mappedProjectGraph = mapProjectGraphFiles(projectGraph);
+
   const rule = new Rule(
     options,
     `${process.cwd()}/proj`,
     'mycompany',
-    mapProjectGraphFiles(projectGraph),
-    new TargetProjectLocator(projectGraph.nodes)
+    mappedProjectGraph,
+    new TargetProjectLocator(mappedProjectGraph.nodes)
   );
   return rule.apply(sourceFile);
 }

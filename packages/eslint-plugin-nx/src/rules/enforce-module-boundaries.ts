@@ -12,16 +12,16 @@ import {
   mapProjectGraphFiles,
   matchImportWithWildcard,
   onlyLoadChildren,
+  MappedProjectGraph,
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import {
   AST_NODE_TYPES,
   TSESTree,
 } from '@typescript-eslint/experimental-utils';
 import { createESLintRule } from '../utils/create-eslint-rule';
-import { normalizePath, FileData } from '@nrwl/devkit';
+import { normalizePath } from '@nrwl/devkit';
 import {
   isNpmProject,
-  ProjectGraph,
   ProjectType,
 } from '@nrwl/workspace/src/core/project-graph';
 import { readNxJson } from '@nrwl/workspace/src/core/file-utils';
@@ -132,10 +132,7 @@ export default createESLintRule<Options, MessageIds>({
     }
 
     const npmScope = (global as any).npmScope;
-    const projectGraph = (global as any).projectGraph as ProjectGraph<
-      any,
-      Record<string, FileData>
-    >;
+    const projectGraph = (global as any).projectGraph as MappedProjectGraph;
 
     if (!(global as any).targetProjectLocator) {
       (global as any).targetProjectLocator = new TargetProjectLocator(
