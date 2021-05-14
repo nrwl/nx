@@ -65,7 +65,7 @@ describe('@nrwl/workspace:workspace', () => {
       layout: 'apps-and-libs',
       defaultBase: 'main',
     });
-    expect(tree.read('proj/.prettierrc').toString()).toMatchSnapshot();
+    expect(tree.read('proj/.prettierrc', 'utf-8')).toMatchSnapshot();
   });
 
   it('should recommend vscode extensions', async () => {

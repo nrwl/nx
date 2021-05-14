@@ -11,7 +11,7 @@ export function readJson<T = any>(host: Tree, path: string) {
   if (!host.exists(path)) {
     throw new Error(`Cannot find ${path}`);
   }
-  const contents = stripJsonComments(host.read(path).toString('utf-8'));
+  const contents = stripJsonComments(host.read(path, 'utf-8'));
   try {
     return JSON.parse(contents) as T;
   } catch (e) {

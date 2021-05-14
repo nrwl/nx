@@ -40,14 +40,14 @@ function containsComponentDeclaration(
   tree: Tree,
   componentPath: string
 ): boolean {
-  const contents = tree.read(componentPath);
-  if (!contents) {
+  const contents = tree.read(componentPath, 'utf-8');
+  if (contents === null) {
     throw new Error(`Failed to read ${componentPath}`);
   }
 
   const sourceFile = ts.createSourceFile(
     componentPath,
-    contents.toString(),
+    contents,
     ts.ScriptTarget.Latest,
     true
   );

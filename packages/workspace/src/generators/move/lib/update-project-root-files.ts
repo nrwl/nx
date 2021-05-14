@@ -43,7 +43,7 @@ export function updateProjectRootFiles(
       continue;
     }
 
-    const oldContent = tree.read(join(destination, file)).toString();
+    const oldContent = tree.read(join(destination, file), 'utf-8');
     const newContent = oldContent.replace(regex, newRelativeRoot);
     tree.write(join(destination, file), newContent);
   }

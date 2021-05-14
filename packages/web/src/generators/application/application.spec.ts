@@ -191,10 +191,10 @@ describe('app', () => {
         directory: 'myDir',
       });
       expect(
-        tree.read('apps/my-dir/my-app/src/app/app.element.ts').toString()
+        tree.read('apps/my-dir/my-app/src/app/app.element.ts', 'utf-8')
       ).toBeTruthy();
       expect(
-        tree.read('apps/my-dir/my-app/src/app/app.element.ts').toString()
+        tree.read('apps/my-dir/my-app/src/app/app.element.ts', 'utf-8')
       ).toContain('Thank you for using and showing some ♥ for Nx.');
     });
   });
@@ -214,7 +214,7 @@ describe('app', () => {
       name: 'my-App',
     });
 
-    expect(tree.read('apps/my-app/jest.config.js').toString()).not.toContain(
+    expect(tree.read('apps/my-app/jest.config.js', 'utf-8')).not.toContain(
       `'jest-preset-angular/build/AngularSnapshotSerializer.js',`
     );
   });
@@ -294,7 +294,7 @@ describe('app', () => {
     it('should use the prefix in the index.html', async () => {
       await applicationGenerator(tree, { name: 'myApp', prefix: 'prefix' });
 
-      expect(tree.read('apps/my-app/src/index.html').toString()).toContain(
+      expect(tree.read('apps/my-app/src/index.html', 'utf-8')).toContain(
         '<prefix-root></prefix-root>'
       );
     });
@@ -347,7 +347,7 @@ describe('app', () => {
         babelJest: true,
       } as Schema);
 
-      expect(tree.read(`apps/my-app/jest.config.js`).toString())
+      expect(tree.read(`apps/my-app/jest.config.js`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
           displayName: 'my-app',

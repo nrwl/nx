@@ -63,7 +63,7 @@ describe('app', () => {
       expect(tree.exists('apps/my-app/pages/index.module.scss')).toBeTruthy();
       expect(tree.exists('apps/my-app/pages/styles.css')).toBeTruthy();
 
-      const indexContent = tree.read('apps/my-app/pages/index.tsx').toString();
+      const indexContent = tree.read('apps/my-app/pages/index.tsx', 'utf-8');
       expect(indexContent).toContain(
         `import styles from './index.module.scss'`
       );
@@ -80,7 +80,7 @@ describe('app', () => {
       expect(tree.exists('apps/my-app/pages/index.module.less')).toBeTruthy();
       expect(tree.exists('apps/my-app/pages/styles.less')).toBeTruthy();
 
-      const indexContent = tree.read('apps/my-app/pages/index.tsx').toString();
+      const indexContent = tree.read('apps/my-app/pages/index.tsx', 'utf-8');
       expect(indexContent).toContain(
         `import styles from './index.module.less'`
       );
@@ -97,7 +97,7 @@ describe('app', () => {
       expect(tree.exists('apps/my-app/pages/index.module.styl')).toBeTruthy();
       expect(tree.exists('apps/my-app/pages/styles.styl')).toBeTruthy();
 
-      const indexContent = tree.read('apps/my-app/pages/index.tsx').toString();
+      const indexContent = tree.read('apps/my-app/pages/index.tsx', 'utf-8');
       expect(indexContent).toContain(
         `import styles from './index.module.styl'`
       );
@@ -116,7 +116,7 @@ describe('app', () => {
       ).toBeFalsy();
       expect(tree.exists('apps/my-app/pages/styles.css')).toBeTruthy();
 
-      const indexContent = tree.read('apps/my-app/pages/index.tsx').toString();
+      const indexContent = tree.read('apps/my-app/pages/index.tsx', 'utf-8');
       expect(indexContent).not.toContain(`import styles from './index.module`);
       expect(indexContent).toContain(`import styled from 'styled-components'`);
     });
@@ -134,7 +134,7 @@ describe('app', () => {
       ).toBeFalsy();
       expect(tree.exists('apps/my-app/pages/styles.css')).toBeTruthy();
 
-      const indexContent = tree.read('apps/my-app/pages/index.tsx').toString();
+      const indexContent = tree.read('apps/my-app/pages/index.tsx', 'utf-8');
       expect(indexContent).not.toContain(`import styles from './index.module`);
       expect(indexContent).toContain(`import styled from '@emotion/styled'`);
     });
@@ -147,7 +147,7 @@ describe('app', () => {
         style: 'styled-jsx',
       });
 
-      const indexContent = tree.read('apps/my-app/pages/index.tsx').toString();
+      const indexContent = tree.read('apps/my-app/pages/index.tsx', 'utf-8');
 
       expect(indexContent).toMatch(/<style jsx>{`.page {}`}<\/style>/);
       expect(
@@ -165,7 +165,7 @@ describe('app', () => {
   it('should setup jest with tsx support', async () => {
     await applicationGenerator(tree, { name: 'my-app', style: 'css' });
 
-    expect(tree.read('apps/my-app/jest.config.js').toString('utf-8')).toContain(
+    expect(tree.read('apps/my-app/jest.config.js', 'utf-8')).toContain(
       `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],`
     );
   });
@@ -173,7 +173,7 @@ describe('app', () => {
   it('should setup jest with SVGR support', async () => {
     await applicationGenerator(tree, { name: 'my-app', style: 'css' });
 
-    expect(tree.read('apps/my-app/jest.config.js').toString('utf-8')).toContain(
+    expect(tree.read('apps/my-app/jest.config.js', 'utf-8')).toContain(
       `'^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest'`
     );
   });
@@ -244,7 +244,7 @@ describe('app', () => {
   it('should generate functional components by default', async () => {
     await applicationGenerator(tree, { name: 'myApp', style: 'css' });
 
-    const appContent = tree.read('apps/my-app/pages/index.tsx').toString();
+    const appContent = tree.read('apps/my-app/pages/index.tsx', 'utf-8');
 
     expect(appContent).not.toMatch(/extends Component/);
   });

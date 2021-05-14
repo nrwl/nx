@@ -53,7 +53,7 @@ export function addOrUpdateProperty(
   const propertyName = properties.shift();
   const propertyAssignment = findPropertyAssignment(object, propertyName);
 
-  const originalContents = tree.read(path).toString();
+  const originalContents = tree.read(path, 'utf-8');
 
   if (propertyAssignment) {
     if (
@@ -230,6 +230,6 @@ export function jestConfigObject(
   host: Tree,
   path: string
 ): Partial<Config.InitialOptions> & { [index: string]: any } {
-  const jestConfigAst = jestConfigObjectAst(host.read(path).toString('utf-8'));
+  const jestConfigAst = jestConfigObjectAst(host.read(path, 'utf-8'));
   return getJsonObject(jestConfigAst.getText());
 }

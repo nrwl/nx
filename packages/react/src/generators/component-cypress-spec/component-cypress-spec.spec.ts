@@ -102,7 +102,7 @@ describe('react:component-cypress-spec', () => {
 
           it('should properly set up the spec', () => {
             expect(
-              formatFile`${appTree.read(cypressStorySpecFilePath).toString()}`
+              formatFile`${appTree.read(cypressStorySpecFilePath, 'utf-8')}`
             )
               .toContain(formatFile`describe('test-ui-lib: Test component', () => {
         beforeEach(() => cy.visit('/iframe.html?id=test--primary&knob-name=&knob-displayAge=false'));
@@ -130,9 +130,8 @@ describe('react:component-cypress-spec', () => {
         });
 
         it('should properly set up the spec', () => {
-          expect(
-            formatFile`${appTree.read(cypressStorySpecFilePath).toString()}`
-          ).toContain(formatFile`describe('test-ui-lib: Test component', () => {
+          expect(formatFile`${appTree.read(cypressStorySpecFilePath, 'utf-8')}`)
+            .toContain(formatFile`describe('test-ui-lib: Test component', () => {
       beforeEach(() => cy.visit('/iframe.html?id=test--primary'));
       
       it('should render the component', () => {

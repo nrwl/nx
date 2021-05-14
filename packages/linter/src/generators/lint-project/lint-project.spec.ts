@@ -34,7 +34,7 @@ describe('@nrwl/linter:lint-project', () => {
         });
 
         expect(
-          tree.read('libs/test-lib/.eslintrc.json').toString()
+          tree.read('libs/test-lib/.eslintrc.json', 'utf-8')
         ).toMatchSnapshot();
       });
 
@@ -70,7 +70,7 @@ describe('@nrwl/linter:lint-project', () => {
         });
 
         expect(
-          tree.read('libs/test-lib/tslint.json').toString()
+          tree.read('libs/test-lib/tslint.json', 'utf-8')
         ).toMatchSnapshot();
       });
 

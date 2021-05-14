@@ -60,14 +60,14 @@ export function createComponentSpecFile(
     .replace('.jsx', '')
     .replace('.js', '');
 
-  const contents = tree.read(componentFilePath);
-  if (!contents) {
+  const contents = tree.read(componentFilePath, 'utf-8');
+  if (contents === null) {
     throw new Error(`Failed to read ${componentFilePath}`);
   }
 
   const sourceFile = ts.createSourceFile(
     componentFilePath,
-    contents.toString(),
+    contents,
     ts.ScriptTarget.Latest,
     true
   );

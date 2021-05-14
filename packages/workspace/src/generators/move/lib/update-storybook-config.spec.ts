@@ -51,7 +51,7 @@ describe('updateStorybookConfig', () => {
 
     updateStorybookConfig(tree, schema, projectConfig);
 
-    const storybookMainAfter = tree.read(storybookMainPath).toString();
+    const storybookMainAfter = tree.read(storybookMainPath, 'utf-8');
     expect(storybookMainAfter).toContain(
       `const rootMain = require('../../../../.storybook/main');`
     );
@@ -80,9 +80,10 @@ describe('updateStorybookConfig', () => {
 
     updateStorybookConfig(tree, schema, projectConfig);
 
-    const storybookWebpackConfigAfter = tree
-      .read(storybookWebpackConfigPath)
-      .toString();
+    const storybookWebpackConfigAfter = tree.read(
+      storybookWebpackConfigPath,
+      'utf-8'
+    );
     expect(storybookWebpackConfigAfter).toContain(
       `const rootWebpackConfig = require('../../../../.storybook/webpack.config');`
     );

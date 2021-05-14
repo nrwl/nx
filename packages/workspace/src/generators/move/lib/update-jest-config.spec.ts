@@ -57,8 +57,8 @@ describe('updateJestConfig', () => {
 
     updateJestConfig(tree, schema, projectConfig);
 
-    const jestConfigAfter = tree.read(jestConfigPath).toString();
-    const rootJestConfigAfter = tree.read(rootJestConfigPath).toString();
+    const jestConfigAfter = tree.read(jestConfigPath, 'utf-8');
+    const rootJestConfigAfter = tree.read(rootJestConfigPath, 'utf-8');
     expect(jestConfigAfter).toContain(`name: 'my-destination'`);
     expect(jestConfigAfter).toContain(
       `coverageDirectory: '../../coverage/libs/my-destination'`
