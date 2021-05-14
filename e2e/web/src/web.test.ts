@@ -362,9 +362,9 @@ describe('index.html interpolation', () => {
     </html>
 `;
     const envFilePath = `apps/${appName}/.env`;
-    const envFileContents = `{
-      "NX_VARIABLE": "foo",
-      "SOME_OTHER_VARIABLE": "bar",
+    const envFileContents = `
+      NX_VARIABLE=foo,
+      SOME_OTHER_VARIABLE=bar,
     }`;
 
     const expectedBuiltIndex = `<!DOCTYPE html>
@@ -372,8 +372,7 @@ describe('index.html interpolation', () => {
       <head>
         <meta charset="utf-8" />
         <title>BestReactApp</title>
-        <base href="/" />
-    
+        <base href="/"/>   
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" type="image/x-icon" href="favicon.ico" />
       </head>
@@ -381,8 +380,8 @@ describe('index.html interpolation', () => {
         <div id="root"></div>
         <div>Nx Variable: foo</div>
         <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
-        <div>Deploy: baz</div>
-      </body>
+        <div>Deploy Url: baz</div>
+        <script src="bazruntime.js" defer></script><script src="bazpolyfills.js" defer></script><script src="bazstyles.js" defer></script><script src="bazmain.js" defer></script></body>
     </html>
 `;
 
