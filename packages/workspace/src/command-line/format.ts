@@ -31,6 +31,11 @@ const PRETTIER_EXTENSIONS = [
   'json',
   'md',
   'mdx',
+  'graphql',
+  'gql',
+  'yaml',
+  'yml',
+  'vue',
 ];
 
 const MATCH_ALL_PATTERN = `**/*.{${PRETTIER_EXTENSIONS.join(',')}}`;
