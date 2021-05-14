@@ -4,7 +4,7 @@ describe('interpolateEnvironmentVariablesToIndex()', () => {
   const envDefaults = {
     NX_VARIABLE: 'foo',
     SOME_OTHER_VARIABLE: 'bar',
-    PUBLIC_URL: 'baz',
+    DEPLOY_URL: 'baz',
   };
 
   beforeEach(() => {
@@ -16,60 +16,60 @@ describe('interpolateEnvironmentVariablesToIndex()', () => {
     const content = `
 <div>Nx Variable: %NX_VARIABLE%</div>
 <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
-<div>Public Url: %PUBLIC_URL%</div>
+<div>Deploy Url: %DEPLOY_URL%</div>
 `;
     const expected = `
 <div>Nx Variable: foo</div>
 <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
-<div>Public Url: baz</div>
+<div>Deploy Url: baz</div>
 `;
     expect(interpolateEnvironmentVariablesToIndex(content)).toBe(expected);
   });
 
-  test('Public url set as option overrides PUBLIC_URL env variable', () => {
+  test('Deploy url set as option overrides DEPLOY_URL env variable', () => {
     const content = `
 <div>Nx Variable: %NX_VARIABLE%</div>
 <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
-<div>Public Url: %PUBLIC_URL%</div>
+<div>Deploy Url: %DEPLOY_URL%</div>
 `;
     const expected = `
 <div>Nx Variable: foo</div>
 <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
-<div>Public Url: some-other-url.com</div>
+<div>Deploy Url: some-other-url.com</div>
 `;
     expect(
       interpolateEnvironmentVariablesToIndex(content, 'some-other-url.com')
     ).toBe(expected);
   });
 
-  test('No public url provided via either option', () => {
-    delete process.env.PUBLIC_URL;
+  test('No deploy url provided via either option', () => {
+    delete process.env.DEPLOY_URL;
     const content = `
 <div>Nx Variable: %NX_VARIABLE%</div>
 <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
-<div>Public Url: %PUBLIC_URL%</div>
+<div>Deploy Url: %DEPLOY_URL%</div>
 `;
     const expected = `
 <div>Nx Variable: foo</div>
 <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
-<div>Public Url: </div>
+<div>Deploy Url: </div>
 `;
     expect(interpolateEnvironmentVariablesToIndex(content)).toBe(expected);
   });
 
   test('NX_ prefixed option present in index.html, but not present in process.env', () => {
-    delete process.env.PUBLIC_URL;
+    delete process.env.DEPLOY_URL;
     const content = `
 <div>Nx Variable: %NX_VARIABLE%</div>
 <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
 <div>Some other nx_variable: %NX_SOME_OTHER_VARIABLE%</div>
-<div>Public Url: %PUBLIC_URL%</div>
+<div>Deploy Url: %DEPLOY_URL%</div>
 `;
     const expected = `
 <div>Nx Variable: foo</div>
 <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
 <div>Some other nx_variable: %NX_SOME_OTHER_VARIABLE%</div>
-<div>Public Url: </div>
+<div>Deploy Url: </div>
 `;
     expect(interpolateEnvironmentVariablesToIndex(content)).toBe(expected);
   });

@@ -1,8 +1,8 @@
 export function interpolateEnvironmentVariablesToIndex(
   contents: string,
-  publicUrl?: string
+  deployUrl?: string
 ): string {
-  const environmentVariables = getClientEnvironment(publicUrl || '');
+  const environmentVariables = getClientEnvironment(deployUrl || '');
   return interpolateEnvironmentVariables(contents, environmentVariables as any);
 }
 
@@ -12,7 +12,7 @@ function isNxEnvironmentKey(x: string): boolean {
   return NX_PREFIX.test(x);
 }
 
-function getClientEnvironment(publicUrl: string) {
+function getClientEnvironment(deployUrl: string) {
   return Object.keys(process.env)
     .filter(isNxEnvironmentKey)
     .reduce(
@@ -22,8 +22,7 @@ function getClientEnvironment(publicUrl: string) {
       },
       {
         NODE_ENV: process.env.NODE_ENV || 'development',
-        PUBLIC_URL: publicUrl || process.env.PUBLIC_URL || '',
-        FAST_REFRESH: process.env.FAST_REFRESH !== 'false',
+        DEPLOY_URL: deployUrl || process.env.DEPLOY_URL || '',
       }
     );
 }

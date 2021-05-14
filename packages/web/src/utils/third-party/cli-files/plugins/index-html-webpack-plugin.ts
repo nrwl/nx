@@ -23,7 +23,6 @@ export interface IndexHtmlWebpackPluginOptions {
   baseHref?: string;
   entrypoints: string[];
   deployUrl?: string;
-  publicUrl?: string;
   sri: boolean;
   noModuleEntrypoints: string[];
   moduleEntrypoints: string[];
@@ -106,7 +105,7 @@ export class IndexHtmlWebpackPlugin {
           input: this._options.input,
           inputContent: interpolateEnvironmentVariablesToIndex(
             inputContent,
-            this._options.publicUrl
+            this._options.deployUrl
           ),
           baseHref: this._options.baseHref,
           deployUrl: this._options.deployUrl,
