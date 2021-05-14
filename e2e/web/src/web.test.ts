@@ -343,10 +343,23 @@ describe('index.html interpolation', () => {
 
     const srcPath = `apps/${appName}/src`;
     const indexPath = `${srcPath}/index.html`;
-    const indexContent = `
-<div>Nx Variable: %NX_VARIABLE%</div>
-<div>Some other variable: %SOME_OTHER_VARIABLE%</div>
-<div>Deploy Url: %DEPLOY_URL%</div>
+    const indexContent = `<!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <title>BestReactApp</title>
+        <base href="/" />
+    
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" type="image/x-icon" href="favicon.ico" />
+      </head>
+      <body>
+        <div id="root"></div>
+        <div>Nx Variable: %NX_VARIABLE%</div>
+        <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
+        <div>Deploy Url: %DEPLOY_URL%</div>
+      </body>
+    </html>
 `;
     const envFilePath = `apps/${appName}/.env`;
     const envFileContents = `{
@@ -354,10 +367,23 @@ describe('index.html interpolation', () => {
       "SOME_OTHER_VARIABLE": "bar",
     }`;
 
-    const expectedBuiltIndex = `
-<div>Nx Variable: foo</div>
-<div>Some other variable: %SOME_OTHER_VARIABLE%</div>
-<div>Deploy: baz</div>
+    const expectedBuiltIndex = `<!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <title>BestReactApp</title>
+        <base href="/" />
+    
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" type="image/x-icon" href="favicon.ico" />
+      </head>
+      <body>
+        <div id="root"></div>
+        <div>Nx Variable: foo</div>
+        <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
+        <div>Deploy: baz</div>
+      </body>
+    </html>
 `;
 
     createFile(envFilePath);
