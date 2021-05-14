@@ -110,7 +110,7 @@ Object {
       },
       "options": Object {
         "cypressConfig": "apps/my-dir/my-app-e2e/cypress.json",
-        "devServerTarget": "my-dir-my-app:serve",
+        "devServerTarget": "my-dir-my-app:serve:development",
         "tsConfig": "apps/my-dir/my-app-e2e/tsconfig.e2e.json",
       },
     },
@@ -239,7 +239,7 @@ Object {
       },
       "options": Object {
         "cypressConfig": "apps/my-app-e2e/cypress.json",
-        "devServerTarget": "my-app:serve",
+        "devServerTarget": "my-app:serve:development",
         "tsConfig": "apps/my-app-e2e/tsconfig.e2e.json",
       },
     },

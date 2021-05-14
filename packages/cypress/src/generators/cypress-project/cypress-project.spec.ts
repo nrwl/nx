@@ -1,4 +1,10 @@
-import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
+import {
+  readJson,
+  addProjectConfiguration,
+  readProjectConfiguration,
+  updateProjectConfiguration,
+  Tree,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { cypressProjectGenerator } from './cypress-project';
 import { Schema } from './schema';
@@ -12,6 +18,32 @@ describe('schematic:cypress-project', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+
+    addProjectConfiguration(tree, 'my-app', {
+      root: 'my-app',
+      targets: {
+        serve: {
+          executor: 'serve-executor',
+          options: {},
+          configurations: {
+            production: {},
+          },
+        },
+      },
+    });
+
+    addProjectConfiguration(tree, 'my-dir-my-app', {
+      root: 'my-dir/my-app',
+      targets: {
+        serve: {
+          executor: 'serve-executor',
+          options: {},
+          configurations: {
+            production: {},
+          },
+        },
+      },
+    });
   });
 
   describe('Cypress Project', () => {
@@ -62,6 +94,44 @@ describe('schematic:cypress-project', () => {
         options: {
           cypressConfig: 'apps/my-app-e2e/cypress.json',
           devServerTarget: 'my-app:serve',
+          tsConfig: 'apps/my-app-e2e/tsconfig.e2e.json',
+        },
+        configurations: {
+          production: {
+            devServerTarget: 'my-app:serve:production',
+          },
+        },
+      });
+    });
+
+    it('should add update `workspace.json` file for a project with a defaultConfiguration', async () => {
+      const originalProject = readProjectConfiguration(tree, 'my-app');
+      originalProject.targets.serve.defaultConfiguration = 'development';
+      originalProject.targets.serve.configurations.development = {};
+      updateProjectConfiguration(tree, 'my-app', originalProject);
+
+      await cypressProjectGenerator(tree, {
+        name: 'my-app-e2e',
+        project: 'my-app',
+        linter: Linter.TsLint,
+      });
+      const workspaceJson = readJson(tree, 'workspace.json');
+      const project = workspaceJson.projects['my-app-e2e'];
+
+      expect(project.root).toEqual('apps/my-app-e2e');
+
+      expect(project.architect.lint).toEqual({
+        builder: '@angular-devkit/build-angular:tslint',
+        options: {
+          tsConfig: ['apps/my-app-e2e/tsconfig.e2e.json'],
+          exclude: ['**/node_modules/**', '!apps/my-app-e2e/**/*'],
+        },
+      });
+      expect(project.architect.e2e).toEqual({
+        builder: '@nrwl/cypress:cypress',
+        options: {
+          cypressConfig: 'apps/my-app-e2e/cypress.json',
+          devServerTarget: 'my-app:serve:development',
           tsConfig: 'apps/my-app-e2e/tsconfig.e2e.json',
         },
         configurations: {
