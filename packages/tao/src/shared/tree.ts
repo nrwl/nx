@@ -21,8 +21,16 @@ export interface Tree {
 
   /**
    * Read the contents of a file.
+   * @param filePath A path to a file.
    */
   read(filePath: string): Buffer | null;
+
+  /**
+   * Read the contents of a file as string.
+   * @param filePath A path to a file.
+   * @param encoding the encoding for the result
+   */
+  read(filePath: string, encoding: BufferEncoding): string | null;
 
   /**
    * Update the contents of a file or create a new file.
@@ -87,14 +95,19 @@ export class FsTree implements Tree {
 
   constructor(readonly root: string, private readonly isVerbose: boolean) {}
 
-  read(filePath: string): Buffer | null {
+  read(filePath: string): Buffer | null;
+  read(filePath: string, encoding: BufferEncoding): string | null;
+  read(filePath: string, encoding?: BufferEncoding): Buffer | string | null {
     filePath = this.normalize(filePath);
     try {
+      let content: Buffer;
       if (this.recordedChanges[this.rp(filePath)]) {
-        return this.recordedChanges[this.rp(filePath)].content;
+        content = this.recordedChanges[this.rp(filePath)].content;
       } else {
-        return this.fsReadFile(filePath);
+        content = this.fsReadFile(filePath);
       }
+
+      return encoding ? content.toString(encoding) : content;
     } catch (e) {
       if (this.isVerbose) {
         logger.error(e);

@@ -1,6 +1,9 @@
 import { join, relative } from 'path';
-import { FileChange } from '@nrwl/tao/src/shared/tree';
-import { Generator, GeneratorCallback } from '@nrwl/tao/src/shared/workspace';
+import type { FileChange, Tree } from '@nrwl/tao/src/shared/tree';
+import type {
+  Generator,
+  GeneratorCallback,
+} from '@nrwl/tao/src/shared/workspace';
 
 class RunCallbackTask {
   constructor(private callback: GeneratorCallback) {}
@@ -69,7 +72,7 @@ const actionToFileChangeMap = {
   d: 'DELETE',
 };
 
-class DevkitTreeFromAngularDevkitTree {
+class DevkitTreeFromAngularDevkitTree implements Tree {
   constructor(private tree, private _root: string) {}
 
   get root(): string {
@@ -132,9 +135,17 @@ class DevkitTreeFromAngularDevkitTree {
     return relative(this.root, join(this.root, path));
   }
 
-  read(filePath: string): Buffer | null {
-    return this.tree.read(filePath);
+  read(filePath: string): Buffer;
+  read(filePath: string, encoding: BufferEncoding): string;
+  read(filePath: string, encoding?: BufferEncoding) {
+    return encoding
+      ? this.tree.read(filePath).toString(encoding)
+      : this.tree.read(filePath);
   }
+
+  /* read(filePath: string): Buffer | null {
+    return this.tree.read(filePath);
+  }*/
 
   rename(from: string, to: string): void {
     this.tree.rename(from, to);
