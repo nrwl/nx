@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Temporarily enable builds for all commit
+exit 1
+
 # Ignore all production deployments since this should be a manual promotion
 if [ $VERCEL_GIT_COMMIT_REF == "master" ]; then
   echo "🛑 - Build cancelled"

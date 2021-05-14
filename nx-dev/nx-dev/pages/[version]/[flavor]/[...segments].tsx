@@ -9,6 +9,7 @@ import {
 } from '@nrwl/nx-dev/data-access-documents';
 import { DocViewer } from '@nrwl/nx-dev/feature-doc-viewer';
 import { getMenu, Menu } from '@nrwl/nx-dev/data-access-menu';
+import { useRouter } from 'next/router';
 
 interface DocumentationProps {
   version: VersionMetadata;
@@ -17,31 +18,22 @@ interface DocumentationProps {
   versions: VersionMetadata[];
   menu: Menu;
   document?: DocumentData;
+  error?: any;
 }
 
 interface DocumentationParams {
   params: { version: string; flavor: string; segments: string | string[] };
 }
 
-export function Documentation({
-  document,
-  menu,
-  version,
-  versions,
-  flavor,
-  flavors,
-}: DocumentationProps) {
-  return (
-    <DocViewer
-      version={version}
-      versionList={versions}
-      flavor={flavor}
-      flavorList={flavors}
-      document={document}
-      menu={menu}
-      toc={null}
-    />
-  );
+export function Documentation({ document, error }: DocumentationProps) {
+  const router = useRouter();
+  console.log('>>> document', document);
+  console.log('>>> error', error);
+  if (router.isFallback || !document) {
+    return <h1>FALLBACK</h1>;
+  } else {
+    return <h1>FOUND</h1>;
+  }
 }
 
 const defaultVersion = {
@@ -56,6 +48,33 @@ const defaultFlavor = {
 };
 
 export async function getStaticProps({ params }: DocumentationParams) {
+  const { versions, version, flavor, menu, document } = await getProps({
+    params,
+  });
+
+  if (document) {
+    return {
+      props: {
+        version: null as any,
+        flavor: null as any,
+        flavors: null as any,
+        versions: null as any,
+        menu: null as any,
+        document,
+      },
+    };
+  } else {
+    console.log('>>> redirect', JSON.stringify(params));
+    return {
+      redirect: {
+        destination: '/',
+        permanent: false,
+      },
+    };
+  }
+}
+
+async function getProps({ params }: DocumentationParams) {
   let versions: VersionMetadata[];
   let version: VersionMetadata;
   let flavor: { label: string; value: string };
@@ -69,33 +88,42 @@ export async function getStaticProps({ params }: DocumentationParams) {
    * - Otherwise, redirect to the root.
    */
   try {
-    versions = getVersions();
-    version =
-      versions.find((item) => item.id === params.version) || defaultVersion;
-    flavor =
-      flavorList.find((item) => item.value === params.flavor) || defaultFlavor;
-    menu = getMenu(params.version, params.flavor);
+    versions = null as any;
+    version = null as any;
+    flavor = null as any;
+    menu = null as any;
     document = getDocument(params.version, [params.flavor, ...params.segments]);
 
     return {
-      props: {
-        version,
-        flavor,
-        flavors: flavorList,
-        versions: versions,
-        menu,
-        document,
-      },
+      version,
+      flavor,
+      flavors: flavorList,
+      versions: versions,
+      menu,
+      document,
+      error: null,
     };
-  } catch {
-    const firstPagePath = menu?.sections[0].itemList?.[0].itemList?.[0].path;
+  } catch (e) {
+    console.log('>>> ERROR', e);
     return {
-      redirect: {
-        destination: firstPagePath ?? '/',
-        permanent: false,
-      },
+      version: null,
+      versions: null,
+      flavors: null,
+      flavor: null,
+      menu: null,
+      document: null,
+      error: e,
     };
   }
+
+  return {
+    version: null,
+    versions: null,
+    flavors: null,
+    flavor: null,
+    menu: null,
+    document: document || null,
+    error: 'fallback'}
 }
 
 export async function getStaticPaths(props) {
@@ -113,7 +141,7 @@ export async function getStaticPaths(props) {
      * 1. The content of the document if it exists.
      * 2. A redirect to another page if document is not found.
      */
-    fallback: 'blocking',
+    fallback: true,
   };
 }
 
