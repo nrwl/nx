@@ -334,3 +334,51 @@ describe('Build Options', () => {
     expect(barStyles).toContain(barCssContent);
   });
 });
+
+describe('index.html interpolation', () => {
+  test('should interpolate environment variables', () => {
+    const appName = uniq('app');
+
+    runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+
+    const srcPath = `apps/${appName}/src`;
+    const indexPath = `${srcPath}/index.html`;
+    const indexContent = `
+<div>Nx Variable: %NX_VARIABLE%</div>
+<div>Some other variable: %SOME_OTHER_VARIABLE%</div>
+<div>Deploy Url: %DEPLOY_URL%</div>
+`;
+    const envFilePath = `apps/${appName}/.env`;
+    const envFileContents = `{
+      "NX_VARIABLE": "foo",
+      "SOME_OTHER_VARIABLE": "bar",
+    }`;
+
+    const expectedBuiltIndex = `
+<div>Nx Variable: foo</div>
+<div>Some other variable: %SOME_OTHER_VARIABLE%</div>
+<div>Deploy: baz</div>
+`;
+
+    createFile(envFilePath);
+
+    // createFile could not create a file with content
+    updateFile(envFilePath, envFileContents);
+    updateFile(indexPath, indexContent);
+
+    const workspacePath = `workspace.json`;
+    const workspaceConfig = readJson(workspacePath);
+    const buildOptions =
+      workspaceConfig.projects[appName].targets.build.options;
+    buildOptions.deployUrl = 'baz';
+
+    updateFile(workspacePath, JSON.stringify(workspaceConfig));
+
+    runCLI(`build ${appName}`);
+
+    const distPath = `dist/apps/${appName}`;
+    const resultIndexContents = readFile(`${distPath}/index.html`);
+
+    expect(resultIndexContents).toBe(expectedBuiltIndex);
+  });
+});
