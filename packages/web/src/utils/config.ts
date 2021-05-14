@@ -57,7 +57,7 @@ export function getBaseWebpackPartial(
             cwd: join(options.root, options.sourceRoot),
             emitDecoratorMetadata,
             isModern: esm,
-            envName: configuration,
+            envName: isScriptOptimizeOn ? 'production' : configuration,
             babelrc: true,
             cacheDirectory: true,
             cacheCompression: false,
