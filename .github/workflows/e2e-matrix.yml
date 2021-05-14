@@ -47,7 +47,7 @@ jobs:
         version: 5.18.9
 
     - name: Run e2e tests
-      run: yarn nx e2e ${{ matrix.packages }}
+      run: yarn nx run-many --target=e2e --projects=${{ matrix.packages }} --ignore-engines
       env:
         GIT_AUTHOR_NAME: test@test.com
         GIT_AUTHOR_EMAIL: Test
