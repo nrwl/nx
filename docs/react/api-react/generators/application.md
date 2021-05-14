@@ -144,7 +144,7 @@ Skip updating workspace.json with default options based on values provided to th
 
 ### strict
 
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 
