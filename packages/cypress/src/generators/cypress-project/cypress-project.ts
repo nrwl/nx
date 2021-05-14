@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
+  readProjectConfiguration,
   convertNxGenerator,
   formatFiles,
   generateFiles,
@@ -40,8 +41,17 @@ function createFiles(host: Tree, options: CypressProjectSchema) {
   }
 }
 
-function addProject(host: Tree, options: CypressProjectSchema) {
-  addProjectConfiguration(host, options.projectName, {
+function addProject(tree: Tree, options: CypressProjectSchema) {
+  let devServerTarget: string = `${options.project}:serve`;
+  if (options.project) {
+    const project = readProjectConfiguration(tree, options.project);
+    devServerTarget =
+      project.targets.serve && project.targets.serve.defaultConfiguration
+        ? `${options.project}:serve:${project.targets.serve.defaultConfiguration}`
+        : devServerTarget;
+  }
+
+  addProjectConfiguration(tree, options.projectName, {
     root: options.projectRoot,
     sourceRoot: joinPathFragments(options.projectRoot, 'src'),
     projectType: 'application',
@@ -51,7 +61,7 @@ function addProject(host: Tree, options: CypressProjectSchema) {
         options: {
           cypressConfig: joinPathFragments(options.projectRoot, 'cypress.json'),
           tsConfig: joinPathFragments(options.projectRoot, 'tsconfig.e2e.json'),
-          devServerTarget: `${options.project}:serve`,
+          devServerTarget,
         },
         configurations: {
           production: {
