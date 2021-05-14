@@ -713,5 +713,28 @@ describe('app', () => {
         },
       ]);
     });
+
+    it('should default strict to true in workspace.json', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        strict: true,
+      });
+      const workspaceJson = readWorkspaceConfiguration(appTree);
+
+      expect(workspaceJson.generators['@nrwl/react']).toMatchObject({
+        application: {
+          babel: true,
+          style: schema.style,
+          strict: true,
+        },
+        component: {
+          style: schema.style,
+        },
+        library: {
+          style: schema.style,
+          strict: true,
+        },
+      });
+    });
   });
 });
