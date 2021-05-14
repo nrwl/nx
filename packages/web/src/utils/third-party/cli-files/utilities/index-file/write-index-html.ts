@@ -34,7 +34,6 @@ export interface WriteIndexHtmlOptions {
   styles?: ExtraEntryPoint[];
   postTransform?: IndexHtmlTransform;
   crossOrigin?: CrossOriginValue;
-  publicUrl?: string;
 }
 
 export type IndexHtmlTransform = (content: string) => Promise<string>;
@@ -52,13 +51,12 @@ export async function writeIndexHtml({
   styles = [],
   postTransform,
   crossOrigin,
-  publicUrl,
 }: WriteIndexHtmlOptions) {
   let content = readFileSync(indexPath).toString();
   content = stripBom(content);
   content = augmentIndexHtml({
     input: outputPath,
-    inputContent: interpolateEnvironmentVariablesToIndex(content, publicUrl),
+    inputContent: interpolateEnvironmentVariablesToIndex(content, deployUrl),
     baseHref,
     deployUrl,
     crossOrigin,
