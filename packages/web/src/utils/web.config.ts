@@ -84,7 +84,6 @@ function getBrowserPartial(
         deployUrl,
         sri: subresourceIntegrity,
         noModuleEntrypoints: ['polyfills-es5'],
-        publicUrl: options.publicUrl,
       })
     );
   }
