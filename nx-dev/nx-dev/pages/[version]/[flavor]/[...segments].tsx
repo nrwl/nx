@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useRouter } from 'next/router';
 import {
   DocumentData,
   flavorList,
@@ -31,6 +32,10 @@ export function Documentation({
   flavor,
   flavors,
 }: DocumentationProps) {
+  const router = useRouter();
+  if (router.isFallback) {
+    return <></>;
+  }
   return (
     <DocViewer
       version={version}
@@ -108,12 +113,7 @@ export async function getStaticPaths(props) {
 
   return {
     paths: allPaths,
-    /*
-     * Block rendering until the page component resolves with either:
-     * 1. The content of the document if it exists.
-     * 2. A redirect to another page if document is not found.
-     */
-    fallback: 'blocking',
+    fallback: true,
   };
 }
 
