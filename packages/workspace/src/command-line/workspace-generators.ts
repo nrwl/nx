@@ -24,6 +24,7 @@ import { output } from '../utilities/output';
 import type { CompilerOptions } from 'typescript';
 import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import { logger, normalizePath } from '@nrwl/devkit';
+import { generate } from '@nrwl/tao/src/commands/generate';
 
 const rootDirectory = appRootPath;
 
@@ -47,16 +48,12 @@ export async function workspaceGenerators(args: string[]) {
   const generatorName = args[0];
   const ws = new Workspaces(rootDirectory);
   if (ws.isNxGenerator(collectionFile, generatorName)) {
-    try {
-      execSync(
-        `npx tao g "${collectionFile}":${generatorName} ${args
-          .slice(1)
-          .join(' ')}`,
-        { stdio: ['inherit', 'inherit', 'inherit'] }
-      );
-    } catch (e) {
-      process.exit(1);
-    }
+    process.exitCode = await generate(
+      process.cwd(),
+      rootDirectory,
+      args.slice(1),
+      parsedArgs.verbose
+    );
   } else {
     const logger = require('@angular-devkit/core/node').createConsoleLogger(
       parsedArgs.verbose,
