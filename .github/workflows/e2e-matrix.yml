@@ -47,7 +47,7 @@ jobs:
         version: 5.18.9
 
     - name: Run e2e tests
-      run: yarn nx e2e ${{ matrix.packages }} affected
+      run: yarn nx e2e ${{ matrix.packages }}
       env:
         GIT_AUTHOR_NAME: test@test.com
         GIT_AUTHOR_EMAIL: Test
