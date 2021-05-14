@@ -92,9 +92,7 @@ export function createWebpackConfig(
         oneOf: [
           // If coming from JS/TS file, then transform into React component using SVGR.
           {
-            issuer: {
-              test: /\.[jt]sx?$/,
-            },
+            issuer: /\.[jt]sx?$/,
             use: [
               {
                 loader: require.resolve('@svgr/webpack'),
