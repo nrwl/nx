@@ -1,6 +1,6 @@
 import * as chalk from 'chalk';
 import { output } from '../output';
-import { CorePlugin, PluginCapabilities } from './models';
+import type { CorePlugin, PluginCapabilities } from './models';
 
 export function fetchCorePlugins() {
   const corePlugins: CorePlugin[] = [
@@ -63,7 +63,7 @@ export function fetchCorePlugins() {
 export function listCorePlugins(
   installedPlugins: PluginCapabilities[],
   corePlugins: CorePlugin[]
-) {
+): void {
   const installedPluginsMap: Set<string> = new Set<string>(
     installedPlugins.map((p) => p.name)
   );

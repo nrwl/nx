@@ -3,7 +3,7 @@ import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { appRootPath } from '../app-root';
 import { readJsonFile } from '../fileutils';
 import { output } from '../output';
-import { PluginCapabilities } from './models';
+import type { PluginCapabilities } from './models';
 import { hasElements } from './shared';
 
 function tryGetCollection<T>(
@@ -11,7 +11,7 @@ function tryGetCollection<T>(
   pluginName: string,
   jsonFile: string,
   propName: string
-): T {
+): T | null {
   if (!jsonFile) {
     return null;
   }
@@ -29,7 +29,7 @@ function tryGetCollection<T>(
 export function getPluginCapabilities(
   workspaceRoot: string,
   pluginName: string
-): PluginCapabilities {
+): PluginCapabilities | null {
   try {
     const packageJsonPath = require.resolve(`${pluginName}/package.json`, {
       paths: [workspaceRoot],
