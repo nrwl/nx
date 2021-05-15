@@ -258,6 +258,7 @@
     "glob": "7.1.4",
     "gray-matter": "^4.0.2",
     "kill-port": "^1.6.1",
+    "npm-run-path": "^4.0.1",
     "react": "17.0.2",
     "react-copy-to-clipboard": "^5.0.3",
     "react-dom": "17.0.2",

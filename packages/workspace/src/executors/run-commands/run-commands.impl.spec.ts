@@ -1,6 +1,7 @@
 import { readFileSync, unlinkSync, writeFileSync } from 'fs';
 import { relative } from 'path';
 import { dirSync, fileSync } from 'tmp';
+import { env as appendLocalEnv } from 'npm-run-path';
 import runCommands, { LARGE_BUFFER } from './run-commands.impl';
 
 function normalize(p: string) {
@@ -407,6 +408,45 @@ describe('Command Runner Builder', () => {
           `no such file or directory, open '/somePath/.fakeEnv'`
         );
       }
+    });
+  });
+
+  describe('preferLocal', () => {
+    it('should be false by default', async () => {
+      const exec = jest.spyOn(require('child_process'), 'execSync');
+      await runCommands(
+        {
+          command: 'nx report',
+          parallel: false,
+        },
+        context
+      );
+
+      expect(exec).toHaveBeenCalledWith('nx report', {
+        maxBuffer: LARGE_BUFFER,
+        env: { ...process.env },
+        stdio: [0, 1, 2],
+        cwd: undefined,
+      });
+    });
+
+    it('should append local env when preferLocal is true', async () => {
+      const exec = jest.spyOn(require('child_process'), 'execSync');
+      await runCommands(
+        {
+          command: 'nx report',
+          parallel: false,
+          preferLocal: true,
+        },
+        context
+      );
+
+      expect(exec).toHaveBeenCalledWith('nx report', {
+        maxBuffer: LARGE_BUFFER,
+        env: { ...process.env, ...appendLocalEnv() },
+        stdio: [0, 1, 2],
+        cwd: undefined,
+      });
     });
   });
 });

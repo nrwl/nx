@@ -2,6 +2,7 @@ import { ExecutorContext } from '@nrwl/devkit';
 import { exec, execSync } from 'child_process';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
+import { env as appendLocalEnv } from 'npm-run-path';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 
@@ -35,6 +36,7 @@ export interface RunCommandsBuilderOptions extends Json {
   args?: string;
   envFile?: string;
   outputPath?: string;
+  preferLocal?: boolean;
 }
 
 const propKeys = [
@@ -47,6 +49,7 @@ const propKeys = [
   'args',
   'envFile',
   'outputPath',
+  'preferLocal',
 ];
 
 export interface NormalizedRunCommandsBuilderOptions
@@ -55,6 +58,7 @@ export interface NormalizedRunCommandsBuilderOptions
     command: string;
     forwardAllArgs?: boolean;
   }[];
+
   parsedArgs: { [k: string]: any };
 }
 
@@ -95,7 +99,8 @@ async function runInParallel(
       c.command,
       options.readyWhen,
       options.color,
-      calculateCwd(options.cwd, context)
+      calculateCwd(options.cwd, context),
+      options.preferLocal
     ).then((result) => ({
       result,
       command: c.command,
@@ -159,7 +164,8 @@ async function runSerially(
     createSyncProcess(
       c.command,
       options.color,
-      calculateCwd(options.cwd, context)
+      calculateCwd(options.cwd, context),
+      options.preferLocal
     );
   }
   return true;
@@ -169,12 +175,13 @@ function createProcess(
   command: string,
   readyWhen: string,
   color: boolean,
-  cwd: string
+  cwd: string,
+  preferLocal: boolean
 ): Promise<boolean> {
   return new Promise((res) => {
     const childProcess = exec(command, {
       maxBuffer: LARGE_BUFFER,
-      env: processEnv(color),
+      env: processEnv(color, preferLocal),
       cwd,
     });
     /**
@@ -203,9 +210,14 @@ function createProcess(
   });
 }
 
-function createSyncProcess(command: string, color: boolean, cwd: string) {
+function createSyncProcess(
+  command: string,
+  color: boolean,
+  cwd: string,
+  preferLocal: boolean
+) {
   execSync(command, {
-    env: processEnv(color),
+    env: processEnv(color, preferLocal),
     stdio: [0, 1, 2],
     maxBuffer: LARGE_BUFFER,
     cwd,
@@ -221,8 +233,10 @@ function calculateCwd(
   return path.join(context.root, cwd);
 }
 
-function processEnv(color: boolean) {
-  const env = { ...process.env };
+function processEnv(color: boolean, preferLocal: boolean) {
+  const env = preferLocal
+    ? { ...process.env, ...appendLocalEnv() }
+    : { ...process.env };
   if (color) {
     env.FORCE_COLOR = `${color}`;
   }

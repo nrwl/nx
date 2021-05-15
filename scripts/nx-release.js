@@ -24,20 +24,15 @@ if (!parsedArgs.local && !process.env.GITHUB_TOKEN_RELEASE_IT_NX) {
 if (parsedArgs.help) {
   console.log(`
       Usage: yarn nx-release <version> [options]
-
       Example: "yarn nx-release 1.0.0-beta.1"
-
       The acceptable format for the version number is:
       {number}.{number}.{number}[-{alpha|beta|rc}.{number}]
-
       The subsection of the version number in []s is optional, and, if used, will be used to
       mark the release as "prerelease" on GitHub, and tag it with "next" on npm.
-
       Options:
         --dry-run           Do not touch or write anything, but show the commands
         --help              Show this message
         --local             Publish to local npm registry (IMPORTANT: install & run Verdaccio first & set registry in .npmrc)
-
     `);
   process.exit(0);
 }

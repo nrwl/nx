@@ -74,6 +74,11 @@
     "cwd": {
       "type": "string",
       "description": "Current working directory of the commands. If it's not specified the commands will run in the workspace root, if a relative path is specified the commands will run in that path relative to the workspace root and if it's an absolute path the commands will run in that path."
+    },
+    "preferLocal": {
+      "type": "boolean",
+      "description": "Prefer local installed package execution.",
+      "default": false
     }
   },
   "additionalProperties": true,

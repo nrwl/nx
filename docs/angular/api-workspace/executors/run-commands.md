@@ -214,6 +214,14 @@ Type: `boolean`
 
 Run commands in parallel
 
+### preferLocal
+
+Default: `false`
+
+Type: `boolean`
+
+Prefer local installed package execution.
+
 ### readyWhen
 
 Type: `string`
