@@ -118,6 +118,16 @@ Type: `string`
 
 A comma delimited glob string that is provided to the Cypress runner to specify which spec files to run. i.e. '**examples/**,**actions.spec**
 
+### testingType
+
+Default: `e2e`
+
+Type: `string`
+
+Possible values: `component`, `e2e`
+
+Specify the type of tests to execute
+
 ### tsConfig
 
 Type: `string`

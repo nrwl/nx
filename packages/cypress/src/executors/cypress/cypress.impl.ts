@@ -34,6 +34,7 @@ export interface CypressExecutorOptions extends Json {
   reporter?: string;
   reporterOptions?: string;
   skipServe: boolean;
+  testingType?: 'component' | 'e2e';
 }
 
 try {
@@ -183,6 +184,7 @@ async function runCypress(baseUrl: string, opts: CypressExecutorOptions) {
   options.ignoreTestFiles = opts.ignoreTestFiles;
   options.reporter = opts.reporter;
   options.reporterOptions = opts.reporterOptions;
+  options.testingType = opts.testingType;
 
   const result = await (!opts.watch || opts.headless
     ? Cypress.run(options)
