@@ -2,7 +2,7 @@ import { lstatSync, readFileSync, writeFileSync } from 'fs';
 import { removeSync, ensureDirSync } from 'fs-extra';
 import { dirSync } from 'tmp';
 import * as path from 'path';
-import { FileChange, FsTree, flushChanges } from './tree';
+import { FileChange, FsTree, flushChanges, TreeWriteOptions } from './tree';
 
 describe('tree', () => {
   describe('FsTree', () => {
@@ -15,6 +15,10 @@ describe('tree', () => {
       writeFileSync(
         path.join(dir, 'parent', 'parent-file.txt'),
         'parent content'
+      );
+      writeFileSync(
+        path.join(dir, 'parent', 'parent-file-with-write-options.txt'),
+        'parent content with write options'
       );
       writeFileSync(
         path.join(dir, 'parent', 'child', 'child-file.txt'),
@@ -59,21 +63,37 @@ describe('tree', () => {
     });
 
     it('should be able to read and write files with encodings and strings', () => {
+      const writeOptions: TreeWriteOptions = { mode: '755' };
       expect(tree.read('parent/parent-file.txt', 'utf-8')).toEqual(
         'parent content'
       );
 
       tree.write('parent/parent-file.txt', 'new content');
+      tree.write(
+        'parent/parent-file-with-write-options.txt',
+        'new content with write options',
+        writeOptions
+      );
 
       expect(tree.read('parent/parent-file.txt', 'utf-8')).toEqual(
         'new content'
       );
+
+      expect(
+        tree.read('parent/parent-file-with-write-options.txt').toString()
+      ).toEqual('new content with write options');
 
       expect(s(tree.listChanges())).toEqual([
         {
           path: 'parent/parent-file.txt',
           type: 'UPDATE',
           content: 'new content',
+        },
+        {
+          path: 'parent/parent-file-with-write-options.txt',
+          type: 'UPDATE',
+          content: 'new content with write options',
+          options: writeOptions,
         },
       ]);
 
@@ -98,21 +118,38 @@ describe('tree', () => {
     });
 
     it('should be able to create files', () => {
+      const writeOptions: TreeWriteOptions = { mode: '755' };
       tree.write('parent/new-parent-file.txt', 'new parent content');
+      tree.write(
+        'parent/new-parent-file-with-write-options.txt',
+        'new parent content with write options',
+        writeOptions
+      );
       tree.write('parent/new-child/new-child-file.txt', 'new child content');
 
       expect(tree.read('parent/new-parent-file.txt', 'utf-8')).toEqual(
         'new parent content'
       );
-      expect(tree.read('parent/new-child/new-child-file.txt', 'utf-8')).toEqual(
-        'new child content'
-      );
+      expect(
+        tree
+          .read('parent/new-parent-file-with-write-options.txt', 'utf-8')
+          .toString()
+      ).toEqual('new parent content with write options');
+      expect(
+        tree.read('parent/new-child/new-child-file.txt', 'utf-8').toString()
+      ).toEqual('new child content');
 
       expect(s(tree.listChanges())).toEqual([
         {
           path: 'parent/new-parent-file.txt',
           type: 'CREATE',
           content: 'new parent content',
+        },
+        {
+          path: 'parent/new-parent-file-with-write-options.txt',
+          type: 'CREATE',
+          content: 'new parent content with write options',
+          options: writeOptions,
         },
         {
           path: 'parent/new-child/new-child-file.txt',
@@ -128,9 +165,20 @@ describe('tree', () => {
       ).toEqual('new parent content');
       expect(
         readFileSync(
+          path.join(dir, 'parent/new-parent-file-with-write-options.txt'),
+          'utf-8'
+        ).toString()
+      ).toEqual('new parent content with write options');
+      expect(
+        lstatSync(
+          path.join(dir, 'parent/new-parent-file-with-write-options.txt')
+        ).mode & octal(writeOptions.mode)
+      ).toEqual(octal(writeOptions.mode));
+      expect(
+        readFileSync(
           path.join(dir, 'parent/new-child/new-child-file.txt'),
           'utf-8'
-        )
+        ).toString()
       ).toEqual('new child content');
     });
 
@@ -257,7 +305,11 @@ describe('tree', () => {
 
     describe('children', () => {
       it('should return the list of children of a dir', () => {
-        expect(tree.children('parent')).toEqual(['child', 'parent-file.txt']);
+        expect(tree.children('parent')).toEqual([
+          'child',
+          'parent-file-with-write-options.txt',
+          'parent-file.txt',
+        ]);
         expect(tree.children('parent/child')).toEqual(['child-file.txt']);
       });
 
@@ -267,6 +319,7 @@ describe('tree', () => {
 
         expect(tree.children('parent')).toEqual([
           'child',
+          'parent-file-with-write-options.txt',
           'parent-file.txt',
           'new-child',
         ]);
@@ -295,6 +348,7 @@ describe('tree', () => {
         );
 
         expect(tree.children('parent')).toEqual([
+          'parent-file-with-write-options.txt',
           'parent-file.txt',
           'renamed-child',
         ]);
@@ -318,6 +372,7 @@ describe('tree', () => {
         it('should remove a child after deleting a file', () => {
           tree.delete('parent/child/child-file.txt');
           tree.delete('parent/parent-file.txt');
+          tree.delete('parent/parent-file-with-write-options.txt');
 
           expect(tree.children('')).not.toContain('parent');
 
@@ -338,5 +393,10 @@ describe('tree', () => {
       if (f.content) (f as any).content = f.content.toString();
       return f;
     });
+  }
+
+  function octal(value: string | number): number {
+    if (typeof value === 'string') return parseInt(value, 8);
+    return value;
   }
 });
