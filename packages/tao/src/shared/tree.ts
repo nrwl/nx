@@ -5,10 +5,23 @@ import {
   writeFileSync,
   ensureDirSync,
   removeSync,
+  chmodSync,
 } from 'fs-extra';
 import { logger } from './logger';
 import { dirname, join, relative, sep } from 'path';
 import * as chalk from 'chalk';
+
+/**
+ * Options to set when writing a file in the Virtual file system tree.
+ */
+export interface TreeWriteOptions {
+  /**
+   * Permission to be granted on the file, given as a string (e.g `755`) or octal integer (e.g `0o755`).
+   * The logical OR operator can be used to separate multiple permissions.
+   * See https://nodejs.org/api/fs.html#fs_file_modes
+   */
+  mode?: string | number;
+}
 
 /**
  * Virtual file system tree.
@@ -35,7 +48,11 @@ export interface Tree {
   /**
    * Update the contents of a file or create a new file.
    */
-  write(filePath: string, content: Buffer | string): void;
+  write(
+    filePath: string,
+    content: Buffer | string,
+    options?: TreeWriteOptions
+  ): void;
 
   /**
    * Check if a file exists.
@@ -86,11 +103,19 @@ export interface FileChange {
    * The content of the file or null in case of delete.
    */
   content: Buffer | null;
+  /**
+   * Options to set on the file being created or updated.
+   */
+  options?: TreeWriteOptions;
 }
 
 export class FsTree implements Tree {
   private recordedChanges: {
-    [path: string]: { content: Buffer | null; isDeleted: boolean };
+    [path: string]: {
+      content: Buffer | null;
+      isDeleted: boolean;
+      options?: TreeWriteOptions;
+    };
   } = {};
 
   constructor(readonly root: string, private readonly isVerbose: boolean) {}
@@ -116,7 +141,11 @@ export class FsTree implements Tree {
     }
   }
 
-  write(filePath: string, content: Buffer | string): void {
+  write(
+    filePath: string,
+    content: Buffer | string,
+    options?: TreeWriteOptions
+  ): void {
     filePath = this.normalize(filePath);
     if (
       this.fsExists(this.rp(filePath)) &&
@@ -130,6 +159,7 @@ export class FsTree implements Tree {
       this.recordedChanges[this.rp(filePath)] = {
         content: Buffer.from(content),
         isDeleted: false,
+        options,
       };
     } catch (e) {
       if (this.isVerbose) {
@@ -138,9 +168,13 @@ export class FsTree implements Tree {
     }
   }
 
-  overwrite(filePath: string, content: Buffer | string): void {
+  overwrite(
+    filePath: string,
+    content: Buffer | string,
+    options?: TreeWriteOptions
+  ): void {
     filePath = this.normalize(filePath);
-    this.write(filePath, content);
+    this.write(filePath, content, options);
   }
 
   delete(filePath: string): void {
@@ -223,12 +257,14 @@ export class FsTree implements Tree {
             path: f,
             type: 'UPDATE',
             content: this.recordedChanges[f].content,
+            options: this.recordedChanges[f].options,
           });
         } else {
           res.push({
             path: f,
             type: 'CREATE',
             content: this.recordedChanges[f].content,
+            options: this.recordedChanges[f].options,
           });
         }
       }
@@ -300,8 +336,10 @@ export function flushChanges(root: string, fileChanges: FileChange[]): void {
     if (f.type === 'CREATE') {
       ensureDirSync(dirname(fpath));
       writeFileSync(fpath, f.content);
+      if (f.options?.mode) chmodSync(fpath, f.options.mode);
     } else if (f.type === 'UPDATE') {
       writeFileSync(fpath, f.content);
+      if (f.options?.mode) chmodSync(fpath, f.options.mode);
     } else if (f.type === 'DELETE') {
       removeSync(fpath);
     }
