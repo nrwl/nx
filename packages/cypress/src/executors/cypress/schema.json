@@ -91,6 +91,12 @@
       "type": "boolean",
       "description": "Skip dev-server build.",
       "default": false
+    },
+    "testingType": {
+      "type": "string",
+      "description": "Specify the type of tests to execute",
+      "enum": ["component", "e2e"],
+      "default": "e2e"
     }
   },
   "additionalProperties": true,
