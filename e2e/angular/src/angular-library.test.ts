@@ -169,7 +169,7 @@ import { names } from '@nrwl/devkit';
 
         const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
 
-        expect(jsonFile.dependencies['tslib']).toEqual('^2.1.0');
+        expect(jsonFile.dependencies['tslib']).toEqual('^2.0.0');
         expect(jsonFile.peerDependencies[`@${proj}/${childLib}`]).toBeDefined();
         expect(
           jsonFile.peerDependencies[`@${proj}/${childLib2}`]
