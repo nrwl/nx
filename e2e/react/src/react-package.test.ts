@@ -220,7 +220,6 @@ describe('Build React libraries and apps', () => {
         expect.objectContaining({
           [`@${proj}/${childLib}`]: '0.0.1',
           [`@${proj}/${childLib2}`]: '0.0.1',
-          react: expect.anything(),
         })
       );
     });
