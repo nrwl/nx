@@ -1,7 +1,7 @@
-import { exec } from 'child_process';
+const { exec } = require('child_process');
 
 const verdacio = exec(
-  `yarn verdaccio --config ./scripts/local-registry/config.yml --listen 4872`
+  'yarn verdaccio --config ./scripts/local-registry/config.yml'
 );
 verdacio.unref();
 
@@ -16,10 +16,6 @@ function outputHandling(data) {
 
 verdacio.stdout.on('data', outputHandling);
 verdacio.stderr.on('data', outputHandling);
-verdacio.on('exit', (code) => {
-  process.exit(code);
-});
+verdacio.on('exit', (code) => process.exit(code));
 
-setTimeout(() => {
-  process.exit(0);
-}, 2000);
+setTimeout(() => process.exit(0), 2000);
