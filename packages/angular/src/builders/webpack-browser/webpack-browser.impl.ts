@@ -20,6 +20,7 @@ import { Schema } from '@angular-devkit/build-angular/src/browser/schema';
 import { switchMap } from 'rxjs/operators';
 import { existsSync } from 'fs';
 import { merge } from 'webpack-merge';
+import { SchematicsException } from '@angular-devkit/schematics';
 
 type BrowserBuilderSchema = Schema &
   JsonObject & {
@@ -35,8 +36,7 @@ function buildApp(
 ): Observable<BuilderOutput> {
   const { buildTarget, ...delegateOptions } = options;
 
-  // If we don't have a third-party builder being used
-  // And there is a path to custom webpack config
+  // If there is a path to custom webpack config
   // Invoke our own support for custom webpack config
   if (options.customWebpackConfig && options.customWebpackConfig.path) {
     const pathToWebpackConfig = joinPathFragments(
@@ -51,7 +51,9 @@ function buildApp(
         pathToWebpackConfig
       );
     } else {
-      // TODO: Throw bad config error
+      throw new SchematicsException(
+        `Custom Webpack Config File Not Found!\nTo use a custom webpack config, please ensure the path to the custom webpack file is correct: \n${pathToWebpackConfig}`
+      );
     }
   }
 
