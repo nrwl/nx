@@ -158,5 +158,10 @@
     "name": "nx-dotnet",
     "description": "Nx plugin for developing and housing .NET projects within an Nx workspace.",
     "url": "https://github.com/nx-dotnet/nx-dotnet"
+  },
+  {
+    "name": "@nxrocks/nx-quarkus",
+    "description": "Nx plugin to generate, run, package, build (and more) Quarkus projects inside your Nx workspace",
+    "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-quarkus"
   }
 ]
