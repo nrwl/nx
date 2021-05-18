@@ -15,6 +15,7 @@
     "@angular-devkit",
     "@angular-eslint/",
     "@schematics",
-    "jasmine-marbles"
+    "jasmine-marbles",
+    "webpack-merge"
   ]
 }
