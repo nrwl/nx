@@ -13,7 +13,7 @@
     "check-internal-links": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts",
     "check-versions": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/check-versions.ts",
     "check-documentation-map": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/map-link-checker.ts",
-    "e2e-start-local-registry": "ts-node -P ./scripts/tsconfig.e2e.json scripts/e2e-start-local-registry.ts",
+    "e2e-start-local-registry": "node ./scripts/e2e-start-local-registry.js",
     "e2e-build-package-publish": "ts-node -P ./scripts/tsconfig.e2e.json scripts/e2e-build-package-publish.ts",
     "format": "nx format",
     "nx-release": "./scripts/nx-release.js",

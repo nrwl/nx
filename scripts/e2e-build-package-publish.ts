@@ -1,6 +1,10 @@
 import { execSync } from 'child_process';
-import { readFileSync, removeSync, writeFileSync } from 'fs-extra';
-import { readdirSync } from 'fs';
+import { removeSync } from 'fs-extra';
+import { readFileSync, writeFileSync, readdirSync } from 'fs';
+import {
+  prettierVersion,
+  typescriptVersion,
+} from '../packages/workspace/src/utils/versions';
 
 process.env.PUBLISHED_VERSION = `9999.0.2`;
 process.env.npm_config_registry = `http://localhost:4872`;
@@ -12,7 +16,7 @@ export function buildPackagePublishAndCleanPorts() {
   removeSync('./tmp/angular/proj-backup');
   removeSync('./tmp/local-registry');
 
-  build(process.env.PUBLISHED_VERSION, '3.9.3', '2.1.2');
+  build(process.env.PUBLISHED_VERSION);
   try {
     updateVersionsAndPublishPackages();
   } catch (e) {
@@ -21,7 +25,7 @@ export function buildPackagePublishAndCleanPorts() {
   }
 }
 
-export const getDirectories = (source) =>
+export const getDirectories = (source: string) =>
   readdirSync(source, { withFileTypes: true })
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
@@ -38,13 +42,13 @@ function updateVersionsAndPublishPackages() {
   });
 }
 
-function updateVersion(packagePath) {
+function updateVersion(packagePath: string) {
   return execSync(`npm version ${process.env.PUBLISHED_VERSION}`, {
     cwd: packagePath,
   });
 }
 
-function publishPackage(packagePath, npmMajorVersion: number) {
+function publishPackage(packagePath: string, npmMajorVersion: number) {
   if (process.env.npm_config_registry.indexOf('http://localhost') === -1) {
     throw Error(`
       ------------------
@@ -79,7 +83,7 @@ function publishPackage(packagePath, npmMajorVersion: number) {
   }
 }
 
-function build(nxVersion, typescriptVersion, prettierVersion) {
+function build(nxVersion: string) {
   try {
     execSync('npx nx run-many --target=build --all', {
       stdio: ['ignore', 'ignore', 'ignore'],
@@ -133,8 +137,7 @@ function build(nxVersion, typescriptVersion, prettierVersion) {
   ].map((f) => `${BUILD_DIR}/${f}`);
 
   files.forEach((f) => {
-    let content = readFileSync(f).toString();
-    content = content
+    const content = readFileSync(f, 'utf-8')
       .replace(
         /exports.nxVersion = '\*'/g,
         `exports.nxVersion = '${nxVersion}'`
