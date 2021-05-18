@@ -198,7 +198,7 @@
     "rollup-plugin-local-resolve": "1.0.7",
     "rollup-plugin-peer-deps-external": "2.2.2",
     "rollup-plugin-postcss": "^4.0.0",
-    "rollup-plugin-typescript2": "^0.27.1",
+    "rollup-plugin-typescript2": "^0.30.0",
     "rxjs": "6.6.7",
     "rxjs-for-await": "0.0.2",
     "sass": "1.26.3",
