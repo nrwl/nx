@@ -762,7 +762,7 @@ export function wrapAngularDevkitSchematic(
     );
 
     const options = {
-      generatorOptions: { ...generatorOptions, _: [] },
+      generatorOptions,
       dryRun: true,
       interactive: false,
       help: false,
