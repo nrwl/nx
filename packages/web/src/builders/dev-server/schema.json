@@ -41,6 +41,11 @@
       "description": "Whether to reload the page on change, using live-reload.",
       "default": true
     },
+    "hmr": {
+      "type": "boolean",
+      "description": "Enable hot module replacement.",
+      "default": false
+    },
     "publicHost": {
       "type": "string",
       "description": "Public URL where the application will be served"

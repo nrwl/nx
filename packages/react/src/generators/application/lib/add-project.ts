@@ -112,10 +112,12 @@ function createServeTarget(options: NormalizedSchema): TargetConfiguration {
     executor: '@nrwl/web:dev-server',
     options: {
       buildTarget: `${options.projectName}:build`,
+      hmr: true,
     },
     configurations: {
       production: {
         buildTarget: `${options.projectName}:build:production`,
+        hmr: false,
       },
     },
   };

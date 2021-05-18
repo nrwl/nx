@@ -64,6 +64,7 @@ Options:
   --sslCert               SSL certificate to use for serving HTTPS.
   --watch                 Watches for changes and rebuilds application (default: true)
   --liveReload            Whether to reload the page on change, using live-reload. (default: true)
+  --hmr                   Enable hot module replacement.
   --publicHost            Public URL where the application will be served
   --open                  Open the application in the browser.
   --allowedHosts          This option allows you to whitelist services that are allowed to access the dev server.

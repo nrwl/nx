@@ -2,6 +2,7 @@ import { getDevServerConfig } from './devserver.config';
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import * as ts from 'typescript';
 import * as fs from 'fs';
+import { HotModuleReplacementPlugin } from 'webpack';
 import { WebBuildBuilderOptions } from '../builders/build/build.impl';
 import { WebDevServerOptions } from '../builders/dev-server/dev-server.impl';
 import { join } from 'path';
@@ -54,6 +55,7 @@ describe('getDevServerConfig', () => {
       buildTarget: 'webapp:build',
       ssl: false,
       liveReload: true,
+      hmr: true,
       open: false,
       watch: true,
       allowedHosts: null,
@@ -328,7 +330,7 @@ describe('getDevServerConfig', () => {
           root,
           sourceRoot,
           buildInput,
-          serveInput
+          { ...serveInput, hmr: false }
         );
 
         expect(result.liveReload).toEqual(true);
@@ -339,10 +341,46 @@ describe('getDevServerConfig', () => {
           root,
           sourceRoot,
           buildInput,
-          { ...serveInput, liveReload: false }
+          { ...serveInput, hmr: false, liveReload: false }
         );
 
         expect(result.liveReload).toEqual(false);
+      });
+    });
+
+    describe('hmr option', () => {
+      it('should set the correct value', () => {
+        const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
+          buildInput,
+          { ...serveInput, hmr: false }
+        );
+
+        expect(result.hot).toEqual(false);
+      });
+
+      it('should set the correct if true and disable live reload', () => {
+        const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
+          buildInput,
+          serveInput
+        );
+
+        expect(result.liveReload).toEqual(false);
+        expect(result.hot).toEqual(true);
+      });
+
+      it('should add hot module replacement plugin', () => {
+        const { plugins } = getDevServerConfig(
+          root,
+          sourceRoot,
+          buildInput,
+          serveInput
+        );
+
+        expect(plugins).toContainEqual(new HotModuleReplacementPlugin());
       });
     });
 
