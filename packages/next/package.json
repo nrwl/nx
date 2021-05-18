@@ -43,6 +43,8 @@
     "chalk": "4.1.0",
     "copy-webpack-plugin": "6.0.3",
     "fs-extra": "^9.1.0",
-    "url-loader": "^3.0.0"
+    "url-loader": "^3.0.0",
+    "tsconfig-paths": "^3.9.0",
+    "ts-node": "~9.1.1"
   }
 }

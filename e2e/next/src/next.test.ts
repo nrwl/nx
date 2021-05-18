@@ -1,16 +1,20 @@
 import { stringUtils } from '@nrwl/workspace';
 import {
   checkFilesExist,
+  createFile,
   killPorts,
   newProject,
   readFile,
   readJson,
   runCLI,
   runCLIAsync,
+  runCommandUntil,
   runCypressTests,
   uniq,
   updateFile,
+  updateWorkspaceConfig,
 } from '@nrwl/e2e/utils';
+import * as http from 'http';
 
 describe('Next.js Applications', () => {
   let proj: string;
@@ -452,7 +456,75 @@ describe('Next.js Applications', () => {
       checkE2E: false,
     });
   }, 120000);
+
+  it('should allow using a custom server implementation in TypeScript', async () => {
+    const appName = uniq('app');
+
+    // generate next.js app
+    runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
+
+    // create custom server
+    createFile(
+      'tools/custom-next-server.ts',
+      `
+      const express = require('express');
+      const path = require('path');
+      
+      export default async function nextCustomServer(app, settings, proxyConfig) {
+        const handle = app.getRequestHandler();
+        await app.prepare();
+
+        const x: string = 'custom typescript server running';
+        console.log(x);
+      
+        const server = express();
+        server.disable('x-powered-by');
+      
+        server.use(
+          express.static(path.resolve(settings.dir, settings.conf.outdir, 'public'))
+        );
+      
+        // Default catch-all handler to allow Next.js to handle all other routes
+        server.all('*', (req, res) => handle(req, res));
+      
+        server.listen(settings.port, settings.hostname);
+      }    
+    `
+    );
+
+    updateWorkspaceConfig((workspace) => {
+      workspace.projects[appName].targets.serve.options.customServerPath =
+        '../../tools/custom-next-server.ts';
+
+      return workspace;
+    });
+
+    // serve Next.js
+    const p = await runCommandUntil(`run ${appName}:serve`, (output) => {
+      return output.indexOf('custom typescript server running') > -1;
+    });
+
+    const data = await getData();
+    expect(data).toContain(`Welcome to ${appName}`);
+
+    p.kill();
+  }, 300000);
 });
+
+function getData(): Promise<any> {
+  return new Promise((resolve) => {
+    http.get('http://localhost:4200', (res) => {
+      expect(res.statusCode).toEqual(200);
+      let data = '';
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      res.once('end', () => {
+        resolve(data);
+      });
+    });
+  });
+}
 
 async function checkApp(
   appName: string,
