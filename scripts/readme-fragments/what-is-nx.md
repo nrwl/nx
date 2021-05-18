@@ -1,6 +1,6 @@
 ## What is Nx?
 
-🔎 **Powerful, Extensible Dev Tools**
+🔎 **Powerful and Extensible Build Framework**
 
 ### Use Intelligent Build System with Distributed Caching & Distributed Task Execution
 

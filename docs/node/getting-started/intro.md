@@ -1,6 +1,6 @@
 # Intro to Nx
 
-Nx is a suite of powerful, extensible dev tools that help you develop, test, build, and scale [Node](/{{framework}}/node/overview) applications.
+Nx is a powerful and extensible build framework that helps you develop, test, build, and scale [Node](/{{framework}}/node/overview) applications.
 
 ## 10-Minute Nx Overview
 
