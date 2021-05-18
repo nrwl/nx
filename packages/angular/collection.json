@@ -91,8 +91,8 @@
     },
 
     "move": {
-      "factory": "./src/schematics/move/move",
-      "schema": "./src/schematics/move/schema.json",
+      "factory": "./src/generators/move/move#angularMoveSchematic",
+      "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
       "description": "Move an Angular application or library to another folder"
     },
@@ -122,6 +122,12 @@
       "description": "Initialize the @nrwl/angular plugin",
       "aliases": ["ng-add"],
       "hidden": true
+    },
+    "move": {
+      "factory": "./src/generators/move/move#angularMoveGenerator",
+      "schema": "./src/generators/move/schema.json",
+      "aliases": ["mv"],
+      "description": "Move an Angular application or library to another folder"
     }
   }
 }
