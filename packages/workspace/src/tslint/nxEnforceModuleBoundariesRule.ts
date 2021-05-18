@@ -13,6 +13,8 @@ import {
   hasNoneOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
   isRelativeImportIntoAnotherProject,
+  MappedProjectGraph,
+  mapProjectGraphFiles,
   matchImportWithWildcard,
   onlyLoadChildren,
 } from '../utils/runtime-lint-utils';
@@ -28,7 +30,7 @@ export class Rule extends Lint.Rules.AbstractRule {
     options: IOptions,
     private readonly projectPath?: string,
     private readonly npmScope?: string,
-    private readonly projectGraph?: ProjectGraph,
+    private readonly projectGraph?: MappedProjectGraph,
     private readonly targetProjectLocator?: TargetProjectLocator
   ) {
     super(options);
@@ -38,10 +40,12 @@ export class Rule extends Lint.Rules.AbstractRule {
       if (!(global as any).projectGraph) {
         const nxJson = readNxJson();
         (global as any).npmScope = nxJson.npmScope;
-        (global as any).projectGraph = readCurrentProjectGraph();
+        (global as any).projectGraph = mapProjectGraphFiles(
+          readCurrentProjectGraph()
+        );
       }
       this.npmScope = (global as any).npmScope;
-      this.projectGraph = (global as any).projectGraph;
+      this.projectGraph = (global as any).projectGraph as MappedProjectGraph;
 
       if (!(global as any).targetProjectLocator && this.projectGraph) {
         (global as any).targetProjectLocator = new TargetProjectLocator(
@@ -109,16 +113,20 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       return;
     }
 
+    const filePath = getSourceFilePath(
+      this.getSourceFile().fileName,
+      this.projectPath
+    );
+    const sourceProject = findSourceProject(this.projectGraph, filePath);
+
     // check for relative and absolute imports
     if (
       isRelativeImportIntoAnotherProject(
         imp,
         this.projectPath,
         this.projectGraph,
-        getSourceFilePath(
-          normalize(this.getSourceFile().fileName),
-          this.projectPath
-        )
+        filePath,
+        sourceProject
       ) ||
       isAbsoluteImportIntoAnotherProject(imp)
     ) {
@@ -130,12 +138,6 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       return;
     }
 
-    const filePath = getSourceFilePath(
-      this.getSourceFile().fileName,
-      this.projectPath
-    );
-
-    const sourceProject = findSourceProject(this.projectGraph, filePath);
     const targetProject = findProjectUsingImport(
       this.projectGraph,
       this.targetProjectLocator,

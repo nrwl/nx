@@ -1,9 +1,6 @@
 import { resolveModuleByImport } from '../utilities/typescript';
-import { defaultFileRead, normalizedProjectRoot } from './file-utils';
-import {
-  ProjectGraphNode,
-  ProjectGraphNodeRecords,
-} from './project-graph/project-graph-models';
+import { normalizedProjectRoot, readFileIfExisting } from './file-utils';
+import { ProjectGraphNode } from './project-graph/project-graph-models';
 import {
   getSortedProjectNodes,
   isNpmProject,
@@ -29,14 +26,12 @@ export class TargetProjectLocator {
         } as ProjectGraphNode)
     );
   private npmProjects = this.sortedProjects.filter(isNpmProject);
-  private tsConfigPath = this.getRootTsConfigPath();
-  private absTsConfigPath = join(appRootPath, this.tsConfigPath);
-  private paths = parseJsonWithComments(defaultFileRead(this.tsConfigPath))
-    ?.compilerOptions?.paths;
+  private tsConfig = this.getRootTsConfig();
+  private paths = this.tsConfig.config?.compilerOptions?.paths;
   private typescriptResolutionCache = new Map<string, string | null>();
   private npmResolutionCache = new Map<string, string | null>();
 
-  constructor(private nodes: ProjectGraphNodeRecords) {}
+  constructor(private readonly nodes: Record<string, ProjectGraphNode>) {}
 
   /**
    * Find a project based on its import
@@ -73,6 +68,12 @@ export class TargetProjectLocator {
       }
     }
 
+    // try to find npm package before using expensive typescript resolution
+    const npmProject = this.findNpmPackage(importExpr);
+    if (npmProject || this.npmResolutionCache.has(importExpr)) {
+      return npmProject;
+    }
+
     let resolvedModule: string;
     if (this.typescriptResolutionCache.has(normalizedImportExpr)) {
       resolvedModule = this.typescriptResolutionCache.get(normalizedImportExpr);
@@ -80,7 +81,7 @@ export class TargetProjectLocator {
       resolvedModule = resolveModuleByImport(
         normalizedImportExpr,
         filePath,
-        this.absTsConfigPath
+        this.tsConfig.absolutePath
       );
       this.typescriptResolutionCache.set(
         normalizedImportExpr,
@@ -89,12 +90,13 @@ export class TargetProjectLocator {
     }
 
     // TODO: vsavkin temporary workaround. Remove it once we reworking handling of npm packages.
-    if (resolvedModule && resolvedModule.indexOf('/node_modules/') === -1) {
+    if (resolvedModule && resolvedModule.indexOf('node_modules/') === -1) {
       const resolvedProject = this.findProjectOfResolvedModule(resolvedModule);
       if (resolvedProject) {
         return resolvedProject;
       }
     }
+    // TODO: meeroslav this block should be probably removed
     const importedProject = this.sortedWorkspaceProjects.find((p) => {
       const projectImport = `@${npmScope}/${p.data.normalizedRoot}`;
       return (
@@ -102,23 +104,28 @@ export class TargetProjectLocator {
         normalizedImportExpr.startsWith(`${projectImport}/`)
       );
     });
-    if (importedProject) return importedProject.name;
+    if (importedProject) {
+      return importedProject.name;
+    }
 
-    const npmProject = this.findNpmPackage(importExpr);
-    return npmProject ? npmProject : null;
+    // nothing found, cache for later
+    this.npmResolutionCache.set(importExpr, undefined);
+    return null;
   }
 
-  private findNpmPackage(npmImport: string) {
+  private findNpmPackage(npmImport: string): string | undefined {
     if (this.npmResolutionCache.has(npmImport)) {
       return this.npmResolutionCache.get(npmImport);
     } else {
-      const pkgName = this.npmProjects.find(
+      const pkg = this.npmProjects.find(
         (pkg) =>
           npmImport === pkg.data.packageName ||
           npmImport.startsWith(`${pkg.data.packageName}/`)
-      )?.name;
-      this.npmResolutionCache.set(npmImport, pkgName);
-      return pkgName;
+      );
+      if (pkg) {
+        this.npmResolutionCache.set(npmImport, pkg.name);
+        return pkg.name;
+      }
     }
   }
 
@@ -127,15 +134,18 @@ export class TargetProjectLocator {
       return resolvedModule.startsWith(p.data.root);
     });
 
-    return importedProject?.name;
+    return importedProject ? importedProject.name : void 0;
   }
 
-  private getRootTsConfigPath() {
-    try {
-      defaultFileRead('tsconfig.base.json');
-      return 'tsconfig.base.json';
-    } catch (e) {
-      return 'tsconfig.json';
+  private getRootTsConfig() {
+    let path = 'tsconfig.base.json';
+    let absolutePath = join(appRootPath, path);
+    let content = readFileIfExisting(absolutePath);
+    if (!content) {
+      path = 'tsconfig.json';
+      absolutePath = join(appRootPath, path);
+      content = readFileIfExisting(absolutePath);
     }
+    return { path, absolutePath, config: parseJsonWithComments(content) };
   }
 }

@@ -9,8 +9,10 @@ import {
   hasNoneOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
   isRelativeImportIntoAnotherProject,
+  mapProjectGraphFiles,
   matchImportWithWildcard,
   onlyLoadChildren,
+  MappedProjectGraph,
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import {
   AST_NODE_TYPES,
@@ -20,7 +22,6 @@ import { createESLintRule } from '../utils/create-eslint-rule';
 import { normalizePath } from '@nrwl/devkit';
 import {
   isNpmProject,
-  ProjectGraph,
   ProjectType,
 } from '@nrwl/workspace/src/core/project-graph';
 import { readNxJson } from '@nrwl/workspace/src/core/file-utils';
@@ -121,7 +122,9 @@ export default createESLintRule<Options, MessageIds>({
     if (!(global as any).projectGraph) {
       const nxJson = readNxJson();
       (global as any).npmScope = nxJson.npmScope;
-      (global as any).projectGraph = readCurrentProjectGraph();
+      (global as any).projectGraph = mapProjectGraphFiles(
+        readCurrentProjectGraph()
+      );
     }
 
     if (!(global as any).projectGraph) {
@@ -129,7 +132,7 @@ export default createESLintRule<Options, MessageIds>({
     }
 
     const npmScope = (global as any).npmScope;
-    const projectGraph = (global as any).projectGraph as ProjectGraph;
+    const projectGraph = (global as any).projectGraph as MappedProjectGraph;
 
     if (!(global as any).targetProjectLocator) {
       (global as any).targetProjectLocator = new TargetProjectLocator(
@@ -159,23 +162,25 @@ export default createESLintRule<Options, MessageIds>({
 
       const imp = node.source.value as string;
 
-      const sourceFilePath = getSourceFilePath(
-        normalizePath(context.getFilename()),
-        projectPath
-      );
-
       // whitelisted import
       if (allow.some((a) => matchImportWithWildcard(a, imp))) {
         return;
       }
 
+      const sourceFilePath = getSourceFilePath(
+        context.getFilename(),
+        projectPath
+      );
+
       // check for relative and absolute imports
+      const sourceProject = findSourceProject(projectGraph, sourceFilePath);
       if (
         isRelativeImportIntoAnotherProject(
           imp,
           projectPath,
           projectGraph,
-          sourceFilePath
+          sourceFilePath,
+          sourceProject
         ) ||
         isAbsoluteImportIntoAnotherProject(imp)
       ) {
@@ -189,7 +194,6 @@ export default createESLintRule<Options, MessageIds>({
         return;
       }
 
-      const sourceProject = findSourceProject(projectGraph, sourceFilePath);
       const targetProject = findProjectUsingImport(
         projectGraph,
         targetProjectLocator,

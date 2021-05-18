@@ -151,7 +151,7 @@ function getIgnoredGlobs() {
   return ig;
 }
 
-function readFileIfExisting(path: string) {
+export function readFileIfExisting(path: string) {
   return existsSync(path) ? readFileSync(path, 'utf-8') : '';
 }
 
