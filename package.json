@@ -1,7 +1,7 @@
 {
   "name": "@nrwl/nx-source",
   "version": "12.3.0",
-  "description": "Powerful, Extensible Dev Tools",
+  "description": "Powerful and Extensible Build Framework",
   "homepage": "https://nx.dev",
   "private": true,
   "scripts": {

@@ -71,7 +71,7 @@ export function Index() {
         <div className="max-w-screen xl:max-w-screen-xl mx-auto px-5 py-5">
           <div className="mt-40">
             <h1 className="text-4xl sm:text-6xl lg:text-7xl leading none font-extrabold tracking-tight text-gray-900 mt-10 mb-8 sm:mt-14 sm:mb-10">
-              Extensible Dev Tools <br /> for Monorepos.
+              Powerful and Extensible Build Framework
             </h1>
             <p className="max-w-screen-lg text-lg sm:text-2xl sm:leading-10 font-medium mb-10 sm:mb-11">
               Build full-stack applications with modern tools and reinforce best
@@ -152,7 +152,7 @@ export function Index() {
                 Frameworks Agnostic
               </h2>
               <p className="sm:text-lg mb-6">
-                Nx is a suite of powerful, extensible dev tools to help you
+                Nx is a powerful and extensible build framework to help you
                 architect, test, and build at any scale — integrating seamlessly
                 with modern technologies and libraries while providing a robust
                 CLI, caching, dependency management, and more.
