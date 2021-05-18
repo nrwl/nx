@@ -31,8 +31,13 @@
   </svg>
 
   <div id="app">
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
       <div class="sidebar-content">
+        <a
+          href="javascript:;"
+          class="sidebar-hide-button"
+          id="sidebar-toggle-button"
+        ></a>
         <div class="sidebar-section" id="focused-project"></div>
 
         <div class="sidebar-section" id="display-options-panel"></div>
@@ -51,7 +56,6 @@
       <div id="graph-container"></div>
     </div>
   </div>
-
   <script>
     window.projects = [];
     window.graph = {};
