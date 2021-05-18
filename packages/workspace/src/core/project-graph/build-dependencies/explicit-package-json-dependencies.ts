@@ -5,7 +5,7 @@ import {
   ProjectGraphNodeRecords,
 } from '../project-graph-models';
 import { defaultFileRead } from '../../file-utils';
-import { parseJsonWithComments } from '@nrwl/workspace/src/utilities/fileutils';
+import { parseJsonWithComments } from '../../../utilities/fileutils';
 import { joinPathFragments } from '@nrwl/devkit';
 
 export function buildExplicitPackageJsonDependencies(

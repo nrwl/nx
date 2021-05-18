@@ -2,7 +2,7 @@ import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import { ChildProcess, fork } from 'child_process';
 import * as dotenv from 'dotenv';
 import { readFileSync, writeFileSync } from 'fs';
-import { ProjectGraph } from '../core/project-graph';
+import type { ProjectGraph } from '@nrwl/devkit';
 import { appRootPath } from '../utilities/app-root';
 import { output, TaskCacheStatus } from '../utilities/output';
 import { Cache, TaskWithCachedResult } from './cache';

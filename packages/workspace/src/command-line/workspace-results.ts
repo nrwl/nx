@@ -5,9 +5,9 @@ import {
 } from '../utilities/fileutils';
 import { existsSync, unlinkSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
-import { ProjectGraphNode } from '../core/project-graph';
+import type { ProjectGraphNode } from '@nrwl/devkit';
 import { join } from 'path';
-import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
+import { appRootPath } from '../utilities/app-root';
 import {
   cacheDirectory,
   readCacheDirectoryProperty,

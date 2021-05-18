@@ -1,17 +1,20 @@
 import { toOldFormatOrNull, Workspaces } from '@nrwl/tao/src/shared/workspace';
-import { FileData, NxJsonConfiguration } from '@nrwl/devkit';
+import type {
+  FileData,
+  NxJsonConfiguration,
+  ProjectGraphNode,
+} from '@nrwl/devkit';
 import { execSync } from 'child_process';
 import { readFileSync, readdirSync, existsSync, statSync } from 'fs';
 import { extname, join, relative, sep } from 'path';
 import { performance } from 'perf_hooks';
-import { NxArgs } from '../command-line/utils';
+import type { NxArgs } from '../command-line/utils';
 import { WorkspaceResults } from '../command-line/workspace-results';
 import { appRootPath } from '../utilities/app-root';
 import { fileExists, readJsonFile } from '../utilities/fileutils';
 import { jsonDiff } from '../utilities/json-diff';
 import { defaultFileHasher } from './hasher/file-hasher';
-import { ProjectGraphNode } from './project-graph';
-import { Environment } from './shared-interfaces';
+import type { Environment } from './shared-interfaces';
 
 const ignore = require('ignore');
 

@@ -1,17 +1,11 @@
 import { Observable } from 'rxjs';
-import {
-  AffectedEventType,
-  Task,
-  TaskCompleteEvent,
-  TasksRunner,
-} from './tasks-runner';
-import { ProjectGraph } from '../core/project-graph';
-import { NxJson } from '../core/shared-interfaces';
+import { Task, TaskCompleteEvent, TasksRunner } from './tasks-runner';
+import type { ProjectGraph, NxJsonConfiguration } from '@nrwl/devkit';
 import { TaskOrchestrator } from './task-orchestrator';
 import { getDefaultDependencyConfigs } from './utils';
 import { performance } from 'perf_hooks';
 import { TaskGraphCreator } from './task-graph-creator';
-import { Hasher } from '@nrwl/workspace/src/core/hasher/hasher';
+import { Hasher } from '../core/hasher/hasher';
 
 export interface RemoteCache {
   retrieve: (hash: string, cacheDirectory: string) => Promise<boolean>;
@@ -55,7 +49,7 @@ export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
     target: string;
     initiatingProject?: string;
     projectGraph: ProjectGraph;
-    nxJson: NxJson;
+    nxJson: NxJsonConfiguration;
     hideCachedOutput?: boolean;
   }
 ): Observable<TaskCompleteEvent> => {
@@ -97,7 +91,7 @@ async function runAllTasks(
   context: {
     initiatingProject?: string;
     projectGraph: ProjectGraph;
-    nxJson: NxJson;
+    nxJson: NxJsonConfiguration;
     hideCachedOutput?: boolean;
   }
 ): Promise<Array<{ task: Task; type: any; success: boolean }>> {

@@ -3,12 +3,13 @@ import { join } from 'path';
 import { appRootPath } from '../utilities/app-root';
 import { Reporter, ReporterArgs } from './reporter';
 import * as yargs from 'yargs';
-import {
+import type {
   ProjectGraph,
   ProjectGraphNode,
   TargetDependencyConfig,
+  NxJsonConfiguration,
 } from '@nrwl/devkit';
-import { Environment, NxJson } from '../core/shared-interfaces';
+import { Environment } from '../core/shared-interfaces';
 import { NxArgs } from '@nrwl/workspace/src/command-line/utils';
 import { isRelativePath } from '../utilities/fileutils';
 import {
@@ -340,7 +341,7 @@ function getId({
 
 export function getRunner(
   nxArgs: NxArgs,
-  nxJson: NxJson
+  nxJson: NxJsonConfiguration
 ): {
   tasksRunner: TasksRunner;
   runnerOptions: unknown;

@@ -1,7 +1,4 @@
-import {
-  ProjectGraph,
-  ProjectGraphNode,
-} from '../core/project-graph/project-graph-models';
+import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
 import { isWorkspaceProject } from '../core/project-graph/operators';
 
 interface Reach {

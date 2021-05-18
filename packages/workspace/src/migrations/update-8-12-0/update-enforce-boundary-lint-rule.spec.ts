@@ -5,7 +5,7 @@ import {
   _test_addWorkspaceFile,
   WorkspaceFormat,
 } from '@angular-devkit/core/src/workspace/core';
-import { NxJson } from '../../core/shared-interfaces';
+import type { NxJsonConfiguration } from '@nrwl/devkit';
 
 describe('Add update-enforce-boundary-lint rule', () => {
   let tree: Tree;
@@ -31,7 +31,7 @@ describe('Add update-enforce-boundary-lint rule', () => {
     );
     tree.create(
       '/nx.json',
-      JSON.stringify(<NxJson>{ npmScope: 'proj', projects: {} })
+      JSON.stringify(<NxJsonConfiguration>{ npmScope: 'proj', projects: {} })
     );
     tree.create(
       '/tsconfig.json',

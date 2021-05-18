@@ -1,9 +1,9 @@
 import { FileData, filesChanged } from '../file-utils';
-import {
+import type {
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphNode,
-} from '../project-graph';
+} from '@nrwl/devkit';
 import { join } from 'path';
 import { appRootPath } from '../../utilities/app-root';
 import { existsSync } from 'fs';
@@ -14,7 +14,7 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '../../utilities/fileutils';
-import { ProjectFileMap } from '@nrwl/workspace/src/core/file-graph';
+import type { ProjectFileMap } from '../file-graph';
 import { performance } from 'perf_hooks';
 import {
   cacheDirectory,

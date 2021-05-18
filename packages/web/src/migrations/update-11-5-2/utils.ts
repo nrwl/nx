@@ -1,6 +1,4 @@
-import { ProjectGraph } from '@nrwl/workspace';
-import { getProjects } from '@nrwl/devkit';
-import { DependencyType } from '@nrwl/workspace/src/core/project-graph';
+import { getProjects, ProjectGraph, DependencyType } from '@nrwl/devkit';
 
 const cache = new Map<string, boolean>();
 

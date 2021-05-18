@@ -1,7 +1,6 @@
 import { readJson, Tree, updateJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-
-import { NxJson } from '../../core/shared-interfaces';
+import { NxJsonConfiguration } from '@nrwl/devkit';
 
 import { libraryGenerator } from './library';
 import { Schema } from './schema.d';
@@ -42,7 +41,7 @@ describe('lib', () => {
         name: 'myLib',
         tags: 'one,two',
       });
-      const nxJson = readJson<NxJson>(tree, '/nx.json');
+      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-lib': {
           tags: ['one', 'two'],
@@ -170,7 +169,7 @@ describe('lib', () => {
         directory: 'myDir',
         tags: 'one',
       });
-      const nxJson = readJson<NxJson>(tree, '/nx.json');
+      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-dir-my-lib': {
           tags: ['one'],
@@ -184,7 +183,7 @@ describe('lib', () => {
         tags: 'one,two',
         simpleModuleName: true,
       });
-      const nxJson2 = readJson<NxJson>(tree, '/nx.json');
+      const nxJson2 = readJson<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson2.projects).toEqual({
         'my-dir-my-lib': {
           tags: ['one'],

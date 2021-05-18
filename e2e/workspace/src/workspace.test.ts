@@ -1,4 +1,4 @@
-import { NxJson } from '@nrwl/workspace';
+import type { NxJsonConfiguration } from '@nrwl/devkit';
 import {
   getPackageManagerCommand,
   getSelectedPackageManager,
@@ -475,7 +475,7 @@ describe('affected (with git)', () => {
   afterAll(() => removeProject({ onlyOnCI: true }));
 
   it('should not affect other projects by generating a new project', () => {
-    const nxJson: NxJson = readJson('nx.json');
+    const nxJson: NxJsonConfiguration = readJson('nx.json');
 
     delete nxJson.implicitDependencies;
 
@@ -503,7 +503,7 @@ describe('affected (with git)', () => {
   }, 1000000);
 
   it('should detect changes to projects based on the nx.json', () => {
-    const nxJson: NxJson = readJson('nx.json');
+    const nxJson: NxJsonConfiguration = readJson('nx.json');
 
     nxJson.projects[myapp].tags = ['tag'];
     updateFile('nx.json', JSON.stringify(nxJson));

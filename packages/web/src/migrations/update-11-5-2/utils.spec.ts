@@ -1,9 +1,5 @@
-import { getProjects } from '@nrwl/devkit';
-import { ProjectGraph } from '@nrwl/workspace';
-import {
-  DependencyType,
-  reverse,
-} from '@nrwl/workspace/src/core/project-graph';
+import { getProjects, ProjectGraph, DependencyType } from '@nrwl/devkit';
+import { reverse } from '@nrwl/workspace/src/core/project-graph';
 import { hasDependentAppUsingWebBuild } from '@nrwl/web/src/migrations/update-11-5-2/utils';
 
 describe('hasDependentAppUsingWebBuild', () => {

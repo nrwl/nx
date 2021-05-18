@@ -1,8 +1,8 @@
 import { TasksRunner } from './tasks-runner';
 import defaultTaskRunner from './default-tasks-runner';
 import { createTasksForProjectToRun, getRunner } from './run-command';
-import { NxJson } from '../core/shared-interfaces';
-import { DependencyType, ProjectGraph } from '@nrwl/devkit';
+import { DependencyType } from '@nrwl/devkit';
+import type { ProjectGraph, NxJsonConfiguration } from '@nrwl/devkit';
 
 describe('createTasksForProjectToRun', () => {
   let projectGraph: ProjectGraph;
@@ -477,7 +477,7 @@ describe('createTasksForProjectToRun', () => {
 });
 
 describe('getRunner', () => {
-  let nxJson: NxJson;
+  let nxJson: NxJsonConfiguration;
   let mockRunner: TasksRunner;
   let overrides: any;
 

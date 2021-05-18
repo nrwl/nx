@@ -19,8 +19,8 @@ import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
 import { parseFiles } from './shared';
 import { NxArgs, RawNxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
 import { performance } from 'perf_hooks';
-import { Environment } from '@nrwl/workspace/src/core/shared-interfaces';
-import { EmptyReporter } from '@nrwl/workspace/src/tasks-runner/empty-reporter';
+import type { Environment } from '../core/shared-interfaces';
+import { EmptyReporter } from '../tasks-runner/empty-reporter';
 
 export async function affected(
   command: 'apps' | 'libs' | 'dep-graph' | 'print-affected' | 'affected',

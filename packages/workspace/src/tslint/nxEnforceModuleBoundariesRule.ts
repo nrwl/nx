@@ -1,7 +1,12 @@
 import * as Lint from 'tslint';
 import { IOptions } from 'tslint';
 import * as ts from 'typescript';
-import { isNpmProject, ProjectGraph, ProjectType } from '../core/project-graph';
+import type { ProjectGraph } from '@nrwl/devkit';
+import {
+  isNpmProject,
+  ProjectType,
+  readCurrentProjectGraph,
+} from '../core/project-graph';
 import { appRootPath } from '../utilities/app-root';
 import {
   DepConstraint,
@@ -19,10 +24,9 @@ import {
   onlyLoadChildren,
 } from '../utils/runtime-lint-utils';
 import { normalize } from 'path';
-import { readNxJson } from '@nrwl/workspace/src/core/file-utils';
+import { readNxJson } from '../core/file-utils';
 import { TargetProjectLocator } from '../core/target-project-locator';
-import { checkCircularPath } from '@nrwl/workspace/src/utils/graph-utils';
-import { readCurrentProjectGraph } from '@nrwl/workspace/src/core/project-graph/project-graph';
+import { checkCircularPath } from '../utils/graph-utils';
 import { isRelativePath } from '../utilities/fileutils';
 
 export class Rule extends Lint.Rules.AbstractRule {

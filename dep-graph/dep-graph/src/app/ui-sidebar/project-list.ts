@@ -1,4 +1,4 @@
-import { ProjectGraphNode } from '@nrwl/workspace';
+import type { ProjectGraphNode } from '@nrwl/devkit';
 import { Subject } from 'rxjs';
 import {
   parseParentDirectoriesFromPilePath,
