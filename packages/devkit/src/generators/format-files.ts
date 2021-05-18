@@ -63,7 +63,7 @@ function updateWorkspaceJsonToMatchFormatVersion(host: Tree) {
 
   try {
     const workspaceJson = JSON.parse(
-      stripJsonComments(host.read(path).toString())
+      stripJsonComments(host.read(path, 'utf-8'))
     );
     const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
     if (reformatted) {

@@ -72,14 +72,14 @@ export function createComponentStoriesFile(
 
   const name = componentFileName;
 
-  const contents = host.read(componentFilePath);
-  if (!contents) {
+  const contents = host.read(componentFilePath, 'utf-8');
+  if (contents === null) {
     throw new Error(`Failed to read ${componentFilePath}`);
   }
 
   const sourceFile = ts.createSourceFile(
     componentFilePath,
-    contents.toString(),
+    contents,
     ts.ScriptTarget.Latest,
     true
   );

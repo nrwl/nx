@@ -68,7 +68,7 @@ function updateJestConfig(tree: Tree) {
         const { sourceRoot } = readProjectConfiguration(tree, projectName);
         const setupTestPath = join(sourceRoot, 'test-setup.ts');
         if (tree.exists(setupTestPath)) {
-          const contents = tree.read(setupTestPath).toString();
+          const contents = tree.read(setupTestPath, 'utf-8');
           tree.write(
             setupTestPath,
             contents.replace(

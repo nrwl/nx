@@ -363,7 +363,7 @@ function readComponent(
     throw new Error(`Cannot find ${path}`);
   }
 
-  const content = host.read(path).toString('utf-8');
+  const content = host.read(path, 'utf-8');
 
   const source = ts.createSourceFile(
     path,

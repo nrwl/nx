@@ -50,7 +50,7 @@ describe('react:component-story', () => {
       });
 
       it('should properly set up the story', () => {
-        expect(formatFile`${appTree.read(storyFilePath).toString()}`)
+        expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
           .toContain(formatFile`
             import React from 'react';
             import { TestUiLib, TestUiLibProps } from './test-ui-lib';
@@ -104,7 +104,7 @@ describe('react:component-story', () => {
       });
 
       it('should properly set up the story', () => {
-        expect(formatFile`${appTree.read(storyFilePathPlain).toString()}`)
+        expect(formatFile`${appTree.read(storyFilePathPlain, 'utf-8')}`)
           .toContain(formatFile`
             import React from 'react';
             import { Test } from './test-ui-libplain';
@@ -151,7 +151,7 @@ describe('react:component-story', () => {
       });
 
       it('should create a story without knobs', () => {
-        expect(formatFile`${appTree.read(storyFilePath).toString()}`)
+        expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
           .toContain(formatFile`
             import React from 'react';
             import { Test } from './test-ui-lib';
@@ -200,7 +200,7 @@ describe('react:component-story', () => {
       });
 
       it('should setup knobs based on the component props', () => {
-        expect(formatFile`${appTree.read(storyFilePath).toString()}`)
+        expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
           .toContain(formatFile`
             import { text, boolean } from '@storybook/addon-knobs';
             import React from 'react';
@@ -357,7 +357,7 @@ describe('react:component-story', () => {
         });
 
         it('should properly setup the knobs based on the component props', () => {
-          expect(formatFile`${appTree.read(storyFilePath).toString()}`)
+          expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
             .toContain(formatFile`
             import { text, boolean } from '@storybook/addon-knobs';
             import React from 'react';
@@ -392,7 +392,7 @@ describe('react:component-story', () => {
     });
 
     it('should properly set up the story', () => {
-      expect(formatFile`${appTree.read(storyFilePath).toString()}`)
+      expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
         .toContain(formatFile`
           import React from 'react';
           import { TestUiLib, TestUiLibProps } from './test-ui-lib';

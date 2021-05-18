@@ -24,9 +24,10 @@ export function installPackagesTask(
   cwd: string = '',
   packageManager?: PackageManager
 ) {
-  const packageJsonValue = host
-    .read(joinPathFragments(cwd, 'package.json'))
-    .toString();
+  const packageJsonValue = host.read(
+    joinPathFragments(cwd, 'package.json'),
+    'utf-8'
+  );
   if (
     host
       .listChanges()
@@ -35,9 +36,10 @@ export function installPackagesTask(
   ) {
     // Don't install again if install was already executed with package.json
     if (storedPackageJsonValue != packageJsonValue || alwaysRun) {
-      storedPackageJsonValue = host
-        .read(joinPathFragments(cwd, 'package.json'))
-        .toString();
+      storedPackageJsonValue = host.read(
+        joinPathFragments(cwd, 'package.json'),
+        'utf-8'
+      );
       const pm = packageManager || detectPackageManager(cwd);
       const pmc = getPackageManagerCommand(pm);
       execSync(pmc.install, {

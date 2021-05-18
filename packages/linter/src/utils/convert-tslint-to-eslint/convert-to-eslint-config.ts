@@ -215,9 +215,9 @@ export function convertTSLintDisableCommentsForProject(
     if (!filePath.endsWith('.ts')) {
       return;
     }
-    const fileContent = tree.read(filePath)!.toString('utf-8');
+    const fileContent = tree.read(filePath, 'utf-8');
     // Avoid updating files if we don't have to
-    if (!likelyContainsTSLintComment(fileContent)) {
+    if (!fileContent || !likelyContainsTSLintComment(fileContent)) {
       return;
     }
     const updatedFileContent = convertFileComments({ fileContent, filePath });

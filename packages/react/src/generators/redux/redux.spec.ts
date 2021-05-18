@@ -71,7 +71,7 @@ describe('redux', () => {
         appProject: 'my-app',
       });
 
-      const main = appTree.read('/apps/my-app/src/main.tsx').toString();
+      const main = appTree.read('/apps/my-app/src/main.tsx', 'utf-8');
       expect(main).toContain('@reduxjs/toolkit');
       expect(main).toContain('configureStore');
       expect(main).toContain('[THIRD_SLICE_FEATURE_KEY]: thirdSliceReducer,');

@@ -18,7 +18,7 @@ describe('@nrwl/linter:init', () => {
           linter: Linter.EsLint,
         });
 
-        expect(tree.read('.eslintrc.json').toString()).toMatchSnapshot();
+        expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
       });
     });
 
@@ -28,7 +28,7 @@ describe('@nrwl/linter:init', () => {
           linter: Linter.TsLint,
         });
 
-        expect(tree.read('tslint.json').toString()).toMatchSnapshot();
+        expect(tree.read('tslint.json', 'utf-8')).toMatchSnapshot();
       });
     });
   });

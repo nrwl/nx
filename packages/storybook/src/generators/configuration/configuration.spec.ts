@@ -97,7 +97,7 @@ describe('@nrwl/storybook:configuration', () => {
       uiFramework: '@storybook/angular',
     });
 
-    expect(tree.read('.storybook/main.js').toString()).toEqual(newContents);
+    expect(tree.read('.storybook/main.js', 'utf-8')).toEqual(newContents);
   });
 
   it('should update workspace file', async () => {

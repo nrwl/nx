@@ -38,7 +38,7 @@ describe('updateProjectRootFiles', () => {
 
     updateProjectRootFiles(tree, schema, projectConfig);
 
-    const testFileAfter = tree.read(testFilePath).toString();
+    const testFileAfter = tree.read(testFilePath, 'utf-8');
     expect(testFileAfter).toContain(`preset: '../../../jest.config.js'`);
     expect(testFileAfter).toContain(
       `coverageDirectory: '../../../coverage/libs/my-source'`

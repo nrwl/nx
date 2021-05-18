@@ -629,7 +629,7 @@ function convertEventTypeToHandleMultipleConfigNames(
     let isNewFormat = true;
     try {
       isNewFormat =
-        JSON.parse(host.read(actualConfigName).toString()).version === 2;
+        JSON.parse(host.read(actualConfigName, 'utf-8')).version === 2;
     } catch (e) {}
 
     if (content && isNewFormat) {

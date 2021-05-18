@@ -40,7 +40,7 @@ describe('updateImports', () => {
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     updateImports(tree, schema, projectConfig);
 
-    expect(tree.read(importerFilePath).toString()).toMatchSnapshot();
+    expect(tree.read(importerFilePath, 'utf-8')).toMatchSnapshot();
   });
 
   /**
@@ -77,15 +77,15 @@ describe('updateImports', () => {
       projectConfig
     );
 
-    expect(tree.read(importerFilePath).toString()).toContain(
+    expect(tree.read(importerFilePath, 'utf-8')).toContain(
       `import { Table } from '@proj/table';`
     );
 
-    expect(tree.read(importerFilePath).toString()).toContain(
+    expect(tree.read(importerFilePath, 'utf-8')).toContain(
       `import { Tab } from '@proj/tabs';`
     );
 
-    expect(tree.read(importerFilePath).toString()).toMatchSnapshot();
+    expect(tree.read(importerFilePath, 'utf-8')).toMatchSnapshot();
   });
 
   it('should correctly update deep imports', async () => {
@@ -117,15 +117,15 @@ describe('updateImports', () => {
       projectConfig
     );
 
-    expect(tree.read(importerFilePath).toString()).toContain(
+    expect(tree.read(importerFilePath, 'utf-8')).toContain(
       `import { Table } from '@proj/table/components';`
     );
 
-    expect(tree.read(importerFilePath).toString()).toContain(
+    expect(tree.read(importerFilePath, 'utf-8')).toContain(
       `import { Tab } from '@proj/tabs/components';`
     );
 
-    expect(tree.read(importerFilePath).toString()).toMatchSnapshot();
+    expect(tree.read(importerFilePath, 'utf-8')).toMatchSnapshot();
   });
 
   it('should update dynamic imports', async () => {
@@ -156,23 +156,23 @@ describe('updateImports', () => {
       projectConfig
     );
 
-    expect(tree.read(importerFilePath).toString()).toContain(
+    expect(tree.read(importerFilePath, 'utf-8')).toContain(
       `import('@proj/table').then(m => m.Table);`
     );
 
-    expect(tree.read(importerFilePath).toString()).toContain(
+    expect(tree.read(importerFilePath, 'utf-8')).toContain(
       `import('@proj/table/components').then(m => m.Table);`
     );
 
-    expect(tree.read(importerFilePath).toString()).toContain(
+    expect(tree.read(importerFilePath, 'utf-8')).toContain(
       `import('@proj/tabs').then(m => m.Tab);`
     );
 
-    expect(tree.read(importerFilePath).toString()).toContain(
+    expect(tree.read(importerFilePath, 'utf-8')).toContain(
       `import('@proj/tabs/components').then(m => m.Tab);`
     );
 
-    expect(tree.read(importerFilePath).toString()).toMatchSnapshot();
+    expect(tree.read(importerFilePath, 'utf-8')).toMatchSnapshot();
   });
   //
   // it('should update require imports', async () => {

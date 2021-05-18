@@ -294,7 +294,7 @@ describe('lib', () => {
         appTree.exists('libs/my-lib/src/lib/my-lib.module.styl')
       ).toBeFalsy();
 
-      const content = appTree.read('libs/my-lib/src/lib/my-lib.tsx').toString();
+      const content = appTree.read('libs/my-lib/src/lib/my-lib.tsx', 'utf-8');
       expect(content).not.toContain('styled-components');
       expect(content).not.toContain('<StyledApp>');
       expect(content).not.toContain('@emotion/styled');
@@ -361,8 +361,8 @@ describe('lib', () => {
         appProject: 'my-app',
       });
 
-      const appSource = appTree.read('apps/my-app/src/app/app.tsx').toString();
-      const mainSource = appTree.read('apps/my-app/src/main.tsx').toString();
+      const appSource = appTree.read('apps/my-app/src/app/app.tsx', 'utf-8');
+      const mainSource = appTree.read('apps/my-app/src/main.tsx', 'utf-8');
 
       expect(mainSource).toContain('react-router-dom');
       expect(mainSource).toContain('<BrowserRouter>');
@@ -387,8 +387,8 @@ describe('lib', () => {
         appProject: 'my-app',
       });
 
-      const appSource = appTree.read('apps/my-app/src/app/app.tsx').toString();
-      const mainSource = appTree.read('apps/my-app/src/main.tsx').toString();
+      const appSource = appTree.read('apps/my-app/src/app/app.tsx', 'utf-8');
+      const mainSource = appTree.read('apps/my-app/src/main.tsx', 'utf-8');
 
       expect(mainSource).toContain('react-router-dom');
       expect(mainSource).toContain('<BrowserRouter>');
@@ -621,7 +621,7 @@ describe('lib', () => {
       });
 
       expect(() => {
-        JSON.parse(appTree.read(`libs/my-lib/.babelrc`).toString());
+        readJson(appTree, `libs/my-lib/.babelrc`);
       }).not.toThrow();
     }
   );

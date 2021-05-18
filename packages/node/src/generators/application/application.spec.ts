@@ -330,7 +330,7 @@ describe('app', () => {
         babelJest: true,
       } as Schema);
 
-      expect(tree.read(`apps/my-node-app/jest.config.js`).toString())
+      expect(tree.read(`apps/my-node-app/jest.config.js`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
           displayName: 'my-node-app',

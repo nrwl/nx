@@ -110,7 +110,7 @@ describe('lib', () => {
       });
 
       expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
-      expect(tree.read(`libs/my-lib/jest.config.js`).toString())
+      expect(tree.read(`libs/my-lib/jest.config.js`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
           displayName: 'my-lib',
@@ -134,7 +134,7 @@ describe('lib', () => {
       expect(tree.exists('libs/my-lib/README.md')).toBeTruthy();
       expect(tree.exists('libs/my-lib/package.json')).toBeFalsy();
 
-      const ReadmeContent = tree.read('libs/my-lib/README.md').toString();
+      const ReadmeContent = tree.read('libs/my-lib/README.md', 'utf-8');
       expect(ReadmeContent).toContain('nx test my-lib');
     });
 
@@ -144,7 +144,7 @@ describe('lib', () => {
         name: 'myLib',
       });
 
-      expect(tree.read('jest.config.js').toString()).toMatchInlineSnapshot(`
+      expect(tree.read('jest.config.js', 'utf-8')).toMatchInlineSnapshot(`
         "module.exports = {
         projects: [\\"<rootDir>/libs/my-lib\\"]
         };"
@@ -154,7 +154,7 @@ describe('lib', () => {
         name: 'myLib2',
       });
 
-      expect(tree.read('jest.config.js').toString()).toMatchInlineSnapshot(`
+      expect(tree.read('jest.config.js', 'utf-8')).toMatchInlineSnapshot(`
         "module.exports = {
         projects: [\\"<rootDir>/libs/my-lib\\",\\"<rootDir>/libs/my-lib2\\"]
         };"
@@ -714,7 +714,7 @@ describe('lib', () => {
         babelJest: true,
       } as Schema);
 
-      expect(tree.read(`libs/my-lib/jest.config.js`).toString())
+      expect(tree.read(`libs/my-lib/jest.config.js`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "module.exports = {
           displayName: 'my-lib',

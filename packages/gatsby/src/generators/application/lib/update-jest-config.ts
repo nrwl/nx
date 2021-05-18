@@ -8,7 +8,7 @@ export function updateJestConfig(host: Tree, options: NormalizedSchema) {
   }
 
   const configPath = `${options.projectRoot}/jest.config.js`;
-  const originalContent = host.read(configPath).toString();
+  const originalContent = host.read(configPath, 'utf-8');
   const content = updateJestConfigContent(originalContent);
   host.write(configPath, content);
 }

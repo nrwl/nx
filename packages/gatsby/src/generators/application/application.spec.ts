@@ -208,7 +208,7 @@ describe('app', () => {
       style: 'css',
     });
 
-    expect(tree.read('apps/my-app/jest.config.js').toString('utf-8')).toContain(
+    expect(tree.read('apps/my-app/jest.config.js', 'utf-8')).toContain(
       `moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],`
     );
   });
@@ -219,7 +219,7 @@ describe('app', () => {
       style: 'css',
     });
 
-    expect(tree.read('apps/my-app/jest.config.js').toString('utf-8')).toContain(
+    expect(tree.read('apps/my-app/jest.config.js', 'utf-8')).toContain(
       `'^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest'`
     );
   });
@@ -281,7 +281,7 @@ describe('app', () => {
   it('should generate an index component', async () => {
     await applicationGenerator(tree, { name: 'myApp', style: 'css' });
 
-    const appContent = tree.read('apps/my-app/src/pages/index.tsx').toString();
+    const appContent = tree.read('apps/my-app/src/pages/index.tsx', 'utf-8');
 
     expect(appContent).not.toMatch(/extends Component/);
   });

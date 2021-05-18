@@ -111,9 +111,8 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
       options.projectSourceRoot,
       options.js ? 'index.js' : 'index.ts'
     );
-    const buffer = host.read(indexFilePath);
-    if (!!buffer) {
-      const indexSource = buffer.toString('utf-8');
+    const indexSource = host.read(indexFilePath, 'utf-8');
+    if (indexSource !== null) {
       const indexSourceFile = ts.createSourceFile(
         indexFilePath,
         indexSource,
