@@ -12,7 +12,7 @@ jobs:
         node_version:
           # - 12.x
           - 14.x
-          - 15.x
+          # - 15.x
         package_manager:
           - npm
           - yarn
@@ -47,7 +47,7 @@ jobs:
         version: 5.18.9
 
     - name: Run e2e tests
-      run: yarn nx run-many --target=e2e --projects=${{ matrix.packages }} --ignore-engines
+      run: yarn nx run-many --target=e2e --projects=${{ matrix.packages }}
       env:
         GIT_AUTHOR_NAME: test@test.com
         GIT_AUTHOR_EMAIL: Test
