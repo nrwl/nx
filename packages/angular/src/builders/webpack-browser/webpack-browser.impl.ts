@@ -28,13 +28,8 @@ function buildApp(
 ): Promise<BuilderRun> {
   const { buildTarget, ...delegateOptions } = options;
 
-  // delete targetBuilder from options before passing into scheduleBuilder
-  const targetBuilder =
-    (delegateOptions.targetBuilder as string) || buildTarget;
-  delete delegateOptions.targetBuilder;
-
   if (buildTarget) {
-    const target = targetFromTargetString(targetBuilder);
+    const target = targetFromTargetString(buildTarget);
     return context.scheduleTarget(target, delegateOptions, {
       target: context.target,
       logger: context.logger as any,

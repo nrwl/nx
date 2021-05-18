@@ -12,7 +12,7 @@ import {
 } from '@nrwl/e2e/utils';
 import { writeFileSync } from 'fs';
 
-describe('Storybook schematics', () => {
+xdescribe('Storybook schematics', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
