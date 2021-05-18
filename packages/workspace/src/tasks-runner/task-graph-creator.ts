@@ -1,7 +1,6 @@
-import { ProjectGraph } from '../core/project-graph';
+import type { ProjectGraph, TargetDependencyConfig } from '@nrwl/devkit';
 import { Task } from './tasks-runner';
 import { getDependencyConfigs } from './utils';
-import { TargetDependencyConfig } from '@nrwl/tao/src/shared/workspace';
 
 export interface TaskGraph {
   roots: string[];

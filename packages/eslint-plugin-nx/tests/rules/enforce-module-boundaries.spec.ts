@@ -1,6 +1,6 @@
+import type { ProjectGraph } from '@nrwl/devkit';
 import {
   DependencyType,
-  ProjectGraph,
   ProjectType,
 } from '@nrwl/workspace/src/core/project-graph';
 import { TSESLint } from '@typescript-eslint/experimental-utils';

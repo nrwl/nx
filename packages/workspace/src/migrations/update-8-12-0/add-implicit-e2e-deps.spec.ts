@@ -2,7 +2,7 @@ import { Tree } from '@angular-devkit/schematics';
 import { createEmptyWorkspace } from '../../utils/testing-utils';
 import { callRule, runMigration } from '../../utils/testing';
 import { readJsonInTree, updateJsonInTree } from '../../utils/ast-utils';
-import { NxJson } from '../../core/shared-interfaces';
+import type { NxJsonConfiguration } from '@nrwl/devkit';
 
 describe('Update 8.12.0', () => {
   let tree: Tree;
@@ -11,7 +11,7 @@ describe('Update 8.12.0', () => {
     tree = Tree.empty();
     tree = createEmptyWorkspace(tree);
     tree = await callRule(
-      updateJsonInTree<NxJson>('nx.json', (json) => {
+      updateJsonInTree<NxJsonConfiguration>('nx.json', (json) => {
         json.projects['my-app'] = {
           tags: [],
         };
@@ -30,7 +30,7 @@ describe('Update 8.12.0', () => {
   it('should add implicit dependencies for e2e projects', async () => {
     const result = await runMigration('add-implicit-e2e-deps', {}, tree);
 
-    const nxJson = readJsonInTree<NxJson>(result, 'nx.json');
+    const nxJson = readJsonInTree<NxJsonConfiguration>(result, 'nx.json');
 
     expect(nxJson.projects['my-app-e2e']).toEqual({
       tags: [],
@@ -44,7 +44,7 @@ describe('Update 8.12.0', () => {
 
   it('should not add duplicate implicit dependencies for e2e projects', async () => {
     tree = await callRule(
-      updateJsonInTree<NxJson>('nx.json', (json) => {
+      updateJsonInTree<NxJsonConfiguration>('nx.json', (json) => {
         json.projects['my-app-e2e'].implicitDependencies = ['my-app'];
         return json;
       }),
@@ -52,7 +52,7 @@ describe('Update 8.12.0', () => {
     );
     const result = await runMigration('add-implicit-e2e-deps', {}, tree);
 
-    const nxJson = readJsonInTree<NxJson>(result, 'nx.json');
+    const nxJson = readJsonInTree<NxJsonConfiguration>(result, 'nx.json');
 
     expect(nxJson.projects['my-app-e2e']).toEqual({
       tags: [],

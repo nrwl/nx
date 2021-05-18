@@ -1,4 +1,4 @@
-import { GeneratorCallback } from '@nrwl/devkit';
+import type { GeneratorCallback } from '@nrwl/devkit';
 
 export function runTasksInSerial(
   ...tasks: GeneratorCallback[]

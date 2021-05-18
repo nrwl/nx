@@ -1,5 +1,6 @@
 import { Tree } from '@angular-devkit/schematics';
-import { NxJson, readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
+import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
+import type { NxJsonConfiguration } from '@nrwl/devkit';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import * as stripJsonComments from 'strip-json-comments';
 import { callRule, runSchematic } from '../../utils/testing';
@@ -35,7 +36,7 @@ describe('app', () => {
         { name: 'myApp', tags: 'one,two' },
         appTree
       );
-      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
+      const nxJson = readJsonInTree<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-app': {
           tags: ['one', 'two'],
@@ -184,7 +185,7 @@ describe('app', () => {
         { name: 'myApp', directory: 'myDir', tags: 'one,two' },
         appTree
       );
-      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
+      const nxJson = readJsonInTree<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-dir-my-app': {
           tags: ['one', 'two'],

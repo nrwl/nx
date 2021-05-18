@@ -1,8 +1,6 @@
-import { fs, vol } from 'memfs';
-import {
-  ProjectGraphContext,
-  ProjectGraphNode,
-} from './project-graph/project-graph-models';
+import { vol } from 'memfs';
+import { ProjectGraphContext } from './project-graph';
+import type { ProjectGraphNode } from '@nrwl/devkit';
 import { TargetProjectLocator } from './target-project-locator';
 
 jest.mock('../utilities/app-root', () => ({

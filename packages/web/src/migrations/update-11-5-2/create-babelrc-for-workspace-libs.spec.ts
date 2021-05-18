@@ -1,10 +1,7 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { readJson, Tree } from '@nrwl/devkit';
+import { readJson, DependencyType } from '@nrwl/devkit';
 import { createBabelrcForWorkspaceLibs } from './create-babelrc-for-workspace-libs';
-import {
-  DependencyType,
-  ProjectGraph,
-} from '@nrwl/workspace/src/core/project-graph';
+import type { ProjectGraph, Tree } from '@nrwl/devkit';
 
 let projectGraph: ProjectGraph;
 jest.mock('@nrwl/workspace/src/core/project-graph', () => ({

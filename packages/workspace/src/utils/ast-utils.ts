@@ -24,11 +24,14 @@ import { getWorkspacePath } from './cli-config-utils';
 import {
   createProjectGraph,
   onlyWorkspaceProjects,
-  ProjectGraph,
 } from '../core/project-graph';
 import { FileData } from '../core/file-utils';
 import { extname, join, normalize, Path } from '@angular-devkit/core';
-import { NxJson, NxJsonProjectConfig } from '../core/shared-interfaces';
+import type {
+  NxJsonConfiguration,
+  NxJsonProjectConfiguration,
+  ProjectGraph,
+} from '@nrwl/devkit';
 import { addInstallTask } from './rules/add-install-task';
 import { findNodes } from '../utilities/typescript/find-nodes';
 import { getSourceNodes } from '../utilities/typescript/get-source-nodes';
@@ -446,21 +449,24 @@ export function updateWorkspaceInTree<T = any, O = T>(
 }
 
 export function readNxJsonInTree(host: Tree) {
-  return readJsonInTree<NxJson>(host, 'nx.json');
+  return readJsonInTree<NxJsonConfiguration>(host, 'nx.json');
 }
 
 export function libsDir(host: Tree) {
-  const json = readJsonInTree<NxJson>(host, 'nx.json');
+  const json = readJsonInTree<NxJsonConfiguration>(host, 'nx.json');
   return json?.workspaceLayout?.libsDir ?? 'libs';
 }
 
 export function appsDir(host: Tree) {
-  const json = readJsonInTree<NxJson>(host, 'nx.json');
+  const json = readJsonInTree<NxJsonConfiguration>(host, 'nx.json');
   return json?.workspaceLayout?.appsDir ?? 'apps';
 }
 
 export function updateNxJsonInTree(
-  callback: (json: NxJson, context: SchematicContext) => NxJson
+  callback: (
+    json: NxJsonConfiguration,
+    context: SchematicContext
+  ) => NxJsonConfiguration
 ): Rule {
   return (host: Tree, context: SchematicContext): Tree => {
     host.overwrite(
@@ -473,7 +479,7 @@ export function updateNxJsonInTree(
 
 export function addProjectToNxJsonInTree(
   projectName: string,
-  options: NxJsonProjectConfig
+  options: NxJsonProjectConfiguration
 ): Rule {
   const defaultOptions = {
     tags: [],

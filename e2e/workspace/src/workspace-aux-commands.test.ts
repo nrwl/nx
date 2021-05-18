@@ -15,7 +15,7 @@ import {
   updateFile,
   workspaceConfigName,
 } from '@nrwl/e2e/utils';
-import { NxJson } from '@nrwl/workspace';
+import type { NxJsonConfiguration } from '@nrwl/devkit';
 import { classify } from '@nrwl/workspace/src/utils/strings';
 
 let proj: string;
@@ -758,7 +758,7 @@ describe('Move Project', () => {
      */
 
     runCLI(`generate @nrwl/workspace:lib ${lib3}`);
-    let nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    let nxJson = JSON.parse(readFile('nx.json')) as NxJsonConfiguration;
     nxJson.projects[lib3].implicitDependencies = [`${lib1}-data-access`];
     updateFile(`nx.json`, JSON.stringify(nxJson));
 
@@ -817,7 +817,7 @@ describe('Move Project', () => {
     checkFilesExist(rootClassPath);
 
     expect(moveOutput).toContain('UPDATE nx.json');
-    nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    nxJson = JSON.parse(readFile('nx.json')) as NxJsonConfiguration;
     expect(nxJson.projects[`${lib1}-data-access`]).toBeUndefined();
     expect(nxJson.projects[newName]).toEqual({
       tags: [],
@@ -894,7 +894,7 @@ describe('Move Project', () => {
      */
 
     runCLI(`generate @nrwl/workspace:lib ${lib3}`);
-    let nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    let nxJson = JSON.parse(readFile('nx.json')) as NxJsonConfiguration;
     nxJson.projects[lib3].implicitDependencies = [`${lib1}-data-access`];
     updateFile(`nx.json`, JSON.stringify(nxJson));
 
@@ -953,7 +953,7 @@ describe('Move Project', () => {
     checkFilesExist(rootClassPath);
 
     expect(moveOutput).toContain('UPDATE nx.json');
-    nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    nxJson = JSON.parse(readFile('nx.json')) as NxJsonConfiguration;
     expect(nxJson.projects[`${lib1}-data-access`]).toBeUndefined();
     expect(nxJson.projects[newName]).toEqual({
       tags: [],
@@ -1033,7 +1033,7 @@ describe('Move Project', () => {
      */
 
     runCLI(`generate @nrwl/workspace:lib ${lib3}`);
-    nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    nxJson = JSON.parse(readFile('nx.json')) as NxJsonConfiguration;
     nxJson.projects[lib3].implicitDependencies = [`${lib1}-data-access`];
     updateFile(`nx.json`, JSON.stringify(nxJson));
 
@@ -1092,7 +1092,7 @@ describe('Move Project', () => {
     checkFilesExist(rootClassPath);
 
     expect(moveOutput).toContain('UPDATE nx.json');
-    nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    nxJson = JSON.parse(readFile('nx.json')) as NxJsonConfiguration;
     expect(nxJson.projects[`${lib1}-data-access`]).toBeUndefined();
     expect(nxJson.projects[newName]).toEqual({
       tags: [],
@@ -1153,7 +1153,7 @@ describe('Remove Project', () => {
      */
 
     runCLI(`generate @nrwl/workspace:lib ${lib2}`);
-    let nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    let nxJson = JSON.parse(readFile('nx.json')) as NxJsonConfiguration;
     nxJson.projects[lib2].implicitDependencies = [lib1];
     updateFile(`nx.json`, JSON.stringify(nxJson));
 
@@ -1185,7 +1185,7 @@ describe('Remove Project', () => {
     expect(exists(tmpProjPath(`libs/${lib1}`))).toBeFalsy();
 
     expect(removeOutputForced).toContain(`UPDATE nx.json`);
-    nxJson = JSON.parse(readFile('nx.json')) as NxJson;
+    nxJson = JSON.parse(readFile('nx.json')) as NxJsonConfiguration;
     expect(nxJson.projects[`${lib1}`]).toBeUndefined();
     expect(nxJson.projects[lib2].implicitDependencies).toEqual([]);
 

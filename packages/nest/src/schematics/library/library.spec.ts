@@ -1,8 +1,9 @@
 import { Tree } from '@angular-devkit/schematics';
-import { NxJson, readJsonInTree } from '@nrwl/workspace';
+import { readJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import type { NxJsonConfiguration } from '@nrwl/devkit';
 
 describe('lib', () => {
   let appTree: Tree;
@@ -144,7 +145,7 @@ describe('lib', () => {
         { name: 'myLib', tags: 'one,two' },
         appTree
       );
-      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
+      const nxJson = readJsonInTree<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-lib': {
           tags: ['one', 'two'],
@@ -259,7 +260,7 @@ describe('lib', () => {
         },
         appTree
       );
-      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
+      const nxJson = readJsonInTree<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-dir-my-lib': {
           tags: ['one'],
@@ -275,7 +276,7 @@ describe('lib', () => {
         },
         tree
       );
-      const nxJson2 = readJsonInTree<NxJson>(tree2, '/nx.json');
+      const nxJson2 = readJsonInTree<NxJsonConfiguration>(tree2, '/nx.json');
       expect(nxJson2.projects).toEqual({
         'my-dir-my-lib': {
           tags: ['one'],

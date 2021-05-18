@@ -1,6 +1,6 @@
-import { readJson, Tree } from '@nrwl/devkit';
+import { readJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { NxJson } from '@nrwl/workspace/src/core/shared-interfaces';
+import type { Tree, NxJsonConfiguration } from '@nrwl/devkit';
 
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
@@ -26,7 +26,7 @@ describe('app', () => {
 
     it('should update nx.json', async () => {
       await applicationGenerator(tree, { name: 'myApp', tags: 'one,two' });
-      const nxJson = readJson<NxJson>(tree, '/nx.json');
+      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-app': {
           tags: ['one', 'two'],
@@ -132,7 +132,7 @@ describe('app', () => {
         directory: 'myDir',
         tags: 'one,two',
       });
-      const nxJson = readJson<NxJson>(tree, '/nx.json');
+      const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-dir-my-app': {
           tags: ['one', 'two'],

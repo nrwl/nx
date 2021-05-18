@@ -20,14 +20,15 @@ import {
 } from '@typescript-eslint/experimental-utils';
 import { createESLintRule } from '../utils/create-eslint-rule';
 import { normalizePath } from '@nrwl/devkit';
+import type { ProjectGraph } from '@nrwl/devkit';
 import {
   isNpmProject,
   ProjectType,
+  readCurrentProjectGraph,
 } from '@nrwl/workspace/src/core/project-graph';
 import { readNxJson } from '@nrwl/workspace/src/core/file-utils';
 import { TargetProjectLocator } from '@nrwl/workspace/src/core/target-project-locator';
 import { checkCircularPath } from '@nrwl/workspace/src/utils/graph-utils';
-import { readCurrentProjectGraph } from '@nrwl/workspace/src/core/project-graph/project-graph';
 import { isRelativePath } from '@nrwl/workspace/src/utilities/fileutils';
 
 type Options = [

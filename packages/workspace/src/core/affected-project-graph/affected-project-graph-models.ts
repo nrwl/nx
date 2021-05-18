@@ -1,10 +1,9 @@
-import { NxJson } from '../shared-interfaces';
-import { Change, FileChange } from '../file-utils';
-import { ProjectGraph } from '../project-graph';
+import type { NxJsonConfiguration, ProjectGraph } from '@nrwl/devkit';
+import type { Change, FileChange } from '../file-utils';
 
 export interface AffectedProjectGraphContext {
   workspaceJson: any;
-  nxJson: NxJson<string[]>;
+  nxJson: NxJsonConfiguration<string[]>;
   touchedProjects: string[];
 }
 
@@ -12,7 +11,7 @@ export interface TouchedProjectLocator<T extends Change = Change> {
   (
     fileChanges: FileChange<T>[],
     workspaceJson?: any,
-    nxJson?: NxJson<string[]>,
+    nxJson?: NxJsonConfiguration<string[]>,
     packageJson?: any,
     projectGraph?: ProjectGraph
   ): string[];

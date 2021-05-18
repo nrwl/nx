@@ -7,7 +7,7 @@ import {
   walkJsonTree,
 } from '../../../utilities/json-diff';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
-import { ImplicitDependencyEntry } from '../../shared-interfaces';
+import type { ImplicitDependencyEntry } from '@nrwl/devkit';
 
 export const getImplicitlyTouchedProjectsByJsonChanges: TouchedProjectLocator<
   WholeFileChange | JsonChange

@@ -1,13 +1,13 @@
 import * as path from 'path';
 import { FileData } from '../core/file-utils';
-import {
-  DependencyType,
+import type {
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphNode,
-} from '../core/project-graph';
+  TargetConfiguration,
+} from '@nrwl/devkit';
 import { TargetProjectLocator } from '../core/target-project-locator';
-import { normalizePath, TargetConfiguration } from '@nrwl/devkit';
+import { normalizePath, DependencyType } from '@nrwl/devkit';
 
 export interface MappedProjectGraphNode<T = any> {
   type: string;

@@ -1,16 +1,9 @@
-import {
-  ProjectGraph,
-  ProjectGraphNode,
-  ProjectType,
-} from '../core/project-graph';
+import { ProjectType } from '../core/project-graph';
 import { join, resolve, dirname, relative } from 'path';
-import {
-  fileExists,
-  readJsonFile,
-  writeJsonFile,
-} from '@nrwl/workspace/src/utilities/fileutils';
+import { fileExists, readJsonFile, writeJsonFile } from './fileutils';
 import { stripIndents } from '@nrwl/devkit';
-import { getOutputsForTargetAndConfiguration } from '@nrwl/workspace/src/tasks-runner/utils';
+import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
+import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
 import * as ts from 'typescript';
 import { unlinkSync } from 'fs';
 import { output } from './output';

@@ -1,5 +1,5 @@
 import { ProjectGraphBuilder } from './project-graph-builder';
-import { ProjectGraph, ProjectGraphNode } from './project-graph-models';
+import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
 
 const reverseMemo = new Map<ProjectGraph, ProjectGraph>();
 

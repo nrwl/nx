@@ -1,5 +1,4 @@
-import { ProjectGraphDependency } from '@nrwl/workspace';
-
+import type { ProjectGraphDependency } from '@nrwl/devkit';
 import * as cy from 'cytoscape';
 
 export class ProjectEdge {
