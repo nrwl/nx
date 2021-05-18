@@ -27,5 +27,6 @@ fi
 
 if [[ $COMMAND == "start" ]]; then
   echo "Starting Local Registry"
-  npx verdaccio --config ./.verdaccio/config.yml
+  VERDACCIO_HANDLE_KILL_SIGNALS=true
+	npx verdaccio --config ./.verdaccio/config.yml
 fi
