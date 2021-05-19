@@ -16,7 +16,10 @@ import { updateLibPackageNpmScope } from './lib/update-lib-package-npm-scope';
 import { updateProject } from './lib/update-project';
 import { updateTsConfig } from './lib/update-tsconfig';
 import { Schema } from './schema';
-import { enableStrictTypeChecking } from './lib/enable-strict-type-checking';
+import {
+  enableStrictTypeChecking,
+  setLibraryStrictDefault,
+} from './lib/enable-strict-type-checking';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { NormalizedSchema } from './lib/normalized-schema';
 
@@ -80,7 +83,9 @@ export default function (schema: Schema): Rule {
         ? updateLibPackageNpmScope(options)
         : noop(),
       addModule(options),
-      options.strict ? enableStrictTypeChecking(options) : noop(),
+      options.strict
+        ? enableStrictTypeChecking(options)
+        : setLibraryStrictDefault(options.strict),
       options.linter !== Linter.None ? addLinting(options) : noop(),
       formatFiles(options),
     ]);

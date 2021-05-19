@@ -130,7 +130,7 @@ Skip creating spec files.
 
 ### strict
 
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 

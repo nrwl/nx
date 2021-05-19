@@ -175,6 +175,17 @@ describe('lib', () => {
       const tsconfigJson = readJsonInTree(tree, 'libs/my-lib/tsconfig.json');
       expect(tsconfigJson).toEqual({
         extends: '../../tsconfig.base.json',
+        angularCompilerOptions: {
+          strictInjectionParameters: true,
+          strictInputAccessModifiers: true,
+          strictTemplates: true,
+        },
+        compilerOptions: {
+          forceConsistentCasingInFileNames: true,
+          noFallthroughCasesInSwitch: true,
+          noImplicitReturns: true,
+          strict: true,
+        },
         files: [],
         include: [],
         references: [
@@ -580,6 +591,17 @@ describe('lib', () => {
       );
       expect(tsconfigJson).toEqual({
         extends: '../../../tsconfig.base.json',
+        angularCompilerOptions: {
+          strictInjectionParameters: true,
+          strictInputAccessModifiers: true,
+          strictTemplates: true,
+        },
+        compilerOptions: {
+          forceConsistentCasingInFileNames: true,
+          noFallthroughCasesInSwitch: true,
+          noImplicitReturns: true,
+          strict: true,
+        },
         files: [],
         include: [],
         references: [
@@ -1148,10 +1170,31 @@ describe('lib', () => {
       expect(angularCompilerOptions.strictTemplates).toBe(true);
 
       // check to see if the workspace configuration has been updated to use strict
-      // mode by default in future applications
+      // mode by default in future libraries
+      const workspaceJson = readJsonInTree(tree, 'workspace.json');
+      expect(
+        workspaceJson.schematics['@nrwl/angular:library'].strict
+      ).not.toBeDefined();
+    });
+
+    it('should set defaults when --strict=false', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          framework: 'angular',
+          publishable: true,
+          importPath: '@myorg/lib',
+          strict: false,
+        },
+        appTree
+      );
+
+      // check to see if the workspace configuration has been updated to turn off
+      // strict mode by default in future libraries
       const workspaceJson = readJsonInTree(tree, 'workspace.json');
       expect(workspaceJson.schematics['@nrwl/angular:library'].strict).toBe(
-        true
+        false
       );
     });
   });
