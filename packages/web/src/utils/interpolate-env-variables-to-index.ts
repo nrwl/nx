@@ -27,25 +27,13 @@ function getClientEnvironment(deployUrl: string) {
     );
 }
 
-function replaceAll(
-  contents: string,
-  contentsToReplace: string,
-  contentsToReplaceWith: string
-): string {
-  let temp = contents;
-  while (temp.includes(contentsToReplace)) {
-    temp = temp.replace(contentsToReplace, contentsToReplaceWith);
-  }
-  return temp;
-}
-
 function interpolateEnvironmentVariables(
   documentContents: string,
   environmentVariables: Record<string, string>
 ): string {
   let temp = documentContents;
   for (const [key, value] of Object.entries(environmentVariables)) {
-    temp = replaceAll(temp, `%${key}%`, value);
+    temp = temp.replace(new RegExp(`%${key}%`, 'g'), value);
   }
   return temp;
 }
