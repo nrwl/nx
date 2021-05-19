@@ -1,6 +1,6 @@
 # Getting Started
 
-Nx is a powerful and extensible build framework that helps you develop, test, build, and scale with React and React frameworks like Gatsby, Next.js, React Native, etc.
+Nx is a smart and extensible build framework that helps you develop, test, build, and scale with React and React frameworks like Gatsby, Next.js, React Native, etc.
 
 ## 10-Minute Nx Overview
 

@@ -1,4 +1,4 @@
-<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx.png" width="600" alt="Nx - Powerful and Extensible Build Framework"></p>
+<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx.png" width="600" alt="Nx - Smart, Extensible Build Framework"></p>
 
 <div style="text-align: center;">
 
@@ -16,7 +16,7 @@
 
 # What is Nx?
 
-🔎 **Powerful and Extensible Build Framework**
+🔎 **Smart, Extensible Build Framework**
 
 ### Use Intelligent Build System with Distributed Caching & Distributed Task Execution
 

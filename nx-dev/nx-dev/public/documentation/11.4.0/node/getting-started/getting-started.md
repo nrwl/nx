@@ -1,6 +1,6 @@
 # Getting Started
 
-Nx is a powerful and extensible build framework that helps you develop, test, build, and scale Node applications.
+Nx is a smart and extensible build framework that helps you develop, test, build, and scale Node applications.
 
 ## Create Nx Workspace
 

@@ -18,7 +18,7 @@ export const commandsObject = yargs
   .parserConfiguration({
     'strip-dashed': true,
   })
-  .usage('Powerful and Extensible Build Framework')
+  .usage('Smart, Extensible Build Framework')
   .command(
     'run [project][:target][:configuration] [options, ...]',
     `

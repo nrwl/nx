@@ -1,6 +1,6 @@
 # Distributed CI Using Azure Pipelines
 
-Nx is a set of powerful and extensible build framework, and it works really well with monorepos. Monorepos provide a lot of advantages:
+Nx is a set of smart and extensible build framework, and it works really well with monorepos. Monorepos provide a lot of advantages:
 
 - Everything at that current commit works together. Changes can be verified across all affected parts of the organization.
 - Easy to split code into composable modules
