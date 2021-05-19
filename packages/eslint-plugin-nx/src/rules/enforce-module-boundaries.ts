@@ -84,7 +84,7 @@ export default createESLintRule<Options, MessageIds>({
     messages: {
       noRelativeOrAbsoluteImportsAcrossLibraries: `Libraries cannot be imported by a relative or absolute path, and must begin with a npm scope`,
       noCircularDependencies: `Circular dependency between "{{sourceProjectName}}" and "{{targetProjectName}}" detected: {{path}}`,
-      noSelfCircularDependencies: `Only relative imports are allowed within the project. Absolute import found: {{imp}}`,
+      noSelfCircularDependencies: `Projects should use relative imports to import from other files within the same project. Use "./path/to/file" instead of import from "{{imp}}"`,
       noImportsOfApps: 'Imports of apps are forbidden',
       noImportsOfE2e: 'Imports of e2e projects are forbidden',
       noImportOfNonBuildableLibraries:

@@ -155,7 +155,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     // same project => allow
     if (sourceProject === targetProject) {
       if (!this.allowCircularSelfDependency && !isRelativePath(imp)) {
-        const error = `Only relative imports are allowed within the project. Absolute import found: ${imp}`;
+        const error = `Projects should use relative imports to import from other files within the same project. Use "./path/to/file" instead of import from "${imp}"`;
         this.addFailureAt(node.getStart(), node.getWidth(), error);
       } else {
         super.visitImportDeclaration(node);

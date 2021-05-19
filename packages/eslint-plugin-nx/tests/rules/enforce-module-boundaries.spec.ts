@@ -851,7 +851,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
     );
 
     const message =
-      'Only relative imports are allowed within the project. Absolute import found: @mycompany/mylib';
+      'Projects should use relative imports to import from other files within the same project. Use "./path/to/file" instead of import from "@mycompany/mylib"';
     expect(failures.length).toEqual(2);
     expect(failures[0].message).toEqual(message);
     expect(failures[1].message).toEqual(message);
