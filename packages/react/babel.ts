@@ -14,7 +14,7 @@ module.exports = function (api: any, options: ReactBabelOptions) {
   /**
    * pagesDir is set when being transpiled by Next.js
    */
-  const isNextJs = api.caller((caller) => caller && caller.pagesDir);
+  const isNextJs = api.caller((caller) => caller?.pagesDir);
 
   const presets: any[] = [
     ['@nrwl/web/babel', { useBuiltIns: options.useBuiltIns }],
