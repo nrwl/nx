@@ -199,7 +199,7 @@ export async function removeProject({ onlyOnCI = false } = {}) {
 
 export function runCypressTests() {
   // temporary disable
-  return false;
+  return true;
 }
 
 export function runCommandAsync(
