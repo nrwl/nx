@@ -3,4 +3,5 @@
  */
 export interface <%= className %>Entity {
   id: string | number;  // Primary ID
+  name: string;
 };

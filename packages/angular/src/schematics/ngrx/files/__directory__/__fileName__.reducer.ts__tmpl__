@@ -8,16 +8,16 @@ export const <%= constantName %>_FEATURE_KEY = '<%= propertyName %>';
  *
  *  Note: replace if already defined in another module
  */
-
-/* tslint:disable:no-empty-interface */
 export interface Entity {
-};
+  id: string;
+  name: string;
+}
 
 export interface <%= className %>State {
-  list        : Entity[];             // list of <%= className %>; analogous to a sql normalized table
-  selectedId ?: string | number;      // which <%= className %> record has been selected
-  loaded      : boolean;              // has the <%= className %> list been loaded
-  error      ?: any;                  // last none error (if any)
+  list: Entity[]; // list of <%= className %>; analogous to a sql normalized table
+  selectedId?: string | number; // which <%= className %> record has been selected
+  loaded: boolean; // has the <%= className %> list been loaded
+  error?: any; // last none error (if any)
 };
 
 export interface <%= className %>PartialState {
@@ -25,8 +25,8 @@ export interface <%= className %>PartialState {
 }
 
 export const initialState: <%= className %>State = {
-  list : [ ],
-  loaded : false
+  list: [],
+  loaded: false
 };
 
 export function reducer(
@@ -37,7 +37,7 @@ export function reducer(
     case <%= className %>ActionTypes.<%= className %>Loaded: {
       state = {
         ...state,
-        list  : action.payload,
+        list: action.payload,
         loaded: true
       };
       break;

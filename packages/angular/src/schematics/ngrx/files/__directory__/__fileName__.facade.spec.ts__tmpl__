@@ -20,23 +20,18 @@ import {
 } from './<%= fileName %>.reducer';
 
 interface TestSchema {
-  '<%= propertyName %>' : <%= className %>State
+  '<%= propertyName %>': <%= className %>State
 }
 
 describe('<%= className %>Facade', () => {
   let facade: <%= className %>Facade;
   let store: Store<TestSchema>;
-  let create<%= className %>;
-
-  beforeEach(() => {
-    create<%= className %> = ( id:string, name = '' ): Entity => ({
-       id,
-       name: name || `name-${id}`
-    });
+  const create<%= className %> = (id: string, name?: string): Entity => ({
+    id,
+    name: name || `name-${id}`
   });
 
   describe('used in NgModule', () => {
-
     beforeEach(() => {
       @NgModule({
         imports: [
@@ -115,5 +110,4 @@ describe('<%= className %>Facade', () => {
       }
     });
   });
-
 });

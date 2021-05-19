@@ -626,6 +626,21 @@ function addProxyConfig(options: NormalizedSchema): Rule {
   };
 }
 
+function setApplicationStrictDefault(strict: boolean): Rule {
+  // set the default so future applications use it
+  // unless the user has previously set this value
+  return updateWorkspace((workspace) => {
+    workspace.extensions.schematics = workspace.extensions.schematics || {};
+
+    workspace.extensions.schematics['@nrwl/angular:application'] =
+      workspace.extensions.schematics['@nrwl/angular:application'] || {};
+
+    workspace.extensions.schematics['@nrwl/angular:application'].strict =
+      workspace.extensions.schematics['@nrwl/angular:application'].strict ??
+      strict;
+  });
+}
+
 function enableStrictTypeChecking(schema: Schema): Rule {
   return (host) => {
     const options = normalizeOptions(host, schema);
@@ -660,6 +675,7 @@ function enableStrictTypeChecking(schema: Schema): Rule {
         json.angularCompilerOptions = {
           ...(json.angularCompilerOptions ?? {}),
           strictInjectionParameters: true,
+          strictInputAccessModifiers: true,
           strictTemplates: true,
         };
 
@@ -669,20 +685,7 @@ function enableStrictTypeChecking(schema: Schema): Rule {
       rules.push(rule);
     }
 
-    // set the default so future applications will default to strict mode
-    // unless the user has previously set this to false by default
-    const updateAngularWorkspace = updateWorkspace((workspace) => {
-      workspace.extensions.schematics = workspace.extensions.schematics || {};
-
-      workspace.extensions.schematics['@nrwl/angular:application'] =
-        workspace.extensions.schematics['@nrwl/angular:application'] || {};
-
-      workspace.extensions.schematics['@nrwl/angular:application'].strict =
-        workspace.extensions.schematics['@nrwl/angular:application'].strict ??
-        options.strict;
-    });
-
-    return chain([...rules, updateAngularWorkspace]);
+    return chain(rules);
   };
 }
 
@@ -770,7 +773,9 @@ export default function (schema: Schema): Rule {
         : noop(),
       addEditorTsConfigReference(options),
       options.backendProject ? addProxyConfig(options) : noop(),
-      options.strict ? enableStrictTypeChecking(options) : noop(),
+      options.strict
+        ? enableStrictTypeChecking(options)
+        : setApplicationStrictDefault(false),
       formatFiles(options),
     ])(host, context);
   };

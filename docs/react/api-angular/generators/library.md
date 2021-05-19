@@ -152,7 +152,7 @@ Do not update tsconfig.json for development experience.
 
 ### strict
 
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 

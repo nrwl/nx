@@ -90,7 +90,7 @@
     "strict": {
       "type": "boolean",
       "description": "Creates a library with stricter type checking and build optimization options.",
-      "default": false
+      "default": true
     },
     "linter": {
       "description": "The tool to use for running lint checks.",

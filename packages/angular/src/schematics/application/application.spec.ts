@@ -693,11 +693,25 @@ describe('app', () => {
         expect(angularCompilerOptions.strictTemplates).toBe(true);
       }
 
-      // check to see if the workspace configuration has been updated to use strict
-      // mode by default in future applications
+      // should not update workspace configuration since --strict=true is the default
+      const workspaceJson = readJsonInTree(tree, 'workspace.json');
+      expect(
+        workspaceJson.schematics['@nrwl/angular:application'].strict
+      ).not.toBeDefined();
+    });
+
+    it('should set defaults when --strict=false', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'my-app', strict: false },
+        appTree
+      );
+
+      // check to see if the workspace configuration has been updated to turn off
+      // strict mode by default in future applications
       const workspaceJson = readJsonInTree(tree, 'workspace.json');
       expect(workspaceJson.schematics['@nrwl/angular:application'].strict).toBe(
-        true
+        false
       );
     });
   });

@@ -609,14 +609,8 @@ import {
       const content = tree.readContent(`${statePath}/users.selectors.ts`);
 
       [
-        `
-import {
-  USERS_FEATURE_KEY,
-  State,
-  UsersPartialState,
-  usersAdapter,
-} from './users.reducer';`,
-        `const { selectAll, selectEntities } = usersAdapter.getSelectors();`,
+        `import { USERS_FEATURE_KEY, State, usersAdapter } from './users.reducer';`,
+        'const { selectAll, selectEntities } = usersAdapter.getSelectors();',
       ].forEach((text) => {
         expect(content).toContain(text);
       });
