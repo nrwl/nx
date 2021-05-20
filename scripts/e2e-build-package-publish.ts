@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
-import { removeSync } from 'fs-extra';
-import { readFileSync, writeFileSync, readdirSync } from 'fs';
+import { removeSync, readFileSync, writeFileSync } from 'fs-extra';
+import { readdirSync } from 'fs';
 import {
   prettierVersion,
   typescriptVersion,
