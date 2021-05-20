@@ -37,7 +37,7 @@ jobs:
           - e2e-angular
       fail-fast: false
 
-    name: OS ${{ matrix.os }} Node v${{ matrix.node_version }} (${{ matrix.package_manager }}) - ${{ matrix.packages }}
+    name: ${{ matrix.os }} > Node v${{ matrix.node_version }} (${{ matrix.package_manager }}) - ${{ matrix.packages }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
