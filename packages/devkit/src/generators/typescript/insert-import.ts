@@ -1,1 +1,1 @@
-export function insertImport() {}
+export function insertImport(): void {}

@@ -20,7 +20,9 @@
     },
     {
       "files": ["*.ts", "*.tsx"],
-      "rules": {}
+      "rules": {
+        "@typescript-eslint/explicit-module-boundary-types": ["error"]
+      }
     },
     {
       "files": ["*.js", "*.jsx"],

@@ -1,13 +1,14 @@
 import { FsTree } from '@nrwl/tao/src/shared/tree';
+import type { Tree } from '@nrwl/tao/src/shared/tree';
 
 /**
  * Creates a host for testing.
  */
-export function createTreeWithEmptyWorkspace() {
+export function createTreeWithEmptyWorkspace(): Tree {
   const tree = new FsTree('/virtual', false);
 
   tree.write('/workspace.json', JSON.stringify({ version: 1, projects: {} }));
-  tree.write('./.prettierrc', '{"singleQuote": true}');
+  tree.write('./.prettierrc', JSON.stringify({ singleQuote: true }));
   tree.write(
     '/package.json',
     JSON.stringify({

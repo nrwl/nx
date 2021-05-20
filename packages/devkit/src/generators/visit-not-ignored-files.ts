@@ -1,7 +1,5 @@
-import { Tree } from '@nrwl/tao/src/shared/tree';
-
+import type { Tree } from '@nrwl/tao/src/shared/tree';
 import { join } from 'path';
-
 import ignore, { Ignore } from 'ignore';
 
 /**
@@ -11,7 +9,7 @@ export function visitNotIgnoredFiles(
   tree: Tree,
   dirPath: string = tree.root,
   visitor: (path: string) => void
-) {
+): void {
   let ig: Ignore;
   if (tree.exists('.gitignore')) {
     ig = ignore();

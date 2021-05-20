@@ -1,5 +1,5 @@
-export { Tree, FileChange } from '@nrwl/tao/src/shared/tree';
-export {
+export type { Tree, FileChange } from '@nrwl/tao/src/shared/tree';
+export type {
   WorkspaceJsonConfiguration,
   TargetDependencyConfig,
   TargetConfiguration,
@@ -11,7 +11,7 @@ export {
   ExecutorContext,
   Workspace,
 } from '@nrwl/tao/src/shared/workspace';
-export {
+export type {
   ImplicitDependencyEntry,
   ImplicitJsonSubsetDependency,
   NxJsonConfiguration,
@@ -19,16 +19,15 @@ export {
   NxAffectedConfig,
 } from '@nrwl/tao/src/shared/nx';
 export { logger } from '@nrwl/tao/src/shared/logger';
-export {
-  getPackageManagerCommand,
-  PackageManager,
-} from '@nrwl/tao/src/shared/package-manager';
-export { runExecutor, Target } from '@nrwl/tao/src/commands/run';
+export type { PackageManager } from '@nrwl/tao/src/shared/package-manager';
+export { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
+export type { Target } from '@nrwl/tao/src/commands/run';
+export { runExecutor } from '@nrwl/tao/src/commands/run';
 
 export { formatFiles } from './src/generators/format-files';
 export { generateFiles } from './src/generators/generate-files';
+export type { WorkspaceConfiguration } from './src/generators/project-configuration';
 export {
-  WorkspaceConfiguration,
   addProjectConfiguration,
   readProjectConfiguration,
   removeProjectConfiguration,
@@ -47,16 +46,16 @@ export {
 } from './src/executors/parse-target-string';
 export { readTargetOptions } from './src/executors/read-target-options';
 
-export {
+export type {
   ProjectFileMap,
   FileData,
   ProjectGraph,
   ProjectGraphDependency,
-  DependencyType,
   ProjectGraphNode,
   NxPlugin,
   ProjectGraphProcessorContext,
 } from './src/project-graph/interfaces';
+export { DependencyType } from './src/project-graph/interfaces';
 export { ProjectGraphBuilder } from './src/project-graph/utils';
 
 export { readJson, writeJson, updateJson } from './src/utils/json';
@@ -70,13 +69,12 @@ export {
   getWorkspaceLayout,
   getWorkspacePath,
 } from './src/utils/get-workspace-layout';
-export {
-  applyChangesToString,
-  ChangeType,
+export type {
   StringChange,
   StringDeletion,
   StringInsertion,
 } from './src/utils/string-change';
+export { applyChangesToString, ChangeType } from './src/utils/string-change';
 export { offsetFromRoot } from './src/utils/offset-from-root';
 export { convertNxGenerator } from './src/utils/invoke-nx-generator';
 export { convertNxExecutor } from './src/utils/convert-nx-executor';
