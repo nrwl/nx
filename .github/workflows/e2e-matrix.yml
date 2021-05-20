@@ -7,7 +7,7 @@ on:
     branches-ignore:
       - master
     paths:
-      - ".github/wokflows/e2e-matrix.yml"
+      - ".github/workflows/e2e-matrix.yml"
 
 jobs:
   e2e:
