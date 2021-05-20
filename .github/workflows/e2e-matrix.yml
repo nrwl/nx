@@ -58,7 +58,9 @@ jobs:
       with:
         path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
         key: ${{ matrix.os }}-node-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
-        restore-keys: ${{ matrix.os }}-node-${{ matrix.node-version }}-yarn-
+        restore-keys: |
+          ${{ matrix.os }}-node-${{ matrix.node-version }}-yarn-
+          ${{ matrix.os }}-node-${{ matrix.node-version }}-
 
     - run: yarn install
 
