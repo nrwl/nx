@@ -11,6 +11,7 @@ export function getStorybookFrameworkPath(uiFramework) {
   const serverOptionsPaths = {
     '@storybook/angular': '@storybook/angular/dist/ts3.9/server/options',
     '@storybook/react': '@storybook/react/dist/cjs/server/options',
+    '@storybook/html': '@storybook/html/dist/cjs/server/options',
   };
 
   if (isStorybookV62onwards(uiFramework)) {
