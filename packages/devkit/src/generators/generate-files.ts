@@ -1,7 +1,6 @@
 import { readFileSync, readdirSync, statSync } from 'fs';
 import * as path from 'path';
-import { Tree } from '@nrwl/tao/src/shared/tree';
-import { join, relative } from 'path';
+import type { Tree } from '@nrwl/tao/src/shared/tree';
 import { logger } from '@nrwl/tao/src/shared/logger';
 
 const binaryExts = new Set([
@@ -60,7 +59,7 @@ export function generateFiles(
   srcFolder: string,
   target: string,
   substitutions: { [k: string]: any }
-) {
+): void {
   const ejs = require('ejs');
   allFilesInDir(srcFolder).forEach((filePath) => {
     let newContent: Buffer | string;
@@ -92,9 +91,9 @@ function computePath(
   target: string,
   filePath: string,
   substitutions: { [k: string]: any }
-) {
-  const relativeFromSrcFolder = relative(srcFolder, filePath);
-  let computedPath = join(target, relativeFromSrcFolder);
+): string {
+  const relativeFromSrcFolder = path.relative(srcFolder, filePath);
+  let computedPath = path.join(target, relativeFromSrcFolder);
   if (computedPath.endsWith('.template')) {
     computedPath = computedPath.substring(0, computedPath.length - 9);
   }
@@ -104,11 +103,11 @@ function computePath(
   return computedPath;
 }
 
-function allFilesInDir(parent: string) {
-  let res = [];
+function allFilesInDir(parent: string): string[] {
+  let res: string[] = [];
   try {
     readdirSync(parent).forEach((c) => {
-      const child = join(parent, c);
+      const child = path.join(parent, c);
       try {
         const s = statSync(child);
         if (!s.isDirectory()) {
@@ -116,8 +115,8 @@ function allFilesInDir(parent: string) {
         } else if (s.isDirectory()) {
           res = [...res, ...allFilesInDir(child)];
         }
-      } catch (e) {}
+      } catch {}
     });
-  } catch (e) {}
+  } catch {}
   return res;
 }

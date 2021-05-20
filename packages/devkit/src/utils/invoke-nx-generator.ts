@@ -34,6 +34,7 @@ function createRunCallbackTask() {
  * Convert an Nx Generator into an Angular Devkit Schematic
  */
 export function convertNxGenerator<T = any>(generator: Generator<T>) {
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   return (options: T) => invokeNxGenerator(generator, options);
 }
 
@@ -131,7 +132,7 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
     return fileChanges;
   }
 
-  private normalize(path) {
+  private normalize(path: string): string {
     return relative(this.root, join(this.root, path));
   }
 
@@ -142,10 +143,6 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
       ? this.tree.read(filePath).toString(encoding)
       : this.tree.read(filePath);
   }
-
-  /* read(filePath: string): Buffer | null {
-    return this.tree.read(filePath);
-  }*/
 
   rename(from: string, to: string): void {
     this.tree.rename(from, to);

@@ -1,5 +1,6 @@
-import { Target } from '@nrwl/tao/src/commands/run';
-import { ExecutorContext, Workspaces } from '@nrwl/tao/src/shared/workspace';
+import type { Target } from '@nrwl/tao/src/commands/run';
+import type { ExecutorContext } from '@nrwl/tao/src/shared/workspace';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 import { combineOptionsForExecutor } from '@nrwl/tao/src/shared/params';
 
 /**
@@ -25,7 +26,7 @@ export function readTargetOptions<T = any>(
 
   return combineOptionsForExecutor(
     {},
-    configuration,
+    configuration ?? '',
     targetConfiguration,
     schema,
     defaultProject,

@@ -1,4 +1,7 @@
-import { TargetConfiguration, Workspace } from '@nrwl/tao/src/shared/workspace';
+import type {
+  TargetConfiguration,
+  Workspace,
+} from '@nrwl/tao/src/shared/workspace';
 
 /**
  * Some metadata about a file

@@ -11,7 +11,10 @@
  * `
  * ```
  */
-export function stripIndents(strings, ...values) {
+export function stripIndents(
+  strings: TemplateStringsArray,
+  ...values: any[]
+): string {
   return String.raw(strings, ...values)
     .split('\n')
     .map((line) => line.trim())

@@ -1,5 +1,6 @@
-import { createTree } from '@nrwl/devkit/testing';
-import { Tree, visitNotIgnoredFiles } from '@nrwl/devkit';
+import { createTree } from '../tests/create-tree';
+import type { Tree } from '@nrwl/tao/src/shared/tree';
+import { visitNotIgnoredFiles } from './visit-not-ignored-files';
 
 describe('visitNotIgnoredFiles', () => {
   let tree: Tree;

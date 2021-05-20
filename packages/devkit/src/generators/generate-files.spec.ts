@@ -1,4 +1,4 @@
-import { Tree } from '@nrwl/tao/src/shared/tree';
+import type { Tree } from '@nrwl/tao/src/shared/tree';
 import { createTree } from '../tests/create-tree';
 import { generateFiles } from './generate-files';
 import { join } from 'path';

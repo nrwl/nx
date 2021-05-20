@@ -1,11 +1,11 @@
-import { Tree } from '@nrwl/tao/src/shared/tree';
-import {
+import type { Tree } from '@nrwl/tao/src/shared/tree';
+import type {
   ProjectConfiguration,
-  toNewFormat,
   WorkspaceJsonConfiguration,
 } from '@nrwl/tao/src/shared/workspace';
-import { readJson, updateJson } from '../utils/json';
-import {
+import { toNewFormat } from '@nrwl/tao/src/shared/workspace';
+import { readJson, updateJson, writeJson } from '../utils/json';
+import type {
   NxJsonConfiguration,
   NxJsonProjectConfiguration,
 } from '@nrwl/tao/src/shared/nx';
@@ -31,7 +31,7 @@ export function addProjectConfiguration(
   host: Tree,
   projectName: string,
   projectConfiguration: ProjectConfiguration & NxJsonProjectConfiguration
-) {
+): void {
   setProjectConfiguration(host, projectName, projectConfiguration, 'create');
 }
 
@@ -49,7 +49,7 @@ export function updateProjectConfiguration(
   host: Tree,
   projectName: string,
   projectConfiguration: ProjectConfiguration & NxJsonProjectConfiguration
-) {
+): void {
   setProjectConfiguration(host, projectName, projectConfiguration, 'update');
 }
 
@@ -59,7 +59,10 @@ export function updateProjectConfiguration(
  * The project configuration is stored in workspace.json and nx.json.
  * The utility will update both files.
  */
-export function removeProjectConfiguration(host: Tree, projectName: string) {
+export function removeProjectConfiguration(
+  host: Tree,
+  projectName: string
+): void {
   setProjectConfiguration(host, projectName, undefined, 'delete');
 }
 
@@ -68,7 +71,9 @@ export function removeProjectConfiguration(host: Tree, projectName: string) {
  *
  * Use {@link readProjectConfiguration} if only one project is needed.
  */
-export function getProjects(host: Tree) {
+export function getProjects(
+  host: Tree
+): Map<string, ProjectConfiguration & NxJsonProjectConfiguration> {
   const workspace = readWorkspace(host);
   const nxJson = readJson<NxJsonConfiguration>(host, 'nx.json');
 
@@ -116,7 +121,7 @@ export function updateWorkspaceConfiguration(
     tasksRunnerOptions,
     workspaceLayout,
   }: WorkspaceConfiguration
-) {
+): void {
   const workspace: Omit<WorkspaceJsonConfiguration, 'projects'> = {
     version,
     cli,
@@ -152,7 +157,10 @@ export function updateWorkspaceConfiguration(
  * @param host - the file system tree
  * @param projectName - unique name. Often directories are part of the name (e.g., mydir-mylib)
  */
-export function readProjectConfiguration(host: Tree, projectName: string) {
+export function readProjectConfiguration(
+  host: Tree,
+  projectName: string
+): ProjectConfiguration & NxJsonProjectConfiguration {
   const workspace = readWorkspace(host);
   if (!workspace.projects[projectName]) {
     throw new Error(
@@ -187,7 +195,7 @@ function readWorkspaceSection(
   workspace: WorkspaceJsonConfiguration,
   projectName: string
 ) {
-  return workspace.projects[projectName] as ProjectConfiguration;
+  return workspace.projects[projectName];
 }
 
 function readNxJsonSection(nxJson: NxJsonConfiguration, projectName: string) {
@@ -253,7 +261,7 @@ function addProjectToWorkspaceJson(
     );
   }
   workspaceJson.projects[projectName] = project;
-  host.write(path, JSON.stringify(workspaceJson, null, 2));
+  writeJson(host, path, workspaceJson);
 }
 
 function addProjectToNxJson(
@@ -273,7 +281,7 @@ function addProjectToNxJson(
       ...(config || {}),
     };
   }
-  host.write('nx.json', JSON.stringify(nxJson, null, 2));
+  writeJson(host, 'nx.json', nxJson);
 }
 
 function readWorkspace(host: Tree): WorkspaceJsonConfiguration {

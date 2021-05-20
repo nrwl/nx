@@ -1,4 +1,4 @@
-import { Tree } from '@nrwl/tao/src/shared/tree';
+import type { Tree } from '@nrwl/tao/src/shared/tree';
 import * as stripJsonComments from 'strip-json-comments';
 
 /**
@@ -7,7 +7,7 @@ import * as stripJsonComments from 'strip-json-comments';
  * @param host - file system tree
  * @param path - file path
  */
-export function readJson<T = any>(host: Tree, path: string) {
+export function readJson<T = any>(host: Tree, path: string): T {
   if (!host.exists(path)) {
     throw new Error(`Cannot find ${path}`);
   }
@@ -26,7 +26,7 @@ export function readJson<T = any>(host: Tree, path: string) {
  * @param path Path of JSON file in the Tree
  * @param value Serializable value to write
  */
-export function writeJson<T = any>(host: Tree, path: string, value: T) {
+export function writeJson<T = any>(host: Tree, path: string, value: T): void {
   host.write(path, JSON.stringify(value, null, 2));
 }
 
@@ -41,7 +41,7 @@ export function updateJson<T = any, U = T>(
   host: Tree,
   path: string,
   updater: (value: T) => U
-) {
+): void {
   const updatedValue = updater(readJson(host, path));
   writeJson(host, path, updatedValue);
 }
