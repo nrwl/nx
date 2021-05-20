@@ -17,7 +17,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          # - windows-latest
+          - windows-latest
         node_version:
           - 14.x
           # - 15.x
@@ -37,7 +37,7 @@ jobs:
           - e2e-angular
       fail-fast: false
 
-    name: ${{ matrix.os.replace('-latest','') }} > Node v${{ matrix.node_version }} (${{ matrix.package_manager }}) - ${{ matrix.packages }}
+    name: OS ${{ matrix.os }} Node v${{ matrix.node_version }} (${{ matrix.package_manager }}) - ${{ matrix.packages }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
