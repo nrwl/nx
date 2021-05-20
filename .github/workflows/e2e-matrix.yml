@@ -5,7 +5,7 @@ on:
     - cron: "0 0 * * *"
   push:
     paths:
-      - 'e2e-matrix.yml'
+      - .github/wokflows/e2e-matrix.yml
 
 jobs:
   e2e:
