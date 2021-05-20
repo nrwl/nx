@@ -4,10 +4,6 @@
   "description": "Browser target options",
   "type": "object",
   "properties": {
-    "buildTarget": {
-      "description": "Build target used for building the app after its dependencies have been built. If no target is configured, @angular-devkit/build-angular:browser is sheduled directly.",
-      "type": "string"
-    },
     "assets": {
       "type": "array",
       "description": "List of static application assets.",
@@ -373,7 +369,8 @@
           "type": "string"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false,
+      "required": ["path"]
     }
   },
   "additionalProperties": false,

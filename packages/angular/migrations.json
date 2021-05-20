@@ -78,6 +78,12 @@
       "version": "12.3.1",
       "description": "Migrates some rules that have changed in Angular EsLint",
       "factory": "./src/migrations/update-12-3-0/update-angular-eslint-rules"
+    },
+    "convert-webpack-browser-build-target-to-delegate-build": {
+      "cli": "nx",
+      "version": "12.3.5-beta.0",
+      "description": "Convert targets using @nrwl/angular:webpack-browser with the buildTarget option set to use the @nrwl/angular:delegate-build executor instead.",
+      "factory": "./src/migrations/update-12-3-0/convert-webpack-browser-build-target-to-delegate-build"
     }
   },
   "packageJsonUpdates": {

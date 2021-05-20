@@ -3,7 +3,6 @@ import {
   BuilderOutput,
   BuilderRun,
   createBuilder,
-  targetFromTargetString,
 } from '@angular-devkit/architect';
 import { executeBrowserBuilder } from '@angular-devkit/build-angular';
 import { JsonObject } from '@angular-devkit/core';
@@ -22,31 +21,28 @@ import { existsSync } from 'fs';
 import { merge } from 'webpack-merge';
 import { SchematicsException } from '@angular-devkit/schematics';
 
-type BrowserBuilderSchema = Schema &
-  JsonObject & {
-    buildTarget?: string;
-    customWebpackConfig?: {
-      path: string;
-    };
+type BrowserBuilderSchema = Schema & {
+  customWebpackConfig?: {
+    path: string;
   };
+};
 
 function buildApp(
   options: BrowserBuilderSchema,
   context: BuilderContext
 ): Observable<BuilderOutput> {
-  const { buildTarget, ...delegateOptions } = options;
-
+  const { customWebpackConfig, ...delegateOptions } = options;
   // If there is a path to custom webpack config
   // Invoke our own support for custom webpack config
-  if (options.customWebpackConfig && options.customWebpackConfig.path) {
+  if (customWebpackConfig) {
     const pathToWebpackConfig = joinPathFragments(
       context.workspaceRoot,
-      options.customWebpackConfig.path
+      customWebpackConfig.path
     );
 
     if (existsSync(pathToWebpackConfig)) {
       return buildAppWithCustomWebpackConfiguration(
-        options,
+        delegateOptions,
         context,
         pathToWebpackConfig
       );
@@ -57,37 +53,24 @@ function buildApp(
     }
   }
 
-  let scheduledBuilder: Promise<BuilderRun>;
-
-  if (buildTarget) {
-    const target = targetFromTargetString(buildTarget);
-    scheduledBuilder = context.scheduleTarget(target, delegateOptions, {
+  const scheduledBuilder = context.scheduleBuilder(
+    '@angular-devkit/build-angular:browser',
+    delegateOptions as Schema & JsonObject,
+    {
       target: context.target,
       logger: context.logger as any,
-    });
-  } else {
-    delegateOptions.customWebpackConfig = undefined;
-    scheduledBuilder = context.scheduleBuilder(
-      '@angular-devkit/build-angular:browser',
-      delegateOptions,
-      {
-        target: context.target,
-        logger: context.logger as any,
-      }
-    );
-  }
+    }
+  );
 
   return from(scheduledBuilder).pipe(switchMap((x) => x.result));
 }
 
 function buildAppWithCustomWebpackConfiguration(
-  options: BrowserBuilderSchema,
+  options: Schema,
   context: BuilderContext,
   pathToWebpackConfig: string
 ) {
-  const { buildTarget, customWebpackConfig, ...delegateOptions } = options;
-
-  return executeBrowserBuilder(delegateOptions, context, {
+  return executeBrowserBuilder(options, context, {
     webpackConfiguration: (baseWebpackConfig) => {
       const customWebpackConfiguration = require(pathToWebpackConfig);
       return merge(baseWebpackConfig, customWebpackConfiguration);
