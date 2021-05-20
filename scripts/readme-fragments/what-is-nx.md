@@ -2,13 +2,17 @@
 
 🔎 **Smart, Extensible Build Framework**
 
-### Use Intelligent Build System with Distributed Caching & Distributed Task Execution
+### Distributed Graph-Based Task Execution and Computation Caching
 
-Nx is smart. It analyzes your workspace and figures out what can be affected by every code change. That's why Nx doesn't rebuild and retest everything on every commit--it only rebuilds what is necessary.
+<strong>Nx</strong> is smart. It analyzes your workspace and figures out what can be affected by every code change.
+That's why Nx doesn't rebuild and retest everything on every commit--<strong>it only rebuilds what is necessary</strong>
+.
 
-Nx also uses a distributed computation cache. If someone has already built or tested similar code, Nx will use their results to speed up the command for everyone else instead of rebuilding or retesting the code from scratch.
+<strong>Nx</strong> partitions commands into a graph of smaller tasks. Nx then runs those tasks in parallel,
+and <strong>it can even distribute them across many machines without any configuration</strong>.
 
-This, in combination with Nx’s support for config-free distributed task execution, where a command can be split and ran on many machines in parallel, can help teams see up to 10x reduction in build and test times.
+<strong>Nx also uses a distributed computation cache.</strong> If someone has already built or tested similar code, Nx
+will use their results to speed up the command for everyone else.
 
 ### Develop Efficiently at Scale with Nx
 

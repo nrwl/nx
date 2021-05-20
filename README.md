@@ -18,25 +18,35 @@
 
 🔎 **Smart, Extensible Build Framework**
 
-### Use Intelligent Build System with Distributed Caching & Distributed Task Execution
+### Distributed Graph-Based Task Execution and Computation Caching
 
-Nx is smart. It analyzes your workspace and figures out what can be affected by every code change. That's why Nx doesn't rebuild and retest everything on every commit--it only rebuilds what is necessary.
+<strong>Nx</strong> is smart. It analyzes your workspace and figures out what can be affected by every code change.
+That's why Nx doesn't rebuild and retest everything on every commit--<strong>it only rebuilds what is necessary</strong>
+.
 
-Nx also uses a distributed computation cache. If someone has already built or tested similar code, Nx will use their results to speed up the command for everyone else instead of rebuilding or retesting the code from scratch.
+<strong>Nx</strong> partitions commands into a graph of smaller tasks. Nx then runs those tasks in parallel,
+and <strong>it can even distribute them across many machines without any configuration</strong>.
 
-This, in combination with Nx’s support for config-free distributed task execution, where a command can be split and ran on many machines in parallel, can help teams see up to 10x reduction in build and test times.
+<strong>Nx also uses a distributed computation cache.</strong> If someone has already built or tested similar code, Nx
+will use their results to speed up the command for everyone else.
 
 ### Develop Efficiently at Scale with Nx
 
-Nx helps scale your development from one team building one application to many teams building multiple frontend and backend applications all in the same workspace. When using Nx, developers have a holistic dev experience powered by an advanced CLI (with editor plugins), capabilities for controlled code sharing and consistent code generation.
+Nx helps scale your development from one team building one application to many teams building multiple frontend and
+backend applications all in the same workspace. When using Nx, developers have a holistic dev experience powered by an
+advanced CLI (with editor plugins), capabilities for controlled code sharing and consistent code generation.
 
 ### Use Modern Tools
 
-Nx is an open framework with plugins for many modern tools and frameworks. It has support for TypeScript, React, Angular, Cypress, Jest, Prettier, Nest.js, Next.js, Storybook, Ionic among others. With Nx, you get a consistent dev experience regardless of the tools used.
+Nx is an open framework with plugins for many modern tools and frameworks. It has support for TypeScript, React,
+Angular, Cypress, Jest, Prettier, Nest.js, Next.js, Storybook, Ionic among others. With Nx, you get a consistent dev
+experience regardless of the tools used.
 
 # Documentation & Resources
 
-Even though Nx isn't technology specific, we provide 3 separate flavours of the documentation site to it make it easier for you to get up and running. For every link below, you will be able to select whether you want your examples to be written in React, Node or Angular.
+Even though Nx isn't technology specific, we provide 3 separate flavours of the documentation site to it make it easier
+for you to get up and running. For every link below, you will be able to select whether you want your examples to be
+written in React, Node or Angular.
 
 - [Nx Documentation and Guides](https://nx.dev)
 - [Intro into Nx](https://nx.dev/getting-started/intro)
@@ -91,12 +101,15 @@ Even though Nx isn't technology specific, we provide 3 separate flavours of the 
 
 # Engage with the Core Team and the Community
 
-- [Nx Office Hours Playlist on YouTube](https://www.youtube.com/playlist?list=PLakNactNC1dE8KLQ5zd3fQwu_yQHjTmR5). It's a regular YouTube stream where we talk all things Nx. Join the stream, ask questions, etc.
+- [Nx Office Hours Playlist on YouTube](https://www.youtube.com/playlist?list=PLakNactNC1dE8KLQ5zd3fQwu_yQHjTmR5). It's
+  a regular YouTube stream where we talk all things Nx. Join the stream, ask questions, etc.
 - [Follow Nx on Twitter](https://twitter.com/NxDevTools)
 
 ## Want to help?
 
-If you want to file a bug or submit a PR, read up on our [guidelines for contributing](https://github.com/nrwl/nx/blob/master/CONTRIBUTING.md) and watch this video that will help you get started.
+If you want to file a bug or submit a PR, read up on
+our [guidelines for contributing](https://github.com/nrwl/nx/blob/master/CONTRIBUTING.md) and watch this video that will
+help you get started.
 
 <a href="https://www.youtube.com/watch?v=o11p0zSm0No&feature=youtu.be" target="_blank">
 <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/how-to-contribute.png" width="600" alt="Nx - How to contribute video"></p>
