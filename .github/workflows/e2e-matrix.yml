@@ -4,6 +4,8 @@ on:
   schedule:
     - cron: "0 0 * * *"
   push:
+    branches-ignore:
+      - master
     paths:
       - .github/wokflows/e2e-matrix.yml
 
