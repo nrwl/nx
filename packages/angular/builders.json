@@ -1,6 +1,11 @@
 {
   "$schema": "@angular-devkit/architect/src/builders-schema.json",
   "builders": {
+    "delegate-build": {
+      "implementation": "./src/builders/delegate-build/delegate-build.impl",
+      "schema": "./src/builders/delegate-build/schema.json",
+      "description": "Delegates the build to a different target while supporting incremental builds"
+    },
     "ng-packagr-lite": {
       "implementation": "./src/builders/ng-packagr-lite/ng-packagr-lite.impl",
       "schema": "./src/builders/ng-packagr-lite/schema.json",

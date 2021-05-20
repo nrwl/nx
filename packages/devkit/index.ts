@@ -41,7 +41,10 @@ export { toJS } from './src/generators/to-js';
 export { updateTsConfigsToJs } from './src/generators/update-ts-configs-to-js';
 export { visitNotIgnoredFiles } from './src/generators/visit-not-ignored-files';
 
-export { parseTargetString } from './src/executors/parse-target-string';
+export {
+  parseTargetString,
+  targetToTargetString,
+} from './src/executors/parse-target-string';
 export { readTargetOptions } from './src/executors/read-target-options';
 
 export {

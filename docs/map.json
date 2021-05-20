@@ -461,6 +461,11 @@
             "name": "webpack-browser executor",
             "id": "webpack-browser",
             "file": "angular/api-angular/executors/webpack-browser"
+          },
+          {
+            "name": "delegate-build executor",
+            "id": "delegate-build",
+            "file": "angular/api-angular/executors/delegate-build"
           }
         ]
       },
@@ -1523,6 +1528,11 @@
             "name": "webpack-browser executor",
             "id": "webpack-browser",
             "file": "react/api-angular/executors/webpack-browser"
+          },
+          {
+            "name": "delegate-build executor",
+            "id": "delegate-build",
+            "file": "react/api-angular/executors/delegate-build"
           }
         ]
       },
@@ -2544,6 +2554,11 @@
             "name": "webpack-browser executor",
             "id": "webpack-browser",
             "file": "node/api-angular/executors/webpack-browser"
+          },
+          {
+            "name": "delegate-build executor",
+            "id": "delegate-build",
+            "file": "node/api-angular/executors/delegate-build"
           }
         ]
       },
