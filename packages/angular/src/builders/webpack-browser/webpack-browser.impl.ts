@@ -34,7 +34,7 @@ function buildApp(
   const { customWebpackConfig, ...delegateOptions } = options;
   // If there is a path to custom webpack config
   // Invoke our own support for custom webpack config
-  if (customWebpackConfig) {
+  if (customWebpackConfig && customWebpackConfig.path) {
     const pathToWebpackConfig = joinPathFragments(
       context.workspaceRoot,
       customWebpackConfig.path
