@@ -12,8 +12,8 @@ process.env.YARN_REGISTRY = process.env.npm_config_registry;
 
 function buildPackagePublishAndCleanPorts() {
   removeSync('./build');
-  removeSync('./tmp/nx/proj-backup');
-  removeSync('./tmp/angular/proj-backup');
+  removeSync('./tmp/nx');
+  removeSync('./tmp/angular');
   removeSync('./tmp/local-registry');
 
   build(process.env.PUBLISHED_VERSION);
@@ -25,11 +25,7 @@ function buildPackagePublishAndCleanPorts() {
   }
 }
 
-<<<<<<< HEAD:scripts/e2e-build-package-publish.ts
 const getDirectories = (source: string) =>
-=======
-const getDirectories = (source) =>
->>>>>>> 7011eb70 (feat(repo): change build package to js):scripts/e2e-build-package-publish.js
   readdirSync(source, { withFileTypes: true })
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
@@ -46,13 +42,13 @@ function updateVersionsAndPublishPackages() {
   });
 }
 
-function updateVersion(packagePath) {
+function updateVersion(packagePath: string) {
   return execSync(`npm version ${process.env.PUBLISHED_VERSION}`, {
     cwd: packagePath,
   });
 }
 
-function publishPackage(packagePath, npmMajorVersion) {
+function publishPackage(packagePath: string, npmMajorVersion: number) {
   if (process.env.npm_config_registry.indexOf('http://localhost') === -1) {
     throw Error(`
       ------------------
@@ -86,7 +82,7 @@ function publishPackage(packagePath, npmMajorVersion) {
   }
 }
 
-function build(nxVersion) {
+function build(nxVersion: string) {
   try {
     execSync('npx nx run-many --target=build --all', {
       stdio: ['ignore', 'ignore', 'ignore'],
