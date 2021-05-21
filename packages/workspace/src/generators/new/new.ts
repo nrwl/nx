@@ -262,10 +262,10 @@ const presetDependencies: Omit<
     },
   },
   [Preset.NextJs]: {
-    dependencies: {},
-    dev: {
+    dependencies: {
       '@nrwl/next': nxVersion,
     },
+    dev: {},
   },
   [Preset.Gatsby]: {
     dependencies: {},
