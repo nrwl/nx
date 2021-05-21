@@ -16,6 +16,7 @@
     "@angular-eslint/",
     "@schematics",
     "jasmine-marbles",
+    "rxjs-for-await",
     "webpack-merge"
   ]
 }

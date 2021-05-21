@@ -8,10 +8,8 @@
 import { logger } from '@nrwl/devkit';
 import { STATE_DONE } from 'ng-packagr/lib/graph/node';
 import { isInProgress } from 'ng-packagr/lib/graph/select';
-import {
-  Transform,
-  transformFromPromise,
-} from 'ng-packagr/lib/graph/transform';
+import type { Transform } from 'ng-packagr/lib/graph/transform';
+import { transformFromPromise } from 'ng-packagr/lib/graph/transform';
 import { byEntryPoint } from 'ng-packagr/lib/ng-package/nodes';
 import { pipe } from 'rxjs';
 

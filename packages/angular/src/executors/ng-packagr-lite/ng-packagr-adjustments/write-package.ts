@@ -7,17 +7,13 @@
 
 import { logger } from '@nrwl/devkit';
 import { Node } from 'ng-packagr/lib/graph/node';
-import {
-  Transform,
-  transformFromPromise,
-} from 'ng-packagr/lib/graph/transform';
+import type { Transform } from 'ng-packagr/lib/graph/transform';
+import { transformFromPromise } from 'ng-packagr/lib/graph/transform';
 import { NgEntryPoint } from 'ng-packagr/lib/ng-package/entry-point/entry-point';
 import {
-  EntryPointNode,
   fileUrl,
   isEntryPointInProgress,
   isPackage,
-  PackageNode,
 } from 'ng-packagr/lib/ng-package/nodes';
 import { NgPackage } from 'ng-packagr/lib/ng-package/package';
 import {
@@ -35,9 +31,9 @@ type CompilationMode = 'partial' | 'full' | undefined;
 
 export const nxWritePackageTransform: Transform = transformFromPromise(
   async (graph) => {
-    const entryPoint: EntryPointNode = graph.find(isEntryPointInProgress());
-    const ngEntryPoint: NgEntryPoint = entryPoint.data.entryPoint;
-    const ngPackageNode: PackageNode = graph.find(isPackage);
+    const entryPoint = graph.find(isEntryPointInProgress());
+    const ngEntryPoint = entryPoint.data.entryPoint;
+    const ngPackageNode = graph.find(isPackage);
     const ngPackage = ngPackageNode.data;
     const { destinationFiles } = entryPoint.data;
     const ignorePaths: string[] = [

@@ -1,6 +1,6 @@
 # webpack-browser
 
-Angular browser builder that supports incremental builds
+Angular browser builder that supports incremental builds.
 
 Properties can be configured in angular.json when defining the executor, or when invoking it.
 

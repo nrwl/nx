@@ -1,6 +1,6 @@
 # delegate-build
 
-Delegates the build to a different target while supporting incremental builds
+Delegates the build to a different target while supporting incremental builds.
 
 Properties can be configured in angular.json when defining the executor, or when invoking it.
 

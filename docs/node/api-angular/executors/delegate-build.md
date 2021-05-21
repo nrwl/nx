@@ -1,6 +1,6 @@
 # delegate-build
 
-Delegates the build to a different target while supporting incremental builds
+Delegates the build to a different target while supporting incremental builds.
 
 Properties can be configured in workspace.json when defining the executor, or when invoking it.
 Read more about how to use executors and the CLI here: https://nx.dev/node/getting-started/nx-cli#running-tasks.
