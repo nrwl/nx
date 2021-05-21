@@ -9,7 +9,6 @@ import {
   Tree,
 } from '@angular-devkit/schematics';
 import { formatFiles, Linter, updateJsonInTree } from '@nrwl/workspace';
-import init, { addUnitTestRunner } from '../init/init';
 import { addModule } from './lib/add-module';
 import { normalizeOptions } from './lib/normalize-options';
 import { updateLibPackageNpmScope } from './lib/update-lib-package-npm-scope';
@@ -22,6 +21,7 @@ import {
 } from './lib/enable-strict-type-checking';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { NormalizedSchema } from './lib/normalized-schema';
+import { initSchematic } from '../../generators/init/init.compat';
 
 export default function (schema: Schema): Rule {
   return (host: Tree): Rule => {
@@ -41,11 +41,10 @@ export default function (schema: Schema): Rule {
     }
 
     return chain([
-      init({
+      initSchematic({
         ...options,
         skipFormat: true,
       }),
-      addUnitTestRunner(options),
       // TODO: Remove this after Angular 10.1.0
       updateJsonInTree('tsconfig.json', () => ({
         files: [],
