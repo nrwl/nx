@@ -34,6 +34,7 @@ export interface NextBuildBuilderOptions {
   fileReplacements: FileReplacement[];
   assets?: any[];
   nextConfig?: string;
+  buildLibsFromSource?: boolean;
 }
 
 export interface NextServeBuilderOptions {
@@ -45,12 +46,14 @@ export interface NextServeBuilderOptions {
   customServerPath?: string;
   hostname?: string;
   proxyConfig?: string;
+  buildLibsFromSource?: boolean;
 }
 
 export interface NextExportBuilderOptions {
   buildTarget: string;
   silent: boolean;
   threads: number;
+  buildLibsFromSource?: boolean;
 }
 
 export interface WebpackConfigOptions {

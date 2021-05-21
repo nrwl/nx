@@ -6,6 +6,14 @@ Properties can be configured in angular.json when defining the executor, or when
 
 ## Properties
 
+### buildLibsFromSource
+
+Default: `true`
+
+Type: `boolean`
+
+Read buildable libraries from source instead of building them separately.
+
 ### fileReplacements
 
 Type: `object[]`

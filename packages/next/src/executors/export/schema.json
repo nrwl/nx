@@ -16,6 +16,11 @@
     "threads": {
       "type": "number",
       "description": "Number of worker threads to utilize (defaults to the number of CPUs)"
+    },
+    "buildLibsFromSource": {
+      "type": "boolean",
+      "description": "Read buildable libraries from source instead of building them separately.",
+      "default": true
     }
   },
   "required": []
