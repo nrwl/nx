@@ -21,7 +21,7 @@ npx --ignore-existing create-nx-workspace happynrwl --preset=next
 If you used the Next.js preset, you are all set and can skip this. If you created an empty workspace or have an existing workspace, you can add Next.js capabilities to the workspace:
 
 ```bash
-yarn add --dev @nrwl/next
+yarn add @nrwl/next
 ```
 
 ## Generating a Next.js Application

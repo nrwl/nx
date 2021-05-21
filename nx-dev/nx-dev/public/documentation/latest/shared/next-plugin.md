@@ -11,11 +11,11 @@ The Nx Plugin for Next.js contains executors and generators for managing Next.js
 Installing the Next plugin to a workspace can be done with the following:
 
 ```shell script
-yarn add -D @nrwl/next
+yarn add @nrwl/next
 ```
 
 ```shell script
-npm install -D @nrwl/next
+npm install @nrwl/next
 ```
 
 ## Applications
