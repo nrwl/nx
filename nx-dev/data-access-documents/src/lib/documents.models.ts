@@ -10,7 +10,8 @@ export interface VersionMetadata {
   id: string;
   release: string;
   path: string;
-  default: boolean;
+  default?: boolean;
+  hidden?: boolean;
 }
 
 export interface DocumentMetadata {

@@ -52,9 +52,6 @@
       "@nrwl/nx-dev/data-access-documents": [
         "./nx-dev/data-access-documents/src/index.ts"
       ],
-      "@nrwl/nx-dev/data-access-menu": [
-        "./nx-dev/data-access-menu/src/index.ts"
-      ],
       "@nrwl/nx-dev/feature-search": ["./nx-dev/feature-search/src/index.ts"]
     }
   }

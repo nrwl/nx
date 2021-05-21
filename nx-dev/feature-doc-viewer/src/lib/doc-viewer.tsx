@@ -1,7 +1,7 @@
 import React from 'react';
 import Content from './content';
 import Head from 'next/head';
-import { Menu } from '@nrwl/nx-dev/data-access-menu';
+import { Menu } from '@nrwl/nx-dev/data-access-documents';
 import {
   DocumentData,
   VersionMetadata,

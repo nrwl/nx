@@ -8,10 +8,7 @@ export function createMenuItems(
 ): MenuItem[] {
   const items = root.find((x) => x.id === flavor)?.itemList;
 
-  const createPathMetadata = (
-    g: DocumentMetadata,
-    parentId: string = ''
-  ): MenuItem => {
+  const createPathMetadata = (g: DocumentMetadata, parentId = ''): MenuItem => {
     const pathData = {
       ...g,
       path: `/${versionId}/${flavor}/${parentId}/${g.id}`,

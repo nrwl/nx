@@ -1,14 +1,12 @@
-import * as React from 'react';
-import {
+import type {
   DocumentData,
-  flavorList,
-  getDocument,
-  getStaticDocumentPaths,
-  getVersions,
+  Menu,
   VersionMetadata,
 } from '@nrwl/nx-dev/data-access-documents';
+import { flavorList } from '@nrwl/nx-dev/data-access-documents';
 import { DocViewer } from '@nrwl/nx-dev/feature-doc-viewer';
-import { getMenu, Menu } from '@nrwl/nx-dev/data-access-menu';
+
+import { documentsApi, menuApi } from '../../../lib/api';
 
 interface DocumentationProps {
   version: VersionMetadata;
@@ -44,12 +42,6 @@ export function Documentation({
   );
 }
 
-const defaultVersion = {
-  name: 'Preview',
-  id: 'preview',
-  path: 'preview',
-} as VersionMetadata;
-
 const defaultFlavor = {
   label: 'React',
   value: 'react',
@@ -69,40 +61,46 @@ export async function getStaticProps({ params }: DocumentationParams) {
    * - Otherwise, redirect to the root.
    */
   try {
-    versions = getVersions();
-    version =
-      versions.find((item) => item.id === params.version) || defaultVersion;
+    versions = documentsApi.getVersions();
+    version = versions.find((item) => item.id === params.version);
     flavor =
       flavorList.find((item) => item.value === params.flavor) || defaultFlavor;
-    menu = getMenu(params.version, params.flavor);
-    document = getDocument(params.version, [params.flavor, ...params.segments]);
+    menu = menuApi.getMenu(params.version, params.flavor);
+    document = documentsApi.getDocument(params.version, [
+      params.flavor,
+      ...params.segments,
+    ]);
 
-    return {
-      props: {
-        version,
-        flavor,
-        flavors: flavorList,
-        versions: versions,
-        menu,
-        document,
-      },
-    };
+    if (document && version) {
+      return {
+        props: {
+          version,
+          flavor,
+          flavors: flavorList,
+          versions: versions,
+          menu,
+          document,
+        },
+      };
+    }
   } catch {
-    const firstPagePath = menu?.sections[0].itemList?.[0].itemList?.[0].path;
-    return {
-      redirect: {
-        destination: firstPagePath ?? '/',
-        permanent: false,
-      },
-    };
+    // nothing
   }
+
+  const firstPagePath = menu?.sections[0].itemList?.[0].itemList?.[0].path;
+  return {
+    redirect: {
+      destination: firstPagePath ?? '/',
+      permanent: false,
+    },
+  };
 }
 
-export async function getStaticPaths(props) {
-  const versions = ['preview'].concat(getVersions().map((x) => x.id));
+export async function getStaticPaths() {
+  const versions = documentsApi.getVersions().map((x) => x.id);
 
   const allPaths = versions.reduce((acc, v) => {
-    acc.push(...getStaticDocumentPaths(v));
+    acc.push(...documentsApi.getStaticDocumentPaths(v));
     return acc;
   }, []);
 
