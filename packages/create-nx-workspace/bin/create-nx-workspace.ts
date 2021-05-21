@@ -124,7 +124,16 @@ if (parsedArgs.help) {
     parsedArgs
   );
 
-  const tmpDir = createSandbox(packageManager);
+  output.log({
+    title: 'Nx is creating your workspace.',
+    bodyLines: [
+      'To make sure the command works reliably in all environments, and that the preset is applied correctly,',
+      `Nx will run "${packageManager} install" several times. Please wait.`,
+    ],
+  });
+
+  const tmpDir = await createSandbox(packageManager);
+
   await createApp(tmpDir, name, packageManager, {
     ...parsedArgs,
     cli,
@@ -133,6 +142,10 @@ if (parsedArgs.help) {
     style,
     nxCloud,
   });
+
+  if (nxCloud) {
+    await setupNxCloud(name, packageManager);
+  }
 
   showNxWarning(name);
   pointToTutorialAndCourse(preset);
@@ -402,44 +415,38 @@ function determineStyle(preset: Preset, parsedArgs: any) {
   return Promise.resolve(parsedArgs.style);
 }
 
-function createSandbox(packageManager: string) {
-  output.log({
-    title: 'Nx is creating your workspace.',
-    bodyLines: [
-      'To make sure the command works reliably in all environments, and that the preset is applied correctly,',
-      `Nx will run "${packageManager} install" several times. Please wait.`,
-    ],
-  });
-  const tmpDir = dirSync().name;
-  writeFileSync(
-    path.join(tmpDir, 'package.json'),
-    JSON.stringify({
-      dependencies: {
-        '@nrwl/workspace': nxVersion,
-        '@nrwl/tao': cliVersion,
-        typescript: tsVersion,
-        prettier: prettierVersion,
-      },
-      license: 'MIT',
-    })
-  );
+async function createSandbox(packageManager: string) {
+  const installSpinner = ora(
+    `Installing dependencies with ${packageManager}`
+  ).start();
 
+  const tmpDir = dirSync().name;
   try {
-    execSync(`${packageManager} install --silent`, {
-      cwd: tmpDir,
-      stdio: 'ignore',
+    writeFileSync(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({
+        dependencies: {
+          '@nrwl/workspace': nxVersion,
+          '@nrwl/tao': cliVersion,
+          typescript: tsVersion,
+          prettier: prettierVersion,
+        },
+        license: 'MIT',
+      })
+    );
+
+    await execAndWait(`${packageManager} install --silent`, tmpDir);
+
+    installSpinner.succeed();
+  } catch (e) {
+    installSpinner.fail();
+    output.error({
+      title: `Nx failed to install dependencies`,
+      bodyLines: [`Exit code: ${e.code}`, `Log file: ${e.logFile}`],
     });
-  } catch (_) {
-    // Install failed so run again without --silent
-    try {
-      execSync(`${packageManager} install`, {
-        cwd: tmpDir,
-        stdio: [0, 1, 2],
-      });
-    } catch (e) {
-      // This will probably fail so we exit with the same status
-      process.exit(e.status);
-    }
+    process.exit(1);
+  } finally {
+    installSpinner.stop();
   }
 
   return tmpDir;
@@ -476,30 +483,46 @@ async function createApp(
     process.env.npm_config_legacy_peer_deps = 'false';
   }
   const fullCommandWithoutWorkspaceRoot = `${pmc.exec} tao ${command}/collection.json --cli=${cli}`;
-  const spinner = ora('Creating your workspace').start();
+
+  let workspaceSetupSpinner = ora('Creating your workspace').start();
 
   try {
     const fullCommand = `${fullCommandWithoutWorkspaceRoot} --nxWorkspaceRoot=${nxWorkspaceRoot}`;
     await execAndWait(fullCommand, tmpDir);
+
+    workspaceSetupSpinner.succeed('Nx has successfully created the workspace.');
   } catch (e) {
+    workspaceSetupSpinner.fail();
     output.error({
       title: `Nx failed to create a workspace.`,
       bodyLines: [`Exit code: ${e.code}`, `Log file: ${e.logFile}`],
     });
+    process.exit(1);
   } finally {
-    spinner.stop();
+    workspaceSetupSpinner.stop();
   }
+}
 
-  output.success({
-    title: 'Nx has successfully created the workspace.',
-  });
+async function setupNxCloud(name: string, packageManager: PackageManager) {
+  const nxCloudSpinner = ora(`Setting up NxCloud`).start();
+  try {
+    const pmc = getPackageManagerCommand(packageManager);
+    await execAndWait(
+      `${pmc.exec} nx g @nrwl/nx-cloud:init --no-analytics`,
+      path.join(process.cwd(), name)
+    );
+    nxCloudSpinner.succeed('NxCloud has been set up successfully');
+  } catch (e) {
+    nxCloudSpinner.fail();
 
-  if (parsedArgs.nxCloud) {
-    output.addVerticalSeparator();
-    execSync(`${pmc.exec} nx g @nrwl/nx-cloud:init --no-analytics`, {
-      stdio: [0, 1, 2],
-      cwd: path.join(process.cwd(), name),
+    output.error({
+      title: `Nx failed to setup NxCloud`,
+      bodyLines: [`Exit code: ${e.code}`, `Log file: ${e.logFile}`],
     });
+
+    process.exit(1);
+  } finally {
+    nxCloudSpinner.stop();
   }
 }
 
