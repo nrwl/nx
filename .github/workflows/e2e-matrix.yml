@@ -2,15 +2,17 @@ name: E2E matrix
 
 on:
   schedule:
-  - cron: "0 0 * * *"
+    - cron: "0 0 * * *"
 
 jobs:
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os:
+          - ubuntu-latest
+          # - windows-latest
         node_version:
-          # - 12.x
           - 14.x
           # - 15.x
         package_manager:
@@ -22,7 +24,8 @@ jobs:
           - e2e-cli,e2e-nx-plugin,dep-graph-dep-graph-e2e
           - e2e-cypress,e2e-jest
           - e2e-react
-          - e2e-next,e2e-gatsby
+          - e2e-next
+          - e2e-gatsby
           - e2e-node
           - e2e-web,e2e-linter,e2e-storybook
           - e2e-angular
@@ -30,7 +33,8 @@ jobs:
 
     name: Node v${{ matrix.node_version }} (${{ matrix.package_manager }}) - ${{ matrix.packages }}
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v2
       with:
         fetch-depth: 0
 
@@ -40,11 +44,20 @@ jobs:
         node-version: ${{ matrix.node_version }}
     - run: yarn install
 
+    - name: Cleanup
+      run: |
+        # Workaround to provide additional free space for testing.
+        # https://github.com/actions/virtual-environments/issues/2840
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /opt/ghc
+        sudo rm -rf "/usr/local/share/boost"
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
     - name: Install PNPM
       if: ${{ matrix.package_manager == 'pnpm' }}
-      uses: pnpm/action-setup@v1.2.1
+      uses: pnpm/action-setup@v2.0.1
       with:
-        version: 5.18.9
+        version: 6.0.2
 
     - name: Run e2e tests
       run: yarn nx run-many --target=e2e --projects=${{ matrix.packages }}
