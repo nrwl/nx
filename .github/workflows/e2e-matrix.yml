@@ -17,7 +17,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          # - windows-latest
+          - windows-latest
         node_version:
           - 14.x
           # - 15.x
@@ -43,10 +43,6 @@ jobs:
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
-
-    - name: Setup tmate session
-      if: ${{ matrix.package_manager == 'yarn' }}
-      uses: mxschmitt/action-tmate@v3
 
     - name: Use Node.js ${{ matrix.node_version }}
       uses: actions/setup-node@v2
@@ -81,6 +77,10 @@ jobs:
       uses: pnpm/action-setup@v1.2.1
       with:
         version: 5.18.9
+
+    # - name: Setup tmate session
+    #   if: ${{ matrix.package_manager == 'yarn' }}
+    #   uses: mxschmitt/action-tmate@v3
 
     - name: Run e2e tests
       run: yarn nx run-many --target=e2e --projects="${{ join(matrix.packages) }}"
