@@ -25,7 +25,11 @@ function buildPackagePublishAndCleanPorts() {
   }
 }
 
+<<<<<<< HEAD:scripts/e2e-build-package-publish.ts
 const getDirectories = (source: string) =>
+=======
+const getDirectories = (source) =>
+>>>>>>> 7011eb70 (feat(repo): change build package to js):scripts/e2e-build-package-publish.js
   readdirSync(source, { withFileTypes: true })
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
@@ -42,13 +46,13 @@ function updateVersionsAndPublishPackages() {
   });
 }
 
-function updateVersion(packagePath: string) {
+function updateVersion(packagePath) {
   return execSync(`npm version ${process.env.PUBLISHED_VERSION}`, {
     cwd: packagePath,
   });
 }
 
-function publishPackage(packagePath: string, npmMajorVersion: number) {
+function publishPackage(packagePath, npmMajorVersion) {
   if (process.env.npm_config_registry.indexOf('http://localhost') === -1) {
     throw Error(`
       ------------------
@@ -64,8 +68,7 @@ function publishPackage(packagePath: string, npmMajorVersion: number) {
     if (npmMajorVersion === 7) {
       writeFileSync(
         `${packagePath}/.npmrc`,
-        `registry=${
-          process.env.npm_config_registry
+        `registry=${process.env.npm_config_registry
         }\n${process.env.npm_config_registry.replace(
           'http:',
           ''
@@ -83,7 +86,7 @@ function publishPackage(packagePath: string, npmMajorVersion: number) {
   }
 }
 
-function build(nxVersion: string) {
+function build(nxVersion) {
   try {
     execSync('npx nx run-many --target=build --all', {
       stdio: ['ignore', 'ignore', 'ignore'],
