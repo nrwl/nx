@@ -62,6 +62,8 @@ jobs:
 
     - run: yarn install
 
+    - run: yarn build
+
     - name: Cleanup
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
