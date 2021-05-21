@@ -6,21 +6,15 @@
  */
 
 import { InjectionToken } from 'injection-js';
+import type { Transform } from 'ng-packagr/lib/graph/transform';
+import { transformFromPromise } from 'ng-packagr/lib/graph/transform';
+import { provideTransform } from 'ng-packagr/lib/graph/transform.di';
 import {
-  Transform,
-  transformFromPromise,
-} from 'ng-packagr/lib/graph/transform';
-import {
-  provideTransform,
-  TransformProvider,
-} from 'ng-packagr/lib/graph/transform.di';
-import {
-  EntryPointNode,
   isEntryPoint,
   isEntryPointInProgress,
 } from 'ng-packagr/lib/ng-package/nodes';
 import { compileSourceFiles } from 'ng-packagr/lib/ngc/compile-source-files';
-import { StylesheetProcessor as StylesheetProcessorClass } from 'ng-packagr/lib/styles/stylesheet-processor';
+import type { StylesheetProcessor as StylesheetProcessorClass } from 'ng-packagr/lib/styles/stylesheet-processor';
 import { STYLESHEET_PROCESSOR_TOKEN } from 'ng-packagr/lib/styles/stylesheet-processor.di';
 import { setDependenciesTsConfigPaths } from 'ng-packagr/lib/ts/tsconfig';
 import * as path from 'path';
@@ -31,8 +25,8 @@ export const nxCompileNgcTransformFactory = (
 ): Transform => {
   return transformFromPromise(async (graph) => {
     try {
-      const entryPoint: EntryPointNode = graph.find(isEntryPointInProgress());
-      const entryPoints: EntryPointNode[] = graph.filter(isEntryPoint);
+      const entryPoint = graph.find(isEntryPointInProgress());
+      const entryPoints = graph.filter(isEntryPoint);
       // Add paths mappings for dependencies
       const tsConfig = setDependenciesTsConfigPaths(
         entryPoint.data.tsConfig,
@@ -76,7 +70,7 @@ export const nxCompileNgcTransformFactory = (
 export const NX_COMPILE_NGC_TOKEN = new InjectionToken<Transform>(
   `nx.v1.compileNgc`
 );
-export const NX_COMPILE_NGC_TRANSFORM: TransformProvider = provideTransform({
+export const NX_COMPILE_NGC_TRANSFORM = provideTransform({
   provide: NX_COMPILE_NGC_TOKEN,
   useFactory: nxCompileNgcTransformFactory,
   deps: [STYLESHEET_PROCESSOR_TOKEN],

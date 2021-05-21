@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "title": "ng-packagr Target",
   "description": "ng-packagr target options for Build Architect. Use to build library projects.",
+  "cli": "nx",
   "type": "object",
   "properties": {
     "project": {
@@ -19,12 +20,12 @@
     },
     "updateBuildableProjectDepsInPackageJson": {
       "type": "boolean",
-      "description": "Update buildable project dependencies in package.json",
+      "description": "Update buildable project dependencies in package.json.",
       "default": true
     },
     "buildableProjectDepsInPackageJsonType": {
       "type": "string",
-      "description": "When updateBuildableProjectDepsInPackageJson is true, this adds dependencies to either `peerDependencies` or `dependencies`",
+      "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
       "enum": ["dependencies", "peerDependencies"],
       "default": "peerDependencies"
     }
