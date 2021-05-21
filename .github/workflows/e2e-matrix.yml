@@ -78,12 +78,6 @@ jobs:
       with:
         version: 5.18.9
 
-    - name: Setup tmate session
-      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled && failure() }}
-      uses: mxschmitt/action-tmate@v3
-      with:
-        sudo: false # disable sudo for windows debugging
-
     - name: Run e2e tests
       run: yarn nx run-many --target=e2e --projects="${{ join(matrix.packages) }}"
       env:
