@@ -1,4 +1,4 @@
-import { DocumentMetadata } from '@nrwl/nx-dev/data-access-documents';
+import { DocumentMetadata } from './documents.models';
 
 export interface Menu {
   version: string;

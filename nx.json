@@ -134,7 +134,6 @@
     "nx-dev-data-access-documents": {
       "tags": ["scope:nx-dev", "type:data-access"]
     },
-    "nx-dev-data-access-menu": { "tags": ["scope:nx-dev", "type:data-access"] },
     "nx-dev-feature-search": { "tags": ["scope:nx-dev", "type:feature"] }
   },
   "affected": { "defaultBase": "master" }

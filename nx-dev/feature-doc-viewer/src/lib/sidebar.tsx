@@ -1,10 +1,14 @@
 import React, { useCallback, useState } from 'react';
 import cx from 'classnames';
 import Link from 'next/link';
-import { Menu, MenuItem, MenuSection } from '@nrwl/nx-dev/data-access-menu';
+import {
+  Menu,
+  MenuItem,
+  MenuSection,
+  VersionMetadata,
+} from '@nrwl/nx-dev/data-access-documents';
 import { useRouter } from 'next/router';
 import { Selector } from '@nrwl/nx-dev/ui/common';
-import { VersionMetadata } from '@nrwl/nx-dev/data-access-documents';
 
 export interface SidebarProps {
   menu: Menu;
