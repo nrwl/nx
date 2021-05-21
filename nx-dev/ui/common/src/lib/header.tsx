@@ -2,10 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { AlgoliaSearch } from '@nrwl/nx-dev/feature-search';
 
-/* eslint-disable-next-line */
-export interface headerProps {}
-
-export function Header(props: headerProps) {
+export function Header() {
   return (
     <header className="h-16 px-5 py-5 border-b border-gray-100 flex items-center justify-between print:hidden">
       <div className="flex items-center justify-between w-full max-w-screen-xl mx-auto space-x-10">
@@ -61,7 +58,7 @@ export function Header(props: headerProps) {
                 Plugins
               </a>
             </Link>
-            <Link href="/angular">
+            <Link href="/community">
               <a className="px-3 py-2 hover:bg-gray-100 active:bg-gray-200 rounded inline-flex transition-all ease-out duration 180 leading-tight">
                 Community
               </a>
