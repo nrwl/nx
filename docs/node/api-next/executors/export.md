@@ -7,6 +7,14 @@ Read more about how to use executors and the CLI here: https://nx.dev/node/getti
 
 ## Properties
 
+### buildLibsFromSource
+
+Default: `true`
+
+Type: `boolean`
+
+Read buildable libraries from source instead of building them separately.
+
 ### buildTarget
 
 Type: `string`
