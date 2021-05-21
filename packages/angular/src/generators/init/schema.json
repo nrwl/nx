@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "$id": "SchematicsAngularModuleInit",
+  "cli": "nx",
   "title": "Init Angular Plugin",
   "description": "NOTE: Does not work in the --dry-run mode",
   "type": "object",

@@ -28,7 +28,6 @@ import {
   Linter,
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
-import init from '../init/init';
 import {
   addImportToModule,
   addImportToTestBed,
@@ -42,6 +41,7 @@ import {
 } from '@nrwl/workspace/src/utils/ast-utils';
 import { names, offsetFromRoot } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import { initSchematic } from '../../generators/init/init.compat';
 
 interface NormalizedSchema extends Schema {
   prefix: string; // we set a default for this in normalizeOptions, so it is no longer optional
@@ -718,7 +718,7 @@ export default function (schema: Schema): Rule {
       : `${options.name}/e2e`;
 
     return chain([
-      init({
+      initSchematic({
         ...options,
         skipFormat: true,
       }),

@@ -1,21 +1,28 @@
-import { Tree } from '@angular-devkit/schematics';
-import { runSchematic, callRule } from '../../utils/testing';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
+import { readJson, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { Linter } from '@nrwl/workspace';
+
+import init from './init';
+import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 
 describe('init', () => {
-  let appTree: Tree;
+  let host: Tree;
 
   beforeEach(() => {
-    appTree = createEmptyWorkspace(Tree.empty());
+    host = createTreeWithEmptyWorkspace();
   });
 
   it('should add angular dependencies', async () => {
-    const tree = await runSchematic('init', {}, appTree);
-    const { dependencies, devDependencies } = readJsonInTree(
-      tree,
-      'package.json'
-    );
+    // ACT
+    await init(host, {
+      unitTestRunner: UnitTestRunner.Jest,
+      linter: Linter.EsLint,
+      skipFormat: false,
+    });
+
+    // ASSERT
+    const { dependencies, devDependencies } = readJson(host, 'package.json');
+
     expect(dependencies['@angular/animations']).toBeDefined();
     expect(dependencies['@angular/common']).toBeDefined();
     expect(dependencies['@angular/compiler']).toBeDefined();
@@ -34,16 +41,16 @@ describe('init', () => {
   });
 
   it('should add a postinstall script for ngcc', async () => {
-    const tree = await runSchematic(
-      'init',
-      {
-        unitTestRunner: 'karma',
-      },
-      appTree
-    );
+    // ACT
+    await init(host, {
+      unitTestRunner: UnitTestRunner.Karma,
+      linter: Linter.EsLint,
+      skipFormat: false,
+    });
 
-    const packageJson = readJsonInTree(tree, 'package.json');
+    const packageJson = readJson(host, 'package.json');
 
+    // ASSERT
     expect(packageJson.scripts.postinstall).toEqual(
       'ngcc --properties es2015 browser module main'
     );
@@ -52,14 +59,16 @@ describe('init', () => {
   describe('--unit-test-runner', () => {
     describe('karma', () => {
       it('should add karma dependencies', async () => {
-        const tree = await runSchematic(
-          'init',
-          {
-            unitTestRunner: 'karma',
-          },
-          appTree
-        );
-        const { devDependencies } = readJsonInTree(tree, 'package.json');
+        // ACT
+        await init(host, {
+          unitTestRunner: UnitTestRunner.Karma,
+          linter: Linter.EsLint,
+          skipFormat: false,
+        });
+
+        const { devDependencies } = readJson(host, 'package.json');
+
+        // ASSERT
         expect(devDependencies['karma']).toBeDefined();
         expect(devDependencies['karma-chrome-launcher']).toBeDefined();
         expect(
@@ -73,25 +82,30 @@ describe('init', () => {
       });
 
       it('should add karma configuration', async () => {
-        const tree = await runSchematic(
-          'init',
-          {
-            unitTestRunner: 'karma',
-          },
-          appTree
-        );
-        expect(tree.exists('karma.conf.js')).toBeTruthy();
+        // ACT
+        await init(host, {
+          unitTestRunner: UnitTestRunner.Karma,
+          linter: Linter.EsLint,
+          skipFormat: false,
+        });
+
+        const hasKarmaConfigFile = host.exists('karma.conf.js');
+
+        // ASSERT
+        expect(hasKarmaConfigFile).toBeTruthy();
       });
 
       it('should set defaults', async () => {
-        const tree = await runSchematic(
-          'init',
-          {
-            unitTestRunner: 'karma',
-          },
-          appTree
-        );
-        const { schematics } = readJsonInTree(tree, 'workspace.json');
+        // ACT
+        await init(host, {
+          unitTestRunner: UnitTestRunner.Karma,
+          linter: Linter.EsLint,
+          skipFormat: false,
+        });
+
+        const { schematics } = readJson(host, 'workspace.json');
+
+        // ASSERT
         expect(schematics['@nrwl/angular:application'].unitTestRunner).toEqual(
           'karma'
         );
@@ -103,39 +117,46 @@ describe('init', () => {
 
     describe('jest', () => {
       it('should add jest dependencies', async () => {
-        const tree = await runSchematic(
-          'init',
-          {
-            unitTestRunner: 'jest',
-          },
-          appTree
-        );
-        const { devDependencies } = readJsonInTree(tree, 'package.json');
+        // ACT
+        await init(host, {
+          unitTestRunner: UnitTestRunner.Jest,
+          linter: Linter.EsLint,
+          skipFormat: false,
+        });
+
+        const { devDependencies } = readJson(host, 'package.json');
+
+        // ASSERT
         expect(devDependencies['@nrwl/jest']).toBeDefined();
         expect(devDependencies['jest']).toBeDefined();
         expect(devDependencies['jest-preset-angular']).toBeDefined();
       });
 
       it('should add jest configuration', async () => {
-        const tree = await runSchematic(
-          'init',
-          {
-            unitTestRunner: 'jest',
-          },
-          appTree
-        );
-        expect(tree.exists('jest.config.js')).toBeTruthy();
+        // ACT
+        await init(host, {
+          unitTestRunner: UnitTestRunner.Jest,
+          linter: Linter.EsLint,
+          skipFormat: false,
+        });
+
+        const hasJestConfigFile = host.exists('jest.config.js');
+
+        // ASSERT
+        expect(hasJestConfigFile).toBeTruthy();
       });
 
       it('should set defaults', async () => {
-        const tree = await runSchematic(
-          'init',
-          {
-            unitTestRunner: 'jest',
-          },
-          appTree
-        );
-        const { schematics } = readJsonInTree(tree, 'workspace.json');
+        // ACT
+        await init(host, {
+          unitTestRunner: UnitTestRunner.Jest,
+          linter: Linter.EsLint,
+          skipFormat: false,
+        });
+
+        const { schematics } = readJson(host, 'workspace.json');
+
+        // ASSERT
         expect(schematics['@nrwl/angular:application'].unitTestRunner).toEqual(
           'jest'
         );
@@ -149,28 +170,33 @@ describe('init', () => {
   describe('--e2e-test-runner', () => {
     describe('cypress', () => {
       it('should add cypress dependencies', async () => {
-        const tree = await runSchematic(
-          'init',
-          {
-            unitTestRunner: 'none',
-            e2eTestRunner: 'cypress',
-          },
-          appTree
-        );
-        const { devDependencies } = readJsonInTree(tree, 'package.json');
+        // ACT
+        await init(host, {
+          unitTestRunner: UnitTestRunner.None,
+          e2eTestRunner: E2eTestRunner.Cypress,
+          linter: Linter.EsLint,
+          skipFormat: false,
+        });
+
+        const { devDependencies } = readJson(host, 'package.json');
+
+        // ASSERT
         expect(devDependencies['@nrwl/cypress']).toBeDefined();
         expect(devDependencies['cypress']).toBeDefined();
       });
 
       it('should set defaults', async () => {
-        const tree = await runSchematic(
-          'init',
-          {
-            e2eTestRunner: 'cypress',
-          },
-          appTree
-        );
-        const { schematics } = readJsonInTree(tree, 'workspace.json');
+        // ACT
+        await init(host, {
+          unitTestRunner: UnitTestRunner.None,
+          e2eTestRunner: E2eTestRunner.Cypress,
+          linter: Linter.EsLint,
+          skipFormat: false,
+        });
+
+        const { schematics } = readJson(host, 'workspace.json');
+
+        // ASSERT
         expect(schematics['@nrwl/angular:application'].e2eTestRunner).toEqual(
           'cypress'
         );
@@ -179,14 +205,17 @@ describe('init', () => {
 
     describe('protractor', () => {
       it('should add protractor dependencies', async () => {
-        const tree = await runSchematic(
-          'init',
-          {
-            e2eTestRunner: 'protractor',
-          },
-          appTree
-        );
-        const { devDependencies } = readJsonInTree(tree, 'package.json');
+        // ACT
+        await init(host, {
+          unitTestRunner: UnitTestRunner.None,
+          e2eTestRunner: E2eTestRunner.Protractor,
+          linter: Linter.EsLint,
+          skipFormat: false,
+        });
+
+        const { devDependencies } = readJson(host, 'package.json');
+
+        // ASSERT
         expect(devDependencies['protractor']).toBeDefined();
         expect(devDependencies['jasmine-core']).toBeDefined();
         expect(devDependencies['jasmine-spec-reporter']).toBeDefined();
@@ -195,14 +224,17 @@ describe('init', () => {
       });
 
       it('should set defaults', async () => {
-        const tree = await runSchematic(
-          'init',
-          {
-            e2eTestRunner: 'protractor',
-          },
-          appTree
-        );
-        const { schematics } = readJsonInTree(tree, 'workspace.json');
+        // ACT
+        await init(host, {
+          unitTestRunner: UnitTestRunner.None,
+          e2eTestRunner: E2eTestRunner.Protractor,
+          linter: Linter.EsLint,
+          skipFormat: false,
+        });
+
+        const { schematics } = readJson(host, 'workspace.json');
+
+        // ASSERT
         expect(schematics['@nrwl/angular:application'].e2eTestRunner).toEqual(
           'protractor'
         );
@@ -213,14 +245,16 @@ describe('init', () => {
   describe('--linter', () => {
     describe('eslint', () => {
       it('should set the default to eslint', async () => {
-        const tree = await runSchematic(
-          'init',
-          {
-            linter: 'eslint',
-          },
-          appTree
-        );
-        const workspaceJson = readJsonInTree(tree, 'workspace.json');
+        // ACT
+        await init(host, {
+          unitTestRunner: UnitTestRunner.None,
+          linter: Linter.EsLint,
+          skipFormat: false,
+        });
+
+        const workspaceJson = readJson(host, 'workspace.json');
+
+        // ASSERT
         expect(
           workspaceJson.schematics['@nrwl/angular:application'].linter
         ).toEqual('eslint');
@@ -232,14 +266,16 @@ describe('init', () => {
 
     describe('none', () => {
       it('should set the default to none', async () => {
-        const tree = await runSchematic(
-          'init',
-          {
-            linter: 'none',
-          },
-          appTree
-        );
-        const workspaceJson = readJsonInTree(tree, 'workspace.json');
+        // ACT
+        await init(host, {
+          unitTestRunner: UnitTestRunner.None,
+          linter: Linter.None,
+          skipFormat: false,
+        });
+
+        const workspaceJson = readJson(host, 'workspace.json');
+
+        // ASSERT
         expect(
           workspaceJson.schematics['@nrwl/angular:application'].linter
         ).toEqual('none');
@@ -252,16 +288,35 @@ describe('init', () => {
 
   describe('defaultCollection', () => {
     it('should be set if none was set before', async () => {
-      const result = await runSchematic('init', {}, appTree);
-      const workspaceJson = readJsonInTree(result, 'workspace.json');
+      // ACT
+      await init(host, {
+        unitTestRunner: UnitTestRunner.Jest,
+        e2eTestRunner: E2eTestRunner.Cypress,
+        linter: Linter.EsLint,
+        skipFormat: false,
+      });
+
+      const workspaceJson = readJson(host, 'workspace.json');
+
+      // ASSERT
       expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/angular');
     });
 
     it.each(['css', 'scss', 'styl', 'less'])(
       'should set "%s" as default style extension for components',
       async (style) => {
-        const result = await runSchematic('init', { style }, appTree);
-        const workspaceJson = readJsonInTree(result, 'workspace.json');
+        // ACT
+        await init(host, {
+          unitTestRunner: UnitTestRunner.Jest,
+          e2eTestRunner: E2eTestRunner.Cypress,
+          linter: Linter.EsLint,
+          skipFormat: false,
+          style,
+        });
+
+        const workspaceJson = readJson(host, 'workspace.json');
+
+        // ASSERT
         expect(
           workspaceJson.schematics['@nrwl/angular:component']['style']
         ).toBe(style);

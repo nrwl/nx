@@ -4,8 +4,8 @@
   "extends": ["@schematics/angular", "@nrwl/workspace"],
   "schematics": {
     "init": {
-      "factory": "./src/schematics/init/init",
-      "schema": "./src/schematics/init/schema.json",
+      "factory": "./src/generators/init/init.compat#initSchematic",
+      "schema": "./src/generators/init/schema.json",
       "description": "Initialize the @nrwl/angular plugin",
       "aliases": ["ng-add"],
       "hidden": true
@@ -115,6 +115,13 @@
       "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionGenerator",
       "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
       "description": "Convert a project from TSLint to ESLint"
+    },
+    "init": {
+      "factory": "./src/generators/init/init",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the @nrwl/angular plugin",
+      "aliases": ["ng-add"],
+      "hidden": true
     }
   }
 }
