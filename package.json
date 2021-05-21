@@ -123,7 +123,7 @@
     "core-js": "^3.6.5",
     "cosmiconfig": "^4.0.0",
     "css-loader": "3.4.2",
-    "cypress": "^6.0.1",
+    "cypress": "^7.3.0",
     "cytoscape": "^3.18.2",
     "cytoscape-dagre": "^2.3.2",
     "cytoscape-popper": "^2.0.0",
