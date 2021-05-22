@@ -1,12 +1,13 @@
-import { Tree } from '@angular-devkit/schematics';
-import { UnitTestTree } from '@angular-devkit/schematics/testing';
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { callRule, runSchematic } from '../../../utils/testing';
+import { Tree } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { Schema } from '../schema';
 import { updateModuleName } from './update-module-name';
 
+const libSchematic = wrapAngularDevkitSchematic('@nrwl/angular', 'lib');
+
 describe('updateModuleName Rule', () => {
-  let tree: UnitTestTree;
+  let tree: Tree;
   const schema: Schema = {
     projectName: 'my-source',
     destination: 'my-destination',
@@ -20,17 +21,14 @@ describe('updateModuleName Rule', () => {
   const importerPath = '/libs/my-importer/src/lib/my-importing-file.ts';
 
   beforeEach(async () => {
-    tree = new UnitTestTree(Tree.empty());
-    tree = createEmptyWorkspace(tree) as UnitTestTree;
+    tree = createTreeWithEmptyWorkspace();
 
     // fake a mid-move tree:
-    tree = await runSchematic(
-      'lib',
-      { name: 'my-destination', addModuleSpec: true },
-      tree
-    );
+    await libSchematic(tree, {
+      name: 'my-destination',
+    });
 
-    tree.create(
+    tree.write(
       '/libs/my-destination/src/lib/my-source.module.ts',
       `import { NgModule } from '@angular/core';
     import { CommonModule } from '@angular/common';
@@ -41,7 +39,7 @@ describe('updateModuleName Rule', () => {
     export class MySourceModule {}`
     );
 
-    tree.create(
+    tree.write(
       '/libs/my-destination/src/lib/my-source.module.spec.ts',
       `import { async, TestBed } from '@angular/core/testing';
     import { MySourceModule } from './my-source.module';
@@ -59,7 +57,7 @@ describe('updateModuleName Rule', () => {
     });`
     );
 
-    tree.overwrite(
+    tree.write(
       indexPath,
       `export * from './lib/my-source.module';
     `
@@ -68,9 +66,9 @@ describe('updateModuleName Rule', () => {
     tree.delete(modulePath);
     tree.delete(moduleSpecPath);
 
-    tree = await runSchematic('lib', { name: 'my-importer' }, tree);
+    await libSchematic(tree, { name: 'my-importer' });
 
-    tree.create(
+    tree.write(
       importerPath,
       `import { MySourceModule } from '@proj/my-destination';
     
@@ -80,10 +78,10 @@ describe('updateModuleName Rule', () => {
   });
 
   it('should rename the module files and update the module name', async () => {
-    tree = (await callRule(updateModuleName(schema), tree)) as UnitTestTree;
+    await updateModuleName(tree, schema);
 
-    expect(tree.files).toContain(modulePath);
-    expect(tree.files).toContain(moduleSpecPath);
+    expect(tree.exists(modulePath)).toBe(true);
+    expect(tree.exists(moduleSpecPath)).toBe(true);
 
     const moduleFile = tree.read(modulePath).toString('utf-8');
     expect(moduleFile).toContain(`export class MyDestinationModule {}`);
@@ -100,7 +98,7 @@ describe('updateModuleName Rule', () => {
   });
 
   it('should update any references to the module', async () => {
-    tree = (await callRule(updateModuleName(schema), tree)) as UnitTestTree;
+    await updateModuleName(tree, schema);
 
     const importerFile = tree.read(importerPath).toString('utf-8');
     expect(importerFile).toContain(
@@ -112,7 +110,7 @@ describe('updateModuleName Rule', () => {
   });
 
   it('should update the index.ts file which exports the module', async () => {
-    tree = (await callRule(updateModuleName(schema), tree)) as UnitTestTree;
+    await updateModuleName(tree, schema);
 
     const indexFile = tree.read(indexPath).toString('utf-8');
     expect(indexFile).toContain(`export * from './lib/my-destination.module';`);

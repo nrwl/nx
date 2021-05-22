@@ -1,7 +1,7 @@
-import { chain, externalSchematic } from '@angular-devkit/schematics';
+import { convertNxGenerator, Tree } from '@nrwl/devkit';
+import { moveGenerator } from '@nrwl/workspace';
 import { updateModuleName } from './lib/update-module-name';
 import { Schema } from './schema';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 /**
  * Moves an Angular lib/app to another folder (and renames it in the process)
@@ -10,13 +10,10 @@ import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
  * to the workspace, so it can't use the same tricks as the `@nrwl/workspace` rules
  * to get the before and after names and paths.
  */
-export default function (schema: Schema) {
-  return chain([
-    externalSchematic('@nrwl/workspace', 'move', schema),
-    updateModuleName(schema),
-  ]);
+
+export async function angularMoveGenerator(tree: Tree, schema: Schema) {
+  await moveGenerator(tree, schema);
+  await updateModuleName(tree, schema);
 }
-export const moveGenerator = wrapAngularDevkitSchematic(
-  '@nrwl/angular',
-  'move'
-);
+
+export const angularMoveSchematic = convertNxGenerator(angularMoveGenerator);
