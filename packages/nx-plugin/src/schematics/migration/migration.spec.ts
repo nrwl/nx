@@ -68,7 +68,9 @@ describe('NxPlugin migration', () => {
     );
     expect(migrationsJson.packageJsonUpdates).toBeFalsy();
 
-    expect(packageJson['nx-migrate'].migrations).toEqual('./migrations.json');
+    expect(packageJson['nx-migrations'].migrations).toEqual(
+      './migrations.json'
+    );
   });
 
   it('should generate files with default name', async () => {

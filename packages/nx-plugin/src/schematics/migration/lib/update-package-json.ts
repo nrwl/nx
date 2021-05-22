@@ -7,11 +7,11 @@ export function updatePackageJson(options: NormalizedSchema): Rule {
   return updateJsonInTree(
     path.join(options.projectRoot, 'package.json'),
     (json) => {
-      if (!json['nx-migrate'] || !json['nx-migrate'].migrations) {
-        if (json['nx-migrate']) {
-          json['nx-migrate'].migrations = './migrations.json';
+      if (!json['nx-migrations'] || !json['nx-migrations'].migrations) {
+        if (json['nx-migrations']) {
+          json['nx-migrations'].migrations = './migrations.json';
         } else {
-          json['nx-migrate'] = {
+          json['nx-migrations'] = {
             migrations: './migrations.json',
           };
         }
