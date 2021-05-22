@@ -167,8 +167,7 @@ interface Schema {
   message: string;
   allCaps: boolean;
 }
-
-export default function (
+export function run(
   options: Schema,
   context: BuilderContext
 ): Observable<{ success: true }> {
@@ -194,3 +193,7 @@ The schema files for both Nx Devkit executors and Angular Builders are the same.
 If you are writing an Nx plugin, use Nx Devkit. It's **much** easier to use and debug. It has better docs and more people supporting it.
 
 Do you have to rewrite your Nx Plugin if it is written using Angular Devkit? No. Nx supports both and will always support both. And, most importantly, the end user might not even know what you used to write a generator or an executor.
+
+```
+
+```
