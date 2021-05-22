@@ -19437,7 +19437,7 @@ export const nxGraph: ProjectGraphCache = {
       type: 'npm',
       name: 'npm:rollup-plugin-typescript2',
       data: {
-        version: '^0.27.1',
+        version: '^0.30.0',
         packageName: 'rollup-plugin-typescript2',
         files: [],
       },
