@@ -176,7 +176,11 @@ export function createRollupOptions(
   sourceRoot: string
 ): rollup.InputOptions[] {
   return outputConfigs.map((config) => {
-    const compilerOptions = createCompilerOptions(config, options, dependencies);
+    const compilerOptions = createCompilerOptions(
+      config,
+      options,
+      dependencies
+    );
 
     const plugins = [
       copy({
@@ -238,9 +242,9 @@ export function createRollupOptions(
 
     const globals = options.globals
       ? options.globals.reduce((acc, item) => {
-        acc[item.moduleId] = item.global;
-        return acc;
-      }, {})
+          acc[item.moduleId] = item.global;
+          return acc;
+        }, {})
       : {};
 
     const externalPackages = dependencies
@@ -283,7 +287,7 @@ function createCompilerOptions(config, options, dependencies) {
     return {
       ...baseCompilerOptions,
       target: 'es5',
-    }
+    };
   }
 
   return baseCompilerOptions;
@@ -333,8 +337,8 @@ function convertCopyAssetsToRollupOptions(
 ): RollupCopyAssetOption[] {
   return assets
     ? assets.map((a) => ({
-      src: join(a.input, a.glob).replace(/\\/g, '/'),
-      dest: join(outputPath, a.output).replace(/\\/g, '/'),
-    }))
+        src: join(a.input, a.glob).replace(/\\/g, '/'),
+        dest: join(outputPath, a.output).replace(/\\/g, '/'),
+      }))
     : undefined;
 }
