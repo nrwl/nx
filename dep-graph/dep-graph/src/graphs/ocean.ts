@@ -26442,7 +26442,7 @@ export const oceanGraph: ProjectGraphCache = {
       type: 'npm',
       name: 'npm:dotenv',
       data: {
-        version: '8.2.0',
+        version: '10.0.0',
         packageName: 'dotenv',
         files: [],
       },
