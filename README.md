@@ -111,7 +111,7 @@ If you want to file a bug or submit a PR, read up on
 our [guidelines for contributing](https://github.com/nrwl/nx/blob/master/CONTRIBUTING.md) and watch this video that will
 help you get started.
 
-<a href="https://www.youtube.com/watch?v=o11p0zSm0No&feature=youtu.be" target="_blank">
+<a href="https://www.youtube.com/watch?v=8LCA_4qxc08" target="_blank">
 <p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/how-to-contribute.png" width="600" alt="Nx - How to contribute video"></p>
 </a>
 
