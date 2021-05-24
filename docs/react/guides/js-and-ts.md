@@ -11,4 +11,4 @@ nx g @nrwl/react:component mycmp --project=myapp --js
 
 You can build/test/lint/serve your applications and libraries the same way whether you use JavaScript and TypeScript. You can also mix and match them.
 
-Regardless whether you use JavaScript or TypeScript, you will have a `tsconfig.json` file at the root of the workspace. **It's not used to build the applications and libraries in the workspace. It's only used to improve the editor experience.**
+Regardless whether you use JavaScript or TypeScript, you will have a `tsconfig.base.json` file at the root of the workspace. **It's not used to build the applications and libraries in the workspace. It's only used to improve the editor experience.**

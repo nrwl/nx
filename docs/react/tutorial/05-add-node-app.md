@@ -13,23 +13,23 @@ Nx is an open platform with plugins for many modern tools and frameworks. **To s
 ```bash
 >  NX  Installed plugins:
 
-  @nrwl/cypress (builders,schematics)
-  @nrwl/jest (builders,schematics)
+  @nrwl/cypress (executors,generators)
+  @nrwl/jest (executors,generators)
   @nrwl/linter (builders)
-  @nrwl/react (schematics)
-  @nrwl/web (builders,schematics)
-  @nrwl/workspace (builders,schematics)
+  @nrwl/react (generators)
+  @nrwl/web (executors,generators)
+  @nrwl/workspace (executors,generators)
 
 
 >  NX  Also available:
 
-  @nrwl/angular (schematics)
-  @nrwl/express (builders,schematics)
-  @nrwl/nest (builders,schematics)
-  @nrwl/next (builders,schematics)
-  @nrwl/node (builders,schematics)
-  @nrwl/nx-plugin (builders,schematics)
-  @nrwl/storybook (builders,schematics)
+  @nrwl/angular (generators)
+  @nrwl/express (executors,generators)
+  @nrwl/nest (executors,generators)
+  @nrwl/next (executors,generators)
+  @nrwl/node (executors,generators)
+  @nrwl/nx-plugin (executors,generators)
+  @nrwl/storybook (executors,generators)
 
 
 >  NX  Community plugins:
@@ -94,7 +94,7 @@ myorg/
 ├── workspace.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 The `apps` directory is where Nx places anything you can run: frontend applications, backend applications, e2e test suites. That's why the `api` application appeared there.

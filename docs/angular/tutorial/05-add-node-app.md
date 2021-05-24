@@ -13,23 +13,23 @@ Nx is an open platform with plugins for many modern tools and frameworks. **To s
 ```bash
 >  NX  Installed plugins:
 
-  @nrwl/angular (builders,schematics)
-  @nrwl/cypress (builders,schematics)
-  @nrwl/jest (builders,schematics)
-  @nrwl/workspace (builders,schematics)
+  @nrwl/angular (executors,generators)
+  @nrwl/cypress (executors,generators)
+  @nrwl/jest (executors,generators)
+  @nrwl/workspace (executors,generators)
 
 
 >  NX  Also available:
 
-  @nrwl/express (builders,schematics)
+  @nrwl/express (executors,generators)
   @nrwl/linter (builders)
-  @nrwl/nest (builders,schematics)
-  @nrwl/next (builders,schematics)
-  @nrwl/node (builders,schematics)
-  @nrwl/nx-plugin (builders,schematics)
-  @nrwl/react (builders,schematics)
-  @nrwl/storybook (builders,schematics)
-  @nrwl/web (builders,schematics)
+  @nrwl/nest (executors,generators)
+  @nrwl/next (executors,generators)
+  @nrwl/node (executors,generators)
+  @nrwl/nx-plugin (executors,generators)
+  @nrwl/react (executors,generators)
+  @nrwl/storybook (executors,generators)
+  @nrwl/web (executors,generators)
 
 
 >  NX  Community plugins:
@@ -102,7 +102,7 @@ myorg/
 ├── nx.json
 ├── package.json
 ├── tools/
-├── tsconfig.json
+├── tsconfig.base.json
 └── tslint.json
 ```
 

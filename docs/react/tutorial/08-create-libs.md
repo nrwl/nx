@@ -45,7 +45,7 @@ myorg/
 ├── tools/
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 The `libs/ui/src/lib/ui.tsx` file looks like this:
@@ -106,7 +106,7 @@ myorg/
 ├── workspace.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 **Implement the Todos component.**
@@ -179,4 +179,4 @@ export default App;
 Libraries' public API is defined in...
 !!!!!
 index.ts
-workspace.json and tsconfig.json files
+workspace.json and tsconfig.base.json files

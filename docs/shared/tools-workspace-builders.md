@@ -23,7 +23,7 @@ happynrwl/
 │           └── schema.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 ### schema.json
