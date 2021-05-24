@@ -46,7 +46,7 @@ nx g @nrwl/web:app frontend
 ├── package.json
 ├── README.md
 ├── workspace.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 ### Testing Applications

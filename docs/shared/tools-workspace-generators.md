@@ -23,7 +23,7 @@ happynrwl/
 │   |   |    └── schema.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 The `index.ts` provides an entry point to the generator. The file contains a function that is called to perform manipulations on a tree that represents the file system.
@@ -112,7 +112,7 @@ happynrwl/
 │   |   |    └── schema.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 Next, update the `index.ts` file for the generator, and generate the new files.

@@ -74,7 +74,7 @@ myorg/
 ├── angular.json
 ├── nx.json
 ├── package.json
-├── tsconfig.json
+├── tsconfig.base.json
 ├── tslint.json
 └── README.md
 ```

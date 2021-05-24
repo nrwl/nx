@@ -40,7 +40,7 @@ myorg/
 ├── nx.json
 ├── package.json
 ├── tools/
-├── tsconfig.json
+├── tsconfig.base.json
 └── tslint.json
 ```
 
@@ -91,7 +91,7 @@ myorg/
 ├── nx.json
 ├── package.json
 ├── tools/
-├── tsconfig.json
+├── tsconfig.base.json
 └── tslint.json
 ```
 

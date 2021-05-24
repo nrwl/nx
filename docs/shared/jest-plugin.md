@@ -33,7 +33,7 @@ By default, Nx will use Jest when creating applications and libraries.
 ├── package.json
 ├── README.md
 ├── workspace.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 Depending on the project you are creating, Nx can support other test runners in addition to Jest. You can configure the test runner you use by passing `--unit-test-runner=jest` when creating applications or libraries.

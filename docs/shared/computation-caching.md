@@ -11,7 +11,7 @@ There are three things that tell Nx if something has been computed before:
 
 ## Source Code Cache Inputs
 
-The result of building/testing an application or a library depends on the source code of that project and all the source codes of all the libraries it depends on (directly or indirectly). It also depends on the configuration files like `package.json`, `workspace.json`, `nx.json`, `tsconfig.json`, and `package-lock.json`. The list of these files isn't arbitrary. Nx can deduce most of them by analyzing our codebase. Few will have to be listed manually in the `implicitDependencies` property of `nx.json`.
+The result of building/testing an application or a library depends on the source code of that project and all the source codes of all the libraries it depends on (directly or indirectly). It also depends on the configuration files like `package.json`, `workspace.json`, `nx.json`, `tsconfig.base.json`, and `package-lock.json`. The list of these files isn't arbitrary. Nx can deduce most of them by analyzing our codebase. Few will have to be listed manually in the `implicitDependencies` property of `nx.json`.
 
 ```json
 {

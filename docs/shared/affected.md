@@ -113,7 +113,7 @@ Nx uses its advanced code analysis to construct a dependency graph of all applic
   "npmScope": "myorg",
   "implicitDependencies": {
     "package.json": "*",
-    "tsconfig.json": "*",
+    "tsconfig.base.json": "*",
     "nx.json": "*"
   },
   "projects": {
@@ -155,7 +155,7 @@ The `implicitDependencies` map is used to define what projects are affected by g
 {
   "implicitDependencies": {
     "package.json": ["admin", "client"],
-    "tsconfig.json": "*",
+    "tsconfig.base.json": "*",
     "nx.json": "*"
   }
 }
