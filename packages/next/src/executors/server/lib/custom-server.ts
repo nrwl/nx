@@ -1,5 +1,5 @@
 import { joinPathFragments } from '@nrwl/devkit';
-import NextServer from 'next/dist/server/next-dev-server';
+import next from 'next';
 import { NextServerOptions, ProxyConfig } from '../../../utils/types';
 import { tsNodeRegister } from './tsnode-register';
 
@@ -7,7 +7,7 @@ export function customServer(
   settings: NextServerOptions,
   proxyConfig?: ProxyConfig
 ): Promise<void> {
-  const nextApp = new NextServer(settings);
+  const nextApp = next(settings);
 
   tsNodeRegister(
     joinPathFragments(settings.dir, settings.path),
