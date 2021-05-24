@@ -1,62 +1,57 @@
+jest.mock('@angular/compiler-cli');
+jest.mock('@nrwl/workspace/src/core/project-graph');
+jest.mock('@nrwl/workspace/src/utilities/buildable-libs-utils');
+jest.mock('ng-packagr');
+
+import * as ng from '@angular/compiler-cli';
 import type { ExecutorContext } from '@nrwl/devkit';
+import * as buildableLibsUtils from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import * as ngPackagr from 'ng-packagr';
 import { BehaviorSubject } from 'rxjs';
+import type { BuildAngularLibraryExecutorOptions } from '../package/schema';
 import { NX_ENTRY_POINT_PROVIDERS } from './ng-packagr-adjustments/entry-point.di';
 import {
   NX_PACKAGE_PROVIDERS,
   NX_PACKAGE_TRANSFORM,
 } from './ng-packagr-adjustments/package.di';
-import type { BuildAngularLibraryExecutorOptions } from '../package/schema';
-
-const ngPackagrBuildMock = jest.fn(() => Promise.resolve());
-const ngPackagerWatchSubject = new BehaviorSubject<void>(undefined);
-const ngPackagrWatchMock = jest.fn(() => ngPackagerWatchSubject.asObservable());
-const ngPackagrWithBuildTransformMock = jest.fn(() => {});
-const ngPackagrWithTsConfigMock = jest.fn(() => {});
-const NgPackagerMock = jest.fn(() => ({
-  build: ngPackagrBuildMock,
-  forProject: jest.fn(),
-  watch: ngPackagrWatchMock,
-  withBuildTransform: ngPackagrWithBuildTransformMock,
-  withTsConfig: ngPackagrWithTsConfigMock,
-}));
-jest.doMock('ng-packagr', () => ({
-  NgPackagr: NgPackagerMock,
-}));
-
-const tsConfig = {
-  options: {
-    paths: { '@myorg/my-package': ['/root/my-package/src/index.ts'] },
-  },
-};
-jest.doMock('@angular/compiler-cli', () => ({
-  readConfiguration: jest.fn(() => tsConfig),
-}));
-
-jest.doMock('@nrwl/workspace/src/core/project-graph', () => ({
-  createProjectGraph: jest.fn(),
-}));
-
-jest.doMock('@nrwl/workspace/src/utilities/buildable-libs-utils', () => ({
-  calculateProjectDependencies: jest.fn(() => ({
-    target: {},
-    dependencies: [],
-  })),
-  checkDependentProjectsHaveBeenBuilt: jest.fn(),
-  updateBuildableProjectPackageJsonDependencies: jest.fn(),
-  updatePaths: jest.fn(),
-}));
 import ngPackagrLiteExecutor from './ng-packagr-lite.impl';
-import {
-  checkDependentProjectsHaveBeenBuilt,
-  updatePaths,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-const checkDependentProjectsHaveBeenBuiltMock = checkDependentProjectsHaveBeenBuilt as jest.Mock<boolean>;
 
 describe('NgPackagrLite executor', () => {
   let context: ExecutorContext;
+  let ngPackagrBuildMock: jest.Mock;
+  let ngPackagerWatchSubject: BehaviorSubject<void>;
+  let ngPackagrWatchMock: jest.Mock;
+  let ngPackagrWithBuildTransformMock: jest.Mock;
+  let ngPackagrWithTsConfigMock: jest.Mock;
   let options: BuildAngularLibraryExecutorOptions;
+  let tsConfig: { options: { paths: { [key: string]: string[] } } };
 
   beforeEach(async () => {
+    tsConfig = {
+      options: {
+        paths: { '@myorg/my-package': ['/root/my-package/src/index.ts'] },
+      },
+    };
+    (ng.readConfiguration as jest.Mock).mockImplementation(() => tsConfig);
+    (buildableLibsUtils.calculateProjectDependencies as jest.Mock).mockImplementation(
+      () => ({
+        target: {},
+        dependencies: [],
+      })
+    );
+    ngPackagrBuildMock = jest.fn(() => Promise.resolve());
+    ngPackagerWatchSubject = new BehaviorSubject<void>(undefined);
+    ngPackagrWatchMock = jest.fn(() => ngPackagerWatchSubject.asObservable());
+    ngPackagrWithBuildTransformMock = jest.fn();
+    ngPackagrWithTsConfigMock = jest.fn();
+    (ngPackagr.NgPackagr as jest.Mock).mockImplementation(() => ({
+      build: ngPackagrBuildMock,
+      forProject: jest.fn(),
+      watch: ngPackagrWatchMock,
+      withBuildTransform: ngPackagrWithBuildTransformMock,
+      withTsConfig: ngPackagrWithTsConfigMock,
+    }));
+
     context = {
       root: '/root',
       projectName: 'my-lib',
@@ -69,7 +64,9 @@ describe('NgPackagrLite executor', () => {
   afterEach(() => jest.clearAllMocks());
 
   it('should return unsuccessful result when deps have not been built', async () => {
-    checkDependentProjectsHaveBeenBuiltMock.mockReturnValue(false);
+    (buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock).mockReturnValue(
+      false
+    );
 
     const result = await ngPackagrLiteExecutor(options, context);
 
@@ -77,7 +74,9 @@ describe('NgPackagrLite executor', () => {
   });
 
   it('should build the library when deps have been built', async () => {
-    checkDependentProjectsHaveBeenBuiltMock.mockReturnValue(true);
+    (buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock).mockReturnValue(
+      true
+    );
 
     const result = await ngPackagrLiteExecutor(options, context);
 
@@ -86,11 +85,13 @@ describe('NgPackagrLite executor', () => {
   });
 
   it('should instantiate NgPackager with the right providers and set to use the right build transformation provider', async () => {
-    checkDependentProjectsHaveBeenBuiltMock.mockReturnValue(true);
+    (buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock).mockReturnValue(
+      true
+    );
 
     const result = await ngPackagrLiteExecutor(options, context);
 
-    expect(NgPackagerMock).toHaveBeenCalledWith([
+    expect(ngPackagr.NgPackagr).toHaveBeenCalledWith([
       ...NX_PACKAGE_PROVIDERS,
       ...NX_ENTRY_POINT_PROVIDERS,
     ]);
@@ -101,7 +102,9 @@ describe('NgPackagrLite executor', () => {
   });
 
   it('should process tsConfig for incremental builds when tsConfig options is set', async () => {
-    checkDependentProjectsHaveBeenBuiltMock.mockReturnValue(true);
+    (buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock).mockReturnValue(
+      true
+    );
     const tsConfigPath = '/root/my-lib/tsconfig.app.json';
 
     const result = await ngPackagrLiteExecutor(
@@ -109,7 +112,7 @@ describe('NgPackagrLite executor', () => {
       context
     );
 
-    expect(updatePaths).toHaveBeenCalledWith(
+    expect(buildableLibsUtils.updatePaths).toHaveBeenCalledWith(
       expect.any(Array),
       tsConfig.options.paths
     );
@@ -120,7 +123,9 @@ describe('NgPackagrLite executor', () => {
 
   describe('--watch', () => {
     it('should emit results everytime there are changes', async () => {
-      checkDependentProjectsHaveBeenBuiltMock.mockReturnValue(true);
+      (buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock).mockReturnValue(
+        true
+      );
 
       const results = ngPackagrLiteExecutor(
         { ...options, watch: true },

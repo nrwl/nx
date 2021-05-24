@@ -23,3 +23,11 @@ The full path for the output directory, relative to the workspace root.
 Type: `string`
 
 The full path for the TypeScript configuration file, relative to the workspace root.
+
+### watch
+
+Default: `false`
+
+Type: `boolean`
+
+Run build when files change.
