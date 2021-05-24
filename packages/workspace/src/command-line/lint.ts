@@ -7,7 +7,7 @@ import { readWorkspaceFiles, workspaceLayout } from '../core/file-utils';
 import { output } from '../utilities/output';
 import * as path from 'path';
 
-export function workspaceLint() {
+export function workspaceLint(): void {
   const graph = onlyWorkspaceProjects(createProjectGraph());
 
   const cliErrorOutputConfigs = new WorkspaceIntegrityChecks(

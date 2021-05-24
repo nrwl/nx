@@ -164,7 +164,7 @@ describe('splitArgs', () => {
           notNxArg: true,
           _: ['--override'],
           $0: '',
-          head: 'directlyOnCommandSha1' // higher priority than $NX_HEAD
+          head: 'directlyOnCommandSha1', // higher priority than $NX_HEAD
         },
         'affected'
       ).nxArgs
@@ -180,7 +180,7 @@ describe('splitArgs', () => {
           notNxArg: true,
           _: ['--override'],
           $0: '',
-          base: 'directlyOnCommandSha2' // higher priority than $NX_BASE
+          base: 'directlyOnCommandSha2', // higher priority than $NX_BASE
         },
         'affected'
       ).nxArgs

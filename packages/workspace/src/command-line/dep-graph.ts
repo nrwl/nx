@@ -1,18 +1,18 @@
-import { exists, readFile, readFileSync, statSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { copySync, ensureDirSync } from 'fs-extra';
 import * as http from 'http';
 import * as open from 'open';
 import { join, normalize, parse, dirname } from 'path';
-import * as url from 'url';
+import { URL } from 'url';
 import {
   createProjectGraph,
   onlyWorkspaceProjects,
-  ProjectGraph,
-  ProjectGraphNode,
 } from '../core/project-graph';
+import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
 import { appRootPath } from '../utilities/app-root';
 import { output } from '../utilities/output';
 import { workspaceLayout } from '../core/file-utils';
+import { writeJsonFile } from '../utilities/fileutils';
 
 // maps file extention to MIME types
 const mimeType = {
@@ -42,8 +42,9 @@ function projectsToHtml(
   layout: { appsDir: string; libsDir: string }
 ) {
   let f = readFileSync(
-    join(__dirname, '../core/dep-graph/index.html')
-  ).toString();
+    join(__dirname, '../core/dep-graph/index.html'),
+    'utf-8'
+  );
 
   f = f
     .replace(
@@ -161,7 +162,7 @@ export function generateGraph(
     return a.name.localeCompare(b.name);
   });
 
-  if (args.focus !== undefined) {
+  if (args.focus) {
     if (!projectExists(projects, args.focus)) {
       output.error({
         title: `Project to focus does not exist.`,
@@ -171,7 +172,7 @@ export function generateGraph(
     }
   }
 
-  if (args.exclude !== undefined) {
+  if (args.exclude) {
     const invalidExcludes: string[] = [];
 
     args.exclude.forEach((project) => {
@@ -191,7 +192,7 @@ export function generateGraph(
 
   let html: string;
 
-  if (args.file === undefined || args.file.endsWith('html')) {
+  if (!args.file || args.file.endsWith('html')) {
     html = projectsToHtml(
       projects,
       graph,
@@ -223,7 +224,7 @@ export function generateGraph(
       const assetsFolder = `${folder}/static`;
       const assets: string[] = [];
       copySync(join(__dirname, '../core/dep-graph'), assetsFolder, {
-        filter: (src, dest) => {
+        filter: (_src, dest) => {
           const isntHtml = !/index\.html/.test(dest);
           if (isntHtml && dest.includes('.')) {
             assets.push(dest);
@@ -248,18 +249,11 @@ export function generateGraph(
 
       ensureDirSync(dirname(filename));
 
-      writeFileSync(
-        filename,
-        JSON.stringify(
-          {
-            graph,
-            affectedProjects,
-            criticalPath: affectedProjects,
-          },
-          null,
-          2
-        )
-      );
+      writeJsonFile(filename, {
+        graph,
+        affectedProjects,
+        criticalPath: affectedProjects,
+      });
 
       output.success({
         title: `JSON output created in ${folder}`,
@@ -280,7 +274,7 @@ export function generateGraph(
 function startServer(html: string, host: string, port = 4211) {
   const app = http.createServer((req, res) => {
     // parse URL
-    const parsedUrl = url.parse(req.url);
+    const parsedUrl = new URL(req.url);
 
     // extract URL path
     // Avoid https://en.wikipedia.org/wiki/Directory_traversal_attack
@@ -292,36 +286,31 @@ function startServer(html: string, host: string, port = 4211) {
     );
     let pathname = join(__dirname, '../core/dep-graph/', sanitizePath);
 
-    exists(pathname, function (exist) {
-      if (!exist) {
-        // if the file is not found, return 404
-        res.statusCode = 404;
-        res.end(`File ${pathname} not found!`);
-        return;
-      }
+    if (!existsSync(pathname)) {
+      // if the file is not found, return 404
+      res.statusCode = 404;
+      res.end(`File ${pathname} not found!`);
+      return;
+    }
 
-      // if is a directory, then look for index.html
-      if (statSync(pathname).isDirectory()) {
-        // pathname += '/index.html';
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(html);
-        return;
-      }
+    // if is a directory, then look for index.html
+    if (statSync(pathname).isDirectory()) {
+      // pathname += '/index.html';
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(html);
+      return;
+    }
 
-      // read file from file system
-      readFile(pathname, function (err, data) {
-        if (err) {
-          res.statusCode = 500;
-          res.end(`Error getting the file: ${err}.`);
-        } else {
-          // based on the URL path, extract the file extention. e.g. .js, .doc, ...
-          const ext = parse(pathname).ext;
-          // if the file is found, set Content-type and send data
-          res.setHeader('Content-type', mimeType[ext] || 'text/plain');
-          res.end(data);
-        }
-      });
-    });
+    try {
+      const data = readFileSync(pathname);
+
+      const ext = parse(pathname).ext;
+      res.setHeader('Content-type', mimeType[ext] || 'text/plain');
+      res.end(data);
+    } catch (err) {
+      res.statusCode = 500;
+      res.end(`Error getting the file: ${err}.`);
+    }
   });
 
   app.listen(port, host);

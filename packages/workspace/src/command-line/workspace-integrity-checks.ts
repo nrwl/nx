@@ -1,4 +1,5 @@
-import { output, CLIErrorMessageConfig } from '../utilities/output';
+import { output } from '../utilities/output';
+import type { CLIErrorMessageConfig } from '../utilities/output';
 import type { ProjectGraph } from '@nrwl/devkit';
 import { workspaceFileName } from '../core/file-utils';
 

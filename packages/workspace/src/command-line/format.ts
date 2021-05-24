@@ -58,24 +58,24 @@ function getPatterns(
   const matchAllPattern = `**/*{${supportedExtensions.join(',')}}`;
   const allFilesPattern = [matchAllPattern];
 
-  try {
-    if (args.all) {
-      return allFilesPattern;
-    }
+  if (args.all) {
+    return allFilesPattern;
+  }
 
+  try {
     if (args.projects && args.projects.length > 0) {
       return getPatternsFromProjects(args.projects, matchAllPattern);
     }
 
     const p = parseFiles(args);
-    const patterns = p.files
-      .filter((f) => fileExists(f))
-      .filter((f) => supportedExtensions.includes(path.extname(f)));
+    const patterns = p.files.filter(
+      (f) => fileExists(f) && supportedExtensions.includes(path.extname(f))
+    );
 
     return args.libsAndApps
       ? getPatternsFromApps(patterns, matchAllPattern)
       : patterns;
-  } catch (e) {
+  } catch {
     return allFilesPattern;
   }
 }
@@ -128,19 +128,19 @@ function check(patterns: string[]) {
           stdio: [0, 1, 2],
         }
       );
-    } catch (e) {
+    } catch {
       process.exit(1);
     }
   }
 }
 
 function updateWorkspaceJsonToMatchFormatVersion() {
-  const path = workspaceConfigName(appRootPath);
+  const workspaceConfig = workspaceConfigName(appRootPath);
   try {
-    const workspaceJson = readJsonFile(path);
+    const workspaceJson = readJsonFile(workspaceConfig);
     const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
     if (reformatted) {
-      writeJsonFile(path, reformatted);
+      writeJsonFile(workspaceConfig, reformatted);
     }
   } catch (e) {
     console.error(`Failed to format: ${path}`);
