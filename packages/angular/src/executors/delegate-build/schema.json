@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema",
   "title": "Schema for an executor which delegates a build.",
   "description": "Options for delegating a build to a different target.",
+  "cli": "nx",
   "type": "object",
   "properties": {
     "buildTarget": {
@@ -15,6 +16,11 @@
     "tsConfig": {
       "type": "string",
       "description": "The full path for the TypeScript configuration file, relative to the workspace root."
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Run build when files change.",
+      "default": false
     }
   },
   "additionalProperties": false,
