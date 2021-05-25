@@ -28,9 +28,7 @@ export default async function (host: Tree, options: Schema) {
 
   addE2ETestRunner(host, options);
 
-  if (!options.skipFormat) {
-    await formatFiles(host);
-  }
+  await formatFiles(host);
 }
 
 function setDefaults(host: Tree, options: Schema) {

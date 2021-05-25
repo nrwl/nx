@@ -19,8 +19,8 @@
     },
 
     "library": {
-      "factory": "./src/schematics/library/library",
-      "schema": "./src/schematics/library/schema.json",
+      "factory": "./src/generators/library/library.compat#librarySchematic",
+      "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "description": "Create an Angular library"
     },
@@ -148,6 +148,12 @@
       "factory": "./src/generators/storybook-configuration/storybook-configuration",
       "schema": "./src/generators/storybook-configuration/schema.json",
       "description": "Create stories/specs for all components declared in a library."
+    },
+    "library": {
+      "factory": "./src/generators/library/library",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "description": "Create an Angular library"
     }
   }
 }

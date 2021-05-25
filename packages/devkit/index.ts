@@ -80,3 +80,4 @@ export { convertNxGenerator } from './src/utils/invoke-nx-generator';
 export { convertNxExecutor } from './src/utils/convert-nx-executor';
 export { stripIndents } from './src/utils/strip-indents';
 export { joinPathFragments, normalizePath } from './src/utils/path';
+export { moveFilesToNewDirectory } from './src/utils/move-dir';

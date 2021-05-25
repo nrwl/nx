@@ -3,17 +3,27 @@ import * as devkit from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { karmaProjectGenerator } from './karma-project';
+import libraryGenerator from '../library/library';
+import { Linter } from '@nrwl/workspace';
+import { UnitTestRunner } from '../../utils/test-runners';
 
 describe('karmaProject', () => {
   let tree: Tree;
 
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace();
-    const libGenerator = wrapAngularDevkitSchematic('@nrwl/angular', 'lib');
-    await libGenerator(tree, {
+
+    await libraryGenerator(tree, {
       name: 'lib1',
-      unitTestRunner: 'none',
+      buildable: false,
+      enableIvy: false,
+      linter: Linter.EsLint,
+      publishable: false,
+      simpleModuleName: false,
+      skipFormat: false,
+      unitTestRunner: UnitTestRunner.None,
     });
+
     const appGenerator = wrapAngularDevkitSchematic('@nrwl/angular', 'app');
     await appGenerator(tree, {
       name: 'app1',
