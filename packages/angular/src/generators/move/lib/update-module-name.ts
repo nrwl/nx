@@ -81,7 +81,7 @@ export async function updateModuleName(
     updateFileContent(tree, replacements, indexFile);
   }
 
-  const skipFiles = filesToRename.map((file) => file.from);
+  const skipFiles = [...filesToRename.map((file) => file.to), indexFile];
 
   // Update any files which import the module
 
