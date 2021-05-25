@@ -12,12 +12,16 @@ on:
 
 jobs:
   e2e:
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os.image }}
     strategy:
       matrix:
         os:
-          - ubuntu-latest
-          # - windows-latest
+          - linux
+            name: Ubuntu
+            image: ubuntu-latest
+          # - windows
+          #   name: Win
+          #   image: windows-latest
         node_version:
           - 14.x
           # - 15.x
@@ -37,7 +41,7 @@ jobs:
           - e2e-angular
       fail-fast: false
 
-    name: ${{ matrix.os }} > Node v${{ matrix.node_version }} (${{ matrix.package_manager }}) - ${{ matrix.packages }}
+    name: ${{ matrix.os.name }} > Node v${{ matrix.node_version }} (${{ matrix.package_manager }}) - ${{ matrix.packages }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -57,13 +61,13 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-        key: ${{ matrix.os }}-node-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
-        restore-keys: ${{ matrix.os }}-node-${{ matrix.node-version }}-yarn-
+        key: ${{ matrix.os.image }}-node-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
+        restore-keys: ${{ matrix.os.image }}-node-${{ matrix.node-version }}-yarn-
 
     - run: yarn install
 
     - name: Cleanup
-      if: ${{ matrix.os == 'ubuntu-latest' }}
+      if: ${{ matrix.os.image == 'ubuntu-latest' }}
       run: |
         # Workaround to provide additional free space for testing.
         # https://github.com/actions/virtual-environments/issues/2840
@@ -85,7 +89,7 @@ jobs:
         GIT_AUTHOR_EMAIL: Test
         GIT_COMMITTER_EMAIL: test@test.com
         GIT_COMMITTER_NAME: Test
-        NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
+        NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os.image }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
         NODE_OPTIONS: --max_old_space_size=8192
         SELECTED_PM: ${{ matrix.package_manager }}
         YARN_REGISTRY: http://localhost:4872
@@ -95,4 +99,4 @@ jobs:
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled && failure() }}
       uses: mxschmitt/action-tmate@v3
       with:
-        sudo: ${{ matrix.os != 'windows-latest' }} # disable sudo for windows debugging
+        sudo: ${{ matrix.os.image != 'windows-latest' }} # disable sudo for windows debugging
