@@ -64,7 +64,8 @@ function publishPackage(packagePath: string, npmMajorVersion: number) {
     if (npmMajorVersion === 7) {
       writeFileSync(
         `${packagePath}/.npmrc`,
-        `registry=${process.env.npm_config_registry
+        `registry=${
+          process.env.npm_config_registry
         }\n${process.env.npm_config_registry.replace(
           'http:',
           ''
