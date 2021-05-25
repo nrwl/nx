@@ -10,7 +10,7 @@ const libSchematic = wrapAngularDevkitSchematic('@nrwl/angular', 'lib');
 describe('updateModuleName Rule', () => {
   let tree: Tree;
 
-  describe('fresh move', () => {
+  describe('move to subfolder', () => {
     const updatedModulePath =
       '/libs/shared/my-first/src/lib/shared-my-first.module.ts';
     const updatedModuleSpecPath =
@@ -115,7 +115,7 @@ describe('updateModuleName Rule', () => {
     });
   });
 
-  describe('mid move', () => {
+  describe('rename', () => {
     const schema: Schema = {
       projectName: 'my-source',
       destination: 'my-destination',
