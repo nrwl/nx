@@ -19,8 +19,8 @@ jobs:
           - ubuntu-latest
           # - windows-latest
         node_version:
-          - 14.x
-          # - 15.x
+          - '14'
+          # - '15'
         package_manager:
           - npm
           - yarn
@@ -37,7 +37,7 @@ jobs:
           - e2e-angular
       fail-fast: false
 
-    name: ${{ matrix.os.name }} > Node v${{ matrix.node_version }} (${{ matrix.package_manager }}) - ${{ matrix.packages }}
+    name: ${{ matrix.os }}/node v${{ matrix.node_version }}/${{ matrix.package_manager }} - ${{ matrix.packages }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
