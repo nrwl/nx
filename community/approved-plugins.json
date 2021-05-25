@@ -163,5 +163,10 @@
     "name": "@nxrocks/nx-quarkus",
     "description": "Nx plugin to generate, run, package, build (and more) Quarkus projects inside your Nx workspace",
     "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-quarkus"
+  },
+  {
+    "name": "@nx-extend/gcp-storage",
+    "description": "Nx plugin to upload to Google Cloud Storage",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/gcp-storage"
   }
 ]
