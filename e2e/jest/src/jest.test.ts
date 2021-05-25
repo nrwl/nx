@@ -34,7 +34,7 @@ describe('Jest', () => {
     expect(libResult.combinedOutput).toContain(
       'Test Suites: 3 passed, 3 total'
     );
-  }, 1000000);
+  }, 500000);
 
   it('should merge with jest config globals', async () => {
     const testGlobal = `'My Test Global'`;

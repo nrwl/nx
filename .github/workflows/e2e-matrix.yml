@@ -17,7 +17,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          - windows-latest
+          # - windows-latest
         node_version:
           - 14.x
           # - 15.x
@@ -26,15 +26,15 @@ jobs:
           - yarn
           - pnpm
         packages:
-          # - e2e-workspace
-          # - e2e-cli,e2e-nx-plugin,dep-graph-dep-graph-e2e
-          # - e2e-cypress,e2e-jest
-          # - e2e-react
-          # - e2e-next
+          - e2e-workspace
+          - e2e-cli,e2e-nx-plugin,dep-graph-dep-graph-e2e
+          - e2e-cypress,e2e-jest
+          - e2e-react
+          - e2e-next
           - e2e-gatsby
-          # - e2e-node
-          # - e2e-web,e2e-linter,e2e-storybook
-          # - e2e-angular
+          - e2e-node
+          - e2e-web,e2e-linter,e2e-storybook
+          - e2e-angular
       fail-fast: false
 
     name: ${{ matrix.os }} > Node v${{ matrix.node_version }} (${{ matrix.package_manager }}) - ${{ matrix.packages }}

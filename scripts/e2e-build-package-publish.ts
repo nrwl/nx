@@ -12,8 +12,8 @@ process.env.YARN_REGISTRY = process.env.npm_config_registry;
 
 function buildPackagePublishAndCleanPorts() {
   removeSync('./build');
-  removeSync('./tmp/nx');
-  removeSync('./tmp/angular');
+  removeSync('./tmp/nx/proj-backup');
+  removeSync('./tmp/angular/proj-backup');
   removeSync('./tmp/local-registry');
 
   build(process.env.PUBLISHED_VERSION);
