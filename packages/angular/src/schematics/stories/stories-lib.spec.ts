@@ -163,12 +163,14 @@ describe('angular:stories for libraries', () => {
 export async function createTestUILib(libName: string): Promise<Tree> {
   let appTree = Tree.empty();
   appTree = createEmptyWorkspace(appTree);
+
   appTree = await callRule(
     externalSchematic('@nrwl/angular', 'library', {
       name: libName,
     }),
     appTree
   );
+
   appTree = await callRule(
     externalSchematic('@schematics/angular', 'component', {
       name: 'test-button',
@@ -337,5 +339,6 @@ export async function createEmptyUILib(libName: string): Promise<Tree> {
     }),
     appTree
   );
+
   return appTree;
 }

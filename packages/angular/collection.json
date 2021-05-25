@@ -19,8 +19,8 @@
     },
 
     "library": {
-      "factory": "./src/schematics/library/library",
-      "schema": "./src/schematics/library/schema.json",
+      "factory": "./src/generators/library/library.compat#librarySchematic",
+      "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "description": "Create an Angular library"
     },
@@ -167,6 +167,12 @@
       "schema": "./src/generators/storybook-migrate-stories-to-6-2/schema.json",
       "description": "Migrate stories to match the new syntax in v6.2 where the component declaration should be in the default export.",
       "hidden": false
+    },
+    "library": {
+      "factory": "./src/generators/library/library",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "description": "Create an Angular library"
     }
   }
 }
