@@ -3,6 +3,12 @@ name: E2E matrix
 on:
   schedule:
     - cron: "0 0 * * *"
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
 
 jobs:
   e2e:
@@ -31,20 +37,33 @@ jobs:
           - e2e-angular
       fail-fast: false
 
-    name: Node v${{ matrix.node_version }} (${{ matrix.package_manager }}) - ${{ matrix.packages }}
+    name: ${{ matrix.os }} > Node v${{ matrix.node_version }} (${{ matrix.package_manager }}) - ${{ matrix.packages }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
 
-    - name: Install dependencies
+    - name: Use Node.js ${{ matrix.node_version }}
       uses: actions/setup-node@v2
       with:
         node-version: ${{ matrix.node_version }}
+
+    - name: Yarn cache directory path
+      id: yarn-cache-dir-path
+      run: echo "::set-output name=dir::$(yarn cache dir)"
+
+    - name: Cache yarn
+      uses: actions/cache@v2
+      with:
+        path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+        key: ${{ matrix.os }}-node-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
+        restore-keys: ${{ matrix.os }}-node-${{ matrix.node-version }}-yarn-
+
     - run: yarn install
 
     - name: Cleanup
+      if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
         # Workaround to provide additional free space for testing.
         # https://github.com/actions/virtual-environments/issues/2840
@@ -60,13 +79,20 @@ jobs:
         version: 6.0.2
 
     - name: Run e2e tests
-      run: yarn nx run-many --target=e2e --projects=${{ matrix.packages }}
+      run: yarn nx run-many --target=e2e --projects="${{ join(matrix.packages) }}"
       env:
         GIT_AUTHOR_NAME: test@test.com
         GIT_AUTHOR_EMAIL: Test
         GIT_COMMITTER_EMAIL: test@test.com
         GIT_COMMITTER_NAME: Test
-        NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.node_version }}-${{ matrix.package_manager }}
+        NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
         NODE_OPTIONS: --max_old_space_size=8192
         SELECTED_PM: ${{ matrix.package_manager }}
+        YARN_REGISTRY: http://localhost:4872
         SELECTED_CLI: ${{ matrix.packages == 'e2e-angular' && 'angular' || 'nx' }}
+
+    - name: Setup tmate session
+      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled && failure() }}
+      uses: mxschmitt/action-tmate@v3
+      with:
+        sudo: ${{ matrix.os != 'windows-latest' }} # disable sudo for windows debugging
