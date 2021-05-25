@@ -15,7 +15,7 @@ export interface StorybookConfig {
 }
 
 export interface StorybookExecutorOptions {
-  uiFramework: string;
+  uiFramework: '@storybook/angular' | '@storybook/react' | '@storybook/html';
   projectBuildConfig?: string;
   config: StorybookConfig;
   host?: string;
