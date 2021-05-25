@@ -19,6 +19,7 @@ import { updateEslintrcJson } from './lib/update-eslintrc-json';
 import { moveProjectConfiguration } from './lib/move-project-configuration';
 import { updateBuildTargets } from './lib/update-build-targets';
 import { updateReadme } from './lib/update-readme';
+import { updatePackageJson } from './lib/update-package-json';
 
 export async function moveGenerator(tree: Tree, schema: Schema) {
   const projectConfig = readProjectConfiguration(tree, schema.projectName);
@@ -31,6 +32,7 @@ export async function moveGenerator(tree: Tree, schema: Schema) {
   updateStorybookConfig(tree, schema, projectConfig);
   updateEslintrcJson(tree, schema, projectConfig);
   updateReadme(tree, schema, projectConfig);
+  updatePackageJson(tree, schema, projectConfig);
   moveProjectConfiguration(tree, schema, projectConfig);
   updateBuildTargets(tree, schema);
   updateDefaultProject(tree, schema);
