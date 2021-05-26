@@ -20,4 +20,5 @@ export interface Schema {
   js?: boolean;
   globalCss?: boolean;
   strict?: boolean;
+  setParserOptionsProject?: boolean;
 }

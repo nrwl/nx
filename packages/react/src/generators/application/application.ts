@@ -38,7 +38,10 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
   });
   tasks.push(lintTask);
 
-  const reactEslintJson = createReactEslintJson(options.appProjectRoot);
+  const reactEslintJson = createReactEslintJson(
+    options.appProjectRoot,
+    options.setParserOptionsProject
+  );
 
   updateJson(
     host,

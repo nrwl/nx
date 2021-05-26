@@ -403,11 +403,6 @@ describe('app', () => {
                 "files": Array [
                   "*.ts",
                 ],
-                "parserOptions": Object {
-                  "project": Array [
-                    "apps/my-app/tsconfig.*?.json",
-                  ],
-                },
                 "rules": Object {
                   "@angular-eslint/component-selector": Array [
                     "error",

@@ -174,6 +174,7 @@ export async function addLintingToApplication(
       `${options.appProjectRoot}/**/*.${options.js ? 'js' : 'ts'}`,
     ],
     skipFormat: true,
+    setParserOptionsProject: options.setParserOptionsProject,
   });
 
   return lintTask;

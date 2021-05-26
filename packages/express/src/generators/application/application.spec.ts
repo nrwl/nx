@@ -53,11 +53,6 @@ describe('app', () => {
               "*.js",
               "*.jsx",
             ],
-            "parserOptions": Object {
-              "project": Array [
-                "apps/my-node-app/tsconfig.*?.json",
-              ],
-            },
             "rules": Object {},
           },
           Object {

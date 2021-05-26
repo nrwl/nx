@@ -21,9 +21,24 @@ export function createEsLintConfiguration(
           'plugin:@nrwl/nx/angular',
           'plugin:@angular-eslint/template/process-inline-templates',
         ],
-        parserOptions: {
-          project: [`${options.projectRoot}/tsconfig.*?.json`],
-        },
+        /**
+         * NOTE: We no longer set parserOptions.project by default when creating new projects.
+         *
+         * We have observed that users rarely add rules requiring type-checking to their Nx workspaces, and therefore
+         * do not actually need the capabilites which parserOptions.project provides. When specifying parserOptions.project,
+         * typescript-eslint needs to create full TypeScript Programs for you. When omitting it, it can perform a simple
+         * parse (and AST tranformation) of the source files it encounters during a lint run, which is much faster and less
+         * much less memory intensive.
+         *
+         * In the rare case that users attempt to add rules requiring type-checking to their setup later on (and haven't set
+         * parserOptions.project), the executor will attempt to look for the particular error typescript-eslint gives you
+         * and provide feedback to the user.
+         */
+        parserOptions: !options.setParserOptionsProject
+          ? undefined
+          : {
+              project: [`${options.projectRoot}/tsconfig.*?.json`],
+            },
         rules: {
           '@angular-eslint/directive-selector': [
             'error',

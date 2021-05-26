@@ -39,6 +39,12 @@ export async function conversionGenerator(
        * delegating to the external (more generic) generators below.
        */
       const js = false;
+      /**
+       * We set the parserOptions.project config just in case the converted config uses
+       * rules which require type-checking. Later in the conversion we check if it actually
+       * does and remove the config again if it doesn't, so that it is most efficient.
+       */
+      const setParserOptionsProject = true;
 
       if (projectConfig.projectType === 'application') {
         await addLintingToApplication(host, {
@@ -46,6 +52,7 @@ export async function conversionGenerator(
           name: projectName,
           appProjectRoot: projectConfig.root,
           js,
+          setParserOptionsProject,
         } as AddLintForApplicationSchema);
       }
 
@@ -55,6 +62,7 @@ export async function conversionGenerator(
           name: projectName,
           projectRoot: projectConfig.root,
           js,
+          setParserOptionsProject,
         } as AddLintForLibrarySchema);
       }
     },

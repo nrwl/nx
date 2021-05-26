@@ -332,6 +332,7 @@ Object {
             "type": "attribute",
           },
         ],
+        "@typescript-eslint/await-thenable": "error",
         "@typescript-eslint/no-empty-interface": "error",
       },
     },
@@ -659,11 +660,6 @@ Object {
       "files": Array [
         "*.ts",
       ],
-      "parserOptions": Object {
-        "project": Array [
-          "libs/angular-lib-1/tsconfig.*?.json",
-        ],
-      },
       "plugins": Array [
         "@angular-eslint/eslint-plugin",
         "@typescript-eslint",

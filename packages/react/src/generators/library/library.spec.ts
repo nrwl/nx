@@ -145,11 +145,6 @@ describe('lib', () => {
                 "*.js",
                 "*.jsx",
               ],
-              "parserOptions": Object {
-                "project": Array [
-                  "libs/my-lib/tsconfig.*?.json",
-                ],
-              },
               "rules": Object {},
             },
             Object {
