@@ -17,11 +17,6 @@ Object {
       "files": Array [
         "*.ts",
       ],
-      "parserOptions": Object {
-        "project": Array [
-          "apps/ng-app1/tsconfig.*?.json",
-        ],
-      },
       "rules": Object {
         "@angular-eslint/component-selector": Array [
           "error",
