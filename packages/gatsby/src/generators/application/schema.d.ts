@@ -8,4 +8,5 @@ export interface Schema {
   unitTestRunner?: 'jest' | 'none';
   e2eTestRunner?: 'cypress' | 'none';
   js?: boolean;
+  setParserOptionsProject?: boolean;
 }
