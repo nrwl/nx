@@ -25,7 +25,7 @@ That's why Nx doesn't rebuild and retest everything on every commit--<strong>it 
 .
 
 <strong>Nx</strong> partitions commands into a graph of smaller tasks. Nx then runs those tasks in parallel,
-and <strong>it can even distribute them across many machines without any configuration</strong>.
+and <strong>it can even distribute them across multiple machines without any configuration</strong>.
 
 <strong>Nx also uses a distributed computation cache.</strong> If someone has already built or tested similar code, Nx
 will use their results to speed up the command for everyone else.
