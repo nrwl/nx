@@ -120,7 +120,7 @@ export function parseRunOneOptions(
     configuration = parsedArgs.configuration;
   } else if (parsedArgs.prod) {
     configuration = 'production';
-  } else if (targets[target].defaultConfiguration) {
+  } else if (!configuration && targets[target].defaultConfiguration) {
     configuration = targets[target].defaultConfiguration;
   }
 

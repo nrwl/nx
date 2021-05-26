@@ -1,7 +1,13 @@
 import { parseRunOneOptions } from './parse-run-one-options';
 
 describe('parseRunOneOptions', () => {
-  const workspaceJson = { projects: { myproj: { architect: { build: {} } } } };
+  const workspaceJson = {
+    projects: {
+      myproj: {
+        architect: { build: { defaultConfiguration: 'someDefaultConfig' } },
+      },
+    },
+  };
   const args = ['build', 'myproj', '--configuration=production', '--flag=true'];
 
   it('should work', () => {
@@ -51,13 +57,13 @@ describe('parseRunOneOptions', () => {
     expect(
       parseRunOneOptions('root', workspaceJson, [
         'run',
-        'myproj:build:production',
+        'myproj:build:staging',
         '--flag=true',
       ])
     ).toEqual({
       project: 'myproj',
       target: 'build',
-      configuration: 'production',
+      configuration: 'staging',
       parsedArgs: { _: [], flag: 'true' },
     });
   });
@@ -72,6 +78,22 @@ describe('parseRunOneOptions', () => {
     ).toEqual({
       project: 'myproj',
       target: 'build',
+      configuration: 'someDefaultConfig',
+      parsedArgs: { _: [], flag: 'true' },
+    });
+  });
+
+  it('should use defaultConfiguration when no provided', () => {
+    expect(
+      parseRunOneOptions('root', workspaceJson, [
+        'run',
+        'myproj:build',
+        '--flag=true',
+      ])
+    ).toEqual({
+      project: 'myproj',
+      target: 'build',
+      configuration: 'someDefaultConfig',
       parsedArgs: { _: [], flag: 'true' },
     });
   });
