@@ -37,6 +37,8 @@ const IGNORE_MATCHES = {
     '@angular-devkit/architect',
     // Installed and uninstalled dynamically when the conversion generator runs
     'tslint-to-eslint-config',
+    // Resolved from the end user's own workspace installation dynamically
+    '@typescript-eslint/eslint-plugin',
   ],
   next: [
     '@angular-devkit/architect',
