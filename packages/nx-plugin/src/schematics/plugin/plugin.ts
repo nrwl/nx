@@ -5,6 +5,7 @@ import {
   schematic,
   Tree,
 } from '@angular-devkit/schematics';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { addDepsToPackageJson } from '@nrwl/workspace';
 import { formatFiles } from '@nrwl/workspace';
 import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
@@ -14,7 +15,7 @@ import { normalizeOptions } from './lib/normalize-options';
 import { updateWorkspaceJson } from './lib/update-workspace-json';
 import { Schema } from './schema';
 
-export default function (schema: Schema): Rule {
+export function pluginSchematic(schema: Schema): Rule {
   return (host: Tree) => {
     const options = normalizeOptions(host, schema);
     const { unitTestRunner } = options;
@@ -45,3 +46,9 @@ export default function (schema: Schema): Rule {
     ]);
   };
 }
+
+export default pluginSchematic;
+export const pluginGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/nx-plugin',
+  'plugin'
+);
