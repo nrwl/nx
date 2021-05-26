@@ -12,7 +12,7 @@ jest.mock('fs', () => require('memfs').fs);
 import storybookExecutor, { StorybookExecutorOptions } from './storybook.impl';
 
 // TODO: re-enable these tests
-xdescribe('@nrwl/storybook:storybook', () => {
+describe('@nrwl/storybook:storybook', () => {
   let context: ExecutorContext;
   let options: StorybookExecutorOptions;
   beforeEach(() => {

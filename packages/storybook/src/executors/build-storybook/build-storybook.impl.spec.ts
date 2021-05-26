@@ -9,7 +9,7 @@ import storybookBuilder from './build-storybook.impl';
 import * as fileUtils from '@nrwl/workspace/src/core/file-utils';
 
 // TODO: re-enable these tests
-xdescribe('Build storybook', () => {
+describe('Build storybook', () => {
   let context: ExecutorContext;
 
   beforeEach(async () => {

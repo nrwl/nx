@@ -1,7 +1,7 @@
 import { from } from 'rxjs';
 import { readAll, readFirst } from '../testing/src/testing-utils';
 
-xdescribe('TestingUtils', () => {
+describe('TestingUtils', () => {
   describe('readAll', () => {
     it('should transform Observable<T> to Promise<Array<T>>', async (done) => {
       const obs = from([1, 2, 3]);

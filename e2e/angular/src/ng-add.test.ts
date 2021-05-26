@@ -10,7 +10,7 @@ import {
   updateFile,
 } from '@nrwl/e2e/utils';
 
-xdescribe('Nrwl Convert to Nx Workspace', () => {
+describe('Nrwl Convert to Nx Workspace', () => {
   it('should generate a workspace', () => {
     runNgNew();
 

@@ -12,7 +12,7 @@ import {
 } from '@nrwl/e2e/utils';
 import { writeFileSync } from 'fs';
 
-xdescribe('Storybook schematics', () => {
+describe('Storybook schematics', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
@@ -35,7 +35,7 @@ xdescribe('Storybook schematics', () => {
         module.exports = {
           stories: [],
           addons: ['@storybook/addon-knobs/register'],
-        };      
+        };
 
         console.log('hi there');
       `
@@ -73,16 +73,16 @@ xdescribe('Storybook schematics', () => {
           import React from 'react';
 
             import './button.css';
-            
+
             export type ButtonStyle = 'default' | 'primary' | 'warning';
-            
+
             /* eslint-disable-next-line */
             export interface ButtonProps {
               text?: string;
               style?: ButtonStyle;
               padding?: number;
             }
-            
+
             export const Button = (props: ButtonProps) => {
               return (
                 <button className={props.style} style={{ padding: \`\${props.padding}px\` }}>
@@ -90,8 +90,8 @@ xdescribe('Storybook schematics', () => {
                 </button>
               );
             };
-            
-            export default Button;            
+
+            export default Button;
             `
       );
       writeFileSync(
@@ -100,9 +100,9 @@ xdescribe('Storybook schematics', () => {
             import React from 'react';
             import { Button, ButtonStyle } from './button';
             import { text, number } from '@storybook/addon-knobs';
-            
+
             export default { title: 'Button' };
-            
+
             export const primary = () => (
               <Button
                 padding={number('Padding', 0)}
@@ -241,9 +241,9 @@ xdescribe('Storybook schematics', () => {
               title: 'My Test Cmp',
               component: MyTestCmpComponent,
             };
-            
+
             let x = 'hi';
-            
+
             export const primary = () => ({
               moduleMetadata: {
                 imports: [],

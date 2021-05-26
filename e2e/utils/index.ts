@@ -198,7 +198,7 @@ export async function removeProject({ onlyOnCI = false } = {}) {
 }
 
 export function runCypressTests() {
-  // temporary disable
+  // temporary enable
   return true;
 }
 

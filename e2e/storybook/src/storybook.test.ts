@@ -14,7 +14,7 @@ describe('Storybook schematics', () => {
   afterEach(() => killPorts());
 
   describe('serve storybook', () => {
-    xit('should run a React based Storybook setup', async () => {
+    it('should run a React based Storybook setup', async () => {
       newProject();
 
       const reactStorybookLib = uniq('test-ui-lib-react');
@@ -82,10 +82,10 @@ describe('Storybook schematics', () => {
         tmpProjPath(`libs/${anotherReactLib}/src/lib/mytestcmp.tsx`),
         `
             import React from 'react';
-            
+
             /* eslint-disable-next-line */
             export interface MyTestCmpProps {}
-            
+
             export const MyTestCmp = (props: MyTestCmpProps) => {
               return (
                 <div>
@@ -93,7 +93,7 @@ describe('Storybook schematics', () => {
                 </div>
               );
             };
-            
+
             export default MyTestCmp;
         `
       );
@@ -112,18 +112,18 @@ describe('Storybook schematics', () => {
         ),
         `
             import React from 'react';
-            
+
             import { MyTestCmp, MyTestCmpProps } from '@${proj}/${anotherReactLib}';
-    
+
             export default {
               component: MyTestCmp,
               title: 'MyTestCmp',
             };
-    
+
             export const primary = () => {
               /* eslint-disable-next-line */
               const props: MyTestCmpProps = {};
-    
+
               return <MyTestCmp />;
             };
         `
