@@ -94,8 +94,6 @@ export default function (schema: Schema): Rule {
 const addLinting = (options: NormalizedSchema) => () => {
   return chain([
     schematic('add-linting', {
-      linter: options.linter,
-      projectType: 'library',
       projectName: options.name,
       projectRoot: options.projectRoot,
       prefix: options.prefix,

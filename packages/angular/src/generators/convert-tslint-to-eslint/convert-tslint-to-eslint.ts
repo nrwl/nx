@@ -8,7 +8,7 @@ import {
 } from '@nrwl/devkit';
 import { ConvertTSLintToESLintSchema, ProjectConverter } from '@nrwl/linter';
 import type { Linter } from 'eslint';
-import { addLintingGenerator } from '../../schematics/add-linting/add-linting';
+import { addLintingGenerator } from '../add-linting/add-linting';
 
 export async function conversionGenerator(
   host: Tree,
@@ -30,8 +30,6 @@ export async function conversionGenerator(
     ignoreExistingTslintConfig: options.ignoreExistingTslintConfig,
     eslintInitializer: async ({ projectName, projectConfig }) => {
       await addLintingGenerator(host, {
-        linter: 'eslint',
-        projectType: projectConfig.projectType,
         projectName,
         projectRoot: projectConfig.root,
         prefix: (projectConfig as any).prefix || 'app',

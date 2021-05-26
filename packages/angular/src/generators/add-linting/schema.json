@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "$id": "SchematicsAngularAddLinting",
-  "title": "Add linting to an Angular project",
+  "$id": "NxAngularAddLintingGenerator",
+  "title": "Add linting to an Angular project.",
+  "cli": "nx",
   "type": "object",
   "properties": {
     "prefix": {
@@ -17,5 +18,7 @@
       "type": "string",
       "description": "The path to the root of the selected project."
     }
-  }
+  },
+  "additionalProperties": false,
+  "required": ["prefix", "projectName", "projectRoot"]
 }
