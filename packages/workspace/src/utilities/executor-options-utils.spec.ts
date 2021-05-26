@@ -39,6 +39,12 @@ describe('forEachExecutorOptions', () => {
         },
       },
     });
+
+    // configuration with no targets at all which is not valid
+    // but should not break the iteration over target configs
+    addProjectConfiguration(tree, 'proj3', {
+      root: 'proj3',
+    } as any);
   });
 
   it('should call a function for all options', () => {
