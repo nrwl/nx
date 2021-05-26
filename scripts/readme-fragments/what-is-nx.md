@@ -14,10 +14,15 @@ and <strong>it can even distribute them across many machines without any configu
 <strong>Nx also uses a distributed computation cache.</strong> If someone has already built or tested similar code, Nx
 will use their results to speed up the command for everyone else.
 
-### Develop Efficiently at Scale with Nx
+### Holistic Dev Experience Powered by an Advanced CLI and Editor Plugins
 
-Nx helps scale your development from one team building one application to many teams building multiple frontend and backend applications all in the same workspace. When using Nx, developers have a holistic dev experience powered by an advanced CLI (with editor plugins), capabilities for controlled code sharing and consistent code generation.
+<strong>Nx</strong> helps scale your development from one team building one application to many teams building multiple
+frontend and backend applications all in the same workspace. <strong >When using Nx, developers have a holistic dev
+experience powered by an advanced CLI</strong > (with editor plugins), capabilities for controlled code sharing and
+consistent code generation.
 
-### Use Modern Tools
+### Rich Plugin Ecosystem
 
-Nx is an open framework with plugins for many modern tools and frameworks. It has support for TypeScript, React, Angular, Cypress, Jest, Prettier, Nest.js, Next.js, Storybook, Ionic among others. With Nx, you get a consistent dev experience regardless of the tools used.
+<strong>Nx</strong> is an open platform with plugins for many modern tools and frameworks. It has support for
+TypeScript, React, Angular, Cypress, Jest, Prettier, Nest.js, Next.js, Storybook, Ionic among others. With Nx, you get a
+consistent dev experience regardless of the tools used.
