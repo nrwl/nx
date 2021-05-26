@@ -10,7 +10,7 @@ process.env.PUBLISHED_VERSION = `9999.0.2`;
 process.env.npm_config_registry = `http://localhost:4872`;
 process.env.YARN_REGISTRY = process.env.npm_config_registry;
 
-export function buildPackagePublishAndCleanPorts() {
+function buildPackagePublishAndCleanPorts() {
   removeSync('./build');
   removeSync('./tmp/nx/proj-backup');
   removeSync('./tmp/angular/proj-backup');
@@ -25,7 +25,7 @@ export function buildPackagePublishAndCleanPorts() {
   }
 }
 
-export const getDirectories = (source: string) =>
+const getDirectories = (source: string) =>
   readdirSync(source, { withFileTypes: true })
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
