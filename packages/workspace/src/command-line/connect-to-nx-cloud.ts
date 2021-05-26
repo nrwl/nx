@@ -59,7 +59,7 @@ async function connectToNxCloudPrompt() {
           {
             name: 'Yes',
             hint:
-              'Faster builds, run details, Github integration. Learn more at https://nx.app',
+              'Faster builds, run details, GitHub integration. Learn more at https://nx.app',
           },
           {
             name: 'No',
