@@ -784,7 +784,6 @@ export default function (schema: Schema): Rule {
 const addLinting = (options: NormalizedSchema) => () => {
   return chain([
     schematic('add-linting', {
-      projectType: 'application',
       projectName: options.name,
       projectRoot: options.appProjectRoot,
       prefix: options.prefix,

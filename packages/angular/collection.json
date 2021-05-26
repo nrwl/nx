@@ -98,9 +98,9 @@
     },
 
     "add-linting": {
-      "factory": "./src/schematics/add-linting/add-linting",
-      "schema": "./src/schematics/add-linting/schema.json",
-      "description": "Add linting configuration to an Angular project",
+      "factory": "./src/generators/add-linting/compat",
+      "schema": "./src/generators/add-linting/schema.json",
+      "description": "Add linting configuration to an Angular project.",
       "hidden": true
     },
 
@@ -111,6 +111,12 @@
     }
   },
   "generators": {
+    "add-linting": {
+      "factory": "./src/generators/add-linting/add-linting",
+      "schema": "./src/generators/add-linting/schema.json",
+      "description": "Add linting configuration to an Angular project.",
+      "hidden": true
+    },
     "convert-tslint-to-eslint": {
       "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionGenerator",
       "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
