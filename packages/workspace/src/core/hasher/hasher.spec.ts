@@ -86,15 +86,11 @@ describe('Hasher', () => {
       createHashing()
     );
 
-    const hash = (
-      await hasher.hashTasks([
-        {
-          target: { project: 'parent', target: 'build' },
-          id: 'parent-build',
-          overrides: { prop: 'prop-value' },
-        },
-      ])
-    )[0];
+    const hash = await hasher.hashTaskWithDepsAndContext({
+      target: { project: 'parent', target: 'build' },
+      id: 'parent-build',
+      overrides: { prop: 'prop-value' },
+    });
 
     expect(hash.value).toContain('yarn.lock.hash'); //implicits
     expect(hash.value).toContain('file.hash'); //project files
@@ -105,7 +101,7 @@ describe('Hasher', () => {
     expect(hash.value).toContain('runtime456'); //target
 
     expect(hash.details.command).toEqual('parent|build||{"prop":"prop-value"}');
-    expect(hash.details.sources).toEqual({
+    expect(hash.details.nodes).toEqual({
       parent:
         '/file|file.hash|{"root":"libs/parent"}|{"implicitDependencies":[],"tags":[]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
