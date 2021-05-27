@@ -1023,6 +1023,11 @@
             "file": "shared/monorepo-nx-enterprise"
           },
           {
+            "name": "Using ESLint in Nx Workspaces",
+            "id": "eslint",
+            "file": "shared/eslint"
+          },
+          {
             "name": "Nx 7 => Nx 8",
             "id": "nx7-to-nx8"
           },
@@ -2077,6 +2082,11 @@
             "file": "shared/monorepo-nx-enterprise"
           },
           {
+            "name": "Using ESLint in Nx Workspaces",
+            "id": "eslint",
+            "file": "shared/eslint"
+          },
+          {
             "name": "JavaScript and TypeScript",
             "id": "js-and-ts",
             "file": "react/guides/js-and-ts"
@@ -3084,6 +3094,11 @@
             "name": "Using Nx at Enterprises",
             "id": "monorepo-nx-enterprise",
             "file": "shared/monorepo-nx-enterprise"
+          },
+          {
+            "name": "Using ESLint in Nx Workspaces",
+            "id": "eslint",
+            "file": "shared/eslint"
           }
         ]
       }
