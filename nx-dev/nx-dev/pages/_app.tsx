@@ -36,7 +36,7 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
         <meta name="theme-color" content="#ffffff" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      <div className="documentation-app text-gray-500 antialiased bg-white">
+      <div className="documentation-app text-gray-700 antialiased bg-white">
         <Header />
         <main>
           <Component {...pageProps} />
