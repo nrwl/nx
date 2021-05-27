@@ -49,7 +49,7 @@ export function Header() {
         <div className="text-sm flex-shrink-0">
           <nav className="flex items-justified justify-center space-x-1">
             <Link href="/latest/react/getting-started/getting-started">
-              <a className="inline-flex justify-center items-center px-4 py-2 rounded bg-blue-600 text-white transition-all hover-bg-blue-700 ease-out duration-180">
+              <a className="inline-flex justify-center font-bold items-center px-4 py-2 rounded bg-blue-600 text-white transition-all hover-bg-blue-700 ease-out duration-180">
                 Get Started
               </a>
             </Link>
@@ -66,9 +66,13 @@ export function Header() {
             <a
               href="https://nx.app/?utm_source=nx.dev"
               target="_blank"
-              className="px-3 py-2 hover:bg-gray-100 active:bg-gray-200 rounded hidden lg:inline-flex transition-all ease-out duration 180 leading-tight"
+              className="px-3 py-2 hover:bg-gray-100 active:bg-gray-200 rounded hidden lg:inline-flex transition-all ease-out duration 180 leading-tight group relative"
             >
               Nx Cloud
+              <span className="flex h-3 w-3 absolute -top-0.5 -right-0.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75" />
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-600" />
+              </span>
             </a>
             <a
               href="https://nrwl.io/services/?utm_source=nx.dev"
