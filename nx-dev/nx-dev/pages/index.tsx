@@ -70,31 +70,42 @@ export function Index() {
       {/*INTRO COMPONENT*/}
       <div className="bg-gray-50">
         <div className="max-w-screen xl:max-w-screen-xl mx-auto px-5 py-5">
-          <div className="mt-40">
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl leading none font-extrabold tracking-tight text-gray-900 mt-10 mb-8 sm:mt-14 sm:mb-10">
-              Smart, Extensible Build Framework
-            </h1>
-            <p className="max-w-screen-lg text-lg sm:text-2xl sm:leading-10 font-medium mb-10 sm:mb-11">
-              Build full-stack applications with modern tools and reinforce best
-              practices for your entire development team. Use Nx to build
-              software at scale, the better way.
-            </p>
+          <div className="mt-8 mb-20 flex lg:flex-row flex-col items-center justify-center">
+            <div className="w-full lg:w-1/2 flex flex-col">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl leading none font-extrabold tracking-tight text-gray-900 mt-10 mb-8 sm:mt-14 sm:mb-10">
+                Smart, Extensible Build Framework
+              </h1>
+              <p className="max-w-screen-lg text-lg sm:text-2xl sm:leading-10 font-medium mb-10 sm:mb-11">
+                Build full-stack applications with modern tools and reinforce
+                best practices for your entire development team. Use Nx to build
+                software at scale, the better way.
+              </p>
 
-            <div className="flex flex-wrap space-y-4 sm:space-y-0 sm:space-x-4 text-center">
-              <Link href="/latest/react/getting-started/getting-started">
-                <a className="w-full sm:w-auto flex-none bg-blue-600 hover:bg-blue-700 text-white text-lg leading-6 font-semibold py-3 px-6 border border-transparen rounded focus:ring-2 focus: ring-offset-2 focus:ring-offset-white focus:ring-blue-700 focus:outline-none transition-colors duration-180">
-                  Get Started
-                </a>
-              </Link>
+              <div className="flex flex-wrap space-y-4 sm:space-y-0 sm:space-x-4 text-center">
+                <Link href="/latest/react/getting-started/getting-started">
+                  <a className="w-full sm:w-auto flex-none bg-blue-600 hover:bg-blue-700 text-white text-lg leading-6 font-semibold py-3 px-6 border border-transparen rounded focus:ring-2 focus: ring-offset-2 focus:ring-offset-white focus:ring-blue-700 focus:outline-none transition-colors duration-180">
+                    Get Started
+                  </a>
+                </Link>
 
-              <InlineCommand
-                language={'bash'}
-                command={'npx create-nx-workspace'}
+                <InlineCommand
+                  language={'bash'}
+                  command={'npx create-nx-workspace'}
+                />
+              </div>
+            </div>
+            <div className="w-full md:w-1/2 flex flex-col justify-between items-center lg:pl-16 lg:pb-0 pb-10 mt-8 lg:mt-0">
+              <iframe
+                width="560"
+                height="315"
+                src="https://www.youtube.com/embed/TXySu4dZLp0"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full"
               />
             </div>
           </div>
-        </div>
-        <div className="max-w-screen xl:max-w-screen-xl mx-auto px-5 py-5">
           {/*SELECTION COMPONENT*/}
           <div className="mt-32 mb-20 flex sm:flex-row flex-col justify-center">
             <div className="w-full sm:w-1/2 grid grid-cols-3 gap-10 items-center">
