@@ -31,7 +31,11 @@ module.exports = {
     extend: {
       colors: {
         blue: {
-          nx: 'rgba(3, 47, 86, 1)',
+          'nx-dark': 'rgba(3, 47, 86, 1)',
+          'nx-light': 'rgba(24, 56, 104, 1)',
+        },
+        purple: {
+          'nx-dark': 'rgba(128, 85, 232, 1)',
         },
       },
     },
