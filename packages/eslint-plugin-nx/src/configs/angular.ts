@@ -33,5 +33,9 @@ export default {
       ? ['plugin:@angular-eslint/recommended--extra']
       : []),
   ],
+  parserOptions: {
+    // Unset the default value for parserOptions.project that is found in earlier versions of @angular-eslint
+    project: [],
+  },
   rules: {},
 };
