@@ -96,7 +96,7 @@ export function Index() {
         </div>
         <div className="max-w-screen xl:max-w-screen-xl mx-auto px-5 py-5">
           {/*SELECTION COMPONENT*/}
-          <div className="mt-32 flex sm:flex-row flex-col justify-center">
+          <div className="mt-32 mb-20 flex sm:flex-row flex-col justify-center">
             <div className="w-full sm:w-1/2 grid grid-cols-3 gap-10 items-center">
               <a
                 href="#"
