@@ -62,7 +62,9 @@ export class Hasher {
       this.fileHasher = new FileHasher(hashing);
       this.fileHasher.clear();
     }
-    this.projectHashes = new ProjectHasher(this.projectGraph, this.hashing);
+    this.projectHashes = new ProjectHasher(this.projectGraph, this.hashing, {
+      cacheTsConfig: this.options.cacheTsConfig ?? false,
+    });
   }
 
   async hashTaskWithDepsAndContext(task: Task): Promise<Hash> {
@@ -271,7 +273,8 @@ class ProjectHasher {
 
   constructor(
     private readonly projectGraph: ProjectGraph,
-    private readonly hashing: HashingImpl
+    private readonly hashing: HashingImpl,
+    private readonly options: { cacheTsConfig: boolean }
   ) {
     this.workspaceJson = this.readWorkspaceConfigFile(workspaceFileName());
     this.nxJson = this.readNxJsonConfigFile('nx.json');
@@ -323,16 +326,31 @@ class ProjectHasher {
         );
         const nxJson = JSON.stringify(this.nxJson.projects[projectName] ?? '');
 
-        const { paths, ...compilerOptions } = this.tsConfigJson.compilerOptions;
+        let tsConfig: string;
 
-        const tsConfig = JSON.stringify({
-          compilerOptions: {
-            ...compilerOptions,
-            paths: {
-              [projectName]: paths[projectName] ?? [],
+        if (this.options.cacheTsConfig) {
+          const {
+            paths,
+            ...compilerOptions
+          } = this.tsConfigJson.compilerOptions;
+
+          const rootPath = this.workspaceJson.projects[projectName].root.split(
+            '/'
+          );
+          rootPath.shift();
+          const pathAlias = `@${this.nxJson.npmScope}/${rootPath.join('/')}`;
+
+          tsConfig = JSON.stringify({
+            compilerOptions: {
+              ...compilerOptions,
+              paths: {
+                [pathAlias]: paths[pathAlias] ?? [],
+              },
             },
-          },
-        });
+          });
+        } else {
+          tsConfig = JSON.stringify(this.tsConfigJson);
+        }
 
         res(
           this.hashing.hashArray([
