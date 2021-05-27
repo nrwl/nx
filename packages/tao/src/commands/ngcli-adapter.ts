@@ -1,6 +1,5 @@
 /* eslint-disable no-restricted-imports */
 import {
-  json,
   logging,
   normalize,
   Path,
@@ -49,8 +48,9 @@ export async function scheduleTarget(
     workspaces.createWorkspaceHost(fsHost)
   );
 
-  const registry = new json.schema.CoreSchemaRegistry();
+  const registry = new schema.CoreSchemaRegistry();
   registry.addPostTransform(schema.transforms.addUndefinedDefaults);
+  registry.useXDeprecatedProvider((msg) => logger.warn(msg));
   const architectHost = new WorkspaceNodeModulesArchitectHost(workspace, root);
   const architect = new Architect(architectHost, registry);
   const run = await architect.scheduleTarget(
