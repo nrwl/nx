@@ -27,8 +27,8 @@ export function createEsLintConfiguration(
          * We have observed that users rarely add rules requiring type-checking to their Nx workspaces, and therefore
          * do not actually need the capabilites which parserOptions.project provides. When specifying parserOptions.project,
          * typescript-eslint needs to create full TypeScript Programs for you. When omitting it, it can perform a simple
-         * parse (and AST tranformation) of the source files it encounters during a lint run, which is much faster and less
-         * much less memory intensive.
+         * parse (and AST tranformation) of the source files it encounters during a lint run, which is much faster and much
+         * less memory intensive.
          *
          * In the rare case that users attempt to add rules requiring type-checking to their setup later on (and haven't set
          * parserOptions.project), the executor will attempt to look for the particular error typescript-eslint gives you

@@ -56,9 +56,9 @@ export default async function run(
         'You must therefore provide a value for the "parserOptions.project" property for @typescript-eslint/parser'
       )
     ) {
-      const { root } = context.workspace.projects[projectName];
       let eslintConfigPathForError = `for ${projectName}`;
       if (context.workspace?.projects?.[projectName]?.root) {
+        const { root } = context.workspace.projects[projectName];
         eslintConfigPathForError = `\`${root}/.eslintrc.json\``;
       }
 
