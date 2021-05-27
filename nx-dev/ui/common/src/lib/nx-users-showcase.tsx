@@ -1,17 +1,8 @@
 export function NxUsersShowcase() {
   return (
-    <div className="max-w-screen xl:max-w-screen-xl mx-auto px-5 py-32">
-      <div className="flex sm:flex-row flex-col justify-center">
-        <div className="w-full py-6 mt-8">
-          <h2 className="text-xl sm:text-2xl lg:text-3xl leading-none font-extrabold text-gray-900 tracking-tight mb-4 text-center">
-            Who's using Nx?
-          </h2>
-          <p className="sm:w-2/3 sm:mx-auto text-center sm:text-lg">
-            The world’s leading companies use and love Nx.
-          </p>
-        </div>
-      </div>
-      <div className="grid items-center justify-items-center grid-cols-3 md:grid-cols-6 gap-8">
+    <div className="max-w-screen-lg mx-auto px-5 py-32">
+      <p className="sm:mx-auto sm:text-lg">Join the ecosystem of Nx users</p>
+      <div className="mt-12 grid items-center justify-items-center grid-cols-3 md:grid-cols-6 gap-12">
         <img
           className="opacity-60"
           src="/images/nx-users/Accenture.png"

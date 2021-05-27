@@ -8,7 +8,7 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
-        <title>Nx documentation</title>
+        <title>Nx: Smart, Extensible Build Framework</title>
         <link
           rel="apple-touch-icon"
           sizes="180x180"
