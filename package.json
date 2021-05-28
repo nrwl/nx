@@ -253,6 +253,7 @@
     "@docsearch/react": "^1.0.0-alpha.14",
     "@headlessui/react": "^1.1.1",
     "@heroicons/react": "^1.0.1",
+    "@testing-library/react-hooks": "^7.0.0",
     "classnames": "^2.3.1",
     "core-js": "^3.6.5",
     "document-register-element": "^1.13.1",
