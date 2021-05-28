@@ -93,8 +93,6 @@
 
 • **ChangeType**: *object*
 
-Defined in: [packages/devkit/src/utils/string-change.ts:1](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/utils/string-change.ts#L1)
-
 ___
 
 ### DependencyType
@@ -102,8 +100,6 @@ ___
 • **DependencyType**: *object*
 
 Type of dependency between projects
-
-Defined in: [packages/devkit/src/project-graph/interfaces.ts:36](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/project-graph/interfaces.ts#L36)
 
 ## Classes
 
@@ -113,8 +109,6 @@ Defined in: [packages/devkit/src/project-graph/interfaces.ts:36](https://github.
 
 Builder for adding nodes and dependencies to a [ProjectGraph](/latest/react/nx-devkit/index#projectgraph)
 
-Defined in: [packages/devkit/src/project-graph/utils.ts:11](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/project-graph/utils.ts#L11)
-
 ## Interfaces
 
 ### ExecutorContext
@@ -122,8 +116,6 @@ Defined in: [packages/devkit/src/project-graph/utils.ts:11](https://github.com/n
 • **ExecutorContext**: *object*
 
 Context that is passed into an executor
-
-Defined in: [packages/tao/src/shared/workspace.ts:199](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/shared/workspace.ts#L199)
 
 ___
 
@@ -133,8 +125,6 @@ ___
 
 Description of a file change in the Nx virtual file system/
 
-Defined in: [packages/tao/src/shared/tree.ts:74](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/shared/tree.ts#L74)
-
 ___
 
 ### FileData
@@ -142,8 +132,6 @@ ___
 • **FileData**: *object*
 
 Some metadata about a file
-
-Defined in: [packages/devkit/src/project-graph/interfaces.ts:9](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/project-graph/interfaces.ts#L9)
 
 ___
 
@@ -157,15 +145,11 @@ ___
 | :------ | :------ |
 | `T` | ``"*"`` \| *string*[] |
 
-Defined in: [packages/tao/src/shared/nx.ts:7](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/shared/nx.ts#L7)
-
 ___
 
 ### NxAffectedConfig
 
 • **NxAffectedConfig**: *object*
-
-Defined in: [packages/tao/src/shared/nx.ts:11](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/shared/nx.ts#L11)
 
 ___
 
@@ -181,15 +165,11 @@ Nx.json configuration
 | :------ | :------ |
 | `T` | ``"*"`` \| *string*[] |
 
-Defined in: [packages/tao/src/shared/nx.ts:21](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/shared/nx.ts#L21)
-
 ___
 
 ### NxJsonProjectConfiguration
 
 • **NxJsonProjectConfiguration**: *object*
-
-Defined in: [packages/tao/src/shared/nx.ts:69](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/shared/nx.ts#L69)
 
 ___
 
@@ -199,8 +179,6 @@ ___
 
 A plugin for Nx
 
-Defined in: [packages/devkit/src/project-graph/interfaces.ts:113](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/project-graph/interfaces.ts#L113)
-
 ___
 
 ### ProjectConfiguration
@@ -209,8 +187,6 @@ ___
 
 Project configuration
 
-Defined in: [packages/tao/src/shared/workspace.ts:68](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/shared/workspace.ts#L68)
-
 ___
 
 ### ProjectFileMap
@@ -218,8 +194,6 @@ ___
 • **ProjectFileMap**: *object*
 
 A list of files separated by the project they belong to
-
-Defined in: [packages/devkit/src/project-graph/interfaces.ts:18](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/project-graph/interfaces.ts#L18)
 
 ___
 
@@ -235,8 +209,6 @@ A Graph of projects in the workspace and dependencies between them
 | :------ | :------ |
 | `T` | *any* |
 
-Defined in: [packages/devkit/src/project-graph/interfaces.ts:25](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/project-graph/interfaces.ts#L25)
-
 ___
 
 ### ProjectGraphDependency
@@ -244,8 +216,6 @@ ___
 • **ProjectGraphDependency**: *object*
 
 A dependency between two projects
-
-Defined in: [packages/devkit/src/project-graph/interfaces.ts:79](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/project-graph/interfaces.ts#L79)
 
 ___
 
@@ -261,8 +231,6 @@ A node describing a project in a workspace
 | :------ | :------ |
 | `T` | *any* |
 
-Defined in: [packages/devkit/src/project-graph/interfaces.ts:54](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/project-graph/interfaces.ts#L54)
-
 ___
 
 ### ProjectGraphProcessorContext
@@ -271,15 +239,11 @@ ___
 
 Additional information to be used to process a project graph
 
-Defined in: [packages/devkit/src/project-graph/interfaces.ts:94](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/project-graph/interfaces.ts#L94)
-
 ___
 
 ### StringDeletion
 
 • **StringDeletion**: *object*
-
-Defined in: [packages/devkit/src/utils/string-change.ts:6](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/utils/string-change.ts#L6)
 
 ___
 
@@ -287,15 +251,11 @@ ___
 
 • **StringInsertion**: *object*
 
-Defined in: [packages/devkit/src/utils/string-change.ts:18](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/utils/string-change.ts#L18)
-
 ___
 
 ### Target
 
 • **Target**: *object*
-
-Defined in: [packages/tao/src/commands/run.ts:22](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/commands/run.ts#L22)
 
 ___
 
@@ -305,15 +265,11 @@ ___
 
 Target's configuration
 
-Defined in: [packages/tao/src/shared/workspace.ts:127](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/shared/workspace.ts#L127)
-
 ___
 
 ### TargetDependencyConfig
 
 • **TargetDependencyConfig**: *object*
-
-Defined in: [packages/tao/src/shared/workspace.ts:109](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/shared/workspace.ts#L109)
 
 ___
 
@@ -323,15 +279,11 @@ ___
 
 Virtual file system tree.
 
-Defined in: [packages/tao/src/shared/tree.ts:16](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/shared/tree.ts#L16)
-
 ___
 
 ### Workspace
 
 • **Workspace**: *object*
-
-Defined in: [packages/tao/src/shared/workspace.ts:7](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/shared/workspace.ts#L7)
 
 ___
 
@@ -340,8 +292,6 @@ ___
 • **WorkspaceJsonConfiguration**: *object*
 
 Workspace configuration
-
-Defined in: [packages/tao/src/shared/workspace.ts:16](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/shared/workspace.ts#L16)
 
 ## Type aliases
 
@@ -370,8 +320,6 @@ Implementation of a target of a project
 
 **Returns:** *Promise*<{ `success`: *boolean*  }\> \| *AsyncIterableIterator*<{ `success`: *boolean*  }\>
 
-Defined in: [packages/tao/src/shared/workspace.ts:186](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/shared/workspace.ts#L186)
-
 ___
 
 ### Generator
@@ -399,8 +347,6 @@ A function that schedules updates to the filesystem to be done atomically
 
 **Returns:** *void* \| [*GeneratorCallback*](/latest/react/nx-devkit/index#generatorcallback) \| *Promise*<void \| [*GeneratorCallback*](/latest/react/nx-devkit/index#generatorcallback)\>
 
-Defined in: [packages/tao/src/shared/workspace.ts:178](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/shared/workspace.ts#L178)
-
 ___
 
 ### GeneratorCallback
@@ -414,8 +360,6 @@ A callback function that is executed after changes are made to the file system
 ▸ (): *void* \| *Promise*<void\>
 
 **Returns:** *void* \| *Promise*<void\>
-
-Defined in: [packages/tao/src/shared/workspace.ts:173](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/shared/workspace.ts#L173)
 
 ___
 
@@ -431,15 +375,11 @@ ___
 
 #### Type declaration
 
-Defined in: [packages/tao/src/shared/nx.ts:3](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/shared/nx.ts#L3)
-
 ___
 
 ### PackageManager
 
 Ƭ **PackageManager**: ``"yarn"`` \| ``"pnpm"`` \| ``"npm"``
-
-Defined in: [packages/tao/src/shared/package-manager.ts:5](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/shared/package-manager.ts#L5)
 
 ___
 
@@ -449,8 +389,6 @@ ___
 
 Type of project supported
 
-Defined in: [packages/tao/src/shared/workspace.ts:63](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/shared/workspace.ts#L63)
-
 ___
 
 ### StringChange
@@ -459,15 +397,11 @@ ___
 
 A change to be made to a string
 
-Defined in: [packages/devkit/src/utils/string-change.ts:33](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/utils/string-change.ts#L33)
-
 ___
 
 ### WorkspaceConfiguration
 
 Ƭ **WorkspaceConfiguration**: *Omit*<[*WorkspaceJsonConfiguration*](/latest/react/nx-devkit/index#workspacejsonconfiguration), ``"projects"``\> & *Omit*<[*NxJsonConfiguration*](/latest/react/nx-devkit/index#nxjsonconfiguration), ``"projects"``\>
-
-Defined in: [packages/devkit/src/generators/project-configuration.ts:14](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/generators/project-configuration.ts#L14)
 
 ## Variables
 
@@ -485,8 +419,6 @@ Defined in: [packages/devkit/src/generators/project-configuration.ts:14](https:/
 | `info` | (`s`: *any*) => *void* |
 | `log` | (...`s`: *any*[]) => *void* |
 | `warn` | (`s`: *any*) => *void* |
-
-Defined in: [packages/tao/src/shared/logger.ts:9](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/shared/logger.ts#L9)
 
 ## Functions
 
@@ -512,8 +444,6 @@ will add `react` and `jest` to the dependencies and devDependencies sections of 
 
 Callback to install dependencies only if necessary. undefined is returned if changes are not necessary.
 
-Defined in: [packages/devkit/src/utils/package-json.ts:18](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/utils/package-json.ts#L18)
-
 ___
 
 ### addProjectConfiguration
@@ -534,8 +464,6 @@ both files.
 | `projectConfiguration` | [*ProjectConfiguration*](/latest/react/nx-devkit/index#projectconfiguration) & [*NxJsonProjectConfiguration*](/latest/react/nx-devkit/index#nxjsonprojectconfiguration) | project configuration |
 
 **Returns:** *void*
-
-Defined in: [packages/devkit/src/generators/project-configuration.ts:30](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/generators/project-configuration.ts#L30)
 
 ___
 
@@ -582,8 +510,6 @@ bootstrap({
 
 **Returns:** *string*
 
-Defined in: [packages/devkit/src/utils/string-change.ts:66](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/utils/string-change.ts#L66)
-
 ___
 
 ### convertNxExecutor
@@ -601,8 +527,6 @@ Use this to expose a compatible Angular Builder
 | `executor` | [*Executor*](/latest/react/nx-devkit/index#executor) |
 
 **Returns:** *any*
-
-Defined in: [packages/devkit/src/utils/convert-nx-executor.ts:11](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/utils/convert-nx-executor.ts#L11)
 
 ___
 
@@ -626,8 +550,6 @@ Convert an Nx Generator into an Angular Devkit Schematic
 
 **Returns:** (`options`: T) => (`tree`: *any*, `context`: *any*) => *Promise*<any\>
 
-Defined in: [packages/devkit/src/utils/invoke-nx-generator.ts:36](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/utils/invoke-nx-generator.ts#L36)
-
 ___
 
 ### formatFiles
@@ -643,8 +565,6 @@ Formats all the created or updated files using Prettier
 | `host` | [*Tree*](/latest/react/nx-devkit/index#tree) | the file system tree |
 
 **Returns:** *Promise*<void\>
-
-Defined in: [packages/devkit/src/generators/format-files.ts:12](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/generators/format-files.ts#L12)
 
 ___
 
@@ -668,8 +588,6 @@ While doing so it performs two substitutions:
 | `substitutions` | *object* | an object of key-value pairs  Examples:  ```typescript generateFiles(host, path.join(__dirname , 'files'), './tools/scripts', {tmpl: '', name: 'myscript'}) ```  This command will take all the files from the `files` directory next to the place where the command is invoked from. It will replace all `__tmpl__` with '' and all `__name__` with 'myscript' in the file names, and will replace all `<%= name %>` with `myscript` in the files themselves.  `tmpl: ''` is a common pattern. With it you can name files like this: `index.ts__tmpl__`, so your editor doesn't get confused about incorrect TypeScript files. |
 
 **Returns:** *void*
-
-Defined in: [packages/devkit/src/generators/generate-files.ts:57](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/generators/generate-files.ts#L57)
 
 ___
 
@@ -705,8 +623,6 @@ execSync(`${getPackageManagerCommand().addDev} my-dev-package`);
 | `rm` | *string* |
 | `run` | (`script`: *string*, `args`: *string*) => *string* |
 
-Defined in: [packages/tao/src/shared/package-manager.ts:27](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/shared/package-manager.ts#L27)
-
 ___
 
 ### getProjects
@@ -724,8 +640,6 @@ Use [readProjectConfiguration](/latest/react/nx-devkit/index#readprojectconfigur
 | `host` | [*Tree*](/latest/react/nx-devkit/index#tree) |
 
 **Returns:** *Map*<string, [*ProjectConfiguration*](/latest/react/nx-devkit/index#projectconfiguration) & [*NxJsonProjectConfiguration*](/latest/react/nx-devkit/index#nxjsonprojectconfiguration)\>
-
-Defined in: [packages/devkit/src/generators/project-configuration.ts:74](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/generators/project-configuration.ts#L74)
 
 ___
 
@@ -754,8 +668,6 @@ Example:
 | `libsDir` | *string* |
 | `npmScope` | *string* |
 
-Defined in: [packages/devkit/src/utils/get-workspace-layout.ts:14](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/utils/get-workspace-layout.ts#L14)
-
 ___
 
 ### getWorkspacePath
@@ -769,8 +681,6 @@ ___
 | `host` | [*Tree*](/latest/react/nx-devkit/index#tree) |
 
 **Returns:** *string*
-
-Defined in: [packages/devkit/src/utils/get-workspace-layout.ts:25](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/utils/get-workspace-layout.ts#L25)
 
 ___
 
@@ -792,8 +702,6 @@ Runs `npm install` or `yarn install`. It will skip running the install if
 
 **Returns:** *void*
 
-Defined in: [packages/devkit/src/tasks/install-packages-task.ts:20](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/tasks/install-packages-task.ts#L20)
-
 ___
 
 ### joinPathFragments
@@ -809,8 +717,6 @@ Normalized path fragments and joins them
 | `...fragments` | *string*[] |
 
 **Returns:** *string*
-
-Defined in: [packages/devkit/src/utils/path.ts:17](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/utils/path.ts#L17)
 
 ___
 
@@ -843,8 +749,6 @@ names("myName") // {name: 'my-name', className: 'MyName', propertyName: 'myName'
 | `name` | *string* |
 | `propertyName` | *string* |
 
-Defined in: [packages/devkit/src/utils/names.ts:12](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/utils/names.ts#L12)
-
 ___
 
 ### normalizePath
@@ -860,8 +764,6 @@ Coverts an os specific path to a unix style path
 | `osSpecificPath` | *string* |
 
 **Returns:** *string*
-
-Defined in: [packages/devkit/src/utils/path.ts:10](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/utils/path.ts#L10)
 
 ___
 
@@ -886,8 +788,6 @@ offsetFromRoot("apps/mydir/myapp/") // returns "../../../"
 
 **Returns:** *string*
 
-Defined in: [packages/devkit/src/utils/offset-from-root.ts:15](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/utils/offset-from-root.ts#L15)
-
 ___
 
 ### parseTargetString
@@ -903,8 +803,6 @@ Parses a target string into {project, target, configuration}
 | `targetString` | *string* | target reference  Examples:  ```typescript parseTargetString("proj:test") // returns { project: "proj", target: "test" } parseTargetString("proj:test:production") // returns { project: "proj", target: "test", configuration: "production" } ``` |
 
 **Returns:** [*Target*](/latest/react/nx-devkit/index#target)
-
-Defined in: [packages/devkit/src/executors/parse-target-string.ts:15](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/executors/parse-target-string.ts#L15)
 
 ___
 
@@ -929,8 +827,6 @@ Reads a document for host, removes all comments and parses JSON.
 
 **Returns:** T
 
-Defined in: [packages/devkit/src/utils/json.ts:10](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/utils/json.ts#L10)
-
 ___
 
 ### readProjectConfiguration
@@ -950,8 +846,6 @@ both files.
 | `projectName` | *string* | unique name. Often directories are part of the name (e.g., mydir-mylib) |
 
 **Returns:** [*ProjectConfiguration*](/latest/react/nx-devkit/index#projectconfiguration) & [*NxJsonProjectConfiguration*](/latest/react/nx-devkit/index#nxjsonprojectconfiguration)
-
-Defined in: [packages/devkit/src/generators/project-configuration.ts:160](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/generators/project-configuration.ts#L160)
 
 ___
 
@@ -978,8 +872,6 @@ Works as if you invoked the target yourself without passing any command lint ove
 
 **Returns:** T
 
-Defined in: [packages/devkit/src/executors/read-target-options.ts:11](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/executors/read-target-options.ts#L11)
-
 ___
 
 ### readWorkspaceConfiguration
@@ -997,8 +889,6 @@ This does _not_ provide projects configuration, use [readProjectConfiguration](/
 | `host` | [*Tree*](/latest/react/nx-devkit/index#tree) |
 
 **Returns:** [*WorkspaceConfiguration*](/latest/react/nx-devkit/index#workspaceconfiguration)
-
-Defined in: [packages/devkit/src/generators/project-configuration.ts:95](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/generators/project-configuration.ts#L95)
 
 ___
 
@@ -1024,8 +914,6 @@ will remove `react` and `jest` from the dependencies and devDependencies section
 
 Callback to uninstall dependencies only if necessary. undefined is returned if changes are not necessary.
 
-Defined in: [packages/devkit/src/utils/package-json.ts:61](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/utils/package-json.ts#L61)
-
 ___
 
 ### removeProjectConfiguration
@@ -1045,8 +933,6 @@ The utility will update both files.
 | `projectName` | *string* |
 
 **Returns:** *void*
-
-Defined in: [packages/devkit/src/generators/project-configuration.ts:62](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/generators/project-configuration.ts#L62)
 
 ___
 
@@ -1098,8 +984,6 @@ Note that the return value is a promise of an iterator, so you need to await bef
 
 **Returns:** *Promise*<AsyncIterableIterator<T\>\>
 
-Defined in: [packages/tao/src/commands/run.ts:287](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/commands/run.ts#L287)
-
 ___
 
 ### stripIndents
@@ -1127,8 +1011,6 @@ stripIndents`
 
 **Returns:** *string*
 
-Defined in: [packages/devkit/src/utils/strip-indents.ts:14](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/utils/strip-indents.ts#L14)
-
 ___
 
 ### targetToTargetString
@@ -1145,8 +1027,6 @@ Returns a string in the format "project:target[:configuration]" for the target
 
 **Returns:** *string*
 
-Defined in: [packages/devkit/src/executors/parse-target-string.ts:39](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/executors/parse-target-string.ts#L39)
-
 ___
 
 ### toJS
@@ -1162,8 +1042,6 @@ Rename and transpile any new typescript files created to javascript files
 | `tree` | [*Tree*](/latest/react/nx-devkit/index#tree) |
 
 **Returns:** *void*
-
-Defined in: [packages/devkit/src/generators/to-js.ts:6](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/generators/to-js.ts#L6)
 
 ___
 
@@ -1190,8 +1068,6 @@ Updates a JSON value to the file system tree
 
 **Returns:** *void*
 
-Defined in: [packages/devkit/src/utils/json.ts:40](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/utils/json.ts#L40)
-
 ___
 
 ### updateProjectConfiguration
@@ -1213,8 +1089,6 @@ both files.
 
 **Returns:** *void*
 
-Defined in: [packages/devkit/src/generators/project-configuration.ts:48](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/generators/project-configuration.ts#L48)
-
 ___
 
 ### updateTsConfigsToJs
@@ -1230,8 +1104,6 @@ ___
 | `options.projectRoot` | *string* |
 
 **Returns:** *void*
-
-Defined in: [packages/devkit/src/generators/update-ts-configs-to-js.ts:4](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/generators/update-ts-configs-to-js.ts#L4)
 
 ___
 
@@ -1252,8 +1124,6 @@ This does _not_ update projects configuration, use [updateProjectConfiguration](
 
 **Returns:** *void*
 
-Defined in: [packages/devkit/src/generators/project-configuration.ts:111](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/generators/project-configuration.ts#L111)
-
 ___
 
 ### visitNotIgnoredFiles
@@ -1271,8 +1141,6 @@ Utility to act on all files in a tree that are not ignored by git.
 | `visitor` | (`path`: *string*) => *void* |
 
 **Returns:** *void*
-
-Defined in: [packages/devkit/src/generators/visit-not-ignored-files.ts:8](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/generators/visit-not-ignored-files.ts#L8)
 
 ___
 
@@ -1297,5 +1165,3 @@ Writes a JSON value to the file system tree
 | `value` | T | Serializable value to write |
 
 **Returns:** *void*
-
-Defined in: [packages/devkit/src/utils/json.ts:29](https://github.com/nrwl/nx/blob/55b37cee/packages/devkit/src/utils/json.ts#L29)

@@ -18,8 +18,6 @@
 
 • **NxScopedHost**: *object*
 
-Defined in: [packages/tao/src/commands/ngcli-adapter.ts:186](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/commands/ngcli-adapter.ts#L186)
-
 ## Functions
 
 ### mockSchematicsForTesting
@@ -53,8 +51,6 @@ Example:
 
 **Returns:** *void*
 
-Defined in: [packages/tao/src/commands/ngcli-adapter.ts:700](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/commands/ngcli-adapter.ts#L700)
-
 ___
 
 ### overrideCollectionResolutionForTesting
@@ -86,8 +82,6 @@ Example:
 
 **Returns:** *void*
 
-Defined in: [packages/tao/src/commands/ngcli-adapter.ts:674](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/commands/ngcli-adapter.ts#L674)
-
 ___
 
 ### wrapAngularDevkitSchematic
@@ -102,5 +96,3 @@ ___
 | `generatorName` | *string* |
 
 **Returns:** (`host`: [*Tree*](/latest/angular/nx-devkit/index#tree), `generatorOptions`: { [k: string]: *any*;  }) => *Promise*<any\>
-
-Defined in: [packages/tao/src/commands/ngcli-adapter.ts:709](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/commands/ngcli-adapter.ts#L709)
