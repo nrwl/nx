@@ -19,6 +19,12 @@ import {
   updateWorkspaceConfig,
 } from '@nrwl/e2e/utils';
 import { accessSync, constants } from 'fs-extra';
+import { promisify } from 'util';
+
+const promisifiedTreeKill: (
+  pid: number,
+  signal: string
+) => Promise<void> = promisify(treeKill);
 
 function getData(): Promise<any> {
   return new Promise((resolve) => {
@@ -111,9 +117,11 @@ describe('Node Applications', () => {
     );
     const result = await getData();
     expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
-    treeKill(p.pid, 'SIGTERM', (err) => {
+    try {
+      promisifiedTreeKill(p.pid, 'SIGTERM');
+    } catch (err) {
       expect(err).toBeFalsy();
-    });
+    }
   }, 120000);
 
   xit('should be able to generate a nest application', async () => {
@@ -162,9 +170,11 @@ describe('Node Applications', () => {
     );
     const result = await getData();
     expect(result.message).toEqual(`Welcome to ${nestapp}!`);
-    treeKill(p.pid, 'SIGTERM', (err) => {
+    try {
+      promisifiedTreeKill(p.pid, 'SIGTERM');
+    } catch (err) {
       expect(err).toBeFalsy();
-    });
+    }
   }, 120000);
 });
 
