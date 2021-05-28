@@ -31,11 +31,14 @@ module.exports = {
     extend: {
       colors: {
         blue: {
-          'nx-dark': 'rgba(3, 47, 86, 1)',
-          'nx-light': 'rgba(24, 56, 104, 1)',
+          'nx-dark': 'hsla(214, 61%, 11%, 1)',
+          'nx-base': 'hsla(214, 62%, 21%, 1)',
         },
         purple: {
-          'nx-dark': 'rgba(128, 85, 232, 1)',
+          'nx-base': 'hsla(258, 76%, 62%, 1)',
+        },
+        green: {
+          'nx-base': 'hsla(162, 47%, 50%, 1)',
         },
       },
     },

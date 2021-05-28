@@ -48,7 +48,7 @@ export function Selector(props: SelectorProps) {
                       className={({ active }) =>
                         `${
                           active
-                            ? 'text-white bg-blue-nx-dark'
+                            ? 'text-white bg-blue-nx-base'
                             : 'text-gray-500'
                         }
                           cursor-pointer select-none relative py-2 pl-10 pr-4`

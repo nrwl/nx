@@ -252,7 +252,7 @@
 }
 
 .DocSearch-Hit[aria-selected='true'] > a {
-  background: theme('colors.blue.nx-dark');
+  background: theme('colors.blue.nx-base');
 }
 
 .DocSearch-Hit + .DocSearch-Hit {
@@ -304,7 +304,7 @@
 
 .DocSearch-Hits mark {
   background: none;
-  color: theme('colors.purple.nx-dark');
+  color: theme('colors.purple.nx-base');
 }
 
 .DocSearch-Hit[aria-selected='true'] mark {
