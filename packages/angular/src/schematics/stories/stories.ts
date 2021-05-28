@@ -10,13 +10,12 @@ import {
 import { SyntaxKind } from 'typescript';
 import { getDecoratorMetadata, getTsSourceFile } from '../../utils/ast-utils';
 import { projectRootPath } from '@nrwl/workspace/src/utils/project-type';
-import { findNodes } from '@nrwl/workspace/src/utils/ast-utils';
+import { findNodes, getProjectConfig } from '@nrwl/workspace';
 import { CreateComponentSpecFileSchema } from '../component-cypress-spec/component-cypress-spec';
 import { CreateComponentStoriesFileSchema } from '../component-story/component-story';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { join, normalize } from '@angular-devkit/core';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-
 export interface StorybookStoriesSchema {
   name: string;
   generateCypressSpecs: boolean;
@@ -50,6 +49,19 @@ export function createAllStories(
       }
       moduleFilePaths.push(filePath);
     });
+
+    /**
+     * Check if e2e project exists
+     * to catch any potential errors
+     */
+    const e2eProjectName = cypressProject || `${projectName}-e2e`;
+    let e2eProject;
+    try {
+      e2eProject = getProjectConfig(tree, e2eProjectName);
+    } catch {
+      e2eProject = undefined;
+    }
+
     return chain(
       moduleFilePaths.map((moduleFilePath) => {
         const file = getTsSourceFile(tree, moduleFilePath);
@@ -215,6 +227,12 @@ export function createAllStories(
           }
         });
 
+        if (generateCypressSpecs && !e2eProject) {
+          context.logger.info(
+            `There was no e2e project "${e2eProjectName}" found, so cypress specs will not be generated. Pass "--cypressProject" to specify a different e2e project name`
+          );
+        }
+
         return chain(
           componentInfo
             .filter((info) => info !== undefined)
@@ -226,7 +244,7 @@ export function createAllStories(
                   componentPath: info.path,
                   componentFileName: info.componentFileName,
                 }),
-                generateCypressSpecs
+                generateCypressSpecs && e2eProject
                   ? schematic<CreateComponentSpecFileSchema>(
                       'component-cypress-spec',
                       {
