@@ -32,9 +32,9 @@
     },
 
     "karma-project": {
-      "factory": "./src/schematics/karma-project/karma-project",
-      "schema": "./src/schematics/karma-project/schema.json",
-      "description": "Add karma testing to a project"
+      "factory": "./src/generators/karma-project/compat",
+      "schema": "./src/generators/karma-project/schema.json",
+      "description": "Add karma testing to a project."
     },
 
     "ngrx": {
@@ -133,6 +133,11 @@
       "factory": "./src/generators/karma/karma",
       "schema": "./src/generators/karma/schema.json",
       "description": "Add karma configuration to a workspace."
+    },
+    "karma-project": {
+      "factory": "./src/generators/karma-project/karmar-project",
+      "schema": "./src/generators/karma-project/schema.json",
+      "description": "Add karma testing to a project."
     },
     "move": {
       "factory": "./src/generators/move/move#angularMoveGenerator",
