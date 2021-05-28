@@ -2413,6 +2413,47 @@
           }
         }
       }
+    },
+    "typedoc-theme": {
+      "root": "typedoc-theme",
+      "sourceRoot": "typedoc-theme/src",
+      "projectType": "library",
+      "targets": {
+        "build-base": {
+          "executor": "@nrwl/workspace:tsc",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/typedoc-theme",
+            "main": "typedoc-theme/src/index.ts",
+            "tsConfig": "typedoc-theme/tsconfig.lib.json",
+            "assets": ["typedoc-theme/*.md"]
+          }
+        },
+        "build": {
+          "executor": "@nrwl/workspace:tsc",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/typedoc-theme",
+            "main": "typedoc-theme/src/index.ts",
+            "tsConfig": "typedoc-theme/tsconfig.lib.json",
+            "assets": ["typedoc-theme/*.md"]
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": ["typedoc-theme/**/*.ts"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/typedoc-theme"],
+          "options": {
+            "jestConfig": "typedoc-theme/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      }
     }
   }
 }

@@ -55,7 +55,8 @@
       "@nrwl/nx-dev/feature-search": ["./nx-dev/feature-search/src/index.ts"],
       "@nrwl/nx-dev/feature-analytics": [
         "./nx-dev/feature-analytics/src/index.ts"
-      ]
+      ],
+      "@nrwl/typedoc-theme": ["/typedoc-theme/src/index.ts"]
     }
   }
 }

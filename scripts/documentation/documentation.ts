@@ -1,5 +1,6 @@
 import * as chalk from 'chalk';
-import { execSync } from 'child_process';
+import { execSync, exec } from 'child_process';
+import { Frameworks } from './frameworks';
 
 import { generateCLIDocumentation } from './generate-cli-data';
 import { generateExecutorsDocumentation } from './generate-executors-data';
@@ -8,6 +9,12 @@ import { generateGeneratorsDocumentation } from './generate-generators-data';
 async function generate() {
   console.log(`${chalk.blue('i')} Generating Documentation`);
 
+  execSync('nx build typedoc-theme');
+  Frameworks.forEach((framework) => {
+    execSync(
+      `rm -rf docs/${framework}/api-nx-devkit && npx typedoc packages/devkit/index.ts packages/devkit/ngcli-adapter.ts --tsconfig packages/devkit/tsconfig.lib.json --out ./docs/${framework}/api-nx-devkit --hideBreadcrumbs true --publicPath /latest/${framework}/nx-devkit/ --theme dist/typedoc-theme/src/lib`
+    );
+  });
   await generateGeneratorsDocumentation();
   await generateExecutorsDocumentation();
   await generateCLIDocumentation();

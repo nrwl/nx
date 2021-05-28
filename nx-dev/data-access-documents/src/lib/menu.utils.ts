@@ -72,6 +72,7 @@ export function getDeepDiveSection(items: MenuItem[]): MenuSection {
 }
 
 export function getApiSection(items: MenuItem[]): MenuSection {
+  console.log(items);
   return {
     id: 'api',
     name: 'API / Reference',
@@ -92,6 +93,7 @@ export function getApiSection(items: MenuItem[]): MenuSection {
         m.id === 'next' ||
         m.id === 'gatsby' ||
         m.id === 'nx-plugin' ||
+        m.id === 'devkit' ||
         m.id === 'cli'
     ),
   };

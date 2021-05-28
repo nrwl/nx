@@ -1,0 +1,106 @@
+# Module: ngcli-adapter
+
+## Table of contents
+
+### Classes
+
+- [NxScopedHost](/latest/node/nx-devkit/ngcli_adapter#nxscopedhost)
+
+### Functions
+
+- [mockSchematicsForTesting](/latest/node/nx-devkit/ngcli_adapter#mockschematicsfortesting)
+- [overrideCollectionResolutionForTesting](/latest/node/nx-devkit/ngcli_adapter#overridecollectionresolutionfortesting)
+- [wrapAngularDevkitSchematic](/latest/node/nx-devkit/ngcli_adapter#wrapangulardevkitschematic)
+
+## Classes
+
+### NxScopedHost
+
+• **NxScopedHost**: *object*
+
+Defined in: [packages/tao/src/commands/ngcli-adapter.ts:186](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/commands/ngcli-adapter.ts#L186)
+
+## Functions
+
+### mockSchematicsForTesting
+
+▸ **mockSchematicsForTesting**(`schematics`: { [name: string]: (`host`: [*Tree*](/latest/node/nx-devkit/index#tree), `generatorOptions`: { [k: string]: *any*;  }) => *Promise*<void\>;  }): *void*
+
+If you have an Nx Devkit generator invoking the wrapped Angular Devkit schematic,
+and you don't want the Angular Devkit schematic to run, you can mock it up using this function.
+
+Unfortunately, there are some edge cases in the Nx-Angular devkit integration that
+can be seen in the unit tests context. This function is useful for handling that as well.
+
+In this case, you can mock it up.
+
+Example:
+
+```
+  mockSchematicsForTesting({
+    'mycollection:myschematic': (tree, params) => {
+       tree.write('README.md');
+    }
+  });
+
+```
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `schematics` | *object* |
+
+**Returns:** *void*
+
+Defined in: [packages/tao/src/commands/ngcli-adapter.ts:700](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/commands/ngcli-adapter.ts#L700)
+
+___
+
+### overrideCollectionResolutionForTesting
+
+▸ **overrideCollectionResolutionForTesting**(`collections`: { [name: string]: *string*;  }): *void*
+
+By default, Angular Devkit schematic collections will be resolved using the Node resolution.
+This doesn't work if you are testing schematics that refer to other schematics in the
+same repo.
+
+This function can can be used to override the resolution behaviour.
+
+Example:
+
+```
+  overrideCollectionResolutionForTesting({
+    '@nrwl/workspace': path.join(__dirname, '../../../../workspace/collection.json'),
+    '@nrwl/angular': path.join(__dirname, '../../../../angular/collection.json'),
+    '@nrwl/linter': path.join(__dirname, '../../../../linter/collection.json')
+  });
+
+```
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `collections` | *object* |
+
+**Returns:** *void*
+
+Defined in: [packages/tao/src/commands/ngcli-adapter.ts:674](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/commands/ngcli-adapter.ts#L674)
+
+___
+
+### wrapAngularDevkitSchematic
+
+▸ **wrapAngularDevkitSchematic**(`collectionName`: *string*, `generatorName`: *string*): *function*
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `collectionName` | *string* |
+| `generatorName` | *string* |
+
+**Returns:** (`host`: [*Tree*](/latest/node/nx-devkit/index#tree), `generatorOptions`: { [k: string]: *any*;  }) => *Promise*<any\>
+
+Defined in: [packages/tao/src/commands/ngcli-adapter.ts:709](https://github.com/nrwl/nx/blob/55b37cee/packages/tao/src/commands/ngcli-adapter.ts#L709)

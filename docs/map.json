@@ -289,6 +289,24 @@
         ]
       },
       {
+        "name": "Nx Devkit",
+        "id": "nx-devkit",
+        "itemList": [
+          {
+            "id": "index",
+            "name": "index",
+            "searchResultsName": "Nx Devkit",
+            "file": "angular/api-nx-devkit/index"
+          },
+          {
+            "id": "ngcli_adapter",
+            "name": "ngcli_adapter",
+            "searchResultsName": "Ng CLI Adapter",
+            "file": "angular/api-nx-devkit/ngcli_adapter"
+          }
+        ]
+      },
+      {
         "name": "Workspace",
         "id": "workspace",
         "itemList": [
@@ -1371,6 +1389,24 @@
         ]
       },
       {
+        "name": "Nx Devkit",
+        "id": "nx-devkit",
+        "itemList": [
+          {
+            "id": "index",
+            "name": "index",
+            "searchResultsName": "Nx Devkit",
+            "file": "react/api-nx-devkit/index"
+          },
+          {
+            "id": "ngcli_adapter",
+            "name": "ngcli_adapter",
+            "searchResultsName": "Ng CLI Adapter",
+            "file": "react/api-nx-devkit/ngcli_adapter"
+          }
+        ]
+      },
+      {
         "name": "Workspace",
         "id": "workspace",
         "itemList": [
@@ -2408,6 +2444,24 @@
             "name": "connect-to-nx-cloud",
             "id": "connect-to-nx-cloud",
             "file": "node/cli/connect-to-nx-cloud"
+          }
+        ]
+      },
+      {
+        "name": "Nx Devkit",
+        "id": "nx-devkit",
+        "itemList": [
+          {
+            "id": "index",
+            "name": "index",
+            "searchResultsName": "Nx Devkit",
+            "file": "node/api-nx-devkit/index"
+          },
+          {
+            "id": "ngcli_adapter",
+            "name": "ngcli_adapter",
+            "searchResultsName": "Ng CLI Adapter",
+            "file": "node/api-nx-devkit/ngcli_adapter"
           }
         ]
       },
