@@ -65,6 +65,7 @@ describe('updateEslint', () => {
     await libraryGenerator(tree, {
       name: 'my-lib',
       linter: Linter.EsLint,
+      setParserOptionsProject: true,
     });
 
     // This step is usually handled elsewhere

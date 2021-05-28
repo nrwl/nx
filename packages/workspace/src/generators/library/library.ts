@@ -73,6 +73,7 @@ export function addLint(
     eslintFilePatterns: [
       `${options.projectRoot}/**/*.${options.js ? 'js' : 'ts'}`,
     ],
+    setParserOptionsProject: options.setParserOptionsProject,
   });
 }
 

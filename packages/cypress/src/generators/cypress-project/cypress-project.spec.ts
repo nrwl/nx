@@ -343,9 +343,6 @@ describe('schematic:cypress-project', () => {
                     "*.js",
                     "*.jsx",
                   ],
-                  "parserOptions": Object {
-                    "project": "apps/my-app-e2e/tsconfig.*?.json",
-                  },
                   "rules": Object {},
                 },
                 Object {

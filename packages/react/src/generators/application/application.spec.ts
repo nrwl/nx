@@ -390,11 +390,6 @@ describe('app', () => {
               "*.js",
               "*.jsx",
             ],
-            "parserOptions": Object {
-              "project": Array [
-                "apps/my-app/tsconfig.*?.json",
-              ],
-            },
             "rules": Object {},
           },
           Object {

@@ -262,9 +262,6 @@ Object {
         "*.js",
         "*.jsx",
       ],
-      "parserOptions": Object {
-        "project": "apps/e2e-app-1/tsconfig.*?.json",
-      },
       "rules": Object {},
     },
     Object {

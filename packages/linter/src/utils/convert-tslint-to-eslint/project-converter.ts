@@ -17,6 +17,7 @@ import {
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import type { Linter } from 'eslint';
+import { removeParserOptionsProjectIfNotRequired } from '../rules-requiring-type-checking';
 import { convertTSLintDisableCommentsForProject } from './convert-to-eslint-config';
 import {
   convertTSLintConfig,
@@ -226,7 +227,11 @@ export class ProjectConverter {
         });
       }
       json.overrides = deduplicateOverrides(json.overrides);
-      return json;
+      /**
+       * Remove the parserOptions.project config if it is not required for the final config,
+       * so that lint runs can be as fast and efficient as possible.
+       */
+      return removeParserOptionsProjectIfNotRequired(json);
     });
 
     /**
@@ -332,7 +337,11 @@ export class ProjectConverter {
        * updating the config file.
        */
       const finalJson = applyPackageSpecificModifications(json);
-      return finalJson;
+      /**
+       * Remove the parserOptions.project config if it is not required for the final config,
+       * so that lint runs can be as fast and efficient as possible.
+       */
+      return removeParserOptionsProjectIfNotRequired(finalJson);
     });
 
     /**
