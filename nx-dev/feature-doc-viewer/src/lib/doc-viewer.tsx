@@ -34,7 +34,7 @@ export function DocViewer({
           {document.data.title} | Nx {flavor.label} documentation
         </title>
       </Head>
-      <div className="w-full max-w-screen-xl max-w-8xl mx-auto">
+      <div className="w-full max-w-screen-lg mx-auto">
         <div className="lg:flex">
           <Sidebar
             menu={menu}
