@@ -83,14 +83,9 @@
         ]
       },
       {
-        "name": "Core Concepts",
+        "name": "Using Nx",
         "id": "core-concepts",
         "itemList": [
-          {
-            "name": "Plugins",
-            "id": "plugins",
-            "file": "shared/plugins-overview"
-          },
           {
             "name": "Computation Caching",
             "id": "computation-caching",
@@ -117,7 +112,7 @@
             "file": "angular/guides/configuration"
           },
           {
-            "name": "Nx Devkit",
+            "name": "Nx Plugins and Devkit",
             "id": "nx-devkit",
             "file": "shared/devkit"
           }
@@ -1187,14 +1182,9 @@
         ]
       },
       {
-        "name": "Core Concepts",
+        "name": "Using Nx",
         "id": "core-concepts",
         "itemList": [
-          {
-            "name": "Plugins",
-            "id": "plugins",
-            "file": "shared/plugins-overview"
-          },
           {
             "name": "Computation Caching",
             "id": "computation-caching",
@@ -1221,7 +1211,7 @@
             "file": "react/guides/configuration"
           },
           {
-            "name": "Nx Devkit",
+            "name": "Nx Plugins and Devkit",
             "id": "nx-devkit",
             "file": "shared/devkit"
           }
@@ -2250,14 +2240,9 @@
         ]
       },
       {
-        "name": "Core Concepts",
+        "name": "Using Nx",
         "id": "core-concepts",
         "itemList": [
-          {
-            "name": "Plugins",
-            "id": "plugins",
-            "file": "shared/plugins-overview"
-          },
           {
             "name": "Computation Caching",
             "id": "computation-caching",
@@ -2284,7 +2269,7 @@
             "file": "node/guides/configuration"
           },
           {
-            "name": "Nx Devkit",
+            "name": "Nx Plugins and Devkit",
             "id": "nx-devkit",
             "file": "shared/devkit"
           }
