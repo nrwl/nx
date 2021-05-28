@@ -14,6 +14,9 @@ async function generate() {
     execSync(
       `rm -rf docs/${framework}/api-nx-devkit && npx typedoc packages/devkit/index.ts packages/devkit/ngcli-adapter.ts --tsconfig packages/devkit/tsconfig.lib.json --out ./docs/${framework}/api-nx-devkit --hideBreadcrumbs true --disableSources --publicPath /latest/${framework}/nx-devkit/ --theme dist/typedoc-theme/src/lib`
     );
+    execSync(
+      `rm -rf docs/${framework}/api-nx-devkit/modules.md docs/${framework}/api-nx-devkit/README.md`
+    );
   });
   await generateGeneratorsDocumentation();
   await generateExecutorsDocumentation();
