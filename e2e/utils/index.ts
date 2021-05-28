@@ -16,6 +16,7 @@ import isCI = require('is-ci');
 import * as path from 'path';
 import { dirSync } from 'tmp';
 import * as killPort from 'kill-port';
+import * as stripJsonComments from 'strip-json-comments';
 
 interface RunCmdOpts {
   silenceError?: boolean;
@@ -115,11 +116,15 @@ export function packageInstall(pkg: string, projName?: string) {
   return install ? install.toString() : '';
 }
 
-export function runNgNew(): string {
-  return execSync(`../../node_modules/.bin/ng new proj --no-interactive`, {
-    cwd: e2eCwd,
-    env: process.env,
-  }).toString();
+export function runNgNew(projectName: string): string {
+  projName = projectName;
+  return execSync(
+    `../../node_modules/.bin/ng new ${projName} --no-interactive`,
+    {
+      cwd: e2eCwd,
+      env: process.env,
+    }
+  ).toString();
 }
 
 export function getSelectedPackageManager(): 'npm' | 'yarn' | 'pnpm' {
@@ -292,13 +297,10 @@ export function runNgAdd(
 ): string {
   try {
     packageInstall('@nrwl/workspace');
-    return execSync(
-      `./node_modules/.bin/ng g @nrwl/workspace:ng-add ${command}`,
-      {
-        cwd: tmpProjPath(),
-        env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
-      }
-    )
+    return execSync(`./node_modules/.bin/ng add @nrwl/workspace ${command}`, {
+      cwd: tmpProjPath(),
+      env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
+    })
       .toString()
       .replace(
         /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
@@ -462,7 +464,12 @@ export function listFiles(dirName: string) {
 }
 
 export function readJson(f: string): any {
-  return JSON.parse(readFile(f));
+  const content = readFile(f);
+  try {
+    return JSON.parse(content);
+  } catch {
+    return JSON.parse(stripJsonComments(content));
+  }
 }
 
 export function readFile(f: string) {

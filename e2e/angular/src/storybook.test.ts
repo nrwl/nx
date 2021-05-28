@@ -56,7 +56,7 @@ describe('Storybook schematics', () => {
   });
 
   describe('build storybook', () => {
-    it('should execute e2e tests using Cypress running against Storybook', () => {
+    xit('should execute e2e tests using Cypress running against Storybook', () => {
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
 
@@ -192,7 +192,7 @@ describe('Storybook schematics', () => {
       );
     }, 1000000);
 
-    it('should build an Angular based storybook', () => {
+    xit('should build an Angular based storybook', () => {
       const angularStorybookLib = uniq('test-ui-lib');
       createTestUILib(angularStorybookLib);
       runCLI(
@@ -207,7 +207,7 @@ describe('Storybook schematics', () => {
       ).toContain(`<title>Storybook</title>`);
     }, 1000000);
 
-    it('should build an Angular based storybook that references another lib', () => {
+    xit('should build an Angular based storybook that references another lib', () => {
       const angularStorybookLib = uniq('test-ui-lib');
       createTestUILib(angularStorybookLib);
       runCLI(

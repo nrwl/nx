@@ -179,7 +179,7 @@ describe('create-nx-workspace', () => {
   });
 
   // temporary disable this
-  it('should respect package manager preference', () => {
+  xit('should respect package manager preference', () => {
     const wsName = uniq('pm');
     const appName = uniq('app');
 
@@ -195,7 +195,7 @@ describe('create-nx-workspace', () => {
   });
 
   // temporary disable this
-  it('should store package manager preference for angular cli', () => {
+  xit('should store package manager preference for angular cli', () => {
     const wsName = uniq('pm');
     const appName = uniq('app');
     runCreateWorkspace(wsName, {
