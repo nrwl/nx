@@ -2,7 +2,11 @@ import React from 'react';
 import Link from 'next/link';
 import { AlgoliaSearch } from '@nrwl/nx-dev/feature-search';
 
-export function Header() {
+export interface HeaderProps {
+  showSearch: boolean;
+}
+
+export function Header({ showSearch }: HeaderProps) {
   return (
     <header className="h-16 px-5 py-5 flex items-center justify-between print:hidden bg-blue-nx-dark">
       <div className="flex items-center justify-between w-full max-w-screen-xl mx-auto space-x-10">
@@ -44,7 +48,9 @@ export function Header() {
           </a>
         </div>
         {/*SEARCH*/}
-        <AlgoliaSearch />
+        <div className="hidden md:inline">
+          {!!showSearch ? <AlgoliaSearch /> : null}
+        </div>
         {/*NAVIGATION*/}
         <div className="text-sm flex-shrink-0">
           <nav className="flex items-justified justify-center space-x-1">
@@ -53,7 +59,7 @@ export function Header() {
                 Get Started
               </a>
             </Link>
-            <Link href="/react">
+            <Link href="/latest/react/core-concepts/plugins">
               <a className="px-3 py-2 text-white leading-tight">Plugins</a>
             </Link>
             <Link href="/community">
@@ -65,10 +71,6 @@ export function Header() {
               className="px-3 py-2 text-white hidden lg:inline-flex leading-tight group relative"
             >
               Nx Cloud
-              <span className="flex h-3 w-3 absolute -top-0.5 -right-0.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-white" />
-              </span>
             </a>
             <a
               href="https://nrwl.io/services/?utm_source=nx.dev"

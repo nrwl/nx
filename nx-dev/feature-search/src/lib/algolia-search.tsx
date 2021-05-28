@@ -85,9 +85,7 @@ export function AlgoliaSearch() {
             strokeLinejoin="round"
           />
         </svg>
-        <span>
-          Quick search<span className="hidden sm:inline"> for anything</span>
-        </span>
+        <span>Quick search</span>
         <span
           style={{ opacity: browserDetected ? '1' : '0' }}
           className="hidden sm:block text-sm leading-5 py-0.5 px-1.5 border border-white rounded-md"
