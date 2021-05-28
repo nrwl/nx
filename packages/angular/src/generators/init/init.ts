@@ -1,32 +1,30 @@
+import { cypressInitGenerator } from '@nrwl/cypress';
+import type { Tree } from '@nrwl/devkit';
 import {
   addDependenciesToPackageJson,
+  formatFiles,
   readJson,
   readWorkspaceConfiguration,
-  Tree,
-  updateWorkspaceConfiguration,
-  writeJson,
-  formatFiles,
   updateJson,
+  updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
 import { jestInitGenerator } from '@nrwl/jest';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-import { cypressInitGenerator } from '@nrwl/cypress';
-
-import { Schema } from './schema';
+import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
+import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
   angularVersion,
   jestPresetAngularVersion,
   rxjsVersion,
 } from '../../utils/versions';
-import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
-import { setDefaultCollection } from '@nrwl/workspace/src/utilities/set-default-collection';
+import { karmaGenerator } from '../karma/karma';
+import { Schema } from './schema';
 
 export default async function (host: Tree, options: Schema) {
   setDefaults(host, options);
   addPostInstall(host);
   updateDependencies(host);
 
-  await addUnitTestRunner(host, options);
+  addUnitTestRunner(host, options);
 
   addE2ETestRunner(host, options);
 
@@ -98,14 +96,13 @@ function updateDependencies(host: Tree) {
   );
 }
 
-async function addUnitTestRunner(
+function addUnitTestRunner(
   host: Tree,
   options: Pick<Schema, 'unitTestRunner'>
 ) {
   switch (options.unitTestRunner) {
     case UnitTestRunner.Karma:
-      const installKarma = wrapAngularDevkitSchematic('@nrwl/angular', 'karma');
-      await installKarma(host, {});
+      karmaGenerator(host);
     case UnitTestRunner.Jest:
       // TODO: remove this when we use `jest-preset-angular@9.0.0`
       process.env.npm_config_legacy_peer_deps = 'true';
