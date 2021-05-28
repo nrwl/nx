@@ -232,7 +232,7 @@ function checkInternalAnchoredLinks(
   for (const [docPath, internalLinks] of Object.entries(links)) {
     for (const link of internalLinks) {
       const [fileKeyWithSlash, anchorKey] = link.split('#');
-      const fileKey = fileKeyWithSlash.replace('/', '');
+      const fileKey = fileKeyWithSlash.replace('/', '').replace('latest/', '');
       if (!internalLinksMap[fileKey]) {
         throw Error(
           `Shouldn't be possible. The previous step would have failed.`
