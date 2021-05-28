@@ -26,9 +26,9 @@
     },
 
     "karma": {
-      "factory": "./src/schematics/karma/karma",
-      "schema": "./src/schematics/karma/schema.json",
-      "description": "Add karma configuration to a workspace"
+      "factory": "./src/generators/karma/compat",
+      "schema": "./src/generators/karma/schema.json",
+      "description": "Add karma configuration to a workspace."
     },
 
     "karma-project": {
@@ -128,6 +128,11 @@
       "description": "Initialize the @nrwl/angular plugin",
       "aliases": ["ng-add"],
       "hidden": true
+    },
+    "karma": {
+      "factory": "./src/generators/karma/karma",
+      "schema": "./src/generators/karma/schema.json",
+      "description": "Add karma configuration to a workspace."
     },
     "move": {
       "factory": "./src/generators/move/move#angularMoveGenerator",
