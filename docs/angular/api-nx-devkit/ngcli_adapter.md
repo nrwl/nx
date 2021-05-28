@@ -16,13 +16,13 @@
 
 ### NxScopedHost
 
-• **NxScopedHost**: *object*
+• **NxScopedHost**: _object_
 
 ## Functions
 
 ### mockSchematicsForTesting
 
-▸ **mockSchematicsForTesting**(`schematics`: { [name: string]: (`host`: [*Tree*](/latest/angular/nx-devkit/index#tree), `generatorOptions`: { [k: string]: *any*;  }) => *Promise*<void\>;  }): *void*
+▸ **mockSchematicsForTesting**(`schematics`: { [name: string]: (`host`: [_Tree_](/latest/angular/nx-devkit/index#tree), `generatorOptions`: { [k: string]: _any_; }) => _Promise_<void\>; }): _void_
 
 If you have an Nx Devkit generator invoking the wrapped Angular Devkit schematic,
 and you don't want the Angular Devkit schematic to run, you can mock it up using this function.
@@ -45,17 +45,17 @@ Example:
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `schematics` | *object* |
+| Name         | Type     |
+| :----------- | :------- |
+| `schematics` | _object_ |
 
-**Returns:** *void*
+**Returns:** _void_
 
-___
+---
 
 ### overrideCollectionResolutionForTesting
 
-▸ **overrideCollectionResolutionForTesting**(`collections`: { [name: string]: *string*;  }): *void*
+▸ **overrideCollectionResolutionForTesting**(`collections`: { [name: string]: _string_; }): _void_
 
 By default, Angular Devkit schematic collections will be resolved using the Node resolution.
 This doesn't work if you are testing schematics that refer to other schematics in the
@@ -76,23 +76,23 @@ Example:
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `collections` | *object* |
+| Name          | Type     |
+| :------------ | :------- |
+| `collections` | _object_ |
 
-**Returns:** *void*
+**Returns:** _void_
 
-___
+---
 
 ### wrapAngularDevkitSchematic
 
-▸ **wrapAngularDevkitSchematic**(`collectionName`: *string*, `generatorName`: *string*): *function*
+▸ **wrapAngularDevkitSchematic**(`collectionName`: _string_, `generatorName`: _string_): _function_
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `collectionName` | *string* |
-| `generatorName` | *string* |
+| Name             | Type     |
+| :--------------- | :------- |
+| `collectionName` | _string_ |
+| `generatorName`  | _string_ |
 
-**Returns:** (`host`: [*Tree*](/latest/angular/nx-devkit/index#tree), `generatorOptions`: { [k: string]: *any*;  }) => *Promise*<any\>
+**Returns:** (`host`: [_Tree_](/latest/angular/nx-devkit/index#tree), `generatorOptions`: { [k: string]: _any_; }) => _Promise_<any\>

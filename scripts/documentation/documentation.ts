@@ -17,6 +17,7 @@ async function generate() {
     execSync(
       `rm -rf docs/${framework}/api-nx-devkit/modules.md docs/${framework}/api-nx-devkit/README.md`
     );
+    execSync(`nx format`);
   });
   await generateGeneratorsDocumentation();
   await generateExecutorsDocumentation();

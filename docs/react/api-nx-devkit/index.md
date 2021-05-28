@@ -91,13 +91,13 @@
 
 ### ChangeType
 
-• **ChangeType**: *object*
+• **ChangeType**: _object_
 
-___
+---
 
 ### DependencyType
 
-• **DependencyType**: *object*
+• **DependencyType**: _object_
 
 Type of dependency between projects
 
@@ -105,7 +105,7 @@ Type of dependency between projects
 
 ### ProjectGraphBuilder
 
-• **ProjectGraphBuilder**: *object*
+• **ProjectGraphBuilder**: _object_
 
 Builder for adding nodes and dependencies to a [ProjectGraph](/latest/react/nx-devkit/index#projectgraph)
 
@@ -113,183 +113,183 @@ Builder for adding nodes and dependencies to a [ProjectGraph](/latest/react/nx-d
 
 ### ExecutorContext
 
-• **ExecutorContext**: *object*
+• **ExecutorContext**: _object_
 
 Context that is passed into an executor
 
-___
+---
 
 ### FileChange
 
-• **FileChange**: *object*
+• **FileChange**: _object_
 
 Description of a file change in the Nx virtual file system/
 
-___
+---
 
 ### FileData
 
-• **FileData**: *object*
+• **FileData**: _object_
 
 Some metadata about a file
 
-___
+---
 
 ### ImplicitJsonSubsetDependency
 
-• **ImplicitJsonSubsetDependency**<T\>: *object*
+• **ImplicitJsonSubsetDependency**<T\>: _object_
 
 #### Type parameters
 
-| Name | Default |
-| :------ | :------ |
-| `T` | ``"*"`` \| *string*[] |
+| Name | Default             |
+| :--- | :------------------ |
+| `T`  | `"*"` \| _string_[] |
 
-___
+---
 
 ### NxAffectedConfig
 
-• **NxAffectedConfig**: *object*
+• **NxAffectedConfig**: _object_
 
-___
+---
 
 ### NxJsonConfiguration
 
-• **NxJsonConfiguration**<T\>: *object*
+• **NxJsonConfiguration**<T\>: _object_
 
 Nx.json configuration
 
 #### Type parameters
 
-| Name | Default |
-| :------ | :------ |
-| `T` | ``"*"`` \| *string*[] |
+| Name | Default             |
+| :--- | :------------------ |
+| `T`  | `"*"` \| _string_[] |
 
-___
+---
 
 ### NxJsonProjectConfiguration
 
-• **NxJsonProjectConfiguration**: *object*
+• **NxJsonProjectConfiguration**: _object_
 
-___
+---
 
 ### NxPlugin
 
-• **NxPlugin**: *object*
+• **NxPlugin**: _object_
 
 A plugin for Nx
 
-___
+---
 
 ### ProjectConfiguration
 
-• **ProjectConfiguration**: *object*
+• **ProjectConfiguration**: _object_
 
 Project configuration
 
-___
+---
 
 ### ProjectFileMap
 
-• **ProjectFileMap**: *object*
+• **ProjectFileMap**: _object_
 
 A list of files separated by the project they belong to
 
-___
+---
 
 ### ProjectGraph
 
-• **ProjectGraph**<T\>: *object*
+• **ProjectGraph**<T\>: _object_
 
 A Graph of projects in the workspace and dependencies between them
 
 #### Type parameters
 
 | Name | Default |
-| :------ | :------ |
-| `T` | *any* |
+| :--- | :------ |
+| `T`  | _any_   |
 
-___
+---
 
 ### ProjectGraphDependency
 
-• **ProjectGraphDependency**: *object*
+• **ProjectGraphDependency**: _object_
 
 A dependency between two projects
 
-___
+---
 
 ### ProjectGraphNode
 
-• **ProjectGraphNode**<T\>: *object*
+• **ProjectGraphNode**<T\>: _object_
 
 A node describing a project in a workspace
 
 #### Type parameters
 
 | Name | Default |
-| :------ | :------ |
-| `T` | *any* |
+| :--- | :------ |
+| `T`  | _any_   |
 
-___
+---
 
 ### ProjectGraphProcessorContext
 
-• **ProjectGraphProcessorContext**: *object*
+• **ProjectGraphProcessorContext**: _object_
 
 Additional information to be used to process a project graph
 
-___
+---
 
 ### StringDeletion
 
-• **StringDeletion**: *object*
+• **StringDeletion**: _object_
 
-___
+---
 
 ### StringInsertion
 
-• **StringInsertion**: *object*
+• **StringInsertion**: _object_
 
-___
+---
 
 ### Target
 
-• **Target**: *object*
+• **Target**: _object_
 
-___
+---
 
 ### TargetConfiguration
 
-• **TargetConfiguration**: *object*
+• **TargetConfiguration**: _object_
 
 Target's configuration
 
-___
+---
 
 ### TargetDependencyConfig
 
-• **TargetDependencyConfig**: *object*
+• **TargetDependencyConfig**: _object_
 
-___
+---
 
 ### Tree
 
-• **Tree**: *object*
+• **Tree**: _object_
 
 Virtual file system tree.
 
-___
+---
 
 ### Workspace
 
-• **Workspace**: *object*
+• **Workspace**: _object_
 
-___
+---
 
 ### WorkspaceJsonConfiguration
 
-• **WorkspaceJsonConfiguration**: *object*
+• **WorkspaceJsonConfiguration**: _object_
 
 Workspace configuration
 
@@ -297,134 +297,134 @@ Workspace configuration
 
 ### Executor
 
-Ƭ **Executor**<T\>: (`options`: T, `context`: [*ExecutorContext*](/latest/react/nx-devkit/index#executorcontext)) => *Promise*<{ `success`: *boolean*  }\> \| *AsyncIterableIterator*<{ `success`: *boolean*  }\>
+Ƭ **Executor**<T\>: (`options`: T, `context`: [_ExecutorContext_](/latest/react/nx-devkit/index#executorcontext)) => _Promise_<{ `success`: _boolean_ }\> \| _AsyncIterableIterator_<{ `success`: _boolean_ }\>
 
 Implementation of a target of a project
 
 #### Type parameters
 
 | Name | Default |
-| :------ | :------ |
-| `T` | *any* |
+| :--- | :------ |
+| `T`  | _any_   |
 
 #### Type declaration
 
-▸ (`options`: T, `context`: [*ExecutorContext*](/latest/react/nx-devkit/index#executorcontext)): *Promise*<{ `success`: *boolean*  }\> \| *AsyncIterableIterator*<{ `success`: *boolean*  }\>
+▸ (`options`: T, `context`: [_ExecutorContext_](/latest/react/nx-devkit/index#executorcontext)): _Promise_<{ `success`: _boolean_ }\> \| _AsyncIterableIterator_<{ `success`: _boolean_ }\>
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `options` | T |
-| `context` | [*ExecutorContext*](/latest/react/nx-devkit/index#executorcontext) |
+| Name      | Type                                                               |
+| :-------- | :----------------------------------------------------------------- |
+| `options` | T                                                                  |
+| `context` | [_ExecutorContext_](/latest/react/nx-devkit/index#executorcontext) |
 
-**Returns:** *Promise*<{ `success`: *boolean*  }\> \| *AsyncIterableIterator*<{ `success`: *boolean*  }\>
+**Returns:** _Promise_<{ `success`: _boolean_ }\> \| _AsyncIterableIterator_<{ `success`: _boolean_ }\>
 
-___
+---
 
 ### Generator
 
-Ƭ **Generator**<T\>: (`tree`: *any*, `schema`: T) => *void* \| [*GeneratorCallback*](/latest/react/nx-devkit/index#generatorcallback) \| *Promise*<void \| [*GeneratorCallback*](/latest/react/nx-devkit/index#generatorcallback)\>
+Ƭ **Generator**<T\>: (`tree`: _any_, `schema`: T) => _void_ \| [_GeneratorCallback_](/latest/react/nx-devkit/index#generatorcallback) \| _Promise_<void \| [_GeneratorCallback_](/latest/react/nx-devkit/index#generatorcallback)\>
 
 A function that schedules updates to the filesystem to be done atomically
 
 #### Type parameters
 
-| Name | Default |
-| :------ | :------ |
-| `T` | *unknown* |
+| Name | Default   |
+| :--- | :-------- |
+| `T`  | _unknown_ |
 
 #### Type declaration
 
-▸ (`tree`: *any*, `schema`: T): *void* \| [*GeneratorCallback*](/latest/react/nx-devkit/index#generatorcallback) \| *Promise*<void \| [*GeneratorCallback*](/latest/react/nx-devkit/index#generatorcallback)\>
+▸ (`tree`: _any_, `schema`: T): _void_ \| [_GeneratorCallback_](/latest/react/nx-devkit/index#generatorcallback) \| _Promise_<void \| [_GeneratorCallback_](/latest/react/nx-devkit/index#generatorcallback)\>
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `tree` | *any* |
-| `schema` | T |
+| Name     | Type  |
+| :------- | :---- |
+| `tree`   | _any_ |
+| `schema` | T     |
 
-**Returns:** *void* \| [*GeneratorCallback*](/latest/react/nx-devkit/index#generatorcallback) \| *Promise*<void \| [*GeneratorCallback*](/latest/react/nx-devkit/index#generatorcallback)\>
+**Returns:** _void_ \| [_GeneratorCallback_](/latest/react/nx-devkit/index#generatorcallback) \| _Promise_<void \| [_GeneratorCallback_](/latest/react/nx-devkit/index#generatorcallback)\>
 
-___
+---
 
 ### GeneratorCallback
 
-Ƭ **GeneratorCallback**: () => *void* \| *Promise*<void\>
+Ƭ **GeneratorCallback**: () => _void_ \| _Promise_<void\>
 
 A callback function that is executed after changes are made to the file system
 
 #### Type declaration
 
-▸ (): *void* \| *Promise*<void\>
+▸ (): _void_ \| _Promise_<void\>
 
-**Returns:** *void* \| *Promise*<void\>
+**Returns:** _void_ \| _Promise_<void\>
 
-___
+---
 
 ### ImplicitDependencyEntry
 
-Ƭ **ImplicitDependencyEntry**<T\>: *object*
+Ƭ **ImplicitDependencyEntry**<T\>: _object_
 
 #### Type parameters
 
-| Name | Default |
-| :------ | :------ |
-| `T` | ``"*"`` \| *string*[] |
+| Name | Default             |
+| :--- | :------------------ |
+| `T`  | `"*"` \| _string_[] |
 
 #### Type declaration
 
-___
+---
 
 ### PackageManager
 
-Ƭ **PackageManager**: ``"yarn"`` \| ``"pnpm"`` \| ``"npm"``
+Ƭ **PackageManager**: `"yarn"` \| `"pnpm"` \| `"npm"`
 
-___
+---
 
 ### ProjectType
 
-Ƭ **ProjectType**: ``"library"`` \| ``"application"``
+Ƭ **ProjectType**: `"library"` \| `"application"`
 
 Type of project supported
 
-___
+---
 
 ### StringChange
 
-Ƭ **StringChange**: [*StringInsertion*](/latest/react/nx-devkit/index#stringinsertion) \| [*StringDeletion*](/latest/react/nx-devkit/index#stringdeletion)
+Ƭ **StringChange**: [_StringInsertion_](/latest/react/nx-devkit/index#stringinsertion) \| [_StringDeletion_](/latest/react/nx-devkit/index#stringdeletion)
 
 A change to be made to a string
 
-___
+---
 
 ### WorkspaceConfiguration
 
-Ƭ **WorkspaceConfiguration**: *Omit*<[*WorkspaceJsonConfiguration*](/latest/react/nx-devkit/index#workspacejsonconfiguration), ``"projects"``\> & *Omit*<[*NxJsonConfiguration*](/latest/react/nx-devkit/index#nxjsonconfiguration), ``"projects"``\>
+Ƭ **WorkspaceConfiguration**: _Omit_<[_WorkspaceJsonConfiguration_](/latest/react/nx-devkit/index#workspacejsonconfiguration), `"projects"`\> & _Omit_<[_NxJsonConfiguration_](/latest/react/nx-devkit/index#nxjsonconfiguration), `"projects"`\>
 
 ## Variables
 
 ### logger
 
-• `Const` **logger**: *object*
+• `Const` **logger**: _object_
 
 #### Type declaration
 
-| Name | Type |
-| :------ | :------ |
-| `debug` | (...`s`: *any*[]) => *void* |
-| `error` | (`s`: *any*) => *void* |
-| `fatal` | (...`s`: *any*[]) => *void* |
-| `info` | (`s`: *any*) => *void* |
-| `log` | (...`s`: *any*[]) => *void* |
-| `warn` | (`s`: *any*) => *void* |
+| Name    | Type                        |
+| :------ | :-------------------------- |
+| `debug` | (...`s`: _any_[]) => _void_ |
+| `error` | (`s`: _any_) => _void_      |
+| `fatal` | (...`s`: _any_[]) => _void_ |
+| `info`  | (`s`: _any_) => _void_      |
+| `log`   | (...`s`: _any_[]) => _void_ |
+| `warn`  | (`s`: _any_) => _void_      |
 
 ## Functions
 
 ### addDependenciesToPackageJson
 
-▸ **addDependenciesToPackageJson**(`host`: [*Tree*](/latest/react/nx-devkit/index#tree), `dependencies`: *Record*<string, string\>, `devDependencies`: *Record*<string, string\>, `packageJsonPath?`: *string*): [*GeneratorCallback*](/latest/react/nx-devkit/index#generatorcallback)
+▸ **addDependenciesToPackageJson**(`host`: [_Tree_](/latest/react/nx-devkit/index#tree), `dependencies`: _Record_<string, string\>, `devDependencies`: _Record_<string, string\>, `packageJsonPath?`: _string_): [_GeneratorCallback_](/latest/react/nx-devkit/index#generatorcallback)
 
 Add Dependencies and Dev Dependencies to package.json
 
@@ -433,22 +433,22 @@ will add `react` and `jest` to the dependencies and devDependencies sections of 
 
 #### Parameters
 
-| Name | Type | Default value | Description |
-| :------ | :------ | :------ | :------ |
-| `host` | [*Tree*](/latest/react/nx-devkit/index#tree) | - | Tree representing file system to modify |
-| `dependencies` | *Record*<string, string\> | - | Dependencies to be added to the dependencies section of package.json |
-| `devDependencies` | *Record*<string, string\> | - | Dependencies to be added to the devDependencies section of package.json |
-| `packageJsonPath` | *string* | 'package.json' | Path to package.json |
+| Name              | Type                                         | Default value  | Description                                                             |
+| :---------------- | :------------------------------------------- | :------------- | :---------------------------------------------------------------------- |
+| `host`            | [_Tree_](/latest/react/nx-devkit/index#tree) | -              | Tree representing file system to modify                                 |
+| `dependencies`    | _Record_<string, string\>                    | -              | Dependencies to be added to the dependencies section of package.json    |
+| `devDependencies` | _Record_<string, string\>                    | -              | Dependencies to be added to the devDependencies section of package.json |
+| `packageJsonPath` | _string_                                     | 'package.json' | Path to package.json                                                    |
 
-**Returns:** [*GeneratorCallback*](/latest/react/nx-devkit/index#generatorcallback)
+**Returns:** [_GeneratorCallback_](/latest/react/nx-devkit/index#generatorcallback)
 
 Callback to install dependencies only if necessary. undefined is returned if changes are not necessary.
 
-___
+---
 
 ### addProjectConfiguration
 
-▸ **addProjectConfiguration**(`host`: [*Tree*](/latest/react/nx-devkit/index#tree), `projectName`: *string*, `projectConfiguration`: [*ProjectConfiguration*](/latest/react/nx-devkit/index#projectconfiguration) & [*NxJsonProjectConfiguration*](/latest/react/nx-devkit/index#nxjsonprojectconfiguration)): *void*
+▸ **addProjectConfiguration**(`host`: [_Tree_](/latest/react/nx-devkit/index#tree), `projectName`: _string_, `projectConfiguration`: [_ProjectConfiguration_](/latest/react/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](/latest/react/nx-devkit/index#nxjsonprojectconfiguration)): _void_
 
 Adds project configuration to the Nx workspace.
 
@@ -457,19 +457,19 @@ both files.
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `host` | [*Tree*](/latest/react/nx-devkit/index#tree) | the file system tree |
-| `projectName` | *string* | unique name. Often directories are part of the name (e.g., mydir-mylib) |
-| `projectConfiguration` | [*ProjectConfiguration*](/latest/react/nx-devkit/index#projectconfiguration) & [*NxJsonProjectConfiguration*](/latest/react/nx-devkit/index#nxjsonprojectconfiguration) | project configuration |
+| Name                   | Type                                                                                                                                                                    | Description                                                             |
+| :--------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------- |
+| `host`                 | [_Tree_](/latest/react/nx-devkit/index#tree)                                                                                                                            | the file system tree                                                    |
+| `projectName`          | _string_                                                                                                                                                                | unique name. Often directories are part of the name (e.g., mydir-mylib) |
+| `projectConfiguration` | [_ProjectConfiguration_](/latest/react/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](/latest/react/nx-devkit/index#nxjsonprojectconfiguration) | project configuration                                                   |
 
-**Returns:** *void*
+**Returns:** _void_
 
-___
+---
 
 ### applyChangesToString
 
-▸ **applyChangesToString**(`text`: *string*, `changes`: [*StringChange*](/latest/react/nx-devkit/index#stringchange)[]): *string*
+▸ **applyChangesToString**(`text`: _string_, `changes`: [_StringChange_](/latest/react/nx-devkit/index#stringchange)[]): _string_
 
 Applies a list of changes to a string's original value.
 
@@ -503,18 +503,18 @@ bootstrap({
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `text` | *string* |
-| `changes` | [*StringChange*](/latest/react/nx-devkit/index#stringchange)[] |
+| Name      | Type                                                           |
+| :-------- | :------------------------------------------------------------- |
+| `text`    | _string_                                                       |
+| `changes` | [_StringChange_](/latest/react/nx-devkit/index#stringchange)[] |
 
-**Returns:** *string*
+**Returns:** _string_
 
-___
+---
 
 ### convertNxExecutor
 
-▸ **convertNxExecutor**(`executor`: [*Executor*](/latest/react/nx-devkit/index#executor)): *any*
+▸ **convertNxExecutor**(`executor`: [_Executor_](/latest/react/nx-devkit/index#executor)): _any_
 
 Convert an Nx Executor into an Angular Devkit Builder
 
@@ -522,78 +522,79 @@ Use this to expose a compatible Angular Builder
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `executor` | [*Executor*](/latest/react/nx-devkit/index#executor) |
+| Name       | Type                                                 |
+| :--------- | :--------------------------------------------------- |
+| `executor` | [_Executor_](/latest/react/nx-devkit/index#executor) |
 
-**Returns:** *any*
+**Returns:** _any_
 
-___
+---
 
 ### convertNxGenerator
 
-▸ **convertNxGenerator**<T\>(`generator`: [*Generator*](/latest/react/nx-devkit/index#generator)<T\>): *function*
+▸ **convertNxGenerator**<T\>(`generator`: [_Generator_](/latest/react/nx-devkit/index#generator)<T\>): _function_
 
 Convert an Nx Generator into an Angular Devkit Schematic
 
 #### Type parameters
 
 | Name | Default |
-| :------ | :------ |
-| `T` | *any* |
+| :--- | :------ |
+| `T`  | _any_   |
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `generator` | [*Generator*](/latest/react/nx-devkit/index#generator)<T\> |
+| Name        | Type                                                       |
+| :---------- | :--------------------------------------------------------- |
+| `generator` | [_Generator_](/latest/react/nx-devkit/index#generator)<T\> |
 
-**Returns:** (`options`: T) => (`tree`: *any*, `context`: *any*) => *Promise*<any\>
+**Returns:** (`options`: T) => (`tree`: _any_, `context`: _any_) => _Promise_<any\>
 
-___
+---
 
 ### formatFiles
 
-▸ **formatFiles**(`host`: [*Tree*](/latest/react/nx-devkit/index#tree)): *Promise*<void\>
+▸ **formatFiles**(`host`: [_Tree_](/latest/react/nx-devkit/index#tree)): _Promise_<void\>
 
 Formats all the created or updated files using Prettier
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `host` | [*Tree*](/latest/react/nx-devkit/index#tree) | the file system tree |
+| Name   | Type                                         | Description          |
+| :----- | :------------------------------------------- | :------------------- |
+| `host` | [_Tree_](/latest/react/nx-devkit/index#tree) | the file system tree |
 
-**Returns:** *Promise*<void\>
+**Returns:** _Promise_<void\>
 
-___
+---
 
 ### generateFiles
 
-▸ **generateFiles**(`host`: [*Tree*](/latest/react/nx-devkit/index#tree), `srcFolder`: *string*, `target`: *string*, `substitutions`: { [k: string]: *any*;  }): *void*
+▸ **generateFiles**(`host`: [_Tree_](/latest/react/nx-devkit/index#tree), `srcFolder`: _string_, `target`: _string_, `substitutions`: { [k: string]: _any_; }): _void_
 
 Generates a folder of files based on provided templates.
 
 While doing so it performs two substitutions:
-- Substitutes segments of file names surrounded by __
+
+- Substitutes segments of file names surrounded by \_\_
 - Uses ejs to substitute values in templates
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `host` | [*Tree*](/latest/react/nx-devkit/index#tree) | the file system tree |
-| `srcFolder` | *string* | the source folder of files (absolute path) |
-| `target` | *string* | the target folder (relative to the host root) |
-| `substitutions` | *object* | an object of key-value pairs  Examples:  ```typescript generateFiles(host, path.join(__dirname , 'files'), './tools/scripts', {tmpl: '', name: 'myscript'}) ```  This command will take all the files from the `files` directory next to the place where the command is invoked from. It will replace all `__tmpl__` with '' and all `__name__` with 'myscript' in the file names, and will replace all `<%= name %>` with `myscript` in the files themselves.  `tmpl: ''` is a common pattern. With it you can name files like this: `index.ts__tmpl__`, so your editor doesn't get confused about incorrect TypeScript files. |
+| Name            | Type                                         | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| :-------------- | :------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `host`          | [_Tree_](/latest/react/nx-devkit/index#tree) | the file system tree                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `srcFolder`     | _string_                                     | the source folder of files (absolute path)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `target`        | _string_                                     | the target folder (relative to the host root)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `substitutions` | _object_                                     | an object of key-value pairs Examples: `typescript generateFiles(host, path.join(__dirname , 'files'), './tools/scripts', {tmpl: '', name: 'myscript'}) ` This command will take all the files from the `files` directory next to the place where the command is invoked from. It will replace all `__tmpl__` with '' and all `__name__` with 'myscript' in the file names, and will replace all `<%= name %>` with `myscript` in the files themselves. `tmpl: ''` is a common pattern. With it you can name files like this: `index.ts__tmpl__`, so your editor doesn't get confused about incorrect TypeScript files. |
 
-**Returns:** *void*
+**Returns:** _void_
 
-___
+---
 
 ### getPackageManagerCommand
 
-▸ **getPackageManagerCommand**(`packageManager?`: [*PackageManager*](/latest/react/nx-devkit/index#packagemanager)): *object*
+▸ **getPackageManagerCommand**(`packageManager?`: [_PackageManager_](/latest/react/nx-devkit/index#packagemanager)): _object_
 
 Returns commands for the package manager used in the workspace.
 By default, the package manager is derived based on the lock file,
@@ -607,27 +608,27 @@ execSync(`${getPackageManagerCommand().addDev} my-dev-package`);
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `packageManager` | [*PackageManager*](/latest/react/nx-devkit/index#packagemanager) |
+| Name             | Type                                                             |
+| :--------------- | :--------------------------------------------------------------- |
+| `packageManager` | [_PackageManager_](/latest/react/nx-devkit/index#packagemanager) |
 
-**Returns:** *object*
+**Returns:** _object_
 
-| Name | Type |
-| :------ | :------ |
-| `add` | *string* |
-| `addDev` | *string* |
-| `exec` | *string* |
-| `install` | *string* |
-| `list` | *string* |
-| `rm` | *string* |
-| `run` | (`script`: *string*, `args`: *string*) => *string* |
+| Name      | Type                                               |
+| :-------- | :------------------------------------------------- |
+| `add`     | _string_                                           |
+| `addDev`  | _string_                                           |
+| `exec`    | _string_                                           |
+| `install` | _string_                                           |
+| `list`    | _string_                                           |
+| `rm`      | _string_                                           |
+| `run`     | (`script`: _string_, `args`: _string_) => _string_ |
 
-___
+---
 
 ### getProjects
 
-▸ **getProjects**(`host`: [*Tree*](/latest/react/nx-devkit/index#tree)): *Map*<string, [*ProjectConfiguration*](/latest/react/nx-devkit/index#projectconfiguration) & [*NxJsonProjectConfiguration*](/latest/react/nx-devkit/index#nxjsonprojectconfiguration)\>
+▸ **getProjects**(`host`: [_Tree_](/latest/react/nx-devkit/index#tree)): _Map_<string, [_ProjectConfiguration_](/latest/react/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](/latest/react/nx-devkit/index#nxjsonprojectconfiguration)\>
 
 Get a map of all projects in a workspace.
 
@@ -635,17 +636,17 @@ Use [readProjectConfiguration](/latest/react/nx-devkit/index#readprojectconfigur
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `host` | [*Tree*](/latest/react/nx-devkit/index#tree) |
+| Name   | Type                                         |
+| :----- | :------------------------------------------- |
+| `host` | [_Tree_](/latest/react/nx-devkit/index#tree) |
 
-**Returns:** *Map*<string, [*ProjectConfiguration*](/latest/react/nx-devkit/index#projectconfiguration) & [*NxJsonProjectConfiguration*](/latest/react/nx-devkit/index#nxjsonprojectconfiguration)\>
+**Returns:** _Map_<string, [_ProjectConfiguration_](/latest/react/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](/latest/react/nx-devkit/index#nxjsonprojectconfiguration)\>
 
-___
+---
 
 ### getWorkspaceLayout
 
-▸ **getWorkspaceLayout**(`host`: [*Tree*](/latest/react/nx-devkit/index#tree)): *object*
+▸ **getWorkspaceLayout**(`host`: [_Tree_](/latest/react/nx-devkit/index#tree)): _object_
 
 Returns workspace defaults. It includes defaults folders for apps and libs,
 and the default scope.
@@ -656,120 +657,120 @@ Example:
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `host` | [*Tree*](/latest/react/nx-devkit/index#tree) | file system tree |
+| Name   | Type                                         | Description      |
+| :----- | :------------------------------------------- | :--------------- |
+| `host` | [_Tree_](/latest/react/nx-devkit/index#tree) | file system tree |
 
-**Returns:** *object*
+**Returns:** _object_
 
-| Name | Type |
-| :------ | :------ |
-| `appsDir` | *string* |
-| `libsDir` | *string* |
-| `npmScope` | *string* |
+| Name       | Type     |
+| :--------- | :------- |
+| `appsDir`  | _string_ |
+| `libsDir`  | _string_ |
+| `npmScope` | _string_ |
 
-___
+---
 
 ### getWorkspacePath
 
-▸ **getWorkspacePath**(`host`: [*Tree*](/latest/react/nx-devkit/index#tree)): *string*
+▸ **getWorkspacePath**(`host`: [_Tree_](/latest/react/nx-devkit/index#tree)): _string_
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `host` | [*Tree*](/latest/react/nx-devkit/index#tree) |
+| Name   | Type                                         |
+| :----- | :------------------------------------------- |
+| `host` | [_Tree_](/latest/react/nx-devkit/index#tree) |
 
-**Returns:** *string*
+**Returns:** _string_
 
-___
+---
 
 ### installPackagesTask
 
-▸ **installPackagesTask**(`host`: [*Tree*](/latest/react/nx-devkit/index#tree), `alwaysRun?`: *boolean*, `cwd?`: *string*, `packageManager?`: [*PackageManager*](/latest/react/nx-devkit/index#packagemanager)): *void*
+▸ **installPackagesTask**(`host`: [_Tree_](/latest/react/nx-devkit/index#tree), `alwaysRun?`: _boolean_, `cwd?`: _string_, `packageManager?`: [_PackageManager_](/latest/react/nx-devkit/index#packagemanager)): _void_
 
 Runs `npm install` or `yarn install`. It will skip running the install if
 `package.json` hasn't changed at all or it hasn't changed since the last invocation.
 
 #### Parameters
 
-| Name | Type | Default value | Description |
-| :------ | :------ | :------ | :------ |
-| `host` | [*Tree*](/latest/react/nx-devkit/index#tree) | - | the file system tree |
-| `alwaysRun` | *boolean* | false | always run the command even if `package.json` hasn't changed. |
-| `cwd` | *string* | '' | - |
-| `packageManager` | [*PackageManager*](/latest/react/nx-devkit/index#packagemanager) | - | - |
+| Name             | Type                                                             | Default value | Description                                                   |
+| :--------------- | :--------------------------------------------------------------- | :------------ | :------------------------------------------------------------ |
+| `host`           | [_Tree_](/latest/react/nx-devkit/index#tree)                     | -             | the file system tree                                          |
+| `alwaysRun`      | _boolean_                                                        | false         | always run the command even if `package.json` hasn't changed. |
+| `cwd`            | _string_                                                         | ''            | -                                                             |
+| `packageManager` | [_PackageManager_](/latest/react/nx-devkit/index#packagemanager) | -             | -                                                             |
 
-**Returns:** *void*
+**Returns:** _void_
 
-___
+---
 
 ### joinPathFragments
 
-▸ **joinPathFragments**(...`fragments`: *string*[]): *string*
+▸ **joinPathFragments**(...`fragments`: _string_[]): _string_
 
 Normalized path fragments and joins them
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `...fragments` | *string*[] |
+| Name           | Type       |
+| :------------- | :--------- |
+| `...fragments` | _string_[] |
 
-**Returns:** *string*
+**Returns:** _string_
 
-___
+---
 
 ### names
 
-▸ **names**(`name`: *string*): *object*
+▸ **names**(`name`: _string_): _object_
 
 Util function to generate different strings based off the provided name.
 
 Examples:
 
 ```typescript
-names("my-name") // {name: 'my-name', className: 'MyName', propertyName: 'myName', constantName: 'MY_NAME', fileName: 'my-name'}
-names("myName") // {name: 'my-name', className: 'MyName', propertyName: 'myName', constantName: 'MY_NAME', fileName: 'my-name'}
+names('my-name'); // {name: 'my-name', className: 'MyName', propertyName: 'myName', constantName: 'MY_NAME', fileName: 'my-name'}
+names('myName'); // {name: 'my-name', className: 'MyName', propertyName: 'myName', constantName: 'MY_NAME', fileName: 'my-name'}
 ```
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `name` | *string* |
+| Name   | Type     |
+| :----- | :------- |
+| `name` | _string_ |
 
-**Returns:** *object*
+**Returns:** _object_
 
-| Name | Type |
-| :------ | :------ |
-| `className` | *string* |
-| `constantName` | *string* |
-| `fileName` | *string* |
-| `name` | *string* |
-| `propertyName` | *string* |
+| Name           | Type     |
+| :------------- | :------- |
+| `className`    | _string_ |
+| `constantName` | _string_ |
+| `fileName`     | _string_ |
+| `name`         | _string_ |
+| `propertyName` | _string_ |
 
-___
+---
 
 ### normalizePath
 
-▸ **normalizePath**(`osSpecificPath`: *string*): *string*
+▸ **normalizePath**(`osSpecificPath`: _string_): _string_
 
 Coverts an os specific path to a unix style path
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `osSpecificPath` | *string* |
+| Name             | Type     |
+| :--------------- | :------- |
+| `osSpecificPath` | _string_ |
 
-**Returns:** *string*
+**Returns:** _string_
 
-___
+---
 
 ### offsetFromRoot
 
-▸ **offsetFromRoot**(`fullPathToDir`: *string*): *string*
+▸ **offsetFromRoot**(`fullPathToDir`: _string_): _string_
 
 Calculates an offset from the root of the workspace, which is useful for
 constructing relative URLs.
@@ -777,61 +778,61 @@ constructing relative URLs.
 Examples:
 
 ```typescript
-offsetFromRoot("apps/mydir/myapp/") // returns "../../../"
+offsetFromRoot('apps/mydir/myapp/'); // returns "../../../"
 ```
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `fullPathToDir` | *string* | directory path |
+| Name            | Type     | Description    |
+| :-------------- | :------- | :------------- |
+| `fullPathToDir` | _string_ | directory path |
 
-**Returns:** *string*
+**Returns:** _string_
 
-___
+---
 
 ### parseTargetString
 
-▸ **parseTargetString**(`targetString`: *string*): [*Target*](/latest/react/nx-devkit/index#target)
+▸ **parseTargetString**(`targetString`: _string_): [_Target_](/latest/react/nx-devkit/index#target)
 
 Parses a target string into {project, target, configuration}
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `targetString` | *string* | target reference  Examples:  ```typescript parseTargetString("proj:test") // returns { project: "proj", target: "test" } parseTargetString("proj:test:production") // returns { project: "proj", target: "test", configuration: "production" } ``` |
+| Name           | Type     | Description                                                                                                                                                                                                                                  |
+| :------------- | :------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `targetString` | _string_ | target reference Examples: `typescript parseTargetString("proj:test") // returns { project: "proj", target: "test" } parseTargetString("proj:test:production") // returns { project: "proj", target: "test", configuration: "production" } ` |
 
-**Returns:** [*Target*](/latest/react/nx-devkit/index#target)
+**Returns:** [_Target_](/latest/react/nx-devkit/index#target)
 
-___
+---
 
 ### readJson
 
-▸ **readJson**<T\>(`host`: [*Tree*](/latest/react/nx-devkit/index#tree), `path`: *string*): T
+▸ **readJson**<T\>(`host`: [_Tree_](/latest/react/nx-devkit/index#tree), `path`: _string_): T
 
 Reads a document for host, removes all comments and parses JSON.
 
 #### Type parameters
 
 | Name | Default |
-| :------ | :------ |
-| `T` | *any* |
+| :--- | :------ |
+| `T`  | _any_   |
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `host` | [*Tree*](/latest/react/nx-devkit/index#tree) | file system tree |
-| `path` | *string* | file path |
+| Name   | Type                                         | Description      |
+| :----- | :------------------------------------------- | :--------------- |
+| `host` | [_Tree_](/latest/react/nx-devkit/index#tree) | file system tree |
+| `path` | _string_                                     | file path        |
 
 **Returns:** T
 
-___
+---
 
 ### readProjectConfiguration
 
-▸ **readProjectConfiguration**(`host`: [*Tree*](/latest/react/nx-devkit/index#tree), `projectName`: *string*): [*ProjectConfiguration*](/latest/react/nx-devkit/index#projectconfiguration) & [*NxJsonProjectConfiguration*](/latest/react/nx-devkit/index#nxjsonprojectconfiguration)
+▸ **readProjectConfiguration**(`host`: [_Tree_](/latest/react/nx-devkit/index#tree), `projectName`: _string_): [_ProjectConfiguration_](/latest/react/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](/latest/react/nx-devkit/index#nxjsonprojectconfiguration)
 
 Reads a project configuration.
 
@@ -840,18 +841,18 @@ both files.
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `host` | [*Tree*](/latest/react/nx-devkit/index#tree) | the file system tree |
-| `projectName` | *string* | unique name. Often directories are part of the name (e.g., mydir-mylib) |
+| Name          | Type                                         | Description                                                             |
+| :------------ | :------------------------------------------- | :---------------------------------------------------------------------- |
+| `host`        | [_Tree_](/latest/react/nx-devkit/index#tree) | the file system tree                                                    |
+| `projectName` | _string_                                     | unique name. Often directories are part of the name (e.g., mydir-mylib) |
 
-**Returns:** [*ProjectConfiguration*](/latest/react/nx-devkit/index#projectconfiguration) & [*NxJsonProjectConfiguration*](/latest/react/nx-devkit/index#nxjsonprojectconfiguration)
+**Returns:** [_ProjectConfiguration_](/latest/react/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](/latest/react/nx-devkit/index#nxjsonprojectconfiguration)
 
-___
+---
 
 ### readTargetOptions
 
-▸ **readTargetOptions**<T\>(`__namedParameters`: [*Target*](/latest/react/nx-devkit/index#target), `context`: [*ExecutorContext*](/latest/react/nx-devkit/index#executorcontext)): T
+▸ **readTargetOptions**<T\>(`__namedParameters`: [_Target_](/latest/react/nx-devkit/index#target), `context`: [_ExecutorContext_](/latest/react/nx-devkit/index#executorcontext)): T
 
 Reads and combines options for a given target.
 
@@ -860,23 +861,23 @@ Works as if you invoked the target yourself without passing any command lint ove
 #### Type parameters
 
 | Name | Default |
-| :------ | :------ |
-| `T` | *any* |
+| :--- | :------ |
+| `T`  | _any_   |
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `__namedParameters` | [*Target*](/latest/react/nx-devkit/index#target) |
-| `context` | [*ExecutorContext*](/latest/react/nx-devkit/index#executorcontext) |
+| Name                | Type                                                               |
+| :------------------ | :----------------------------------------------------------------- |
+| `__namedParameters` | [_Target_](/latest/react/nx-devkit/index#target)                   |
+| `context`           | [_ExecutorContext_](/latest/react/nx-devkit/index#executorcontext) |
 
 **Returns:** T
 
-___
+---
 
 ### readWorkspaceConfiguration
 
-▸ **readWorkspaceConfiguration**(`host`: [*Tree*](/latest/react/nx-devkit/index#tree)): [*WorkspaceConfiguration*](/latest/react/nx-devkit/index#workspaceconfiguration)
+▸ **readWorkspaceConfiguration**(`host`: [_Tree_](/latest/react/nx-devkit/index#tree)): [_WorkspaceConfiguration_](/latest/react/nx-devkit/index#workspaceconfiguration)
 
 Read general workspace configuration such as the default project or cli settings
 
@@ -884,17 +885,17 @@ This does _not_ provide projects configuration, use [readProjectConfiguration](/
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `host` | [*Tree*](/latest/react/nx-devkit/index#tree) |
+| Name   | Type                                         |
+| :----- | :------------------------------------------- |
+| `host` | [_Tree_](/latest/react/nx-devkit/index#tree) |
 
-**Returns:** [*WorkspaceConfiguration*](/latest/react/nx-devkit/index#workspaceconfiguration)
+**Returns:** [_WorkspaceConfiguration_](/latest/react/nx-devkit/index#workspaceconfiguration)
 
-___
+---
 
 ### removeDependenciesFromPackageJson
 
-▸ **removeDependenciesFromPackageJson**(`host`: [*Tree*](/latest/react/nx-devkit/index#tree), `dependencies`: *string*[], `devDependencies`: *string*[], `packageJsonPath?`: *string*): [*GeneratorCallback*](/latest/react/nx-devkit/index#generatorcallback)
+▸ **removeDependenciesFromPackageJson**(`host`: [_Tree_](/latest/react/nx-devkit/index#tree), `dependencies`: _string_[], `devDependencies`: _string_[], `packageJsonPath?`: _string_): [_GeneratorCallback_](/latest/react/nx-devkit/index#generatorcallback)
 
 Remove Dependencies and Dev Dependencies from package.json
 
@@ -903,22 +904,22 @@ will remove `react` and `jest` from the dependencies and devDependencies section
 
 #### Parameters
 
-| Name | Type | Default value | Description |
-| :------ | :------ | :------ | :------ |
-| `host` | [*Tree*](/latest/react/nx-devkit/index#tree) | - | - |
-| `dependencies` | *string*[] | - | Dependencies to be removed from the dependencies section of package.json |
-| `devDependencies` | *string*[] | - | Dependencies to be removed from the devDependencies section of package.json |
-| `packageJsonPath` | *string* | 'package.json' | - |
+| Name              | Type                                         | Default value  | Description                                                                 |
+| :---------------- | :------------------------------------------- | :------------- | :-------------------------------------------------------------------------- |
+| `host`            | [_Tree_](/latest/react/nx-devkit/index#tree) | -              | -                                                                           |
+| `dependencies`    | _string_[]                                   | -              | Dependencies to be removed from the dependencies section of package.json    |
+| `devDependencies` | _string_[]                                   | -              | Dependencies to be removed from the devDependencies section of package.json |
+| `packageJsonPath` | _string_                                     | 'package.json' | -                                                                           |
 
-**Returns:** [*GeneratorCallback*](/latest/react/nx-devkit/index#generatorcallback)
+**Returns:** [_GeneratorCallback_](/latest/react/nx-devkit/index#generatorcallback)
 
 Callback to uninstall dependencies only if necessary. undefined is returned if changes are not necessary.
 
-___
+---
 
 ### removeProjectConfiguration
 
-▸ **removeProjectConfiguration**(`host`: [*Tree*](/latest/react/nx-devkit/index#tree), `projectName`: *string*): *void*
+▸ **removeProjectConfiguration**(`host`: [_Tree_](/latest/react/nx-devkit/index#tree), `projectName`: _string_): _void_
 
 Removes the configuration of an existing project.
 
@@ -927,18 +928,18 @@ The utility will update both files.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `host` | [*Tree*](/latest/react/nx-devkit/index#tree) |
-| `projectName` | *string* |
+| Name          | Type                                         |
+| :------------ | :------------------------------------------- |
+| `host`        | [_Tree_](/latest/react/nx-devkit/index#tree) |
+| `projectName` | _string_                                     |
 
-**Returns:** *void*
+**Returns:** _void_
 
-___
+---
 
 ### runExecutor
 
-▸ **runExecutor**<T\>(`targetDescription`: { `configuration?`: *string* ; `project`: *string* ; `target`: *string*  }, `options`: { [k: string]: *any*;  }, `context`: [*ExecutorContext*](/latest/react/nx-devkit/index#executorcontext)): *Promise*<AsyncIterableIterator<T\>\>
+▸ **runExecutor**<T\>(`targetDescription`: { `configuration?`: _string_ ; `project`: _string_ ; `target`: _string_ }, `options`: { [k: string]: _any_; }, `context`: [_ExecutorContext_](/latest/react/nx-devkit/index#executorcontext)): _Promise_<AsyncIterableIterator<T\>\>
 
 Loads and invokes executor.
 
@@ -957,7 +958,11 @@ Apart from that, it works the same way:
 Example:
 
 ```typescript
-for await (const s of await runExecutor({project: 'myproj', target: 'serve'}, {watch: true}, context)) {
+for await (const s of await runExecutor(
+  { project: 'myproj', target: 'serve' },
+  { watch: true },
+  context
+)) {
   // s.success
 }
 ```
@@ -966,29 +971,29 @@ Note that the return value is a promise of an iterator, so you need to await bef
 
 #### Type parameters
 
-| Name | Type |
-| :------ | :------ |
-| `T` | *object* |
-| `T.success` | *boolean* |
+| Name        | Type      |
+| :---------- | :-------- |
+| `T`         | _object_  |
+| `T.success` | _boolean_ |
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `targetDescription` | *object* |
-| `targetDescription.configuration?` | *string* |
-| `targetDescription.project` | *string* |
-| `targetDescription.target` | *string* |
-| `options` | *object* |
-| `context` | [*ExecutorContext*](/latest/react/nx-devkit/index#executorcontext) |
+| Name                               | Type                                                               |
+| :--------------------------------- | :----------------------------------------------------------------- |
+| `targetDescription`                | _object_                                                           |
+| `targetDescription.configuration?` | _string_                                                           |
+| `targetDescription.project`        | _string_                                                           |
+| `targetDescription.target`         | _string_                                                           |
+| `options`                          | _object_                                                           |
+| `context`                          | [_ExecutorContext_](/latest/react/nx-devkit/index#executorcontext) |
 
-**Returns:** *Promise*<AsyncIterableIterator<T\>\>
+**Returns:** _Promise_<AsyncIterableIterator<T\>\>
 
-___
+---
 
 ### stripIndents
 
-▸ **stripIndents**(`strings`: TemplateStringsArray, ...`values`: *any*[]): *string*
+▸ **stripIndents**(`strings`: TemplateStringsArray, ...`values`: _any_[]): _string_
 
 Removes indents, which is useful for printing warning and messages.
 
@@ -999,80 +1004,80 @@ stripIndents`
  Options:
  - option1
  - option2
-`
+`;
 ```
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `strings` | TemplateStringsArray |
-| `...values` | *any*[] |
+| Name        | Type                 |
+| :---------- | :------------------- |
+| `strings`   | TemplateStringsArray |
+| `...values` | _any_[]              |
 
-**Returns:** *string*
+**Returns:** _string_
 
-___
+---
 
 ### targetToTargetString
 
-▸ **targetToTargetString**(`__namedParameters`: [*Target*](/latest/react/nx-devkit/index#target)): *string*
+▸ **targetToTargetString**(`__namedParameters`: [_Target_](/latest/react/nx-devkit/index#target)): _string_
 
 Returns a string in the format "project:target[:configuration]" for the target
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `__namedParameters` | [*Target*](/latest/react/nx-devkit/index#target) |
+| Name                | Type                                             |
+| :------------------ | :----------------------------------------------- |
+| `__namedParameters` | [_Target_](/latest/react/nx-devkit/index#target) |
 
-**Returns:** *string*
+**Returns:** _string_
 
-___
+---
 
 ### toJS
 
-▸ **toJS**(`tree`: [*Tree*](/latest/react/nx-devkit/index#tree)): *void*
+▸ **toJS**(`tree`: [_Tree_](/latest/react/nx-devkit/index#tree)): _void_
 
 Rename and transpile any new typescript files created to javascript files
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `tree` | [*Tree*](/latest/react/nx-devkit/index#tree) |
+| Name   | Type                                         |
+| :----- | :------------------------------------------- |
+| `tree` | [_Tree_](/latest/react/nx-devkit/index#tree) |
 
-**Returns:** *void*
+**Returns:** _void_
 
-___
+---
 
 ### updateJson
 
-▸ **updateJson**<T, U\>(`host`: [*Tree*](/latest/react/nx-devkit/index#tree), `path`: *string*, `updater`: (`value`: T) => U): *void*
+▸ **updateJson**<T, U\>(`host`: [_Tree_](/latest/react/nx-devkit/index#tree), `path`: _string_, `updater`: (`value`: T) => U): _void_
 
 Updates a JSON value to the file system tree
 
 #### Type parameters
 
 | Name | Default |
-| :------ | :------ |
-| `T` | *any* |
-| `U` | T |
+| :--- | :------ |
+| `T`  | _any_   |
+| `U`  | T       |
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `host` | [*Tree*](/latest/react/nx-devkit/index#tree) | File system tree |
-| `path` | *string* | Path of JSON file in the Tree |
-| `updater` | (`value`: T) => U | Function that maps the current value of a JSON document to a new value to be written to the document |
+| Name      | Type                                         | Description                                                                                          |
+| :-------- | :------------------------------------------- | :--------------------------------------------------------------------------------------------------- |
+| `host`    | [_Tree_](/latest/react/nx-devkit/index#tree) | File system tree                                                                                     |
+| `path`    | _string_                                     | Path of JSON file in the Tree                                                                        |
+| `updater` | (`value`: T) => U                            | Function that maps the current value of a JSON document to a new value to be written to the document |
 
-**Returns:** *void*
+**Returns:** _void_
 
-___
+---
 
 ### updateProjectConfiguration
 
-▸ **updateProjectConfiguration**(`host`: [*Tree*](/latest/react/nx-devkit/index#tree), `projectName`: *string*, `projectConfiguration`: [*ProjectConfiguration*](/latest/react/nx-devkit/index#projectconfiguration) & [*NxJsonProjectConfiguration*](/latest/react/nx-devkit/index#nxjsonprojectconfiguration)): *void*
+▸ **updateProjectConfiguration**(`host`: [_Tree_](/latest/react/nx-devkit/index#tree), `projectName`: _string_, `projectConfiguration`: [_ProjectConfiguration_](/latest/react/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](/latest/react/nx-devkit/index#nxjsonprojectconfiguration)): _void_
 
 Updates the configuration of an existing project.
 
@@ -1081,35 +1086,35 @@ both files.
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `host` | [*Tree*](/latest/react/nx-devkit/index#tree) | the file system tree |
-| `projectName` | *string* | unique name. Often directories are part of the name (e.g., mydir-mylib) |
-| `projectConfiguration` | [*ProjectConfiguration*](/latest/react/nx-devkit/index#projectconfiguration) & [*NxJsonProjectConfiguration*](/latest/react/nx-devkit/index#nxjsonprojectconfiguration) | project configuration |
+| Name                   | Type                                                                                                                                                                    | Description                                                             |
+| :--------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------- |
+| `host`                 | [_Tree_](/latest/react/nx-devkit/index#tree)                                                                                                                            | the file system tree                                                    |
+| `projectName`          | _string_                                                                                                                                                                | unique name. Often directories are part of the name (e.g., mydir-mylib) |
+| `projectConfiguration` | [_ProjectConfiguration_](/latest/react/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](/latest/react/nx-devkit/index#nxjsonprojectconfiguration) | project configuration                                                   |
 
-**Returns:** *void*
+**Returns:** _void_
 
-___
+---
 
 ### updateTsConfigsToJs
 
-▸ **updateTsConfigsToJs**(`host`: [*Tree*](/latest/react/nx-devkit/index#tree), `options`: { `projectRoot`: *string*  }): *void*
+▸ **updateTsConfigsToJs**(`host`: [_Tree_](/latest/react/nx-devkit/index#tree), `options`: { `projectRoot`: _string_ }): _void_
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `host` | [*Tree*](/latest/react/nx-devkit/index#tree) |
-| `options` | *object* |
-| `options.projectRoot` | *string* |
+| Name                  | Type                                         |
+| :-------------------- | :------------------------------------------- |
+| `host`                | [_Tree_](/latest/react/nx-devkit/index#tree) |
+| `options`             | _object_                                     |
+| `options.projectRoot` | _string_                                     |
 
-**Returns:** *void*
+**Returns:** _void_
 
-___
+---
 
 ### updateWorkspaceConfiguration
 
-▸ **updateWorkspaceConfiguration**(`host`: [*Tree*](/latest/react/nx-devkit/index#tree), `__namedParameters`: [*WorkspaceConfiguration*](/latest/react/nx-devkit/index#workspaceconfiguration)): *void*
+▸ **updateWorkspaceConfiguration**(`host`: [_Tree_](/latest/react/nx-devkit/index#tree), `__namedParameters`: [_WorkspaceConfiguration_](/latest/react/nx-devkit/index#workspaceconfiguration)): _void_
 
 Update general workspace configuration such as the default project or cli settings.
 
@@ -1117,51 +1122,51 @@ This does _not_ update projects configuration, use [updateProjectConfiguration](
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `host` | [*Tree*](/latest/react/nx-devkit/index#tree) |
-| `__namedParameters` | [*WorkspaceConfiguration*](/latest/react/nx-devkit/index#workspaceconfiguration) |
+| Name                | Type                                                                             |
+| :------------------ | :------------------------------------------------------------------------------- |
+| `host`              | [_Tree_](/latest/react/nx-devkit/index#tree)                                     |
+| `__namedParameters` | [_WorkspaceConfiguration_](/latest/react/nx-devkit/index#workspaceconfiguration) |
 
-**Returns:** *void*
+**Returns:** _void_
 
-___
+---
 
 ### visitNotIgnoredFiles
 
-▸ **visitNotIgnoredFiles**(`tree`: [*Tree*](/latest/react/nx-devkit/index#tree), `dirPath?`: *string*, `visitor`: (`path`: *string*) => *void*): *void*
+▸ **visitNotIgnoredFiles**(`tree`: [_Tree_](/latest/react/nx-devkit/index#tree), `dirPath?`: _string_, `visitor`: (`path`: _string_) => _void_): _void_
 
 Utility to act on all files in a tree that are not ignored by git.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `tree` | [*Tree*](/latest/react/nx-devkit/index#tree) |
-| `dirPath` | *string* |
-| `visitor` | (`path`: *string*) => *void* |
+| Name      | Type                                         |
+| :-------- | :------------------------------------------- |
+| `tree`    | [_Tree_](/latest/react/nx-devkit/index#tree) |
+| `dirPath` | _string_                                     |
+| `visitor` | (`path`: _string_) => _void_                 |
 
-**Returns:** *void*
+**Returns:** _void_
 
-___
+---
 
 ### writeJson
 
-▸ **writeJson**<T\>(`host`: [*Tree*](/latest/react/nx-devkit/index#tree), `path`: *string*, `value`: T): *void*
+▸ **writeJson**<T\>(`host`: [_Tree_](/latest/react/nx-devkit/index#tree), `path`: _string_, `value`: T): _void_
 
 Writes a JSON value to the file system tree
 
 #### Type parameters
 
 | Name | Default |
-| :------ | :------ |
-| `T` | *any* |
+| :--- | :------ |
+| `T`  | _any_   |
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `host` | [*Tree*](/latest/react/nx-devkit/index#tree) | File system tree |
-| `path` | *string* | Path of JSON file in the Tree |
-| `value` | T | Serializable value to write |
+| Name    | Type                                         | Description                   |
+| :------ | :------------------------------------------- | :---------------------------- |
+| `host`  | [_Tree_](/latest/react/nx-devkit/index#tree) | File system tree              |
+| `path`  | _string_                                     | Path of JSON file in the Tree |
+| `value` | T                                            | Serializable value to write   |
 
-**Returns:** *void*
+**Returns:** _void_
