@@ -10,21 +10,17 @@ export interface SelectorProps {
 }
 
 export function Selector(props: SelectorProps) {
-  const [selectedItem, setSelectedItem] = useState(props.selected);
   return (
     <div className="w-full">
       <Listbox
-        value={selectedItem}
-        onChange={(selection) => {
-          setSelectedItem(selection);
-          props.onChange(selection);
-        }}
+        value={props.selected}
+        onChange={(selection) => props.onChange(selection)}
       >
         {({ open }) => (
           <>
             <div className="relative mt-1">
               <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-white rounded border border-gray-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-opacity-75 focus-visible:ring-white focus-visible:ring-offset-blue-300 focus-visible:ring-offset-2 focus-visible:border-blue-500 sm:text-sm font-medium">
-                <span className="block truncate">{selectedItem.label}</span>
+                <span className="block truncate">{props.selected.label}</span>
                 <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                   <SelectorIcon
                     className="w-5 h-5 text-gray-500"

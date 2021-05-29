@@ -4,7 +4,7 @@
     "outDir": "../../dist/out-tsc",
     "module": "commonjs",
     "types": ["jest", "node"],
-    "lib": ["dom"],
+    "lib": ["dom", "es2019"],
     "jsx": "react"
   },
   "include": [
