@@ -54,12 +54,12 @@ export function Header({ showSearch }: HeaderProps) {
         {/*NAVIGATION*/}
         <div className="text-sm flex-shrink-0">
           <nav className="flex items-justified justify-center space-x-1">
-            <Link href="/latest/react/getting-started/getting-started">
+            <Link href="/getting-started/getting-started">
               <a className="font-bold px-3 py-2 text-white leading-tight">
                 Get Started
               </a>
             </Link>
-            <Link href="/latest/react/core-concepts/plugins">
+            <Link href="/core-concepts/plugins">
               <a className="px-3 py-2 text-white leading-tight">Plugins</a>
             </Link>
             <Link href="/community">
