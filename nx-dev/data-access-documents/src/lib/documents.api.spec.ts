@@ -16,8 +16,7 @@ describe('DocumentsApi', () => {
 
   describe('getDocument', () => {
     it('should retrieve documents that exist', () => {
-      const result = api.getDocument('latest', [
-        'react',
+      const result = api.getDocument('latest', 'react', [
         'getting-started',
         'getting-started',
       ]);
@@ -27,7 +26,7 @@ describe('DocumentsApi', () => {
 
     it('should throw error if segments do not match a file', () => {
       expect(() =>
-        api.getDocument('latest', ['this', 'does', 'not', 'exist'])
+        api.getDocument('latest', 'vue', ['does', 'not', 'exist'])
       ).toThrow();
     });
   });
