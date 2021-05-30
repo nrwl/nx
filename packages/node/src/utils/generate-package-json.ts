@@ -11,7 +11,7 @@ export function generatePackageJson(
   options: BuildNodeBuilderOptions
 ) {
   const packageJson = createPackageJson(projectName, graph, options);
-  packageJson.main = OUT_FILENAME;
+  packageJson.main = packageJson.main ?? OUT_FILENAME;
   delete packageJson.devDependencies;
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
 }
