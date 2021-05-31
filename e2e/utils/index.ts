@@ -529,6 +529,7 @@ export function getPackageManagerCommand({
     : '';
 
   const publishedVersion = `9999.0.2`;
+  process.env.YARN_REGISTRY = `http://localhost:4872`;
 
   return {
     npm: {
