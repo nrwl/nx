@@ -16,7 +16,7 @@ describe('lib', () => {
     unitTestRunner: 'jest',
     style: 'css',
     component: true,
-    strict: false,
+    strict: true,
   };
 
   beforeEach(() => {
@@ -92,14 +92,14 @@ describe('lib', () => {
           path: './tsconfig.spec.json',
         },
       ]);
-      expect(tsconfigJson.compilerOptions.strict).not.toBeDefined();
       expect(
         tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
-      ).not.toBeDefined();
-      expect(tsconfigJson.compilerOptions.noImplicitReturns).not.toBeDefined();
-      expect(
-        tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
-      ).not.toBeDefined();
+      ).toEqual(true);
+      expect(tsconfigJson.compilerOptions.strict).toEqual(true);
+      expect(tsconfigJson.compilerOptions.noImplicitReturns).toEqual(true);
+      expect(tsconfigJson.compilerOptions.noFallthroughCasesInSwitch).toEqual(
+        true
+      );
     });
 
     it('should extend the local tsconfig.json with tsconfig.spec.json', async () => {
@@ -582,22 +582,22 @@ describe('lib', () => {
     });
   });
 
-  describe('--strict', () => {
-    it('should update tsconfig.json', async () => {
+  describe('--no-strict', () => {
+    it('should not add options for strict mode', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
-        strict: true,
+        strict: false,
       });
       const tsconfigJson = readJson(appTree, '/libs/my-lib/tsconfig.json');
 
-      expect(tsconfigJson.compilerOptions.strict).toBeTruthy();
       expect(
         tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
-      ).toBeTruthy();
-      expect(tsconfigJson.compilerOptions.noImplicitReturns).toBeTruthy();
+      ).not.toBeDefined();
+      expect(tsconfigJson.compilerOptions.strict).not.toBeDefined();
+      expect(tsconfigJson.compilerOptions.noImplicitReturns).not.toBeDefined();
       expect(
         tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
-      ).toBeTruthy();
+      ).not.toBeDefined();
     });
   });
 
