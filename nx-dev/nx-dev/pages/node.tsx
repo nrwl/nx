@@ -1,11 +1,6 @@
-import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import {
-  InlineCommand,
-  InteractiveSections,
-  NxUsersShowcase,
-} from '@nrwl/nx-dev/ui/common';
+import { InlineCommand, NxUsersShowcase } from '@nrwl/nx-dev/ui/common';
 
 export function Node() {
   const sectionItemList = [
@@ -52,19 +47,41 @@ export function Node() {
   ];
 
   return (
-    <div className="w-full">
+    <div className="w-full overflow-hidden">
       {/*Intro component*/}
-      <div className="bg-gray-50">
-        <div className="max-w-screen xl:max-w-screen-xl mx-auto px-5 py-5">
-          {/*1*/}
-          <div className="my-32 flex sm:flex-row flex-col justify-center">
-            <div className="w-full sm:w-1/2 lg:w-2/5 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
-              <h2 className="text-3xl sm:text-3xl lg:text-5xl leading-none font-extrabold text-gray-900 tracking-tight mb-4">
+      <div className="bg-blue-nx-dark text-white">
+        <div
+          className="max-w-screen-lg mx-auto px-5 py-5"
+          style={{
+            background:
+              'url(/images/cubes-top-1.png) no-repeat top center / contain',
+          }}
+        >
+          <div className="mt-72 flex sm:flex-row flex-col">
+            <div className="w-full sm:w-1/2 lg:w-2/5 flex flex-col items-start sm:pb-0 pb-10 mt-8 sm:mt-0 relative">
+              <svg
+                width="500"
+                height="500"
+                viewBox="0 0 400 400"
+                fill="currentColor"
+                xmlns="http://www.w3.org/2000/svg"
+                className="fill-current hidden md:block text-green-nx-base absolute -top-40 -left-72"
+              >
+                <circle cx="200" cy="200" r="200" />
+              </svg>
+              <h2 className="text-3xl sm:text-3xl lg:text-5xl leading-none font-extrabold tracking-tight mb-4 z-10">
                 Nx and Node
               </h2>
+              <div className="hidden sm:block pt-4">
+                <Image
+                  src="/images/cubes-left-1.png"
+                  width={488}
+                  height={300}
+                />
+              </div>
             </div>
-            <div className="w-full sm:w-1/2 lg:w-3/5 flex flex-col justify-between items-start sm:pl-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
-              <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold text-gray-900 tracking-tight mb-4">
+            <div className="w-full sm:w-1/2 lg:w-3/5 flex flex-col items-start sm:pl-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
+              <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4">
                 The power and scalability of Node has helped pave the way for
                 increasingly complex and sophisticated applications.
               </h3>
@@ -78,71 +95,98 @@ export function Node() {
             </div>
           </div>
         </div>
-      </div>
-      {/*What is Nx*/}
-      <div className="max-w-screen xl:max-w-screen-xl mx-auto px-5 py-5">
-        <div className="my-32 flex sm:flex-row flex-col justify-center">
-          <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
-            <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold text-gray-900 tracking-tight mb-4">
-              Nx is a smart and extensible build framework that helps you
-              develop, test, build, and scale Node applications.
-            </h3>
-            <p className="sm:text-lg mb-6">
-              Nx is a set of tools that provides a standardized and integrated
-              development experience for all of your Node workspaces. It takes
-              care of things like Typescript configuration and library sharing,
-              so you can focus on other, more interesting development tasks. In
-              addition, Nx provides...
-            </p>
-            <ul className="sm:text-lg list-disc list-inside">
-              <li>API creation using Express and Nest</li>
-              <li className="mt-4">Better linting</li>
-              <li className="mt-4">Better testing</li>
-              <li className="mt-4">
-                Support for popular community tools and frameworks
-              </li>
-              <li className="mt-4">Nx’s own devkit for building plugins</li>
-              <li className="mt-4">
-                And other Nx-specific features including dependency graphs, code
-                generation, and computation caching
-              </li>
-            </ul>
-          </div>
-          <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pl-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
-            <iframe
-              width="560"
-              height="315"
-              src="https://www.youtube.com/embed/iIh5h_G52kI"
-              title="YouTube video player"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="w-full"
-            />
-          </div>
-        </div>
-      </div>
-      {/*Call out*/}
-      <div className="bg-gray-50">
-        <div className="max-w-7xl mx-auto my-12 py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
-          <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-            <span className="block">Ready to dive in?</span>
-            <span className="block text-blue-600">
-              Start using Nx with Node today.
-            </span>
-          </h2>
-          <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
-            <div className="inline-flex rounded-md shadow">
-              <Link href="/latest/node/getting-started/getting-started">
-                <a className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                  Get started with Node
-                </a>
-              </Link>
+        {/*What is Nx*/}
+        <div className="max-w-screen-lg mx-auto px-5 py-5">
+          <div className="my-32 flex sm:flex-row flex-col justify-center">
+            <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
+              <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4">
+                Nx is a smart and extensible build framework that helps you
+                develop, test, build, and scale Node applications.
+              </h3>
+              <p className="sm:text-lg mb-6">
+                Nx is a set of tools that provides a standardized and integrated
+                development experience for all of your Node workspaces. It takes
+                care of things like Typescript configuration and library
+                sharing, so you can focus on other, more interesting development
+                tasks. In addition, Nx provides...
+              </p>
+              <ul className="sm:text-lg list-disc list-inside">
+                <li>API creation using Express and Nest</li>
+                <li className="mt-4">Better linting</li>
+                <li className="mt-4">Better testing</li>
+                <li className="mt-4">
+                  Support for popular community tools and frameworks
+                </li>
+                <li className="mt-4">Nx’s own devkit for building plugins</li>
+                <li className="mt-4">
+                  And other Nx-specific features including dependency graphs,
+                  code generation, and computation caching
+                </li>
+              </ul>
+            </div>
+            <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pl-16 sm:pb-0 pb-10 mt-8 sm:mt-0 relative">
+              <svg
+                width="400"
+                height="400"
+                viewBox="0 0 400 400"
+                fill="currentColor"
+                xmlns="http://www.w3.org/2000/svg"
+                className="fill-current hidden md:block text-green-nx-base absolute -top-20 -right-32"
+              >
+                <circle cx="200" cy="200" r="200" />
+              </svg>
+              <div className="hidden sm:block pt-4">
+                <Image
+                  src="/images/cubes-right-1.png"
+                  width={488}
+                  height={300}
+                />
+              </div>
+              {/*<iframe*/}
+              {/*  width="560"*/}
+              {/*  height="315"*/}
+              {/*  src="https://www.youtube.com/embed/iIh5h_G52kI"*/}
+              {/*  title="YouTube video player"*/}
+              {/*  frameBorder="0"*/}
+              {/*  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"*/}
+              {/*  allowFullScreen*/}
+              {/*  className="w-full"*/}
+              {/*/>*/}
             </div>
           </div>
         </div>
       </div>
-      <div className="max-w-screen xl:max-w-screen-xl mx-auto px-5 py-5">
+      {/*Call out*/}
+      <div className="bg-blue-nx-base text-white">
+        <div className="max-w-screen-lg mx-auto px-5 py-5">
+          <div className="flex sm:flex-row flex-col justify-center py-16">
+            <div className="sm:w-1/2 sm:flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0 relative">
+              <div className="hidden sm:block absolute -top-40">
+                <Image
+                  src="/images/cubes-left-2.png"
+                  width={310}
+                  height={240}
+                />
+              </div>
+            </div>
+            <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
+              <p className="sm:text-lg mb-4 underline">
+                Get started right away by creating a modern Node workspace with
+                Nx, or learn more about the benefits Nx provides when building
+                Node applications.
+              </p>
+              <div className="inline-flex rounded-md shadow">
+                <Link href="/latest/node/getting-started/getting-started">
+                  <a className="inline-flex items-center justify-center px-5 py-2 border border-transparent text-base font-medium rounded-md text-gray-700 bg-white">
+                    Nx Node Doc
+                  </a>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="max-w-screen-lg mx-auto px-5 py-5">
         {/*How to use Nx*/}
         <div className="mt-32 flex sm:flex-row flex-col justify-center">
           <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
@@ -178,7 +222,13 @@ export function Node() {
           </div>
         </div>
         {/*More info*/}
-        <div className="mt-16 mb-32 flex sm:flex-row flex-col items-start justify-center">
+        <div
+          className="mt-16 mb-32 flex sm:flex-row flex-col items-center justify-center p-8 bg-blue-nx-base text-white"
+          style={{
+            background:
+              'linear-gradient(90deg, hsla(0, 0%, 100%, 1) 10%, hsla(214, 62%, 21%, 1) 10%)',
+          }}
+        >
           <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
             <iframe
               width="560"
@@ -197,10 +247,26 @@ export function Node() {
               tutorial to learn how to add testing, share code, view dependency
               graphs, and much, much more.
             </p>
-            <div className="inline-flex rounded-md shadow">
+            <div className="inline-flex">
               <Link href="/latest/node/tutorial/01-create-application">
-                <a className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                  Start learning Nx with Node
+                <a className="inline-flex items-center font-bold group">
+                  <span className="group-hover:underline">
+                    Nx Node App Tutorial
+                  </span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="ml-1 h-5 w-5 transform-gpu transition ease-out duration-200 group-hover:translate-x-2 "
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 7l5 5m0 0l-5 5m5-5H6"
+                    />
+                  </svg>
                 </a>
               </Link>
             </div>
@@ -213,6 +279,25 @@ export function Node() {
             </p>
           </div>
         </div>
+      </div>
+      {/*VIDEO*/}
+      <div className="bg-blue-nx-base text-white">
+        <div className="max-w-screen-lg mx-auto px-5 py-5">
+          <div className="py-32 w-full flex justify-center">
+            <iframe
+              width="760"
+              height="440"
+              src="https://www.youtube.com/embed/iIh5h_G52kI"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="w-max-full mb-8"
+              style={{ boxShadow: '-48px 48px 0 0 hsla(162, 47%, 50%, 1)' }}
+            />
+          </div>
+        </div>
+      </div>
+      <div className="max-w-screen-lg mx-auto px-5 py-5">
         {/*Nx technology*/}
         <div className="py-32 flex sm:flex-row flex-col items-center justify-center">
           <div className="w-full sm:w-2/5 flex flex-col justify-between items-center sm:pb-0 pb-10 mt-8 sm:mt-0">
@@ -262,7 +347,7 @@ export function Node() {
             </div>
           </div>
           <div className="w-full sm:w-3/5 flex flex-col justify-between items-start sm:pl-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
-            <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold text-gray-900 tracking-tight mb-4">
+            <h3 className="text-2xl sm:text-2xl lg:text-3xl leading-none font-extrabold text-gray-900 tracking-tight mb-4">
               Tools
             </h3>
             <p className="sm:text-lg mb-6">
@@ -309,34 +394,41 @@ export function Node() {
             </ul>
           </div>
         </div>
-        {/*Integrated experience*/}
-        <div className="py-32 flex sm:flex-row flex-col items-center justify-center">
-          <div className="w-full sm:w-2/5 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
-            <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold text-gray-900 tracking-tight mb-4">
-              Nx Integrated Development Experience
-            </h3>
-            <p className="sm:text-lg mb-6">
-              Nx provides a modern dev experience that is more integrated. Nx
-              adds a high-quality VS Code plugin which helps you use the build
-              tool effectively, generate components in folders, and much more.
-            </p>
-            <p className="sm:text-lg mb-6">
-              Nx also supports optional free cloud support with Nx Cloud as well
-              as GitHub integration. Share links with your teammates where
-              everyone working on a project can examine detailed build logs and
-              get insights about how to improve your project and build.
-            </p>
-          </div>
-          <div className="w-full sm:w-3/5 flex flex-col justify-between items-start sm:pl-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
-            <Image
-              src="/images/vscode-nxcloud-pr.png"
-              alt="Nx Integrated Development Experience illustration"
-              width={870}
-              height={830}
-            />
+      </div>
+      {/*Integrated experience*/}
+      <div className="bg-blue-nx-base text-white">
+        <div className="max-w-screen-lg mx-auto px-5 py-5">
+          <div className="py-32 flex sm:flex-row flex-col items-center justify-center">
+            <div className="w-full sm:w-2/5 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
+              <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4">
+                Nx Integrated Development Experience
+              </h3>
+              <p className="sm:text-lg mb-6">
+                Nx provides a modern dev experience that is more integrated. Nx
+                adds a high-quality VS Code plugin which helps you use the build
+                tool effectively, generate components in folders, and much more.
+              </p>
+              <p className="sm:text-lg mb-6">
+                Nx also supports optional free cloud support with Nx Cloud as
+                well as GitHub integration. Share links with your teammates
+                where everyone working on a project can examine detailed build
+                logs and get insights about how to improve your project and
+                build.
+              </p>
+            </div>
+            <div className="w-full sm:w-3/5 flex flex-col justify-between items-start sm:pl-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
+              <Image
+                src="/images/vscode-nxcloud-pr.png"
+                alt="Nx Integrated Development Experience illustration"
+                width={870}
+                height={830}
+              />
+            </div>
           </div>
         </div>
-        {/*Learn more*/}
+      </div>
+      {/*Learn more*/}
+      <div className="max-w-screen-lg mx-auto px-5 py-5">
         <div className="py-32 flex sm:flex-row flex-col items-start justify-center">
           <div className="w-full sm:w-2/5 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
             <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold text-gray-900 tracking-tight mb-4">

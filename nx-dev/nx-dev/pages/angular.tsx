@@ -2,14 +2,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { InlineCommand, NxUsersShowcase } from '@nrwl/nx-dev/ui/common';
 
-export function ReactPage() {
+export function AngularPage() {
   return (
     <div className="w-full overflow-hidden">
       {/*Intro component*/}
       <div className="bg-blue-nx-dark text-white">
         <div className="max-w-screen-lg mx-auto px-5 py-5 relative">
           <img
-            src="/images/react-constellation.svg"
+            src="/images/angular-constellation.svg"
             width={800}
             height={650}
             className="absolute top-0 right-0 constellation-wobble-animation"
@@ -17,7 +17,7 @@ export function ReactPage() {
           />
           <div className="mt-72">
             <h2 className="text-3xl sm:text-3xl lg:text-5xl leading-none font-extrabold tracking-tight mb-4">
-              Nx and React
+              Nx and Modern Angular
             </h2>
           </div>
           <div className="mt-8 mb-32 flex sm:flex-row flex-col justify-center">
@@ -26,18 +26,14 @@ export function ReactPage() {
                 <b>Nx</b> provides a holistic dev experience powered by an
                 advanced CLI and editor plugins.
               </p>
-              <p className="sm:text-lg mb-6">
-                Develop your applications using your preferred React frameworks,
-                mix and match them, without losing the rich support for
-                Storybook, Cypress, Jest, ESLint and more.
-              </p>
+              <p className="sm:text-lg mb-6">***CHANGE ME***</p>
               <p className="sm:text-lg mb-6">
                 <b>Nx</b> uses distributed graph-based task execution and
                 computation caching. Keep your CI and local dev experience fast
                 as your repository grows.
               </p>
               <p className="sm:text-lg mb-6">
-                <b>Nx</b> can be added to any React project{' '}
+                <b>Nx</b> can be added to any Angular project{' '}
                 <a href="#create-nx-workspace">in minutes</a>.
               </p>
             </div>
@@ -45,7 +41,7 @@ export function ReactPage() {
               <iframe
                 width="560"
                 height="315"
-                src="https://www.youtube.com/embed/sNz-4PUM0k8"
+                src="https://www.youtube.com/embed/cXOkmOy-8dk"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -60,28 +56,19 @@ export function ReactPage() {
         <div className="mt-32 flex sm:flex-row flex-col justify-center">
           <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
             <h3 className="text-2xl sm:text-2xl lg:text-3xl leading-none font-extrabold text-gray-900 tracking-tight mb-4">
-              Create a React Workspace with Nx
+              Create an Angular Workspace with Nx
             </h3>
           </div>
           <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pl-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
             <p className="sm:text-lg mb-6">
-              Get started right away by creating a new React workspace by
+              Get started right away by creating a new Angular workspace by
               running the following command in your Terminal or Command prompt:
             </p>
 
             <div className="w-full">
               <InlineCommand
                 language={'bash'}
-                command={'npx create-nx-workspace --preset=react'}
-              />
-            </div>
-
-            <p className="sm:text-lg my-6">For NextJS users you can use:</p>
-
-            <div className="w-full">
-              <InlineCommand
-                language={'bash'}
-                command={'npx create-nx-workspace --preset=next'}
+                command={'npx create-nx-workspace --preset=angular'}
               />
             </div>
           </div>
@@ -98,7 +85,7 @@ export function ReactPage() {
             <iframe
               width="560"
               height="315"
-              src="https://www.youtube.com/embed/HcQE5R6ucng"
+              src="https://www.youtube.com/embed/i37yJKK8qGI"
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
@@ -107,15 +94,15 @@ export function ReactPage() {
           </div>
           <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pl-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
             <p className="sm:text-lg mb-6">
-              Once you’ve created your React workspace, follow the steps in this
-              tutorial to learn how to add testing, share code, view dependency
-              graphs, and much, much more.
+              Once you’ve created your Angular workspace, follow the steps in
+              this tutorial to learn how to add testing, share code, view
+              dependency graphs, and much, much more.
             </p>
             <div className="inline-flex">
-              <Link href="/latest/react/tutorial/01-create-application">
+              <Link href="/latest/anguar/tutorial/01-create-application">
                 <a className="inline-flex items-center font-bold group">
                   <span className="group-hover:underline">
-                    Nx React App Tutorial
+                    Nx Angular App Tutorial
                   </span>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -135,19 +122,14 @@ export function ReactPage() {
               </Link>
             </div>
             <p className="italic sm:text-lg my-6">
-              If you want to add Nx to an existing React project, check out
+              If you want to add Nx to an existing Angular project, check out
               these guides for{' '}
-              <Link href="/latest/react/migration/migration-cra">
+              <Link href="/latest/angular/migration/overview">
                 <a className="underline pointer">
                   "Create React App" migration
                 </a>
-              </Link>{' '}
-              or{' '}
-              <Link href="/latest/react/migration/migration-cra">
-                <a className="underline pointer">
-                  "Adding Nx to Yarn/Lerna monorepo" migration
-                </a>
               </Link>
+              .
             </p>
           </div>
         </div>
@@ -237,7 +219,7 @@ export function ReactPage() {
                 className="w-full opacity-25"
                 height="128"
                 width="128"
-                src="https://cdn.jsdelivr.net/npm/simple-icons@v4/icons/gatsby.svg"
+                src="https://cdn.jsdelivr.net/npm/simple-icons@v4/icons/angular.svg"
               />
               <img
                 loading="lazy"
@@ -251,7 +233,7 @@ export function ReactPage() {
                 className="w-full opacity-25"
                 height="128"
                 width="128"
-                src="https://cdn.jsdelivr.net/npm/simple-icons@v4/icons/next-dot-js.svg"
+                src="https://cdn.jsdelivr.net/npm/simple-icons@v4/icons/nestjs.svg"
               />
               <img
                 loading="lazy"
@@ -285,8 +267,8 @@ export function ReactPage() {
               frameworks.
             </p>
             <p className="sm:text-lg mb-6">
-              It has support for TypeScript, React, React Native, Cypress, Jest,
-              Prettier, Nest.js, Next.js, Gatsby, Storybook, Ionic, Go, Rust
+              It has support for TypeScript, Angular, NativeScript, Cypress,
+              Jest, Prettier, Nest.js, AngularCLI, Storybook, Ionic, Go, Rust
               among others. With Nx, you get a consistent dev experience
               regardless of the tools used.
             </p>
@@ -295,45 +277,18 @@ export function ReactPage() {
                 Use Nx's{' '}
                 <a
                   className="underline pointer"
-                  href="https://nx.dev/latest/react/storybook/overview"
+                  href="https://nx.dev/latest/angular/storybook/overview"
                 >
                   Storybook
                 </a>{' '}
                 and{' '}
                 <a
                   className="underline pointer"
-                  href="https://nx.dev/latest/react/cypress/overview#cypress-plugin"
+                  href="https://nx.dev/latest/angular/cypress/overview#cypress-plugin"
                 >
                   Cypress
                 </a>{' '}
                 plugins to build design systems.
-              </li>
-              <li className="mt-4">
-                Use{' '}
-                <a
-                  className="underline pointer"
-                  target="_blank"
-                  href="https://blog.nrwl.io/painlessly-build-and-deploy-next-js-apps-with-nx-225e2721da78?source=friends_link&sk=b381e3b9e7a2d8951fbe806ac0363851"
-                >
-                  NextJS
-                </a>
-                ,{' '}
-                <a
-                  className="underline pointer"
-                  target="_blank"
-                  href="https://blog.nrwl.io/step-to-step-guide-on-creating-a-blog-using-nx-gatsby-wordpress-ac7e9bfc0efd?source=friends_link&sk=5af5e109144bc4985f3fe8d92429463b"
-                >
-                  Gatsby
-                </a>
-                ,{' '}
-                <a
-                  className="underline pointer"
-                  target="_blank"
-                  href="https://blog.nrwl.io/introducing-react-native-support-for-nx-48d335e90c89?source=friends_link&sk=e04878accafe0d9f696b647d0b9ae2d4"
-                >
-                  React Native
-                </a>{' '}
-                and share code between them.
               </li>
             </ul>
           </div>
@@ -387,14 +342,14 @@ export function ReactPage() {
             </p>
             <ul className="sm:text-lg list-disc list-inside">
               <li>
-                <Link href={'/latest/react/getting-started/intro'}>
-                  <a className="underline pointer">Nx React Documentation</a>
+                <Link href={'/latest/angular/getting-started/intro'}>
+                  <a className="underline pointer">Nx Angular Documentation</a>
                 </Link>
               </li>
               <li>
                 <a
                   className="underline pointer"
-                  href="https://egghead.io/playlists/scale-react-development-with-nx-4038"
+                  href="https://www.youtube.com/watch?v=2mYLe9Kp9VM&list=PLakNactNC1dH38AfqmwabvOszDmKriGco"
                   target="_blank"
                 >
                   Free Nx Workspaces video course
@@ -450,4 +405,4 @@ export function ReactPage() {
   );
 }
 
-export default ReactPage;
+export default AngularPage;

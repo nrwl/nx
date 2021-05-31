@@ -136,7 +136,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }) {
                   )}
                 >
                   {isActiveLink ? (
-                    <span className="rounded-md absolute h-full w-2 right-2 top-0 bg-blue-nx-dark" />
+                    <span className="rounded-md absolute h-full w-2 right-2 top-0 bg-blue-nx-base" />
                   ) : null}
                   <span className="relative">{item.name}</span>
                 </a>

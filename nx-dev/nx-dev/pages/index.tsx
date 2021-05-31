@@ -7,7 +7,7 @@ export function Index() {
   return (
     <div className="w-full">
       {/*INTRO COMPONENT*/}
-      <div className="bg-blue-nx-dark text-white">
+      <div className="bg-blue-nx-base text-white">
         <div className="max-w-screen-lg mx-auto px-5 py-5">
           <div className="mt-8 mb-20 flex lg:flex-row flex-col items-center justify-center">
             <div className="w-full lg:w-1/2 flex flex-col">
@@ -21,7 +21,7 @@ export function Index() {
 
               <div className="flex flex-wrap space-y-4 sm:space-y-0 sm:space-x-4 text-center">
                 <Link href="/latest/react/getting-started/getting-started">
-                  <a className="w-full sm:w-auto flex-none bg-purple-nx-dark text-white text-lg leading-6 font-semibold py-3 px-6 border border-transparent rounded focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-purple-nx-dark focus:outline-none transition-colors duration-180">
+                  <a className="w-full sm:w-auto flex-none bg-purple-nx-base text-white text-lg leading-6 font-semibold py-3 px-6 border border-transparent rounded focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-purple-nx-base focus:outline-none transition-colors duration-180">
                     Get Started
                   </a>
                 </Link>
@@ -84,8 +84,8 @@ export function Index() {
         </div>
       </div>
 
+      {/*SELECTION COMPONENT*/}
       <div className="max-w-screen-lg mx-auto px-5 py-5">
-        {/*SELECTION COMPONENT*/}
         <div className="mt-32 mb-20 flex sm:flex-row flex-col justify-center">
           <div className="w-full sm:w-1/2 grid grid-cols-3 gap-10 items-center">
             <Link href="/react">
@@ -98,15 +98,16 @@ export function Index() {
                 </div>
               </a>
             </Link>
-            <a className="w-full bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all ease-out duration-180 rounded py-4 px-3 space-x-1 text-base tracking-tight font-bold leading-tight text-center flex flex-col justify-center items-center px-2 py-4 space-y-4">
-              <svg viewBox="0 0 24 24" className="w-1/2" fill="#E23236">
-                <path d="M9.931 12.645h4.138l-2.07-4.908m0-7.737L.68 3.982l1.726 14.771L12 24l9.596-5.242L23.32 3.984 11.999.001zm7.064 18.31h-2.638l-1.422-3.503H8.996l-1.422 3.504h-2.64L12 2.65z" />
-              </svg>
-              <div className="sm:text-base md:text-sm lg:text-base">
-                Angular
-              </div>
-            </a>
-
+            <Link href="/angular">
+              <a className="w-full bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all ease-out duration-180 rounded py-4 px-3 space-x-1 text-base tracking-tight font-bold leading-tight text-center flex flex-col justify-center items-center px-2 py-4 space-y-4">
+                <svg viewBox="0 0 24 24" className="w-1/2" fill="#E23236">
+                  <path d="M9.931 12.645h4.138l-2.07-4.908m0-7.737L.68 3.982l1.726 14.771L12 24l9.596-5.242L23.32 3.984 11.999.001zm7.064 18.31h-2.638l-1.422-3.503H8.996l-1.422 3.504h-2.64L12 2.65z" />
+                </svg>
+                <div className="sm:text-base md:text-sm lg:text-base">
+                  Angular
+                </div>
+              </a>
+            </Link>
             <Link href="/node">
               <a className="w-full bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all ease-out duration-180 rounded py-4 px-3 space-x-1 text-base tracking-tight font-bold leading-tight text-center flex flex-col justify-center items-center px-2 py-4 space-y-4">
                 <svg viewBox="0 0 24 24" className="w-1/2" fill="#77AE64">
@@ -130,7 +131,7 @@ export function Index() {
         </div>
       </div>
 
-      <div className="bg-blue-nx-dark text-white">
+      <div className="bg-blue-nx-base text-white">
         <div className="max-w-screen-lg mx-auto px-5 py-5">
           {/*GRAPH AND COMPUTATION CACHING*/}
           <div className="mt-32 flex sm:flex-row flex-col">
@@ -219,7 +220,7 @@ export function Index() {
                 <div className="inline-flex rounded-md shadow">
                   <a
                     href="https://nx.app/?utm_source=nx.dev"
-                    className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-nx-dark"
+                    className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-nx-base"
                   >
                     Learn About Nx Cloud
                   </a>
@@ -287,7 +288,7 @@ export function Index() {
                 <a
                   target="_blank"
                   href="https://www.youtube.com/watch?v=2mYLe9Kp9VM&list=PLakNactNC1dH38AfqmwabvOszDmKriGco?utm_source=nx.dev"
-                  className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-nx-dark"
+                  className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-nx-base"
                 >
                   Watch Nx Workspaces Course
                 </a>
@@ -297,7 +298,7 @@ export function Index() {
         </div>
       </div>
 
-      <div className="bg-blue-nx-dark text-white">
+      <div className="bg-blue-nx-base text-white">
         <div className="max-w-screen-lg mx-auto px-5 py-5">
           {/*MORE*/}
           <div className="my-32 flex sm:flex-row flex-col">

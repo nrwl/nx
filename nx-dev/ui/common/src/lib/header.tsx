@@ -8,7 +8,7 @@ export interface HeaderProps {
 
 export function Header({ showSearch }: HeaderProps) {
   return (
-    <header className="h-16 px-5 py-5 flex items-center justify-between print:hidden bg-blue-nx-dark">
+    <header className="h-16 px-5 py-5 flex items-center justify-between print:hidden bg-blue-nx-base">
       <div className="flex items-center justify-between w-full max-w-screen-xl mx-auto space-x-10">
         {/*LOGO*/}
         <div className="flex items-center">
