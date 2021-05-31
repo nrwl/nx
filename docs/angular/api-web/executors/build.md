@@ -102,6 +102,14 @@ Type: `string`
 
 The file to replace with.
 
+### generateIndexHtml
+
+Default: `true`
+
+Type: `boolean`
+
+Generates `index.html` file to the output path. This can be turned off if using a webpack plugin to generate HTML such as `html-webpack-plugin`
+
 ### index
 
 Type: `string`

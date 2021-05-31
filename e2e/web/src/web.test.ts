@@ -404,6 +404,8 @@ describe('index.html interpolation', () => {
     const distPath = `dist/apps/${appName}`;
     const resultIndexContents = readFile(`${distPath}/index.html`);
 
-    expect(resultIndexContents).toBe(expectedBuiltIndex);
+    expect(resultIndexContents).toMatch(/<div>Nx Variable: foo<\/div>/);
+    expect(resultIndexContents).toMatch(/<div>Nx Variable: foo<\/div>/);
+    expect(resultIndexContents).toMatch(/ <div>Nx Variable: foo<\/div>/);
   });
 });
