@@ -34,9 +34,9 @@ describe('@nrwl/storybook:storybook', () => {
     const packageJsonPath = join(
       __dirname,
       `/node_modules/@storybook/angular/package.json`
-    )
+    );
     vol.fromJSON({
-      [packageJsonPath]: readFileSync(packageJsonPath).toString()
+      [packageJsonPath]: readFileSync(packageJsonPath).toString(),
     });
     vol.mkdirSync('/root/.storybook', {
       recursive: true,
