@@ -1169,11 +1169,10 @@ describe('Remove Project', () => {
     }
 
     expect(error).toBeDefined();
-    expect(error.stderr.toString()).toMatch(
-      new RegExp(
-        `${lib1} is still depended on by the following projects:\n\s*${lib2}`
-      )
+    expect(error.stderr.toString()).toContain(
+      `${lib1} is still depended on by the following projects`
     );
+    expect(error.stderr.toString()).toContain(lib2);
 
     /**
      * Try force removing the project
