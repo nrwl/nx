@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 import { fs as fsMock, vol } from 'memfs';
 import * as fs from 'fs';
+=======
+import { fs, vol } from 'memfs';
+>>>>>>> 53c87807 (fix(storybook): fix failing test)
 
 import { ExecutorContext } from '@nrwl/devkit';
 
@@ -69,6 +73,7 @@ describe('@nrwl/storybook:storybook', () => {
   });
 
   it('should provide options to storybook', async () => {
+    jest.mock('fs', () => fs);
     const iterator = storybookExecutor(options, context);
     const { value } = await iterator.next();
     expect(value).toEqual({ success: true });
