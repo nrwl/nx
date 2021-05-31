@@ -33,7 +33,7 @@ describe('@nrwl/storybook:storybook', () => {
     // preserve original package.json file to memory
     const packageJsonPath = join(
       __dirname,
-      `/node_modules/@storybook/angular/package.json`
+      `../../../../../node_modules/@storybook/angular/package.json`
     );
     vol.fromJSON({
       [packageJsonPath]: readFileSync(packageJsonPath).toString(),
