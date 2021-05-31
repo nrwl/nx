@@ -50,7 +50,6 @@ export async function scheduleTarget(
 
   const registry = new schema.CoreSchemaRegistry();
   registry.addPostTransform(schema.transforms.addUndefinedDefaults);
-  registry.useXDeprecatedProvider((msg) => logger.warn(msg));
   const architectHost = new WorkspaceNodeModulesArchitectHost(workspace, root);
   const architect = new Architect(architectHost, registry);
   const run = await architect.scheduleTarget(
