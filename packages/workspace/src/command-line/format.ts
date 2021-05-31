@@ -1,6 +1,5 @@
 import { execSync } from 'child_process';
 import * as path from 'path';
-import * as resolve from 'resolve';
 import { getProjectRoots, parseFiles } from './shared';
 import { fileExists } from '../utilities/fileutils';
 import {
@@ -38,6 +37,8 @@ const PRETTIER_EXTENSIONS = [
 ];
 
 const MATCH_ALL_PATTERN = `**/*.{${PRETTIER_EXTENSIONS.join(',')}}`;
+
+const PRETTIER_PATH = require.resolve('prettier/bin-prettier');
 
 export function format(command: 'check' | 'write', args: yargs.Arguments) {
   const { nxArgs } = splitArgsIntoNxArgsAndOverrides(args, 'affected');
@@ -109,7 +110,7 @@ function chunkify(target: string[], size: number): string[][] {
 
 function write(patterns: string[]) {
   if (patterns.length > 0) {
-    execSync(`node "${prettierPath()}" --write ${patterns.join(' ')}`, {
+    execSync(`node "${PRETTIER_PATH}" --write ${patterns.join(' ')}`, {
       stdio: [0, 1, 2],
     });
   }
@@ -119,7 +120,7 @@ function check(patterns: string[]) {
   if (patterns.length > 0) {
     try {
       execSync(
-        `node "${prettierPath()}" --list-different ${patterns.join(' ')}`,
+        `node "${PRETTIER_PATH}" --list-different ${patterns.join(' ')}`,
         {
           stdio: [0, 1, 2],
         }
@@ -128,13 +129,6 @@ function check(patterns: string[]) {
       process.exit(1);
     }
   }
-}
-
-function prettierPath() {
-  const basePath = path.dirname(
-    resolve.sync('prettier', { basedir: __dirname })
-  );
-  return path.join(basePath, 'bin-prettier.js');
 }
 
 function updateWorkspaceJsonToMatchFormatVersion() {
