@@ -272,6 +272,7 @@
     "weak-napi": "^2.0.2"
   },
   "resolutions": {
-    "ng-packagr/rxjs": "6.6.7"
+    "ng-packagr/rxjs": "6.6.7",
+    "**/xmlhttprequest-ssl": "~1.6.2"
   }
 }
