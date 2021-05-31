@@ -420,7 +420,7 @@ describe('lib', () => {
         executor: '@nrwl/web:package',
         outputs: ['{options.outputPath}'],
         options: {
-          external: ['react', 'react-dom'],
+          external: ['react/jsx-runtime'],
           entryFile: 'libs/my-lib/src/index.ts',
           outputPath: 'dist/libs/my-lib',
           project: 'libs/my-lib/package.json',
@@ -455,12 +455,16 @@ describe('lib', () => {
       });
 
       const workspaceJson = readJson(appTree, '/workspace.json');
+      const babelrc = readJson(appTree, 'libs/my-lib/.babelrc');
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
-          external: ['react', 'react-dom', 'react-is', 'styled-components'],
+          external: ['react/jsx-runtime'],
         },
       });
+      expect(babelrc.plugins).toEqual([
+        ['styled-components', { pure: true, ssr: true }],
+      ]);
     });
 
     it('should support @emotion/styled', async () => {
@@ -472,12 +476,14 @@ describe('lib', () => {
       });
 
       const workspaceJson = readJson(appTree, '/workspace.json');
+      const babelrc = readJson(appTree, 'libs/my-lib/.babelrc');
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
-          external: ['react', 'react-dom', '@emotion/styled', '@emotion/react'],
+          external: ['react/jsx-runtime', '@emotion/styled/base'],
         },
       });
+      expect(babelrc.plugins).toEqual(['@emotion/babel-plugin']);
     });
 
     it('should support styled-jsx', async () => {
@@ -493,10 +499,10 @@ describe('lib', () => {
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
-          external: ['react', 'react-dom', 'styled-jsx'],
+          external: ['react/jsx-runtime'],
         },
       });
-      expect(babelrc.plugins).toContain('styled-jsx/babel');
+      expect(babelrc.plugins).toEqual(['styled-jsx/babel']);
     });
 
     it('should support style none', async () => {
@@ -511,7 +517,7 @@ describe('lib', () => {
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
-          external: ['react', 'react-dom'],
+          external: ['react/jsx-runtime'],
         },
       });
     });
