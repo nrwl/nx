@@ -65,7 +65,7 @@
     "@nrwl/linter": "12.3.0",
     "@nrwl/next": "12.3.0",
     "@nrwl/node": "12.3.0",
-    "@nrwl/nx-cloud": "12.1.1-beta.12",
+    "@nrwl/nx-cloud": "12.1.4-beta.2",
     "@nrwl/tao": "12.3.0",
     "@nrwl/web": "12.3.0",
     "@nrwl/workspace": "12.3.0",
