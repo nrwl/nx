@@ -10,6 +10,7 @@
     "check-commit": "node ./scripts/commit-lint.js",
     "check-format": "nx format:check --all",
     "check-imports": "node ./scripts/check-imports.js",
+    "check-lock-files": "node ./scripts/check-lock-files.js",
     "check-internal-links": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts",
     "check-versions": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/check-versions.ts",
     "check-documentation-map": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/map-link-checker.ts",
