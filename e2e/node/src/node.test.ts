@@ -122,7 +122,7 @@ describe('Node Applications', () => {
     } catch (err) {
       expect(err).toBeFalsy();
     }
-  }, 300000);
+  }, 1000000);
 
   it('should be able to generate a nest application', async () => {
     const nestapp = uniq('nestapp');
@@ -175,7 +175,7 @@ describe('Node Applications', () => {
     } catch (err) {
       expect(err).toBeFalsy();
     }
-  }, 300000);
+  }, 1000000);
 });
 
 describe('Build Node apps', () => {
