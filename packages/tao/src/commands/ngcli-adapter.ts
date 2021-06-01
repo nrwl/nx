@@ -1,8 +1,10 @@
 /* eslint-disable no-restricted-imports */
 import {
+  fragment,
   logging,
   normalize,
   Path,
+  PathFragment,
   schema,
   tags,
   virtualFs,
@@ -402,6 +404,11 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
         ? of(true)
         : super.isFile(path);
     }
+  }
+
+  list(path: Path): Observable<PathFragment[]> {
+    const fragments = this.host.children(path).map((child) => fragment(child));
+    return of(fragments);
   }
 }
 
