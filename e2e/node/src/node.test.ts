@@ -63,7 +63,7 @@ describe('Node Applications', () => {
     expect(result).toContain('Hello World!');
   }, 60000);
 
-  xit('should be able to generate an express application', async () => {
+  it('should be able to generate an express application', async () => {
     const nodeapp = uniq('nodeapp');
 
     runCLI(`generate @nrwl/express:app ${nodeapp} --linter=eslint`);
@@ -124,7 +124,7 @@ describe('Node Applications', () => {
     }
   }, 120000);
 
-  xit('should be able to generate a nest application', async () => {
+  it('should be able to generate a nest application', async () => {
     const nestapp = uniq('nestapp');
     runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
 
