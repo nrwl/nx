@@ -1,6 +1,7 @@
 import { logger } from '@nrwl/devkit';
 import { removeSync } from 'fs-extra';
 import * as ts from 'typescript';
+import { Diagnostic } from 'typescript';
 import { readTsConfig } from '../typescript';
 
 export interface TypeScriptCompilationOptions {
@@ -13,24 +14,63 @@ export interface TypeScriptCompilationOptions {
   watch?: boolean;
 }
 
-export function compileTypeScript(
-  options: TypeScriptCompilationOptions
-): { success: boolean } | Promise<any> {
+export interface TypescriptWatchChangeEvent {
+  diagnostic: ts.Diagnostic;
+  newLine: string;
+  options: ts.CompilerOptions;
+  errorCount: number;
+}
+
+export function compileTypeScript(options: TypeScriptCompilationOptions): {
+  success: boolean;
+} {
   const normalizedOptions = normalizeOptions(options);
+  const tsConfig = getNormalizedTsConfig(normalizedOptions);
 
   if (normalizedOptions.deleteOutputPath) {
     removeSync(normalizedOptions.outputPath);
   }
-  const tsConfig = readTsConfig(normalizedOptions.tsConfig);
-  tsConfig.options.outDir = normalizedOptions.outputPath;
-  tsConfig.options.noEmitOnError = true;
-  tsConfig.options.rootDir = normalizedOptions.rootDir;
 
-  if (normalizedOptions.watch) {
-    return createWatchProgram(tsConfig);
-  } else {
-    return createProgram(tsConfig, normalizedOptions.projectName);
+  return createProgram(tsConfig, normalizedOptions.projectName);
+}
+
+export function compileTypeScriptWatcher(
+  options: TypeScriptCompilationOptions,
+  callback: (
+    diagnostic: Diagnostic,
+    newLine: string,
+    options: ts.CompilerOptions,
+    errorCount: number
+  ) => void | Promise<void>
+): Promise<any> {
+  const normalizedOptions = normalizeOptions(options);
+  const tsConfig = getNormalizedTsConfig(normalizedOptions);
+
+  if (normalizedOptions.deleteOutputPath) {
+    removeSync(normalizedOptions.outputPath);
   }
+
+  const host = ts.createWatchCompilerHost(
+    tsConfig.fileNames,
+    tsConfig.options,
+    ts.sys
+  );
+
+  const original = host.onWatchStatusChange;
+  host.onWatchStatusChange = async (a, b, c, d) => {
+    original?.(a, b, c, d);
+    await callback?.(a, b, c, d);
+  };
+
+  return new Promise(() => {});
+}
+
+function getNormalizedTsConfig(options: TypeScriptCompilationOptions) {
+  const tsConfig = readTsConfig(options.tsConfig);
+  tsConfig.options.outDir = options.outputPath;
+  tsConfig.options.noEmitOnError = true;
+  tsConfig.options.rootDir = options.rootDir;
+  return tsConfig;
 }
 
 function createProgram(
@@ -62,16 +102,6 @@ function createProgram(
     );
     return { success: true };
   }
-}
-
-function createWatchProgram(tsconfig: ts.ParsedCommandLine): Promise<any> {
-  const host = ts.createWatchCompilerHost(
-    tsconfig.fileNames,
-    tsconfig.options,
-    ts.sys
-  );
-  ts.createWatchProgram(host);
-  return new Promise(() => {});
 }
 
 function normalizeOptions(
