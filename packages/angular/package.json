@@ -33,12 +33,12 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@angular-devkit/schematics": "~12.0.0",
+    "@angular-devkit/schematics": "^12.0.0",
     "@nrwl/cypress": "*",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
-    "@schematics/angular": "~12.0.0",
+    "@schematics/angular": "^12.0.0",
     "jasmine-marbles": "~0.6.0",
     "rxjs-for-await": "0.0.2",
     "webpack-merge": "5.7.3"
