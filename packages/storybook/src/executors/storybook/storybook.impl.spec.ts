@@ -1,3 +1,6 @@
+import { fs as fsMock, vol } from 'memfs';
+import * as fs from 'fs';
+
 import { ExecutorContext } from '@nrwl/devkit';
 
 jest.mock('@storybook/core/server', () => ({
@@ -6,13 +9,11 @@ jest.mock('@storybook/core/server', () => ({
 import { buildDevStandalone } from '@storybook/core/server';
 import * as fileUtils from '@nrwl/workspace/src/core/file-utils';
 
-import { vol } from 'memfs';
-jest.mock('fs', () => require('memfs').fs);
-
 import storybookExecutor, { StorybookExecutorOptions } from './storybook.impl';
+import { join } from 'path';
+import { readFileSync } from 'fs-extra';
 
-// TODO: fix this test
-xdescribe('@nrwl/storybook:storybook', () => {
+describe('@nrwl/storybook:storybook', () => {
   let context: ExecutorContext;
   let options: StorybookExecutorOptions;
   beforeEach(() => {
@@ -23,20 +24,30 @@ xdescribe('@nrwl/storybook:storybook', () => {
       },
     });
 
+    // preserve original package.json file to memory
+    const rootPath = join(__dirname, `../../../../../`);
+    const packageJsonPath = join(
+      rootPath,
+      `node_modules/@storybook/angular/package.json`
+    );
+    const storybookPath = join(rootPath, '.storybook');
+
     options = {
       uiFramework: '@storybook/angular',
       port: 4400,
       config: {
-        configFolder: `/root/.storybook`,
+        configFolder: storybookPath,
       },
     };
-    vol.fromJSON({});
-    vol.mkdirSync('/root/.storybook', {
+    vol.fromJSON({
+      [packageJsonPath]: readFileSync(packageJsonPath).toString(),
+    });
+    vol.mkdirSync(storybookPath, {
       recursive: true,
     });
     context = {
-      root: '/root',
-      cwd: '/root',
+      root: rootPath,
+      cwd: rootPath,
       projectName: 'proj',
       targetName: 'storybook',
       workspace: {
@@ -51,6 +62,10 @@ xdescribe('@nrwl/storybook:storybook', () => {
       },
       isVerbose: false,
     };
+    jest.mock('fs', () => fsMock);
+    jest.spyOn(fs, 'statSync').mockReturnValue({
+      isDirectory: () => true,
+    } as fs.Stats);
   });
 
   it('should provide options to storybook', async () => {
