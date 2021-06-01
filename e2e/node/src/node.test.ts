@@ -63,7 +63,7 @@ describe('Node Applications', () => {
     expect(result).toContain('Hello World!');
   }, 60000);
 
-  it('should be able to generate an express application', async () => {
+  it('should be able to setup an express application', async () => {
     const nodeapp = uniq('nodeapp');
 
     runCLI(`generate @nrwl/express:app ${nodeapp} --linter=eslint`);
@@ -86,6 +86,13 @@ describe('Node Applications', () => {
     expect(jestResult.combinedOutput).toContain(
       'Test Suites: 1 passed, 1 total'
     );
+  });
+
+  it('should be able to build an express application', async () => {
+    const nodeapp = uniq('nodeapp');
+
+    runCLI(`generate @nrwl/express:app ${nodeapp} --linter=eslint`);
+    updateFile(`apps/${nodeapp}/src/assets/file.txt`, ``);
     await runCLIAsync(`build ${nodeapp}`);
 
     checkFilesExist(
@@ -111,6 +118,13 @@ describe('Node Applications', () => {
         resolve(null);
       });
     });
+  }, 60000);
+
+  it('should be able to serve an express application', async () => {
+    const nodeapp = uniq('nodeapp');
+
+    runCLI(`generate @nrwl/express:app ${nodeapp} --linter=eslint`);
+
     // checking serve
     const p = await runCommandUntil(`serve ${nodeapp}`, (output) =>
       output.includes('Listening at http://localhost:3333')
@@ -122,9 +136,9 @@ describe('Node Applications', () => {
     } catch (err) {
       expect(err).toBeFalsy();
     }
-  }, 1000000);
+  }, 60000);
 
-  it('should be able to generate a nest application', async () => {
+  it('should be able to setup a nest application', async () => {
     const nestapp = uniq('nestapp');
     runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
 
@@ -136,6 +150,12 @@ describe('Node Applications', () => {
     expect(jestResult.combinedOutput).toContain(
       'Test Suites: 2 passed, 2 total'
     );
+  }, 60000);
+
+  it('should be able to build a nest application', async () => {
+    const nestapp = uniq('nestapp');
+    runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
+    updateFile(`apps/${nestapp}/src/assets/file.txt`, ``);
 
     await runCLIAsync(`build ${nestapp}`);
 
@@ -163,6 +183,11 @@ describe('Node Applications', () => {
         }
       });
     });
+  }, 60000);
+
+  it('should be able to serve a nest application', async () => {
+    const nestapp = uniq('nestapp');
+    runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
 
     // checking serve
     const p = await runCommandUntil(`serve ${nestapp}`, (output) =>
@@ -175,7 +200,7 @@ describe('Node Applications', () => {
     } catch (err) {
       expect(err).toBeFalsy();
     }
-  }, 1000000);
+  }, 60000);
 });
 
 describe('Build Node apps', () => {
