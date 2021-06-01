@@ -1,4 +1,5 @@
-import { fs, vol } from 'memfs';
+import { fs as fsMock, vol } from 'memfs';
+import * as fs from 'fs';
 
 import { ExecutorContext } from '@nrwl/devkit';
 
@@ -23,27 +24,30 @@ describe('@nrwl/storybook:storybook', () => {
       },
     });
 
+    // preserve original package.json file to memory
+    const rootPath = join(__dirname, `../../../../../`);
+    const packageJsonPath = join(
+      rootPath,
+      `node_modules/@storybook/angular/package.json`
+    );
+    const storybookPath = join(rootPath, '.storybook');
+
     options = {
       uiFramework: '@storybook/angular',
       port: 4400,
       config: {
-        configFolder: `/root/.storybook`,
+        configFolder: storybookPath,
       },
     };
-    // preserve original package.json file to memory
-    const packageJsonPath = join(
-      __dirname,
-      `../../../../../node_modules/@storybook/angular/package.json`
-    );
     vol.fromJSON({
       [packageJsonPath]: readFileSync(packageJsonPath).toString(),
     });
-    vol.mkdirSync('/root/.storybook', {
+    vol.mkdirSync(storybookPath, {
       recursive: true,
     });
     context = {
-      root: '/root',
-      cwd: '/root',
+      root: rootPath,
+      cwd: rootPath,
       projectName: 'proj',
       targetName: 'storybook',
       workspace: {
@@ -58,10 +62,13 @@ describe('@nrwl/storybook:storybook', () => {
       },
       isVerbose: false,
     };
+    jest.mock('fs', () => fsMock);
+    jest.spyOn(fs, 'statSync').mockReturnValue({
+      isDirectory: () => true,
+    } as fs.Stats);
   });
 
   it('should provide options to storybook', async () => {
-    jest.mock('fs', () => fs);
     const iterator = storybookExecutor(options, context);
     const { value } = await iterator.next();
     expect(value).toEqual({ success: true });
