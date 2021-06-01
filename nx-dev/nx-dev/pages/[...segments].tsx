@@ -12,9 +12,10 @@ import { documentsApi, menuApi } from '../lib/api';
 import { useStorage } from '../lib/use-storage';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Head from 'next/head';
 
 const versionList = documentsApi.getVersions();
-const defaultVersion = versionList[0];
+const defaultVersion = versionList.find((v) => v.default);
 const defaultFlavor = {
   label: 'React',
   value: 'react',
@@ -71,6 +72,14 @@ export function DocumentationPage({
 
   return (
     <>
+      {isFallback && (
+        <Head>
+          <link
+            rel="canonical"
+            href={`/${version.id}/${flavor.value}${router.asPath}`}
+          />
+        </Head>
+      )}
       <DocViewer
         version={version}
         versionList={versions}
@@ -179,10 +188,30 @@ export async function getStaticProps({
 }
 
 export async function getStaticPaths() {
+  const allPaths = versionList.flatMap((v) => {
+    const paths = documentsApi.getStaticDocumentPaths(v.id);
+
+    // Use `/latest/react` as the default path if version and flavor not provided.
+    // Make sure to set `isFallback: true` on the static props of these paths so
+    if (v.id === defaultVersion.id) {
+      paths.concat(
+        paths
+          .filter((path) => path.params.segments[1] === defaultFlavor.value)
+          .map((path) => ({
+            ...path,
+            params: {
+              ...path.params,
+              segments: path.params.segments.slice(2),
+            },
+          }))
+      );
+    }
+
+    return paths;
+  });
+
   return {
-    paths: versionList.flatMap((v) =>
-      documentsApi.getStaticDocumentPaths(v.id)
-    ),
+    paths: allPaths,
     fallback: 'blocking',
   };
 }
