@@ -7,6 +7,11 @@ function checkLockFiles() {
       'Invalid occurence of "package-lock.json" file. Please remove it and use only "yarn.lock"'
     );
   }
+  if (fs.existsSync('pnpm-lock.yaml')) {
+    errors.push(
+      'Invalid occurence of "pnpm-lock.yaml" file. Please remove it and use only "yarn.lock"'
+    );
+  }
   try {
     const content = fs.readFileSync('yarn.lock', 'utf-8');
     if (content.match(/localhost:487/)) {
