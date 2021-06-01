@@ -3,12 +3,16 @@ const fs = require('fs');
 function checkLockFiles() {
   const errors = [];
   if (fs.existsSync('package-lock.json')) {
-    errors.push('Invalid occurence of "package-lock.json" file. Please remove it and use only "yarn.lock"');
+    errors.push(
+      'Invalid occurence of "package-lock.json" file. Please remove it and use only "yarn.lock"'
+    );
   }
   try {
     const content = fs.readFileSync('yarn.lock', 'utf-8');
     if (content.match(/localhost:487/)) {
-      errors.push('The "yarn.lock" has reference to local yarn repository ("localhost:4873"). Please use "registry.yarnpkg.com" in "yarn.lock"');
+      errors.push(
+        'The "yarn.lock" has reference to local yarn repository ("localhost:4873"). Please use "registry.yarnpkg.com" in "yarn.lock"'
+      );
     }
   } catch {
     errors.push('The "yarn.lock" does not exist or cannot be read');
