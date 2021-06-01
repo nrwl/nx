@@ -34,7 +34,7 @@ describe('12.4.0 - Update Storybook', () => {
     });
     tree.write('proj/.storybook/main.js', 'module.exports = {};');
     jest.requireMock('@storybook/core/package.json').version = '6.2.0';
-    jest.mock('/virtual/proj/.storybook/main.js', () => ({}), {
+    jest.mock('/proj/.storybook/main.js', () => ({}), {
       virtual: true,
     });
 
@@ -52,7 +52,7 @@ describe('12.4.0 - Update Storybook', () => {
     ).toEqual('6.2.0');
 
     // Should not do it again if run again
-    jest.requireMock('/virtual/proj/.storybook/main.js').core = {
+    jest.requireMock('/proj/.storybook/main.js').core = {
       builder: 'webpack5',
     };
     await update(tree);
@@ -82,7 +82,7 @@ describe('12.4.0 - Update Storybook', () => {
     });
     tree.write('proj/.storybook/main.js', 'module.exports = {};');
     jest.requireMock('@storybook/core/package.json').version = '5.2.0';
-    jest.mock('/virtual/proj/.storybook/main.js', () => ({}), {
+    jest.mock('/proj/.storybook/main.js', () => ({}), {
       virtual: true,
     });
 
@@ -114,7 +114,7 @@ describe('12.4.0 - Update Storybook', () => {
     });
     tree.write('proj/.storybook/main.js', 'module.exports = {};');
     jest.requireMock('@storybook/core/package.json').version = '6.2.0';
-    jest.mock('/virtual/proj/.storybook/main.js', () => ({}), {
+    jest.mock('/proj/.storybook/main.js', () => ({}), {
       virtual: true,
     });
 
