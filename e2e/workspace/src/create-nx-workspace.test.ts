@@ -182,6 +182,8 @@ describe('create-nx-workspace', () => {
     const wsName = uniq('pm');
     const appName = uniq('app');
 
+    process.env.YARN_REGISTRY = `http://localhost:4872`;
+
     runCreateWorkspace(wsName, {
       preset: 'react',
       style: 'css',
@@ -196,6 +198,8 @@ describe('create-nx-workspace', () => {
   it('should store package manager preference for angular cli', () => {
     const wsName = uniq('pm');
     const appName = uniq('app');
+
+    process.env.YARN_REGISTRY = `http://localhost:4872`;
 
     runCreateWorkspace(wsName, {
       preset: 'angular',
