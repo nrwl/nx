@@ -52,6 +52,9 @@ Object {
         ],
         "tsConfig": "apps/my-dir/my-app/tsconfig.app.json",
       },
+      "outputs": Array [
+        "{options.outputPath}",
+      ],
     },
     "extract-i18n": Object {
       "builder": "@angular-devkit/build-angular:extract-i18n",
@@ -181,6 +184,9 @@ Object {
         ],
         "tsConfig": "apps/my-app/tsconfig.app.json",
       },
+      "outputs": Array [
+        "{options.outputPath}",
+      ],
     },
     "extract-i18n": Object {
       "builder": "@angular-devkit/build-angular:extract-i18n",

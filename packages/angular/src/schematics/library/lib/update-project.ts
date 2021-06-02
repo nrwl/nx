@@ -21,6 +21,7 @@ import * as path from 'path';
 import { NormalizedSchema } from './normalized-schema';
 import { updateNgPackage } from './update-ng-package';
 import { offsetFromRoot } from '@nrwl/devkit';
+import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
 
 // TODO - refactor this into separate rules with better names
 export function updateProject(options: NormalizedSchema): Rule {
@@ -134,14 +135,17 @@ export function updateProject(options: NormalizedSchema): Rule {
         if (!options.publishable && !options.buildable) {
           delete fixedProject.architect.build;
         } else {
-          if (options.publishable) {
-            // adjust the builder path to our custom one
-            fixedProject.architect.build.builder = '@nrwl/angular:package';
-          } else {
-            // adjust the builder path to our custom one
-            fixedProject.architect.build.builder =
-              '@nrwl/angular:ng-packagr-lite';
-          }
+          // Set the right builder for the type of library.
+          // Ensure the outputs property comes after the builder for
+          // better readability.
+          const { builder, ...rest } = fixedProject.architect.build;
+          fixedProject.architect.build = {
+            builder: options.publishable
+              ? '@nrwl/angular:package'
+              : '@nrwl/angular:ng-packagr-lite',
+            outputs: [`dist/${libsDir(host)}/${options.projectDirectory}`],
+            ...rest,
+          };
         }
 
         delete fixedProject.architect.test;
