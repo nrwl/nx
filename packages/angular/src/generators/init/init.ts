@@ -104,8 +104,6 @@ function addUnitTestRunner(
     case UnitTestRunner.Karma:
       karmaGenerator(host);
     case UnitTestRunner.Jest:
-      // TODO: remove this when we use `jest-preset-angular@9.0.0`
-      process.env.npm_config_legacy_peer_deps = 'true';
       addDependenciesToPackageJson(
         host,
         {},

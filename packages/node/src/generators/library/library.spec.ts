@@ -387,6 +387,7 @@ describe('lib', () => {
         "module.exports = {
           displayName: 'my-lib',
           preset: '../../jest.preset.js',
+          testEnvironment: 'node',
           transform: {
             '^.+\\\\\\\\.[tj]sx?$': 'babel-jest'
           },
