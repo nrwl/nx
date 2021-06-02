@@ -13,7 +13,7 @@ import {
   runCLI,
   runCLIAsync,
   runNodeScriptUntil,
-  runNxCommandUntil,
+  runCommandUntil,
   tmpProjPath,
   uniq,
   updateFile,
@@ -120,13 +120,13 @@ describe('Node Applications', () => {
 
     console.log('Running express');
     // checking serve
-    const p = await runNxCommandUntil(`serve ${nodeapp}`, (output) =>
+    const p = await runCommandUntil(`serve ${nodeapp}`, (output) =>
       output.includes('Listening at http://localhost:3333')
     );
 
     expect(p).toBeDefined();
-    // const result = await getData();
-    // expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
+    const result = await getData();
+    expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
     try {
       promisifiedTreeKill(p.pid, 'SIGTERM');
     } catch (err) {
@@ -177,7 +177,7 @@ describe('Node Applications', () => {
     runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
 
     // checking serve
-    const p = await runNxCommandUntil(`serve ${nestapp}`, (output) =>
+    const p = await runCommandUntil(`serve ${nestapp}`, (output) =>
       output.includes('Listening at http://localhost:3333')
     );
     expect(p).toBeDefined();

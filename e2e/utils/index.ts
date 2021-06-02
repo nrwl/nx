@@ -254,6 +254,7 @@ function spawnProcessUntilCriteriaMet(
 
     function checkCriteria(data) {
       output += data.toString();
+      console.log('MJ: current output', output);
       if (criteria(output) && !complete) {
         complete = true;
         res(p);
@@ -263,6 +264,7 @@ function spawnProcessUntilCriteriaMet(
     p.stdout.on('data', checkCriteria);
     p.stderr.on('data', checkCriteria);
     p.on('exit', (code) => {
+      console.log('MJ: exiting process', code);
       if (!complete) {
         rej(`Exited with ${code}`);
       } else {
@@ -279,7 +281,7 @@ export function runNodeScriptUntil(
   return spawnProcessUntilCriteriaMet(`node ${path}`, criteria);
 }
 
-export function runNxCommandUntil(
+export function runCommandUntil(
   command: string,
   criteria: (output: string) => boolean
 ): Promise<ChildProcess> {
