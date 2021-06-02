@@ -214,6 +214,10 @@ export class Hasher {
         'package-lock.json',
         'yarn.lock',
         'pnpm-lock.yaml',
+
+        // ignore files will change the set of inputs to the hasher
+        '.gitignore',
+        '.nxignore',
       ];
 
       const fileHashes = [
