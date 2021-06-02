@@ -270,7 +270,6 @@ describe('migrate', () => {
     // updates package.json
     const packageJson = readJson(`package.json`);
     expect(packageJson.dependencies['migrate-child-package']).toEqual('9.0.0');
-    expect(readFile(`package.json`).endsWith(`}\n`)).toEqual(true);
 
     // creates migrations.json
     const migrationsJson = readJson(`migrations.json`);

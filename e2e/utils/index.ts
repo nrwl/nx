@@ -16,7 +16,7 @@ import isCI = require('is-ci');
 import * as path from 'path';
 import { dirSync } from 'tmp';
 import * as killPort from 'kill-port';
-import * as stripJsonComments from 'strip-json-comments';
+import { parseJson } from '@nrwl/devkit';
 
 interface RunCmdOpts {
   silenceError?: boolean;
@@ -467,11 +467,7 @@ export function listFiles(dirName: string) {
 
 export function readJson(f: string): any {
   const content = readFile(f);
-  try {
-    return JSON.parse(content);
-  } catch {
-    return JSON.parse(stripJsonComments(content));
-  }
+  return parseJson(content);
 }
 
 export function readFile(f: string) {

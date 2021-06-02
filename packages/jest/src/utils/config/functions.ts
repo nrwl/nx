@@ -6,8 +6,12 @@ import {
   isExpressionStatement,
   SyntaxKind,
 } from 'typescript';
-import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
-import * as stripJsonComments from 'strip-json-comments';
+import {
+  applyChangesToString,
+  ChangeType,
+  Tree,
+  stripJsonComments,
+} from '@nrwl/devkit';
 import { Config } from '@jest/types';
 
 function makeTextToInsert(

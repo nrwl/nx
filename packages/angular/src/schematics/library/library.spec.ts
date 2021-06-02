@@ -3,7 +3,7 @@ import { Tree } from '@angular-devkit/schematics';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
 import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
-import * as stripJsonComments from 'strip-json-comments';
+import { parseJson } from '@nrwl/devkit';
 import { createApp, runSchematic, callRule } from '../../utils/testing';
 import type { NxJsonConfiguration } from '@nrwl/devkit';
 
@@ -700,10 +700,8 @@ describe('lib', () => {
           ),
       }`);
 
-        const tsConfigAppJson = JSON.parse(
-          stripJsonComments(
-            getFileContent(tree, 'apps/myapp/tsconfig.app.json')
-          )
+        const tsConfigAppJson = parseJson(
+          getFileContent(tree, 'apps/myapp/tsconfig.app.json')
         );
         expect(tsConfigAppJson.include).toEqual([
           '**/*.ts',
@@ -744,10 +742,8 @@ describe('lib', () => {
           ),
       }`);
 
-        const tsConfigAppJson2 = JSON.parse(
-          stripJsonComments(
-            getFileContent(tree2, 'apps/myapp/tsconfig.app.json')
-          )
+        const tsConfigAppJson2 = parseJson(
+          getFileContent(tree2, 'apps/myapp/tsconfig.app.json')
         );
         expect(tsConfigAppJson2.include).toEqual([
           '**/*.ts',
@@ -796,10 +792,8 @@ describe('lib', () => {
           import('@proj/my-dir/my-lib3').then((module) => module.MyLib3Module),
       }`);
 
-        const tsConfigAppJson3 = JSON.parse(
-          stripJsonComments(
-            getFileContent(tree3, 'apps/myapp/tsconfig.app.json')
-          )
+        const tsConfigAppJson3 = parseJson(
+          getFileContent(tree3, 'apps/myapp/tsconfig.app.json')
         );
         expect(tsConfigAppJson3.include).toEqual([
           '**/*.ts',

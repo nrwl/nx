@@ -1,7 +1,7 @@
 import * as ts from 'typescript';
 import { findNodes, InsertChange, ReplaceChange } from '@nrwl/workspace';
 import { Tree } from '@angular-devkit/schematics';
-import * as stripJsonComments from 'strip-json-comments';
+import { stripJsonComments } from '@nrwl/devkit';
 import { Config } from '@jest/types';
 
 function createInsertChange(

@@ -6,7 +6,7 @@ import { output } from '../output';
 import type { PluginCapabilities } from './models';
 import { hasElements } from './shared';
 
-function tryGetCollection<T>(
+function tryGetCollection<T extends object>(
   workspaceRoot: string,
   pluginName: string,
   jsonFile: string,

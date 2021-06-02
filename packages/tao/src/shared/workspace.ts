@@ -1,8 +1,8 @@
-import { existsSync, readFileSync } from 'fs';
+import { existsSync } from 'fs';
 import * as path from 'path';
-import * as stripJsonComments from 'strip-json-comments';
-import { NxJsonConfiguration, NxJsonProjectConfiguration } from './nx';
-import { PackageManager } from './package-manager';
+import { readJsonFile } from '../utils/fileutils';
+import type { NxJsonConfiguration, NxJsonProjectConfiguration } from './nx';
+import type { PackageManager } from './package-manager';
 
 export interface Workspace
   extends WorkspaceJsonConfiguration,
@@ -261,13 +261,8 @@ export class Workspaces {
   }
 
   readWorkspaceConfiguration(): WorkspaceJsonConfiguration {
-    const w = JSON.parse(
-      stripJsonComments(
-        readFileSync(
-          path.join(this.root, workspaceConfigName(this.root)),
-          'utf-8'
-        )
-      )
+    const w = readJsonFile(
+      path.join(this.root, workspaceConfigName(this.root))
     );
     return toNewFormat(w);
   }
@@ -297,9 +292,7 @@ export class Workspaces {
       );
       const executorsDir = path.dirname(executorsFilePath);
       const schemaPath = path.join(executorsDir, executorConfig.schema || '');
-      const schema = JSON.parse(
-        stripJsonComments(readFileSync(schemaPath, 'utf-8'))
-      );
+      const schema = readJsonFile(schemaPath);
       if (!schema.properties || typeof schema.properties !== 'object') {
         schema.properties = {};
       }
@@ -339,9 +332,7 @@ export class Workspaces {
         generatorsJson.generators?.[normalizedGeneratorName] ||
         generatorsJson.schematics?.[normalizedGeneratorName];
       const schemaPath = path.join(generatorsDir, generatorConfig.schema || '');
-      const schema = JSON.parse(
-        stripJsonComments(readFileSync(schemaPath, 'utf-8'))
-      );
+      const schema = readJsonFile(schemaPath);
       if (!schema.properties || typeof schema.properties !== 'object') {
         schema.properties = {};
       }
@@ -366,9 +357,7 @@ export class Workspaces {
     const packageJsonPath = require.resolve(`${nodeModule}/package.json`, {
       paths: this.resolvePaths(),
     });
-    const packageJson = JSON.parse(
-      stripJsonComments(readFileSync(packageJsonPath, 'utf-8'))
-    );
+    const packageJson = readJsonFile(packageJsonPath);
     const executorsFile = packageJson.executors ?? packageJson.builders;
 
     if (!executorsFile) {
@@ -380,9 +369,7 @@ export class Workspaces {
     const executorsFilePath = require.resolve(
       path.join(path.dirname(packageJsonPath), executorsFile)
     );
-    const executorsJson = JSON.parse(
-      stripJsonComments(readFileSync(executorsFilePath, 'utf-8'))
-    );
+    const executorsJson = readJsonFile(executorsFilePath);
     const executorConfig =
       executorsJson.executors?.[executor] || executorsJson.builders?.[executor];
     if (!executorConfig) {
@@ -406,9 +393,7 @@ export class Workspaces {
           paths: this.resolvePaths(),
         }
       );
-      const packageJson = JSON.parse(
-        stripJsonComments(readFileSync(packageJsonPath, 'utf-8'))
-      );
+      const packageJson = readJsonFile(packageJsonPath);
       const generatorsFile = packageJson.generators ?? packageJson.schematics;
 
       if (!generatorsFile) {
@@ -421,9 +406,7 @@ export class Workspaces {
         path.join(path.dirname(packageJsonPath), generatorsFile)
       );
     }
-    const generatorsJson = JSON.parse(
-      stripJsonComments(readFileSync(generatorsFilePath, 'utf-8'))
-    );
+    const generatorsJson = readJsonFile(generatorsFilePath);
 
     let normalizedGeneratorName =
       findFullGeneratorName(generator, generatorsJson.generators) ||
