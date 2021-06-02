@@ -252,8 +252,8 @@ export function runCommandUntil(
     let output = '';
     let complete = false;
 
-    function checkCriteria(c) {
-      output += c.toString();
+    function checkCriteria(data) {
+      output += data.toString();
       if (criteria(output) && !complete) {
         complete = true;
         res(p);

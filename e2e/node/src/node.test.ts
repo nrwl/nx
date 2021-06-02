@@ -90,7 +90,6 @@ describe('Node Applications', () => {
 
   it('should be able to build an express application', async () => {
     const nodeapp = uniq('nodeapp');
-
     runCLI(`generate @nrwl/express:app ${nodeapp} --linter=eslint`);
     updateFile(`apps/${nodeapp}/src/assets/file.txt`, ``);
     await runCLIAsync(`build ${nodeapp}`);
@@ -105,6 +104,7 @@ describe('Node Applications', () => {
     const server = exec(`node ./dist/apps/${nodeapp}/main.js`, {
       cwd: tmpProjPath(),
     });
+    expect(server).toBeTruthy();
 
     await new Promise((resolve) => {
       server.stdout.on('data', async (data) => {
@@ -129,7 +129,10 @@ describe('Node Applications', () => {
     const p = await runCommandUntil(`serve ${nodeapp}`, (output) =>
       output.includes('Listening at http://localhost:3333')
     );
+    console.log('Serving express');
+    expect(p).toBeDefined();
     const result = await getData();
+    console.log('Result arrived', result);
     expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
     try {
       promisifiedTreeKill(p.pid, 'SIGTERM');
@@ -156,7 +159,6 @@ describe('Node Applications', () => {
     const nestapp = uniq('nestapp');
     runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
     updateFile(`apps/${nestapp}/src/assets/file.txt`, ``);
-
     await runCLIAsync(`build ${nestapp}`);
 
     checkFilesExist(
@@ -173,14 +175,14 @@ describe('Node Applications', () => {
     // checking build
     await new Promise((resolve) => {
       server.stdout.on('data', async (data) => {
-        const message = data.toString();
-        if (message.includes('Listening at http://localhost:3333')) {
-          const result = await getData();
+        expect(data.toString()).toContain('Listening at http://localhost:3333');
+        const result = await getData();
 
-          expect(result.message).toEqual(`Welcome to ${nestapp}!`);
-          server.kill();
-          resolve(null);
-        }
+        expect(result.message).toEqual(`Welcome to ${nestapp}!`);
+
+        console.log('kill server');
+        server.kill();
+        resolve(null);
       });
     });
   }, 60000);
@@ -193,6 +195,7 @@ describe('Node Applications', () => {
     const p = await runCommandUntil(`serve ${nestapp}`, (output) =>
       output.includes('Listening at http://localhost:3333')
     );
+    expect(p).toBeDefined();
     const result = await getData();
     expect(result.message).toEqual(`Welcome to ${nestapp}!`);
     try {
