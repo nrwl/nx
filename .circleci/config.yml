@@ -80,6 +80,7 @@ jobs:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
       SELECTED_PM: << parameters.pm >>
       SELECTED_CLI: << parameters.cli >>
+      NX_VERBOSE_LOGGING: "true"
     steps:
       - setup:
           os: << parameters.os >>
@@ -103,6 +104,7 @@ jobs:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
       SELECTED_CLI: << parameters.cli >>
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
+      NX_VERBOSE_LOGGING: "true"
     steps:
       - setup:
           os: << parameters.os >>
@@ -118,19 +120,6 @@ jobs:
       - run:
           name: Check Package dependencies
           command: yarn depcheck
-      - run:
-          name: Run Builds
-          command: npx nx affected --target=build --parallel --max-parallel=3
-      - run:
-          name: Run Unit Tests
-          command: npx nx affected --target=test --parallel --max-parallel=2
-      - run:
-          name: Run Linting
-          command: npx nx affected --target=lint --parallel --max-parallel=4
-      - run:
-          name: Run E2E Tests
-          command: npx nx affected --target=e2e
-          no_output_timeout: 45m
       - run:
           name: Stop All Running Agents for This CI Run
           command: npx nx-cloud stop-all-agents
