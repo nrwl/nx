@@ -25,7 +25,7 @@ import { dirname, extname, resolve, join } from 'path';
 import * as stripJsonComments from 'strip-json-comments';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 import { Observable, of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import { NX_ERROR, NX_PREFIX } from '../shared/logger';
 
 export async function scheduleTarget(
@@ -391,6 +391,17 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
         ? of(true)
         : super.exists(path);
     }
+  }
+
+  isDirectory(path: Path): Observable<boolean> {
+    return super.isDirectory(path).pipe(
+      catchError(() => of(false)),
+      switchMap((isDirectory) =>
+        isDirectory
+          ? of(true)
+          : of(this.host.exists(path) && !this.host.isFile(path))
+      )
+    );
   }
 
   isFile(path: Path): Observable<boolean> {
