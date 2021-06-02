@@ -18,6 +18,7 @@ type PropertyDescription = {
   'x-prompt'?:
     | string
     | { message: string; type: string; items: any[]; multiselect?: boolean };
+  'x-deprecated'?: boolean | string;
 };
 
 type Properties = {
@@ -360,6 +361,7 @@ export function combineOptionsForExecutor(
     defaultProjectName,
     relativeCwd
   );
+  warnDeprecations(combined, schema);
   setDefaults(combined, schema);
   validateOptsAgainstSchema(combined, schema);
   return combined;
@@ -400,10 +402,27 @@ export async function combineOptionsForGenerator(
     combined = await promptForValues(combined, schema);
   }
 
+  warnDeprecations(combined, schema);
   setDefaults(combined, schema);
 
   validateOptsAgainstSchema(combined, schema);
   return combined;
+}
+
+export function warnDeprecations(
+  opts: { [k: string]: any },
+  schema: Schema
+): void {
+  Object.keys(opts).forEach((option) => {
+    const deprecated = schema.properties[option]?.['x-deprecated'];
+    if (deprecated) {
+      logger.warn(
+        `Option "${option}" is deprecated${
+          typeof deprecated == 'string' ? ': ' + deprecated : '.'
+        }`
+      );
+    }
+  });
 }
 
 export function convertSmartDefaultsIntoNamedParams(
