@@ -109,7 +109,6 @@
     "@typescript-eslint/experimental-utils": "^4.3.0",
     "@typescript-eslint/parser": "^4.3.0",
     "angular": "1.8.0",
-    "app-root-path": "^2.0.1",
     "autoprefixer": "^10.2.5",
     "babel-jest": "26.2.2",
     "caniuse-lite": "^1.0.30001030",
