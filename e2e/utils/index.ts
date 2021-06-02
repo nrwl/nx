@@ -235,19 +235,19 @@ export function runCommandAsync(
   });
 }
 
-export function runCommandUntil(
+function spawnProcessUntilCriteriaMet(
   command: string,
   criteria: (output: string) => boolean
 ): Promise<ChildProcess> {
-  const pm = getPackageManagerCommand();
-  const p = exec(`${pm.runNx} ${command}`, {
+  const p = exec(command, {
     cwd: tmpProjPath(),
     env: {
       ...process.env,
-      FORCE_COLOR: 'false',
+      FORCE_COLOR: 'true',
       NX_INVOKED_BY_RUNNER: undefined,
     },
   });
+
   return new Promise((res, rej) => {
     let output = '';
     let complete = false;
@@ -270,6 +270,21 @@ export function runCommandUntil(
       }
     });
   });
+}
+
+export function runNodeScriptUntil(
+  path: string,
+  criteria: (output: string) => boolean
+): Promise<ChildProcess> {
+  return spawnProcessUntilCriteriaMet(`node ${path}`, criteria);
+}
+
+export function runNxCommandUntil(
+  command: string,
+  criteria: (output: string) => boolean
+): Promise<ChildProcess> {
+  const pm = getPackageManagerCommand();
+  return spawnProcessUntilCriteriaMet(`${pm.runNx} ${command}`, criteria);
 }
 
 export function runCLIAsync(

@@ -12,7 +12,8 @@ import {
   readJson,
   runCLI,
   runCLIAsync,
-  runCommandUntil,
+  runNodeScriptUntil,
+  runNxCommandUntil,
   tmpProjPath,
   uniq,
   updateFile,
@@ -100,24 +101,16 @@ describe('Node Applications', () => {
       `dist/apps/${nodeapp}/main.js.map`
     );
 
-    // checking build
-    const server = exec(`node ./dist/apps/${nodeapp}/main.js`, {
-      cwd: tmpProjPath(),
-    });
-    expect(server).toBeTruthy();
+    const p = await runNodeScriptUntil(
+      `./dist/apps/${nodeapp}/main.js`,
+      (output) => output.includes('Listening at http://localhost:3333')
+    );
 
-    await new Promise((resolve) => {
-      server.stdout.on('data', async (data) => {
-        expect(data.toString()).toContain('Listening at http://localhost:3333');
-        const result = await getData();
-
-        expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
-
-        console.log('kill server');
-        server.kill();
-        resolve(null);
-      });
-    });
+    expect(p).toBeTruthy();
+    const result = await getData();
+    expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
+    process.stdout.write('Kill process');
+    p.kill();
   }, 60000);
 
   it('should be able to serve an express application', async () => {
@@ -125,14 +118,14 @@ describe('Node Applications', () => {
 
     runCLI(`generate @nrwl/express:app ${nodeapp} --linter=eslint`);
 
+    console.log('Running express');
     // checking serve
-    const p = await runCommandUntil(`serve ${nodeapp}`, (output) =>
+    const p = await runNxCommandUntil(`serve ${nodeapp}`, (output) =>
       output.includes('Listening at http://localhost:3333')
     );
-    console.log('Serving express');
+
     expect(p).toBeDefined();
     const result = await getData();
-    console.log('Result arrived', result);
     expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
     try {
       promisifiedTreeKill(p.pid, 'SIGTERM');
@@ -167,24 +160,16 @@ describe('Node Applications', () => {
       `dist/apps/${nestapp}/main.js.map`
     );
 
-    const server = exec(`node ./dist/apps/${nestapp}/main.js`, {
-      cwd: tmpProjPath(),
-    });
-    expect(server).toBeTruthy();
+    const p = await runNodeScriptUntil(
+      `./dist/apps/${nestapp}/main.js`,
+      (output) => output.includes('Listening at http://localhost:3333')
+    );
 
-    // checking build
-    await new Promise((resolve) => {
-      server.stdout.on('data', async (data) => {
-        expect(data.toString()).toContain('Listening at http://localhost:3333');
-        const result = await getData();
-
-        expect(result.message).toEqual(`Welcome to ${nestapp}!`);
-
-        console.log('kill server');
-        server.kill();
-        resolve(null);
-      });
-    });
+    expect(p).toBeTruthy();
+    const result = await getData();
+    expect(result.message).toEqual(`Welcome to ${nestapp}!`);
+    process.stdout.write('Kill process');
+    p.kill();
   }, 60000);
 
   it('should be able to serve a nest application', async () => {
@@ -192,7 +177,7 @@ describe('Node Applications', () => {
     runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
 
     // checking serve
-    const p = await runCommandUntil(`serve ${nestapp}`, (output) =>
+    const p = await runNxCommandUntil(`serve ${nestapp}`, (output) =>
       output.includes('Listening at http://localhost:3333')
     );
     expect(p).toBeDefined();
