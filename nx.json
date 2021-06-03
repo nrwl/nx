@@ -38,6 +38,7 @@
     "libsDir": "",
     "appsDir": ""
   },
+  "plugins": ["./nx-dev/tools/nx-dev-plugin.js"],
   "projects": {
     "nx": {},
     "tao": {},
