@@ -3,11 +3,20 @@ import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { createTestUILib } from '../stories/stories-lib.spec';
 import { callRule, runSchematic } from '../../utils/testing';
 import { storybookVersion } from '../../../../storybook/src/utils/versions';
+import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
+import { joinPathFragments } from '@nrwl/devkit';
 
 describe('migrate-defaults-5-to-6 schematic', () => {
   let appTree: Tree;
 
   beforeEach(async () => {
+    overrideCollectionResolutionForTesting({
+      '@nrwl/storybook': joinPathFragments(
+        __dirname,
+        '../../../../storybook/collection.json'
+      ),
+    });
+
     appTree = await createTestUILib('test-ui-lib');
 
     appTree = await callRule(
