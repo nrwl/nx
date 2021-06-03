@@ -27,7 +27,7 @@ describe('Hasher', () => {
     fs.readFileSync = (file) => {
       if (file === 'workspace.json') {
         return JSON.stringify({
-          projects: { proj: 'proj-from-workspace.json' },
+          projects: { proj: { root: 'proj-from-workspace.json' } },
         });
       }
       if (file === 'nx.json') {
@@ -75,7 +75,8 @@ describe('Hasher', () => {
 
     expect(hash.details.command).toEqual('proj|build||{"prop":"prop-value"}');
     expect(hash.details.nodes).toEqual({
-      proj: '/file|file.hash|"proj-from-workspace.json"|"proj-from-nx.json"',
+      proj:
+        '/file|file.hash|{"root":"proj-from-workspace.json"}|"proj-from-nx.json"',
     });
     expect(hash.details.implicitDeps).toEqual({
       'yarn.lock': 'yarn.lock.hash',
@@ -125,8 +126,10 @@ describe('Hasher', () => {
       expect(e.message).toContain(
         'Nx failed to execute runtimeCacheInputs defined in nx.json failed:'
       );
-      expect(e.message).toContain('boom:');
-      expect(e.message).toContain(' not found');
+      expect(e.message).toContain('boom');
+      expect(
+        e.message.includes(' not found') || e.message.includes('not recognized')
+      ).toBeTruthy();
     }
   });
 

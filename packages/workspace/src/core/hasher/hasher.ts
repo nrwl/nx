@@ -344,7 +344,7 @@ class ProjectHasher {
       return { projects: {}, version: 2 };
     }
   }
-  
+
   private readNxJsonConfigFile(path: string): NxJsonConfiguration {
     try {
       const res = readJsonFile(path);

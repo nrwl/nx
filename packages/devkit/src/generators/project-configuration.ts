@@ -248,7 +248,7 @@ function addProjectToWorkspaceJson(
       const { tags, implicitDependencies, ...c } = project;
       workspaceConfiguration = c;
     }
-    
+
     workspaceJson.projects[projectName] = workspaceConfiguration;
     writeJson(host, path, workspaceJson);
   }

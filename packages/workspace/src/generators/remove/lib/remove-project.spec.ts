@@ -22,7 +22,8 @@ describe('moveProject', () => {
   });
 
   it('should delete the project folder', async () => {
-    removeProject(tree, readProjectConfiguration(tree, 'my-lib'));
+    const config = readProjectConfiguration(tree, 'my-lib');
+    removeProject(tree, config);
     expect(tree.children('libs')).not.toContain('my-lib');
   });
 });

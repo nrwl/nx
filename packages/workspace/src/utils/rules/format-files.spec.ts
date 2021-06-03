@@ -34,7 +34,7 @@ describe('formatFiles', () => {
       .toPromise();
     expect(prettier.format).toHaveBeenCalledWith('const a=a', {
       printWidth: 80,
-      filepath: `${appRootPath}/a.ts`,
+      filepath: path.join(appRootPath, 'a.ts'),
     });
     expect(result.read('a.ts').toString()).toEqual('formatted :: const a=a');
   });
@@ -64,7 +64,7 @@ describe('formatFiles', () => {
       .callRule(formatFiles(), tree)
       .toPromise();
     expect(prettier.format).toHaveBeenCalledWith('const a=b', {
-      filepath: `${appRootPath}/a.ts`,
+      filepath: path.join(appRootPath, 'a.ts'),
     });
     expect(result.read('a.ts').toString()).toEqual('formatted :: const a=b');
   });
@@ -79,7 +79,7 @@ describe('formatFiles', () => {
       .callRule(formatFiles(), tree)
       .toPromise();
     expect(prettier.format).toHaveBeenCalledWith('const a=a', {
-      filepath: `${appRootPath}/b.ts`,
+      filepath: path.join(appRootPath, 'b.ts'),
     });
     expect(result.read('b.ts').toString()).toEqual('formatted :: const a=a');
   });
