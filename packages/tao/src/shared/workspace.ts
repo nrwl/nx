@@ -57,6 +57,10 @@ export interface WorkspaceJsonConfiguration {
   };
 }
 
+export interface RawWorkspaceJsonConfiguration extends Omit<WorkspaceJsonConfiguration, 'projects'>{
+  projects: { [projectName: string]: ProjectConfiguration | string};
+}
+
 /**
  * Type of project supported
  */
@@ -458,16 +462,21 @@ export function toNewFormat(w: any): WorkspaceJsonConfiguration {
 
 export function toNewFormatOrNull(w: any) {
   let formatted = false;
-  Object.values(w.projects || {}).forEach((project: any) => {
-    if (project.architect) {
-      renameProperty(project, 'architect', 'targets');
+  Object.entries(w.projects || {}).forEach(([project, config]: [string, any]) => {
+    if (typeof config === 'string') {
+      const fileConfig = readJsonFile(config)
+      w.projects[project] = fileConfig
+      config = fileConfig;
+    }
+    if (config.architect) {
+      renameProperty(config, 'architect', 'targets');
       formatted = true;
     }
-    if (project.schematics) {
-      renameProperty(project, 'schematics', 'generators');
+    if (config.schematics) {
+      renameProperty(config, 'schematics', 'generators');
       formatted = true;
     }
-    Object.values(project.targets || {}).forEach((target: any) => {
+    Object.values(config.targets || {}).forEach((target: any) => {
       if (target.builder) {
         renameProperty(target, 'builder', 'executor');
         formatted = true;
@@ -488,16 +497,21 @@ export function toNewFormatOrNull(w: any) {
 
 export function toOldFormatOrNull(w: any) {
   let formatted = false;
-  Object.values(w.projects || {}).forEach((project: any) => {
-    if (project.targets) {
-      renameProperty(project, 'targets', 'architect');
+
+  Object.entries(w.projects || {}).forEach(([project, config]: [string, any]) => {
+    if (typeof config === 'string') {
+      config = readJsonFile(config);
+      w.projects[project] = config;
+    }
+    if (config.targets) {
+      renameProperty(config, 'targets', 'architect');
       formatted = true;
     }
-    if (project.generators) {
-      renameProperty(project, 'generators', 'schematics');
+    if (config.generators) {
+      renameProperty(config, 'generators', 'schematics');
       formatted = true;
     }
-    Object.values(project.architect || {}).forEach((target: any) => {
+    Object.values(config.architect || {}).forEach((target: any) => {
       if (target.executor) {
         renameProperty(target, 'executor', 'builder');
         formatted = true;

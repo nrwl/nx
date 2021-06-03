@@ -1,4 +1,4 @@
-import { readJson, readProjectConfiguration } from '@nrwl/devkit';
+import { NxJsonProjectConfiguration, readJson, readProjectConfiguration } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { libraryGenerator } from '../library/library';
@@ -8,6 +8,11 @@ import convertToNxProject, {
   SCHEMA_OPTIONS_ARE_MUTUALLY_EXCLUSIVE,
 } from './convert-to-nx-project';
 import { getProjectConfigurationPath } from './utils/get-project-configuration-path';
+
+jest.mock('fs-extra', () => ({
+  ...jest.requireActual('fs-extra'),
+  readJsonSync: () => ({})
+}));
 
 describe('convert-to-nx-project', () => {
   it('should throw if project && all are both specified', async () => {
@@ -68,4 +73,21 @@ describe('convert-to-nx-project', () => {
       expect(config).toEqual(newConfigFile);
     }
   });
+
+  it('should extract tags from nx.json into nx-project.json', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+
+    await libraryGenerator(tree, {
+      name: 'lib',
+      tags: 'scope:test'
+    });
+    
+    const config =  readProjectConfiguration(tree, 'lib');
+    
+    await convertToNxProject(tree, { all: true });
+  
+    const newConfigFile = await readJson<NxJsonProjectConfiguration>(tree, getProjectConfigurationPath(config));
+    expect(newConfigFile.tags).toEqual(['scope:test']);
+  });
+
 });

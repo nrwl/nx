@@ -335,13 +335,13 @@ class ProjectHasher {
     return this.sourceHashes[projectName];
   }
 
-  private readConfigFile(path: string) {
+  private readConfigFile(path: string): WorkspaceJsonConfiguration {
     try {
       const res = readJsonFile(path);
       res.projects ??= {};
-      return res;
+      return toNewFormat(res);
     } catch {
-      return { projects: {} };
+      return { projects: {}, version: 2 };
     }
   }
 }

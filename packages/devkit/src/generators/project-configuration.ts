@@ -1,6 +1,7 @@
 import type { Tree } from '@nrwl/tao/src/shared/tree';
 import type {
   ProjectConfiguration,
+  RawWorkspaceJsonConfiguration,
   WorkspaceJsonConfiguration,
 } from '@nrwl/tao/src/shared/workspace';
 import { toNewFormat } from '@nrwl/tao/src/shared/workspace';
@@ -10,6 +11,7 @@ import type {
   NxJsonProjectConfiguration,
 } from '@nrwl/tao/src/shared/nx';
 import { getWorkspacePath } from '../utils/get-workspace-layout';
+import { readJsonSync } from 'fs-extra';
 
 export type WorkspaceConfiguration = Omit<
   WorkspaceJsonConfiguration,
@@ -81,7 +83,7 @@ export function getProjects(
     Object.keys(workspace.projects).map((projectName) => {
       return [
         projectName,
-        getProjectConfiguration(projectName, workspace, nxJson),
+        getProjectConfiguration(host, projectName, workspace, nxJson),
       ];
     })
   );
@@ -156,31 +158,36 @@ export function readProjectConfiguration(
   }
 
   const nxJson = readJson<NxJsonConfiguration>(host, 'nx.json');
-  if (!nxJson.projects[projectName]) {
-    throw new Error(
-      `Cannot find configuration for '${projectName}' in nx.json`
-    );
-  }
 
-  return getProjectConfiguration(projectName, workspace, nxJson);
+  // TODO: Remove after confirming that nx.json should be optional.
+  // if (!nxJson.projects[projectName]) {
+  //   throw new Error(
+  //     `Cannot find configuration for '${projectName}' in nx.json`
+  //   );
+  // }
+
+  return getProjectConfiguration(host, projectName, workspace, nxJson);
 }
 
 function getProjectConfiguration(
+  host: Tree,
   projectName: string,
   workspace: WorkspaceJsonConfiguration,
   nxJson: NxJsonConfiguration
 ): ProjectConfiguration & NxJsonProjectConfiguration {
   return {
-    ...readWorkspaceSection(workspace, projectName),
+    ...readWorkspaceSection(host, workspace, projectName),
     ...readNxJsonSection(nxJson, projectName),
   };
 }
 
 function readWorkspaceSection(
+  host: Tree,
   workspace: WorkspaceJsonConfiguration,
   projectName: string
 ) {
-  return workspace.projects[projectName];
+  const config = workspace.projects[projectName];
+  return typeof config === 'string' ? readJson(host, config) : config;
 }
 
 function readNxJsonSection(nxJson: NxJsonConfiguration, projectName: string) {
@@ -226,7 +233,7 @@ function addProjectToWorkspaceJson(
   mode: 'create' | 'update' | 'delete'
 ) {
   const path = getWorkspacePath(host);
-  const workspaceJson = readJson<WorkspaceJsonConfiguration>(host, path);
+  const workspaceJson = readJson<RawWorkspaceJsonConfiguration>(host, path);
   if (mode == 'create' && workspaceJson.projects[projectName]) {
     throw new Error(
       `Cannot create Project '${projectName}'. It already exists.`
@@ -242,8 +249,14 @@ function addProjectToWorkspaceJson(
       `Cannot update Project '${projectName}'. It does not exist.`
     );
   }
-  workspaceJson.projects[projectName] = project;
-  writeJson(host, path, workspaceJson);
+
+  const existingConfig = workspaceJson.projects[projectName];
+  if (typeof existingConfig === 'string') {
+    writeJson(host, existingConfig, project);
+  } else {
+    workspaceJson.projects[projectName] = project;
+    writeJson(host, path, workspaceJson);
+  }
 }
 
 function addProjectToNxJson(
@@ -268,7 +281,8 @@ function addProjectToNxJson(
 
 function readWorkspace(host: Tree): WorkspaceJsonConfiguration {
   const path = getWorkspacePath(host);
-  const workspaceJson = readJson<WorkspaceJsonConfiguration>(host, path);
+  const workspaceJson = readJson<RawWorkspaceJsonConfiguration>(host, path);
+
   const originalVersion = workspaceJson.version;
   return {
     ...toNewFormat(workspaceJson),
