@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { InlineCommand, NxUsersShowcase } from '@nrwl/nx-dev/ui/common';
+import React from 'react';
 
 export function AngularPage() {
   return (
@@ -19,22 +20,42 @@ export function AngularPage() {
             <h2 className="text-3xl sm:text-3xl lg:text-5xl leading-none font-extrabold tracking-tight mb-4">
               Nx and Modern Angular
             </h2>
+            <p className="sm:text-lg mb-16">
+              Nx is a smart and extensible build framework that helps you
+              develop, test, build, and scale Angular applications with fully
+              integrated support for modern tools like Jest, Cypress, Storybook,
+              ESLint, NgRx, and more.
+            </p>
           </div>
           <div className="mt-8 mb-32 flex sm:flex-row flex-col justify-center">
             <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
               <p className="sm:text-lg mb-6">
-                <b>Nx</b> provides a holistic dev experience powered by an
-                advanced CLI and editor plugins.
+                <b>Nx</b> takes the core of the Angular framework and the CLI
+                and provides a more modern development experience on top of
+                them. <b>Nx</b>
+                provides better linting, better testing, a faster CLI, support
+                for popular community libraries and tools.
               </p>
-              <p className="sm:text-lg mb-6">***CHANGE ME***</p>
               <p className="sm:text-lg mb-6">
                 <b>Nx</b> uses distributed graph-based task execution and
                 computation caching. Keep your CI and local dev experience fast
                 as your repository grows.
               </p>
               <p className="sm:text-lg mb-6">
-                <b>Nx</b> can be added to any Angular project{' '}
-                <a href="#create-nx-workspace">in minutes</a>.
+                You can{' '}
+                <a
+                  href="#create-an-angular-workspace-with-nx"
+                  className="underline pointer"
+                >
+                  get started by creating a modern Angular workspace with Nx
+                </a>
+                , or{' '}
+                <Link href="/latest/angular/migration/overview">
+                  <a className="underline pointer">
+                    add it to an existing Angular workspace
+                  </a>
+                </Link>{' '}
+                .
               </p>
             </div>
             <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pl-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
@@ -55,8 +76,12 @@ export function AngularPage() {
         {/*How to use Nx*/}
         <div className="mt-32 flex sm:flex-row flex-col justify-center">
           <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
-            <h3 className="text-2xl sm:text-2xl lg:text-3xl leading-none font-extrabold text-gray-900 tracking-tight mb-4">
-              Create an Angular Workspace with Nx
+            <h3
+              id="create-an-angular-workspace-with-nx"
+              className="text-2xl sm:text-2xl lg:text-3xl leading-none font-extrabold text-gray-900 tracking-tight mb-4"
+            >
+              Create an Angular Workspace <br className="hidden lg:block" />{' '}
+              with Nx
             </h3>
           </div>
           <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pl-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
@@ -133,64 +158,50 @@ export function AngularPage() {
             </p>
           </div>
         </div>
-        {/*Nx technology*/}
-        <div className="py-32 flex sm:flex-row flex-col items-center justify-center">
-          <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
-            <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold text-gray-900 tracking-tight mb-4">
-              Distributed Graph-Based Task Executions and Computation Caching
-            </h3>
-            <p className="sm:text-lg mb-6">
-              <span className="font-bold">Nx</span> is smart. It analyzes your
-              workspace and figures out what can be affected by every code
-              change. That's why Nx doesn't rebuild and retest everything on
-              every commit —{' '}
-              <span className="font-bold">
-                it only rebuilds what is necessary
-              </span>
-              .
-            </p>
-            <p className="sm:text-lg mb-6">
-              <span className="font-bold">Nx</span> partitions commands into a
-              graph of smaller tasks. Nx then runs those tasks in parallel, and
-              <span className="font-bold">
-                it can even distribute them across many machines without any
-                configuration
-              </span>
-              .
-            </p>
-            <p className="sm:text-lg mb-6">
-              <span className="font-bold">
-                Nx also uses a distributed computation cache.
-              </span>{' '}
-              If someone has already built or tested similar code, Nx will use
-              their results to speed up the command for everyone else.
-            </p>
-          </div>
-          <div className="w-full sm:w-1/2 flex flex-col justify-between items-center sm:pl-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
-            <img
-              loading="lazy"
-              className="w-full opacity-25"
-              height="128"
-              width="128"
-              src="https://cdn.jsdelivr.net/npm/simple-icons@v4/icons/nx.svg"
-            />
-          </div>
-        </div>
       </div>
-      {/*Call out*/}
+      {/*Nx technology*/}
       <div className="bg-blue-nx-base text-white">
-        <div className="max-w-7xl mx-auto my-12 py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
-          <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-            <span className="block">Ready to dive in?</span>
-            <span className="block">Start using Nx with React today.</span>
-          </h2>
-          <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
-            <div className="inline-flex rounded-md shadow">
-              <Link href="/latest/react/getting-started/getting-started">
-                <a className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-gray-700 bg-white">
-                  Get started with React
-                </a>
-              </Link>
+        <div className="max-w-screen-lg mx-auto px-5 py-5">
+          <div className="py-32 flex sm:flex-row flex-col items-center justify-center">
+            <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
+              <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4">
+                Distributed Graph-Based Task Executions and Computation Caching
+              </h3>
+              <p className="sm:text-lg mb-6">
+                <span className="font-bold">Nx</span> is smart. It analyzes your
+                workspace and figures out what can be affected by every code
+                change. That's why Nx doesn't rebuild and retest everything on
+                every commit —{' '}
+                <span className="font-bold">
+                  it only rebuilds what is necessary
+                </span>
+                .
+              </p>
+              <p className="sm:text-lg mb-6">
+                <span className="font-bold">Nx</span> partitions commands into a
+                graph of smaller tasks. Nx then runs those tasks in parallel,
+                and
+                <span className="font-bold">
+                  it can even distribute them across many machines without any
+                  configuration
+                </span>
+                .
+              </p>
+              <p className="sm:text-lg mb-6">
+                <span className="font-bold">
+                  Nx also uses a distributed computation cache.
+                </span>{' '}
+                If someone has already built or tested similar code, Nx will use
+                their results to speed up the command for everyone else.
+              </p>
+            </div>
+            <div className="w-full sm:w-1/2 flex flex-col justify-between items-center sm:pl-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
+              <Image
+                src="/images/distributed-tasks.png"
+                alt="Distributed Graph-Based Task Execution and Computation Caching illustration"
+                width={388}
+                height={300}
+              />
             </div>
           </div>
         </div>
@@ -199,7 +210,7 @@ export function AngularPage() {
         {/*Nx plugins ecosystem*/}
         <div className="py-32 flex sm:flex-row flex-col items-center justify-center">
           <div className="w-full sm:w-2/5 flex flex-col justify-between items-center sm:pb-0 pb-10 mt-8 sm:mt-0">
-            <div className="grid grid-cols-4 sm:grid-cols-2 md:grid-cols-4 gap-16 lg:gap-24">
+            <div className="grid grid-cols-4 gap-16">
               <img
                 loading="lazy"
                 className="w-full opacity-25"
@@ -262,33 +273,33 @@ export function AngularPage() {
             <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold text-gray-900 tracking-tight mb-4">
               Rich Plugin Ecosystem
             </h3>
-            <p className="sm:text-lg mb-6 font-bold">
-              Nx is an open platform with plugins for many modern tools and
-              frameworks.
-            </p>
             <p className="sm:text-lg mb-6">
+              <b>
+                Nx is an open platform with plugins for many modern tools and
+                frameworks.
+              </b>
               It has support for TypeScript, Angular, NativeScript, Cypress,
               Jest, Prettier, Nest.js, AngularCLI, Storybook, Ionic, Go, Rust
               among others. With Nx, you get a consistent dev experience
               regardless of the tools used.
             </p>
+            <p className="sm:text-lg mb-6">For instance:</p>
             <ul className="sm:text-lg list-disc list-inside">
               <li>
-                Use Nx's{' '}
                 <a
                   className="underline pointer"
-                  href="https://nx.dev/latest/angular/storybook/overview"
+                  href="https://blog.nrwl.io/nx-is-modern-angular-bda6cf10746d"
                 >
-                  Storybook
-                </a>{' '}
-                and{' '}
+                  Nx is Modern Angular
+                </a>
+              </li>
+              <li>
                 <a
                   className="underline pointer"
-                  href="https://nx.dev/latest/angular/cypress/overview#cypress-plugin"
+                  href="https://blog.nrwl.io/smarter-and-faster-angular-development-with-nx-6ccca0fe18d1"
                 >
-                  Cypress
-                </a>{' '}
-                plugins to build design systems.
+                  Smarter and Faster Angular Development with Nx
+                </a>
               </li>
             </ul>
           </div>
@@ -322,6 +333,24 @@ export function AngularPage() {
                 width={870}
                 height={830}
               />
+            </div>
+          </div>
+        </div>
+      </div>
+      {/*Call out*/}
+      <div className="bg-blue-nx-dark text-white overflow-hidden">
+        <div className="max-w-7xl mx-auto my-12 py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
+          <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
+            <span className="block">Ready to dive in?</span>
+            <span className="block">Start using Nx with React today.</span>
+          </h2>
+          <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
+            <div className="inline-flex rounded-md shadow">
+              <Link href="/latest/react/getting-started/getting-started">
+                <a className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-gray-700 bg-white">
+                  Get started with React
+                </a>
+              </Link>
             </div>
           </div>
         </div>
