@@ -1,12 +1,12 @@
 import React from 'react';
-import Content from './content';
+import cx from 'classnames';
 import Head from 'next/head';
-import { Menu } from '@nrwl/nx-dev/data-access-documents';
 import {
   DocumentData,
+  Menu,
   VersionMetadata,
 } from '@nrwl/nx-dev/data-access-documents';
-
+import Content from './content';
 import Sidebar from './sidebar';
 
 export interface DocumentationFeatureDocViewerProps {
@@ -17,6 +17,7 @@ export interface DocumentationFeatureDocViewerProps {
   menu: Menu;
   document: DocumentData;
   toc: any;
+  navIsOpen: boolean;
 }
 
 export function DocViewer({
@@ -26,6 +27,7 @@ export function DocViewer({
   menu,
   flavor,
   flavorList,
+  navIsOpen,
 }: DocumentationFeatureDocViewerProps) {
   return (
     <>
@@ -42,10 +44,14 @@ export function DocViewer({
             flavor={flavor}
             flavorList={flavorList}
             versionList={versionList}
+            navIsOpen={navIsOpen}
           />
           <div
             id="content-wrapper"
-            className="min-w-0 w-full flex-auto lg:static lg:max-h-full lg:overflow-visible"
+            className={cx(
+              'min-w-0 w-full flex-auto lg:static lg:max-h-full lg:overflow-visible pt-16 md:pl-4',
+              navIsOpen && 'overflow-hidden max-h-screen fixed'
+            )}
           >
             <Content
               document={document}
