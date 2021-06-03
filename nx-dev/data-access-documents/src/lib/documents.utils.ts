@@ -1,11 +1,10 @@
 import { join } from 'path';
-import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
 
 export const archiveRootPath = join(
-  appRootPath,
+  process.env.WORKSPACE_ROOT,
   'nx-dev/nx-dev/public/documentation'
 );
-export const previewRootPath = join(appRootPath, 'docs');
+export const previewRootPath = join(process.env.WORKSPACE_ROOT, 'docs');
 
 export function extractTitle(markdownContent: string): string | null {
   return (

@@ -2369,6 +2369,11 @@
           }
         }
       }
+    },
+    "docs": {
+      "root": "docs",
+      "sourceRoot": "docs",
+      "projectType": "library"
     }
   },
   "cli": {
