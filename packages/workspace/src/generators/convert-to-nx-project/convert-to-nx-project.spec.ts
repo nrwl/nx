@@ -1,4 +1,8 @@
-import { NxJsonProjectConfiguration, readJson, readProjectConfiguration } from '@nrwl/devkit';
+import {
+  NxJsonProjectConfiguration,
+  readJson,
+  readProjectConfiguration,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 import { libraryGenerator } from '../library/library';
@@ -11,7 +15,7 @@ import { getProjectConfigurationPath } from './utils/get-project-configuration-p
 
 jest.mock('fs-extra', () => ({
   ...jest.requireActual('fs-extra'),
-  readJsonSync: () => ({})
+  readJsonSync: () => ({}),
 }));
 
 describe('convert-to-nx-project', () => {
@@ -45,31 +49,38 @@ describe('convert-to-nx-project', () => {
     });
 
     const config = readProjectConfiguration(tree, 'lib');
- 
+
     await convertToNxProject(tree, { project: 'lib' });
-    const newConfigFile = await readJson(tree, getProjectConfigurationPath(config));
+    const newConfigFile = await readJson(
+      tree,
+      getProjectConfigurationPath(config)
+    );
 
     expect(config).toEqual(newConfigFile);
   });
-  
+
   it('should extract all project configurations to nx-project.json', async () => {
     const tree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(tree, {
       name: 'lib',
     });
-    
+
     await libraryGenerator(tree, {
       name: 'lib2',
     });
 
-    const configs = ['lib', 'lib2'].map(x => readProjectConfiguration(tree, x))
-    
+    const configs = ['lib', 'lib2'].map((x) =>
+      readProjectConfiguration(tree, x)
+    );
 
     await convertToNxProject(tree, { all: true });
-  
+
     for (const config of configs) {
-      const newConfigFile = await readJson(tree, getProjectConfigurationPath(config));
+      const newConfigFile = await readJson(
+        tree,
+        getProjectConfigurationPath(config)
+      );
       expect(config).toEqual(newConfigFile);
     }
   });
@@ -79,15 +90,17 @@ describe('convert-to-nx-project', () => {
 
     await libraryGenerator(tree, {
       name: 'lib',
-      tags: 'scope:test'
+      tags: 'scope:test',
     });
-    
-    const config =  readProjectConfiguration(tree, 'lib');
-    
+
+    const config = readProjectConfiguration(tree, 'lib');
+
     await convertToNxProject(tree, { all: true });
-  
-    const newConfigFile = await readJson<NxJsonProjectConfiguration>(tree, getProjectConfigurationPath(config));
+
+    const newConfigFile = await readJson<NxJsonProjectConfiguration>(
+      tree,
+      getProjectConfigurationPath(config)
+    );
     expect(newConfigFile.tags).toEqual(['scope:test']);
   });
-
 });

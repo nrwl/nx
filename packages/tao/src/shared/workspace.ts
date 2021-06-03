@@ -57,8 +57,9 @@ export interface WorkspaceJsonConfiguration {
   };
 }
 
-export interface RawWorkspaceJsonConfiguration extends Omit<WorkspaceJsonConfiguration, 'projects'>{
-  projects: { [projectName: string]: ProjectConfiguration | string};
+export interface RawWorkspaceJsonConfiguration
+  extends Omit<WorkspaceJsonConfiguration, 'projects'> {
+  projects: { [projectName: string]: ProjectConfiguration | string };
 }
 
 /**
@@ -462,27 +463,29 @@ export function toNewFormat(w: any): WorkspaceJsonConfiguration {
 
 export function toNewFormatOrNull(w: any) {
   let formatted = false;
-  Object.entries(w.projects || {}).forEach(([project, config]: [string, any]) => {
-    if (typeof config === 'string') {
-      const fileConfig = readJsonFile(config)
-      w.projects[project] = fileConfig
-      config = fileConfig;
-    }
-    if (config.architect) {
-      renameProperty(config, 'architect', 'targets');
-      formatted = true;
-    }
-    if (config.schematics) {
-      renameProperty(config, 'schematics', 'generators');
-      formatted = true;
-    }
-    Object.values(config.targets || {}).forEach((target: any) => {
-      if (target.builder) {
-        renameProperty(target, 'builder', 'executor');
+  Object.entries(w.projects || {}).forEach(
+    ([project, config]: [string, any]) => {
+      if (typeof config === 'string') {
+        const fileConfig = readJsonFile(config);
+        w.projects[project] = fileConfig;
+        config = fileConfig;
+      }
+      if (config.architect) {
+        renameProperty(config, 'architect', 'targets');
         formatted = true;
       }
-    });
-  });
+      if (config.schematics) {
+        renameProperty(config, 'schematics', 'generators');
+        formatted = true;
+      }
+      Object.values(config.targets || {}).forEach((target: any) => {
+        if (target.builder) {
+          renameProperty(target, 'builder', 'executor');
+          formatted = true;
+        }
+      });
+    }
+  );
 
   if (w.schematics) {
     renameProperty(w, 'schematics', 'generators');
@@ -498,26 +501,28 @@ export function toNewFormatOrNull(w: any) {
 export function toOldFormatOrNull(w: any) {
   let formatted = false;
 
-  Object.entries(w.projects || {}).forEach(([project, config]: [string, any]) => {
-    if (typeof config === 'string') {
-      config = readJsonFile(config);
-      w.projects[project] = config;
-    }
-    if (config.targets) {
-      renameProperty(config, 'targets', 'architect');
-      formatted = true;
-    }
-    if (config.generators) {
-      renameProperty(config, 'generators', 'schematics');
-      formatted = true;
-    }
-    Object.values(config.architect || {}).forEach((target: any) => {
-      if (target.executor) {
-        renameProperty(target, 'executor', 'builder');
+  Object.entries(w.projects || {}).forEach(
+    ([project, config]: [string, any]) => {
+      if (typeof config === 'string') {
+        config = readJsonFile(config);
+        w.projects[project] = config;
+      }
+      if (config.targets) {
+        renameProperty(config, 'targets', 'architect');
         formatted = true;
       }
-    });
-  });
+      if (config.generators) {
+        renameProperty(config, 'generators', 'schematics');
+        formatted = true;
+      }
+      Object.values(config.architect || {}).forEach((target: any) => {
+        if (target.executor) {
+          renameProperty(target, 'executor', 'builder');
+          formatted = true;
+        }
+      });
+    }
+  );
 
   if (w.generators) {
     renameProperty(w, 'generators', 'schematics');

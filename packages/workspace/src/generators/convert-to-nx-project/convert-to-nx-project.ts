@@ -10,12 +10,8 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
-  updateProjectConfiguration,
-  updateWorkspaceConfiguration,
   writeJson,
 } from '@nrwl/devkit';
-
-import {join} from 'path';
 
 import { Schema } from './schema';
 import { checkIfNxProjectFileExists } from './utils/check-if-nx-project-file-exists';
@@ -58,13 +54,13 @@ export async function convertToNxProjectGenerator(host: Tree, schema: Schema) {
     updateJson(host, getWorkspacePath(host), (value) => {
       value.projects[project] = configPath;
       return value;
-    })
+    });
 
     updateJson(host, 'nx.json', (value: NxJsonConfiguration) => {
-      delete value.projects[project]
+      delete value.projects[project];
       return value;
-    })
-  } 
+    });
+  }
 
   await formatFiles(host);
 }

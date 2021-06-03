@@ -11,7 +11,6 @@ import type {
   NxJsonProjectConfiguration,
 } from '@nrwl/tao/src/shared/nx';
 import { getWorkspacePath } from '../utils/get-workspace-layout';
-import { readJsonSync } from 'fs-extra';
 
 export type WorkspaceConfiguration = Omit<
   WorkspaceJsonConfiguration,
@@ -212,9 +211,8 @@ function setProjectConfiguration(
     );
   }
 
-  const { tags, implicitDependencies, ...workspaceConfiguration } =
-    projectConfiguration;
-  addProjectToWorkspaceJson(host, projectName, workspaceConfiguration, mode);
+  const { tags, implicitDependencies } = projectConfiguration;
+  addProjectToWorkspaceJson(host, projectName, projectConfiguration, mode);
   addProjectToNxJson(
     host,
     projectName,
@@ -229,11 +227,86 @@ function setProjectConfiguration(
 function addProjectToWorkspaceJson(
   host: Tree,
   projectName: string,
-  project: ProjectConfiguration,
+  project: ProjectConfiguration & NxJsonProjectConfiguration,
   mode: 'create' | 'update' | 'delete'
 ) {
   const path = getWorkspacePath(host);
   const workspaceJson = readJson<RawWorkspaceJsonConfiguration>(host, path);
+
+  validateWorkspaceJsonOperations(mode, workspaceJson, projectName);
+
+  const existingConfig = workspaceJson.projects[projectName];
+  if (typeof existingConfig === 'string') {
+    if (mode === 'delete') {
+      host.delete(existingConfig);
+    } else {
+      writeJson(host, existingConfig, project);
+    }
+  } else {
+    let workspaceConfiguration: ProjectConfiguration;
+    if (project) {
+      const { tags, implicitDependencies, ...c } = project;
+      workspaceConfiguration = c;
+    }
+    
+    workspaceJson.projects[projectName] = workspaceConfiguration;
+    writeJson(host, path, workspaceJson);
+  }
+}
+
+function addProjectToNxJson(
+  host: Tree,
+  projectName: string,
+  config: NxJsonProjectConfiguration,
+  mode: 'create' | 'update' | 'delete'
+) {
+  // distributed project files do not use nx.json,
+  // so only proceed if the project does not use them.
+  if (!getProjectFileLocation(host, projectName)) {
+    const nxJson = readJson<NxJsonConfiguration>(host, 'nx.json');
+    if (mode === 'delete') {
+      delete nxJson.projects[projectName];
+    } else {
+      nxJson.projects[projectName] = {
+        ...{
+          tags: [],
+        },
+        ...(config || {}),
+      };
+    }
+    writeJson(host, 'nx.json', nxJson);
+  }
+}
+
+function readWorkspace(host: Tree): WorkspaceJsonConfiguration {
+  const path = getWorkspacePath(host);
+  const workspaceJson = readJson<RawWorkspaceJsonConfiguration>(host, path);
+
+  const originalVersion = workspaceJson.version;
+  return {
+    ...toNewFormat(workspaceJson),
+    version: originalVersion,
+  };
+}
+
+/**
+ * @description Determine where a project's configuration is located.
+ * @returns file path if separate from root config, null otherwise.
+ */
+function getProjectFileLocation(host: Tree, project: string): string | null {
+  const rawWorkspace = readJson<RawWorkspaceJsonConfiguration>(
+    host,
+    getWorkspacePath(host)
+  );
+  const projectConfig = rawWorkspace.projects[project];
+  return typeof projectConfig === 'string' ? projectConfig : null;
+}
+
+function validateWorkspaceJsonOperations(
+  mode: 'create' | 'update' | 'delete',
+  workspaceJson: RawWorkspaceJsonConfiguration | WorkspaceJsonConfiguration,
+  projectName: string
+) {
   if (mode == 'create' && workspaceJson.projects[projectName]) {
     throw new Error(
       `Cannot create Project '${projectName}'. It already exists.`
@@ -246,46 +319,7 @@ function addProjectToWorkspaceJson(
   }
   if (mode == 'delete' && !workspaceJson.projects[projectName]) {
     throw new Error(
-      `Cannot update Project '${projectName}'. It does not exist.`
+      `Cannot delete Project '${projectName}'. It does not exist.`
     );
   }
-
-  const existingConfig = workspaceJson.projects[projectName];
-  if (typeof existingConfig === 'string') {
-    writeJson(host, existingConfig, project);
-  } else {
-    workspaceJson.projects[projectName] = project;
-    writeJson(host, path, workspaceJson);
-  }
-}
-
-function addProjectToNxJson(
-  host: Tree,
-  projectName: string,
-  config: NxJsonProjectConfiguration,
-  mode: 'create' | 'update' | 'delete'
-) {
-  const nxJson = readJson<NxJsonConfiguration>(host, 'nx.json');
-  if (mode === 'delete') {
-    delete nxJson.projects[projectName];
-  } else {
-    nxJson.projects[projectName] = {
-      ...{
-        tags: [],
-      },
-      ...(config || {}),
-    };
-  }
-  writeJson(host, 'nx.json', nxJson);
-}
-
-function readWorkspace(host: Tree): WorkspaceJsonConfiguration {
-  const path = getWorkspacePath(host);
-  const workspaceJson = readJson<RawWorkspaceJsonConfiguration>(host, path);
-
-  const originalVersion = workspaceJson.version;
-  return {
-    ...toNewFormat(workspaceJson),
-    version: originalVersion,
-  };
 }
