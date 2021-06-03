@@ -1,15 +1,21 @@
 import { DocumentsApi } from './documents.api';
 import type { DocumentMetadata } from './documents.models';
 import { join } from 'path';
-import { readJsonFile } from '@nrwl/workspace';
-import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
+import fs from 'fs';
 
-const archiveRootPath = join(appRootPath, 'nx-dev/nx-dev/public/documentation');
+const archiveRootPath = join(
+  process.env.WORKSPACE_ROOT,
+  'nx-dev/nx-dev/public/documentation'
+);
 const documentsCache = new Map<string, DocumentMetadata[]>([
   ['latest', readJsonFile(join(archiveRootPath, 'latest', 'map.json'))],
   ['previous', readJsonFile(join(archiveRootPath, 'previous', 'map.json'))],
 ]);
 const versionsData = readJsonFile(join(archiveRootPath, 'versions.json'));
+
+function readJsonFile(f) {
+  return JSON.parse(fs.readFileSync(f).toString());
+}
 
 describe('DocumentsApi', () => {
   const api = new DocumentsApi(versionsData, documentsCache);

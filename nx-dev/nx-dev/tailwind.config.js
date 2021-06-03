@@ -1,5 +1,7 @@
 const path = require('path');
+// nx-ignore-next-line
 const nxJson = require('@nrwl/workspace').readNxJson();
+// nx-ignore-next-line
 const workspaceJson = require('@nrwl/workspace').readWorkspaceJson();
 
 function getProjectNameWithTag(projectsJson, tag) {

@@ -1,11 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { join } from 'path';
-import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
 
 import * as send from 'send';
 
 // Repeated here since `data-access-documents` isn't available at runtime.
-const previewRootPath = join(appRootPath, 'docs');
+const previewRootPath = join(process.env.WORKSPACE_ROOT, 'docs');
 
 export default function (req: NextApiRequest, res: NextApiResponse) {
   return new Promise<void>((resolve) => {
