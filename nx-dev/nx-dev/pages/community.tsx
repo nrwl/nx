@@ -1,17 +1,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import {
-  Footer,
-  Header,
-  InlineCommand,
-  NxUsersShowcase,
-  PluginCard,
-} from '@nrwl/nx-dev/ui/common';
+import { Footer, Header, PluginCard } from '@nrwl/nx-dev/ui/common';
 import React from 'react';
+import { useStorage } from '../lib/use-storage';
 
 declare const fetch: any;
 
-interface NodeProps {
+interface CommunityProps {
   pluginList: {
     description: string;
     name: string;
@@ -19,16 +14,11 @@ interface NodeProps {
   }[];
 }
 
-export async function getStaticProps(): Promise<{ props: NodeProps }> {
-  // Call an external API endpoint to get posts.
-  // You can use any data fetching library
+export async function getStaticProps(): Promise<{ props: CommunityProps }> {
   const res = await fetch(
     'https://raw.githubusercontent.com/nrwl/nx/master/community/approved-plugins.json'
   );
   const pluginList = await res.json();
-
-  // By returning { props: { posts } }, the Blog component
-  // will receive `posts` as a prop at build time
   return {
     props: {
       pluginList,
@@ -36,10 +26,22 @@ export async function getStaticProps(): Promise<{ props: NodeProps }> {
   };
 }
 
-export function Node(props: NodeProps) {
+export function Community(props: CommunityProps) {
+  const { value: storedFlavor } = useStorage('flavor');
+  const { value: storedVersion } = useStorage('version');
   return (
     <>
-      <Header showSearch={false} />
+      <Header
+        showSearch={false}
+        flavor={{
+          name: storedFlavor || 'react',
+          value: storedFlavor || 'react',
+        }}
+        version={{
+          name: storedVersion || 'Latest',
+          value: storedVersion || 'latest',
+        }}
+      />
       <main>
         <div className="w-full">
           {/*Intro component*/}
@@ -198,7 +200,7 @@ export function Node(props: NodeProps) {
                 <div className="inline-flex rounded-md shadow mb-6">
                   <a
                     href="#community-plugin-list"
-                    className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                    className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-nx-base"
                   >
                     Check the community plugins right now!
                   </a>
@@ -249,14 +251,14 @@ export function Node(props: NodeProps) {
             <div className="max-w-7xl mx-auto my-12 py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
               <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
                 <span className="block">Ready to dive in?</span>
-                <span className="block text-blue-600">
+                <span className="block text-blue-nx-base">
                   Start using Nx with Node today.
                 </span>
               </h2>
               <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
                 <div className="inline-flex rounded-md shadow">
                   <Link href="/latest/node/getting-started/getting-started">
-                    <a className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                    <a className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-nx-base">
                       Get started with Node
                     </a>
                   </Link>
@@ -289,9 +291,18 @@ export function Node(props: NodeProps) {
           </div>
         </div>
       </main>
-      <Footer />
+      <Footer
+        flavor={{
+          name: storedFlavor || 'react',
+          value: storedFlavor || 'react',
+        }}
+        version={{
+          name: storedVersion || 'Latest',
+          value: storedVersion || 'latest',
+        }}
+      />
     </>
   );
 }
 
-export default Node;
+export default Community;

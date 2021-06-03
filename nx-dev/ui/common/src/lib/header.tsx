@@ -4,9 +4,11 @@ import { AlgoliaSearch } from '@nrwl/nx-dev/feature-search';
 
 export interface HeaderProps {
   showSearch: boolean;
+  flavor: { name: string; value: string } | null;
+  version: { name: string; value: string } | null;
 }
 
-export function Header({ showSearch }: HeaderProps) {
+export function Header({ flavor, showSearch, version }: HeaderProps) {
   return (
     <header className="h-16 px-5 py-5 flex items-center justify-between print:hidden bg-blue-nx-base">
       <div className="flex items-center justify-between w-full max-w-screen-xl mx-auto space-x-10">
@@ -49,17 +51,23 @@ export function Header({ showSearch }: HeaderProps) {
         </div>
         {/*SEARCH*/}
         <div className="hidden md:inline">
-          {!!showSearch ? <AlgoliaSearch /> : null}
+          {!!showSearch ? (
+            <AlgoliaSearch flavorId={flavor.value} versionId={version.value} />
+          ) : null}
         </div>
         {/*NAVIGATION*/}
         <div className="text-sm flex-shrink-0">
           <nav className="flex items-justified justify-center space-x-1">
-            <Link href="/getting-started/getting-started">
+            <Link
+              href={`/${version.value}/${flavor.value}/getting-started/getting-started`}
+            >
               <a className="font-bold px-3 py-2 text-white leading-tight">
                 Get Started
               </a>
             </Link>
-            <Link href="/core-concepts/plugins">
+            <Link
+              href={`/${version.value}/${flavor.value}/core-concepts/plugins`}
+            >
               <a className="px-3 py-2 text-white leading-tight">Plugins</a>
             </Link>
             <Link href="/community">

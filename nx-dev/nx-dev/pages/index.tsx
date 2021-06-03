@@ -7,11 +7,24 @@ import {
   NxUsersShowcase,
 } from '@nrwl/nx-dev/ui/common';
 import Image from 'next/image';
+import { useStorage } from '../lib/use-storage';
 
 export function Index() {
+  const { value: storedFlavor } = useStorage('flavor');
+  const { value: storedVersion } = useStorage('version');
   return (
     <>
-      <Header showSearch={false} />
+      <Header
+        showSearch={false}
+        flavor={{
+          name: storedFlavor || 'react',
+          value: storedFlavor || 'react',
+        }}
+        version={{
+          name: storedVersion || 'Latest',
+          value: storedVersion || 'latest',
+        }}
+      />
       <main>
         <div className="w-full">
           {/*INTRO COMPONENT*/}
@@ -385,7 +398,16 @@ export function Index() {
           <NxUsersShowcase />
         </div>
       </main>
-      <Footer />
+      <Footer
+        flavor={{
+          name: storedFlavor || 'react',
+          value: storedFlavor || 'react',
+        }}
+        version={{
+          name: storedVersion || 'Latest',
+          value: storedVersion || 'latest',
+        }}
+      />
     </>
   );
 }

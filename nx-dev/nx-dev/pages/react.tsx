@@ -7,11 +7,24 @@ import {
   NxUsersShowcase,
 } from '@nrwl/nx-dev/ui/common';
 import React from 'react';
+import { useStorage } from '../lib/use-storage';
 
 export function ReactPage() {
+  const { value: storedFlavor } = useStorage('flavor');
+  const { value: storedVersion } = useStorage('version');
   return (
     <>
-      <Header showSearch={false} />
+      <Header
+        showSearch={false}
+        flavor={{
+          name: storedFlavor || 'react',
+          value: storedFlavor || 'react',
+        }}
+        version={{
+          name: storedVersion || 'Latest',
+          value: storedVersion || 'latest',
+        }}
+      />
       <main>
         <div className="w-full overflow-hidden">
           {/*Intro component*/}
@@ -478,7 +491,16 @@ export function ReactPage() {
           <NxUsersShowcase />
         </div>
       </main>
-      <Footer />
+      <Footer
+        flavor={{
+          name: storedFlavor || 'react',
+          value: storedFlavor || 'react',
+        }}
+        version={{
+          name: storedVersion || 'Latest',
+          value: storedVersion || 'latest',
+        }}
+      />
     </>
   );
 }

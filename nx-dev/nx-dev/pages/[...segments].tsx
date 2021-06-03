@@ -45,6 +45,7 @@ export function DocumentationPage({
   const { value: storedFlavor, setValue: setStoredFlavor } = useStorage(
     'flavor'
   );
+  const { setValue: setStoredVersion } = useStorage('version');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [navIsOpen, setNavIsOpen] = useState(false);
 
@@ -53,6 +54,11 @@ export function DocumentationPage({
       setStoredFlavor(flavor.value);
     }
   }, [flavor, isFallback, setStoredFlavor]);
+  useEffect(() => {
+    if (!isFallback) {
+      setStoredVersion(version.id);
+    }
+  }, [version, isFallback, setStoredVersion]);
 
   useEffect(() => {
     if (!isFallback || !storedFlavor) return;
@@ -82,7 +88,11 @@ export function DocumentationPage({
           />
         </Head>
       )}
-      <Header showSearch={true} />
+      <Header
+        showSearch={true}
+        version={{ name: version.name, value: version.id }}
+        flavor={{ name: flavor.label, value: flavor.value }}
+      />
       <main>
         <DocViewer
           version={version}
@@ -140,7 +150,18 @@ export function DocumentationPage({
           </svg>
         </button>
       </main>
-      {!navIsOpen ? <Footer /> : null}
+      {!navIsOpen ? (
+        <Footer
+          flavor={{
+            name: flavor.label,
+            value: flavor.value,
+          }}
+          version={{
+            name: version.name,
+            value: version.id,
+          }}
+        />
+      ) : null}
       <Dialog
         as="div"
         className="fixed z-50 inset-0 overflow-y-auto"
