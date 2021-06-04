@@ -34,5 +34,6 @@
       "enum": ["eslint", "none"],
       "default": "eslint"
     }
-  }
+  },
+  "additionalProperties": false
 }
