@@ -268,6 +268,7 @@ export class ForkedProcessTaskRunner {
     env = {
       ...env,
       ...envsFromFiles,
+      NX_TASK_TARGET_PROJECT: task.target.project,
       NX_TASK_HASH: task.hash,
     };
 
