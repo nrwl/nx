@@ -29,7 +29,7 @@ export function AngularPage() {
         <div className="w-full overflow-hidden">
           {/*Intro component*/}
           <div className="bg-blue-nx-dark text-white">
-            <div className="max-w-screen-lg mx-auto px-5 py-5 relative">
+            <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5 relative">
               <img
                 src="/images/angular-constellation.svg"
                 width={800}
@@ -93,7 +93,7 @@ export function AngularPage() {
               </div>
             </div>
           </div>
-          <div className="max-w-screen-lg mx-auto px-5 py-5">
+          <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
             {/*How to use Nx*/}
             <div className="mt-32 flex sm:flex-row flex-col justify-center">
               <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
@@ -183,7 +183,7 @@ export function AngularPage() {
           </div>
           {/*Nx technology*/}
           <div className="bg-blue-nx-base text-white">
-            <div className="max-w-screen-lg mx-auto px-5 py-5">
+            <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
               <div className="py-32 flex sm:flex-row flex-col items-center justify-center">
                 <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
                   <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4">
@@ -229,7 +229,7 @@ export function AngularPage() {
               </div>
             </div>
           </div>
-          <div className="max-w-screen-lg mx-auto px-5 py-5">
+          <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
             {/*Nx plugins ecosystem*/}
             <div className="py-32 flex sm:flex-row flex-col items-center justify-center">
               <div className="w-full sm:w-2/5 flex flex-col justify-between items-center sm:pb-0 pb-10 mt-8 sm:mt-0">
@@ -330,7 +330,7 @@ export function AngularPage() {
           </div>
           {/*Integrated experience*/}
           <div className="bg-blue-nx-base text-white">
-            <div className="max-w-screen-lg mx-auto px-5 py-5">
+            <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
               <div className="py-32 flex sm:flex-row flex-col items-center justify-center">
                 <div className="w-full sm:w-2/5 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
                   <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4">
@@ -379,7 +379,7 @@ export function AngularPage() {
               </div>
             </div>
           </div>
-          <div className="max-w-screen-lg mx-auto px-5 py-5">
+          <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
             {/*Learn more*/}
             <div className="py-32 flex sm:flex-row flex-col items-start justify-center">
               <div className="w-full sm:w-2/5 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
