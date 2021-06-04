@@ -17,30 +17,14 @@ import {
 import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
 import { readFileSync, writeFileSync } from 'fs-extra';
 import * as stripJsonComments from 'strip-json-comments';
-
-const PRETTIER_EXTENSIONS = [
-  'ts',
-  'js',
-  'tsx',
-  'jsx',
-  'scss',
-  'less',
-  'css',
-  'html',
-  'json',
-  'md',
-  'mdx',
-  'graphql',
-  'gql',
-  'yaml',
-  'yml',
-];
-
-const MATCH_ALL_PATTERN = `**/*.{${PRETTIER_EXTENSIONS.join(',')}}`;
+import * as prettier from 'prettier';
 
 const PRETTIER_PATH = require.resolve('prettier/bin-prettier');
 
-export function format(command: 'check' | 'write', args: yargs.Arguments) {
+export function format(
+  command: 'check' | 'write',
+  args: yargs.Arguments
+): void {
   const { nxArgs } = splitArgsIntoNxArgsAndOverrides(args, 'affected');
 
   const patterns = getPatterns({ ...args, ...nxArgs } as any).map(
@@ -61,8 +45,15 @@ export function format(command: 'check' | 'write', args: yargs.Arguments) {
   }
 }
 
-function getPatterns(args: NxArgs & { libsAndApps: boolean; _: string[] }) {
-  const allFilesPattern = [MATCH_ALL_PATTERN];
+function getPatterns(
+  args: NxArgs & { libsAndApps: boolean; _: string[] }
+): string[] {
+  const supportedExtensions = prettier
+    .getSupportInfo()
+    .languages.flatMap((language) => language.extensions)
+    .filter((extension) => !!extension);
+  const matchAllPattern = `**/*{${supportedExtensions.join(',')}}`;
+  const allFilesPattern = [matchAllPattern];
 
   try {
     if (args.all) {
@@ -70,34 +61,43 @@ function getPatterns(args: NxArgs & { libsAndApps: boolean; _: string[] }) {
     }
 
     if (args.projects && args.projects.length > 0) {
-      return getPatternsFromProjects(args.projects);
+      return getPatternsFromProjects(args.projects, matchAllPattern);
     }
 
     const p = parseFiles(args);
     const patterns = p.files
       .filter((f) => fileExists(f))
-      .filter((f) =>
-        PRETTIER_EXTENSIONS.map((ext) => `.${ext}`).includes(path.extname(f))
-      );
+      .filter((f) => supportedExtensions.includes(path.extname(f)));
 
-    return args.libsAndApps ? getPatternsFromApps(patterns) : patterns;
+    return args.libsAndApps
+      ? getPatternsFromApps(patterns, matchAllPattern)
+      : patterns;
   } catch (e) {
     return allFilesPattern;
   }
 }
 
-function getPatternsFromApps(affectedFiles: string[]): string[] {
+function getPatternsFromApps(
+  affectedFiles: string[],
+  matchAllPattern: string
+): string[] {
   const graph = onlyWorkspaceProjects(createProjectGraph());
   const affectedGraph = filterAffected(
     graph,
     calculateFileChanges(affectedFiles)
   );
-  return getPatternsFromProjects(Object.keys(affectedGraph.nodes));
+  return getPatternsFromProjects(
+    Object.keys(affectedGraph.nodes),
+    matchAllPattern
+  );
 }
 
-function getPatternsFromProjects(projects: string[]) {
+function getPatternsFromProjects(
+  projects: string[],
+  matchAllPattern: string
+): string[] {
   const roots = getProjectRoots(projects);
-  return roots.map((root) => `${root}/${MATCH_ALL_PATTERN}`);
+  return roots.map((root) => `${root}/${matchAllPattern}`);
 }
 
 function chunkify(target: string[], size: number): string[][] {
