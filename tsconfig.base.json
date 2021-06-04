@@ -10,7 +10,7 @@
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
     "types": ["node", "jest"],
-    "lib": ["es2018"],
+    "lib": ["es2019"],
     "declaration": true,
     "resolveJsonModule": true,
     "baseUrl": ".",
