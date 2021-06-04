@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "$id": "NxPluginExecutor",
+  "title": "Create a Executor for an Nx Plugin",
+  "type": "object",
+  "examples": [
+    {
+      "command": "g executor my-executor --project=my-plugin",
+      "description": "Generate libs/my-plugin/src/executors/my-executor"
+    }
+  ],
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project.",
+      "alias": "p",
+      "$default": {
+        "$source": "projectName"
+      },
+      "x-prompt": "What is the name of the project for the executor?"
+    },
+    "name": {
+      "type": "string",
+      "description": "Executor name",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What name would you like to use for the executor?"
+    },
+    "description": {
+      "type": "string",
+      "description": "Executor description",
+      "alias": "d"
+    },
+    "unitTestRunner": {
+      "type": "string",
+      "enum": ["jest", "none"],
+      "description": "Test runner to use for unit tests",
+      "default": "jest"
+    }
+  },
+  "required": ["project", "name"],
+  "additionalProperties": false
+}

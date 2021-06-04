@@ -1,5 +1,4 @@
 {
-  "$schema": "@angular-devkit/architect/src/builders-schema.json",
   "builders": {
     "e2e": {
       "implementation": "./src/executors/e2e/e2e.impl",
