@@ -1,9 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
+import { sendPageViewEvent } from '@nrwl/nx-dev/feature-analytics';
 import '../styles/main.css';
 
 export default function CustomApp({ Component, pageProps }: AppProps) {
+  const router = useRouter();
+  const gaMeasurementId = 'UA-88380372-10';
+  useEffect(() => {
+    const handleRouteChange = (url: URL) =>
+      sendPageViewEvent(gaMeasurementId, { path: url });
+    router.events.on('routeChangeStart', (url) => handleRouteChange(url));
+    return () => router.events.off('routeChangeStart', handleRouteChange);
+  }, [router]);
   return (
     <>
       <Head>
@@ -34,6 +44,23 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
         <meta name="msapplication-TileColor" content="#da532c" />
         <meta name="theme-color" content="#ffffff" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {/* Global Site Tag (gtag.js) - Google Analytics */}
+        <script
+          async
+          src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){ dataLayer.push(arguments); }
+            gtag('js', new Date());
+            gtag('config', '${gaMeasurementId}', {
+              page_path: window.location.pathname,
+            });
+          `,
+          }}
+        />
       </Head>
       <div className="documentation-app text-gray-700 antialiased bg-white">
         <Component {...pageProps} />

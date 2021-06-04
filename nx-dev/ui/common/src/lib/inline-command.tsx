@@ -6,9 +6,14 @@ import { CopyToClipboard } from 'react-copy-to-clipboard';
 export interface InlineCommandProps {
   language: string;
   command: string;
+  callback?: (command: string) => void;
 }
 
-export function InlineCommand({ language, command }: InlineCommandProps) {
+export function InlineCommand({
+  language,
+  command,
+  callback,
+}: InlineCommandProps) {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
     let t: NodeJS.Timeout;
@@ -23,7 +28,13 @@ export function InlineCommand({ language, command }: InlineCommandProps) {
   }, [copied]);
   return (
     <div className="relative">
-      <CopyToClipboard text={command} onCopy={() => setCopied(true)}>
+      <CopyToClipboard
+        text={command}
+        onCopy={() => {
+          setCopied(true);
+          if (typeof callback === 'function') callback(command);
+        }}
+      >
         <button
           type="button"
           className="max-w-full text-sm flex-none bg-white text-gray-400 hover:text-gray-900 font-mono leading-6 py-1 sm:px-3 border border-gray-200 rounded-xl flex items-center justify-center space-x-2 sm:space-x-4 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-gray-300 focus:outline-none transition-colors duration-180"
