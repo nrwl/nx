@@ -264,9 +264,11 @@ describe('Storybook schematics', () => {
 });
 
 export function createTestUILib(libName: string): void {
-  runCLI(`g @nrwl/angular:library ${libName} --no-interactive`);
   runCLI(
-    `g @nrwl/angular:component test-button --project=${libName} --no-interactive --buildable=true`
+    `g @nrwl/angular:library ${libName} --no-interactive --buildable=true`
+  );
+  runCLI(
+    `g @nrwl/angular:component test-button --project=${libName} --no-interactive`
   );
 
   writeFileSync(
