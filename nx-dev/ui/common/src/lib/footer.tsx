@@ -1,6 +1,9 @@
 import Link from 'next/link';
-
-export function Footer() {
+export interface FooterProps {
+  version: { name: string; value: string };
+  flavor: { name: string; value: string };
+}
+export function Footer({ version, flavor }: FooterProps) {
   return (
     <footer className="mt-32 text-white body-font">
       <div className="bg-blue-nx-base text-white">
@@ -37,7 +40,9 @@ export function Footer() {
               <h3 className="text-xl leading-none tracking-tight mb-4">Help</h3>
               <ul>
                 <li className="mb-2">
-                  <Link href="/latest/react/getting-started/intro">
+                  <Link
+                    href={`/${version.value}/${flavor.value}/getting-started/intro`}
+                  >
                     <a className="cursor-pointer block">Documentation</a>
                   </Link>
                 </li>

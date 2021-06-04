@@ -1,7 +1,6 @@
 import React from 'react';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
-import { Header, Footer } from '@nrwl/nx-dev/ui/common';
 import '../styles/main.css';
 
 export default function CustomApp({ Component, pageProps }: AppProps) {
@@ -37,12 +36,8 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <div className="documentation-app text-gray-700 antialiased bg-white">
-        <Header showSearch={!!pageProps.document} />
-        <main>
-          <Component {...pageProps} />
-        </main>
+        <Component {...pageProps} />
       </div>
-      <Footer />
     </>
   );
 }

@@ -16,9 +16,13 @@ function Hit({ hit, children }) {
   );
 }
 
-export function AlgoliaSearch() {
-  const frameworkFilter = `framework:react`; // TODO: @ben Tap into current framework selection
-  const versionFilter = `version:latest`; // TODO: @ben Tap into current version selection
+export interface AlgoliaSearchProps {
+  flavorId: string;
+  versionId: string;
+}
+export function AlgoliaSearch({ flavorId, versionId }: AlgoliaSearchProps) {
+  const frameworkFilter = `framework:${flavorId}`;
+  const versionFilter = `version:${versionId}`;
 
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);

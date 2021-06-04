@@ -5,7 +5,12 @@ import Footer from './footer';
 
 describe('Footer', () => {
   it('should render successfully', () => {
-    const { baseElement } = render(<Footer />);
+    const { baseElement } = render(
+      <Footer
+        flavor={{ name: 'react', value: 'react' }}
+        version={{ name: 'latest', value: 'latest' }}
+      />
+    );
     expect(baseElement).toBeTruthy();
   });
 });

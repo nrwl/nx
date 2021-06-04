@@ -1,3 +1,8 @@
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import cx from 'classnames';
+import Link from 'next/link';
+import Head from 'next/head';
 import { Dialog } from '@headlessui/react';
 import type {
   DocumentData,
@@ -6,13 +11,9 @@ import type {
 } from '@nrwl/nx-dev/data-access-documents';
 import { flavorList } from '@nrwl/nx-dev/data-access-documents';
 import { DocViewer } from '@nrwl/nx-dev/feature-doc-viewer';
-import { useRouter } from 'next/router';
-
+import { Footer, Header } from '@nrwl/nx-dev/ui/common';
 import { documentsApi, menuApi } from '../lib/api';
 import { useStorage } from '../lib/use-storage';
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import Head from 'next/head';
 
 const versionList = documentsApi.getVersions();
 const defaultVersion = versionList.find((v) => v.default);
@@ -44,13 +45,20 @@ export function DocumentationPage({
   const { value: storedFlavor, setValue: setStoredFlavor } = useStorage(
     'flavor'
   );
+  const { setValue: setStoredVersion } = useStorage('version');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [navIsOpen, setNavIsOpen] = useState(false);
 
   useEffect(() => {
     if (!isFallback) {
       setStoredFlavor(flavor.value);
     }
   }, [flavor, isFallback, setStoredFlavor]);
+  useEffect(() => {
+    if (!isFallback) {
+      setStoredVersion(version.id);
+    }
+  }, [version, isFallback, setStoredVersion]);
 
   useEffect(() => {
     if (!isFallback || !storedFlavor) return;
@@ -80,15 +88,80 @@ export function DocumentationPage({
           />
         </Head>
       )}
-      <DocViewer
-        version={version}
-        versionList={versions}
-        flavor={flavor}
-        flavorList={flavors}
-        document={document}
-        menu={menu}
-        toc={null}
+      <Header
+        showSearch={true}
+        version={{ name: version.name, value: version.id }}
+        flavor={{ name: flavor.label, value: flavor.value }}
       />
+      <main>
+        <DocViewer
+          version={version}
+          versionList={versions}
+          flavor={flavor}
+          flavorList={flavors}
+          document={document}
+          menu={menu}
+          toc={null}
+          navIsOpen={navIsOpen}
+        />
+        <button
+          type="button"
+          className="fixed z-50 bottom-4 right-4 w-16 h-16 rounded-full bg-blue-nx-base text-white block lg:hidden"
+          onClick={() => setNavIsOpen(!navIsOpen)}
+        >
+          <span className="sr-only">Open site navigation</span>
+          <svg
+            width="24"
+            height="24"
+            fill="none"
+            className={cx(
+              'absolute top-1/2 left-1/2 -mt-3 -ml-3 transition duration-300 transform',
+              {
+                'opacity-0 scale-80': navIsOpen,
+              }
+            )}
+          >
+            <path
+              d="M4 8h16M4 16h16"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <svg
+            width="24"
+            height="24"
+            fill="none"
+            className={cx(
+              'absolute top-1/2 left-1/2 -mt-3 -ml-3 transition duration-300 transform',
+              {
+                'opacity-0 scale-80': !navIsOpen,
+              }
+            )}
+          >
+            <path
+              d="M6 18L18 6M6 6l12 12"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      </main>
+      {!navIsOpen ? (
+        <Footer
+          flavor={{
+            name: flavor.label,
+            value: flavor.value,
+          }}
+          version={{
+            name: version.name,
+            value: version.id,
+          }}
+        />
+      ) : null}
       <Dialog
         as="div"
         className="fixed z-50 inset-0 overflow-y-auto"
