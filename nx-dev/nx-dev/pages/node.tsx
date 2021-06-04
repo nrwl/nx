@@ -74,7 +74,7 @@ export function Node() {
           {/*Intro component*/}
           <div className="bg-blue-nx-dark text-white">
             <div
-              className="max-w-screen-lg mx-auto px-5 py-5"
+              className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5"
               style={{
                 background:
                   'url(/images/cubes-top-1.png) no-repeat top center / contain',
@@ -119,7 +119,7 @@ export function Node() {
               </div>
             </div>
             {/*What is Nx*/}
-            <div className="max-w-screen-lg mx-auto px-5 py-5">
+            <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
               <div className="my-32 flex sm:flex-row flex-col justify-center">
                 <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
                   <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4">
@@ -184,7 +184,7 @@ export function Node() {
           </div>
           {/*Call out*/}
           <div className="bg-blue-nx-base text-white">
-            <div className="max-w-screen-lg mx-auto px-5 py-5">
+            <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
               <div className="flex sm:flex-row flex-col justify-center py-16">
                 <div className="sm:w-1/2 sm:flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0 relative">
                   <div className="hidden sm:block absolute -top-40">
@@ -212,7 +212,7 @@ export function Node() {
               </div>
             </div>
           </div>
-          <div className="max-w-screen-lg mx-auto px-5 py-5">
+          <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
             {/*How to use Nx*/}
             <div className="mt-32 flex sm:flex-row flex-col justify-center">
               <div className="w-full sm:w-1/2 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
@@ -308,7 +308,7 @@ export function Node() {
           </div>
           {/*VIDEO*/}
           <div className="bg-blue-nx-base text-white">
-            <div className="max-w-screen-lg mx-auto px-5 py-5">
+            <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
               <div className="py-32 w-full flex justify-center">
                 <iframe
                   width="760"
@@ -323,7 +323,7 @@ export function Node() {
               </div>
             </div>
           </div>
-          <div className="max-w-screen-lg mx-auto px-5 py-5">
+          <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
             {/*Nx technology*/}
             <div className="py-32 flex sm:flex-row flex-col items-center justify-center">
               <div className="w-full sm:w-2/5 flex flex-col justify-between items-center sm:pb-0 pb-10 mt-8 sm:mt-0">
@@ -425,7 +425,7 @@ export function Node() {
           </div>
           {/*Integrated experience*/}
           <div className="bg-blue-nx-base text-white">
-            <div className="max-w-screen-lg mx-auto px-5 py-5">
+            <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
               <div className="py-32 flex sm:flex-row flex-col items-center justify-center">
                 <div className="w-full sm:w-2/5 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
                   <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4">
@@ -457,7 +457,7 @@ export function Node() {
             </div>
           </div>
           {/*Learn more*/}
-          <div className="max-w-screen-lg mx-auto px-5 py-5">
+          <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
             <div className="py-32 flex sm:flex-row flex-col items-start justify-center">
               <div className="w-full sm:w-2/5 flex flex-col justify-between items-start sm:pb-0 pb-10 mt-8 sm:mt-0">
                 <h3 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold text-gray-900 tracking-tight mb-4">

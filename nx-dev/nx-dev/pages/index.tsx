@@ -29,7 +29,7 @@ export function Index() {
         <div className="w-full">
           {/*INTRO COMPONENT*/}
           <div className="bg-blue-nx-base text-white">
-            <div className="max-w-screen-lg mx-auto px-5 py-5">
+            <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
               <div className="mt-8 mb-20 flex lg:flex-row flex-col items-center justify-center">
                 <div className="w-full lg:w-1/2 flex flex-col">
                   <h1 className="text-4xl sm:text-5xl lg:text-6xl leading none font-extrabold tracking-tight mt-10 mb-8 sm:mt-14 sm:mb-10">
@@ -106,7 +106,7 @@ export function Index() {
           </div>
 
           {/*SELECTION COMPONENT*/}
-          <div className="max-w-screen-lg mx-auto px-5 py-5">
+          <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
             <div className="mt-32 mb-20 flex sm:flex-row flex-col justify-center">
               <div className="w-full sm:w-1/2 grid grid-cols-3 gap-10 items-center">
                 <Link href="/react">
@@ -177,7 +177,7 @@ export function Index() {
           </div>
 
           <div className="bg-blue-nx-base text-white">
-            <div className="max-w-screen-lg mx-auto px-5 py-5">
+            <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
               {/*GRAPH AND COMPUTATION CACHING*/}
               <div className="mt-32 flex sm:flex-row flex-col">
                 <div className="w-full sm:w-1/2 flex flex-col justify-center items-center sm:pr-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
@@ -302,7 +302,7 @@ export function Index() {
             </div>
           </div>
 
-          <div className="max-w-screen-lg mx-auto px-5 py-5">
+          <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
             {/*LEARNING MATERIALS*/}
             <div className="my-32 flex sm:flex-row flex-col">
               <div className="w-full sm:w-1/2 flex flex-col justify-center items-center sm:pb-0 sm:pr-16 pb-10 mt-8 sm:mt-0">
@@ -348,7 +348,7 @@ export function Index() {
           </div>
 
           <div className="bg-blue-nx-base text-white">
-            <div className="max-w-screen-lg mx-auto px-5 py-5">
+            <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
               {/*MORE*/}
               <div className="my-32 flex sm:flex-row flex-col">
                 <div className="w-full sm:w-1/2 flex flex-col justify-center sm:pr-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
