@@ -56,7 +56,7 @@ describe('Storybook schematics', () => {
   });
 
   describe('build storybook', () => {
-    xit('should execute e2e tests using Cypress running against Storybook', () => {
+    it('should execute e2e tests using Cypress running against Storybook', () => {
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
 
@@ -266,7 +266,7 @@ describe('Storybook schematics', () => {
 export function createTestUILib(libName: string): void {
   runCLI(`g @nrwl/angular:library ${libName} --no-interactive`);
   runCLI(
-    `g @nrwl/angular:component test-button --project=${libName} --no-interactive`
+    `g @nrwl/angular:component test-button --project=${libName} --no-interactive --buildable=true`
   );
 
   writeFileSync(
@@ -284,7 +284,7 @@ export function createTestUILib(libName: string): void {
       export class TestButtonComponent implements OnInit {
         @Input('buttonType') type = 'button';
         @Input() style: ButtonStyle = 'default';
-        @Input() age: number;
+        @Input() age!: number;
         @Input() isDisabled = false;
 
         constructor() { }
