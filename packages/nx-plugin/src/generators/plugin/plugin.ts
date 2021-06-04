@@ -8,6 +8,7 @@ import {
   updateProjectConfiguration,
   addDependenciesToPackageJson,
   formatFiles,
+  GeneratorCallback,
 } from '@nrwl/devkit';
 import type { Tree } from '@nrwl/devkit';
 import type { Schema } from './schema';
@@ -17,6 +18,7 @@ import { libraryGenerator } from '@nrwl/node';
 import { e2eProjectGenerator } from '../e2e-project/e2e';
 import { generatorGenerator } from '../generator/generator';
 import { executorGenerator } from '../executor/executor';
+import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 
 interface NormalizedSchema extends Schema {
   name: string;
@@ -119,14 +121,16 @@ function updateWorkspaceJson(host: Tree, options: NormalizedSchema) {
 
 export async function pluginGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
+  const tasks: GeneratorCallback[] = [];
 
-  await libraryGenerator(host, {
+  const libraryTask = await libraryGenerator(host, {
     ...schema,
     publishable: true,
     importPath: schema.importPath ?? options.npmPackageName,
   });
+  tasks.push(libraryTask);
 
-  addDependenciesToPackageJson(
+  const installTask = addDependenciesToPackageJson(
     host,
     {},
     {
@@ -136,6 +140,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
       tslib: '^2.0.0',
     }
   );
+  tasks.push(installTask);
 
   await addFiles(host, options);
   updateWorkspaceJson(host, options);
@@ -148,6 +153,8 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
   });
 
   await formatFiles(host);
+
+  return runTasksInSerial(...tasks);
 }
 
 export default pluginGenerator;
