@@ -110,41 +110,31 @@ export function readWorkspaceConfiguration(host: Tree): WorkspaceConfiguration {
  */
 export function updateWorkspaceConfiguration(
   host: Tree,
-  {
-    version,
-    cli,
-    defaultProject,
-    generators,
-    implicitDependencies,
-    affected,
-    npmScope,
-    tasksRunnerOptions,
-    workspaceLayout,
-  }: WorkspaceConfiguration
+  workspaceConfig: WorkspaceConfiguration
 ): void {
-  const workspace: Omit<WorkspaceJsonConfiguration, 'projects'> = {
+  const {
     version,
     cli,
     defaultProject,
     generators,
-  };
-  const nxJson: Omit<NxJsonConfiguration, 'projects'> = {
-    implicitDependencies,
-    affected,
-    npmScope,
-    tasksRunnerOptions,
-    workspaceLayout,
+    ...nxJson
+  } = workspaceConfig;
+  const workspace: Omit<Required<WorkspaceJsonConfiguration>, 'projects'> = {
+    version,
+    cli,
+    defaultProject,
+    generators,
   };
 
   updateJson<WorkspaceJsonConfiguration>(
     host,
     getWorkspacePath(host),
     (json) => {
-      return { ...workspace, projects: json.projects };
+      return { ...json, ...workspace };
     }
   );
   updateJson<NxJsonConfiguration>(host, 'nx.json', (json) => {
-    return { ...nxJson, projects: json.projects };
+    return { ...json, ...nxJson };
   });
 }
 
