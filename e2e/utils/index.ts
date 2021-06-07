@@ -328,6 +328,8 @@ export function runCLI(
     let r = execSync(`${pm.runNx} ${command}`, {
       cwd: opts.cwd || tmpProjPath(),
       env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
+      encoding: 'utf8',
+      maxBuffer: 50 * 1024 * 1024,
     }).toString();
     r = r.replace(
       /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
