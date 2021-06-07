@@ -171,11 +171,11 @@
           "alwaysAddToPackageJson": false
         },
         "ts-jest": {
-          "version": "27.0.2",
+          "version": "27.0.3",
           "alwaysAddToPackageJson": false
         },
         "jest-preset-angular": {
-          "version": "9.0.1",
+          "version": "9.0.2",
           "alwaysAddToPackageJson": false
         }
       }
