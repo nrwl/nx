@@ -13,8 +13,7 @@ import storybookExecutor, { StorybookExecutorOptions } from './storybook.impl';
 import { join } from 'path';
 import { readFileSync } from 'fs-extra';
 
-// TODO: fix this test
-xdescribe('@nrwl/storybook:storybook', () => {
+describe('@nrwl/storybook:storybook', () => {
   let context: ExecutorContext;
   let options: StorybookExecutorOptions;
   beforeEach(() => {
