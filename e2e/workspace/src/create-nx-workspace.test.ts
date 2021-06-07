@@ -178,10 +178,11 @@ describe('create-nx-workspace', () => {
     expect(existsSync(`${tmpDir}/${wsName}/package.json`)).toBeTruthy();
   });
 
-  // temporary disable this
-  xit('should respect package manager preference', () => {
+  it('should respect package manager preference', () => {
     const wsName = uniq('pm');
     const appName = uniq('app');
+
+    process.env.YARN_REGISTRY = `http://localhost:4872`;
 
     runCreateWorkspace(wsName, {
       preset: 'react',
@@ -194,10 +195,12 @@ describe('create-nx-workspace', () => {
     checkFilesDoNotExist('package-lock.json');
   });
 
-  // temporary disable this
-  xit('should store package manager preference for angular cli', () => {
+  it('should store package manager preference for angular cli', () => {
     const wsName = uniq('pm');
     const appName = uniq('app');
+
+    process.env.YARN_REGISTRY = `http://localhost:4872`;
+
     runCreateWorkspace(wsName, {
       preset: 'angular',
       appName,
