@@ -1,3 +1,5 @@
+import React from 'react';
+import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -6,7 +8,7 @@ import {
   InlineCommand,
   NxUsersShowcase,
 } from '@nrwl/nx-dev/ui/common';
-import React from 'react';
+import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
 import { useStorage } from '../lib/use-storage';
 
 export function Node() {
@@ -52,6 +54,7 @@ export function Node() {
       ].join(' '),
     },
   ];
+  const router = useRouter();
 
   const { value: storedFlavor } = useStorage('flavor');
   const { value: storedVersion } = useStorage('version');
@@ -232,6 +235,9 @@ export function Node() {
                   <InlineCommand
                     language={'bash'}
                     command={'npx create-nx-workspace --preset=nest'}
+                    callback={() =>
+                      sendCustomEvent('code-snippets', 'click', router.pathname)
+                    }
                   />
                 </div>
 
@@ -243,6 +249,9 @@ export function Node() {
                   <InlineCommand
                     language={'bash'}
                     command={'npx create-nx-workspace --preset=express'}
+                    callback={() =>
+                      sendCustomEvent('code-snippets', 'click', router.pathname)
+                    }
                   />
                 </div>
               </div>

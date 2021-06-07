@@ -1,9 +1,12 @@
 {
-  "npmScope": "nrwl",
   "implicitDependencies": {
     "package.json": "*",
     ".eslintrc.json": "*"
   },
+  "affected": {
+    "defaultBase": "master"
+  },
+  "npmScope": "nrwl",
   "tasksRunnerOptions": {
     "default": {
       "runner": "@nrwl/nx-cloud",
@@ -54,7 +57,9 @@
     "nest": {
       "implicitDependencies": ["node", "linter"]
     },
-    "linter": { "implicitDependencies": ["eslint-plugin-nx"] },
+    "linter": {
+      "implicitDependencies": ["eslint-plugin-nx"]
+    },
     "express": {
       "implicitDependencies": ["node"]
     },
@@ -111,7 +116,9 @@
     "e2e-workspace": {
       "implicitDependencies": ["create-nx-workspace"]
     },
-    "gatsby": { "tags": [] },
+    "gatsby": {
+      "tags": []
+    },
     "dep-graph-dep-graph-e2e": {
       "implicitDependencies": ["dep-graph-dep-graph"]
     },
@@ -135,8 +142,14 @@
     "nx-dev-data-access-documents": {
       "tags": ["scope:nx-dev", "type:data-access"]
     },
-    "nx-dev-feature-search": { "tags": ["scope:nx-dev", "type:feature"] },
-    "docs": { "tags": ["scope:nx-dev"] }
-  },
-  "affected": { "defaultBase": "master" }
+    "nx-dev-feature-search": {
+      "tags": ["scope:nx-dev", "type:feature"]
+    },
+    "docs": {
+      "tags": ["scope:nx-dev"]
+    },
+    "nx-dev-feature-analytics": {
+      "tags": ["scope:nx-dev", "type:feature"]
+    }
+  }
 }

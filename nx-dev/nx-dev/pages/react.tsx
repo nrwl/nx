@@ -1,3 +1,5 @@
+import React from 'react';
+import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -6,10 +8,11 @@ import {
   InlineCommand,
   NxUsersShowcase,
 } from '@nrwl/nx-dev/ui/common';
-import React from 'react';
+import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
 import { useStorage } from '../lib/use-storage';
 
 export function ReactPage() {
+  const router = useRouter();
   const { value: storedFlavor } = useStorage('flavor');
   const { value: storedVersion } = useStorage('version');
   return (
@@ -107,6 +110,9 @@ export function ReactPage() {
                   <InlineCommand
                     language={'bash'}
                     command={'npx create-nx-workspace --preset=react'}
+                    callback={() =>
+                      sendCustomEvent('code-snippets', 'click', router.pathname)
+                    }
                   />
                 </div>
 
@@ -118,6 +124,9 @@ export function ReactPage() {
                   <InlineCommand
                     language={'bash'}
                     command={'npx create-nx-workspace --preset=next'}
+                    callback={() =>
+                      sendCustomEvent('code-snippets', 'click', router.pathname)
+                    }
                   />
                 </div>
               </div>
