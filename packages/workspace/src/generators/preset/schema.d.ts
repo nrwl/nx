@@ -16,4 +16,5 @@ export interface Schema {
     | 'react-express'
     | 'nest'
     | 'express';
+  standaloneConfig: boolean;
 }

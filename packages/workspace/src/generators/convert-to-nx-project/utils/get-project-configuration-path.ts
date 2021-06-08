@@ -4,5 +4,5 @@ import { join } from 'path';
 export function getProjectConfigurationPath(
   configuration: ProjectConfiguration
 ) {
-  return join(configuration.root, 'nx-project.json');
+  return join(configuration.root, 'project.json');
 }

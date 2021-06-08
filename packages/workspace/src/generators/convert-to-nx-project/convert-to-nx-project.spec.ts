@@ -41,7 +41,7 @@ describe('convert-to-nx-project', () => {
     await expect(p).rejects.toMatch(PROJECT_OR_ALL_IS_REQUIRED);
   });
 
-  it('should extract single project configuration to nx-project.json', async () => {
+  it('should extract single project configuration to project.json', async () => {
     const tree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(tree, {
@@ -59,7 +59,7 @@ describe('convert-to-nx-project', () => {
     expect(config).toEqual(newConfigFile);
   });
 
-  it('should extract all project configurations to nx-project.json', async () => {
+  it('should extract all project configurations to project.json', async () => {
     const tree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(tree, {
@@ -85,7 +85,7 @@ describe('convert-to-nx-project', () => {
     }
   });
 
-  it('should extract tags from nx.json into nx-project.json', async () => {
+  it('should extract tags from nx.json into project.json', async () => {
     const tree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(tree, {

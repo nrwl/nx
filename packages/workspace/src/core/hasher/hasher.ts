@@ -11,6 +11,7 @@ import {
   ProjectGraph,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
+import { resolveNewFormatWithInlineProjects } from '@nrwl/tao/src/shared/workspace';
 
 export interface Hash {
   value: string;
@@ -339,7 +340,7 @@ class ProjectHasher {
     try {
       const res = readJsonFile(path);
       res.projects ??= {};
-      return toNewFormat(res);
+      return resolveNewFormatWithInlineProjects(res);
     } catch {
       return { projects: {}, version: 2 };
     }

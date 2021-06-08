@@ -269,7 +269,7 @@ export class Workspaces {
     const w = readJsonFile(
       path.join(this.root, workspaceConfigName(this.root))
     );
-    return toNewFormat(w);
+    return resolveNewFormatWithInlineProjects(w);
   }
 
   isNxExecutor(nodeModule: string, executor: string) {
@@ -463,30 +463,22 @@ export function toNewFormat(w: any): WorkspaceJsonConfiguration {
 
 export function toNewFormatOrNull(w: any) {
   let formatted = false;
-  Object.entries(w.projects || {}).forEach(
-    ([project, config]: [string, any]) => {
-      if (typeof config === 'string') {
-        const fileConfig = readJsonFile(config);
-        w.projects[project] = fileConfig;
-        config = fileConfig;
-      }
-      if (config.architect) {
-        renameProperty(config, 'architect', 'targets');
-        formatted = true;
-      }
-      if (config.schematics) {
-        renameProperty(config, 'schematics', 'generators');
-        formatted = true;
-      }
-      Object.values(config.targets || {}).forEach((target: any) => {
-        if (target.builder) {
-          renameProperty(target, 'builder', 'executor');
-          formatted = true;
-        }
-      });
+  Object.values(w.projects || {}).forEach((projectConfig: any) => {
+    if (projectConfig.architect) {
+      renameProperty(projectConfig, 'architect', 'targets');
+      formatted = true;
     }
-  );
-
+    if (projectConfig.schematics) {
+      renameProperty(projectConfig, 'schematics', 'generators');
+      formatted = true;
+    }
+    Object.values(projectConfig.targets || {}).forEach((target: any) => {
+      if (target.builder) {
+        renameProperty(target, 'builder', 'executor');
+        formatted = true;
+      }
+    });
+  });
   if (w.schematics) {
     renameProperty(w, 'schematics', 'generators');
     formatted = true;
@@ -501,28 +493,22 @@ export function toNewFormatOrNull(w: any) {
 export function toOldFormatOrNull(w: any) {
   let formatted = false;
 
-  Object.entries(w.projects || {}).forEach(
-    ([project, config]: [string, any]) => {
-      if (typeof config === 'string') {
-        config = readJsonFile(config);
-        w.projects[project] = config;
-      }
-      if (config.targets) {
-        renameProperty(config, 'targets', 'architect');
-        formatted = true;
-      }
-      if (config.generators) {
-        renameProperty(config, 'generators', 'schematics');
-        formatted = true;
-      }
-      Object.values(config.architect || {}).forEach((target: any) => {
-        if (target.executor) {
-          renameProperty(target, 'executor', 'builder');
-          formatted = true;
-        }
-      });
+  Object.values(w.projects || {}).forEach((projectConfig: any) => {
+    if (projectConfig.targets) {
+      renameProperty(projectConfig, 'targets', 'architect');
+      formatted = true;
     }
-  );
+    if (projectConfig.generators) {
+      renameProperty(projectConfig, 'generators', 'schematics');
+      formatted = true;
+    }
+    Object.values(projectConfig.architect || {}).forEach((target: any) => {
+      if (target.executor) {
+        renameProperty(target, 'executor', 'builder');
+        formatted = true;
+      }
+    });
+  });
 
   if (w.generators) {
     renameProperty(w, 'generators', 'schematics');
@@ -533,6 +519,27 @@ export function toOldFormatOrNull(w: any) {
     formatted = true;
   }
   return formatted ? w : null;
+}
+
+export function resolveOldFormatWithInlineProjects(w: any) {
+  return toOldFormatOrNull(inlineProjectConfigurations(w));
+}
+
+export function resolveNewFormatWithInlineProjects(w: any) {
+  return toNewFormat(inlineProjectConfigurations(w));
+}
+
+export function inlineProjectConfigurations(w: any) {
+  Object.entries(w.projects || {}).forEach(
+    ([project, config]: [string, any]) => {
+      if (typeof config === 'string') {
+        const fileConfig = readJsonFile(path.join(config, 'project.json'));
+        w.projects[project] = fileConfig;
+        config = fileConfig;
+      }
+    }
+  );
+  return w;
 }
 
 // we have to do it this way to preserve the order of properties

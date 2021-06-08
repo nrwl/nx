@@ -7,11 +7,11 @@
   "examples": [
     {
       "command": "g @nrwl/workspace:convert-to-nx-project --project my-feature-lib",
-      "description": "Convert the my-feature-lib project to use nx-project.json file instead of workspace.json"
+      "description": "Convert the my-feature-lib project to use project.json file instead of workspace.json"
     },
     {
       "command": "g @nrwl/workspace:convert-to-nx-project --all",
-      "description": "Convert all projects in workspace.json to separate nx-project.json files."
+      "description": "Convert all projects in workspace.json to separate project.json files."
     }
   ],
   "properties": {
