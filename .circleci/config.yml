@@ -3,6 +3,14 @@ version: 2.1
 # Variables
 var_1: &working_directory ~/repo
 
+machine:
+  pre:
+    - mkdir ~/.yarn-cache
+
+dependencies:
+  cache_directories:
+    - ~/.yarn-cache
+
 executors:
   linux:
     working_directory: *working_directory
