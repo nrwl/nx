@@ -5,11 +5,11 @@ var_1: &working_directory ~/repo
 
 machine:
   pre:
-    - mkdir ~/.yarn-cache
+    - mkdir ~/.cache/yarn
 
 dependencies:
   cache_directories:
-    - ~/.yarn-cache
+    - ~/.cache/yarn
 
 executors:
   linux:
@@ -44,7 +44,7 @@ commands:
             - nrwl-nx-yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}
       - run:
           name: Install dependencies
-          command: yarn install --frozen-lockfile --non-interactive --cache-folder ~/.cache/yarn
+          command: yarn install --prefer-offline --frozen-lockfile --non-interactive --cache-folder ~/.cache/yarn
       - save_cache:
           name: Save Yarn Package Cache
           # Windows needs its own cache key because binaries in node_modules are different.
