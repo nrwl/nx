@@ -41,5 +41,6 @@
       "default": "eslint"
     }
   },
+  "additionalProperties": false,
   "required": ["name"]
 }

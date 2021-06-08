@@ -62,8 +62,8 @@
     },
 
     "storybook-migrate-defaults-5-to-6": {
-      "factory": "./src/schematics/storybook-migrate-defaults-5-to-6/migrate-defaults-5-to-6",
-      "schema": "./src/schematics/storybook-migrate-defaults-5-to-6/schema.json",
+      "factory": "./src/generators/storybook-migrate-defaults-5-to-6/compat",
+      "schema": "./src/generators/storybook-migrate-defaults-5-to-6/schema.json",
       "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
       "hidden": false
     },
@@ -148,6 +148,12 @@
       "factory": "./src/generators/storybook-configuration/storybook-configuration",
       "schema": "./src/generators/storybook-configuration/schema.json",
       "description": "Create stories/specs for all components declared in a library."
+    },
+    "storybook-migrate-defaults-5-to-6": {
+      "factory": "./src/generators/storybook-migrate-defaults-5-to-6/storybook-migrate-defaults-5-to-6",
+      "schema": "./src/generators/storybook-migrate-defaults-5-to-6/schema.json",
+      "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
+      "hidden": false
     }
   }
 }

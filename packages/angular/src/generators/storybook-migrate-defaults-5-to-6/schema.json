@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "$id": "storybook-migrate-defaults-5-to-6",
+  "$id": "NxStorybookMigrateDefaults5To6Generator",
   "type": "object",
   "properties": {
     "all": {
@@ -22,5 +22,6 @@
       }
     }
   },
+  "additionalProperties": false,
   "required": []
 }
