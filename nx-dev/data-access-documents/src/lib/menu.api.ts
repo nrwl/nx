@@ -12,17 +12,17 @@ export class MenuApi {
 
   constructor(private readonly documentsApi: DocumentsApi) {}
 
-  getMenu(version: string, flavor: string): Menu {
-    const key = `${version}-${flavor}`;
+  getMenu(versionId: string, flavorId: string): Menu {
+    const key = `${versionId}-${flavorId}`;
     let menu = this.menuCache.get(key);
 
     if (!menu) {
-      const root = this.documentsApi.getDocuments(version);
-      const items = createMenuItems(version, flavor, root);
+      const root = this.documentsApi.getDocuments(versionId);
+      const items = createMenuItems(versionId, flavorId, root);
       if (items) {
         menu = {
-          version,
-          flavor,
+          version: versionId,
+          flavor: flavorId,
           sections: [
             getBasicSection(items),
             getDeepDiveSection(items),
@@ -30,7 +30,7 @@ export class MenuApi {
           ],
         };
       } else {
-        throw new Error(`Cannot find documents for flavor "${flavor}"`);
+        throw new Error(`Cannot find documents for flavor "${flavorId}"`);
       }
       this.menuCache.set(key, menu);
     }

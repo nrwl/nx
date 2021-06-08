@@ -20,7 +20,7 @@ export function forEachExecutorOptions<Options>(
   ) => void
 ) {
   for (const [projectName, project] of getProjects(tree)) {
-    for (const [targetName, target] of Object.entries(project.targets)) {
+    for (const [targetName, target] of Object.entries(project.targets || {})) {
       if (executorName !== target.executor) {
         continue;
       }

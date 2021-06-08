@@ -15,20 +15,20 @@ Use the `nx list` command to see installed and available plugins. Both Nrwl main
 ```bash
 ❯ nx list
 >  NX  Installed plugins:
-  @nrwl/angular (builders,schematics)
-  @nrwl/cypress (builders,schematics)
-  @nrwl/jest (builders,schematics)
+  @nrwl/angular (executors,generators)
+  @nrwl/cypress (executors,generators)
+  @nrwl/jest (executors,generators)
   @nrwl/linter (builders)
-  @nrwl/nest (schematics)
-  @nrwl/node (builders,schematics)
-  @nrwl/nx-cloud (schematics)
-  @nrwl/workspace (builders,schematics)
+  @nrwl/nest (generators)
+  @nrwl/node (executors,generators)
+  @nrwl/nx-cloud (generators)
+  @nrwl/workspace (executors,generators)
 >  NX  Also available:
-  @nrwl/express (builders,schematics)
-  @nrwl/next (builders,schematics)
-  @nrwl/react (builders,schematics)
-  @nrwl/storybook (builders,schematics)
-  @nrwl/web (builders,schematics)
+  @nrwl/express (executors,generators)
+  @nrwl/next (executors,generators)
+  @nrwl/react (executors,generators)
+  @nrwl/storybook (executors,generators)
+  @nrwl/web (executors,generators)
 >  NX  Community plugins:
   @nxtend/ionic-react - An Nx plugin for developing Ionic React applications and libraries
   @angular-architects/ddd - Nx plugin for structuring a monorepo with domains and layers

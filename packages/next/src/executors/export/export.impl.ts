@@ -13,7 +13,11 @@ import {
   NextExportBuilderOptions,
 } from '../../utils/types';
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
-import { calculateProjectDependencies } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import {
+  calculateProjectDependencies,
+  DependentBuildableProjectNode,
+} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
 
 try {
   require('dotenv').config();
@@ -23,14 +27,20 @@ export default async function exportExecutor(
   options: NextExportBuilderOptions,
   context: ExecutorContext
 ) {
-  const projGraph = createProjectGraph();
-  const { dependencies } = calculateProjectDependencies(
-    projGraph,
-    context.root,
-    context.projectName,
-    'build', // this should be generalized
-    context.configurationName
-  );
+  let dependencies: DependentBuildableProjectNode[] = [];
+  if (!options.buildLibsFromSource) {
+    const projGraph = createProjectGraph();
+    const result = calculateProjectDependencies(
+      projGraph,
+      context.root,
+      context.projectName,
+      'build', // this should be generalized
+      context.configurationName
+    );
+    dependencies = result.dependencies;
+
+    assertDependentProjectsHaveBeenBuilt(dependencies, context);
+  }
 
   const buildTarget = parseTargetString(options.buildTarget);
   const build = await runExecutor(buildTarget, {}, context);

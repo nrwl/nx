@@ -7,4 +7,5 @@ export interface Schema {
   linter?: Linter;
   js?: boolean;
   skipFormat?: boolean;
+  setParserOptionsProject?: boolean;
 }

@@ -1249,11 +1249,6 @@ describe('lib', () => {
                 "files": Array [
                   "*.ts",
                 ],
-                "parserOptions": Object {
-                  "project": Array [
-                    "libs/my-lib/tsconfig.*?.json",
-                  ],
-                },
                 "rules": Object {
                   "@angular-eslint/component-selector": Array [
                     "error",

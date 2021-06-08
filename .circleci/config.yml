@@ -3,11 +3,19 @@ version: 2.1
 # Variables
 var_1: &working_directory ~/repo
 
+machine:
+  pre:
+    - mkdir ~/.cache/yarn
+
+dependencies:
+  cache_directories:
+    - ~/.cache/yarn
+
 executors:
   linux:
     working_directory: *working_directory
     docker:
-      - image: cimg/node:12.20-browsers
+      - image: cimg/node:14.17-browsers
 
   windows:
     working_directory: *working_directory
@@ -27,16 +35,16 @@ commands:
           condition:
             equal: [<< parameters.os >>, windows]
           steps:
-            - run: nvm install 12.20
-            - run: nvm use 12.20
-            - run: npm install -g yarn@1.19.0
+            - run: nvm install 14.17
+            - run: nvm use 14.17
+            - run: npm install -g yarn@1.22.10
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
             - nrwl-nx-yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}
       - run:
           name: Install dependencies
-          command: yarn install --frozen-lockfile --non-interactive --cache-folder ~/.cache/yarn
+          command: yarn install --prefer-offline --frozen-lockfile --non-interactive --cache-folder ~/.cache/yarn
       - save_cache:
           name: Save Yarn Package Cache
           # Windows needs its own cache key because binaries in node_modules are different.

@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
     "types": ["node"],
-    "lib": ["DOM"]
+    "lib": ["DOM", "es2019"]
   },
   "exclude": ["**/*.spec.ts"],
   "include": ["**/*.ts"]

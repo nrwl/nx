@@ -260,7 +260,7 @@ The `nx.json` file contains extra configuration options mostly related to the pr
       "dependencies": "*",
       "devDependencies": "*"
     },
-    "tsconfig.json": "*",
+    "tsconfig.base.json": "*",
     "nx.json": "*"
   },
   "projects": {

@@ -49,7 +49,7 @@ happynrwl/
 ├── workspace.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 For larger projects, it is a good idea to group libraries into application sections.
@@ -77,7 +77,7 @@ happynrwl/
 ├── workspace.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 Here we have:
@@ -113,7 +113,7 @@ happynrwl/
 ├── workspace.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 ### Type (What is in the library)

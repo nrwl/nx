@@ -6,6 +6,7 @@ import {
   convertNxGenerator,
   getProjects,
   joinPathFragments,
+  logger,
   ProjectType,
   Tree,
   visitNotIgnoredFiles,
@@ -79,6 +80,15 @@ export async function createAllStories(
     }
   });
 
+  const e2eProjectName = cypressProject || `${projectName}-e2e`;
+  const e2eProject = projects.get(e2eProjectName);
+
+  if (generateCypressSpecs && !e2eProject) {
+    logger.info(
+      `There was no e2e project "${e2eProjectName}" found, so cypress specs will not be generated. Pass "--cypressProject" to specify a different e2e project name`
+    );
+  }
+
   await Promise.all(
     componentPaths.map(async (componentPath) => {
       const relativeCmpDir = componentPath.replace(join(sourceRoot, '/'), '');
@@ -92,7 +102,7 @@ export async function createAllStories(
         project: projectName,
       });
 
-      if (generateCypressSpecs) {
+      if (generateCypressSpecs && e2eProject) {
         await componentCypressSpecGenerator(tree, {
           project: projectName,
           componentPath: relativeCmpDir,

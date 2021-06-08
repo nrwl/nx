@@ -1,8 +1,7 @@
 import { readJson, updateJson } from './json';
 import { installPackagesTask } from '../tasks/install-packages-task';
-
-import { Tree } from '@nrwl/tao/src/shared/tree';
-import { GeneratorCallback } from '@nrwl/tao/src/shared/workspace';
+import type { Tree } from '@nrwl/tao/src/shared/tree';
+import type { GeneratorCallback } from '@nrwl/tao/src/shared/workspace';
 
 /**
  * Add Dependencies and Dev Dependencies to package.json
@@ -44,7 +43,7 @@ export function addDependenciesToPackageJson(
       return json;
     });
   }
-  return () => {
+  return (): void => {
     installPackagesTask(host);
   };
 }
@@ -87,12 +86,12 @@ export function removeDependenciesFromPackageJson(
       return json;
     });
   }
-  return () => {
+  return (): void => {
     installPackagesTask(host);
   };
 }
 
-function sortObjectByKeys(obj: unknown) {
+function sortObjectByKeys(obj: unknown): unknown {
   return Object.keys(obj)
     .sort()
     .reduce((result, key) => {

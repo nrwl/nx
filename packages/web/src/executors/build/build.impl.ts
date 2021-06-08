@@ -58,6 +58,8 @@ export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   buildLibsFromSource?: boolean;
 
   deleteOutputPath?: boolean;
+
+  generateIndexHtml?: boolean;
 }
 
 function getWebpackConfigs(
@@ -186,7 +188,7 @@ export function run(options: WebBuildBuilderOptions, context: ExecutorContext) {
           result1 && !result1.hasErrors() && (!result2 || !result2.hasErrors());
         const emittedFiles1 = getEmittedFiles(result1);
         const emittedFiles2 = result2 ? getEmittedFiles(result2) : [];
-        if (options.optimization) {
+        if (options.generateIndexHtml) {
           await writeIndexHtml({
             crossOrigin: options.crossOrigin,
             outputPath: join(options.outputPath, basename(options.index)),

@@ -1,5 +1,7 @@
 const path = require('path');
+// nx-ignore-next-line
 const nxJson = require('@nrwl/workspace').readNxJson();
+// nx-ignore-next-line
 const workspaceJson = require('@nrwl/workspace').readWorkspaceJson();
 
 function getProjectNameWithTag(projectsJson, tag) {
@@ -31,7 +33,14 @@ module.exports = {
     extend: {
       colors: {
         blue: {
-          nx: 'rgba(3, 47, 86, 1)',
+          'nx-dark': 'hsla(214, 61%, 11%, 1)',
+          'nx-base': 'hsla(214, 62%, 21%, 1)',
+        },
+        purple: {
+          'nx-base': 'hsla(258, 76%, 62%, 1)',
+        },
+        green: {
+          'nx-base': 'hsla(162, 47%, 50%, 1)',
         },
       },
     },

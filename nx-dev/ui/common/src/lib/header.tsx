@@ -2,25 +2,28 @@ import React from 'react';
 import Link from 'next/link';
 import { AlgoliaSearch } from '@nrwl/nx-dev/feature-search';
 
-/* eslint-disable-next-line */
-export interface headerProps {}
+export interface HeaderProps {
+  showSearch: boolean;
+  flavor: { name: string; value: string } | null;
+  version: { name: string; value: string } | null;
+}
 
-export function Header(props: headerProps) {
+export function Header({ flavor, showSearch, version }: HeaderProps) {
   return (
-    <header className="h-16 px-5 py-5 border-b border-gray-100 flex items-center justify-between print:hidden">
+    <header className="h-16 px-5 py-5 flex items-center justify-between print:hidden bg-blue-nx-base">
       <div className="flex items-center justify-between w-full max-w-screen-xl mx-auto space-x-10">
         {/*LOGO*/}
         <div className="flex items-center">
           <a href="/" className="flex items-center">
-            <svg width="50" height="50" viewBox="0 0 262 163" className="mr-2">
+            <svg width="40" height="40" viewBox="0 0 262 163" className="mr-2">
               <polygon
                 id="Path"
-                fill="#022f56"
+                fill="#ffffff"
                 points="130.68 104.59 97.49 52.71 97.44 96.3 40.24 0 0 0 0 162.57 39.79 162.57 39.92 66.39 96.53 158.26"
               />
               <polygon
                 id="Path"
-                fill="#022f56"
+                fill="#ffffff"
                 points="97.5 41.79 137.24 41.79 137.33 41.33 137.33 0 97.54 0 97.49 41.33"
               />
               <path
@@ -36,7 +39,7 @@ export function Header(props: headerProps) {
               <path
                 d="M261.46,105.38 L261.46,105.27 C261.34,73.03 235.17,45.45 202.91,45.45 C183.207085,45.4363165 164.821777,55.3450614 154,71.81 L153.79,71.45 L137.23,45.45 L97.5,45.4499858 L135.25,104.57 L98.41,162.57 L137,162.57 L153.79,136.78 L170.88,162.57 L209.48,162.57 L174.48,107.49 C173.899005,106.416838 173.583536,105.220114 173.56,104 C173.557346,96.2203871 176.64661,88.7586448 182.147627,83.2576275 C187.648645,77.7566101 195.110387,74.6673462 202.89,74.67 C219.11,74.67 221.82,84.37 225.32,88.93 C232.23,97.93 246.03,93.99 246.03,105.73 L246.03,105.73 C246.071086,108.480945 247.576662,111.001004 249.979593,112.340896 C252.382524,113.680787 255.317747,113.636949 257.679593,112.225896 C260.041438,110.814842 261.471086,108.250945 261.43,105.5 L261.43,105.5 L261.43,105.38 L261.46,105.38 Z"
                 id="Path"
-                fill="#022f56"
+                fill="#ffffff"
               />
               <path
                 d="M261.5,113.68 C261.892278,116.421801 261.504116,119.218653 260.38,121.75 C258.18,126.84 254.51,125.14 254.51,125.14 C254.51,125.14 251.35,123.6 253.27,120.65 C255.4,117.36 259.61,117.74 261.5,113.68 Z"
@@ -47,43 +50,47 @@ export function Header(props: headerProps) {
           </a>
         </div>
         {/*SEARCH*/}
-        <AlgoliaSearch />
+        <div className="hidden md:inline">
+          {!!showSearch ? (
+            <AlgoliaSearch flavorId={flavor.value} versionId={version.value} />
+          ) : null}
+        </div>
         {/*NAVIGATION*/}
         <div className="text-sm flex-shrink-0">
           <nav className="flex items-justified justify-center space-x-1">
-            <Link href="/latest/react/getting-started/getting-started">
-              <a className="inline-flex justify-center items-center px-4 py-2 rounded bg-blue-600 text-white transition-all hover-bg-blue-700 ease-out duration-180">
+            <Link
+              href={`/${version.value}/${flavor.value}/getting-started/getting-started`}
+            >
+              <a className="font-bold px-3 py-2 text-white leading-tight">
                 Get Started
               </a>
             </Link>
-            <Link href="/react">
-              <a className="px-3 py-2 hover:bg-gray-100 active:bg-gray-200 rounded inline-flex transition-all ease-out duration 180 leading-tight">
-                Plugins
-              </a>
+            <Link
+              href={`/${version.value}/${flavor.value}/core-concepts/plugins`}
+            >
+              <a className="px-3 py-2 text-white leading-tight">Plugins</a>
             </Link>
-            <Link href="/angular">
-              <a className="px-3 py-2 hover:bg-gray-100 active:bg-gray-200 rounded inline-flex transition-all ease-out duration 180 leading-tight">
-                Community
-              </a>
+            <Link href="/community">
+              <a className="px-3 py-2 text-white leading-tight">Community</a>
             </Link>
             <a
               href="https://nx.app/?utm_source=nx.dev"
               target="_blank"
-              className="px-3 py-2 hover:bg-gray-100 active:bg-gray-200 rounded hidden lg:inline-flex transition-all ease-out duration 180 leading-tight"
+              className="px-3 py-2 text-white hidden lg:inline-flex leading-tight group relative"
             >
               Nx Cloud
             </a>
             <a
               href="https://nrwl.io/services/?utm_source=nx.dev"
               target="_blank"
-              className="px-3 py-2 hover:bg-gray-100 active:bg-gray-200 rounded hidden lg:inline-flex transition-all ease-out duration 180 leading-tight"
+              className="px-3 py-2 text-white hidden lg:inline-flex leading-tight"
             >
               Nx Consulting
             </a>
             <a
               href="https://github.com/nrwl/nx"
               target="_blank"
-              className="px-3 py-2 text-gray-400 hover:text-gray-500 transition-colors duration-180"
+              className="px-3 py-2 text-white"
             >
               <span className="sr-only">Nx on Github</span>
               <svg

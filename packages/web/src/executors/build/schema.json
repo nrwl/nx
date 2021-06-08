@@ -253,6 +253,11 @@
       "type": "boolean",
       "description": "Read buildable libraries from source instead of building them separately.",
       "default": true
+    },
+    "generateIndexHtml": {
+      "type": "boolean",
+      "description": "Generates `index.html` file to the output path. This can be turned off if using a webpack plugin to generate HTML such as `html-webpack-plugin`",
+      "default": true
     }
   },
   "required": ["tsConfig", "main", "index"],

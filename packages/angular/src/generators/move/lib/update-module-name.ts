@@ -1,12 +1,13 @@
 import {
+  getProjects,
   names,
   readProjectConfiguration,
   Tree,
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
 import { getNewProjectName } from '@nrwl/workspace/src/generators/move/lib/utils';
+import { join } from 'path';
 import { Schema } from '../schema';
-
 /**
  * Updates the Angular module name (including the spec file and index.ts)
  *
@@ -43,7 +44,7 @@ export async function updateModuleName(
 
   const findFileName = new RegExp(`\\b${moduleFile.from}`, 'g');
 
-  const filesToChange = [
+  const filesToRename = [
     {
       from: `${project.sourceRoot}/lib/${moduleFile.from}.ts`,
       to: `${project.sourceRoot}/lib/${moduleFile.to}.ts`,
@@ -54,47 +55,68 @@ export async function updateModuleName(
     },
   ];
 
+  const replacements = [
+    {
+      regex: findFileName,
+      replaceWith: moduleFile.to,
+    },
+    {
+      regex: findModuleName,
+      replaceWith: moduleName.to,
+    },
+  ];
+
   // Update the module file and its spec file
-  filesToChange.forEach((file) => {
+  filesToRename.forEach((file) => {
     if (tree.exists(file.from)) {
-      let content = tree.read(file.from)?.toString('utf-8');
-
-      if (content) {
-        if (findModuleName.test(content)) {
-          content = content.replace(findModuleName, moduleName.to);
-        }
-
-        if (findFileName.test(content)) {
-          content = content.replace(findFileName, moduleFile.to);
-        }
-
-        tree.write(file.to, content);
-      }
+      updateFileContent(tree, replacements, file.from, file.to);
 
       tree.delete(file.from);
     }
   });
 
-  const skipFiles = filesToChange.map((file) => file.from);
+  // update index file
+  const indexFile = join(project.sourceRoot, 'index.ts');
+  if (tree.exists(indexFile)) {
+    updateFileContent(tree, replacements, indexFile);
+  }
+
+  const skipFiles = [...filesToRename.map((file) => file.to), indexFile];
 
   // Update any files which import the module
-  visitNotIgnoredFiles(tree, '', (file) => {
-    // skip files that were already modified
-    if (skipFiles.includes(file)) {
-      return;
-    }
 
-    let content = tree.read(file)?.toString();
+  for (const [name, definition] of getProjects(tree)) {
+    visitNotIgnoredFiles(tree, definition.root, (file) => {
+      // skip files that were already modified
 
-    if (content) {
-      if (findModuleName.test(content)) {
-        content = content.replace(findModuleName, moduleName.to);
+      if (skipFiles.includes(file)) {
+        return;
       }
 
-      if (findFileName.test(content)) {
-        content = content.replace(findFileName, moduleFile.to);
+      updateFileContent(tree, replacements, file);
+    });
+  }
+}
+function updateFileContent(
+  tree: Tree,
+  replacements: { regex: RegExp; replaceWith: string }[],
+  fileName: string,
+  newFileName?: string
+): void {
+  let content = tree.read(fileName)?.toString('utf-8');
+
+  if (content) {
+    let updated = false;
+
+    replacements.forEach((replacement) => {
+      if (replacement.regex.test(content)) {
+        content = content.replace(replacement.regex, replacement.replaceWith);
+        updated = true;
       }
-      tree.write(file, content);
+    });
+
+    if (updated) {
+      tree.write(newFileName ?? fileName, content);
     }
-  });
+  }
 }

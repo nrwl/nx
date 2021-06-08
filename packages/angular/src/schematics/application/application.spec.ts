@@ -145,6 +145,7 @@ describe('app', () => {
       expect(appE2eSpec).toContain('Welcome to my-app!');
     });
 
+    // TODO: this test should be fixed
     xit('should work if the new project root is changed', async () => {
       appTree = await callRule(
         updateJsonInTree('/workspace.json', (json) => ({
@@ -403,11 +404,6 @@ describe('app', () => {
                 "files": Array [
                   "*.ts",
                 ],
-                "parserOptions": Object {
-                  "project": Array [
-                    "apps/my-app/tsconfig.*?.json",
-                  ],
-                },
                 "rules": Object {
                   "@angular-eslint/component-selector": Array [
                     "error",

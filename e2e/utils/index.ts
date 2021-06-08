@@ -16,6 +16,7 @@ import isCI = require('is-ci');
 import * as path from 'path';
 import { dirSync } from 'tmp';
 import * as killPort from 'kill-port';
+import * as stripJsonComments from 'strip-json-comments';
 
 interface RunCmdOpts {
   silenceError?: boolean;
@@ -115,11 +116,15 @@ export function packageInstall(pkg: string, projName?: string) {
   return install ? install.toString() : '';
 }
 
-export function runNgNew(): string {
-  return execSync(`../../node_modules/.bin/ng new proj --no-interactive`, {
-    cwd: e2eCwd,
-    env: process.env,
-  }).toString();
+export function runNgNew(projectName: string): string {
+  projName = projectName;
+  return execSync(
+    `../../node_modules/.bin/ng new ${projName} --no-interactive`,
+    {
+      cwd: e2eCwd,
+      env: process.env,
+    }
+  ).toString();
 }
 
 export function getSelectedPackageManager(): 'npm' | 'yarn' | 'pnpm' {
@@ -198,8 +203,8 @@ export async function removeProject({ onlyOnCI = false } = {}) {
 }
 
 export function runCypressTests() {
-  // temporary disable
-  return false;
+  // temporary enable
+  return true;
 }
 
 export function runCommandAsync(
@@ -292,13 +297,10 @@ export function runNgAdd(
 ): string {
   try {
     packageInstall('@nrwl/workspace');
-    return execSync(
-      `./node_modules/.bin/ng g @nrwl/workspace:ng-add ${command}`,
-      {
-        cwd: tmpProjPath(),
-        env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
-      }
-    )
+    return execSync(`./node_modules/.bin/ng add @nrwl/workspace ${command}`, {
+      cwd: tmpProjPath(),
+      env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
+    })
       .toString()
       .replace(
         /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
@@ -326,6 +328,8 @@ export function runCLI(
     let r = execSync(`${pm.runNx} ${command}`, {
       cwd: opts.cwd || tmpProjPath(),
       env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
+      encoding: 'utf8',
+      maxBuffer: 50 * 1024 * 1024,
     }).toString();
     r = r.replace(
       /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
@@ -462,7 +466,12 @@ export function listFiles(dirName: string) {
 }
 
 export function readJson(f: string): any {
-  return JSON.parse(readFile(f));
+  const content = readFile(f);
+  try {
+    return JSON.parse(content);
+  } catch {
+    return JSON.parse(stripJsonComments(content));
+  }
 }
 
 export function readFile(f: string) {
@@ -521,9 +530,11 @@ export function getPackageManagerCommand({
     ? ' --scripts-prepend-node-path '
     : '';
 
+  const publishedVersion = `9999.0.2`;
+
   return {
     npm: {
-      createWorkspace: `npx create-nx-workspace@9999.0.2`,
+      createWorkspace: `npx create-nx-workspace@${publishedVersion}`,
       runNx: `npm run nx${scriptsPrependNodePathFlag} --`,
       runNxSilent: `npm run nx --silent${scriptsPrependNodePathFlag} --`,
       addDev: `npm install --legacy-peer-deps -D`,
@@ -531,14 +542,14 @@ export function getPackageManagerCommand({
     },
     yarn: {
       // `yarn create nx-workspace` is failing due to wrong global path
-      createWorkspace: `yarn global add create-nx-workspace@9999.0.2 && create-nx-workspace`,
+      createWorkspace: `yarn global add create-nx-workspace@${publishedVersion} && create-nx-workspace`,
       runNx: `yarn nx`,
       runNxSilent: `yarn --silent nx`,
       addDev: `yarn add -D`,
       list: 'npm ls --depth 10',
     },
     pnpm: {
-      createWorkspace: `pnpx create-nx-workspace@9999.0.2`,
+      createWorkspace: `pnpx create-nx-workspace@${publishedVersion}`,
       runNx: `pnpm run nx --`,
       runNxSilent: `pnpm run nx --silent --`,
       addDev: `pnpm add -D`,

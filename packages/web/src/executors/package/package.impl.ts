@@ -176,8 +176,9 @@ export function createRollupOptions(
   sourceRoot: string
 ): rollup.InputOptions[] {
   return outputConfigs.map((config) => {
-    const compilerOptionPaths = computeCompilerOptionsPaths(
-      options.tsConfig,
+    const compilerOptions = createCompilerOptions(
+      config,
+      options,
       dependencies
     );
 
@@ -193,13 +194,7 @@ export function createRollupOptions(
         check: true,
         tsconfig: options.tsConfig,
         tsconfigOverride: {
-          compilerOptions: {
-            rootDir: options.entryRoot,
-            allowJs: false,
-            declaration: true,
-            paths: compilerOptionPaths,
-            target: config.format === 'esm' ? undefined : 'es5',
-          },
+          compilerOptions,
         },
       }),
       peerDepsExternal({
@@ -273,6 +268,29 @@ export function createRollupOptions(
       return require(plugin)(currentConfig, options);
     }, rollupConfig);
   });
+}
+
+function createCompilerOptions(config, options, dependencies) {
+  const compilerOptionPaths = computeCompilerOptionsPaths(
+    options.tsConfig,
+    dependencies
+  );
+
+  const baseCompilerOptions = {
+    rootDir: options.entryRoot,
+    allowJs: false,
+    declaration: true,
+    paths: compilerOptionPaths,
+  };
+
+  if (config.format !== 'esm') {
+    return {
+      ...baseCompilerOptions,
+      target: 'es5',
+    };
+  }
+
+  return baseCompilerOptions;
 }
 
 function updatePackageJson(

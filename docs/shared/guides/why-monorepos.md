@@ -1,4 +1,4 @@
-## Why Monorepos?
+# Why Monorepos?
 
 A monorepo is a single git repository that holds the source code for multiple applications and libraries, along with the tooling for them.
 

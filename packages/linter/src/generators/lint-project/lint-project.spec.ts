@@ -31,6 +31,7 @@ describe('@nrwl/linter:lint-project', () => {
           linter: Linter.EsLint,
           eslintFilePatterns: ['**/*.ts'],
           project: 'test-lib',
+          setParserOptionsProject: false,
         });
 
         expect(
@@ -44,6 +45,7 @@ describe('@nrwl/linter:lint-project', () => {
           linter: Linter.EsLint,
           eslintFilePatterns: ['**/*.ts'],
           project: 'test-lib',
+          setParserOptionsProject: false,
         });
 
         const projectConfig = readProjectConfiguration(tree, 'test-lib');
@@ -67,6 +69,7 @@ describe('@nrwl/linter:lint-project', () => {
           linter: Linter.TsLint,
           tsConfigPaths: ['tsconfig.json'],
           project: 'test-lib',
+          setParserOptionsProject: false,
         });
 
         expect(
@@ -80,6 +83,7 @@ describe('@nrwl/linter:lint-project', () => {
           linter: Linter.TsLint,
           tsConfigPaths: ['tsconfig.json'],
           project: 'test-lib',
+          setParserOptionsProject: false,
         });
 
         const projectConfig = readProjectConfiguration(tree, 'test-lib');

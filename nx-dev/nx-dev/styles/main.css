@@ -8,9 +8,32 @@
 @tailwind components;
 @tailwind utilities;
 
+/*! purgecss start ignore */
+@import './constellation-wobble.animation.css';
+/*! purgecss end ignore */
+
 svg {
   shape-rendering: crispEdges;
   text-rendering: optimizeLegibility;
+}
+
+/*
+  General CSS rules for markdown iframes and img
+ */
+iframe[src*='youtube'] {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+.prose iframe,
+.prose img {
+  display: block;
+  margin: 1.7rem auto;
+  max-width: 560px;
+}
+.prose iframe {
+  width: 100%;
+}
+.prose img {
+  width: max-content;
 }
 
 /*

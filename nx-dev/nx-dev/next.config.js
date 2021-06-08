@@ -1,14 +1,9 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { join } = require('path');
+// nx-ignore-next-line
 const withNx = require('@nrwl/next/plugins/with-nx');
 
 module.exports = withNx({
-  async redirects() {
-    return [
-      {
-        source: '/:version',
-        destination: '/',
-        permanent: true,
-      },
-    ];
+  env: {
+    WORKSPACE_ROOT: join(__dirname, '../..'),
   },
 });

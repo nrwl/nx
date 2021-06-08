@@ -4,7 +4,7 @@ import autolinkHeadings from 'rehype-autolink-headings';
 import gfm from 'remark-gfm';
 import slug from 'rehype-slug';
 import { DocumentData } from '@nrwl/nx-dev/data-access-documents';
-
+import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
 import { transformLinkPath } from './renderers/transform-link-path';
 import { transformImagePath } from './renderers/transform-image-path';
 import { renderIframes } from './renderers/render-iframe';
@@ -16,7 +16,10 @@ export interface ContentProps {
   version: string;
 }
 
-const components: any = {
+interface ComponentsConfig {
+  readonly code: { callback: (command: string) => void };
+}
+const components: any = (config: ComponentsConfig) => ({
   code({ node, inline, className, children, ...props }) {
     const language = /language-(\w+)/.exec(className || '')?.[1];
     return !inline && language ? (
@@ -24,6 +27,7 @@ const components: any = {
         text={String(children).replace(/\n$/, '')}
         language={language}
         {...props}
+        callback={(command) => config.code.callback(command)}
       />
     ) : (
       <code className={className} {...props}>
@@ -34,7 +38,7 @@ const components: any = {
   pre({ children }) {
     return <>{children}</>;
   },
-};
+});
 
 export function Content(props: ContentProps) {
   return (
@@ -52,7 +56,16 @@ export function Content(props: ContentProps) {
           document: props.document,
         })}
         className="prose max-w-none"
-        components={components}
+        components={components({
+          code: {
+            callback: () =>
+              sendCustomEvent(
+                'code-snippets',
+                'click',
+                props.document.filePath
+              ),
+          },
+        })}
       />
     </div>
   );

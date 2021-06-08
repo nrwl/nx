@@ -444,6 +444,15 @@ function updateProject(options: NormalizedSchema): Rule {
 
         delete fixedProject.architect.test;
 
+        // Ensure the outputs property comes after the builder for
+        // better readability.
+        const { builder, ...rest } = fixedProject.architect.build;
+        fixedProject.architect.build = {
+          builder,
+          outputs: ['{options.outputPath}'],
+          ...rest,
+        };
+
         if (options.unitTestRunner === 'none') {
           host.delete(
             `${options.appProjectRoot}/src/app/app.component.spec.ts`
@@ -784,7 +793,6 @@ export default function (schema: Schema): Rule {
 const addLinting = (options: NormalizedSchema) => () => {
   return chain([
     schematic('add-linting', {
-      projectType: 'application',
       projectName: options.name,
       projectRoot: options.appProjectRoot,
       prefix: options.prefix,

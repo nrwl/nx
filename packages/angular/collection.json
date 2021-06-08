@@ -26,15 +26,15 @@
     },
 
     "karma": {
-      "factory": "./src/schematics/karma/karma",
-      "schema": "./src/schematics/karma/schema.json",
-      "description": "Add karma configuration to a workspace"
+      "factory": "./src/generators/karma/compat",
+      "schema": "./src/generators/karma/schema.json",
+      "description": "Add karma configuration to a workspace."
     },
 
     "karma-project": {
-      "factory": "./src/schematics/karma-project/karma-project",
-      "schema": "./src/schematics/karma-project/schema.json",
-      "description": "Add karma testing to a project"
+      "factory": "./src/generators/karma-project/compat",
+      "schema": "./src/generators/karma-project/schema.json",
+      "description": "Add karma testing to a project."
     },
 
     "ngrx": {
@@ -56,15 +56,14 @@
     },
 
     "storybook-configuration": {
-      "factory": "./src/schematics/storybook-configuration/configuration",
-      "schema": "./src/schematics/storybook-configuration/schema.json",
-      "description": "Create stories/specs for all components declared in a library",
-      "hidden": false
+      "factory": "./src/generators/storybook-configuration/compat",
+      "schema": "./src/generators/storybook-configuration/schema.json",
+      "description": "Create stories/specs for all components declared in a library."
     },
 
     "storybook-migrate-defaults-5-to-6": {
-      "factory": "./src/schematics/storybook-migrate-defaults-5-to-6/migrate-defaults-5-to-6",
-      "schema": "./src/schematics/storybook-migrate-defaults-5-to-6/schema.json",
+      "factory": "./src/generators/storybook-migrate-defaults-5-to-6/compat",
+      "schema": "./src/generators/storybook-migrate-defaults-5-to-6/schema.json",
       "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
       "hidden": false
     },
@@ -98,9 +97,9 @@
     },
 
     "add-linting": {
-      "factory": "./src/schematics/add-linting/add-linting",
-      "schema": "./src/schematics/add-linting/schema.json",
-      "description": "Add linting configuration to an Angular project",
+      "factory": "./src/generators/add-linting/compat",
+      "schema": "./src/generators/add-linting/schema.json",
+      "description": "Add linting configuration to an Angular project.",
       "hidden": true
     },
 
@@ -111,6 +110,12 @@
     }
   },
   "generators": {
+    "add-linting": {
+      "factory": "./src/generators/add-linting/add-linting",
+      "schema": "./src/generators/add-linting/schema.json",
+      "description": "Add linting configuration to an Angular project.",
+      "hidden": true
+    },
     "convert-tslint-to-eslint": {
       "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionGenerator",
       "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
@@ -123,11 +128,32 @@
       "aliases": ["ng-add"],
       "hidden": true
     },
+    "karma": {
+      "factory": "./src/generators/karma/karma",
+      "schema": "./src/generators/karma/schema.json",
+      "description": "Add karma configuration to a workspace."
+    },
+    "karma-project": {
+      "factory": "./src/generators/karma-project/karma-project",
+      "schema": "./src/generators/karma-project/schema.json",
+      "description": "Add karma testing to a project."
+    },
     "move": {
       "factory": "./src/generators/move/move#angularMoveGenerator",
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
       "description": "Move an Angular application or library to another folder"
+    },
+    "storybook-configuration": {
+      "factory": "./src/generators/storybook-configuration/storybook-configuration",
+      "schema": "./src/generators/storybook-configuration/schema.json",
+      "description": "Create stories/specs for all components declared in a library."
+    },
+    "storybook-migrate-defaults-5-to-6": {
+      "factory": "./src/generators/storybook-migrate-defaults-5-to-6/storybook-migrate-defaults-5-to-6",
+      "schema": "./src/generators/storybook-migrate-defaults-5-to-6/schema.json",
+      "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
+      "hidden": false
     }
   }
 }

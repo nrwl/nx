@@ -79,7 +79,20 @@ function mockFindReportedConfiguration(_, pathToTslintJson) {
     case 'tslint.json':
       return exampleRootTslintJson.tslintPrintConfigResult;
     case appProjectTSLintJsonPath:
-      return projectTslintJsonData.tslintPrintConfigResult;
+      return {
+        /**
+         * Add in an example of rule which requires type-checking so we can test
+         * that parserOptions.project is appropriately preserved in the final
+         * config in this case.
+         */
+        rules: {
+          ...projectTslintJsonData.tslintPrintConfigResult.rules,
+          'await-promise': {
+            ruleArguments: [],
+            ruleSeverity: 'error',
+          },
+        },
+      };
     case libProjectTSLintJsonPath:
       return projectTslintJsonData.tslintPrintConfigResult;
     default:
@@ -167,11 +180,18 @@ describe('convert-tslint-to-eslint', () => {
     /**
      * Existing tslint.json file for the app project
      */
-    writeJson(
-      host,
-      'apps/angular-app-1/tslint.json',
-      projectTslintJsonData.raw
-    );
+    writeJson(host, 'apps/angular-app-1/tslint.json', {
+      ...projectTslintJsonData.raw,
+      rules: {
+        ...projectTslintJsonData.raw.rules,
+        /**
+         * Add in an example of rule which requires type-checking so we can test
+         * that parserOptions.project is appropriately preserved in the final
+         * config in this case.
+         */
+        'await-promise': true,
+      },
+    });
     /**
      * Existing tslint.json file for the lib project
      */

@@ -1,8 +1,8 @@
-import {
-  DependencyType,
+import type {
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphNode,
+  DependencyType,
 } from './interfaces';
 
 /**
@@ -27,7 +27,7 @@ export class ProjectGraphBuilder {
   /**
    * Adds a project node to the project graph
    */
-  addNode(node: ProjectGraphNode) {
+  addNode(node: ProjectGraphNode): void {
     // Check if project with the same name already exists
     if (this.nodes[node.name]) {
       // Throw if existing project is of a different type
@@ -52,7 +52,7 @@ export class ProjectGraphBuilder {
     type: DependencyType | string,
     sourceProjectName: string,
     targetProjectName: string
-  ) {
+  ): void {
     if (sourceProjectName === targetProjectName) {
       return;
     }

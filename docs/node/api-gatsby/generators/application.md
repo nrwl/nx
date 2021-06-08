@@ -58,6 +58,14 @@ Generate JavaScript files rather than TypeScript files
 
 Type: `string`
 
+### setParserOptionsProject
+
+Default: `false`
+
+Type: `boolean`
+
+Whether or not to configure the ESLint "parserOptions.project" option. We do not do this by default for lint performance reasons.
+
 ### style
 
 Alias(es): s

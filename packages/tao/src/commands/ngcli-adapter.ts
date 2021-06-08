@@ -1,9 +1,10 @@
 /* eslint-disable no-restricted-imports */
 import {
-  json,
+  fragment,
   logging,
   normalize,
   Path,
+  PathFragment,
   schema,
   tags,
   virtualFs,
@@ -24,7 +25,7 @@ import { dirname, extname, resolve, join } from 'path';
 import * as stripJsonComments from 'strip-json-comments';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 import { Observable, of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import { NX_ERROR, NX_PREFIX } from '../shared/logger';
 
 export async function scheduleTarget(
@@ -49,7 +50,7 @@ export async function scheduleTarget(
     workspaces.createWorkspaceHost(fsHost)
   );
 
-  const registry = new json.schema.CoreSchemaRegistry();
+  const registry = new schema.CoreSchemaRegistry();
   registry.addPostTransform(schema.transforms.addUndefinedDefaults);
   const architectHost = new WorkspaceNodeModulesArchitectHost(workspace, root);
   const architect = new Architect(architectHost, registry);
@@ -392,6 +393,17 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
     }
   }
 
+  isDirectory(path: Path): Observable<boolean> {
+    return super.isDirectory(path).pipe(
+      catchError(() => of(false)),
+      switchMap((isDirectory) =>
+        isDirectory
+          ? of(true)
+          : of(this.host.exists(path) && !this.host.isFile(path))
+      )
+    );
+  }
+
   isFile(path: Path): Observable<boolean> {
     if (isWorkspaceConfigPath(path)) {
       return findWorkspaceConfigFileChange(this.host)
@@ -402,6 +414,11 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
         ? of(true)
         : super.isFile(path);
     }
+  }
+
+  list(path: Path): Observable<PathFragment[]> {
+    const fragments = this.host.children(path).map((child) => fragment(child));
+    return of(fragments);
   }
 }
 

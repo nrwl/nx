@@ -1,10 +1,7 @@
-import {
-  addDependenciesToPackageJson,
-  readJson,
-  writeJson,
-  Tree,
-} from '@nrwl/devkit';
-import { createTree } from '@nrwl/devkit/testing';
+import type { Tree } from '@nrwl/tao/src/shared/tree';
+import { readJson, writeJson } from './json';
+import { addDependenciesToPackageJson } from './package-json';
+import { createTree } from '../tests/create-tree';
 
 describe('addDependenciesToPackageJson', () => {
   let tree: Tree;

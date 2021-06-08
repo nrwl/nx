@@ -5,7 +5,7 @@
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       "parserOptions": {
-        "project": ["/nx-dev/feature-search/tsconfig.*?.json"]
+        "project": ["nx-dev/feature-search/tsconfig.*?.json"]
       },
       "rules": {}
     },

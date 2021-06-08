@@ -23,7 +23,7 @@ happynrwl/
 │   |   |    └── schema.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 The `index.ts` provides an entry point to the generator. The file contains a function that is called to perform manipulations on a tree that represents the file system.
@@ -112,7 +112,7 @@ happynrwl/
 │   |   |    └── schema.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 Next, update the `index.ts` file for the generator, and generate the new files.
@@ -124,12 +124,13 @@ import {
   installPackagesTask,
   generateFiles,
   joinPathFragments,
+  readProjectConfiguration,
 } from '@nrwl/devkit';
-import { libraryGenerator, getProjectConfig } from '@nrwl/workspace';
+import { libraryGenerator } from '@nrwl/workspace';
 
 export default async function (tree: Tree, schema: any) {
   await libraryGenerator(tree, { name: schema.name });
-  const libraryRoot = getProjectConfig(tree, schema.name).root;
+  const libraryRoot = readProjectConfiguration(tree, schema.name).root;
   generateFiles(
     tree, // the virtual file system
     joinPathFragments(__dirname, './files'), // path to the file templates

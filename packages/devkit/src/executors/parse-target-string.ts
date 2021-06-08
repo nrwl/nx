@@ -1,4 +1,4 @@
-import { Target } from '@nrwl/tao/src/commands/run';
+import type { Target } from '@nrwl/tao/src/commands/run';
 
 /**
  * Parses a target string into {project, target, configuration}
@@ -12,7 +12,7 @@ import { Target } from '@nrwl/tao/src/commands/run';
  * parseTargetString("proj:test:production") // returns { project: "proj", target: "test", configuration: "production" }
  * ```
  */
-export function parseTargetString(targetString: string) {
+export function parseTargetString(targetString: string): Target {
   const [project, target, configuration] = targetString.split(':');
   if (!project || !target) {
     throw new Error(`Invalid Target String: ${targetString}`);

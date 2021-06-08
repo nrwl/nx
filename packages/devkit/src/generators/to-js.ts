@@ -1,9 +1,9 @@
-import { Tree } from '@nrwl/tao/src/shared/tree';
+import type { Tree } from '@nrwl/tao/src/shared/tree';
 
 /**
  * Rename and transpile any new typescript files created to javascript files
  */
-export function toJS(tree: Tree) {
+export function toJS(tree: Tree): void {
   const { JsxEmit, ScriptTarget, transpile } = require('typescript');
 
   for (const c of tree.listChanges()) {

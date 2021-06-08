@@ -75,7 +75,7 @@ After the changes are applied, your workspace file structure should look similar
 ├── angular.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 Your workspace is now powered by Nx! You can verify out that your application still runs as intended:
@@ -160,7 +160,7 @@ A new Nx workspace with your `org name` as the folder name, and your `applicatio
 ├── jest.config.js
 ├── nx.json
 ├── package.json
-├── tsconfig.json
+├── tsconfig.base.json
 └── tslint.json
 ```
 

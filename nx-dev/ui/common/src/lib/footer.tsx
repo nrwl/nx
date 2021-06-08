@@ -1,57 +1,119 @@
 import Link from 'next/link';
-
-export function Footer() {
+export interface FooterProps {
+  version: { name: string; value: string };
+  flavor: { name: string; value: string };
+}
+export function Footer({ version, flavor }: FooterProps) {
   return (
-    <footer className="mt-32 text-gray-600 body-font">
-      <div className="px-5 py-8 mx-auto flex items-center justify-between w-full max-w-screen-xl mx-auto space-x-10 items-center sm:flex-row flex-col">
-        <div className="flex">
-          <div className="flex title-font font-medium items-center md:justify-start justify-center text-gray-900">
-            <Link href="/">
-              <a className="flex items-center">
-                <svg
-                  width="50"
-                  height="50"
-                  viewBox="0 0 262 163"
-                  className="mr-2"
-                >
-                  <polygon
-                    id="Path"
-                    fill="#022f56"
-                    points="130.68 104.59 97.49 52.71 97.44 96.3 40.24 0 0 0 0 162.57 39.79 162.57 39.92 66.39 96.53 158.26"
-                  />
-                  <polygon
-                    id="Path"
-                    fill="#022f56"
-                    points="97.5 41.79 137.24 41.79 137.33 41.33 137.33 0 97.54 0 97.49 41.33"
-                  />
-                  <path
-                    d="M198.66,86.86 C189.139872,86.6795216 180.538723,92.516445 177.19,101.43 C182.764789,93.0931021 193.379673,89.7432211 202.73,93.37 C207.05,95.13 212.73,97.97 217.23,96.45 C212.950306,90.4438814 206.034895,86.8725952 198.66,86.86 L198.66,86.86 Z"
-                    id="Path"
-                    fill="#96D8E9"
-                  />
-                  <path
-                    d="M243.75,106.42 C243.75,101.55 241.1,100.42 235.6,98.42 C231.52,97 226.89,95.4 223.52,91 C222.86,90.13 222.25,89.15 221.6,88.11 C220.14382,85.4164099 218.169266,83.037429 215.79,81.11 C212.58,78.75 208.37,77.6 202.91,77.6 C191.954261,77.6076705 182.084192,84.2206169 177.91,94.35 C183.186964,87.0278244 191.956716,83.0605026 200.940147,83.9314609 C209.923578,84.8024193 217.767888,90.3805017 221.54,98.58 C223.424615,101.689762 227.141337,103.174819 230.65,102.22 C236.02,101.07 235.65,106.15 243.76,107.87 L243.75,106.42 Z"
-                    id="Path"
-                    fill="#48C4E5"
-                  />
-                  <path
-                    d="M261.46,105.38 L261.46,105.27 C261.34,73.03 235.17,45.45 202.91,45.45 C183.207085,45.4363165 164.821777,55.3450614 154,71.81 L153.79,71.45 L137.23,45.45 L97.5,45.4499858 L135.25,104.57 L98.41,162.57 L137,162.57 L153.79,136.78 L170.88,162.57 L209.48,162.57 L174.48,107.49 C173.899005,106.416838 173.583536,105.220114 173.56,104 C173.557346,96.2203871 176.64661,88.7586448 182.147627,83.2576275 C187.648645,77.7566101 195.110387,74.6673462 202.89,74.67 C219.11,74.67 221.82,84.37 225.32,88.93 C232.23,97.93 246.03,93.99 246.03,105.73 L246.03,105.73 C246.071086,108.480945 247.576662,111.001004 249.979593,112.340896 C252.382524,113.680787 255.317747,113.636949 257.679593,112.225896 C260.041438,110.814842 261.471086,108.250945 261.43,105.5 L261.43,105.5 L261.43,105.38 L261.46,105.38 Z"
-                    id="Path"
-                    fill="#022f56"
-                  />
-                  <path
-                    d="M261.5,113.68 C261.892278,116.421801 261.504116,119.218653 260.38,121.75 C258.18,126.84 254.51,125.14 254.51,125.14 C254.51,125.14 251.35,123.6 253.27,120.65 C255.4,117.36 259.61,117.74 261.5,113.68 Z"
-                    id="Path"
-                    fill="#022f56"
-                  />
-                </svg>
-
-                <span className="ml-3 text-xl">Dev Tools</span>
-              </a>
-            </Link>
+    <footer className="mt-32 text-white body-font">
+      <div className="bg-blue-nx-base text-white">
+        <div className="max-w-screen-sm mx-auto px-5 py-5">
+          {/*FOOTER LINKS*/}
+          <div className="my-12 flex sm:flex-row flex-col items-start text-center sm:text-left">
+            <div className="w-full sm:w-1/3 flex flex-col p-6 mt-8 sm:mt-0">
+              <h3 className="text-xl leading-none tracking-tight mb-4">
+                Resources
+              </h3>
+              <ul>
+                <li className="mb-2">
+                  <a
+                    href="https://blog.nrwl.io/?utm_source=nx.dev"
+                    target="_blank"
+                    rel="nofollow"
+                    className="cursor-pointer block"
+                  >
+                    Blog
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://nrwl.io/?utm_source=nx.dev"
+                    target="_blank"
+                    className="cursor-pointer block"
+                  >
+                    Nrwl
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div className="w-full sm:w-1/3 flex flex-col p-6 mt-8 sm:mt-0">
+              <h3 className="text-xl leading-none tracking-tight mb-4">Help</h3>
+              <ul>
+                <li className="mb-2">
+                  <Link
+                    href={`/${version.value}/${flavor.value}/getting-started/intro`}
+                  >
+                    <a className="cursor-pointer block">Documentation</a>
+                  </Link>
+                </li>
+                <li className="mb-2">
+                  <Link href="/community">
+                    <a className="cursor-pointer block">Community</a>
+                  </Link>
+                </li>
+                <li className="mb-2">
+                  <a
+                    href="https://stackoverflow.com/questions/tagged/nrwl-nx"
+                    target="_blank"
+                    rel="nofollow"
+                    className="cursor-pointer block"
+                  >
+                    StackOverflow
+                  </a>
+                </li>
+                <li className="mb-2">
+                  <a
+                    href="https://github.com/nrwl/nx/issues?q=is%3Aopen+is%3Aissue"
+                    target="_blank"
+                    rel="nofollow"
+                    className="cursor-pointer block"
+                  >
+                    Report Issues
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div className="w-full sm:w-1/3 flex flex-col p-6 mt-8 sm:mt-0">
+              <h3 className="text-xl leading-none tracking-tight mb-4">
+                Community
+              </h3>
+              <ul>
+                <li className="mb-2">
+                  <a
+                    href="https://twitter.com/NXdevtools"
+                    target="_blank"
+                    rel="nofollow"
+                    className="cursor-pointer block"
+                  >
+                    Twitter
+                  </a>
+                </li>
+                <li className="mb-2">
+                  <a
+                    href="https://github.com/nrwl/nx/"
+                    target="_blank"
+                    rel="nofollow"
+                    className="cursor-pointer block"
+                  >
+                    Github
+                  </a>
+                </li>
+                <li className="mb-2">
+                  <a
+                    href="https://github.com/nrwl/nx/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc+label%3Acommunity"
+                    target="_blank"
+                    rel="nofollow"
+                    className="cursor-pointer block"
+                  >
+                    Help us
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
-          <p className="text-sm text-gray-500 sm:ml-4 sm:pl-4 sm:border-l-2 sm:border-gray-200 sm:py-2 sm:mt-0 mt-4">
-            © 2021 - Created with
+
+          <div className="mt-16 mb-6 w-full text-center">
+            Created with
             <svg
               className="mx-1 h-4 w-4 inline align-baseline"
               viewBox="0 0 20 20"
@@ -71,7 +133,7 @@ export function Footer() {
               target="_blank"
             >
               <svg
-                className="inline-block align-bottom ml-1 h-6 w-12 text-blue-600"
+                className="inline-block align-bottom ml-1 h-6 w-12 text-white"
                 fill="currentcolor"
                 viewBox="0 0 402.32 125.56"
               >
@@ -85,69 +147,8 @@ export function Footer() {
                 </g>
               </svg>
             </a>
-          </p>
-        </div>
-        <div className="inline-flex sm:ml-auto sm:mt-0 mt-4 justify-center sm:justify-start">
-          <a
-            href="https://twitter.com/NxDevTools"
-            className="ml-3 text-gray-500 point-cursor hover:text-blue-600"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            <span className="sr-only">Nx on Twitter</span>
-            <svg
-              fill="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="w-5 h-5"
-              viewBox="0 0 24 24"
-              role="img"
-            >
-              <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z" />
-            </svg>
-          </a>
-          <a
-            href="http://go.nrwl.io/join-slack"
-            className="ml-3 text-gray-500 hover:text-blue-600 point-cursor"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            <span className="sr-only">Nx Slack Community</span>
-            <svg
-              fill="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              role="img"
-              className="w-5 h-5"
-              viewBox="0 0 24 24"
-            >
-              <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z" />
-            </svg>
-          </a>
-          <a
-            href="https://github.com/nrwl/nx"
-            className="ml-3 text-gray-500 hover:text-blue-600 point-cursor"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            <span className="sr-only">Nx on Github</span>
-            <svg
-              fill="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              role="img"
-              className="w-5 h-5"
-              viewBox="0 0 16 16"
-            >
-              <path
-                fillRule="evenodd"
-                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
-              />
-            </svg>
-          </a>
+          </div>
+          <div className="w-full text-center">© 2021</div>
         </div>
       </div>
     </footer>

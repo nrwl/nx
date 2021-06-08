@@ -70,7 +70,7 @@ describe('react:stories for libraries', () => {
     ).toBeTruthy();
   });
 
-  xit('should not overwrite existing stories', () => {});
+  it('should not overwrite existing stories', () => {});
 
   it('should ignore files that do not contain components', async () => {
     // create another component

@@ -15,7 +15,7 @@ First, use `nx.json` to annotate your projects with tags. In this example, we wi
   "npmScope": "myorg",
   "implicitDependencies": {
     "package.json": "*",
-    "tsconfig.json": "*",
+    "tsconfig.base.json": "*",
     "nx.json": "*"
   },
   "projects": {

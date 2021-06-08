@@ -53,12 +53,14 @@ export function createWebpackConfig(
     const mainFields = ['es2015', 'module', 'main'];
     const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
     let tsConfigPath = join(projectRoot, 'tsconfig.json');
-    tsConfigPath = createTmpTsConfig(
-      join(workspaceRoot, tsConfigPath),
-      workspaceRoot,
-      projectRoot,
-      dependencies
-    );
+    if (dependencies.length > 0) {
+      tsConfigPath = createTmpTsConfig(
+        join(workspaceRoot, tsConfigPath),
+        workspaceRoot,
+        projectRoot,
+        dependencies
+      );
+    }
 
     config.resolve.plugins = [
       new TsconfigPathsPlugin({

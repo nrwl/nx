@@ -150,7 +150,10 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     return;
   }
 
-  const reactEslintJson = createReactEslintJson(options.projectRoot);
+  const reactEslintJson = createReactEslintJson(
+    options.projectRoot,
+    options.setParserOptionsProject
+  );
 
   updateJson(
     host,
@@ -172,20 +175,12 @@ function addProject(host: Tree, options: NormalizedSchema) {
 
   if (options.publishable || options.buildable) {
     const { libsDir } = getWorkspaceLayout(host);
+    const external = ['react/jsx-runtime'];
 
-    const external = ['react', 'react-dom'];
-    // Also exclude CSS-in-JS packages from build
-    if (
-      options.style !== 'css' &&
-      options.style !== 'scss' &&
-      options.style !== 'styl' &&
-      options.style !== 'less' &&
-      options.style !== 'none'
-    ) {
-      external.push(
-        ...Object.keys(CSS_IN_JS_DEPENDENCIES[options.style].dependencies)
-      );
+    if (options.style === '@emotion/styled') {
+      external.push('@emotion/styled/base');
     }
+
     targets.build = {
       builder: '@nrwl/web:package',
       outputs: ['{options.outputPath}'],
