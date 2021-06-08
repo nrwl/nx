@@ -54,16 +54,18 @@ export async function configurationGenerator(
   configureTsSolutionConfig(tree, schema);
   updateLintConfig(tree, schema);
   addStorybookTask(tree, schema.name, schema.uiFramework);
-  if (schema.configureCypress && projectType !== 'application') {
-    const cypressTask = await cypressProjectGenerator(tree, {
-      name: schema.name,
-      js: schema.js,
-      linter: schema.linter,
-      directory: schema.cypressDirectory,
-    });
-    tasks.push(cypressTask);
-  } else {
-    logger.warn('There is already an e2e project setup');
+  if (schema.configureCypress) {
+    if (projectType !== 'application') {
+      const cypressTask = await cypressProjectGenerator(tree, {
+        name: schema.name,
+        js: schema.js,
+        linter: schema.linter,
+        directory: schema.cypressDirectory,
+      });
+      tasks.push(cypressTask);
+    } else {
+      logger.warn('There is already an e2e project setup');
+    }
   }
 
   await formatFiles(tree);
