@@ -206,8 +206,6 @@ export async function removeProject({ onlyOnCI = false } = {}) {
   try {
     removeSync(tmpProjPath());
   } catch (e) {}
-
-  await killPorts();
 }
 
 export function runCypressTests() {

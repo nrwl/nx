@@ -2,7 +2,6 @@ import type { NxJsonConfiguration } from '@nrwl/devkit';
 import {
   getPackageManagerCommand,
   getSelectedPackageManager,
-  killPorts,
   listFiles,
   newProject,
   readFile,
@@ -22,9 +21,7 @@ describe('run-one', () => {
   let proj: string;
 
   beforeAll(() => (proj = newProject()));
-
   afterAll(() => removeProject({ onlyOnCI: true }));
-  afterEach(() => killPorts());
 
   it('should build a specific project', () => {
     const myapp = uniq('app');
@@ -172,7 +169,6 @@ describe('run-many', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
-
   afterEach(() => removeProject({ onlyOnCI: true }));
 
   // This fails with pnpm due to incompatibilities with ngcc for buildable libraries.
@@ -311,7 +307,6 @@ describe('affected:*', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
-
   afterEach(() => removeProject({ onlyOnCI: true }));
 
   it('should print, build, and test affected apps', async () => {
@@ -478,7 +473,6 @@ describe('affected (with git)', () => {
   let mylib = uniq('mylib');
 
   beforeAll(() => newProject());
-
   afterAll(() => removeProject({ onlyOnCI: true }));
 
   it('should not affect other projects by generating a new project', () => {
@@ -551,7 +545,6 @@ describe('print-affected', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
-
   afterEach(() => removeProject({ onlyOnCI: true }));
 
   it('should print information about affected projects', async () => {

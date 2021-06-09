@@ -670,9 +670,10 @@ async function checkApp(
     );
   }
 
-  if (opts.checkE2E && runCypressTests()) {
+  if (opts.checkE2E) {
     const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);
     expect(e2eResults).toContain('All specs passed!');
+    await killPorts();
   }
 
   runCLI(`export ${appName}`);

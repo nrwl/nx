@@ -1,5 +1,4 @@
 import {
-  killPorts,
   newProject,
   readJson,
   removeProject,
@@ -11,9 +10,7 @@ import {
 
 describe('Run Commands', () => {
   beforeAll(() => newProject());
-
   afterAll(() => removeProject({ onlyOnCI: true }));
-  afterEach(() => killPorts());
 
   it('should not override environment variables already set when setting a custom env file path', async () => {
     const nodeapp = uniq('nodeapp');

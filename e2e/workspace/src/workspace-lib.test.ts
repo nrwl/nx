@@ -14,9 +14,7 @@ beforeAll(() => {
   proj = newProject();
 });
 
-afterAll(() => {
-  removeProject({ onlyOnCI: true });
-});
+afterAll(() => removeProject({ onlyOnCI: true }));
 
 describe('@nrwl/workspace:library', () => {
   it('should be able to be created', () => {
@@ -84,7 +82,7 @@ describe('@nrwl/workspace:library', () => {
       `libs/${consumerLib}/src/lib/${consumerLib}.ts`,
       `
     import { a } from '@${proj}/${producerLib}';
-    
+
     export function ${consumerLib}() {
       return a + 1;
     }`
@@ -93,7 +91,7 @@ describe('@nrwl/workspace:library', () => {
       `libs/${consumerLib}/src/lib/${consumerLib}.spec.ts`,
       `
     import { ${consumerLib} } from './${consumerLib}';
-    
+
     describe('', () => {
       it('should return 1', () => {
         expect(${consumerLib}()).toEqual(1);

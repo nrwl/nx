@@ -36,9 +36,7 @@ describe('Cypress E2E Test runner', () => {
   });
 
   describe('running Cypress', () => {
-    afterEach(() => killPorts());
-
-    it('should execute e2e tests using Cypress', () => {
+    it('should execute e2e tests using Cypress', async () => {
       newProject();
       const myapp = uniq('myapp');
       runCLI(
@@ -61,6 +59,7 @@ describe('Cypress E2E Test runner', () => {
       expect(runCLI(`e2e ${myapp}-e2e --headless --no-watch`)).toContain(
         'All specs passed!'
       );
+      await killPorts();
     }, 1000000);
   });
 });
