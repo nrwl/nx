@@ -4,4 +4,5 @@ export interface Schema {
   projectDirectory?: string;
   pluginOutputPath?: string;
   jestConfig?: string;
+  standaloneConfig: boolean;
 }

@@ -150,6 +150,7 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
     projectDirectory: options.projectDirectory,
     pluginOutputPath: `dist/${options.libsDir}/${options.projectDirectory}`,
     npmPackageName: options.npmPackageName,
+    standaloneConfig: options.standaloneConfig,
   });
 
   await formatFiles(host);

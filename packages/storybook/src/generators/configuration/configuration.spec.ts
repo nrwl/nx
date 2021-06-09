@@ -20,6 +20,7 @@ describe('@nrwl/storybook:configuration', () => {
     tree = createTreeWithEmptyWorkspace();
     await libraryGenerator(tree, {
       name: 'test-ui-lib',
+      standaloneConfig: false,
     });
     writeJson(tree, 'package.json', {
       devDependencies: {
@@ -33,6 +34,7 @@ describe('@nrwl/storybook:configuration', () => {
     await configurationGenerator(tree, {
       name: 'test-ui-lib',
       uiFramework: '@storybook/angular',
+      standaloneConfig: false,
     });
 
     // Root
@@ -79,6 +81,7 @@ describe('@nrwl/storybook:configuration', () => {
     await configurationGenerator(tree, {
       name: 'test-ui-lib',
       uiFramework: '@storybook/angular',
+      standaloneConfig: false,
     });
 
     const newContents = `module.exports = {
@@ -89,12 +92,14 @@ describe('@nrwl/storybook:configuration', () => {
     // Setup a new lib
     await libraryGenerator(tree, {
       name: 'test-ui-lib-2',
+      standaloneConfig: false,
     });
 
     tree.write('.storybook/main.js', newContents);
     await configurationGenerator(tree, {
       name: 'test-ui-lib-2',
       uiFramework: '@storybook/angular',
+      standaloneConfig: false,
     });
 
     expect(tree.read('.storybook/main.js', 'utf-8')).toEqual(newContents);
@@ -104,6 +109,7 @@ describe('@nrwl/storybook:configuration', () => {
     await configurationGenerator(tree, {
       name: 'test-ui-lib',
       uiFramework: '@storybook/react',
+      standaloneConfig: false,
     });
     const project = readProjectConfiguration(tree, 'test-ui-lib');
 
@@ -135,6 +141,7 @@ describe('@nrwl/storybook:configuration', () => {
     await configurationGenerator(tree, {
       name: 'test-ui-lib',
       uiFramework: '@storybook/react',
+      standaloneConfig: false,
     });
     const tsconfigJson = readJson<TsConfig>(
       tree,
@@ -151,6 +158,7 @@ describe('@nrwl/storybook:configuration', () => {
     await configurationGenerator(tree, {
       name: 'test-ui-lib',
       uiFramework: '@storybook/react',
+      standaloneConfig: false,
     });
     const tsconfigJson = readJson<TsConfig>(
       tree,
@@ -176,6 +184,7 @@ describe('@nrwl/storybook:configuration', () => {
     await libraryGenerator(tree, {
       name: 'test-ui-lib2',
       linter: Linter.EsLint,
+      standaloneConfig: false,
     });
 
     updateJson(tree, 'libs/test-ui-lib2/.eslintrc.json', (json) => {
@@ -188,6 +197,7 @@ describe('@nrwl/storybook:configuration', () => {
     await configurationGenerator(tree, {
       name: 'test-ui-lib2',
       uiFramework: '@storybook/react',
+      standaloneConfig: false,
     });
 
     expect(readJson(tree, 'libs/test-ui-lib2/.eslintrc.json').parserOptions)

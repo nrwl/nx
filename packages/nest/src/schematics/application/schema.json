@@ -46,6 +46,11 @@
     "frontendProject": {
       "type": "string",
       "description": "Frontend project that needs to access this application. This sets up proxy configuration."
+    },
+    "standaloneConfig": {
+      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
+      "type": "boolean",
+      "default": false
     }
   },
   "required": []

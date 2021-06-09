@@ -23,10 +23,19 @@ describe('updateImports', () => {
     // this is a bit of a cheat - we expect to run this rule on an intermediate state
     // tree where the workspace hasn't been updated yet, so just create libs representing
     // source and destination to make sure that the workspace has libraries with those names.
-    await libraryGenerator(tree, { name: 'my-destination' });
-    await libraryGenerator(tree, { name: 'my-source' });
+    await libraryGenerator(tree, {
+      name: 'my-destination',
+      standaloneConfig: false,
+    });
+    await libraryGenerator(tree, {
+      name: 'my-source',
+      standaloneConfig: false,
+    });
 
-    await libraryGenerator(tree, { name: 'my-importer' });
+    await libraryGenerator(tree, {
+      name: 'my-importer',
+      standaloneConfig: false,
+    });
     const importerFilePath = 'libs/my-importer/src/importer.ts';
     tree.write(
       importerFilePath,
@@ -49,10 +58,13 @@ describe('updateImports', () => {
    * be updated.
    */
   it('should not update import paths when they contain a partial match', async () => {
-    await libraryGenerator(tree, { name: 'table' });
-    await libraryGenerator(tree, { name: 'tab' });
+    await libraryGenerator(tree, { name: 'table', standaloneConfig: false });
+    await libraryGenerator(tree, { name: 'tab', standaloneConfig: false });
 
-    await libraryGenerator(tree, { name: 'my-importer' });
+    await libraryGenerator(tree, {
+      name: 'my-importer',
+      standaloneConfig: false,
+    });
     const importerFilePath = 'libs/my-importer/src/importer.ts';
     tree.write(
       importerFilePath,
@@ -89,10 +101,13 @@ describe('updateImports', () => {
   });
 
   it('should correctly update deep imports', async () => {
-    await libraryGenerator(tree, { name: 'table' });
-    await libraryGenerator(tree, { name: 'tab' });
+    await libraryGenerator(tree, { name: 'table', standaloneConfig: false });
+    await libraryGenerator(tree, { name: 'tab', standaloneConfig: false });
 
-    await libraryGenerator(tree, { name: 'my-importer' });
+    await libraryGenerator(tree, {
+      name: 'my-importer',
+      standaloneConfig: false,
+    });
     const importerFilePath = 'libs/my-importer/src/importer.ts';
     tree.write(
       importerFilePath,
@@ -129,10 +144,13 @@ describe('updateImports', () => {
   });
 
   it('should update dynamic imports', async () => {
-    await libraryGenerator(tree, { name: 'table' });
-    await libraryGenerator(tree, { name: 'tab' });
+    await libraryGenerator(tree, { name: 'table', standaloneConfig: false });
+    await libraryGenerator(tree, { name: 'tab', standaloneConfig: false });
 
-    await libraryGenerator(tree, { name: 'my-importer' });
+    await libraryGenerator(tree, {
+      name: 'my-importer',
+      standaloneConfig: false,
+    });
     const importerFilePath = 'libs/my-importer/src/importer.ts';
     tree.write(
       importerFilePath,

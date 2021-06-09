@@ -18,4 +18,5 @@ export interface Schema {
   js?: boolean;
   pascalCaseFiles?: boolean;
   strict?: boolean;
+  standaloneConfig: boolean;
 }

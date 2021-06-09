@@ -24,7 +24,7 @@ describe('updatePackageJson', () => {
     };
 
     tree = createTreeWithEmptyWorkspace();
-    await libraryGenerator(tree, { name: 'my-lib' });
+    await libraryGenerator(tree, { name: 'my-lib', standaloneConfig: false });
     projectConfig = readProjectConfiguration(tree, 'my-lib');
   });
 

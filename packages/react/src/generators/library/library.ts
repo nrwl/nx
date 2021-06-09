@@ -202,13 +202,18 @@ function addProject(host: Tree, options: NormalizedSchema) {
     };
   }
 
-  addProjectConfiguration(host, options.name, {
-    root: options.projectRoot,
-    sourceRoot: joinPathFragments(options.projectRoot, 'src'),
-    projectType: 'library',
-    tags: options.parsedTags,
-    targets,
-  });
+  addProjectConfiguration(
+    host,
+    options.name,
+    {
+      root: options.projectRoot,
+      sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+      projectType: 'library',
+      tags: options.parsedTags,
+      targets,
+    },
+    options.standaloneConfig
+  );
 }
 
 function updateTsConfig(tree: Tree, options: NormalizedSchema) {

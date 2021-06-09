@@ -15,6 +15,7 @@ describe('run-commands', () => {
 
     await libraryGenerator(tree, {
       name: 'lib',
+      standaloneConfig: false,
     });
 
     await runCommands(tree, opts);

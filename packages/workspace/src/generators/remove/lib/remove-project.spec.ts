@@ -12,6 +12,7 @@ describe('moveProject', () => {
     tree = createTreeWithEmptyWorkspace();
     await libraryGenerator(tree, {
       name: 'my-lib',
+      standaloneConfig: false,
     });
 
     schema = {

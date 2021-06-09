@@ -14,6 +14,7 @@ describe('schematic:cypress-project', () => {
   let tree: Tree;
   const defaultOptions: Omit<Schema, 'name' | 'project'> = {
     linter: Linter.EsLint,
+    standaloneConfig: false,
   };
 
   beforeEach(() => {
@@ -76,6 +77,7 @@ describe('schematic:cypress-project', () => {
         name: 'my-app-e2e',
         project: 'my-app',
         linter: Linter.TsLint,
+        standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, 'workspace.json');
       const project = workspaceJson.projects['my-app-e2e'];
@@ -114,6 +116,7 @@ describe('schematic:cypress-project', () => {
         name: 'my-app-e2e',
         project: 'my-app',
         linter: Linter.TsLint,
+        standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, 'workspace.json');
       const project = workspaceJson.projects['my-app-e2e'];
@@ -147,6 +150,7 @@ describe('schematic:cypress-project', () => {
         name: 'my-app-e2e',
         project: 'my-app',
         linter: Linter.EsLint,
+        standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, 'workspace.json');
       const project = workspaceJson.projects['my-app-e2e'];
@@ -164,6 +168,7 @@ describe('schematic:cypress-project', () => {
         name: 'my-app-e2e',
         project: 'my-app',
         linter: Linter.None,
+        standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, 'workspace.json');
       const project = workspaceJson.projects['my-app-e2e'];
@@ -176,6 +181,7 @@ describe('schematic:cypress-project', () => {
         name: 'my-app-e2e',
         project: 'my-app',
         linter: Linter.EsLint,
+        standaloneConfig: false,
       });
 
       const project = readProjectConfiguration(tree, 'my-app-e2e');
@@ -224,6 +230,7 @@ describe('schematic:cypress-project', () => {
           project: 'my-dir-my-app',
           directory: 'my-dir',
           linter: Linter.TsLint,
+          standaloneConfig: false,
         });
         const projectConfig = readJson(tree, 'workspace.json').projects[
           'my-dir-my-app-e2e'
@@ -319,6 +326,7 @@ describe('schematic:cypress-project', () => {
             name: 'my-app-e2e',
             project: 'my-app',
             linter: Linter.EsLint,
+            standaloneConfig: false,
           });
           const packageJson = readJson(tree, 'package.json');
           expect(

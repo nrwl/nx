@@ -24,6 +24,7 @@ describe('convert-to-nx-project', () => {
 
     await libraryGenerator(tree, {
       name: 'lib',
+      standaloneConfig: false,
     });
 
     const p = convertToNxProject(tree, { all: true, project: 'lib' });
@@ -35,6 +36,7 @@ describe('convert-to-nx-project', () => {
 
     await libraryGenerator(tree, {
       name: 'lib',
+      standaloneConfig: false,
     });
 
     const p = convertToNxProject(tree, {});
@@ -46,6 +48,7 @@ describe('convert-to-nx-project', () => {
 
     await libraryGenerator(tree, {
       name: 'lib',
+      standaloneConfig: false,
     });
 
     const config = readProjectConfiguration(tree, 'lib');
@@ -64,10 +67,12 @@ describe('convert-to-nx-project', () => {
 
     await libraryGenerator(tree, {
       name: 'lib',
+      standaloneConfig: false,
     });
 
     await libraryGenerator(tree, {
       name: 'lib2',
+      standaloneConfig: false,
     });
 
     const configs = ['lib', 'lib2'].map((x) =>
@@ -91,6 +96,7 @@ describe('convert-to-nx-project', () => {
     await libraryGenerator(tree, {
       name: 'lib',
       tags: 'scope:test',
+      standaloneConfig: false,
     });
 
     const config = readProjectConfiguration(tree, 'lib');

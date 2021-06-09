@@ -16,6 +16,7 @@ describe('redux', () => {
       skipTsConfig: false,
       style: 'css',
       unitTestRunner: 'jest',
+      standaloneConfig: false,
     });
   });
 
@@ -54,6 +55,7 @@ describe('redux', () => {
         style: 'css',
         unitTestRunner: 'none',
         name: 'my-app',
+        standaloneConfig: false,
       });
       await reduxGenerator(appTree, {
         name: 'my-slice',

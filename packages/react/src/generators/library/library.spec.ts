@@ -17,6 +17,7 @@ describe('lib', () => {
     style: 'css',
     component: true,
     strict: true,
+    standaloneConfig: false,
   };
 
   beforeEach(() => {
@@ -349,6 +350,7 @@ describe('lib', () => {
         name: 'myApp',
         routing: true,
         style: 'css',
+        standaloneConfig: false,
       });
 
       await libraryGenerator(appTree, {
@@ -375,6 +377,7 @@ describe('lib', () => {
         unitTestRunner: 'jest',
         name: 'myApp',
         style: 'css',
+        standaloneConfig: false,
       });
 
       await libraryGenerator(appTree, {

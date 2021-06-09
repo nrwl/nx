@@ -154,6 +154,7 @@ describe('react:component-cypress-spec', () => {
       skipFormat: true,
       style: 'css',
       unitTestRunner: 'none',
+      standaloneConfig: false,
     });
     await componentCypressSpecGenerator(appTree, {
       componentPath: `lib/test-ui-lib.tsx`,
@@ -187,6 +188,7 @@ export async function createTestUILib(
     skipTsConfig: false,
     style: 'css',
     unitTestRunner: 'jest',
+    standaloneConfig: false,
   });
 
   // create some Nx app that we'll use to generate the cypress
@@ -200,6 +202,7 @@ export async function createTestUILib(
     skipFormat: true,
     style: 'css',
     unitTestRunner: 'none',
+    standaloneConfig: false,
   });
 
   return appTree;

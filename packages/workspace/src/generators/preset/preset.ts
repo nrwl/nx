@@ -41,7 +41,7 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig
+      standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/angular');
   } else if (options.preset === 'react') {
@@ -53,7 +53,7 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig
+      standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/react');
   } else if (options.preset === 'next') {
@@ -64,7 +64,7 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig
+      standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/next');
   } else if (options.preset === 'web-components') {
@@ -75,7 +75,7 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig
+      standaloneConfig: options.standaloneConfig,
     });
     addDependenciesToPackageJson(
       tree,
@@ -102,19 +102,19 @@ async function createPreset(tree: Tree, options: Schema) {
       style: options.style,
       linter: options.linter,
       skipFormat: true,
-      standaloneConfig: options.standaloneConfig
+      standaloneConfig: options.standaloneConfig,
     });
     await nestApplicationGenerator(tree, {
       name: 'api',
       frontendProject: options.name,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig
+      standaloneConfig: options.standaloneConfig,
     });
     await libraryGenerator(tree, {
       name: 'api-interfaces',
       unitTestRunner: 'none',
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig
+      standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/angular');
     connectAngularAndNest(tree, options);
@@ -130,19 +130,19 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       style: options.style,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig
+      standaloneConfig: options.standaloneConfig,
     });
     await expressApplicationGenerator(tree, {
       name: 'api',
       frontendProject: options.name,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig
+      standaloneConfig: options.standaloneConfig,
     });
     await libraryGenerator(tree, {
       name: 'api-interfaces',
       unitTestRunner: 'none',
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig
+      standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/react');
     connectReactAndExpress(tree, options);
@@ -162,7 +162,7 @@ async function createPreset(tree: Tree, options: Schema) {
     await expressApplicationGenerator(tree, {
       name: options.name,
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig
+      standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/express');
   } else if (options.preset === 'gatsby') {
@@ -173,7 +173,7 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.name,
       linter: options.linter,
       style: options.style,
-      standaloneConfig: options.standaloneConfig
+      standaloneConfig: options.standaloneConfig,
     });
     setDefaultCollection(tree, '@nrwl/gatsby');
   } else {

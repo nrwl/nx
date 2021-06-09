@@ -13,4 +13,5 @@ export interface Schema {
   js?: boolean;
   pascalCaseFiles?: boolean;
   setParserOptionsProject?: boolean;
+  standaloneConfig: boolean;
 }

@@ -60,6 +60,14 @@ Type: `string`
 
 Library or application name
 
+### standaloneConfig
+
+Default: `false`
+
+Type: `boolean`
+
+Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json
+
 ### uiFramework
 
 Type: `string`

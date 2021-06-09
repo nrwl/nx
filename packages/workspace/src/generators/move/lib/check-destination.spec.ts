@@ -14,7 +14,7 @@ describe('checkDestination', () => {
 
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace();
-    await libraryGenerator(tree, { name: 'my-lib' });
+    await libraryGenerator(tree, { name: 'my-lib', standaloneConfig: false });
     projectConfig = readProjectConfiguration(tree, 'my-lib');
   });
 
@@ -34,7 +34,10 @@ describe('checkDestination', () => {
   });
 
   it('should throw an error if the path already exists', async () => {
-    await libraryGenerator(tree, { name: 'my-other-lib' });
+    await libraryGenerator(tree, {
+      name: 'my-other-lib',
+      standaloneConfig: false,
+    });
 
     const schema: Schema = {
       projectName: 'my-lib',

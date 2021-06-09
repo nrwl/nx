@@ -20,6 +20,7 @@ export interface CypressConfigureSchema {
   js?: boolean;
   directory?: string;
   linter: Linter;
+  standaloneConfig: boolean;
 }
 
 export async function cypressProjectGenerator(
@@ -37,6 +38,7 @@ export async function cypressProjectGenerator(
     js: schema.js,
     linter: schema.linter,
     directory: schema.directory,
+    standaloneConfig: schema.standaloneConfig,
   });
   const generatedCypressProjectName = getE2eProjectName(
     schema.name,

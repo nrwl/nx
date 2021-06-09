@@ -9,4 +9,5 @@ export interface Schema {
   tags?: string;
   unitTestRunner: 'jest' | 'none';
   linter: Linter;
+  standaloneConfig: boolean;
 }
