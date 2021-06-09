@@ -145,6 +145,87 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "12.3.7": {
+      "version": "12.3.7-beta.0",
+      "packages": {
+        "gatsby": {
+          "version": "3.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-image": {
+          "version": "1.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-manifest": {
+          "version": "3.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-offline": {
+          "version": "4.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-react-helmet": {
+          "version": "4.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-sharp": {
+          "version": "3.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-styled-jsx": {
+          "version": "4.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-source-filesystem": {
+          "version": "3.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-transformer-sharp": {
+          "version": "3.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-typescript": {
+          "version": "3.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "babel-plugin-module-resolver": {
+          "version": "4.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "babel-preset-gatsby": {
+          "version": "1.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react": {
+          "version": "11.2.7",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-emotion": {
+          "version": "6.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-styled-components": {
+          "version": "4.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-sass": {
+          "version": "4.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-less": {
+          "version": "5.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "gatsby-plugin-stylus": {
+          "version": "3.7.0",
+          "alwaysAddToPackageJson": false
+        },
+        "node-sass": {
+          "version": "6.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
