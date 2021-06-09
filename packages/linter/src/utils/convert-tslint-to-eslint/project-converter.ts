@@ -1,20 +1,22 @@
 import {
-  GeneratorCallback,
   getProjects,
   installPackagesTask,
   joinPathFragments,
   logger,
-  NxJsonProjectConfiguration,
   offsetFromRoot,
-  ProjectConfiguration,
   readJson,
   readProjectConfiguration,
   readWorkspaceConfiguration,
   removeDependenciesFromPackageJson,
-  Tree,
   updateJson,
   updateProjectConfiguration,
   updateWorkspaceConfiguration,
+} from '@nrwl/devkit';
+import type {
+  Tree,
+  GeneratorCallback,
+  NxJsonProjectConfiguration,
+  ProjectConfiguration,
 } from '@nrwl/devkit';
 import type { Linter } from 'eslint';
 import { removeParserOptionsProjectIfNotRequired } from '../rules-requiring-type-checking';
@@ -211,7 +213,7 @@ export class ProjectConverter {
       convertedRootESLintConfig
     );
     updateJson(this.host, '.eslintrc.json', (json) => {
-      json.overrides = json.overrides || [];
+      json.overrides ||= [];
       if (
         finalConvertedRootESLintConfig.overrides &&
         finalConvertedRootESLintConfig.overrides.length
@@ -318,7 +320,7 @@ export class ProjectConverter {
        * by using eslint-plugin-tslint. We instead explicitly warn the user about this missing converter,
        * and therefore at this point we strip out any rules which start with @typescript-eslint/tslint/config
        */
-      json.rules = json.rules || {};
+      json.rules ||= {};
       if (
         convertedProjectESLintConfig.rules &&
         Object.keys(convertedProjectESLintConfig.rules).length
@@ -520,9 +522,8 @@ export class ProjectConverter {
   ) {
     const workspace = readWorkspaceConfiguration(this.host);
 
-    workspace.generators = workspace.generators || {};
-    workspace.generators[collectionName] =
-      workspace.generators[collectionName] || {};
+    workspace.generators ||= {};
+    workspace.generators[collectionName] ||= {};
     const prev = workspace.generators[collectionName];
 
     workspace.generators = {

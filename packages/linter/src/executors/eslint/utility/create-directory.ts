@@ -14,7 +14,7 @@ export function createDirectory(directoryPath: string) {
 function directoryExists(name: string) {
   try {
     return statSync(name).isDirectory();
-  } catch (e) {
+  } catch {
     return false;
   }
 }

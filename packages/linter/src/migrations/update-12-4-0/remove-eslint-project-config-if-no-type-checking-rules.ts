@@ -1,10 +1,5 @@
-import {
-  formatFiles,
-  getProjects,
-  readJson,
-  Tree,
-  updateJson,
-} from '@nrwl/devkit';
+import { formatFiles, getProjects, readJson, updateJson } from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
 import { join } from 'path';
 import {
   hasRulesRequiringTypeChecking,

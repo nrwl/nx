@@ -1,6 +1,6 @@
 import * as fs from 'fs';
-import { Schema } from './schema';
-import { ExecutorContext } from '@nrwl/devkit';
+import type { Schema } from './schema';
+import type { ExecutorContext } from '@nrwl/devkit';
 
 jest.spyOn(fs, 'writeFileSync').mockImplementation();
 let mockCreateDirectory = jest.fn();
