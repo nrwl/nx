@@ -19,5 +19,5 @@ export interface Schema {
   skipBabelrc?: boolean;
   buildable?: boolean;
   setParserOptionsProject?: boolean;
-  standaloneConfig: boolean;
+  standaloneConfig?: boolean;
 }

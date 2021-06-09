@@ -11,5 +11,5 @@ export interface Schema {
   e2eTestRunner?: 'cypress' | 'none';
   linter?: Linter;
   babelJest?: boolean;
-  standaloneConfig: boolean;
+  standaloneConfig?: boolean;
 }

@@ -56,6 +56,23 @@ describe('Node Applications', () => {
     expect(result).toContain('Hello World!');
   }, 300000);
 
+  it('should be able to generate an empty application with standalone configuration', async () => {
+    const nodeapp = uniq('nodeapp');
+
+    runCLI(
+      `generate @nrwl/node:app ${nodeapp} --linter=eslint --standaloneConfig`
+    );
+
+    updateFile(`apps/${nodeapp}/src/main.ts`, `console.log('Hello World!');`);
+    await runCLIAsync(`build ${nodeapp}`);
+
+    checkFilesExist(`dist/apps/${nodeapp}/main.js`);
+    const result = execSync(`node dist/apps/${nodeapp}/main.js`, {
+      cwd: tmpProjPath(),
+    }).toString();
+    expect(result).toContain('Hello World!');
+  }, 60000);
+
   xit('should be able to generate an express application', async () => {
     const nodeapp = uniq('nodeapp');
     const port = 3334;

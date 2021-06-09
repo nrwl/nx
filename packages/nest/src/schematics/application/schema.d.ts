@@ -10,5 +10,5 @@ export interface Schema {
   tags?: string;
   linter: Linter;
   frontendProject?: string;
-  standaloneConfig: boolean;
+  standaloneConfig?: boolean;
 }

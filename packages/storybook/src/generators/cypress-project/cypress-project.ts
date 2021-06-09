@@ -20,7 +20,7 @@ export interface CypressConfigureSchema {
   js?: boolean;
   directory?: string;
   linter: Linter;
-  standaloneConfig: boolean;
+  standaloneConfig?: boolean;
 }
 
 export async function cypressProjectGenerator(

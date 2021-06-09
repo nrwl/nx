@@ -8,5 +8,5 @@ export interface Schema {
   js?: boolean;
   skipFormat?: boolean;
   setParserOptionsProject?: boolean;
-  standaloneConfig: boolean;
+  standaloneConfig?: booleann;
 }

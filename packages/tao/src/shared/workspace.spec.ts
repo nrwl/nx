@@ -14,11 +14,11 @@ describe('workspace', () => {
     const standaloneConfig = libConfig('lib1');
 
     (readJsonFile as jest.Mock).mockImplementation((path) => {
-        if (path === 'libs/lib1/project.json') {
-            return standaloneConfig
-        }
-        throw `${path} not in mock!`
-    })
+      if (path === 'libs/lib1/project.json') {
+        return standaloneConfig;
+      }
+      throw `${path} not in mock!`;
+    });
 
     const inlineConfig = {
       version: 1,

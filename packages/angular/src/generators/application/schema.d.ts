@@ -19,5 +19,5 @@ export interface Schema {
   e2eTestRunner: E2eTestRunner;
   backendProject?: string;
   strict?: boolean;
-  standaloneConfig: boolean;
+  standaloneConfig?: boolean;
 }

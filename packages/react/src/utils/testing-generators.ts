@@ -6,7 +6,7 @@ import { applicationGenerator as webApplicationGenerator } from '@nrwl/web';
 export async function createApp(
   tree: Tree,
   appName: string,
-  standaloneConfig: boolean
+  standaloneConfig?: boolean
 ): Promise<any> {
   const { fileName } = names(appName);
 
@@ -25,7 +25,7 @@ export async function createApp(
 export async function createWebApp(
   tree: Tree,
   appName: string,
-  standaloneConfig: boolean
+  standaloneConfig?: boolean
 ): Promise<any> {
   const { fileName } = names(appName);
 
@@ -39,7 +39,7 @@ export async function createWebApp(
 export async function createLib(
   tree: Tree,
   libName: string,
-  standaloneConfig: boolean
+  standaloneConfig?: boolean
 ): Promise<any> {
   const { fileName } = names(libName);
 
