@@ -17,6 +17,7 @@ import {
 import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
 import * as prettier from 'prettier';
 import { readJsonFile, writeJsonFile } from '@nrwl/devkit';
+import { objectSort } from '@nrwl/tao/src/utils/object-sort';
 
 const PRETTIER_PATH = require.resolve('prettier/bin-prettier');
 
@@ -36,6 +37,9 @@ export function format(
   switch (command) {
     case 'write':
       updateWorkspaceJsonToMatchFormatVersion();
+      sortWorkspaceJson();
+      sortNxJson();
+      sortTsConfig();
       chunkList.forEach((chunk) => write(chunk));
       break;
     case 'check':
@@ -142,4 +146,28 @@ function updateWorkspaceJsonToMatchFormatVersion() {
     console.error(`Failed to format: ${path}`);
     console.error(e);
   }
+}
+
+function sortWorkspaceJson() {
+  const workspaceJsonPath = workspaceConfigName(appRootPath);
+  const workspaceJson = readJsonFile(workspaceJsonPath);
+  const sortedProjects = objectSort(workspaceJson.projects);
+  workspaceJson.projects = sortedProjects;
+  writeJsonFile(workspaceJsonPath, workspaceJson);
+}
+
+function sortNxJson() {
+  const nxJsonPath = path.join(appRootPath, 'nx.json');
+  const nxJson = readJsonFile(nxJsonPath);
+  const sortedProjects = objectSort(nxJson.projects);
+  nxJson.projects = sortedProjects;
+  writeJsonFile(nxJsonPath, nxJson);
+}
+
+function sortTsConfig() {
+  const tsconfigPath = path.join(appRootPath, 'tsconfig.base.json');
+  const tsconfig = readJsonFile(tsconfigPath);
+  const sortedPaths = objectSort(tsconfig.compilerOptions.paths);
+  tsconfig.compilerOptions.paths = sortedPaths;
+  writeJsonFile(tsconfigPath, tsconfig);
 }

@@ -4,6 +4,7 @@ import * as path from 'path';
 import type * as Prettier from 'prettier';
 import { getWorkspacePath } from '../utils/get-workspace-layout';
 import { readJson, writeJson } from '../utils/json';
+import { objectSort } from '@nrwl/tao/src/utils/object-sort';
 
 /**
  * Formats all the created or updated files using Prettier
@@ -16,6 +17,9 @@ export async function formatFiles(host: Tree): Promise<void> {
   } catch {}
 
   updateWorkspaceJsonToMatchFormatVersion(host);
+  sortWorkspaceJson(host);
+  sortNxJson(host);
+  sortTsConfig(host);
 
   if (!prettier) return;
 
@@ -71,4 +75,26 @@ function updateWorkspaceJsonToMatchFormatVersion(host: Tree) {
     console.error(`Failed to format: ${path}`);
     console.error(e);
   }
+}
+
+function sortWorkspaceJson(host: Tree) {
+  const workspaceJsonPath = getWorkspacePath(host);
+  const workspaceJson = readJson(host, workspaceJsonPath);
+  const sortedProjects = objectSort(workspaceJson.projects);
+  workspaceJson.projects = sortedProjects;
+  writeJson(host, workspaceJsonPath, workspaceJson);
+}
+
+function sortNxJson(host: Tree) {
+  const nxJson = readJson(host, 'nx.json');
+  const sortedProjects = objectSort(nxJson.projects);
+  nxJson.projects = sortedProjects;
+  writeJson(host, 'nx.json', nxJson);
+}
+
+function sortTsConfig(host: Tree) {
+  const tsconfig = readJson(host, 'tsconfig.base.json');
+  const sortedPaths = objectSort(tsconfig.compilerOptions.paths);
+  tsconfig.compilerOptions.paths = sortedPaths;
+  writeJson(host, 'tsconfig.base.json', tsconfig);
 }

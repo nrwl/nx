@@ -28,6 +28,9 @@ export function formatFiles(
 
   return (host: Tree, context: SchematicContext) => {
     updateWorkspaceJsonToMatchFormatVersion(host, directory);
+    sortWorkspaceJson(host, directory);
+    sortNxJson(host);
+    sortTsConfig(host);
 
     if (!prettier) {
       return host;
@@ -76,15 +79,20 @@ export function formatFiles(
   };
 }
 
-function updateWorkspaceJsonToMatchFormatVersion(
-  host: Tree,
-  directory: string
-) {
+function getWorkspaceFile(host: Tree, directory: string) {
   const possibleFiles = [
     `${directory}/workspace.json`,
     `${directory}/angular.json`,
   ];
   const path = possibleFiles.filter((path) => host.exists(path))[0];
+  return path;
+}
+
+function updateWorkspaceJsonToMatchFormatVersion(
+  host: Tree,
+  directory: string
+) {
+  const path = getWorkspaceFile(host, directory);
   try {
     if (path) {
       const workspaceJson = parseJson(host.read(path).toString());
@@ -97,4 +105,35 @@ function updateWorkspaceJsonToMatchFormatVersion(
     console.error(`Failed to format: ${path}`);
     console.error(e);
   }
+}
+
+function objectSort(originalObject: object) {
+  return Object.keys(originalObject)
+    .sort()
+    .reduce((obj, key) => {
+      obj[key] = originalObject[key];
+      return obj;
+    }, {});
+}
+
+function sortWorkspaceJson(host: Tree, directory: string) {
+  const workspaceJsonPath = getWorkspaceFile(host, directory);
+  const workspaceJson = parseJson(host.read(workspaceJsonPath).toString());
+  const sortedProjects = objectSort(workspaceJson.projects);
+  workspaceJson.projects = sortedProjects;
+  host.overwrite(workspaceJsonPath, serializeJson(workspaceJson));
+}
+
+function sortNxJson(host: Tree) {
+  const nxJson = parseJson(host.read('nx.json').toString());
+  const sortedProjects = objectSort(nxJson.projects);
+  nxJson.projects = sortedProjects;
+  host.overwrite('nx.json', serializeJson(nxJson));
+}
+
+function sortTsConfig(host: Tree) {
+  const tsconfig = parseJson(host.read('tsconfig.base.json').toString());
+  const sortedPaths = objectSort(tsconfig.compilerOptions.paths);
+  tsconfig.compilerOptions.paths = sortedPaths;
+  host.overwrite('tsconfig.base.json', serializeJson(tsconfig));
 }
