@@ -51,7 +51,7 @@ function updateExecutorJson(host: Tree, options: NormalizedSchema) {
 
   return updateJson(host, executorPath, (json) => {
     let executors = json.executors ?? json.builders;
-    executors = executors || {};
+    executors ||= {};
     executors[options.name] = {
       implementation: `./src/executors/${options.name}/executor`,
       schema: `./src/executors/${options.name}/schema.json`,
