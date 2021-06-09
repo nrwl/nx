@@ -9,7 +9,7 @@ export function showNxWarning(workspaceName: string) {
       cwd: pathToRunNxCommand,
       stdio: ['ignore', 'ignore', 'ignore'],
     });
-  } catch (e) {
+  } catch {
     // no nx found
     output.addVerticalSeparator();
     output.note({

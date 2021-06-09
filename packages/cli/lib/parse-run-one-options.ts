@@ -1,4 +1,4 @@
-import * as yargsParser from 'yargs-parser';
+import yargsParser = require('yargs-parser');
 
 function calculateDefaultProjectName(cwd: string, root: string, wc: any) {
   let relativeCwd = cwd.replace(/\\/g, '/').split(root.replace(/\\/g, '/'))[1];
