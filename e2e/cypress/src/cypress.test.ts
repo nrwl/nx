@@ -5,14 +5,11 @@ import {
   readFile,
   readJson,
   runCLI,
-  runCypressTests,
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
 
 describe('Cypress E2E Test runner', () => {
-  afterEach(() => killPorts());
-
   describe('project scaffolding', () => {
     it('should generate an app with the Cypress as e2e test runner', () => {
       newProject();
@@ -38,32 +35,32 @@ describe('Cypress E2E Test runner', () => {
     }, 1000000);
   });
 
-  if (runCypressTests()) {
-    describe('running Cypress', () => {
-      it('should execute e2e tests using Cypress', () => {
-        newProject();
-        const myapp = uniq('myapp');
-        runCLI(
-          `generate @nrwl/react:app ${myapp} --e2eTestRunner=cypress --linter=eslint`
-        );
+  describe('running Cypress', () => {
+    afterEach(() => killPorts());
 
-        expect(runCLI(`e2e ${myapp}-e2e --headless --no-watch`)).toContain(
-          'All specs passed!'
-        );
+    it('should execute e2e tests using Cypress', () => {
+      newProject();
+      const myapp = uniq('myapp');
+      runCLI(
+        `generate @nrwl/react:app ${myapp} --e2eTestRunner=cypress --linter=eslint`
+      );
 
-        const originalContents = JSON.parse(
-          readFile(`apps/${myapp}-e2e/cypress.json`)
-        );
-        delete originalContents.fixturesFolder;
-        updateFile(
-          `apps/${myapp}-e2e/cypress.json`,
-          JSON.stringify(originalContents)
-        );
+      expect(runCLI(`e2e ${myapp}-e2e --headless --no-watch`)).toContain(
+        'All specs passed!'
+      );
 
-        expect(runCLI(`e2e ${myapp}-e2e --headless --no-watch`)).toContain(
-          'All specs passed!'
-        );
-      }, 1000000);
-    });
-  }
+      const originalContents = JSON.parse(
+        readFile(`apps/${myapp}-e2e/cypress.json`)
+      );
+      delete originalContents.fixturesFolder;
+      updateFile(
+        `apps/${myapp}-e2e/cypress.json`,
+        JSON.stringify(originalContents)
+      );
+
+      expect(runCLI(`e2e ${myapp}-e2e --headless --no-watch`)).toContain(
+        'All specs passed!'
+      );
+    }, 1000000);
+  });
 });

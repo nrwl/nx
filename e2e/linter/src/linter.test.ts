@@ -1,7 +1,6 @@
 import * as path from 'path';
 import {
   checkFilesExist,
-  killPorts,
   newProject,
   readFile,
   readJson,
@@ -11,8 +10,6 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Linter', () => {
-  afterEach(() => killPorts());
-
   it('linting should error when rules are not followed', () => {
     newProject();
     const myapp = uniq('myapp');

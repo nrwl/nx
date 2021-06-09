@@ -186,8 +186,16 @@ export function newProject({ name = uniq('proj') } = {}): string {
 export async function killPorts() {
   // potential leftovers from other e2e tests
   // there are a lot of reasons for why sigterm sometime fails
-  await killPort(4200);
-  await killPort(3333);
+  try {
+    await killPort(4200);
+  } catch {
+    throw 'Port 4200 could not be closed';
+  }
+  try {
+    await killPort(3333);
+  } catch {
+    throw 'Port 3333 could not be closed';
+  }
 }
 
 // Useful in order to cleanup space during CI to prevent `No space left on device` exceptions

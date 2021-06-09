@@ -11,9 +11,9 @@ import {
 import { writeFileSync } from 'fs';
 
 describe('Storybook schematics', () => {
-  afterEach(() => killPorts());
-
   describe('serve storybook', () => {
+    afterEach(() => killPorts());
+
     it('should run a React based Storybook setup', async () => {
       newProject();
 

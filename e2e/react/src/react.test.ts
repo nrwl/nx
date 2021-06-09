@@ -2,7 +2,6 @@ import { serializeJson } from '@nrwl/workspace';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
-  killPorts,
   newProject,
   readFile,
   readJson,
@@ -19,7 +18,6 @@ describe('React Applications', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
-  afterEach(() => killPorts());
 
   it('should be able to generate a react app + lib', async () => {
     const appName = uniq('app');

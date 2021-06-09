@@ -20,26 +20,28 @@ describe('Next.js Applications', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
-  afterEach(() => killPorts());
 
-  it('should be able to serve with a proxy configuration', async () => {
-    const appName = uniq('app');
+  describe('serve', () => {
+    afterEach(() => killPorts());
 
-    runCLI(`generate @nrwl/next:app ${appName}`);
+    it('should be able to serve with a proxy configuration', async () => {
+      const appName = uniq('app');
 
-    const proxyConf = {
-      '/external-api': {
-        target: 'http://localhost:4200',
-        pathRewrite: {
-          '^/external-api/hello': '/api/hello',
+      runCLI(`generate @nrwl/next:app ${appName}`);
+
+      const proxyConf = {
+        '/external-api': {
+          target: 'http://localhost:4200',
+          pathRewrite: {
+            '^/external-api/hello': '/api/hello',
+          },
         },
-      },
-    };
-    updateFile(`apps/${appName}/proxy.conf.json`, JSON.stringify(proxyConf));
+      };
+      updateFile(`apps/${appName}/proxy.conf.json`, JSON.stringify(proxyConf));
 
-    updateFile(
-      `apps/${appName}-e2e/src/integration/app.spec.ts`,
-      `
+      updateFile(
+        `apps/${appName}-e2e/src/integration/app.spec.ts`,
+        `
         describe('next-app', () => {
           beforeEach(() => cy.visit('/'));
 
@@ -48,11 +50,11 @@ describe('Next.js Applications', () => {
           });
         });
         `
-    );
+      );
 
-    updateFile(
-      `apps/${appName}/pages/index.tsx`,
-      `
+      updateFile(
+        `apps/${appName}/pages/index.tsx`,
+        `
         import React, { useEffect, useState } from 'react';
 
         export const Index = () => {
@@ -68,17 +70,28 @@ describe('Next.js Applications', () => {
         };
         export default Index;
       `
-    );
+      );
 
-    updateFile(
-      `apps/${appName}/pages/api/hello.js`,
-      `
+      updateFile(
+        `apps/${appName}/pages/api/hello.js`,
+        `
         export default (_req, res) => {
           res.status(200).send('Hello Next.js!');
         };
       `
-    );
-  }, 120000);
+      );
+
+      // serve Next.js
+      const p = await runCommandUntil(`run ${appName}:serve`, (output) => {
+        return output.indexOf('custom typescript server running') > -1;
+      });
+
+      const data = await getData();
+      expect(data).toContain(`Welcome to ${appName}`);
+
+      p.kill();
+    }, 120000);
+  });
 
   it('should be able to consume a react libs (buildable and non-buildable)', async () => {
     const appName = uniq('app');
@@ -230,14 +243,14 @@ describe('Next.js Applications', () => {
           import { testFn } from '@${proj}/${tsLibName}';
           import { TestComponent } from '@${proj}/${tsxLibName}';\n\n
           ${content.replace(
-            `</h2>`,
-            `</h2>
+        `</h2>`,
+        `</h2>
                 <div>
                   {testFn()}
                   <TestComponent text="Hello Next.JS" />
                 </div>
               `
-          )}`
+      )}`
     );
 
     const e2eTestPath = `apps/${appName}-e2e/src/integration/app.spec.ts`;
@@ -245,14 +258,13 @@ describe('Next.js Applications', () => {
     updateFile(
       e2eTestPath,
       `
-        ${
-          e2eContent +
-          `
+        ${e2eContent +
+      `
           it('should successfully call async API route', () => {
             cy.request('/api/hello').its('body').should('include', 'hell0');
           });
           `
-        }
+      }
       `
     );
 
@@ -455,6 +467,7 @@ describe('Next.js Applications', () => {
       checkE2E: false,
     });
   }, 120000);
+<<<<<<< HEAD
 
   it('webpack5 - should be able to consume a react libs (buildable and non-buildable)', async () => {
     const appName = uniq('app');
@@ -484,7 +497,7 @@ describe('Next.js Applications', () => {
       `
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const withNx = require('@nrwl/next/plugins/with-nx');
-        
+
         module.exports = withNx({
           nx: {
             // Set this to false if you do not want to use SVGR
@@ -566,26 +579,26 @@ describe('Next.js Applications', () => {
       `
       const express = require('express');
       const path = require('path');
-      
+
       export default async function nextCustomServer(app, settings, proxyConfig) {
         const handle = app.getRequestHandler();
         await app.prepare();
 
         const x: string = 'custom typescript server running';
         console.log(x);
-      
+
         const server = express();
         server.disable('x-powered-by');
-      
+
         server.use(
           express.static(path.resolve(settings.dir, settings.conf.outdir, 'public'))
         );
-      
+
         // Default catch-all handler to allow Next.js to handle all other routes
         server.all('*', (req, res) => handle(req, res));
-      
+
         server.listen(settings.port, settings.hostname);
-      }    
+      }
     `
     );
 
