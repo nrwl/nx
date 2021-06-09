@@ -194,7 +194,7 @@ function readWorkspaceSection(
   projectName: string
 ) {
   const config = workspace.projects[projectName];
-  return typeof config === 'string' ? readJson(host, config) : config;
+  return config;
 }
 
 function readNxJsonSection(nxJson: NxJsonConfiguration, projectName: string) {
