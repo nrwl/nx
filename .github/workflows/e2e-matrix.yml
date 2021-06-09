@@ -17,12 +17,26 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
+<<<<<<< HEAD
           # - windows-latest
         include:
           - os: ubuntu-latest
             os-name: ubuntu
           # - os: windows-latest
           #   os-name: windows
+=======
+          - windows-latest
+        include:
+          - os: ubuntu-latest
+            os-name: ubuntu
+          - os: windows-latest
+            os-name: windows
+        # exclude:
+          # - os: windows-latest
+          #   package_manager: pnpm
+          # - os: windows-latest
+          #   package_manager: yarn
+>>>>>>> d9b51ca0 (chore(repo): more preparations for the windows nightly)
         node_version:
           - '14'
           # - '15'
@@ -31,15 +45,17 @@ jobs:
           - yarn
           - pnpm
         packages:
-          - e2e-angular
-          - e2e-cli,e2e-nx-plugin,
-          - e2e-cypress,e2e-jest
+          # - e2e-angular
+          - e2e-cli
+          - e2e-nx-plugin
+          - e2e-cypress
           - e2e-gatsby
           - e2e-next
-          - e2e-node
-          - e2e-react
-          - e2e-web,e2e-linter,e2e-storybook
-          - e2e-workspace
+          - e2e-node,e2e-react,e2e-jest
+          - e2e-linter
+          - e2e-web
+          - e2e-storybook
+          # - e2e-workspace
       fail-fast: false
 
     name: ${{ matrix.os-name }}/n v${{ matrix.node_version }}/${{ matrix.package_manager }} - ${{ matrix.packages }}
@@ -62,8 +78,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-        key: ${{ matrix.os }}-node-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
-        restore-keys: ${{ matrix.os }}-node-${{ matrix.node-version }}-yarn-
+        key: ${{ matrix.os }}-yarn-${{ hashFiles('yarn.lock') }}
+        restore-keys: |
+          ${{ matrix.os }}-yarn-
 
     - name: Install packages
       run: yarn install --prefer-offline --non-interactive
@@ -97,6 +114,7 @@ jobs:
         NODE_OPTIONS: --max_old_space_size=8192
         SELECTED_PM: ${{ matrix.package_manager }}
         YARN_REGISTRY: http://localhost:4872
+        VERBOSE_OUTPUT: true
         SELECTED_CLI: ${{ matrix.packages == 'e2e-angular' && 'angular' || 'nx' }}
 
     - name: Setup tmate session

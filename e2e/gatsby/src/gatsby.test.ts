@@ -1,6 +1,5 @@
 import {
   checkFilesExist,
-  killPorts,
   newProject,
   runCLI,
   runCLIAsync,
