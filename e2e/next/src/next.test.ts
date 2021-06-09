@@ -36,19 +36,6 @@ describe('Next.js Applications', () => {
     updateFile(`apps/${appName}/proxy.conf.json`, JSON.stringify(proxyConf));
 
     updateFile(
-      `apps/${appName}-e2e/src/integration/app.spec.ts`,
-      `
-        describe('next-app', () => {
-          beforeEach(() => cy.visit('/'));
-
-          it('should ', () => {
-            cy.get('h1').contains('Hello Next.js!');
-          });
-        });
-        `
-    );
-
-    updateFile(
       `apps/${appName}/pages/index.tsx`,
       `
         import React, { useEffect, useState } from 'react';
@@ -79,7 +66,7 @@ describe('Next.js Applications', () => {
 
     // serve Next.js
     const p = await runCommandUntil(`run ${appName}:serve`, (output) => {
-      return output.indexOf('custom typescript server running') > -1;
+      return output.indexOf('[ ready ] on http://localhost:4200') > -1;
     });
 
     const data = await getData();
