@@ -1,4 +1,4 @@
-import { formatFiles, getProjects, Tree } from '@nrwl/devkit';
+import { formatFiles, getProjects, Tree, writeJson } from '@nrwl/devkit';
 import {
   createProjectGraph,
   reverse,
@@ -18,10 +18,7 @@ export async function createBabelrcForWorkspaceLibs(host: Tree) {
     if (p.projectType === 'library' && !host.exists(babelrcPath)) {
       // Library is included in applications that require .babelrc to
       // exist and contain '@nrwl/web/babel' preset.
-      host.write(
-        babelrcPath,
-        JSON.stringify({ presets: ['@nrwl/web/babel'] }, null, 2)
-      );
+      writeJson(host, babelrcPath, { presets: ['@nrwl/web/babel'] });
     }
   }
 
