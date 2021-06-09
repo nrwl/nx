@@ -472,7 +472,7 @@ export function readJson(f: string): any {
 
 export function readFile(f: string) {
   const ff = f.startsWith('/') ? f : tmpProjPath(f);
-  return readFileSync(ff).toString();
+  return readFileSync(ff, 'utf-8');
 }
 
 export function rmDist() {

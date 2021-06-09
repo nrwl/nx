@@ -13,7 +13,11 @@ import {
 } from '../shared/package-manager';
 import { FsTree } from '../shared/tree';
 import { flushChanges } from './generate';
-import { readJsonFile, writeJsonFile } from '../utils/fileutils';
+import {
+  JsonReadOptions,
+  readJsonFile,
+  writeJsonFile,
+} from '../utils/fileutils';
 
 export type MigrationsJson = {
   version: string;
@@ -503,7 +507,8 @@ function updatePackageJson(
   }
 ) {
   const packageJsonPath = join(root, 'package.json');
-  const json = readJsonFile(packageJsonPath);
+  const parseOptions: JsonReadOptions = {};
+  const json = readJsonFile(packageJsonPath, parseOptions);
   Object.keys(updatedPackages).forEach((p) => {
     if (json.devDependencies && json.devDependencies[p]) {
       json.devDependencies[p] = updatedPackages[p].version;
@@ -514,7 +519,9 @@ function updatePackageJson(
       json.dependencies[p] = updatedPackages[p].version;
     }
   });
-  writeJsonFile(packageJsonPath, json);
+  writeJsonFile(packageJsonPath, json, {
+    appendNewLine: parseOptions.endsWithNewline,
+  });
 }
 
 async function generateMigrationsJsonAndUpdatePackageJson(
