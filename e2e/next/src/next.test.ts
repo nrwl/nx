@@ -9,7 +9,6 @@ import {
   runCLI,
   runCLIAsync,
   runCommandUntil,
-  runCypressTests,
   uniq,
   updateFile,
   updateWorkspaceConfig,
@@ -20,29 +19,25 @@ describe('Next.js Applications', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
-  afterEach(async () => await killPorts());
 
-  describe('serve', () => {
-    afterEach(() => killPorts());
+  it('should be able to serve with a proxy configuration', async () => {
+    const appName = uniq('app');
 
-    it('should be able to serve with a proxy configuration', async () => {
-      const appName = uniq('app');
+    runCLI(`generate @nrwl/next:app ${appName}`);
 
-      runCLI(`generate @nrwl/next:app ${appName}`);
-
-      const proxyConf = {
-        '/external-api': {
-          target: 'http://localhost:4200',
-          pathRewrite: {
-            '^/external-api/hello': '/api/hello',
-          },
+    const proxyConf = {
+      '/external-api': {
+        target: 'http://localhost:4200',
+        pathRewrite: {
+          '^/external-api/hello': '/api/hello',
         },
-      };
-      updateFile(`apps/${appName}/proxy.conf.json`, JSON.stringify(proxyConf));
+      },
+    };
+    updateFile(`apps/${appName}/proxy.conf.json`, JSON.stringify(proxyConf));
 
-      updateFile(
-        `apps/${appName}-e2e/src/integration/app.spec.ts`,
-        `
+    updateFile(
+      `apps/${appName}-e2e/src/integration/app.spec.ts`,
+      `
         describe('next-app', () => {
           beforeEach(() => cy.visit('/'));
 
@@ -51,11 +46,11 @@ describe('Next.js Applications', () => {
           });
         });
         `
-      );
+    );
 
-      updateFile(
-        `apps/${appName}/pages/index.tsx`,
-        `
+    updateFile(
+      `apps/${appName}/pages/index.tsx`,
+      `
         import React, { useEffect, useState } from 'react';
 
         export const Index = () => {
@@ -71,28 +66,28 @@ describe('Next.js Applications', () => {
         };
         export default Index;
       `
-      );
+    );
 
-      updateFile(
-        `apps/${appName}/pages/api/hello.js`,
-        `
+    updateFile(
+      `apps/${appName}/pages/api/hello.js`,
+      `
         export default (_req, res) => {
           res.status(200).send('Hello Next.js!');
         };
       `
-      );
+    );
 
-      // serve Next.js
-      const p = await runCommandUntil(`run ${appName}:serve`, (output) => {
-        return output.indexOf('custom typescript server running') > -1;
-      });
+    // serve Next.js
+    const p = await runCommandUntil(`run ${appName}:serve`, (output) => {
+      return output.indexOf('custom typescript server running') > -1;
+    });
 
-      const data = await getData();
-      expect(data).toContain(`Welcome to ${appName}`);
+    const data = await getData();
+    expect(data).toContain(`Welcome to ${appName}`);
 
-      p.kill();
-    }, 120000);
-  });
+    p.kill();
+    await killPorts();
+  }, 120000);
 
   it('should be able to consume a react libs (buildable and non-buildable)', async () => {
     const appName = uniq('app');
@@ -141,9 +136,9 @@ describe('Next.js Applications', () => {
     }).toThrow();
 
     await checkApp(appName, {
-      checkUnitTest: true,
+      checkUnitTest: false,
       checkLint: true,
-      checkE2E: true,
+      checkE2E: false,
     });
   }, 120000);
 
@@ -172,6 +167,7 @@ describe('Next.js Applications', () => {
       checkLint: false,
       checkE2E: true,
     });
+    await killPorts();
   }, 120000);
 
   it('should compile when using a workspace and react lib written in TypeScript', async () => {
@@ -274,6 +270,7 @@ describe('Next.js Applications', () => {
       checkLint: true,
       checkE2E: true,
     });
+    await killPorts();
   }, 120000);
 
   it('should support Less', async () => {
@@ -400,6 +397,7 @@ describe('Next.js Applications', () => {
       checkLint: true,
       checkE2E: true,
     });
+    await killPorts();
   }, 180000);
 
   it('should fail the build when TS errors are present', async () => {
@@ -468,7 +466,6 @@ describe('Next.js Applications', () => {
       checkE2E: false,
     });
   }, 120000);
-<<<<<<< HEAD
 
   it('webpack5 - should be able to consume a react libs (buildable and non-buildable)', async () => {
     const appName = uniq('app');
@@ -619,6 +616,7 @@ describe('Next.js Applications', () => {
     expect(data).toContain(`Welcome to ${appName}`);
 
     p.kill();
+    await killPorts();
   }, 300000);
 });
 
