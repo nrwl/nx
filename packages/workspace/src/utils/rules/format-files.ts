@@ -118,22 +118,34 @@ function objectSort(originalObject: object) {
 
 function sortWorkspaceJson(host: Tree, directory: string) {
   const workspaceJsonPath = getWorkspaceFile(host, directory);
-  const workspaceJson = parseJson(host.read(workspaceJsonPath).toString());
-  const sortedProjects = objectSort(workspaceJson.projects);
-  workspaceJson.projects = sortedProjects;
-  host.overwrite(workspaceJsonPath, serializeJson(workspaceJson));
+  try {
+    const workspaceJson = parseJson(host.read(workspaceJsonPath).toString());
+    const sortedProjects = objectSort(workspaceJson.projects);
+    workspaceJson.projects = sortedProjects;
+    host.overwrite(workspaceJsonPath, serializeJson(workspaceJson));
+  } catch (e) {
+    console.error(`failed to sort projects in ${workspaceJsonPath}`);
+  }
 }
 
 function sortNxJson(host: Tree) {
-  const nxJson = parseJson(host.read('nx.json').toString());
-  const sortedProjects = objectSort(nxJson.projects);
-  nxJson.projects = sortedProjects;
-  host.overwrite('nx.json', serializeJson(nxJson));
+  try {
+    const nxJson = parseJson(host.read('nx.json').toString());
+    const sortedProjects = objectSort(nxJson.projects);
+    nxJson.projects = sortedProjects;
+    host.overwrite('nx.json', serializeJson(nxJson));
+  } catch (e) {
+    console.error('failed to sort projects in nx.json');
+  }
 }
 
 function sortTsConfig(host: Tree) {
-  const tsconfig = parseJson(host.read('tsconfig.base.json').toString());
-  const sortedPaths = objectSort(tsconfig.compilerOptions.paths);
-  tsconfig.compilerOptions.paths = sortedPaths;
-  host.overwrite('tsconfig.base.json', serializeJson(tsconfig));
+  try {
+    const tsconfig = parseJson(host.read('tsconfig.base.json').toString());
+    const sortedPaths = objectSort(tsconfig.compilerOptions.paths);
+    tsconfig.compilerOptions.paths = sortedPaths;
+    host.overwrite('tsconfig.base.json', serializeJson(tsconfig));
+  } catch (e) {
+    console.error('failed to sort paths in tsconfig.base.json');
+  }
 }

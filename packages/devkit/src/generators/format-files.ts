@@ -79,22 +79,34 @@ function updateWorkspaceJsonToMatchFormatVersion(host: Tree) {
 
 function sortWorkspaceJson(host: Tree) {
   const workspaceJsonPath = getWorkspacePath(host);
-  const workspaceJson = readJson(host, workspaceJsonPath);
-  const sortedProjects = objectSort(workspaceJson.projects);
-  workspaceJson.projects = sortedProjects;
-  writeJson(host, workspaceJsonPath, workspaceJson);
+  try {
+    const workspaceJson = readJson(host, workspaceJsonPath);
+    const sortedProjects = objectSort(workspaceJson.projects);
+    workspaceJson.projects = sortedProjects;
+    writeJson(host, workspaceJsonPath, workspaceJson);
+  } catch (e) {
+    console.error(`failed to sort projects in ${workspaceJsonPath}`);
+  }
 }
 
 function sortNxJson(host: Tree) {
-  const nxJson = readJson(host, 'nx.json');
-  const sortedProjects = objectSort(nxJson.projects);
-  nxJson.projects = sortedProjects;
-  writeJson(host, 'nx.json', nxJson);
+  try {
+    const nxJson = readJson(host, 'nx.json');
+    const sortedProjects = objectSort(nxJson.projects);
+    nxJson.projects = sortedProjects;
+    writeJson(host, 'nx.json', nxJson);
+  } catch (e) {
+    console.error('failed to sort projects in nx.json');
+  }
 }
 
 function sortTsConfig(host: Tree) {
-  const tsconfig = readJson(host, 'tsconfig.base.json');
-  const sortedPaths = objectSort(tsconfig.compilerOptions.paths);
-  tsconfig.compilerOptions.paths = sortedPaths;
-  writeJson(host, 'tsconfig.base.json', tsconfig);
+  try {
+    const tsconfig = readJson(host, 'tsconfig.base.json');
+    const sortedPaths = objectSort(tsconfig.compilerOptions.paths);
+    tsconfig.compilerOptions.paths = sortedPaths;
+    writeJson(host, 'tsconfig.base.json', tsconfig);
+  } catch (e) {
+    console.error('failed to sort paths in tsconfig.base.json');
+  }
 }
