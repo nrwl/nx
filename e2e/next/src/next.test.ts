@@ -20,6 +20,7 @@ describe('Next.js Applications', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
+  afterEach(async () => await killPorts());
 
   describe('serve', () => {
     afterEach(() => killPorts());
