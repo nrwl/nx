@@ -5,13 +5,12 @@ import { defaultFileHasher, FileHasher } from './file-hasher';
 import { defaultHashing, HashingImpl } from './hashing-impl';
 import * as minimatch from 'minimatch';
 import { performance } from 'perf_hooks';
-import * as stripJsonComments from 'strip-json-comments';
+import { parseJson, readJsonFile } from '@nrwl/devkit';
 import {
   NxJsonConfiguration,
   ProjectGraph,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
-import { readJsonFile } from '../../utilities/fileutils';
 
 export interface Hash {
   value: string;
@@ -252,7 +251,7 @@ export class Hasher {
       {
         hash: this.fileHasher.hashFile('nx.json', (file) => {
           try {
-            const r = JSON.parse(stripJsonComments(file));
+            const r = parseJson(file);
             delete r.projects;
             return JSON.stringify(r);
           } catch {

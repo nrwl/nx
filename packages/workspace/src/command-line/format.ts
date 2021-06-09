@@ -15,9 +15,8 @@ import {
   workspaceConfigName,
 } from '@nrwl/tao/src/shared/workspace';
 import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
-import { readFileSync, writeFileSync } from 'fs-extra';
-import * as stripJsonComments from 'strip-json-comments';
 import * as prettier from 'prettier';
+import { readJsonFile, writeJsonFile } from '@nrwl/devkit';
 
 const PRETTIER_PATH = require.resolve('prettier/bin-prettier');
 
@@ -132,18 +131,12 @@ function check(patterns: string[]) {
 }
 
 function updateWorkspaceJsonToMatchFormatVersion() {
+  const path = workspaceConfigName(appRootPath);
   try {
-    const workspaceJson = JSON.parse(
-      stripJsonComments(
-        readFileSync(workspaceConfigName(appRootPath)).toString()
-      )
-    );
+    const workspaceJson = readJsonFile(path);
     const reformatted = reformattedWorkspaceJsonOrNull(workspaceJson);
     if (reformatted) {
-      writeFileSync(
-        workspaceConfigName(appRootPath),
-        JSON.stringify(reformatted, null, 2)
-      );
+      writeJsonFile(path, reformatted);
     }
   } catch (e) {
     console.error(`Failed to format: ${path}`);

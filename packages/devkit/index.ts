@@ -59,6 +59,19 @@ export { DependencyType } from './src/project-graph/interfaces';
 export { ProjectGraphBuilder } from './src/project-graph/utils';
 
 export { readJson, writeJson, updateJson } from './src/utils/json';
+
+export {
+  parseJson,
+  serializeJson,
+  stripJsonComments,
+} from '@nrwl/tao/src/utils/json';
+export type {
+  JsonParseOptions,
+  JsonSerializeOptions,
+} from '@nrwl/tao/src/utils/json';
+
+export { readJsonFile, writeJsonFile } from '@nrwl/tao/src/utils/fileutils';
+
 export {
   addDependenciesToPackageJson,
   removeDependenciesFromPackageJson,

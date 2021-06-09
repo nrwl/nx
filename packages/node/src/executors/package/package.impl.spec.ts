@@ -28,27 +28,25 @@ describe('NodePackageBuilder', () => {
   let context: ExecutorContext;
 
   beforeEach(async () => {
-    mocked(fsUtility.readJsonFile).mockImplementation(
-      (path: string): unknown => {
-        if (path.endsWith('tsconfig.lib.json')) {
-          return {
-            extends: './tsconfig.json',
-            compilerOptions: {
-              outDir: '../../dist/out-tsc',
-              declaration: true,
-              rootDir: './src',
-              types: ['node'],
-            },
-            exclude: ['**/*.spec.ts'],
-            include: ['**/*.ts'],
-          };
-        } else {
-          return {
-            name: 'nodelib',
-          };
-        }
+    mocked(fsUtility.readJsonFile).mockImplementation((path: string) => {
+      if (path.endsWith('tsconfig.lib.json')) {
+        return {
+          extends: './tsconfig.json',
+          compilerOptions: {
+            outDir: '../../dist/out-tsc',
+            declaration: true,
+            rootDir: './src',
+            types: ['node'],
+          },
+          exclude: ['**/*.spec.ts'],
+          include: ['**/*.ts'],
+        };
+      } else {
+        return {
+          name: 'nodelib',
+        };
       }
-    );
+    });
     mocked(fsUtility.writeJsonFile).mockImplementation(
       (_: string, _2: unknown) => {
         //empty

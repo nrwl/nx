@@ -12,7 +12,7 @@ import {
 } from '@angular-devkit/core';
 import * as chalk from 'chalk';
 import { createConsoleLogger, NodeJsSyncHost } from '@angular-devkit/core/node';
-import { readFileSync, Stats } from 'fs';
+import { Stats } from 'fs';
 import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 import { GenerateOptions } from './generate';
 import { Tree } from '../shared/tree';
@@ -22,11 +22,12 @@ import {
   workspaceConfigName,
 } from '@nrwl/tao/src/shared/workspace';
 import { dirname, extname, resolve, join } from 'path';
-import * as stripJsonComments from 'strip-json-comments';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 import { Observable, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { NX_ERROR, NX_PREFIX } from '../shared/logger';
+import { readJsonFile } from '../utils/fileutils';
+import { parseJson, serializeJson } from '../utils/json';
 
 export async function scheduleTarget(
   root: string,
@@ -197,12 +198,10 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
             return super.read(r.actualConfigFileName).pipe(
               map((r) => {
                 try {
-                  const w = JSON.parse(Buffer.from(r).toString());
+                  const w = parseJson(Buffer.from(r).toString());
                   const formatted = toOldFormatOrNull(w);
-                  return formatted
-                    ? Buffer.from(JSON.stringify(formatted, null, 2))
-                    : r;
-                } catch (e) {
+                  return formatted ? Buffer.from(serializeJson(formatted)) : r;
+                } catch {
                   return r;
                 }
               })
@@ -223,12 +222,12 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
         if (r.isWorkspaceConfig) {
           if (r.isNewFormat) {
             try {
-              const w = JSON.parse(Buffer.from(content).toString());
+              const w = parseJson(Buffer.from(content).toString());
               const formatted = toNewFormatOrNull(w);
               if (formatted) {
                 return super.write(
                   r.actualConfigFileName,
-                  Buffer.from(JSON.stringify(formatted, null, 2))
+                  Buffer.from(serializeJson(formatted))
                 );
               } else {
                 return super.write(r.actualConfigFileName, content);
@@ -297,13 +296,13 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
           return super.read(actualConfigFileName as any).pipe(
             map((r) => {
               try {
-                const w = JSON.parse(Buffer.from(r).toString());
+                const w = parseJson(Buffer.from(r).toString());
                 return {
                   isWorkspaceConfig: true,
                   actualConfigFileName,
                   isNewFormat: w.version === 2,
                 };
-              } catch (e) {
+              } catch {
                 return {
                   isWorkspaceConfig: true,
                   actualConfigFileName,
@@ -364,11 +363,11 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
 
       // we try to format it, if it changes, return it, otherwise return the original change
       try {
-        const w = JSON.parse(Buffer.from(match.content).toString());
+        const w = parseJson(Buffer.from(match.content).toString());
         const formatted = toOldFormatOrNull(w);
         return of(
           formatted
-            ? Buffer.from(JSON.stringify(formatted, null, 2))
+            ? Buffer.from(serializeJson(formatted))
             : Buffer.from(match.content)
         );
       } catch (e) {
@@ -446,7 +445,7 @@ function isWorkspaceConfigPath(p: Path | string) {
 
 function processConfigWhenReading(content: ArrayBuffer) {
   try {
-    const json = JSON.parse(Buffer.from(content).toString());
+    const json = parseJson(Buffer.from(content).toString());
     Object.values(json.projects).forEach((p: any) => {
       try {
         Object.values(p.architect || p.targets).forEach((e: any) => {
@@ -460,7 +459,7 @@ function processConfigWhenReading(content: ArrayBuffer) {
         });
       } catch (e) {}
     });
-    return Buffer.from(JSON.stringify(json, null, 2));
+    return Buffer.from(serializeJson(json));
   } catch (e) {
     return content;
   }
@@ -468,7 +467,7 @@ function processConfigWhenReading(content: ArrayBuffer) {
 
 function processConfigWhenWriting(content: ArrayBuffer) {
   try {
-    const json = JSON.parse(Buffer.from(content).toString());
+    const json = parseJson(Buffer.from(content).toString());
     Object.values(json.projects).forEach((p: any) => {
       try {
         Object.values(p.architect || p.targets).forEach((e: any) => {
@@ -482,7 +481,7 @@ function processConfigWhenWriting(content: ArrayBuffer) {
         });
       } catch (e) {}
     });
-    return Buffer.from(JSON.stringify(json, null, 2));
+    return Buffer.from(serializeJson(json));
   } catch (e) {
     return content;
   }
@@ -593,12 +592,10 @@ export async function runMigration(
 
       try {
         if (collectionPath) {
-          JSON.parse(
-            stripJsonComments(readFileSync(collectionPath).toString())
-          );
+          readJsonFile(collectionPath);
           return collectionPath;
         }
-      } catch (e) {
+      } catch {
         throw new Error(`Invalid migration file in package: "${name}"`);
       }
       throw new Error(`Collection cannot be resolved: "${name}"`);
@@ -646,15 +643,15 @@ function convertEventTypeToHandleMultipleConfigNames(
     let isNewFormat = true;
     try {
       isNewFormat =
-        JSON.parse(host.read(actualConfigName, 'utf-8')).version === 2;
+        parseJson(host.read(actualConfigName, 'utf-8')).version === 2;
     } catch (e) {}
 
     if (content && isNewFormat) {
-      const formatted = toNewFormatOrNull(JSON.parse(content.toString()));
+      const formatted = toNewFormatOrNull(parseJson(content.toString()));
       if (formatted) {
         return {
           eventPath: actualConfigName,
-          content: Buffer.from(JSON.stringify(formatted, null, 2)),
+          content: Buffer.from(serializeJson(formatted)),
         };
       } else {
         return { eventPath: actualConfigName, content };
