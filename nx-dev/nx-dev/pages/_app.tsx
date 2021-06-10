@@ -45,7 +45,7 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
           content="Nx: Smart, Extensible Build Framework"
         />
         <meta property="og:image" content="/images/nx-media.jpg" />
-        <meta property="og:image:width" content="600" />
+        <meta property="og:image:width" content="1000" />
         <meta property="og:image:height" content="300" />
         <link
           rel="apple-touch-icon"
