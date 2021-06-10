@@ -142,7 +142,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }) {
                   )}
                 >
                   {isActiveLink ? (
-                    <span className="rounded-md absolute h-full w-1 -right-4 top-0 bg-green-nx-base" />
+                    <span className="rounded-md absolute h-full w-1 -right-2 sm:-right-4 top-0 bg-green-nx-base" />
                   ) : null}
                   <span
                     className={cx('relative', {

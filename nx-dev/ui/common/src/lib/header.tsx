@@ -68,10 +68,14 @@ export function Header({ flavor, showSearch, version }: HeaderProps) {
             <Link
               href={`/${version.value}/${flavor.value}/core-concepts/plugins`}
             >
-              <a className="px-3 py-2 text-white leading-tight">Plugins</a>
+              <a className="px-3 py-2 hidden md:inline-flex text-white leading-tight">
+                Plugins
+              </a>
             </Link>
             <Link href="/community">
-              <a className="px-3 py-2 text-white leading-tight">Community</a>
+              <a className="px-3 py-2 hidden md:inline-flex text-white leading-tight">
+                Community
+              </a>
             </Link>
             <a
               href="https://nx.app/?utm_source=nx.dev"

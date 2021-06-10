@@ -43,6 +43,18 @@ module.exports = {
           'nx-base': 'hsla(162, 47%, 50%, 1)',
         },
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            'code::before': {
+              content: '',
+            },
+            'code::after': {
+              content: '',
+            },
+          },
+        },
+      },
     },
   },
   variants: {
