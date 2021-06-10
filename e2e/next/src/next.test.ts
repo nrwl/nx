@@ -73,12 +73,8 @@ describe('Next.js Applications', () => {
     expect(data).toContain(`Welcome to ${appName}`);
 
     p.kill();
-<<<<<<< HEAD
     await killPorts();
-  }, 120000);
-=======
   }, 300000);
->>>>>>> d6d6d7e9 (fix(nextjs): remove localhost concurency)
 
   it('should be able to consume a react libs (buildable and non-buildable)', async () => {
     const appName = uniq('app');
@@ -158,7 +154,6 @@ describe('Next.js Applications', () => {
       checkLint: false,
       checkE2E: true,
     });
-    await killPorts();
   }, 120000);
 
   it('should compile when using a workspace and react lib written in TypeScript', async () => {
@@ -261,7 +256,6 @@ describe('Next.js Applications', () => {
       checkLint: true,
       checkE2E: true,
     });
-    await killPorts();
   }, 120000);
 
   it('should support Less', async () => {
@@ -388,7 +382,6 @@ describe('Next.js Applications', () => {
       checkLint: true,
       checkE2E: true,
     });
-    await killPorts();
   }, 180000);
 
   it('should fail the build when TS errors are present', async () => {
@@ -609,64 +602,63 @@ describe('Next.js Applications', () => {
     p.kill();
     await killPorts();
   }, 300000);
-});
 
-function getData(): Promise<any> {
-  return new Promise((resolve) => {
-    http.get('http://localhost:4200', (res) => {
-      expect(res.statusCode).toEqual(200);
-      let data = '';
-      res.on('data', (chunk) => {
-        data += chunk;
-      });
-      res.once('end', () => {
-        resolve(data);
+  function getData(): Promise<any> {
+    return new Promise((resolve) => {
+      http.get('http://localhost:4200', (res) => {
+        expect(res.statusCode).toEqual(200);
+        let data = '';
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+        res.once('end', () => {
+          resolve(data);
+        });
       });
     });
-  });
-}
-
-async function checkApp(
-  appName: string,
-  opts: {
-    checkUnitTest: boolean;
-    checkLint: boolean;
-    checkE2E: boolean;
-    checkWebpack5?: boolean;
-  }
-) {
-  await killPorts();
-  const buildResult = runCLI(`build ${appName} --withDeps`);
-  if (opts.checkWebpack5) {
-    expect(buildResult).toContain('Using webpack 5');
-  }
-  expect(buildResult).toContain(`Compiled successfully`);
-  checkFilesExist(`dist/apps/${appName}/.next/build-manifest.json`);
-  checkFilesExist(`dist/apps/${appName}/public/star.svg`);
-
-  const packageJson = readJson(`dist/apps/${appName}/package.json`);
-  expect(packageJson.dependencies.react).toBeDefined();
-  expect(packageJson.dependencies['react-dom']).toBeDefined();
-  expect(packageJson.dependencies.next).toBeDefined();
-
-  if (opts.checkLint) {
-    const lintResults = runCLI(`lint ${appName}`);
-    expect(lintResults).toContain('All files pass linting.');
   }
 
-  if (opts.checkUnitTest) {
-    const testResults = await runCLIAsync(`test ${appName}`);
-    expect(testResults.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total'
-    );
-  }
+  async function checkApp(
+    appName: string,
+    opts: {
+      checkUnitTest: boolean;
+      checkLint: boolean;
+      checkE2E: boolean;
+      checkWebpack5?: boolean;
+    }
+  ) {
+    const buildResult = runCLI(`build ${appName} --withDeps`);
+    if (opts.checkWebpack5) {
+      expect(buildResult).toContain('Using webpack 5');
+    }
+    expect(buildResult).toContain(`Compiled successfully`);
+    checkFilesExist(`dist/apps/${appName}/.next/build-manifest.json`);
+    checkFilesExist(`dist/apps/${appName}/public/star.svg`);
 
-  if (opts.checkE2E) {
-    const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);
-    expect(e2eResults).toContain('All specs passed!');
-  }
+    const packageJson = readJson(`dist/apps/${appName}/package.json`);
+    expect(packageJson.dependencies.react).toBeDefined();
+    expect(packageJson.dependencies['react-dom']).toBeDefined();
+    expect(packageJson.dependencies.next).toBeDefined();
 
-  runCLI(`export ${appName}`);
-  checkFilesExist(`dist/apps/${appName}/exported/index.html`);
-  await killPorts();
-}
+    if (opts.checkLint) {
+      const lintResults = runCLI(`lint ${appName}`);
+      expect(lintResults).toContain('All files pass linting.');
+    }
+
+    if (opts.checkUnitTest) {
+      const testResults = await runCLIAsync(`test ${appName}`);
+      expect(testResults.combinedOutput).toContain(
+        'Test Suites: 1 passed, 1 total'
+      );
+    }
+
+    if (opts.checkE2E) {
+      const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);
+      expect(e2eResults).toContain('All specs passed!');
+      await killPorts();
+    }
+
+    runCLI(`export ${appName}`);
+    checkFilesExist(`dist/apps/${appName}/exported/index.html`);
+  }
+});
