@@ -2,6 +2,7 @@ import { serializeJson } from '@nrwl/workspace';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  killPorts,
   newProject,
   readFile,
   readJson,
@@ -397,5 +398,6 @@ describe('React Applications', () => {
       const e2eResults = runCLI(`e2e ${appName}-e2e`);
       expect(e2eResults).toContain('All specs passed!');
     }
+    await killPorts();
   }
 });

@@ -59,7 +59,7 @@ describe('Next.js Applications', () => {
       `apps/${appName}/pages/api/hello.js`,
       `
         export default (_req, res) => {
-          res.status(200).send('Hello Next.js!');
+          res.status(200).send('Welcome to ${appName}');
         };
       `
     );
@@ -73,8 +73,12 @@ describe('Next.js Applications', () => {
     expect(data).toContain(`Welcome to ${appName}`);
 
     p.kill();
+<<<<<<< HEAD
     await killPorts();
   }, 120000);
+=======
+  }, 300000);
+>>>>>>> d6d6d7e9 (fix(nextjs): remove localhost concurency)
 
   it('should be able to consume a react libs (buildable and non-buildable)', async () => {
     const appName = uniq('app');
@@ -631,6 +635,7 @@ async function checkApp(
     checkWebpack5?: boolean;
   }
 ) {
+  await killPorts();
   const buildResult = runCLI(`build ${appName} --withDeps`);
   if (opts.checkWebpack5) {
     expect(buildResult).toContain('Using webpack 5');
@@ -659,9 +664,9 @@ async function checkApp(
   if (opts.checkE2E) {
     const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);
     expect(e2eResults).toContain('All specs passed!');
-    await killPorts();
   }
 
   runCLI(`export ${appName}`);
   checkFilesExist(`dist/apps/${appName}/exported/index.html`);
+  await killPorts();
 }
