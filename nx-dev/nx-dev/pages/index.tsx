@@ -2,6 +2,7 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
+import Head from 'next/head';
 import {
   Footer,
   Header,
@@ -17,6 +18,15 @@ export function Index() {
   const { value: storedVersion } = useStorage('version');
   return (
     <>
+      <Head>
+        <title>Nx: Smart, Extensible Build Framework</title>
+        <meta
+          name="description"
+          content="Nx is a smart and extensible build framework to help you architect, test,
+        and build at any scale — integrating seamlessly with modern technologies and libraries while providing a
+        distributed graph-based task execution, a robust CLI, computation caching, dependency management, and more."
+        />
+      </Head>
       <Header
         showSearch={false}
         flavor={{
