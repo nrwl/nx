@@ -4,88 +4,88 @@
 
 ### Enumerations
 
-- [ChangeType](/latest/angular/nx-devkit/index#changetype)
-- [DependencyType](/latest/angular/nx-devkit/index#dependencytype)
+- [ChangeType](../../angular/nx-devkit/index#changetype)
+- [DependencyType](../../angular/nx-devkit/index#dependencytype)
 
 ### Classes
 
-- [ProjectGraphBuilder](/latest/angular/nx-devkit/index#projectgraphbuilder)
+- [ProjectGraphBuilder](../../angular/nx-devkit/index#projectgraphbuilder)
 
 ### Interfaces
 
-- [ExecutorContext](/latest/angular/nx-devkit/index#executorcontext)
-- [FileChange](/latest/angular/nx-devkit/index#filechange)
-- [FileData](/latest/angular/nx-devkit/index#filedata)
-- [ImplicitJsonSubsetDependency](/latest/angular/nx-devkit/index#implicitjsonsubsetdependency)
-- [NxAffectedConfig](/latest/angular/nx-devkit/index#nxaffectedconfig)
-- [NxJsonConfiguration](/latest/angular/nx-devkit/index#nxjsonconfiguration)
-- [NxJsonProjectConfiguration](/latest/angular/nx-devkit/index#nxjsonprojectconfiguration)
-- [NxPlugin](/latest/angular/nx-devkit/index#nxplugin)
-- [ProjectConfiguration](/latest/angular/nx-devkit/index#projectconfiguration)
-- [ProjectFileMap](/latest/angular/nx-devkit/index#projectfilemap)
-- [ProjectGraph](/latest/angular/nx-devkit/index#projectgraph)
-- [ProjectGraphDependency](/latest/angular/nx-devkit/index#projectgraphdependency)
-- [ProjectGraphNode](/latest/angular/nx-devkit/index#projectgraphnode)
-- [ProjectGraphProcessorContext](/latest/angular/nx-devkit/index#projectgraphprocessorcontext)
-- [StringDeletion](/latest/angular/nx-devkit/index#stringdeletion)
-- [StringInsertion](/latest/angular/nx-devkit/index#stringinsertion)
-- [Target](/latest/angular/nx-devkit/index#target)
-- [TargetConfiguration](/latest/angular/nx-devkit/index#targetconfiguration)
-- [TargetDependencyConfig](/latest/angular/nx-devkit/index#targetdependencyconfig)
-- [Tree](/latest/angular/nx-devkit/index#tree)
-- [Workspace](/latest/angular/nx-devkit/index#workspace)
-- [WorkspaceJsonConfiguration](/latest/angular/nx-devkit/index#workspacejsonconfiguration)
+- [ExecutorContext](../../angular/nx-devkit/index#executorcontext)
+- [FileChange](../../angular/nx-devkit/index#filechange)
+- [FileData](../../angular/nx-devkit/index#filedata)
+- [ImplicitJsonSubsetDependency](../../angular/nx-devkit/index#implicitjsonsubsetdependency)
+- [NxAffectedConfig](../../angular/nx-devkit/index#nxaffectedconfig)
+- [NxJsonConfiguration](../../angular/nx-devkit/index#nxjsonconfiguration)
+- [NxJsonProjectConfiguration](../../angular/nx-devkit/index#nxjsonprojectconfiguration)
+- [NxPlugin](../../angular/nx-devkit/index#nxplugin)
+- [ProjectConfiguration](../../angular/nx-devkit/index#projectconfiguration)
+- [ProjectFileMap](../../angular/nx-devkit/index#projectfilemap)
+- [ProjectGraph](../../angular/nx-devkit/index#projectgraph)
+- [ProjectGraphDependency](../../angular/nx-devkit/index#projectgraphdependency)
+- [ProjectGraphNode](../../angular/nx-devkit/index#projectgraphnode)
+- [ProjectGraphProcessorContext](../../angular/nx-devkit/index#projectgraphprocessorcontext)
+- [StringDeletion](../../angular/nx-devkit/index#stringdeletion)
+- [StringInsertion](../../angular/nx-devkit/index#stringinsertion)
+- [Target](../../angular/nx-devkit/index#target)
+- [TargetConfiguration](../../angular/nx-devkit/index#targetconfiguration)
+- [TargetDependencyConfig](../../angular/nx-devkit/index#targetdependencyconfig)
+- [Tree](../../angular/nx-devkit/index#tree)
+- [Workspace](../../angular/nx-devkit/index#workspace)
+- [WorkspaceJsonConfiguration](../../angular/nx-devkit/index#workspacejsonconfiguration)
 
 ### Type aliases
 
-- [Executor](/latest/angular/nx-devkit/index#executor)
-- [Generator](/latest/angular/nx-devkit/index#generator)
-- [GeneratorCallback](/latest/angular/nx-devkit/index#generatorcallback)
-- [ImplicitDependencyEntry](/latest/angular/nx-devkit/index#implicitdependencyentry)
-- [PackageManager](/latest/angular/nx-devkit/index#packagemanager)
-- [ProjectType](/latest/angular/nx-devkit/index#projecttype)
-- [StringChange](/latest/angular/nx-devkit/index#stringchange)
-- [WorkspaceConfiguration](/latest/angular/nx-devkit/index#workspaceconfiguration)
+- [Executor](../../angular/nx-devkit/index#executor)
+- [Generator](../../angular/nx-devkit/index#generator)
+- [GeneratorCallback](../../angular/nx-devkit/index#generatorcallback)
+- [ImplicitDependencyEntry](../../angular/nx-devkit/index#implicitdependencyentry)
+- [PackageManager](../../angular/nx-devkit/index#packagemanager)
+- [ProjectType](../../angular/nx-devkit/index#projecttype)
+- [StringChange](../../angular/nx-devkit/index#stringchange)
+- [WorkspaceConfiguration](../../angular/nx-devkit/index#workspaceconfiguration)
 
 ### Variables
 
-- [logger](/latest/angular/nx-devkit/index#logger)
+- [logger](../../angular/nx-devkit/index#logger)
 
 ### Functions
 
-- [addDependenciesToPackageJson](/latest/angular/nx-devkit/index#adddependenciestopackagejson)
-- [addProjectConfiguration](/latest/angular/nx-devkit/index#addprojectconfiguration)
-- [applyChangesToString](/latest/angular/nx-devkit/index#applychangestostring)
-- [convertNxExecutor](/latest/angular/nx-devkit/index#convertnxexecutor)
-- [convertNxGenerator](/latest/angular/nx-devkit/index#convertnxgenerator)
-- [formatFiles](/latest/angular/nx-devkit/index#formatfiles)
-- [generateFiles](/latest/angular/nx-devkit/index#generatefiles)
-- [getPackageManagerCommand](/latest/angular/nx-devkit/index#getpackagemanagercommand)
-- [getProjects](/latest/angular/nx-devkit/index#getprojects)
-- [getWorkspaceLayout](/latest/angular/nx-devkit/index#getworkspacelayout)
-- [getWorkspacePath](/latest/angular/nx-devkit/index#getworkspacepath)
-- [installPackagesTask](/latest/angular/nx-devkit/index#installpackagestask)
-- [joinPathFragments](/latest/angular/nx-devkit/index#joinpathfragments)
-- [names](/latest/angular/nx-devkit/index#names)
-- [normalizePath](/latest/angular/nx-devkit/index#normalizepath)
-- [offsetFromRoot](/latest/angular/nx-devkit/index#offsetfromroot)
-- [parseTargetString](/latest/angular/nx-devkit/index#parsetargetstring)
-- [readJson](/latest/angular/nx-devkit/index#readjson)
-- [readProjectConfiguration](/latest/angular/nx-devkit/index#readprojectconfiguration)
-- [readTargetOptions](/latest/angular/nx-devkit/index#readtargetoptions)
-- [readWorkspaceConfiguration](/latest/angular/nx-devkit/index#readworkspaceconfiguration)
-- [removeDependenciesFromPackageJson](/latest/angular/nx-devkit/index#removedependenciesfrompackagejson)
-- [removeProjectConfiguration](/latest/angular/nx-devkit/index#removeprojectconfiguration)
-- [runExecutor](/latest/angular/nx-devkit/index#runexecutor)
-- [stripIndents](/latest/angular/nx-devkit/index#stripindents)
-- [targetToTargetString](/latest/angular/nx-devkit/index#targettotargetstring)
-- [toJS](/latest/angular/nx-devkit/index#tojs)
-- [updateJson](/latest/angular/nx-devkit/index#updatejson)
-- [updateProjectConfiguration](/latest/angular/nx-devkit/index#updateprojectconfiguration)
-- [updateTsConfigsToJs](/latest/angular/nx-devkit/index#updatetsconfigstojs)
-- [updateWorkspaceConfiguration](/latest/angular/nx-devkit/index#updateworkspaceconfiguration)
-- [visitNotIgnoredFiles](/latest/angular/nx-devkit/index#visitnotignoredfiles)
-- [writeJson](/latest/angular/nx-devkit/index#writejson)
+- [addDependenciesToPackageJson](../../angular/nx-devkit/index#adddependenciestopackagejson)
+- [addProjectConfiguration](../../angular/nx-devkit/index#addprojectconfiguration)
+- [applyChangesToString](../../angular/nx-devkit/index#applychangestostring)
+- [convertNxExecutor](../../angular/nx-devkit/index#convertnxexecutor)
+- [convertNxGenerator](../../angular/nx-devkit/index#convertnxgenerator)
+- [formatFiles](../../angular/nx-devkit/index#formatfiles)
+- [generateFiles](../../angular/nx-devkit/index#generatefiles)
+- [getPackageManagerCommand](../../angular/nx-devkit/index#getpackagemanagercommand)
+- [getProjects](../../angular/nx-devkit/index#getprojects)
+- [getWorkspaceLayout](../../angular/nx-devkit/index#getworkspacelayout)
+- [getWorkspacePath](../../angular/nx-devkit/index#getworkspacepath)
+- [installPackagesTask](../../angular/nx-devkit/index#installpackagestask)
+- [joinPathFragments](../../angular/nx-devkit/index#joinpathfragments)
+- [names](../../angular/nx-devkit/index#names)
+- [normalizePath](../../angular/nx-devkit/index#normalizepath)
+- [offsetFromRoot](../../angular/nx-devkit/index#offsetfromroot)
+- [parseTargetString](../../angular/nx-devkit/index#parsetargetstring)
+- [readJson](../../angular/nx-devkit/index#readjson)
+- [readProjectConfiguration](../../angular/nx-devkit/index#readprojectconfiguration)
+- [readTargetOptions](../../angular/nx-devkit/index#readtargetoptions)
+- [readWorkspaceConfiguration](../../angular/nx-devkit/index#readworkspaceconfiguration)
+- [removeDependenciesFromPackageJson](../../angular/nx-devkit/index#removedependenciesfrompackagejson)
+- [removeProjectConfiguration](../../angular/nx-devkit/index#removeprojectconfiguration)
+- [runExecutor](../../angular/nx-devkit/index#runexecutor)
+- [stripIndents](../../angular/nx-devkit/index#stripindents)
+- [targetToTargetString](../../angular/nx-devkit/index#targettotargetstring)
+- [toJS](../../angular/nx-devkit/index#tojs)
+- [updateJson](../../angular/nx-devkit/index#updatejson)
+- [updateProjectConfiguration](../../angular/nx-devkit/index#updateprojectconfiguration)
+- [updateTsConfigsToJs](../../angular/nx-devkit/index#updatetsconfigstojs)
+- [updateWorkspaceConfiguration](../../angular/nx-devkit/index#updateworkspaceconfiguration)
+- [visitNotIgnoredFiles](../../angular/nx-devkit/index#visitnotignoredfiles)
+- [writeJson](../../angular/nx-devkit/index#writejson)
 
 ## Enumerations
 
@@ -107,7 +107,7 @@ Type of dependency between projects
 
 • **ProjectGraphBuilder**: _object_
 
-Builder for adding nodes and dependencies to a [ProjectGraph](/latest/angular/nx-devkit/index#projectgraph)
+Builder for adding nodes and dependencies to a [ProjectGraph](../../angular/nx-devkit/index#projectgraph)
 
 ## Interfaces
 
@@ -297,7 +297,7 @@ Workspace configuration
 
 ### Executor
 
-Ƭ **Executor**<T\>: (`options`: T, `context`: [_ExecutorContext_](/latest/angular/nx-devkit/index#executorcontext)) => _Promise_<{ `success`: _boolean_ }\> \| _AsyncIterableIterator_<{ `success`: _boolean_ }\>
+Ƭ **Executor**<T\>: (`options`: T, `context`: [_ExecutorContext_](../../angular/nx-devkit/index#executorcontext)) => _Promise_<{ `success`: _boolean_ }\> \| _AsyncIterableIterator_<{ `success`: _boolean_ }\>
 
 Implementation of a target of a project
 
@@ -309,14 +309,14 @@ Implementation of a target of a project
 
 #### Type declaration
 
-▸ (`options`: T, `context`: [_ExecutorContext_](/latest/angular/nx-devkit/index#executorcontext)): _Promise_<{ `success`: _boolean_ }\> \| _AsyncIterableIterator_<{ `success`: _boolean_ }\>
+▸ (`options`: T, `context`: [_ExecutorContext_](../../angular/nx-devkit/index#executorcontext)): _Promise_<{ `success`: _boolean_ }\> \| _AsyncIterableIterator_<{ `success`: _boolean_ }\>
 
 #### Parameters
 
-| Name      | Type                                                                 |
-| :-------- | :------------------------------------------------------------------- |
-| `options` | T                                                                    |
-| `context` | [_ExecutorContext_](/latest/angular/nx-devkit/index#executorcontext) |
+| Name      | Type                                                               |
+| :-------- | :----------------------------------------------------------------- |
+| `options` | T                                                                  |
+| `context` | [_ExecutorContext_](../../angular/nx-devkit/index#executorcontext) |
 
 **Returns:** _Promise_<{ `success`: _boolean_ }\> \| _AsyncIterableIterator_<{ `success`: _boolean_ }\>
 
@@ -324,7 +324,7 @@ Implementation of a target of a project
 
 ### Generator
 
-Ƭ **Generator**<T\>: (`tree`: _any_, `schema`: T) => _void_ \| [_GeneratorCallback_](/latest/angular/nx-devkit/index#generatorcallback) \| _Promise_<void \| [_GeneratorCallback_](/latest/angular/nx-devkit/index#generatorcallback)\>
+Ƭ **Generator**<T\>: (`tree`: _any_, `schema`: T) => _void_ \| [_GeneratorCallback_](../../angular/nx-devkit/index#generatorcallback) \| _Promise_<void \| [_GeneratorCallback_](../../angular/nx-devkit/index#generatorcallback)\>
 
 A function that schedules updates to the filesystem to be done atomically
 
@@ -336,7 +336,7 @@ A function that schedules updates to the filesystem to be done atomically
 
 #### Type declaration
 
-▸ (`tree`: _any_, `schema`: T): _void_ \| [_GeneratorCallback_](/latest/angular/nx-devkit/index#generatorcallback) \| _Promise_<void \| [_GeneratorCallback_](/latest/angular/nx-devkit/index#generatorcallback)\>
+▸ (`tree`: _any_, `schema`: T): _void_ \| [_GeneratorCallback_](../../angular/nx-devkit/index#generatorcallback) \| _Promise_<void \| [_GeneratorCallback_](../../angular/nx-devkit/index#generatorcallback)\>
 
 #### Parameters
 
@@ -345,7 +345,7 @@ A function that schedules updates to the filesystem to be done atomically
 | `tree`   | _any_ |
 | `schema` | T     |
 
-**Returns:** _void_ \| [_GeneratorCallback_](/latest/angular/nx-devkit/index#generatorcallback) \| _Promise_<void \| [_GeneratorCallback_](/latest/angular/nx-devkit/index#generatorcallback)\>
+**Returns:** _void_ \| [_GeneratorCallback_](../../angular/nx-devkit/index#generatorcallback) \| _Promise_<void \| [_GeneratorCallback_](../../angular/nx-devkit/index#generatorcallback)\>
 
 ---
 
@@ -393,7 +393,7 @@ Type of project supported
 
 ### StringChange
 
-Ƭ **StringChange**: [_StringInsertion_](/latest/angular/nx-devkit/index#stringinsertion) \| [_StringDeletion_](/latest/angular/nx-devkit/index#stringdeletion)
+Ƭ **StringChange**: [_StringInsertion_](../../angular/nx-devkit/index#stringinsertion) \| [_StringDeletion_](../../angular/nx-devkit/index#stringdeletion)
 
 A change to be made to a string
 
@@ -401,7 +401,7 @@ A change to be made to a string
 
 ### WorkspaceConfiguration
 
-Ƭ **WorkspaceConfiguration**: _Omit_<[_WorkspaceJsonConfiguration_](/latest/angular/nx-devkit/index#workspacejsonconfiguration), `"projects"`\> & _Omit_<[_NxJsonConfiguration_](/latest/angular/nx-devkit/index#nxjsonconfiguration), `"projects"`\>
+Ƭ **WorkspaceConfiguration**: _Omit_<[_WorkspaceJsonConfiguration_](../../angular/nx-devkit/index#workspacejsonconfiguration), `"projects"`\> & _Omit_<[_NxJsonConfiguration_](../../angular/nx-devkit/index#nxjsonconfiguration), `"projects"`\>
 
 ## Variables
 
@@ -424,7 +424,7 @@ A change to be made to a string
 
 ### addDependenciesToPackageJson
 
-▸ **addDependenciesToPackageJson**(`host`: [_Tree_](/latest/angular/nx-devkit/index#tree), `dependencies`: _Record_<string, string\>, `devDependencies`: _Record_<string, string\>, `packageJsonPath?`: _string_): [_GeneratorCallback_](/latest/angular/nx-devkit/index#generatorcallback)
+▸ **addDependenciesToPackageJson**(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `dependencies`: _Record_<string, string\>, `devDependencies`: _Record_<string, string\>, `packageJsonPath?`: _string_): [_GeneratorCallback_](../../angular/nx-devkit/index#generatorcallback)
 
 Add Dependencies and Dev Dependencies to package.json
 
@@ -433,14 +433,14 @@ will add `react` and `jest` to the dependencies and devDependencies sections of 
 
 #### Parameters
 
-| Name              | Type                                           | Default value  | Description                                                             |
-| :---------------- | :--------------------------------------------- | :------------- | :---------------------------------------------------------------------- |
-| `host`            | [_Tree_](/latest/angular/nx-devkit/index#tree) | -              | Tree representing file system to modify                                 |
-| `dependencies`    | _Record_<string, string\>                      | -              | Dependencies to be added to the dependencies section of package.json    |
-| `devDependencies` | _Record_<string, string\>                      | -              | Dependencies to be added to the devDependencies section of package.json |
-| `packageJsonPath` | _string_                                       | 'package.json' | Path to package.json                                                    |
+| Name              | Type                                         | Default value  | Description                                                             |
+| :---------------- | :------------------------------------------- | :------------- | :---------------------------------------------------------------------- |
+| `host`            | [_Tree_](../../angular/nx-devkit/index#tree) | -              | Tree representing file system to modify                                 |
+| `dependencies`    | _Record_<string, string\>                    | -              | Dependencies to be added to the dependencies section of package.json    |
+| `devDependencies` | _Record_<string, string\>                    | -              | Dependencies to be added to the devDependencies section of package.json |
+| `packageJsonPath` | _string_                                     | 'package.json' | Path to package.json                                                    |
 
-**Returns:** [_GeneratorCallback_](/latest/angular/nx-devkit/index#generatorcallback)
+**Returns:** [_GeneratorCallback_](../../angular/nx-devkit/index#generatorcallback)
 
 Callback to install dependencies only if necessary. undefined is returned if changes are not necessary.
 
@@ -448,7 +448,7 @@ Callback to install dependencies only if necessary. undefined is returned if cha
 
 ### addProjectConfiguration
 
-▸ **addProjectConfiguration**(`host`: [_Tree_](/latest/angular/nx-devkit/index#tree), `projectName`: _string_, `projectConfiguration`: [_ProjectConfiguration_](/latest/angular/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](/latest/angular/nx-devkit/index#nxjsonprojectconfiguration)): _void_
+▸ **addProjectConfiguration**(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `projectName`: _string_, `projectConfiguration`: [_ProjectConfiguration_](../../angular/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../angular/nx-devkit/index#nxjsonprojectconfiguration)): _void_
 
 Adds project configuration to the Nx workspace.
 
@@ -457,11 +457,11 @@ both files.
 
 #### Parameters
 
-| Name                   | Type                                                                                                                                                                        | Description                                                             |
-| :--------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------- |
-| `host`                 | [_Tree_](/latest/angular/nx-devkit/index#tree)                                                                                                                              | the file system tree                                                    |
-| `projectName`          | _string_                                                                                                                                                                    | unique name. Often directories are part of the name (e.g., mydir-mylib) |
-| `projectConfiguration` | [_ProjectConfiguration_](/latest/angular/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](/latest/angular/nx-devkit/index#nxjsonprojectconfiguration) | project configuration                                                   |
+| Name                   | Type                                                                                                                                                                    | Description                                                             |
+| :--------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------- |
+| `host`                 | [_Tree_](../../angular/nx-devkit/index#tree)                                                                                                                            | the file system tree                                                    |
+| `projectName`          | _string_                                                                                                                                                                | unique name. Often directories are part of the name (e.g., mydir-mylib) |
+| `projectConfiguration` | [_ProjectConfiguration_](../../angular/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../angular/nx-devkit/index#nxjsonprojectconfiguration) | project configuration                                                   |
 
 **Returns:** _void_
 
@@ -469,7 +469,7 @@ both files.
 
 ### applyChangesToString
 
-▸ **applyChangesToString**(`text`: _string_, `changes`: [_StringChange_](/latest/angular/nx-devkit/index#stringchange)[]): _string_
+▸ **applyChangesToString**(`text`: _string_, `changes`: [_StringChange_](../../angular/nx-devkit/index#stringchange)[]): _string_
 
 Applies a list of changes to a string's original value.
 
@@ -503,10 +503,10 @@ bootstrap({
 
 #### Parameters
 
-| Name      | Type                                                             |
-| :-------- | :--------------------------------------------------------------- |
-| `text`    | _string_                                                         |
-| `changes` | [_StringChange_](/latest/angular/nx-devkit/index#stringchange)[] |
+| Name      | Type                                                           |
+| :-------- | :------------------------------------------------------------- |
+| `text`    | _string_                                                       |
+| `changes` | [_StringChange_](../../angular/nx-devkit/index#stringchange)[] |
 
 **Returns:** _string_
 
@@ -514,7 +514,7 @@ bootstrap({
 
 ### convertNxExecutor
 
-▸ **convertNxExecutor**(`executor`: [_Executor_](/latest/angular/nx-devkit/index#executor)): _any_
+▸ **convertNxExecutor**(`executor`: [_Executor_](../../angular/nx-devkit/index#executor)): _any_
 
 Convert an Nx Executor into an Angular Devkit Builder
 
@@ -522,9 +522,9 @@ Use this to expose a compatible Angular Builder
 
 #### Parameters
 
-| Name       | Type                                                   |
-| :--------- | :----------------------------------------------------- |
-| `executor` | [_Executor_](/latest/angular/nx-devkit/index#executor) |
+| Name       | Type                                                 |
+| :--------- | :--------------------------------------------------- |
+| `executor` | [_Executor_](../../angular/nx-devkit/index#executor) |
 
 **Returns:** _any_
 
@@ -532,7 +532,7 @@ Use this to expose a compatible Angular Builder
 
 ### convertNxGenerator
 
-▸ **convertNxGenerator**<T\>(`generator`: [_Generator_](/latest/angular/nx-devkit/index#generator)<T\>): _function_
+▸ **convertNxGenerator**<T\>(`generator`: [_Generator_](../../angular/nx-devkit/index#generator)<T\>): _function_
 
 Convert an Nx Generator into an Angular Devkit Schematic
 
@@ -544,9 +544,9 @@ Convert an Nx Generator into an Angular Devkit Schematic
 
 #### Parameters
 
-| Name        | Type                                                         |
-| :---------- | :----------------------------------------------------------- |
-| `generator` | [_Generator_](/latest/angular/nx-devkit/index#generator)<T\> |
+| Name        | Type                                                       |
+| :---------- | :--------------------------------------------------------- |
+| `generator` | [_Generator_](../../angular/nx-devkit/index#generator)<T\> |
 
 **Returns:** (`options`: T) => (`tree`: _any_, `context`: _any_) => _Promise_<any\>
 
@@ -554,15 +554,15 @@ Convert an Nx Generator into an Angular Devkit Schematic
 
 ### formatFiles
 
-▸ **formatFiles**(`host`: [_Tree_](/latest/angular/nx-devkit/index#tree)): _Promise_<void\>
+▸ **formatFiles**(`host`: [_Tree_](../../angular/nx-devkit/index#tree)): _Promise_<void\>
 
 Formats all the created or updated files using Prettier
 
 #### Parameters
 
-| Name   | Type                                           | Description          |
-| :----- | :--------------------------------------------- | :------------------- |
-| `host` | [_Tree_](/latest/angular/nx-devkit/index#tree) | the file system tree |
+| Name   | Type                                         | Description          |
+| :----- | :------------------------------------------- | :------------------- |
+| `host` | [_Tree_](../../angular/nx-devkit/index#tree) | the file system tree |
 
 **Returns:** _Promise_<void\>
 
@@ -570,7 +570,7 @@ Formats all the created or updated files using Prettier
 
 ### generateFiles
 
-▸ **generateFiles**(`host`: [_Tree_](/latest/angular/nx-devkit/index#tree), `srcFolder`: _string_, `target`: _string_, `substitutions`: { [k: string]: _any_; }): _void_
+▸ **generateFiles**(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `srcFolder`: _string_, `target`: _string_, `substitutions`: { [k: string]: _any_; }): _void_
 
 Generates a folder of files based on provided templates.
 
@@ -581,12 +581,12 @@ While doing so it performs two substitutions:
 
 #### Parameters
 
-| Name            | Type                                           | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| :-------------- | :--------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `host`          | [_Tree_](/latest/angular/nx-devkit/index#tree) | the file system tree                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `srcFolder`     | _string_                                       | the source folder of files (absolute path)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `target`        | _string_                                       | the target folder (relative to the host root)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `substitutions` | _object_                                       | an object of key-value pairs Examples: `typescript generateFiles(host, path.join(__dirname , 'files'), './tools/scripts', {tmpl: '', name: 'myscript'}) ` This command will take all the files from the `files` directory next to the place where the command is invoked from. It will replace all `__tmpl__` with '' and all `__name__` with 'myscript' in the file names, and will replace all `<%= name %>` with `myscript` in the files themselves. `tmpl: ''` is a common pattern. With it you can name files like this: `index.ts__tmpl__`, so your editor doesn't get confused about incorrect TypeScript files. |
+| Name            | Type                                         | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| :-------------- | :------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `host`          | [_Tree_](../../angular/nx-devkit/index#tree) | the file system tree                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `srcFolder`     | _string_                                     | the source folder of files (absolute path)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `target`        | _string_                                     | the target folder (relative to the host root)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `substitutions` | _object_                                     | an object of key-value pairs Examples: `typescript generateFiles(host, path.join(__dirname , 'files'), './tools/scripts', {tmpl: '', name: 'myscript'}) ` This command will take all the files from the `files` directory next to the place where the command is invoked from. It will replace all `__tmpl__` with '' and all `__name__` with 'myscript' in the file names, and will replace all `<%= name %>` with `myscript` in the files themselves. `tmpl: ''` is a common pattern. With it you can name files like this: `index.ts__tmpl__`, so your editor doesn't get confused about incorrect TypeScript files. |
 
 **Returns:** _void_
 
@@ -594,7 +594,7 @@ While doing so it performs two substitutions:
 
 ### getPackageManagerCommand
 
-▸ **getPackageManagerCommand**(`packageManager?`: [_PackageManager_](/latest/angular/nx-devkit/index#packagemanager)): _object_
+▸ **getPackageManagerCommand**(`packageManager?`: [_PackageManager_](../../angular/nx-devkit/index#packagemanager)): _object_
 
 Returns commands for the package manager used in the workspace.
 By default, the package manager is derived based on the lock file,
@@ -608,9 +608,9 @@ execSync(`${getPackageManagerCommand().addDev} my-dev-package`);
 
 #### Parameters
 
-| Name             | Type                                                               |
-| :--------------- | :----------------------------------------------------------------- |
-| `packageManager` | [_PackageManager_](/latest/angular/nx-devkit/index#packagemanager) |
+| Name             | Type                                                             |
+| :--------------- | :--------------------------------------------------------------- |
+| `packageManager` | [_PackageManager_](../../angular/nx-devkit/index#packagemanager) |
 
 **Returns:** _object_
 
@@ -628,25 +628,25 @@ execSync(`${getPackageManagerCommand().addDev} my-dev-package`);
 
 ### getProjects
 
-▸ **getProjects**(`host`: [_Tree_](/latest/angular/nx-devkit/index#tree)): _Map_<string, [_ProjectConfiguration_](/latest/angular/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](/latest/angular/nx-devkit/index#nxjsonprojectconfiguration)\>
+▸ **getProjects**(`host`: [_Tree_](../../angular/nx-devkit/index#tree)): _Map_<string, [_ProjectConfiguration_](../../angular/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../angular/nx-devkit/index#nxjsonprojectconfiguration)\>
 
 Get a map of all projects in a workspace.
 
-Use [readProjectConfiguration](/latest/angular/nx-devkit/index#readprojectconfiguration) if only one project is needed.
+Use [readProjectConfiguration](../../angular/nx-devkit/index#readprojectconfiguration) if only one project is needed.
 
 #### Parameters
 
-| Name   | Type                                           |
-| :----- | :--------------------------------------------- |
-| `host` | [_Tree_](/latest/angular/nx-devkit/index#tree) |
+| Name   | Type                                         |
+| :----- | :------------------------------------------- |
+| `host` | [_Tree_](../../angular/nx-devkit/index#tree) |
 
-**Returns:** _Map_<string, [_ProjectConfiguration_](/latest/angular/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](/latest/angular/nx-devkit/index#nxjsonprojectconfiguration)\>
+**Returns:** _Map_<string, [_ProjectConfiguration_](../../angular/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../angular/nx-devkit/index#nxjsonprojectconfiguration)\>
 
 ---
 
 ### getWorkspaceLayout
 
-▸ **getWorkspaceLayout**(`host`: [_Tree_](/latest/angular/nx-devkit/index#tree)): _object_
+▸ **getWorkspaceLayout**(`host`: [_Tree_](../../angular/nx-devkit/index#tree)): _object_
 
 Returns workspace defaults. It includes defaults folders for apps and libs,
 and the default scope.
@@ -657,9 +657,9 @@ Example:
 
 #### Parameters
 
-| Name   | Type                                           | Description      |
-| :----- | :--------------------------------------------- | :--------------- |
-| `host` | [_Tree_](/latest/angular/nx-devkit/index#tree) | file system tree |
+| Name   | Type                                         | Description      |
+| :----- | :------------------------------------------- | :--------------- |
+| `host` | [_Tree_](../../angular/nx-devkit/index#tree) | file system tree |
 
 **Returns:** _object_
 
@@ -673,13 +673,13 @@ Example:
 
 ### getWorkspacePath
 
-▸ **getWorkspacePath**(`host`: [_Tree_](/latest/angular/nx-devkit/index#tree)): _string_
+▸ **getWorkspacePath**(`host`: [_Tree_](../../angular/nx-devkit/index#tree)): _string_
 
 #### Parameters
 
-| Name   | Type                                           |
-| :----- | :--------------------------------------------- |
-| `host` | [_Tree_](/latest/angular/nx-devkit/index#tree) |
+| Name   | Type                                         |
+| :----- | :------------------------------------------- |
+| `host` | [_Tree_](../../angular/nx-devkit/index#tree) |
 
 **Returns:** _string_
 
@@ -687,19 +687,19 @@ Example:
 
 ### installPackagesTask
 
-▸ **installPackagesTask**(`host`: [_Tree_](/latest/angular/nx-devkit/index#tree), `alwaysRun?`: _boolean_, `cwd?`: _string_, `packageManager?`: [_PackageManager_](/latest/angular/nx-devkit/index#packagemanager)): _void_
+▸ **installPackagesTask**(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `alwaysRun?`: _boolean_, `cwd?`: _string_, `packageManager?`: [_PackageManager_](../../angular/nx-devkit/index#packagemanager)): _void_
 
 Runs `npm install` or `yarn install`. It will skip running the install if
 `package.json` hasn't changed at all or it hasn't changed since the last invocation.
 
 #### Parameters
 
-| Name             | Type                                                               | Default value | Description                                                   |
-| :--------------- | :----------------------------------------------------------------- | :------------ | :------------------------------------------------------------ |
-| `host`           | [_Tree_](/latest/angular/nx-devkit/index#tree)                     | -             | the file system tree                                          |
-| `alwaysRun`      | _boolean_                                                          | false         | always run the command even if `package.json` hasn't changed. |
-| `cwd`            | _string_                                                           | ''            | -                                                             |
-| `packageManager` | [_PackageManager_](/latest/angular/nx-devkit/index#packagemanager) | -             | -                                                             |
+| Name             | Type                                                             | Default value | Description                                                   |
+| :--------------- | :--------------------------------------------------------------- | :------------ | :------------------------------------------------------------ |
+| `host`           | [_Tree_](../../angular/nx-devkit/index#tree)                     | -             | the file system tree                                          |
+| `alwaysRun`      | _boolean_                                                        | false         | always run the command even if `package.json` hasn't changed. |
+| `cwd`            | _string_                                                         | ''            | -                                                             |
+| `packageManager` | [_PackageManager_](../../angular/nx-devkit/index#packagemanager) | -             | -                                                             |
 
 **Returns:** _void_
 
@@ -793,7 +793,7 @@ offsetFromRoot('apps/mydir/myapp/'); // returns "../../../"
 
 ### parseTargetString
 
-▸ **parseTargetString**(`targetString`: _string_): [_Target_](/latest/angular/nx-devkit/index#target)
+▸ **parseTargetString**(`targetString`: _string_): [_Target_](../../angular/nx-devkit/index#target)
 
 Parses a target string into {project, target, configuration}
 
@@ -803,13 +803,13 @@ Parses a target string into {project, target, configuration}
 | :------------- | :------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `targetString` | _string_ | target reference Examples: `typescript parseTargetString("proj:test") // returns { project: "proj", target: "test" } parseTargetString("proj:test:production") // returns { project: "proj", target: "test", configuration: "production" } ` |
 
-**Returns:** [_Target_](/latest/angular/nx-devkit/index#target)
+**Returns:** [_Target_](../../angular/nx-devkit/index#target)
 
 ---
 
 ### readJson
 
-▸ **readJson**<T\>(`host`: [_Tree_](/latest/angular/nx-devkit/index#tree), `path`: _string_): T
+▸ **readJson**<T\>(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `path`: _string_): T
 
 Reads a document for host, removes all comments and parses JSON.
 
@@ -821,10 +821,10 @@ Reads a document for host, removes all comments and parses JSON.
 
 #### Parameters
 
-| Name   | Type                                           | Description      |
-| :----- | :--------------------------------------------- | :--------------- |
-| `host` | [_Tree_](/latest/angular/nx-devkit/index#tree) | file system tree |
-| `path` | _string_                                       | file path        |
+| Name   | Type                                         | Description      |
+| :----- | :------------------------------------------- | :--------------- |
+| `host` | [_Tree_](../../angular/nx-devkit/index#tree) | file system tree |
+| `path` | _string_                                     | file path        |
 
 **Returns:** T
 
@@ -832,7 +832,7 @@ Reads a document for host, removes all comments and parses JSON.
 
 ### readProjectConfiguration
 
-▸ **readProjectConfiguration**(`host`: [_Tree_](/latest/angular/nx-devkit/index#tree), `projectName`: _string_): [_ProjectConfiguration_](/latest/angular/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](/latest/angular/nx-devkit/index#nxjsonprojectconfiguration)
+▸ **readProjectConfiguration**(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `projectName`: _string_): [_ProjectConfiguration_](../../angular/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../angular/nx-devkit/index#nxjsonprojectconfiguration)
 
 Reads a project configuration.
 
@@ -841,18 +841,18 @@ both files.
 
 #### Parameters
 
-| Name          | Type                                           | Description                                                             |
-| :------------ | :--------------------------------------------- | :---------------------------------------------------------------------- |
-| `host`        | [_Tree_](/latest/angular/nx-devkit/index#tree) | the file system tree                                                    |
-| `projectName` | _string_                                       | unique name. Often directories are part of the name (e.g., mydir-mylib) |
+| Name          | Type                                         | Description                                                             |
+| :------------ | :------------------------------------------- | :---------------------------------------------------------------------- |
+| `host`        | [_Tree_](../../angular/nx-devkit/index#tree) | the file system tree                                                    |
+| `projectName` | _string_                                     | unique name. Often directories are part of the name (e.g., mydir-mylib) |
 
-**Returns:** [_ProjectConfiguration_](/latest/angular/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](/latest/angular/nx-devkit/index#nxjsonprojectconfiguration)
+**Returns:** [_ProjectConfiguration_](../../angular/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../angular/nx-devkit/index#nxjsonprojectconfiguration)
 
 ---
 
 ### readTargetOptions
 
-▸ **readTargetOptions**<T\>(`__namedParameters`: [_Target_](/latest/angular/nx-devkit/index#target), `context`: [_ExecutorContext_](/latest/angular/nx-devkit/index#executorcontext)): T
+▸ **readTargetOptions**<T\>(`__namedParameters`: [_Target_](../../angular/nx-devkit/index#target), `context`: [_ExecutorContext_](../../angular/nx-devkit/index#executorcontext)): T
 
 Reads and combines options for a given target.
 
@@ -866,10 +866,10 @@ Works as if you invoked the target yourself without passing any command lint ove
 
 #### Parameters
 
-| Name                | Type                                                                 |
-| :------------------ | :------------------------------------------------------------------- |
-| `__namedParameters` | [_Target_](/latest/angular/nx-devkit/index#target)                   |
-| `context`           | [_ExecutorContext_](/latest/angular/nx-devkit/index#executorcontext) |
+| Name                | Type                                                               |
+| :------------------ | :----------------------------------------------------------------- |
+| `__namedParameters` | [_Target_](../../angular/nx-devkit/index#target)                   |
+| `context`           | [_ExecutorContext_](../../angular/nx-devkit/index#executorcontext) |
 
 **Returns:** T
 
@@ -877,25 +877,25 @@ Works as if you invoked the target yourself without passing any command lint ove
 
 ### readWorkspaceConfiguration
 
-▸ **readWorkspaceConfiguration**(`host`: [_Tree_](/latest/angular/nx-devkit/index#tree)): [_WorkspaceConfiguration_](/latest/angular/nx-devkit/index#workspaceconfiguration)
+▸ **readWorkspaceConfiguration**(`host`: [_Tree_](../../angular/nx-devkit/index#tree)): [_WorkspaceConfiguration_](../../angular/nx-devkit/index#workspaceconfiguration)
 
 Read general workspace configuration such as the default project or cli settings
 
-This does _not_ provide projects configuration, use [readProjectConfiguration](/latest/angular/nx-devkit/index#readprojectconfiguration) instead.
+This does _not_ provide projects configuration, use [readProjectConfiguration](../../angular/nx-devkit/index#readprojectconfiguration) instead.
 
 #### Parameters
 
-| Name   | Type                                           |
-| :----- | :--------------------------------------------- |
-| `host` | [_Tree_](/latest/angular/nx-devkit/index#tree) |
+| Name   | Type                                         |
+| :----- | :------------------------------------------- |
+| `host` | [_Tree_](../../angular/nx-devkit/index#tree) |
 
-**Returns:** [_WorkspaceConfiguration_](/latest/angular/nx-devkit/index#workspaceconfiguration)
+**Returns:** [_WorkspaceConfiguration_](../../angular/nx-devkit/index#workspaceconfiguration)
 
 ---
 
 ### removeDependenciesFromPackageJson
 
-▸ **removeDependenciesFromPackageJson**(`host`: [_Tree_](/latest/angular/nx-devkit/index#tree), `dependencies`: _string_[], `devDependencies`: _string_[], `packageJsonPath?`: _string_): [_GeneratorCallback_](/latest/angular/nx-devkit/index#generatorcallback)
+▸ **removeDependenciesFromPackageJson**(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `dependencies`: _string_[], `devDependencies`: _string_[], `packageJsonPath?`: _string_): [_GeneratorCallback_](../../angular/nx-devkit/index#generatorcallback)
 
 Remove Dependencies and Dev Dependencies from package.json
 
@@ -904,14 +904,14 @@ will remove `react` and `jest` from the dependencies and devDependencies section
 
 #### Parameters
 
-| Name              | Type                                           | Default value  | Description                                                                 |
-| :---------------- | :--------------------------------------------- | :------------- | :-------------------------------------------------------------------------- |
-| `host`            | [_Tree_](/latest/angular/nx-devkit/index#tree) | -              | -                                                                           |
-| `dependencies`    | _string_[]                                     | -              | Dependencies to be removed from the dependencies section of package.json    |
-| `devDependencies` | _string_[]                                     | -              | Dependencies to be removed from the devDependencies section of package.json |
-| `packageJsonPath` | _string_                                       | 'package.json' | -                                                                           |
+| Name              | Type                                         | Default value  | Description                                                                 |
+| :---------------- | :------------------------------------------- | :------------- | :-------------------------------------------------------------------------- |
+| `host`            | [_Tree_](../../angular/nx-devkit/index#tree) | -              | -                                                                           |
+| `dependencies`    | _string_[]                                   | -              | Dependencies to be removed from the dependencies section of package.json    |
+| `devDependencies` | _string_[]                                   | -              | Dependencies to be removed from the devDependencies section of package.json |
+| `packageJsonPath` | _string_                                     | 'package.json' | -                                                                           |
 
-**Returns:** [_GeneratorCallback_](/latest/angular/nx-devkit/index#generatorcallback)
+**Returns:** [_GeneratorCallback_](../../angular/nx-devkit/index#generatorcallback)
 
 Callback to uninstall dependencies only if necessary. undefined is returned if changes are not necessary.
 
@@ -919,7 +919,7 @@ Callback to uninstall dependencies only if necessary. undefined is returned if c
 
 ### removeProjectConfiguration
 
-▸ **removeProjectConfiguration**(`host`: [_Tree_](/latest/angular/nx-devkit/index#tree), `projectName`: _string_): _void_
+▸ **removeProjectConfiguration**(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `projectName`: _string_): _void_
 
 Removes the configuration of an existing project.
 
@@ -928,10 +928,10 @@ The utility will update both files.
 
 #### Parameters
 
-| Name          | Type                                           |
-| :------------ | :--------------------------------------------- |
-| `host`        | [_Tree_](/latest/angular/nx-devkit/index#tree) |
-| `projectName` | _string_                                       |
+| Name          | Type                                         |
+| :------------ | :------------------------------------------- |
+| `host`        | [_Tree_](../../angular/nx-devkit/index#tree) |
+| `projectName` | _string_                                     |
 
 **Returns:** _void_
 
@@ -939,7 +939,7 @@ The utility will update both files.
 
 ### runExecutor
 
-▸ **runExecutor**<T\>(`targetDescription`: { `configuration?`: _string_ ; `project`: _string_ ; `target`: _string_ }, `options`: { [k: string]: _any_; }, `context`: [_ExecutorContext_](/latest/angular/nx-devkit/index#executorcontext)): _Promise_<AsyncIterableIterator<T\>\>
+▸ **runExecutor**<T\>(`targetDescription`: { `configuration?`: _string_ ; `project`: _string_ ; `target`: _string_ }, `options`: { [k: string]: _any_; }, `context`: [_ExecutorContext_](../../angular/nx-devkit/index#executorcontext)): _Promise_<AsyncIterableIterator<T\>\>
 
 Loads and invokes executor.
 
@@ -978,14 +978,14 @@ Note that the return value is a promise of an iterator, so you need to await bef
 
 #### Parameters
 
-| Name                               | Type                                                                 |
-| :--------------------------------- | :------------------------------------------------------------------- |
-| `targetDescription`                | _object_                                                             |
-| `targetDescription.configuration?` | _string_                                                             |
-| `targetDescription.project`        | _string_                                                             |
-| `targetDescription.target`         | _string_                                                             |
-| `options`                          | _object_                                                             |
-| `context`                          | [_ExecutorContext_](/latest/angular/nx-devkit/index#executorcontext) |
+| Name                               | Type                                                               |
+| :--------------------------------- | :----------------------------------------------------------------- |
+| `targetDescription`                | _object_                                                           |
+| `targetDescription.configuration?` | _string_                                                           |
+| `targetDescription.project`        | _string_                                                           |
+| `targetDescription.target`         | _string_                                                           |
+| `options`                          | _object_                                                           |
+| `context`                          | [_ExecutorContext_](../../angular/nx-devkit/index#executorcontext) |
 
 **Returns:** _Promise_<AsyncIterableIterator<T\>\>
 
@@ -1020,15 +1020,15 @@ stripIndents`
 
 ### targetToTargetString
 
-▸ **targetToTargetString**(`__namedParameters`: [_Target_](/latest/angular/nx-devkit/index#target)): _string_
+▸ **targetToTargetString**(`__namedParameters`: [_Target_](../../angular/nx-devkit/index#target)): _string_
 
 Returns a string in the format "project:target[:configuration]" for the target
 
 #### Parameters
 
-| Name                | Type                                               |
-| :------------------ | :------------------------------------------------- |
-| `__namedParameters` | [_Target_](/latest/angular/nx-devkit/index#target) |
+| Name                | Type                                             |
+| :------------------ | :----------------------------------------------- |
+| `__namedParameters` | [_Target_](../../angular/nx-devkit/index#target) |
 
 **Returns:** _string_
 
@@ -1036,15 +1036,15 @@ Returns a string in the format "project:target[:configuration]" for the target
 
 ### toJS
 
-▸ **toJS**(`tree`: [_Tree_](/latest/angular/nx-devkit/index#tree)): _void_
+▸ **toJS**(`tree`: [_Tree_](../../angular/nx-devkit/index#tree)): _void_
 
 Rename and transpile any new typescript files created to javascript files
 
 #### Parameters
 
-| Name   | Type                                           |
-| :----- | :--------------------------------------------- |
-| `tree` | [_Tree_](/latest/angular/nx-devkit/index#tree) |
+| Name   | Type                                         |
+| :----- | :------------------------------------------- |
+| `tree` | [_Tree_](../../angular/nx-devkit/index#tree) |
 
 **Returns:** _void_
 
@@ -1052,7 +1052,7 @@ Rename and transpile any new typescript files created to javascript files
 
 ### updateJson
 
-▸ **updateJson**<T, U\>(`host`: [_Tree_](/latest/angular/nx-devkit/index#tree), `path`: _string_, `updater`: (`value`: T) => U): _void_
+▸ **updateJson**<T, U\>(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `path`: _string_, `updater`: (`value`: T) => U): _void_
 
 Updates a JSON value to the file system tree
 
@@ -1065,11 +1065,11 @@ Updates a JSON value to the file system tree
 
 #### Parameters
 
-| Name      | Type                                           | Description                                                                                          |
-| :-------- | :--------------------------------------------- | :--------------------------------------------------------------------------------------------------- |
-| `host`    | [_Tree_](/latest/angular/nx-devkit/index#tree) | File system tree                                                                                     |
-| `path`    | _string_                                       | Path of JSON file in the Tree                                                                        |
-| `updater` | (`value`: T) => U                              | Function that maps the current value of a JSON document to a new value to be written to the document |
+| Name      | Type                                         | Description                                                                                          |
+| :-------- | :------------------------------------------- | :--------------------------------------------------------------------------------------------------- |
+| `host`    | [_Tree_](../../angular/nx-devkit/index#tree) | File system tree                                                                                     |
+| `path`    | _string_                                     | Path of JSON file in the Tree                                                                        |
+| `updater` | (`value`: T) => U                            | Function that maps the current value of a JSON document to a new value to be written to the document |
 
 **Returns:** _void_
 
@@ -1077,7 +1077,7 @@ Updates a JSON value to the file system tree
 
 ### updateProjectConfiguration
 
-▸ **updateProjectConfiguration**(`host`: [_Tree_](/latest/angular/nx-devkit/index#tree), `projectName`: _string_, `projectConfiguration`: [_ProjectConfiguration_](/latest/angular/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](/latest/angular/nx-devkit/index#nxjsonprojectconfiguration)): _void_
+▸ **updateProjectConfiguration**(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `projectName`: _string_, `projectConfiguration`: [_ProjectConfiguration_](../../angular/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../angular/nx-devkit/index#nxjsonprojectconfiguration)): _void_
 
 Updates the configuration of an existing project.
 
@@ -1086,11 +1086,11 @@ both files.
 
 #### Parameters
 
-| Name                   | Type                                                                                                                                                                        | Description                                                             |
-| :--------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------- |
-| `host`                 | [_Tree_](/latest/angular/nx-devkit/index#tree)                                                                                                                              | the file system tree                                                    |
-| `projectName`          | _string_                                                                                                                                                                    | unique name. Often directories are part of the name (e.g., mydir-mylib) |
-| `projectConfiguration` | [_ProjectConfiguration_](/latest/angular/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](/latest/angular/nx-devkit/index#nxjsonprojectconfiguration) | project configuration                                                   |
+| Name                   | Type                                                                                                                                                                    | Description                                                             |
+| :--------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------- |
+| `host`                 | [_Tree_](../../angular/nx-devkit/index#tree)                                                                                                                            | the file system tree                                                    |
+| `projectName`          | _string_                                                                                                                                                                | unique name. Often directories are part of the name (e.g., mydir-mylib) |
+| `projectConfiguration` | [_ProjectConfiguration_](../../angular/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../angular/nx-devkit/index#nxjsonprojectconfiguration) | project configuration                                                   |
 
 **Returns:** _void_
 
@@ -1098,15 +1098,15 @@ both files.
 
 ### updateTsConfigsToJs
 
-▸ **updateTsConfigsToJs**(`host`: [_Tree_](/latest/angular/nx-devkit/index#tree), `options`: { `projectRoot`: _string_ }): _void_
+▸ **updateTsConfigsToJs**(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `options`: { `projectRoot`: _string_ }): _void_
 
 #### Parameters
 
-| Name                  | Type                                           |
-| :-------------------- | :--------------------------------------------- |
-| `host`                | [_Tree_](/latest/angular/nx-devkit/index#tree) |
-| `options`             | _object_                                       |
-| `options.projectRoot` | _string_                                       |
+| Name                  | Type                                         |
+| :-------------------- | :------------------------------------------- |
+| `host`                | [_Tree_](../../angular/nx-devkit/index#tree) |
+| `options`             | _object_                                     |
+| `options.projectRoot` | _string_                                     |
 
 **Returns:** _void_
 
@@ -1114,18 +1114,18 @@ both files.
 
 ### updateWorkspaceConfiguration
 
-▸ **updateWorkspaceConfiguration**(`host`: [_Tree_](/latest/angular/nx-devkit/index#tree), `__namedParameters`: [_WorkspaceConfiguration_](/latest/angular/nx-devkit/index#workspaceconfiguration)): _void_
+▸ **updateWorkspaceConfiguration**(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `__namedParameters`: [_WorkspaceConfiguration_](../../angular/nx-devkit/index#workspaceconfiguration)): _void_
 
 Update general workspace configuration such as the default project or cli settings.
 
-This does _not_ update projects configuration, use [updateProjectConfiguration](/latest/angular/nx-devkit/index#updateprojectconfiguration) or [addProjectConfiguration](/latest/angular/nx-devkit/index#addprojectconfiguration) instead.
+This does _not_ update projects configuration, use [updateProjectConfiguration](../../angular/nx-devkit/index#updateprojectconfiguration) or [addProjectConfiguration](../../angular/nx-devkit/index#addprojectconfiguration) instead.
 
 #### Parameters
 
-| Name                | Type                                                                               |
-| :------------------ | :--------------------------------------------------------------------------------- |
-| `host`              | [_Tree_](/latest/angular/nx-devkit/index#tree)                                     |
-| `__namedParameters` | [_WorkspaceConfiguration_](/latest/angular/nx-devkit/index#workspaceconfiguration) |
+| Name                | Type                                                                             |
+| :------------------ | :------------------------------------------------------------------------------- |
+| `host`              | [_Tree_](../../angular/nx-devkit/index#tree)                                     |
+| `__namedParameters` | [_WorkspaceConfiguration_](../../angular/nx-devkit/index#workspaceconfiguration) |
 
 **Returns:** _void_
 
@@ -1133,17 +1133,17 @@ This does _not_ update projects configuration, use [updateProjectConfiguration](
 
 ### visitNotIgnoredFiles
 
-▸ **visitNotIgnoredFiles**(`tree`: [_Tree_](/latest/angular/nx-devkit/index#tree), `dirPath?`: _string_, `visitor`: (`path`: _string_) => _void_): _void_
+▸ **visitNotIgnoredFiles**(`tree`: [_Tree_](../../angular/nx-devkit/index#tree), `dirPath?`: _string_, `visitor`: (`path`: _string_) => _void_): _void_
 
 Utility to act on all files in a tree that are not ignored by git.
 
 #### Parameters
 
-| Name      | Type                                           |
-| :-------- | :--------------------------------------------- |
-| `tree`    | [_Tree_](/latest/angular/nx-devkit/index#tree) |
-| `dirPath` | _string_                                       |
-| `visitor` | (`path`: _string_) => _void_                   |
+| Name      | Type                                         |
+| :-------- | :------------------------------------------- |
+| `tree`    | [_Tree_](../../angular/nx-devkit/index#tree) |
+| `dirPath` | _string_                                     |
+| `visitor` | (`path`: _string_) => _void_                 |
 
 **Returns:** _void_
 
@@ -1151,7 +1151,7 @@ Utility to act on all files in a tree that are not ignored by git.
 
 ### writeJson
 
-▸ **writeJson**<T\>(`host`: [_Tree_](/latest/angular/nx-devkit/index#tree), `path`: _string_, `value`: T): _void_
+▸ **writeJson**<T\>(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `path`: _string_, `value`: T): _void_
 
 Writes a JSON value to the file system tree
 
@@ -1163,10 +1163,10 @@ Writes a JSON value to the file system tree
 
 #### Parameters
 
-| Name    | Type                                           | Description                   |
-| :------ | :--------------------------------------------- | :---------------------------- |
-| `host`  | [_Tree_](/latest/angular/nx-devkit/index#tree) | File system tree              |
-| `path`  | _string_                                       | Path of JSON file in the Tree |
-| `value` | T                                              | Serializable value to write   |
+| Name    | Type                                         | Description                   |
+| :------ | :------------------------------------------- | :---------------------------- |
+| `host`  | [_Tree_](../../angular/nx-devkit/index#tree) | File system tree              |
+| `path`  | _string_                                     | Path of JSON file in the Tree |
+| `value` | T                                            | Serializable value to write   |
 
 **Returns:** _void_

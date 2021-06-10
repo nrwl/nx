@@ -72,7 +72,6 @@ export function getDeepDiveSection(items: MenuItem[]): MenuSection {
 }
 
 export function getApiSection(items: MenuItem[]): MenuSection {
-  console.log(items);
   return {
     id: 'api',
     name: 'API / Reference',

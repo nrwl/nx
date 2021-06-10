@@ -12,7 +12,7 @@ async function generate() {
   execSync('nx build typedoc-theme');
   Frameworks.forEach((framework) => {
     execSync(
-      `rm -rf docs/${framework}/api-nx-devkit && npx typedoc packages/devkit/index.ts packages/devkit/ngcli-adapter.ts --tsconfig packages/devkit/tsconfig.lib.json --out ./docs/${framework}/api-nx-devkit --hideBreadcrumbs true --disableSources --publicPath /latest/${framework}/nx-devkit/ --theme dist/typedoc-theme/src/lib`
+      `rm -rf docs/${framework}/api-nx-devkit && npx typedoc packages/devkit/index.ts packages/devkit/ngcli-adapter.ts --tsconfig packages/devkit/tsconfig.lib.json --out ./docs/${framework}/api-nx-devkit --hideBreadcrumbs true --disableSources --publicPath ../../${framework}/nx-devkit/ --theme dist/typedoc-theme/src/lib`
     );
     execSync(
       `rm -rf docs/${framework}/api-nx-devkit/modules.md docs/${framework}/api-nx-devkit/README.md`

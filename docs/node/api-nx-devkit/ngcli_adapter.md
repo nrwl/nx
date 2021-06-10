@@ -4,13 +4,13 @@
 
 ### Classes
 
-- [NxScopedHost](/latest/node/nx-devkit/ngcli_adapter#nxscopedhost)
+- [NxScopedHost](../../node/nx-devkit/ngcli_adapter#nxscopedhost)
 
 ### Functions
 
-- [mockSchematicsForTesting](/latest/node/nx-devkit/ngcli_adapter#mockschematicsfortesting)
-- [overrideCollectionResolutionForTesting](/latest/node/nx-devkit/ngcli_adapter#overridecollectionresolutionfortesting)
-- [wrapAngularDevkitSchematic](/latest/node/nx-devkit/ngcli_adapter#wrapangulardevkitschematic)
+- [mockSchematicsForTesting](../../node/nx-devkit/ngcli_adapter#mockschematicsfortesting)
+- [overrideCollectionResolutionForTesting](../../node/nx-devkit/ngcli_adapter#overridecollectionresolutionfortesting)
+- [wrapAngularDevkitSchematic](../../node/nx-devkit/ngcli_adapter#wrapangulardevkitschematic)
 
 ## Classes
 
@@ -22,7 +22,7 @@
 
 ### mockSchematicsForTesting
 
-▸ **mockSchematicsForTesting**(`schematics`: { [name: string]: (`host`: [_Tree_](/latest/node/nx-devkit/index#tree), `generatorOptions`: { [k: string]: _any_; }) => _Promise_<void\>; }): _void_
+▸ **mockSchematicsForTesting**(`schematics`: { [name: string]: (`host`: [_Tree_](../../node/nx-devkit/index#tree), `generatorOptions`: { [k: string]: _any_; }) => _Promise_<void\>; }): _void_
 
 If you have an Nx Devkit generator invoking the wrapped Angular Devkit schematic,
 and you don't want the Angular Devkit schematic to run, you can mock it up using this function.
@@ -95,4 +95,4 @@ Example:
 | `collectionName` | _string_ |
 | `generatorName`  | _string_ |
 
-**Returns:** (`host`: [_Tree_](/latest/node/nx-devkit/index#tree), `generatorOptions`: { [k: string]: _any_; }) => _Promise_<any\>
+**Returns:** (`host`: [_Tree_](../../node/nx-devkit/index#tree), `generatorOptions`: { [k: string]: _any_; }) => _Promise_<any\>
