@@ -158,7 +158,7 @@ function sortWorkspaceJson() {
       writeJsonFile(workspaceJsonPath, workspaceJson);
     }
   } catch (e) {
-    console.error(`failed to sort projects in ${workspaceJsonPath}`);
+    // catch noop
   }
 }
 
@@ -170,7 +170,7 @@ function sortNxJson() {
     nxJson.projects = sortedProjects;
     writeJsonFile(nxJsonPath, nxJson);
   } catch (e) {
-    console.error('failed to sort projects in nx.json');
+    // catch noop
   }
 }
 
@@ -182,6 +182,6 @@ function sortTsConfig() {
     tsconfig.compilerOptions.paths = sortedPaths;
     writeJsonFile(tsconfigPath, tsconfig);
   } catch (e) {
-    console.error('failed to sort paths in tsconfig.base.json');
+    // catch noop
   }
 }

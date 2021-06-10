@@ -93,7 +93,7 @@ function sortWorkspaceJson(host: Tree) {
       });
     }
   } catch (e) {
-    console.warn(`failed to sort projects in ${workspaceJsonPath}`);
+    // catch noop
   }
 }
 
@@ -106,7 +106,7 @@ function sortNxJson(host: Tree) {
       projects: sortedProjects,
     });
   } catch (e) {
-    console.warn('failed to sort projects in nx.json');
+    // catch noop
   }
 }
 
@@ -122,6 +122,6 @@ function sortTsConfig(host: Tree) {
       },
     });
   } catch (e) {
-    console.warn('failed to sort paths in tsconfig.base.json');
+    // catch noop
   }
 }
