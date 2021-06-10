@@ -75,7 +75,6 @@ describe('Next.js Applications', () => {
     expect(data).toContain(`Welcome to ${appName}`);
 
     p.kill();
-    await killPorts();
   }, 300000);
 
   it('should be able to consume a react libs (buildable and non-buildable)', async () => {
