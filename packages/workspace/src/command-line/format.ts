@@ -152,9 +152,11 @@ function sortWorkspaceJson() {
   const workspaceJsonPath = workspaceConfigName(appRootPath);
   try {
     const workspaceJson = readJsonFile(workspaceJsonPath);
-    const sortedProjects = objectSortByKeys(workspaceJson.projects);
-    workspaceJson.projects = sortedProjects;
-    writeJsonFile(workspaceJsonPath, workspaceJson);
+    if (Object.entries(workspaceJson.projects).length !== 0) {
+      const sortedProjects = objectSortByKeys(workspaceJson.projects);
+      workspaceJson.projects = sortedProjects;
+      writeJsonFile(workspaceJsonPath, workspaceJson);
+    }
   } catch (e) {
     console.error(`failed to sort projects in ${workspaceJsonPath}`);
   }

@@ -112,11 +112,13 @@ function sortWorkspaceJson(host: Tree, directory: string) {
   const workspaceJsonPath = getWorkspaceFile(host, directory);
   try {
     const workspaceJson = parseJson(host.read(workspaceJsonPath).toString());
-    const sortedProjects = sortObjectByKeys(workspaceJson.projects);
-    workspaceJson.projects = sortedProjects;
-    host.overwrite(workspaceJsonPath, serializeJson(workspaceJson));
+    if (Object.entries(workspaceJson.projects).length !== 0) {
+      const sortedProjects = sortObjectByKeys(workspaceJson.projects);
+      workspaceJson.projects = sortedProjects;
+      host.overwrite(workspaceJsonPath, serializeJson(workspaceJson));
+    }
   } catch (e) {
-    console.error(`failed to sort projects in ${workspaceJsonPath}`);
+    console.warn(`failed to sort projects in ${workspaceJsonPath}`);
   }
 }
 
@@ -127,7 +129,7 @@ function sortNxJson(host: Tree) {
     nxJson.projects = sortedProjects;
     host.overwrite('nx.json', serializeJson(nxJson));
   } catch (e) {
-    console.error('failed to sort projects in nx.json');
+    console.warn('failed to sort projects in nx.json');
   }
 }
 
@@ -138,6 +140,6 @@ function sortTsConfig(host: Tree) {
     tsconfig.compilerOptions.paths = sortedPaths;
     host.overwrite('tsconfig.base.json', serializeJson(tsconfig));
   } catch (e) {
-    console.error('failed to sort paths in tsconfig.base.json');
+    console.warn('failed to sort paths in tsconfig.base.json');
   }
 }
