@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/schema",
   "$id": "NxStorybookMigrateDefaults5To6Generator",
+  "cli": "nx",
   "type": "object",
   "properties": {
     "all": {
