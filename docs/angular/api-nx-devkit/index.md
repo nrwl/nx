@@ -17,6 +17,8 @@
 - [FileChange](../../angular/nx-devkit/index#filechange)
 - [FileData](../../angular/nx-devkit/index#filedata)
 - [ImplicitJsonSubsetDependency](../../angular/nx-devkit/index#implicitjsonsubsetdependency)
+- [JsonParseOptions](../../angular/nx-devkit/index#jsonparseoptions)
+- [JsonSerializeOptions](../../angular/nx-devkit/index#jsonserializeoptions)
 - [NxAffectedConfig](../../angular/nx-devkit/index#nxaffectedconfig)
 - [NxJsonConfiguration](../../angular/nx-devkit/index#nxjsonconfiguration)
 - [NxJsonProjectConfiguration](../../angular/nx-devkit/index#nxjsonprojectconfiguration)
@@ -66,18 +68,23 @@
 - [getWorkspacePath](../../angular/nx-devkit/index#getworkspacepath)
 - [installPackagesTask](../../angular/nx-devkit/index#installpackagestask)
 - [joinPathFragments](../../angular/nx-devkit/index#joinpathfragments)
+- [moveFilesToNewDirectory](../../angular/nx-devkit/index#movefilestonewdirectory)
 - [names](../../angular/nx-devkit/index#names)
 - [normalizePath](../../angular/nx-devkit/index#normalizepath)
 - [offsetFromRoot](../../angular/nx-devkit/index#offsetfromroot)
+- [parseJson](../../angular/nx-devkit/index#parsejson)
 - [parseTargetString](../../angular/nx-devkit/index#parsetargetstring)
 - [readJson](../../angular/nx-devkit/index#readjson)
+- [readJsonFile](../../angular/nx-devkit/index#readjsonfile)
 - [readProjectConfiguration](../../angular/nx-devkit/index#readprojectconfiguration)
 - [readTargetOptions](../../angular/nx-devkit/index#readtargetoptions)
 - [readWorkspaceConfiguration](../../angular/nx-devkit/index#readworkspaceconfiguration)
 - [removeDependenciesFromPackageJson](../../angular/nx-devkit/index#removedependenciesfrompackagejson)
 - [removeProjectConfiguration](../../angular/nx-devkit/index#removeprojectconfiguration)
 - [runExecutor](../../angular/nx-devkit/index#runexecutor)
+- [serializeJson](../../angular/nx-devkit/index#serializejson)
 - [stripIndents](../../angular/nx-devkit/index#stripindents)
+- [stripJsonComments](../../angular/nx-devkit/index#stripjsoncomments)
 - [targetToTargetString](../../angular/nx-devkit/index#targettotargetstring)
 - [toJS](../../angular/nx-devkit/index#tojs)
 - [updateJson](../../angular/nx-devkit/index#updatejson)
@@ -86,6 +93,7 @@
 - [updateWorkspaceConfiguration](../../angular/nx-devkit/index#updateworkspaceconfiguration)
 - [visitNotIgnoredFiles](../../angular/nx-devkit/index#visitnotignoredfiles)
 - [writeJson](../../angular/nx-devkit/index#writejson)
+- [writeJsonFile](../../angular/nx-devkit/index#writejsonfile)
 
 ## Enumerations
 
@@ -144,6 +152,18 @@ Some metadata about a file
 | Name | Default             |
 | :--- | :------------------ |
 | `T`  | `"*"` \| _string_[] |
+
+---
+
+### JsonParseOptions
+
+• **JsonParseOptions**: _object_
+
+---
+
+### JsonSerializeOptions
+
+• **JsonSerializeOptions**: _object_
 
 ---
 
@@ -721,6 +741,22 @@ Normalized path fragments and joins them
 
 ---
 
+### moveFilesToNewDirectory
+
+▸ **moveFilesToNewDirectory**(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `oldDir`: _string_, `newDir`: _string_): _void_
+
+#### Parameters
+
+| Name     | Type                                         |
+| :------- | :------------------------------------------- |
+| `host`   | [_Tree_](../../angular/nx-devkit/index#tree) |
+| `oldDir` | _string_                                     |
+| `newDir` | _string_                                     |
+
+**Returns:** _void_
+
+---
+
 ### names
 
 ▸ **names**(`name`: _string_): _object_
@@ -791,6 +827,32 @@ offsetFromRoot('apps/mydir/myapp/'); // returns "../../../"
 
 ---
 
+### parseJson
+
+▸ **parseJson**<T\>(`input`: _string_, `options?`: [_JsonParseOptions_](../../angular/nx-devkit/index#jsonparseoptions)): T
+
+Parses the given JSON string and returns the object the JSON content represents.
+By default javascript-style comments are allowed.
+
+#### Type parameters
+
+| Name | Type     | Default |
+| :--- | :------- | :------ |
+| `T`  | _object_ | _any_   |
+
+#### Parameters
+
+| Name       | Type                                                                 | Description            |
+| :--------- | :------------------------------------------------------------------- | :--------------------- |
+| `input`    | _string_                                                             | JSON content as string |
+| `options?` | [_JsonParseOptions_](../../angular/nx-devkit/index#jsonparseoptions) | JSON parse options     |
+
+**Returns:** T
+
+Object the JSON content represents
+
+---
+
 ### parseTargetString
 
 ▸ **parseTargetString**(`targetString`: _string_): [_Target_](../../angular/nx-devkit/index#target)
@@ -809,24 +871,50 @@ Parses a target string into {project, target, configuration}
 
 ### readJson
 
-▸ **readJson**<T\>(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `path`: _string_): T
+▸ **readJson**<T\>(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `path`: _string_, `options?`: [_JsonParseOptions_](../../angular/nx-devkit/index#jsonparseoptions)): T
 
 Reads a document for host, removes all comments and parses JSON.
 
 #### Type parameters
 
-| Name | Default |
-| :--- | :------ |
-| `T`  | _any_   |
+| Name | Type     | Default |
+| :--- | :------- | :------ |
+| `T`  | _object_ | _any_   |
 
 #### Parameters
 
-| Name   | Type                                         | Description      |
-| :----- | :------------------------------------------- | :--------------- |
-| `host` | [_Tree_](../../angular/nx-devkit/index#tree) | file system tree |
-| `path` | _string_                                     | file path        |
+| Name       | Type                                                                 | Description                 |
+| :--------- | :------------------------------------------------------------------- | :-------------------------- |
+| `host`     | [_Tree_](../../angular/nx-devkit/index#tree)                         | file system tree            |
+| `path`     | _string_                                                             | file path                   |
+| `options?` | [_JsonParseOptions_](../../angular/nx-devkit/index#jsonparseoptions) | Optional JSON Parse Options |
 
 **Returns:** T
+
+---
+
+### readJsonFile
+
+▸ **readJsonFile**<T\>(`path`: _string_, `options?`: JsonReadOptions): T
+
+Reads a JSON file and returns the object the JSON content represents.
+
+#### Type parameters
+
+| Name | Type     | Default |
+| :--- | :------- | :------ |
+| `T`  | _object_ | _any_   |
+
+#### Parameters
+
+| Name       | Type            | Description        |
+| :--------- | :-------------- | :----------------- |
+| `path`     | _string_        | A path to a file.  |
+| `options?` | JsonReadOptions | JSON parse options |
+
+**Returns:** T
+
+Object the JSON content of the file represents
 
 ---
 
@@ -991,6 +1079,32 @@ Note that the return value is a promise of an iterator, so you need to await bef
 
 ---
 
+### serializeJson
+
+▸ **serializeJson**<T\>(`input`: T, `options?`: [_JsonSerializeOptions_](../../angular/nx-devkit/index#jsonserializeoptions)): _string_
+
+Serializes the given data to a JSON string.
+By default the JSON string is formatted with a 2 space intendation to be easy readable.
+
+#### Type parameters
+
+| Name | Type     | Default  |
+| :--- | :------- | :------- |
+| `T`  | _object_ | _object_ |
+
+#### Parameters
+
+| Name       | Type                                                                         | Description                               |
+| :--------- | :--------------------------------------------------------------------------- | :---------------------------------------- |
+| `input`    | T                                                                            | Object which should be serialized to JSON |
+| `options?` | [_JsonSerializeOptions_](../../angular/nx-devkit/index#jsonserializeoptions) | JSON serialize options                    |
+
+**Returns:** _string_
+
+the formatted JSON representation of the object
+
+---
+
 ### stripIndents
 
 ▸ **stripIndents**(`strings`: TemplateStringsArray, ...`values`: _any_[]): _string_
@@ -1013,6 +1127,25 @@ stripIndents`
 | :---------- | :------------------- |
 | `strings`   | TemplateStringsArray |
 | `...values` | _any_[]              |
+
+**Returns:** _string_
+
+---
+
+### stripJsonComments
+
+▸ `Const` **stripJsonComments**(`text`: _string_, `replaceCh?`: _string_): _string_
+
+Takes JSON with JavaScript-style comments and remove
+them. Optionally replaces every none-newline character
+of comments with a replaceCharacter
+
+#### Parameters
+
+| Name         | Type     |
+| :----------- | :------- |
+| `text`       | _string_ |
+| `replaceCh?` | _string_ |
 
 **Returns:** _string_
 
@@ -1052,24 +1185,25 @@ Rename and transpile any new typescript files created to javascript files
 
 ### updateJson
 
-▸ **updateJson**<T, U\>(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `path`: _string_, `updater`: (`value`: T) => U): _void_
+▸ **updateJson**<T, U\>(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `path`: _string_, `updater`: (`value`: T) => U, `options?`: [_JsonParseOptions_](../../angular/nx-devkit/index#jsonparseoptions) & [_JsonSerializeOptions_](../../angular/nx-devkit/index#jsonserializeoptions)): _void_
 
 Updates a JSON value to the file system tree
 
 #### Type parameters
 
-| Name | Default |
-| :--- | :------ |
-| `T`  | _any_   |
-| `U`  | T       |
+| Name | Type     | Default |
+| :--- | :------- | :------ |
+| `T`  | _object_ | _any_   |
+| `U`  | _object_ | T       |
 
 #### Parameters
 
-| Name      | Type                                         | Description                                                                                          |
-| :-------- | :------------------------------------------- | :--------------------------------------------------------------------------------------------------- |
-| `host`    | [_Tree_](../../angular/nx-devkit/index#tree) | File system tree                                                                                     |
-| `path`    | _string_                                     | Path of JSON file in the Tree                                                                        |
-| `updater` | (`value`: T) => U                            | Function that maps the current value of a JSON document to a new value to be written to the document |
+| Name       | Type                                                                                                                                                | Description                                                                                          |
+| :--------- | :-------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------- |
+| `host`     | [_Tree_](../../angular/nx-devkit/index#tree)                                                                                                        | File system tree                                                                                     |
+| `path`     | _string_                                                                                                                                            | Path of JSON file in the Tree                                                                        |
+| `updater`  | (`value`: T) => U                                                                                                                                   | Function that maps the current value of a JSON document to a new value to be written to the document |
+| `options?` | [_JsonParseOptions_](../../angular/nx-devkit/index#jsonparseoptions) & [_JsonSerializeOptions_](../../angular/nx-devkit/index#jsonserializeoptions) | Optional JSON Parse and Serialize Options                                                            |
 
 **Returns:** _void_
 
@@ -1114,7 +1248,7 @@ both files.
 
 ### updateWorkspaceConfiguration
 
-▸ **updateWorkspaceConfiguration**(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `__namedParameters`: [_WorkspaceConfiguration_](../../angular/nx-devkit/index#workspaceconfiguration)): _void_
+▸ **updateWorkspaceConfiguration**(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `workspaceConfig`: [_WorkspaceConfiguration_](../../angular/nx-devkit/index#workspaceconfiguration)): _void_
 
 Update general workspace configuration such as the default project or cli settings.
 
@@ -1122,10 +1256,10 @@ This does _not_ update projects configuration, use [updateProjectConfiguration](
 
 #### Parameters
 
-| Name                | Type                                                                             |
-| :------------------ | :------------------------------------------------------------------------------- |
-| `host`              | [_Tree_](../../angular/nx-devkit/index#tree)                                     |
-| `__namedParameters` | [_WorkspaceConfiguration_](../../angular/nx-devkit/index#workspaceconfiguration) |
+| Name              | Type                                                                             |
+| :---------------- | :------------------------------------------------------------------------------- |
+| `host`            | [_Tree_](../../angular/nx-devkit/index#tree)                                     |
+| `workspaceConfig` | [_WorkspaceConfiguration_](../../angular/nx-devkit/index#workspaceconfiguration) |
 
 **Returns:** _void_
 
@@ -1151,22 +1285,47 @@ Utility to act on all files in a tree that are not ignored by git.
 
 ### writeJson
 
-▸ **writeJson**<T\>(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `path`: _string_, `value`: T): _void_
+▸ **writeJson**<T\>(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `path`: _string_, `value`: T, `options?`: [_JsonSerializeOptions_](../../angular/nx-devkit/index#jsonserializeoptions)): _void_
 
 Writes a JSON value to the file system tree
 
 #### Type parameters
 
-| Name | Default |
-| :--- | :------ |
-| `T`  | _any_   |
+| Name | Type     | Default  |
+| :--- | :------- | :------- |
+| `T`  | _object_ | _object_ |
 
 #### Parameters
 
-| Name    | Type                                         | Description                   |
-| :------ | :------------------------------------------- | :---------------------------- |
-| `host`  | [_Tree_](../../angular/nx-devkit/index#tree) | File system tree              |
-| `path`  | _string_                                     | Path of JSON file in the Tree |
-| `value` | T                                            | Serializable value to write   |
+| Name       | Type                                                                         | Description                     |
+| :--------- | :--------------------------------------------------------------------------- | :------------------------------ |
+| `host`     | [_Tree_](../../angular/nx-devkit/index#tree)                                 | File system tree                |
+| `path`     | _string_                                                                     | Path of JSON file in the Tree   |
+| `value`    | T                                                                            | Serializable value to write     |
+| `options?` | [_JsonSerializeOptions_](../../angular/nx-devkit/index#jsonserializeoptions) | Optional JSON Serialize Options |
+
+**Returns:** _void_
+
+---
+
+### writeJsonFile
+
+▸ **writeJsonFile**<T\>(`path`: _string_, `data`: T, `options?`: JsonWriteOptions): _void_
+
+Serializes the given data to JSON and writes it to a file.
+
+#### Type parameters
+
+| Name | Type     | Default  |
+| :--- | :------- | :------- |
+| `T`  | _object_ | _object_ |
+
+#### Parameters
+
+| Name       | Type             | Description                                                     |
+| :--------- | :--------------- | :-------------------------------------------------------------- |
+| `path`     | _string_         | A path to a file.                                               |
+| `data`     | T                | data which should be serialized to JSON and written to the file |
+| `options?` | JsonWriteOptions | JSON serialize options                                          |
 
 **Returns:** _void_
