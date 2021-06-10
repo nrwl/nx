@@ -12,9 +12,13 @@ import {
   VersionMetadata,
 } from './documents.models';
 
-export const flavorList: { label: string; value: string }[] = [
+export const flavorList: {
+  label: string;
+  value: string;
+  default?: boolean;
+}[] = [
   { label: 'Angular', value: 'angular' },
-  { label: 'React', value: 'react' },
+  { label: 'React', value: 'react', default: true },
   { label: 'Node', value: 'node' },
 ];
 
@@ -23,6 +27,10 @@ export class DocumentsApi {
     private readonly versions: VersionMetadata[],
     private readonly documentsMap: Map<string, DocumentMetadata[]>
   ) {}
+
+  getDefaultVersion(): VersionMetadata {
+    return this.versions.find((v) => v.default);
+  }
 
   getVersions(): VersionMetadata[] {
     return this.versions;
@@ -64,6 +72,7 @@ export class DocumentsApi {
 
   getStaticDocumentPaths(version: string) {
     const paths = [];
+    const defaultVersion = this.getDefaultVersion();
 
     function recur(curr, acc) {
       if (curr.itemList) {
@@ -76,6 +85,15 @@ export class DocumentsApi {
             segments: [version, ...acc, curr.id],
           },
         });
+
+        // For generic paths such as `/getting-started/intro`, use the default version and react flavor.
+        if (version === defaultVersion.id && acc[0] === 'react') {
+          paths.push({
+            params: {
+              segments: [...acc.slice(1), curr.id],
+            },
+          });
+        }
       }
     }
 
