@@ -1,19 +1,21 @@
-import { Tree, writeJson } from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
+import { joinPathFragments, writeJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { wrapAngularDevkitSchematic } from '@nrwl/tao/src/commands/ngcli-adapter';
-import { SyntaxKind } from 'typescript';
-import ts = require('typescript');
-import { nxVersion, storybookVersion } from '../../utils/versions';
-import migrateStoriesTo62Generator, {
-  getTsSourceFile,
-} from './migrate-stories-to-6-2';
+import { Linter } from '@nrwl/linter';
+import { storybookVersion } from '@nrwl/storybook';
+import {
+  overrideCollectionResolutionForTesting,
+  wrapAngularDevkitSchematic,
+} from '@nrwl/tao/src/commands/ngcli-adapter';
 import { findNodes } from '@nrwl/workspace/src/utils/ast-utils';
+import * as ts from 'typescript';
+import { SyntaxKind } from 'typescript';
+import { getTsSourceFile } from '../../utils/nx-devkit/ast-utils';
+import { nxVersion } from '../../utils/versions';
+import { storybookConfigurationGenerator } from '../storybook-configuration/storybook-configuration';
+import { angularMigrateStoriesTo62Generator } from './migrate-stories-to-6-2';
 
 const libSchematic = wrapAngularDevkitSchematic('@nrwl/angular', 'lib');
-const storybookConfigSchematic = wrapAngularDevkitSchematic(
-  '@nrwl/angular',
-  'storybook-configuration'
-);
 const componentSchematic = wrapAngularDevkitSchematic(
   '@schematics/angular',
   'component'
@@ -24,6 +26,13 @@ describe('migrate-stories-to-6-2 schematic', () => {
 
   describe('angular project', () => {
     beforeEach(async () => {
+      overrideCollectionResolutionForTesting({
+        '@nrwl/storybook': joinPathFragments(
+          __dirname,
+          '../../../../storybook/collection.json'
+        ),
+      });
+
       appTree = createTreeWithEmptyWorkspace();
 
       await libSchematic(appTree, {
@@ -43,8 +52,12 @@ describe('migrate-stories-to-6-2 schematic', () => {
         },
       });
 
-      await storybookConfigSchematic(appTree, {
+      await storybookConfigurationGenerator(appTree, {
         name: 'test-ui-lib',
+        configureCypress: true,
+        generateCypressSpecs: true,
+        generateStories: true,
+        linter: Linter.EsLint,
       });
 
       appTree.write(
@@ -82,7 +95,7 @@ describe('migrate-stories-to-6-2 schematic', () => {
     });
 
     it('should move the component from the story to parameters.component', async () => {
-      await migrateStoriesTo62Generator(appTree);
+      await angularMigrateStoriesTo62Generator(appTree);
       const storyFilePath =
         'libs/test-ui-lib/src/lib/test-button/test-button.component.stories.ts';
       const file = getTsSourceFile(appTree, storyFilePath);
