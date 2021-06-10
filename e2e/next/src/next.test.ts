@@ -1,4 +1,4 @@
-import { stringUtils } from '@nrwl/workspace';
+import { output, stringUtils } from '@nrwl/workspace';
 import {
   checkFilesExist,
   createFile,
@@ -22,6 +22,8 @@ describe('Next.js Applications', () => {
 
   it('should be able to serve with a proxy configuration', async () => {
     const appName = uniq('app');
+
+    output.success({ title: `Next proxy configuration ${appName}` });
 
     runCLI(`generate @nrwl/next:app ${appName}`);
 
@@ -78,6 +80,9 @@ describe('Next.js Applications', () => {
 
   it('should be able to consume a react libs (buildable and non-buildable)', async () => {
     const appName = uniq('app');
+
+    output.success({ title: `Next buildable react libs ${appName}` });
+
     const buildableLibName = uniq('lib');
     const nonBuildableLibName = uniq('lib');
 
@@ -133,6 +138,8 @@ describe('Next.js Applications', () => {
     const appName = uniq('app');
     const libName = uniq('lib');
 
+    output.success({ title: `Next dynamically load libs ${appName}` });
+
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
     runCLI(`generate @nrwl/react:lib ${libName} --no-interactive --style=none`);
 
@@ -158,6 +165,9 @@ describe('Next.js Applications', () => {
 
   it('should compile when using a workspace and react lib written in TypeScript', async () => {
     const appName = uniq('app');
+
+    output.success({ title: `Next compile lib in typescript ${appName}` });
+
     const tsLibName = uniq('tslib');
     const tsxLibName = uniq('tsxlib');
 
@@ -261,6 +271,8 @@ describe('Next.js Applications', () => {
   it('should support Less', async () => {
     const appName = uniq('app');
 
+    output.success({ title: `Next support less ${appName}` });
+
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=less`);
 
     await checkApp(appName, {
@@ -273,6 +285,8 @@ describe('Next.js Applications', () => {
   it('should support Stylus', async () => {
     const appName = uniq('app');
 
+    output.success({ title: `Next support stylus ${appName}` });
+
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=styl`);
 
     await checkApp(appName, {
@@ -284,6 +298,8 @@ describe('Next.js Applications', () => {
 
   it('should support --style=styled-components', async () => {
     const appName = uniq('app');
+
+    output.success({ title: `Next support styled components ${appName}` });
 
     runCLI(
       `generate @nrwl/next:app ${appName} --no-interactive --style=styled-components`
@@ -299,6 +315,8 @@ describe('Next.js Applications', () => {
   it('should support --style=@emotion/styled', async () => {
     const appName = uniq('app');
 
+    output.success({ title: `Next support @emotion ${appName}` });
+
     runCLI(
       `generate @nrwl/next:app ${appName} --no-interactive --style=@emotion/styled`
     );
@@ -312,6 +330,8 @@ describe('Next.js Applications', () => {
 
   it('should build with public folder', async () => {
     const appName = uniq('app');
+
+    output.success({ title: `Next build with public folder ${appName}` });
 
     runCLI(
       `generate @nrwl/next:app ${appName} --no-interactive --style=@emotion/styled`
@@ -344,6 +364,8 @@ describe('Next.js Applications', () => {
   it('should build with a next.config.js file in the dist folder', async () => {
     const appName = uniq('app');
 
+    output.success({ title: `Next build with next config ${appName}` });
+
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
 
     updateFile(
@@ -373,6 +395,8 @@ describe('Next.js Applications', () => {
   it('should support --js flag', async () => {
     const appName = uniq('app');
 
+    output.success({ title: `Next support js flag ${appName}` });
+
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive --js`);
 
     checkFilesExist(`apps/${appName}/pages/index.js`);
@@ -386,6 +410,8 @@ describe('Next.js Applications', () => {
 
   it('should fail the build when TS errors are present', async () => {
     const appName = uniq('app');
+
+    output.success({ title: `Next fail with TS errors ${appName}` });
 
     runCLI(
       `generate @nrwl/next:app ${appName} --no-interactive --style=@emotion/styled`
@@ -414,6 +440,8 @@ describe('Next.js Applications', () => {
   it('should be able to consume a react lib written in JavaScript', async () => {
     const appName = uniq('app');
     const libName = uniq('lib');
+
+    output.success({ title: `Next consume JS lib ${appName}` });
 
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
 
