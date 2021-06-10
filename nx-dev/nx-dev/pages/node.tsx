@@ -10,6 +10,7 @@ import {
 } from '@nrwl/nx-dev/ui/common';
 import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
 import { useStorage } from '../lib/use-storage';
+import Head from 'next/head';
 
 export function Node() {
   const sectionItemList = [
@@ -61,6 +62,13 @@ export function Node() {
 
   return (
     <>
+      <Head>
+        <title>Nx and Node</title>
+        <meta
+          name="description"
+          content="Nx is a smart and extensible build framework to help you develop, test, build, and scale Node applications."
+        />
+      </Head>
       <Header
         showSearch={false}
         flavor={{

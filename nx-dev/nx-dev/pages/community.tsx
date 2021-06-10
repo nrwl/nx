@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Footer, Header, PluginCard } from '@nrwl/nx-dev/ui/common';
 import React from 'react';
 import { useStorage } from '../lib/use-storage';
+import Head from 'next/head';
 
 declare const fetch: any;
 
@@ -31,6 +32,10 @@ export function Community(props: CommunityProps) {
   const { value: storedVersion } = useStorage('version');
   return (
     <>
+      <Head>
+        <title>Nx Community and Plugin Listing</title>
+        <meta name="description" content="Nx Community and Plugin Listing" />
+      </Head>
       <Header
         showSearch={false}
         flavor={{

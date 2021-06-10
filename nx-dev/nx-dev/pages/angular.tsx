@@ -2,6 +2,7 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
+import Head from 'next/head';
 import {
   Footer,
   Header,
@@ -17,6 +18,14 @@ export function AngularPage() {
   const { value: storedVersion } = useStorage('version');
   return (
     <>
+      <Head>
+        <title>Nx and Modern Angular</title>
+        <meta
+          name="description"
+          content="Nx is a suite of powerful dev tools that help developers build, test, and scale full-stack Angular
+          applications with integration with modern libraries like Jest, Cypress, Storybook, NgRx, ESLint, and more."
+        />
+      </Head>
       <Header
         showSearch={false}
         flavor={{

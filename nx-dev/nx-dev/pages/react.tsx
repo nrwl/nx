@@ -2,6 +2,7 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
+import Head from 'next/head';
 import {
   Footer,
   Header,
@@ -17,6 +18,13 @@ export function ReactPage() {
   const { value: storedVersion } = useStorage('version');
   return (
     <>
+      <Head>
+        <title>Nx and React</title>
+        <meta
+          name="description"
+          content="Nx dev tools help developers build, test, and scale full-stack React, Next.js, Gatsby, React Native projects and monorepos."
+        />
+      </Head>
       <Header
         showSearch={false}
         flavor={{
