@@ -115,10 +115,3 @@ or
 ```bash
 yarn nx serve todos
 ```
-
-!!!!!
-Open http://localhost:4200 in the browser. What do you see?
-!!!!!
-Page saying "Welcome to Todos!"
-Page saying "This is an React app built with Create React App"
-404

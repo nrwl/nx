@@ -38,11 +38,3 @@ If you have not done so already, stop the `npx nx serve` command and run `npx nx
 A UI will open. Click the button in the top right corner that says "Run all specs". Keep the E2E tests running.
 
 As you progress through the tutorial, you will work on making these E2E tests pass.
-
-!!!!!
-What assertion fails?
-!!!!!
-Expect 0 to equal 2
-Nothing fails. Everything works.
-Cannot find any elements matching 'li.todo'
-Cannot find any elements matching 'button#add-todo'

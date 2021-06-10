@@ -117,10 +117,3 @@ yarn nx serve todos
 ## Note on `nx serve` and `ng serve`
 
 Internally, the Nx CLI delegates to the Angular CLI when running commands or generating code. The `nx serve` command produces the same result as `ng serve`, and `nx build` produces the same results as `ng build`. However, the Nx CLI supports advanced capabilities that aren't supported by the Angular CLI. For instance, Nx's computation cache only works when using the Nx CLI. In other words, using `nx` instead `ng` will result in the same output, but often will perform a lot better. [Read more about Nx CLI and Angular CLI.](/angular/cli/nx-and-cli)
-
-!!!!!
-Open http://localhost:4200 in the browser. What do you see?
-!!!!!
-Page saying "Welcome to Todos!"
-Page saying "This is an Angular app built with the Angular CLI"
-404
