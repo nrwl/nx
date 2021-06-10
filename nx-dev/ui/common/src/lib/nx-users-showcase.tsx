@@ -2,7 +2,7 @@ export function NxUsersShowcase() {
   return (
     <div className="max-w-screen-lg mx-auto px-5 py-32">
       <p className="sm:mx-auto sm:text-lg">Join the ecosystem of Nx users</p>
-      <div className="mt-12 grid items-center justify-items-center grid-cols-3 md:grid-cols-6 gap-12 text-gray-500">
+      <div className="mt-12 grid items-center justify-items-center grid-cols-1 sm:grid-cols-3 md:grid-cols-6 gap-12 text-gray-500">
         <svg width="160" height="88" viewBox="0 0 160 88" fill="currentColor">
           <path d="M90.9947 24.3067L98.6787 27.3333L90.9947 30.1947V34.2827L104.155 28.9693V25.7L90.9947 20.3867V24.3067Z" />
           <path d="M82.4107 42.1293C83.3107 40.412 85.1107 39.4333 87.0707 39.5133V39.5107C89.864 39.5107 91.7307 41.1467 91.7307 44.9067V55.2093H87.3974V45.5627C87.3974 43.764 86.6614 42.9467 85.108 42.9467C83.7174 42.8667 82.4907 44.0107 82.4107 45.4V55.2093H78.16V39.84H82.4107V42.1293Z" />

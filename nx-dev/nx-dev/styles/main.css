@@ -27,10 +27,10 @@ iframe[src*='youtube'] {
 .prose img {
   display: block;
   margin: 1.7rem auto;
-  max-width: 560px;
 }
 .prose iframe {
   width: 100%;
+  max-width: 560px;
 }
 .prose img {
   width: max-content;
