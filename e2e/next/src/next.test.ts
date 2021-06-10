@@ -235,14 +235,14 @@ describe('Next.js Applications', () => {
           import { testFn } from '@${proj}/${tsLibName}';
           import { TestComponent } from '@${proj}/${tsxLibName}';\n\n
           ${content.replace(
-        `</h2>`,
-        `</h2>
+            `</h2>`,
+            `</h2>
                 <div>
                   {testFn()}
                   <TestComponent text="Hello Next.JS" />
                 </div>
               `
-      )}`
+          )}`
     );
 
     const e2eTestPath = `apps/${appName}-e2e/src/integration/app.spec.ts`;
@@ -250,13 +250,14 @@ describe('Next.js Applications', () => {
     updateFile(
       e2eTestPath,
       `
-        ${e2eContent +
-      `
+        ${
+          e2eContent +
+          `
           it('should successfully call async API route', () => {
             cy.request('/api/hello').its('body').should('include', 'hell0');
           });
           `
-      }
+        }
       `
     );
 
