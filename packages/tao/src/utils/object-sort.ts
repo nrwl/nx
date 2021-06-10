@@ -1,8 +1,10 @@
-export function objectSortByKeys(originalObject: object) {
+export function sortObjectByKeys(originalObject: object) {
   return Object.keys(originalObject)
     .sort()
     .reduce((obj, key) => {
-      obj[key] = originalObject[key];
-      return obj;
+      return {
+        ...obj,
+        [key]: originalObject[key],
+      };
     }, {});
 }

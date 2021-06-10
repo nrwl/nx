@@ -4,7 +4,7 @@ import * as path from 'path';
 import type * as Prettier from 'prettier';
 import { getWorkspacePath } from '../utils/get-workspace-layout';
 import { readJson, writeJson } from '../utils/json';
-import { objectSortByKeys } from '@nrwl/tao/src/utils/object-sort';
+import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
 
 /**
  * Formats all the created or updated files using Prettier
@@ -79,12 +79,18 @@ function updateWorkspaceJsonToMatchFormatVersion(host: Tree) {
 
 function sortWorkspaceJson(host: Tree) {
   const workspaceJsonPath = getWorkspacePath(host);
+  if (!path) {
+    return;
+  }
+
   try {
     const workspaceJson = readJson(host, workspaceJsonPath);
     if (Object.entries(workspaceJson.projects).length !== 0) {
-      const sortedProjects = objectSortByKeys(workspaceJson.projects);
-      workspaceJson.projects = sortedProjects;
-      writeJson(host, workspaceJsonPath, workspaceJson);
+      const sortedProjects = sortObjectByKeys(workspaceJson.projects);
+      writeJson(host, workspaceJsonPath, {
+        ...workspaceJson,
+        projects: sortedProjects,
+      });
     }
   } catch (e) {
     console.warn(`failed to sort projects in ${workspaceJsonPath}`);
@@ -94,9 +100,11 @@ function sortWorkspaceJson(host: Tree) {
 function sortNxJson(host: Tree) {
   try {
     const nxJson = readJson(host, 'nx.json');
-    const sortedProjects = objectSortByKeys(nxJson.projects);
-    nxJson.projects = sortedProjects;
-    writeJson(host, 'nx.json', nxJson);
+    const sortedProjects = sortObjectByKeys(nxJson.projects);
+    writeJson(host, 'nx.json', {
+      ...nxJson,
+      projects: sortedProjects,
+    });
   } catch (e) {
     console.warn('failed to sort projects in nx.json');
   }
@@ -105,9 +113,14 @@ function sortNxJson(host: Tree) {
 function sortTsConfig(host: Tree) {
   try {
     const tsconfig = readJson(host, 'tsconfig.base.json');
-    const sortedPaths = objectSortByKeys(tsconfig.compilerOptions.paths);
-    tsconfig.compilerOptions.paths = sortedPaths;
-    writeJson(host, 'tsconfig.base.json', tsconfig);
+    const sortedPaths = sortObjectByKeys(tsconfig.compilerOptions.paths);
+    writeJson(host, 'tsconfig.base.json', {
+      ...tsconfig,
+      compilerOptions: {
+        ...tsconfig.compilerOptions,
+        paths: sortedPaths,
+      },
+    });
   } catch (e) {
     console.warn('failed to sort paths in tsconfig.base.json');
   }

@@ -12,7 +12,6 @@ import * as path from 'path';
 import { appRootPath } from '../../utilities/app-root';
 import { reformattedWorkspaceJsonOrNull } from '@nrwl/tao/src/shared/workspace';
 import { parseJson, serializeJson } from '@nrwl/devkit';
-import { sortObjectByKeys } from '../ast-utils';
 
 export function formatFiles(
   options: { skipFormat: boolean } = { skipFormat: false },
@@ -29,9 +28,6 @@ export function formatFiles(
 
   return (host: Tree, context: SchematicContext) => {
     updateWorkspaceJsonToMatchFormatVersion(host, directory);
-    sortWorkspaceJson(host, directory);
-    sortNxJson(host);
-    sortTsConfig(host);
 
     if (!prettier) {
       return host;
@@ -105,41 +101,5 @@ function updateWorkspaceJsonToMatchFormatVersion(
   } catch (e) {
     console.error(`Failed to format: ${path}`);
     console.error(e);
-  }
-}
-
-function sortWorkspaceJson(host: Tree, directory: string) {
-  const workspaceJsonPath = getWorkspaceFile(host, directory);
-  try {
-    const workspaceJson = parseJson(host.read(workspaceJsonPath).toString());
-    if (Object.entries(workspaceJson.projects).length !== 0) {
-      const sortedProjects = sortObjectByKeys(workspaceJson.projects);
-      workspaceJson.projects = sortedProjects;
-      host.overwrite(workspaceJsonPath, serializeJson(workspaceJson));
-    }
-  } catch (e) {
-    console.warn(`failed to sort projects in ${workspaceJsonPath}`);
-  }
-}
-
-function sortNxJson(host: Tree) {
-  try {
-    const nxJson = parseJson(host.read('nx.json').toString());
-    const sortedProjects = sortObjectByKeys(nxJson.projects);
-    nxJson.projects = sortedProjects;
-    host.overwrite('nx.json', serializeJson(nxJson));
-  } catch (e) {
-    console.warn('failed to sort projects in nx.json');
-  }
-}
-
-function sortTsConfig(host: Tree) {
-  try {
-    const tsconfig = parseJson(host.read('tsconfig.base.json').toString());
-    const sortedPaths = sortObjectByKeys(tsconfig.compilerOptions.paths);
-    tsconfig.compilerOptions.paths = sortedPaths;
-    host.overwrite('tsconfig.base.json', serializeJson(tsconfig));
-  } catch (e) {
-    console.warn('failed to sort paths in tsconfig.base.json');
   }
 }
