@@ -122,10 +122,3 @@ Now that the application is set up, run it locally via:
 ```shell script
 nx serve todos
 ```
-
-!!!!!
-Open http://localhost:3333/api in the browser. What do you see?
-!!!!!
-Page saying "{"message":"Welcome to todos!"}"
-Page saying "This is Nest app built with Nx!"
-404

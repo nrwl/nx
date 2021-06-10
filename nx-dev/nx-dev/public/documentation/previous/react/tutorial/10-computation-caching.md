@@ -94,10 +94,3 @@ All files pass linting.
 ```
 
 > Add --parallel to any command, and Nx will do most of the work in parallel.
-
-!!!!!
-Run `npx nx lint api --with-deps`. What do you see?
-!!!!!
-Nx read the output from cache instead of running the command for 1 out of 2 projects.
-Everything was retrieved from the cache
-`Cannot lint data` error

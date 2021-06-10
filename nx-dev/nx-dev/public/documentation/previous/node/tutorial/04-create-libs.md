@@ -87,9 +87,3 @@ export class AppModule {}
 ```
 
 **Restart `nx serve todos` then go to http://localhost:3333/auth. You should see `{ authenticated: true }`**
-
-!!!!!
-Libraries' public API is defined in...
-!!!!!
-index.ts
-workspace.json and tsconfig.json files

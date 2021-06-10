@@ -181,10 +181,3 @@ export class AppController {
   }
 }
 ```
-
-!!!!!
-Run "npx nx serve api" and open http://localhost:3333/api/todos. What do you see?
-!!!!!
-`[{"title":"Todo 1"},{"title":"Todo 2"}]`
-Blank screen
-404

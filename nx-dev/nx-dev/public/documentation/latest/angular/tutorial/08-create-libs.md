@@ -155,9 +155,3 @@ export class AppModule {}
 ```
 
 **Restart both `npx nx serve api` and `npx nx serve todos` and you should see the application running.**
-
-!!!!!
-Libraries' public API is defined in...
-!!!!!
-index.ts
-angular.json and tsconfig.json files

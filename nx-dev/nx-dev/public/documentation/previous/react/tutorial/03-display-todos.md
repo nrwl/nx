@@ -89,9 +89,3 @@ export default App;
 ```
 
 The tests should pass now.
-
-!!!!!
-What will you see if you run: `npx nx e2e todos-e2e --headless`
-!!!!!
-Cypress will run in the headless mode, and the test will pass.
-Cypress will run in the headless mode, and the test will fail.
