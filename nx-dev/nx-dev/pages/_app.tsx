@@ -10,7 +10,7 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
   const gaMeasurementId = 'UA-88380372-10';
   useEffect(() => {
     const handleRouteChange = (url: URL) =>
-      sendPageViewEvent(gaMeasurementId, { path: url });
+      sendPageViewEvent({ gaId: gaMeasurementId, path: url.toString() });
     router.events.on('routeChangeStart', (url) => handleRouteChange(url));
     return () => router.events.off('routeChangeStart', handleRouteChange);
   }, [router]);
