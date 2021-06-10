@@ -15,7 +15,7 @@ import {
 import isCI = require('is-ci');
 import * as path from 'path';
 import { dirSync } from 'tmp';
-import * as killPort from 'kill-port';
+import { kill, killer } from 'cross-port-killer';
 import { parseJson } from '@nrwl/devkit';
 
 interface RunCmdOpts {
@@ -183,16 +183,21 @@ export function newProject({ name = uniq('proj') } = {}): string {
   }
 }
 
+export async function killProcess(pid: number) {
+  await killer.killByPid(pid.toString());
+  await killPorts();
+}
+
 export async function killPorts() {
   // potential leftovers from other e2e tests
   // there are a lot of reasons for why sigterm sometime fails
   try {
-    await killPort(4200);
+    await kill(4200);
   } catch {
     throw 'Port 4200 could not be closed';
   }
   try {
-    await killPort(3333);
+    await kill(3333);
   } catch {
     throw 'Port 3333 could not be closed';
   }

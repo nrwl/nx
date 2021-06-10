@@ -3,6 +3,7 @@ import {
   checkFilesExist,
   createFile,
   killPorts,
+  killProcess,
   newProject,
   readFile,
   readJson,
@@ -19,7 +20,6 @@ describe('Next.js Applications', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
-
   it('should be able to serve with a proxy configuration', async () => {
     const appName = uniq('app');
 
@@ -74,8 +74,7 @@ describe('Next.js Applications', () => {
     const data = await getData();
     expect(data).toContain(`Welcome to ${appName}`);
 
-    p.kill('SIGKILL');
-    await killPorts();
+    await killProcess(p.pid);
   }, 300000);
 
   it('should be able to consume a react libs (buildable and non-buildable)', async () => {
