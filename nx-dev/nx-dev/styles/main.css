@@ -13,7 +13,7 @@
 /*! purgecss end ignore */
 
 svg {
-  shape-rendering: crispEdges;
+  shape-rendering: auto;
   text-rendering: optimizeLegibility;
 }
 
