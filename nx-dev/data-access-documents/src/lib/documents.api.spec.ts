@@ -37,7 +37,7 @@ describe('DocumentsApi', () => {
     });
   });
 
-  describe('getDocumentsPath', () => {
+  describe('getDocumentsRoot', () => {
     it('should support latest', () => {
       expect(api.getDocumentsRoot('latest')).toMatch(
         /nx-dev\/nx-dev\/public\/documentation\/latest/
@@ -57,6 +57,32 @@ describe('DocumentsApi', () => {
         expect.objectContaining({ id: 'latest' }),
         expect.objectContaining({ id: 'previous' }),
       ]);
+    });
+  });
+
+  describe('getStaticDocumentPaths', () => {
+    it.each`
+      version       | flavor
+      ${'latest'}   | ${'react'}
+      ${'latest'}   | ${'angular'}
+      ${'latest'}   | ${'node'}
+      ${'previous'} | ${'react'}
+      ${'previous'} | ${'angular'}
+      ${'previous'} | ${'node'}
+    `('should return paths for all flavors', ({ version, flavor }) => {
+      const paths = api.getStaticDocumentPaths(version);
+      const urls = paths.map((p) => p.params.segments.join('/'));
+
+      expect(urls).toContainEqual(
+        expect.stringMatching(`${version}/${flavor}/getting-started`)
+      );
+    });
+
+    it('should return generic paths for the latest version', () => {
+      const paths = api.getStaticDocumentPaths('latest');
+      const urls = paths.map((p) => p.params.segments.join('/'));
+
+      expect(urls).toContainEqual(expect.stringMatching(/^getting-started\//));
     });
   });
 });

@@ -17,10 +17,7 @@ import { useStorage } from '../lib/use-storage';
 
 const versionList = documentsApi.getVersions();
 const defaultVersion = versionList.find((v) => v.default);
-const defaultFlavor = {
-  label: 'React',
-  value: 'react',
-};
+const defaultFlavor = flavorList.find((f) => f.default);
 
 interface DocumentationPageProps {
   version: VersionMetadata;
@@ -267,27 +264,9 @@ export async function getStaticProps({
 }
 
 export async function getStaticPaths() {
-  const allPaths = versionList.flatMap((v) => {
-    const paths = documentsApi.getStaticDocumentPaths(v.id);
-
-    // Use `/latest/react` as the default path if version and flavor not provided.
-    // Make sure to set `isFallback: true` on the static props of these paths so
-    if (v.id === defaultVersion.id) {
-      paths.concat(
-        paths
-          .filter((path) => path.params.segments[1] === defaultFlavor.value)
-          .map((path) => ({
-            ...path,
-            params: {
-              ...path.params,
-              segments: path.params.segments.slice(2),
-            },
-          }))
-      );
-    }
-
-    return paths;
-  });
+  const allPaths = versionList.flatMap((v) =>
+    documentsApi.getStaticDocumentPaths(v.id)
+  );
 
   return {
     paths: allPaths,
