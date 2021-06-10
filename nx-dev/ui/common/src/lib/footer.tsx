@@ -127,7 +127,7 @@ export function Footer({ version, flavor }: FooterProps) {
             </svg>{' '}
             by
             <a
-              href="https://twitter.com/nrwl_io"
+              href="https://nrwl.io"
               className="text-gray-600 ml-1 point-cursor"
               rel="noopener noreferrer"
               target="_blank"
