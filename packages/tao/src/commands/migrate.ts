@@ -459,6 +459,7 @@ function createFetcher(packageManager: PackageManager) {
           version: resolvedVersion,
         };
       }
+      removeSync(dir);
     }
     return cache[`${packageName}-${packageVersion}`];
   };
