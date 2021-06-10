@@ -43,9 +43,9 @@ export function Index() {
           {/*INTRO COMPONENT*/}
           <div className="bg-blue-nx-base text-white">
             <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
-              <div className="mt-8 mb-20 flex lg:flex-row flex-col items-center justify-center">
+              <div className="sm:mt-8 mb-20 flex lg:flex-row flex-col items-center justify-center">
                 <div className="w-full lg:w-1/2 flex flex-col">
-                  <h1 className="text-4xl sm:text-5xl lg:text-6xl leading none font-extrabold tracking-tight mt-10 mb-8 sm:mt-14 sm:mb-10">
+                  <h1 className="text-4xl sm:text-5xl lg:text-6xl leading none font-extrabold tracking-tight sm:mt-10 mb-8 sm:mt-14 sm:mb-10">
                     Smart, Extensible Build Framework
                   </h1>
                   <p className="max-w-screen-lg text-lg sm:text-2xl sm:leading-10 font-medium mb-10 sm:mb-11">
@@ -73,7 +73,7 @@ export function Index() {
                     />
                   </div>
                 </div>
-                <div className="w-full md:w-1/2 flex flex-col justify-between items-center lg:pl-16 lg:pb-0 pb-10 mt-8 lg:mt-0">
+                <div className="hidden sm:flex w-full md:w-1/2 flex-col justify-between items-center lg:pl-16 lg:pb-0 pb-10 mt-8 lg:mt-0">
                   <svg
                     width="300"
                     height="300"
@@ -128,7 +128,7 @@ export function Index() {
           {/*SELECTION COMPONENT*/}
           <div className="max-w-screen-lg xl:max-w-screen-xl mx-auto px-5 py-5">
             <div className="mt-32 mb-20 flex sm:flex-row flex-col justify-center">
-              <div className="w-full sm:w-1/2 grid grid-cols-3 gap-10 items-center">
+              <div className="w-full sm:w-1/2 grid grid-cols-3 gap-4 sm:gap-10 items-center">
                 <Link href="/react">
                   <a className="w-full bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all ease-out duration-180 rounded py-4 px-3 space-x-1 text-base tracking-tight font-bold leading-tight text-center flex flex-col justify-center items-center px-2 py-4 space-y-4">
                     <svg viewBox="0 0 24 24" className="w-1/2" fill="#52C1DE">
