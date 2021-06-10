@@ -76,6 +76,7 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
         {/* Global Site Tag (gtag.js) - Google Analytics */}
         <script
           async
+          defer
           src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
         />
         <script
@@ -89,6 +90,13 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
             });
           `,
           }}
+        />
+        {/* HubSpot Analytics */}
+        <script
+          id="hs-script-loader"
+          async
+          defer
+          src="https://js.hs-scripts.com/2757427.js"
         />
       </Head>
       <div className="documentation-app text-gray-700 antialiased bg-white">
