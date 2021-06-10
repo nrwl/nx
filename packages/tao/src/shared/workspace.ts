@@ -465,22 +465,22 @@ export function toNewFormatOrNull(w: any) {
   let formatted = false;
   Object.values(w.projects || {}).forEach((projectConfig: any) => {
     if (projectConfig.architect) {
-      renameProperty(projectConfig, 'architect', 'targets');
+      renamePropertyWithStableKeys(projectConfig, 'architect', 'targets');
       formatted = true;
     }
     if (projectConfig.schematics) {
-      renameProperty(projectConfig, 'schematics', 'generators');
+      renamePropertyWithStableKeys(projectConfig, 'schematics', 'generators');
       formatted = true;
     }
     Object.values(projectConfig.targets || {}).forEach((target: any) => {
       if (target.builder) {
-        renameProperty(target, 'builder', 'executor');
+        renamePropertyWithStableKeys(target, 'builder', 'executor');
         formatted = true;
       }
     });
   });
   if (w.schematics) {
-    renameProperty(w, 'schematics', 'generators');
+    renamePropertyWithStableKeys(w, 'schematics', 'generators');
     formatted = true;
   }
   if (w.version !== 2) {
@@ -494,24 +494,29 @@ export function toOldFormatOrNull(w: any) {
   let formatted = false;
 
   Object.values(w.projects || {}).forEach((projectConfig: any) => {
+    if (typeof projectConfig === 'string') {
+      throw new Error(
+        "'project.json' files are incompatible with version 1 workspace schemas."
+      );
+    }
     if (projectConfig.targets) {
-      renameProperty(projectConfig, 'targets', 'architect');
+      renamePropertyWithStableKeys(projectConfig, 'targets', 'architect');
       formatted = true;
     }
     if (projectConfig.generators) {
-      renameProperty(projectConfig, 'generators', 'schematics');
+      renamePropertyWithStableKeys(projectConfig, 'generators', 'schematics');
       formatted = true;
     }
     Object.values(projectConfig.architect || {}).forEach((target: any) => {
       if (target.executor) {
-        renameProperty(target, 'executor', 'builder');
+        renamePropertyWithStableKeys(target, 'executor', 'builder');
         formatted = true;
       }
     });
   });
 
   if (w.generators) {
-    renameProperty(w, 'generators', 'schematics');
+    renamePropertyWithStableKeys(w, 'generators', 'schematics');
     formatted = true;
   }
   if (w.version !== 1) {
@@ -533,9 +538,9 @@ export function inlineProjectConfigurations(w: any) {
   Object.entries(w.projects || {}).forEach(
     ([project, config]: [string, any]) => {
       if (typeof config === 'string') {
-        const fileConfig = readJsonFile(path.join(config, 'project.json'));
-        w.projects[project] = fileConfig;
-        config = fileConfig;
+        const configFilePath = path.join(config, 'project.json');
+        const fileConfig = readJsonFile(configFilePath);
+        w.projects[project] = { ...fileConfig, configFilePath };
       }
     }
   );
@@ -544,7 +549,11 @@ export function inlineProjectConfigurations(w: any) {
 
 // we have to do it this way to preserve the order of properties
 // not to screw up the formatting
-function renameProperty(obj: any, from: string, to: string) {
+export function renamePropertyWithStableKeys(
+  obj: any,
+  from: string,
+  to: string
+) {
   const copy = { ...obj };
   Object.keys(obj).forEach((k) => {
     delete obj[k];

@@ -31,7 +31,10 @@ describe('workspace', () => {
     const resolved = inlineProjectConfigurations(inlineConfig);
     expect(resolved).toEqual({
       ...inlineConfig,
-      projects: { ...inlineConfig.projects, lib1: standaloneConfig },
+      projects: {
+        ...inlineConfig.projects,
+        lib1: { ...standaloneConfig, configFilePath: 'libs/lib1/project.json' },
+      },
     });
   });
 });

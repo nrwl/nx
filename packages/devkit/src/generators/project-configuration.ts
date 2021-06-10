@@ -87,7 +87,7 @@ export function getProjects(
   const nxJson = readJson<NxJsonConfiguration>(host, 'nx.json');
 
   return new Map(
-    Object.keys(workspace.projects).map((projectName) => {
+    Object.keys(workspace.projects || {}).map((projectName) => {
       return [
         projectName,
         getProjectConfiguration(host, projectName, workspace, nxJson),
@@ -312,12 +312,18 @@ function readWorkspace(host: Tree): WorkspaceJsonConfiguration {
   };
 }
 
+/**
+ * This has to be separate from the inline functionality inside tao,
+ * as the functionality in tao does not use a Tree. Changes made during
+ * a generator would not be present during runtime execution.
+ * @returns
+ */
 function inlineProjectConfigurationsWithTree(
   host: Tree
 ): WorkspaceJsonConfiguration {
   const path = getWorkspacePath(host);
   const workspaceJson = readJson<RawWorkspaceJsonConfiguration>(host, path);
-  Object.entries(workspaceJson.projects).forEach(([project, config]) => {
+  Object.entries(workspaceJson.projects || {}).forEach(([project, config]) => {
     if (typeof config === 'string') {
       const configFileLocation = join(config, 'project.json');
       workspaceJson.projects[project] = readJson<
@@ -337,7 +343,7 @@ function getProjectFileLocation(host: Tree, project: string): string | null {
     host,
     getWorkspacePath(host)
   );
-  const projectConfig = rawWorkspace.projects[project];
+  const projectConfig = rawWorkspace.projects?.[project];
   return typeof projectConfig === 'string'
     ? join(projectConfig, 'project.json')
     : null;
