@@ -17,7 +17,7 @@ import {
 import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
 import * as prettier from 'prettier';
 import { readJsonFile, writeJsonFile } from '@nrwl/devkit';
-import { objectSort } from '@nrwl/tao/src/utils/object-sort';
+import { objectSortByKeys } from '@nrwl/tao/src/utils/object-sort';
 
 const PRETTIER_PATH = require.resolve('prettier/bin-prettier');
 
@@ -152,7 +152,7 @@ function sortWorkspaceJson() {
   const workspaceJsonPath = workspaceConfigName(appRootPath);
   try {
     const workspaceJson = readJsonFile(workspaceJsonPath);
-    const sortedProjects = objectSort(workspaceJson.projects);
+    const sortedProjects = objectSortByKeys(workspaceJson.projects);
     workspaceJson.projects = sortedProjects;
     writeJsonFile(workspaceJsonPath, workspaceJson);
   } catch (e) {
@@ -164,7 +164,7 @@ function sortNxJson() {
   try {
     const nxJsonPath = path.join(appRootPath, 'nx.json');
     const nxJson = readJsonFile(nxJsonPath);
-    const sortedProjects = objectSort(nxJson.projects);
+    const sortedProjects = objectSortByKeys(nxJson.projects);
     nxJson.projects = sortedProjects;
     writeJsonFile(nxJsonPath, nxJson);
   } catch (e) {
@@ -176,7 +176,7 @@ function sortTsConfig() {
   try {
     const tsconfigPath = path.join(appRootPath, 'tsconfig.base.json');
     const tsconfig = readJsonFile(tsconfigPath);
-    const sortedPaths = objectSort(tsconfig.compilerOptions.paths);
+    const sortedPaths = objectSortByKeys(tsconfig.compilerOptions.paths);
     tsconfig.compilerOptions.paths = sortedPaths;
     writeJsonFile(tsconfigPath, tsconfig);
   } catch (e) {

@@ -12,6 +12,7 @@ import * as path from 'path';
 import { appRootPath } from '../../utilities/app-root';
 import { reformattedWorkspaceJsonOrNull } from '@nrwl/tao/src/shared/workspace';
 import { parseJson, serializeJson } from '@nrwl/devkit';
+import { sortObjectByKeys } from '../ast-utils';
 
 export function formatFiles(
   options: { skipFormat: boolean } = { skipFormat: false },
@@ -107,20 +108,11 @@ function updateWorkspaceJsonToMatchFormatVersion(
   }
 }
 
-function objectSort(originalObject: object) {
-  return Object.keys(originalObject)
-    .sort()
-    .reduce((obj, key) => {
-      obj[key] = originalObject[key];
-      return obj;
-    }, {});
-}
-
 function sortWorkspaceJson(host: Tree, directory: string) {
   const workspaceJsonPath = getWorkspaceFile(host, directory);
   try {
     const workspaceJson = parseJson(host.read(workspaceJsonPath).toString());
-    const sortedProjects = objectSort(workspaceJson.projects);
+    const sortedProjects = sortObjectByKeys(workspaceJson.projects);
     workspaceJson.projects = sortedProjects;
     host.overwrite(workspaceJsonPath, serializeJson(workspaceJson));
   } catch (e) {
@@ -131,7 +123,7 @@ function sortWorkspaceJson(host: Tree, directory: string) {
 function sortNxJson(host: Tree) {
   try {
     const nxJson = parseJson(host.read('nx.json').toString());
-    const sortedProjects = objectSort(nxJson.projects);
+    const sortedProjects = sortObjectByKeys(nxJson.projects);
     nxJson.projects = sortedProjects;
     host.overwrite('nx.json', serializeJson(nxJson));
   } catch (e) {
@@ -142,7 +134,7 @@ function sortNxJson(host: Tree) {
 function sortTsConfig(host: Tree) {
   try {
     const tsconfig = parseJson(host.read('tsconfig.base.json').toString());
-    const sortedPaths = objectSort(tsconfig.compilerOptions.paths);
+    const sortedPaths = sortObjectByKeys(tsconfig.compilerOptions.paths);
     tsconfig.compilerOptions.paths = sortedPaths;
     host.overwrite('tsconfig.base.json', serializeJson(tsconfig));
   } catch (e) {

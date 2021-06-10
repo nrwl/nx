@@ -1,4 +1,4 @@
-export function objectSort(originalObject: object) {
+export function objectSortByKeys(originalObject: object) {
   return Object.keys(originalObject)
     .sort()
     .reduce((obj, key) => {
