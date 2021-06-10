@@ -2265,6 +2265,12 @@
             "jestConfig": "nx-dev/nx-dev/jest.config.js",
             "passWithNoTests": true
           }
+        },
+        "sitemap": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "./node_modules/.bin/next-sitemap --config ./nx-dev/nx-dev/next-sitemap.js"
+          }
         }
       }
     },
