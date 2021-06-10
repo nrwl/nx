@@ -1,53 +1,59 @@
-import { Tree, writeJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { wrapAngularDevkitSchematic } from '@nrwl/tao/src/commands/ngcli-adapter';
+import { Tree } from '@angular-devkit/schematics';
 import { SyntaxKind } from 'typescript';
 import ts = require('typescript');
 import { nxVersion, storybookVersion } from '../../utils/versions';
-import migrateStoriesTo62Generator, {
-  getTsSourceFile,
-} from './migrate-stories-to-6-2';
+import { runExternalSchematic, runSchematic } from '../../utils/testing';
+import { createEmptyWorkspace } from '@nrwl/workspace/testing';
+import { serializeJson } from '@nrwl/devkit';
 import { findNodes } from '@nrwl/workspace/src/utils/ast-utils';
-
-const libSchematic = wrapAngularDevkitSchematic('@nrwl/angular', 'lib');
-const storybookConfigSchematic = wrapAngularDevkitSchematic(
-  '@nrwl/angular',
-  'storybook-configuration'
-);
-const componentSchematic = wrapAngularDevkitSchematic(
-  '@schematics/angular',
-  'component'
-);
 
 describe('migrate-stories-to-6-2 schematic', () => {
   let appTree: Tree;
 
   describe('angular project', () => {
     beforeEach(async () => {
-      appTree = createTreeWithEmptyWorkspace();
-
-      await libSchematic(appTree, {
-        name: 'test-ui-lib',
-      });
-
-      await componentSchematic(appTree, {
-        name: 'test-button',
-        project: 'test-ui-lib',
-      });
-
-      writeJson(appTree, 'package.json', {
-        devDependencies: {
-          '@nrwl/storybook': nxVersion,
-          '@storybook/addon-knobs': storybookVersion,
-          '@storybook/angular': storybookVersion,
+      appTree = Tree.empty();
+      appTree = createEmptyWorkspace(appTree);
+      appTree = await runExternalSchematic(
+        '@nrwl/angular',
+        'lib',
+        {
+          name: 'test-ui-lib',
         },
-      });
+        appTree
+      );
 
-      await storybookConfigSchematic(appTree, {
-        name: 'test-ui-lib',
-      });
+      appTree = await runExternalSchematic(
+        '@schematics/angular',
+        'component',
+        {
+          name: 'test-button',
+          project: 'test-ui-lib',
+        },
+        appTree
+      );
 
-      appTree.write(
+      appTree = await runExternalSchematic(
+        '@nrwl/angular',
+        'storybook-configuration',
+        {
+          name: 'test-ui-lib',
+        },
+        appTree
+      );
+
+      appTree.overwrite(
+        'package.json',
+        serializeJson({
+          devDependencies: {
+            '@nrwl/storybook': nxVersion,
+            '@storybook/addon-knobs': storybookVersion,
+            '@storybook/angular': storybookVersion,
+          },
+        })
+      );
+
+      appTree.overwrite(
         `libs/test-ui-lib/src/lib/test-button/test-button.component.stories.ts`,
         `
           import { text, number, boolean } from '@storybook/addon-knobs';
@@ -82,7 +88,13 @@ describe('migrate-stories-to-6-2 schematic', () => {
     });
 
     it('should move the component from the story to parameters.component', async () => {
-      await migrateStoriesTo62Generator(appTree);
+      appTree = await runSchematic(
+        'migrate-stories-to-6-2',
+        {
+          name: 'test-ui-lib',
+        },
+        appTree
+      );
       const storyFilePath =
         'libs/test-ui-lib/src/lib/test-button/test-button.component.stories.ts';
       const file = getTsSourceFile(appTree, storyFilePath);
@@ -122,3 +134,19 @@ describe('migrate-stories-to-6-2 schematic', () => {
     });
   });
 });
+
+function getTsSourceFile(host: Tree, path: string): ts.SourceFile {
+  const buffer = host.read(path);
+  if (!buffer) {
+    throw new Error(`Could not read TS file (${path}).`);
+  }
+  const content = buffer.toString();
+  const source = ts.createSourceFile(
+    path,
+    content,
+    ts.ScriptTarget.Latest,
+    true
+  );
+
+  return source;
+}
