@@ -11,5 +11,5 @@ module.exports = {
   },
   resolver: '../scripts/patched-jest-resolver.js',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../coverage//typedoc-theme',
+  coverageDirectory: '../coverage/typedoc-theme',
 };
