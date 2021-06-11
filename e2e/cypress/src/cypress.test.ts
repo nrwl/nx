@@ -59,7 +59,7 @@ describe('Cypress E2E Test runner', () => {
       expect(runCLI(`e2e ${myapp}-e2e --headless --no-watch`)).toContain(
         'All specs passed!'
       );
-      await killPorts();
+      expect(await killPorts()).toBeTruthy();
     }, 1000000);
   });
 });

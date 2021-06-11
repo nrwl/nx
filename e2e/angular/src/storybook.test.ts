@@ -187,7 +187,7 @@ describe('Storybook schematics', () => {
       expect(readFile(`dist/storybook/${myAngularLib}/index.html`)).toContain(
         `<title>Storybook</title>`
       );
-      await killPorts();
+      expect(await killPorts()).toBeTruthy();
     }, 1000000);
 
     xit('should build an Angular based storybook', () => {

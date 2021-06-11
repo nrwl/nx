@@ -2,6 +2,7 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   createFile,
+  killPorts,
   newProject,
   readFile,
   readJson,
@@ -54,6 +55,7 @@ describe('Web Components Applications', () => {
     if (runCypressTests()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);
       expect(e2eResults).toContain('All specs passed!');
+      expect(await killPorts()).toBeTruthy();
     }
   }, 500000);
 
