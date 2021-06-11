@@ -18,7 +18,7 @@ import { dirSync } from 'tmp';
 import { kill } from 'cross-port-killer';
 import { check as portCheck } from 'tcp-port-used';
 import { parseJson } from '@nrwl/devkit';
-import { output } from '@nrwl/workspace';
+import chalk = require('chalk');
 
 interface RunCmdOpts {
   silenceError?: boolean;
@@ -188,16 +188,16 @@ export function newProject({ name = uniq('proj') } = {}): string {
 async function killPort(port: number): Promise<boolean> {
   if (await portCheck(port)) {
     try {
-      output.log({ title: `Attmepting to close port ${port}` });
+      logInfo(`Attmepting to close port ${port}`);
       await kill(port);
       if (await portCheck(port)) {
-        output.error({ title: `Port ${port} still open` });
+        logError(`Port ${port} still open`);
       } else {
-        output.success({ title: `Port ${port} successfully closed` });
+        logSuccess(`Port ${port} successfully closed`);
         return true;
       }
     } catch {
-      output.error({ title: `Port ${port} closing failed` });
+      logError(`Port ${port} closing failed`);
     }
     return false;
   } else {
@@ -532,6 +532,38 @@ function tmpBackupProjPath(path?: string) {
   return path ? `${e2eCwd}/proj-backup/${path}` : `${e2eCwd}/proj-backup`;
 }
 
+const E2E_LOG_PREFIX = `${chalk.reset.inverse.bold.keyword('orange')(' E2E ')}`;
+
+function e2eConsoleLogger(message: string, body?: string) {
+  process.stdout.write('\n');
+  process.stdout.write(`${E2E_LOG_PREFIX} ${message}\n`);
+  if (body) {
+    process.stdout.write(`${body}\n`);
+  }
+  process.stdout.write('\n');
+}
+
+export function logInfo(title: string, body?: string) {
+  const message = `${chalk.reset.inverse.bold.white(
+    ' INFO '
+  )} ${chalk.bold.white(title)}`;
+  return e2eConsoleLogger(message, body);
+}
+
+export function logError(title: string, body?: string) {
+  const message = `${chalk.reset.inverse.bold.green(
+    ' ERROR '
+  )} ${chalk.bold.red(title)}`;
+  return e2eConsoleLogger(message, body);
+}
+
+export function logSuccess(title: string, body?: string) {
+  const message = `${chalk.reset.inverse.bold.green(
+    ' SUCCESS '
+  )} ${chalk.bold.green(title)}`;
+  return e2eConsoleLogger(message, body);
+}
+
 export function getPackageManagerCommand({
   path = tmpProjPath(),
   packageManager = detectPackageManager(path),
@@ -551,25 +583,25 @@ export function getPackageManagerCommand({
 
   return {
     npm: {
-      createWorkspace: `npx create-nx-workspace@${publishedVersion}`,
+      createWorkspace: `npx create - nx - workspace@${publishedVersion} `,
       runNx: `npm run nx${scriptsPrependNodePathFlag} --`,
-      runNxSilent: `npm run nx --silent${scriptsPrependNodePathFlag} --`,
-      addDev: `npm install --legacy-peer-deps -D`,
+      runNxSilent: `npm run nx--silent${scriptsPrependNodePathFlag} --`,
+      addDev: `npm install--legacy - peer - deps - D`,
       list: 'npm ls --depth 10',
     },
     yarn: {
-      // `yarn create nx-workspace` is failing due to wrong global path
-      createWorkspace: `yarn global add create-nx-workspace@${publishedVersion} && create-nx-workspace`,
+      // `yarn create nx - workspace` is failing due to wrong global path
+      createWorkspace: `yarn global add create - nx - workspace@${publishedVersion} && create - nx - workspace`,
       runNx: `yarn nx`,
-      runNxSilent: `yarn --silent nx`,
-      addDev: `yarn add -D`,
+      runNxSilent: `yarn--silent nx`,
+      addDev: `yarn add - D`,
       list: 'npm ls --depth 10',
     },
     pnpm: {
-      createWorkspace: `pnpx create-nx-workspace@${publishedVersion}`,
-      runNx: `pnpm run nx --`,
-      runNxSilent: `pnpm run nx --silent --`,
-      addDev: `pnpm add -D`,
+      createWorkspace: `pnpx create - nx - workspace@${publishedVersion} `,
+      runNx: `pnpm run nx--`,
+      runNxSilent: `pnpm run nx--silent--`,
+      addDev: `pnpm add - D`,
       list: 'npm ls --depth 10',
     },
   }[packageManager];
@@ -577,6 +609,6 @@ export function getPackageManagerCommand({
 
 export function expectNoAngularDevkit() {
   const { list } = getPackageManagerCommand();
-  const result = runCommand(`${list} @angular-devkit/core`);
+  const result = runCommand(`${list} @angular-devkit / core`);
   expect(result).not.toContain('@angular-devkit/core');
 }

@@ -277,7 +277,6 @@
   },
   "resolutions": {
     "ng-packagr/rxjs": "6.6.7",
-    "**/xmlhttprequest-ssl": "~1.6.2",
-    "**/fsevents": "2.3.2"
+    "**/xmlhttprequest-ssl": "~1.6.2"
   }
 }
