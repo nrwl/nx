@@ -76,8 +76,11 @@ describe('Next.js Applications', () => {
     const data = await getData(port);
     expect(data).toContain(`Welcome to ${appName}`);
 
-    await p.kill();
-    expect(await killPorts(port)).toBeTruthy();
+    if (await p.kill('SIGKILL')) {
+      expect(await killPorts(port)).toBeTruthy();
+    } else {
+      expect('process running').toBeFalsy();
+    }
   }, 300000);
 
   it('should be able to consume a react libs (buildable and non-buildable)', async () => {
@@ -609,8 +612,11 @@ describe('Next.js Applications', () => {
     const data = await getData(port);
     expect(data).toContain(`Welcome to ${appName}`);
 
-    await p.kill();
-    expect(await killPorts(port)).toBeTruthy();
+    if (await p.kill('SIGKILL')) {
+      expect(await killPorts(port)).toBeTruthy();
+    } else {
+      expect('process running').toBeFalsy();
+    }
   }, 300000);
 
   function getData(port: number): Promise<any> {

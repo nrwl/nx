@@ -11,8 +11,6 @@ import {
 import { serializeJson } from '@nrwl/workspace';
 
 describe('file-server', () => {
-  afterEach(() => killPorts());
-
   it('should serve folder of files', async () => {
     newProject({ name: uniq('fileserver') });
     const appName = uniq('app');
@@ -28,6 +26,10 @@ describe('file-server', () => {
         output.indexOf('Built at') > -1 && output.indexOf('Available on') > -1
       );
     });
-    p.kill();
+    if (await p.kill('SIGKILL')) {
+      await killPorts();
+    } else {
+      expect('process running').toBeFalsy();
+    }
   }, 300000);
 });
