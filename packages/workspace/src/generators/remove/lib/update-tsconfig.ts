@@ -16,13 +16,17 @@ export function updateTsconfig(
   schema: Schema,
   project: ProjectConfiguration
 ) {
-  const { npmScope } = getWorkspaceLayout(tree);
+  const { appsDir, libsDir, npmScope } = getWorkspaceLayout(tree);
 
   const tsConfigPath = 'tsconfig.base.json';
   if (tree.exists(tsConfigPath)) {
     updateJson(tree, tsConfigPath, (json) => {
       delete json.compilerOptions.paths[
-        `@${npmScope}/${project.root.substr(5)}`
+        `@${npmScope}/${project.root.substr(
+          project.projectType === 'application'
+            ? appsDir.length + 1
+            : libsDir.length + 1
+        )}`
       ];
 
       return json;
