@@ -192,6 +192,20 @@ describe('params', () => {
       ).toEqual({ directory: 'test' });
     });
 
+    it('should replace aliases defined in aliases with actual keys', () => {
+      expect(
+        convertAliases(
+          { d: 'test' },
+          {
+            properties: { directory: { type: 'string', aliases: ['d'] } },
+            required: [],
+            description: '',
+          },
+          true
+        )
+      ).toEqual({ directory: 'test' });
+    });
+
     it('should filter unknown keys into the leftovers field when excludeUnmatched is true', () => {
       expect(
         convertAliases(

@@ -9,6 +9,7 @@ type PropertyDescription = {
   oneOf?: any;
   items?: any;
   alias?: string;
+  aliases?: string[];
   description?: string;
   format?: string;
   visible?: boolean;
@@ -135,7 +136,8 @@ export function convertAliases(
       acc[k] = opts[k];
     } else {
       const found = Object.entries(schema.properties).find(
-        ([_, d]) => d.alias === k
+        ([_, d]) =>
+          d.alias === k || (Array.isArray(d.aliases) && d.aliases.includes(k))
       );
       if (found) {
         acc[found[0]] = opts[k];
