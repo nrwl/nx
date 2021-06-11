@@ -40,7 +40,9 @@ export function addLoadChildren(host: Tree, options: NormalizedSchema) {
       return json;
     });
   } else {
-    // we should warn the user about not finding the config
+    console.warn(
+      `Unable to find tsconfig.json for ${options.parentModule}. Related \`includes\` for the tsconfig have not been updated.`
+    );
   }
 }
 

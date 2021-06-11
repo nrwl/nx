@@ -15,8 +15,11 @@ export function moveProject(
 ) {
   const destination = getDestination(tree, schema, project);
   visitNotIgnoredFiles(tree, project.root, (file) => {
+    // This is a rename but Angular Devkit isn't capable of writing to a file after it's renamed so this is a workaround
+    const content = tree.read(file);
     const relativeFromOriginalSource = relative(project.root, file);
     const newFilePath = join(destination, relativeFromOriginalSource);
-    tree.rename(file, newFilePath);
+    tree.write(newFilePath, content);
+    tree.delete(file);
   });
 }

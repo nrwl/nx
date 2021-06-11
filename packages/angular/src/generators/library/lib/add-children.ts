@@ -8,8 +8,12 @@ import {
 import { NormalizedSchema } from './normalized-schema';
 
 export function addChildren(host: Tree, options: NormalizedSchema) {
+  if (!host.exists(options.parentModule)) {
+    throw new Error(`Cannot find '${options.parentModule}'`);
+  }
+
   const { npmScope } = getWorkspaceLayout(host);
-  const moduleSource = host.read(options.parentModule)!.toString('utf-8');
+  const moduleSource = host.read(options.parentModule, 'utf-8');
   const constName = `${names(options.fileName).propertyName}Routes`;
   const importPath = `@${npmScope}/${options.projectDirectory}`;
   let sourceFile = ts.createSourceFile(

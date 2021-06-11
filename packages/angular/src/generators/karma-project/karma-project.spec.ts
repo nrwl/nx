@@ -4,7 +4,7 @@ import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { karmaProjectGenerator } from './karma-project';
 import libraryGenerator from '../library/library';
-import { Linter } from '@nrwl/workspace';
+import { Linter } from '@nrwl/linter';
 import { UnitTestRunner } from '../../utils/test-runners';
 
 describe('karmaProject', () => {

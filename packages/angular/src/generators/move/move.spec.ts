@@ -2,7 +2,7 @@ import { Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { angularMoveGenerator } from './move';
 import libraryGenerator from '../library/library';
-import { Linter } from '@nrwl/workspace';
+import { Linter } from '@nrwl/linter';
 import { UnitTestRunner } from '../../utils/test-runners';
 
 describe('@nrwl/angular:move', () => {

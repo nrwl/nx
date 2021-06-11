@@ -2,11 +2,26 @@ import { getWorkspaceLayout, Tree } from '@nrwl/devkit';
 import { Schema } from '../schema';
 import { NormalizedSchema } from './normalized-schema';
 import { names } from '@nrwl/devkit';
+import { Linter } from '@nrwl/linter';
+import { UnitTestRunner } from '../../../utils/test-runners';
 
 export function normalizeOptions(
   host: Tree,
-  options: Schema
+  schema: Partial<Schema>
 ): NormalizedSchema {
+  // Create a schema with populated default values
+  const options: Schema = {
+    buildable: false,
+    enableIvy: false,
+    linter: Linter.EsLint,
+    name: '', // JSON validation will ensure this is set
+    publishable: false,
+    simpleModuleName: false,
+    skipFormat: false,
+    unitTestRunner: UnitTestRunner.Jest,
+    ...schema,
+  };
+
   const name = names(options.name).fileName;
   const projectDirectory = options.directory
     ? `${names(options.directory).fileName}/${name}`

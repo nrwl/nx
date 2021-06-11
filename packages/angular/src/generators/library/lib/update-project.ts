@@ -13,7 +13,7 @@ import { NormalizedSchema } from './normalized-schema';
 import { updateNgPackage } from './update-ng-package';
 
 export async function updateProject(host: Tree, options: NormalizedSchema) {
-  await updateNxConfigWithProject(host, options);
+  updateNxConfigWithProject(host, options);
   createFiles(host, options);
   updateProjectTsConfig(host, options);
   fixProjectWorkspaceConfig(host, options);
@@ -174,14 +174,11 @@ function updateProjectTsConfig(host: Tree, options: NormalizedSchema) {
 }
 
 function updateNxConfigWithProject(host: Tree, options: NormalizedSchema) {
-  return new Promise((resolve) => {
-    updateJson(host, `/nx.json`, (json) => ({
-      ...json,
-      projects: {
-        ...json.projects,
-        [options.name]: { tags: options.parsedTags },
-      },
-    }));
-    resolve(true);
-  });
+  updateJson(host, `/nx.json`, (json) => ({
+    ...json,
+    projects: {
+      ...json.projects,
+      [options.name]: { tags: options.parsedTags },
+    },
+  }));
 }

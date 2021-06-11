@@ -6,7 +6,7 @@ import {
   parseJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/workspace';
+import { Linter } from '@nrwl/linter';
 import { createApp } from '../../utils/nx-devkit/testing';
 import libraryGenerator from './library';
 import { Schema } from './schema';
@@ -480,22 +480,16 @@ describe('lib', () => {
       ).toBeUndefined();
     });
 
-    it('should throw an exception when not passing importPath when using --publishable', async () => {
-      expect.assertions(1);
+    it('should set a default importPath when not passing importPath when using --publishable', async () => {
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        directory: 'myDir',
+        publishable: true,
+      });
 
-      try {
-        // ACT
-        await runLibraryGeneratorWithOpts({
-          directory: 'myDir',
-          publishable: true,
-        });
-
-        // ASSERT
-      } catch (e) {
-        expect(e.message).toContain(
-          'For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)'
-        );
-      }
+      // ASSERT
+      const pkgJson = readJson(appTree, `libs/my-dir/my-lib/package.json`);
+      expect(pkgJson.name).toEqual('@proj/my-dir-my-lib');
     });
 
     it('should update tsconfig.json (no existing path mappings)', async () => {
@@ -565,7 +559,9 @@ describe('lib', () => {
         fail();
       } catch (e) {
         // ASSERT
-        expect(e.message).toEqual('routing must be set');
+        expect(e.message).toEqual(
+          'To use --lazy option, --routing must also be set.'
+        );
       }
     });
 
