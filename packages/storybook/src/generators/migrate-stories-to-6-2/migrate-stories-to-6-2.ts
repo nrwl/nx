@@ -10,7 +10,7 @@ import {
   visitNotIgnoredFiles,
 } from '@nrwl/devkit';
 import { fileExists } from '@nrwl/workspace/src/utilities/fileutils';
-import { findNodes } from '@nrwl/workspace/src/utils/ast-utils';
+import { findNodes } from '@nrwl/workspace/src/utilities/typescript/find-nodes';
 import { join, normalize } from 'path';
 import { SyntaxKind } from 'typescript';
 import ts = require('typescript');
