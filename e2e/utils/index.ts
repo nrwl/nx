@@ -583,25 +583,25 @@ export function getPackageManagerCommand({
 
   return {
     npm: {
-      createWorkspace: `npx create - nx - workspace@${publishedVersion} `,
+      createWorkspace: `npx create-nx-workspace@${publishedVersion}`,
       runNx: `npm run nx${scriptsPrependNodePathFlag} --`,
-      runNxSilent: `npm run nx--silent${scriptsPrependNodePathFlag} --`,
-      addDev: `npm install--legacy - peer - deps - D`,
+      runNxSilent: `npm run nx --silent${scriptsPrependNodePathFlag} --`,
+      addDev: `npm install --legacy-peer-deps -D`,
       list: 'npm ls --depth 10',
     },
     yarn: {
-      // `yarn create nx - workspace` is failing due to wrong global path
-      createWorkspace: `yarn global add create - nx - workspace@${publishedVersion} && create - nx - workspace`,
+      // `yarn create nx-workspace` is failing due to wrong global path
+      createWorkspace: `yarn global add create-nx-workspace@${publishedVersion} && create-nx-workspace`,
       runNx: `yarn nx`,
-      runNxSilent: `yarn--silent nx`,
-      addDev: `yarn add - D`,
+      runNxSilent: `yarn --silent nx`,
+      addDev: `yarn add -D`,
       list: 'npm ls --depth 10',
     },
     pnpm: {
-      createWorkspace: `pnpx create - nx - workspace@${publishedVersion} `,
-      runNx: `pnpm run nx--`,
-      runNxSilent: `pnpm run nx--silent--`,
-      addDev: `pnpm add - D`,
+      createWorkspace: `pnpx create-nx-workspace@${publishedVersion}`,
+      runNx: `pnpm run nx --`,
+      runNxSilent: `pnpm run nx --silent --`,
+      addDev: `pnpm add -D`,
       list: 'npm ls --depth 10',
     },
   }[packageManager];
@@ -609,6 +609,6 @@ export function getPackageManagerCommand({
 
 export function expectNoAngularDevkit() {
   const { list } = getPackageManagerCommand();
-  const result = runCommand(`${list} @angular-devkit / core`);
+  const result = runCommand(`${list} @angular-devkit/core`);
   expect(result).not.toContain('@angular-devkit/core');
 }
