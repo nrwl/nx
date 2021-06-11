@@ -216,6 +216,7 @@
     "stylus": "0.54.5",
     "stylus-loader": "3.0.2",
     "tailwindcss": "^2.1.1",
+    "tcp-port-used": "^1.0.2",
     "terser": "4.3.8",
     "terser-webpack-plugin": "2.3.8",
     "tippy.js": "^6.3.1",
@@ -276,6 +277,7 @@
   },
   "resolutions": {
     "ng-packagr/rxjs": "6.6.7",
-    "**/xmlhttprequest-ssl": "~1.6.2"
+    "**/xmlhttprequest-ssl": "~1.6.2",
+    "**/fsevents": "2.3.2"
   }
 }

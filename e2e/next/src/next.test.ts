@@ -3,7 +3,6 @@ import {
   checkFilesExist,
   createFile,
   killPorts,
-  killProcess,
   newProject,
   readFile,
   readJson,
@@ -20,8 +19,10 @@ describe('Next.js Applications', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
+
   it('should be able to serve with a proxy configuration', async () => {
     const appName = uniq('app');
+    const port = 4202;
 
     output.success({ title: `Next proxy configuration ${appName}` });
 
@@ -29,7 +30,7 @@ describe('Next.js Applications', () => {
 
     const proxyConf = {
       '/external-api': {
-        target: 'http://localhost:4200',
+        target: `http://localhost:${port}`,
         pathRewrite: {
           '^/external-api/hello': '/api/hello',
         },
@@ -67,14 +68,18 @@ describe('Next.js Applications', () => {
     );
 
     // serve Next.js
-    const p = await runCommandUntil(`run ${appName}:serve`, (output) => {
-      return output.indexOf('[ ready ] on http://localhost:4200') > -1;
-    });
+    const p = await runCommandUntil(
+      `run ${appName}:serve --port=${port}`,
+      (output) => {
+        return output.indexOf(`[ ready ] on http://localhost:${port}`) > -1;
+      }
+    );
 
-    const data = await getData();
+    const data = await getData(port);
     expect(data).toContain(`Welcome to ${appName}`);
 
-    await killProcess(p.pid);
+    await p.kill();
+    expect(await killPorts(port)).toBeTruthy();
   }, 300000);
 
   it('should be able to consume a react libs (buildable and non-buildable)', async () => {
@@ -578,6 +583,9 @@ describe('Next.js Applications', () => {
 
   it('should allow using a custom server implementation in TypeScript', async () => {
     const appName = uniq('app');
+    const port = 4201;
+
+    output.success({ title: `Next typescript implementation ${appName}` });
 
     // generate next.js app
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
@@ -586,29 +594,29 @@ describe('Next.js Applications', () => {
     createFile(
       'tools/custom-next-server.ts',
       `
-      const express = require('express');
-      const path = require('path');
+        const express = require('express');
+        const path = require('path');
 
-      export default async function nextCustomServer(app, settings, proxyConfig) {
-        const handle = app.getRequestHandler();
-        await app.prepare();
+        export default async function nextCustomServer(app, settings, proxyConfig) {
+          const handle = app.getRequestHandler();
+          await app.prepare();
 
-        const x: string = 'custom typescript server running';
-        console.log(x);
+          const x: string = 'custom typescript server running';
+          console.log(x);
 
-        const server = express();
-        server.disable('x-powered-by');
+          const server = express();
+          server.disable('x-powered-by');
 
-        server.use(
-          express.static(path.resolve(settings.dir, settings.conf.outdir, 'public'))
-        );
+          server.use(
+            express.static(path.resolve(settings.dir, settings.conf.outdir, 'public'))
+          );
 
-        // Default catch-all handler to allow Next.js to handle all other routes
-        server.all('*', (req, res) => handle(req, res));
+          // Default catch-all handler to allow Next.js to handle all other routes
+          server.all('*', (req, res) => handle(req, res));
 
-        server.listen(settings.port, settings.hostname);
-      }
-    `
+          server.listen(settings.port, settings.hostname);
+        }
+      `
     );
 
     updateWorkspaceConfig((workspace) => {
@@ -619,20 +627,23 @@ describe('Next.js Applications', () => {
     });
 
     // serve Next.js
-    const p = await runCommandUntil(`run ${appName}:serve`, (output) => {
-      return output.indexOf('custom typescript server running') > -1;
-    });
+    const p = await runCommandUntil(
+      `run ${appName}:serve --port=${port}`,
+      (output) => {
+        return output.indexOf(`[ ready ] on http://localhost:${port}`) > -1;
+      }
+    );
 
-    const data = await getData();
+    const data = await getData(port);
     expect(data).toContain(`Welcome to ${appName}`);
 
-    p.kill();
-    await killPorts();
+    await p.kill();
+    expect(await killPorts(port)).toBeTruthy();
   }, 300000);
 
-  function getData(): Promise<any> {
+  function getData(port: number): Promise<any> {
     return new Promise((resolve) => {
-      http.get('http://localhost:4200', (res) => {
+      http.get(`http://localhost:${port}`, (res) => {
         expect(res.statusCode).toEqual(200);
         let data = '';
         res.on('data', (chunk) => {
@@ -682,7 +693,7 @@ describe('Next.js Applications', () => {
     if (opts.checkE2E) {
       const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);
       expect(e2eResults).toContain('All specs passed!');
-      await killPorts();
+      expect(await killPorts()).toBeTruthy();
     }
 
     runCLI(`export ${appName}`);

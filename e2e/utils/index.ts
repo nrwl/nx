@@ -15,8 +15,10 @@ import {
 import isCI = require('is-ci');
 import * as path from 'path';
 import { dirSync } from 'tmp';
-import { kill, killer } from 'cross-port-killer';
+import { kill } from 'cross-port-killer';
+import { check as portCheck } from 'tcp-port-used';
 import { parseJson } from '@nrwl/devkit';
+import { output } from '@nrwl/workspace';
 
 interface RunCmdOpts {
   silenceError?: boolean;
@@ -183,24 +185,32 @@ export function newProject({ name = uniq('proj') } = {}): string {
   }
 }
 
-export async function killProcess(pid: number) {
-  await killer.killByPid(pid.toString());
-  await killPorts();
+async function killPort(port: number): Promise<boolean> {
+  if (await portCheck(port)) {
+    try {
+      output.log({ title: `Attmepting to close port ${port}` });
+      await kill(port);
+      if (await portCheck(port)) {
+        output.error({ title: `Port ${port} still open` });
+      } else {
+        output.success({ title: `Port ${port} successfully closed` });
+        return true;
+      }
+    } catch {
+      output.error({ title: `Port ${port} closing failed` });
+    }
+    return false;
+  } else {
+    return true;
+  }
 }
 
-export async function killPorts() {
-  // potential leftovers from other e2e tests
-  // there are a lot of reasons for why sigterm sometime fails
-  try {
-    await kill(4200);
-  } catch {
-    throw 'Port 4200 could not be closed';
-  }
-  try {
-    await kill(3333);
-  } catch {
-    throw 'Port 3333 could not be closed';
-  }
+export async function killPorts(port?: number): Promise<boolean> {
+  return (
+    (await killPort(3333)) &&
+    (await killPort(4200)) &&
+    (!port || (await killPort(port)))
+  );
 }
 
 // Useful in order to cleanup space during CI to prevent `No space left on device` exceptions
