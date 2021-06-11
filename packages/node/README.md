@@ -1,4 +1,4 @@
-<p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx.png" width="600"></p>
+<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx.png" width="600" alt="Nx - Smart, Extensible Build Framework"></p>
 
 {{links}}
 
@@ -10,7 +10,7 @@
 
 ## What is It?
 
-Builders and schematics adding basic functionality for building, testing and linting node applications and libraries.
+Executors and generators adding basic functionality for building, testing and linting node applications and libraries.
 
 ## How to Use
 

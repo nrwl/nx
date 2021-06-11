@@ -1,5 +1,6 @@
 import { splitArgsIntoNxArgsAndOverrides, getAffectedConfig } from './utils';
 import * as fileUtils from '../core/file-utils';
+
 jest.mock('../core/file-utils');
 
 describe('splitArgs', () => {
@@ -23,6 +24,20 @@ describe('splitArgs', () => {
       head: 'sha2',
       skipNxCache: false,
     });
+  });
+
+  it('should put every command start with nx to nxArgs', () => {
+    const nxArgs = splitArgsIntoNxArgsAndOverrides(
+      {
+        'nx-key': 'some-value',
+        nxKey: 'some-value',
+        _: ['--override'],
+        $0: '',
+      },
+      'affected'
+    ).nxArgs;
+    expect(nxArgs['nx-key']).toEqual('some-value');
+    expect(nxArgs['nxKey']).toEqual('some-value');
   });
 
   it('should default to having a base of master', () => {

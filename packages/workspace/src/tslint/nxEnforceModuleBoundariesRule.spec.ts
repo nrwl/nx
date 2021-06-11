@@ -1,5 +1,5 @@
 import { vol } from 'memfs';
-import { extname, join } from 'path';
+import { extname } from 'path';
 import { RuleFailure } from 'tslint';
 import * as ts from 'typescript';
 import {
@@ -9,10 +9,10 @@ import {
 } from '../core/project-graph';
 import { Rule } from './nxEnforceModuleBoundariesRule';
 import { TargetProjectLocator } from '../core/target-project-locator';
-import { readFileSync } from 'fs';
+import { mapProjectGraphFiles } from '../utils/runtime-lint-utils';
 
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('../utils/app-root', () => ({ appRootPath: '/root' }));
+jest.mock('../utilities/app-root', () => ({ appRootPath: '/root' }));
 
 const tsconfig = {
   compilerOptions: {
@@ -70,7 +70,7 @@ const fileSys = {
   './tsconfig.base.json': JSON.stringify(tsconfig),
 };
 
-describe('Enforce Module Boundaries', () => {
+describe('Enforce Module Boundaries (tslint)', () => {
   beforeEach(() => {
     vol.fromJSON(fileSys, '/root');
   });
@@ -93,7 +93,7 @@ describe('Enforce Module Boundaries', () => {
               root: 'libs/myapp',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [
                 createFile(`apps/myapp/src/main.ts`),
                 createFile(`apps/myapp/blah.ts`),
@@ -107,7 +107,7 @@ describe('Enforce Module Boundaries', () => {
               root: 'libs/mylib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [
                 createFile(`libs/mylib/src/index.ts`),
                 createFile(`libs/mylib/src/deep.ts`),
@@ -138,7 +138,7 @@ describe('Enforce Module Boundaries', () => {
               root: 'libs/myapp',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [
                 createFile(`apps/myapp/src/main.ts`),
                 createFile(`apps/myapp/src/blah.ts`),
@@ -152,7 +152,7 @@ describe('Enforce Module Boundaries', () => {
               root: 'libs/myapp2',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [],
             },
           },
@@ -163,7 +163,7 @@ describe('Enforce Module Boundaries', () => {
               root: 'libs/myapp2/mylib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile('libs/myapp2/mylib/src/index.ts')],
             },
           },
@@ -185,7 +185,7 @@ describe('Enforce Module Boundaries', () => {
             root: 'libs/api',
             tags: ['api', 'domain1'],
             implicitDependencies: [],
-            architect: {},
+            targets: {},
             files: [createFile(`libs/api/src/index.ts`)],
           },
         },
@@ -196,7 +196,7 @@ describe('Enforce Module Boundaries', () => {
             root: 'libs/impl-both-domains',
             tags: ['impl', 'domain1', 'domain2'],
             implicitDependencies: [],
-            architect: {},
+            targets: {},
             files: [createFile(`libs/impl-both-domains/src/index.ts`)],
           },
         },
@@ -207,7 +207,7 @@ describe('Enforce Module Boundaries', () => {
             root: 'libs/impl-domain2',
             tags: ['impl', 'domain2'],
             implicitDependencies: [],
-            architect: {},
+            targets: {},
             files: [createFile(`libs/impl-domain2/src/index.ts`)],
           },
         },
@@ -218,7 +218,7 @@ describe('Enforce Module Boundaries', () => {
             root: 'libs/impl2',
             tags: ['impl', 'domain1'],
             implicitDependencies: [],
-            architect: {},
+            targets: {},
             files: [createFile(`libs/impl2/src/index.ts`)],
           },
         },
@@ -229,7 +229,7 @@ describe('Enforce Module Boundaries', () => {
             root: 'libs/impl',
             tags: ['impl', 'domain1'],
             implicitDependencies: [],
-            architect: {},
+            targets: {},
             files: [createFile(`libs/impl/src/index.ts`)],
           },
         },
@@ -240,7 +240,7 @@ describe('Enforce Module Boundaries', () => {
             root: 'libs/untagged',
             tags: [],
             implicitDependencies: [],
-            architect: {},
+            targets: {},
             files: [createFile(`libs/untagged/src/index.ts`)],
           },
         },
@@ -252,7 +252,7 @@ describe('Enforce Module Boundaries', () => {
             version: '0.0.0',
             tags: [],
             implicitDependencies: [],
-            architect: {},
+            targets: {},
             files: [],
           },
         },
@@ -416,7 +416,7 @@ describe('Enforce Module Boundaries', () => {
                 root: 'libs/mylib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {},
+                targets: {},
                 files: [
                   createFile(`libs/mylib/src/main.ts`),
                   createFile(`libs/mylib/other.ts`),
@@ -444,7 +444,7 @@ describe('Enforce Module Boundaries', () => {
                 root: 'libs/mylib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {},
+                targets: {},
                 files: [
                   createFile(`libs/mylib/src/main.ts`),
                   createFile(`libs/mylib/other/index.ts`),
@@ -472,7 +472,7 @@ describe('Enforce Module Boundaries', () => {
                 root: 'libs/mylib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {},
+                targets: {},
                 files: [createFile(`libs/mylib/src/main.ts`)],
               },
             },
@@ -483,7 +483,7 @@ describe('Enforce Module Boundaries', () => {
                 root: 'libs/other',
                 tags: [],
                 implicitDependencies: [],
-                architect: {},
+                targets: {},
                 files: [createFile('libs/other/src/index.ts')],
               },
             },
@@ -511,7 +511,7 @@ describe('Enforce Module Boundaries', () => {
                 root: 'libs/mylib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {},
+                targets: {},
                 files: [createFile(`libs/mylib/src/main.ts`)],
               },
             },
@@ -522,7 +522,7 @@ describe('Enforce Module Boundaries', () => {
                 root: 'libs/other',
                 tags: [],
                 implicitDependencies: [],
-                architect: {},
+                targets: {},
                 files: [createFile('libs/other/src/index.ts')],
               },
             },
@@ -550,7 +550,7 @@ describe('Enforce Module Boundaries', () => {
               root: 'libs/mylib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [
                 createFile(`libs/mylib/src/main.ts`),
                 createFile(`libs/mylib/src/other.ts`),
@@ -584,7 +584,7 @@ describe('Enforce Module Boundaries', () => {
               root: 'libs/mylib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`libs/mylib/src/main.ts`)],
             },
           },
@@ -595,7 +595,7 @@ describe('Enforce Module Boundaries', () => {
               root: 'libs/utils',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`libs/utils/a.ts`)],
             },
           },
@@ -620,7 +620,7 @@ describe('Enforce Module Boundaries', () => {
               root: 'libs/mylib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`libs/mylib/src/main.ts`)],
             },
           },
@@ -631,7 +631,7 @@ describe('Enforce Module Boundaries', () => {
               root: 'libs/other',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`libs/other/index.ts`)],
             },
           },
@@ -666,7 +666,7 @@ describe('Enforce Module Boundaries', () => {
               root: 'libs/mylib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`libs/mylib/src/main.ts`)],
             },
           },
@@ -677,7 +677,7 @@ describe('Enforce Module Boundaries', () => {
               root: 'apps/myapp',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`apps/myapp/src/index.ts`)],
             },
           },
@@ -702,7 +702,7 @@ describe('Enforce Module Boundaries', () => {
               root: 'libs/mylib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`libs/mylib/src/main.ts`)],
             },
           },
@@ -713,7 +713,7 @@ describe('Enforce Module Boundaries', () => {
               root: 'apps/myapp-e2e',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`apps/myapp-e2e/src/index.ts`)],
             },
           },
@@ -724,6 +724,121 @@ describe('Enforce Module Boundaries', () => {
     expect(failures[0].getFailure()).toEqual(
       'imports of e2e projects are forbidden'
     );
+  });
+
+  it('should error when absolute path within project detected', () => {
+    const failures = runRule(
+      {},
+      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+      'import "@mycompany/mylib"',
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+              files: [createFile(`libs/mylib/src/main.ts`)],
+            },
+          },
+          anotherlibName: {
+            name: 'anotherlibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/anotherlib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+              files: [createFile(`libs/anotherlib/src/main.ts`)],
+            },
+          },
+          myappName: {
+            name: 'myappName',
+            type: ProjectType.app,
+            data: {
+              root: 'apps/myapp',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+              files: [createFile(`apps/myapp/src/index.ts`)],
+            },
+          },
+        },
+        dependencies: {
+          mylibName: [
+            {
+              source: 'mylibName',
+              target: 'anotherlibName',
+              type: DependencyType.static,
+            },
+          ],
+        },
+      }
+    );
+    const message =
+      'Projects should use relative imports to import from other files within the same project. Use "./path/to/file" instead of import from "@mycompany/mylib"';
+    expect(failures.length).toEqual(1);
+    expect(failures[0].getFailure()).toEqual(message);
+  });
+
+  it('should ignore detected absolute path within project if allowCircularSelfDependency flag is set', () => {
+    const failures = runRule(
+      {
+        allowCircularSelfDependency: true,
+      },
+      `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+      'import "@mycompany/mylib"',
+      {
+        nodes: {
+          mylibName: {
+            name: 'mylibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/mylib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+              files: [createFile(`libs/mylib/src/main.ts`)],
+            },
+          },
+          anotherlibName: {
+            name: 'anotherlibName',
+            type: ProjectType.lib,
+            data: {
+              root: 'libs/anotherlib',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+              files: [createFile(`libs/anotherlib/src/main.ts`)],
+            },
+          },
+          myappName: {
+            name: 'myappName',
+            type: ProjectType.app,
+            data: {
+              root: 'apps/myapp',
+              tags: [],
+              implicitDependencies: [],
+              targets: {},
+              files: [createFile(`apps/myapp/src/index.ts`)],
+            },
+          },
+        },
+        dependencies: {
+          mylibName: [
+            {
+              source: 'mylibName',
+              target: 'anotherlibName',
+              type: DependencyType.static,
+            },
+          ],
+        },
+      }
+    );
+    expect(failures.length).toEqual(0);
   });
 
   it('should error when circular dependency detected', () => {
@@ -740,7 +855,7 @@ describe('Enforce Module Boundaries', () => {
               root: 'libs/mylib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`libs/mylib/src/main.ts`)],
             },
           },
@@ -751,7 +866,7 @@ describe('Enforce Module Boundaries', () => {
               root: 'libs/anotherlib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`libs/anotherlib/src/main.ts`)],
             },
           },
@@ -762,7 +877,7 @@ describe('Enforce Module Boundaries', () => {
               root: 'apps/myapp',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`apps/myapp/src/index.ts`)],
             },
           },
@@ -797,7 +912,7 @@ describe('Enforce Module Boundaries', () => {
               root: 'libs/mylib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`libs/mylib/src/main.ts`)],
             },
           },
@@ -808,7 +923,7 @@ describe('Enforce Module Boundaries', () => {
               root: 'libs/anotherlib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`libs/anotherlib/src/main.ts`)],
             },
           },
@@ -819,7 +934,7 @@ describe('Enforce Module Boundaries', () => {
               root: 'libs/badcirclelib',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`libs/badcirclelib/src/main.ts`)],
             },
           },
@@ -830,7 +945,7 @@ describe('Enforce Module Boundaries', () => {
               root: 'apps/myapp',
               tags: [],
               implicitDependencies: [],
-              architect: {},
+              targets: {},
               files: [createFile(`apps/myapp/index.ts`)],
             },
           },
@@ -882,10 +997,10 @@ describe('Enforce Module Boundaries', () => {
                 root: 'libs/buildableLib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {
+                targets: {
                   build: {
                     // defines a buildable lib
-                    builder: '@angular-devkit/build-ng-packagr:build',
+                    executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
                 files: [createFile(`libs/buildableLib/src/main.ts`)],
@@ -898,7 +1013,7 @@ describe('Enforce Module Boundaries', () => {
                 root: 'libs/nonBuildableLib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {},
+                targets: {},
                 files: [createFile(`libs/nonBuildableLib/src/main.ts`)],
               },
             },
@@ -925,10 +1040,10 @@ describe('Enforce Module Boundaries', () => {
                 root: 'libs/buildableLib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {
+                targets: {
                   build: {
                     // defines a buildable lib
-                    builder: '@angular-devkit/build-ng-packagr:build',
+                    executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
                 files: [createFile(`libs/buildableLib/src/main.ts`)],
@@ -941,7 +1056,7 @@ describe('Enforce Module Boundaries', () => {
                 root: 'libs/nonBuildableLib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {},
+                targets: {},
                 files: [createFile(`libs/nonBuildableLib/src/main.ts`)],
               },
             },
@@ -970,10 +1085,10 @@ describe('Enforce Module Boundaries', () => {
                 root: 'libs/buildableLib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {
+                targets: {
                   build: {
                     // defines a buildable lib
-                    builder: '@angular-devkit/build-ng-packagr:build',
+                    executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
                 files: [createFile(`libs/buildableLib/src/main.ts`)],
@@ -986,10 +1101,10 @@ describe('Enforce Module Boundaries', () => {
                 root: 'libs/anotherBuildableLib',
                 tags: [],
                 implicitDependencies: [],
-                architect: {
+                targets: {
                   build: {
                     // defines a buildable lib
-                    builder: '@angular-devkit/build-ng-packagr:build',
+                    executor: '@angular-devkit/build-ng-packagr:build',
                   },
                 },
                 files: [createFile(`libs/anotherBuildableLib/src/main.ts`)],
@@ -1063,14 +1178,14 @@ function runRule(
     true
   );
 
+  const mappedProjectGraph = mapProjectGraphFiles(projectGraph);
+
   const rule = new Rule(
     options,
     `${process.cwd()}/proj`,
     'mycompany',
-    projectGraph,
-    new TargetProjectLocator(projectGraph.nodes, (path) =>
-      readFileSync(join('/root', path)).toString()
-    )
+    mappedProjectGraph,
+    new TargetProjectLocator(mappedProjectGraph.nodes)
   );
   return rule.apply(sourceFile);
 }

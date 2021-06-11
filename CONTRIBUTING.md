@@ -6,8 +6,8 @@ We would love for you to contribute to Nx! Read this document to see how to do i
 
 Watch this 5-minute video:
 
-<a href="https://www.youtube.com/watch?v=o11p0zSm0No&feature=youtu.be" target="_blank">
-<p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/how-to-contribute.png" width="600"></p>
+<a href="https://www.youtube.com/watch?v=8LCA_4qxc08" target="_blank">
+<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/how-to-contribute.png" width="600" alt="Nx - How to contribute"></p>
 </a>
 
 ## Got a Question?
@@ -24,7 +24,7 @@ Source code and documentation are included in the top-level folders listed below
 
 - `docs` - Markdown and configuration files for documentation including tutorials, guides for each supported platform, and API docs.
 - `e2e` - E2E tests.
-- `packages` - Source code for Nx packages such as Angular, React, Web, NestJS, Next and others including schematics and builders.
+- `packages` - Source code for Nx packages such as Angular, React, Web, NestJS, Next and others including generators and executors (or builders).
 - `scripts` - Miscellaneous scripts for project tasks such as building documentation, testing, and code formatting.
 - `tmp` - Folder used by e2e tests. If you are a WebStorm user, make sure to mark this folder as excluded.
 
@@ -64,6 +64,7 @@ yarn local-registry disable
 To publish packages to a local registry, do the following:
 
 - Run `yarn local-registry start` in Terminal 1 (keep it running)
+- Run `npm adduser --registry http://localhost:4873` in Terminal 2 (real credentials are not required, you just need to be logged in)
 - Run `yarn local-registry enable` in Terminal 2
 - Run `yarn nx-release 999.9.9 --local` in Terminal 2
 - Run `cd /tmp` in Terminal 2
@@ -74,7 +75,7 @@ To publish packages to a local registry, do the following:
 To make sure your changes do not break any unit tests, run the following:
 
 ```bash
-yarn test
+nx affected --target=test
 ```
 
 For example, if you need to only run the tests for the jest package, run:
@@ -88,13 +89,13 @@ nx test jest
 To make sure your changes do not break any E2E tests, run:
 
 ```bash
-yarn e2e
+nx e2e e2e-cli # or any other project here
 ```
 
 Running E2E tests can take some time, so it is often useful to run a single test. To run a single suite of tests, run:
 
 ```bash
-yarn e2e e2e-cli
+nx e2e e2e-cli -t versions # I often add qqqq to my test name so I can use -t qqqq
 ```
 
 ### Developing on Windows
@@ -127,7 +128,9 @@ You can file new issues by filling out our [issue form](https://github.com/nrwl/
 Please follow the following guidelines:
 
 - Make sure unit tests pass (`yarn test`)
-  - Target a specific unit test (i.e. `/build/packages/angular/src/utils/ast-utils.spec.js`) with `yarn test angular/src/utils/ast-utils`
+  - Target a specific project with: `nx run proj:test` (i.e. `nx run angular:test` to target `packages/angular`)
+  - Target a specific unit test file (i.e. `packages/angular/src/utils/ast-utils.spec.ts`) with `npx jest angular/src/utils/ast-utils` or `npx jest packages/angular/src/utils/ast-utils`
+  - For more options on running tests - check `npx jest --help` or visit [jestjs.io](https://jestjs.io/)
   - Debug with `node --inspect-brk ./node_modules/jest/bin/jest.js build/packages/angular/src/utils/ast-utils.spec.js`
 - Make sure e2e tests pass (this can take a while, so you can always let CI check those) (`yarn e2e`)
   - Target a specific e2e test (i.e. `/build/e2e/cypress.test.js`) with `yarn e2e cypress`
@@ -163,7 +166,7 @@ The scope must be one of the following:
 
 - angular - anything Angular specific
 - core - anything Nx core specific
-- docs - anything related to docs infrastructure
+- nxdev - anything related to docs infrastructure
 - nextjs - anything Next specific
 - nest - anything Nest specific
 - node - anything Node specific
@@ -174,6 +177,7 @@ The scope must be one of the following:
 - testing - anything testing specific (e.g., jest or cypress)
 - repo - anything related to managing the repo itself
 - misc - misc stuff
+- devkit - devkit-related changes
 
 ##### Subject and Body
 
@@ -184,7 +188,7 @@ Including the issue number that the PR relates to also helps with tracking.
 #### Example
 
 ```
-feat(schematics): add an option to generate lazy-loadable modules
+feat(generators): add an option to generate lazy-loadable modules
 
 `nx generate lib mylib --lazy` provisions the mylib project in tslint.json
 

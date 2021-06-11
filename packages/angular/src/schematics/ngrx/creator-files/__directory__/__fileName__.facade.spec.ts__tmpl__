@@ -21,23 +21,18 @@ import {
 } from './<%= fileName %>.reducer';
 
 interface TestSchema {
-  '<%= propertyName %>' : State
+  '<%= propertyName %>': State
 }
 
 describe('<%= className %>Facade', () => {
   let facade: <%= className %>Facade;
   let store: Store<TestSchema>;
-  const create<%= className %>Entity = (id: string, name = '' ) => ({
+  const create<%= className %>Entity = (id: string, name = ''): <%= className %>Entity => ({
     id,
     name: name || `name-${id}`
-  } as <%= className %>Entity);
-
-  beforeEach(() => {
-    
   });
 
   describe('used in NgModule', () => {
-
     beforeEach(() => {
       @NgModule({
         imports: [
@@ -59,8 +54,8 @@ describe('<%= className %>Facade', () => {
       class RootModule {}
       TestBed.configureTestingModule({ imports: [RootModule] });
 
-      store = TestBed.get(Store);
-      facade = TestBed.get(<%= className %>Facade);
+      store = TestBed.inject(Store);
+      facade = TestBed.inject(<%= className %>Facade);
     });
 
     /**
@@ -74,7 +69,7 @@ describe('<%= className %>Facade', () => {
         expect(list.length).toBe(0);
         expect(isLoaded).toBe(false);
 
-        facade.dispatch(<%= className %>Actions.load<%= className %>());
+        facade.init();
 
         list = await readFirst(facade.all<%= className %>$);
         isLoaded = await readFirst(facade.loaded$);
@@ -99,7 +94,7 @@ describe('<%= className %>Facade', () => {
         expect(list.length).toBe(0);
         expect(isLoaded).toBe(false);
 
-        facade.dispatch(<%= className %>Actions.load<%= className %>Success({
+        store.dispatch(<%= className %>Actions.load<%= className %>Success({
           <%= propertyName %>: [
             create<%= className %>Entity('AAA'),
             create<%= className %>Entity('BBB')
@@ -118,5 +113,4 @@ describe('<%= className %>Facade', () => {
       }
     });
   });
-
 });

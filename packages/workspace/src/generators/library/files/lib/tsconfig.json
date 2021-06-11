@@ -1,0 +1,13 @@
+{
+  "extends": "<%= offsetFromRoot %>tsconfig.base.json",<% if (js) { %>
+  "compilerOptions": {
+    "allowJs": true
+  },<% } %>
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ]
+}

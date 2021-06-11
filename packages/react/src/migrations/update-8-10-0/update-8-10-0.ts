@@ -7,7 +7,6 @@ import {
 } from '@angular-devkit/schematics';
 import {
   formatFiles,
-  offsetFromRoot,
   readWorkspace,
   updateJsonInTree,
   updatePackagesInPackageJson,
@@ -15,6 +14,7 @@ import {
 } from '@nrwl/workspace';
 import * as path from 'path';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { offsetFromRoot } from '@nrwl/devkit';
 
 const ignore = require('ignore');
 

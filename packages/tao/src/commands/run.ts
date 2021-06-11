@@ -1,7 +1,6 @@
-import * as minimist from 'minimist';
-import { getLogger } from '../shared/logger';
+import * as yargsParser from 'yargs-parser';
 import {
-  combineOptionsForBuilder,
+  combineOptionsForExecutor,
   convertToCamelCase,
   handleErrors,
   Options,
@@ -9,17 +8,24 @@ import {
 } from '../shared/params';
 import { printHelp } from '../shared/print-help';
 import {
-  TargetDefinition,
-  WorkspaceDefinition,
+  ExecutorContext,
+  ProjectConfiguration,
+  TargetConfiguration,
+  WorkspaceJsonConfiguration,
   Workspaces,
 } from '../shared/workspace';
 
-const chalk = require('chalk');
+import * as chalk from 'chalk';
+import { logger } from '../shared/logger';
+import { eachValueFrom } from 'rxjs-for-await';
 
-export interface RunOptions {
+export interface Target {
   project: string;
   target: string;
-  configuration: string;
+  configuration?: string;
+}
+
+export interface RunOptions extends Target {
   help: boolean;
   runOptions: Options;
 }
@@ -31,14 +37,17 @@ function throwInvalidInvocation() {
 }
 
 function parseRunOpts(
+  cwd: string,
   args: string[],
-  defaultProjectName: string | null,
-  logger: Console
+  defaultProjectName: string | null
 ): RunOptions {
   const runOptions = convertToCamelCase(
-    minimist(args, {
+    yargsParser(args, {
       boolean: ['help', 'prod'],
       string: ['configuration', 'project'],
+      alias: {
+        c: 'configuration',
+      },
     })
   );
   const help = runOptions.help as boolean;
@@ -53,7 +62,7 @@ function parseRunOpts(
   ] = runOptions._[0].split(':');
   if (!project && defaultProjectName) {
     logger.debug(
-      `No project name specified. Using default project : ${chalk.default.bold(
+      `No project name specified. Using default project : ${chalk.bold(
         defaultProjectName
       )}`
     );
@@ -74,6 +83,7 @@ function parseRunOpts(
   const res = { project, target, configuration, help, runOptions };
   delete runOptions['help'];
   delete runOptions['_'];
+  delete runOptions['c'];
   delete runOptions['configuration'];
   delete runOptions['prod'];
   delete runOptions['project'];
@@ -82,86 +92,240 @@ function parseRunOpts(
 }
 
 export function printRunHelp(
-  opts: RunOptions,
-  schema: Schema,
-  logger: Console
+  opts: { project: string; target: string },
+  schema: Schema
 ) {
-  printHelp(`nx run ${opts.project}:${opts.target}`, schema, logger as any);
+  printHelp(`nx run ${opts.project}:${opts.target}`, schema);
 }
 
-export function validateTargetAndConfiguration(
-  workspace: WorkspaceDefinition,
-  opts: RunOptions
+export function validateProject(
+  workspace: WorkspaceJsonConfiguration,
+  projectName: string
 ) {
-  const project = workspace.projects[opts.project];
+  const project = workspace.projects[projectName];
   if (!project) {
-    throw new Error(`Could not find project "${opts.project}"`);
+    throw new Error(`Could not find project "${projectName}"`);
   }
-  const target = project.architect[opts.target];
-  const availableTargets = Object.keys(project.architect);
-  if (!target) {
+}
+
+function isPromise<T extends { success: boolean }>(
+  v: Promise<T> | AsyncIterableIterator<T>
+): v is Promise<T> {
+  return typeof (v as any)?.then === 'function';
+}
+
+function isAsyncIterator<T extends { success: boolean }>(
+  v: Promise<{ success: boolean }> | AsyncIterableIterator<T>
+): v is AsyncIterableIterator<T> {
+  return typeof (v as any)?.[Symbol.asyncIterator] === 'function';
+}
+
+async function* promiseToIterator<T extends { success: boolean }>(
+  v: Promise<T>
+): AsyncIterableIterator<T> {
+  yield await v;
+}
+
+async function iteratorToProcessStatusCode(
+  i: AsyncIterableIterator<{ success: boolean }>
+): Promise<number> {
+  let success: boolean;
+
+  // This is a workaround to fix an issue that only happens with
+  // the @angular-devkit/build-angular:browser builder. Starting
+  // on version 12.0.1, a SASS compilation implementation was
+  // introduced making use of workers and it's unref()-ing the worker
+  // too early, causing the process to exit early in environments
+  // like CI or when running Docker builds.
+  const keepProcessAliveInterval = setInterval(() => {}, 1000);
+  try {
+    let prev: IteratorResult<{ success: boolean }>;
+    let current: IteratorResult<{ success: boolean }>;
+    do {
+      prev = current;
+      current = await i.next();
+    } while (!current.done);
+
+    success =
+      current.value !== undefined || !prev
+        ? current.value.success
+        : prev.value.success;
+
+    return success ? 0 : 1;
+  } finally {
+    clearInterval(keepProcessAliveInterval);
+  }
+}
+
+function createImplicitTargetConfig(
+  proj: ProjectConfiguration,
+  targetName: string
+): TargetConfiguration {
+  return {
+    executor: '@nrwl/workspace:run-script',
+    options: {
+      script: targetName,
+    },
+  };
+}
+
+async function runExecutorInternal<T extends { success: boolean }>(
+  {
+    project,
+    target,
+    configuration,
+  }: {
+    project: string;
+    target: string;
+    configuration?: string;
+  },
+  options: { [k: string]: any },
+  root: string,
+  cwd: string,
+  workspace: WorkspaceJsonConfiguration,
+  isVerbose: boolean,
+  printHelp: boolean
+): Promise<AsyncIterableIterator<T>> {
+  validateProject(workspace, project);
+
+  const ws = new Workspaces(root);
+  const proj = workspace.projects[project];
+  const targetConfig = proj.targets
+    ? proj.targets[target]
+    : createImplicitTargetConfig(proj, target);
+
+  if (!targetConfig) {
     throw new Error(
-      `Could not find target "${opts.target}" in the ${
-        opts.project
-      } project. Valid targets are: ${chalk.default.bold(
-        availableTargets.join(', ')
-      )}`
+      `NX Cannot find target '${target}' for project '${project}'`
     );
   }
 
-  // Not all targets have configurations
-  // and an undefined configuration is valid
-  if (opts.configuration) {
-    if (target.configurations) {
-      const configuration = target.configurations[opts.configuration];
-      if (!configuration) {
-        throw new Error(
-          `Could not find configuration "${opts.configuration}" in ${
-            opts.project
-          }:${opts.target}. Valid configurations are: ${Object.keys(
-            target.configurations
-          ).join(', ')}`
-        );
-      }
+  configuration = configuration ?? targetConfig.defaultConfiguration;
+
+  const [nodeModule, executor] = targetConfig.executor.split(':');
+  const { schema, implementationFactory } = ws.readExecutor(
+    nodeModule,
+    executor
+  );
+
+  if (printHelp) {
+    printRunHelp({ project, target }, schema);
+    process.exit(0);
+  }
+
+  const combinedOptions = combineOptionsForExecutor(
+    options,
+    configuration,
+    targetConfig,
+    schema,
+    project,
+    ws.relativeCwd(cwd)
+  );
+
+  if (ws.isNxExecutor(nodeModule, executor)) {
+    const implementation = implementationFactory();
+    const r = implementation(combinedOptions, {
+      root,
+      target: targetConfig,
+      workspace,
+      projectName: project,
+      targetName: target,
+      configurationName: configuration,
+      cwd,
+      isVerbose,
+    }) as Promise<T> | AsyncIterableIterator<T>;
+    if (isPromise<T>(r)) {
+      return promiseToIterator<T>(r);
+    } else if (isAsyncIterator<T>(r)) {
+      return r;
     } else {
-      throw new Error(
-        `No configurations are defined for ${opts.project}:${opts.target}, so "${opts.configuration}" is invalid.`
+      throw new TypeError(
+        `NX Executor "${targetConfig.executor}" should return either a Promise or an AsyncIterator`
       );
     }
+  } else {
+    require('../compat/compat');
+    const observable = await (await import('./ngcli-adapter')).scheduleTarget(
+      root,
+      {
+        project,
+        target,
+        configuration,
+        runOptions: combinedOptions,
+      },
+      isVerbose
+    );
+    return eachValueFrom<T>(observable as any);
   }
 }
 
-export interface TargetContext {
-  root: string;
-  target: TargetDefinition;
-  workspace: WorkspaceDefinition;
+/**
+ * Loads and invokes executor.
+ *
+ * This is analogous to invoking executor from the terminal, with the exception
+ * that the params aren't parsed from the string, but instead provided parsed already.
+ *
+ * Apart from that, it works the same way:
+ *
+ * - it will load the workspace configuration
+ * - it will resolve the target
+ * - it will load the executor and the schema
+ * - it will load the options for the appropriate configuration
+ * - it will run the validations and will set the default
+ * - and, of course, it will invoke the executor
+ *
+ * Example:
+ *
+ * ```typescript
+ * for await (const s of await runExecutor({project: 'myproj', target: 'serve'}, {watch: true}, context)) {
+ *   // s.success
+ * }
+ * ```
+ *
+ * Note that the return value is a promise of an iterator, so you need to await before iterating over it.
+ */
+export async function runExecutor<T extends { success: boolean }>(
+  targetDescription: {
+    project: string;
+    target: string;
+    configuration?: string;
+  },
+  options: { [k: string]: any },
+  context: ExecutorContext
+): Promise<AsyncIterableIterator<T>> {
+  return await runExecutorInternal<T>(
+    targetDescription,
+    options,
+    context.root,
+    context.cwd,
+    context.workspace,
+    context.isVerbose,
+    false
+  );
 }
 
-export async function run(root: string, args: string[], isVerbose: boolean) {
-  const logger = getLogger(isVerbose) as any;
-  const ws = new Workspaces();
+export async function run(
+  cwd: string,
+  root: string,
+  args: string[],
+  isVerbose: boolean
+) {
+  const ws = new Workspaces(root);
 
-  return handleErrors(logger, isVerbose, async () => {
-    const workspace = ws.readWorkspaceConfiguration(root);
-    const opts = parseRunOpts(args, workspace.defaultProject, logger);
-    validateTargetAndConfiguration(workspace, opts);
-
-    const target = workspace.projects[opts.project].architect[opts.target];
-    if (ws.isNxBuilder(target)) {
-      const { schema, implementation } = ws.readBuilder(target);
-      const combinedOptions = combineOptionsForBuilder(
+  return handleErrors(isVerbose, async () => {
+    const workspace = ws.readWorkspaceConfiguration();
+    const defaultProjectName = ws.calculateDefaultProjectName(cwd, workspace);
+    const opts = parseRunOpts(cwd, args, defaultProjectName);
+    return iteratorToProcessStatusCode(
+      await runExecutorInternal(
+        opts,
         opts.runOptions,
-        opts.configuration,
-        target,
-        schema
-      );
-      if (opts.help) {
-        printRunHelp(opts, schema, logger);
-        return 0;
-      }
-      return await implementation(combinedOptions, { root, target, workspace });
-    } else {
-      return (await import('./ngcli-adapter')).run(logger, root, opts);
-    }
+        root,
+        cwd,
+        workspace,
+        isVerbose,
+        opts.help
+      )
+    );
   });
 }

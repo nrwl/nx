@@ -14,14 +14,14 @@ import {
 } from '@angular-devkit/schematics';
 import {
   getWorkspacePath,
-  Linter,
-  offsetFromRoot,
   replaceAppNameWithPath,
   updateJsonInTree,
 } from '@nrwl/workspace';
 import * as path from 'path';
 import { NormalizedSchema } from './normalized-schema';
 import { updateNgPackage } from './update-ng-package';
+import { offsetFromRoot } from '@nrwl/devkit';
+import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
 
 // TODO - refactor this into separate rules with better names
 export function updateProject(options: NormalizedSchema): Rule {
@@ -130,51 +130,25 @@ export function updateProject(options: NormalizedSchema): Rule {
           options.projectRoot
         );
 
-        fixedProject.schematics = fixedProject.schematics || {};
-        if (options.style !== 'css') {
-          fixedProject.schematics = {
-            ...fixedProject.schematics,
-            '@schematics/angular:component': {
-              style: options.style,
-            },
-          };
-        }
+        delete fixedProject.schematics;
 
         if (!options.publishable && !options.buildable) {
           delete fixedProject.architect.build;
         } else {
-          if (options.publishable) {
-            // adjust the builder path to our custom one
-            fixedProject.architect.build.builder = '@nrwl/angular:package';
-          } else {
-            // adjust the builder path to our custom one
-            fixedProject.architect.build.builder =
-              '@nrwl/angular:ng-packagr-lite';
-          }
+          // Set the right builder for the type of library.
+          // Ensure the outputs property comes after the builder for
+          // better readability.
+          const { builder, ...rest } = fixedProject.architect.build;
+          fixedProject.architect.build = {
+            builder: options.publishable
+              ? '@nrwl/angular:package'
+              : '@nrwl/angular:ng-packagr-lite',
+            outputs: [`dist/${libsDir(host)}/${options.projectDirectory}`],
+            ...rest,
+          };
         }
 
         delete fixedProject.architect.test;
-
-        if (options.linter === Linter.TsLint) {
-          fixedProject.architect.lint.options.tsConfig = fixedProject.architect.lint.options.tsConfig.filter(
-            (path) =>
-              path !==
-              join(normalize(options.projectRoot), 'tsconfig.spec.json')
-          );
-          fixedProject.architect.lint.options.exclude.push(
-            '!' + join(normalize(options.projectRoot), '**/*')
-          );
-        }
-
-        if (options.linter === Linter.EsLint) {
-          fixedProject.architect.lint.builder = '@nrwl/linter:eslint';
-          fixedProject.architect.lint.options.lintFilePatterns = [
-            `${options.projectRoot}/src/**/*.ts`,
-          ];
-          delete fixedProject.architect.lint.options.tsConfig;
-          delete fixedProject.architect.lint.options.exclude;
-          host.delete(`${options.projectRoot}/tslint.json`);
-        }
 
         json.projects[options.name] = fixedProject;
         return json;
@@ -198,28 +172,13 @@ export function updateProject(options: NormalizedSchema): Rule {
         },
       };
     }),
-    options.linter === Linter.TsLint
-      ? updateJsonInTree(`${options.projectRoot}/tslint.json`, (json) => {
-          return {
-            ...json,
-            extends: `${offsetFromRoot(options.projectRoot)}tslint.json`,
-            linterOptions: {
-              exclude: ['!**/*'],
-            },
-          };
-        })
-      : noop(),
-    updateJsonInTree(`/nx.json`, (json) => {
-      return {
-        ...json,
-        projects: {
-          ...json.projects,
-          [options.name]: { tags: options.parsedTags },
-        },
-      };
-    }),
-    (host: Tree) => {
-      return updateNgPackage(host, options);
-    },
+    updateJsonInTree(`/nx.json`, (json) => ({
+      ...json,
+      projects: {
+        ...json.projects,
+        [options.name]: { tags: options.parsedTags },
+      },
+    })),
+    (host: Tree) => updateNgPackage(host, options),
   ]);
 }

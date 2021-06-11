@@ -1,16 +1,16 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "component-cypress-spec",
+  "$id": "NxAngularComponentCypressSpec",
   "type": "object",
   "properties": {
     "projectName": {
       "type": "string",
-      "description": "Name of the library from angular.json",
+      "description": "Name of the project from angular.json",
       "examples": ["ui-samples"]
     },
-    "libPath": {
+    "projectPath": {
       "type": "string",
-      "description": "Path to the library",
+      "description": "Path to the project",
       "examples": ["libs/ui-samples"]
     },
     "componentName": {
@@ -20,18 +20,22 @@
     },
     "componentPath": {
       "type": "string",
-      "description": "Relative path to the component file from the library root",
+      "description": "Relative path to the component file from the project root",
       "examples": ["awesome"]
     },
     "componentFileName": {
       "type": "string",
       "description": "Component file name without the .ts extension",
       "examples": ["awesome.component"]
+    },
+    "cypressProject": {
+      "type": "string",
+      "description": "The Cypress project to generate the stories under. By default, inferred from 'projectName'"
     }
   },
   "required": [
     "projectName",
-    "libPath",
+    "projectPath",
     "componentName",
     "componentPath",
     "componentFileName"

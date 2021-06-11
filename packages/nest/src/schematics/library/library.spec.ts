@@ -1,8 +1,9 @@
 import { Tree } from '@angular-devkit/schematics';
-import { NxJson, readJsonInTree } from '@nrwl/workspace';
+import { readJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
 import { runSchematic } from '../../utils/testing';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import type { NxJsonConfiguration } from '@nrwl/devkit';
 
 describe('lib', () => {
   let appTree: Tree;
@@ -26,6 +27,7 @@ describe('lib', () => {
       });
       expect(workspaceJson.projects['my-lib'].architect.test).toEqual({
         builder: '@nrwl/jest:jest',
+        outputs: ['coverage/libs/my-lib'],
         options: {
           jestConfig: 'libs/my-lib/jest.config.js',
           passWithNoTests: true,
@@ -143,7 +145,7 @@ describe('lib', () => {
         { name: 'myLib', tags: 'one,two' },
         appTree
       );
-      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
+      const nxJson = readJsonInTree<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-lib': {
           tags: ['one', 'two'],
@@ -202,6 +204,43 @@ describe('lib', () => {
       expect(tree.exists(`libs/my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
       expect(tree.exists(`libs/my-lib/src/lib/my-lib.spec.ts`)).toBeFalsy();
+
+      const eslintrcJson = readJsonInTree(tree, 'libs/my-lib/.eslintrc.json');
+      expect(eslintrcJson).toMatchInlineSnapshot(`
+        Object {
+          "extends": Array [
+            "../../.eslintrc.json",
+          ],
+          "ignorePatterns": Array [
+            "!**/*",
+          ],
+          "overrides": Array [
+            Object {
+              "files": Array [
+                "*.ts",
+                "*.tsx",
+                "*.js",
+                "*.jsx",
+              ],
+              "rules": Object {},
+            },
+            Object {
+              "files": Array [
+                "*.ts",
+                "*.tsx",
+              ],
+              "rules": Object {},
+            },
+            Object {
+              "files": Array [
+                "*.js",
+                "*.jsx",
+              ],
+              "rules": Object {},
+            },
+          ],
+        }
+      `);
     });
   });
 
@@ -216,7 +255,7 @@ describe('lib', () => {
         },
         appTree
       );
-      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
+      const nxJson = readJsonInTree<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-dir-my-lib': {
           tags: ['one'],
@@ -232,7 +271,7 @@ describe('lib', () => {
         },
         tree
       );
-      const nxJson2 = readJsonInTree<NxJson>(tree2, '/nx.json');
+      const nxJson2 = readJsonInTree<NxJsonConfiguration>(tree2, '/nx.json');
       expect(nxJson2.projects).toEqual({
         'my-dir-my-lib': {
           tags: ['one'],
@@ -316,6 +355,55 @@ describe('lib', () => {
           ],
         }
       `);
+    });
+  });
+
+  describe('--strict', () => {
+    it('should update the projects tsconfig with strict true', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          strict: true,
+        },
+        appTree
+      );
+      const tsconfigJson = readJsonInTree(
+        tree,
+        '/libs/my-lib/tsconfig.lib.json'
+      );
+
+      expect(tsconfigJson.compilerOptions.strict).toBeTruthy();
+      expect(
+        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
+      ).toBeTruthy();
+      expect(tsconfigJson.compilerOptions.noImplicitReturns).toBeTruthy();
+      expect(
+        tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
+      ).toBeTruthy();
+    });
+
+    it('should default to strict false', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+        },
+        appTree
+      );
+      const tsconfigJson = readJsonInTree(
+        tree,
+        '/libs/my-lib/tsconfig.lib.json'
+      );
+
+      expect(tsconfigJson.compilerOptions.strict).not.toBeDefined();
+      expect(
+        tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
+      ).not.toBeDefined();
+      expect(tsconfigJson.compilerOptions.noImplicitReturns).not.toBeDefined();
+      expect(
+        tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
+      ).not.toBeDefined();
     });
   });
 
@@ -417,7 +505,7 @@ describe('lib', () => {
       preset: '../../jest.preset.js',
       globals: {
         'ts-jest': {
-          tsConfig: '<rootDir>/tsconfig.spec.json',
+          tsconfig: '<rootDir>/tsconfig.spec.json',
         },
       },
       testEnvironment: 'node',

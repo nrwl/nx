@@ -1,0 +1,112 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "title": "Lint Target",
+  "description": "Linter",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["eslint", "tslint"],
+      "default": "eslint"
+    },
+    "config": {
+      "type": "string",
+      "description": "The name of the configuration file."
+    },
+    "tsConfig": {
+      "description": "The name of the TypeScript configuration file.",
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "format": {
+      "type": "string",
+      "description": "ESLint Output formatter (https://eslint.org/docs/user-guide/formatters).",
+      "default": "stylish",
+      "anyOf": [
+        {
+          "enum": [
+            "stylish",
+            "compact",
+            "codeframe",
+            "unix",
+            "visualstudio",
+            "table",
+            "checkstyle",
+            "html",
+            "jslint-xml",
+            "json",
+            "json-with-metadata",
+            "junit",
+            "tap"
+          ]
+        },
+        { "minLength": 1 }
+      ]
+    },
+    "exclude": {
+      "type": "array",
+      "description": "Files to exclude from linting.",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
+    },
+    "files": {
+      "type": "array",
+      "description": "Files to include in linting.",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
+    },
+    "force": {
+      "type": "boolean",
+      "description": "Succeeds even if there was linting errors.",
+      "default": false
+    },
+    "silent": {
+      "type": "boolean",
+      "description": "Hide output text.",
+      "default": false
+    },
+    "fix": {
+      "type": "boolean",
+      "description": "Fixes linting errors (may overwrite linted files).",
+      "default": false
+    },
+    "cache": {
+      "type": "boolean",
+      "description": "Only check changed files.",
+      "default": false
+    },
+    "cacheLocation": {
+      "type": "string",
+      "description": "Path to the cache file or directory."
+    },
+    "outputFile": {
+      "type": "string",
+      "description": "File to write report to."
+    },
+    "maxWarnings": {
+      "type": "number",
+      "description": "Number of warnings to trigger nonzero exit code - default: -1",
+      "default": -1
+    },
+    "quiet": {
+      "type": "boolean",
+      "description": "Report errors only - default: false",
+      "default": false
+    }
+  },
+  "additionalProperties": false,
+  "required": ["linter"]
+}

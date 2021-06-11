@@ -1,6 +1,4 @@
 import { chain, Tree } from '@angular-devkit/schematics';
-import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import { join } from 'path';
 import {
   readJsonInTree,
   updateJsonInTree,

@@ -1,13 +1,13 @@
-import * as stripJsonComments from 'strip-json-comments';
-import { ProjectGraphContext, AddProjectNode } from '../project-graph-models';
-import { FileRead } from '../../file-utils';
+import { AddProjectNode, ProjectGraphContext } from '../project-graph-models';
+import { readJsonFile } from '@nrwl/devkit';
+import { join } from 'path';
+import { appRootPath } from '../../../utilities/app-root';
 
 export function buildNpmPackageNodes(
   ctx: ProjectGraphContext,
-  addNode: AddProjectNode,
-  fileRead: FileRead
+  addNode: AddProjectNode
 ) {
-  const packageJson = JSON.parse(stripJsonComments(fileRead('package.json')));
+  const packageJson = readJsonFile(join(appRootPath, 'package.json'));
   const deps = {
     ...packageJson.dependencies,
     ...packageJson.devDependencies,

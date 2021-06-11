@@ -28,7 +28,7 @@ nx test myapp
 
 ## Common Options
 
-The options below are common to the `test` command used within an Nx workspace. The Jest and Karma-specifc test options are listed after these options.
+The options below are common to the `test` command used within an Nx workspace. The Jest and Karma-specific test options are listed after these options.
 
 ### codeCoverage
 
@@ -241,7 +241,7 @@ Karma reporters to use. Directly passed to the karma runner.
 
 Output sourcemaps.
 
-### tsCconfig
+### tsConfig
 
 The name of the TypeScript configuration file.
 

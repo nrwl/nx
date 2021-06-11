@@ -1,13 +1,14 @@
+import { readJsonSync } from 'fs-extra';
+import * as glob from 'glob';
 import * as chalk from 'chalk';
-import * as fs from 'fs';
-import * as shell from 'shelljs';
 
-const { green, red } = chalk.default;
+console.log(`${chalk.blue('i')} Documentation Map Check`);
+
 const basePath = 'docs';
 const sharedFilesPattern = 'shared/cli';
 
-const readmePathList: string[] = shell
-  .ls(`${basePath}/**/*.md`)
+const readmePathList: string[] = glob
+  .sync(`${basePath}/**/*.md`)
   .map((path: string) => path.split(basePath)[1])
   .map((path: string) => path.slice(1, -3)) // Removing first `/` and `.md`
   .filter((path: string) => !path.startsWith(sharedFilesPattern));
@@ -31,9 +32,7 @@ function pathExtractor(
   return pathList;
 }
 
-const mapPathList: string[] = JSON.parse(
-  fs.readFileSync(`${basePath}/map.json`, { encoding: 'utf8' })
-)
+const mapPathList: string[] = readJsonSync(`${basePath}/map.json`)
   .map((file: any) => pathExtractor([], file, ''))
   .flat()
   .filter(
@@ -50,44 +49,46 @@ let scriptError = false;
 
 if (!!readmeMissList.length) {
   console.error(
-    red("\n⚠️  Documentation files and 'map.json' file are out of sync!\n")
+    chalk.red(
+      "\n⚠️  Documentation files and 'map.json' file are out of sync!\n"
+    )
   );
   console.log(readmeMissList.map((x) => x.concat('.md')).join('\n'));
   console.error(
-    red(
+    chalk.red(
       `\nSome documentation files exist without any reference in \'map.json\', make sure to add an entry.`
     )
   );
   scriptError = true;
 } else {
   console.log(
-    green("Markdown files are in sync with 'map.json', everything is good 👍")
+    `${chalk.green('🗸')} Markdown files are in sync with ${chalk.grey(
+      'docs/maps.json'
+    )}.`
   );
 }
 
 if (!!mapMissList.length) {
-  console.error(
-    red(
-      "\n⚠️  The 'map.json' file and the documentation files are out of sync!\n"
-    )
+  console.log(
+    `\n${chalk.red(
+      'ERROR'
+    )} The 'map.json' file and the documentation files are out of sync!\n`
   );
   console.log(mapMissList.map((x) => x.concat('.md')).join('\n'));
-  console.error(
-    red(
-      `\nThe \'map.json\' file is linking documenation files that do not exist.`
-    )
+  console.log(
+    `\n${chalk.red(
+      'ERROR'
+    )} The \'map.json\' file is linking documenation files that do not exist.`
   );
   scriptError = true;
 } else {
   console.log(
-    green(
-      "The 'map.json' file and the documentation files are in sync, everything is good 👍"
-    )
+    `${chalk.green(
+      '🗸'
+    )} The 'map.json' file and the documentation files are in sync.`
   );
 }
 
 if (scriptError) {
   process.exit(1);
-} else {
-  process.exit(0);
 }

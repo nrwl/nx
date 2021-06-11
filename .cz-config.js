@@ -17,8 +17,9 @@ module.exports = {
   scopes: [
     { name: 'angular', description: 'anything Angular specific' },
     { name: 'core', description: 'anything Nx core specific' },
-    { name: 'docs', description: 'anything related to docs infrastructure' },
+    { name: 'nxdev', description: 'anything related to docs infrastructure' },
     { name: 'nextjs', description: 'anything Next specific' },
+    { name: 'gatsby', description: 'anything Gatsby specific' },
     { name: 'nest', description: 'anything Nest specific' },
     { name: 'node', description: 'anything Node specific' },
     { name: 'express', description: 'anything Express specific' },
@@ -36,6 +37,7 @@ module.exports = {
       description: 'anything related to managing the repo itself',
     },
     { name: 'misc', description: 'misc stuff' },
+    { name: 'devkit', description: 'devkit-related changes' },
   ],
 
   allowTicketNumber: true,

@@ -98,7 +98,7 @@ export function getBrowserConfig(
         : false,
     },
     optimization: {
-      runtimeChunk: 'single',
+      runtimeChunk: !!buildOptions.runtimeChunk ? 'single' : false,
       splitChunks: {
         maxAsyncRequests: Infinity,
         cacheGroups: {

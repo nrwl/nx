@@ -18,18 +18,22 @@ import {
   Tree,
 } from '@angular-devkit/schematics';
 import * as ts from 'typescript';
-import * as stripJsonComments from 'strip-json-comments';
-import { serializeJson } from './fileutils';
+import { parseJson, serializeJson } from '@nrwl/devkit';
 import { getWorkspacePath } from './cli-config-utils';
 import {
   createProjectGraph,
   onlyWorkspaceProjects,
-  ProjectGraph,
 } from '../core/project-graph';
-import { FileData, FileRead } from '../core/file-utils';
+import { FileData } from '../core/file-utils';
 import { extname, join, normalize, Path } from '@angular-devkit/core';
-import { NxJson, NxJsonProjectConfig } from '../core/shared-interfaces';
+import type {
+  NxJsonConfiguration,
+  NxJsonProjectConfiguration,
+  ProjectGraph,
+} from '@nrwl/devkit';
 import { addInstallTask } from './rules/add-install-task';
+import { findNodes } from '../utilities/typescript/find-nodes';
+import { getSourceNodes } from '../utilities/typescript/get-source-nodes';
 
 function nodesByPosition(first: ts.Node, second: ts.Node): number {
   return first.getStart() - second.getStart();
@@ -60,7 +64,7 @@ function insertAfterLastOccurrence(
   return new InsertChange(file, lastItemPosition, toInsert);
 }
 
-function sortObjectByKeys(obj: unknown) {
+export function sortObjectByKeys(obj: unknown) {
   return Object.keys(obj)
     .sort()
     .reduce((result, key) => {
@@ -71,58 +75,8 @@ function sortObjectByKeys(obj: unknown) {
     }, {});
 }
 
-export function findNodes(
-  node: ts.Node,
-  kind: ts.SyntaxKind | ts.SyntaxKind[],
-  max = Infinity
-): ts.Node[] {
-  if (!node || max == 0) {
-    return [];
-  }
-
-  const arr: ts.Node[] = [];
-  const hasMatch = Array.isArray(kind)
-    ? kind.includes(node.kind)
-    : node.kind === kind;
-  if (hasMatch) {
-    arr.push(node);
-    max--;
-  }
-  if (max > 0) {
-    for (const child of node.getChildren()) {
-      findNodes(child, kind, max).forEach((node) => {
-        if (max > 0) {
-          arr.push(node);
-        }
-        max--;
-      });
-
-      if (max <= 0) {
-        break;
-      }
-    }
-  }
-
-  return arr;
-}
-
-export function getSourceNodes(sourceFile: ts.SourceFile): ts.Node[] {
-  const nodes: ts.Node[] = [sourceFile];
-  const result = [];
-
-  while (nodes.length > 0) {
-    const node = nodes.shift();
-
-    if (node) {
-      result.push(node);
-      if (node.getChildCount(sourceFile) >= 0) {
-        nodes.unshift(...node.getChildren());
-      }
-    }
-  }
-
-  return result;
-}
+export { findNodes } from '../utilities/typescript/find-nodes';
+export { getSourceNodes } from '../utilities/typescript/get-source-nodes';
 
 export interface Change {
   apply(host: any): Promise<void>;
@@ -367,15 +321,15 @@ export function insert(host: Tree, modulePath: string, changes: Change[]) {
   }
 
   // sort changes so that the highest pos goes first
-  const orderedChanges = changes.sort((a, b) => b.order - a.order);
+  const orderedChanges = changes.sort((a, b) => b.order - a.order) as any;
 
   const recorder = host.beginUpdate(modulePath);
   for (const change of orderedChanges) {
-    if (change instanceof InsertChange) {
+    if (change.type == 'insert') {
       recorder.insertLeft(change.pos, change.toAdd);
-    } else if (change instanceof RemoveChange) {
+    } else if (change.type == 'remove') {
       recorder.remove(change.pos - 1, change.toRemove.length + 1);
-    } else if (change instanceof ReplaceChange) {
+    } else if (change.type == 'replace') {
       recorder.remove(change.pos, change.oldText.length);
       recorder.insertLeft(change.pos, change.newText);
     } else if (change.type === 'noop') {
@@ -393,69 +347,41 @@ export function insert(host: Tree, modulePath: string, changes: Change[]) {
  * @param path The path to the JSON file
  * @returns The JSON data in the file.
  */
-export function readJsonInTree<T = any>(host: Tree, path: string): T {
+export function readJsonInTree<T extends object = any>(
+  host: Tree,
+  path: string
+): T {
   if (!host.exists(path)) {
     throw new Error(`Cannot find ${path}`);
   }
-  const contents = stripJsonComments(host.read(path)!.toString('utf-8'));
   try {
-    return JSON.parse(contents);
+    return parseJson(host.read(path)!.toString('utf-8'));
   } catch (e) {
     throw new Error(`Cannot parse ${path}: ${e.message}`);
   }
 }
 
+// TODO(v13): remove this deprecated method
 /**
+ * @deprecated This method is deprecated and is synonymous to {@link onlyWorkspaceProjects}({@link createProjectGraph}())
  * Method for utilizing the project graph in schematics
  */
 export function getProjectGraphFromHost(host: Tree): ProjectGraph {
-  return onlyWorkspaceProjects(getFullProjectGraphFromHost(host));
+  return onlyWorkspaceProjects(createProjectGraph());
 }
 
+// TODO(v13): remove this deprecated method
+/**
+ * @deprecated This method is deprecated and is synonymous to {@link createProjectGraph}()
+ */
 export function getFullProjectGraphFromHost(host: Tree): ProjectGraph {
-  const workspaceJson = readJsonInTree(host, getWorkspacePath(host));
-  const nxJson = readJsonInTree<NxJson>(host, '/nx.json');
-
-  const fileRead: FileRead = (f: string) => {
-    try {
-      return host.read(f).toString();
-    } catch (e) {
-      throw new Error(`${f} does not exist`);
-    }
-  };
-
-  const workspaceFiles: FileData[] = [];
-
-  workspaceFiles.push(
-    ...allFilesInDirInHost(host, normalize(''), { recursive: false }).map((f) =>
-      getFileDataInHost(host, f)
-    )
-  );
-  workspaceFiles.push(
-    ...allFilesInDirInHost(host, normalize('tools')).map((f) =>
-      getFileDataInHost(host, f)
-    )
-  );
-
-  // Add files for workspace projects
-  Object.keys(workspaceJson.projects).forEach((projectName) => {
-    const project = workspaceJson.projects[projectName];
-    workspaceFiles.push(
-      ...allFilesInDirInHost(host, normalize(project.root)).map((f) =>
-        getFileDataInHost(host, f)
-      )
-    );
-  });
-
-  return createProjectGraph(
-    workspaceJson,
-    nxJson,
-    workspaceFiles,
-    fileRead,
-    false
-  );
+  return createProjectGraph(undefined, undefined, undefined);
 }
 
+// TODO(v13): remove this deprecated method
+/**
+ * @deprecated This method is deprecated
+ */
 export function getFileDataInHost(host: Tree, path: Path): FileData {
   return {
     file: path,
@@ -493,7 +419,7 @@ export function allFilesInDirInHost(
  * @param callback Manipulation of the JSON data
  * @returns A rule which updates a JSON file file in a Tree
  */
-export function updateJsonInTree<T = any, O = T>(
+export function updateJsonInTree<T extends object = any, O extends object = T>(
   path: string,
   callback: (json: T, context: SchematicContext) => O
 ): Rule {
@@ -510,9 +436,10 @@ export function updateJsonInTree<T = any, O = T>(
   };
 }
 
-export function updateWorkspaceInTree<T = any, O = T>(
-  callback: (json: T, context: SchematicContext, host: Tree) => O
-): Rule {
+export function updateWorkspaceInTree<
+  T extends object = any,
+  O extends object = T
+>(callback: (json: T, context: SchematicContext, host: Tree) => O): Rule {
   return (host: Tree, context: SchematicContext = undefined): Tree => {
     const path = getWorkspacePath(host);
     host.overwrite(
@@ -524,25 +451,24 @@ export function updateWorkspaceInTree<T = any, O = T>(
 }
 
 export function readNxJsonInTree(host: Tree) {
-  return readJsonInTree<NxJson>(host, 'nx.json');
+  return readJsonInTree<NxJsonConfiguration>(host, 'nx.json');
 }
 
 export function libsDir(host: Tree) {
-  const json = readJsonInTree<NxJson>(host, 'nx.json');
-  return json && json.workspaceLayout && json.workspaceLayout.libsDir
-    ? json.workspaceLayout.libsDir
-    : 'libs';
+  const json = readJsonInTree<NxJsonConfiguration>(host, 'nx.json');
+  return json?.workspaceLayout?.libsDir ?? 'libs';
 }
 
 export function appsDir(host: Tree) {
-  const json = readJsonInTree<NxJson>(host, 'nx.json');
-  return json && json.workspaceLayout && json.workspaceLayout.appsDir
-    ? json.workspaceLayout.appsDir
-    : 'apps';
+  const json = readJsonInTree<NxJsonConfiguration>(host, 'nx.json');
+  return json?.workspaceLayout?.appsDir ?? 'apps';
 }
 
 export function updateNxJsonInTree(
-  callback: (json: NxJson, context: SchematicContext) => NxJson
+  callback: (
+    json: NxJsonConfiguration,
+    context: SchematicContext
+  ) => NxJsonConfiguration
 ): Rule {
   return (host: Tree, context: SchematicContext): Tree => {
     host.overwrite(
@@ -555,7 +481,7 @@ export function updateNxJsonInTree(
 
 export function addProjectToNxJsonInTree(
   projectName: string,
-  options: NxJsonProjectConfig
+  options: NxJsonProjectConfiguration
 ): Rule {
   const defaultOptions = {
     tags: [],
@@ -601,7 +527,6 @@ function requiresAddingOfPackages(packageJsonFile, deps, devDeps): boolean {
  * Updates the package.json given the passed deps and/or devDeps. Only updates
  * if the packages are not yet present
  *
- * @param host the schematic tree
  * @param deps the package.json dependencies to add
  * @param devDeps the package.json devDependencies to add
  * @param addInstall default `true`; set to false to avoid installs
@@ -833,7 +758,7 @@ function renameFile(tree: Tree, from: string, to: string) {
   if (!buffer) {
     return;
   }
-  tree.create(to, buffer.toString());
+  tree.create(to, buffer);
   tree.delete(from);
 }
 

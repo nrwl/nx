@@ -1,0 +1,41 @@
+import React from 'react';
+<% if (styledModule && styledModule !== 'styled-jsx') {
+  var wrapper = 'StyledApp';
+%>import styled from '<%= styledModule %>';<% } else {
+  var wrapper = 'div';
+%>
+<%- styledModule !== 'styled-jsx' ? `import * as styles from './index.module.${style}';` : '' %>
+<% }
+%>
+
+import { ReactComponent as Logo } from './logo.svg';
+import star from './star.svg';
+
+<% if (styledModule && styledModule !== 'styled-jsx') { %>
+const StyledApp = styled.div`
+  <%- pageWrapperStyle %>
+
+  <%- pageStyleContent %>
+`;
+<% }%>
+
+export function Index() {
+  /*
+   * Replace the elements below with your own.
+   *
+   * Note: The corresponding styles are in the ./<%= fileName %>.<%= style %> file.
+   */
+  return (
+    <<%= wrapper %><% if (!styledModule) {%> className={styles.page} <%} else if (styledModule === 'styled-jsx'){%> className='page' <%}%>>
+      <%- styledModule === 'styled-jsx' ? `<style jsx>{\`
+        .page {
+          ${pageWrapperStyle}
+        }
+        ${pageStyleContent}
+      \`}</style>` : `` %>
+      <%- appContent %>
+    </<%= wrapper %>>
+  );
+};
+
+export default Index;

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "NxNestLibrary",
+  "$id": "NxNestLibrary",
   "title": "Create a Nest Library for Nx",
   "type": "object",
   "examples": [
@@ -100,6 +100,11 @@
         "es2019",
         "es2020"
       ]
+    },
+    "strict": {
+      "type": "boolean",
+      "description": "Whether to enable tsconfig strict mode or not.",
+      "default": false
     }
   },
   "required": ["name"]

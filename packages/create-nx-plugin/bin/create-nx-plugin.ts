@@ -1,15 +1,18 @@
 #!/usr/bin/env node
 
 // we can't import from '@nrwl/workspace' because it will require typescript
-import { output } from '@nrwl/workspace/src/utils/output';
-import { getPackageManagerExecuteCommand } from '@nrwl/workspace/src/utils/detect-package-manager';
-import { dirSync } from 'tmp';
-import { writeFileSync, readFileSync, removeSync } from 'fs-extra';
-import * as path from 'path';
+import {
+  getPackageManagerCommand,
+  PackageManager,
+} from '@nrwl/tao/src/shared/package-manager';
+import { output } from '@nrwl/workspace/src/utilities/output';
 import { execSync } from 'child_process';
-import * as inquirer from 'inquirer';
-import yargsParser = require('yargs-parser');
+import { readFileSync, removeSync, writeFileSync } from 'fs-extra';
+import * as enquirer from 'enquirer';
+import * as path from 'path';
+import { dirSync } from 'tmp';
 import { showNxWarning } from './shared';
+import yargsParser = require('yargs-parser');
 
 const tsVersion = 'TYPESCRIPT_VERSION';
 const cliVersion = 'NX_VERSION';
@@ -17,9 +20,11 @@ const nxVersion = 'NX_VERSION';
 const prettierVersion = 'PRETTIER_VERSION';
 
 const parsedArgs = yargsParser(process.argv, {
-  string: ['pluginName', 'packageManager'],
+  string: ['pluginName', 'packageManager', 'importPath'],
   alias: {
+    importPath: 'import-path',
     pluginName: 'plugin-name',
+    packageManager: 'pm',
   },
   boolean: ['help'],
 });
@@ -50,7 +55,7 @@ function createSandbox(packageManager: string) {
 
 function createWorkspace(
   tmpDir: string,
-  packageManager: string,
+  packageManager: PackageManager,
   parsedArgs: any,
   name: string
 ) {
@@ -62,17 +67,11 @@ function createWorkspace(
   const command = `new ${args} --preset=empty --collection=@nrwl/workspace`;
   console.log(command);
 
-  const collectionJsonPath = require.resolve(
-    '@nrwl/workspace/collection.json',
-    { paths: [tmpDir] }
-  );
-
-  const packageExec = getPackageManagerExecuteCommand(packageManager);
+  const pmc = getPackageManagerCommand(packageManager);
   execSync(
-    `${packageExec} tao ${command.replace(
-      '--collection=@nrwl/workspace',
-      `--collection=${collectionJsonPath}`
-    )} --nxWorkspaceRoot="${process.cwd()}"`,
+    `${
+      pmc.exec
+    } tao ${command}/collection.json --nxWorkspaceRoot="${process.cwd()}"`,
     {
       stdio: [0, 1, 2],
       cwd: tmpDir,
@@ -84,24 +83,27 @@ function createWorkspace(
   });
 }
 
-function createNxPlugin(workspaceName, pluginName, packageManager) {
-  console.log(
-    `nx generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${workspaceName}/${pluginName}`
-  );
-  const packageExec = getPackageManagerExecuteCommand(packageManager);
-  execSync(
-    `${packageExec} nx generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${workspaceName}/${pluginName}`,
-    {
-      cwd: workspaceName,
-      stdio: [0, 1, 2],
-    }
-  );
+function createNxPlugin(
+  workspaceName,
+  pluginName,
+  packageManager,
+  parsedArgs: any
+) {
+  const importPath = parsedArgs.importPath ?? `${workspaceName}/${pluginName}`;
+  const command = `nx generate @nrwl/nx-plugin:plugin ${pluginName} --importPath=${importPath}`;
+  console.log(command);
+
+  const pmc = getPackageManagerCommand(packageManager);
+  execSync(`${pmc.exec} ${command}`, {
+    cwd: workspaceName,
+    stdio: [0, 1, 2],
+  });
 }
 
 function updateWorkspace(workspaceName: string) {
   const nxJsonPath = path.join(workspaceName, 'nx.json');
 
-  const nxJson = JSON.parse(readFileSync(nxJsonPath).toString('UTF-8'));
+  const nxJson = JSON.parse(readFileSync(nxJsonPath, 'utf-8'));
 
   nxJson['workspaceLayout'] = {
     appsDir: 'e2e',
@@ -132,15 +134,15 @@ function determineWorkspaceName(parsedArgs: any): Promise<string> {
     return Promise.resolve(workspaceName);
   }
 
-  return inquirer
+  return enquirer
     .prompt([
       {
         name: 'WorkspaceName',
         message: `Workspace name (e.g., org name)    `,
-        type: 'string',
+        type: 'input',
       },
     ])
-    .then((a) => {
+    .then((a: { WorkspaceName: string }) => {
       if (!a.WorkspaceName) {
         output.error({
           title: 'Invalid workspace name',
@@ -157,15 +159,15 @@ function determinePluginName(parsedArgs) {
     return Promise.resolve(parsedArgs.pluginName);
   }
 
-  return inquirer
+  return enquirer
     .prompt([
       {
         name: 'PluginName',
         message: `Plugin name                        `,
-        type: 'string',
+        type: 'input',
       },
     ])
-    .then((a) => {
+    .then((a: { PluginName: string }) => {
       if (!a.PluginName) {
         output.error({
           title: 'Invalid name',
@@ -183,13 +185,13 @@ function showHelp() {
 
   Create a new Nx workspace
 
-  Args: 
+  Args:
 
     name           workspace name (e.g., org name)
 
   Options:
 
-    pluginName     the name of the plugin to be created  
+    pluginName     the name of the plugin to be created
 `);
 }
 
@@ -198,13 +200,13 @@ if (parsedArgs.help) {
   process.exit(0);
 }
 
-const packageManager = parsedArgs.packageManager || 'npm';
+const packageManager: PackageManager = parsedArgs.packageManager || 'npm';
 determineWorkspaceName(parsedArgs).then((workspaceName) => {
   return determinePluginName(parsedArgs).then((pluginName) => {
     const tmpDir = createSandbox(packageManager);
     createWorkspace(tmpDir, packageManager, parsedArgs, workspaceName);
     updateWorkspace(workspaceName);
-    createNxPlugin(workspaceName, pluginName, packageManager);
+    createNxPlugin(workspaceName, pluginName, packageManager, parsedArgs);
     commitChanges(workspaceName);
     showNxWarning(workspaceName);
   });

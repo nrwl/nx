@@ -19,7 +19,7 @@ describe('getWebpackConfig', () => {
       },
     });
     expect(config.module.rules).toContainEqual({
-      test: /\.(j|t)sx?$/,
+      test: /\.([jt])sx?$/,
       loader: require.resolve('ts-loader'),
       exclude: [/node_modules/],
       options: {

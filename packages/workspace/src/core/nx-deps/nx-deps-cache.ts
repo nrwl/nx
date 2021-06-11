@@ -1,21 +1,25 @@
 import { FileData, filesChanged } from '../file-utils';
-import {
+import type {
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphNode,
-} from '../project-graph';
+} from '@nrwl/devkit';
 import { join } from 'path';
-import { appRootPath } from '../../utils/app-root';
+import { appRootPath } from '../../utilities/app-root';
 import { existsSync } from 'fs';
-import * as fsExtra from 'fs-extra';
+import { ensureDirSync } from 'fs-extra';
 import {
   directoryExists,
   fileExists,
   readJsonFile,
   writeJsonFile,
-} from '../../utils/fileutils';
-import { FileMap } from '@nrwl/workspace/src/core/file-graph';
+} from '../../utilities/fileutils';
+import type { ProjectFileMap } from '../file-graph';
 import { performance } from 'perf_hooks';
+import {
+  cacheDirectory,
+  readCacheDirectoryProperty,
+} from '../../utilities/cache-directory';
 
 export interface ProjectGraphCache {
   version: string;
@@ -24,13 +28,17 @@ export interface ProjectGraphCache {
   dependencies: Record<string, ProjectGraphDependency[]>;
 }
 
-const nxDepsDir = join(appRootPath, 'node_modules', '.cache', 'nx');
+const nxDepsDir = cacheDirectory(
+  appRootPath,
+  readCacheDirectoryProperty(appRootPath)
+);
 const nxDepsPath = join(nxDepsDir, 'nxdeps.json');
+
 export function readCache(): false | ProjectGraphCache {
   performance.mark('read cache:start');
   try {
     if (!existsSync(nxDepsDir)) {
-      fsExtra.ensureDirSync(nxDepsDir);
+      ensureDirSync(nxDepsDir);
     }
   } catch (e) {
     /*
@@ -48,11 +56,21 @@ export function readCache(): false | ProjectGraphCache {
     }
   }
 
-  const data = fileExists(nxDepsPath) ? readJsonFile(nxDepsPath) : null;
+  let data = null;
+  try {
+    if (fileExists(nxDepsPath)) {
+      data = readJsonFile(nxDepsPath);
+    }
+  } catch (error) {
+    console.log(
+      `Error reading '${nxDepsPath}'. Continue the process without the cache.`
+    );
+    console.log(error);
+  }
 
   performance.mark('read cache:end');
   performance.measure('read cache', 'read cache:start', 'read cache:end');
-  return data ? data : false;
+  return data ?? false;
 }
 
 export function writeCache(
@@ -71,14 +89,16 @@ export function writeCache(
 }
 
 export function differentFromCache(
-  fileMap: FileMap,
+  fileMap: ProjectFileMap,
   c: ProjectGraphCache
 ): {
   noDifference: boolean;
-  filesDifferentFromCache: FileMap;
+  filesDifferentFromCache: ProjectFileMap;
   partiallyConstructedProjectGraph?: ProjectGraph;
 } {
-  const currentProjects = Object.keys(fileMap).sort();
+  const currentProjects = Object.keys(fileMap)
+    .sort()
+    .filter((name) => fileMap[name].length > 0);
   const previousProjects = Object.keys(c.nodes)
     .sort()
     .filter((name) => c.nodes[name].data.files.length > 0);
@@ -96,7 +116,7 @@ export function differentFromCache(
   }
 
   // Projects are same -> compute projects with file changes
-  const filesDifferentFromCache: FileMap = {};
+  const filesDifferentFromCache: ProjectFileMap = {};
   currentProjects.forEach((p) => {
     if (filesChanged(c.nodes[p].data.files, fileMap[p])) {
       filesDifferentFromCache[p] = fileMap[p];
@@ -114,7 +134,7 @@ export function differentFromCache(
   };
 
   return {
-    filesDifferentFromCache: filesDifferentFromCache,
+    filesDifferentFromCache,
     partiallyConstructedProjectGraph,
     noDifference: Object.keys(filesDifferentFromCache).length === 0,
   };

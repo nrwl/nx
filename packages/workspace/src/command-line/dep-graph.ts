@@ -1,20 +1,18 @@
 import { exists, readFile, readFileSync, statSync, writeFileSync } from 'fs';
-import { copySync } from 'fs-extra';
+import { copySync, ensureDirSync } from 'fs-extra';
 import * as http from 'http';
-import * as opn from 'opn';
-import { join, normalize, parse } from 'path';
+import * as open from 'open';
+import { join, normalize, parse, dirname } from 'path';
 import * as url from 'url';
 import {
   createProjectGraph,
   onlyWorkspaceProjects,
   ProjectGraph,
   ProjectGraphNode,
-  ProjectGraphDependency,
 } from '../core/project-graph';
-import { appRootPath } from '../utils/app-root';
-import { output } from '../utils/output';
-import { checkProjectExists } from '../utils/rules/check-project-exists';
-import { filter } from '@angular-devkit/schematics';
+import { appRootPath } from '../utilities/app-root';
+import { output } from '../utilities/output';
+import { workspaceLayout } from '../core/file-utils';
 
 // maps file extention to MIME types
 const mimeType = {
@@ -40,7 +38,8 @@ function projectsToHtml(
   affected: string[],
   focus: string,
   groupByFolder: boolean,
-  exclude: string[]
+  exclude: string[],
+  layout: { appsDir: string; libsDir: string }
 ) {
   let f = readFileSync(
     join(__dirname, '../core/dep-graph/index.html')
@@ -48,21 +47,25 @@ function projectsToHtml(
 
   f = f
     .replace(
-      `window.projects = null`,
+      `window.projects = []`,
       `window.projects = ${JSON.stringify(projects)}`
     )
-    .replace(`window.graph = null`, `window.graph = ${JSON.stringify(graph)}`)
+    .replace(`window.graph = {}`, `window.graph = ${JSON.stringify(graph)}`)
     .replace(
-      `window.affected = null`,
+      `window.affected = []`,
       `window.affected = ${JSON.stringify(affected)}`
     )
     .replace(
-      `window.groupByFolder = null`,
+      `window.groupByFolder = false`,
       `window.groupByFolder = ${!!groupByFolder}`
     )
     .replace(
-      `window.exclude = null`,
+      `window.exclude = []`,
       `window.exclude = ${JSON.stringify(exclude)}`
+    )
+    .replace(
+      `window.workspaceLayout = null`,
+      `window.workspaceLayout = ${JSON.stringify(layout)}`
     );
 
   if (focus) {
@@ -151,6 +154,7 @@ export function generateGraph(
   affectedProjects: string[]
 ): void {
   let graph = onlyWorkspaceProjects(createProjectGraph());
+  const layout = workspaceLayout();
 
   const projects = Object.values(graph.nodes) as ProjectGraphNode[];
   projects.sort((a, b) => {
@@ -194,7 +198,8 @@ export function generateGraph(
       affectedProjects,
       args.focus || null,
       args.groupByFolder || false,
-      args.exclude || []
+      args.exclude || [],
+      layout
     );
   } else {
     graph = filterGraph(graph, args.focus || null, args.exclude || []);
@@ -240,6 +245,8 @@ export function generateGraph(
       });
     } else if (ext === 'json') {
       filename = `${folder}/${filename}`;
+
+      ensureDirSync(dirname(filename));
 
       writeFileSync(
         filename,
@@ -323,7 +330,5 @@ function startServer(html: string, host: string, port = 4211) {
     title: `Dep graph started at http://${host}:${port}`,
   });
 
-  opn(`http://${host}:${port}`, {
-    wait: false,
-  });
+  open(`http://${host}:${port}`);
 }

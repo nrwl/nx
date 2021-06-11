@@ -1,6 +1,12 @@
+import {
+  NxJsonConfiguration,
+  ProjectGraph,
+  ProjectGraphNode,
+  TargetDependencyConfig,
+} from '@nrwl/devkit';
 import { Task } from './tasks-runner';
-import { ProjectGraphNode } from '../core/project-graph';
-import * as flatten from 'flat';
+import { flatten } from 'flat';
+import { output } from '../utilities/output';
 
 const commonCommands = ['build', 'test', 'lint', 'e2e', 'deploy'];
 
@@ -45,6 +51,58 @@ export function getCommand(cliCommand: string, isYarn: boolean, task: Task) {
   }
 }
 
+export function getDefaultDependencyConfigs(
+  nxJson: NxJsonConfiguration,
+  runnerOptions?: {
+    strictlyOrderedTargets?: string[];
+  }
+): Record<string, TargetDependencyConfig[]> {
+  const defaults: Record<string, TargetDependencyConfig[]> =
+    nxJson.targetDependencies ?? {};
+
+  const strictlyOrderedTargets = runnerOptions
+    ? runnerOptions.strictlyOrderedTargets ?? ['build']
+    : [];
+  // Strictly Ordered Targets depend on their dependencies
+  for (const target of strictlyOrderedTargets) {
+    defaults[target] = defaults[target] || [];
+    defaults[target].push({
+      target,
+      projects: 'dependencies',
+    });
+  }
+
+  return defaults;
+}
+
+export function getDependencyConfigs(
+  { project, target }: { project: string; target: string },
+  defaultDependencyConfigs: Record<string, TargetDependencyConfig[]>,
+  projectGraph: ProjectGraph
+): TargetDependencyConfig[] | undefined {
+  // DependencyConfigs configured in workspace.json override configurations at the root.
+  const dependencyConfigs =
+    projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
+    defaultDependencyConfigs[target] ??
+    [];
+
+  for (const dependencyConfig of dependencyConfigs) {
+    if (
+      dependencyConfig.projects !== 'dependencies' &&
+      dependencyConfig.projects !== 'self'
+    ) {
+      output.error({
+        title: `dependsOn is improperly configured for ${project}:${target}`,
+        bodyLines: [
+          `dependsOn.projects is ${dependencyConfig.projects} but should be "self" or "dependencies"`,
+        ],
+      });
+      process.exit(1);
+    }
+  }
+  return dependencyConfigs;
+}
+
 export function getOutputs(p: Record<string, ProjectGraphNode>, task: Task) {
   return getOutputsForTargetAndConfiguration(task, p[task.target.project]);
 }
@@ -53,25 +111,34 @@ export function getOutputsForTargetAndConfiguration(
   task: Pick<Task, 'target' | 'overrides'>,
   node: ProjectGraphNode
 ) {
-  if (task.overrides?.outputPath) {
-    return [task.overrides?.outputPath];
-  }
   const { target, configuration } = task.target;
-  const architect = node.data.architect[target];
-  if (architect && architect.outputs) return architect.outputs;
 
-  let opts = architect.options || {};
-  if (architect.configurations && architect.configurations[configuration]) {
-    opts = {
-      ...opts,
-      ...architect.configurations[configuration],
-    };
+  const targets = node.data.targets[target];
+
+  const options = {
+    ...targets.options,
+    ...targets?.configurations?.[configuration],
+    ...task.overrides,
+  };
+
+  if (targets?.outputs) {
+    return targets.outputs.map((output: string) =>
+      interpolateOutputs(output, options)
+    );
   }
 
-  if (opts.outputPath) {
-    return Array.isArray(opts.outputPath) ? opts.outputPath : [opts.outputPath];
-  } else if (target === 'build') {
-    return [`dist/${node.data.root}`];
+  // Keep backwards compatibility in case `outputs` doesn't exist
+  if (options.outputPath) {
+    return Array.isArray(options.outputPath)
+      ? options.outputPath
+      : [options.outputPath];
+  } else if (target === 'build' || target === 'prepare') {
+    return [
+      `dist/${node.data.root}`,
+      `${node.data.root}/dist`,
+      `${node.data.root}/build`,
+      `${node.data.root}/public`,
+    ];
   } else {
     return [];
   }
@@ -95,7 +162,7 @@ function unparseOption(key: string, value: any, unparsed: string[]) {
   } else if (Array.isArray(value)) {
     value.forEach((item) => unparseOption(key, item, unparsed));
   } else if (Object.prototype.toString.call(value) === '[object Object]') {
-    const flattened = flatten(value, { safe: true });
+    const flattened = flatten<any, any>(value, { safe: true });
     for (const flattenedKey in flattened) {
       unparseOption(
         `${key}.${flattenedKey}`,
@@ -103,7 +170,32 @@ function unparseOption(key: string, value: any, unparsed: string[]) {
         unparsed
       );
     }
-  } else if (typeof value === 'string' || value != null) {
+  } else if (
+    typeof value === 'string' &&
+    stringShouldBeWrappedIntoQuotes(value)
+  ) {
+    const sanitized = value.replace(/"/g, String.raw`\"`);
+    unparsed.push(`--${key}="${sanitized}"`);
+  } else if (value != null) {
     unparsed.push(`--${key}=${value}`);
   }
+}
+
+function stringShouldBeWrappedIntoQuotes(str: string) {
+  return str.includes(' ') || str.includes('{') || str.includes('"');
+}
+
+function interpolateOutputs(template: string, data: any): string {
+  return template.replace(/{([\s\S]+?)}/g, (match: string) => {
+    let value = data;
+    let path = match.slice(1, -1).trim().split('.').slice(1);
+    for (let idx = 0; idx < path.length; idx++) {
+      if (!value[path[idx]]) {
+        throw new Error(`Could not interpolate output {${match}}!`);
+      }
+      value = value[path[idx]];
+    }
+
+    return value;
+  });
 }

@@ -1,15 +1,15 @@
-import { Rule, Tree } from '@angular-devkit/schematics';
 import { join as pathJoin } from 'path';
 import { readFileSync } from 'fs';
+import { Tree } from '@angular-devkit/schematics';
 
-export default function update(): Rule {
+export default function update() {
   return (host: Tree) => {
     const decorateCli = readFileSync(
       pathJoin(
         __dirname as any,
         '..',
         '..',
-        'schematics',
+        'generators',
         'utils',
         'decorate-angular-cli.js__tmpl__'
       )

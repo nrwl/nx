@@ -1,6 +1,4 @@
 import { execSync } from 'child_process';
-import { createProjectGraph, ProjectGraphNode } from '../core/project-graph';
-import { NxJson } from '../core/shared-interfaces';
 import { readWorkspaceJson, TEN_MEGABYTES } from '../core/file-utils';
 import { NxArgs } from './utils';
 
@@ -45,12 +43,23 @@ function getUntrackedFiles(): string[] {
 }
 
 function getFilesUsingBaseAndHead(base: string, head: string): string[] {
-  const mergeBase = execSync(`git merge-base ${base} ${head}`, {
-    maxBuffer: TEN_MEGABYTES,
-  })
-    .toString()
-    .trim();
-  return parseGitOutput(`git diff --name-only --relative ${mergeBase} ${head}`);
+  let mergeBase;
+  try {
+    mergeBase = execSync(`git merge-base "${base}" "${head}"`, {
+      maxBuffer: TEN_MEGABYTES,
+    })
+      .toString()
+      .trim();
+  } catch {
+    mergeBase = execSync(`git merge-base --fork-point "${base}" "${head}"`, {
+      maxBuffer: TEN_MEGABYTES,
+    })
+      .toString()
+      .trim();
+  }
+  return parseGitOutput(
+    `git diff --name-only --relative "${mergeBase}" "${head}"`
+  );
 }
 
 function parseGitOutput(command: string): string[] {

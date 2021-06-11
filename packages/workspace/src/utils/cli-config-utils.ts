@@ -1,14 +1,14 @@
 import { Tree } from '@angular-devkit/schematics';
 import { readJsonInTree } from './ast-utils';
-import { NxJson } from '@nrwl/workspace/src/core/shared-interfaces';
+import type { NxJsonConfiguration } from '@nrwl/devkit';
 
 export function getWorkspacePath(host: Tree) {
-  const possibleFiles = ['/workspace.json', '/angular.json', '/.angular.json'];
+  const possibleFiles = ['/angular.json', '/workspace.json'];
   return possibleFiles.filter((path) => host.exists(path))[0];
 }
 
-export function getNpmScope(host: Tree) {
-  return readJsonInTree<NxJson>(host, 'nx.json').npmScope;
+export function getNpmScope(host: Tree): string {
+  return readJsonInTree<NxJsonConfiguration>(host, 'nx.json').npmScope;
 }
 
 export function parseTarget(targetString: string) {

@@ -9,7 +9,7 @@ const addExcludes = updateWorkspace((workspace) => {
       if (target.builder !== '@angular-devkit/build-angular:tslint') {
         return;
       }
-      const exceptRootGlob = '!' + join(normalize(project.root), '**/*');
+      const exceptRootGlob = `!${join(normalize(project.root), '**/*')}`;
 
       if (!target.options.exclude) {
         target.options.exclude = [];

@@ -59,6 +59,39 @@
       "version": "10.4.0-beta.1",
       "description": "Update libraries",
       "factory": "./src/migrations/update-10-4-0/update-10-4-0"
+    },
+    "rename-emotion-packages-11.0.0": {
+      "version": "11.0.0-beta.0",
+      "description": "Rename emotion packages to match new 11.0.0 package names",
+      "factory": "./src/migrations/update-11-0-0/rename-emotion-packages-11-0-0"
+    },
+    "update-11.0.0": {
+      "version": "11.0.0-beta.0",
+      "description": "Update libraries",
+      "factory": "./src/migrations/update-11-0-0/update-11-0-0"
+    },
+    "move-react-redux-types-package-11.2.0": {
+      "version": "11.2.0-beta.0",
+      "description": "Move react redux typings from dependencies to devDependencies in package.json",
+      "factory": "./src/migrations/update-11-2-0/move-react-redux-types-package-11-2-0"
+    },
+    "use-react-jsx-in-tsconfig-12.0.0": {
+      "cli": "nx",
+      "version": "12.0.0-beta.0",
+      "description": "Migrate tsconfig.json to allow new jsx transform to be used. Removes the need for `import React from 'react'`",
+      "factory": "./src/migrations/update-12-0-0/use-react-jsx-in-tsconfig"
+    },
+    "update-emotion-setup-12.0.0": {
+      "cli": "nx",
+      "version": "12.0.0-beta.0",
+      "description": "Update workspace to use `@emotion/babel-plugin` instead of `@emotion/babel-preset-css-prop` to support new jsx transform",
+      "factory": "./src/migrations/update-12-0-0/update-emotion-setup"
+    },
+    "remove-react-redux-types-package-12.0.0": {
+      "cli": "nx",
+      "version": "12.0.0-beta.0",
+      "description": "Remove @types/react-redux from package.json since react-redux installs the package automatically now",
+      "factory": "./src/migrations/update-12-0-0/remove-react-redux-types-package"
     }
   },
   "packageJsonUpdates": {
@@ -377,6 +410,92 @@
         },
         "eslint-plugin-react-hooks": {
           "version": "4.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "11.0.0": {
+      "version": "11.0.0-beta.0",
+      "packages": {
+        "@emotion/react": {
+          "version": "11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/styled": {
+          "version": "11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/babel-preset-css-prop": {
+          "version": "11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/server": {
+          "version": "11.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "12.0.0": {
+      "version": "12.0.0-beta.0",
+      "packages": {
+        "react": {
+          "version": "17.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "react-dom": {
+          "version": "17.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react": {
+          "version": "17.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-dom": {
+          "version": "17.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/styled-components": {
+          "version": "5.1.9",
+          "alwaysAddToPackageJson": false
+        },
+        "react-is": {
+          "version": "17.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-is": {
+          "version": "17.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/styled": {
+          "version": "11.1.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@emotion/react": {
+          "version": "11.1.5",
+          "alwaysAddToPackageJson": false
+        },
+        "styled-jsx": {
+          "version": "3.4.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-router-dom": {
+          "version": "5.1.7",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react": {
+          "version": "11.2.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@reduxjs/toolkit": {
+          "version": "1.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-redux": {
+          "version": "7.2.3",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-react": {
+          "version": "7.23.1",
           "alwaysAddToPackageJson": false
         }
       }

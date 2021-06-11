@@ -1,20 +1,23 @@
 import { getDevServerConfig } from './devserver.config';
-import { Logger } from '@angular-devkit/core/src/logger';
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import * as ts from 'typescript';
 import * as fs from 'fs';
-import { WebBuildBuilderOptions } from '../builders/build/build.impl';
-import { WebDevServerOptions } from '../builders/dev-server/dev-server.impl';
+import { HotModuleReplacementPlugin } from 'webpack';
+import { WebBuildBuilderOptions } from '../executors/build/build.impl';
+import { WebDevServerOptions } from '../executors/dev-server/dev-server.impl';
 import { join } from 'path';
 
 jest.mock('tsconfig-paths-webpack-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+import { logger } from '@nrwl/devkit';
+import open = require('open');
+
+jest.mock('open');
 
 describe('getDevServerConfig', () => {
   let buildInput: WebBuildBuilderOptions;
   let serveInput: WebDevServerOptions;
   let mockCompilerOptions: any;
-  let logger: Logger;
   let root: string;
   let sourceRoot: string;
 
@@ -52,6 +55,7 @@ describe('getDevServerConfig', () => {
       buildTarget: 'webapp:build',
       ssl: false,
       liveReload: true,
+      hmr: true,
       open: false,
       watch: true,
       allowedHosts: null,
@@ -65,7 +69,7 @@ describe('getDevServerConfig', () => {
       target: 'es2015',
     };
 
-    spyOn(ts, 'readConfigFile').and.callFake(() => ({
+    jest.spyOn(ts, 'readConfigFile').mockImplementation(() => ({
       config: {
         compilerOptions: mockCompilerOptions,
       },
@@ -78,8 +82,7 @@ describe('getDevServerConfig', () => {
         root,
         sourceRoot,
         buildInput,
-        serveInput,
-        logger
+        serveInput
       ) as any;
 
       expect(result.headers['Access-Control-Allow-Origin']).toEqual('*');
@@ -90,8 +93,7 @@ describe('getDevServerConfig', () => {
         root,
         sourceRoot,
         buildInput,
-        serveInput,
-        logger
+        serveInput
       ) as any;
 
       expect(result.overlay.warnings).toEqual(false);
@@ -102,8 +104,7 @@ describe('getDevServerConfig', () => {
         root,
         sourceRoot,
         buildInput,
-        serveInput,
-        logger
+        serveInput
       ) as any;
 
       expect(result.stats).toEqual(false);
@@ -114,11 +115,72 @@ describe('getDevServerConfig', () => {
         root,
         sourceRoot,
         buildInput,
-        serveInput,
-        logger
+        serveInput
       ) as any;
 
       expect(result.contentBase).toEqual(false);
+    });
+
+    describe('onListening', () => {
+      let mockServer;
+
+      beforeEach(() => {
+        mockServer = {
+          options: {
+            https: false,
+          },
+          hostname: 'example.com',
+          listeningApp: {
+            address: () => ({
+              port: 9999,
+            }),
+          },
+        };
+
+        jest.spyOn(logger, 'info');
+      });
+
+      it('should print out the URL of the server', () => {
+        const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
+          buildInput,
+          serveInput
+        ) as any;
+
+        result.onListening(mockServer);
+
+        expect(logger.info).toHaveBeenCalledWith(
+          expect.stringMatching(new RegExp('http://example.com:9999/'))
+        );
+      });
+
+      it('should not open the url by default', () => {
+        const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
+          buildInput,
+          serveInput
+        ) as any;
+
+        result.onListening(mockServer);
+
+        expect(open).not.toHaveBeenCalled();
+      });
+
+      it('should open the url if --open is passed', () => {
+        serveInput.open = true;
+        const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
+          buildInput,
+          serveInput
+        ) as any;
+
+        result.onListening(mockServer);
+
+        expect(open).toHaveBeenCalledWith('http://example.com:9999/');
+      });
     });
   });
 
@@ -128,8 +190,7 @@ describe('getDevServerConfig', () => {
         root,
         sourceRoot,
         buildInput,
-        serveInput,
-        logger
+        serveInput
       ) as any;
 
       expect(result.host).toEqual('localhost');
@@ -142,8 +203,7 @@ describe('getDevServerConfig', () => {
         root,
         sourceRoot,
         buildInput,
-        serveInput,
-        logger
+        serveInput
       ) as any;
 
       expect(result.port).toEqual(4200);
@@ -156,8 +216,7 @@ describe('getDevServerConfig', () => {
         root,
         sourceRoot,
         buildInput,
-        serveInput,
-        logger
+        serveInput
       ) as any;
 
       expect(result.historyApiFallback).toEqual({
@@ -173,8 +232,7 @@ describe('getDevServerConfig', () => {
           root,
           sourceRoot,
           buildInput,
-          serveInput,
-          logger
+          serveInput
         ) as any;
 
         expect(result.compress).toEqual(false);
@@ -191,8 +249,7 @@ describe('getDevServerConfig', () => {
               styles: false,
             },
           },
-          serveInput,
-          logger
+          serveInput
         ) as any;
 
         expect(result.compress).toEqual(true);
@@ -209,8 +266,7 @@ describe('getDevServerConfig', () => {
               styles: true,
             },
           },
-          serveInput,
-          logger
+          serveInput
         ) as any;
 
         expect(result.compress).toEqual(true);
@@ -227,8 +283,7 @@ describe('getDevServerConfig', () => {
               styles: true,
             },
           },
-          serveInput,
-          logger
+          serveInput
         ) as any;
 
         expect(result.compress).toEqual(true);
@@ -245,8 +300,7 @@ describe('getDevServerConfig', () => {
               styles: false,
             },
           },
-          serveInput,
-          logger
+          serveInput
         ) as any;
 
         expect(result.overlay.errors).toEqual(true);
@@ -263,8 +317,7 @@ describe('getDevServerConfig', () => {
               styles: true,
             },
           },
-          serveInput,
-          logger
+          serveInput
         ) as any;
 
         expect(result.overlay.errors).toEqual(false);
@@ -277,8 +330,7 @@ describe('getDevServerConfig', () => {
           root,
           sourceRoot,
           buildInput,
-          serveInput,
-          logger
+          { ...serveInput, hmr: false }
         );
 
         expect(result.liveReload).toEqual(true);
@@ -289,11 +341,46 @@ describe('getDevServerConfig', () => {
           root,
           sourceRoot,
           buildInput,
-          { ...serveInput, liveReload: false },
-          logger
+          { ...serveInput, hmr: false, liveReload: false }
         );
 
         expect(result.liveReload).toEqual(false);
+      });
+    });
+
+    describe('hmr option', () => {
+      it('should set the correct value', () => {
+        const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
+          buildInput,
+          { ...serveInput, hmr: false }
+        );
+
+        expect(result.hot).toEqual(false);
+      });
+
+      it('should set the correct if true and disable live reload', () => {
+        const { devServer: result } = getDevServerConfig(
+          root,
+          sourceRoot,
+          buildInput,
+          serveInput
+        );
+
+        expect(result.liveReload).toEqual(false);
+        expect(result.hot).toEqual(true);
+      });
+
+      it('should add hot module replacement plugin', () => {
+        const { plugins } = getDevServerConfig(
+          root,
+          sourceRoot,
+          buildInput,
+          serveInput
+        );
+
+        expect(plugins).toContainEqual(new HotModuleReplacementPlugin());
       });
     });
 
@@ -309,15 +396,14 @@ describe('getDevServerConfig', () => {
               styles: true,
             },
           },
-          serveInput,
-          logger
+          serveInput
         ) as any;
 
         expect(result.https).toEqual(false);
       });
 
       it('should configure it with the key and cert provided when on', () => {
-        spyOn(fs, 'readFileSync').and.callFake((path) => {
+        jest.spyOn(fs, 'readFileSync').mockImplementation((path: string) => {
           if (path.endsWith('ssl.key')) {
             return 'sslKeyContents';
           } else if (path.endsWith('ssl.cert')) {
@@ -334,8 +420,7 @@ describe('getDevServerConfig', () => {
             ssl: true,
             sslKey: 'ssl.key',
             sslCert: 'ssl.cert',
-          },
-          logger
+          }
         ) as any;
 
         expect(result.https).toEqual({
@@ -364,8 +449,7 @@ describe('getDevServerConfig', () => {
           {
             ...serveInput,
             proxyConfig: 'proxy.conf',
-          },
-          logger
+          }
         ) as any;
 
         expect(result.proxy).toEqual({
@@ -383,8 +467,7 @@ describe('getDevServerConfig', () => {
           {
             ...serveInput,
             allowedHosts: 'host.com,subdomain.host.com',
-          },
-          logger
+          }
         ) as any;
 
         expect(result.allowedHosts).toEqual(['host.com', 'subdomain.host.com']);
@@ -398,8 +481,7 @@ describe('getDevServerConfig', () => {
           {
             ...serveInput,
             allowedHosts: 'host.com',
-          },
-          logger
+          }
         ) as any;
 
         expect(result.allowedHosts).toEqual(['host.com']);
@@ -410,8 +492,7 @@ describe('getDevServerConfig', () => {
           root,
           sourceRoot,
           buildInput,
-          serveInput,
-          logger
+          serveInput
         ) as any;
 
         expect(result.allowedHosts).toEqual([]);
@@ -423,8 +504,7 @@ describe('getDevServerConfig', () => {
             root,
             sourceRoot,
             { ...buildInput, maxWorkers: 1 },
-            serveInput,
-            logger
+            serveInput
           ) as any;
 
           const typeCheckerPlugin = result.plugins.find(
@@ -440,8 +520,7 @@ describe('getDevServerConfig', () => {
             root,
             sourceRoot,
             { ...buildInput, memoryLimit: 1024 },
-            serveInput,
-            logger
+            serveInput
           ) as any;
 
           const typeCheckerPlugin = result.plugins.find(

@@ -1,36 +1,30 @@
-export { readTsConfig } from './src/utils/typescript';
-export {
-  toPropertyName,
-  toClassName,
-  toFileName,
-  names,
-  findModuleParent,
-} from './src/utils/name-utils';
+export { readTsConfig } from './src/utilities/typescript';
 export { ProjectType, projectRootDir } from './src/utils/project-type';
 export {
   serializeJson,
   renameSync,
   updateJsonFile,
   readJsonFile,
-  readWorkspaceConfigPath,
   copyFile,
   createDirectory,
-} from './src/utils/fileutils';
+} from './src/utilities/fileutils';
+
+// TODO: vsavkin delete after Nx 12
+export * from './src/devkit-reexport';
+
 export {
-  offsetFromRoot,
   ExistingPrettierConfig,
   resolveUserExistingPrettierConfig,
-} from './src/utils/common';
-export { output } from './src/utils/output';
+} from './src/utilities/prettier';
+
+export { output } from './src/utilities/output';
 export { commandsObject } from './src/command-line/nx-commands';
 export { supportedNxCommands } from './src/command-line/supported-nx-commands';
-export { readWorkspaceJson, readNxJson } from './src/core/file-utils';
-export { NxJson } from './src/core/shared-interfaces';
 export {
-  ProjectGraphNode,
-  ProjectGraphDependency,
-  ProjectGraph,
-} from './src/core/project-graph';
+  readWorkspaceJson,
+  readNxJson,
+  readWorkspaceConfig,
+} from './src/core/file-utils';
 export { ProjectGraphCache } from './src/core/nx-deps/nx-deps-cache';
 export {
   readJsonInTree,
@@ -68,6 +62,8 @@ export {
   serializeTarget,
 } from './src/utils/cli-config-utils';
 
+export { unparse } from './src/tasks-runner/utils';
+
 export {
   getWorkspace,
   updateWorkspace,
@@ -83,10 +79,15 @@ export * from './src/utils/rules/ng-add';
 export { updateKarmaConf } from './src/utils/rules/update-karma-conf';
 export { visitNotIgnoredFiles } from './src/utils/rules/visit-not-ignored-files';
 export { setDefaultCollection } from './src/utils/rules/workspace';
+export { renamePackageImports } from './src/utils/rules/rename-package-imports';
+export { renameNpmPackages } from './src/utils/rules/rename-npm-packages';
 import * as strings from './src/utils/strings';
 export { checkAndCleanWithSemver } from './src/utils/version-utils';
 export { updatePackagesInPackageJson } from './src/utils/update-packages-in-package-json';
 
-export { libraryGenerator } from './src/schematics/library/library';
+export { libraryGenerator } from './src/generators/library/library';
+export { moveGenerator } from './src/generators/move/move';
+export { removeGenerator } from './src/generators/remove/remove';
+export { runCommandsGenerator } from './src/generators/run-commands/run-commands';
 
 export const stringUtils = strings;

@@ -1,13 +1,15 @@
-import { ParsedArgs } from 'minimist';
+import * as yargsParser from 'yargs-parser';
+import { logger } from './logger';
 import {
   coerceTypesInOptions,
   convertAliases,
-  convertPositionParamsIntoNamedParams,
+  convertSmartDefaultsIntoNamedParams,
   convertToCamelCase,
   lookupUnmatched,
   Schema,
   setDefaults,
   validateOptsAgainstSchema,
+  warnDeprecations,
 } from './params';
 
 describe('params', () => {
@@ -61,39 +63,115 @@ describe('params', () => {
         a: ['one', 'two'],
         b: 'three,four',
       });
+
+      const opts2 = coerceTypesInOptions({ a: '1,2', b: 'true,false' }, {
+        properties: {
+          a: { type: 'array', items: { type: 'number' } },
+          b: { type: 'array', items: { type: 'boolean' } },
+        },
+      } as Schema);
+
+      expect(opts2).toEqual({
+        a: [1, 2],
+        b: [true, false],
+      });
+    });
+
+    it('should handle oneOf', () => {
+      const opts = coerceTypesInOptions(
+        { a: 'false' } as any,
+        {
+          properties: {
+            a: { oneOf: [{ type: 'object' }, { type: 'boolean' }] },
+          },
+        } as Schema
+      );
+
+      expect(opts).toEqual({
+        a: false,
+      });
+    });
+
+    it('should handle oneOf with enums inside', () => {
+      const opts = coerceTypesInOptions(
+        { inspect: 'inspect' } as any,
+        {
+          properties: {
+            inspect: {
+              oneOf: [
+                {
+                  type: 'string',
+                  enum: ['inspect', 'inspect-brk'],
+                },
+                {
+                  type: 'number',
+                },
+                {
+                  type: 'boolean',
+                },
+              ],
+            },
+          },
+        } as Schema
+      );
+
+      expect(opts).toEqual({
+        inspect: 'inspect',
+      });
+    });
+
+    it('should only coerce string values', () => {
+      const opts = coerceTypesInOptions(
+        { a: true } as any,
+        {
+          properties: {
+            a: { oneOf: [{ type: 'boolean' }, { type: 'number' }] },
+          },
+        } as Schema
+      );
+
+      expect(opts).toEqual({
+        a: true,
+      });
     });
   });
 
   describe('convertToCamelCase', () => {
     it('should convert dash case to camel case', () => {
       expect(
-        convertToCamelCase({
-          _: undefined,
-          'one-two': 1,
-        } as ParsedArgs)
+        convertToCamelCase(
+          yargsParser(['--one-two', '1'], {
+            number: ['oneTwo'],
+          })
+        )
       ).toEqual({
+        _: [],
         oneTwo: 1,
       });
     });
 
     it('should not convert camel case', () => {
       expect(
-        convertToCamelCase({
-          _: undefined,
-          oneTwo: 1,
-        })
+        convertToCamelCase(
+          yargsParser(['--oneTwo', '1'], {
+            number: ['oneTwo'],
+          })
+        )
       ).toEqual({
+        _: [],
         oneTwo: 1,
       });
     });
 
     it('should handle mixed case', () => {
       expect(
-        convertToCamelCase({
-          _: undefined,
-          'one-Two': 1,
-        })
+        convertToCamelCase(
+          yargsParser(['--one-Two', '1'], {
+            number: ['oneTwo'],
+          })
+        )
       ).toEqual({
+        _: [],
         oneTwo: 1,
       });
     });
@@ -255,12 +333,58 @@ describe('params', () => {
 
       expect(opts).toEqual({ a: [{ key: 'inner' }, { key: 'inner' }] });
     });
+
+    it('should set the default array value', () => {
+      const opts = setDefaults(
+        {},
+        {
+          properties: {
+            a: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  key: {
+                    type: 'string',
+                    default: 'inner',
+                  },
+                },
+              },
+              default: [],
+            },
+          },
+        }
+      );
+
+      expect(opts).toEqual({ a: [] });
+    });
+
+    it('should resolve types using refs', () => {
+      const opts = setDefaults(
+        {},
+        {
+          properties: {
+            a: {
+              $ref: '#/definitions/a',
+            },
+          },
+          definitions: {
+            a: {
+              type: 'boolean',
+              default: true,
+            },
+          },
+        }
+      );
+
+      expect(opts).toEqual({ a: true });
+    });
   });
 
-  describe('convertPositionParamsIntoNamedParams', () => {
-    it('should set defaults from argv', () => {
+  describe('convertSmartDefaultsIntoNamedParams', () => {
+    it('should use argv', () => {
       const params = {};
-      convertPositionParamsIntoNamedParams(
+      convertSmartDefaultsIntoNamedParams(
         params,
         {
           properties: {
@@ -273,15 +397,60 @@ describe('params', () => {
             },
           },
         },
-        ['argv-value']
+        ['argv-value'],
+        null,
+        null
       );
 
       expect(params).toEqual({ a: 'argv-value' });
     });
+
+    it('should use projectName', () => {
+      const params = {};
+      convertSmartDefaultsIntoNamedParams(
+        params,
+        {
+          properties: {
+            a: {
+              type: 'string',
+              $default: {
+                $source: 'projectName',
+              },
+            },
+          },
+        },
+        [],
+        'myProject',
+        null
+      );
+
+      expect(params).toEqual({ a: 'myProject' });
+    });
+
+    it('should use relativeCwd to set path', () => {
+      const params = {};
+      convertSmartDefaultsIntoNamedParams(
+        params,
+        {
+          properties: {
+            a: {
+              type: 'string',
+              format: 'path',
+              visible: false,
+            },
+          },
+        },
+        [],
+        null,
+        './somepath'
+      );
+
+      expect(params).toEqual({ a: './somepath' });
+    });
   });
 
   describe('validateOptsAgainstSchema', () => {
-    it('should throw if missing the required field', () => {
+    it('should throw if missing the required property', () => {
       expect(() =>
         validateOptsAgainstSchema(
           {},
@@ -295,6 +464,25 @@ describe('params', () => {
           }
         )
       ).toThrow("Required property 'a' is missing");
+    });
+
+    it('should throw if found an unknown property', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          {
+            a: true,
+            b: false,
+          },
+          {
+            properties: {
+              a: {
+                type: 'boolean',
+              },
+            },
+            additionalProperties: false,
+          }
+        )
+      ).toThrow("'b' is not found in schema");
     });
 
     it("should throw if the type doesn't match (primitive types)", () => {
@@ -312,6 +500,21 @@ describe('params', () => {
       ).toThrow(
         "Property 'a' does not match the schema. 'string' should be a 'boolean'."
       );
+    });
+
+    it('should not throw if the schema type is absent (primitive types)', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: 'string' },
+          {
+            properties: {
+              a: {
+                default: false,
+              },
+            },
+          }
+        )
+      ).not.toThrow();
     });
 
     it('should handle one of', () => {
@@ -334,6 +537,106 @@ describe('params', () => {
           }
         )
       ).not.toThrow();
+    });
+
+    it('should handle oneOf with factorized type', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: 10 },
+          {
+            properties: {
+              a: {
+                type: 'number',
+                oneOf: [{ multipleOf: 5 }, { multipleOf: 3 }],
+              },
+            },
+          }
+        )
+      ).not.toThrow();
+    });
+
+    it('should handle oneOf properties explicit types', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: true },
+          {
+            properties: {
+              a: {
+                type: 'number',
+                oneOf: [{ type: 'string' }, { type: 'boolean' }],
+              },
+            },
+          }
+        )
+      ).not.toThrow();
+    });
+
+    it('should handle oneOf properties with enums', () => {
+      // matching enum value
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: 'inspect' },
+          {
+            properties: {
+              a: {
+                oneOf: [
+                  {
+                    type: 'string',
+                    enum: ['inspect', 'inspect-brk'],
+                  },
+                  {
+                    type: 'boolean',
+                  },
+                ],
+              },
+            },
+          }
+        )
+      ).not.toThrow();
+
+      // matching oneOf value
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: true },
+          {
+            properties: {
+              a: {
+                oneOf: [
+                  {
+                    type: 'string',
+                    enum: ['inspect', 'inspect-brk'],
+                  },
+                  {
+                    type: 'boolean',
+                  },
+                ],
+              },
+            },
+          }
+        )
+      ).not.toThrow();
+
+      // non-matching enum value
+      expect(() =>
+        validateOptsAgainstSchema(
+          { a: 'abc' },
+          {
+            properties: {
+              a: {
+                oneOf: [
+                  {
+                    type: 'string',
+                    enum: ['inspect', 'inspect-brk'],
+                  },
+                  {
+                    type: 'boolean',
+                  },
+                ],
+              },
+            },
+          }
+        )
+      ).toThrow();
     });
 
     it("should throw if the type doesn't match (arrays)", () => {
@@ -375,6 +678,88 @@ describe('params', () => {
         )
       ).toThrow(
         "Property 'key' does not match the schema. 'string' should be a 'boolean'."
+      );
+    });
+
+    it('should resolve types using refs', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          { key: 'string' },
+          {
+            properties: {
+              key: {
+                $ref: '#/definitions/key',
+              },
+            },
+            definitions: {
+              key: {
+                type: 'boolean',
+              },
+            },
+          }
+        )
+      ).toThrow(
+        "Property 'key' does not match the schema. 'string' should be a 'boolean'."
+      );
+    });
+  });
+
+  describe('warnDeprecations', () => {
+    beforeEach(() => {
+      jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    });
+
+    it('should not log a warning when an option marked as deprecated is not specified', () => {
+      warnDeprecations(
+        { b: true },
+        {
+          properties: {
+            a: {
+              type: 'boolean',
+              'x-deprecated': true,
+            },
+            b: {
+              type: 'boolean',
+            },
+          },
+        }
+      );
+
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    it('should log a warning when an option marked as deprecated is specified', () => {
+      warnDeprecations(
+        { a: true },
+        {
+          properties: {
+            a: {
+              type: 'boolean',
+              'x-deprecated': true,
+            },
+          },
+        }
+      );
+
+      expect(logger.warn).toHaveBeenCalledWith('Option "a" is deprecated.');
+    });
+
+    it('should log a warning with the deprecation notice when x-deprecated is a string', () => {
+      warnDeprecations(
+        { a: true },
+        {
+          properties: {
+            a: {
+              type: 'boolean',
+              'x-deprecated':
+                'Deprecated since version x.x.x. Use "b" instead.',
+            },
+          },
+        }
+      );
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Option "a" is deprecated: Deprecated since version x.x.x. Use "b" instead.'
       );
     });
   });

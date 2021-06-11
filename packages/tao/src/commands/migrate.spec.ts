@@ -303,11 +303,16 @@ describe('Migration', () => {
           },
           '@nrwl/angular': { version: '2.0.0', alwaysAddToPackageJson: false },
           '@nrwl/cypress': { version: '2.0.0', alwaysAddToPackageJson: false },
+          '@nrwl/devkit': {
+            alwaysAddToPackageJson: false,
+            version: '2.0.0',
+          },
           '@nrwl/eslint-plugin-nx': {
             version: '2.0.0',
             alwaysAddToPackageJson: false,
           },
           '@nrwl/express': { version: '2.0.0', alwaysAddToPackageJson: false },
+          '@nrwl/gatsby': { version: '2.0.0', alwaysAddToPackageJson: false },
           '@nrwl/jest': { version: '2.0.0', alwaysAddToPackageJson: false },
           '@nrwl/linter': { version: '2.0.0', alwaysAddToPackageJson: false },
           '@nrwl/nest': { version: '2.0.0', alwaysAddToPackageJson: false },
@@ -388,30 +393,30 @@ describe('Migration', () => {
                   },
                 },
               },
-              schematics: {
+              generators: {
                 version2: {
                   version: '2.0.0',
-                  factory: 'parent-factory',
+                  description: 'parent-desc',
                 },
               },
             });
           } else if (p === 'child') {
             return Promise.resolve({
               version: '2.0.0',
-              schematics: {
+              generators: {
                 version2: {
                   version: '2.0.0',
-                  factory: 'child-factory',
+                  description: 'child-desc',
                 },
               },
             });
           } else if (p === 'newChild') {
             return Promise.resolve({
               version: '3.0.0',
-              schematics: {
+              generators: {
                 version2: {
                   version: '2.0.0',
-                  factory: 'new-child-factory',
+                  description: 'new-child-desc',
                 },
               },
             });
@@ -425,16 +430,16 @@ describe('Migration', () => {
       expect(await migrator.updatePackageJson('parent', '2.0.0')).toEqual({
         migrations: [
           {
-            package: 'parent',
             version: '2.0.0',
             name: 'version2',
-            factory: 'parent-factory',
+            package: 'parent',
+            description: 'parent-desc',
           },
           {
             package: 'child',
             version: '2.0.0',
             name: 'version2',
-            factory: 'child-factory',
+            description: 'child-desc',
           },
         ],
         packageJson: {
@@ -541,6 +546,28 @@ describe('Migration', () => {
       expect(() =>
         parseMigrationsOptions(['8.12.0', '--to', 'myscope'])
       ).toThrowError(`Incorrect 'to' section. Use --to="package@version"`);
+    });
+
+    it('should handle backslashes in package names', () => {
+      const r = parseMigrationsOptions([
+        '@nrwl\\workspace@8.12.0',
+        '--from',
+        '@myscope\\a@12.3,@myscope\\b@1.1.1',
+        '--to',
+        '@myscope\\c@12.3.1',
+      ]);
+      expect(r).toEqual({
+        type: 'generateMigrations',
+        targetPackage: '@nrwl/workspace',
+        targetVersion: '8.12.0',
+        from: {
+          '@myscope/a': '12.3.0',
+          '@myscope/b': '1.1.1',
+        },
+        to: {
+          '@myscope/c': '12.3.1',
+        },
+      });
     });
   });
 });

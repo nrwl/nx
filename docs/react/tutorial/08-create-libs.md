@@ -1,8 +1,8 @@
-# Step 8: Create Libs
+# React Nx Tutorial - Step 8: Create Libs
 
-## Video of this Lesson
+## Nx.dev Tutorial | React | Step 8: Create Libs
 
-<iframe width="560" height="600" src="https://www.youtube.com/embed/a1CAYlXizWM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/a1CAYlXizWM" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Libraries are not just a way to share code in Nx. They are also useful for factoring out code into small units with a well-defined public API.
 
@@ -25,27 +25,27 @@ You should see the following:
 ```treeview
 myorg/
 ├── apps/
-│   ├── todos/
-│   ├── todos-e2e/
-│   └── api/
+│   ├── todos/
+│   ├── todos-e2e/
+│   └── api/
 ├── libs/
-│   ├── data/
+│   ├── data/
 │   └── ui/
-│       ├── src/
-│       │   ├── lib/
-│       │   │   └── ui/
-│       │   │       ├── ui.css
-│       │   │       ├── ui.spec.tsx
-│       │   │       └── ui.tsx
-│       │   └── index.ts
-│       ├── jest.conf.js
-│       ├── tsconfig.app.json
-│       ├── tsconfig.json
-│       └── tsconfig.spec.json
+│       ├── src/
+│       │   ├── lib/
+│       │   │   └── ui/
+│       │   │       ├── ui.css
+│       │   │       ├── ui.spec.tsx
+│       │   │       └── ui.tsx
+│       │   └── index.ts
+│       ├── jest.conf.js
+│       ├── tsconfig.app.json
+│       ├── tsconfig.json
+│       └── tsconfig.spec.json
 ├── tools/
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 The `libs/ui/src/lib/ui.tsx` file looks like this:
@@ -81,32 +81,32 @@ npx nx g @nrwl/react:component todos --project=ui --export
 ```treeview
 myorg/
 ├── apps/
-│   ├── todos/
-│   ├── todos-e2e/
-│   └── api/
+│   ├── todos/
+│   ├── todos-e2e/
+│   └── api/
 ├── libs/
-│   ├── data/
+│   ├── data/
 │   └── ui/
-│       ├── src/
-│       │   ├── lib/
-│       │   │   ├── ui/
-│       │   │   │   ├── ui.css
-│       │   │   │   ├── ui.spec.tsx
-│       │   │   │   └── ui.tsx
-│       │   │   └── todos/
-│       │   │       ├── todos.css
-│       │   │       ├── todos.spec.tsx
-│       │   │       └── todos.tsx
-│       │   └── index.ts
-│       ├── jest.conf.js
-│       ├── tsconfig.app.json
-│       ├── tsconfig.json
-│       └── tsconfig.spec.json
+│       ├── src/
+│       │   ├── lib/
+│       │   │   ├── ui/
+│       │   │   │   ├── ui.css
+│       │   │   │   ├── ui.spec.tsx
+│       │   │   │   └── ui.tsx
+│       │   │   └── todos/
+│       │   │       ├── todos.css
+│       │   │       ├── todos.spec.tsx
+│       │   │       └── todos.tsx
+│       │   └── index.ts
+│       ├── jest.conf.js
+│       ├── tsconfig.app.json
+│       ├── tsconfig.json
+│       └── tsconfig.spec.json
 ├── tools/
 ├── workspace.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 **Implement the Todos component.**
@@ -174,9 +174,3 @@ export default App;
 **Restart both `npx nx serve api` and `npx nx serve todos` and you should see the application running.**
 
 > Nx helps you explore code generation options. Run `npx nx g @nrwl/react:component --help` to see all options available. Pass `--dry-run` to the command to see what would be generated without actually changing anything, like this: `npx nx g @nrwl/react:component mycmp --project=ui --dry-run`.
-
-!!!!!
-Libraries' public API is defined in...
-!!!!!
-index.ts
-workspace.json and tsconfig.json files

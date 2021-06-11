@@ -1,0 +1,7 @@
+<% if (strict) { %>import { StrictMode } from 'react';<% } %>
+import * as ReactDOM from 'react-dom';
+<% if (routing) { %>import { BrowserRouter } from 'react-router-dom';<% } %>
+
+import App from './app/<%= fileName %>';
+
+ReactDOM.render(<% if (strict) { %><StrictMode><% } %><% if (routing) { %><BrowserRouter><% } %><App /><% if (routing) { %></BrowserRouter><% } %><% if (strict) { %></StrictMode><% } %>, document.getElementById('root'));

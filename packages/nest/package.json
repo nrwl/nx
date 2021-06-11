@@ -14,8 +14,8 @@
     "Cypress",
     "CLI"
   ],
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "./index.js",
+  "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -28,13 +28,13 @@
     "requirements": {},
     "migrations": "./migrations.json"
   },
-  "peerDependencies": {
-    "@nrwl/workspace": "*"
-  },
   "dependencies": {
+    "@nrwl/devkit": "*",
+    "@nrwl/linter": "*",
     "@nrwl/node": "*",
     "@nrwl/jest": "*",
-    "@angular-devkit/schematics": "~10.1.3",
+    "@angular-devkit/core": "^12.0.0",
+    "@angular-devkit/schematics": "^12.0.0",
     "@nestjs/schematics": "^7.0.0"
   }
 }

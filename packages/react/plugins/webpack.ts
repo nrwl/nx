@@ -1,4 +1,5 @@
 import { Configuration } from 'webpack';
+import * as ReactRefreshPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 
 // Add React-specific configuration
 function getWebpackConfig(config: Configuration) {
@@ -20,7 +21,14 @@ function getWebpackConfig(config: Configuration) {
             test: /\.[jt]sx?$/,
           },
           use: [
-            '@svgr/webpack?-svgo,+titleProp,+ref![path]',
+            {
+              loader: require.resolve('@svgr/webpack'),
+              options: {
+                svgo: false,
+                titleProp: true,
+                ref: true,
+              },
+            },
             {
               loader: require.resolve('url-loader'),
               options: {
@@ -46,6 +54,27 @@ function getWebpackConfig(config: Configuration) {
       ],
     }
   );
+
+  if (config.mode === 'development' && config['devServer']?.hot) {
+    // add `react-refresh/babel` to babel loader plugin
+    const babelLoader = config.module.rules.find((rule) =>
+      rule.loader.toString().includes('babel-loader')
+    );
+    if (babelLoader) {
+      babelLoader.options['plugins'] = [
+        ...(babelLoader.options['plugins'] || []),
+        [
+          require.resolve('react-refresh/babel'),
+          {
+            skipEnvCheck: true,
+          },
+        ],
+      ];
+    }
+
+    // add https://github.com/pmmmwh/react-refresh-webpack-plugin to webpack plugin
+    config.plugins.push(new ReactRefreshPlugin());
+  }
 
   return config;
 }

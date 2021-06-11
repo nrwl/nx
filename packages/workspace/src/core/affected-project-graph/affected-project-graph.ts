@@ -1,11 +1,11 @@
-import { ProjectGraph, ProjectGraphBuilder, reverse } from '../project-graph';
+import { ProjectGraphBuilder, reverse } from '../project-graph';
 import {
   FileChange,
   readNxJson,
   readPackageJson,
   readWorkspaceJson,
 } from '../file-utils';
-import { NxJson } from '../shared-interfaces';
+import type { NxJsonConfiguration, ProjectGraph } from '@nrwl/devkit';
 import {
   getImplicitlyTouchedProjects,
   getTouchedProjects,
@@ -25,7 +25,7 @@ export function filterAffected(
   graph: ProjectGraph,
   touchedFiles: FileChange[],
   workspaceJson: any = readWorkspaceJson(),
-  nxJson: NxJson = readNxJson(),
+  nxJson: NxJsonConfiguration = readNxJson(),
   packageJson: any = readPackageJson()
 ): ProjectGraph {
   const normalizedNxJson = normalizeNxJson(nxJson);

@@ -1,15 +1,10 @@
 import { Rule, Tree } from '@angular-devkit/schematics';
-import {
-  addIncludeToTsConfig,
-  getNpmScope,
-  insert,
-  offsetFromRoot,
-  toFileName,
-} from '@nrwl/workspace';
+import { addIncludeToTsConfig, getNpmScope, insert } from '@nrwl/workspace';
 import * as path from 'path';
 import * as ts from 'typescript';
 import { addRoute } from '../../../utils/ast-utils';
 import { NormalizedSchema } from './normalized-schema';
+import { names, offsetFromRoot } from '@nrwl/devkit';
 
 export function addLoadChildren(options: NormalizedSchema): Rule {
   return (host: Tree) => {
@@ -31,9 +26,9 @@ export function addLoadChildren(options: NormalizedSchema): Rule {
       ...addRoute(
         options.parentModule,
         sourceFile,
-        `{path: '${toFileName(
-          options.fileName
-        )}', loadChildren: () => import('${
+        `{path: '${
+          names(options.fileName).fileName
+        }', loadChildren: () => import('${
           options.importPath
         }').then(module => module.${options.moduleName})}`
       ),

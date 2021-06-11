@@ -1,33 +1,32 @@
-import { Entity, <%= className %>State  } from './<%= fileName %>.reducer';
+import { Entity, <%= className %>PartialState } from './<%= fileName %>.reducer';
 import { <%= propertyName %>Query } from './<%= fileName %>.selectors';
 
 describe('<%= className %> Selectors', () => {
   const ERROR_MSG = 'No Error Available';
-  const get<%= className %>Id = (it) => it['id'];
+  const get<%= className %>Id = (it: Entity) => it.id;
 
-  let storeState;
+  let storeState: <%= className %>PartialState;
 
   beforeEach(() => {
-     const create<%= className %> = ( id:string, name = '' ): Entity => ({
+     const create<%= className %> = (id: string, name = ''): Entity => ({
        id,
        name: name || `name-${id}`
      });
      storeState = {
-      <%= propertyName %> : {
+      <%= propertyName %>: {
         list : [
-            create<%= className %>( 'PRODUCT-AAA' ),
-            create<%= className %>( 'PRODUCT-BBB' ),
-            create<%= className %>( 'PRODUCT-CCC' )
-          ],
-          selectedId : 'PRODUCT-BBB',
-          error      : ERROR_MSG,
-          loaded     : true
+          create<%= className %>('PRODUCT-AAA'),
+          create<%= className %>('PRODUCT-BBB'),
+          create<%= className %>('PRODUCT-CCC')
+        ],
+        selectedId: 'PRODUCT-BBB',
+        error: ERROR_MSG,
+        loaded: true
        }
      };
   });
 
   describe('<%= className %> Selectors', () => {
-
     it('getAll<%= className %>() should return the list of <%= className %>', () => {
       const results = <%= propertyName %>Query.getAll<%= className %>(storeState);
       const selId = get<%= className %>Id(results[1]);
@@ -37,7 +36,7 @@ describe('<%= className %> Selectors', () => {
     });
 
     it('getSelected<%= className %>() should return the selected Entity', () => {
-      const result = <%= propertyName %>Query.getSelected<%= className %>(storeState);
+      const result = <%= propertyName %>Query.getSelected<%= className %>(storeState) as Entity;
       const selId = get<%= className %>Id(result);
 
       expect(selId).toBe('PRODUCT-BBB');
@@ -54,6 +53,5 @@ describe('<%= className %> Selectors', () => {
 
       expect(result).toBe(ERROR_MSG);
     });
-
   });
 });

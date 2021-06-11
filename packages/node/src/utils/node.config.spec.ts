@@ -1,8 +1,7 @@
 import { getNodeWebpackConfig } from './node.config';
-import { BannerPlugin } from 'webpack';
 jest.mock('tsconfig-paths-webpack-plugin');
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
-import { BuildNodeBuilderOptions } from '../builders/build/build.impl';
+import { BuildNodeBuilderOptions } from './types';
 
 describe('getNodePartial', () => {
   let input: BuildNodeBuilderOptions;

@@ -59,6 +59,18 @@
       "version": "10.3.1-beta.1",
       "description": "Fix ts-jest migration",
       "factory": "./src/migrations/update-10-3-0/update-ts-jest"
+    },
+    "update-jest-preset-angular-8-4-0": {
+      "version": "12.1.0-beta.1",
+      "cli": "nx",
+      "description": "Update jest-preset-angular to version 8.4.0",
+      "factory": "./src/migrations/update-12-1-2/update-jest-preset-angular"
+    },
+    "update-ts-jest-6-5-5": {
+      "version": "12.1.2-beta.1",
+      "cli": "nx",
+      "description": "Replace tsConfig with tsconfig for ts-jest in jest.config.js",
+      "factory": "./src/migrations/update-12-1-2/update-ts-jest"
     }
   },
   "packageJsonUpdates": {
@@ -122,6 +134,19 @@
       "packages": {
         "ts-jest": {
           "version": "26.4.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "12.1.0": {
+      "version": "12.1.0-beta.1",
+      "packages": {
+        "jest-preset-angular": {
+          "version": "8.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ts-jest": {
+          "version": "26.5.5",
           "alwaysAddToPackageJson": false
         }
       }

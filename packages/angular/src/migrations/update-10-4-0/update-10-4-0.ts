@@ -4,11 +4,11 @@ import { chain, Rule, Tree } from '@angular-devkit/schematics';
 import {
   formatFiles,
   getWorkspace,
-  offsetFromRoot,
   updateJsonInTree,
   updatePackagesInPackageJson,
 } from '@nrwl/workspace';
 import { join as pathJoin } from 'path';
+import { offsetFromRoot } from '@nrwl/devkit';
 
 function updateBaseConfig(project: ProjectDefinition, baseConfig: Path): Rule {
   return updateJsonInTree(baseConfig, (json) => {

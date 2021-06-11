@@ -1,25 +1,22 @@
+import { toOldFormatOrNull, Workspaces } from '@nrwl/tao/src/shared/workspace';
+import type {
+  FileData,
+  NxJsonConfiguration,
+  ProjectGraphNode,
+} from '@nrwl/devkit';
 import { execSync } from 'child_process';
-import * as fs from 'fs';
-import { readFileSync } from 'fs';
-import * as path from 'path';
-import { extname, join } from 'path';
-import { NxArgs } from '../command-line/utils';
-import { WorkspaceResults } from '../command-line/workspace-results';
-import { appRootPath } from '../utils/app-root';
-import { fileExists, readJsonFile } from '../utils/fileutils';
-import { jsonDiff } from '../utils/json-diff';
-import { ProjectGraphNode } from './project-graph';
-import { Environment, NxJson } from './shared-interfaces';
-import { defaultFileHasher } from './hasher/file-hasher';
+import { readFileSync, readdirSync, existsSync, statSync } from 'fs';
+import { extname, join, relative, sep } from 'path';
 import { performance } from 'perf_hooks';
+import type { NxArgs } from '../command-line/utils';
+import { WorkspaceResults } from '../command-line/workspace-results';
+import { appRootPath } from '../utilities/app-root';
+import { fileExists, readJsonFile } from '../utilities/fileutils';
+import { jsonDiff } from '../utilities/json-diff';
+import { defaultFileHasher } from './hasher/file-hasher';
+import type { Environment } from './shared-interfaces';
 
 const ignore = require('ignore');
-
-export interface FileData {
-  file: string;
-  hash: string;
-  ext: string;
-}
 
 export interface Change {
   type: string;
@@ -91,16 +88,15 @@ function defaultReadFileAtRevision(
   revision: void | string
 ): string {
   try {
-    const fileFullPath = `${appRootPath}${path.sep}${file}`;
+    const fileFullPath = `${appRootPath}${sep}${file}`;
     const gitRepositoryPath = execSync('git rev-parse --show-toplevel')
       .toString()
       .trim();
-    const filePathInGitRepository = path
-      .relative(gitRepositoryPath, fileFullPath)
-      .split(path.sep)
+    const filePathInGitRepository = relative(gitRepositoryPath, fileFullPath)
+      .split(sep)
       .join('/');
     return !revision
-      ? readFileSync(file).toString()
+      ? readFileSync(file, 'utf-8')
       : execSync(`git show ${revision}:${filePathInGitRepository}`, {
           maxBuffer: TEN_MEGABYTES,
         })
@@ -112,11 +108,11 @@ function defaultReadFileAtRevision(
 }
 
 function getFileData(filePath: string): FileData {
-  const file = path.relative(appRootPath, filePath).split(path.sep).join('/');
+  const file = relative(appRootPath, filePath).split(sep).join('/');
   return {
-    file: file,
+    file,
     hash: defaultFileHasher.hashFile(filePath),
-    ext: path.extname(filePath),
+    ext: extname(filePath),
   };
 }
 
@@ -125,20 +121,20 @@ export function allFilesInDir(
   recurse: boolean = true
 ): FileData[] {
   const ignoredGlobs = getIgnoredGlobs();
-  const relDirName = path.relative(appRootPath, dirName);
+  const relDirName = relative(appRootPath, dirName);
   if (relDirName && ignoredGlobs.ignores(relDirName)) {
     return [];
   }
 
   let res = [];
   try {
-    fs.readdirSync(dirName).forEach((c) => {
-      const child = path.join(dirName, c);
-      if (ignoredGlobs.ignores(path.relative(appRootPath, child))) {
+    readdirSync(dirName).forEach((c) => {
+      const child = join(dirName, c);
+      if (ignoredGlobs.ignores(relative(appRootPath, child))) {
         return;
       }
       try {
-        const s = fs.statSync(child);
+        const s = statSync(child);
         if (!s.isDirectory()) {
           // add starting with "apps/myapp/..." or "libs/mylib/..."
           res.push(getFileData(child));
@@ -158,16 +154,29 @@ function getIgnoredGlobs() {
   return ig;
 }
 
-function readFileIfExisting(path: string) {
-  return fs.existsSync(path) ? fs.readFileSync(path, 'UTF-8').toString() : '';
+export function readFileIfExisting(path: string) {
+  return existsSync(path) ? readFileSync(path, 'utf-8') : '';
 }
 
-export function readWorkspaceJson(): any {
-  return readJsonFile(`${appRootPath}/${workspaceFileName()}`);
+export function readWorkspaceJson() {
+  return readWorkspaceConfig({
+    format: 'nx',
+    path: appRootPath,
+  });
 }
 
-export function defaultCliCommand() {
-  return workspaceFileName() === 'angular.json' ? 'ng' : 'nx';
+export function readWorkspaceConfig(opts: {
+  format: 'angularCli' | 'nx';
+  path?: string;
+}) {
+  const ws = new Workspaces(opts.path || process.cwd());
+  const json = ws.readWorkspaceConfiguration();
+  if (opts.format === 'angularCli') {
+    const formatted = toOldFormatOrNull(json);
+    return formatted ?? json;
+  } else {
+    return json;
+  }
 }
 
 export function workspaceFileName() {
@@ -181,15 +190,15 @@ export function workspaceFileName() {
 export type FileRead = (s: string) => string;
 
 export function defaultFileRead(filePath: string): string | null {
-  return readFileSync(join(appRootPath, filePath), 'UTF-8');
+  return readFileSync(join(appRootPath, filePath), 'utf-8');
 }
 
 export function readPackageJson(): any {
   return readJsonFile(`${appRootPath}/package.json`);
 }
 
-export function readNxJson(): NxJson {
-  const config = readJsonFile<NxJson>(`${appRootPath}/nx.json`);
+export function readNxJson(): NxJsonConfiguration {
+  const config = readJsonFile<NxJsonConfiguration>(`${appRootPath}/nx.json`);
   if (!config.npmScope) {
     throw new Error(`nx.json must define the npmScope property.`);
   }
@@ -198,11 +207,10 @@ export function readNxJson(): NxJson {
 
 export function workspaceLayout(): { appsDir: string; libsDir: string } {
   const nxJson = readNxJson();
-  const appsDir =
-    (nxJson.workspaceLayout && nxJson.workspaceLayout.appsDir) || 'apps';
-  const libsDir =
-    (nxJson.workspaceLayout && nxJson.workspaceLayout.libsDir) || 'libs';
-  return { appsDir, libsDir };
+  return {
+    appsDir: nxJson.workspaceLayout?.appsDir ?? 'apps',
+    libsDir: nxJson.workspaceLayout?.libsDir ?? 'libs',
+  };
 }
 
 // TODO: Make this list extensible
@@ -263,7 +271,7 @@ export function readEnvironment(
   const workspaceJson = readWorkspaceJson();
   const workspaceResults = new WorkspaceResults(target, projects);
 
-  return { nxJson, workspaceJson, workspaceResults };
+  return { nxJson, workspaceJson, workspaceResults } as any;
 }
 
 export function normalizedProjectRoot(p: ProjectGraphNode): string {
@@ -288,3 +296,6 @@ export function filesChanged(a: FileData[], b: FileData[]) {
   }
   return false;
 }
+
+// Original Exports
+export { FileData };

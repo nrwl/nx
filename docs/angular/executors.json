@@ -1,0 +1,15 @@
+[
+  "angular",
+  "cypress",
+  "express",
+  "gatsby",
+  "jest",
+  "linter",
+  "nest",
+  "next",
+  "node",
+  "nx-plugin",
+  "storybook",
+  "web",
+  "workspace"
+]

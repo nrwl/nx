@@ -1,8 +1,8 @@
-import { chain, Tree } from '@angular-devkit/schematics';
-import { NxJson, readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
+import { Tree } from '@angular-devkit/schematics';
+import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
+import type { NxJsonConfiguration } from '@nrwl/devkit';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { callRule, runMigration } from '../../utils/testing';
-import { updateWorkspace } from '@nrwl/workspace/src/utils/workspace';
 
 describe('Update 9.2.0', () => {
   let tree: Tree;
@@ -15,7 +15,7 @@ describe('Update 9.2.0', () => {
   describe('for projects with no tasks runner options', () => {
     it('should add configuration for cacheable operations', async () => {
       tree = await runMigration('update-9-2-0', {}, tree);
-      const nxJson = readJsonInTree<NxJson>(tree, 'nx.json');
+      const nxJson = readJsonInTree<NxJsonConfiguration>(tree, 'nx.json');
       expect(nxJson.tasksRunnerOptions).toEqual({
         default: {
           runner: '@nrwl/workspace/tasks-runners/default',
@@ -46,7 +46,7 @@ describe('Update 9.2.0', () => {
           tree
         );
         tree = await runMigration('update-9-2-0', {}, tree);
-        const nxJson = readJsonInTree<NxJson>(tree, 'nx.json');
+        const nxJson = readJsonInTree<NxJsonConfiguration>(tree, 'nx.json');
         expect(nxJson.tasksRunnerOptions).toEqual({
           default: {
             runner: '@nrwl/workspace/tasks-runners/default',
@@ -82,7 +82,7 @@ describe('Update 9.2.0', () => {
           tree
         );
         tree = await runMigration('update-9-2-0', {}, tree);
-        const nxJson = readJsonInTree<NxJson>(tree, 'nx.json');
+        const nxJson = readJsonInTree<NxJsonConfiguration>(tree, 'nx.json');
         expect(nxJson.tasksRunnerOptions).toEqual({
           default: {
             runner: '@nrwl/workspace/tasks-runners/default',

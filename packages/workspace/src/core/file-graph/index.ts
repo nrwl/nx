@@ -1,1 +1,1 @@
-export * from './file-map';
+export * from './project-file-map';

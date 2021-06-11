@@ -1,20 +1,24 @@
 import * as ts from 'typescript';
-import { findNodes, InsertChange, ReplaceChange } from '@nrwl/workspace';
-import { Tree } from '@angular-devkit/schematics';
-import * as stripJsonComments from 'strip-json-comments';
+import {
+  BinaryExpression,
+  ExpressionStatement,
+  isBinaryExpression,
+  isExpressionStatement,
+  SyntaxKind,
+} from 'typescript';
+import {
+  applyChangesToString,
+  ChangeType,
+  Tree,
+  stripJsonComments,
+} from '@nrwl/devkit';
 import { Config } from '@jest/types';
 
-function createInsertChange(
-  path: string,
+function makeTextToInsert(
   value: unknown,
-  position: number,
   precedingCommaNeeded: boolean
-) {
-  return new InsertChange(
-    path,
-    position,
-    `${precedingCommaNeeded ? ',' : ''}${value}`
-  );
+): string {
+  return `${precedingCommaNeeded ? ',' : ''}${value}`;
 }
 
 function findPropertyAssignment(
@@ -44,6 +48,7 @@ export function getJsonObject(object: string) {
 }
 
 export function addOrUpdateProperty(
+  tree: Tree,
   object: ts.ObjectLiteralExpression,
   properties: string[],
   value: unknown,
@@ -52,6 +57,8 @@ export function addOrUpdateProperty(
   const propertyName = properties.shift();
   const propertyAssignment = findPropertyAssignment(object, propertyName);
 
+  const originalContents = tree.read(path, 'utf-8');
+
   if (propertyAssignment) {
     if (
       propertyAssignment.initializer.kind === ts.SyntaxKind.StringLiteral ||
@@ -59,14 +66,21 @@ export function addOrUpdateProperty(
       propertyAssignment.initializer.kind === ts.SyntaxKind.FalseKeyword ||
       propertyAssignment.initializer.kind === ts.SyntaxKind.TrueKeyword
     ) {
-      return [
-        new ReplaceChange(
-          path,
-          propertyAssignment.initializer.pos,
-          propertyAssignment.initializer.getFullText(),
-          value as string
-        ),
-      ];
+      const updatedContents = applyChangesToString(originalContents, [
+        {
+          type: ChangeType.Delete,
+          start: propertyAssignment.initializer.pos,
+          length: propertyAssignment.initializer.getFullText().length,
+        },
+        {
+          type: ChangeType.Insert,
+          index: propertyAssignment.initializer.pos,
+          text: value as string,
+        },
+      ]);
+
+      tree.write(path, updatedContents);
+      return;
     }
 
     if (
@@ -84,25 +98,37 @@ export function addOrUpdateProperty(
       }
 
       if (arrayLiteral.elements.length === 0) {
-        return [
-          new InsertChange(path, arrayLiteral.elements.end, value as string),
-        ];
+        const updatedContents = applyChangesToString(originalContents, [
+          {
+            type: ChangeType.Insert,
+            index: arrayLiteral.elements.end,
+            text: value as string,
+          },
+        ]);
+        tree.write(path, updatedContents);
+        return;
       } else {
-        return [
-          createInsertChange(
-            path,
-            value,
-            arrayLiteral.elements.end,
-            arrayLiteral.elements.length !== 0 &&
-              !arrayLiteral.elements.hasTrailingComma
-          ),
-        ];
+        const text = makeTextToInsert(
+          value,
+          arrayLiteral.elements.length !== 0 &&
+            !arrayLiteral.elements.hasTrailingComma
+        );
+        const updatedContents = applyChangesToString(originalContents, [
+          {
+            type: ChangeType.Insert,
+            index: arrayLiteral.elements.end,
+            text,
+          },
+        ]);
+        tree.write(path, updatedContents);
+        return;
       }
     } else if (
       propertyAssignment.initializer.kind ===
       ts.SyntaxKind.ObjectLiteralExpression
     ) {
       return addOrUpdateProperty(
+        tree,
         propertyAssignment.initializer as ts.ObjectLiteralExpression,
         properties,
         value,
@@ -115,14 +141,19 @@ export function addOrUpdateProperty(
         `Please use dot delimited paths to update an existing object. Eg. object.property `
       );
     }
-    return [
-      createInsertChange(
-        path,
-        `${JSON.stringify(propertyName)}: ${value}`,
-        object.properties.end,
-        object.properties.length !== 0 && !object.properties.hasTrailingComma
-      ),
-    ];
+    const text = makeTextToInsert(
+      `${JSON.stringify(propertyName)}: ${value}`,
+      object.properties.length !== 0 && !object.properties.hasTrailingComma
+    );
+    const updatedContents = applyChangesToString(originalContents, [
+      {
+        type: ChangeType.Insert,
+        index: object.properties.end,
+        text,
+      },
+    ]);
+    tree.write(path, updatedContents);
+    return;
   }
 }
 
@@ -157,15 +188,8 @@ export function removeProperty(
  * @param path
  */
 export function jestConfigObjectAst(
-  host: Tree,
-  path: string
+  fileContent: string
 ): ts.ObjectLiteralExpression {
-  if (!host.exists(path)) {
-    throw new Error(`Cannot find '${path}' in your workspace.`);
-  }
-
-  const fileContent = host.read(path).toString('utf-8');
-
   const sourceFile = ts.createSourceFile(
     'jest.config.js',
     fileContent,
@@ -173,23 +197,28 @@ export function jestConfigObjectAst(
     true
   );
 
-  const expressions = findNodes(
-    sourceFile,
-    ts.SyntaxKind.BinaryExpression
-  ) as ts.BinaryExpression[];
-
-  const moduleExports = expressions.find(
-    (node) =>
-      node.left.getText() === 'module.exports' &&
-      node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
-      ts.isObjectLiteralExpression(node.right)
+  const moduleExportsStatement = sourceFile.statements.find(
+    (statement) =>
+      isExpressionStatement(statement) &&
+      isBinaryExpression(statement.expression) &&
+      statement.expression.left.getText() === 'module.exports' &&
+      statement.expression.operatorToken.kind === SyntaxKind.EqualsToken
   );
+
+  const moduleExports = (moduleExportsStatement as ExpressionStatement)
+    .expression as BinaryExpression;
 
   if (!moduleExports) {
     throw new Error(
       `
        The provided jest config file does not have the expected 'module.exports' expression. 
        See https://jestjs.io/docs/en/configuration for more details.`
+    );
+  }
+
+  if (!ts.isObjectLiteralExpression(moduleExports.right)) {
+    throw new Error(
+      `The 'module.exports' expression is not an object literal.`
     );
   }
 
@@ -205,6 +234,6 @@ export function jestConfigObject(
   host: Tree,
   path: string
 ): Partial<Config.InitialOptions> & { [index: string]: any } {
-  const jestConfigAst = jestConfigObjectAst(host, path);
+  const jestConfigAst = jestConfigObjectAst(host.read(path, 'utf-8'));
   return getJsonObject(jestConfigAst.getText());
 }

@@ -1,7 +1,7 @@
 {
   "name": "create-nx-plugin",
   "version": "0.0.1",
-  "description": "Extensible Dev Tools for Monorepos",
+  "description": "Smart, Extensible Build Framework",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nrwl/nx.git"
@@ -28,10 +28,10 @@
   "homepage": "https://nx.dev",
   "dependencies": {
     "@nrwl/workspace": "*",
-    "tmp": "0.0.33",
+    "enquirer": "~2.3.6",
+    "fs-extra": "^9.1.0",
+    "tmp": "~0.2.1",
     "yargs": "15.4.1",
-    "yargs-parser": "20.0.0",
-    "inquirer": "^6.3.1",
-    "fs-extra": "7.0.1"
+    "yargs-parser": "20.0.0"
   }
 }

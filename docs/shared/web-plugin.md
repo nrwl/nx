@@ -1,6 +1,6 @@
 # Nx Plugin for Web
 
-The Nx Plugin for Web Components contains schematics for managing Web Component applications and libraries within an Nx workspace. It provides:
+The Nx Plugin for Web Components contains generators for managing Web Component applications and libraries within an Nx workspace. It provides:
 
 - Integration with libraries such as Jest, Cypress, and Storybook.
 - Scaffolding for creating buildable libraries that can be published to npm.
@@ -63,24 +63,20 @@ myorg/
 ├── workspace.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 ## See Also
 
-- [Using Cypress](/{{framework}}/plugins/cypress/overview)
-- [Using Jest](/{{framework}}/plugins/cypress/overview)
+- [Using Cypress](/{{framework}}/cypress/overview)
+- [Using Jest](/{{framework}}/cypress/overview)
 
-## Builders
+## Executors / Builders
 
-- [build](/{{framework}}/plugins/web/builders/build) - Builds a web components application
-- [dev-server](/{{framework}}/plugins/web/builders/package) - Builds and serves a web application
-- [package](/{{framework}}/plugins/web/builders/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
+- [build](/{{framework}}/web/build) - Builds a web components application
+- [dev-server](/{{framework}}/web/dev-server) - Builds and serves a web application
+- [package](/{{framework}}/web/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
 
-## Schematics
+## Generators
 
-- [application](/{{framework}}/plugins/web/schematics/application) - Create an Web Components application
-- [component](/{{framework}}/plugins/web/schematics/component) - Create an Web Components library
-- [library](/{{framework}}/plugins/web/schematics/library) - Create an Web Components library
-- [redux](/{{framework}}/plugins/web/schematics/redux) - Generate a Redux slice for a project
-- [storybook-configuration](/{{framework}}/plugins/web/schematics/storybook-configuration) - Set up Storybook for a react library
+- [application](/{{framework}}/web/application) - Create an Web Components application

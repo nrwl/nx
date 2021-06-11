@@ -1,17 +1,18 @@
-import { Tree } from '@angular-devkit/schematics';
 import {
   addPropertyToJestConfig,
   removePropertyFromJestConfig,
 } from './update-config';
 import { jestConfigObject } from './functions';
+import { Tree } from '@nrwl/devkit';
+import { createTree } from '@nrwl/devkit/testing';
 
 describe('Update jest.config.js', () => {
   let host: Tree;
 
   beforeEach(() => {
-    host = Tree.empty();
+    host = createTree();
     // create
-    host.create(
+    host.write(
       'jest.config.js',
       String.raw`
       module.exports = {
@@ -164,20 +165,23 @@ describe('Update jest.config.js', () => {
       expect(json['update-me']).toEqual('goodbye');
     });
 
-    describe('errors', () => {
-      it('should throw an error when trying to add a value to an already existing object without being dot delimited', () => {
-        expect(() => {
-          addPropertyToJestConfig(
-            host,
-            'jest.config.js',
-            'alreadyExistingObject',
-            'should fail'
-          );
-        }).toThrow();
+    describe('warnings', () => {
+      beforeEach(() => {
+        jest.spyOn(console, 'warn');
       });
 
-      it('should throw an error if the jest.config doesnt match module.exports = {} style', () => {
-        host.create(
+      it('should warn when trying to add a value to an already existing object without being dot delimited', () => {
+        addPropertyToJestConfig(
+          host,
+          'jest.config.js',
+          'alreadyExistingObject',
+          'should fail'
+        );
+        expect(console.warn).toHaveBeenCalled();
+      });
+
+      it('should warn if the jest.config doesnt match module.exports = {} style', () => {
+        host.write(
           'jest.unconventional.js',
           String.raw`
           jestObject = {
@@ -187,14 +191,13 @@ describe('Update jest.config.js', () => {
           module.exports = jestObject;
         `
         );
-        expect(() => {
-          addPropertyToJestConfig(
-            host,
-            'jest.unconventional.js',
-            'stuffhere',
-            'should fail'
-          );
-        }).toThrow();
+        addPropertyToJestConfig(
+          host,
+          'jest.unconventional.js',
+          'stuffhere',
+          'should fail'
+        );
+        expect(console.warn).toHaveBeenCalled();
       });
 
       it('should throw if the provided config does not exist in the tree', () => {

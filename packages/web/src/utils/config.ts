@@ -4,7 +4,7 @@ import { join, resolve } from 'path';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import * as TerserWebpackPlugin from 'terser-webpack-plugin';
-import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
+import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 
 import { AssetGlobPattern, BuildBuilderOptions } from './types';
 import { getOutputHashFormat } from './hash-format';
@@ -20,6 +20,7 @@ export function getBaseWebpackPartial(
   options: BuildBuilderOptions,
   esm?: boolean,
   isScriptOptimizeOn?: boolean,
+  emitDecoratorMetadata?: boolean,
   configuration?: string
 ): Configuration {
   const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
@@ -54,8 +55,9 @@ export function getBaseWebpackPartial(
           options: {
             rootMode: 'upward',
             cwd: join(options.root, options.sourceRoot),
+            emitDecoratorMetadata,
             isModern: esm,
-            envName: configuration,
+            envName: isScriptOptimizeOn ? 'production' : configuration,
             babelrc: true,
             cacheDirectory: true,
             cacheCompression: false,
@@ -67,7 +69,7 @@ export function getBaseWebpackPartial(
       extensions,
       alias: getAliases(options),
       plugins: [
-        new TsConfigPathsPlugin({
+        new TsconfigPathsPlugin({
           configFile: options.tsConfig,
           extensions,
           mainFields,
@@ -240,7 +242,7 @@ export function createCopyPlugin(assets: AssetGlobPattern[]) {
             '.gitkeep',
             '**/.DS_Store',
             '**/Thumbs.db',
-            ...(asset.ignore ? asset.ignore : []),
+            ...(asset.ignore ?? []),
           ],
           dot: true,
         },

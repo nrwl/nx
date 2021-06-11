@@ -1,0 +1,11 @@
+{
+  "presets": [
+    [
+      "@nrwl/gatsby/babel", {
+        "reactRuntime": "automatic"
+        <% if (style === '@emotion/styled') { %>,"reactImportSource": "@emotion/react"<% } %>
+      }
+    ]
+  ],
+  "plugins": []
+}

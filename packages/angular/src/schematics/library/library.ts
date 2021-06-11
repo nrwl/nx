@@ -8,26 +8,30 @@ import {
   SchematicsException,
   Tree,
 } from '@angular-devkit/schematics';
-import {
-  addLintFiles,
-  formatFiles,
-  Linter,
-  updateJsonInTree,
-} from '@nrwl/workspace';
-import init, { addUnitTestRunner } from '../init/init';
+import { formatFiles, Linter, updateJsonInTree } from '@nrwl/workspace';
 import { addModule } from './lib/add-module';
 import { normalizeOptions } from './lib/normalize-options';
 import { updateLibPackageNpmScope } from './lib/update-lib-package-npm-scope';
 import { updateProject } from './lib/update-project';
 import { updateTsConfig } from './lib/update-tsconfig';
 import { Schema } from './schema';
-import { enableStrictTypeChecking } from './lib/enable-strict-type-checking';
+import {
+  enableStrictTypeChecking,
+  setLibraryStrictDefault,
+} from './lib/enable-strict-type-checking';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import { NormalizedSchema } from './lib/normalized-schema';
+import { initSchematic } from '../../generators/init/init.compat';
 
 export default function (schema: Schema): Rule {
   return (host: Tree): Rule => {
     const options = normalizeOptions(host, schema);
     if (!options.routing && options.lazy) {
       throw new Error(`routing must be set`);
+    }
+
+    if (options.enableIvy === true && !options.buildable) {
+      throw new Error('enableIvy must only be used with buildable.');
     }
 
     if (options.publishable === true && !schema.importPath) {
@@ -37,14 +41,10 @@ export default function (schema: Schema): Rule {
     }
 
     return chain([
-      init({
+      initSchematic({
         ...options,
         skipFormat: true,
       }),
-      addLintFiles(options.projectRoot, options.linter, {
-        onlyGlobal: options.linter === Linter.TsLint,
-      }),
-      addUnitTestRunner(options),
       // TODO: Remove this after Angular 10.1.0
       updateJsonInTree('tsconfig.json', () => ({
         files: [],
@@ -54,7 +54,6 @@ export default function (schema: Schema): Rule {
       externalSchematic('@schematics/angular', 'library', {
         name: options.name,
         prefix: options.prefix,
-        style: options.style,
         entryFile: 'index',
         skipPackageJson: !(options.publishable || options.buildable),
         skipTsConfig: true,
@@ -83,8 +82,26 @@ export default function (schema: Schema): Rule {
         ? updateLibPackageNpmScope(options)
         : noop(),
       addModule(options),
-      options.strict ? enableStrictTypeChecking(options) : noop(),
+      options.strict
+        ? enableStrictTypeChecking(options)
+        : setLibraryStrictDefault(options.strict),
+      options.linter !== Linter.None ? addLinting(options) : noop(),
       formatFiles(options),
     ]);
   };
 }
+
+const addLinting = (options: NormalizedSchema) => () => {
+  return chain([
+    schematic('add-linting', {
+      projectName: options.name,
+      projectRoot: options.projectRoot,
+      prefix: options.prefix,
+    }),
+  ]);
+};
+
+export const libraryGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/angular',
+  'library'
+);

@@ -1,19 +1,16 @@
-import { Observable } from 'rxjs';
-import { Target } from '@angular-devkit/architect';
-
-import { ProjectGraph } from '../core/project-graph';
-import { NxJson } from '../core/shared-interfaces';
+import type { Observable } from 'rxjs';
+import type { NxJsonConfiguration, ProjectGraph } from '@nrwl/devkit';
 
 export interface Task {
   id: string;
-  target: Target;
+  target: { target: string; project: string; configuration?: string };
   overrides: any;
   hash?: string;
   projectRoot?: string;
   hashDetails?: {
     command: string;
-    sources: { [projectName: string]: string };
-    implicitDeps: { [key: string]: string };
+    nodes: { [name: string]: string };
+    implicitDeps: { [fileName: string]: string };
     runtime: { [input: string]: string };
   };
 }
@@ -21,6 +18,7 @@ export interface Task {
 export enum AffectedEventType {
   TaskComplete = '[Task] Complete',
   TaskCacheRead = '[Task] CacheRead',
+  TaskDependencyFailed = '[Task] DependencyFailed',
 }
 
 export interface AffectedEvent {
@@ -40,6 +38,7 @@ export type TasksRunner<T = unknown> = (
     target?: string;
     initiatingProject?: string | null;
     projectGraph: ProjectGraph;
-    nxJson: NxJson;
+    nxJson: NxJsonConfiguration;
+    hideCachedOutput?: boolean;
   }
 ) => Observable<AffectedEvent>;

@@ -1,29 +1,33 @@
 import { dirSync } from 'tmp';
-import { rmdirSync } from 'fs-extra';
+import { mkdirSync, removeSync } from 'fs-extra';
 import { execSync } from 'child_process';
 import { getFileHashes } from './git-hasher';
 
 describe('git-hasher', () => {
-  let dir;
+  let dir: string;
+  const warnSpy = jest.spyOn(console, 'warn');
 
   beforeEach(() => {
     dir = dirSync().name;
     run(`git init`);
     run(`git config user.email "test@test.com"`);
     run(`git config user.name "test"`);
+
+    warnSpy.mockClear();
   });
 
   afterEach(() => {
-    rmdirSync(dir, { recursive: true });
+    expect(console.warn).not.toHaveBeenCalled();
+    removeSync(dir);
   });
 
   it('should work', () => {
     run(`echo AAA > a.txt`);
     run(`git add .`);
     run(`git commit -am init`);
-    const hashes1 = getFileHashes(dir);
-    expect([...hashes1.keys()]).toEqual([`${dir}/a.txt`]);
-    expect(hashes1.get(`${dir}/a.txt`)).toBeDefined();
+    const hashes = getFileHashes(dir);
+    expect([...hashes.keys()]).toEqual([`${dir}/a.txt`]);
+    expect(hashes.get(`${dir}/a.txt`)).toBeDefined();
 
     // should handle additions
     run(`echo BBB > b.txt`);
@@ -110,6 +114,44 @@ describe('git-hasher', () => {
     run(`git add .`);
     run(`echo modified >> moda.txt`);
     expect([...getFileHashes(dir).keys()]).toEqual([`${dir}/moda.txt`]);
+  });
+
+  it('should handle special characters in filenames', () => {
+    run(`echo AAA > "a-ū".txt`);
+    run(`echo BBB > "b-ū".txt`);
+    run(`git add .`);
+    run(`git commit -am init`);
+    expect([...getFileHashes(dir).keys()]).toEqual([
+      `${dir}/a-ū.txt`,
+      `${dir}/b-ū.txt`,
+    ]);
+
+    run(`mv a-ū.txt moda-ū.txt`);
+    run(`git add .`);
+    run(`echo modified >> moda-ū.txt`);
+    expect([...getFileHashes(dir).keys()]).toEqual([
+      `${dir}/b-ū.txt`,
+      `${dir}/moda-ū.txt`,
+    ]);
+
+    run(`rm "moda-ū.txt"`);
+    expect([...getFileHashes(dir).keys()]).toEqual([`${dir}/b-ū.txt`]);
+  });
+
+  it('should work with sub-directories', () => {
+    const subDir = `${dir}/sub`;
+    mkdirSync(subDir);
+    run(`echo AAA > a.txt`);
+    run(`echo BBB > sub/b.txt`);
+    run(`git add --all`);
+    run(`git commit -am init`);
+    expect([...getFileHashes(subDir).keys()]).toEqual([`${subDir}/b.txt`]);
+
+    run(`echo CCC > sub/c.txt`);
+    expect([...getFileHashes(subDir).keys()]).toEqual([
+      `${subDir}/b.txt`,
+      `${subDir}/c.txt`,
+    ]);
   });
 
   function run(command: string) {

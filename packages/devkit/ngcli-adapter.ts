@@ -1,1 +1,6 @@
-export { wrapAngularDevkitSchematic } from '@nrwl/tao/src/commands/ngcli-adapter';
+export {
+  wrapAngularDevkitSchematic,
+  overrideCollectionResolutionForTesting,
+  mockSchematicsForTesting,
+  NxScopedHost,
+} from '@nrwl/tao/src/commands/ngcli-adapter';

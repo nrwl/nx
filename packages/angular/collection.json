@@ -4,8 +4,8 @@
   "extends": ["@schematics/angular", "@nrwl/workspace"],
   "schematics": {
     "init": {
-      "factory": "./src/schematics/init/init",
-      "schema": "./src/schematics/init/schema.json",
+      "factory": "./src/generators/init/init.compat#initSchematic",
+      "schema": "./src/generators/init/schema.json",
       "description": "Initialize the @nrwl/angular plugin",
       "aliases": ["ng-add"],
       "hidden": true
@@ -26,15 +26,15 @@
     },
 
     "karma": {
-      "factory": "./src/schematics/karma/karma",
-      "schema": "./src/schematics/karma/schema.json",
-      "description": "Add karma configuration to a workspace"
+      "factory": "./src/generators/karma/compat",
+      "schema": "./src/generators/karma/schema.json",
+      "description": "Add karma configuration to a workspace."
     },
 
     "karma-project": {
-      "factory": "./src/schematics/karma-project/karma-project",
-      "schema": "./src/schematics/karma-project/schema.json",
-      "description": "Add karma testing to a project"
+      "factory": "./src/generators/karma-project/compat",
+      "schema": "./src/generators/karma-project/schema.json",
+      "description": "Add karma testing to a project."
     },
 
     "ngrx": {
@@ -56,9 +56,22 @@
     },
 
     "storybook-configuration": {
-      "factory": "./src/schematics/storybook-configuration/configuration",
-      "schema": "./src/schematics/storybook-configuration/schema.json",
-      "description": "Create stories/specs for all components declared in a library",
+      "factory": "./src/generators/storybook-configuration/compat",
+      "schema": "./src/generators/storybook-configuration/schema.json",
+      "description": "Create stories/specs for all components declared in a library."
+    },
+
+    "storybook-migrate-defaults-5-to-6": {
+      "factory": "./src/generators/storybook-migrate-defaults-5-to-6/compat",
+      "schema": "./src/generators/storybook-migrate-defaults-5-to-6/schema.json",
+      "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
+      "hidden": false
+    },
+
+    "storybook-migrate-stories-to-6-2": {
+      "factory": "./src/generators/storybook-migrate-stories-to-6-2/compat",
+      "schema": "./src/generators/storybook-migrate-stories-to-6-2/schema.json",
+      "description": "Migrate stories to match the new syntax in v6.2 where the component declaration should be in the default export.",
       "hidden": false
     },
 
@@ -84,10 +97,76 @@
     },
 
     "move": {
-      "factory": "./src/schematics/move/move",
-      "schema": "./src/schematics/move/schema.json",
+      "factory": "./src/generators/move/move#angularMoveSchematic",
+      "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
       "description": "Move an Angular application or library to another folder"
+    },
+
+    "add-linting": {
+      "factory": "./src/generators/add-linting/compat",
+      "schema": "./src/generators/add-linting/schema.json",
+      "description": "Add linting configuration to an Angular project.",
+      "hidden": true
+    },
+
+    "convert-tslint-to-eslint": {
+      "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionSchematic",
+      "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
+      "description": "Convert a project from TSLint to ESLint"
+    }
+  },
+  "generators": {
+    "add-linting": {
+      "factory": "./src/generators/add-linting/add-linting",
+      "schema": "./src/generators/add-linting/schema.json",
+      "description": "Add linting configuration to an Angular project.",
+      "hidden": true
+    },
+    "convert-tslint-to-eslint": {
+      "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionGenerator",
+      "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
+      "description": "Convert a project from TSLint to ESLint"
+    },
+    "init": {
+      "factory": "./src/generators/init/init",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the @nrwl/angular plugin",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+    "karma": {
+      "factory": "./src/generators/karma/karma",
+      "schema": "./src/generators/karma/schema.json",
+      "description": "Add karma configuration to a workspace."
+    },
+    "karma-project": {
+      "factory": "./src/generators/karma-project/karma-project",
+      "schema": "./src/generators/karma-project/schema.json",
+      "description": "Add karma testing to a project."
+    },
+    "move": {
+      "factory": "./src/generators/move/move#angularMoveGenerator",
+      "schema": "./src/generators/move/schema.json",
+      "aliases": ["mv"],
+      "description": "Move an Angular application or library to another folder"
+    },
+    "storybook-configuration": {
+      "factory": "./src/generators/storybook-configuration/storybook-configuration",
+      "schema": "./src/generators/storybook-configuration/schema.json",
+      "description": "Create stories/specs for all components declared in a library."
+    },
+    "storybook-migrate-defaults-5-to-6": {
+      "factory": "./src/generators/storybook-migrate-defaults-5-to-6/storybook-migrate-defaults-5-to-6",
+      "schema": "./src/generators/storybook-migrate-defaults-5-to-6/schema.json",
+      "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
+      "hidden": false
+    },
+    "storybook-migrate-stories-to-6-2": {
+      "factory": "./src/generators/storybook-migrate-stories-to-6-2/migrate-stories-to-6-2",
+      "schema": "./src/generators/storybook-migrate-stories-to-6-2/schema.json",
+      "description": "Migrate stories to match the new syntax in v6.2 where the component declaration should be in the default export.",
+      "hidden": false
     }
   }
 }

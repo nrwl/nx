@@ -9,7 +9,6 @@ import {
 } from '@nrwl/workspace';
 
 import * as path from 'path';
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 describe('Update 8-5-0', () => {
   let tree: Tree;
@@ -46,6 +45,7 @@ describe('Update 8-5-0', () => {
 
     const config = readWorkspace(tree);
     expect(config).toEqual({
+      version: 1,
       schematics: {
         '@nrwl/react': {
           application: {},

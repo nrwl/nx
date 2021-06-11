@@ -19,19 +19,15 @@ import {
   getNpmScope,
   getWorkspacePath,
   insert,
-  offsetFromRoot,
   readJsonInTree,
   replaceAppNameWithPath,
   replaceNodeValue,
-  toFileName,
   updateJsonInTree,
   updateWorkspace,
-  addLintFiles,
-  Linter,
   generateProjectLint,
+  Linter,
 } from '@nrwl/workspace';
 import { join, normalize } from '@angular-devkit/core';
-import init from '../init/init';
 import {
   addImportToModule,
   addImportToTestBed,
@@ -43,8 +39,12 @@ import {
   updateWorkspaceInTree,
   appsDir,
 } from '@nrwl/workspace/src/utils/ast-utils';
+import { names, offsetFromRoot } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import { initSchematic } from '../../generators/init/init.compat';
 
 interface NormalizedSchema extends Schema {
+  prefix: string; // we set a default for this in normalizeOptions, so it is no longer optional
   appProjectRoot: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
@@ -77,7 +77,7 @@ const nrwlHomeTemplate = {
         <li class="col-span-2">
             <a
                     class="resource flex"
-                    href="https://connect.nrwl.io/app/courses/nx-workspaces/intro"
+                    href="https://nxplaybook.com/p/nx-workspaces"
             >
                 Nx video course
             </a>
@@ -85,7 +85,7 @@ const nrwlHomeTemplate = {
         <li class="col-span-2">
             <a
                     class="resource flex"
-                    href="https://nx.dev/angular/getting-started/what-is-nx"
+                    href="https://nx.dev/latest/angular/getting-started/getting-started"
             >
                 Nx video tutorial
             </a>
@@ -93,7 +93,7 @@ const nrwlHomeTemplate = {
         <li class="col-span-2">
             <a
                     class="resource flex"
-                    href="https://nx.dev/angular/tutorial/01-create-application"
+                    href="https://nx.dev/latest/angular/tutorial/01-create-application"
             >
                 Interactive tutorial
             </a>
@@ -412,45 +412,6 @@ function updateComponentSpec(options: NormalizedSchema) {
   };
 }
 
-function updateTsLintConfig(options: NormalizedSchema): Rule {
-  return chain([
-    updateJsonInTree('tslint.json', (json) => {
-      if (
-        json.rulesDirectory &&
-        json.rulesDirectory.indexOf('node_modules/codelyzer') === -1
-      ) {
-        json.rulesDirectory.push('node_modules/codelyzer');
-        json.rules = {
-          ...json.rules,
-
-          'directive-selector': [true, 'attribute', 'app', 'camelCase'],
-          'component-selector': [true, 'element', 'app', 'kebab-case'],
-          'no-conflicting-lifecycle': true,
-          'no-host-metadata-property': true,
-          'no-input-rename': true,
-          'no-inputs-metadata-property': true,
-          'no-output-native': true,
-          'no-output-on-prefix': true,
-          'no-output-rename': true,
-          'no-outputs-metadata-property': true,
-          'template-banana-in-box': true,
-          'template-no-negated-async': true,
-          'use-lifecycle-interface': true,
-          'use-pipe-transform-interface': true,
-        };
-      }
-      return json;
-    }),
-    updateJsonInTree(`${options.appProjectRoot}/tslint.json`, (json) => {
-      json.extends = `${offsetFromRoot(options.appProjectRoot)}tslint.json`;
-      json.linterOptions = {
-        exclude: ['!**/*'],
-      };
-      return json;
-    }),
-  ]);
-}
-
 function addSchematicFiles(
   appProjectRoot: string,
   options: NormalizedSchema
@@ -479,30 +440,23 @@ function updateProject(options: NormalizedSchema): Rule {
           options.name,
           options.appProjectRoot
         );
+        delete fixedProject.schematics;
 
         delete fixedProject.architect.test;
 
-        if (options.linter === Linter.TsLint) {
-          fixedProject.architect.lint.options.tsConfig = fixedProject.architect.lint.options.tsConfig.filter(
-            (path) =>
-              path !==
-                join(normalize(options.appProjectRoot), 'tsconfig.spec.json') &&
-              path !==
-                join(normalize(options.appProjectRoot), 'e2e/tsconfig.json')
-          );
-          fixedProject.architect.lint.options.exclude.push(
-            '!' + join(normalize(options.appProjectRoot), '**/*')
-          );
-        }
+        // Ensure the outputs property comes after the builder for
+        // better readability.
+        const { builder, ...rest } = fixedProject.architect.build;
+        fixedProject.architect.build = {
+          builder,
+          outputs: ['{options.outputPath}'],
+          ...rest,
+        };
 
-        if (options.linter === Linter.EsLint) {
-          fixedProject.architect.lint.builder = '@nrwl/linter:eslint';
-          fixedProject.architect.lint.options.lintFilePatterns = [
-            `${options.appProjectRoot}/src/**/*.ts`,
-          ];
-          delete fixedProject.architect.lint.options.tsConfig;
-          delete fixedProject.architect.lint.options.exclude;
-          host.delete(`${options.appProjectRoot}/tslint.json`);
+        if (options.unitTestRunner === 'none') {
+          host.delete(
+            `${options.appProjectRoot}/src/app/app.component.spec.ts`
+          );
         }
 
         if (options.e2eTestRunner === 'none') {
@@ -521,12 +475,6 @@ function updateProject(options: NormalizedSchema): Rule {
               ...json.compilerOptions,
               outDir: `${offsetFromRoot(options.appProjectRoot)}dist/out-tsc`,
             },
-            exclude: options.enableIvy
-              ? undefined
-              : options.unitTestRunner === 'jest'
-              ? ['src/test-setup.ts', '**/*.spec.ts']
-              : ['src/test.ts', '**/*.spec.ts'],
-            include: options.enableIvy ? undefined : ['src/**/*.d.ts'],
           };
         }
       ),
@@ -656,20 +604,6 @@ function addEditorTsConfigReference(options: NormalizedSchema): Rule {
         return json;
       }
     ),
-    updateWorkspace((workspace) => {
-      const projectConfig = workspace.projects.get(options.name);
-      const lintTarget = projectConfig.targets.get('lint');
-
-      const isUsingTSLint =
-        lintTarget?.builder === '@angular-devkit/build-angular:tslint';
-
-      if (isUsingTSLint) {
-        const tsConfigs = lintTarget.options.tsConfig as string[];
-        tsConfigs.push(
-          join(normalize(options.appProjectRoot), 'tsconfig.editor.json')
-        );
-      }
-    }),
   ]);
 }
 
@@ -689,13 +623,31 @@ function addProxyConfig(options: NormalizedSchema): Rule {
           };
         }),
         updateWorkspaceInTree((json) => {
-          projectConfig.architect.serve.options.proxyConfig = pathToProxyFile;
+          projectConfig.architect.serve.options = {
+            ...projectConfig.architect.serve.options,
+            proxyConfig: pathToProxyFile,
+          };
           json.projects[options.name] = projectConfig;
           return json;
         }),
       ])(host, context);
     }
   };
+}
+
+function setApplicationStrictDefault(strict: boolean): Rule {
+  // set the default so future applications use it
+  // unless the user has previously set this value
+  return updateWorkspace((workspace) => {
+    workspace.extensions.schematics = workspace.extensions.schematics || {};
+
+    workspace.extensions.schematics['@nrwl/angular:application'] =
+      workspace.extensions.schematics['@nrwl/angular:application'] || {};
+
+    workspace.extensions.schematics['@nrwl/angular:application'].strict =
+      workspace.extensions.schematics['@nrwl/angular:application'].strict ??
+      strict;
+  });
 }
 
 function enableStrictTypeChecking(schema: Schema): Rule {
@@ -732,6 +684,7 @@ function enableStrictTypeChecking(schema: Schema): Rule {
         json.angularCompilerOptions = {
           ...(json.angularCompilerOptions ?? {}),
           strictInjectionParameters: true,
+          strictInputAccessModifiers: true,
           strictTemplates: true,
         };
 
@@ -741,21 +694,21 @@ function enableStrictTypeChecking(schema: Schema): Rule {
       rules.push(rule);
     }
 
-    // set the default so future applications will default to strict mode
-    // unless the user has previously set this to false by default
-    const updateAngularWorkspace = updateWorkspace((workspace) => {
-      workspace.extensions.schematics = workspace.extensions.schematics || {};
-
-      workspace.extensions.schematics['@nrwl/angular:application'] =
-        workspace.extensions.schematics['@nrwl/angular:application'] || {};
-
-      workspace.extensions.schematics['@nrwl/angular:application'].strict =
-        workspace.extensions.schematics['@nrwl/angular:application'].strict ??
-        options.strict;
-    });
-
-    return chain([...rules, updateAngularWorkspace]);
+    return chain(rules);
   };
+}
+
+function addProtractor(
+  options: NormalizedSchema,
+  e2eProjectRoot: string
+): Rule {
+  return chain([
+    externalSchematic('@schematics/angular', 'e2e', {
+      relatedAppName: options.name,
+      rootSelector: `${options.prefix}-root`,
+    }),
+    move(e2eProjectRoot, options.e2eProjectRoot),
+  ]);
 }
 
 export default function (schema: Schema): Rule {
@@ -774,16 +727,10 @@ export default function (schema: Schema): Rule {
       : `${options.name}/e2e`;
 
     return chain([
-      init({
+      initSchematic({
         ...options,
         skipFormat: true,
       }),
-      // TODO: Remove this after Angular 10.1.0
-      updateJsonInTree('tsconfig.json', () => ({
-        files: [],
-        include: [],
-        references: [],
-      })),
       externalSchematic('@schematics/angular', 'application', {
         name: options.name,
         inlineStyle: options.inlineStyle,
@@ -792,18 +739,13 @@ export default function (schema: Schema): Rule {
         skipTests: options.skipTests,
         style: options.style,
         viewEncapsulation: options.viewEncapsulation,
-        enableIvy: options.enableIvy,
         routing: false,
         skipInstall: true,
         skipPackageJson: false,
       }),
-      // TODO: Remove this after Angular 10.1.0
-      (host) => {
-        host.delete('tsconfig.json');
-      },
       addSchematicFiles(appProjectRoot, options),
       options.e2eTestRunner === 'protractor'
-        ? move(e2eProjectRoot, options.e2eProjectRoot)
+        ? addProtractor(options, e2eProjectRoot)
         : removeE2e(options, e2eProjectRoot),
       options.e2eTestRunner === 'protractor'
         ? updateE2eProject(options)
@@ -812,18 +754,16 @@ export default function (schema: Schema): Rule {
       updateProject(options),
       updateComponentTemplate(options),
       updateComponentStyles(options),
-      updateComponentSpec(options),
+      options.unitTestRunner !== 'none' ? updateComponentSpec(options) : noop(),
       options.routing ? addRouterRootConfiguration(options) : noop(),
-      addLintFiles(options.appProjectRoot, options.linter, {
-        onlyGlobal: options.linter === Linter.TsLint, // local lint files are added differently when tslint
-      }),
-      options.linter === 'tslint' ? updateTsLintConfig(options) : noop(),
+      options.linter === Linter.EsLint ? addLinting(options) : noop(),
       options.unitTestRunner === 'jest'
         ? externalSchematic('@nrwl/jest', 'jest-project', {
             project: options.name,
             supportTsx: false,
             skipSerializers: false,
             setupFile: 'angular',
+            skipFormat: options.skipFormat,
           })
         : noop(),
       options.unitTestRunner === 'karma'
@@ -837,22 +777,35 @@ export default function (schema: Schema): Rule {
             directory: options.directory,
             project: options.name,
             linter: options.linter,
+            skipFormat: options.skipFormat,
           })
         : noop(),
       addEditorTsConfigReference(options),
       options.backendProject ? addProxyConfig(options) : noop(),
-      options.strict ? enableStrictTypeChecking(options) : noop(),
+      options.strict
+        ? enableStrictTypeChecking(options)
+        : setApplicationStrictDefault(false),
       formatFiles(options),
     ])(host, context);
   };
 }
 
+const addLinting = (options: NormalizedSchema) => () => {
+  return chain([
+    schematic('add-linting', {
+      projectName: options.name,
+      projectRoot: options.appProjectRoot,
+      prefix: options.prefix,
+    }),
+  ]);
+};
+
 function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const appDirectory = options.directory
-    ? `${toFileName(options.directory)}/${toFileName(options.name)}`
-    : toFileName(options.name);
+    ? `${names(options.directory).fileName}/${names(options.name).fileName}`
+    : names(options.name).fileName;
 
-  let e2eProjectName = `${toFileName(options.name)}-e2e`;
+  let e2eProjectName = `${names(options.name).fileName}-e2e`;
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
   if (options.e2eTestRunner !== 'cypress') {
     e2eProjectName = `${appProjectName}-e2e`;
@@ -868,7 +821,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const defaultPrefix = getNpmScope(host);
   return {
     ...options,
-    prefix: options.prefix ? options.prefix : defaultPrefix,
+    prefix: options.prefix ?? defaultPrefix,
     name: appProjectName,
     appProjectRoot,
     e2eProjectRoot,
@@ -876,3 +829,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     parsedTags,
   };
 }
+
+export const applicationGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/angular',
+  'application'
+);

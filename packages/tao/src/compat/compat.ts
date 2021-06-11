@@ -8,13 +8,6 @@ if (!patched) {
   Module.prototype.require = function () {
     const result = originalRequire.apply(this, arguments);
     if (arguments[0].startsWith('@angular-devkit/core')) {
-      const Workspace = originalRequire.apply(this, [
-        `@angular-devkit/core/src/experimental/workspace`,
-      ]).Workspace;
-      Workspace._workspaceFileNames = [
-        'workspace.json',
-        ...Workspace._workspaceFileNames,
-      ];
       const core = originalRequire.apply(this, [
         `@angular-devkit/core/src/workspace/core`,
       ]);
