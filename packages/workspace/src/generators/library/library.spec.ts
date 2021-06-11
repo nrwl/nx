@@ -239,9 +239,9 @@ describe('lib', () => {
         directory: 'myDir',
       });
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
-      expect(
-        tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']
-      ).toEqual(['libs/my-dir/my-lib/src/index.ts']);
+      expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
+        ['libs/my-dir/my-lib/src/index.ts']
+      );
       expect(
         tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
       ).toBeUndefined();

@@ -65,74 +65,62 @@ export const oceanGraph: ProjectGraphCache = {
         tags: [],
         files: [
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/.eslintrc.json',
+            file: 'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/.eslintrc.json',
             hash: '48d6da8e18917b8bde09f1d589f12a50c3349721',
             ext: '.json',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/jest.config.js',
+            file: 'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/jest.config.js',
             hash: '24d3e4fc4982da74e5af3238ffdfddd8bb09b724',
             ext: '.js',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/README.md',
+            file: 'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/README.md',
             hash: 'fd9858b65eb5722c86a0f9922adc3ed4f917a720',
             ext: '.md',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/src/index.ts',
+            file: 'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/src/index.ts',
             hash: '0e4e1c84e1038fc74a788818ad27b74087cb8af0',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/src/lib/nx-cloud-community-on-public.module.ts',
+            file: 'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/src/lib/nx-cloud-community-on-public.module.ts',
             hash: '2db504dc62712fcc7383c839f0ac2baaaca5d0eb',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/src/lib/private-workspace/private-workspace.component.html',
+            file: 'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/src/lib/private-workspace/private-workspace.component.html',
             hash: '36c12a9aecae10cfc66a231121a445ca4b071422',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/src/lib/private-workspace/private-workspace.component.scss',
+            file: 'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/src/lib/private-workspace/private-workspace.component.scss',
             hash: 'bc50af8444b362654c606e1119d7baaed0bf05df',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/src/lib/private-workspace/private-workspace.component.ts',
+            file: 'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/src/lib/private-workspace/private-workspace.component.ts',
             hash: '249fec8d4367e9d4f4e755d322ef30ad04d2c32c',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/src/test-setup.ts',
+            file: 'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/src/test-setup.ts',
             hash: '8d88704e8ff09145a6310d3df98f124042268bfe',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/tsconfig.json',
+            file: 'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/tsconfig.json',
             hash: '26b7b4afd192ea6de9e231782d05a8f03f80627b',
             ext: '.json',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/tsconfig.lib.json',
+            file: 'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/tsconfig.lib.json',
             hash: 'f559902363bb40e006af3bc37dca6b5efc58e82e',
             ext: '.json',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/tsconfig.spec.json',
+            file: 'libs/nx-cloud/private-cloud/feature-community-on-public-cloud/tsconfig.spec.json',
             hash: 'aed68bc6bf86609a7a4f0fdf5a562265cd90e452',
             ext: '.json',
           },
@@ -163,14 +151,12 @@ export const oceanGraph: ProjectGraphCache = {
         tags: [],
         files: [
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-installation/.eslintrc.json',
+            file: 'libs/nx-cloud/private-cloud/feature-installation/.eslintrc.json',
             hash: '158269b33116749bd0fd653a9cf04be9905bc4fa',
             ext: '.json',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-installation/jest.config.js',
+            file: 'libs/nx-cloud/private-cloud/feature-installation/jest.config.js',
             hash: '3e0cdda32785212db1262aca64509d8eeb8859ff',
             ext: '.js',
           },
@@ -180,56 +166,47 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.md',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-installation/src/index.ts',
+            file: 'libs/nx-cloud/private-cloud/feature-installation/src/index.ts',
             hash: '6927083d9c382c662e32ac14733e7feb500d3cc2',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-installation/src/lib/installation-information/installation-information.component.html',
+            file: 'libs/nx-cloud/private-cloud/feature-installation/src/lib/installation-information/installation-information.component.html',
             hash: '1b07aa5b199905599f08752ffd90f735dbd2471a',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-installation/src/lib/installation-information/installation-information.component.scss',
+            file: 'libs/nx-cloud/private-cloud/feature-installation/src/lib/installation-information/installation-information.component.scss',
             hash: '0b5060a39cc8ea48a7988e2fdee8b625987df032',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-installation/src/lib/installation-information/installation-information.component.ts',
+            file: 'libs/nx-cloud/private-cloud/feature-installation/src/lib/installation-information/installation-information.component.ts',
             hash: '313f29ad667f2aba195a13573b46d633579cff5c',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-installation/src/lib/nx-cloud-installation.module.ts',
+            file: 'libs/nx-cloud/private-cloud/feature-installation/src/lib/nx-cloud-installation.module.ts',
             hash: '59932622aa1e912e6acbd4176b5f3be4b1d7fa7e',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-installation/src/test-setup.ts',
+            file: 'libs/nx-cloud/private-cloud/feature-installation/src/test-setup.ts',
             hash: '8d88704e8ff09145a6310d3df98f124042268bfe',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-installation/tsconfig.json',
+            file: 'libs/nx-cloud/private-cloud/feature-installation/tsconfig.json',
             hash: '26b7b4afd192ea6de9e231782d05a8f03f80627b',
             ext: '.json',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-installation/tsconfig.lib.json',
+            file: 'libs/nx-cloud/private-cloud/feature-installation/tsconfig.lib.json',
             hash: 'f559902363bb40e006af3bc37dca6b5efc58e82e',
             ext: '.json',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-installation/tsconfig.spec.json',
+            file: 'libs/nx-cloud/private-cloud/feature-installation/tsconfig.spec.json',
             hash: 'aed68bc6bf86609a7a4f0fdf5a562265cd90e452',
             ext: '.json',
           },
@@ -264,14 +241,12 @@ export const oceanGraph: ProjectGraphCache = {
         tags: [],
         files: [
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-instructions/ng-package.json',
+            file: 'libs/nx-cloud/private-cloud/feature-instructions/ng-package.json',
             hash: 'd91328f4120e341915551ae2dbbc03a318ae9f3e',
             ext: '.json',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-instructions/package.json',
+            file: 'libs/nx-cloud/private-cloud/feature-instructions/package.json',
             hash: '33e4755260f77368a30dc99832f9ecc90c69f4d9',
             ext: '.json',
           },
@@ -281,50 +256,42 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.md',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-instructions/src/index.ts',
+            file: 'libs/nx-cloud/private-cloud/feature-instructions/src/index.ts',
             hash: 'b2cc43fd98ed11642e0958653ce82a26de37f003',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-instructions/src/lib/nx-cloud-private-cloud-feature-nx-private-cloud-instructions.module.ts',
+            file: 'libs/nx-cloud/private-cloud/feature-instructions/src/lib/nx-cloud-private-cloud-feature-nx-private-cloud-instructions.module.ts',
             hash: '5dbdbd3ac03547aa281bcb6d70ec73f1273ae3ff',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-instructions/src/lib/private-cloud-instructions/private-cloud-instructions.component.html',
+            file: 'libs/nx-cloud/private-cloud/feature-instructions/src/lib/private-cloud-instructions/private-cloud-instructions.component.html',
             hash: '17918a19dfd16d08021af67f39ce87d3349e51fa',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-instructions/src/lib/private-cloud-instructions/private-cloud-instructions.component.scss',
+            file: 'libs/nx-cloud/private-cloud/feature-instructions/src/lib/private-cloud-instructions/private-cloud-instructions.component.scss',
             hash: '41c03fea86a64651fa4fbd2d817eef319b99e616',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-instructions/src/lib/private-cloud-instructions/private-cloud-instructions.component.ts',
+            file: 'libs/nx-cloud/private-cloud/feature-instructions/src/lib/private-cloud-instructions/private-cloud-instructions.component.ts',
             hash: '6a3c21135e9ce80fad4326779c49eeb86157c6c2',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-instructions/tsconfig.json',
+            file: 'libs/nx-cloud/private-cloud/feature-instructions/tsconfig.json',
             hash: '65a461fddeba298723b1b3c07334592d75afa3a1',
             ext: '.json',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-instructions/tsconfig.lib.json',
+            file: 'libs/nx-cloud/private-cloud/feature-instructions/tsconfig.lib.json',
             hash: '7f81390acf4387edec605ef9dfc25784396857bb',
             ext: '.json',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-instructions/tsconfig.lib.prod.json',
+            file: 'libs/nx-cloud/private-cloud/feature-instructions/tsconfig.lib.prod.json',
             hash: 'a05c793059b642b25820e31a96a22c0fa1330e2c',
             ext: '.json',
           },
@@ -373,8 +340,7 @@ export const oceanGraph: ProjectGraphCache = {
         tags: [],
         files: [
           {
-            file:
-              'libs/nx-cloud/reference/feature-invite-members/jest.config.js',
+            file: 'libs/nx-cloud/reference/feature-invite-members/jest.config.js',
             hash: 'ca1c4fb466dccb89a89158dfd7e7138e29d89c72',
             ext: '.js',
           },
@@ -389,74 +355,62 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-invite-members/src/lib/accept-invite/accept-invite.component.ts',
+            file: 'libs/nx-cloud/reference/feature-invite-members/src/lib/accept-invite/accept-invite.component.ts',
             hash: '33b33aedc0d5b5eb07d61ab0e8bba1bc85a7214f',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-invite-members/src/lib/add-member-modal/add-member-modal.component.html',
+            file: 'libs/nx-cloud/reference/feature-invite-members/src/lib/add-member-modal/add-member-modal.component.html',
             hash: '01391f36e14a40785db2a54d8c33c93e6d77a0a5',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-invite-members/src/lib/add-member-modal/add-member-modal.component.scss',
+            file: 'libs/nx-cloud/reference/feature-invite-members/src/lib/add-member-modal/add-member-modal.component.scss',
             hash: 'c7acb4bf6e7f6dd478cc87d9fc5a9ee93fd12013',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-invite-members/src/lib/add-member-modal/add-member-modal.component.ts',
+            file: 'libs/nx-cloud/reference/feature-invite-members/src/lib/add-member-modal/add-member-modal.component.ts',
             hash: '4c16027a8b50a055380d6b2d3892b986d253f7cf',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-invite-members/src/lib/invite-member-button/invite-member-button.component.html',
+            file: 'libs/nx-cloud/reference/feature-invite-members/src/lib/invite-member-button/invite-member-button.component.html',
             hash: '09acafd7f5a34084454762583d65ec2fce4afeb1',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-invite-members/src/lib/invite-member-button/invite-member-button.component.scss',
+            file: 'libs/nx-cloud/reference/feature-invite-members/src/lib/invite-member-button/invite-member-button.component.scss',
             hash: 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-invite-members/src/lib/invite-member-button/invite-member-button.component.ts',
+            file: 'libs/nx-cloud/reference/feature-invite-members/src/lib/invite-member-button/invite-member-button.component.ts',
             hash: '133398786cd8564aea53d1945a3eb6fafe9f5a75',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-invite-members/src/lib/nx-cloud-reference-feature-invite-members.module.ts',
+            file: 'libs/nx-cloud/reference/feature-invite-members/src/lib/nx-cloud-reference-feature-invite-members.module.ts',
             hash: '218cbacc4ffd46909dbac64a10a7d1e2d7273a13',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-invite-members/src/test-setup.ts',
+            file: 'libs/nx-cloud/reference/feature-invite-members/src/test-setup.ts',
             hash: '8d88704e8ff09145a6310d3df98f124042268bfe',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-invite-members/tsconfig.json',
+            file: 'libs/nx-cloud/reference/feature-invite-members/tsconfig.json',
             hash: '26b7b4afd192ea6de9e231782d05a8f03f80627b',
             ext: '.json',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-invite-members/tsconfig.lib.json',
+            file: 'libs/nx-cloud/reference/feature-invite-members/tsconfig.lib.json',
             hash: '290e7bc9a4e40a6a9a2c218090e8973fc9375730',
             ext: '.json',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-invite-members/tsconfig.spec.json',
+            file: 'libs/nx-cloud/reference/feature-invite-members/tsconfig.spec.json',
             hash: 'aed68bc6bf86609a7a4f0fdf5a562265cd90e452',
             ext: '.json',
           },
@@ -505,8 +459,7 @@ export const oceanGraph: ProjectGraphCache = {
         tags: ['nx-cloud', 'type:data-access'],
         files: [
           {
-            file:
-              'libs/nx-cloud/reference/data-access-workspace/jest.config.js',
+            file: 'libs/nx-cloud/reference/data-access-workspace/jest.config.js',
             hash: 'b99f8bd1f7957d40ac5a9ccf7b952b6fec049134',
             ext: '.js',
           },
@@ -516,68 +469,57 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/data-access-workspace/src/lib/current-workspace.service.ts',
+            file: 'libs/nx-cloud/reference/data-access-workspace/src/lib/current-workspace.service.ts',
             hash: 'f32aadd43619b16e23eb94da7c481504f5eb30f1',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/data-access-workspace/src/lib/data-access-workspace.module.ts',
+            file: 'libs/nx-cloud/reference/data-access-workspace/src/lib/data-access-workspace.module.ts',
             hash: '59833cebc90a541b44f80a556d47dcfabc7105fa',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/data-access-workspace/src/lib/models/aggregation-job-data.ts',
+            file: 'libs/nx-cloud/reference/data-access-workspace/src/lib/models/aggregation-job-data.ts',
             hash: 'c98a806f999605a49385afd1b484bf1af0427c6f',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/data-access-workspace/src/lib/models/project-usage-data.ts',
+            file: 'libs/nx-cloud/reference/data-access-workspace/src/lib/models/project-usage-data.ts',
             hash: '8cee8feaa5e2f3a0d2f19caf02e04583447cc05f',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/data-access-workspace/src/lib/models/run-page.ts',
+            file: 'libs/nx-cloud/reference/data-access-workspace/src/lib/models/run-page.ts',
             hash: '877d2e195cdbaf4dd8a43f155fa0b1177512cedb',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/data-access-workspace/src/lib/models/usage-period.ts',
+            file: 'libs/nx-cloud/reference/data-access-workspace/src/lib/models/usage-period.ts',
             hash: '096a33c18eb329616780a2cdc93a288971070d3f',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/data-access-workspace/src/lib/models/usage.ts',
+            file: 'libs/nx-cloud/reference/data-access-workspace/src/lib/models/usage.ts',
             hash: 'e484a11525e41f69683e86c4304e2e6431fb67ad',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/data-access-workspace/src/lib/models/workspace.interface.ts',
+            file: 'libs/nx-cloud/reference/data-access-workspace/src/lib/models/workspace.interface.ts',
             hash: 'b8ba214a10d0e5dd422a2ecdc43885869dacc79f',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/data-access-workspace/src/lib/run-page.service.ts',
+            file: 'libs/nx-cloud/reference/data-access-workspace/src/lib/run-page.service.ts',
             hash: 'b99c7f78e32f300d8a49aaf751f61fd0e7d4bbf2',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/data-access-workspace/src/lib/usage.service.ts',
+            file: 'libs/nx-cloud/reference/data-access-workspace/src/lib/usage.service.ts',
             hash: 'b57189a77690040be1b59f74aaf93040fc251882',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/data-access-workspace/src/test-setup.ts',
+            file: 'libs/nx-cloud/reference/data-access-workspace/src/test-setup.ts',
             hash: '8d88704e8ff09145a6310d3df98f124042268bfe',
             ext: '.ts',
           },
@@ -587,14 +529,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.json',
           },
           {
-            file:
-              'libs/nx-cloud/reference/data-access-workspace/tsconfig.lib.json',
+            file: 'libs/nx-cloud/reference/data-access-workspace/tsconfig.lib.json',
             hash: '30c861db6fdc5f5c9c83c11d39b7fceab815f9a6',
             ext: '.json',
           },
           {
-            file:
-              'libs/nx-cloud/reference/data-access-workspace/tsconfig.spec.json',
+            file: 'libs/nx-cloud/reference/data-access-workspace/tsconfig.spec.json',
             hash: 'aed68bc6bf86609a7a4f0fdf5a562265cd90e452',
             ext: '.json',
           },
@@ -658,92 +598,77 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-access-token/src/lib/confirm-delete-dialog/confirm-delete-dialog.component.html',
+            file: 'libs/nx-cloud/reference/feature-access-token/src/lib/confirm-delete-dialog/confirm-delete-dialog.component.html',
             hash: 'b16d267df6ef38c5b4c8a35defb40650f85f8024',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-access-token/src/lib/confirm-delete-dialog/confirm-delete-dialog.component.scss',
+            file: 'libs/nx-cloud/reference/feature-access-token/src/lib/confirm-delete-dialog/confirm-delete-dialog.component.scss',
             hash: '1bc886ad66e96c018e9530583019b663a908f97f',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-access-token/src/lib/confirm-delete-dialog/confirm-delete-dialog.component.ts',
+            file: 'libs/nx-cloud/reference/feature-access-token/src/lib/confirm-delete-dialog/confirm-delete-dialog.component.ts',
             hash: '06d79cfffd456242db265f8405aac0d427f00005',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-access-token/src/lib/generate-new-token-dialog/generate-new-token-dialog.component.html',
+            file: 'libs/nx-cloud/reference/feature-access-token/src/lib/generate-new-token-dialog/generate-new-token-dialog.component.html',
             hash: '5988b05e2f9b632dd43fa1f83d44f90934b6abe3',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-access-token/src/lib/generate-new-token-dialog/generate-new-token-dialog.component.scss',
+            file: 'libs/nx-cloud/reference/feature-access-token/src/lib/generate-new-token-dialog/generate-new-token-dialog.component.scss',
             hash: '79d81e4abccf85ba01d8021c370965cb0161a04e',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-access-token/src/lib/generate-new-token-dialog/generate-new-token-dialog.component.ts',
+            file: 'libs/nx-cloud/reference/feature-access-token/src/lib/generate-new-token-dialog/generate-new-token-dialog.component.ts',
             hash: '410639cf1024666bce10621ea5bef9343ea35115',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-access-token/src/lib/generate-new-token-dialog/package.json',
+            file: 'libs/nx-cloud/reference/feature-access-token/src/lib/generate-new-token-dialog/package.json',
             hash: '64b00b26de88aed4e5328a47c06321cfc821d6d8',
             ext: '.json',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-access-token/src/lib/nx-cloud-feature-access-token.module.ts',
+            file: 'libs/nx-cloud/reference/feature-access-token/src/lib/nx-cloud-feature-access-token.module.ts',
             hash: '8495b6590bbbfa0a839a8425ad86fee22a898e3b',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-access-token/src/lib/token-setup-instructions-dialog/token-setup-instructions-dialog.component.html',
+            file: 'libs/nx-cloud/reference/feature-access-token/src/lib/token-setup-instructions-dialog/token-setup-instructions-dialog.component.html',
             hash: '9a241c9bd71b9a4d55a57c2613afd2cea35cb831',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-access-token/src/lib/token-setup-instructions-dialog/token-setup-instructions-dialog.component.scss',
+            file: 'libs/nx-cloud/reference/feature-access-token/src/lib/token-setup-instructions-dialog/token-setup-instructions-dialog.component.scss',
             hash: '678b50290c5706eb408c7c210a0bfccdbb550758',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-access-token/src/lib/token-setup-instructions-dialog/token-setup-instructions-dialog.component.ts',
+            file: 'libs/nx-cloud/reference/feature-access-token/src/lib/token-setup-instructions-dialog/token-setup-instructions-dialog.component.ts',
             hash: '56fa427c4c14b56c2b9db4b65afce1aa9349385f',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-access-token/src/lib/tokens-list/tokens-list.component.html',
+            file: 'libs/nx-cloud/reference/feature-access-token/src/lib/tokens-list/tokens-list.component.html',
             hash: '8c54faa1f9394c0ceab05060df550bc898ed2fa8',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-access-token/src/lib/tokens-list/tokens-list.component.scss',
+            file: 'libs/nx-cloud/reference/feature-access-token/src/lib/tokens-list/tokens-list.component.scss',
             hash: 'dc2dcad5bae2518025d1f160b2c06f624bdfeacf',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-access-token/src/lib/tokens-list/tokens-list.component.ts',
+            file: 'libs/nx-cloud/reference/feature-access-token/src/lib/tokens-list/tokens-list.component.ts',
             hash: '0a21c947af91edb3a037e876640b82ae7fe66f9a',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-access-token/src/test-setup.ts',
+            file: 'libs/nx-cloud/reference/feature-access-token/src/test-setup.ts',
             hash: '8d88704e8ff09145a6310d3df98f124042268bfe',
             ext: '.ts',
           },
@@ -753,14 +678,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.json',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-access-token/tsconfig.lib.json',
+            file: 'libs/nx-cloud/reference/feature-access-token/tsconfig.lib.json',
             hash: '30c861db6fdc5f5c9c83c11d39b7fceab815f9a6',
             ext: '.json',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-access-token/tsconfig.spec.json',
+            file: 'libs/nx-cloud/reference/feature-access-token/tsconfig.spec.json',
             hash: 'aed68bc6bf86609a7a4f0fdf5a562265cd90e452',
             ext: '.json',
           },
@@ -827,32 +750,27 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/util-org-membership/src/lib/is-admin.pipe.ts',
+            file: 'libs/nx-cloud/reference/util-org-membership/src/lib/is-admin.pipe.ts',
             hash: '00ae1b478480ab69495060019c5e4251e5139308',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/util-org-membership/src/lib/org-membership.module.ts',
+            file: 'libs/nx-cloud/reference/util-org-membership/src/lib/org-membership.module.ts',
             hash: '4cc25bb114fcda450555115cbb131c5eb7a8f18b',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/util-org-membership/src/lib/org-membership.service.ts',
+            file: 'libs/nx-cloud/reference/util-org-membership/src/lib/org-membership.service.ts',
             hash: '44e52ee0f79b0ae6e3c86ef4c2a987e9eda00075',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/util-org-membership/src/lib/org-route.guard.ts',
+            file: 'libs/nx-cloud/reference/util-org-membership/src/lib/org-route.guard.ts',
             hash: 'eacb4fcbb51237211f50e8b444c44e675f43a605',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/util-org-membership/src/test-setup.ts',
+            file: 'libs/nx-cloud/reference/util-org-membership/src/test-setup.ts',
             hash: '8d88704e8ff09145a6310d3df98f124042268bfe',
             ext: '.ts',
           },
@@ -862,14 +780,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.json',
           },
           {
-            file:
-              'libs/nx-cloud/reference/util-org-membership/tsconfig.lib.json',
+            file: 'libs/nx-cloud/reference/util-org-membership/tsconfig.lib.json',
             hash: 'feb76e1306e58f9278f240b994d3de132ff6d85d',
             ext: '.json',
           },
           {
-            file:
-              'libs/nx-cloud/reference/util-org-membership/tsconfig.spec.json',
+            file: 'libs/nx-cloud/reference/util-org-membership/tsconfig.spec.json',
             hash: 'aed68bc6bf86609a7a4f0fdf5a562265cd90e452',
             ext: '.json',
           },
@@ -932,32 +848,27 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-landing/src/lib/nx-cloud-feature-private-cloud-landing.module.ts',
+            file: 'libs/nx-cloud/private-cloud/feature-landing/src/lib/nx-cloud-feature-private-cloud-landing.module.ts',
             hash: 'f708923ef29dcd78586b1500d678a93a9edf6544',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-landing/src/lib/private-cloud-landing/private-cloud-landing.component.html',
+            file: 'libs/nx-cloud/private-cloud/feature-landing/src/lib/private-cloud-landing/private-cloud-landing.component.html',
             hash: '445c41aaa0d2eaadf2e467b12e456e45fcbbcca8',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-landing/src/lib/private-cloud-landing/private-cloud-landing.component.scss',
+            file: 'libs/nx-cloud/private-cloud/feature-landing/src/lib/private-cloud-landing/private-cloud-landing.component.scss',
             hash: '700cc22e01176162176db14ebd0b4df2b247c941',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-landing/src/lib/private-cloud-landing/private-cloud-landing.component.ts',
+            file: 'libs/nx-cloud/private-cloud/feature-landing/src/lib/private-cloud-landing/private-cloud-landing.component.ts',
             hash: '65b8b76028692d98949174a38d51939ea720e462',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-landing/src/test-setup.ts',
+            file: 'libs/nx-cloud/private-cloud/feature-landing/src/test-setup.ts',
             hash: '8d88704e8ff09145a6310d3df98f124042268bfe',
             ext: '.ts',
           },
@@ -967,14 +878,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.json',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-landing/tsconfig.lib.json',
+            file: 'libs/nx-cloud/private-cloud/feature-landing/tsconfig.lib.json',
             hash: 'f559902363bb40e006af3bc37dca6b5efc58e82e',
             ext: '.json',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-landing/tsconfig.spec.json',
+            file: 'libs/nx-cloud/private-cloud/feature-landing/tsconfig.spec.json',
             hash: 'aed68bc6bf86609a7a4f0fdf5a562265cd90e452',
             ext: '.json',
           },
@@ -1036,74 +945,62 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-style-guide/src/lib/basics/basics.component.html',
+            file: 'libs/nrwlio-site/pages/feature-style-guide/src/lib/basics/basics.component.html',
             hash: '9e817cef9db6a3ba8b8fab2139257dad7bb1d75c',
             ext: '.html',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-style-guide/src/lib/basics/basics.component.scss',
+            file: 'libs/nrwlio-site/pages/feature-style-guide/src/lib/basics/basics.component.scss',
             hash: '1693bbc9ab3e780697380bb4afc51edcdfaae219',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-style-guide/src/lib/basics/basics.component.ts',
+            file: 'libs/nrwlio-site/pages/feature-style-guide/src/lib/basics/basics.component.ts',
             hash: 'c56c95c0bb77d104b538086d44d8f4011b6d56bb',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-style-guide/src/lib/contents/contents.component.html',
+            file: 'libs/nrwlio-site/pages/feature-style-guide/src/lib/contents/contents.component.html',
             hash: '64d5a07d6f8fc3b59d3d358d20d72d280a25489b',
             ext: '.html',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-style-guide/src/lib/contents/contents.component.scss',
+            file: 'libs/nrwlio-site/pages/feature-style-guide/src/lib/contents/contents.component.scss',
             hash: 'd582ae210860576104972688577526c6aa4ea174',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-style-guide/src/lib/contents/contents.component.ts',
+            file: 'libs/nrwlio-site/pages/feature-style-guide/src/lib/contents/contents.component.ts',
             hash: 'd707766a804a507681acb94facdfdcff1dc06595',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-style-guide/src/lib/dynamic-layout/dynamic-layout.component.ts',
+            file: 'libs/nrwlio-site/pages/feature-style-guide/src/lib/dynamic-layout/dynamic-layout.component.ts',
             hash: '67b108980c39127df4a2a46212fc0af4bf78e6c9',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-style-guide/src/lib/feature-style-guide.module.ts',
+            file: 'libs/nrwlio-site/pages/feature-style-guide/src/lib/feature-style-guide.module.ts',
             hash: '08993fe59a385a31df400f5d3355c07918031c8a',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-style-guide/src/lib/shell/shell.component.html',
+            file: 'libs/nrwlio-site/pages/feature-style-guide/src/lib/shell/shell.component.html',
             hash: '70b045fd75d5ba24fc56ba0ebab8a8e3bcd38726',
             ext: '.html',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-style-guide/src/lib/shell/shell.component.scss',
+            file: 'libs/nrwlio-site/pages/feature-style-guide/src/lib/shell/shell.component.scss',
             hash: 'f4807e800f80ac0d3668add939c387659189bee5',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-style-guide/src/lib/shell/shell.component.ts',
+            file: 'libs/nrwlio-site/pages/feature-style-guide/src/lib/shell/shell.component.ts',
             hash: 'e344f47734e79e75546fa06a9cb658aad58f84b3',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-style-guide/src/test-setup.ts',
+            file: 'libs/nrwlio-site/pages/feature-style-guide/src/test-setup.ts',
             hash: '8d88704e8ff09145a6310d3df98f124042268bfe',
             ext: '.ts',
           },
@@ -1113,14 +1010,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.json',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-style-guide/tsconfig.lib.json',
+            file: 'libs/nrwlio-site/pages/feature-style-guide/tsconfig.lib.json',
             hash: 'ad83824e5f62f1e5ff2acd0960bde6bab3f87d66',
             ext: '.json',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-style-guide/tsconfig.spec.json',
+            file: 'libs/nrwlio-site/pages/feature-style-guide/tsconfig.spec.json',
             hash: 'aed68bc6bf86609a7a4f0fdf5a562265cd90e452',
             ext: '.json',
           },
@@ -1187,44 +1082,37 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-contact-us/src/lib/contact-us-query.service.ts',
+            file: 'libs/nrwlio-site/pages/feature-contact-us/src/lib/contact-us-query.service.ts',
             hash: '39a45dfd46b354c640181c8207aa0a036bcd8355',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-contact-us/src/lib/contact-us.model.ts',
+            file: 'libs/nrwlio-site/pages/feature-contact-us/src/lib/contact-us.model.ts',
             hash: '9548cda5608f5438c652d3a69677ba61537b430a',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-contact-us/src/lib/feature-contact-us-routing.module.ts',
+            file: 'libs/nrwlio-site/pages/feature-contact-us/src/lib/feature-contact-us-routing.module.ts',
             hash: '2e6e30be8ac3452ebb345ef2a3a740e8b505abef',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-contact-us/src/lib/feature-contact-us.module.ts',
+            file: 'libs/nrwlio-site/pages/feature-contact-us/src/lib/feature-contact-us.module.ts',
             hash: '3a919efb89c384678c99edc1ce53cbda0d60c886',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-contact-us/src/lib/shell/shell.component.html',
+            file: 'libs/nrwlio-site/pages/feature-contact-us/src/lib/shell/shell.component.html',
             hash: '90ad1702ef2005e73b4d57d7d495a872045500be',
             ext: '.html',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-contact-us/src/lib/shell/shell.component.scss',
+            file: 'libs/nrwlio-site/pages/feature-contact-us/src/lib/shell/shell.component.scss',
             hash: '167fba0f4a28d0508c3c0179f6020f0d9c517c71',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-contact-us/src/lib/shell/shell.component.ts',
+            file: 'libs/nrwlio-site/pages/feature-contact-us/src/lib/shell/shell.component.ts',
             hash: '8b90c7029122fd3b44940a931ef9ebaa1512c234',
             ext: '.ts',
           },
@@ -1244,8 +1132,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.json',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-contact-us/tsconfig.spec.json',
+            file: 'libs/nrwlio-site/pages/feature-contact-us/tsconfig.spec.json',
             hash: 'aed68bc6bf86609a7a4f0fdf5a562265cd90e452',
             ext: '.json',
           },
@@ -1309,284 +1196,237 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/aggregated-time-saved-graph/aggregated-time-saved-graph.component.html',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/aggregated-time-saved-graph/aggregated-time-saved-graph.component.html',
             hash: 'b13610d18808c799d4902815345c411aa070fe97',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/aggregated-time-saved-graph/aggregated-time-saved-graph.component.ts',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/aggregated-time-saved-graph/aggregated-time-saved-graph.component.ts',
             hash: '20ac037da3df6d424c3fe3e3f225a98697d7bd4e',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/aggregated-time-saved-graph/diagonal-stripes.component.html',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/aggregated-time-saved-graph/diagonal-stripes.component.html',
             hash: 'ed44b2119bb0cd3f0f8bb8922b5fe64be2a77516',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/aggregated-time-saved-graph/diagonal-stripes.component.ts',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/aggregated-time-saved-graph/diagonal-stripes.component.ts',
             hash: '0e47f8697224fc88d5eff32a72975a44c6926723',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting-chart/cache-reporting-chart.component.html',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting-chart/cache-reporting-chart.component.html',
             hash: 'c4b5f00aef5df0b9dc684a2aa58c4f4ffb46a290',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting-chart/cache-reporting-chart.component.scss',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting-chart/cache-reporting-chart.component.scss',
             hash: 'cf23f4c57503527b0538e9e40d1c82b3e1684936',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting-chart/cache-reporting-chart.component.ts',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting-chart/cache-reporting-chart.component.ts',
             hash: 'fec32cf0f404b9d781ceccfc89c0a4a774d2563d',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting-details/cache-reporting-details.component.html',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting-details/cache-reporting-details.component.html',
             hash: '96f4c0551172ad8a3d60953313ed785bd44fcd86',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting-details/cache-reporting-details.component.scss',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting-details/cache-reporting-details.component.scss',
             hash: 'fa0d569f9799b8f8cebd03b762fdb145a229139e',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting-details/cache-reporting-details.component.ts',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting-details/cache-reporting-details.component.ts',
             hash: '229668cdbbd1f1b7ff7ea4966fbb05a89adcd0c2',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting-troubleshooting/cache-reporting-troubleshooting.component.html',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting-troubleshooting/cache-reporting-troubleshooting.component.html',
             hash: 'a682cc9a4cb4db12582931defe944c7a3ece3f5d',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting-troubleshooting/cache-reporting-troubleshooting.component.scss',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting-troubleshooting/cache-reporting-troubleshooting.component.scss',
             hash: '0e27fd24b0e8a44370bac16086fe1d5ced086dd0',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting-troubleshooting/cache-reporting-troubleshooting.component.ts',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting-troubleshooting/cache-reporting-troubleshooting.component.ts',
             hash: '0430740e13146ece4c1023e320ec79e7326c4279',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting/cache-reporting.component.html',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting/cache-reporting.component.html',
             hash: '7673ee24553795e9b0fc8ce65b5b9376c51d3597',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting/cache-reporting.component.scss',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting/cache-reporting.component.scss',
             hash: '331700fdcc046d29b4dbdb969ec0caea46752746',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting/cache-reporting.component.ts',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/cache-reporting/cache-reporting.component.ts',
             hash: '9a914f31d2972012c026c03d6ec98a8bd00b058e',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/confirm-delete-dialog/confirm-delete-dialog.component.html',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/confirm-delete-dialog/confirm-delete-dialog.component.html',
             hash: 'd994250327eb38364b069cd840abc15dced946ab',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/confirm-delete-dialog/confirm-delete-dialog.component.scss',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/confirm-delete-dialog/confirm-delete-dialog.component.scss',
             hash: '1bc886ad66e96c018e9530583019b663a908f97f',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/confirm-delete-dialog/confirm-delete-dialog.component.ts',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/confirm-delete-dialog/confirm-delete-dialog.component.ts',
             hash: 'a20dff4f613daacdb40fb8d02c3f78847d345af7',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/feature-workspace.module.ts',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/feature-workspace.module.ts',
             hash: 'a215c4bdf69a8e1fb07da294659217766946c8a0',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/run-list-item/run-list-item.component.html',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/run-list-item/run-list-item.component.html',
             hash: '4665298449dc5538ff47b77602a8c39f23a3679b',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/run-list-item/run-list-item.component.scss',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/run-list-item/run-list-item.component.scss',
             hash: 'd43d28e2c7057421316734e6a2154369881a55d8',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/run-list-item/run-list-item.component.ts',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/run-list-item/run-list-item.component.ts',
             hash: '9ba28ae8891587c7e9e6b61f129c48694a335e84',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/run-list/run-list.component.html',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/run-list/run-list.component.html',
             hash: '136a1b5eb4ef9113eeaae42c3adb3e5d442fbd69',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/run-list/run-list.component.scss',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/run-list/run-list.component.scss',
             hash: '263821ea1e9a5023f168f1e1dfb116a0b3258a6c',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/run-list/run-list.component.ts',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/run-list/run-list.component.ts',
             hash: '1cae137c3a3e2b2ed60c434897fa6fc7ec443150',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/tokens-view/tokens-view.component.html',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/tokens-view/tokens-view.component.html',
             hash: '6e3b91e53b1e03ff7981ff7ec376f85d2ac15e8a',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/tokens-view/tokens-view.component.ts',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/tokens-view/tokens-view.component.ts',
             hash: 'eaea2e82b54a8bef68fc538fab2c16a307c73efe',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-edit/workspace-edit.component.html',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-edit/workspace-edit.component.html',
             hash: '67e19356de07269e435f83a7895f10de24624e1e',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-edit/workspace-edit.component.scss',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-edit/workspace-edit.component.scss',
             hash: '364b98a2fa1317745ff6723272965ded20d80f1c',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-edit/workspace-edit.component.ts',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-edit/workspace-edit.component.ts',
             hash: '96b6292687159371f49282e1b1014dc6a59eddaa',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-field-form/workspace-field-form.component.html',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-field-form/workspace-field-form.component.html',
             hash: 'fd15601e24cfb660b4b88a3bebfa5818430ea2f9',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-field-form/workspace-field-form.component.scss',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-field-form/workspace-field-form.component.scss',
             hash: 'd5d0d86fbbab0b50e0551e502dfdded847d31da8',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-field-form/workspace-field-form.component.ts',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-field-form/workspace-field-form.component.ts',
             hash: '41b39f0d1e1080b96031c20d220d08d0ac4d1c2b',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-header/workspace-header.component.html',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-header/workspace-header.component.html',
             hash: '843a8e6b3301e27f3c76d665db3543034a4be045',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-header/workspace-header.component.scss',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-header/workspace-header.component.scss',
             hash: 'ef156ff93dfa3d7c771b9bdad814a5c6eee84785',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-header/workspace-header.component.ts',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-header/workspace-header.component.ts',
             hash: '749cc4509cd6a2a76d5cb7bca946d104fd8d932d',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-landing/workspace-landing.component.html',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-landing/workspace-landing.component.html',
             hash: 'c6a51843563b567dd8e53d512c160d56fa5678a4',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-landing/workspace-landing.component.scss',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-landing/workspace-landing.component.scss',
             hash: 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-landing/workspace-landing.component.ts',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-landing/workspace-landing.component.ts',
             hash: '09d8f350eae7e417aa86e6b356c7af93afc68e56',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-route.guard.ts',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-route.guard.ts',
             hash: '92bd088c95da0f574518218ba8b2054fd3fd70b7',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-stats/workspace-stats.component.html',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-stats/workspace-stats.component.html',
             hash: '7d4385444e0535835bf0765f52fbf6d44960034e',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-stats/workspace-stats.component.scss',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-stats/workspace-stats.component.scss',
             hash: 'fc852f855d1a4f7bf0453d3c1c1854587074b075',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-stats/workspace-stats.component.ts',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-stats/workspace-stats.component.ts',
             hash: '106cb5f39b637a2e6c4a2dfa4dcf270ce403c6e9',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-view/workspace-view.component.html',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-view/workspace-view.component.html',
             hash: 'efd8cf8b10cc6588f4dcfdfba5b410901c7d9014',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-view/workspace-view.component.scss',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-view/workspace-view.component.scss',
             hash: 'e82c9cc5b402c46fe8bbd49c40a1344f173acf38',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-view/workspace-view.component.ts',
+            file: 'libs/nx-cloud/reference/feature-workspace/src/lib/workspace-view/workspace-view.component.ts',
             hash: '27f5c5a538668750ef59f22a71f41cd7e386a10c',
             ext: '.ts',
           },
@@ -1606,8 +1446,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.json',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-workspace/tsconfig.spec.json',
+            file: 'libs/nx-cloud/reference/feature-workspace/tsconfig.spec.json',
             hash: 'aed68bc6bf86609a7a4f0fdf5a562265cd90e452',
             ext: '.json',
           },
@@ -1666,26 +1505,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-nrwl-changelog/src/lib/changelog-graphql.interfaces.ts',
+            file: 'libs/platform/data-access-nrwl-changelog/src/lib/changelog-graphql.interfaces.ts',
             hash: '1193bfc8bb909e0435094e2ee8993a442d5c2675',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-nrwl-changelog/src/lib/changelog-graphql.service.ts',
+            file: 'libs/platform/data-access-nrwl-changelog/src/lib/changelog-graphql.service.ts',
             hash: '5844a5eda33b8e790fe0ea8d0a87b064d17b2e2b',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-nrwl-changelog/src/lib/nrwl-changelog.interfaces.ts',
+            file: 'libs/platform/data-access-nrwl-changelog/src/lib/nrwl-changelog.interfaces.ts',
             hash: '8f7945fd3aae7b0242959bedd792ee9deda9b4f3',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-nrwl-changelog/src/lib/platform-data-access-nrwl-changelog.module.ts',
+            file: 'libs/platform/data-access-nrwl-changelog/src/lib/platform-data-access-nrwl-changelog.module.ts',
             hash: 'bb698da808493372d26c6e6b2f0351bf5addd5ce',
             ext: '.ts',
           },
@@ -1772,44 +1607,37 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-make-ng-cli-faster/src/lib/faster-ng-cli/faster-ng-cli.component.html',
+            file: 'libs/nx-cloud/feature-make-ng-cli-faster/src/lib/faster-ng-cli/faster-ng-cli.component.html',
             hash: 'c24fe3ffc6c1b4c8c581ddc1149ae8cbf420e909',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/feature-make-ng-cli-faster/src/lib/faster-ng-cli/faster-ng-cli.component.scss',
+            file: 'libs/nx-cloud/feature-make-ng-cli-faster/src/lib/faster-ng-cli/faster-ng-cli.component.scss',
             hash: '2779189b3dcc5a5bea90080bfeb799e7a0914623',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/feature-make-ng-cli-faster/src/lib/faster-ng-cli/faster-ng-cli.component.ts',
+            file: 'libs/nx-cloud/feature-make-ng-cli-faster/src/lib/faster-ng-cli/faster-ng-cli.component.ts',
             hash: '7cc10b672da3a4083046a76a347a1d239fc41852',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-make-ng-cli-faster/src/lib/nx-cloud-feature-make-ng-cli-faster.module.ts',
+            file: 'libs/nx-cloud/feature-make-ng-cli-faster/src/lib/nx-cloud-feature-make-ng-cli-faster.module.ts',
             hash: 'e9d3d52630818837df2162940c13d893ea7a7cec',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-make-ng-cli-faster/src/lib/tabbed-articles/tabbed-articles.component.html',
+            file: 'libs/nx-cloud/feature-make-ng-cli-faster/src/lib/tabbed-articles/tabbed-articles.component.html',
             hash: '16c54c3faeced9106d6048fd537f2d970c197483',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/feature-make-ng-cli-faster/src/lib/tabbed-articles/tabbed-articles.component.scss',
+            file: 'libs/nx-cloud/feature-make-ng-cli-faster/src/lib/tabbed-articles/tabbed-articles.component.scss',
             hash: '744289b8e57eecafec394e4dec9156367c005186',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/feature-make-ng-cli-faster/src/lib/tabbed-articles/tabbed-articles.component.ts',
+            file: 'libs/nx-cloud/feature-make-ng-cli-faster/src/lib/tabbed-articles/tabbed-articles.component.ts',
             hash: '605e41dbaa908892180b154eae39633bfebce79c',
             ext: '.ts',
           },
@@ -1896,110 +1724,92 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-branches/src/lib/branch-model.ts',
+            file: 'libs/nx-cloud/reference/feature-branches/src/lib/branch-model.ts',
             hash: 'bb63c54d564faf1dc3f312c9985f7644abfc9f53',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-branches/src/lib/branch-not-found/branch-not-found-landing.component.ts',
+            file: 'libs/nx-cloud/reference/feature-branches/src/lib/branch-not-found/branch-not-found-landing.component.ts',
             hash: '2917414a3a996258806c28a72eeb5ae661ab72d7',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-branches/src/lib/branch-not-found/branch-not-found.component.ts',
+            file: 'libs/nx-cloud/reference/feature-branches/src/lib/branch-not-found/branch-not-found.component.ts',
             hash: 'bed38f3b5f29082f39522f67268b5c0635b38be1',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-branches/src/lib/branch-view-container/branch-view-container.component.html',
+            file: 'libs/nx-cloud/reference/feature-branches/src/lib/branch-view-container/branch-view-container.component.html',
             hash: '05a7cc38d5b49bf95374d15dbf5d580ee9cf3b78',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-branches/src/lib/branch-view-container/branch-view-container.component.scss',
+            file: 'libs/nx-cloud/reference/feature-branches/src/lib/branch-view-container/branch-view-container.component.scss',
             hash: '8e82db11f3d23f68a2fe0e17c11e55f3ad55f9cc',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-branches/src/lib/branch-view-container/branch-view-container.component.ts',
+            file: 'libs/nx-cloud/reference/feature-branches/src/lib/branch-view-container/branch-view-container.component.ts',
             hash: '42734e7162c05b0cf3967717168e75becea2243f',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-branches/src/lib/branch-view/branch-view.component.html',
+            file: 'libs/nx-cloud/reference/feature-branches/src/lib/branch-view/branch-view.component.html',
             hash: '2362036927a162e82c82107705971aad5f996105',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-branches/src/lib/branch-view/branch-view.component.scss',
+            file: 'libs/nx-cloud/reference/feature-branches/src/lib/branch-view/branch-view.component.scss',
             hash: '215e912260323a9bb5ce58c512a169b8cffc975c',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-branches/src/lib/branch-view/branch-view.component.ts',
+            file: 'libs/nx-cloud/reference/feature-branches/src/lib/branch-view/branch-view.component.ts',
             hash: '5a560c89f9ad680578596a5c5c45742dd505ef49',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-branches/src/lib/branch.guard.ts',
+            file: 'libs/nx-cloud/reference/feature-branches/src/lib/branch.guard.ts',
             hash: '6812fc18ca87fda4e9f8791b396673a8efbce4d3',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-branches/src/lib/branch.service.ts',
+            file: 'libs/nx-cloud/reference/feature-branches/src/lib/branch.service.ts',
             hash: '1154a73f2a470e85196b3fb63f3e5448f7fdffbe',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-branches/src/lib/nx-cloud-feature-branches.module.ts',
+            file: 'libs/nx-cloud/reference/feature-branches/src/lib/nx-cloud-feature-branches.module.ts',
             hash: '1b7711470ada6508b3f2ef3e331ed55224b27690',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-branches/src/lib/run-group-graph/run-group-graph.component.html',
+            file: 'libs/nx-cloud/reference/feature-branches/src/lib/run-group-graph/run-group-graph.component.html',
             hash: '4372c66552ec550ef81cc4a7cf642833652579d1',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-branches/src/lib/run-group-graph/run-group-graph.component.scss',
+            file: 'libs/nx-cloud/reference/feature-branches/src/lib/run-group-graph/run-group-graph.component.scss',
             hash: '79a8894fc7dae7a6fbcc03e487abfac779448bc2',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-branches/src/lib/run-group-graph/run-group-graph.component.ts',
+            file: 'libs/nx-cloud/reference/feature-branches/src/lib/run-group-graph/run-group-graph.component.ts',
             hash: 'ab09f7cf30e78003ae9826ad972517ba0cf725b3',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-branches/src/lib/run-group-view/run-group-view.component.html',
+            file: 'libs/nx-cloud/reference/feature-branches/src/lib/run-group-view/run-group-view.component.html',
             hash: '2977e50a1f62412a651df193dc82f9249e18d5c3',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-branches/src/lib/run-group-view/run-group-view.component.scss',
+            file: 'libs/nx-cloud/reference/feature-branches/src/lib/run-group-view/run-group-view.component.scss',
             hash: 'e158432f13fcc288f8bb0635648401b1250bed47',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-branches/src/lib/run-group-view/run-group-view.component.ts',
+            file: 'libs/nx-cloud/reference/feature-branches/src/lib/run-group-view/run-group-view.component.ts',
             hash: '09174148f73c14e14c66eb5b1afe5014fbb6729e',
             ext: '.ts',
           },
@@ -2081,32 +1891,27 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-home/src/lib/home-page/home-page.component.html',
+            file: 'libs/nx-cloud/private-cloud/feature-home/src/lib/home-page/home-page.component.html',
             hash: '6fb7e8152183d939ae854ec163b8fa801b0e8c18',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-home/src/lib/home-page/home-page.component.scss',
+            file: 'libs/nx-cloud/private-cloud/feature-home/src/lib/home-page/home-page.component.scss',
             hash: '35dea962c76b19daa28127ee94e7f49a28ebbb1c',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-home/src/lib/home-page/home-page.component.spec.ts',
+            file: 'libs/nx-cloud/private-cloud/feature-home/src/lib/home-page/home-page.component.spec.ts',
             hash: '3d55316820ac7e97e8ccd284483bbec74f7d2887',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-home/src/lib/home-page/home-page.component.ts',
+            file: 'libs/nx-cloud/private-cloud/feature-home/src/lib/home-page/home-page.component.ts',
             hash: 'afb80378159714669fa941c41647f4121526521d',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/private-cloud/feature-home/src/lib/nx-cloud-feature-home.module.ts',
+            file: 'libs/nx-cloud/private-cloud/feature-home/src/lib/nx-cloud-feature-home.module.ts',
             hash: '5d52dab877f5708f317b8718bfecb2edd3ac4891',
             ext: '.ts',
           },
@@ -2188,62 +1993,52 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-documentation/src/lib/doc-fetcher.service.ts',
+            file: 'libs/nx-docs-site/feature-documentation/src/lib/doc-fetcher.service.ts',
             hash: '73d06354e028638338ad0656d18383cd72bf781d',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-documentation/src/lib/document-viewer/document-viewer.component.ts',
+            file: 'libs/nx-docs-site/feature-documentation/src/lib/document-viewer/document-viewer.component.ts',
             hash: '0b194a1540164bda13dcbbc41d81a6da66e584fd',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-documentation/src/lib/feature-documentation.module.ts',
+            file: 'libs/nx-docs-site/feature-documentation/src/lib/feature-documentation.module.ts',
             hash: '5df1695a09cac99e38464017908428745822163d',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-documentation/src/lib/global-banner/global-banner.component.ts',
+            file: 'libs/nx-docs-site/feature-documentation/src/lib/global-banner/global-banner.component.ts',
             hash: 'e61a556587a85715beee2cea94c9dbfe897dbda5',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-documentation/src/lib/not-found/not-found.component.html',
+            file: 'libs/nx-docs-site/feature-documentation/src/lib/not-found/not-found.component.html',
             hash: '0bfd10af700fb77cdb41d264500521f0ddacf3c0',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-documentation/src/lib/not-found/not-found.component.scss',
+            file: 'libs/nx-docs-site/feature-documentation/src/lib/not-found/not-found.component.scss',
             hash: '2c8189837c0c97a932a6254b284e2dee03bcf65d',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-documentation/src/lib/not-found/not-found.component.ts',
+            file: 'libs/nx-docs-site/feature-documentation/src/lib/not-found/not-found.component.ts',
             hash: '1c0cf979ab825242c41539bdfd5a9374c78a0fb3',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-documentation/src/lib/shell/shell.component.ts',
+            file: 'libs/nx-docs-site/feature-documentation/src/lib/shell/shell.component.ts',
             hash: '2c5450bbd17af22e5c9240b9fdc4e1d61edb36b4',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-documentation/src/lib/table-of-contents/table-of-contents.component.ts',
+            file: 'libs/nx-docs-site/feature-documentation/src/lib/table-of-contents/table-of-contents.component.ts',
             hash: '4a76081eb9c4f98bb09e76af1f37cbb05c83201a',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-documentation/src/lib/tutorial/tutorial.component.ts',
+            file: 'libs/nx-docs-site/feature-documentation/src/lib/tutorial/tutorial.component.ts',
             hash: 'ddea506fac82e2349a2cf89190ed1e3216f1a785',
             ext: '.ts',
           },
@@ -2330,32 +2125,27 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-products/src/lib/feature-products-routing.module.ts',
+            file: 'libs/nrwlio-site/pages/feature-products/src/lib/feature-products-routing.module.ts',
             hash: '7792b292cccc62146648deb4adb5a53ced199a1d',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-products/src/lib/feature-products.module.ts',
+            file: 'libs/nrwlio-site/pages/feature-products/src/lib/feature-products.module.ts',
             hash: '3f287f05471b0c19dfdfaa64d6203945fc90a7cd',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-products/src/lib/products-query.service.ts',
+            file: 'libs/nrwlio-site/pages/feature-products/src/lib/products-query.service.ts',
             hash: '893134150e98c26ef6f16c24380572b731a54a88',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-products/src/lib/products.model.ts',
+            file: 'libs/nrwlio-site/pages/feature-products/src/lib/products.model.ts',
             hash: 'c202f03e2c7cc8954af63707f7957607f48fb7bc',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-products/src/lib/shell/shell.component.ts',
+            file: 'libs/nrwlio-site/pages/feature-products/src/lib/shell/shell.component.ts',
             hash: '2cb5feb127761b36310be79ec723c3811183122a',
             ext: '.ts',
           },
@@ -2442,104 +2232,87 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-services/src/lib/feature-services-routing.module.ts',
+            file: 'libs/nrwlio-site/pages/feature-services/src/lib/feature-services-routing.module.ts',
             hash: 'dacaa17dd5d1fde35029584dd83ee147808dabb4',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-services/src/lib/feature-services.module.ts',
+            file: 'libs/nrwlio-site/pages/feature-services/src/lib/feature-services.module.ts',
             hash: '8349077dadedb06c2d2654559df50a03b85e9826',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-services/src/lib/services-card/services-card.component.scss',
+            file: 'libs/nrwlio-site/pages/feature-services/src/lib/services-card/services-card.component.scss',
             hash: '56c7413a3e2a3e8d67e64f701115a97f8b2da03f',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-services/src/lib/services-card/services-card.component.ts',
+            file: 'libs/nrwlio-site/pages/feature-services/src/lib/services-card/services-card.component.ts',
             hash: '82756bc7023ba42ed83f499a876ef2c88c9631d8',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-services/src/lib/services-cards-container/services-cards-container.component.scss',
+            file: 'libs/nrwlio-site/pages/feature-services/src/lib/services-cards-container/services-cards-container.component.scss',
             hash: 'a055d6b77c6e5964a21e4566f2b8ad7340ccddeb',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-services/src/lib/services-cards-container/services-cards-container.component.ts',
+            file: 'libs/nrwlio-site/pages/feature-services/src/lib/services-cards-container/services-cards-container.component.ts',
             hash: '8367fbf0d05edd36858d0fabe776c9c625cff0dd',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-services/src/lib/services-content.ts',
+            file: 'libs/nrwlio-site/pages/feature-services/src/lib/services-content.ts',
             hash: 'dd060d1f4c22387095b51910e5998c18e2adbea7',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-services/src/lib/services-solutions-container/services-solutions-container.component.scss',
+            file: 'libs/nrwlio-site/pages/feature-services/src/lib/services-solutions-container/services-solutions-container.component.scss',
             hash: '09a1f062d85c5588f548e211e291598228ecbeda',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-services/src/lib/services-solutions-container/services-solutions-container.component.ts',
+            file: 'libs/nrwlio-site/pages/feature-services/src/lib/services-solutions-container/services-solutions-container.component.ts',
             hash: 'd288448f3ad0f6a0b28a9898add0d70a56a8f7c8',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-services/src/lib/services.model.ts',
+            file: 'libs/nrwlio-site/pages/feature-services/src/lib/services.model.ts',
             hash: '96da569ed59007821f01e157665cd0d16bed5c66',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-services/src/lib/shell/shell.component.html',
+            file: 'libs/nrwlio-site/pages/feature-services/src/lib/shell/shell.component.html',
             hash: 'b23de640128b540fd4bb0fa0bf6478b7d349369d',
             ext: '.html',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-services/src/lib/shell/shell.component.scss',
+            file: 'libs/nrwlio-site/pages/feature-services/src/lib/shell/shell.component.scss',
             hash: '393136d6c31e79c3864e503add96cbdc82f32e30',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-services/src/lib/shell/shell.component.ts',
+            file: 'libs/nrwlio-site/pages/feature-services/src/lib/shell/shell.component.ts',
             hash: 'a5a0ad2e8df7c6a9d36ac8b8af89d293b1ca0e6a',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-services/src/lib/solutions-card-dialog/solutions-card-dialog.component.scss',
+            file: 'libs/nrwlio-site/pages/feature-services/src/lib/solutions-card-dialog/solutions-card-dialog.component.scss',
             hash: '8568b3af6d6790cf623ac7c6aeca34705177ccb6',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-services/src/lib/solutions-card-dialog/solutions-card-dialog.component.ts',
+            file: 'libs/nrwlio-site/pages/feature-services/src/lib/solutions-card-dialog/solutions-card-dialog.component.ts',
             hash: '3d7cf2518d131e448d7da68eda2e65e2c7fe275c',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-services/src/lib/solutions-card/solutions-card.component.scss',
+            file: 'libs/nrwlio-site/pages/feature-services/src/lib/solutions-card/solutions-card.component.scss',
             hash: '5354c131417a874d54f53beab052b2b8e5da0b41',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-services/src/lib/solutions-card/solutions-card.component.ts',
+            file: 'libs/nrwlio-site/pages/feature-services/src/lib/solutions-card/solutions-card.component.ts',
             hash: '2161aae9b7e6ccdea18ecc7eb18e82c13a8c2f5e',
             ext: '.ts',
           },
@@ -2626,140 +2399,117 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/activate-subscription/activate-subscription.component.html',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/activate-subscription/activate-subscription.component.html',
             hash: 'fbd49b6134d30b35d078444fb38fe372aa82c809',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/activate-subscription/activate-subscription.component.scss',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/activate-subscription/activate-subscription.component.scss',
             hash: 'd7ed5ba31b32f333eae7ba0e9d10dea3135d561c',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/activate-subscription/activate-subscription.component.ts',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/activate-subscription/activate-subscription.component.ts',
             hash: '708bd93baf1d6429db21fe7b9ae0a872683ed58d',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/billing.service.ts',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/billing.service.ts',
             hash: 'c9c2672e776057cb4570345d17a1194107f8fdc7',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/cancel-subscription-dialog/cancel-subscription-dialog.component.html',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/cancel-subscription-dialog/cancel-subscription-dialog.component.html',
             hash: '3afdf4114a5050fc07771ce61754c5f23702a09b',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/cancel-subscription-dialog/cancel-subscription-dialog.component.scss',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/cancel-subscription-dialog/cancel-subscription-dialog.component.scss',
             hash: '7d34b48fe638dfcd4e4f64992b1eccfb9a05ba17',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/cancel-subscription-dialog/cancel-subscription-dialog.component.ts',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/cancel-subscription-dialog/cancel-subscription-dialog.component.ts',
             hash: '74cd058d98e10b5a17b1899478d8a27bb72fb25c',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/create-promotion-dialog/create-promotion-dialog.component.html',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/create-promotion-dialog/create-promotion-dialog.component.html',
             hash: '62fe9b381ac042792dbdd0d50eb346af6edfbc95',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/create-promotion-dialog/create-promotion-dialog.component.scss',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/create-promotion-dialog/create-promotion-dialog.component.scss',
             hash: '3eaddd99d8a8e8ecb0145eb1ba1a17a59cc9dc13',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/create-promotion-dialog/create-promotion-dialog.component.ts',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/create-promotion-dialog/create-promotion-dialog.component.ts',
             hash: 'a54b5dac994413acf8f00cfca5199337ad40c108',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/issue-coupon-dialog/issue-coupon-dialog.component.html',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/issue-coupon-dialog/issue-coupon-dialog.component.html',
             hash: 'c378d05283ab9f0d7786a9801914451f08a9a73d',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/issue-coupon-dialog/issue-coupon-dialog.component.scss',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/issue-coupon-dialog/issue-coupon-dialog.component.scss',
             hash: '38bdb9cbf13dc8e826dc4cc82859a4cd6fa61492',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/issue-coupon-dialog/issue-coupon-dialog.component.ts',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/issue-coupon-dialog/issue-coupon-dialog.component.ts',
             hash: 'dd6d91caab043315457a4d2ac680ad0a7bfd2b24',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/main-billing/main-billing.component.html',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/main-billing/main-billing.component.html',
             hash: '8a339ddfec8b064ccc69cb9f85262da6f65d9ec6',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/main-billing/main-billing.component.scss',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/main-billing/main-billing.component.scss',
             hash: '5ffad16d56515a53674d8b37ccd8e5c579b0ef4b',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/main-billing/main-billing.component.ts',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/main-billing/main-billing.component.ts',
             hash: '1afbb03431d52fa11f315b1e0ee2b5f68932c69d',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/nx-cloud-feature-billing.module.ts',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/nx-cloud-feature-billing.module.ts',
             hash: '011fe4aeceaf939c16f3d521b78065bdf5fda098',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/redeem-coupon/redeem-coupon.component.html',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/redeem-coupon/redeem-coupon.component.html',
             hash: '8fdeb3338c4b872d75fe4234cb611e4dd928d431',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/redeem-coupon/redeem-coupon.component.scss',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/redeem-coupon/redeem-coupon.component.scss',
             hash: 'c7acb4bf6e7f6dd478cc87d9fc5a9ee93fd12013',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/redeem-coupon/redeem-coupon.component.ts',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/redeem-coupon/redeem-coupon.component.ts',
             hash: '5c1011d1fd9400943d7d15f76c39b1d17ece7b77',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/subscription-widget/subscription-widget.component.html',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/subscription-widget/subscription-widget.component.html',
             hash: 'a39388fdbc97853d128086c49ef9b21348570bc8',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/subscription-widget/subscription-widget.component.scss',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/subscription-widget/subscription-widget.component.scss',
             hash: '7c5af3952f88711e2b6095e5059fb321ea612e66',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-billing/src/lib/subscription-widget/subscription-widget.component.ts',
+            file: 'libs/nx-cloud/reference/feature-billing/src/lib/subscription-widget/subscription-widget.component.ts',
             hash: 'adc0081896f3b8d09cc5ad84dd35468d300147f0',
             ext: '.ts',
           },
@@ -2846,80 +2596,67 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-about-us/src/lib/feature-about-us.module.ts',
+            file: 'libs/nrwlio-site/pages/feature-about-us/src/lib/feature-about-us.module.ts',
             hash: 'a2ec748a91b63a2e6a5ffe4e00f0aa4d373a9041',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-about-us/src/lib/founder-card/founder-card.component.html',
+            file: 'libs/nrwlio-site/pages/feature-about-us/src/lib/founder-card/founder-card.component.html',
             hash: '07cedf6d17c577156c487ac1a5ca572e1a5c82a6',
             ext: '.html',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-about-us/src/lib/founder-card/founder-card.component.scss',
+            file: 'libs/nrwlio-site/pages/feature-about-us/src/lib/founder-card/founder-card.component.scss',
             hash: '01be5c31107ce9e91439ddff75ba933d874e3952',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-about-us/src/lib/founder-card/founder-card.component.ts',
+            file: 'libs/nrwlio-site/pages/feature-about-us/src/lib/founder-card/founder-card.component.ts',
             hash: 'd887292b1c10131a3d3e0fdc43c708a145032a09',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-about-us/src/lib/member-card/member-card.component.html',
+            file: 'libs/nrwlio-site/pages/feature-about-us/src/lib/member-card/member-card.component.html',
             hash: '909c8f5f10d5796aee91d0551ae442e1ca7fd31f',
             ext: '.html',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-about-us/src/lib/member-card/member-card.component.scss',
+            file: 'libs/nrwlio-site/pages/feature-about-us/src/lib/member-card/member-card.component.scss',
             hash: 'a20ccaeee3fad577a197103bf8496d395ae813ba',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-about-us/src/lib/member-card/member-card.component.ts',
+            file: 'libs/nrwlio-site/pages/feature-about-us/src/lib/member-card/member-card.component.ts',
             hash: '348e248a8c2bbec6a78fb7de035743422a4104b7',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-about-us/src/lib/shell/shell.component.html',
+            file: 'libs/nrwlio-site/pages/feature-about-us/src/lib/shell/shell.component.html',
             hash: '2d3c8d618adcfd8a7af69d9cb69bdbb35ba6d448',
             ext: '.html',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-about-us/src/lib/shell/shell.component.scss',
+            file: 'libs/nrwlio-site/pages/feature-about-us/src/lib/shell/shell.component.scss',
             hash: 'c3c1c2df58f2f265ee3402a9d7a263aa95e8735f',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-about-us/src/lib/shell/shell.component.ts',
+            file: 'libs/nrwlio-site/pages/feature-about-us/src/lib/shell/shell.component.ts',
             hash: '759ebb42ea15e8258eb7a5b6216fa02c9d0b7e6c',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-about-us/src/lib/shell/shuffle.ts',
+            file: 'libs/nrwlio-site/pages/feature-about-us/src/lib/shell/shuffle.ts',
             hash: 'e79e59aa267a02825b2bbc55bb40cf387acddeaf',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-about-us/src/lib/team-query.service.ts',
+            file: 'libs/nrwlio-site/pages/feature-about-us/src/lib/team-query.service.ts',
             hash: '4ee033a8a0cc15bb65e748f55533fb9e0affb11e',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-about-us/src/lib/team.model.ts',
+            file: 'libs/nrwlio-site/pages/feature-about-us/src/lib/team.model.ts',
             hash: '8c39b6156e285bfd3b8d950636fe2d4755318252',
             ext: '.ts',
           },
@@ -3006,62 +2743,52 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-careers/src/lib/feature-careers.module.ts',
+            file: 'libs/nrwlio-site/pages/feature-careers/src/lib/feature-careers.module.ts',
             hash: '0c665bb381dabcbf93c93012b6c60d3092c158b6',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-careers/src/lib/job-listing-form/job-listing-form.component.html',
+            file: 'libs/nrwlio-site/pages/feature-careers/src/lib/job-listing-form/job-listing-form.component.html',
             hash: '8d7943b5b8ef16e6fe0edff700c6d5b2e9f02d78',
             ext: '.html',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-careers/src/lib/job-listing-form/job-listing-form.component.scss',
+            file: 'libs/nrwlio-site/pages/feature-careers/src/lib/job-listing-form/job-listing-form.component.scss',
             hash: 'ac6999d1ecd3ed2de78e4585013788908192f5f6',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-careers/src/lib/job-listing-form/job-listing-form.component.ts',
+            file: 'libs/nrwlio-site/pages/feature-careers/src/lib/job-listing-form/job-listing-form.component.ts',
             hash: 'a91702c9a4e582ae13df0c988f6cbe7f058678b1',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-careers/src/lib/job-listing/job-listing.component.html',
+            file: 'libs/nrwlio-site/pages/feature-careers/src/lib/job-listing/job-listing.component.html',
             hash: '6703db3e5d4d81118b50c8f38d5e3780cc6e2f1f',
             ext: '.html',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-careers/src/lib/job-listing/job-listing.component.scss',
+            file: 'libs/nrwlio-site/pages/feature-careers/src/lib/job-listing/job-listing.component.scss',
             hash: '5edc5898778ed45bfd978a5b6bf3c3abf8192d2f',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-careers/src/lib/job-listing/job-listing.component.ts',
+            file: 'libs/nrwlio-site/pages/feature-careers/src/lib/job-listing/job-listing.component.ts',
             hash: '8165b72a8a690c1a8a5f06a8c194c50803f11872',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-careers/src/lib/shell/shell.component.html',
+            file: 'libs/nrwlio-site/pages/feature-careers/src/lib/shell/shell.component.html',
             hash: 'bf956cb71c0578e9b2769b3259aa336213b8f6bd',
             ext: '.html',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-careers/src/lib/shell/shell.component.scss',
+            file: 'libs/nrwlio-site/pages/feature-careers/src/lib/shell/shell.component.scss',
             hash: 'ce5aca9fb03ff3f2c6f74fce06c6256993dfa981',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-careers/src/lib/shell/shell.component.ts',
+            file: 'libs/nrwlio-site/pages/feature-careers/src/lib/shell/shell.component.ts',
             hash: '2bb16f3b4a963d77d1a4cc256216e327074afc4f',
             ext: '.ts',
           },
@@ -3173,32 +2900,27 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-terms-of-service/src/lib/nx-cloud-feature-terms-of-service.module.spec.ts',
+            file: 'libs/nx-cloud/feature-terms-of-service/src/lib/nx-cloud-feature-terms-of-service.module.spec.ts',
             hash: 'c014ea5c879980da14d871e4145ad39a8f923ff0',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-terms-of-service/src/lib/nx-cloud-feature-terms-of-service.module.ts',
+            file: 'libs/nx-cloud/feature-terms-of-service/src/lib/nx-cloud-feature-terms-of-service.module.ts',
             hash: '64e2a8b4af46304490b0cfac95c72655f118d2bb',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-terms-of-service/src/lib/terms-of-service/terms-of-service.component.html',
+            file: 'libs/nx-cloud/feature-terms-of-service/src/lib/terms-of-service/terms-of-service.component.html',
             hash: 'c49ecc31f1a0d098c0c0cfc3e8b19f65cd85fadb',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/feature-terms-of-service/src/lib/terms-of-service/terms-of-service.component.scss',
+            file: 'libs/nx-cloud/feature-terms-of-service/src/lib/terms-of-service/terms-of-service.component.scss',
             hash: 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/feature-terms-of-service/src/lib/terms-of-service/terms-of-service.component.ts',
+            file: 'libs/nx-cloud/feature-terms-of-service/src/lib/terms-of-service/terms-of-service.component.ts',
             hash: 'c7a09491f2943a1868a5a4eb61e05e75460bdddf',
             ext: '.ts',
           },
@@ -3218,8 +2940,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.json',
           },
           {
-            file:
-              'libs/nx-cloud/feature-terms-of-service/tsconfig.lib.prod.json',
+            file: 'libs/nx-cloud/feature-terms-of-service/tsconfig.lib.prod.json',
             hash: 'cbae794224800aec4b08c87a37135e334265908e',
             ext: '.json',
           },
@@ -3284,26 +3005,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-live-events/src/lib/live-event-graphql.interface.ts',
+            file: 'libs/platform/data-access-live-events/src/lib/live-event-graphql.interface.ts',
             hash: '8bae49a8c2e05cc3b7d84df723a0d41386814c3b',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-live-events/src/lib/live-event-graphql.service.ts',
+            file: 'libs/platform/data-access-live-events/src/lib/live-event-graphql.service.ts',
             hash: '6368b8876cc5102012c289578d2ccc1c51f260ad',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-live-events/src/lib/live-event.interface.ts',
+            file: 'libs/platform/data-access-live-events/src/lib/live-event.interface.ts',
             hash: '0aedf4c8a46af63fd1618b532ee0b482f6c94e69',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-live-events/src/lib/platform-data-access-live-events.module.ts',
+            file: 'libs/platform/data-access-live-events/src/lib/platform-data-access-live-events.module.ts',
             hash: '183ae11ddbc0bcfb828ccbe045d5052bd83f1e27',
             ext: '.ts',
           },
@@ -3385,20 +3102,17 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-file-system/src/lib/base-path-token..ts',
+            file: 'libs/nx-docs-site/feature-file-system/src/lib/base-path-token..ts',
             hash: '02162ac928af0e342610a3659b71c9772962b27b',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-file-system/src/lib/feature-file-system.module.ts',
+            file: 'libs/nx-docs-site/feature-file-system/src/lib/feature-file-system.module.ts',
             hash: '860be56e568244fe6a8f06b19437749905f8e7c5',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-file-system/src/lib/file-system.interceptor.ts',
+            file: 'libs/nx-docs-site/feature-file-system/src/lib/file-system.interceptor.ts',
             hash: '347613c5199350487a2c6e28a1503a3edfacbd84',
             ext: '.ts',
           },
@@ -3476,26 +3190,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-nrwl-changelog/src/lib/nrwl-changelog/nrwl-changelog.component.html',
+            file: 'libs/platform/feature-nrwl-changelog/src/lib/nrwl-changelog/nrwl-changelog.component.html',
             hash: '6cf5a68939e53bcbcf8c05986cd95a67265810b1',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-nrwl-changelog/src/lib/nrwl-changelog/nrwl-changelog.component.scss',
+            file: 'libs/platform/feature-nrwl-changelog/src/lib/nrwl-changelog/nrwl-changelog.component.scss',
             hash: 'c0775f93ae04e53ed2c44e190bd018c28a570cf1',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-nrwl-changelog/src/lib/nrwl-changelog/nrwl-changelog.component.ts',
+            file: 'libs/platform/feature-nrwl-changelog/src/lib/nrwl-changelog/nrwl-changelog.component.ts',
             hash: 'e64f99528ebdc733c6515a087f324536816bf5d0',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-nrwl-changelog/src/lib/platform-feature-nrwl-changelog.module.ts',
+            file: 'libs/platform/feature-nrwl-changelog/src/lib/platform-feature-nrwl-changelog.module.ts',
             hash: 'a03800cd4d5767c65f68127e45a21cca4a80b0aa',
             ext: '.ts',
           },
@@ -3581,32 +3291,27 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-live-broadcast/src/lib/broadcast-is-live.guard.ts',
+            file: 'libs/platform/feature-live-broadcast/src/lib/broadcast-is-live.guard.ts',
             hash: 'd04b17b8c18e1e0d5afe8e15a1d497cc9b69a137',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-live-broadcast/src/lib/live-broadcast/live-broadcast.component.html',
+            file: 'libs/platform/feature-live-broadcast/src/lib/live-broadcast/live-broadcast.component.html',
             hash: 'c6ce7e65172b1208e0234b2f5a210d9c0ce9fbca',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-live-broadcast/src/lib/live-broadcast/live-broadcast.component.scss',
+            file: 'libs/platform/feature-live-broadcast/src/lib/live-broadcast/live-broadcast.component.scss',
             hash: 'cff5219f62d8337a84d91b3e78f04d293152f432',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-live-broadcast/src/lib/live-broadcast/live-broadcast.component.ts',
+            file: 'libs/platform/feature-live-broadcast/src/lib/live-broadcast/live-broadcast.component.ts',
             hash: 'ade4473db86ec67db869518dcbfb3ffef2a7f556',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-live-broadcast/src/lib/platform-feature-live-broadcast.module.ts',
+            file: 'libs/platform/feature-live-broadcast/src/lib/platform-feature-live-broadcast.module.ts',
             hash: '7f070b442e490b10a2e5dba8b5d914c1877bb226',
             ext: '.ts',
           },
@@ -3688,26 +3393,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/data-access-graphql/src/lib/authorization.token.ts',
+            file: 'libs/nrwlio-site/data-access-graphql/src/lib/authorization.token.ts',
             hash: 'db37b5941bb901bba811947a83aee4077a2ce3e3',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/data-access-graphql/src/lib/data-access-graphql.module.ts',
+            file: 'libs/nrwlio-site/data-access-graphql/src/lib/data-access-graphql.module.ts',
             hash: '36874d5132fc71747ff833530622dbe9e5983304',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/data-access-graphql/src/lib/graphql-uri.token.ts',
+            file: 'libs/nrwlio-site/data-access-graphql/src/lib/graphql-uri.token.ts',
             hash: 'b2eb69ec877e380b4e75189a07c98b469a292e85',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/data-access-graphql/src/lib/graphql.module.ts',
+            file: 'libs/nrwlio-site/data-access-graphql/src/lib/graphql.module.ts',
             hash: '6d6dd90a218f0ed41c49ca3f144e5619d096e919',
             ext: '.ts',
           },
@@ -3793,26 +3494,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/nx-cloud-feature-runs.module.ts',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/nx-cloud-feature-runs.module.ts',
             hash: '71be536971773edc31bcf923832d800921e2c1dd',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/run-machine-info/run-machine-info.component.html',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/run-machine-info/run-machine-info.component.html',
             hash: 'b4cead4a283ccdffafa7d40daead26e27c7a1b1b',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/run-machine-info/run-machine-info.component.scss',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/run-machine-info/run-machine-info.component.scss',
             hash: '9d9215db85c9ad311eefb96c2dc7090aa1fd0877',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/run-machine-info/run-machine-info.component.ts',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/run-machine-info/run-machine-info.component.ts',
             hash: 'a6e00926005d032c86be594de79d9697e5432585',
             ext: '.ts',
           },
@@ -3822,122 +3519,102 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/run-not-found/run-not-found.component.ts',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/run-not-found/run-not-found.component.ts',
             hash: '58f55811aafba2b125c94729b5b66b8b250380e0',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/run-summary/run-summary.component.html',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/run-summary/run-summary.component.html',
             hash: 'baa29169b11199966f0e3383cb50216322fff2d8',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/run-summary/run-summary.component.scss',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/run-summary/run-summary.component.scss',
             hash: '6c42ece9a97eafd030e9c1a9fd1b29d0ef670bbc',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/run-summary/run-summary.component.ts',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/run-summary/run-summary.component.ts',
             hash: '523cbb1b08a9949b407731862d3dd84e6c8bb23b',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/run-tasks/run-tasks.component.html',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/run-tasks/run-tasks.component.html',
             hash: '1066e87d4f846c05b8daafe29172682d40a364de',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/run-tasks/run-tasks.component.scss',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/run-tasks/run-tasks.component.scss',
             hash: '58c44e53df532b226bf1b6241af8ee976470d95d',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/run-tasks/run-tasks.component.ts',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/run-tasks/run-tasks.component.ts',
             hash: '32cab3fee0a3f57668b65256cb348ee05df5bceb',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/run-view-container/run-view-container.component.html',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/run-view-container/run-view-container.component.html',
             hash: 'eb8737b2f0aa51eb6a998e1a58bf6aa86bab302a',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/run-view-container/run-view-container.component.scss',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/run-view-container/run-view-container.component.scss',
             hash: '19d3d60d412162a23f6b578d2c93d08914cc438c',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/run-view-container/run-view-container.component.ts',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/run-view-container/run-view-container.component.ts',
             hash: '3888509fe1c498d6283ce5d773bd7150ab249a41',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/run-view/run-view.component.html',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/run-view/run-view.component.html',
             hash: 'fea31b2a28c94aca0f177a3079a26cc3e25f59e3',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/run-view/run-view.component.scss',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/run-view/run-view.component.scss',
             hash: 'cf477c213fa6221c4a853a7132041527ab9d1556',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/run-view/run-view.component.ts',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/run-view/run-view.component.ts',
             hash: 'f2039c5832be7cceedcf819f7d4c025c6dcf0a90',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/single-run.service.ts',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/single-run.service.ts',
             hash: '204e321dec6caccf2792bd921d9c5d0df1781a0e',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/task-view-container/task-view-container.component.html',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/task-view-container/task-view-container.component.html',
             hash: '37f9450ab7d7c63d8d280e7cd83fd138d748d08d',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/task-view-container/task-view-container.component.scss',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/task-view-container/task-view-container.component.scss',
             hash: 'f4c2ba921608969af29097dfd2193610cfcae5fc',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/task-view-container/task-view-container.component.ts',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/task-view-container/task-view-container.component.ts',
             hash: 'f30ab67b2e57cd0e679fe12e3cd53c770471a1d6',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/task-view/task-view.component.html',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/task-view/task-view.component.html',
             hash: '8b6d42acb3c0de01bde6dfeda4192b0bdf178fa2',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/task-view/task-view.component.scss',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/task-view/task-view.component.scss',
             hash: '5f9e2925fbd5df6ee48555955ee0f62aff45a0ee',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-runs/src/lib/task-view/task-view.component.ts',
+            file: 'libs/nx-cloud/reference/feature-runs/src/lib/task-view/task-view.component.ts',
             hash: 'feca43683c0dfc8d1d5a0e481f16734c6d4dc04c',
             ext: '.ts',
           },
@@ -4015,62 +3692,52 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-organizations/src/lib/all-organizations/all-organizations.component.html',
+            file: 'libs/platform/feature-organizations/src/lib/all-organizations/all-organizations.component.html',
             hash: '0339170eddf8fa9af5e5be0295b5fec35f27d045',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-organizations/src/lib/all-organizations/all-organizations.component.scss',
+            file: 'libs/platform/feature-organizations/src/lib/all-organizations/all-organizations.component.scss',
             hash: 'c3257fa6f72f25e660d03549fd443547ebc08707',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-organizations/src/lib/all-organizations/all-organizations.component.ts',
+            file: 'libs/platform/feature-organizations/src/lib/all-organizations/all-organizations.component.ts',
             hash: 'a6896857b0fd5b57e04c2e9ca15420a8559caab3',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-organizations/src/lib/create-organization-dialog/create-organization-dialog.component.html',
+            file: 'libs/platform/feature-organizations/src/lib/create-organization-dialog/create-organization-dialog.component.html',
             hash: '2656aa24eb4357bcb0eed4d9abce1a3b287a6757',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-organizations/src/lib/create-organization-dialog/create-organization-dialog.component.scss',
+            file: 'libs/platform/feature-organizations/src/lib/create-organization-dialog/create-organization-dialog.component.scss',
             hash: 'ddc5b4c3bed9b7804076416a2b7b7e3b18c7d49a',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-organizations/src/lib/create-organization-dialog/create-organization-dialog.component.ts',
+            file: 'libs/platform/feature-organizations/src/lib/create-organization-dialog/create-organization-dialog.component.ts',
             hash: '4c83f7266bfbe9d6d41d13bed4ee8b66299badea',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-organizations/src/lib/platform-feature-organizations.module.ts',
+            file: 'libs/platform/feature-organizations/src/lib/platform-feature-organizations.module.ts',
             hash: '3b3a90e652a17925c691677c6bc02b8781a7e975',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-organizations/src/lib/update-organization-dialog/update-organization-dialog.component.html',
+            file: 'libs/platform/feature-organizations/src/lib/update-organization-dialog/update-organization-dialog.component.html',
             hash: 'e7b86a65d4a0c1e6eb534eae777becb30efe1e6a',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-organizations/src/lib/update-organization-dialog/update-organization-dialog.component.scss',
+            file: 'libs/platform/feature-organizations/src/lib/update-organization-dialog/update-organization-dialog.component.scss',
             hash: 'ddc5b4c3bed9b7804076416a2b7b7e3b18c7d49a',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-organizations/src/lib/update-organization-dialog/update-organization-dialog.component.ts',
+            file: 'libs/platform/feature-organizations/src/lib/update-organization-dialog/update-organization-dialog.component.ts',
             hash: '1494397081b2d993ed981d619bf01942c9c54c2b',
             ext: '.ts',
           },
@@ -4156,62 +3823,52 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-live-workshop/src/lib/archives/archives.component.html',
+            file: 'libs/platform/feature-live-workshop/src/lib/archives/archives.component.html',
             hash: '655c0c9d43df37a2907078b22858ea934a3c97d9',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-live-workshop/src/lib/archives/archives.component.scss',
+            file: 'libs/platform/feature-live-workshop/src/lib/archives/archives.component.scss',
             hash: '2aa8ac49b7be50239b42c4d60604a56afe9f597b',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-live-workshop/src/lib/archives/archives.component.ts',
+            file: 'libs/platform/feature-live-workshop/src/lib/archives/archives.component.ts',
             hash: '45b22223e43f6d1f2dd73c71e1da28a03300fc6e',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-live-workshop/src/lib/live-workshop-collection.query.ts',
+            file: 'libs/platform/feature-live-workshop/src/lib/live-workshop-collection.query.ts',
             hash: '71f38e4c68d6d96eef7f5aa2d50e9ada35dc08bc',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-live-workshop/src/lib/live-workshop-single.query.ts',
+            file: 'libs/platform/feature-live-workshop/src/lib/live-workshop-single.query.ts',
             hash: '821a2a5759093d526ea7fb543aa59773deebc0b9',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-live-workshop/src/lib/live-workshop.interface.ts',
+            file: 'libs/platform/feature-live-workshop/src/lib/live-workshop.interface.ts',
             hash: 'ff423ee9e249205312dfab3cf3b0bbc364a7ef9c',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-live-workshop/src/lib/live-workshop/live-workshop.component.html',
+            file: 'libs/platform/feature-live-workshop/src/lib/live-workshop/live-workshop.component.html',
             hash: '333647d3380339435fccf81c7e3795fb3e7dd677',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-live-workshop/src/lib/live-workshop/live-workshop.component.scss',
+            file: 'libs/platform/feature-live-workshop/src/lib/live-workshop/live-workshop.component.scss',
             hash: '63c6d16190c818c699e29ddc8927a04720467fb1',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-live-workshop/src/lib/live-workshop/live-workshop.component.ts',
+            file: 'libs/platform/feature-live-workshop/src/lib/live-workshop/live-workshop.component.ts',
             hash: '4ee4f385a2a70ee474059aac383e89474e547b9e',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-live-workshop/src/lib/platform-feature-live-workshop.module.ts',
+            file: 'libs/platform/feature-live-workshop/src/lib/platform-feature-live-workshop.module.ts',
             hash: '2ba768b596e95c198d45abe507a350e50be8386e',
             ext: '.ts',
           },
@@ -4297,14 +3954,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-home/src/lib/feature-home.module.ts',
+            file: 'libs/nrwlio-site/pages/feature-home/src/lib/feature-home.module.ts',
             hash: 'c00ef255df02e82c946fe7181f19ee869503710a',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-home/src/lib/home-query.service.ts',
+            file: 'libs/nrwlio-site/pages/feature-home/src/lib/home-query.service.ts',
             hash: 'c9a7bd917c3cc4d50111fe92fde627c5bc95a3a4',
             ext: '.ts',
           },
@@ -4314,20 +3969,17 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-home/src/lib/shell/shell.component.html',
+            file: 'libs/nrwlio-site/pages/feature-home/src/lib/shell/shell.component.html',
             hash: '510045f35c447c5584cc0afa14f6dd98e79a1b88',
             ext: '.html',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-home/src/lib/shell/shell.component.scss',
+            file: 'libs/nrwlio-site/pages/feature-home/src/lib/shell/shell.component.scss',
             hash: '7b6de9a71f53d00b4e1b62f67b7bffa33210b371',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/pages/feature-home/src/lib/shell/shell.component.ts',
+            file: 'libs/nrwlio-site/pages/feature-home/src/lib/shell/shell.component.ts',
             hash: '03c17e54b8aafc65e053975298b809338d77eacb',
             ext: '.ts',
           },
@@ -4409,248 +4061,207 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/add-allowed-email-domain-button/add-allowed-email-domain-button.component.html',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/add-allowed-email-domain-button/add-allowed-email-domain-button.component.html',
             hash: '9aeafa62d145f5fe935175dee6f73e46c6c34178',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/add-allowed-email-domain-button/add-allowed-email-domain-button.component.scss',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/add-allowed-email-domain-button/add-allowed-email-domain-button.component.scss',
             hash: 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/add-allowed-email-domain-button/add-allowed-email-domain-button.component.ts',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/add-allowed-email-domain-button/add-allowed-email-domain-button.component.ts',
             hash: '3189b2a7a4ad064c6778a9d85e7e2154d625b69a',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/add-email-domain-modal/add-email-domain-modal.component.html',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/add-email-domain-modal/add-email-domain-modal.component.html',
             hash: 'e45d5b1e3b7fb61e215f5638fefca451e3912c94',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/add-email-domain-modal/add-email-domain-modal.component.scss',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/add-email-domain-modal/add-email-domain-modal.component.scss',
             hash: '9303da7d3977ccb992b7a24f85d0d4f43f13d082',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/add-email-domain-modal/add-email-domain-modal.component.ts',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/add-email-domain-modal/add-email-domain-modal.component.ts',
             hash: '5ef7015f1acbe55495aa9254563b3e2792bdb246',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/confirm-delete-org-dialog/confirm-delete-org-dialog.component.html',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/confirm-delete-org-dialog/confirm-delete-org-dialog.component.html',
             hash: '9e76ed6d55097c089365aa66a04dbcfaa8bde4b5',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/confirm-delete-org-dialog/confirm-delete-org-dialog.component.scss',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/confirm-delete-org-dialog/confirm-delete-org-dialog.component.scss',
             hash: '1bc886ad66e96c018e9530583019b663a908f97f',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/confirm-delete-org-dialog/confirm-delete-org-dialog.component.ts',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/confirm-delete-org-dialog/confirm-delete-org-dialog.component.ts',
             hash: 'df53ead359fccbce1aeeb558ef21525820d2776c',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/edit-member-role-dialog/edit-member-role-dialog.component.html',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/edit-member-role-dialog/edit-member-role-dialog.component.html',
             hash: 'ec89a734a4b462b904dce94f1c40f69ab26f3e8c',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/edit-member-role-dialog/edit-member-role-dialog.component.scss',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/edit-member-role-dialog/edit-member-role-dialog.component.scss',
             hash: 'fd13e721dd7d23ca4f274092fe44b55f276590f7',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/edit-member-role-dialog/edit-member-role-dialog.component.ts',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/edit-member-role-dialog/edit-member-role-dialog.component.ts',
             hash: '63fec1204c6584365b5fa76d594e5906c8f35095',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/empty-organization.guard.ts',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/empty-organization.guard.ts',
             hash: 'cef280ac3e58426347dbd3c8b5ee299379a7967b',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/nx-cloud-feature-org.module.ts',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/nx-cloud-feature-org.module.ts',
             hash: 'd3eafc5dea5348e3256c49b5380aca30ee865b71',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/org-create/org-create.component.html',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/org-create/org-create.component.html',
             hash: '5fbc7944c1c54cf7871d2617b3a5965aed94c23c',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/org-create/org-create.component.scss',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/org-create/org-create.component.scss',
             hash: 'a4964fad1af3c15ac5496f40ae1616795b46b636',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/org-create/org-create.component.ts',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/org-create/org-create.component.ts',
             hash: '512be19ba1d87a64fd344940778cad1f221d9225',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/org-edit/org-edit.component.html',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/org-edit/org-edit.component.html',
             hash: '068e0751481dbce779cc7bf552520054d10ba93e',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/org-edit/org-edit.component.scss',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/org-edit/org-edit.component.scss',
             hash: 'f8ae5aba41f0ad68510e05747676f3a647ba0746',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/org-edit/org-edit.component.ts',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/org-edit/org-edit.component.ts',
             hash: 'aa0e68148650229db59067a51cb7badd7a1f840d',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/org-form/org-form.component.html',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/org-form/org-form.component.html',
             hash: 'b43228fb111f1602b1eff493535b905922d1070a',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/org-form/org-form.component.scss',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/org-form/org-form.component.scss',
             hash: 'f40c240a96f616fb501d5f8194766c7126d194b3',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/org-form/org-form.component.ts',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/org-form/org-form.component.ts',
             hash: 'be512644797831e340f90e9943a5ff35ebe52142',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/org-list/org-list.component.html',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/org-list/org-list.component.html',
             hash: '4ac016f7d3aea9551e6cc0f680d5647497834bd6',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/org-list/org-list.component.scss',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/org-list/org-list.component.scss',
             hash: 'be909bc6a441bf645dda2e69474f0e2ad4d0134b',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/org-list/org-list.component.ts',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/org-list/org-list.component.ts',
             hash: '5cc80829af4addad385183a0ceba741cde8505bc',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/org-member-list/org-member-list.component.html',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/org-member-list/org-member-list.component.html',
             hash: '37e8f5262dd332d9fe411db89d845a94129abc34',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/org-member-list/org-member-list.component.scss',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/org-member-list/org-member-list.component.scss',
             hash: '355eedf2354e48bdb779355a5860ca2193e6befc',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/org-member-list/org-member-list.component.ts',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/org-member-list/org-member-list.component.ts',
             hash: '16307238d2dc05fd0f31149eb60a37536d458da5',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/remove-email-dialog/remove-email-dialog.component.html',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/remove-email-dialog/remove-email-dialog.component.html',
             hash: '0644c2eb0c6ad540e00bdd201bd464e80e23fdcd',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/remove-email-dialog/remove-email-dialog.component.scss',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/remove-email-dialog/remove-email-dialog.component.scss',
             hash: 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/remove-email-dialog/remove-email-dialog.component.ts',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/remove-email-dialog/remove-email-dialog.component.ts',
             hash: '73d7ca984f90827efda1d1f25ef4b80be5f3e0d1',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/remove-member-dialog/remove-member-dialog.component.html',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/remove-member-dialog/remove-member-dialog.component.html',
             hash: '5bccc65be956526d240b34e5aa58a49eb86807e2',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/remove-member-dialog/remove-member-dialog.component.scss',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/remove-member-dialog/remove-member-dialog.component.scss',
             hash: 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/remove-member-dialog/remove-member-dialog.component.ts',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/remove-member-dialog/remove-member-dialog.component.ts',
             hash: 'd45425a5e82b4988da343c8c753409fc3ec46aea',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/workspace-list/workspace-list.component.html',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/workspace-list/workspace-list.component.html',
             hash: '84f4395539fcfb07248fa8a4270b914d670f13a3',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/workspace-list/workspace-list.component.scss',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/workspace-list/workspace-list.component.scss',
             hash: 'f3bc8df28410f7e9d6b8541c57f1255862e80b21',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/workspace-list/workspace-list.component.ts',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/workspace-list/workspace-list.component.ts',
             hash: 'b7d0accde0b6f5e0d37dbaf8f2d28224eb8cca7e',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/workspace-setup/workspace-setup.component.html',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/workspace-setup/workspace-setup.component.html',
             hash: '4af8f2e17f1ce7ec72f212768cf5f7e4ff8664c4',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/workspace-setup/workspace-setup.component.scss',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/workspace-setup/workspace-setup.component.scss',
             hash: 'fed9474edda5a1551383642aed2dd6951419f797',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/reference/feature-org/src/lib/workspace-setup/workspace-setup.component.ts',
+            file: 'libs/nx-cloud/reference/feature-org/src/lib/workspace-setup/workspace-setup.component.ts',
             hash: '7854ebbe48dcea10551fd044809234e91dfb7416',
             ext: '.ts',
           },
@@ -4736,26 +4347,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-redirects/src/lib/feature-redirects.module.ts',
+            file: 'libs/nx-docs-site/feature-redirects/src/lib/feature-redirects.module.ts',
             hash: 'c9ffcf0113e455d4bec22a0b0f2f98f477ad093d',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-redirects/src/lib/flavor-redirect.guard.ts',
+            file: 'libs/nx-docs-site/feature-redirects/src/lib/flavor-redirect.guard.ts',
             hash: 'df9d19bafc77933f2f4019b50a56c38843fbc282',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-redirects/src/lib/generic-url-redirect.guard.ts',
+            file: 'libs/nx-docs-site/feature-redirects/src/lib/generic-url-redirect.guard.ts',
             hash: 'fdfa44501e22872e280b9ce754f90153a355b77a',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-redirects/src/lib/version-redirect.guard.ts',
+            file: 'libs/nx-docs-site/feature-redirects/src/lib/version-redirect.guard.ts',
             hash: '8f570584acd84ae9381516a2c9064fb0fa782963',
             ext: '.ts',
           },
@@ -4836,26 +4443,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/admin/feature-support/src/lib/login-as-user-dialog.component.html',
+            file: 'libs/nx-cloud/admin/feature-support/src/lib/login-as-user-dialog.component.html',
             hash: 'c0d24ca628df909f98370989974e273c721a5d85',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/admin/feature-support/src/lib/login-as-user-dialog.component.scss',
+            file: 'libs/nx-cloud/admin/feature-support/src/lib/login-as-user-dialog.component.scss',
             hash: 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/admin/feature-support/src/lib/login-as-user-dialog.component.ts',
+            file: 'libs/nx-cloud/admin/feature-support/src/lib/login-as-user-dialog.component.ts',
             hash: '836d8d005b2507cd6f699ab80a762e451a026542',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/admin/feature-support/src/lib/nx-cloud-feature-support.module.ts',
+            file: 'libs/nx-cloud/admin/feature-support/src/lib/nx-cloud-feature-support.module.ts',
             hash: '873c09d6c8322119b1318a428f8b1ef79cce763b',
             ext: '.ts',
           },
@@ -4927,170 +4530,142 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/bulk-create-organization-membership-dialog/bulk-create-organization-membership-dialog.component.html',
+            file: 'libs/platform/feature-organization/src/lib/bulk-create-organization-membership-dialog/bulk-create-organization-membership-dialog.component.html',
             hash: '5fbd571d3561e581e5615fb1eb84bf21255ec23c',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/bulk-create-organization-membership-dialog/bulk-create-organization-membership-dialog.component.scss',
+            file: 'libs/platform/feature-organization/src/lib/bulk-create-organization-membership-dialog/bulk-create-organization-membership-dialog.component.scss',
             hash: '165bc2254e461d997301c7d4d45c5debda3b4822',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/bulk-create-organization-membership-dialog/bulk-create-organization-membership-dialog.component.ts',
+            file: 'libs/platform/feature-organization/src/lib/bulk-create-organization-membership-dialog/bulk-create-organization-membership-dialog.component.ts',
             hash: 'b6ab98e66e2fe65a9376467ee30cd130b2038a15',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/bulk-create-organization-membership-user/bulk-create-organization-membership-user.component.html',
+            file: 'libs/platform/feature-organization/src/lib/bulk-create-organization-membership-user/bulk-create-organization-membership-user.component.html',
             hash: '03e078cdb8aee7d1ae9a15b7359e6feef37575b1',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/bulk-create-organization-membership-user/bulk-create-organization-membership-user.component.scss',
+            file: 'libs/platform/feature-organization/src/lib/bulk-create-organization-membership-user/bulk-create-organization-membership-user.component.scss',
             hash: '7e809efd095e4815c8052e34bae6cc3302a5389c',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/bulk-create-organization-membership-user/bulk-create-organization-membership-user.component.ts',
+            file: 'libs/platform/feature-organization/src/lib/bulk-create-organization-membership-user/bulk-create-organization-membership-user.component.ts',
             hash: '9ef5d042b3534ec6c993094a90bd77e3991f0a5e',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/bulk-input-users-for-organization-membership-dialog/bulk-input-users-for-organization-membership-dialog.component.html',
+            file: 'libs/platform/feature-organization/src/lib/bulk-input-users-for-organization-membership-dialog/bulk-input-users-for-organization-membership-dialog.component.html',
             hash: '916b0d004639a1cb2cf14616f2f1e18166e2121d',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/bulk-input-users-for-organization-membership-dialog/bulk-input-users-for-organization-membership-dialog.component.scss',
+            file: 'libs/platform/feature-organization/src/lib/bulk-input-users-for-organization-membership-dialog/bulk-input-users-for-organization-membership-dialog.component.scss',
             hash: '4a14b8085f7697f837f2312890563e5baa8572c6',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/bulk-input-users-for-organization-membership-dialog/bulk-input-users-for-organization-membership-dialog.component.ts',
+            file: 'libs/platform/feature-organization/src/lib/bulk-input-users-for-organization-membership-dialog/bulk-input-users-for-organization-membership-dialog.component.ts',
             hash: 'b05768c7cd421a7ca3f3329b424e5c3ac7fd17fc',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/delete-organization-membership-confirmation-dialog/delete-organization-membership-confirmation-dialog.component.html',
+            file: 'libs/platform/feature-organization/src/lib/delete-organization-membership-confirmation-dialog/delete-organization-membership-confirmation-dialog.component.html',
             hash: '489f486dc51dafd1f4a0b1e50ce1b47f07fcdf0f',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/delete-organization-membership-confirmation-dialog/delete-organization-membership-confirmation-dialog.component.scss',
+            file: 'libs/platform/feature-organization/src/lib/delete-organization-membership-confirmation-dialog/delete-organization-membership-confirmation-dialog.component.scss',
             hash: '8f5c580105b58f80494dfc9f104b7770d57419d3',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/delete-organization-membership-confirmation-dialog/delete-organization-membership-confirmation-dialog.component.ts',
+            file: 'libs/platform/feature-organization/src/lib/delete-organization-membership-confirmation-dialog/delete-organization-membership-confirmation-dialog.component.ts',
             hash: '8037e7c3686e9f982ce6c37227a3bdfc10974310',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/delete-organization-membership-progress-dialog/delete-organization-membership-progress-dialog.component.html',
+            file: 'libs/platform/feature-organization/src/lib/delete-organization-membership-progress-dialog/delete-organization-membership-progress-dialog.component.html',
             hash: '1cddc28bc94eb26121b8ead8c447dae0388e150a',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/delete-organization-membership-progress-dialog/delete-organization-membership-progress-dialog.component.scss',
+            file: 'libs/platform/feature-organization/src/lib/delete-organization-membership-progress-dialog/delete-organization-membership-progress-dialog.component.scss',
             hash: '8f5c580105b58f80494dfc9f104b7770d57419d3',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/delete-organization-membership-progress-dialog/delete-organization-membership-progress-dialog.component.ts',
+            file: 'libs/platform/feature-organization/src/lib/delete-organization-membership-progress-dialog/delete-organization-membership-progress-dialog.component.ts',
             hash: 'ac85c1d33479fa37e7781a1562f65086c14f0c41',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/organization-members/organization-members.component.html',
+            file: 'libs/platform/feature-organization/src/lib/organization-members/organization-members.component.html',
             hash: '1c6e2be2fc8776f8bf019fe3a9410a50b4856579',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/organization-members/organization-members.component.scss',
+            file: 'libs/platform/feature-organization/src/lib/organization-members/organization-members.component.scss',
             hash: '8da9e5db7323f24da920747e20040a03c9fc43cf',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/organization-members/organization-members.component.ts',
+            file: 'libs/platform/feature-organization/src/lib/organization-members/organization-members.component.ts',
             hash: 'eb33b64822f522234bf40d4e24241a8e51335fd4',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/organization-settings/organization-settings.component.html',
+            file: 'libs/platform/feature-organization/src/lib/organization-settings/organization-settings.component.html',
             hash: '36b39ba3cbc1a91b32aac72346bd67a9f7c4c084',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/organization-settings/organization-settings.component.scss',
+            file: 'libs/platform/feature-organization/src/lib/organization-settings/organization-settings.component.scss',
             hash: '3487d5943b187af0e4fa46665eee61db5b19fb3f',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/organization-settings/organization-settings.component.ts',
+            file: 'libs/platform/feature-organization/src/lib/organization-settings/organization-settings.component.ts',
             hash: '76744a0a48d217b685f47f86f957354c8e5930ab',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/organization-shell/organization-shell.component.html',
+            file: 'libs/platform/feature-organization/src/lib/organization-shell/organization-shell.component.html',
             hash: '0680b43f9c6ae05df91c576141f20ed411d07c7d',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/organization-shell/organization-shell.component.scss',
+            file: 'libs/platform/feature-organization/src/lib/organization-shell/organization-shell.component.scss',
             hash: '5d4e87f30f6362b8597dbe54a44aadaffa915763',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/organization-shell/organization-shell.component.ts',
+            file: 'libs/platform/feature-organization/src/lib/organization-shell/organization-shell.component.ts',
             hash: '4192c65da8ac734c8f68db14e2c86a229684f3c9',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/platform-feature-org.module.ts',
+            file: 'libs/platform/feature-organization/src/lib/platform-feature-org.module.ts',
             hash: '53784e6f19c10703889b4996d384fb77dd7d9105',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/update-organization-membership-role-dialog/update-organization-membership-role-dialog.component.html',
+            file: 'libs/platform/feature-organization/src/lib/update-organization-membership-role-dialog/update-organization-membership-role-dialog.component.html',
             hash: 'e8f879266087ddc23379da8b327eefb6206c0cf2',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/update-organization-membership-role-dialog/update-organization-membership-role-dialog.component.scss',
+            file: 'libs/platform/feature-organization/src/lib/update-organization-membership-role-dialog/update-organization-membership-role-dialog.component.scss',
             hash: '43a0eb55d35117e30fd9e2b1a011783cc62585d9',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-organization/src/lib/update-organization-membership-role-dialog/update-organization-membership-role-dialog.component.ts',
+            file: 'libs/platform/feature-organization/src/lib/update-organization-membership-role-dialog/update-organization-membership-role-dialog.component.ts',
             hash: 'f96a0e37426d6f4bbf52100fae10a31f96d1c969',
             ext: '.ts',
           },
@@ -5167,26 +4742,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-cookbook/src/lib/platform-data-access-cookbook.module.ts',
+            file: 'libs/platform/data-access-cookbook/src/lib/platform-data-access-cookbook.module.ts',
             hash: 'e7152b08857101aee29cb74de4e24bd2beaa5b70',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-cookbook/src/lib/recipe-graphql.interface.ts',
+            file: 'libs/platform/data-access-cookbook/src/lib/recipe-graphql.interface.ts',
             hash: '93368ecfd38e021ad9aee8769acab15edde14f35',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-cookbook/src/lib/recipe-graphql.service.ts',
+            file: 'libs/platform/data-access-cookbook/src/lib/recipe-graphql.service.ts',
             hash: '1f7ec0b7d44172d404b8e28b87bcd22a5f117eba',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-cookbook/src/lib/recipe.interface.ts',
+            file: 'libs/platform/data-access-cookbook/src/lib/recipe.interface.ts',
             hash: 'bd0cb079d928f732e1af9490c0897dc45d544b7f',
             ext: '.ts',
           },
@@ -5267,26 +4838,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-landing-page/src/lib/landing-page/landing-page.component.html',
+            file: 'libs/platform/feature-landing-page/src/lib/landing-page/landing-page.component.html',
             hash: '933454f09c91107f1c8c1c9c9bc668d01b397109',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-landing-page/src/lib/landing-page/landing-page.component.scss',
+            file: 'libs/platform/feature-landing-page/src/lib/landing-page/landing-page.component.scss',
             hash: '75b52bbd3019f781497186c216792389666aaf66',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-landing-page/src/lib/landing-page/landing-page.component.ts',
+            file: 'libs/platform/feature-landing-page/src/lib/landing-page/landing-page.component.ts',
             hash: '915d4103f9aee0df01c040e2147dd0e0aaa448e2',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-landing-page/src/lib/platform-feature-landing-page.module.ts',
+            file: 'libs/platform/feature-landing-page/src/lib/platform-feature-landing-page.module.ts',
             hash: '481ad29004fda84af4122b2d105ad1b31aa08bb5',
             ext: '.ts',
           },
@@ -5366,14 +4933,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-graphql/src/lib/data-access-graphql.module.ts',
+            file: 'libs/platform/data-access-graphql/src/lib/data-access-graphql.module.ts',
             hash: '8d55492e7cd87994e77cee2bc9b908380ed62c0b',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-graphql/src/lib/environment-config.service.ts',
+            file: 'libs/platform/data-access-graphql/src/lib/environment-config.service.ts',
             hash: '4cf865294c69038abd89613e4cb1ede09a0f3fe6',
             ext: '.ts',
           },
@@ -5388,8 +4953,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-graphql/src/lib/organizations.state.ts',
+            file: 'libs/platform/data-access-graphql/src/lib/organizations.state.ts',
             hash: 'ca7d6ac2092a85bea08f9292858b0c25fbcfba03',
             ext: '.ts',
           },
@@ -5471,44 +5035,37 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-live-events/src/lib/live-event-detail/live-event-detail.component.html',
+            file: 'libs/platform/feature-live-events/src/lib/live-event-detail/live-event-detail.component.html',
             hash: 'eedceda41823bf6ddaa7488f666177d330414db6',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-live-events/src/lib/live-event-detail/live-event-detail.component.scss',
+            file: 'libs/platform/feature-live-events/src/lib/live-event-detail/live-event-detail.component.scss',
             hash: '6918f9dc86c8fe19a8778bb80a071c37763ecfa8',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-live-events/src/lib/live-event-detail/live-event-detail.component.ts',
+            file: 'libs/platform/feature-live-events/src/lib/live-event-detail/live-event-detail.component.ts',
             hash: '71229c78dfb0ea8581e030c72a2aa597c6f633c5',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-live-events/src/lib/live-events/live-events.component.html',
+            file: 'libs/platform/feature-live-events/src/lib/live-events/live-events.component.html',
             hash: '76a133c46b9e6f7187ad73630fe86cd51690de16',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-live-events/src/lib/live-events/live-events.component.scss',
+            file: 'libs/platform/feature-live-events/src/lib/live-events/live-events.component.scss',
             hash: '2aa8ac49b7be50239b42c4d60604a56afe9f597b',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-live-events/src/lib/live-events/live-events.component.ts',
+            file: 'libs/platform/feature-live-events/src/lib/live-events/live-events.component.ts',
             hash: 'd8a2189e0640ede217eec82cf21b0aba6e638ea0',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-live-events/src/lib/platform-feature-live-events.module.ts',
+            file: 'libs/platform/feature-live-events/src/lib/platform-feature-live-events.module.ts',
             hash: '77934b757cd56dac8090ba921e29820b8ceaeb76',
             ext: '.ts',
           },
@@ -5590,146 +5147,122 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/compound-selectors/course-lessons-by-course-id.selector.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/compound-selectors/course-lessons-by-course-id.selector.ts',
             hash: '2039d28e5679bec52daf38b38f9821dc1fe4ade5',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/compound-selectors/course-overview.selector.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/compound-selectors/course-overview.selector.ts',
             hash: 'eb258f7c53574bd93bd8cb1c97df58fe5a55651c',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/compound-selectors/index.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/compound-selectors/index.ts',
             hash: '99b443bf545b344b87954a3e7bf72775c0e54c7e',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/course-lessons/course-lessons.actions.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/course-lessons/course-lessons.actions.ts',
             hash: '0faef61e2b1402c767ac5c4bc52f38f7e066bd25',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/course-lessons/course-lessons.effects.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/course-lessons/course-lessons.effects.ts',
             hash: '5aa4a70556a27b128a5fd6a49d536ab90a578360',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/course-lessons/course-lessons.reducer.spec.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/course-lessons/course-lessons.reducer.spec.ts',
             hash: '28f03a13b1f984251b146ab82d68f718997d423a',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/course-lessons/course-lessons.reducer.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/course-lessons/course-lessons.reducer.ts',
             hash: '405915942f5211640940a5c6d96c29b3622cf0b0',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/course-lessons/course-lessons.selectors.spec.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/course-lessons/course-lessons.selectors.spec.ts',
             hash: 'd0e4110680360b68db7e196944be14ad29a25d7b',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/course-lessons/course-lessons.selectors.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/course-lessons/course-lessons.selectors.ts',
             hash: '14c4d3284a3aeabbd31b6f69af454e73b1d09e99',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/course-lessons/index.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/course-lessons/index.ts',
             hash: 'e790406311040d8c7d92800aca5eeb318f17c34f',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/course-sections/course-sections.effects.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/course-sections/course-sections.effects.ts',
             hash: '7fe03910e408160de245d69cc0b9915b86edcb2a',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/course-sections/course-sections.reducer.spec.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/course-sections/course-sections.reducer.spec.ts',
             hash: '38c5af1937c5bfd2b4fba88a8b047374315fd8e8',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/course-sections/course-sections.reducer.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/course-sections/course-sections.reducer.ts',
             hash: '27144f72bc5703d9f22e7a082cf97787ec81ef6c',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/course-sections/course-sections.selectors.spec.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/course-sections/course-sections.selectors.spec.ts',
             hash: '15e91a8ab968af613d9bab0034caa5ff55de93d1',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/course-sections/course-sections.selectors.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/course-sections/course-sections.selectors.ts',
             hash: 'f13ecdaabad49e9b69b1dabc0b037d2b9fbe25d8',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/course-sections/index.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/course-sections/index.ts',
             hash: '134e0d6c4258fdf04a13d3969f010e2e99ae259e',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/courses/courses.actions.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/courses/courses.actions.ts',
             hash: '1eec23a0412337843fa5bcd4a06217ab01252664',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/courses/courses.effects.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/courses/courses.effects.ts',
             hash: '7f261b3a78761a6ceae993726e79af4ec511c30b',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/courses/courses.reducer.spec.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/courses/courses.reducer.spec.ts',
             hash: 'de04c62f1293324653af09f80387327fef2106e0',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/courses/courses.reducer.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/courses/courses.reducer.ts',
             hash: '9b92ccce0882a892d67fee1659a1bc93e212bdba',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/courses/courses.selectors.spec.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/courses/courses.selectors.spec.ts',
             hash: 'c7855774c59b26f35cad5397332a2516dc66f793',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/courses/courses.selectors.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/courses/courses.selectors.ts',
             hash: '63f778a9461c87df585de151e00032288aed3532',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/+state/courses/index.ts',
+            file: 'libs/platform/data-access-courses/src/lib/+state/courses/index.ts',
             hash: '2bdea63d7eca555a7b51b54f6db5a8d6cfa67334',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/course-overview.interface.ts',
+            file: 'libs/platform/data-access-courses/src/lib/course-overview.interface.ts',
             hash: 'ea876394895372fc883962d5a3bf8cebdcec143d',
             ext: '.ts',
           },
@@ -5739,8 +5272,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/lib/platform-data-access-courses.module.ts',
+            file: 'libs/platform/data-access-courses/src/lib/platform-data-access-courses.module.ts',
             hash: 'e770edabef0d77e31b6c7e802bbfa090158c3421',
             ext: '.ts',
           },
@@ -5750,8 +5282,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-courses/src/test/generic-courses-store-state.ts',
+            file: 'libs/platform/data-access-courses/src/test/generic-courses-store-state.ts',
             hash: '364363a11a08b3b17e7cee14c8a414627ca34930',
             ext: '.ts',
           },
@@ -5828,14 +5359,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/data-access-graphql/src/lib/contentful-configuration.token.ts',
+            file: 'libs/nx-cloud/data-access-graphql/src/lib/contentful-configuration.token.ts',
             hash: 'eb9980a5531679e3926e0b38461b8ac795315827',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/data-access-graphql/src/lib/environment-config.service.ts',
+            file: 'libs/nx-cloud/data-access-graphql/src/lib/environment-config.service.ts',
             hash: '7a6856d7d2c71dc4574b549fcb1cbdc4e5041b21',
             ext: '.ts',
           },
@@ -5845,8 +5374,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/data-access-graphql/src/lib/nx-cloud-data-access-graphql.module.ts',
+            file: 'libs/nx-cloud/data-access-graphql/src/lib/nx-cloud-data-access-graphql.module.ts',
             hash: '11a3ef1fd6108bb53b7e9c375a6cb9c717d7a48e',
             ext: '.ts',
           },
@@ -5932,26 +5460,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-plugins/src/lib/feature-plugins.module.ts',
+            file: 'libs/nx-docs-site/feature-plugins/src/lib/feature-plugins.module.ts',
             hash: '6ebf161e6a20df0b99d6ac39bad8fc158c44a19a',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-plugins/src/lib/github-icon/github-icon.component.ts',
+            file: 'libs/nx-docs-site/feature-plugins/src/lib/github-icon/github-icon.component.ts',
             hash: 'eeffc2b6f4b44afcb30924b18db82610084a855b',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-plugins/src/lib/npm-icon/npm-icon.component.ts',
+            file: 'libs/nx-docs-site/feature-plugins/src/lib/npm-icon/npm-icon.component.ts',
             hash: 'ec66856bbf2515fddaac4013fb9d95bfe998b0c6',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-plugins/src/lib/plugin-card/plugin-card.component.ts',
+            file: 'libs/nx-docs-site/feature-plugins/src/lib/plugin-card/plugin-card.component.ts',
             hash: 'b8604a0432406807da6b0ce650e9613985a2b963',
             ext: '.ts',
           },
@@ -5961,32 +5485,27 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-plugins/src/lib/plugins.service.ts',
+            file: 'libs/nx-docs-site/feature-plugins/src/lib/plugins.service.ts',
             hash: '4d4424e1378c07043ad38091c155e721b3ed3659',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-plugins/src/lib/shell/shell.component.html',
+            file: 'libs/nx-docs-site/feature-plugins/src/lib/shell/shell.component.html',
             hash: 'a328980e341b52255677fb8ac8e34d888979b51f',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-plugins/src/lib/shell/shell.component.scss',
+            file: 'libs/nx-docs-site/feature-plugins/src/lib/shell/shell.component.scss',
             hash: '6f2b898aa54e6171792f51bb6e9c40fbb9dd0742',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-plugins/src/lib/shell/shell.component.ts',
+            file: 'libs/nx-docs-site/feature-plugins/src/lib/shell/shell.component.ts',
             hash: '20805b3c15f1a69faea6876975cf04db081c814e',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-plugins/src/lib/yarn-icon/yarn-icon.component.ts',
+            file: 'libs/nx-docs-site/feature-plugins/src/lib/yarn-icon/yarn-icon.component.ts',
             hash: 'd72e71f0e8dc303707301c9d22bae66014392a03',
             ext: '.ts',
           },
@@ -6072,26 +5591,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-expert-bio/src/lib/bio-page/bio-page.component.html',
+            file: 'libs/platform/feature-expert-bio/src/lib/bio-page/bio-page.component.html',
             hash: '0797c88c83e1480e4b51c7d9acaf4f6528d20a82',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-expert-bio/src/lib/bio-page/bio-page.component.scss',
+            file: 'libs/platform/feature-expert-bio/src/lib/bio-page/bio-page.component.scss',
             hash: '58df1a4fc6085c1aefac4bdb5c04487670eb8e42',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-expert-bio/src/lib/bio-page/bio-page.component.ts',
+            file: 'libs/platform/feature-expert-bio/src/lib/bio-page/bio-page.component.ts',
             hash: '6c0bfbbf0aa8183e6cfe87098aafd0e2ab583393',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-expert-bio/src/lib/platform-feature-expert-bio.module.ts',
+            file: 'libs/platform/feature-expert-bio/src/lib/platform-feature-expert-bio.module.ts',
             hash: '9537f5367b0922d1f95cc4209c67406608276edf',
             ext: '.ts',
           },
@@ -6177,26 +5692,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/ui/text-sliders/src/lib/ui-text-sliders.module.ts',
+            file: 'libs/nrwlio-site/ui/text-sliders/src/lib/ui-text-sliders.module.ts',
             hash: '9894b57d5d5f03a38f7a39c5681775dedc648d65',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/ui/text-sliders/src/lib/vertical-text-slider/vertical-text-slider.component.html',
+            file: 'libs/nrwlio-site/ui/text-sliders/src/lib/vertical-text-slider/vertical-text-slider.component.html',
             hash: 'c159f7757f9347c70c2289b6d8aaff40d183f4d5',
             ext: '.html',
           },
           {
-            file:
-              'libs/nrwlio-site/ui/text-sliders/src/lib/vertical-text-slider/vertical-text-slider.component.scss',
+            file: 'libs/nrwlio-site/ui/text-sliders/src/lib/vertical-text-slider/vertical-text-slider.component.scss',
             hash: 'b55825b9daaa2c12c05eda5d6ca3154c02ee32f4',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/ui/text-sliders/src/lib/vertical-text-slider/vertical-text-slider.component.ts',
+            file: 'libs/nrwlio-site/ui/text-sliders/src/lib/vertical-text-slider/vertical-text-slider.component.ts',
             hash: '675ce07d4d8d3e667e27b29b1eea6e42487b562f',
             ext: '.ts',
           },
@@ -6282,20 +5793,17 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-search/src/lib/algolia-search.component.scss',
+            file: 'libs/nx-docs-site/feature-search/src/lib/algolia-search.component.scss',
             hash: '32153a52e7b225e72dbb0fbb88bf770787150904',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-search/src/lib/algolia-search.component.ts',
+            file: 'libs/nx-docs-site/feature-search/src/lib/algolia-search.component.ts',
             hash: '82c7013582040ba030ed17bb41ece2bfb21054df',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-search/src/lib/feature-search.module.ts',
+            file: 'libs/nx-docs-site/feature-search/src/lib/feature-search.module.ts',
             hash: 'bcb6f59c47509236c4848955e49d7f89d61ffe9a',
             ext: '.ts',
           },
@@ -6387,68 +5895,57 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-promotions/src/lib/nx-cloud-feature-promotions.module.ts',
+            file: 'libs/nx-cloud/feature-promotions/src/lib/nx-cloud-feature-promotions.module.ts',
             hash: '2b1fd050b3c4ea5b1077815d1d126a6144d4da2d',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-promotions/src/lib/promotion-signup-form/promotion-signup-form.component.html',
+            file: 'libs/nx-cloud/feature-promotions/src/lib/promotion-signup-form/promotion-signup-form.component.html',
             hash: 'e3dc398b2a615acc2ac355b20ab1269a6140fcdb',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/feature-promotions/src/lib/promotion-signup-form/promotion-signup-form.component.scss',
+            file: 'libs/nx-cloud/feature-promotions/src/lib/promotion-signup-form/promotion-signup-form.component.scss',
             hash: '158f22e1fc9e12b624b1cc03287ef08aa1c5e3d5',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/feature-promotions/src/lib/promotion-signup-form/promotion-signup-form.component.ts',
+            file: 'libs/nx-cloud/feature-promotions/src/lib/promotion-signup-form/promotion-signup-form.component.ts',
             hash: 'b97352e43c9a8d9af71a57d92bb64fba74cc8f13',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-promotions/src/lib/promotion-signup-success/promotion-signup-success.component.html',
+            file: 'libs/nx-cloud/feature-promotions/src/lib/promotion-signup-success/promotion-signup-success.component.html',
             hash: '8df0af45b9dee78075b3ce25b64b03d41a97ba2a',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/feature-promotions/src/lib/promotion-signup-success/promotion-signup-success.component.scss',
+            file: 'libs/nx-cloud/feature-promotions/src/lib/promotion-signup-success/promotion-signup-success.component.scss',
             hash: '0b47fe0d709d3fb1907bef062faf31b5f507ea16',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/feature-promotions/src/lib/promotion-signup-success/promotion-signup-success.component.ts',
+            file: 'libs/nx-cloud/feature-promotions/src/lib/promotion-signup-success/promotion-signup-success.component.ts',
             hash: 'f5e75f4d451d042fcd6c6cfdcc91cb53cd2f0565',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-promotions/src/lib/promotion-signup/promotion-signup.component.html',
+            file: 'libs/nx-cloud/feature-promotions/src/lib/promotion-signup/promotion-signup.component.html',
             hash: '2e4607bda4dc58388e112f7f57f3dd5c74597a33',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/feature-promotions/src/lib/promotion-signup/promotion-signup.component.scss',
+            file: 'libs/nx-cloud/feature-promotions/src/lib/promotion-signup/promotion-signup.component.scss',
             hash: '11f1a3224fe463aa8fb54b044416354781d4b24b',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/feature-promotions/src/lib/promotion-signup/promotion-signup.component.ts',
+            file: 'libs/nx-cloud/feature-promotions/src/lib/promotion-signup/promotion-signup.component.ts',
             hash: 'e46f2ab250b65433dab47ef6c6e2776d2374fdc1',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-promotions/src/lib/promotions.service.ts',
+            file: 'libs/nx-cloud/feature-promotions/src/lib/promotions.service.ts',
             hash: '0857448fda39a46953b73fa00c50ccbf6736791e',
             ext: '.ts',
           },
@@ -6533,146 +6030,122 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/dashboard/dashboard.component.html',
+            file: 'libs/platform/feature-dashboard/src/lib/dashboard/dashboard.component.html',
             hash: '63122fdd473e3016df422037911e56caa3cd69b1',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/dashboard/dashboard.component.scss',
+            file: 'libs/platform/feature-dashboard/src/lib/dashboard/dashboard.component.scss',
             hash: '3b8dcb058be45e06e222b7d0ae69bf64fa5fc81c',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/dashboard/dashboard.component.ts',
+            file: 'libs/platform/feature-dashboard/src/lib/dashboard/dashboard.component.ts',
             hash: '00814d063f8fd33f11aed3a52c4e204b59adcedb',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/featured-book/featured-book.component.html',
+            file: 'libs/platform/feature-dashboard/src/lib/featured-book/featured-book.component.html',
             hash: '5e4510ecfab46bbe7ec35ef3e597c3ea6b3149a1',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/featured-book/featured-book.component.scss',
+            file: 'libs/platform/feature-dashboard/src/lib/featured-book/featured-book.component.scss',
             hash: 'f4f08915ca021433222b3cae9704a7dc9b4176b8',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/featured-book/featured-book.component.ts',
+            file: 'libs/platform/feature-dashboard/src/lib/featured-book/featured-book.component.ts',
             hash: '21a3bc7e0dd2983c4385e314ae6973ec8d704fd2',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/featured-changelog/featured-changelog.component.html',
+            file: 'libs/platform/feature-dashboard/src/lib/featured-changelog/featured-changelog.component.html',
             hash: '735b6d73fda186f5e5476ca0f3f1dba2fa08ea7b',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/featured-changelog/featured-changelog.component.scss',
+            file: 'libs/platform/feature-dashboard/src/lib/featured-changelog/featured-changelog.component.scss',
             hash: 'f4f08915ca021433222b3cae9704a7dc9b4176b8',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/featured-changelog/featured-changelog.component.ts',
+            file: 'libs/platform/feature-dashboard/src/lib/featured-changelog/featured-changelog.component.ts',
             hash: 'efac60dbe18bc09f6989ceecc4e3a430ec11ab05',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/featured-connect-live/featured-connect-live.component.html',
+            file: 'libs/platform/feature-dashboard/src/lib/featured-connect-live/featured-connect-live.component.html',
             hash: '9d3c4b6e4017029d9df49746ff3b70dae273fc47',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/featured-connect-live/featured-connect-live.component.scss',
+            file: 'libs/platform/feature-dashboard/src/lib/featured-connect-live/featured-connect-live.component.scss',
             hash: 'f318e2c4ab504dd62276cd84824f4318184b0f5e',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/featured-connect-live/featured-connect-live.component.ts',
+            file: 'libs/platform/feature-dashboard/src/lib/featured-connect-live/featured-connect-live.component.ts',
             hash: 'ee72ce6cbb721df056e0cab6eb5bc7ea9b33a9f3',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/featured-course/featured-course.component.html',
+            file: 'libs/platform/feature-dashboard/src/lib/featured-course/featured-course.component.html',
             hash: '18456a961ef8e581d490658ab2f1a9a7e60eac69',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/featured-course/featured-course.component.scss',
+            file: 'libs/platform/feature-dashboard/src/lib/featured-course/featured-course.component.scss',
             hash: 'f4f08915ca021433222b3cae9704a7dc9b4176b8',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/featured-course/featured-course.component.ts',
+            file: 'libs/platform/feature-dashboard/src/lib/featured-course/featured-course.component.ts',
             hash: 'c132e88a6afa71d6baa2e51fc78c997e460fc423',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/featured-expert/featured-expert.component.html',
+            file: 'libs/platform/feature-dashboard/src/lib/featured-expert/featured-expert.component.html',
             hash: 'e2ff4bc623f416147ee75af8d258d47d21695bbc',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/featured-expert/featured-expert.component.scss',
+            file: 'libs/platform/feature-dashboard/src/lib/featured-expert/featured-expert.component.scss',
             hash: 'f4f08915ca021433222b3cae9704a7dc9b4176b8',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/featured-expert/featured-expert.component.ts',
+            file: 'libs/platform/feature-dashboard/src/lib/featured-expert/featured-expert.component.ts',
             hash: '9c8e49bfabb0fa6ffd8a525fb33d6477bf304cc4',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/featured-recipe/featured-recipe.component.html',
+            file: 'libs/platform/feature-dashboard/src/lib/featured-recipe/featured-recipe.component.html',
             hash: '2b17bde7cc83c529074f70c0dff65249a8877511',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/featured-recipe/featured-recipe.component.scss',
+            file: 'libs/platform/feature-dashboard/src/lib/featured-recipe/featured-recipe.component.scss',
             hash: 'f4f08915ca021433222b3cae9704a7dc9b4176b8',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/featured-recipe/featured-recipe.component.ts',
+            file: 'libs/platform/feature-dashboard/src/lib/featured-recipe/featured-recipe.component.ts',
             hash: '5a18a18b9da8740ed9236c4b12d6d0b204b4e8c0',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/featured-topic/featured-topic.component.html',
+            file: 'libs/platform/feature-dashboard/src/lib/featured-topic/featured-topic.component.html',
             hash: 'f0f01a3ef30648d35ad6f9c5c9f8ee90f489b5c7',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/featured-topic/featured-topic.component.scss',
+            file: 'libs/platform/feature-dashboard/src/lib/featured-topic/featured-topic.component.scss',
             hash: 'f4f08915ca021433222b3cae9704a7dc9b4176b8',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-dashboard/src/lib/featured-topic/featured-topic.component.ts',
+            file: 'libs/platform/feature-dashboard/src/lib/featured-topic/featured-topic.component.ts',
             hash: 'dbab944a329e0f38f737d05eeae555ea51a726a9',
             ext: '.ts',
           },
@@ -6759,8 +6232,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-blurb/src/lib/platform-data-access-blurb.module.ts',
+            file: 'libs/platform/data-access-blurb/src/lib/platform-data-access-blurb.module.ts',
             hash: 'f3de6f0df88085ed67e266032619992f7553d71c',
             ext: '.ts',
           },
@@ -6842,20 +6314,17 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/utils-fetcher/src/lib/documentation-versions-fetcher.service.ts',
+            file: 'libs/nx-docs-site/utils-fetcher/src/lib/documentation-versions-fetcher.service.ts',
             hash: '37ec9812b0041d459b0bea0a465197312c6d84f7',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/utils-fetcher/src/lib/metadata-fetcher.service.ts',
+            file: 'libs/nx-docs-site/utils-fetcher/src/lib/metadata-fetcher.service.ts',
             hash: '9437a8bf9817cde2108d43def9c26b83ee59db17',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/utils-fetcher/src/lib/nx-docs-site-utils-fetcher.module.ts',
+            file: 'libs/nx-docs-site/utils-fetcher/src/lib/nx-docs-site-utils-fetcher.module.ts',
             hash: 'b0a8b1b18163d3d76a65f91ea6a060f599e83436',
             ext: '.ts',
           },
@@ -6945,20 +6414,17 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/design-system/testimonials/src/lib/testimonial.component.spec.ts',
+            file: 'libs/design-system/testimonials/src/lib/testimonial.component.spec.ts',
             hash: '42e3c65662e5048b1dc40533da1d37311fe61382',
             ext: '.ts',
           },
           {
-            file:
-              'libs/design-system/testimonials/src/lib/testimonial.component.ts',
+            file: 'libs/design-system/testimonials/src/lib/testimonial.component.ts',
             hash: '4c0aede55a0cc989a782b364c9e3ac8b37846538',
             ext: '.ts',
           },
           {
-            file:
-              'libs/design-system/testimonials/src/lib/testimonials.module.ts',
+            file: 'libs/design-system/testimonials/src/lib/testimonials.module.ts',
             hash: '78f4e605343d748a3b7519b6494a70f8643a0094',
             ext: '.ts',
           },
@@ -7031,14 +6497,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/ui/breadcrumb-nav/src/lib/breadcrumb-nav.component.ts',
+            file: 'libs/nx-cloud/ui/breadcrumb-nav/src/lib/breadcrumb-nav.component.ts',
             hash: '7e9d4b82064d8bc75a4f7d251c3cfb0a662b747f',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/ui/breadcrumb-nav/src/lib/breadcrumb-nav.module.ts',
+            file: 'libs/nx-cloud/ui/breadcrumb-nav/src/lib/breadcrumb-nav.module.ts',
             hash: 'e2258fd5274fb23740ffdeb31e842add89d687a2',
             ext: '.ts',
           },
@@ -7116,14 +6580,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-book/src/lib/book-graphql.interface.ts',
+            file: 'libs/platform/data-access-book/src/lib/book-graphql.interface.ts',
             hash: '9f9e8d9d2fae16d4eb29884827c7ca5c3824f652',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-book/src/lib/book-graphql.service.ts',
+            file: 'libs/platform/data-access-book/src/lib/book-graphql.service.ts',
             hash: 'de7c6f350f7349f6b3f93289c0bcda893f5b12bd',
             ext: '.ts',
           },
@@ -7133,8 +6595,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/data-access-book/src/lib/platform-data-access-book.module.ts',
+            file: 'libs/platform/data-access-book/src/lib/platform-data-access-book.module.ts',
             hash: '3e29fb9cca159ae8a6999f2821853ded1759fc6b',
             ext: '.ts',
           },
@@ -7215,98 +6676,82 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-home/src/lib/angular-home/angular-home.component.html',
+            file: 'libs/nx-docs-site/feature-home/src/lib/angular-home/angular-home.component.html',
             hash: 'dcf0f239e2493c4dd293fbcfbb79650e7104e3c0',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-home/src/lib/angular-home/angular-home.component.scss',
+            file: 'libs/nx-docs-site/feature-home/src/lib/angular-home/angular-home.component.scss',
             hash: 'f013a4d02b060ec9a59f53c4231bd34ef8c69c3a',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-home/src/lib/angular-home/angular-home.component.ts',
+            file: 'libs/nx-docs-site/feature-home/src/lib/angular-home/angular-home.component.ts',
             hash: '3a980d76ed2f941bb2f5fcb9ccbbb9ed280d7a08',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-home/src/lib/deprecated-home/deprecated-home.component.html',
+            file: 'libs/nx-docs-site/feature-home/src/lib/deprecated-home/deprecated-home.component.html',
             hash: '13b1301e2d8c8714de1a0089fa05753f9c9dd531',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-home/src/lib/deprecated-home/deprecated-home.component.scss',
+            file: 'libs/nx-docs-site/feature-home/src/lib/deprecated-home/deprecated-home.component.scss',
             hash: '277306c0c5c203c8b7a79c268c5b76fa51cad062',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-home/src/lib/deprecated-home/deprecated-home.component.ts',
+            file: 'libs/nx-docs-site/feature-home/src/lib/deprecated-home/deprecated-home.component.ts',
             hash: 'c1a97f950da77b214d7c506e7cbdee3a8d28fcc6',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-home/src/lib/feature-home.module.ts',
+            file: 'libs/nx-docs-site/feature-home/src/lib/feature-home.module.ts',
             hash: 'c25775ac7bb751775cdc9cf6bcfa63ce9da76566',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-home/src/lib/flavor-selection.guard.ts',
+            file: 'libs/nx-docs-site/feature-home/src/lib/flavor-selection.guard.ts',
             hash: '8735095c7c139f07622d8fe41b61a304e4ad5103',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-home/src/lib/node-home/node-home.component.html',
+            file: 'libs/nx-docs-site/feature-home/src/lib/node-home/node-home.component.html',
             hash: '5cbfccfb97a7d79fcf1d60c4aef430620fa20cde',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-home/src/lib/node-home/node-home.component.scss',
+            file: 'libs/nx-docs-site/feature-home/src/lib/node-home/node-home.component.scss',
             hash: '3b3f27df1fd7b8b3a569377d9b2ce153da5d3f52',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-home/src/lib/node-home/node-home.component.ts',
+            file: 'libs/nx-docs-site/feature-home/src/lib/node-home/node-home.component.ts',
             hash: 'cbf15d683e371cb2d04820de3392c5c4b43e64eb',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-home/src/lib/nx-cloud-sponsor/nx-cloud-sponsor.component.scss',
+            file: 'libs/nx-docs-site/feature-home/src/lib/nx-cloud-sponsor/nx-cloud-sponsor.component.scss',
             hash: '26d86c6376cfc26b0dbdca263a3d395a2460a36e',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-home/src/lib/nx-cloud-sponsor/nx-cloud-sponsor.component.ts',
+            file: 'libs/nx-docs-site/feature-home/src/lib/nx-cloud-sponsor/nx-cloud-sponsor.component.ts',
             hash: '01d4b34836a8803a6af1f3e7688f563443a20f89',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-home/src/lib/react-home/react-home.component.html',
+            file: 'libs/nx-docs-site/feature-home/src/lib/react-home/react-home.component.html',
             hash: '7f8def747925ad111c73426f5f12c074ebdd08c3',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-home/src/lib/react-home/react-home.component.scss',
+            file: 'libs/nx-docs-site/feature-home/src/lib/react-home/react-home.component.scss',
             hash: '951e79381a1d374b01c5a1d46e82043a485dbd1c',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-docs-site/feature-home/src/lib/react-home/react-home.component.ts',
+            file: 'libs/nx-docs-site/feature-home/src/lib/react-home/react-home.component.ts',
             hash: '6dc4da4aaab48348be58b5bb6e5b346bc323a793',
             ext: '.ts',
           },
@@ -7383,44 +6828,37 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-cookbook/src/lib/platform-feature-cookbook.module.ts',
+            file: 'libs/platform/feature-cookbook/src/lib/platform-feature-cookbook.module.ts',
             hash: '22d4ec7992e44a8d9e692ba6cf1777566a3d29c7',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-cookbook/src/lib/recipe/recipe.component.html',
+            file: 'libs/platform/feature-cookbook/src/lib/recipe/recipe.component.html',
             hash: '738ce4441a6f87912fad69a26a1ea6493552d527',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-cookbook/src/lib/recipe/recipe.component.scss',
+            file: 'libs/platform/feature-cookbook/src/lib/recipe/recipe.component.scss',
             hash: 'c20014b1efca7918f8d27a8bb4a1940dde4c8a25',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-cookbook/src/lib/recipe/recipe.component.ts',
+            file: 'libs/platform/feature-cookbook/src/lib/recipe/recipe.component.ts',
             hash: '5c7639d7c53699c9a1c2dff8082bcdda97b3a8b9',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-cookbook/src/lib/recipes/recipes.component.html',
+            file: 'libs/platform/feature-cookbook/src/lib/recipes/recipes.component.html',
             hash: '2a0e64bc6177703ddb04a5dfddf59e6f4da498f0',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-cookbook/src/lib/recipes/recipes.component.scss',
+            file: 'libs/platform/feature-cookbook/src/lib/recipes/recipes.component.scss',
             hash: '669352ae1f6ba9a855bfa110cf1ad90d33e7959e',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-cookbook/src/lib/recipes/recipes.component.ts',
+            file: 'libs/platform/feature-cookbook/src/lib/recipes/recipes.component.ts',
             hash: '103efb2cbc54349bb7db1cf4da25536db14975c7',
             ext: '.ts',
           },
@@ -7501,26 +6939,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-policies/src/lib/platform-feature-policies.module.ts',
+            file: 'libs/platform/feature-policies/src/lib/platform-feature-policies.module.ts',
             hash: '2021bcba32ce19e228eb2e37cb966d65597f2c4a',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-policies/src/lib/privacy-policy/privacy-policy.component.html',
+            file: 'libs/platform/feature-policies/src/lib/privacy-policy/privacy-policy.component.html',
             hash: 'fc44fafc8116c2603fb397201d7c18da448ac3aa',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-policies/src/lib/privacy-policy/privacy-policy.component.scss',
+            file: 'libs/platform/feature-policies/src/lib/privacy-policy/privacy-policy.component.scss',
             hash: 'aa46314bf219ca92a7a58da76acf59085347182f',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-policies/src/lib/privacy-policy/privacy-policy.component.ts',
+            file: 'libs/platform/feature-policies/src/lib/privacy-policy/privacy-policy.component.ts',
             hash: '7529e0b6287bff246bf212d4f689223b47f7b39d',
             ext: '.ts',
           },
@@ -7601,8 +7035,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/shared/utils/download-csv/src/lib/shared-utils-download-csv.ts',
+            file: 'libs/shared/utils/download-csv/src/lib/shared-utils-download-csv.ts',
             hash: '131b885745a8d2b6317f70a74fad8a5f1036921c',
             ext: '.ts',
           },
@@ -7683,44 +7116,37 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/feature-pages/src/lib/feature-pages-routing.module.ts',
+            file: 'libs/nrwlio-site/feature-pages/src/lib/feature-pages-routing.module.ts',
             hash: '422b1b7c369ca6e71b970ff10e1e8ef6c16d95f3',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/feature-pages/src/lib/feature-pages.module.ts',
+            file: 'libs/nrwlio-site/feature-pages/src/lib/feature-pages.module.ts',
             hash: '0dc8cb3c712bef9d39f1dd6e9bf4a5c49acef0b6',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/feature-pages/src/lib/not-found/not-found.component.html',
+            file: 'libs/nrwlio-site/feature-pages/src/lib/not-found/not-found.component.html',
             hash: '17774fc6c9b0170fe3cef913ea52e43482234047',
             ext: '.html',
           },
           {
-            file:
-              'libs/nrwlio-site/feature-pages/src/lib/not-found/not-found.component.scss',
+            file: 'libs/nrwlio-site/feature-pages/src/lib/not-found/not-found.component.scss',
             hash: '2c8189837c0c97a932a6254b284e2dee03bcf65d',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/feature-pages/src/lib/not-found/not-found.component.ts',
+            file: 'libs/nrwlio-site/feature-pages/src/lib/not-found/not-found.component.ts',
             hash: 'c0b85624d086cd0b9f7bce96243f3e355bf4d158',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/feature-pages/src/lib/page-metas.service.ts',
+            file: 'libs/nrwlio-site/feature-pages/src/lib/page-metas.service.ts',
             hash: '82926b7e8243c5fbc0b29ddd974a1e432acaefe3',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/feature-pages/src/lib/page-resolver.service.ts',
+            file: 'libs/nrwlio-site/feature-pages/src/lib/page-resolver.service.ts',
             hash: 'b1dce84a3937f339d5491e4945e5923ee852d3e3',
             ext: '.ts',
           },
@@ -7730,8 +7156,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/feature-pages/src/lib/pages-query.service.ts',
+            file: 'libs/nrwlio-site/feature-pages/src/lib/pages-query.service.ts',
             hash: '8a4ec03f4d87c2bd6a6b7663b8a777927c0d08d9',
             ext: '.ts',
           },
@@ -7741,8 +7166,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/feature-pages/src/lib/shell/shell.component.ts',
+            file: 'libs/nrwlio-site/feature-pages/src/lib/shell/shell.component.ts',
             hash: 'a65269088c1247674f2b6d1cc9fe9ce37678d020',
             ext: '.ts',
           },
@@ -7828,32 +7252,27 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-policies/src/lib/feature-policies.module.spec.ts',
+            file: 'libs/nx-cloud/feature-policies/src/lib/feature-policies.module.spec.ts',
             hash: '5ba0208b4b347831f74afa0ef8fd1bb7a02f61b3',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-policies/src/lib/feature-policies.module.ts',
+            file: 'libs/nx-cloud/feature-policies/src/lib/feature-policies.module.ts',
             hash: '7f9a98a084308ce9d572ab0b61540ed446222595',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-policies/src/lib/privacy-policy/privacy-policy.component.html',
+            file: 'libs/nx-cloud/feature-policies/src/lib/privacy-policy/privacy-policy.component.html',
             hash: '3bdebbfcbf99aed6ca037cc017b9b57c76988839',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/feature-policies/src/lib/privacy-policy/privacy-policy.component.scss',
+            file: 'libs/nx-cloud/feature-policies/src/lib/privacy-policy/privacy-policy.component.scss',
             hash: 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/feature-policies/src/lib/privacy-policy/privacy-policy.component.ts',
+            file: 'libs/nx-cloud/feature-policies/src/lib/privacy-policy/privacy-policy.component.ts',
             hash: '49b0fd520db309e46655592a370cc9e17718190e',
             ext: '.ts',
           },
@@ -7939,26 +7358,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-courses/src/lib/courses/courses.component.html',
+            file: 'libs/platform/feature-courses/src/lib/courses/courses.component.html',
             hash: 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-courses/src/lib/courses/courses.component.scss',
+            file: 'libs/platform/feature-courses/src/lib/courses/courses.component.scss',
             hash: '2be414365bafda3734caeaf54370dfb802ed7878',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-courses/src/lib/courses/courses.component.ts',
+            file: 'libs/platform/feature-courses/src/lib/courses/courses.component.ts',
             hash: 'c449390168638e0f13fe1813757e57f86b16c8eb',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-courses/src/lib/platform-feature-courses.module.ts',
+            file: 'libs/platform/feature-courses/src/lib/platform-feature-courses.module.ts',
             hash: '8d9cbeca39d2d94c10449b3de6fc56ae596fdbdd',
             ext: '.ts',
           },
@@ -8040,26 +7455,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-reports/src/lib/platform-feature-reports.module.ts',
+            file: 'libs/platform/feature-reports/src/lib/platform-feature-reports.module.ts',
             hash: '2fe80ad422c7cf0dd83c29cb6741a569de28e683',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-reports/src/lib/reports/reports.component.html',
+            file: 'libs/platform/feature-reports/src/lib/reports/reports.component.html',
             hash: '1fa1de6f5779794f838d4b7380651f0dc8089e28',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-reports/src/lib/reports/reports.component.scss',
+            file: 'libs/platform/feature-reports/src/lib/reports/reports.component.scss',
             hash: '58df1a4fc6085c1aefac4bdb5c04487670eb8e42',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-reports/src/lib/reports/reports.component.ts',
+            file: 'libs/platform/feature-reports/src/lib/reports/reports.component.ts',
             hash: 'b91fa270831cb079b7d68e907dfe6db3be6ae7cb',
             ext: '.ts',
           },
@@ -8146,86 +7557,72 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-landing/src/lib/landing-feature-item/fade.animation.ts',
+            file: 'libs/nx-cloud/feature-landing/src/lib/landing-feature-item/fade.animation.ts',
             hash: 'ee127813e2b43d149446f7ba3d5d74d0d5a18a13',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-landing/src/lib/landing-feature-item/landing-feature-item.component.html',
+            file: 'libs/nx-cloud/feature-landing/src/lib/landing-feature-item/landing-feature-item.component.html',
             hash: 'd68f3032c43c043237e4149da0052ca7ee7f0fca',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/feature-landing/src/lib/landing-feature-item/landing-feature-item.component.scss',
+            file: 'libs/nx-cloud/feature-landing/src/lib/landing-feature-item/landing-feature-item.component.scss',
             hash: 'a262c5643090646b76c0739b12646588a9b1409e',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/feature-landing/src/lib/landing-feature-item/landing-feature-item.component.ts',
+            file: 'libs/nx-cloud/feature-landing/src/lib/landing-feature-item/landing-feature-item.component.ts',
             hash: 'b813d30a8921f201d8ac8fe9b4d7deda2211baac',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-landing/src/lib/landing-features/landing-features.component.html',
+            file: 'libs/nx-cloud/feature-landing/src/lib/landing-features/landing-features.component.html',
             hash: 'd8b4f8c872f7457a0c53e241522a2d890fea72e4',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/feature-landing/src/lib/landing-features/landing-features.component.scss',
+            file: 'libs/nx-cloud/feature-landing/src/lib/landing-features/landing-features.component.scss',
             hash: 'c2fbd1b853447d4ed34e676b90c914708684b697',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/feature-landing/src/lib/landing-features/landing-features.component.ts',
+            file: 'libs/nx-cloud/feature-landing/src/lib/landing-features/landing-features.component.ts',
             hash: '46555f49b45fa1678cc3e10099ec27cf9309019c',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-landing/src/lib/nx-cloud-feature-landing.module.ts',
+            file: 'libs/nx-cloud/feature-landing/src/lib/nx-cloud-feature-landing.module.ts',
             hash: 'edcee5505c43c6bf4e6f9fd52dc5853a26e9757e',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-landing/src/lib/price-calculator/price-calculator.component.css',
+            file: 'libs/nx-cloud/feature-landing/src/lib/price-calculator/price-calculator.component.css',
             hash: '7e52a06ca58b134aa45cc4382aa8c2aba12b05ac',
             ext: '.css',
           },
           {
-            file:
-              'libs/nx-cloud/feature-landing/src/lib/price-calculator/price-calculator.component.html',
+            file: 'libs/nx-cloud/feature-landing/src/lib/price-calculator/price-calculator.component.html',
             hash: '1fb7a1e729735df6cb23312fe2a05604f613e132',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/feature-landing/src/lib/price-calculator/price-calculator.component.ts',
+            file: 'libs/nx-cloud/feature-landing/src/lib/price-calculator/price-calculator.component.ts',
             hash: 'c367c893746dc010711c016e0f7c8f48be5bb05a',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-landing/src/lib/shell/shell.component.html',
+            file: 'libs/nx-cloud/feature-landing/src/lib/shell/shell.component.html',
             hash: 'aaa795e28183ef0fc56b320067135135bba4b6a7',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/feature-landing/src/lib/shell/shell.component.scss',
+            file: 'libs/nx-cloud/feature-landing/src/lib/shell/shell.component.scss',
             hash: 'b0846cdea2d3acc24fa2421c5c5d3bf79de89262',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/feature-landing/src/lib/shell/shell.component.ts',
+            file: 'libs/nx-cloud/feature-landing/src/lib/shell/shell.component.ts',
             hash: 'd1d6b1c9cdb4f26d276f81894b753ef1163fd640',
             ext: '.ts',
           },
@@ -8311,98 +7708,82 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-pricing/src/lib/nx-cloud-feature-pricing.module.ts',
+            file: 'libs/nx-cloud/feature-pricing/src/lib/nx-cloud-feature-pricing.module.ts',
             hash: '919d6406f2d56ca1b6b1af856410cccff690e1e7',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-pricing/src/lib/pricing-faqs/pricing-faqs.component.html',
+            file: 'libs/nx-cloud/feature-pricing/src/lib/pricing-faqs/pricing-faqs.component.html',
             hash: '8ab9b04310ff58d673a813915d3c4b0eab5d0e76',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/feature-pricing/src/lib/pricing-faqs/pricing-faqs.component.scss',
+            file: 'libs/nx-cloud/feature-pricing/src/lib/pricing-faqs/pricing-faqs.component.scss',
             hash: '5b991c2d65a869fcdf01fa9d684f9a8f41cef506',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/feature-pricing/src/lib/pricing-faqs/pricing-faqs.component.ts',
+            file: 'libs/nx-cloud/feature-pricing/src/lib/pricing-faqs/pricing-faqs.component.ts',
             hash: 'f32c85a31860455a9e8844c9f71dba06f6b4e7dc',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-pricing/src/lib/pricing-feature-table/pricing-feature-table.component.html',
+            file: 'libs/nx-cloud/feature-pricing/src/lib/pricing-feature-table/pricing-feature-table.component.html',
             hash: 'deeab143b4925439923b3ff2ad045d42290cb66b',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/feature-pricing/src/lib/pricing-feature-table/pricing-feature-table.component.scss',
+            file: 'libs/nx-cloud/feature-pricing/src/lib/pricing-feature-table/pricing-feature-table.component.scss',
             hash: 'c002ae912c16673dd43b8cb9dc45e331f5634536',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/feature-pricing/src/lib/pricing-feature-table/pricing-feature-table.component.ts',
+            file: 'libs/nx-cloud/feature-pricing/src/lib/pricing-feature-table/pricing-feature-table.component.ts',
             hash: 'e04217147f38036f5ea4fd87c06000f66949bd02',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-pricing/src/lib/pricing-table-value/pricing-table-value.component.html',
+            file: 'libs/nx-cloud/feature-pricing/src/lib/pricing-table-value/pricing-table-value.component.html',
             hash: 'b79e2c1b4cdb55e29402e0ecff4dd5fe283e2bd1',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/feature-pricing/src/lib/pricing-table-value/pricing-table-value.component.scss',
+            file: 'libs/nx-cloud/feature-pricing/src/lib/pricing-table-value/pricing-table-value.component.scss',
             hash: '8811252b74a7802892f5e42ebad671774db80af7',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/feature-pricing/src/lib/pricing-table-value/pricing-table-value.component.ts',
+            file: 'libs/nx-cloud/feature-pricing/src/lib/pricing-table-value/pricing-table-value.component.ts',
             hash: 'ab2817875764281da9f09b80b435f6ae91095663',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-pricing/src/lib/pricing/pricing.component.html',
+            file: 'libs/nx-cloud/feature-pricing/src/lib/pricing/pricing.component.html',
             hash: '97e8358dd9964a3e386ad77b8d866cdfc81dd417',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/feature-pricing/src/lib/pricing/pricing.component.scss',
+            file: 'libs/nx-cloud/feature-pricing/src/lib/pricing/pricing.component.scss',
             hash: '34109edf970daf4b1d898ee646ece4dcc5f0a2a8',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/feature-pricing/src/lib/pricing/pricing.component.ts',
+            file: 'libs/nx-cloud/feature-pricing/src/lib/pricing/pricing.component.ts',
             hash: 'b8eb6847fe24a68425e643cd1996c61cb578f697',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-pricing/src/lib/private-cloud-form/private-cloud-form.component.html',
+            file: 'libs/nx-cloud/feature-pricing/src/lib/private-cloud-form/private-cloud-form.component.html',
             hash: 'e3b256d95fe369c914287f263d7ff327013ccf2c',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/feature-pricing/src/lib/private-cloud-form/private-cloud-form.component.scss',
+            file: 'libs/nx-cloud/feature-pricing/src/lib/private-cloud-form/private-cloud-form.component.scss',
             hash: '791f0846d78e2f20fb511c2de915745b440410ed',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/feature-pricing/src/lib/private-cloud-form/private-cloud-form.component.ts',
+            file: 'libs/nx-cloud/feature-pricing/src/lib/private-cloud-form/private-cloud-form.component.ts',
             hash: 'a5be3e4e01a76a6d9a80778cea613c34e25f678e',
             ext: '.ts',
           },
@@ -8479,44 +7860,37 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-topics/src/lib/platform-feature-topics.module.ts',
+            file: 'libs/platform/feature-topics/src/lib/platform-feature-topics.module.ts',
             hash: '046b8cf37188312cbefa615fc8701181c0526e10',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-topics/src/lib/topic-detail/topic-detail.component.html',
+            file: 'libs/platform/feature-topics/src/lib/topic-detail/topic-detail.component.html',
             hash: '7a7cda3518203d88afa8623dbfcd6fc9dce7b5c5',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-topics/src/lib/topic-detail/topic-detail.component.scss',
+            file: 'libs/platform/feature-topics/src/lib/topic-detail/topic-detail.component.scss',
             hash: 'b67995824e441866cd6290322ba2fd22b6bbaf18',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-topics/src/lib/topic-detail/topic-detail.component.ts',
+            file: 'libs/platform/feature-topics/src/lib/topic-detail/topic-detail.component.ts',
             hash: '7eadcf5b48126a7756d196b7fb86d37804fa74a5',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-topics/src/lib/topics/topics.component.html',
+            file: 'libs/platform/feature-topics/src/lib/topics/topics.component.html',
             hash: 'a149c6fbef4a59fdb2f73ad6b2e4bc1b49a0820f',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-topics/src/lib/topics/topics.component.scss',
+            file: 'libs/platform/feature-topics/src/lib/topics/topics.component.scss',
             hash: '734691ca152fc8e68bb8ad4231ccf0654725e68f',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-topics/src/lib/topics/topics.component.ts',
+            file: 'libs/platform/feature-topics/src/lib/topics/topics.component.ts',
             hash: '3fe5313de717d58342f2087d2137cf9984fb4ed6',
             ext: '.ts',
           },
@@ -8597,14 +7971,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/shared/google-analytics/src/lib/google-analytics.module.ts',
+            file: 'libs/shared/google-analytics/src/lib/google-analytics.module.ts',
             hash: 'c68728d40ab0a05d9e3d7150c4c392eb729d56ca',
             ext: '.ts',
           },
           {
-            file:
-              'libs/shared/google-analytics/src/lib/google-analytics.service.ts',
+            file: 'libs/shared/google-analytics/src/lib/google-analytics.service.ts',
             hash: '82211878d2086bce69655e64ce4d1b4238130e71',
             ext: '.ts',
           },
@@ -8686,80 +8058,67 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-users/src/lib/all-users/all-users.component.html',
+            file: 'libs/platform/feature-users/src/lib/all-users/all-users.component.html',
             hash: 'a0b7d11af5b1ee65db4e40265c1bf110b7612369',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-users/src/lib/all-users/all-users.component.scss',
+            file: 'libs/platform/feature-users/src/lib/all-users/all-users.component.scss',
             hash: '78e8cd365924be9f0f6ecd86bc4e67e9c3ada844',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-users/src/lib/all-users/all-users.component.ts',
+            file: 'libs/platform/feature-users/src/lib/all-users/all-users.component.ts',
             hash: 'ca86b38edf8632b5e41c3e97c1fc4db84599bb3d',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-users/src/lib/create-user-dialog/create-user-dialog.component.html',
+            file: 'libs/platform/feature-users/src/lib/create-user-dialog/create-user-dialog.component.html',
             hash: '643dbbee65e3b5218dbc9280b800c1eb35ce0e13',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-users/src/lib/create-user-dialog/create-user-dialog.component.scss',
+            file: 'libs/platform/feature-users/src/lib/create-user-dialog/create-user-dialog.component.scss',
             hash: 'ddc5b4c3bed9b7804076416a2b7b7e3b18c7d49a',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-users/src/lib/create-user-dialog/create-user-dialog.component.ts',
+            file: 'libs/platform/feature-users/src/lib/create-user-dialog/create-user-dialog.component.ts',
             hash: '6f6838342bf6beb24f41c6b469e6485c6b44a902',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-users/src/lib/delete-user-confirmation-dialog/delete-user-confirmation-dialog.component.html',
+            file: 'libs/platform/feature-users/src/lib/delete-user-confirmation-dialog/delete-user-confirmation-dialog.component.html',
             hash: '6c67b746bb7e10f57147aa8853a1e0ceef73adba',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-users/src/lib/delete-user-confirmation-dialog/delete-user-confirmation-dialog.component.scss',
+            file: 'libs/platform/feature-users/src/lib/delete-user-confirmation-dialog/delete-user-confirmation-dialog.component.scss',
             hash: '8f5c580105b58f80494dfc9f104b7770d57419d3',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-users/src/lib/delete-user-confirmation-dialog/delete-user-confirmation-dialog.component.ts',
+            file: 'libs/platform/feature-users/src/lib/delete-user-confirmation-dialog/delete-user-confirmation-dialog.component.ts',
             hash: 'a76db3c3b5731fd467939860afc9390184f9f18c',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-users/src/lib/delete-user-progress-dialog/delete-user-progress-dialog.component.html',
+            file: 'libs/platform/feature-users/src/lib/delete-user-progress-dialog/delete-user-progress-dialog.component.html',
             hash: '0069ae1b965b699c6142c15a3b7660663f1ccf45',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-users/src/lib/delete-user-progress-dialog/delete-user-progress-dialog.component.scss',
+            file: 'libs/platform/feature-users/src/lib/delete-user-progress-dialog/delete-user-progress-dialog.component.scss',
             hash: '3f2356796cc1f5e89c7b0c6a676d688765b55031',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-users/src/lib/delete-user-progress-dialog/delete-user-progress-dialog.component.ts',
+            file: 'libs/platform/feature-users/src/lib/delete-user-progress-dialog/delete-user-progress-dialog.component.ts',
             hash: '62906e5aa3169a6f3412e910c8704ce24f81aa35',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-users/src/lib/platform-feature-users.module.ts',
+            file: 'libs/platform/feature-users/src/lib/platform-feature-users.module.ts',
             hash: 'ba783216bc200a0da9d5e606ca58e6d464534e4d',
             ext: '.ts',
           },
@@ -8836,14 +8195,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-books/src/lib/book/book.component.html',
+            file: 'libs/platform/feature-books/src/lib/book/book.component.html',
             hash: '036136c58663aafdb40adaa9dede18cc50504693',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-books/src/lib/book/book.component.scss',
+            file: 'libs/platform/feature-books/src/lib/book/book.component.scss',
             hash: '7e66fd818d3f3e5f85eb531a5e78f3067aa9e52b',
             ext: '.scss',
           },
@@ -8853,44 +8210,37 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-books/src/lib/books/books.component.html',
+            file: 'libs/platform/feature-books/src/lib/books/books.component.html',
             hash: 'b701b82b9510be681b52141f00c8c22be7e6acf9',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-books/src/lib/books/books.component.scss',
+            file: 'libs/platform/feature-books/src/lib/books/books.component.scss',
             hash: '6b21b34e4c680c6f64b3820177a25cf94f1afb6c',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-books/src/lib/books/books.component.ts',
+            file: 'libs/platform/feature-books/src/lib/books/books.component.ts',
             hash: '87788d7e42cbf180ebcf2d771e74fa2ed2488ccc',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-books/src/lib/epub-reader/epub-reader.component.html',
+            file: 'libs/platform/feature-books/src/lib/epub-reader/epub-reader.component.html',
             hash: '2e94e79943aa25cd27c28c96722f36f1b50ce8ff',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-books/src/lib/epub-reader/epub-reader.component.scss',
+            file: 'libs/platform/feature-books/src/lib/epub-reader/epub-reader.component.scss',
             hash: '8ebaf96c4b1424d5b88424d037ec850971f688e4',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-books/src/lib/epub-reader/epub-reader.component.ts',
+            file: 'libs/platform/feature-books/src/lib/epub-reader/epub-reader.component.ts',
             hash: '40e24c52600bb8b8d4f2b8c8d61a52f6d1543dec',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-books/src/lib/platform-feature-books.module.ts',
+            file: 'libs/platform/feature-books/src/lib/platform-feature-books.module.ts',
             hash: 'f409f8f05cd6851d99a21396ef0a4aa28510caca',
             ext: '.ts',
           },
@@ -8976,44 +8326,37 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/ui-expert-bio/src/lib/expert-bio/expert-bio.component.html',
+            file: 'libs/platform/ui-expert-bio/src/lib/expert-bio/expert-bio.component.html',
             hash: '6853d5584991d2499119de009de5500c85f4b320',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/ui-expert-bio/src/lib/expert-bio/expert-bio.component.scss',
+            file: 'libs/platform/ui-expert-bio/src/lib/expert-bio/expert-bio.component.scss',
             hash: 'a2ba71e1c27e2c847d7dd52a61dd1595c1e0308c',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/ui-expert-bio/src/lib/expert-bio/expert-bio.component.ts',
+            file: 'libs/platform/ui-expert-bio/src/lib/expert-bio/expert-bio.component.ts',
             hash: 'd2348137cb29d57bb778f902032f299a0c21081b',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/ui-expert-bio/src/lib/platform-ui-expert-bio.module.ts',
+            file: 'libs/platform/ui-expert-bio/src/lib/platform-ui-expert-bio.module.ts',
             hash: '0ed00a26537eb842e0d43d9e3656308751276623',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/ui-expert-bio/src/lib/topic-card/topic-card.component.html',
+            file: 'libs/platform/ui-expert-bio/src/lib/topic-card/topic-card.component.html',
             hash: '394395e3f90760f0a9c2459af5a3f42c083886cc',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/ui-expert-bio/src/lib/topic-card/topic-card.component.scss',
+            file: 'libs/platform/ui-expert-bio/src/lib/topic-card/topic-card.component.scss',
             hash: 'bf69547d4323268893490eb968f217c19c13c792',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/ui-expert-bio/src/lib/topic-card/topic-card.component.ts',
+            file: 'libs/platform/ui-expert-bio/src/lib/topic-card/topic-card.component.ts',
             hash: '955f1d9b3517fe4cbc7a690d2b30304e54e2227f',
             ext: '.ts',
           },
@@ -9095,56 +8438,47 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/ads/ad-display-primary/ad-display-primary-query.service.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/ads/ad-display-primary/ad-display-primary-query.service.ts',
             hash: '01d3c5f3ef32f7599480f274c9c4822113fed497',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/ads/ad-display-primary/ad-display-primary.component.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/ads/ad-display-primary/ad-display-primary.component.ts',
             hash: 'b57ad3ada5872e83a65392f0f0362cd550cc34ba',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/ads/ad-display-primary/ad-display-primary.model.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/ads/ad-display-primary/ad-display-primary.model.ts',
             hash: 'f654103ecf04a170dc5677d2b5c1bd4f958ec159',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/articles/article-primary/article-primary-query.service.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/articles/article-primary/article-primary-query.service.ts',
             hash: 'b707865731e46426c44c0a5f1437915c2c55541f',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/articles/article-primary/article-primary.component.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/articles/article-primary/article-primary.component.ts',
             hash: 'cdc29af3b4560c5f5fe355551170d82ce2e6a49c',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/articles/article-primary/article-primary.model.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/articles/article-primary/article-primary.model.ts',
             hash: 'ddaeb47f6d67acbb30ceff3d0169bee87422e379',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/component-drivers.collection.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/component-drivers.collection.ts',
             hash: '309ed38790fe57a27dd656b6f7535375d065f91d',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/contentful-components.service.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/contentful-components.service.ts',
             hash: '802580415c22466ff2486e28a534a2f5253d0e10',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/contentful-configuration.token.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/contentful-configuration.token.ts',
             hash: '0f5f9041df7ba6638400e69d59cd8803132bd14f',
             ext: '.ts',
           },
@@ -9154,158 +8488,132 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/contents/content-block-001/content-block-001-query.service.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/contents/content-block-001/content-block-001-query.service.ts',
             hash: '484681ddc10c25c234c93bc123992cb2a480ae30',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/contents/content-block-001/content-block-001.component.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/contents/content-block-001/content-block-001.component.ts',
             hash: 'cf9151a565be9b74be7a13d56fe10517507b3d28',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/contents/content-block-001/content-block-001.model.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/contents/content-block-001/content-block-001.model.ts',
             hash: '8387648f784a480ee7bde7ff7eaaf5f6b681d5f6',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/contents/content-block-002/content-block-002-query.service.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/contents/content-block-002/content-block-002-query.service.ts',
             hash: '2d2e5d7f44a386f18b55af87e933f8045f50f827',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/contents/content-block-002/content-block-002.component.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/contents/content-block-002/content-block-002.component.ts',
             hash: '530d7a43f281da21627bd0d7e4b4a60ef8e93e94',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/contents/content-block-002/content-block-002.model.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/contents/content-block-002/content-block-002.model.ts',
             hash: 'd82d00caf1ecc8fb9d978656ca2bdce6489d0e0a',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/contents/content-block-004/content-block-004-query.service.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/contents/content-block-004/content-block-004-query.service.ts',
             hash: '8c9a6e526d57ed53fb2818be5cb50870ca426767',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/contents/content-block-004/content-block-004.component.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/contents/content-block-004/content-block-004.component.ts',
             hash: '2802650ccf8a0bae0196e0460c1e828a1155bb0b',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/contents/content-block-004/content-block-004.model.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/contents/content-block-004/content-block-004.model.ts',
             hash: 'f0c0242e6eac701d59c24bd0fce92f0a8ca98884',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/contents/content-wide/content-wide-query.service.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/contents/content-wide/content-wide-query.service.ts',
             hash: '8808aea179288d7e7fc7629073a30d48a03a7939',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/contents/content-wide/content-wide.component.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/contents/content-wide/content-wide.component.ts',
             hash: '6a2561f1160d885f39d4497c293882cda45d8437',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/contents/content-wide/content-wide.model.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/contents/content-wide/content-wide.model.ts',
             hash: '3ab62aafcd1015aa598dabd694476f8d6db6ec53',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/domain-switcher.service.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/domain-switcher.service.ts',
             hash: '54fbf646ffd5554d6c75a06ce851157ca6a58f87',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/downloads/download-primary/download-primary-query.service.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/downloads/download-primary/download-primary-query.service.ts',
             hash: '53803070862e19e5b6baa52cec1b0cd94097b33c',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/downloads/download-primary/download-primary.component.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/downloads/download-primary/download-primary.component.ts',
             hash: '9386ae9bf54901b2b35a5fe2774507882d979a49',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/downloads/download-primary/download-primary.model.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/downloads/download-primary/download-primary.model.ts',
             hash: '02b8b821b7085b38e7070323d44a7fb32e375513',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/dynamic-layout/dyanmic-layout-query.service.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/dynamic-layout/dyanmic-layout-query.service.ts',
             hash: '93604b622c115f195d5bfbab917472cb8295e1a2',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/dynamic-layout/dynamic-layout-view.directive.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/dynamic-layout/dynamic-layout-view.directive.ts',
             hash: '6fde413abb01a41017e42f3a6c2fbabc7562ddc9',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/dynamic-layout/dynamic-layout.component.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/dynamic-layout/dynamic-layout.component.ts',
             hash: '90aa8bacb91caff0d1e556ec166e12fa15e52a01',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/dynamic-layout/dynamic-layout.model.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/dynamic-layout/dynamic-layout.model.ts',
             hash: 'a1acf6bfada6893689f8a89a0170940a23eaae24',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/features/feature-primary/feature-primary-query.service.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/features/feature-primary/feature-primary-query.service.ts',
             hash: '1a0a2fe0972e3e9a95e40b45d60ae801ed893924',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/features/feature-primary/feature-primary.component.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/features/feature-primary/feature-primary.component.ts',
             hash: '9abaab90de699e3b0703f0fb2a10e6d8aecd8279',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/features/feature-primary/feature-primary.model.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/features/feature-primary/feature-primary.model.ts',
             hash: '7f765904321d7a74ba43c160379f0902e97b7b84',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/heros/hero-primary/hero-primary-query.service.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/heros/hero-primary/hero-primary-query.service.ts',
             hash: 'b44518a5fa99d2387a3c669d555ba350739c2b80',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/heros/hero-primary/hero-primary.component.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/heros/hero-primary/hero-primary.component.ts',
             hash: '44c2b46545c9b1605959a9a385bfe3b9b1008116',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/heros/hero-primary/hero-primary.model.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/heros/hero-primary/hero-primary.model.ts',
             hash: 'f7e8f45d8156fc84bb556aea5e9eb1f7c291a43d',
             ext: '.ts',
           },
@@ -9315,38 +8623,32 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/layout-metas/layout-metas-query.service.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/layout-metas/layout-metas-query.service.ts',
             hash: '6ab380f3f360e5e63abc63d53844c0e5d2e46dc2',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/layout-metas/layout-metas.component.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/layout-metas/layout-metas.component.ts',
             hash: 'c38a90d9795d086590e994feebd37f81d86b455e',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/layout-metas/layout-metas.model.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/layout-metas/layout-metas.model.ts',
             hash: '4377be9409577cbf951d6d8d77e40cad9ce59598',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/testimonials/testimonial-primary/testimonial-primary-query.service.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/testimonials/testimonial-primary/testimonial-primary-query.service.ts',
             hash: 'b46e29b15ff693dbedfd7aee38af873cd522b50d',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/testimonials/testimonial-primary/testimonial-primary.component.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/testimonials/testimonial-primary/testimonial-primary.component.ts',
             hash: '36e20b4816aa542bacff781da2d2d3c76cde32da',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/contentful/src/lib/testimonials/testimonial-primary/testimonial-primary.model.ts',
+            file: 'libs/nrwlio-site/contentful/src/lib/testimonials/testimonial-primary/testimonial-primary.model.ts',
             hash: 'd53c9a27e629630678d5c7bbd23c8d4e94e6f9e5',
             ext: '.ts',
           },
@@ -9432,26 +8734,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-about/src/lib/about/about.component.html',
+            file: 'libs/platform/feature-about/src/lib/about/about.component.html',
             hash: '9585229f6b39256d10705536cfe6d392a9aff227',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-about/src/lib/about/about.component.scss',
+            file: 'libs/platform/feature-about/src/lib/about/about.component.scss',
             hash: 'ba66f3e45a14c9d82c3eeca318096c1d2805d4c3',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-about/src/lib/about/about.component.ts',
+            file: 'libs/platform/feature-about/src/lib/about/about.component.ts',
             hash: '477f0f57cac080f7c77906ee2a4216858b81922a',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-about/src/lib/platform-feature-about.module.ts',
+            file: 'libs/platform/feature-about/src/lib/platform-feature-about.module.ts',
             hash: '993c4b79c032f2df22f9bd025639cc70d5c15dca',
             ext: '.ts',
           },
@@ -9541,8 +8839,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/design-system/contents/src/lib/content-1.component.spec.ts',
+            file: 'libs/design-system/contents/src/lib/content-1.component.spec.ts',
             hash: 'b62b9ee8d93e29f66af59f6219c9272d08431abb',
             ext: '.ts',
           },
@@ -9552,8 +8849,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/design-system/contents/src/lib/content-2.component.spec.ts',
+            file: 'libs/design-system/contents/src/lib/content-2.component.spec.ts',
             hash: 'aa1afec0b0434654d21e482e0491a3ae62694ea6',
             ext: '.ts',
           },
@@ -9563,8 +8859,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/design-system/contents/src/lib/content-3.component.spec.ts',
+            file: 'libs/design-system/contents/src/lib/content-3.component.spec.ts',
             hash: '7b19717901bcedc13f4ac8e577c7f30ed881305f',
             ext: '.ts',
           },
@@ -9574,8 +8869,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/design-system/contents/src/lib/content-4.component.spec.ts',
+            file: 'libs/design-system/contents/src/lib/content-4.component.spec.ts',
             hash: '1467e45e14b23e08067b56dc790e64a0fb267db0',
             ext: '.ts',
           },
@@ -9585,8 +8879,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/design-system/contents/src/lib/content-5.component.spec.ts',
+            file: 'libs/design-system/contents/src/lib/content-5.component.spec.ts',
             hash: '521a89d6ce3c912ea276361a2c1c41d4adc5077e',
             ext: '.ts',
           },
@@ -9676,20 +8969,17 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-auth/src/lib/auth-callback/auth-callback.component.html',
+            file: 'libs/platform/feature-auth/src/lib/auth-callback/auth-callback.component.html',
             hash: 'a58059d3299e32ffa24a950d561c82458004ac2e',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-auth/src/lib/auth-callback/auth-callback.component.scss',
+            file: 'libs/platform/feature-auth/src/lib/auth-callback/auth-callback.component.scss',
             hash: 'db0291ae856ba03fc059546a82b381c5a3a9cc90',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-auth/src/lib/auth-callback/auth-callback.component.ts',
+            file: 'libs/platform/feature-auth/src/lib/auth-callback/auth-callback.component.ts',
             hash: '79a1904f4bf087cfb40adfbf074516f219fcdf0e',
             ext: '.ts',
           },
@@ -9704,50 +8994,42 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-auth/src/lib/email-not-verified/email-not-verified.component.html',
+            file: 'libs/platform/feature-auth/src/lib/email-not-verified/email-not-verified.component.html',
             hash: '69bab4b6a68c11ad41e10a710208184700a5f42c',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-auth/src/lib/email-not-verified/email-not-verified.component.scss',
+            file: 'libs/platform/feature-auth/src/lib/email-not-verified/email-not-verified.component.scss',
             hash: '042c98ba3b28a2dc8c05a7d23261a7e05df3280c',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/feature-auth/src/lib/email-not-verified/email-not-verified.component.ts',
+            file: 'libs/platform/feature-auth/src/lib/email-not-verified/email-not-verified.component.ts',
             hash: '0caef09e7f1d95b4f53941cef528f74dd9344a85',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-auth/src/lib/login-button/login-button.component.css',
+            file: 'libs/platform/feature-auth/src/lib/login-button/login-button.component.css',
             hash: 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391',
             ext: '.css',
           },
           {
-            file:
-              'libs/platform/feature-auth/src/lib/login-button/login-button.component.html',
+            file: 'libs/platform/feature-auth/src/lib/login-button/login-button.component.html',
             hash: 'dc2684ada7aaa0870aaed3a4b61abb88db150365',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-auth/src/lib/login-button/login-button.component.ts',
+            file: 'libs/platform/feature-auth/src/lib/login-button/login-button.component.ts',
             hash: '44042bfac6687119e7a0517b1e9c6a6df8162903',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/feature-auth/src/lib/login/login.component.html',
+            file: 'libs/platform/feature-auth/src/lib/login/login.component.html',
             hash: 'ad949a08b76c9360dcc5ec7e60754cb53a2f94fc',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/feature-auth/src/lib/login/login.component.scss',
+            file: 'libs/platform/feature-auth/src/lib/login/login.component.scss',
             hash: 'c3349b2e690bb6e3c9835c4308904c84c6b08849',
             ext: '.scss',
           },
@@ -9944,38 +9226,32 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/ui/footer/src/lib/footer/footer.component.html',
+            file: 'libs/nrwlio-site/ui/footer/src/lib/footer/footer.component.html',
             hash: '53e637e19bff55b12d74f836715652c0674b0201',
             ext: '.html',
           },
           {
-            file:
-              'libs/nrwlio-site/ui/footer/src/lib/footer/footer.component.scss',
+            file: 'libs/nrwlio-site/ui/footer/src/lib/footer/footer.component.scss',
             hash: '2360e75a9044f2036788816557396efb43203e5e',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/ui/footer/src/lib/footer/footer.component.ts',
+            file: 'libs/nrwlio-site/ui/footer/src/lib/footer/footer.component.ts',
             hash: '7bc52cfb74ac7a74a7d4b65be83ab6a5964b50b2',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/ui/footer/src/lib/newsletter-signup/newsletter-signup.component.html',
+            file: 'libs/nrwlio-site/ui/footer/src/lib/newsletter-signup/newsletter-signup.component.html',
             hash: '30fb93f9b6b1f0ce586375aebef763ae8efdd7ca',
             ext: '.html',
           },
           {
-            file:
-              'libs/nrwlio-site/ui/footer/src/lib/newsletter-signup/newsletter-signup.component.scss',
+            file: 'libs/nrwlio-site/ui/footer/src/lib/newsletter-signup/newsletter-signup.component.scss',
             hash: '9f2e1cf47560fa50bda95cef93d7b5ab1423b86d',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/ui/footer/src/lib/newsletter-signup/newsletter-signup.component.ts',
+            file: 'libs/nrwlio-site/ui/footer/src/lib/newsletter-signup/newsletter-signup.component.ts',
             hash: '0606352d564dc60ebb3c5d3ce6362980b78d6451',
             ext: '.ts',
           },
@@ -10066,20 +9342,17 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/ui/header/src/lib/header/header.component.html',
+            file: 'libs/nrwlio-site/ui/header/src/lib/header/header.component.html',
             hash: 'c310b80d80d20a3d2fe256e7703d53ee0eb6f4c2',
             ext: '.html',
           },
           {
-            file:
-              'libs/nrwlio-site/ui/header/src/lib/header/header.component.scss',
+            file: 'libs/nrwlio-site/ui/header/src/lib/header/header.component.scss',
             hash: '914a70d9e63867d84235826468137a3dcb40b356',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/ui/header/src/lib/header/header.component.ts',
+            file: 'libs/nrwlio-site/ui/header/src/lib/header/header.component.ts',
             hash: 'b055f0fb1e43cdd49c016684381afa39e58b8975',
             ext: '.ts',
           },
@@ -10165,20 +9438,17 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-auth/src/lib/auth-callback/auth-callback.component.html',
+            file: 'libs/nx-cloud/feature-auth/src/lib/auth-callback/auth-callback.component.html',
             hash: '9bd7fd7efab788dffc54f24695b6b8d3e2ece8e8',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/feature-auth/src/lib/auth-callback/auth-callback.component.scss',
+            file: 'libs/nx-cloud/feature-auth/src/lib/auth-callback/auth-callback.component.scss',
             hash: 'c9cec10d9543174dfba64a2836fd0d521c983b5d',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/feature-auth/src/lib/auth-callback/auth-callback.component.ts',
+            file: 'libs/nx-cloud/feature-auth/src/lib/auth-callback/auth-callback.component.ts',
             hash: 'd0cd6996802d4386e6b2acdd7925a487e1432ce4',
             ext: '.ts',
           },
@@ -10188,38 +9458,32 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-auth/src/lib/auth0-based-auth.module.ts',
+            file: 'libs/nx-cloud/feature-auth/src/lib/auth0-based-auth.module.ts',
             hash: '167836042b427488f47ebf1627acc9b313642360',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-auth/src/lib/initial-redirect.guard.ts',
+            file: 'libs/nx-cloud/feature-auth/src/lib/initial-redirect.guard.ts',
             hash: '8198b3be7eeb132c47d7225a24d88d9588370f65',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-auth/src/lib/login-button/login-button.component.html',
+            file: 'libs/nx-cloud/feature-auth/src/lib/login-button/login-button.component.html',
             hash: 'dc5c9fd0931879d340466329af8eb639a389f4b1',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/feature-auth/src/lib/login-button/login-button.component.ts',
+            file: 'libs/nx-cloud/feature-auth/src/lib/login-button/login-button.component.ts',
             hash: '77f9a5ee2b3aa7b084658b0712ce581beda256b5',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-auth/src/lib/login/login.component.html',
+            file: 'libs/nx-cloud/feature-auth/src/lib/login/login.component.html',
             hash: '2a4c56c7055ae689d2b4d316d9a9efcff3f9c64e',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/feature-auth/src/lib/login/login.component.scss',
+            file: 'libs/nx-cloud/feature-auth/src/lib/login/login.component.scss',
             hash: 'c9cec10d9543174dfba64a2836fd0d521c983b5d',
             ext: '.scss',
           },
@@ -10239,14 +9503,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-auth/src/lib/services/auth0-based-auth.service.ts',
+            file: 'libs/nx-cloud/feature-auth/src/lib/services/auth0-based-auth.service.ts',
             hash: '7e786c18fe91e95002e857469e43ec83ad466258',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-auth/src/lib/services/simple-auth.service.ts',
+            file: 'libs/nx-cloud/feature-auth/src/lib/services/simple-auth.service.ts',
             hash: '7dc7e3b14e9318ce5606a35badb57510ab8eabfb',
             ext: '.ts',
           },
@@ -10266,20 +9528,17 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-auth/src/lib/verify-email/verify-email.component.html',
+            file: 'libs/nx-cloud/feature-auth/src/lib/verify-email/verify-email.component.html',
             hash: '97b1c5699cce7e6d2bd64f18a111792184644b7c',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/feature-auth/src/lib/verify-email/verify-email.component.scss',
+            file: 'libs/nx-cloud/feature-auth/src/lib/verify-email/verify-email.component.scss',
             hash: 'd8cb14b81edd38910070c847d93e98bb3ad599da',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-cloud/feature-auth/src/lib/verify-email/verify-email.component.ts',
+            file: 'libs/nx-cloud/feature-auth/src/lib/verify-email/verify-email.component.ts',
             hash: 'c63964b78dfa21b0f09cf7464b9a5a138e1c7be2',
             ext: '.ts',
           },
@@ -10390,8 +9649,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-packages/nx-cloud/src/lib/generators/init/schema.json',
+            file: 'libs/nx-packages/nx-cloud/src/lib/generators/init/schema.json',
             hash: '794bc83cddcbd72e6c8022896613b3e2aafb22cc',
             ext: '.json',
           },
@@ -10477,86 +9735,72 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/base-ui/src/lib/flavors-overlay/flavors-overlay-ref.ts',
+            file: 'libs/nx-docs-site/base-ui/src/lib/flavors-overlay/flavors-overlay-ref.ts',
             hash: 'c0522e200a153998d7ffa9350342d79bb279f046',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/base-ui/src/lib/flavors-overlay/flavors-overlay.component.html',
+            file: 'libs/nx-docs-site/base-ui/src/lib/flavors-overlay/flavors-overlay.component.html',
             hash: 'd5e4ee43fe2b7afbd40e074a6204cb8319515a12',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-docs-site/base-ui/src/lib/flavors-overlay/flavors-overlay.component.scss',
+            file: 'libs/nx-docs-site/base-ui/src/lib/flavors-overlay/flavors-overlay.component.scss',
             hash: '946508d6e73ca71982ec45eebc4a7f6611689b07',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-docs-site/base-ui/src/lib/flavors-overlay/flavors-overlay.component.ts',
+            file: 'libs/nx-docs-site/base-ui/src/lib/flavors-overlay/flavors-overlay.component.ts',
             hash: 'da2a1e3dc5251f379b872dfe57ac532090e84931',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/base-ui/src/lib/flavors-overlay/flavors-overlay.service.ts',
+            file: 'libs/nx-docs-site/base-ui/src/lib/flavors-overlay/flavors-overlay.service.ts',
             hash: 'f46e21347f6cecd4d33395b4f985960b6c1b3c81',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/base-ui/src/lib/flavors-selector/flavors-selector.component.html',
+            file: 'libs/nx-docs-site/base-ui/src/lib/flavors-selector/flavors-selector.component.html',
             hash: '9330df95a0a4b3b540aa03f96cfb9d782de99ae1',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-docs-site/base-ui/src/lib/flavors-selector/flavors-selector.component.scss',
+            file: 'libs/nx-docs-site/base-ui/src/lib/flavors-selector/flavors-selector.component.scss',
             hash: '64ab939907112c9699ae135b404c2f433f0ded88',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-docs-site/base-ui/src/lib/flavors-selector/flavors-selector.component.ts',
+            file: 'libs/nx-docs-site/base-ui/src/lib/flavors-selector/flavors-selector.component.ts',
             hash: 'ac028199b20e4c67b970bf2aa150f2546b90d55c',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/base-ui/src/lib/flex-layout/custom-flex-directive.ts',
+            file: 'libs/nx-docs-site/base-ui/src/lib/flex-layout/custom-flex-directive.ts',
             hash: '47af2055fcf6848fb440c0af57d1d0d743a2d763',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/base-ui/src/lib/flex-layout/custom-layout-align-directive.ts',
+            file: 'libs/nx-docs-site/base-ui/src/lib/flex-layout/custom-layout-align-directive.ts',
             hash: '15a19407e339681e37d395a96ad10a42d76ab0fd',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/base-ui/src/lib/flex-layout/custom-layout-directive.ts',
+            file: 'libs/nx-docs-site/base-ui/src/lib/flex-layout/custom-layout-directive.ts',
             hash: 'db76598f59f3424f37001f2bceba7fb740585bef',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/base-ui/src/lib/flex-layout/custom-layout-gap-directive.ts',
+            file: 'libs/nx-docs-site/base-ui/src/lib/flex-layout/custom-layout-gap-directive.ts',
             hash: 'be368154ef526f8f949681e16a152c3e6701535e',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/base-ui/src/lib/footer/footer.component.ts',
+            file: 'libs/nx-docs-site/base-ui/src/lib/footer/footer.component.ts',
             hash: 'c7e48e552ba91cb1d6203d5c109f2cd6f685a17f',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/base-ui/src/lib/header/header.component.ts',
+            file: 'libs/nx-docs-site/base-ui/src/lib/header/header.component.ts',
             hash: '37ab42ba1ec45d048c6001e25315351ccdd04e5b',
             ext: '.ts',
           },
@@ -10566,26 +9810,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/base-ui/src/lib/nav-item/nav-item.component.scss',
+            file: 'libs/nx-docs-site/base-ui/src/lib/nav-item/nav-item.component.scss',
             hash: 'e4ac41694e602ed0a2a94126d1885aa27f1548e8',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-docs-site/base-ui/src/lib/nav-item/nav-item.component.ts',
+            file: 'libs/nx-docs-site/base-ui/src/lib/nav-item/nav-item.component.ts',
             hash: '2bfe6a53fe5bb9ce3aafedbae6c52f48bb9bbe81',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/base-ui/src/lib/side-menu/side-menu.component.scss',
+            file: 'libs/nx-docs-site/base-ui/src/lib/side-menu/side-menu.component.scss',
             hash: '1089507658047e7f62eb5dc02663d23060ca1524',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nx-docs-site/base-ui/src/lib/side-menu/side-menu.component.ts',
+            file: 'libs/nx-docs-site/base-ui/src/lib/side-menu/side-menu.component.ts',
             hash: '52eabdf9640125fc152d56d24f9b36fd48f7ee06',
             ext: '.ts',
           },
@@ -10671,20 +9911,17 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwlio-site/ui/heros/src/lib/hero-full/hero-full.component.html',
+            file: 'libs/nrwlio-site/ui/heros/src/lib/hero-full/hero-full.component.html',
             hash: 'd172c2e09f4f91786c5920e325f080f1d131a68b',
             ext: '.html',
           },
           {
-            file:
-              'libs/nrwlio-site/ui/heros/src/lib/hero-full/hero-full.component.scss',
+            file: 'libs/nrwlio-site/ui/heros/src/lib/hero-full/hero-full.component.scss',
             hash: '4b201a8cbd17d47f39b60e89b891ba11722cc5be',
             ext: '.scss',
           },
           {
-            file:
-              'libs/nrwlio-site/ui/heros/src/lib/hero-full/hero-full.component.ts',
+            file: 'libs/nrwlio-site/ui/heros/src/lib/hero-full/hero-full.component.ts',
             hash: '21fb5f4a0433af458bc04b3b935af7c335559e89',
             ext: '.ts',
           },
@@ -10790,32 +10027,27 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/article-container/src/lib/article-container/article-container.component.html',
+            file: 'libs/ui/article-container/src/lib/article-container/article-container.component.html',
             hash: '106d35345463d3811a96d78b7ffd8d77f3f408d8',
             ext: '.html',
           },
           {
-            file:
-              'libs/ui/article-container/src/lib/article-container/article-container.component.scss',
+            file: 'libs/ui/article-container/src/lib/article-container/article-container.component.scss',
             hash: '01f4935f01b0d4030c1db81f204974e1ebdc0fc3',
             ext: '.scss',
           },
           {
-            file:
-              'libs/ui/article-container/src/lib/article-container/article-container.component.ts',
+            file: 'libs/ui/article-container/src/lib/article-container/article-container.component.ts',
             hash: '68ef828858073f5aad18a7257a394c1b91fe68e0',
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/article-container/src/lib/ui-article-container.module.spec.ts',
+            file: 'libs/ui/article-container/src/lib/ui-article-container.module.spec.ts',
             hash: '109c364656a72f19127f31e4092efec6f38d2f44',
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/article-container/src/lib/ui-article-container.module.ts',
+            file: 'libs/ui/article-container/src/lib/ui-article-container.module.ts',
             hash: 'cf9a9c75de62d9a6e04d55502e0848f4bfb20a4f',
             ext: '.ts',
           },
@@ -10916,14 +10148,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-faq/src/lib/nx-cloud-feature-faq.module.spec.ts',
+            file: 'libs/nx-cloud/feature-faq/src/lib/nx-cloud-feature-faq.module.spec.ts',
             hash: '62658ae36c0d22fe59538e643dbcf3b80ac026e4',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/feature-faq/src/lib/nx-cloud-feature-faq.module.ts',
+            file: 'libs/nx-cloud/feature-faq/src/lib/nx-cloud-feature-faq.module.ts',
             hash: '3112a2712500145a8efbf52488b65798d5b822a6',
             ext: '.ts',
           },
@@ -11040,8 +10270,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.scss',
           },
           {
-            file:
-              'libs/design-system/styles/src/lib/design-system-styles.spec.ts',
+            file: 'libs/design-system/styles/src/lib/design-system-styles.spec.ts',
             hash: 'a0961762d064bb061c5eea3a23e0a0b07af75ebe',
             ext: '.ts',
           },
@@ -11452,8 +10681,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/ui/terminal/src/lib/terminal/terminal.component.ts',
+            file: 'libs/nx-cloud/ui/terminal/src/lib/terminal/terminal.component.ts',
             hash: 'fd87bfa9f92c052ad1b7d2f14524dde4e292c191',
             ext: '.ts',
           },
@@ -11527,20 +10755,17 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/components/src/lib/back-button/back-button.component.html',
+            file: 'libs/platform/components/src/lib/back-button/back-button.component.html',
             hash: 'c5197fdec6cb85d8f57a9abfd49d9b4ff1e58e72',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/components/src/lib/back-button/back-button.component.scss',
+            file: 'libs/platform/components/src/lib/back-button/back-button.component.scss',
             hash: 'f879aed8ae31fa550dd668b184c90fe2196479f0',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/components/src/lib/back-button/back-button.component.ts',
+            file: 'libs/platform/components/src/lib/back-button/back-button.component.ts',
             hash: 'e2967487d319ef8392940124595b541911eabe0f',
             ext: '.ts',
           },
@@ -11550,44 +10775,37 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/components/src/lib/live-now/live-now.component.html',
+            file: 'libs/platform/components/src/lib/live-now/live-now.component.html',
             hash: 'e930cc077abd167e86ed702bd2a66bd1b90578e2',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/components/src/lib/live-now/live-now.component.scss',
+            file: 'libs/platform/components/src/lib/live-now/live-now.component.scss',
             hash: '93997537009c774264889cd24602641618986057',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/components/src/lib/live-now/live-now.component.ts',
+            file: 'libs/platform/components/src/lib/live-now/live-now.component.ts',
             hash: '2eae55985756bfda86031e37b7432fd456769fde',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/components/src/lib/platform-components.module.ts',
+            file: 'libs/platform/components/src/lib/platform-components.module.ts',
             hash: '89279122219fe30e3e30aa803a0186ae63c2ff65',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/components/src/lib/primary-toolbar/primary-toolbar.component.html',
+            file: 'libs/platform/components/src/lib/primary-toolbar/primary-toolbar.component.html',
             hash: 'e480a622f13ee07a6617248f236d29833c764244',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/components/src/lib/primary-toolbar/primary-toolbar.component.scss',
+            file: 'libs/platform/components/src/lib/primary-toolbar/primary-toolbar.component.scss',
             hash: 'c7b7bcbd115d4afa8d6341ae31aadf0540cfca8a',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/components/src/lib/primary-toolbar/primary-toolbar.component.ts',
+            file: 'libs/platform/components/src/lib/primary-toolbar/primary-toolbar.component.ts',
             hash: '4fc969bb1834ab00365b4531dbd925b517d7ffa1',
             ext: '.ts',
           },
@@ -11713,8 +10931,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-docs-site/styles/src/lib/theme-switcher/theme-switcher.component.ts',
+            file: 'libs/nx-docs-site/styles/src/lib/theme-switcher/theme-switcher.component.ts',
             hash: 'b3409786247d217fa39d7d52337268121b016c3f',
             ext: '.ts',
           },
@@ -11802,14 +11019,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/ui-courses/src/lib/lesson/lesson.component.html',
+            file: 'libs/platform/ui-courses/src/lib/lesson/lesson.component.html',
             hash: '7a1eaab243d45f8b915c7a2a4d2c4150ced73b4f',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/ui-courses/src/lib/lesson/lesson.component.scss',
+            file: 'libs/platform/ui-courses/src/lib/lesson/lesson.component.scss',
             hash: 'def2cb4b1ed9dc524129de2078e506095c7c10b4',
             ext: '.scss',
           },
@@ -11819,26 +11034,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/ui-courses/src/lib/platform-ui-courses.module.ts',
+            file: 'libs/platform/ui-courses/src/lib/platform-ui-courses.module.ts',
             hash: '8d9e326324c526c02b4530ef18ff28b73ef41144',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/ui-courses/src/lib/restricted-lesson/restricted-lesson.component.html',
+            file: 'libs/platform/ui-courses/src/lib/restricted-lesson/restricted-lesson.component.html',
             hash: 'aaea7d83992e99d7594b45958625c54521296147',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/ui-courses/src/lib/restricted-lesson/restricted-lesson.component.scss',
+            file: 'libs/platform/ui-courses/src/lib/restricted-lesson/restricted-lesson.component.scss',
             hash: 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391',
             ext: '.scss',
           },
           {
-            file:
-              'libs/platform/ui-courses/src/lib/restricted-lesson/restricted-lesson.component.ts',
+            file: 'libs/platform/ui-courses/src/lib/restricted-lesson/restricted-lesson.component.ts',
             hash: 'fcdd7d1e2b28a391def0bb74e922a073b4a5516c',
             ext: '.ts',
           },
@@ -11917,26 +11128,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/ui-twitter/src/lib/platform-ui-twitter.module.ts',
+            file: 'libs/platform/ui-twitter/src/lib/platform-ui-twitter.module.ts',
             hash: '88e3dfa3641e725b3a9e176e41277eba387655ea',
             ext: '.ts',
           },
           {
-            file:
-              'libs/platform/ui-twitter/src/lib/twitter-share-button/twitter-share-button.component.css',
+            file: 'libs/platform/ui-twitter/src/lib/twitter-share-button/twitter-share-button.component.css',
             hash: '1cf00a1152220b33558b1e9050ee8a75c03479e8',
             ext: '.css',
           },
           {
-            file:
-              'libs/platform/ui-twitter/src/lib/twitter-share-button/twitter-share-button.component.html',
+            file: 'libs/platform/ui-twitter/src/lib/twitter-share-button/twitter-share-button.component.html',
             hash: 'cfa2482bba263ee055f26f13c174cec5368d2c41',
             ext: '.html',
           },
           {
-            file:
-              'libs/platform/ui-twitter/src/lib/twitter-share-button/twitter-share-button.component.ts',
+            file: 'libs/platform/ui-twitter/src/lib/twitter-share-button/twitter-share-button.component.ts',
             hash: 'b968806f6fd6f52fc2be92994dc9c05ca3d190f9',
             ext: '.ts',
           },
@@ -12123,8 +11330,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/shared/ui-markdown/src/lib/markdown-renderer-override.service.ts',
+            file: 'libs/shared/ui-markdown/src/lib/markdown-renderer-override.service.ts',
             hash: 'e8a5468e6d26825736337ed52229560e4ab2ffef',
             ext: '.ts',
           },
@@ -12134,8 +11340,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/shared/ui-markdown/src/lib/shared-ui-markdown.module.ts',
+            file: 'libs/shared/ui-markdown/src/lib/shared-ui-markdown.module.ts',
             hash: '0bb9265e7a5845e19df6e83abf4f25ee7572bd4b',
             ext: '.ts',
           },
@@ -12298,8 +11503,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.svg',
           },
           {
-            file:
-              'libs/nrwlio-site/assets/src/lib/careers/icon-flexibility.svg',
+            file: 'libs/nrwlio-site/assets/src/lib/careers/icon-flexibility.svg',
             hash: 'db18f59c24ca00053b13811447130596695ec44c',
             ext: '.svg',
           },
@@ -12309,14 +11513,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.svg',
           },
           {
-            file:
-              'libs/nrwlio-site/assets/src/lib/careers/icon-open-source.svg',
+            file: 'libs/nrwlio-site/assets/src/lib/careers/icon-open-source.svg',
             hash: '59829b480b112005a76b156abfaa3d93a6a12a06',
             ext: '.svg',
           },
           {
-            file:
-              'libs/nrwlio-site/assets/src/lib/careers/icon-remote-work.svg',
+            file: 'libs/nrwlio-site/assets/src/lib/careers/icon-remote-work.svg',
             hash: 'dd1c1b5d0212ec434d06b7427bcca7e8e5e683d1',
             ext: '.svg',
           },
@@ -12366,8 +11568,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.svg',
           },
           {
-            file:
-              'libs/nrwlio-site/assets/src/lib/careers/who-we-are-looking-for.png',
+            file: 'libs/nrwlio-site/assets/src/lib/careers/who-we-are-looking-for.png',
             hash: '910cc0b9b62a4058063bf48825facbebeb877140',
             ext: '.png',
           },
@@ -12412,26 +11613,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.svg',
           },
           {
-            file:
-              'libs/nrwlio-site/assets/src/lib/services/hero-service-asset-temp.svg',
+            file: 'libs/nrwlio-site/assets/src/lib/services/hero-service-asset-temp.svg',
             hash: 'c7f446f78f5e92b99ced6cde173a301cf2dcdec0',
             ext: '.svg',
           },
           {
-            file:
-              'libs/nrwlio-site/assets/src/lib/services/item-angularjs-upgrade.svg',
+            file: 'libs/nrwlio-site/assets/src/lib/services/item-angularjs-upgrade.svg',
             hash: 'cb96d2b2f73600b49f21e7a2ef710d73ec0ae87c',
             ext: '.svg',
           },
           {
-            file:
-              'libs/nrwlio-site/assets/src/lib/services/item-app-performance.svg',
+            file: 'libs/nrwlio-site/assets/src/lib/services/item-app-performance.svg',
             hash: 'cd0684ff6ed72015d345548b254531a80a54a03f',
             ext: '.svg',
           },
           {
-            file:
-              'libs/nrwlio-site/assets/src/lib/services/item-bazelification.svg',
+            file: 'libs/nrwlio-site/assets/src/lib/services/item-bazelification.svg',
             hash: '589746a73ba11d5f9772b8d02f7dd81ca650ef82',
             ext: '.svg',
           },
@@ -12446,20 +11643,17 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.svg',
           },
           {
-            file:
-              'libs/nrwlio-site/assets/src/lib/services/item-nxification.svg',
+            file: 'libs/nrwlio-site/assets/src/lib/services/item-nxification.svg',
             hash: 'a61437a75f50efe011c74c9e3a3fc333aa28895c',
             ext: '.svg',
           },
           {
-            file:
-              'libs/nrwlio-site/assets/src/lib/services/item-platform-development.svg',
+            file: 'libs/nrwlio-site/assets/src/lib/services/item-platform-development.svg',
             hash: '03e85f49bbc9ebed207b3dc2c1f105d7890c8cc4',
             ext: '.svg',
           },
           {
-            file:
-              'libs/nrwlio-site/assets/src/lib/services/item-react-nxification.svg',
+            file: 'libs/nrwlio-site/assets/src/lib/services/item-react-nxification.svg',
             hash: '2a9a497d0b1969987af966c38fdfff7a86ea693e',
             ext: '.svg',
           },
@@ -12479,14 +11673,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.svg',
           },
           {
-            file:
-              'libs/nrwlio-site/assets/src/lib/services/services-model-plan.svg',
+            file: 'libs/nrwlio-site/assets/src/lib/services/services-model-plan.svg',
             hash: 'a90df330bc1cfe66ef4ebba6fa2fc8b9ef4eb19d',
             ext: '.svg',
           },
           {
-            file:
-              'libs/nrwlio-site/assets/src/lib/services/services-model-train.svg',
+            file: 'libs/nrwlio-site/assets/src/lib/services/services-model-train.svg',
             hash: '1195ce4abb465247bc4fc6ee9d811079988f0546',
             ext: '.svg',
           },
@@ -12521,8 +11713,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.jpg',
           },
           {
-            file:
-              'libs/nrwlio-site/assets/src/lib/team-bullet-presentations.jpg',
+            file: 'libs/nrwlio-site/assets/src/lib/team-bullet-presentations.jpg',
             hash: '5af69ae27dc8b6496ce623a96675944c82c1ab10',
             ext: '.jpg',
           },
@@ -12693,14 +11884,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/ui/header/src/lib/header/header.component.html',
+            file: 'libs/nx-cloud/ui/header/src/lib/header/header.component.html',
             hash: '6ee6083568b6967df2b8413883773332e12f818b',
             ext: '.html',
           },
           {
-            file:
-              'libs/nx-cloud/ui/header/src/lib/header/header.component.scss',
+            file: 'libs/nx-cloud/ui/header/src/lib/header/header.component.scss',
             hash: '8bf59961331ec09b0f7c75faa23959f4ad49c6a7',
             ext: '.scss',
           },
@@ -12710,8 +11899,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/ui/header/src/lib/nx-cloud-ui-header.module.ts',
+            file: 'libs/nx-cloud/ui/header/src/lib/nx-cloud-ui-header.module.ts',
             hash: '476db1538762a31ad10086a886420b164e68f869',
             ext: '.ts',
           },
@@ -12799,8 +11987,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/ui/footer/src/lib/footer/footer.component.html',
+            file: 'libs/nx-cloud/ui/footer/src/lib/footer/footer.component.html',
             hash: 'b9f4b47528605232b974ecfcb5f0433f1f651919',
             ext: '.html',
           },
@@ -13011,26 +12198,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwl-api/reporting/src/lib/time-saved-email/hubspot-utils.ts',
+            file: 'libs/nrwl-api/reporting/src/lib/time-saved-email/hubspot-utils.ts',
             hash: 'e4f4c23f4c7cdef5e912d4ffcda35022710906ad',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwl-api/reporting/src/lib/time-saved-email/mongo-queries.ts',
+            file: 'libs/nrwl-api/reporting/src/lib/time-saved-email/mongo-queries.ts',
             hash: '7556ada065ac4a4246a9ee207287faf431e240f9',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwl-api/reporting/src/lib/time-saved-email/monthly-time-saved.ts',
+            file: 'libs/nrwl-api/reporting/src/lib/time-saved-email/monthly-time-saved.ts',
             hash: '7a5c0d7f2e5f797e0ed0e3cf5620a522dc5862b0',
             ext: '.ts',
           },
           {
-            file:
-              'libs/nrwl-api/reporting/src/lib/time-saved-email/run-immediately.ts',
+            file: 'libs/nrwl-api/reporting/src/lib/time-saved-email/run-immediately.ts',
             hash: '8e2a9d9c5dddc34468c9ca9890085649b078c1f0',
             ext: '.ts',
           },
@@ -13175,20 +12358,17 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/floating-items/src/lib/floating-item/floating-item.component.html',
+            file: 'libs/ui/floating-items/src/lib/floating-item/floating-item.component.html',
             hash: '8e20b212afa202d9646033a1d542cb5387f92c8f',
             ext: '.html',
           },
           {
-            file:
-              'libs/ui/floating-items/src/lib/floating-item/floating-item.component.scss',
+            file: 'libs/ui/floating-items/src/lib/floating-item/floating-item.component.scss',
             hash: 'ab26114aabfa53c6825d715366ecb3de657109d4',
             ext: '.scss',
           },
           {
-            file:
-              'libs/ui/floating-items/src/lib/floating-item/floating-item.component.ts',
+            file: 'libs/ui/floating-items/src/lib/floating-item/floating-item.component.ts',
             hash: 'b422c7e30ecb15501aaf23a80bc3af9264fc1ba3',
             ext: '.ts',
           },
@@ -13435,26 +12615,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/article-media/src/lib/article-media/article-media.component.html',
+            file: 'libs/ui/article-media/src/lib/article-media/article-media.component.html',
             hash: 'e6c2b9958416739c2030591925bdfe0239ebd16e',
             ext: '.html',
           },
           {
-            file:
-              'libs/ui/article-media/src/lib/article-media/article-media.component.scss',
+            file: 'libs/ui/article-media/src/lib/article-media/article-media.component.scss',
             hash: 'cf91f5de1df01f0c7b4881479fb3e48e0913fc05',
             ext: '.scss',
           },
           {
-            file:
-              'libs/ui/article-media/src/lib/article-media/article-media.component.ts',
+            file: 'libs/ui/article-media/src/lib/article-media/article-media.component.ts',
             hash: '1c0ea39e375c55ec9ed677fb539cb5b753420b9d',
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/article-media/src/lib/ui-article-media.module.spec.ts',
+            file: 'libs/ui/article-media/src/lib/ui-article-media.module.spec.ts',
             hash: '0f512557b9cf6c06ee67205022ec9def7c0ab6d6',
             ext: '.ts',
           },
@@ -13547,8 +12723,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/nx-cloud/hubspot/src/lib/nx-cloud-hubspot-forms.service.ts',
+            file: 'libs/nx-cloud/hubspot/src/lib/nx-cloud-hubspot-forms.service.ts',
             hash: '09da83e754b7acd5b1e2919fa3f795bbaf608dbe',
             ext: '.ts',
           },
@@ -13812,26 +12987,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/testimonials/src/lib/testimonial-card/testimonial-card.component.scss',
+            file: 'libs/ui/testimonials/src/lib/testimonial-card/testimonial-card.component.scss',
             hash: 'fd83ca271730309058d78067a973e263278d017b',
             ext: '.scss',
           },
           {
-            file:
-              'libs/ui/testimonials/src/lib/testimonial-card/testimonial-card.component.ts',
+            file: 'libs/ui/testimonials/src/lib/testimonial-card/testimonial-card.component.ts',
             hash: '25d1676ab90ac87f13806c802390b24b5f974b11',
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/testimonials/src/lib/testimonial-primary/testimonial-primary.component.scss',
+            file: 'libs/ui/testimonials/src/lib/testimonial-primary/testimonial-primary.component.scss',
             hash: '35f36a6681d9f0896d28157ff835a59c45dc92a5',
             ext: '.scss',
           },
           {
-            file:
-              'libs/ui/testimonials/src/lib/testimonial-primary/testimonial-primary.component.ts',
+            file: 'libs/ui/testimonials/src/lib/testimonial-primary/testimonial-primary.component.ts',
             hash: 'a11880416a68799997100c38e584f7000a423244',
             ext: '.ts',
           },
@@ -13929,14 +13100,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.gif',
           },
           {
-            file:
-              'libs/nx-cloud/assets/src/lib/favicon/android-chrome-192x192.png',
+            file: 'libs/nx-cloud/assets/src/lib/favicon/android-chrome-192x192.png',
             hash: 'd5b79b6088e7336bba692486386ddbf45999d42c',
             ext: '.png',
           },
           {
-            file:
-              'libs/nx-cloud/assets/src/lib/favicon/android-chrome-512x512.png',
+            file: 'libs/nx-cloud/assets/src/lib/favicon/android-chrome-512x512.png',
             hash: 'f7b9a923bf1c298c68ee484a3abd502e136d573c',
             ext: '.png',
           },
@@ -13971,8 +13140,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.svg',
           },
           {
-            file:
-              'libs/nx-cloud/assets/src/lib/help/copy-nxcloud-access-token.jpg',
+            file: 'libs/nx-cloud/assets/src/lib/help/copy-nxcloud-access-token.jpg',
             hash: 'aed2f5e54919c7d7d190a092b4a98bdc8217bef2',
             ext: '.jpg',
           },
@@ -13997,8 +13165,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.svg',
           },
           {
-            file:
-              'libs/nx-cloud/assets/src/lib/illustrations/computation-dark.svg',
+            file: 'libs/nx-cloud/assets/src/lib/illustrations/computation-dark.svg',
             hash: '08edc9c272414fce8bc5b5ecee74f62b51d9b22e',
             ext: '.svg',
           },
@@ -14008,20 +13175,17 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.svg',
           },
           {
-            file:
-              'libs/nx-cloud/assets/src/lib/illustrations/enjoy-the-benefits.svg',
+            file: 'libs/nx-cloud/assets/src/lib/illustrations/enjoy-the-benefits.svg',
             hash: '9bca34bd484cab4da22e153fdebbd9a40484ef32',
             ext: '.svg',
           },
           {
-            file:
-              'libs/nx-cloud/assets/src/lib/illustrations/icon-automation.svg',
+            file: 'libs/nx-cloud/assets/src/lib/illustrations/icon-automation.svg',
             hash: 'a5e61a0c44c537a27322a4ced3615b32c7054fcd',
             ext: '.svg',
           },
           {
-            file:
-              'libs/nx-cloud/assets/src/lib/illustrations/icon-calculator.svg',
+            file: 'libs/nx-cloud/assets/src/lib/illustrations/icon-calculator.svg',
             hash: '20681f446917933d01e27cceef7f0386838ce711',
             ext: '.svg',
           },
@@ -14046,8 +13210,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.svg',
           },
           {
-            file:
-              'libs/nx-cloud/assets/src/lib/illustrations/icon-expenses.svg',
+            file: 'libs/nx-cloud/assets/src/lib/illustrations/icon-expenses.svg',
             hash: '6d68793ec8c9ee3481ea5edfe4ba3541fe3bc2ef',
             ext: '.svg',
           },
@@ -14067,8 +13230,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.svg',
           },
           {
-            file:
-              'libs/nx-cloud/assets/src/lib/illustrations/icon-open-source.svg',
+            file: 'libs/nx-cloud/assets/src/lib/illustrations/icon-open-source.svg',
             hash: '448ae1ad3f8a630dae13472763ca06779fabe755',
             ext: '.svg',
           },
@@ -14088,8 +13250,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.svg',
           },
           {
-            file:
-              'libs/nx-cloud/assets/src/lib/illustrations/icon-save-money.svg',
+            file: 'libs/nx-cloud/assets/src/lib/illustrations/icon-save-money.svg',
             hash: 'c5d655c5b2a608c029c3d83ed3b3b503ca35a1a4',
             ext: '.svg',
           },
@@ -14114,14 +13275,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.svg',
           },
           {
-            file:
-              'libs/nx-cloud/assets/src/lib/illustrations/landing-power-up.svg',
+            file: 'libs/nx-cloud/assets/src/lib/illustrations/landing-power-up.svg',
             hash: '8d27efecbf3446edec30cfb628306948fd71c8cf',
             ext: '.svg',
           },
           {
-            file:
-              'libs/nx-cloud/assets/src/lib/illustrations/landing-servers.svg',
+            file: 'libs/nx-cloud/assets/src/lib/illustrations/landing-servers.svg',
             hash: 'b8f38f1120da2128685ba772f326d2ea17de9adf',
             ext: '.svg',
           },
@@ -14151,14 +13310,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.png',
           },
           {
-            file:
-              'libs/nx-cloud/assets/src/lib/nx-cloud-logo-horizontal-white.svg',
+            file: 'libs/nx-cloud/assets/src/lib/nx-cloud-logo-horizontal-white.svg',
             hash: '9778d28f938c264fcae795853431a2ac4682e402',
             ext: '.svg',
           },
           {
-            file:
-              'libs/nx-cloud/assets/src/lib/nx-cloud-logo-vertical-white.svg',
+            file: 'libs/nx-cloud/assets/src/lib/nx-cloud-logo-vertical-white.svg',
             hash: 'ec4070c350c5ee0f8f020dd598349277092be129',
             ext: '.svg',
           },
@@ -14188,20 +13345,17 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.jpg',
           },
           {
-            file:
-              'libs/nx-cloud/assets/src/lib/private-cloud-instructions/access-token.png',
+            file: 'libs/nx-cloud/assets/src/lib/private-cloud-instructions/access-token.png',
             hash: 'f330e3fc735f60d5e1b314339c2acd09ff7c0b7c',
             ext: '.png',
           },
           {
-            file:
-              'libs/nx-cloud/assets/src/lib/private-cloud-instructions/webhook-setup1.png',
+            file: 'libs/nx-cloud/assets/src/lib/private-cloud-instructions/webhook-setup1.png',
             hash: '3c8d90333938bd4c52bf831eb8cb37b888356073',
             ext: '.png',
           },
           {
-            file:
-              'libs/nx-cloud/assets/src/lib/private-cloud-instructions/webhook-setup2.png',
+            file: 'libs/nx-cloud/assets/src/lib/private-cloud-instructions/webhook-setup2.png',
             hash: 'c286c82a19cb47d7870c36c3e69b006034c961d2',
             ext: '.png',
           },
@@ -14508,8 +13662,7 @@ export const oceanGraph: ProjectGraphCache = {
                   {
                     replace:
                       'apps/nx-docs-site/src/environments/environment.ts',
-                    with:
-                      'apps/nx-docs-site/src/environments/environment.prod.ts',
+                    with: 'apps/nx-docs-site/src/environments/environment.prod.ts',
                   },
                 ],
                 optimization: true,
@@ -14547,8 +13700,7 @@ export const oceanGraph: ProjectGraphCache = {
                   {
                     replace:
                       'apps/nx-docs-site/src/environments/environment.ts',
-                    with:
-                      'apps/nx-docs-site/src/environments/environment.prod.ts',
+                    with: 'apps/nx-docs-site/src/environments/environment.prod.ts',
                   },
                 ],
                 sourceMap: false,
@@ -14633,830 +13785,692 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/builders/ng-packagr-lite.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/builders/ng-packagr-lite.md',
             hash: 'c03f75dee5e3178a80db8bd994cb0c8d9f4a59bb',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/builders/package.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/builders/package.md',
             hash: '506a5054cecdd10ff4a55882a3b15e9a4971aea5',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/builders/webpack-browser.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/builders/webpack-browser.md',
             hash: '4fd34e498cd85b6506ceb656c157c8dfa9262354',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/schematics/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/schematics/application.md',
             hash: '21d84d5a9ed0d57e46522d8629fda2f08cd23b91',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/schematics/downgrade-module.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/schematics/downgrade-module.md',
             hash: 'bf61edc6e0a516b8cef4dc3589c18fbef6a7499f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/schematics/karma-project.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/schematics/karma-project.md',
             hash: '437525907fccfd807fc390049e2b571ecd7791f4',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/schematics/karma.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/schematics/karma.md',
             hash: '60e8a1287f6690c45bd9169d6c28a3e96340f92c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/schematics/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/schematics/library.md',
             hash: '2bef93086bebfab8528211cc1300f7e3965f3709',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/schematics/move.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/schematics/move.md',
             hash: '194b230d652705ec93ee44d48e7392af21004425',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/schematics/ngrx.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/schematics/ngrx.md',
             hash: '2b80efe29efcefa7bd8805f7d79b840a650c0369',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/schematics/stories.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/schematics/stories.md',
             hash: 'f78a30e2a5b2c407da702eff38d2dd12c9c11f7a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/schematics/storybook-configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/schematics/storybook-configuration.md',
             hash: '22c0c2f577521a0af94d675fccc0b7d30e2d3347',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/schematics/upgrade-module.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-angular/schematics/upgrade-module.md',
             hash: '5ef0b737053c380a340aa7ec78c73b708f6e9fbe',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-cypress/builders/cypress.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-cypress/builders/cypress.md',
             hash: 'c940e55be12269b913b11f4f2374e987566074e8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-express/schematics/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-express/schematics/application.md',
             hash: 'fa4f5a0ae5589d0d2601b6f9d568625c8331e4a8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-jest/builders/jest.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-jest/builders/jest.md',
             hash: 'beca0edde661ea11012cc260ac074b5aee625629',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-linter/builders/eslint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-linter/builders/eslint.md',
             hash: '0886f1080d03d6d888f5f33bd3785889681d0848',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-linter/builders/lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-linter/builders/lint.md',
             hash: 'ebe4e1a3ff1533e51e4960d9c2046044150dc939',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/application.md',
             hash: 'a8033843a30abe4c566f5f7516029f606c98cc8b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/class.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/class.md',
             hash: '60eed0c9defc6c9c79e95c509d26f61789dd6028',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/controller.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/controller.md',
             hash: '34196e0344dc0531108ba564bc69784d3a6a4b37',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/decorator.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/decorator.md',
             hash: '91251f6129fafea6a60cbf385d9808a78062901f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/filter.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/filter.md',
             hash: 'e9fdd2d25f15f1fddb741dd42989535b2d5a9994',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/gateway.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/gateway.md',
             hash: '17337b131037df028cea417d662d97e09e9c23eb',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/guard.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/guard.md',
             hash: '957a74659561bcf1438ef815289bb6c5feaea7aa',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/interceptor.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/interceptor.md',
             hash: '7fe958dbe35ad5b18c6f7232b7e80833e4652b49',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/interface.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/interface.md',
             hash: '3d3caeeb6aba0ba4f73ed4c4b7526b969054d8cf',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/library.md',
             hash: '378edce0f3eb638f868677c68374054f94d986bb',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/middleware.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/middleware.md',
             hash: 'f0bbc032b30480a32982748b05cbab0955275135',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/module.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/module.md',
             hash: 'fadf38a320b0ddfe68bdc2f433e872a90bfef3b7',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/pipe.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/pipe.md',
             hash: 'aa4f795996bdec0c7e36a2f44123e6513cda18cb',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/provider.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/provider.md',
             hash: 'aeec1a7e37412445bbc9626d8cddee75dc6ce1b6',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/resolver.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/resolver.md',
             hash: '11f796c62251f9ef39d64ff45b454d694caf6743',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/service.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nest/schematics/service.md',
             hash: '64eba5d6dcad61915e391b3b9f50793fe64ef7fc',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-next/builders/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-next/builders/build.md',
             hash: 'c1c48a58cbc10c635870aa45086d725430a24425',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-next/builders/export.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-next/builders/export.md',
             hash: '830302d8b3e776a91e090feb936e403a7149d2a5',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-next/builders/server.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-next/builders/server.md',
             hash: '8f0510f26198eda5f6cd5ce1cc579f423f18adfd',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-next/schematics/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-next/schematics/application.md',
             hash: '1edfc0e6473b23b5e81a6aed8aa6bab9e97250b0',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-next/schematics/component.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-next/schematics/component.md',
             hash: 'a15559d721943911a55e7858f641dbff5eb6efb6',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-next/schematics/page.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-next/schematics/page.md',
             hash: '913c30ad4934aa86870e2c58196720f0219339f5',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-node/builders/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-node/builders/build.md',
             hash: '219d41f303e6b9f8a224606f2cbe47ffeaff9970',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-node/builders/execute.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-node/builders/execute.md',
             hash: '73f1a5c3f0ae982251211dc53bbf778dd7d403a1',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-node/builders/package.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-node/builders/package.md',
             hash: '1799dcda7b8b9b73b4049ce2f34e99fb117b5d04',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-node/schematics/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-node/schematics/application.md',
             hash: 'e5beb3332a374a2f1e6c335bd6326522dbdb351a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-node/schematics/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-node/schematics/library.md',
             hash: '40b589c3f7818547498ba86b31aaae5d8d5bc1ff',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nx-plugin/builders/e2e.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nx-plugin/builders/e2e.md',
             hash: '816558d0d0bbf8e2d8981e5c2a73c0f00a597b0e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nx-plugin/schematics/builder.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nx-plugin/schematics/builder.md',
             hash: '834d5e6a0ea05366b93de07ba1ccf441783a9b86',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nx-plugin/schematics/migration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nx-plugin/schematics/migration.md',
             hash: 'c3d3a9d3a8f30fd4addebdc2abaaab7e749efd8b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nx-plugin/schematics/plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nx-plugin/schematics/plugin.md',
             hash: '656fff8080cec6a0c61832206959d39f60404d27',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nx-plugin/schematics/schematic.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-nx-plugin/schematics/schematic.md',
             hash: '926215122b89e8d01b3bada51fef1d6fd55cdd3e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-react/schematics/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-react/schematics/application.md',
             hash: '1c545946a636090d79037497ffb339bed9936343',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-react/schematics/component-cypress-spec.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-react/schematics/component-cypress-spec.md',
             hash: '5496c40fdeee21f15d910f7e840b09b52123b69e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-react/schematics/component-story.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-react/schematics/component-story.md',
             hash: '9dc2d510afcafcc73b4ecd24131b885c4b4b5bf6',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-react/schematics/component.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-react/schematics/component.md',
             hash: 'e0734c9b23f2a879eaf663acd11ff99746541c59',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-react/schematics/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-react/schematics/library.md',
             hash: '247ca157507b7dae3f1981ab49b0245004d0012b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-react/schematics/redux.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-react/schematics/redux.md',
             hash: '762c61dba7d32beec8a2da9757947c9ae2db1459',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-react/schematics/stories.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-react/schematics/stories.md',
             hash: '27511a4e981e6bd2a00a99521f04f0c72086b26a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-react/schematics/storybook-configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-react/schematics/storybook-configuration.md',
             hash: '3d7b940a94456e2a2321c3513bad21256d594839',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-storybook/builders/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-storybook/builders/build.md',
             hash: '6d16ae6db7ac8bb6e4ccfbb03a9d0dea75588922',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-storybook/builders/storybook.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-storybook/builders/storybook.md',
             hash: '58f6cd165b65e0759909497a77adc4ed76ece3fb',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-storybook/schematics/configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-storybook/schematics/configuration.md',
             hash: '85424203c18da2c47919c914175106c5b620f9a8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-storybook/schematics/cypress-project.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-storybook/schematics/cypress-project.md',
             hash: '2c41f37dd5e4c659a8bd98bda01a89ef41d16e7b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-web/builders/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-web/builders/build.md',
             hash: 'be67fd7ff7cb619dc38def55da9654d0d0e9112e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-web/builders/dev-server.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-web/builders/dev-server.md',
             hash: 'ed4a0bc4617c9e4a3f8a1e056a0da468c32eaad9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-web/builders/package.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-web/builders/package.md',
             hash: 'fcb94cbf4fbb104fe1d9009016a111c9f9e96dfb',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-web/schematics/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-web/schematics/application.md',
             hash: 'c7954c442c21307be42a32d33a9e86256183a02f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-workspace/builders/run-commands.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-workspace/builders/run-commands.md',
             hash: 'c10a295449a114bdb8935eb22f56deb6d9c19c08',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-workspace/schematics/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-workspace/schematics/library.md',
             hash: '08cbd36929ee5b5fd4fa6d6018a62c2ae3b1b0a5',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-workspace/schematics/move.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-workspace/schematics/move.md',
             hash: '8f330cc62bf7a0dcbe883d229e6329cbdb4eabff',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-workspace/schematics/remove.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-workspace/schematics/remove.md',
             hash: 'c641affde7249e934963f448bd79db900b703368',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-workspace/schematics/run-commands.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-workspace/schematics/run-commands.md',
             hash: 'aece6f40fe1a63524d345321ceeb0703ef2324e5',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-workspace/schematics/workspace-schematic.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/api-workspace/schematics/workspace-schematic.md',
             hash: '48d2b6607b0a1a689633b111e62016071e984a08',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/builders.json',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/builders.json',
             hash: '722846ec085f8420adb3aa54cda733c6e96ccb92',
             ext: '.json',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/affected-apps.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/affected-apps.md',
             hash: 'a3a0b085a39c5e362f89291a7cb5c89cabe16c36',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/affected-build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/affected-build.md',
             hash: '76dc8d0795571a2d58f58f617e286b50c49a8617',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/affected-dep-graph.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/affected-dep-graph.md',
             hash: '1f5311aa42f3571d220bf1c55db4510593ce996c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/affected-e2e.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/affected-e2e.md',
             hash: 'f6a95185629148021f272b0d9cdcaf389d93f466',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/affected-libs.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/affected-libs.md',
             hash: 'f9648615be93795227bfff5fe13482e06568cee8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/affected-lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/affected-lint.md',
             hash: 'ebf0491368d705d043d5425d561e14938d8e2d02',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/affected-test.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/affected-test.md',
             hash: '663ec95368de8e696d50052f380f20524aa5a372',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/affected.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/affected.md',
             hash: '874b43a5c60fdb471a492652a41d25c42670a605',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/build.md',
             hash: '8a398ba7e32adf7dc0c39005b4b081b9a2070033',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/dep-graph.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/dep-graph.md',
             hash: '7de42387d7c42fe19b3f64fee70dff2e53931f41',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/e2e.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/e2e.md',
             hash: '1fdb16dc1bb845214d8fb86074d9955074f53ad1',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/format-check.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/format-check.md',
             hash: '8582f2a9a592b9bd296ffe988dd69fe25f8d0aca',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/format-write.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/format-write.md',
             hash: '356fdf198afcca9674d99ff797bc0d8f05e21973',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/generate.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/generate.md',
             hash: '033fcfd871d6cac1bed56b688d48d87a072292af',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/lint.md',
             hash: '19efd0e2af38aaa58ed144a10632755a6f37ffba',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/list.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/list.md',
             hash: '09742dbc9bbd99276f5f8d24c800c9f5be12d500',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/migrate.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/migrate.md',
             hash: '2fcd07191768eb2427a02877ade11b9c264f81b5',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/print-affected.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/print-affected.md',
             hash: '1ac11d2fd80e57e08f41883035e7ba54d7bed1c9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/report.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/report.md',
             hash: '0d7c3480d5a028a13d8da43f34d0fd699bd58c55',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/run-many.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/run-many.md',
             hash: '11f33191055c1d7132fb46f5618fa34bd098a654',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/run.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/run.md',
             hash: '87df36051c3f52d5577a7f1c59424f6b9fd0b9d2',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/serve.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/serve.md',
             hash: '6a87bc97767eb44b8e44b868a4f0b08c826378b4',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/test.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/test.md',
             hash: '84d7e9db8662dd4775f841ebd3a07d7743d0ad09',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/workspace-lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/workspace-lint.md',
             hash: 'd3eeca5b2b9c13b8f18eea24cfcb8c2bcf6829f9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/workspace-schematic.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/cli/workspace-schematic.md',
             hash: '1935090762ef64b71d4d5c44e5e5b6eaafdfbfbf',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/examples/apollo-angular.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/examples/apollo-angular.md',
             hash: 'c6818acd7f008d9fca6b1f451682755afefa5090',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/examples/react-affected.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/examples/react-affected.png',
             hash: 'e1dd4042dd12e46bb23fe26781c469db2460b021',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/examples/react-affected2.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/examples/react-affected2.png',
             hash: '3d8f870b9377d708c56b77a4a889b24ffa3628a7',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/examples/react-and-angular.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/examples/react-and-angular.md',
             hash: '5539ef330d8c40c0af350f79f83cad5d7e1f2de4',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/examples/react-dep-graph.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/examples/react-dep-graph.png',
             hash: '81f04e46326bc57d1ae87a7a5896a3d9ef8e1638',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/examples/react-serve.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/examples/react-serve.png',
             hash: 'b73ca2038a61a7915a20721ec775e925baf0ff8e',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/getting-started/advanced-nx-workspace-course.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/getting-started/advanced-nx-workspace-course.png',
             hash: 'bf8a9f31fe3679f3f5f9d535da0735170299b095',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/getting-started/create-workspace.gif',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/getting-started/create-workspace.gif',
             hash: '85a97af73b29af9a4476e2b3d4d22ec1a1b05eca',
             ext: '.gif',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/getting-started/dep-graph.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/getting-started/dep-graph.png',
             hash: '0cc9c65cdf9c81eba3d30cd09979f818d74a7260',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/getting-started/nx-and-cli.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/getting-started/nx-and-cli.md',
             hash: 'da560808b667d4beace6fdf1db574bf152fb59af',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/getting-started/resources.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/getting-started/resources.md',
             hash: '3558206cb45425a9ccda114eaf00cfe6c494150b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/getting-started/why-nx.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/getting-started/why-nx.md',
             hash: '57865b754bc18eda488888df473133136b70d2d3',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/guides/cli-overview.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/guides/cli-overview.md',
             hash: 'd92ffe5c1fa7df736d6d2d6ae458d3aee059f207',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/guides/configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/guides/configuration.md',
             hash: '324f992babd08ce1df6b8a34d515e69ba267d317',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/guides/misc-data-persistence.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/guides/misc-data-persistence.md',
             hash: 'd5f0bdd266f4b5c8fe4a04c48e50eaa7ebae290d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/guides/misc-ngrx.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/guides/misc-ngrx.md',
             hash: '784b1e43fae2a43d7ace7088e8565947277468f9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/guides/misc-upgrade.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/guides/misc-upgrade.md',
             hash: 'b840a290289cb524c65176422e39526d69a52bc9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/guides/modern-angular/karma-to-jest.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/guides/modern-angular/karma-to-jest.md',
             hash: 'b0eb35a6181d8b40527a2b5ac3932d820a757e90',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/guides/modern-angular/protractor-to-cypress.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/guides/modern-angular/protractor-to-cypress.md',
             hash: '6e7b179a52008c9b2c9d2ebbe2c289b897f5a19c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/guides/nx7-to-nx8.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/guides/nx7-to-nx8.md',
             hash: '3e9095160947bb7b56deb905e5dcf7447a4b701d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/guides/running-custom-commands.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/guides/running-custom-commands.md',
             hash: '2afa6f986713d1a0964cca9ae06348768380917f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/guides/storybook-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/guides/storybook-plugin.md',
             hash: '19ad7dcfe736d913a4bb588e5aeee7e6bfcc1a55',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/guides/update.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/guides/update.md',
             hash: '4e4723273ce668d64ab8ce4c7da42d803e4b3253',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/migration/migration-angular.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/migration/migration-angular.md',
             hash: '60bf3d20dcab9d7500286e006a6a120e0967af6f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/migration/migration-angularjs-unit-tests-passing.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/migration/migration-angularjs-unit-tests-passing.png',
             hash: '53414ab08cb6659ac6e5506f9c351ad343075064',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/migration/migration-angularjs.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/migration/migration-angularjs.md',
             hash: '4938946027f304eabb4385eff92f9f60b29da027',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/schematics.json',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/schematics.json',
             hash: 'ae621ac6e860b926f344bdfa4e92498d24335626',
             ext: '.json',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/01-create-application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/01-create-application.md',
             hash: 'd28468eb0ebf086f84988be95744903e90fb0980',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/02-add-e2e-test.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/02-add-e2e-test.md',
             hash: '34e3541ab5bc80595019fdb84b28feb6248cd025',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/03-display-todos.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/03-display-todos.md',
             hash: '6eb024640fd8252f2edfd82145647bad61908952',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/04-connect-to-api.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/04-connect-to-api.md',
             hash: '0f23ed8b792ca8ffa4b985d4cd6f8f0fc948fc8d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/05-add-node-app.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/05-add-node-app.md',
             hash: '1f09cba585569763a966de223bf0230acff3b8e3',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/06-proxy.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/06-proxy.md',
             hash: '4dc74e5fb217dfc2d30c0195d4e4c9cfe8a94d3d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/07-share-code.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/07-share-code.md',
             hash: '86ae8e3be1e787bc8d3a69aab0ee5297188861b7',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/08-create-libs.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/08-create-libs.md',
             hash: '3b81fc4295484270bbd7af9f995685f7e432d985',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/09-dep-graph.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/09-dep-graph.md',
             hash: '483db717f2bc7d176f9fd5d7ed3032068f4774ce',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/10-computation-caching.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/10-computation-caching.md',
             hash: '370220478c581c7e4023c801d1b3ad18b5beccf4',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/11-test-affected-projects.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/11-test-affected-projects.md',
             hash: 'c0d2c34ed4b52dbe220b2de4bd5bd2d4e3edfe78',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/12-summary.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/angular/tutorial/12-summary.md',
             hash: 'c16ce711ac86bfb12395615bd58ef9d7e1e1c59e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/builders.json',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/builders.json',
             hash: 'd147d35dea142344dcbb2293d49a1deb84b0c150',
             ext: '.json',
           },
@@ -15466,2732 +14480,2277 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.json',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/builders/ng-packagr-lite.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/builders/ng-packagr-lite.md',
             hash: '7e7f576f2efb17a1418cdfdb1fb663ed643349ed',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/builders/package.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/builders/package.md',
             hash: '67a6e8615644bfa9444a172ae38fae1717e0f7ab',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/builders/webpack-browser.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/builders/webpack-browser.md',
             hash: '0ce26b763ed55bf601607a6baf5380fdc08613c7',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/schematics/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/schematics/application.md',
             hash: 'a895bddf451b6eb7ab046a5fa8688c5dcd75720c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/schematics/downgrade-module.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/schematics/downgrade-module.md',
             hash: '83a9b97974fe9935ef5c28006ed169a59870bf6e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/schematics/karma-project.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/schematics/karma-project.md',
             hash: 'fb87bebaa393c4bb4fad7084ca641f7ce4d52c2e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/schematics/karma.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/schematics/karma.md',
             hash: 'fa41a5fe4654fb7ad89178f38aa0399cdf728ce8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/schematics/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/schematics/library.md',
             hash: 'fb756b7a75d580565464f9e5882e8057c69b4ad8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/schematics/move.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/schematics/move.md',
             hash: '835e09dc50248f26bcda8063c497288294b1ecc0',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/schematics/ngrx.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/schematics/ngrx.md',
             hash: '9d4a0f23dc962452ee656e011b884afeb40927d0',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/schematics/stories.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/schematics/stories.md',
             hash: '2c028bd6326b268e55f2d816634be33cd5296342',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/schematics/storybook-configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/schematics/storybook-configuration.md',
             hash: '59170f1310d6f1397e918da18d87afc752fe8d3f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/schematics/upgrade-module.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-angular/schematics/upgrade-module.md',
             hash: '093f05de0159d531029aa9ed04372527bb069598',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-cypress/builders/cypress.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-cypress/builders/cypress.md',
             hash: '00f4aed94a63dce6ae71f3f6578a0949db9c6d07',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-express/schematics/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-express/schematics/application.md',
             hash: 'c801960e6a9fa878fa1b9048256f30327c0d3fd9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-jest/builders/jest.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-jest/builders/jest.md',
             hash: '78e065f5ca9aed03149876354ee357087a8d9203',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-linter/builders/eslint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-linter/builders/eslint.md',
             hash: 'd1ecf361584fe955ebfc63c90d2c67d28a7b084e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-linter/builders/lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-linter/builders/lint.md',
             hash: 'c8e382a1d4ee750d98360b00ba50fbc66b3d96d9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/application.md',
             hash: 'cca4d44354a4b5c0ed3f15a4f8e4e4bf4ce6ab87',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/class.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/class.md',
             hash: '919d78f9ccad6a202f0cb5003859ed3298df204d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/controller.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/controller.md',
             hash: '6d876ec3eeaa5e1318d638d2413b6b18c5036f34',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/decorator.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/decorator.md',
             hash: '30c763bfe182f09705aa315e077eb82e66e3347d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/filter.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/filter.md',
             hash: '574c0bb7faf8d9b86e0addc1b0d2f1544cb410ce',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/gateway.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/gateway.md',
             hash: '0c84025bedeeac4d0b0dec53180462559db7cea4',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/guard.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/guard.md',
             hash: '07c00cac00c85b4ac3d8496d5b89dfcc78c2dd1c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/interceptor.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/interceptor.md',
             hash: 'ba3aff009eed789c473930c5649f6dec46c22cc2',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/interface.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/interface.md',
             hash: '6392eb510c6f1f5d8238d03c4675b54d2c186728',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/library.md',
             hash: '5a96b01c79745f21acb2015b7bf598fa9e7e6f52',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/middleware.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/middleware.md',
             hash: '8f4f48344e3202eea4b303e2115fe828491be209',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/module.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/module.md',
             hash: '9d36d9e18e69258365b438977779c4ceea41c0d0',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/pipe.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/pipe.md',
             hash: '49992338e207fdb76d916b1a15356a43a7794d18',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/provider.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/provider.md',
             hash: '6ea1995f14867cb1904edfc7c68008fd666b447a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/resolver.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/resolver.md',
             hash: '35a7bf480c4703a30166f5d314efdf3a73c45638',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/service.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nest/schematics/service.md',
             hash: '78da4067aa39ce928c0ef54865e76aeb622d9e45',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-next/builders/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-next/builders/build.md',
             hash: 'c3ebe5d4eed25494edb4aa98545e099ceee9a397',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-next/builders/export.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-next/builders/export.md',
             hash: '37d3d14e2f8604488b76ef464f3595901d4f41b2',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-next/builders/server.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-next/builders/server.md',
             hash: '7076eb98972781c41314d32a2f887151d0d23e90',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-next/schematics/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-next/schematics/application.md',
             hash: 'ec0c74b2b2d13fe12c7c05ab51e41c3ec29b687f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-next/schematics/component.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-next/schematics/component.md',
             hash: 'bb6cffb91e6be7eae2b7a9fc01952bfd6710746a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-next/schematics/page.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-next/schematics/page.md',
             hash: '82ca21954ec0bc5b4b550a5d4e7613f17865b1fb',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-node/builders/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-node/builders/build.md',
             hash: '907e79a73dd4364bd43f876b5c0e5692e9f3bad0',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-node/builders/execute.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-node/builders/execute.md',
             hash: 'b08dfb613498cb0a2ea633d23eb4e42f8022b791',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-node/builders/package.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-node/builders/package.md',
             hash: 'ff12624f41107dcab8f2a50fc8f5da88ac072d71',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-node/schematics/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-node/schematics/application.md',
             hash: '5ed7f18cd4ed742c398c36317989093b4caa0bfe',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-node/schematics/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-node/schematics/library.md',
             hash: '1320501c10bb346fa104a9aaa4702679e477d894',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nx-plugin/builders/e2e.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nx-plugin/builders/e2e.md',
             hash: '0cf587ff28f1f8e3fbc94b172da18335e650f286',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nx-plugin/schematics/builder.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nx-plugin/schematics/builder.md',
             hash: '63c86c4e429366c6d76a319dbba774477390eca3',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nx-plugin/schematics/migration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nx-plugin/schematics/migration.md',
             hash: 'd8ebce862a794715a51b6c14aa26ee4cc4ccf907',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nx-plugin/schematics/plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nx-plugin/schematics/plugin.md',
             hash: 'f7bce6c1ba9c7b43537de336d709a3689d222a21',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nx-plugin/schematics/schematic.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-nx-plugin/schematics/schematic.md',
             hash: 'dd34d31cdc0e733163fd23971d3f55e8214edf83',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-react/schematics/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-react/schematics/application.md',
             hash: '305c382e5dce08f33f42fe4b60de89bcc1d2164a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-react/schematics/component-cypress-spec.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-react/schematics/component-cypress-spec.md',
             hash: '58b52f635add7eb9e407d871168912b0fc3d0e19',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-react/schematics/component-story.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-react/schematics/component-story.md',
             hash: '35ef6ced9c08a07ad07f7863536859522c2c7620',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-react/schematics/component.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-react/schematics/component.md',
             hash: '8fe208e4ec679fe7ab87485db7032024961368c9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-react/schematics/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-react/schematics/library.md',
             hash: '81cf8a607f4621bf13ed35f9fb1e418910d2769b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-react/schematics/redux.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-react/schematics/redux.md',
             hash: 'cda1e636d6ca2673a5d13c483c297415fc889dec',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-react/schematics/stories.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-react/schematics/stories.md',
             hash: '69ae7ee3934bb7c26517cf6ffbbda1f7ed3c7b57',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-react/schematics/storybook-configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-react/schematics/storybook-configuration.md',
             hash: 'd5a59afb476fa8ec1f27ebcfa29edfe38d08809f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-storybook/builders/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-storybook/builders/build.md',
             hash: '163d3882c5130bab148b0001b900c65cccd071e3',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-storybook/builders/storybook.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-storybook/builders/storybook.md',
             hash: '6be3b85997947faf142e2b95ce3ddf047f83b51e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-storybook/schematics/configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-storybook/schematics/configuration.md',
             hash: '65eb7bc7c67a487d08d5e568627b58d65a245f10',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-storybook/schematics/cypress-project.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-storybook/schematics/cypress-project.md',
             hash: 'ed108f43ac61bf669f2a1b767f8ab32521e271cd',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-web/builders/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-web/builders/build.md',
             hash: 'f59e8910eefb9a2a02a2f276577b82f0668519b0',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-web/builders/dev-server.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-web/builders/dev-server.md',
             hash: '96c14732a0153cac125ed167cd932578b4d8deee',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-web/builders/package.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-web/builders/package.md',
             hash: 'a1ce5b616d5a442f6d0738ca671a16b09822cbfb',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-web/schematics/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-web/schematics/application.md',
             hash: '914d89a1c55d253ab5cee98d660fb02700247455',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-workspace/builders/run-commands.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-workspace/builders/run-commands.md',
             hash: '5ab1354885383437d32820154a9584f387fe0db2',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-workspace/schematics/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-workspace/schematics/library.md',
             hash: '681c06659f82c91396bfcbcfca84626e473d63f6',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-workspace/schematics/move.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-workspace/schematics/move.md',
             hash: '8f7f38a34e9e52cf9c6a44be55a2af777c60a025',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-workspace/schematics/remove.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-workspace/schematics/remove.md',
             hash: 'a83d2779386b7e72a93db5f8629d60babe6bd5d8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-workspace/schematics/run-commands.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-workspace/schematics/run-commands.md',
             hash: '6ab77cfeba3eea0c74db1d448744068513490df5',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-workspace/schematics/workspace-schematic.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/api-workspace/schematics/workspace-schematic.md',
             hash: 'd90b6755c4a0b765c039310911df27b5c8f46d86',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/builders.json',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/builders.json',
             hash: '722846ec085f8420adb3aa54cda733c6e96ccb92',
             ext: '.json',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/affected-apps.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/affected-apps.md',
             hash: 'a3a0b085a39c5e362f89291a7cb5c89cabe16c36',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/affected-build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/affected-build.md',
             hash: '76dc8d0795571a2d58f58f617e286b50c49a8617',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/affected-dep-graph.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/affected-dep-graph.md',
             hash: '1f5311aa42f3571d220bf1c55db4510593ce996c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/affected-e2e.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/affected-e2e.md',
             hash: 'f6a95185629148021f272b0d9cdcaf389d93f466',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/affected-libs.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/affected-libs.md',
             hash: 'f9648615be93795227bfff5fe13482e06568cee8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/affected-lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/affected-lint.md',
             hash: 'ebf0491368d705d043d5425d561e14938d8e2d02',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/affected-test.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/affected-test.md',
             hash: '663ec95368de8e696d50052f380f20524aa5a372',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/affected.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/affected.md',
             hash: '874b43a5c60fdb471a492652a41d25c42670a605',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/build.md',
             hash: '8a398ba7e32adf7dc0c39005b4b081b9a2070033',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/dep-graph.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/dep-graph.md',
             hash: '7de42387d7c42fe19b3f64fee70dff2e53931f41',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/e2e.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/e2e.md',
             hash: '1fdb16dc1bb845214d8fb86074d9955074f53ad1',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/format-check.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/format-check.md',
             hash: '8582f2a9a592b9bd296ffe988dd69fe25f8d0aca',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/format-write.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/format-write.md',
             hash: '356fdf198afcca9674d99ff797bc0d8f05e21973',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/generate.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/generate.md',
             hash: '033fcfd871d6cac1bed56b688d48d87a072292af',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/lint.md',
             hash: '19efd0e2af38aaa58ed144a10632755a6f37ffba',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/list.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/list.md',
             hash: '09742dbc9bbd99276f5f8d24c800c9f5be12d500',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/migrate.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/migrate.md',
             hash: '2fcd07191768eb2427a02877ade11b9c264f81b5',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/print-affected.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/print-affected.md',
             hash: '1ac11d2fd80e57e08f41883035e7ba54d7bed1c9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/report.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/report.md',
             hash: '0d7c3480d5a028a13d8da43f34d0fd699bd58c55',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/run-many.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/run-many.md',
             hash: '11f33191055c1d7132fb46f5618fa34bd098a654',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/run.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/run.md',
             hash: '87df36051c3f52d5577a7f1c59424f6b9fd0b9d2',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/serve.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/serve.md',
             hash: '6a87bc97767eb44b8e44b868a4f0b08c826378b4',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/test.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/test.md',
             hash: '84d7e9db8662dd4775f841ebd3a07d7743d0ad09',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/workspace-lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/workspace-lint.md',
             hash: 'd3eeca5b2b9c13b8f18eea24cfcb8c2bcf6829f9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/workspace-schematic.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/cli/workspace-schematic.md',
             hash: '1935090762ef64b71d4d5c44e5e5b6eaafdfbfbf',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/getting-started/advanced-nx-workspace-course.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/getting-started/advanced-nx-workspace-course.png',
             hash: 'bf8a9f31fe3679f3f5f9d535da0735170299b095',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/getting-started/resources.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/getting-started/resources.md',
             hash: 'aff14c088ba679e28984d37be34b17435d03d9ec',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/getting-started/why-nx.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/getting-started/why-nx.md',
             hash: '55fc46217e6d0591e7a857b43dc9e3a979ba4f46',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/guides/cli-overview.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/guides/cli-overview.md',
             hash: 'd74b4a436cff00f4c632ddb2cc8309952c0c32c7',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/guides/configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/guides/configuration.md',
             hash: '4b44b8039c8275323d30b9512a77c5a942485f4c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/schematics.json',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/schematics.json',
             hash: 'ae621ac6e860b926f344bdfa4e92498d24335626',
             ext: '.json',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/tutorial/01-create-application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/tutorial/01-create-application.md',
             hash: '619991a46d79982d26f6628b593116ac5ad80962',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/tutorial/02-display-todos.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/tutorial/02-display-todos.md',
             hash: '3b145b56c676a70a003a90c6fb345ebf43136ce3',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/tutorial/03-share-code.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/tutorial/03-share-code.md',
             hash: '2cc3410e8376c35cad9f0a6786790c426af0bb76',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/tutorial/04-create-libs.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/tutorial/04-create-libs.md',
             hash: '8e341993a977fc5be1658ccfebc54e9325515e0a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/tutorial/05-dep-graph.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/tutorial/05-dep-graph.md',
             hash: '3047bedf2defce51c2801cf988e6611ccbf80395',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/tutorial/06-computation-caching.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/tutorial/06-computation-caching.md',
             hash: '52431ba20301afe839bf4f75b0ce03ec3a75f7ec',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/tutorial/07-test-affected-projects.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/tutorial/07-test-affected-projects.md',
             hash: '15833a3df8b941e29a0dffd6320a67d2abf8f5b8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/node/tutorial/08-summary.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/node/tutorial/08-summary.md',
             hash: '9af8abcb5c59c4fd72aa0e1dc4972de8c182d297',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/builders/ng-packagr-lite.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/builders/ng-packagr-lite.md',
             hash: '667a7b33abdd18ab7601efcd9b7fe86a0525bced',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/builders/package.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/builders/package.md',
             hash: '3d66db032615641cfd582515cdc71812ff19cfc2',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/builders/webpack-browser.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/builders/webpack-browser.md',
             hash: '4efbc5a16eee1be86a94df6ff1b06da7cfc25182',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/schematics/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/schematics/application.md',
             hash: 'a895bddf451b6eb7ab046a5fa8688c5dcd75720c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/schematics/downgrade-module.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/schematics/downgrade-module.md',
             hash: '83a9b97974fe9935ef5c28006ed169a59870bf6e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/schematics/karma-project.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/schematics/karma-project.md',
             hash: 'fb87bebaa393c4bb4fad7084ca641f7ce4d52c2e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/schematics/karma.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/schematics/karma.md',
             hash: 'fa41a5fe4654fb7ad89178f38aa0399cdf728ce8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/schematics/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/schematics/library.md',
             hash: 'fb756b7a75d580565464f9e5882e8057c69b4ad8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/schematics/move.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/schematics/move.md',
             hash: '835e09dc50248f26bcda8063c497288294b1ecc0',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/schematics/ngrx.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/schematics/ngrx.md',
             hash: '9d4a0f23dc962452ee656e011b884afeb40927d0',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/schematics/stories.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/schematics/stories.md',
             hash: '2c028bd6326b268e55f2d816634be33cd5296342',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/schematics/storybook-configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/schematics/storybook-configuration.md',
             hash: '59170f1310d6f1397e918da18d87afc752fe8d3f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/schematics/upgrade-module.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-angular/schematics/upgrade-module.md',
             hash: '093f05de0159d531029aa9ed04372527bb069598',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-cypress/builders/cypress.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-cypress/builders/cypress.md',
             hash: '7442d5d345c4e19ef4f80a4d2eb74e38999a55f9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-express/schematics/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-express/schematics/application.md',
             hash: 'c801960e6a9fa878fa1b9048256f30327c0d3fd9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-jest/builders/jest.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-jest/builders/jest.md',
             hash: 'db8bcb0e4ea63fc69bcd9991c63f9745ea8c5545',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-linter/builders/eslint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-linter/builders/eslint.md',
             hash: 'a2af8e391b8f98bbc1bcff7417b8a5dab5da03fd',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-linter/builders/lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-linter/builders/lint.md',
             hash: '199f5123b0cbfcea009b3e7c23b242acd9a67ce8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/application.md',
             hash: 'cca4d44354a4b5c0ed3f15a4f8e4e4bf4ce6ab87',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/class.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/class.md',
             hash: '919d78f9ccad6a202f0cb5003859ed3298df204d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/controller.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/controller.md',
             hash: '6d876ec3eeaa5e1318d638d2413b6b18c5036f34',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/decorator.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/decorator.md',
             hash: '30c763bfe182f09705aa315e077eb82e66e3347d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/filter.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/filter.md',
             hash: '574c0bb7faf8d9b86e0addc1b0d2f1544cb410ce',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/gateway.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/gateway.md',
             hash: '0c84025bedeeac4d0b0dec53180462559db7cea4',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/guard.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/guard.md',
             hash: '07c00cac00c85b4ac3d8496d5b89dfcc78c2dd1c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/interceptor.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/interceptor.md',
             hash: 'ba3aff009eed789c473930c5649f6dec46c22cc2',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/interface.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/interface.md',
             hash: '6392eb510c6f1f5d8238d03c4675b54d2c186728',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/library.md',
             hash: '5a96b01c79745f21acb2015b7bf598fa9e7e6f52',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/middleware.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/middleware.md',
             hash: '8f4f48344e3202eea4b303e2115fe828491be209',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/module.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/module.md',
             hash: '9d36d9e18e69258365b438977779c4ceea41c0d0',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/pipe.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/pipe.md',
             hash: '49992338e207fdb76d916b1a15356a43a7794d18',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/provider.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/provider.md',
             hash: '6ea1995f14867cb1904edfc7c68008fd666b447a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/resolver.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/resolver.md',
             hash: '35a7bf480c4703a30166f5d314efdf3a73c45638',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/service.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nest/schematics/service.md',
             hash: '78da4067aa39ce928c0ef54865e76aeb622d9e45',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-next/builders/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-next/builders/build.md',
             hash: 'f3b464f2659ec8679cedbdf4f704d2528d8accc1',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-next/builders/export.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-next/builders/export.md',
             hash: 'e6885d3740c5f19e4d7d13a4742c9418c04a61be',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-next/builders/server.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-next/builders/server.md',
             hash: '095e48e2d722f6b053b301a979500d96a1e3a011',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-next/schematics/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-next/schematics/application.md',
             hash: 'ec0c74b2b2d13fe12c7c05ab51e41c3ec29b687f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-next/schematics/component.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-next/schematics/component.md',
             hash: 'bb6cffb91e6be7eae2b7a9fc01952bfd6710746a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-next/schematics/page.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-next/schematics/page.md',
             hash: '82ca21954ec0bc5b4b550a5d4e7613f17865b1fb',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-node/builders/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-node/builders/build.md',
             hash: '0ca8edc43c6bce90c5c12fcb8d2483902e6aabb8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-node/builders/execute.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-node/builders/execute.md',
             hash: '142e72e3f7385b1828dee0322b73956260d3c7ae',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-node/builders/package.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-node/builders/package.md',
             hash: 'bb47b3db6d71f61d461a6208e72f933bd276a5a3',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-node/schematics/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-node/schematics/application.md',
             hash: '5ed7f18cd4ed742c398c36317989093b4caa0bfe',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-node/schematics/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-node/schematics/library.md',
             hash: '1320501c10bb346fa104a9aaa4702679e477d894',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nx-plugin/builders/e2e.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nx-plugin/builders/e2e.md',
             hash: '326849b24bb4ba33ffe01595b3de37991ee49a13',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nx-plugin/schematics/builder.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nx-plugin/schematics/builder.md',
             hash: '63c86c4e429366c6d76a319dbba774477390eca3',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nx-plugin/schematics/migration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nx-plugin/schematics/migration.md',
             hash: 'd8ebce862a794715a51b6c14aa26ee4cc4ccf907',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nx-plugin/schematics/plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nx-plugin/schematics/plugin.md',
             hash: 'f7bce6c1ba9c7b43537de336d709a3689d222a21',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nx-plugin/schematics/schematic.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-nx-plugin/schematics/schematic.md',
             hash: 'dd34d31cdc0e733163fd23971d3f55e8214edf83',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-react/schematics/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-react/schematics/application.md',
             hash: '305c382e5dce08f33f42fe4b60de89bcc1d2164a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-react/schematics/component-cypress-spec.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-react/schematics/component-cypress-spec.md',
             hash: '58b52f635add7eb9e407d871168912b0fc3d0e19',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-react/schematics/component-story.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-react/schematics/component-story.md',
             hash: '35ef6ced9c08a07ad07f7863536859522c2c7620',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-react/schematics/component.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-react/schematics/component.md',
             hash: '8fe208e4ec679fe7ab87485db7032024961368c9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-react/schematics/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-react/schematics/library.md',
             hash: '81cf8a607f4621bf13ed35f9fb1e418910d2769b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-react/schematics/redux.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-react/schematics/redux.md',
             hash: 'cda1e636d6ca2673a5d13c483c297415fc889dec',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-react/schematics/stories.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-react/schematics/stories.md',
             hash: '69ae7ee3934bb7c26517cf6ffbbda1f7ed3c7b57',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-react/schematics/storybook-configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-react/schematics/storybook-configuration.md',
             hash: 'd5a59afb476fa8ec1f27ebcfa29edfe38d08809f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-storybook/builders/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-storybook/builders/build.md',
             hash: '05648b03786f5541ad8346969b9f11d8e52d0b7c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-storybook/builders/storybook.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-storybook/builders/storybook.md',
             hash: 'cbe82db0236cd7435ea69424d3697a241b9953bd',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-storybook/schematics/configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-storybook/schematics/configuration.md',
             hash: '65eb7bc7c67a487d08d5e568627b58d65a245f10',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-storybook/schematics/cypress-project.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-storybook/schematics/cypress-project.md',
             hash: 'ed108f43ac61bf669f2a1b767f8ab32521e271cd',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-web/builders/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-web/builders/build.md',
             hash: '787193fec8813266085e215ffd6beef58168747e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-web/builders/dev-server.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-web/builders/dev-server.md',
             hash: 'e9479059e30dd913c7f51b170ad5abba77e96c12',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-web/builders/package.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-web/builders/package.md',
             hash: '726ee5cf4f3a81039caddda34765171c15323374',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-web/schematics/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-web/schematics/application.md',
             hash: '914d89a1c55d253ab5cee98d660fb02700247455',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-workspace/builders/run-commands.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-workspace/builders/run-commands.md',
             hash: 'b8bed6f2f8ba44811b63c1fb86e06af5893ee22e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-workspace/schematics/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-workspace/schematics/library.md',
             hash: '681c06659f82c91396bfcbcfca84626e473d63f6',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-workspace/schematics/move.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-workspace/schematics/move.md',
             hash: '8f7f38a34e9e52cf9c6a44be55a2af777c60a025',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-workspace/schematics/remove.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-workspace/schematics/remove.md',
             hash: 'a83d2779386b7e72a93db5f8629d60babe6bd5d8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-workspace/schematics/run-commands.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-workspace/schematics/run-commands.md',
             hash: '6ab77cfeba3eea0c74db1d448744068513490df5',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-workspace/schematics/workspace-schematic.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/api-workspace/schematics/workspace-schematic.md',
             hash: 'd90b6755c4a0b765c039310911df27b5c8f46d86',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/builders.json',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/builders.json',
             hash: '722846ec085f8420adb3aa54cda733c6e96ccb92',
             ext: '.json',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/affected-apps.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/affected-apps.md',
             hash: 'a3a0b085a39c5e362f89291a7cb5c89cabe16c36',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/affected-build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/affected-build.md',
             hash: '76dc8d0795571a2d58f58f617e286b50c49a8617',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/affected-dep-graph.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/affected-dep-graph.md',
             hash: '1f5311aa42f3571d220bf1c55db4510593ce996c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/affected-e2e.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/affected-e2e.md',
             hash: 'f6a95185629148021f272b0d9cdcaf389d93f466',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/affected-libs.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/affected-libs.md',
             hash: 'f9648615be93795227bfff5fe13482e06568cee8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/affected-lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/affected-lint.md',
             hash: 'ebf0491368d705d043d5425d561e14938d8e2d02',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/affected-test.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/affected-test.md',
             hash: '663ec95368de8e696d50052f380f20524aa5a372',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/affected.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/affected.md',
             hash: '874b43a5c60fdb471a492652a41d25c42670a605',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/build.md',
             hash: '8a398ba7e32adf7dc0c39005b4b081b9a2070033',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/dep-graph.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/dep-graph.md',
             hash: '7de42387d7c42fe19b3f64fee70dff2e53931f41',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/e2e.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/e2e.md',
             hash: '1fdb16dc1bb845214d8fb86074d9955074f53ad1',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/format-check.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/format-check.md',
             hash: '8582f2a9a592b9bd296ffe988dd69fe25f8d0aca',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/format-write.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/format-write.md',
             hash: '356fdf198afcca9674d99ff797bc0d8f05e21973',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/generate.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/generate.md',
             hash: '033fcfd871d6cac1bed56b688d48d87a072292af',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/lint.md',
             hash: '19efd0e2af38aaa58ed144a10632755a6f37ffba',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/list.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/list.md',
             hash: '09742dbc9bbd99276f5f8d24c800c9f5be12d500',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/migrate.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/migrate.md',
             hash: '2fcd07191768eb2427a02877ade11b9c264f81b5',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/print-affected.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/print-affected.md',
             hash: '1ac11d2fd80e57e08f41883035e7ba54d7bed1c9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/report.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/report.md',
             hash: '0d7c3480d5a028a13d8da43f34d0fd699bd58c55',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/run-many.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/run-many.md',
             hash: '11f33191055c1d7132fb46f5618fa34bd098a654',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/run.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/run.md',
             hash: '87df36051c3f52d5577a7f1c59424f6b9fd0b9d2',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/serve.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/serve.md',
             hash: '6a87bc97767eb44b8e44b868a4f0b08c826378b4',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/test.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/test.md',
             hash: '84d7e9db8662dd4775f841ebd3a07d7743d0ad09',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/workspace-lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/workspace-lint.md',
             hash: 'd3eeca5b2b9c13b8f18eea24cfcb8c2bcf6829f9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/workspace-schematic.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/cli/workspace-schematic.md',
             hash: '1935090762ef64b71d4d5c44e5e5b6eaafdfbfbf',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/examples/apollo-react.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/examples/apollo-react.md',
             hash: 'e3aa0cbe281e21faac3a6dbae4d628a3f2ce595d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/examples/react-nx.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/examples/react-nx.md',
             hash: '3f638680f1f5b26789fea48d7bdb9ed88827f5a8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/getting-started/advanced-nx-workspace-course.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/getting-started/advanced-nx-workspace-course.png',
             hash: 'bf8a9f31fe3679f3f5f9d535da0735170299b095',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/getting-started/resources.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/getting-started/resources.md',
             hash: 'aff14c088ba679e28984d37be34b17435d03d9ec',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/getting-started/why-nx.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/getting-started/why-nx.md',
             hash: '55fc46217e6d0591e7a857b43dc9e3a979ba4f46',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/guides/adding-assets.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/guides/adding-assets.md',
             hash: 'a4e9ffb83749f379dc2b2beedbf772367930f455',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/guides/cli-overview.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/guides/cli-overview.md',
             hash: '82a94514c7faa042523f7910c5ee08435b74306d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/guides/configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/guides/configuration.md',
             hash: '35c9ee8d021e8ec4736de1a06fb194911d91fef3',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/guides/environment-variables.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/guides/environment-variables.md',
             hash: 'aa9997a750b00acaf029d76226c19ebf2bfb4357',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/guides/js-and-ts.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/guides/js-and-ts.md',
             hash: 'f0c6f9e601a5a1db6e0fad3996c9d34676cf0837',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/guides/nextjs.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/guides/nextjs.md',
             hash: '9ee11a36be0a9c052f8e97a8023c2ebb62977bc9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/guides/storybook-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/guides/storybook-plugin.md',
             hash: 'acb33081d6bdf8dff0a0bf49b62df769b3abc103',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/migration/migration-cra.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/migration/migration-cra.md',
             hash: '2c12a78e6c61edda1329797df12a0b127c4eee51',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/schematics.json',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/schematics.json',
             hash: 'ae621ac6e860b926f344bdfa4e92498d24335626',
             ext: '.json',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/01-create-application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/01-create-application.md',
             hash: 'a9a45cb74b509a8e4ae562c8fae9abe3fbb71a6f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/02-add-e2e-test.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/02-add-e2e-test.md',
             hash: '9c463ba69a2012363b7ddb26563f4d6ae7ea1b74',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/03-display-todos.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/03-display-todos.md',
             hash: 'd6ea9189b346f0cb26942ecadf01f6d46e79b366',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/04-connect-to-api.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/04-connect-to-api.md',
             hash: '28dc8bfae5bad651ca1839a7e8fe6a35c3046b82',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/05-add-node-app.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/05-add-node-app.md',
             hash: 'cb6f78073f12bf6ff3d3b133857d591c4ab0bdb6',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/06-proxy.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/06-proxy.md',
             hash: 'bb7d649bc147c993f4b13070571e930d148999b9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/07-share-code.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/07-share-code.md',
             hash: '8edece892a4774d245c8c1bda56c5448b947fc4f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/08-create-libs.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/08-create-libs.md',
             hash: '48e1c79bbc297f9f6cf96c1e76d026060c450a85',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/09-dep-graph.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/09-dep-graph.md',
             hash: '3fb1e8812873a70c0ef1b5b61ba9b8e69e147907',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/10-computation-caching.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/10-computation-caching.md',
             hash: '3bb4d233422c8c87be13736e9714317c50f1b482',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/11-test-affected-projects.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/11-test-affected-projects.md',
             hash: 'bdfb4147ae3e0678207948c8e039e9da1662959c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/12-summary.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/react/tutorial/12-summary.md',
             hash: 'eea36de8f00d5465cf2954edf0c7d160a7929997',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/affected.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/affected.png',
             hash: '4437f9a8e397a98ea7d99b2d929be360a51313c8',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/all-cache-inputs.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/all-cache-inputs.png',
             hash: 'e7e5bd839e7ccb4acc4221dce66952db6cad85e1',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/angular-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/angular-plugin.md',
             hash: 'db1d1312c30a6dfa73d3f5674e30b9c5f2079ff9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/api/angular.jpg',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/api/angular.jpg',
             hash: 'f03bf78a3bd15e5bfeb925922ad94c41e5203009',
             ext: '.jpg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/api/cypress.jpg',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/api/cypress.jpg',
             hash: '7727bf6d734549eeca678de9c870f3b4072698e5',
             ext: '.jpg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/api/express.jpg',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/api/express.jpg',
             hash: 'f55f7f0783d2ec9373b90e66be944eac48bb4bb8',
             ext: '.jpg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/api/jest.jpg',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/api/jest.jpg',
             hash: 'd7ce915a2ad472df19f77de8437d7edc330d665c',
             ext: '.jpg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/api/nest.jpg',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/api/nest.jpg',
             hash: '9e02b1e3dde3433378881993c520c9d65688a9ea',
             ext: '.jpg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/api/node.jpg',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/api/node.jpg',
             hash: '7003802217e825012068684547d7d5e30badd775',
             ext: '.jpg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/api/react.jpg',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/api/react.jpg',
             hash: 'e534bd5b242a8a5ed55c8d02851dd7c4d86ac3ba',
             ext: '.jpg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/api/web.jpg',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/api/web.jpg',
             hash: 'd92cea331c6bd8d4453e5311ca30b43c0a77fe0a',
             ext: '.jpg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/caching-example.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/caching-example.png',
             hash: '026252539a044e6b3312df9e6065d97c168f8f49',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/ci-graph-everything-affected.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/ci-graph-everything-affected.png',
             hash: '95ea861c4ea747b8fad48d765b45384ce63f0223',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/ci-graph-one-affected.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/ci-graph-one-affected.png',
             hash: '1eb5a4c166942cd3b03be920b5b71959d2583359',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/ci-graph.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/ci-graph.png',
             hash: '94138839eac7b5de9928acb243ab9c5c22f378c3',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/cli/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/cli/build.md',
             hash: '8a398ba7e32adf7dc0c39005b4b081b9a2070033',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/cli/e2e.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/cli/e2e.md',
             hash: '1fdb16dc1bb845214d8fb86074d9955074f53ad1',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/cli/generate.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/cli/generate.md',
             hash: '033fcfd871d6cac1bed56b688d48d87a072292af',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/cli/lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/cli/lint.md',
             hash: '19efd0e2af38aaa58ed144a10632755a6f37ffba',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/cli/run.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/cli/run.md',
             hash: '87df36051c3f52d5577a7f1c59424f6b9fd0b9d2',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/cli/serve.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/cli/serve.md',
             hash: '6a87bc97767eb44b8e44b868a4f0b08c826378b4',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/cli/test.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/cli/test.md',
             hash: '84d7e9db8662dd4775f841ebd3a07d7743d0ad09',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/computation-caching.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/computation-caching.md',
             hash: 'ad15e517a8ad1e6305968800caf1495826a3f31f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/console.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/console.md',
             hash: 'bf20ceaf23970286ab83b706507204559cf79515',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/continue-light.svg',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/continue-light.svg',
             hash: '2563bfa114bef1fefe582096bfd1095f44a4f6c4',
             ext: '.svg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/cypress-logo.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/cypress-logo.png',
             hash: '6553e4a03ef1554df37beca19e24c10a10c2c71a',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/cypress-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/cypress-plugin.md',
             hash: '0e6ed455409a1b78c429841d24ca9e045c937dc0',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/dependency-graph.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/dependency-graph.png',
             hash: '7c187112fb9f4b32b4ba88088638438ac9b97381',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/distributed-builds.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/distributed-builds.md',
             hash: '2788c8fd29deb4855cbd98af99a931f3d54c91ac',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/examples/nx-examples.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/examples/nx-examples.md',
             hash: 'fc01b6336758215afb8dcbc13583aa4afa6a0a8b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/express-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/express-plugin.md',
             hash: '997e2fbb7a959a238b792c5bcdc9adaf6f640520',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/folder-light.svg',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/folder-light.svg',
             hash: '8daecdac6a358b5d789ed6e6f02dee0b4c7a48c3',
             ext: '.svg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/guides/browser-support.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/guides/browser-support.md',
             hash: '1dba1fbc7d3ae86715e7286fee104c0fa728d36b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/incremental-builds.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/incremental-builds.md',
             hash: 'dde79502493b83bcc6622d3058d0831fc6290fdb',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/jest-logo.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/jest-logo.png',
             hash: 'ac0c0f5e4429a5ce6b6f1c66bf62040b36e5794c',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/jest-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/jest-plugin.md',
             hash: 'a85dc68adbb057509173e5bd87f396b03e16ad77',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/migration/overview.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/migration/overview.md',
             hash: '36a7d1bf6bc9da5c0e3bc498a7ccd2bbe80fde4b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/migration/preserving-git-histories.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/migration/preserving-git-histories.md',
             hash: '761db22841dff7992413668a32b2d5e1389ec439',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/monorepo-affected.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/monorepo-affected.md',
             hash: '6ef0f1e58cfed5bf0150909aaf4894dc4734aea1',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/monorepo-ci-azure.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/monorepo-ci-azure.md',
             hash: '464c20fa734b1188a30867f5e182227bcb9d1748',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/monorepo-ci-jenkins.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/monorepo-ci-jenkins.md',
             hash: '3b31d0fc1958dc5d57bc7ef518972d193e02db2b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/monorepo-nx-enterprise.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/monorepo-nx-enterprise.md',
             hash: '483214ac368a8f8e9a701d169ce0b831acc4aa4e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/monorepo-tags.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/monorepo-tags.md',
             hash: '526f0b53c2e86e34f393ada77e4ffdff959babd2',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/nest-logo.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/nest-logo.png',
             hash: 'f1e27035310756193211911a74cdf39d4c6376b5',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/nest-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/nest-plugin.md',
             hash: '091d39ce89f04190e99eb732bc04ad9e5dc81d7f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/next-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/next-plugin.md',
             hash: 'e4fd1c38fcb4d85c5f5d075abe525ba2ffa11b38',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/node-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/node-plugin.md',
             hash: 'e57256327e2557f6bfed1c7d1a61f73590042f83',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/nx-console-logo.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/nx-console-logo.png',
             hash: '11d0c0758fd20321bdda24886f3fd573092fc5ac',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/nx-console-screenshot.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/nx-console-screenshot.png',
             hash: '0a444ee0d5d93eac2c3f18f35ba2e91b3c4b4ff4',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/nx-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/nx-plugin.md',
             hash: '3d45c48ebb7a67d23f43ad875e3723b9b0c86584',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/plugins-overview.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/plugins-overview.md',
             hash: '3ea5f1fff7f9737696d965ed183f2864cc26240a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/prettier-logo.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/prettier-logo.png',
             hash: '59bb947f29431ccf142c1ed2f520aa747c38541a',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/react-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/react-plugin.md',
             hash: '3d45b88a7eb4d3e175d9c2ed649d87ffeed208b2',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/refresh-light.svg',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/refresh-light.svg',
             hash: 'e0345748192eeb97633b33feb5cd8997a98c9edc',
             ext: '.svg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/running-custom-commands.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/running-custom-commands.md',
             hash: '4ea8f7ce32ea03db8bff49bce1aae696de6ced67',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/storybook-logo.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/storybook-logo.png',
             hash: '9201193134c0f94a842c4f929b9c23f62060e0d1',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/tools-workspace-builders.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/tools-workspace-builders.md',
             hash: '8d2aa069e395e005fc96cfebe77a1afe42ee386c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/tools-workspace-schematics.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/tools-workspace-schematics.md',
             hash: '36a8e3fdd9166bebbc14220e92feb4e32f0d2f96',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/update.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/update.md',
             hash: '702770be2f5802e9d46410d2a844af0a78a6d74a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/using-builders.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/using-builders.md',
             hash: 'b5cb842a23baa4454ad613edd0e6180d2275ef67',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/using-schematics.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/using-schematics.md',
             hash: 'cbef5bb9286199f1283191cc18babc1ca4f4b571',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/vscode-schematics-debug.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/vscode-schematics-debug.png',
             hash: '57efd4b6c15012e816df353cd1bc33c08a189116',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/web-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/web-plugin.md',
             hash: 'fe698f59aae63d7deed27bb230ac3bf72aae0f20',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/workspace-overview.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/workspace-overview.md',
             hash: 'bb9ec7c2f41ee2b74d665a393b04736cd98203b8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/workspace-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/workspace-plugin.md',
             hash: '3529e62980033c3dfdd5af83ec3ef1afcd9c59d5',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/workspace/buildable-and-publishable-libraries.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/workspace/buildable-and-publishable-libraries.md',
             hash: 'f149f2eac7489967dc1c37fd8dba5cdc6bf9e3a4',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/workspace/creating-libraries.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/workspace/creating-libraries.md',
             hash: '3cd6c16c57ccdbab8b5ea4aaa75c2976e4a647a4',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/workspace/grouping-libraries.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/workspace/grouping-libraries.md',
             hash: 'c844995610063be710fd18e758c35e5feb290613',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/workspace/library-types.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/workspace/library-types.md',
             hash: '1182992056416592ef53c866da92e0bb37dcb222',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/workspace/structure/dependency-graph.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/10.4.13/shared/workspace/structure/dependency-graph.md',
             hash: '9c352090b1045f8723bfb1d58563e5e0aae9f568',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/executors/ng-packagr-lite.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/executors/ng-packagr-lite.md',
             hash: '050bf6e3111fff2db9c1a7417dfce4aaaf7f167c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/executors/package.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/executors/package.md',
             hash: '2981a96842ecc1fd9ce8ad8b966087bd553dacae',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/executors/webpack-browser.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/executors/webpack-browser.md',
             hash: '1c4deaa3524cce8aae1b75b991d79ca7eee51dbd',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/application.md',
             hash: '91d225fbd677b9117786945365f0e4f70a707c7a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/convert-tslint-to-eslint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/convert-tslint-to-eslint.md',
             hash: '7d91f58a0f80192c6680dc1c2c6222bac36ccfd1',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/downgrade-module.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/downgrade-module.md',
             hash: 'bf61edc6e0a516b8cef4dc3589c18fbef6a7499f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/karma-project.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/karma-project.md',
             hash: '437525907fccfd807fc390049e2b571ecd7791f4',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/karma.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/karma.md',
             hash: '60e8a1287f6690c45bd9169d6c28a3e96340f92c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/library.md',
             hash: 'ee1c4809fc7af3328d834d9a712c2c1c1e244f1c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/move.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/move.md',
             hash: '8619f74ca3d9f794be6128ed91439473fa2e569c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/ngrx.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/ngrx.md',
             hash: '2b80efe29efcefa7bd8805f7d79b840a650c0369',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/stories.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/stories.md',
             hash: 'eb917cdf600f5a18b03bda4f5b6c77bb04a9ed3e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/storybook-configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/storybook-configuration.md',
             hash: '395e3800eb9da88467a3d78244ee2dfb05991911',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/storybook-migrate-defaults-5-to-6.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/storybook-migrate-defaults-5-to-6.md',
             hash: 'db5fa1d5fd46cc209be0b076bfbe6f99d0e6f9ac',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/upgrade-module.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-angular/generators/upgrade-module.md',
             hash: '5ef0b737053c380a340aa7ec78c73b708f6e9fbe',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-cypress/executors/cypress.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-cypress/executors/cypress.md',
             hash: '81c7804ea01a9b141647fb3d08840466fe45491c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-express/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-express/generators/application.md',
             hash: 'fa4f5a0ae5589d0d2601b6f9d568625c8331e4a8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-gatsby/executors/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-gatsby/executors/build.md',
             hash: '1e7af3c1701fec3d7b27db4b86c9663beda4d203',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-gatsby/executors/server.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-gatsby/executors/server.md',
             hash: '9fea830c4dfa7af56e4497eac876ec46870ca70c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-gatsby/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-gatsby/generators/application.md',
             hash: '6378fe7a59f9133bc463a2f1b287aab57a4a7b08',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-gatsby/generators/component.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-gatsby/generators/component.md',
             hash: '58421410b8681dfbb01781c6f989fbfa78afd015',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-gatsby/generators/page.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-gatsby/generators/page.md',
             hash: 'f188dae08ddec307a26c053f7e1d97ed08cd6343',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-jest/executors/jest.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-jest/executors/jest.md',
             hash: '7dacc3d16a8dbd3478944b4c0696ebf580af415c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-linter/executors/eslint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-linter/executors/eslint.md',
             hash: '30b5a4989b601e498dc7d41f3fa1cf171a18e9f8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-linter/executors/lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-linter/executors/lint.md',
             hash: '24da827c26fc63867088390878a6453338dae552',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/application.md',
             hash: 'a8033843a30abe4c566f5f7516029f606c98cc8b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/class.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/class.md',
             hash: '7e17ad9c6ad0dc4c5ea4448f4a855d4ddece04a2',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/controller.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/controller.md',
             hash: 'f712c2aae2c7f51229c9486979b88cad3097483f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/convert-tslint-to-eslint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/convert-tslint-to-eslint.md',
             hash: '5abd6a8a7be6095c7077ebe99f60b8868afeb198',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/decorator.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/decorator.md',
             hash: 'cc261f485a47260f578ff7b12d39b41348f58b2f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/filter.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/filter.md',
             hash: '7436e2a376b640cbb3de2c1fbae5cfcf25120052',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/gateway.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/gateway.md',
             hash: 'cd342690512359699b7e138f89859d6875ebd792',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/guard.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/guard.md',
             hash: '62dc698b6c28f7cb48d37eea1df4334aecb05d6c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/interceptor.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/interceptor.md',
             hash: 'd6bfc25455af476ae1ddfbf56e0f35cee50acb23',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/interface.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/interface.md',
             hash: 'eb7aadeefa5c54b2af9d1f1cfdd066e722c89db6',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/library.md',
             hash: '7c114d270259703167fb94a3cca3f5864d31972f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/middleware.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/middleware.md',
             hash: '5bf8afa0d92682ea0eef4752e04e8525d02ddf1a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/module.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/module.md',
             hash: '906e7bcb36899ccb0f518d73490e710198fb5fce',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/pipe.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/pipe.md',
             hash: 'e12a91f0455ec966526a78eb094d9e8f6a6ea58f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/provider.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/provider.md',
             hash: '292cb7f4ae6e36720d7b023da0f3a37cf934eae6',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/resolver.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/resolver.md',
             hash: '09b7c8b3f82ad83fb017a98d6735c6a65ee9707e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/service.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nest/generators/service.md',
             hash: '34731ea8628175d351670ce5c572470eccee1add',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-next/executors/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-next/executors/build.md',
             hash: '2650cc0bb28e8fffd6073fd389c97a2c0ee428b6',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-next/executors/export.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-next/executors/export.md',
             hash: '3bbc6787cbc8e397b2828aa8cdd9234413f7c288',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-next/executors/server.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-next/executors/server.md',
             hash: '94641914c99a7938f1de00908606734433ba2f6b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-next/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-next/generators/application.md',
             hash: 'ac0a2d21b6471555cb094d267c398ba9aade6062',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-next/generators/component.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-next/generators/component.md',
             hash: 'a15559d721943911a55e7858f641dbff5eb6efb6',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-next/generators/page.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-next/generators/page.md',
             hash: '913c30ad4934aa86870e2c58196720f0219339f5',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-node/executors/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-node/executors/build.md',
             hash: 'ff0f829d8c473e101661151cbd6d297b90b28966',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-node/executors/execute.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-node/executors/execute.md',
             hash: '44fe9a5277fef7204e94cf9f37e5d2645e2b61ba',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-node/executors/package.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-node/executors/package.md',
             hash: '1fbc6e2005703daa29ddb09cc54f12b05f718428',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-node/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-node/generators/application.md',
             hash: 'e5beb3332a374a2f1e6c335bd6326522dbdb351a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-node/generators/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-node/generators/library.md',
             hash: 'bffb37794f8e47b21f051d95879b7815d22aa55a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nx-plugin/executors/e2e.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nx-plugin/executors/e2e.md',
             hash: '5aded76bd82bc71e39dde69ec3cd44d3d23cf934',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nx-plugin/generators/executor.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nx-plugin/generators/executor.md',
             hash: 'eb3f4bd5e02c944af62e173e36019f3292698132',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nx-plugin/generators/generator.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nx-plugin/generators/generator.md',
             hash: 'c1c905fe15b079d7be4e55d688c1e9eae33510a6',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nx-plugin/generators/migration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nx-plugin/generators/migration.md',
             hash: '4b0efe5cbc0cc8912ff41a3b8ce488089bf20e14',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nx-plugin/generators/plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-nx-plugin/generators/plugin.md',
             hash: '656fff8080cec6a0c61832206959d39f60404d27',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-react/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-react/generators/application.md',
             hash: '54ff079d1a29c533e2a46e5309ca94058d63e5ff',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-react/generators/component-cypress-spec.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-react/generators/component-cypress-spec.md',
             hash: '5496c40fdeee21f15d910f7e840b09b52123b69e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-react/generators/component-story.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-react/generators/component-story.md',
             hash: '9dc2d510afcafcc73b4ecd24131b885c4b4b5bf6',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-react/generators/component.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-react/generators/component.md',
             hash: '8868ee5e75b0da40972fe45de93081dbba642d40',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-react/generators/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-react/generators/library.md',
             hash: '9cde8c90fdb6a1b9a9ad1811620879e720fabdea',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-react/generators/redux.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-react/generators/redux.md',
             hash: '762c61dba7d32beec8a2da9757947c9ae2db1459',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-react/generators/stories.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-react/generators/stories.md',
             hash: '986574e2f602699fe9cf96d2a562473d33edb839',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-react/generators/storybook-configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-react/generators/storybook-configuration.md',
             hash: '6733d5691d73fd87a13f648883eaa1eb50d743f7',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-react/generators/storybook-migrate-defaults-5-to-6.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-react/generators/storybook-migrate-defaults-5-to-6.md',
             hash: 'fdccfaff0b9ad132f9b649f09ae5a83c076b81d0',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-storybook/executors/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-storybook/executors/build.md',
             hash: '15d9ae88d290e5ffa59998f820257461b68083b2',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-storybook/executors/storybook.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-storybook/executors/storybook.md',
             hash: 'c5a279411f33929d2cd939904408cdb36aad8702',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-storybook/generators/configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-storybook/generators/configuration.md',
             hash: 'e6e78485df9a0e28b6ee8a7513090598d3966165',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-storybook/generators/cypress-project.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-storybook/generators/cypress-project.md',
             hash: 'd6a486edc38b0b40df1428530aa8aa914342e329',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-storybook/generators/migrate-defaults-5-to-6.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-storybook/generators/migrate-defaults-5-to-6.md',
             hash: '7ec95f19c7cf6ce4ff808f973e7f482543ca32cc',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-web/executors/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-web/executors/build.md',
             hash: '7c687ea34eded5e7a3503c7d4ee6403d5ae6d260',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-web/executors/dev-server.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-web/executors/dev-server.md',
             hash: 'e53943a8508ba1c9761d6b0c8456dfd0a93ebdbd',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-web/executors/file-server.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-web/executors/file-server.md',
             hash: 'caa61108477d03a243c1ed44fc90ed1f881eea25',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-web/executors/package.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-web/executors/package.md',
             hash: 'fd09f76f67b6bafd5a9b98d479957fe788975d82',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-web/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-web/generators/application.md',
             hash: 'c7954c442c21307be42a32d33a9e86256183a02f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-workspace/executors/run-commands.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-workspace/executors/run-commands.md',
             hash: '80ffbe793d7922f8d472e35ad33109dc07f64951',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-workspace/executors/run-script.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-workspace/executors/run-script.md',
             hash: '525ac4e72590154b5e593fda9d451caf421e98e0',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-workspace/generators/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-workspace/generators/library.md',
             hash: '7ca32f42b029dacbc1fb49847fcd9fed8c0364ef',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-workspace/generators/move.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-workspace/generators/move.md',
             hash: '8b76fb8b6ae8cb86c415ff738b59c6255a37ac0a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-workspace/generators/remove.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-workspace/generators/remove.md',
             hash: 'c641affde7249e934963f448bd79db900b703368',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-workspace/generators/run-commands.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-workspace/generators/run-commands.md',
             hash: '0ff2c258ac839343aed98bc7f194341cdd017fce',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-workspace/generators/workspace-generator.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/api-workspace/generators/workspace-generator.md',
             hash: 'a426f12cf8f83fb9e120d513a49c9503b4ddfa5c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/affected-apps.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/affected-apps.md',
             hash: 'a3a0b085a39c5e362f89291a7cb5c89cabe16c36',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/affected-build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/affected-build.md',
             hash: '87dbc138554b135f7543d6a0ea6c8c981cf81966',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/affected-dep-graph.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/affected-dep-graph.md',
             hash: '1f5311aa42f3571d220bf1c55db4510593ce996c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/affected-e2e.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/affected-e2e.md',
             hash: '13992dcca8de1ff854705b6ecb343d553e5f4101',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/affected-libs.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/affected-libs.md',
             hash: 'f9648615be93795227bfff5fe13482e06568cee8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/affected-lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/affected-lint.md',
             hash: '93c30beaa954ecfed926977c02e77dbc46edb63e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/affected-test.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/affected-test.md',
             hash: '7339dc151c1f65c8df3c96219ddfdbd122a83472',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/affected.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/affected.md',
             hash: '5b4b792fad8acce4c722217db0ea4571bfcc2674',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/build.md',
             hash: '2f9ed87491619a70cae9ad871e701b8c3942ebaf',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/dep-graph.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/dep-graph.md',
             hash: '7de42387d7c42fe19b3f64fee70dff2e53931f41',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/e2e.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/e2e.md',
             hash: 'a58c94c597e8d95e48c0231b6584748bde88e07d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/format-check.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/format-check.md',
             hash: '8582f2a9a592b9bd296ffe988dd69fe25f8d0aca',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/format-write.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/format-write.md',
             hash: '356fdf198afcca9674d99ff797bc0d8f05e21973',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/generate.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/generate.md',
             hash: '0fa39dc3f69a7ea7a6eae4ea125e4d86a3d7ae5e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/lint.md',
             hash: '14f73a547f7d2c717d4bf5f1fd4a07a4cd497b32',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/list.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/list.md',
             hash: '312250e8497f1fde97e83b8ca7170eb966ed122b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/migrate.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/migrate.md',
             hash: '2fcd07191768eb2427a02877ade11b9c264f81b5',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/print-affected.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/print-affected.md',
             hash: '1ac11d2fd80e57e08f41883035e7ba54d7bed1c9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/report.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/report.md',
             hash: '0d7c3480d5a028a13d8da43f34d0fd699bd58c55',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/run-many.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/run-many.md',
             hash: '0a247289e0d7f82d7d712f9bbe415202a701ba3a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/run.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/run.md',
             hash: '87df36051c3f52d5577a7f1c59424f6b9fd0b9d2',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/serve.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/serve.md',
             hash: '0cbdfd6aa33b5c0ef79e117de9cdb3327601472c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/test.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/test.md',
             hash: 'dd5787527630982b7a322d328c9364abe003e44d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/workspace-generator.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/workspace-generator.md',
             hash: 'dca864f7aa6b81bc5164cf48798cd5561a7df421',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/workspace-lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/cli/workspace-lint.md',
             hash: 'd3eeca5b2b9c13b8f18eea24cfcb8c2bcf6829f9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/examples/apollo-angular.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/examples/apollo-angular.md',
             hash: 'c6818acd7f008d9fca6b1f451682755afefa5090',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/examples/react-affected.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/examples/react-affected.png',
             hash: 'e1dd4042dd12e46bb23fe26781c469db2460b021',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/examples/react-affected2.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/examples/react-affected2.png',
             hash: '3d8f870b9377d708c56b77a4a889b24ffa3628a7',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/examples/react-and-angular.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/examples/react-and-angular.md',
             hash: '9b3cb2d59b1ca91c9d87da7e8559bcfa85c1da91',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/examples/react-dep-graph.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/examples/react-dep-graph.png',
             hash: '81f04e46326bc57d1ae87a7a5896a3d9ef8e1638',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/examples/react-serve.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/examples/react-serve.png',
             hash: 'b73ca2038a61a7915a20721ec775e925baf0ff8e',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/executors.json',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/executors.json',
             hash: 'ded073647f1735c3c2499f428c6a2b000d4d7b4a',
             ext: '.json',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/generators.json',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/generators.json',
             hash: '46a738dc382521ef4070c3debf5a5a04c966921d',
             ext: '.json',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/getting-started/advanced-nx-workspace-course.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/getting-started/advanced-nx-workspace-course.png',
             hash: 'bf8a9f31fe3679f3f5f9d535da0735170299b095',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/getting-started/intro.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/getting-started/intro.md',
             hash: '33217fa7935af3befd9e662b8b632d02fcecab26',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/getting-started/nx-cli.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/getting-started/nx-cli.md',
             hash: '765cf5b30ced9548128e2a4464a1ea4c2f5198b1',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/getting-started/nx-setup.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/getting-started/nx-setup.md',
             hash: 'f873dc68c9eb101092b49425dc7203c8b76be263',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/configuration.md',
             hash: '0e35f8034c844e1c3f361339b6743449abbbd680',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/misc-data-persistence.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/misc-data-persistence.md',
             hash: 'd5f0bdd266f4b5c8fe4a04c48e50eaa7ebae290d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/misc-ngrx.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/misc-ngrx.md',
             hash: '8113c3513ad3eac693f0373296d9cfbf7740ab0d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/misc-upgrade.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/misc-upgrade.md',
             hash: 'b840a290289cb524c65176422e39526d69a52bc9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/modern-angular/karma-to-jest.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/modern-angular/karma-to-jest.md',
             hash: '4e89788539b7cfcecf3c83b995b8db2b7d888d28',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/modern-angular/protractor-to-cypress.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/modern-angular/protractor-to-cypress.md',
             hash: 'dd6b8d7d2ba11e37da6a642284c6d51f22b1f4e7',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/nx-devkit-angular-devkit.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/nx-devkit-angular-devkit.md',
             hash: '0fa48b013762cae20b298fd4857c76b9129bf7a8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/nx7-to-nx8.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/nx7-to-nx8.md',
             hash: '3e9095160947bb7b56deb905e5dcf7447a4b701d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/running-custom-commands.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/running-custom-commands.md',
             hash: 'd9bb335fa0d6b3f43ca6f280085505c866782503',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/setup-incremental-builds.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/setup-incremental-builds.md',
             hash: '7a6d17175dafc084fb320becaf9fc56c8f095953',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/storybook-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/storybook-plugin.md',
             hash: '007858137a58f9e83b740e0a8cbc6f36126a6a5f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/update.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/guides/update.md',
             hash: 'e7d4197503e71b7c46c36bee8ea025ad3c91c18d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/migration/migration-angular.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/migration/migration-angular.md',
             hash: '123a3a4b393421d8d9b586e3546b1d03973377f5',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/migration/migration-angularjs-unit-tests-passing.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/migration/migration-angularjs-unit-tests-passing.png',
             hash: '53414ab08cb6659ac6e5506f9c351ad343075064',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/migration/migration-angularjs.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/migration/migration-angularjs.md',
             hash: 'e33c05e99adbe3ed752d1aaf00b3f2e1c9daf8a0',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/01-create-application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/01-create-application.md',
             hash: '3771890052ff0d30149596e82907cff6460a6931',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/02-add-e2e-test.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/02-add-e2e-test.md',
             hash: '9fb006e7c433f5647efdd115eaa74fb67e93ce7e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/03-display-todos.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/03-display-todos.md',
             hash: '01bdf0268da6a81908e168e48454ef42e96b50fa',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/04-connect-to-api.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/04-connect-to-api.md',
             hash: '5ebaba37ea930fd06ed08eca2cead028eb87c03f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/05-add-node-app.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/05-add-node-app.md',
             hash: 'fd25bce132ce92eb78f10b06f704f9d66c8b4fc7',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/06-proxy.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/06-proxy.md',
             hash: '67fb24e447e9b53c75f9258282000a7873c720c2',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/07-share-code.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/07-share-code.md',
             hash: 'cabc9480d3dbdbfd180e05d2910a7cf2de20ca90',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/08-create-libs.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/08-create-libs.md',
             hash: '65541656e39083b257375e608dab0c9eb411e8b7',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/09-dep-graph.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/09-dep-graph.md',
             hash: '9eefe9d759c4f4285a72284b6ca223f1fe8e7d2d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/10-computation-caching.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/10-computation-caching.md',
             hash: '73bed9d0f0adf2dd9f934bb1c6b8ab5796df3b17',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/11-test-affected-projects.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/11-test-affected-projects.md',
             hash: 'b5c984b962eb3faddddc3338a88909ecc21970e9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/12-summary.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/angular/tutorial/12-summary.md',
             hash: '0963e7923ad7a0d8e66c7522cf848961f58d7ad0',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/builders.json',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/builders.json',
             hash: 'd147d35dea142344dcbb2293d49a1deb84b0c150',
             ext: '.json',
           },
@@ -18201,2024 +16760,1687 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.json',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/executors/ng-packagr-lite.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/executors/ng-packagr-lite.md',
             hash: '01ae68a0bdce14840f6111d270eab498afca9417',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/executors/package.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/executors/package.md',
             hash: '0ec35d28b661196ec134551746b75cd3536dc20c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/executors/webpack-browser.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/executors/webpack-browser.md',
             hash: 'dd089f1bfc1ea42a9b0cf1bd5c0c3362b62a79fe',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/application.md',
             hash: 'bbe416f9ded72ea19e38c64c584e09d0cb4e9f0c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/convert-tslint-to-eslint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/convert-tslint-to-eslint.md',
             hash: 'aeb395c0239c0058c422ef15d22cd6f1c605a090',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/downgrade-module.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/downgrade-module.md',
             hash: '83a9b97974fe9935ef5c28006ed169a59870bf6e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/karma-project.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/karma-project.md',
             hash: 'fb87bebaa393c4bb4fad7084ca641f7ce4d52c2e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/karma.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/karma.md',
             hash: 'fa41a5fe4654fb7ad89178f38aa0399cdf728ce8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/library.md',
             hash: 'ab04fd7e4aa4d0e02da27c6b0cc11001e012baeb',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/move.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/move.md',
             hash: '4af4c255fab9df5cbedad5f015efb2371c54c8d6',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/ngrx.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/ngrx.md',
             hash: '9d4a0f23dc962452ee656e011b884afeb40927d0',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/stories.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/stories.md',
             hash: '043fdf15678fc9b851034d141574e2b01675475b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/storybook-configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/storybook-configuration.md',
             hash: '073ed1dcd12f2f8567754fb563aa4d5088e0b779',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/storybook-migrate-defaults-5-to-6.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/storybook-migrate-defaults-5-to-6.md',
             hash: '9476ba779446dd3fb0b6cf76d973b6bee09515c1',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/upgrade-module.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-angular/generators/upgrade-module.md',
             hash: '093f05de0159d531029aa9ed04372527bb069598',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-cypress/executors/cypress.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-cypress/executors/cypress.md',
             hash: '08c4f05ec047f5c3d5209f601668367302350e63',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-express/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-express/generators/application.md',
             hash: 'c801960e6a9fa878fa1b9048256f30327c0d3fd9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-gatsby/executors/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-gatsby/executors/build.md',
             hash: 'f8108775fd406a5bc3929c3b0e5c9c391d3a605e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-gatsby/executors/server.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-gatsby/executors/server.md',
             hash: '901978f321f1608a99d0ebc54e15fc0525104f53',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-gatsby/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-gatsby/generators/application.md',
             hash: '444d19ee1b48754be32e083f5f49fa499cbd5914',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-gatsby/generators/component.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-gatsby/generators/component.md',
             hash: '505bd2d0d8f653b86d6b68d6d5c05e15341e733e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-gatsby/generators/page.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-gatsby/generators/page.md',
             hash: '9310106396fba0c7ad194e812c1718d81611abca',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-jest/executors/jest.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-jest/executors/jest.md',
             hash: 'aa2ef3861037ae8c47c83f1a86d75b53604a1845',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-linter/executors/eslint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-linter/executors/eslint.md',
             hash: 'a13ab2d104bc75db7036e183e2645d86f8029119',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-linter/executors/lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-linter/executors/lint.md',
             hash: '5b1c85fe3c2f01c0fc689ea0ded492fbbe2ec943',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/application.md',
             hash: 'cca4d44354a4b5c0ed3f15a4f8e4e4bf4ce6ab87',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/class.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/class.md',
             hash: '6e68d6c09b99a558f3197894c87b0bc4f19cbaf1',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/controller.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/controller.md',
             hash: '675f120e099e878e50946a2635605215129f9190',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/convert-tslint-to-eslint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/convert-tslint-to-eslint.md',
             hash: 'f86652cf1284a16dcb9144ec4fd3cb6c0a03f828',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/decorator.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/decorator.md',
             hash: '3d7897059346ee48809a53f0d24a0fd0e048c93a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/filter.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/filter.md',
             hash: 'ae68bfb9c76a3f1113e55c85126307db651822a8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/gateway.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/gateway.md',
             hash: '158e69e78e61109725c9032106cf0674a957ffe1',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/guard.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/guard.md',
             hash: '79030bc77d0f32f7f90817662776e95f4f2505a5',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/interceptor.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/interceptor.md',
             hash: 'baf34e70657b4c35f5d70ce10115ee3bc66b67b3',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/interface.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/interface.md',
             hash: '5d8e361733bf4aa20c3f1c8ebab6c005ab620915',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/library.md',
             hash: '5e59e4f3c54fb2d2e7412b3e6446eb567e8c09d4',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/middleware.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/middleware.md',
             hash: 'a98c69da257bd9953099fdacb317c9e6dd8b8664',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/module.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/module.md',
             hash: 'd6c89ec3623306c6e2e8716ab6d5bfc7d30c6bd9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/pipe.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/pipe.md',
             hash: '3bc792d24fb5279b8cd4c5a7064f33257b693093',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/provider.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/provider.md',
             hash: '546a44396b9b0263c24f5e95594f6b19a5f6622d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/resolver.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/resolver.md',
             hash: '76cde3741d83e02f1c54f03b80dc7025dd9692f9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/service.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nest/generators/service.md',
             hash: '241519d348b3a58ad6872b86a772231db9150a1c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-next/executors/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-next/executors/build.md',
             hash: '872ac80f2eeebb53c00494391e8cc447cb5c1128',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-next/executors/export.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-next/executors/export.md',
             hash: '2a55bc774d74d274b0ffdbba14050a62faf6b539',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-next/executors/server.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-next/executors/server.md',
             hash: '4727baf647e8ec2ee631587570cfaa6d7209a6b5',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-next/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-next/generators/application.md',
             hash: '7fe8a93eedb1e127d059a0570f8f3bf9bbf2396b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-next/generators/component.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-next/generators/component.md',
             hash: 'bb6cffb91e6be7eae2b7a9fc01952bfd6710746a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-next/generators/page.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-next/generators/page.md',
             hash: '82ca21954ec0bc5b4b550a5d4e7613f17865b1fb',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-node/executors/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-node/executors/build.md',
             hash: '12cc686d7ed15bacfb5fa24b38b05c4597d4929f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-node/executors/execute.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-node/executors/execute.md',
             hash: 'f5b2c6b7cfd47af69d65ae0af718760b7bdb2ecc',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-node/executors/package.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-node/executors/package.md',
             hash: '82130425cf016566e589f3e3d03e5e4d195d708c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-node/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-node/generators/application.md',
             hash: '5ed7f18cd4ed742c398c36317989093b4caa0bfe',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-node/generators/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-node/generators/library.md',
             hash: '3097fb96347108334cf34af1f4f7fc2f00d46194',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nx-plugin/executors/e2e.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nx-plugin/executors/e2e.md',
             hash: 'ceb65a83d1a196019cd59ba13f7d0e3b969915d0',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nx-plugin/generators/executor.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nx-plugin/generators/executor.md',
             hash: 'aed95878693117db9e880a51700b906efb0b4ec6',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nx-plugin/generators/generator.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nx-plugin/generators/generator.md',
             hash: '64d2686a74219010f143b49c4904cdf800f0a433',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nx-plugin/generators/migration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nx-plugin/generators/migration.md',
             hash: '82867640a77ee6a12b2e4b26dc4ee998950cd469',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nx-plugin/generators/plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-nx-plugin/generators/plugin.md',
             hash: 'f7bce6c1ba9c7b43537de336d709a3689d222a21',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-react/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-react/generators/application.md',
             hash: '8bb109275c733ebd385eefa4799899fa79f17332',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-react/generators/component-cypress-spec.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-react/generators/component-cypress-spec.md',
             hash: '58b52f635add7eb9e407d871168912b0fc3d0e19',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-react/generators/component-story.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-react/generators/component-story.md',
             hash: '35ef6ced9c08a07ad07f7863536859522c2c7620',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-react/generators/component.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-react/generators/component.md',
             hash: '2633a1c1e99313c8ac485554809dd060a3394b52',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-react/generators/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-react/generators/library.md',
             hash: 'cad239068896f266baf4bb2e18192d98096f636d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-react/generators/redux.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-react/generators/redux.md',
             hash: 'cda1e636d6ca2673a5d13c483c297415fc889dec',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-react/generators/stories.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-react/generators/stories.md',
             hash: '8189aab8a77169cb312c6b00c5c9526da033d9d3',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-react/generators/storybook-configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-react/generators/storybook-configuration.md',
             hash: '17f57195302c0d98e82624271d0c9dc9f07bf681',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-react/generators/storybook-migrate-defaults-5-to-6.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-react/generators/storybook-migrate-defaults-5-to-6.md',
             hash: '6253cf44e82f54f1283695e66ce80880819ea3ed',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-storybook/executors/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-storybook/executors/build.md',
             hash: 'e46dbc08edfd61276c06fd1bf8f169864a5cc4ab',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-storybook/executors/storybook.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-storybook/executors/storybook.md',
             hash: '66d2689c3860024331f2707588e98f12521bb727',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-storybook/generators/configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-storybook/generators/configuration.md',
             hash: 'ecd1fe62621e635bcab32533ed1890582a74cefe',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-storybook/generators/cypress-project.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-storybook/generators/cypress-project.md',
             hash: '8b70e27fd348bf629c7f34fd8810435b3a4e6c36',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-storybook/generators/migrate-defaults-5-to-6.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-storybook/generators/migrate-defaults-5-to-6.md',
             hash: '4054001fcf22c73a40954f9559caf715f2e3bdc5',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-web/executors/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-web/executors/build.md',
             hash: 'e8731796e35f4713eff55b574a84a17c05a58b01',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-web/executors/dev-server.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-web/executors/dev-server.md',
             hash: '96ae80a5b6872ac3be6be1c16ff9034da201dc1d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-web/executors/file-server.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-web/executors/file-server.md',
             hash: 'b7db7c13868dd2435f4ae2906b34ae7b2bd1e23f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-web/executors/package.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-web/executors/package.md',
             hash: '61309ba0e7e472ddb610001a2b5902b7714c3e43',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-web/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-web/generators/application.md',
             hash: '914d89a1c55d253ab5cee98d660fb02700247455',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-workspace/executors/run-commands.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-workspace/executors/run-commands.md',
             hash: '05442bd98c466e2f3f60201fca45961ad3d9052d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-workspace/executors/run-script.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-workspace/executors/run-script.md',
             hash: '47ed476f0f2fdc1ce5782ef5158144d23e01ea55',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-workspace/generators/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-workspace/generators/library.md',
             hash: 'de7742b4888fd45e342617e944793a54c9941642',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-workspace/generators/move.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-workspace/generators/move.md',
             hash: '723a02289875717602967dcdcb5509e9aafd7117',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-workspace/generators/remove.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-workspace/generators/remove.md',
             hash: 'a83d2779386b7e72a93db5f8629d60babe6bd5d8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-workspace/generators/run-commands.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-workspace/generators/run-commands.md',
             hash: 'fb24979f182bdf85566570da30fd9a174f5934b2',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-workspace/generators/workspace-generator.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/api-workspace/generators/workspace-generator.md',
             hash: '7d95e3eef708f8cd3111206aaad39db24ce78f0f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/affected-apps.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/affected-apps.md',
             hash: 'a3a0b085a39c5e362f89291a7cb5c89cabe16c36',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/affected-build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/affected-build.md',
             hash: '87dbc138554b135f7543d6a0ea6c8c981cf81966',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/affected-dep-graph.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/affected-dep-graph.md',
             hash: '1f5311aa42f3571d220bf1c55db4510593ce996c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/affected-e2e.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/affected-e2e.md',
             hash: '13992dcca8de1ff854705b6ecb343d553e5f4101',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/affected-libs.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/affected-libs.md',
             hash: 'f9648615be93795227bfff5fe13482e06568cee8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/affected-lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/affected-lint.md',
             hash: '93c30beaa954ecfed926977c02e77dbc46edb63e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/affected-test.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/affected-test.md',
             hash: '7339dc151c1f65c8df3c96219ddfdbd122a83472',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/affected.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/affected.md',
             hash: '5b4b792fad8acce4c722217db0ea4571bfcc2674',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/build.md',
             hash: '2f9ed87491619a70cae9ad871e701b8c3942ebaf',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/dep-graph.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/dep-graph.md',
             hash: '7de42387d7c42fe19b3f64fee70dff2e53931f41',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/e2e.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/e2e.md',
             hash: 'a58c94c597e8d95e48c0231b6584748bde88e07d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/format-check.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/format-check.md',
             hash: '8582f2a9a592b9bd296ffe988dd69fe25f8d0aca',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/format-write.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/format-write.md',
             hash: '356fdf198afcca9674d99ff797bc0d8f05e21973',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/generate.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/generate.md',
             hash: '0fa39dc3f69a7ea7a6eae4ea125e4d86a3d7ae5e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/lint.md',
             hash: '14f73a547f7d2c717d4bf5f1fd4a07a4cd497b32',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/list.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/list.md',
             hash: '312250e8497f1fde97e83b8ca7170eb966ed122b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/migrate.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/migrate.md',
             hash: '2fcd07191768eb2427a02877ade11b9c264f81b5',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/print-affected.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/print-affected.md',
             hash: '1ac11d2fd80e57e08f41883035e7ba54d7bed1c9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/report.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/report.md',
             hash: '0d7c3480d5a028a13d8da43f34d0fd699bd58c55',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/run-many.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/run-many.md',
             hash: '0a247289e0d7f82d7d712f9bbe415202a701ba3a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/run.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/run.md',
             hash: '87df36051c3f52d5577a7f1c59424f6b9fd0b9d2',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/serve.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/serve.md',
             hash: '0cbdfd6aa33b5c0ef79e117de9cdb3327601472c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/test.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/test.md',
             hash: 'dd5787527630982b7a322d328c9364abe003e44d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/workspace-generator.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/workspace-generator.md',
             hash: 'dca864f7aa6b81bc5164cf48798cd5561a7df421',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/workspace-lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/cli/workspace-lint.md',
             hash: 'd3eeca5b2b9c13b8f18eea24cfcb8c2bcf6829f9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/executors.json',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/executors.json',
             hash: 'ded073647f1735c3c2499f428c6a2b000d4d7b4a',
             ext: '.json',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/generators.json',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/generators.json',
             hash: '46a738dc382521ef4070c3debf5a5a04c966921d',
             ext: '.json',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/getting-started/advanced-nx-workspace-course.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/getting-started/advanced-nx-workspace-course.png',
             hash: 'bf8a9f31fe3679f3f5f9d535da0735170299b095',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/getting-started/intro.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/getting-started/intro.md',
             hash: '45f8b6988819b6219e00359eafe0955f33058143',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/getting-started/nx-cli.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/getting-started/nx-cli.md',
             hash: 'b49c55fe12f9cbf0a85597767462233d6e68aa94',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/getting-started/nx-setup.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/getting-started/nx-setup.md',
             hash: '059e59ef385dfd454ca6b197c4fdc33dcb21ee99',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/guides/configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/guides/configuration.md',
             hash: 'ae9a719f0210d1629f3ebd3e9166ca27e0a66787',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/guides/storybook-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/guides/storybook-plugin.md',
             hash: '12362818806e0d42dad68b6b10ec0295154b08e1',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/tutorial/01-create-application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/tutorial/01-create-application.md',
             hash: 'a4df61abb8e0fbf9bc0a36bc2efa427df7cbcdd3',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/tutorial/02-display-todos.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/tutorial/02-display-todos.md',
             hash: '90d51f190baa197cc597fe92d225aaed1f99d26d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/tutorial/03-share-code.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/tutorial/03-share-code.md',
             hash: 'd9bc6d9a02597e0bae20ac5dd08ccd745e13eae9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/tutorial/04-create-libs.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/tutorial/04-create-libs.md',
             hash: '535c9956d67cbbd089a75211e8cfd0dc573dc538',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/tutorial/05-dep-graph.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/tutorial/05-dep-graph.md',
             hash: '78f8c7c3089811d37f62cbf8edf4135800f13ebf',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/tutorial/06-computation-caching.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/tutorial/06-computation-caching.md',
             hash: '7e2523ce33230b3f8b1f9352e570333ce34ae308',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/tutorial/07-test-affected-projects.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/tutorial/07-test-affected-projects.md',
             hash: 'd28688609d63e0233126ea395a379b561cc3373f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/node/tutorial/08-summary.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/node/tutorial/08-summary.md',
             hash: '7331a421a07d649ecb1285228ccc879fbaae349e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/executors/ng-packagr-lite.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/executors/ng-packagr-lite.md',
             hash: 'f1e279733288fe2b3136c864a7ed984c1ba0d4b1',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/executors/package.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/executors/package.md',
             hash: '764903c01b49fd719758b1d3d757cf87780308b2',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/executors/webpack-browser.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/executors/webpack-browser.md',
             hash: '2b35ac1f377b906dd87a27c88648accc1d69a375',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/application.md',
             hash: 'bbe416f9ded72ea19e38c64c584e09d0cb4e9f0c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/convert-tslint-to-eslint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/convert-tslint-to-eslint.md',
             hash: 'aeb395c0239c0058c422ef15d22cd6f1c605a090',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/downgrade-module.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/downgrade-module.md',
             hash: '83a9b97974fe9935ef5c28006ed169a59870bf6e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/karma-project.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/karma-project.md',
             hash: 'fb87bebaa393c4bb4fad7084ca641f7ce4d52c2e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/karma.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/karma.md',
             hash: 'fa41a5fe4654fb7ad89178f38aa0399cdf728ce8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/library.md',
             hash: 'ab04fd7e4aa4d0e02da27c6b0cc11001e012baeb',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/move.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/move.md',
             hash: '4af4c255fab9df5cbedad5f015efb2371c54c8d6',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/ngrx.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/ngrx.md',
             hash: '9d4a0f23dc962452ee656e011b884afeb40927d0',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/stories.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/stories.md',
             hash: '043fdf15678fc9b851034d141574e2b01675475b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/storybook-configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/storybook-configuration.md',
             hash: '073ed1dcd12f2f8567754fb563aa4d5088e0b779',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/storybook-migrate-defaults-5-to-6.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/storybook-migrate-defaults-5-to-6.md',
             hash: '9476ba779446dd3fb0b6cf76d973b6bee09515c1',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/upgrade-module.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-angular/generators/upgrade-module.md',
             hash: '093f05de0159d531029aa9ed04372527bb069598',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-cypress/executors/cypress.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-cypress/executors/cypress.md',
             hash: 'b9b9b93a9462f510f43de013825bcb267e15843c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-express/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-express/generators/application.md',
             hash: 'c801960e6a9fa878fa1b9048256f30327c0d3fd9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-gatsby/executors/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-gatsby/executors/build.md',
             hash: 'bace1fb074fe5e67cced71e317969d6ad29ff948',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-gatsby/executors/server.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-gatsby/executors/server.md',
             hash: 'e6683fbd2bdb86b456df17e0b16f4503cab9ae00',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-gatsby/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-gatsby/generators/application.md',
             hash: '444d19ee1b48754be32e083f5f49fa499cbd5914',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-gatsby/generators/component.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-gatsby/generators/component.md',
             hash: '505bd2d0d8f653b86d6b68d6d5c05e15341e733e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-gatsby/generators/page.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-gatsby/generators/page.md',
             hash: '9310106396fba0c7ad194e812c1718d81611abca',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-jest/executors/jest.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-jest/executors/jest.md',
             hash: '0c99cb6ad74148281ad29bdaa81b48acafc62a39',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-linter/executors/eslint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-linter/executors/eslint.md',
             hash: 'b9f479474cce72f75925e3d68e75822ad2541bd0',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-linter/executors/lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-linter/executors/lint.md',
             hash: '7708505a20185ec626e81138d3f13dc35b90b364',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/application.md',
             hash: 'cca4d44354a4b5c0ed3f15a4f8e4e4bf4ce6ab87',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/class.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/class.md',
             hash: '6e68d6c09b99a558f3197894c87b0bc4f19cbaf1',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/controller.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/controller.md',
             hash: '675f120e099e878e50946a2635605215129f9190',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/convert-tslint-to-eslint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/convert-tslint-to-eslint.md',
             hash: 'f86652cf1284a16dcb9144ec4fd3cb6c0a03f828',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/decorator.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/decorator.md',
             hash: '3d7897059346ee48809a53f0d24a0fd0e048c93a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/filter.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/filter.md',
             hash: 'ae68bfb9c76a3f1113e55c85126307db651822a8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/gateway.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/gateway.md',
             hash: '158e69e78e61109725c9032106cf0674a957ffe1',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/guard.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/guard.md',
             hash: '79030bc77d0f32f7f90817662776e95f4f2505a5',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/interceptor.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/interceptor.md',
             hash: 'baf34e70657b4c35f5d70ce10115ee3bc66b67b3',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/interface.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/interface.md',
             hash: '5d8e361733bf4aa20c3f1c8ebab6c005ab620915',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/library.md',
             hash: '5e59e4f3c54fb2d2e7412b3e6446eb567e8c09d4',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/middleware.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/middleware.md',
             hash: 'a98c69da257bd9953099fdacb317c9e6dd8b8664',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/module.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/module.md',
             hash: 'd6c89ec3623306c6e2e8716ab6d5bfc7d30c6bd9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/pipe.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/pipe.md',
             hash: '3bc792d24fb5279b8cd4c5a7064f33257b693093',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/provider.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/provider.md',
             hash: '546a44396b9b0263c24f5e95594f6b19a5f6622d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/resolver.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/resolver.md',
             hash: '76cde3741d83e02f1c54f03b80dc7025dd9692f9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/service.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nest/generators/service.md',
             hash: '241519d348b3a58ad6872b86a772231db9150a1c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-next/executors/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-next/executors/build.md',
             hash: '82c756b72e890365d190736d0c6151590544f8b9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-next/executors/export.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-next/executors/export.md',
             hash: 'b54040ee92971d5ab38ecc84d737c0c9f975e95f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-next/executors/server.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-next/executors/server.md',
             hash: 'f28542204fe21ebba62b40966d89fed966a4c99f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-next/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-next/generators/application.md',
             hash: '7fe8a93eedb1e127d059a0570f8f3bf9bbf2396b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-next/generators/component.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-next/generators/component.md',
             hash: 'bb6cffb91e6be7eae2b7a9fc01952bfd6710746a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-next/generators/page.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-next/generators/page.md',
             hash: '82ca21954ec0bc5b4b550a5d4e7613f17865b1fb',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-node/executors/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-node/executors/build.md',
             hash: '0f2cf18fab52bba632942db46eacff9b10cda5b0',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-node/executors/execute.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-node/executors/execute.md',
             hash: 'c7605b93790ad62cadc414bc235258d452a4276a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-node/executors/package.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-node/executors/package.md',
             hash: '4ffc635e7043d5606bd85f8b283e6e6d890424c1',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-node/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-node/generators/application.md',
             hash: '5ed7f18cd4ed742c398c36317989093b4caa0bfe',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-node/generators/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-node/generators/library.md',
             hash: '3097fb96347108334cf34af1f4f7fc2f00d46194',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nx-plugin/executors/e2e.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nx-plugin/executors/e2e.md',
             hash: '0fe64e669bf3cb170aaefecc242e92899877581b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nx-plugin/generators/executor.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nx-plugin/generators/executor.md',
             hash: 'aed95878693117db9e880a51700b906efb0b4ec6',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nx-plugin/generators/generator.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nx-plugin/generators/generator.md',
             hash: '64d2686a74219010f143b49c4904cdf800f0a433',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nx-plugin/generators/migration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nx-plugin/generators/migration.md',
             hash: '82867640a77ee6a12b2e4b26dc4ee998950cd469',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nx-plugin/generators/plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-nx-plugin/generators/plugin.md',
             hash: 'f7bce6c1ba9c7b43537de336d709a3689d222a21',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-react/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-react/generators/application.md',
             hash: '8bb109275c733ebd385eefa4799899fa79f17332',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-react/generators/component-cypress-spec.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-react/generators/component-cypress-spec.md',
             hash: '58b52f635add7eb9e407d871168912b0fc3d0e19',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-react/generators/component-story.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-react/generators/component-story.md',
             hash: '35ef6ced9c08a07ad07f7863536859522c2c7620',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-react/generators/component.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-react/generators/component.md',
             hash: '2633a1c1e99313c8ac485554809dd060a3394b52',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-react/generators/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-react/generators/library.md',
             hash: 'cad239068896f266baf4bb2e18192d98096f636d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-react/generators/redux.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-react/generators/redux.md',
             hash: 'cda1e636d6ca2673a5d13c483c297415fc889dec',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-react/generators/stories.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-react/generators/stories.md',
             hash: '8189aab8a77169cb312c6b00c5c9526da033d9d3',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-react/generators/storybook-configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-react/generators/storybook-configuration.md',
             hash: '17f57195302c0d98e82624271d0c9dc9f07bf681',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-react/generators/storybook-migrate-defaults-5-to-6.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-react/generators/storybook-migrate-defaults-5-to-6.md',
             hash: '6253cf44e82f54f1283695e66ce80880819ea3ed',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-storybook/executors/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-storybook/executors/build.md',
             hash: '575413f4e5232f62854f55bc6b05111bc1d4a451',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-storybook/executors/storybook.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-storybook/executors/storybook.md',
             hash: '241bfaf7ce075ff0ea13549e2b00b23acd414b41',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-storybook/generators/configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-storybook/generators/configuration.md',
             hash: 'ecd1fe62621e635bcab32533ed1890582a74cefe',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-storybook/generators/cypress-project.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-storybook/generators/cypress-project.md',
             hash: '8b70e27fd348bf629c7f34fd8810435b3a4e6c36',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-storybook/generators/migrate-defaults-5-to-6.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-storybook/generators/migrate-defaults-5-to-6.md',
             hash: '4054001fcf22c73a40954f9559caf715f2e3bdc5',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-web/executors/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-web/executors/build.md',
             hash: '80a2ea9242653398a160ac768bbb83e705a36237',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-web/executors/dev-server.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-web/executors/dev-server.md',
             hash: '882b04de2f17ff8a8216a4ceaa58a1512d8e5b33',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-web/executors/file-server.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-web/executors/file-server.md',
             hash: '532648a84cc6d07122afeb694c4e2234a130a4fc',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-web/executors/package.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-web/executors/package.md',
             hash: '281a7e7655d6bc0933cd5bff0563a3a8d336718f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-web/generators/application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-web/generators/application.md',
             hash: '914d89a1c55d253ab5cee98d660fb02700247455',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-workspace/executors/run-commands.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-workspace/executors/run-commands.md',
             hash: '94467358d234a6690803bb0963e1731e4cc48bdf',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-workspace/executors/run-script.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-workspace/executors/run-script.md',
             hash: '2106d245c3ae11bdf4cd99d2de54cec18ee7ab70',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-workspace/generators/library.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-workspace/generators/library.md',
             hash: 'de7742b4888fd45e342617e944793a54c9941642',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-workspace/generators/move.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-workspace/generators/move.md',
             hash: '723a02289875717602967dcdcb5509e9aafd7117',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-workspace/generators/remove.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-workspace/generators/remove.md',
             hash: 'a83d2779386b7e72a93db5f8629d60babe6bd5d8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-workspace/generators/run-commands.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-workspace/generators/run-commands.md',
             hash: 'fb24979f182bdf85566570da30fd9a174f5934b2',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-workspace/generators/workspace-generator.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/api-workspace/generators/workspace-generator.md',
             hash: '7d95e3eef708f8cd3111206aaad39db24ce78f0f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/affected-apps.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/affected-apps.md',
             hash: 'a3a0b085a39c5e362f89291a7cb5c89cabe16c36',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/affected-build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/affected-build.md',
             hash: '87dbc138554b135f7543d6a0ea6c8c981cf81966',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/affected-dep-graph.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/affected-dep-graph.md',
             hash: '1f5311aa42f3571d220bf1c55db4510593ce996c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/affected-e2e.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/affected-e2e.md',
             hash: '13992dcca8de1ff854705b6ecb343d553e5f4101',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/affected-libs.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/affected-libs.md',
             hash: 'f9648615be93795227bfff5fe13482e06568cee8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/affected-lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/affected-lint.md',
             hash: '93c30beaa954ecfed926977c02e77dbc46edb63e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/affected-test.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/affected-test.md',
             hash: '7339dc151c1f65c8df3c96219ddfdbd122a83472',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/affected.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/affected.md',
             hash: '5b4b792fad8acce4c722217db0ea4571bfcc2674',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/build.md',
             hash: '2f9ed87491619a70cae9ad871e701b8c3942ebaf',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/dep-graph.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/dep-graph.md',
             hash: '7de42387d7c42fe19b3f64fee70dff2e53931f41',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/e2e.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/e2e.md',
             hash: 'a58c94c597e8d95e48c0231b6584748bde88e07d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/format-check.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/format-check.md',
             hash: '8582f2a9a592b9bd296ffe988dd69fe25f8d0aca',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/format-write.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/format-write.md',
             hash: '356fdf198afcca9674d99ff797bc0d8f05e21973',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/generate.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/generate.md',
             hash: '0fa39dc3f69a7ea7a6eae4ea125e4d86a3d7ae5e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/lint.md',
             hash: '14f73a547f7d2c717d4bf5f1fd4a07a4cd497b32',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/list.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/list.md',
             hash: '312250e8497f1fde97e83b8ca7170eb966ed122b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/migrate.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/migrate.md',
             hash: '2fcd07191768eb2427a02877ade11b9c264f81b5',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/print-affected.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/print-affected.md',
             hash: '1ac11d2fd80e57e08f41883035e7ba54d7bed1c9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/report.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/report.md',
             hash: '0d7c3480d5a028a13d8da43f34d0fd699bd58c55',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/run-many.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/run-many.md',
             hash: '0a247289e0d7f82d7d712f9bbe415202a701ba3a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/run.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/run.md',
             hash: '87df36051c3f52d5577a7f1c59424f6b9fd0b9d2',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/serve.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/serve.md',
             hash: '0cbdfd6aa33b5c0ef79e117de9cdb3327601472c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/test.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/test.md',
             hash: 'dd5787527630982b7a322d328c9364abe003e44d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/workspace-generator.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/workspace-generator.md',
             hash: 'dca864f7aa6b81bc5164cf48798cd5561a7df421',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/workspace-lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/cli/workspace-lint.md',
             hash: 'd3eeca5b2b9c13b8f18eea24cfcb8c2bcf6829f9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/examples/apollo-react.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/examples/apollo-react.md',
             hash: 'e3aa0cbe281e21faac3a6dbae4d628a3f2ce595d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/examples/react-nx.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/examples/react-nx.md',
             hash: '69add2be3242a28c2bdb3cdfe8da1b351bf1167e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/executors.json',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/executors.json',
             hash: 'ded073647f1735c3c2499f428c6a2b000d4d7b4a',
             ext: '.json',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/generators.json',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/generators.json',
             hash: '46a738dc382521ef4070c3debf5a5a04c966921d',
             ext: '.json',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/getting-started/advanced-nx-workspace-course.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/getting-started/advanced-nx-workspace-course.png',
             hash: 'bf8a9f31fe3679f3f5f9d535da0735170299b095',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/getting-started/EGH_ScalingReactNx.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/getting-started/EGH_ScalingReactNx.png',
             hash: '308795a5a64edb85dbfde738b72c131976ab87b9',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/getting-started/intro.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/getting-started/intro.md',
             hash: '8a23db33ceb13c75fb3c409e8532ef1c23191073',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/getting-started/nx-cli.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/getting-started/nx-cli.md',
             hash: '6de49934dcf1708b9c90b26a5cc11fb3a8393fe6',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/getting-started/nx-setup.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/getting-started/nx-setup.md',
             hash: '6728223a24498c1ac9a7ca2d00b44dca380e1422',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/guides/adding-assets.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/guides/adding-assets.md',
             hash: 'a4e9ffb83749f379dc2b2beedbf772367930f455',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/guides/configuration.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/guides/configuration.md',
             hash: '6eccc8816f1d4d3993488f3bed1131ebbfcd7474',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/guides/environment-variables.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/guides/environment-variables.md',
             hash: 'f8f4460513b388cfa51ccaef882377b445f0e94b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/guides/js-and-ts.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/guides/js-and-ts.md',
             hash: 'f0c6f9e601a5a1db6e0fad3996c9d34676cf0837',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/guides/nextjs.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/guides/nextjs.md',
             hash: 'b7c21923686511aebba063aa9d160ad4b6e98f33',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/guides/storybook-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/guides/storybook-plugin.md',
             hash: 'a6550f3b29535e4ff968605cad665edab647bad9',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/migration/migration-cra.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/migration/migration-cra.md',
             hash: '8c21dc6e239dc6b2a6578b0d8ef2e489134fa617',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/01-create-application.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/01-create-application.md',
             hash: 'fd4c9cf478846fc547f24a77ad1dd88c2a053c65',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/02-add-e2e-test.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/02-add-e2e-test.md',
             hash: 'b3da10fe071f8c85bbba35ff55edcc2e77e1bb96',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/03-display-todos.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/03-display-todos.md',
             hash: '02e0c5d8c5138d041cd5aee0d1a569a6e5560783',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/04-connect-to-api.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/04-connect-to-api.md',
             hash: 'f6ac37073fcf1e241185d54a160cff16914c7695',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/05-add-node-app.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/05-add-node-app.md',
             hash: '6e01c1f74122109a6566241f572b955224092cf2',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/06-proxy.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/06-proxy.md',
             hash: 'bd49864b6c8a69e23c6f5ea66c8270a656320551',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/07-share-code.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/07-share-code.md',
             hash: '5becf34e75af28085b8008bf896516517227b946',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/08-create-libs.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/08-create-libs.md',
             hash: '3ef25b37f5f3e5cf52825c3b56e545650ab2bd99',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/09-dep-graph.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/09-dep-graph.md',
             hash: '1d214ea01a80de5c9291d42989bab1bea532be98',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/10-computation-caching.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/10-computation-caching.md',
             hash: '4ddf9028a67baf476e1b455584bf8e81c778664e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/11-test-affected-projects.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/11-test-affected-projects.md',
             hash: '726463b6967bd640b2cd20003a47dbfd6f178ede',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/12-summary.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/react/tutorial/12-summary.md',
             hash: 'baf2fd890e41bf21dade12ee44bba5e639be2d76',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/affected.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/affected.md',
             hash: '6ef0f1e58cfed5bf0150909aaf4894dc4734aea1',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/affected.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/affected.png',
             hash: '4437f9a8e397a98ea7d99b2d929be360a51313c8',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/all-cache-inputs.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/all-cache-inputs.png',
             hash: 'e7e5bd839e7ccb4acc4221dce66952db6cad85e1',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/angular-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/angular-plugin.md',
             hash: 'e7f704b8e4430b986ac2c4288863fc61cb8675a5',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/api/angular.jpg',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/api/angular.jpg',
             hash: 'f03bf78a3bd15e5bfeb925922ad94c41e5203009',
             ext: '.jpg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/api/cypress.jpg',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/api/cypress.jpg',
             hash: '7727bf6d734549eeca678de9c870f3b4072698e5',
             ext: '.jpg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/api/express.jpg',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/api/express.jpg',
             hash: 'f55f7f0783d2ec9373b90e66be944eac48bb4bb8',
             ext: '.jpg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/api/jest.jpg',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/api/jest.jpg',
             hash: 'd7ce915a2ad472df19f77de8437d7edc330d665c',
             ext: '.jpg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/api/nest.jpg',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/api/nest.jpg',
             hash: '9e02b1e3dde3433378881993c520c9d65688a9ea',
             ext: '.jpg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/api/node.jpg',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/api/node.jpg',
             hash: '7003802217e825012068684547d7d5e30badd775',
             ext: '.jpg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/api/react.jpg',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/api/react.jpg',
             hash: 'e534bd5b242a8a5ed55c8d02851dd7c4d86ac3ba',
             ext: '.jpg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/api/web.jpg',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/api/web.jpg',
             hash: 'd92cea331c6bd8d4453e5311ca30b43c0a77fe0a',
             ext: '.jpg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/caching-example.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/caching-example.png',
             hash: '026252539a044e6b3312df9e6065d97c168f8f49',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/ci-graph-everything-affected.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/ci-graph-everything-affected.png',
             hash: '95ea861c4ea747b8fad48d765b45384ce63f0223',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/ci-graph-one-affected.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/ci-graph-one-affected.png',
             hash: '1eb5a4c166942cd3b03be920b5b71959d2583359',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/ci-graph.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/ci-graph.png',
             hash: '94138839eac7b5de9928acb243ab9c5c22f378c3',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/cli/build.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/cli/build.md',
             hash: '2f9ed87491619a70cae9ad871e701b8c3942ebaf',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/cli/e2e.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/cli/e2e.md',
             hash: 'a58c94c597e8d95e48c0231b6584748bde88e07d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/cli/generate.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/cli/generate.md',
             hash: '0fa39dc3f69a7ea7a6eae4ea125e4d86a3d7ae5e',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/cli/lint.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/cli/lint.md',
             hash: '14f73a547f7d2c717d4bf5f1fd4a07a4cd497b32',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/cli/run.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/cli/run.md',
             hash: '87df36051c3f52d5577a7f1c59424f6b9fd0b9d2',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/cli/serve.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/cli/serve.md',
             hash: '0cbdfd6aa33b5c0ef79e117de9cdb3327601472c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/cli/test.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/cli/test.md',
             hash: 'dd5787527630982b7a322d328c9364abe003e44d',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/computation-caching.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/computation-caching.md',
             hash: 'ad15e517a8ad1e6305968800caf1495826a3f31f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/console.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/console.md',
             hash: '241b3af659b23ee9e5fb0b697b2ef543c62e0ca0',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/continue-light.svg',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/continue-light.svg',
             hash: '2563bfa114bef1fefe582096bfd1095f44a4f6c4',
             ext: '.svg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/cypress-logo.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/cypress-logo.png',
             hash: '6553e4a03ef1554df37beca19e24c10a10c2c71a',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/cypress-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/cypress-plugin.md',
             hash: 'de6fe4295924568e32277a225454c92be650d748',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/dependency-graph.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/dependency-graph.png',
             hash: '7c187112fb9f4b32b4ba88088638438ac9b97381',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/devkit.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/devkit.md',
             hash: 'ac85f66767abeaed25b4ec8269670293b5888364',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/distributed-builds.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/distributed-builds.md',
             hash: '2788c8fd29deb4855cbd98af99a931f3d54c91ac',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/examples/nx-examples.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/examples/nx-examples.md',
             hash: 'fc01b6336758215afb8dcbc13583aa4afa6a0a8b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/express-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/express-plugin.md',
             hash: '088bbd85d0b7a2311ccbf60f9364d60538b3c7bc',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/folder-light.svg',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/folder-light.svg',
             hash: '8daecdac6a358b5d789ed6e6f02dee0b4c7a48c3',
             ext: '.svg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/gatsby-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/gatsby-plugin.md',
             hash: '02627f0d3f0b5c75d637c6b06924d08e6f52c11a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/github.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/github.png',
             hash: 'd1a2a6374771be04e93755cd90e9bda17423f701',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/guides/browser-support.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/guides/browser-support.md',
             hash: '2a94350a4b198ec80b894a319ef75537c5f3ab65',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/guides/why-monorepos.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/guides/why-monorepos.md',
             hash: '7d97ef8765f63f39446f8036247fce7aee964f0c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/incremental-build-webpack-vs-incremental.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/incremental-build-webpack-vs-incremental.png',
             hash: '9d57530a94709215e6774bf89e28c9ff11e8c6d3',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/incremental-builds.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/incremental-builds.md',
             hash: '990abb1128f14911545726da6b4081cf9af49341',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/jest-logo.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/jest-logo.png',
             hash: 'ac0c0f5e4429a5ce6b6f1c66bf62040b36e5794c',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/jest-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/jest-plugin.md',
             hash: '280e8fceb4977d7ad248588c78b57857d6219ab1',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/migration/adding-to-monorepo.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/migration/adding-to-monorepo.md',
             hash: '43fe7cf50d67b37e6d70c9cab8349e16a1e628b8',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/migration/overview.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/migration/overview.md',
             hash: '906629ca9b141c3fc433b20a738bd5d8dbe6422b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/migration/preserving-git-histories.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/migration/preserving-git-histories.md',
             hash: '5ff68760837420f95321b9ec168d59f6a213a64a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/monorepo-ci-azure.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/monorepo-ci-azure.md',
             hash: '81621ff7420884ae780a17f9c41c2db8a051d9b0',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/monorepo-ci-jenkins.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/monorepo-ci-jenkins.md',
             hash: '17051c31ab9f4966187d91fca3b9b181aaea23fc',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/monorepo-nx-enterprise.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/monorepo-nx-enterprise.md',
             hash: 'f8147ce9c9b6f14275c6a7797392e56a0571470c',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/monorepo-tags.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/monorepo-tags.md',
             hash: '95153c68bba60f348017d53725504ad36db24541',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/nest-logo.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/nest-logo.png',
             hash: 'f1e27035310756193211911a74cdf39d4c6376b5',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/nest-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/nest-plugin.md',
             hash: '715c1675c3a565350c6c5b3915f524aa8fc5b47f',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/next-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/next-plugin.md',
             hash: '0285b3e49b8685811d3262e4a6d48964a5e05f92',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/node-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/node-plugin.md',
             hash: '216e2a0c64a2fb3c6bb4dfe9951d0859a72b2b04',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/nx-console-logo.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/nx-console-logo.png',
             hash: '11d0c0758fd20321bdda24886f3fd573092fc5ac',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/nx-console-screenshot.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/nx-console-screenshot.png',
             hash: '0a444ee0d5d93eac2c3f18f35ba2e91b3c4b4ff4',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/nx-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/nx-plugin.md',
             hash: 'b31779519e65e07b9cfcb1cfaaddea57e6618a9a',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/plugins-overview.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/plugins-overview.md',
             hash: '0ecf7e5b15d5fb6ad61d409a347883aa89a0d182',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/prettier-logo.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/prettier-logo.png',
             hash: '59bb947f29431ccf142c1ed2f520aa747c38541a',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/react-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/react-plugin.md',
             hash: 'eddc941e534e679649de23afdf163e507b266f78',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/refresh-light.svg',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/refresh-light.svg',
             hash: 'e0345748192eeb97633b33feb5cd8997a98c9edc',
             ext: '.svg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/running-custom-commands.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/running-custom-commands.md',
             hash: '714823828e32016b10cad1fbc9bfb060865090b1',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/storybook-logo.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/storybook-logo.png',
             hash: '9201193134c0f94a842c4f929b9c23f62060e0d1',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/tools-workspace-builders.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/tools-workspace-builders.md',
             hash: '440f76e1a01ed28735b3be79206693260d0d383b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/tools-workspace-generators.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/tools-workspace-generators.md',
             hash: '86a50da0588ca933cde59deb73fe8ab6069cf944',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/update.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/update.md',
             hash: '534691ce3ad11ccc5c539bf9f0e1dcb752fe2f86',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/using-builders.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/using-builders.md',
             hash: '03ecdb5005c1d17702f541bcceb6d3d41edc329b',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/using-schematics.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/using-schematics.md',
             hash: 'c842f48632180f00b88e5448070996e377caae00',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/vscode-schematics-debug.png',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/vscode-schematics-debug.png',
             hash: '57efd4b6c15012e816df353cd1bc33c08a189116',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/web-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/web-plugin.md',
             hash: '4d512f80ddc04fb1db038e46e026aafe04da78cd',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/workspace-plugin.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/workspace-plugin.md',
             hash: 'a343267c6fc247081449e9afb257c76cdf6ae849',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/workspace/buildable-and-publishable-libraries.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/workspace/buildable-and-publishable-libraries.md',
             hash: '10c3ba0943a883cf396bd851f7c55fd754703ffc',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/workspace/creating-libraries.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/workspace/creating-libraries.md',
             hash: 'aa5cf178dc0d1d3db68ae9ad1c071628c4f01895',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/workspace/grouping-libraries.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/workspace/grouping-libraries.md',
             hash: '6a370828a8897aa966f03502bf7ddb4f628a3158',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/workspace/library-types.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/workspace/library-types.md',
             hash: '8d4a9ab557bdd624c07b2c1c2e1f07c3162026ea',
             ext: '.md',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/workspace/structure/dependency-graph.md',
+            file: 'apps/nx-docs-site/src/assets/documentation/11.6.0/shared/workspace/structure/dependency-graph.md',
             hash: '2ab4a391c40dab28621f3e7161ad611f6bacec13',
             ext: '.md',
           },
@@ -20243,14 +18465,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/clients/AmericanAirlines.png',
+            file: 'apps/nx-docs-site/src/assets/images/clients/AmericanAirlines.png',
             hash: '9c29a2290cceb1210cf55340d412e2ee2031bede',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/clients/AmericanTireDistributors.png',
+            file: 'apps/nx-docs-site/src/assets/images/clients/AmericanTireDistributors.png',
             hash: 'eb29deb182ef9c5f66f046c60156b86e9b4d3ca0',
             ext: '.png',
           },
@@ -20320,8 +18540,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/clients/SatcomDirect.png',
+            file: 'apps/nx-docs-site/src/assets/images/clients/SatcomDirect.png',
             hash: 'dea10034c008e18eb736bc62fdddcbdfdd4f89cf',
             ext: '.png',
           },
@@ -20336,32 +18555,27 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/favicon/android-chrome-192x192.png',
+            file: 'apps/nx-docs-site/src/assets/images/favicon/android-chrome-192x192.png',
             hash: 'd8a682d4dd2235ed786cfe441677ea52aabcddfa',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/favicon/android-chrome-512x512.png',
+            file: 'apps/nx-docs-site/src/assets/images/favicon/android-chrome-512x512.png',
             hash: '4f7d0b265367cebbc29381872e4787ef33e22949',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/favicon/apple-touch-icon.png',
+            file: 'apps/nx-docs-site/src/assets/images/favicon/apple-touch-icon.png',
             hash: '78dfd572d4d38e82098c0fe468c1010e4458475d',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/favicon/favicon-16x16.png',
+            file: 'apps/nx-docs-site/src/assets/images/favicon/favicon-16x16.png',
             hash: 'ea82d7c30d186a16ddeb752a994e5355e12b6543',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/favicon/favicon-32x32.png',
+            file: 'apps/nx-docs-site/src/assets/images/favicon/favicon-32x32.png',
             hash: 'a9e95b69b4c47c44c7305b071c1043a25e097773',
             ext: '.png',
           },
@@ -20371,56 +18585,47 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ico',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/favicon/mstile-150x150.png',
+            file: 'apps/nx-docs-site/src/assets/images/favicon/mstile-150x150.png',
             hash: '7aad821ccd366d4bcfd0afc4a650456389c2a1de',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/favicon/safari-pinned-tab.svg',
+            file: 'apps/nx-docs-site/src/assets/images/favicon/safari-pinned-tab.svg',
             hash: 'adfd97595eec598bf6863e07952c08c946384631',
             ext: '.svg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/github-circle-white-transparent.svg',
+            file: 'apps/nx-docs-site/src/assets/images/github-circle-white-transparent.svg',
             hash: '879760b67740a30900de215be67b088c7c17dbdc',
             ext: '.svg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/illustrations/computation.svg',
+            file: 'apps/nx-docs-site/src/assets/images/illustrations/computation.svg',
             hash: '6c99ac9dbd624abaadada863be413489cbffd3f2',
             ext: '.svg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/illustrations/develop-like-google.svg',
+            file: 'apps/nx-docs-site/src/assets/images/illustrations/develop-like-google.svg',
             hash: 'b9a27f62e5c6c0ab1c0e4c0f33263efe7b11d608',
             ext: '.svg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/illustrations/full-stack.svg',
+            file: 'apps/nx-docs-site/src/assets/images/illustrations/full-stack.svg',
             hash: 'af722ca3ca554583215b57675c339da48979e725',
             ext: '.svg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/illustrations/modern-tools.svg',
+            file: 'apps/nx-docs-site/src/assets/images/illustrations/modern-tools.svg',
             hash: '36364c77bacbf523a5fdfd51a344008bf47668ac',
             ext: '.svg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/illustrations/youtube-illustration.svg',
+            file: 'apps/nx-docs-site/src/assets/images/illustrations/youtube-illustration.svg',
             hash: '891d87228c32aa8ef063b3f474e93c2738e86576',
             ext: '.svg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/modern-home/angular-constellation.svg',
+            file: 'apps/nx-docs-site/src/assets/images/modern-home/angular-constellation.svg',
             hash: '69c912b6d763b68bf76e74bee610aa21e4c08abd',
             ext: '.svg',
           },
@@ -20430,8 +18635,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/modern-home/intro-cubes.png',
+            file: 'apps/nx-docs-site/src/assets/images/modern-home/intro-cubes.png',
             hash: '6b8a3318baad99ec20d27b37ce5ef784516ba21e',
             ext: '.png',
           },
@@ -20441,44 +18645,37 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/modern-home/left-cubes.png',
+            file: 'apps/nx-docs-site/src/assets/images/modern-home/left-cubes.png',
             hash: '9d189da4f15faf866c7faf0d20e1d6fe8ebd335d',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/modern-home/medium-circle.png',
+            file: 'apps/nx-docs-site/src/assets/images/modern-home/medium-circle.png',
             hash: 'f7b017cb40e62408083291dadb00243f67eda7f9',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/modern-home/nx-dev-doc-angular.png',
+            file: 'apps/nx-docs-site/src/assets/images/modern-home/nx-dev-doc-angular.png',
             hash: 'b63e449a9224173ab588f1df9a52415b39c61d44',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/modern-home/nx-dev-doc-node.png',
+            file: 'apps/nx-docs-site/src/assets/images/modern-home/nx-dev-doc-node.png',
             hash: 'e14b059966541d4f7e97c7076a3d6f22da09ef1d',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/modern-home/nx-dev-doc-react.png',
+            file: 'apps/nx-docs-site/src/assets/images/modern-home/nx-dev-doc-react.png',
             hash: '269ba8bd810d51d4c5680ea4ce582455c41fc189',
             ext: '.png',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/modern-home/react-constellation.svg',
+            file: 'apps/nx-docs-site/src/assets/images/modern-home/react-constellation.svg',
             hash: 'ac4a59f8eb819baaf6ae887929ebde4d9a500ff8',
             ext: '.svg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/modern-home/screenshots.png',
+            file: 'apps/nx-docs-site/src/assets/images/modern-home/screenshots.png',
             hash: '78d0cc03ab13f077c7b33b67c91479b3b414c3c4',
             ext: '.png',
           },
@@ -20498,8 +18695,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.svg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/nx-console-logo-white.svg',
+            file: 'apps/nx-docs-site/src/assets/images/nx-console-logo-white.svg',
             hash: 'fa6078c37461c6699fa3aab4b3539b533be9cbcd',
             ext: '.svg',
           },
@@ -20524,8 +18720,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.svg',
           },
           {
-            file:
-              'apps/nx-docs-site/src/assets/images/react-nx-book-banner.png',
+            file: 'apps/nx-docs-site/src/assets/images/react-nx-book-banner.png',
             hash: '9a44499bd81678db8906dbd63e3011779159b230',
             ext: '.png',
           },
@@ -20681,8 +18876,7 @@ export const oceanGraph: ProjectGraphCache = {
                   {
                     replace:
                       'apps/design-system/src/environments/environment.ts',
-                    with:
-                      'apps/design-system/src/environments/environment.prod.ts',
+                    with: 'apps/design-system/src/environments/environment.prod.ts',
                   },
                 ],
                 optimization: true,
@@ -20802,20 +18996,17 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'apps/design-system/src/app/temporary/nrwl-sandbox.component.ts',
+            file: 'apps/design-system/src/app/temporary/nrwl-sandbox.component.ts',
             hash: 'e427281bf20d2e87a017bf2a53af02e24aa7467a',
             ext: '.ts',
           },
           {
-            file:
-              'apps/design-system/src/app/temporary/nxdev-sandbox.component.ts',
+            file: 'apps/design-system/src/app/temporary/nxdev-sandbox.component.ts',
             hash: 'fc96db7c535823faa4b7c3ab0e690a7b8ddf8094',
             ext: '.ts',
           },
           {
-            file:
-              'apps/design-system/src/app/temporary/testimonials.component.ts',
+            file: 'apps/design-system/src/app/temporary/testimonials.component.ts',
             hash: 'ad42b3c6e18f8bb6daafe57cb07be63a4eee66c7',
             ext: '.ts',
           },
@@ -21264,14 +19455,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'apps/nx-cloud-e2e/src/integration/email-whitelisting.spec.ts',
+            file: 'apps/nx-cloud-e2e/src/integration/email-whitelisting.spec.ts',
             hash: 'b9b0306db68524f6594feea9d3697862ae45d11d',
             ext: '.ts',
           },
           {
-            file:
-              'apps/nx-cloud-e2e/src/integration/graphql-queries-permissions.spec.ts',
+            file: 'apps/nx-cloud-e2e/src/integration/graphql-queries-permissions.spec.ts',
             hash: '92fa3cc2a83664de0fb7a280fa7e9956c72b48d1',
             ext: '.ts',
           },
@@ -21316,8 +19505,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'apps/nx-cloud-e2e/src/integration/workspace-creation.spec.ts',
+            file: 'apps/nx-cloud-e2e/src/integration/workspace-creation.spec.ts',
             hash: '7a0a61d496ff5b3fa95b2051d7f2264d19252415',
             ext: '.ts',
           },
@@ -21332,8 +19520,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'apps/nx-cloud-e2e/src/plugins/tasks/reset-unclaimed-workspace.js',
+            file: 'apps/nx-cloud-e2e/src/plugins/tasks/reset-unclaimed-workspace.js',
             hash: 'd90d8269de51960839eb422178341711e4ec7f4a',
             ext: '.js',
           },
@@ -21421,20 +19608,17 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/downloads/src/lib/download-primary/download-primary.component.html',
+            file: 'libs/ui/downloads/src/lib/download-primary/download-primary.component.html',
             hash: 'd98ff76965043f95e77dd3fb224c6c5dc6a46352',
             ext: '.html',
           },
           {
-            file:
-              'libs/ui/downloads/src/lib/download-primary/download-primary.component.scss',
+            file: 'libs/ui/downloads/src/lib/download-primary/download-primary.component.scss',
             hash: '7333c270b20d7d4c9722410cbf4b53951aa719e8',
             ext: '.scss',
           },
           {
-            file:
-              'libs/ui/downloads/src/lib/download-primary/download-primary.component.ts',
+            file: 'libs/ui/downloads/src/lib/download-primary/download-primary.component.ts',
             hash: '506baec9abe9e8885ea3dd0e9b85ac4bd72cf926',
             ext: '.ts',
           },
@@ -21610,146 +19794,122 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-character/content-character.component.html',
+            file: 'libs/ui/contents/src/lib/content-character/content-character.component.html',
             hash: '80392f3c5af6973f39bb8c5ec2e7a35f4e7ad97a',
             ext: '.html',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-character/content-character.component.scss',
+            file: 'libs/ui/contents/src/lib/content-character/content-character.component.scss',
             hash: '2eec92134056c1fa5617b0bb055e1951e634c057',
             ext: '.scss',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-character/content-character.component.ts',
+            file: 'libs/ui/contents/src/lib/content-character/content-character.component.ts',
             hash: '59e990e8887aeb6bc51354d0c0cf3fce3f097dd2',
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-media-two-columns/content-media-two-columns.component.html',
+            file: 'libs/ui/contents/src/lib/content-media-two-columns/content-media-two-columns.component.html',
             hash: 'd7243b9d73623fdd482562211ee0be04b1748acf',
             ext: '.html',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-media-two-columns/content-media-two-columns.component.scss',
+            file: 'libs/ui/contents/src/lib/content-media-two-columns/content-media-two-columns.component.scss',
             hash: 'd445003cb13eb076956fa15ccfcb6b4751ccfa8e',
             ext: '.scss',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-media-two-columns/content-media-two-columns.component.ts',
+            file: 'libs/ui/contents/src/lib/content-media-two-columns/content-media-two-columns.component.ts',
             hash: 'cbaf20ac22878288f6758598b627b9e3f28dc55b',
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-small/content-small.component.html',
+            file: 'libs/ui/contents/src/lib/content-small/content-small.component.html',
             hash: '9184c1c620ae4aab25e09a1c78d2b36f40e55ecb',
             ext: '.html',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-small/content-small.component.scss',
+            file: 'libs/ui/contents/src/lib/content-small/content-small.component.scss',
             hash: 'e5f76334cbfea32b292e7e9b309ef3de841d3d20',
             ext: '.scss',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-small/content-small.component.ts',
+            file: 'libs/ui/contents/src/lib/content-small/content-small.component.ts',
             hash: '22ccd79f88f81a9936d4bf78548945643945e448',
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-text-alone/content-text-alone.component.html',
+            file: 'libs/ui/contents/src/lib/content-text-alone/content-text-alone.component.html',
             hash: '514e6cb2d1b9d0c84ff47a4f94d16543b43c45ba',
             ext: '.html',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-text-alone/content-text-alone.component.scss',
+            file: 'libs/ui/contents/src/lib/content-text-alone/content-text-alone.component.scss',
             hash: 'b558a3827c94fc9d978762ee9e7cb741d8514362',
             ext: '.scss',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-text-alone/content-text-alone.component.ts',
+            file: 'libs/ui/contents/src/lib/content-text-alone/content-text-alone.component.ts',
             hash: '8dace60ec0bf41556bf13341b1a5de90946da84e',
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-text-centered-title/content-text-centered-title.component.html',
+            file: 'libs/ui/contents/src/lib/content-text-centered-title/content-text-centered-title.component.html',
             hash: '3411ade648fdd940649aeb807d32565ef509b3a4',
             ext: '.html',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-text-centered-title/content-text-centered-title.component.scss',
+            file: 'libs/ui/contents/src/lib/content-text-centered-title/content-text-centered-title.component.scss',
             hash: 'e48033a930072c157b521a97d2de25ca0d0c3081',
             ext: '.scss',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-text-centered-title/content-text-centered-title.component.ts',
+            file: 'libs/ui/contents/src/lib/content-text-centered-title/content-text-centered-title.component.ts',
             hash: '54421a75afcf3ad6f5067557befa519d0b0d3b66',
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-title-alone/content-title-alone.component.html',
+            file: 'libs/ui/contents/src/lib/content-title-alone/content-title-alone.component.html',
             hash: 'fc1b471ee7314242c59ad7aea974fb31dcedf003',
             ext: '.html',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-title-alone/content-title-alone.component.scss',
+            file: 'libs/ui/contents/src/lib/content-title-alone/content-title-alone.component.scss',
             hash: '00f041938f58b355649e25a372f42127147c8fa4',
             ext: '.scss',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-title-alone/content-title-alone.component.ts',
+            file: 'libs/ui/contents/src/lib/content-title-alone/content-title-alone.component.ts',
             hash: '92702f1bc3e7448f97216c2816a0edd39a6d5cc1',
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-wide-card/content-wide-card.component.html',
+            file: 'libs/ui/contents/src/lib/content-wide-card/content-wide-card.component.html',
             hash: '9184c1c620ae4aab25e09a1c78d2b36f40e55ecb',
             ext: '.html',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-wide-card/content-wide-card.component.scss',
+            file: 'libs/ui/contents/src/lib/content-wide-card/content-wide-card.component.scss',
             hash: '30d8f1a86285153c8b847adf6116e26bee3ee76f',
             ext: '.scss',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-wide-card/content-wide-card.component.ts',
+            file: 'libs/ui/contents/src/lib/content-wide-card/content-wide-card.component.ts',
             hash: 'e38a03d7a89eb3966df23d5a6ff7545093a83055',
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-wide/content-wide.component.html',
+            file: 'libs/ui/contents/src/lib/content-wide/content-wide.component.html',
             hash: '3b341e0542261cc09aa15b5a39e697a2b56bb9be',
             ext: '.html',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-wide/content-wide.component.scss',
+            file: 'libs/ui/contents/src/lib/content-wide/content-wide.component.scss',
             hash: 'e0a5e2f0b8a583d4f1073c2e0f9c37542f9c69c0',
             ext: '.scss',
           },
           {
-            file:
-              'libs/ui/contents/src/lib/content-wide/content-wide.component.ts',
+            file: 'libs/ui/contents/src/lib/content-wide/content-wide.component.ts',
             hash: '7692840868be95ff7b05efbc92cb9fec36c667e9',
             ext: '.ts',
           },
@@ -21837,26 +19997,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/features/src/lib/feature-item/feature-item.component.ts',
+            file: 'libs/ui/features/src/lib/feature-item/feature-item.component.ts',
             hash: '22d785331e375dbc0c647f0c92de3b0b0ee2ede5',
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/features/src/lib/feature-primary/feature-primary.component.html',
+            file: 'libs/ui/features/src/lib/feature-primary/feature-primary.component.html',
             hash: 'a24449a69dace854c34b56d93afd18bb5c3ba465',
             ext: '.html',
           },
           {
-            file:
-              'libs/ui/features/src/lib/feature-primary/feature-primary.component.ts',
+            file: 'libs/ui/features/src/lib/feature-primary/feature-primary.component.ts',
             hash: 'bcdfea91fb806fc3d804daf4cb45b6ebc9eb6677',
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/features/src/lib/feature-primary/feature-primary.components.scss',
+            file: 'libs/ui/features/src/lib/feature-primary/feature-primary.components.scss',
             hash: '64bc453354eaaa5a4284b9b5c6e1265f17ad0348',
             ext: '.scss',
           },
@@ -21944,20 +20100,17 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/articles/src/lib/article-primary/article-primary.component.html',
+            file: 'libs/ui/articles/src/lib/article-primary/article-primary.component.html',
             hash: 'c34ace7d2a2505b32475925d6b7fe6f2f63ed9ad',
             ext: '.html',
           },
           {
-            file:
-              'libs/ui/articles/src/lib/article-primary/article-primary.component.scss',
+            file: 'libs/ui/articles/src/lib/article-primary/article-primary.component.scss',
             hash: 'cf91f5de1df01f0c7b4881479fb3e48e0913fc05',
             ext: '.scss',
           },
           {
-            file:
-              'libs/ui/articles/src/lib/article-primary/article-primary.component.ts',
+            file: 'libs/ui/articles/src/lib/article-primary/article-primary.component.ts',
             hash: '0aa2408fcfe2b9808a3dd2231e800033c2de449a',
             ext: '.ts',
           },
@@ -22050,14 +20203,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/callouts/src/lib/callouts-section/callouts-section.component.scss',
+            file: 'libs/ui/callouts/src/lib/callouts-section/callouts-section.component.scss',
             hash: '6812c7080bdc44e2b2cf33518547a2a6b7aeb4fc',
             ext: '.scss',
           },
           {
-            file:
-              'libs/ui/callouts/src/lib/callouts-section/callouts-section.component.ts',
+            file: 'libs/ui/callouts/src/lib/callouts-section/callouts-section.component.ts',
             hash: 'f728b1a6bfcb9edfb132126828891cc50f43eb90',
             ext: '.ts',
           },
@@ -22125,8 +20276,7 @@ export const oceanGraph: ProjectGraphCache = {
                 fileReplacements: [
                   {
                     replace: 'apps/file-server/src/environments/environment.ts',
-                    with:
-                      'apps/file-server/src/environments/environment.prod.ts',
+                    with: 'apps/file-server/src/environments/environment.prod.ts',
                   },
                 ],
               },
@@ -22250,8 +20400,7 @@ export const oceanGraph: ProjectGraphCache = {
                 fileReplacements: [
                   {
                     replace: 'apps/cloud-proxy/src/environments/environment.ts',
-                    with:
-                      'apps/cloud-proxy/src/environments/environment.prod.ts',
+                    with: 'apps/cloud-proxy/src/environments/environment.prod.ts',
                   },
                 ],
               },
@@ -22485,14 +20634,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/banners/src/lib/banner-primary/banner-primary.component.scss',
+            file: 'libs/ui/banners/src/lib/banner-primary/banner-primary.component.scss',
             hash: '9d30e6a1e389bce36af1a0c1b496d0948d0971ea',
             ext: '.scss',
           },
           {
-            file:
-              'libs/ui/banners/src/lib/banner-primary/banner-primary.component.ts',
+            file: 'libs/ui/banners/src/lib/banner-primary/banner-primary.component.ts',
             hash: 'ed94af64471421c123e236cb3c5fa6f9bf0dd11b',
             ext: '.ts',
           },
@@ -22683,14 +20830,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.epub',
           },
           {
-            file:
-              'apps/platform/src/assets/books/enterprise-angular-monorepo-patterns.epub',
+            file: 'apps/platform/src/assets/books/enterprise-angular-monorepo-patterns.epub',
             hash: '965208645ca2eab3878975db94525907f2ba5b5a',
             ext: '.epub',
           },
           {
-            file:
-              'apps/platform/src/assets/books/enterprise-angular-monorepo-patterns.pdf',
+            file: 'apps/platform/src/assets/books/enterprise-angular-monorepo-patterns.pdf',
             hash: 'c08702d62a3939fdbaa1735695a446b9a4088912',
             ext: '.pdf',
           },
@@ -22760,8 +20905,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.png',
           },
           {
-            file:
-              'apps/platform/src/assets/img/CONNECT_ColorTypeIconLockup.png',
+            file: 'apps/platform/src/assets/img/CONNECT_ColorTypeIconLockup.png',
             hash: 'e72e8eb15b745df72c0ec11bf402bdfa622ab6e5',
             ext: '.png',
           },
@@ -22771,8 +20915,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.jpg',
           },
           {
-            file:
-              'apps/platform/src/assets/img/connect_feature_content_recs.jpg',
+            file: 'apps/platform/src/assets/img/connect_feature_content_recs.jpg',
             hash: 'cb197af16fb730e024d62a737526e10377778b4b',
             ext: '.jpg',
           },
@@ -22782,8 +20925,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.jpg',
           },
           {
-            file:
-              'apps/platform/src/assets/img/connect_feature_live_events.jpg',
+            file: 'apps/platform/src/assets/img/connect_feature_live_events.jpg',
             hash: '4466e05788f6421445041464d1252b716fc830e3',
             ext: '.jpg',
           },
@@ -22828,20 +20970,17 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.png',
           },
           {
-            file:
-              'apps/platform/src/assets/img/Twitter_Social_Icon_Circle_Color.png',
+            file: 'apps/platform/src/assets/img/Twitter_Social_Icon_Circle_Color.png',
             hash: 'af44ca5d502e7841fada40eeeefc200d151dc246',
             ext: '.png',
           },
           {
-            file:
-              'apps/platform/src/assets/img/undraw_connecting_teams3_1pgn.svg',
+            file: 'apps/platform/src/assets/img/undraw_connecting_teams3_1pgn.svg',
             hash: '7154533c58a59c18f2df3527c7c2a48de7586ce9',
             ext: '.svg',
           },
           {
-            file:
-              'apps/platform/src/assets/img/undraw_developer_activity_bv83.svg',
+            file: 'apps/platform/src/assets/img/undraw_developer_activity_bv83.svg',
             hash: '5f02492c7ed46e3adb24acfdfeb4f4573a492b15',
             ext: '.svg',
           },
@@ -22851,8 +20990,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.svg',
           },
           {
-            file:
-              'apps/platform/src/assets/img/undraw_live_collaboration_2r4y.svg',
+            file: 'apps/platform/src/assets/img/undraw_live_collaboration_2r4y.svg',
             hash: '301484d6b40deb9bdcda14d0ed68048331102ba9',
             ext: '.svg',
           },
@@ -22867,8 +21005,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.svg',
           },
           {
-            file:
-              'apps/platform/src/assets/img/undraw_youtube_tutorial_2gn3.svg',
+            file: 'apps/platform/src/assets/img/undraw_youtube_tutorial_2gn3.svg',
             hash: '5aa9783a3164825df64a40ac48ec51bfcea231ab',
             ext: '.svg',
           },
@@ -23262,8 +21399,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.sh',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/aggregation/aggregate-billing-usage.ts',
+            file: 'apps/nrwl-api/src/app/aggregation/aggregate-billing-usage.ts',
             hash: '4166d3f5cd136e47bec77328bcaf13ff2a716950',
             ext: '.ts',
           },
@@ -23383,8 +21519,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/billing/stripe/subscription-pausing.ts',
+            file: 'apps/nrwl-api/src/app/billing/stripe/subscription-pausing.ts',
             hash: '7de21c15f7f8eb0ca50b2af5d7b6a8db7e701b8a',
             ext: '.ts',
           },
@@ -23419,32 +21554,27 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/access-token.mutation.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/access-token.mutation.ts',
             hash: '4a3b83996ad98d038ef0e5ab07e50e1be816797b',
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/aggregate.muation.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/aggregate.muation.ts',
             hash: '071c2106336976cc262c57ca9c91088fbc1de586',
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/billing/cancel-subscription.mutation.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/billing/cancel-subscription.mutation.ts',
             hash: '39d51a4740b730bcf01a6acd59690004f5bfbad2',
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/billing/create-subscription.mutation.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/billing/create-subscription.mutation.ts',
             hash: '7a67b3d47f359bc26541264a933d88d605485e87',
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/connect-workspace-using-token.mutation.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/connect-workspace-using-token.mutation.ts',
             hash: '4f6d9279f55e9abbf6169ccc0316433f2b69f2db',
             ext: '.ts',
           },
@@ -23454,86 +21584,72 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/create-test-user.mutation.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/create-test-user.mutation.ts',
             hash: 'a392f3f5fc84a41d037041a612f65f6d0f506c39',
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/invite-members/accept-invite.mutation.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/invite-members/accept-invite.mutation.ts',
             hash: '93512388e5d629c1237fb6e898e666521128eaf6',
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/invite-members/invite-member.mutation.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/invite-members/invite-member.mutation.ts',
             hash: '3a54ff0a5ec648f5e9afbc64d682ee57d5620aba',
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/invite-members/mongo-utils.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/invite-members/mongo-utils.ts',
             hash: '95fb1c239f75f551ff51ae74f8863fa17600af44',
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/invite-members/send-email.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/invite-members/send-email.ts',
             hash: 'ef562c60bc20ae1cdddd8000f44b03582da841d7',
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/issue-coupon.mutation.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/issue-coupon.mutation.ts',
             hash: '1da44ff9a3f0675f03b2681b0bbd49712e6b8829',
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/org-allowed-email-domains.mutations.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/org-allowed-email-domains.mutations.ts',
             hash: '29edf6c564ea24ecdd7708defb0c26ab66e848d5',
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/organization.mutation.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/organization.mutation.ts',
             hash: '8afc312285a558a31246d4f09405a65fe93fcced',
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/promotion-signup/mongo-utils.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/promotion-signup/mongo-utils.ts',
             hash: '106e15211e521aa982e8dbef52796611e8223137',
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/promotion-signup/promotion-signup.mutation.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/promotion-signup/promotion-signup.mutation.ts',
             hash: '1af66f59b98e5fbcf195721218290c3699cdf513',
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/promotion-signup/promotion.mutation.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/promotion-signup/promotion.mutation.ts',
             hash: '274d99355708cc6b4d7cc7eeb235c9538412beab',
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/promotion-signup/send-email.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/promotion-signup/send-email.ts',
             hash: '230aba426d11c0137754682136886e61e7a99c60',
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/redeem-coupon.mutation.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/redeem-coupon.mutation.ts',
             hash: '5ab4513a43ce87805d4ddfaf2da7feb41e3f48b4',
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/resend-verification-email.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/resend-verification-email.ts',
             hash: 'd48d561c33d7b48907599f0f9a691307435f8723',
             ext: '.ts',
           },
@@ -23543,32 +21659,27 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/simple-auth.mutations.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/simple-auth.mutations.ts',
             hash: '4dc6b9e71371d4a56b7474e3c934823e94017644',
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/test-error.mutation.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/test-error.mutation.ts',
             hash: 'f44a1039772f95a0dd5114c6f7ddb364c8737419',
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/verify-email.mutation.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/verify-email.mutation.ts',
             hash: 'f686d2912cf6d1eefa43d37ff1903cb85ff73d8a',
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/mutations/workspace.mutations.ts',
+            file: 'apps/nrwl-api/src/app/graphql/mutations/workspace.mutations.ts',
             hash: '0b0f6ce68d7dc73ea96060e4601e826da47b2b3c',
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/nx-cloud-graphql.interfaces.ts',
+            file: 'apps/nrwl-api/src/app/graphql/nx-cloud-graphql.interfaces.ts',
             hash: '209fea36d6baa2bd9d6d11c430012a9f7c16d9f7',
             ext: '.ts',
           },
@@ -23588,8 +21699,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/query/aggregate-run-queries.ts',
+            file: 'apps/nrwl-api/src/app/graphql/query/aggregate-run-queries.ts',
             hash: '599b0b0b1e4d41c80d62df80116eae122aae2822',
             ext: '.ts',
           },
@@ -23624,8 +21734,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/graphql/query/installation-information.ts',
+            file: 'apps/nrwl-api/src/app/graphql/query/installation-information.ts',
             hash: 'a2fc21d95d0a47a5a75cf17cff3f8c25a755d43f',
             ext: '.ts',
           },
@@ -23695,8 +21804,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'apps/nrwl-api/src/app/middleware/private-cloud-installation-middleware.ts',
+            file: 'apps/nrwl-api/src/app/middleware/private-cloud-installation-middleware.ts',
             hash: 'afd8da6f3e5bf87d81b56d9137cf9834c84ddf58',
             ext: '.ts',
           },
@@ -23870,8 +21978,7 @@ export const oceanGraph: ProjectGraphCache = {
                 fileReplacements: [
                   {
                     replace: 'apps/nx-cloud/src/environments/environment.ts',
-                    with:
-                      'apps/nx-cloud/src/environments/environment.private.ts',
+                    with: 'apps/nx-cloud/src/environments/environment.private.ts',
                   },
                 ],
               },
@@ -24231,26 +22338,22 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/heros/src/lib/hero-primary/hero-primary.component.scss',
+            file: 'libs/ui/heros/src/lib/hero-primary/hero-primary.component.scss',
             hash: 'ded29004bf2b452957193f7bbd4dd52e3ccf473d',
             ext: '.scss',
           },
           {
-            file:
-              'libs/ui/heros/src/lib/hero-primary/hero-primary.component.ts',
+            file: 'libs/ui/heros/src/lib/hero-primary/hero-primary.component.ts',
             hash: '56bdf2418eb200edd1b2e02ab87909c4293f68a4',
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/heros/src/lib/hero-secondary/hero-secondary.component.scss',
+            file: 'libs/ui/heros/src/lib/hero-secondary/hero-secondary.component.scss',
             hash: '592949a8bfd2b8902f93e9de5dec1e6d30556a0e',
             ext: '.scss',
           },
           {
-            file:
-              'libs/ui/heros/src/lib/hero-secondary/hero-secondary.component.ts',
+            file: 'libs/ui/heros/src/lib/hero-secondary/hero-secondary.component.ts',
             hash: '869af257d7582068e5d10af333296cc74d86b9a0',
             ext: '.ts',
           },
@@ -24353,14 +22456,12 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.kt',
           },
           {
-            file:
-              'apps/nx-api/src/main/kotlin/handlers/CreateOrgAndWorkspaceHandlers.kt',
+            file: 'apps/nx-api/src/main/kotlin/handlers/CreateOrgAndWorkspaceHandlers.kt',
             hash: 'df7db6bc2a16858bc6cf65c6fb22453dfd07ad5f',
             ext: '.kt',
           },
           {
-            file:
-              'apps/nx-api/src/main/kotlin/handlers/GithubIntegrationHandlers.kt',
+            file: 'apps/nx-api/src/main/kotlin/handlers/GithubIntegrationHandlers.kt',
             hash: 'c6a72e39a6680efd61cfbbc923b7b61d60793b26',
             ext: '.kt',
           },
@@ -24370,8 +22471,7 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.kt',
           },
           {
-            file:
-              'apps/nx-api/src/main/kotlin/handlers/PrivateCloudHandlers.kt',
+            file: 'apps/nx-api/src/main/kotlin/handlers/PrivateCloudHandlers.kt',
             hash: '2da0f2edf4ae6d295358685e7aedfd8daed13d65',
             ext: '.kt',
           },
@@ -24871,38 +22971,32 @@ export const oceanGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/ads/src/lib/ad-display-primary/ad-display-primary.component.html',
+            file: 'libs/ui/ads/src/lib/ad-display-primary/ad-display-primary.component.html',
             hash: '117d29a941ec06d980d388eccd672573f8f2c3bf',
             ext: '.html',
           },
           {
-            file:
-              'libs/ui/ads/src/lib/ad-display-primary/ad-display-primary.component.scss',
+            file: 'libs/ui/ads/src/lib/ad-display-primary/ad-display-primary.component.scss',
             hash: 'cf91f5de1df01f0c7b4881479fb3e48e0913fc05',
             ext: '.scss',
           },
           {
-            file:
-              'libs/ui/ads/src/lib/ad-display-primary/ad-display-primary.component.ts',
+            file: 'libs/ui/ads/src/lib/ad-display-primary/ad-display-primary.component.ts',
             hash: '8e049445af363ad86b259a134febb8d5ffa947b0',
             ext: '.ts',
           },
           {
-            file:
-              'libs/ui/ads/src/lib/ad-display-wide/ad-display-wide.component.html',
+            file: 'libs/ui/ads/src/lib/ad-display-wide/ad-display-wide.component.html',
             hash: '039237b744a63de396f1100066635d2b5cabba32',
             ext: '.html',
           },
           {
-            file:
-              'libs/ui/ads/src/lib/ad-display-wide/ad-display-wide.component.scss',
+            file: 'libs/ui/ads/src/lib/ad-display-wide/ad-display-wide.component.scss',
             hash: '6efd62b62242aa389d465974971819dd83740832',
             ext: '.scss',
           },
           {
-            file:
-              'libs/ui/ads/src/lib/ad-display-wide/ad-display-wide.component.ts',
+            file: 'libs/ui/ads/src/lib/ad-display-wide/ad-display-wide.component.ts',
             hash: 'b00af98b760830d7c52eed354931b8c36904af1e',
             ext: '.ts',
           },

@@ -365,31 +365,33 @@ describe('TaskGraphCreator', () => {
     });
 
     it('should create task graph (builds depend on build of dependencies, builds depend on prebuilds)', () => {
-      projectGraph.nodes.common1.data.targets = projectGraph.nodes.common2.data.targets = {
-        prebuild: {},
-        build: {
-          dependsOn: [
-            {
-              target: 'build',
-              projects: 'dependencies',
-            },
-            {
-              target: 'prebuild',
-              projects: 'self',
-            },
-          ],
-        },
-      };
-      projectGraph.nodes.app1.data.targets = projectGraph.nodes.app2.data.targets = {
-        build: {
-          dependsOn: [
-            {
-              target: 'build',
-              projects: 'dependencies',
-            },
-          ],
-        },
-      };
+      projectGraph.nodes.common1.data.targets =
+        projectGraph.nodes.common2.data.targets = {
+          prebuild: {},
+          build: {
+            dependsOn: [
+              {
+                target: 'build',
+                projects: 'dependencies',
+              },
+              {
+                target: 'prebuild',
+                projects: 'self',
+              },
+            ],
+          },
+        };
+      projectGraph.nodes.app1.data.targets =
+        projectGraph.nodes.app2.data.targets = {
+          build: {
+            dependsOn: [
+              {
+                target: 'build',
+                projects: 'dependencies',
+              },
+            ],
+          },
+        };
       const tasks = createTasksForProjectToRun(
         [projectGraph.nodes.app1, projectGraph.nodes.app2],
         {

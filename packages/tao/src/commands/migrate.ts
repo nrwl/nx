@@ -666,12 +666,9 @@ async function runMigrations(
       if (m.cli === 'nx') {
         await runNxMigration(root, m.package, m.name);
       } else {
-        await (await import('./ngcli-adapter')).runMigration(
-          root,
-          m.package,
-          m.name,
-          isVerbose
-        );
+        await (
+          await import('./ngcli-adapter')
+        ).runMigration(root, m.package, m.name, isVerbose);
       }
       logger.info(`Successfully finished ${m.name}`);
       logger.info(`---------------------------------------------------------`);

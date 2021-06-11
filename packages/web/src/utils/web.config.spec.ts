@@ -44,9 +44,9 @@ describe('getWebConfig', () => {
       target: 'es2015',
       paths: { path: ['mapped/path'] },
     };
-    (<any>(
-      TsConfigPathsPlugin
-    )).mockImplementation(function MockPathsPlugin() {});
+    (<any>TsConfigPathsPlugin).mockImplementation(
+      function MockPathsPlugin() {}
+    );
 
     jest.spyOn(ts, 'readConfigFile').mockImplementation(() => ({
       config: {

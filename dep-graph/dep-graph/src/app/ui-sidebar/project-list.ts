@@ -21,9 +21,8 @@ export class ProjectList {
 
   setCheckedProjects(selectedProjects: string[]) {
     Object.keys(this.checkboxes).forEach((projectName) => {
-      this.checkboxes[projectName].checked = selectedProjects.includes(
-        projectName
-      );
+      this.checkboxes[projectName].checked =
+        selectedProjects.includes(projectName);
     });
   }
 

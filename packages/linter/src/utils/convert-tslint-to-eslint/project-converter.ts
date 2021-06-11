@@ -170,9 +170,10 @@ export class ProjectConverter {
     delete convertedRootESLintConfig.parser;
     delete convertedRootESLintConfig.parserOptions;
     if (convertedRootESLintConfig.plugins) {
-      convertedRootESLintConfig.plugins = convertedRootESLintConfig.plugins.filter(
-        (p) => p !== '@typescript-eslint/tslint'
-      );
+      convertedRootESLintConfig.plugins =
+        convertedRootESLintConfig.plugins.filter(
+          (p) => p !== '@typescript-eslint/tslint'
+        );
     }
 
     /**
@@ -188,14 +189,14 @@ export class ProjectConverter {
         if (!json.overrides) {
           return json;
         }
-        for (const override of json.overrides) {
-          if (!override.rules) {
+        for (const o of json.overrides) {
+          if (!o.rules) {
             continue;
           }
-          if (!override.rules[nxRuleName]) {
+          if (!o.rules[nxRuleName]) {
             continue;
           }
-          override.rules[nxRuleName] = nxEnforceModuleBoundariesRule;
+          o.rules[nxRuleName] = nxEnforceModuleBoundariesRule;
         }
         return json;
       });
@@ -273,9 +274,10 @@ export class ProjectConverter {
     delete convertedProjectESLintConfig.parser;
     delete convertedProjectESLintConfig.parserOptions;
     if (convertedProjectESLintConfig.plugins) {
-      convertedProjectESLintConfig.plugins = convertedProjectESLintConfig.plugins.filter(
-        (p) => p !== '@typescript-eslint/tslint'
-      );
+      convertedProjectESLintConfig.plugins =
+        convertedProjectESLintConfig.plugins.filter(
+          (p) => p !== '@typescript-eslint/tslint'
+        );
     }
 
     const projectESLintConfigPath = joinPathFragments(

@@ -40,9 +40,8 @@ export function DocumentationPage({
   isFallback,
 }: DocumentationPageProps) {
   const router = useRouter();
-  const { value: storedFlavor, setValue: setStoredFlavor } = useStorage(
-    'flavor'
-  );
+  const { value: storedFlavor, setValue: setStoredFlavor } =
+    useStorage('flavor');
   const { setValue: setStoredVersion } = useStorage('version');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [navIsOpen, setNavIsOpen] = useState(false);

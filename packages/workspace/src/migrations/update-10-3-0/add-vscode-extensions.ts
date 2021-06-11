@@ -13,10 +13,9 @@ export default function (): Rule {
     let needsAngularExtension = false;
 
     for (let [, project] of workspace.projects) {
-      needsAngularExtension = Array.from(
-        project.targets
-      ).some(([, targetDefinition]) =>
-        targetDefinition.builder.startsWith('@angular-devkit')
+      needsAngularExtension = Array.from(project.targets).some(
+        ([, targetDefinition]) =>
+          targetDefinition.builder.startsWith('@angular-devkit')
       );
 
       if (needsAngularExtension) break;

@@ -73,11 +73,8 @@ function rewriteBootstrapLogic(options: Schema): Rule {
 }
 function addEntryComponentsToModule(options: Schema): Rule {
   return (host: Tree) => {
-    const {
-      modulePath,
-      moduleSource,
-      bootstrapComponentClassName,
-    } = readBootstrapInfo(host, options.project);
+    const { modulePath, moduleSource, bootstrapComponentClassName } =
+      readBootstrapInfo(host, options.project);
     insert(
       host,
       modulePath,

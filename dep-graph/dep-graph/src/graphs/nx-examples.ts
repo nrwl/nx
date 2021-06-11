@@ -85,38 +85,32 @@ export const nxExamplesGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/products/product-detail-page/src/lib/product-detail-page/product-detail-page.component.html',
+            file: 'libs/products/product-detail-page/src/lib/product-detail-page/product-detail-page.component.html',
             hash: 'fd5fa276dc13f789ae5d7a37703a296753aec8be',
             ext: '.html',
           },
           {
-            file:
-              'libs/products/product-detail-page/src/lib/product-detail-page/product-detail-page.component.scss',
+            file: 'libs/products/product-detail-page/src/lib/product-detail-page/product-detail-page.component.scss',
             hash: '98fbca8900da6d5c5f6373558f5bd69efe190780',
             ext: '.scss',
           },
           {
-            file:
-              'libs/products/product-detail-page/src/lib/product-detail-page/product-detail-page.component.spec.ts',
+            file: 'libs/products/product-detail-page/src/lib/product-detail-page/product-detail-page.component.spec.ts',
             hash: 'e8390b7218d2dca9eb4be8d2b1cc08e1b1c0de1b',
             ext: '.ts',
           },
           {
-            file:
-              'libs/products/product-detail-page/src/lib/product-detail-page/product-detail-page.component.ts',
+            file: 'libs/products/product-detail-page/src/lib/product-detail-page/product-detail-page.component.ts',
             hash: 'c20bd27b12494827624a3835b1ec6475efaf0913',
             ext: '.ts',
           },
           {
-            file:
-              'libs/products/product-detail-page/src/lib/products-product-detail-page.module.spec.ts',
+            file: 'libs/products/product-detail-page/src/lib/products-product-detail-page.module.spec.ts',
             hash: '01541f218a3a1b95b056fd9d2d1b578e5a2e3d9a',
             ext: '.ts',
           },
           {
-            file:
-              'libs/products/product-detail-page/src/lib/products-product-detail-page.module.ts',
+            file: 'libs/products/product-detail-page/src/lib/products-product-detail-page.module.ts',
             hash: '5c06b527e7ffe870f1960a74a845106beca79b6b',
             ext: '.ts',
           },
@@ -262,44 +256,37 @@ export const nxExamplesGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/shared/product/state/src/lib/+state/products.actions.ts',
+            file: 'libs/shared/product/state/src/lib/+state/products.actions.ts',
             hash: '4c0efeeec1adfcecd34b20bda87fce5f24a64675',
             ext: '.ts',
           },
           {
-            file:
-              'libs/shared/product/state/src/lib/+state/products.reducer.spec.ts',
+            file: 'libs/shared/product/state/src/lib/+state/products.reducer.spec.ts',
             hash: 'b2821f72394868ca503eb637f2891564851583eb',
             ext: '.ts',
           },
           {
-            file:
-              'libs/shared/product/state/src/lib/+state/products.reducer.ts',
+            file: 'libs/shared/product/state/src/lib/+state/products.reducer.ts',
             hash: '9168586d19b76b0dd462dafbb5b6998c4da5ba53',
             ext: '.ts',
           },
           {
-            file:
-              'libs/shared/product/state/src/lib/+state/products.selectors.spec.ts',
+            file: 'libs/shared/product/state/src/lib/+state/products.selectors.spec.ts',
             hash: '25cd673e1ff8b591f92f734944cd20adf965b612',
             ext: '.ts',
           },
           {
-            file:
-              'libs/shared/product/state/src/lib/+state/products.selectors.ts',
+            file: 'libs/shared/product/state/src/lib/+state/products.selectors.ts',
             hash: '74fd5c163037dd51d33316cb2ce1c816728edea1',
             ext: '.ts',
           },
           {
-            file:
-              'libs/shared/product/state/src/lib/shared-product-state.module.spec.ts',
+            file: 'libs/shared/product/state/src/lib/shared-product-state.module.spec.ts',
             hash: '713543b7a36b2027985904f9a74124f79406108c',
             ext: '.ts',
           },
           {
-            file:
-              'libs/shared/product/state/src/lib/shared-product-state.module.ts',
+            file: 'libs/shared/product/state/src/lib/shared-product-state.module.ts',
             hash: '144207d2b4609204b8ceab1ae81d1079d61b3949',
             ext: '.ts',
           },
@@ -450,38 +437,32 @@ export const nxExamplesGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/products/home-page/src/lib/home-page/home-page.component.html',
+            file: 'libs/products/home-page/src/lib/home-page/home-page.component.html',
             hash: '8bd27770e5974269e766d95762fef74b5bd89841',
             ext: '.html',
           },
           {
-            file:
-              'libs/products/home-page/src/lib/home-page/home-page.component.scss',
+            file: 'libs/products/home-page/src/lib/home-page/home-page.component.scss',
             hash: 'ba4f1655a2c0791670384de48367caded0d6e601',
             ext: '.scss',
           },
           {
-            file:
-              'libs/products/home-page/src/lib/home-page/home-page.component.spec.ts',
+            file: 'libs/products/home-page/src/lib/home-page/home-page.component.spec.ts',
             hash: '66eb455b3e71b30c0bd16a4769cc34b81133b667',
             ext: '.ts',
           },
           {
-            file:
-              'libs/products/home-page/src/lib/home-page/home-page.component.ts',
+            file: 'libs/products/home-page/src/lib/home-page/home-page.component.ts',
             hash: 'bd081eedbf10a2cd04c95609379d131e5e8d60a1',
             ext: '.ts',
           },
           {
-            file:
-              'libs/products/home-page/src/lib/products-home-page.module.spec.ts',
+            file: 'libs/products/home-page/src/lib/products-home-page.module.spec.ts',
             hash: '1d9cf1c8c46ebe69275def67ccf6f04c0f967856',
             ext: '.ts',
           },
           {
-            file:
-              'libs/products/home-page/src/lib/products-home-page.module.ts',
+            file: 'libs/products/home-page/src/lib/products-home-page.module.ts',
             hash: 'db6a06b6d0063c4a1fff6c7953be09a680592184',
             ext: '.ts',
           },
@@ -563,14 +544,12 @@ export const nxExamplesGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/shared/product/ui/src/lib/product-price/product-price.element.spec.ts',
+            file: 'libs/shared/product/ui/src/lib/product-price/product-price.element.spec.ts',
             hash: '34be17f44c09cfa01a9fd4dc7ada68c7bafded6e',
             ext: '.ts',
           },
           {
-            file:
-              'libs/shared/product/ui/src/lib/product-price/product-price.element.ts',
+            file: 'libs/shared/product/ui/src/lib/product-price/product-price.element.ts',
             hash: '8c626d1213b1b47bc2bdf221554fb38bb9f9bfae',
             ext: '.ts',
           },
@@ -672,8 +651,7 @@ export const nxExamplesGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/shared/cart/state/src/lib/+state/cart.selectors.spec.ts',
+            file: 'libs/shared/cart/state/src/lib/+state/cart.selectors.spec.ts',
             hash: 'dc5a869677b1db84446492fc6a1045cd33c0d661',
             ext: '.ts',
           },
@@ -683,8 +661,7 @@ export const nxExamplesGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/shared/cart/state/src/lib/shared-cart-state.module.spec.ts',
+            file: 'libs/shared/cart/state/src/lib/shared-cart-state.module.spec.ts',
             hash: 'caef812f0d76e3f3ca6849d53dc0d011cd2e902a',
             ext: '.ts',
           },
@@ -825,14 +802,12 @@ export const nxExamplesGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'libs/cart/cart-page/src/lib/cart-cart-page/cart-cart-page.spec.tsx',
+            file: 'libs/cart/cart-page/src/lib/cart-cart-page/cart-cart-page.spec.tsx',
             hash: 'ccef1ef28fac14fdaa45c523108862d70d28825b',
             ext: '.tsx',
           },
           {
-            file:
-              'libs/cart/cart-page/src/lib/cart-cart-page/cart-cart-page.tsx',
+            file: 'libs/cart/cart-page/src/lib/cart-cart-page/cart-cart-page.tsx',
             hash: '83a824d0bafcc3d4edf94490664351fe99cdef3f',
             ext: '.tsx',
           },
@@ -945,8 +920,7 @@ export const nxExamplesGraph: ProjectGraphCache = {
             ext: '.jpg',
           },
           {
-            file:
-              'libs/shared/assets/src/assets/images/a-dance-with-dragons.jpg',
+            file: 'libs/shared/assets/src/assets/images/a-dance-with-dragons.jpg',
             hash: 'ea6706f36b4e3a579bd97b8e506fbc7345ef8635',
             ext: '.jpg',
           },

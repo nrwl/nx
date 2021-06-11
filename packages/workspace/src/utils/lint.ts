@@ -141,10 +141,8 @@ export function addLintFiles(
              * so as well as applying the extension from the root lint config, we also
              * adjust the config to make extends come first.
              */
-            const {
-              extends: extendsVal,
-              ...localConfigExceptExtends
-            } = options.localConfig;
+            const { extends: extendsVal, ...localConfigExceptExtends } =
+              options.localConfig;
 
             const extendsOption = extendsVal
               ? Array.isArray(extendsVal)

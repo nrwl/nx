@@ -19,7 +19,8 @@ function convertTSLintRuleSeverity(
   if (tslintSeverity === 'default') {
     tslintSeverity = tslintConfig.defaultSeverity || 'error';
   }
-  const narrowedTslintSeverity = tslintSeverity as TSLintRuleSeverityNonDefaultString;
+  const narrowedTslintSeverity =
+    tslintSeverity as TSLintRuleSeverityNonDefaultString;
   return narrowedTslintSeverity === 'warning' ? 'warn' : narrowedTslintSeverity;
 }
 

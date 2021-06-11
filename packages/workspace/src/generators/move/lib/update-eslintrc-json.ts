@@ -43,9 +43,9 @@ export function updateEslintrcJson(
   updateJson<PartialEsLintRcJson>(tree, eslintRcPath, (eslintRcJson) => {
     eslintRcJson.extends = `${offset}.eslintrc.json`;
 
-    eslintRcJson.overrides?.forEach((override) => {
-      if (override.parserOptions?.project) {
-        override.parserOptions.project = [`${destination}/tsconfig.*?.json`];
+    eslintRcJson.overrides?.forEach((o) => {
+      if (o.parserOptions?.project) {
+        o.parserOptions.project = [`${destination}/tsconfig.*?.json`];
       }
     });
 

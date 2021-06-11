@@ -46,9 +46,8 @@ const addCacheableOperations = updateJsonInTree('nx.json', (nxJson) => {
     cacheableOperations.add('test');
     cacheableOperations.add('e2e');
 
-    nxJson.tasksRunnerOptions.default.options.cacheableOperations = Array.from(
-      cacheableOperations
-    );
+    nxJson.tasksRunnerOptions.default.options.cacheableOperations =
+      Array.from(cacheableOperations);
 
     return nxJson;
   }

@@ -281,9 +281,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
       .toPromise();
   }
 
-  protected context(
-    path: string
-  ): Observable<{
+  protected context(path: string): Observable<{
     isWorkspaceConfig: boolean;
     actualConfigFileName: any;
     isNewFormat: boolean;
@@ -516,8 +514,8 @@ export async function runMigration(
   schematic: string,
   isVerbose: boolean
 ) {
-  const NodeModulesEngineHost = require('@angular-devkit/schematics/tools')
-    .NodeModulesEngineHost;
+  const NodeModulesEngineHost =
+    require('@angular-devkit/schematics/tools').NodeModulesEngineHost;
 
   class MigrationEngineHost extends NodeModulesEngineHost {
     private nodeInstallLogPrinted = false;

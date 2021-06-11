@@ -23,10 +23,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   const { npmScope } = getWorkspaceLayout(host);
   const { fileName, className } = names(options.name);
 
-  const {
-    root: projectRoot,
-    sourceRoot: projectSourceRoot,
-  } = readProjectConfiguration(host, options.project);
+  const { root: projectRoot, sourceRoot: projectSourceRoot } =
+    readProjectConfiguration(host, options.project);
 
   const npmPackageName = `@${npmScope}/${options.project}`;
 

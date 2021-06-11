@@ -27,10 +27,8 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
   const description: string = options.description ?? name;
 
-  const {
-    root: projectRoot,
-    sourceRoot: projectSourceRoot,
-  } = readProjectConfiguration(host, options.project);
+  const { root: projectRoot, sourceRoot: projectSourceRoot } =
+    readProjectConfiguration(host, options.project);
 
   const normalized: NormalizedSchema = {
     ...options,

@@ -22,8 +22,10 @@ export function componentCypressSpecGenerator(
     componentName,
   } = options;
   const e2eProjectName = cypressProject || `${projectName}-e2e`;
-  const e2eProjectRoot = readProjectConfiguration(tree, e2eProjectName)
-    .sourceRoot;
+  const e2eProjectRoot = readProjectConfiguration(
+    tree,
+    e2eProjectName
+  ).sourceRoot;
   const e2eLibIntegrationFolderPath = joinPathFragments(
     e2eProjectRoot,
     'integration'

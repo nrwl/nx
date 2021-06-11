@@ -112,13 +112,8 @@ export function updateWorkspaceConfiguration(
   host: Tree,
   workspaceConfig: WorkspaceConfiguration
 ): void {
-  const {
-    version,
-    cli,
-    defaultProject,
-    generators,
-    ...nxJson
-  } = workspaceConfig;
+  const { version, cli, defaultProject, generators, ...nxJson } =
+    workspaceConfig;
   const workspace: Omit<Required<WorkspaceJsonConfiguration>, 'projects'> = {
     version,
     cli,
@@ -210,11 +205,8 @@ function setProjectConfiguration(
     );
   }
 
-  const {
-    tags,
-    implicitDependencies,
-    ...workspaceConfiguration
-  } = projectConfiguration;
+  const { tags, implicitDependencies, ...workspaceConfiguration } =
+    projectConfiguration;
   addProjectToWorkspaceJson(host, projectName, workspaceConfiguration, mode);
   addProjectToNxJson(
     host,

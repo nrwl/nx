@@ -18,9 +18,10 @@ export class RemoveHashPlugin {
 
   apply(compiler: Compiler): void {
     compiler.hooks.compilation.tap('remove-hash-plugin', (compilation) => {
-      const mainTemplate = compilation.mainTemplate as compilation.MainTemplate & {
-        hooks: compilation.CompilationHooks;
-      };
+      const mainTemplate =
+        compilation.mainTemplate as compilation.MainTemplate & {
+          hooks: compilation.CompilationHooks;
+        };
 
       mainTemplate.hooks.assetPath.tap(
         'remove-hash-plugin',

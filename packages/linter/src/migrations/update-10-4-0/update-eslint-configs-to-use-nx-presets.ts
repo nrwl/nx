@@ -526,10 +526,10 @@ export function updateOverridesAndRemoveDuplication(
   ) {
     return;
   }
-  json.overrides = json.overrides.filter((override) => {
+  json.overrides = json.overrides.filter((o) => {
     for (const extendedOverride of configBeingExtended.overrides) {
       try {
-        assert.deepStrictEqual(override, extendedOverride);
+        assert.deepStrictEqual(o, extendedOverride);
         return false;
       } catch {}
     }

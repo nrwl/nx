@@ -232,9 +232,9 @@ describe('lib', () => {
     it('should update tsconfig.base.json', async () => {
       await libraryGenerator(appTree, { ...defaultSchema, directory: 'myDir' });
       const tsconfigJson = readJson(appTree, '/tsconfig.base.json');
-      expect(
-        tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']
-      ).toEqual(['libs/my-dir/my-lib/src/index.ts']);
+      expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
+        ['libs/my-dir/my-lib/src/index.ts']
+      );
       expect(
         tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
       ).toBeUndefined();

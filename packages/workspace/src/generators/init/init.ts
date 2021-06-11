@@ -178,9 +178,9 @@ function updateAngularCLIJson(host: Tree, options: Schema) {
   if (defaultProject.targets.server) {
     const serverOptions = defaultProject.targets.server.options;
     convertServerOptions(serverOptions);
-    Object.values(
-      defaultProject.targets.server.configurations
-    ).forEach((config) => convertServerOptions(config));
+    Object.values(defaultProject.targets.server.configurations).forEach(
+      (config) => convertServerOptions(config)
+    );
   }
 
   if (defaultProject.targets.e2e) {

@@ -1,6 +1,10 @@
 import { getWebpackConfig, preprocessTypescript } from './preprocessor';
 jest.mock('@cypress/webpack-preprocessor', () => {
-  return jest.fn(() => (...args) => Promise.resolve());
+  return jest.fn(
+    () =>
+      (...args) =>
+        Promise.resolve()
+  );
 });
 jest.mock('tsconfig-paths-webpack-plugin');
 import * as wp from '@cypress/webpack-preprocessor';
@@ -8,9 +12,9 @@ import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 
 describe('getWebpackConfig', () => {
   beforeEach(() => {
-    (<any>(
-      TsConfigPathsPlugin
-    )).mockImplementation(function MockPathsPlugin() {});
+    (<any>TsConfigPathsPlugin).mockImplementation(
+      function MockPathsPlugin() {}
+    );
   });
   it('should load typescript', () => {
     const config = getWebpackConfig({

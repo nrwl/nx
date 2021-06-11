@@ -46,10 +46,8 @@ function getDevServerPartial(
 ): WebpackDevServerConfiguration {
   const servePath = buildServePath(buildOptions);
 
-  const {
-    scripts: scriptsOptimization,
-    styles: stylesOptimization,
-  } = buildOptions.optimization as OptimizationOptions;
+  const { scripts: scriptsOptimization, styles: stylesOptimization } =
+    buildOptions.optimization as OptimizationOptions;
 
   const config: WebpackDevServerConfiguration = {
     host: options.host,
