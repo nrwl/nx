@@ -150,6 +150,9 @@
     },
     "nx-dev-feature-analytics": {
       "tags": ["scope:nx-dev", "type:feature"]
+    },
+    "typedoc-theme": {
+      "tags": []
     }
   }
 }
