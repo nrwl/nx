@@ -76,20 +76,15 @@ export function formatFiles(
   };
 }
 
-function getWorkspaceFile(host: Tree, directory: string) {
+function updateWorkspaceJsonToMatchFormatVersion(
+  host: Tree,
+  directory: string
+) {
   const possibleFiles = [
     `${directory}/workspace.json`,
     `${directory}/angular.json`,
   ];
   const path = possibleFiles.filter((path) => host.exists(path))[0];
-  return path;
-}
-
-function updateWorkspaceJsonToMatchFormatVersion(
-  host: Tree,
-  directory: string
-) {
-  const path = getWorkspaceFile(host, directory);
   try {
     if (path) {
       const workspaceJson = parseJson(host.read(path).toString());
