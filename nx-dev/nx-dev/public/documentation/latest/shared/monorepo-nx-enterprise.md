@@ -1,6 +1,6 @@
 # Using Nx at Enterprises
 
-Nx is a great tool for companies of all sizes. These days even small products have several microservies and several frontends (say desktop and mobile) which are often built by distributed teams. Being able to do this type of development holistically, using modern tools, is as important for a startup as it is for a well-established organization.
+Nx is a great tool for companies of all sizes. These days even small products have several microservices and several frontends (say desktop and mobile) which are often built by distributed teams. Being able to do this type of development holistically, using modern tools, is as important for a startup as it is for a well-established organization.
 
 Some things, however, are much more important for large companies:
 
@@ -49,7 +49,7 @@ happynrwl/
 ├── workspace.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 For larger projects, it is a good idea to group libraries into application sections.
@@ -77,7 +77,7 @@ happynrwl/
 ├── workspace.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 Here we have:
@@ -113,7 +113,7 @@ happynrwl/
 ├── workspace.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 ### Type (What is in the library)

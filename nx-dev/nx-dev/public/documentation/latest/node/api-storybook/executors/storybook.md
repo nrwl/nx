@@ -3,7 +3,7 @@
 Serve Storybook
 
 Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/node/getting-started/cli-overview#running-tasks.
+Read more about how to use executors and the CLI here: https://nx.dev/node/getting-started/nx-cli#running-tasks.
 
 ## Properties
 
@@ -22,6 +22,14 @@ Default: `localhost`
 Type: `string`
 
 Host to listen on.
+
+### https
+
+Default: `false`
+
+Type: `boolean`
+
+Serve using HTTPS.
 
 ### port
 
@@ -44,14 +52,6 @@ Default: `true`
 Type: `boolean`
 
 Suppress verbose build output.
-
-### ssl
-
-Default: `false`
-
-Type: `boolean`
-
-Serve using HTTPS.
 
 ### sslCert
 
@@ -76,6 +76,8 @@ Directory where to load static files from, array of strings
 Default: `@storybook/angular`
 
 Type: `string`
+
+Possible values: `@storybook/angular`, `@storybook/react`, `@storybook/html`
 
 Storybook framework npm package
 

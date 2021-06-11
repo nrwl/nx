@@ -19,21 +19,21 @@ By default, Nx will use Jest when creating applications and libraries.
 ```treeview
 <workspace name>/
 ├── apps/
-│   ├── frontend/
-│   │   ├── src/
-│   │   ├── browserslist
-│   │   ├── jest.config.js # <== jest config
-│   │   ├── tsconfig.app.json
-│   │   ├── tsconfig.json
-│   │   └── tsconfig.spec.json
-│   └── frontend-e2e/
+│   ├── frontend/
+│   │   ├── src/
+│   │   ├── browserslist
+│   │   ├── jest.config.js # <== jest config
+│   │   ├── tsconfig.app.json
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.spec.json
+│   └── frontend-e2e/
 ├── libs/
 ├── tools/
 ├── nx.json
 ├── package.json
 ├── README.md
 ├── workspace.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 Depending on the project you are creating, Nx can support other test runners in addition to Jest. You can configure the test runner you use by passing `--unit-test-runner=jest` when creating applications or libraries.

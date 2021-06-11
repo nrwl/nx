@@ -28,7 +28,7 @@ nx build myapp --prod
 
 ## Options
 
-The options below are common to the `build` command used within an Nx workspace. The Web and Angular-specifc build options are listed after these options.
+The options below are common to the `build` command used within an Nx workspace. The Web and Angular-specific build options are listed after these options.
 
 ### baseHref
 
@@ -116,8 +116,7 @@ Output sourcemaps.
 
 ### statsJson
 
-Generates a 'stats.json' file which can be analyzed using tools such as: #webpack-bundle-analyzer' or https://webpack.github.io/
-analyse.
+Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or <https://webpack.github.io/analyse>.
 
 ### styles
 

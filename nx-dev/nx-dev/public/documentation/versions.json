@@ -1,15 +1,15 @@
 [
   {
-    "name": "Latest (v11.4.0)",
+    "name": "Latest (v12.3.6)",
     "id": "latest",
-    "release": "11.4.0",
+    "release": "12.3.6",
     "path": "latest",
     "default": true
   },
   {
-    "name": "Previous (v10.4.13)",
+    "name": "Previous (v11.6.3)",
     "id": "previous",
-    "release": "10.4.13",
+    "release": "11.6.3",
     "path": "previous",
     "default": false
   }

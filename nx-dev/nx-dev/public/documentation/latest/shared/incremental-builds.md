@@ -49,12 +49,12 @@ The above chart has three different test runs:
 
 ## When should I use incremental builds
 
-We're continously improving the speed of incremental builds. However as of now, incremental builds become really benefitial in **really large repositories**.
+We're continuously improving the speed of incremental builds. However as of now, incremental builds become really beneficial in **really large repositories**.
 
 Also, using incremental builds only really makes sense when using the distributed Nx caching with Nx Cloud. Check out [nx.app](https://nx.app) for more information on how to setup distributed caching.
 
 ## Setup an incremental build
 
-- [Setup an incremental build for an Angular app](/angular/ci/setup-incremental-builds-angular)
+- [Setup an incremental build for an Angular app](/latest/angular/ci/setup-incremental-builds-angular)
 - _Setup an incremental build for a React app (soon)_
 - _Setup an incremental build for a Node app (soon)_

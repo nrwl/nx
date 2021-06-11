@@ -73,3 +73,9 @@ You can run any target against the affected projects in the graph like this:
 nx affected --target=build
 nx affected:build
 ```
+
+!!!!!
+Run "nx affected --target=invalid --base=master". What do you see?
+!!!!!
+No projects with "invalid" were run
+An error message saying that the "invalid" target is invalid

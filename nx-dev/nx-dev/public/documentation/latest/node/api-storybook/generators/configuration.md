@@ -30,6 +30,12 @@ Type: `boolean`
 
 Run the cypress-configure generator
 
+### cypressDirectory
+
+Type: `string`
+
+A directory where the Cypress project will be placed. Added at root by default.
+
 ### js
 
 Default: `false`
@@ -44,7 +50,7 @@ Default: `eslint`
 
 Type: `string`
 
-Possible values: `eslint`, `tslint`
+Possible values: `eslint`, `tslint`, `none`
 
 The tool to use for running lint checks.
 

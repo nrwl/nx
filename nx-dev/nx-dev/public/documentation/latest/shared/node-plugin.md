@@ -30,18 +30,18 @@ This creates the following app structure:
 my-org/
 ├── apps/
     └── node-app/
-        ├── jest.config.js
-        ├── src/
-        │   ├── app/
-        │   ├── assets/
-        │   ├── environments/
-        │   │   ├── environment.prod.ts
-        │   │   └── environment.ts
-        │   └── main.ts
-        ├── tsconfig.app.json
-        ├── tsconfig.json
-        ├── tsconfig.spec.json
-        └── tslint.json
+        ├── jest.config.js
+        ├── src/
+        │   ├── app/
+        │   ├── assets/
+        │   ├── environments/
+        │   │   ├── environment.prod.ts
+        │   │   └── environment.ts
+        │   └── main.ts
+        ├── tsconfig.app.json
+        ├── tsconfig.json
+        ├── tsconfig.spec.json
+        └── tslint.json
 ```
 
 From here files can be added within the `app` folder.

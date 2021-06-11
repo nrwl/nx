@@ -1,8 +1,8 @@
-# Step 2: Display todos
+# Node Nx Tutorial - Step 2: Display todos
 
-## Video of this Lesson
+## Nx.dev Tutorial | Node | Step 2: Display Todos
 
-<iframe width="560" height="600" src="https://www.youtube.com/embed/I4-sO2LeVbU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/I4-sO2LeVbU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Great! We now have a server application set up to show some data when going to the `/api` route.
 
@@ -147,3 +147,10 @@ We changed the `@Get` decorator for the `getData` function to point to the `api`
 Then we added the `root` function which renders the `index` file from our `views` directory.
 
 > The serve process should still be running. If it isn't, restart the process with `nx serve todos`
+
+!!!!!
+Open http://localhost:3333 in the browser. What do you see?
+!!!!!
+Page saying "Welcome to todos!"
+Page saying "{"message":"Welcome to todos!"}"
+404

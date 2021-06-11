@@ -12,11 +12,13 @@ Type: `array`
 
 List of static assets.
 
-### babelConfig
+### ~~babelConfig~~
 
 Type: `string`
 
-(deprecated) Path to a function which takes a babel config and returns an updated babel config
+**Deprecated:** Use the .babelrc file for project instead
+
+Path to a function which takes a babel config and returns an updated babel config
 
 ### buildableProjectDepsInPackageJsonType
 
@@ -88,7 +90,7 @@ The path to package.json file.
 
 ### rollupConfig
 
-Type: `string`
+Type: `array[] | string `
 
 Path to a function which takes a rollup config and returns an updated rollup config
 

@@ -1,9 +1,9 @@
 # package
 
-Build and package an Angular library for publishing
+Build and package an Angular library for publishing.
 
 Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/react/getting-started/cli-overview#running-tasks.
+Read more about how to use executors and the CLI here: https://nx.dev/react/getting-started/nx-cli#running-tasks.
 
 ## Properties
 
@@ -15,7 +15,7 @@ Type: `string`
 
 Possible values: `dependencies`, `peerDependencies`
 
-When updateBuildableProjectDepsInPackageJson is true, this adds dependencies to either `peerDependencies` or `dependencies`
+When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.
 
 ### project
 
@@ -35,7 +35,7 @@ Default: `true`
 
 Type: `boolean`
 
-Update buildable project dependencies in package.json
+Update buildable project dependencies in package.json.
 
 ### watch
 

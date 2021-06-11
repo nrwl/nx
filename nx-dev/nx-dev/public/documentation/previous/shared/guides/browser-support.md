@@ -4,7 +4,7 @@ The official Nx plugins rely on [browserslist](https://github.com/browserslist/b
 
 In general, the more modern your applications browser support is, the smaller the filesize as the code can rely on modern API's being present and not have to ship polyfills or shimmed code.
 
-By default, applications generated from official Nx schematics ship an aggressively modern browser support config, in the form of a `.browserlistrc` file in the root of the application with the following contents.
+By default, applications generated from official Nx generators ship an aggressively modern browser support config, in the form of a `.browserlistrc` file in the root of the application with the following contents.
 
 ```
 last 1 Chrome version

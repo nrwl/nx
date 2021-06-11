@@ -25,9 +25,9 @@ If there's no `.storybook` folder at the root of the workspace, one is created.
 ```treeview
 <workspace name>/
 ├── .storybook/
-│   ├── main.js
-│   ├── tsconfig.json
-│   └── webpack.config.js
+│   ├── main.js
+│   ├── tsconfig.json
+│   └── webpack.config.js
 ├── apps/
 ├── libs/
 ├── nx.json
@@ -41,10 +41,10 @@ Also, a project-specific `.storybook` folder is added in the root of the project
 ```treeview
 <project root>/
 ├── .storybook/
-│   ├── main.js
-│   ├── config.js
-│   ├── tsconfig.json
-│   └── webpack.config.js
+│   ├── main.js
+│   ├── config.js
+│   ├── tsconfig.json
+│   └── webpack.config.js
 ├── src/
 ├── README.md
 ├── tsconfig.json
@@ -187,7 +187,7 @@ In that case, when you run the Nx migration scripts, the scripts will ignore the
 
 The `@nrwl/react:storybook-migrate-defaults-5-to-6` generator will not exactly do a migration. It will perform the following actions:
 
-- It will generate new Storybook configuration files using the new (`>6.x`) Storybook way. The way it will do that is, it will look into `workspace.json` and it will find all the projects that have a `Storybook` configuration. Using the `configFolder` path provided there, it will go and generate new Storybook instaces in all these paths. Finally, it will generate a new Storybook instance at the root directory.
+- It will generate new Storybook configuration files using the new (`>6.x`) Storybook way. The way it will do that is, it will look into `workspace.json` and it will find all the projects that have a `Storybook` configuration. Using the `configFolder` path provided there, it will go and generate new Storybook instances in all these paths. Finally, it will generate a new Storybook instance at the root directory.
 
 - If you choose to `keepOld`, then it will add all your existing Storybook configuration files into another folder labeled `.old_storybook`.
 
@@ -247,7 +247,7 @@ Please check out this official [Storybook 6 Migration Guide](https://medium.com/
 
 #### Step 3: Upgrade all `@storybook/*` packages in your project
 
-Check your `package.json` file for all `@storybook` packages. Install the latest versions of these, usign `yarn`:
+Check your `package.json` file for all `@storybook` packages. Install the latest versions of these, using `yarn`:
 
 For example:
 

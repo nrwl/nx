@@ -1,4 +1,4 @@
-# Step 12: Summary
+# Angular Nx Tutorial - Step 12: Summary
 
 In this tutorial you:
 
@@ -13,6 +13,6 @@ In this tutorial you:
 
 **Dive Deep:**
 
-- [Nx CLI](/{{framework}}/cli/overview)
-- [Computation Caching](/{{framework}}/workspace/computation-caching)
-- [Rebuilding What is Affected](/{{framework}}/guides/ci/monorepo-affected)
+- [Nx CLI](/{{framework}}/getting-started/nx-cli)
+- [Computation Caching](/{{framework}}/core-concepts/computation-caching)
+- [Rebuilding What is Affected](/{{framework}}/core-concepts/affected)

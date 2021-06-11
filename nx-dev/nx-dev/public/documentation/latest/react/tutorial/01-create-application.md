@@ -30,43 +30,43 @@ When asked about 'preset', select `react`, and `todos` for the app name.
 ```treeview
 myorg/
 ├── apps/
-│   ├── todos/
-│   │   ├── src/
-│   │   │   ├── app/
-│   │   │   ├── assets/
-│   │   │   ├── environments/
-│   │   │   ├── favicon.ico
-│   │   │   ├── index.html
-│   │   │   ├── main.tsx
-│   │   │   ├── polyfills.ts
-│   │   │   └── styles.css
-│   │   ├── browserslist
-│   │   ├── jest.config.js
-│   │   ├── tsconfig.app.json
-│   │   ├── tsconfig.json
-│   │   └── tsconfig.spec.json
-│   └── todos-e2e/
-│       ├── src/
-│       │   ├── fixtures/
-│       │   │   └── example.json
-│       │   ├── integration/
-│       │   │   └── app.spec.ts
-│       │   ├── plugins/
-│       │   │   └── index.ts
-│       │   └── support/
-│       │       ├── app.po.ts
-│       │       ├── commands.ts
-│       │       └── index.ts
-│       ├── cypress.json
-│       ├── tsconfig.e2e.json
-│       └── tsconfig.json
+│   ├── todos/
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   ├── assets/
+│   │   │   ├── environments/
+│   │   │   ├── favicon.ico
+│   │   │   ├── index.html
+│   │   │   ├── main.tsx
+│   │   │   ├── polyfills.ts
+│   │   │   └── styles.css
+│   │   ├── browserslist
+│   │   ├── jest.config.js
+│   │   ├── tsconfig.app.json
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.spec.json
+│   └── todos-e2e/
+│       ├── src/
+│       │   ├── fixtures/
+│       │   │   └── example.json
+│       │   ├── integration/
+│       │   │   └── app.spec.ts
+│       │   ├── plugins/
+│       │   │   └── index.ts
+│       │   └── support/
+│       │       ├── app.po.ts
+│       │       ├── commands.ts
+│       │       └── index.ts
+│       ├── cypress.json
+│       ├── tsconfig.e2e.json
+│       └── tsconfig.json
 ├── libs/
 ├── tools/
 ├── README.md
 ├── workspace.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 The generate command added two projects to our workspace:
@@ -115,3 +115,10 @@ or
 ```bash
 yarn nx serve todos
 ```
+
+!!!!!
+Open http://localhost:4200 in the browser. What do you see?
+!!!!!
+Page saying "Welcome to Todos!"
+Page saying "This is an React app built with Create React App"
+404

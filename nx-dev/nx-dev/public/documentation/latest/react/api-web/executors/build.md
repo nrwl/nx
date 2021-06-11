@@ -3,7 +3,7 @@
 Build a application
 
 Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/react/getting-started/cli-overview#running-tasks.
+Read more about how to use executors and the CLI here: https://nx.dev/react/getting-started/nx-cli#running-tasks.
 
 ## Properties
 
@@ -95,13 +95,21 @@ Replace files with other files in the build.
 
 Type: `string`
 
-undefined
+The file to be replaced.
 
 #### with
 
 Type: `string`
 
-undefined
+The file to replace with.
+
+### generateIndexHtml
+
+Default: `true`
+
+Type: `boolean`
+
+Generates `index.html` file to the output path. This can be turned off if using a webpack plugin to generate HTML such as `html-webpack-plugin`
 
 ### index
 
@@ -171,17 +179,27 @@ Type: `boolean`
 
 Log progress to the console while building.
 
+### runtimeChunk
+
+Default: `true`
+
+Type: `boolean`
+
+Use a separate bundle containing the runtime.
+
 ### scripts
 
 Type: `array`
 
 External Scripts which will be included before the main application entry
 
-### showCircularDependencies
+### ~~showCircularDependencies~~
 
-Default: `true`
+Default: `false`
 
 Type: `boolean`
+
+**Deprecated:** The recommended method to detect circular dependencies in project code is to use a either a lint rule or other external tooling.
 
 Show circular dependency warnings on builds.
 
@@ -199,7 +217,7 @@ Default: `false`
 
 Type: `boolean`
 
-Generates a 'stats.json' file which can be analyzed using tools such as: #webpack-bundle-analyzer' or https://webpack.github.io/analyse.
+Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or <https://webpack.github.io/analyse>.
 
 ### styles
 

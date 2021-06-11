@@ -1,8 +1,8 @@
-# Step 5: Add Node Application Implementing API
+# Angular Nx Tutorial - Step 5: Add Node Application Implementing API
 
-## Video of this Lesson
+## Nx.dev Tutorial | Angular | Step 5: Add Node Application Implementing API
 
-<iframe width="560" height="600" src="https://www.youtube.com/embed/SsCx2WErVTI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/SsCx2WErVTI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 The requests fail because the API has not been created yet. Using Nx you can develop node applications next to your Angular applications. You can use same commands to run and test them. You can share code between the backend and the frontend. Use this capability to implement the API service.
 
@@ -76,27 +76,27 @@ After this is done, you should see something like this:
 ```treeview
 myorg/
 ├── apps/
-│   ├── todos/
-│   ├── todos-e2e/
-│   └── api/
-│       ├── src/
-│       │   ├── app/
-│       │   │   ├── app.controller.ts
-│       │   │   ├── app.controller.spec.ts
-│       │   │   ├── app.module.ts
-│       │   │   ├── app.service.ts
-│       │   │   └── app.service.spec.ts
-│       │   ├── assets/
-│       │   ├── environments/
-│       │   │   ├── environment.ts
-│       │   │   └── environment.prod.ts
-│       │   └── main.ts
-│       ├── jest.conf.js
-│       ├── proxy.conf.json
-│       ├── tsconfig.app.json
-│       ├── tsconfig.json
-│       ├── tsconfig.spec.json
-│       └── tslint.json
+│   ├── todos/
+│   ├── todos-e2e/
+│   └── api/
+│       ├── src/
+│       │   ├── app/
+│       │   │   ├── app.controller.ts
+│       │   │   ├── app.controller.spec.ts
+│       │   │   ├── app.module.ts
+│       │   │   ├── app.service.ts
+│       │   │   └── app.service.spec.ts
+│       │   ├── assets/
+│       │   ├── environments/
+│       │   │   ├── environment.ts
+│       │   │   └── environment.prod.ts
+│       │   └── main.ts
+│       ├── jest.conf.js
+│       ├── proxy.conf.json
+│       ├── tsconfig.app.json
+│       ├── tsconfig.json
+│       ├── tsconfig.spec.json
+│       └── tslint.json
 ├── libs/
 ├── angular.json
 ├── nx.json
@@ -130,7 +130,7 @@ import { AppService } from './app.service';
 export class AppModule {}
 ```
 
-We recommend using the [Nest](/{{framework}}/plugins/nest/overview) framework when creating node applications. Nest is a powerful framework which helps develop robust node applications. You can also use Express or any node libraries with Nx.
+We recommend using the [Nest](/{{framework}}/nest/overview) framework when creating node applications. Nest is a powerful framework which helps develop robust node applications. You can also use Express or any node libraries with Nx.
 
 In this case you have an application that registers a service and a controller. Services in Nest are responsible for the business logic, and controllers are responsible for implementing Http endpoints.
 
@@ -181,3 +181,10 @@ export class AppController {
   }
 }
 ```
+
+!!!!!
+Run "npx nx serve api" and open http://localhost:3333/api/todos. What do you see?
+!!!!!
+`[{"title":"Todo 1"},{"title":"Todo 2"}]`
+Blank screen
+404

@@ -17,23 +17,23 @@ The result should look like this:
 ```treeview
 myorg/
 ├── apps/
-│   ├── todos/
-│   ├── todos-e2e/
-│   └── api/
+│   ├── todos/
+│   ├── todos-e2e/
+│   └── api/
 ├── libs/
-│   └── data/
-│       ├── src/
-│       │   ├── lib/
+│   └── data/
+│       ├── src/
+│       │   ├── lib/
 │       │   │   └── data.ts
-│       │   └── index.ts
-│       ├── jest.conf.js
-│       ├── tsconfig.app.json
-│       ├── tsconfig.json
-│       └── tsconfig.spec.json
+│       │   └── index.ts
+│       ├── jest.conf.js
+│       ├── tsconfig.app.json
+│       ├── tsconfig.json
+│       └── tsconfig.spec.json
 ├── tools/
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 **Copy the interface into `libs/data/src/lib/data.ts`.**
@@ -86,3 +86,10 @@ export default App;
 ```
 
 Every time you add a new library, you have to restart `npx nx serve`. **So restart both `npx nx serve api` and `npx nx serve todos` and you should see the application running.**
+
+!!!!!
+Nx allows you to share code...
+!!!!!
+Between frontend and backend apps
+Between different frontend apps
+Between different node apps

@@ -7,40 +7,24 @@
         "id": "getting-started",
         "itemList": [
           {
-            "name": "Getting Started",
-            "id": "getting-started",
-            "file": "angular/getting-started/getting-started"
+            "name": "Intro to Nx",
+            "id": "intro",
+            "file": "angular/getting-started/intro"
           },
           {
-            "name": "Resources",
-            "id": "resources"
+            "name": "Nx Setup",
+            "id": "nx-setup",
+            "file": "angular/getting-started/nx-setup"
           },
           {
-            "name": "Nx and Angular CLI",
-            "id": "nx-and-cli",
-            "file": "angular/getting-started/nx-and-cli"
+            "name": "Nx CLI",
+            "id": "nx-cli",
+            "file": "angular/getting-started/nx-cli"
           },
           {
-            "name": "CLI Overview",
-            "searchResultsName": "CLI Overview",
-            "id": "cli-overview",
-            "file": "angular/guides/cli-overview"
-          },
-          {
-            "name": "VS Code Plugin",
+            "name": "Nx Editor Plugins",
             "id": "console",
             "file": "shared/console"
-          },
-          {
-            "name": "Folder Structure",
-            "searchResultsName": "Folder Structure",
-            "id": "folder-structure",
-            "file": "shared/folder-structure"
-          },
-          {
-            "name": "Configuration",
-            "id": "configuration",
-            "file": "angular/guides/configuration"
           }
         ]
       },
@@ -126,6 +110,11 @@
             "name": "Updating Nx",
             "id": "updating-nx",
             "file": "angular/guides/update"
+          },
+          {
+            "name": "Configuration",
+            "id": "configuration",
+            "file": "angular/guides/configuration"
           },
           {
             "name": "Nx Devkit",
@@ -291,6 +280,11 @@
             "name": "workspace-generator",
             "id": "workspace-generator",
             "file": "angular/cli/workspace-generator"
+          },
+          {
+            "name": "connect-to-nx-cloud",
+            "id": "connect-to-nx-cloud",
+            "file": "angular/cli/connect-to-nx-cloud"
           }
         ]
       },
@@ -338,6 +332,11 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "angular/api-workspace/executors/run-script"
+          },
+          {
+            "name": "tsc executor",
+            "id": "tsc",
+            "file": "angular/api-workspace/executors/tsc"
           }
         ]
       },
@@ -444,6 +443,11 @@
             "file": "angular/api-angular/generators/upgrade-module"
           },
           {
+            "name": "convert-tslint-to-eslint",
+            "id": "convert-tslint-to-eslint",
+            "file": "angular/api-angular/generators/convert-tslint-to-eslint"
+          },
+          {
             "name": "package executor",
             "id": "package",
             "file": "angular/api-angular/executors/package"
@@ -457,6 +461,11 @@
             "name": "webpack-browser executor",
             "id": "webpack-browser",
             "file": "angular/api-angular/executors/webpack-browser"
+          },
+          {
+            "name": "delegate-build executor",
+            "id": "delegate-build",
+            "file": "angular/api-angular/executors/delegate-build"
           }
         ]
       },
@@ -747,6 +756,11 @@
             "name": "service generator",
             "id": "service",
             "file": "angular/api-nest/generators/service"
+          },
+          {
+            "name": "convert-tslint-to-eslint",
+            "id": "convert-tslint-to-eslint",
+            "file": "angular/api-nest/generators/convert-tslint-to-eslint"
           }
         ]
       },
@@ -933,9 +947,14 @@
             "file": "shared/monorepo-tags"
           },
           {
-            "name": "Dependency Graph",
+            "name": "Project Graph",
             "id": "dependency-graph",
             "file": "shared/workspace/structure/dependency-graph"
+          },
+          {
+            "name": "Extending the Project Graph",
+            "id": "project-graph-plugins",
+            "file": "shared/workspace/project-graph-plugins"
           }
         ]
       },
@@ -1064,35 +1083,24 @@
         "id": "getting-started",
         "itemList": [
           {
-            "name": "Getting Started",
-            "id": "getting-started",
-            "file": "react/getting-started/getting-started"
+            "name": "Intro to Nx",
+            "id": "intro",
+            "file": "react/getting-started/intro"
           },
           {
-            "name": "Resources",
-            "id": "resources"
+            "name": "Nx Setup",
+            "id": "nx-setup",
+            "file": "react/getting-started/nx-setup"
           },
           {
-            "name": "CLI Overview",
-            "searchResultsName": "CLI Overview",
-            "id": "cli-overview",
-            "file": "react/guides/cli-overview"
+            "name": "Nx CLI",
+            "id": "nx-cli",
+            "file": "react/getting-started/nx-cli"
           },
           {
-            "name": "VS Code Plugin",
+            "name": "Nx Editor Plugins",
             "id": "console",
             "file": "shared/console"
-          },
-          {
-            "name": "Folder Structure",
-            "searchResultsName": "Folder Structure",
-            "id": "folder-structure",
-            "file": "shared/folder-structure"
-          },
-          {
-            "name": "Configuration",
-            "id": "configuration",
-            "file": "react/guides/configuration"
           }
         ]
       },
@@ -1178,6 +1186,11 @@
             "name": "Updating Nx",
             "id": "updating-nx",
             "file": "shared/update"
+          },
+          {
+            "name": "Configuration",
+            "id": "configuration",
+            "file": "react/guides/configuration"
           },
           {
             "name": "Nx Devkit",
@@ -1339,6 +1352,11 @@
             "name": "workspace-generator",
             "id": "workspace-generator",
             "file": "react/cli/workspace-generator"
+          },
+          {
+            "name": "connect-to-nx-cloud",
+            "id": "connect-to-nx-cloud",
+            "file": "react/cli/connect-to-nx-cloud"
           }
         ]
       },
@@ -1386,6 +1404,11 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "react/api-workspace/executors/run-script"
+          },
+          {
+            "name": "tsc executor",
+            "id": "tsc",
+            "file": "react/api-workspace/executors/tsc"
           }
         ]
       },
@@ -1472,6 +1495,11 @@
             "file": "react/api-angular/generators/ngrx"
           },
           {
+            "name": "convert-tslint-to-eslint",
+            "id": "convert-tslint-to-eslint",
+            "file": "react/api-angular/generators/convert-tslint-to-eslint"
+          },
+          {
             "name": "stories generator",
             "id": "stories",
             "file": "react/api-angular/generators/stories"
@@ -1505,6 +1533,11 @@
             "name": "webpack-browser executor",
             "id": "webpack-browser",
             "file": "react/api-angular/executors/webpack-browser"
+          },
+          {
+            "name": "delegate-build executor",
+            "id": "delegate-build",
+            "file": "react/api-angular/executors/delegate-build"
           }
         ]
       },
@@ -1801,6 +1834,11 @@
             "name": "service generator",
             "id": "service",
             "file": "react/api-nest/generators/service"
+          },
+          {
+            "name": "convert-tslint-to-eslint",
+            "id": "convert-tslint-to-eslint",
+            "file": "react/api-nest/generators/convert-tslint-to-eslint"
           }
         ]
       },
@@ -1990,6 +2028,11 @@
             "name": "Dependency Graph",
             "id": "dependency-graph",
             "file": "shared/workspace/structure/dependency-graph"
+          },
+          {
+            "name": "Extending the Project Graph",
+            "id": "project-graph-plugins",
+            "file": "shared/workspace/project-graph-plugins"
           }
         ]
       },
@@ -2091,35 +2134,24 @@
         "id": "getting-started",
         "itemList": [
           {
-            "name": "Getting Started",
-            "id": "getting-started",
-            "file": "node/getting-started/getting-started"
+            "name": "Intro to Nx",
+            "id": "intro",
+            "file": "node/getting-started/intro"
           },
           {
-            "name": "Resources",
-            "id": "resources"
+            "name": "Nx Setup",
+            "id": "nx-setup",
+            "file": "node/getting-started/nx-setup"
           },
           {
-            "name": "CLI Overview",
-            "searchResultsName": "CLI Overview",
-            "id": "cli-overview",
-            "file": "node/guides/cli-overview"
+            "name": "Nx CLI",
+            "id": "nx-cli",
+            "file": "node/getting-started/nx-cli"
           },
           {
-            "name": "VS Code Plugin",
+            "name": "Nx Editor Plugins",
             "id": "console",
             "file": "shared/console"
-          },
-          {
-            "name": "Folder Structure",
-            "searchResultsName": "Folder Structure",
-            "id": "folder-structure",
-            "file": "shared/folder-structure"
-          },
-          {
-            "name": "Configuration",
-            "id": "configuration",
-            "file": "node/guides/configuration"
           }
         ]
       },
@@ -2189,6 +2221,11 @@
             "name": "Updating Nx",
             "id": "updating-nx",
             "file": "shared/update"
+          },
+          {
+            "name": "Configuration",
+            "id": "configuration",
+            "file": "node/guides/configuration"
           },
           {
             "name": "Nx Devkit",
@@ -2346,6 +2383,11 @@
             "name": "workspace-generator",
             "id": "workspace-generator",
             "file": "node/cli/workspace-generator"
+          },
+          {
+            "name": "connect-to-nx-cloud",
+            "id": "connect-to-nx-cloud",
+            "file": "node/cli/connect-to-nx-cloud"
           }
         ]
       },
@@ -2393,6 +2435,11 @@
             "name": "run-script executor",
             "id": "run-script",
             "file": "node/api-workspace/executors/run-script"
+          },
+          {
+            "name": "tsc executor",
+            "id": "tsc",
+            "file": "node/api-workspace/executors/tsc"
           }
         ]
       },
@@ -2499,6 +2546,11 @@
             "file": "node/api-angular/generators/upgrade-module"
           },
           {
+            "name": "convert-tslint-to-eslint",
+            "id": "convert-tslint-to-eslint",
+            "file": "node/api-angular/generators/convert-tslint-to-eslint"
+          },
+          {
             "name": "package executor",
             "id": "package",
             "file": "node/api-angular/executors/package"
@@ -2512,6 +2564,11 @@
             "name": "webpack-browser executor",
             "id": "webpack-browser",
             "file": "node/api-angular/executors/webpack-browser"
+          },
+          {
+            "name": "delegate-build executor",
+            "id": "delegate-build",
+            "file": "node/api-angular/executors/delegate-build"
           }
         ]
       },
@@ -2801,6 +2858,11 @@
             "name": "service generator",
             "id": "service",
             "file": "node/api-nest/generators/service"
+          },
+          {
+            "name": "convert-tslint-to-eslint",
+            "id": "convert-tslint-to-eslint",
+            "file": "node/api-nest/generators/convert-tslint-to-eslint"
           }
         ]
       },
@@ -2990,6 +3052,11 @@
             "name": "Dependency Graph",
             "id": "dependency-graph",
             "file": "shared/workspace/structure/dependency-graph"
+          },
+          {
+            "name": "Extending the Project Graph",
+            "id": "project-graph-plugins",
+            "file": "shared/workspace/project-graph-plugins"
           }
         ]
       },

@@ -195,7 +195,7 @@ module.exports = {
 
 ### 7. Extend the app's tsconfig.json from the base
 
-Modify `apps/webapp/tsconfig.json` to extend the root `tsconfig.json`. This is primarily to pickup the typescript aliases from the root tsconfig file.
+Modify `apps/webapp/tsconfig.json` to extend the root `tsconfig.base.json`. This is primarily to pickup the typescript aliases from the root tsconfig file.
 
 ```json
 {
@@ -278,7 +278,7 @@ import { UiButton } from '@acme/ui-button';
 //...
 ```
 
-The `@acme/ui-button` path alias is defined in the root `tsconfig.json` file.
+The `@acme/ui-button` path alias is defined in the root `tsconfig.base.json` file.
 
 [View the code changes](https://github.com/nrwl/migrate-cra-to-nx/commit/cfb1d6170c72cfd9355d16fefc045527683fc604)
 

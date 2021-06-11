@@ -21,26 +21,26 @@ You should see the following:
 ```treeview
 myorg/
 ├── apps/
-│   ├── todos/
-│   ├── todos-e2e/
-│   └── api/
+│   ├── todos/
+│   ├── todos-e2e/
+│   └── api/
 ├── libs/
-│   ├── data/
+│   ├── data/
 │   └── ui/
-│       ├── src/
-│       │   ├── lib/
-│       │   │   ├── ui.module.spec.ts
-│       │   │   └── ui.module.ts
-│       │   └── index.ts
-│       ├── jest.conf.js
-│       ├── tsconfig.app.json
-│       ├── tsconfig.json
-│       ├── tsconfig.spec.json
-│       └── tslint.json
+│       ├── src/
+│       │   ├── lib/
+│       │   │   ├── ui.module.spec.ts
+│       │   │   └── ui.module.ts
+│       │   └── index.ts
+│       ├── jest.conf.js
+│       ├── tsconfig.app.json
+│       ├── tsconfig.json
+│       ├── tsconfig.spec.json
+│       └── tslint.json
 ├── nx.json
 ├── package.json
 ├── tools/
-├── tsconfig.json
+├── tsconfig.base.json
 └── tslint.json
 ```
 
@@ -67,31 +67,31 @@ npx nx g component todos --project=ui --export
 ```treeview
 myorg/
 ├── apps/
-│   ├── todos/
-│   ├── todos-e2e/
-│   └── api/
+│   ├── todos/
+│   ├── todos-e2e/
+│   └── api/
 ├── libs/
-│   ├── data/
+│   ├── data/
 │   └── ui/
-│       ├── src/
-│       │   ├── lib/
+│       ├── src/
+│       │   ├── lib/
 │       │   │   ├── todos/
 │       │   │   │   ├── todos.component.css
 │       │   │   │   ├── todos.component.html
 │       │   │   │   ├── todos.component.spec.ts
 │       │   │   │   └── todos.component.ts
-│       │   │   ├── ui.module.spec.ts
-│       │   │   └── ui.module.ts
-│       │   └── index.ts
-│       ├── jest.conf.js
-│       ├── tsconfig.app.json
-│       ├── tsconfig.json
-│       ├── tsconfig.spec.json
-│       └── tslint.json
+│       │   │   ├── ui.module.spec.ts
+│       │   │   └── ui.module.ts
+│       │   └── index.ts
+│       ├── jest.conf.js
+│       ├── tsconfig.app.json
+│       ├── tsconfig.json
+│       ├── tsconfig.spec.json
+│       └── tslint.json
 ├── nx.json
 ├── package.json
 ├── tools/
-├── tsconfig.json
+├── tsconfig.base.json
 └── tslint.json
 ```
 
@@ -155,3 +155,9 @@ export class AppModule {}
 ```
 
 **Restart both `npx nx serve api` and `npx nx serve todos` and you should see the application running.**
+
+!!!!!
+Libraries' public API is defined in...
+!!!!!
+index.ts
+angular.json and tsconfig.json files

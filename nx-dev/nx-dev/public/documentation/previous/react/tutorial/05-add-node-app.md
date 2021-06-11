@@ -1,8 +1,8 @@
-# Step 5: Add Node Application Implementing API
+# React Nx Tutorial - Step 5: Add Node Application Implementing API
 
-## Video of this Lesson
+## Nx.dev Tutorial | React | Step 5: Add Node Application Implementing API
 
-<iframe width="560" height="600" src="https://www.youtube.com/embed/XgfknOqgxQ0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/XgfknOqgxQ0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 The requests fail because the API has not been created yet. Using Nx you can develop node applications next to your React applications. You can use same commands to run and test them. You can share code between the backend and the frontend. Use this capability to implement the API service.
 
@@ -74,21 +74,21 @@ After this is done, you should see something like this:
 ```treeview
 myorg/
 ├── apps/
-│   ├── todos/
-│   ├── todos-e2e/
-│   └── api/
-│       ├── src/
-│       │   ├── app/
-│       │   ├── assets/
-│       │   ├── environments/
-│       │   │   ├── environment.ts
-│       │   │   └── environment.prod.ts
-│       │   └── main.ts
-│       ├── jest.conf.js
-│       ├── proxy.conf.json
-│       ├── tsconfig.app.json
-│       ├── tsconfig.json
-│       └── tsconfig.spec.json
+│   ├── todos/
+│   ├── todos-e2e/
+│   └── api/
+│       ├── src/
+│       │   ├── app/
+│       │   ├── assets/
+│       │   ├── environments/
+│       │   │   ├── environment.ts
+│       │   │   └── environment.prod.ts
+│       │   └── main.ts
+│       ├── jest.conf.js
+│       ├── proxy.conf.json
+│       ├── tsconfig.app.json
+│       ├── tsconfig.json
+│       └── tsconfig.spec.json
 ├── libs/
 ├── tools/
 ├── workspace.json
@@ -149,3 +149,10 @@ const server = app.listen(port, () => {
 });
 server.on('error', console.error);
 ```
+
+!!!!!
+Run "npx nx serve api" and open http://localhost:3333/api/todos. What do you see?
+!!!!!
+`[{"title":"Todo 1"},{"title":"Todo 2"}]`
+Blank screen
+404

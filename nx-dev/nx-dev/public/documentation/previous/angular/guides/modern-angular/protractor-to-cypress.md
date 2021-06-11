@@ -1,6 +1,6 @@
 # Migrating from Protractor to Cypress
 
-Nx helps configure your e2e tests for you. When running the Nx schematic to create a new app, you can choose Protractor as an option, but the default is Cypress. If you have an existing set of e2e tests using Protractor and would like to switch to using Cypress, you can follow these steps.
+Nx helps configure your e2e tests for you. When running the Nx generator to create a new app, you can choose Protractor as an option, but the default is Cypress. If you have an existing set of e2e tests using Protractor and would like to switch to using Cypress, you can follow these steps.
 
 Let's say your existing app is named `my-awesome-app` and the e2e Protractor tests are located in `my-awesome-app-e2e`.
 
