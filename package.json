@@ -168,6 +168,7 @@
     "karma-jasmine": "~1.1.1",
     "karma-jasmine-html-reporter": "^0.2.2",
     "karma-webpack": "4.0.2",
+    "kill-port": "^1.6.1",
     "less": "3.12.2",
     "less-loader": "5.0.0",
     "license-webpack-plugin": "2.1.2",
