@@ -1,4 +1,5 @@
 import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
+import { inlineProjectConfigurations } from '@nrwl/tao/src/shared/workspace';
 import { ChildProcess, exec, execSync } from 'child_process';
 import {
   copySync,
@@ -19,6 +20,7 @@ const kill = require('kill-port');
 const isWindows = require('is-windows');
 import { check as portCheck } from 'tcp-port-used';
 import { parseJson } from '@nrwl/devkit';
+
 import chalk = require('chalk');
 import treeKill = require('tree-kill');
 import { promisify } from 'util';
@@ -440,7 +442,7 @@ export function runCommand(command: string): string {
 function setMaxWorkers() {
   if (isCI) {
     const workspaceFile = workspaceConfigName();
-    const workspace = readJson(workspaceFile);
+    const workspace = inlineProjectConfigurations(readJson(workspaceFile));
 
     Object.keys(workspace.projects).forEach((appName) => {
       const project = workspace.projects[appName];

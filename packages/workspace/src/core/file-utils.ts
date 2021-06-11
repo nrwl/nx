@@ -2,6 +2,7 @@ import { toOldFormatOrNull, Workspaces } from '@nrwl/tao/src/shared/workspace';
 import type {
   FileData,
   NxJsonConfiguration,
+  NxJsonProjectConfiguration,
   ProjectGraphNode,
 } from '@nrwl/devkit';
 import { execSync } from 'child_process';
@@ -199,6 +200,21 @@ export function readPackageJson(): any {
 
 export function readNxJson(): NxJsonConfiguration {
   const config = readJsonFile<NxJsonConfiguration>(`${appRootPath}/nx.json`);
+  const workspace = readWorkspaceConfig({ format: 'nx' });
+  Object.entries(workspace.projects).forEach(([project, projectConfig]) => {
+    if (typeof projectConfig === 'string') {
+      let readConfig = readJsonFile<NxJsonProjectConfiguration>(
+        join(projectConfig, 'project.json')
+      );
+      config.projects[project] ??= {};
+      config.projects[project].tags ??= [];
+      config.projects[project].implicitDependencies ??= [];
+      config.projects[project].tags.concat(readConfig.tags);
+      config.projects[project].implicitDependencies.concat(
+        readConfig.implicitDependencies
+      );
+    }
+  });
   if (!config.npmScope) {
     throw new Error(`nx.json must define the npmScope property.`);
   }
