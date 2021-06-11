@@ -7,6 +7,7 @@ import {
   uniq,
   updateFile,
   workspaceConfigName,
+  promisifiedTreeKill,
 } from '@nrwl/e2e/utils';
 import { serializeJson } from '@nrwl/workspace';
 
@@ -26,9 +27,10 @@ describe('file-server', () => {
         output.indexOf('Built at') > -1 && output.indexOf('Available on') > -1
       );
     });
-    if (await p.kill('SIGKILL')) {
-      await killPorts();
-    } else {
+    try {
+      await promisifiedTreeKill(p.pid, 'SIGKILL');
+      expect(await killPorts()).toBeTruthy();
+    } catch {
       expect('process running').toBeFalsy();
     }
   }, 300000);

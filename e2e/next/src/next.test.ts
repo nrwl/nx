@@ -4,6 +4,7 @@ import {
   createFile,
   killPorts,
   newProject,
+  promisifiedTreeKill,
   readFile,
   readJson,
   runCLI,
@@ -76,9 +77,10 @@ describe('Next.js Applications', () => {
     const data = await getData(port);
     expect(data).toContain(`Welcome to ${appName}`);
 
-    if (await p.kill('SIGKILL')) {
+    try {
+      await promisifiedTreeKill(p.pid, 'SIGKILL');
       expect(await killPorts(port)).toBeTruthy();
-    } else {
+    } catch {
       expect('process running').toBeFalsy();
     }
   }, 300000);
@@ -612,9 +614,10 @@ describe('Next.js Applications', () => {
     const data = await getData(port);
     expect(data).toContain(`Welcome to ${appName}`);
 
-    if (await p.kill('SIGKILL')) {
+    try {
+      await promisifiedTreeKill(p.pid, 'SIGKILL');
       expect(await killPorts(port)).toBeTruthy();
-    } else {
+    } catch {
       expect('process running').toBeFalsy();
     }
   }, 300000);

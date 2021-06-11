@@ -19,6 +19,13 @@ import { kill } from 'cross-port-killer';
 import { check as portCheck } from 'tcp-port-used';
 import { parseJson } from '@nrwl/devkit';
 import chalk = require('chalk');
+import treeKill = require('tree-kill');
+import { promisify } from 'util';
+
+export const promisifiedTreeKill: (
+  pid: number,
+  signal: string
+) => Promise<void> = promisify(treeKill);
 
 interface RunCmdOpts {
   silenceError?: boolean;
