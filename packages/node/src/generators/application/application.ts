@@ -205,6 +205,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       skipSerializers: true,
       supportTsx: options.js,
       babelJest: options.babelJest,
+      testEnvironment: 'node',
     });
     tasks.push(jestTask);
   }

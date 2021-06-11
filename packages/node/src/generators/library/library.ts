@@ -38,6 +38,7 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
   const libraryInstall = await workspaceLibraryGenerator(tree, {
     ...schema,
     importPath: options.importPath,
+    testEnvironment: 'node',
   });
   createFiles(tree, options);
 

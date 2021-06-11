@@ -502,7 +502,7 @@
             "assets": [
               {
                 "input": "packages/jest",
-                "glob": "**/files/**",
+                "glob": "**/@(files|files-angular)/**",
                 "output": "/"
               },
               {

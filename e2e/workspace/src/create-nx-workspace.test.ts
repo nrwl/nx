@@ -164,9 +164,9 @@ describe('create-nx-workspace', () => {
   it('should handle spaces in workspace path', () => {
     const wsName = uniq('empty');
 
-    const tmpDir = `${e2eCwd}/with space`;
+    const tmpDir = `${e2eCwd}/${uniq('with space')}`;
 
-    mkdirSync(tmpDir);
+    mkdirSync(tmpDir, { recursive: true });
 
     const command = `npx create-nx-workspace@${'9999.0.2'} ${wsName} --cli=nx --preset=empty --no-nxCloud --no-interactive`;
     execSync(command, {

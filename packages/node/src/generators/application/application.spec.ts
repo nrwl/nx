@@ -330,6 +330,7 @@ describe('app', () => {
         "module.exports = {
           displayName: 'my-node-app',
           preset: '../../jest.preset.js',
+          testEnvironment: 'node',
           transform: {
             '^.+\\\\\\\\.[tj]s$': 'babel-jest'
           },
