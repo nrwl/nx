@@ -12,7 +12,8 @@ import {
   statSync,
   writeFileSync,
 } from 'fs-extra';
-import isCI = require('is-ci');
+// import isCI = require('is-ci');
+const isCI = true;
 import * as path from 'path';
 import { dirSync } from 'tmp';
 import { kill } from 'cross-port-killer';
@@ -193,6 +194,7 @@ export function newProject({ name = uniq('proj') } = {}): string {
 }
 
 async function killPort(port: number): Promise<boolean> {
+  logInfo(`Checking port ${port}`);
   if (await portCheck(port)) {
     try {
       logInfo(`Attmepting to close port ${port}`);
@@ -208,16 +210,15 @@ async function killPort(port: number): Promise<boolean> {
     }
     return false;
   } else {
+    logError(`Port ${port} not open`);
     return true;
   }
 }
 
 export async function killPorts(port?: number): Promise<boolean> {
-  return (
-    (await killPort(3333)) &&
-    (await killPort(4200)) &&
-    (!port || (await killPort(port)))
-  );
+  return port
+    ? await killPort(port)
+    : (await killPort(3333)) && (await killPort(4200));
 }
 
 // Useful in order to cleanup space during CI to prevent `No space left on device` exceptions
