@@ -15,8 +15,7 @@ import {
 import isCI = require('is-ci');
 import * as path from 'path';
 import { dirSync } from 'tmp';
-import { kill } from 'cross-port-killer';
-const portKiller = require('kill-port');
+const kill = require('kill-port');
 import { check as portCheck } from 'tcp-port-used';
 import { parseJson } from '@nrwl/devkit';
 import chalk = require('chalk');
@@ -194,15 +193,10 @@ export function newProject({ name = uniq('proj') } = {}): string {
 }
 
 async function killPort(port: number): Promise<boolean> {
-  logInfo(`Checking port ${port}`);
   if (await portCheck(port)) {
     try {
-      logInfo(`Attmepting to close port ${port}`);
-      if (port === 4201) {
-        await portKiller(port);
-      } else {
-        await kill(port);
-      }
+      logInfo(`Attempting to close port ${port}`);
+      await kill(port);
       if (await portCheck(port)) {
         logError(`Port ${port} still open`);
       } else {
@@ -214,7 +208,6 @@ async function killPort(port: number): Promise<boolean> {
     }
     return false;
   } else {
-    logError(`Port ${port} not open`);
     return true;
   }
 }

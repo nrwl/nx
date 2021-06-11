@@ -79,7 +79,8 @@ describe('Next.js Applications', () => {
 
     try {
       await promisifiedTreeKill(p.pid, 'SIGKILL');
-      expect(await killPorts(port)).toBeTruthy();
+      // expect(await killPorts(port)).toBeTruthy();
+      await killPorts(port);
     } catch {
       expect('process running').toBeFalsy();
     }
@@ -615,8 +616,10 @@ describe('Next.js Applications', () => {
     expect(data).toContain(`Welcome to ${appName}`);
 
     try {
-      await promisifiedTreeKill(p.pid, 'SIGKILL');
-      expect(await killPorts(port)).toBeTruthy();
+      p.kill('SIGKILL');
+      // await promisifiedTreeKill(p.pid, 'SIGKILL');
+      // expect(await killPorts(port)).toBeTruthy();
+      await killPorts(port);
     } catch {
       expect('process running').toBeFalsy();
     }

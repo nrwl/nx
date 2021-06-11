@@ -33,6 +33,7 @@ describe('file-server', () => {
     );
     try {
       await promisifiedTreeKill(p.pid, 'SIGKILL');
+      await killPorts(port);
       // expect(await killPorts(port)).toBeTruthy();
     } catch {
       expect('process running').toBeFalsy();
