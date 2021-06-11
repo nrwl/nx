@@ -1,8 +1,8 @@
-# Step 3: Display Todos
+# Angular Nx Tutorial - Step 3: Display Todos
 
-## Video of this Lesson
+## Nx.dev Tutorial | Angular | Step 3: Display Todos
 
-<iframe width="560" height="600" src="https://www.youtube.com/embed/JlKAwGXmpac" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/JlKAwGXmpac" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Great! You have a failing E2E test. Now you can make it pass!
 
@@ -81,3 +81,9 @@ export class AppComponent {
 ```
 
 The tests should pass now.
+
+!!!!!
+What will you see if you run: `npx nx e2e todos-e2e --headless`
+!!!!!
+Cypress will run in the headless mode, and the test will pass.
+Cypress will run in the headless mode, and the test will fail.

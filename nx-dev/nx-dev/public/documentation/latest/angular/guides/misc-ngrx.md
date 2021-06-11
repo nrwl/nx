@@ -87,9 +87,9 @@ myorg/
 ├── apps/
 └── libs/
     └── products/
-        └── src/
-            └── lib/
-            │   └── +state/
+        └── src/
+            ├── lib/
+            │   ├── +state/
             │   │   ├── products.actions.ts
             │   │   ├── products.effects.ts
             │   │   ├── products.effects.spec.ts
@@ -100,9 +100,9 @@ myorg/
             │   │   ├── products.reducer.spec.ts
             │   │   ├── products.selectors.ts
             │   │   └── products.selectors.spec.ts
-            │   ├── products.module.spec.ts
-            │   └── products.module.ts
-            └── index.ts
+            │   ├── products.module.spec.ts
+            │   └── products.module.ts
+            └── index.ts
 ```
 
 The above command also does the following changes:

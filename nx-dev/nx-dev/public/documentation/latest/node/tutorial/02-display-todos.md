@@ -147,3 +147,10 @@ We changed the `@Get` decorator for the `getData` function to point to the `api`
 Then we added the `root` function which renders the `index` file from our `views` directory.
 
 > The serve process should still be running. If it isn't, restart the process with `nx serve todos`
+
+!!!!!
+Open http://localhost:3333 in the browser. What do you see?
+!!!!!
+Page saying "Welcome to todos!"
+Page saying "{"message":"Welcome to todos!"}"
+404

@@ -13,6 +13,6 @@ In this tutorial you:
 
 **Dive Deep:**
 
-- [Nx CLI](/{{framework}}/getting-started/cli-overview)
+- [Nx CLI](/{{framework}}/getting-started/nx-cli)
 - [Computation Caching](/{{framework}}/core-concepts/computation-caching)
 - [Rebuilding What is Affected](/{{framework}}/core-concepts/affected)

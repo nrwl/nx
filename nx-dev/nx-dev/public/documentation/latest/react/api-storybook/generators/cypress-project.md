@@ -24,6 +24,12 @@ nx g cypress-project ... --dry-run
 
 ## Options
 
+### directory
+
+Type: `string`
+
+A directory where the project is placed
+
 ### js
 
 Default: `false`
@@ -38,7 +44,7 @@ Default: `eslint`
 
 Type: `string`
 
-Possible values: `eslint`, `tslint`
+Possible values: `eslint`, `tslint`, `none`
 
 The tool to use for running lint checks.
 

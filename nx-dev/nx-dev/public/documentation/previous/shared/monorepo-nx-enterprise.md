@@ -1,6 +1,6 @@
 # Using Nx at Enterprises
 
-Nx is a great tool for companies of all sizes. These days even small products have several microservies and several frontends (say desktop and mobile) which are often built by distributed teams. Being able to do this type of development holistically, using modern tools, is as important for a startup as it is for a well-established organization.
+Nx is a great tool for companies of all sizes. These days even small products have several microservices and several frontends (say desktop and mobile) which are often built by distributed teams. Being able to do this type of development holistically, using modern tools, is as important for a startup as it is for a well-established organization.
 
 Some things, however, are much more important for large companies:
 
@@ -136,7 +136,7 @@ For a large organization it's crucial to establish how projects can depend on ea
 - Libraries with a broader scope (e.g., `shared/ui`) should not depend on the libraries with narrower scope (e.g., `happynrwlapp/search/utils-testing`).
 - Component libraries should only depend on other component libraries and utility libraries, but should not depend feature libraries.
 
-Nx provides a feature called tags that can be used to codify and statically-enforce these rules. Read more about tags [here](/shared/monorepo-tags).
+Nx provides a feature called tags that can be used to codify and statically-enforce these rules. Read more about tags [here](/{{framework}}/structure/monorepo-tags).
 
 ## Code Ownership
 
@@ -155,15 +155,15 @@ Since Nx allows us to group apps and libs in directories, those directories can 
 
 When we have 10 people working on an app in the same room, we can agree on best practices over lunch. We can also make sure the team follows them by reviewing each other's PRs. For a team of a hundred located in different cities, this no longer works.
 
-With Nx, we can help teams adopt best practices by using workspace schematics and workspace lint checks.
+With Nx, we can help teams adopt best practices by using workspace generators and workspace lint checks.
 
-### Workspace Schematics
+### Workspace Generators
 
-Schematics is a library used by Nx to do code generation. `nx g lib mylib` invokes the lib schematic from the default collection. Schematics are a great way to codify conventions and best practices. Unfortunately, creating a custom schematics collection is not very straightforward, so few do it.
+Generators is a library used by Nx to do code generation. `nx g lib mylib` invokes the lib generator from the default collection. Generators are a great way to codify conventions and best practices. Unfortunately, creating a custom generators collection is not very straightforward, so few do it.
 
-Nx simplifies it. With Nx, we can create custom schematics in the `tools/schematics` and invoke them without having to do compile, build, deploy anything.
+Nx simplifies it. With Nx, we can create custom generators in the `tools/generators` folder and invoke them without having to do compile, build, deploy anything.
 
-Read more about workspace schematics in the Workspace Schematics guide.
+Read more about workspace generators in the Workspace Generators guide.
 
 ### Workspace Lint Checks
 
@@ -186,7 +186,7 @@ Note `all the projects affected by a PR/commit`. This is very important. Monorep
 - The performance of CI checks will degrade over time. The time it takes to run the CI checks should be proportional to the impact of the change, not the size of the repo.
 - We will be affected by the code your change didn’t touch
 
-We should utilize `affected:*` commands to build and test projects. Read more about them [here](/shared/monorepo-affected).
+We should utilize `affected:*` commands to build and test projects. Read more about them [here](/{{framework}}/cli/affected).
 
 ### Trunk-based development
 

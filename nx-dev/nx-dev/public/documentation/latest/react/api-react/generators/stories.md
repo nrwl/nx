@@ -24,7 +24,15 @@ nx g stories ... --dry-run
 
 ## Options
 
+### cypressProject
+
+Type: `string`
+
+The Cypress project to generate the stories under. This is inferred from 'project' by default
+
 ### generateCypressSpecs
+
+Default: `true`
 
 Type: `boolean`
 

@@ -24,22 +24,22 @@ nx g @nrwl/web:app frontend
 ```treeview
 <workspace name>/
 ├── apps/
-│   ├── frontend/
-│   └── frontend-e2e/
-│       ├── src/
-│       │   ├── fixtures/
-│       │   │   └── example.json
-│       │   ├── integration/
-│       │   │   └── app.spec.ts
-│       │   ├── plugins/
-│       │   │   └── index.ts
-│       │   └── support/
-│       │       ├── app.po.ts
-│       │       ├── commands.ts
-│       │       └── index.ts
-│       ├── cypress.json
-│       ├── tsconfig.e2e.json
-│       └── tsconfig.json
+│   ├── frontend/
+│   └── frontend-e2e/
+│       ├── src/
+│       │   ├── fixtures/
+│       │   │   └── example.json
+│       │   ├── integration/
+│       │   │   └── app.spec.ts
+│       │   ├── plugins/
+│       │   │   └── index.ts
+│       │   └── support/
+│       │       ├── app.po.ts
+│       │       ├── commands.ts
+│       │       └── index.ts
+│       ├── cypress.json
+│       ├── tsconfig.e2e.json
+│       └── tsconfig.json
 ├── libs/
 ├── tools/
 ├── nx.json

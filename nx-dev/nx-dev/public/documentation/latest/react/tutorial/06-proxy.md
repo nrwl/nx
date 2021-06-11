@@ -64,6 +64,7 @@ Options:
   --sslCert               SSL certificate to use for serving HTTPS.
   --watch                 Watches for changes and rebuilds application (default: true)
   --liveReload            Whether to reload the page on change, using live-reload. (default: true)
+  --hmr                   Enable hot module replacement.
   --publicHost            Public URL where the application will be served
   --open                  Open the application in the browser.
   --allowedHosts          This option allows you to whitelist services that are allowed to access the dev server.
@@ -75,3 +76,10 @@ Options:
 It helps with good editor integration (see [VSCode Support](https://nx.dev/react/getting-started/console)).
 
 But, most importantly, it provides a holistic dev experience regardless of the tools used, and enables advanced build features like distributed computation caching and distributed builds).
+
+!!!!!
+Now run both "npx nx serve todos" and "npx nx serve api" in separate terminals, open http://localhost:4200. What do you see?
+!!!!!
+Todos application is working!
+404 in the console
+Todos are displayed but the Add Todo button doesn't work

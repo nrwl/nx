@@ -24,11 +24,11 @@ Type: `string`
 
 A unique identifier for a run to enable grouping or parallelization.
 
-### copyFiles
+### ~~copyFiles~~
 
 Type: `string`
 
-DEPRECATED: A regex string that is used to choose what additional integration files to copy to the dist folder
+**Deprecated:** A regex string that is used to choose what additional integration files to copy to the dist folder
 
 ### cypressConfig
 
@@ -104,11 +104,29 @@ Type: `string`
 
 The reporter options used. Supported options depend on the reporter.
 
+### skipServe
+
+Default: `false`
+
+Type: `boolean`
+
+Skip dev-server build.
+
 ### spec
 
 Type: `string`
 
 A comma delimited glob string that is provided to the Cypress runner to specify which spec files to run. i.e. '**examples/**,**actions.spec**
+
+### testingType
+
+Default: `e2e`
+
+Type: `string`
+
+Possible values: `component`, `e2e`
+
+Specify the type of tests to execute
 
 ### tsConfig
 

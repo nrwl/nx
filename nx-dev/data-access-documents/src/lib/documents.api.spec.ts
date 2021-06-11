@@ -24,7 +24,7 @@ describe('DocumentsApi', () => {
     it('should retrieve documents that exist', () => {
       const result = api.getDocument('latest', 'react', [
         'getting-started',
-        'getting-started',
+        'intro',
       ]);
 
       expect(result.filePath).toBeTruthy();

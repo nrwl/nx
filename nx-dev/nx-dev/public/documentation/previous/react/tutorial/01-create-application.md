@@ -1,12 +1,12 @@
-# Step 1: Create Application
+# React Nx Tutorial - Step 1: Create Application
 
-## Video of this Lesson
+## Nx.dev Tutorial | React | Step 1: Create Application
 
-<iframe width="560" height="600" src="https://www.youtube.com/embed/HcQE5R6ucng" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/HcQE5R6ucng" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 In this tutorial you will use Nx to build a full-stack application out of common libraries using modern technologies.
 
-> Next.js: Nx also has first-class Next.js support. Read more about it [here](https://nx.dev/react/plugins/next/overview)
+> Next.js: Nx also has first-class Next.js support. Read more about it [here](/{{framework}}/next/overview)
 
 ## Create a New Workspace
 
@@ -14,7 +14,11 @@ In this tutorial you will use Nx to build a full-stack application out of common
 
 ```bash
 npx create-nx-workspace@latest
+```
 
+You will then receive the following prompts in your command line:
+
+```
 ? Workspace name (e.g., org name)     myorg
 ? What to create in the new workspace react
 ? Application name                    todos
@@ -26,36 +30,36 @@ When asked about 'preset', select `react`, and `todos` for the app name.
 ```treeview
 myorg/
 ├── apps/
-│   ├── todos/
-│   │   ├── src/
-│   │   │   ├── app/
-│   │   │   ├── assets/
-│   │   │   ├── environments/
-│   │   │   ├── favicon.ico
-│   │   │   ├── index.html
-│   │   │   ├── main.tsx
-│   │   │   ├── polyfills.ts
-│   │   │   └── styles.css
-│   │   ├── browserslist
-│   │   ├── jest.config.js
-│   │   ├── tsconfig.app.json
-│   │   ├── tsconfig.json
-│   │   └── tsconfig.spec.json
-│   └── todos-e2e/
-│       ├── src/
-│       │   ├── fixtures/
-│       │   │   └── example.json
-│       │   ├── integration/
-│       │   │   └── app.spec.ts
-│       │   ├── plugins/
-│       │   │   └── index.ts
-│       │   └── support/
-│       │       ├── app.po.ts
-│       │       ├── commands.ts
-│       │       └── index.ts
-│       ├── cypress.json
-│       ├── tsconfig.e2e.json
-│       └── tsconfig.json
+│   ├── todos/
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   ├── assets/
+│   │   │   ├── environments/
+│   │   │   ├── favicon.ico
+│   │   │   ├── index.html
+│   │   │   ├── main.tsx
+│   │   │   ├── polyfills.ts
+│   │   │   └── styles.css
+│   │   ├── browserslist
+│   │   ├── jest.config.js
+│   │   ├── tsconfig.app.json
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.spec.json
+│   └── todos-e2e/
+│       ├── src/
+│       │   ├── fixtures/
+│       │   │   └── example.json
+│       │   ├── integration/
+│       │   │   └── app.spec.ts
+│       │   ├── plugins/
+│       │   │   └── index.ts
+│       │   └── support/
+│       │       ├── app.po.ts
+│       │       ├── commands.ts
+│       │       └── index.ts
+│       ├── cypress.json
+│       ├── tsconfig.e2e.json
+│       └── tsconfig.json
 ├── libs/
 ├── tools/
 ├── README.md
@@ -111,3 +115,10 @@ or
 ```bash
 yarn nx serve todos
 ```
+
+!!!!!
+Open http://localhost:4200 in the browser. What do you see?
+!!!!!
+Page saying "Welcome to Todos!"
+Page saying "This is an React app built with Create React App"
+404

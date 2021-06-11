@@ -17,25 +17,25 @@ The result should look like this:
 ```treeview
 myorg/
 ├── apps/
-│   ├── todos/
-│   ├── todos-e2e/
-│   └── api/
+│   ├── todos/
+│   ├── todos-e2e/
+│   └── api/
 ├── libs/
-│   └── data/
-│       ├── src/
-│       │   ├── lib/
+│   └── data/
+│       ├── src/
+│       │   ├── lib/
 │       │   │   └── data.ts
-│       │   └── index.ts
-│       ├── jest.conf.js
-│       ├── tsconfig.app.json
-│       ├── tsconfig.json
-│       ├── tsconfig.spec.json
-│       └── tslint.json
+│       │   └── index.ts
+│       ├── jest.conf.js
+│       ├── tsconfig.app.json
+│       ├── tsconfig.json
+│       ├── tsconfig.spec.json
+│       └── tslint.json
 ├── workspace.json
 ├── nx.json
 ├── package.json
 ├── tools/
-├── tsconfig.json
+├── tsconfig.base.json
 └── tslint.json
 ```
 
@@ -109,3 +109,10 @@ export class AppComponent {
 ```
 
 Every time you add a new library, you have to restart `npx nx serve`. **So restart both `npx nx serve api` and `npx nx serve todos` and you should see the application running.**
+
+!!!!!
+Nx allows you to share code...
+!!!!!
+Between frontend and backend apps
+Between different frontend apps
+Between different node apps

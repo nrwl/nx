@@ -126,6 +126,14 @@ Type: `boolean`
 
 Generate application with routes.
 
+### setParserOptionsProject
+
+Default: `false`
+
+Type: `boolean`
+
+Whether or not to configure the ESLint "parserOptions.project" option. We do not do this by default for lint performance reasons.
+
 ### skipFormat
 
 Default: `false`
@@ -141,6 +149,14 @@ Default: `false`
 Type: `boolean`
 
 Skip updating workspace.json with default options based on values provided to this app (e.g. babel, style).
+
+### strict
+
+Default: `true`
+
+Type: `boolean`
+
+Creates an application with stricter type checking and build optimization options.
 
 ### style
 

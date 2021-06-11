@@ -186,11 +186,13 @@ Command to run in child process
 
 Type: `array`
 
+Commands to run in child process
+
 ### cwd
 
 Type: `string`
 
-Current working directory of the commands.
+Current working directory of the commands. If it's not specified the commands will run in the workspace root, if a relative path is specified the commands will run in that path relative to the workspace root and if it's an absolute path the commands will run in that path.
 
 ### envFile
 

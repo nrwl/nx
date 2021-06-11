@@ -114,6 +114,14 @@ Type: `string`
 
 Sets the rootDir for TypeScript compilation. When not defined, it uses the project's root property, or srcRootForCompilationRoot if it is defined.
 
+### simpleModuleName
+
+Default: `false`
+
+Type: `boolean`
+
+Keep the module name simple (when using --directory)
+
 ### skipFormat
 
 Default: `false`

@@ -40,7 +40,7 @@ nx e2e myapp-e2e --watch
 
 ## Common Options
 
-The options below are common to the E2E commands used within an Nx workspace. Cypress and Protractor-specifc options are listed below.
+The options below are common to the E2E commands used within an Nx workspace. Cypress and Protractor-specific options are listed below.
 
 ### baseUrl
 
@@ -64,7 +64,7 @@ Show version number
 
 ### watch
 
-Open the Cypress test runner & autmatically run tests when files are updated
+Open the Cypress test runner & automatically run tests when files are updated
 
 ## Cypress Options
 

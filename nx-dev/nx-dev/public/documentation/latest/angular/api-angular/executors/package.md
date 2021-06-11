@@ -1,6 +1,6 @@
 # package
 
-Build and package an Angular library for publishing
+Build and package an Angular library for publishing.
 
 Properties can be configured in angular.json when defining the executor, or when invoking it.
 
@@ -14,7 +14,7 @@ Type: `string`
 
 Possible values: `dependencies`, `peerDependencies`
 
-When updateBuildableProjectDepsInPackageJson is true, this adds dependencies to either `peerDependencies` or `dependencies`
+When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.
 
 ### project
 
@@ -34,7 +34,7 @@ Default: `true`
 
 Type: `boolean`
 
-Update buildable project dependencies in package.json
+Update buildable project dependencies in package.json.
 
 ### watch
 

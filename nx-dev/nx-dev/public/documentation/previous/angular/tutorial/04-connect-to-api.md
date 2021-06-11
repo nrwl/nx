@@ -1,8 +1,8 @@
-# Step 4: Connect to an API
+# Angular Nx Tutorial - Step 4: Connect to an API
 
-## Video of this Lesson
+## Nx.dev Tutorial | Angular | Step 4: Connect to API
 
-<iframe width="560" height="600" src="https://www.youtube.com/embed/digMpZzPtg8" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/digMpZzPtg8" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Real-world applications do not live in isolation — they need APIs to talk to. Setup your app to talk to an API.
 
@@ -57,3 +57,10 @@ export class AppComponent {
   }
 }
 ```
+
+!!!!!
+Run `npx nx serve todos` and open http://localhost:4200. What do you see?
+!!!!!
+"the server responded with a status of 404 (Not Found)" in Console.
+Blank screen.
+Exception rendered on the screen.

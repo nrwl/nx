@@ -1,8 +1,8 @@
-# Step 7: Test Affected Projects
+# Node Nx Tutorial - Step 7: Test Affected Projects
 
-## Video of this Lesson
+## Nx.dev Tutorial | Node | Step 6: Computation Caching
 
-<iframe width="560" height="600" src="https://www.youtube.com/embed/TRRVLyHfN60" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/TRRVLyHfN60" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 In addition to supporting computation caching, Nx can scale your development by doing code change analysis to see what apps or libraries are affected by a particular pull request.
 
@@ -73,3 +73,9 @@ You can run any target against the affected projects in the graph like this:
 nx affected --target=build
 nx affected:build
 ```
+
+!!!!!
+Run "nx affected --target=invalid --base=master". What do you see?
+!!!!!
+No projects with "invalid" were run
+An error message saying that the "invalid" target is invalid

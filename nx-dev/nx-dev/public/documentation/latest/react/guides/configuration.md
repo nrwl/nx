@@ -1,6 +1,6 @@
 # Configuration
 
-There are three top-level configuration files every Nx workspace has: `workspace.json`, `nx.json`, and `tsconfig.json`. Many Nx plugins will modify these files when generating new code, but you can also modify them manually.
+There are three top-level configuration files every Nx workspace has: `workspace.json`, `nx.json`, and `tsconfig.base.json`. Many Nx plugins will modify these files when generating new code, but you can also modify them manually.
 
 ## workspace.json
 
@@ -248,7 +248,7 @@ The `nx.json` file contains extra configuration options mostly related to the pr
       "dependencies": "*",
       "devDependencies": "*"
     },
-    "tsconfig.json": "*",
+    "tsconfig.base.json": "*",
     "nx.json": "*"
   },
   "projects": {

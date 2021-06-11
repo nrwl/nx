@@ -1,6 +1,6 @@
 # Express Plugin
 
-The Express plugin contains schematics to add a new Express application to an Nx workspace.
+The Express plugin contains generators to add a new Express application to an Nx workspace.
 
 ## Adding the Express plugin
 
@@ -32,18 +32,18 @@ This creates the following app structure:
 my-org/
 ├── apps/
     └── express-app/
-        ├── jest.config.js
-        ├── src/
-        │   ├── app/
-        │   ├── assets/
-        │   ├── environments/
-        │   │   ├── environment.prod.ts
-        │   │   └── environment.ts
-        │   └── main.ts
-        ├── tsconfig.app.json
-        ├── tsconfig.json
-        ├── tsconfig.spec.json
-        └── tslint.json
+        ├── jest.config.js
+        ├── src/
+        │   ├── app/
+        │   ├── assets/
+        │   ├── environments/
+        │   │   ├── environment.prod.ts
+        │   │   └── environment.ts
+        │   └── main.ts
+        ├── tsconfig.app.json
+        ├── tsconfig.json
+        ├── tsconfig.spec.json
+        └── tslint.json
 ```
 
 The `main.ts` content should look similar to this:

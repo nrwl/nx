@@ -22,6 +22,14 @@ Type: `string`
 
 Host to listen on.
 
+### https
+
+Default: `false`
+
+Type: `boolean`
+
+Serve using HTTPS.
+
 ### port
 
 Default: `9009`
@@ -43,14 +51,6 @@ Default: `true`
 Type: `boolean`
 
 Suppress verbose build output.
-
-### ssl
-
-Default: `false`
-
-Type: `boolean`
-
-Serve using HTTPS.
 
 ### sslCert
 
@@ -75,6 +75,8 @@ Directory where to load static files from, array of strings
 Default: `@storybook/angular`
 
 Type: `string`
+
+Possible values: `@storybook/angular`, `@storybook/react`, `@storybook/html`
 
 Storybook framework npm package
 

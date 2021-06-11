@@ -58,22 +58,13 @@ happynrwl/
 │   │   ├── tsconfig.spec.json
 │   │   └── tslint.json
 │   └── angularapp-e2e/
-│       ├── src/
-│       │   ├── integrations/
-│       │   │   └── app.spec.ts
-│       │   ├── fixtures/
-│       │   ├── plugins/
-│       │   └── support/
-│       ├── cypress.json
-│       ├── tsconfig.e2e.json
-│       └── tslint.json
 ├── libs/
 ├── README.md
 ├── angular.json
 ├── nx.json
 ├── package.json
 ├── tools/
-├── tsconfig.json
+├── tsconfig.base.json
 └── tslint.json
 ```
 
@@ -104,6 +95,7 @@ And the template of the generated component will look as follows:
   <img
     width="300"
     src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png"
+    alt="Nx - Smart, Extensible Build Framework"
   />
 </div>
 
@@ -150,22 +142,13 @@ happynrwl/
 │   │   ├── tsconfig.spec.json
 │   │   └── tslint.json
 │   └── reactapp-e2e/
-│       ├── src/
-│       │   ├── integrations/
-│       │   │   └── app.spec.ts
-│       │   ├── fixtures/
-│       │   ├── plugins/
-│       │   └── support/
-│       ├── cypress.json
-│       ├── tsconfig.e2e.json
-│       └── tslint.json
 ├── libs/
 ├── README.md
 ├── angular.json
 ├── nx.json
 ├── package.json
 ├── tools/
-├── tsconfig.json
+├── tsconfig.base.json
 └── tslint.json
 ```
 
@@ -248,7 +231,7 @@ happynrwl/
 ├── nx.json
 ├── package.json
 ├── tools/
-├── tsconfig.json
+├── tsconfig.base.json
 └── tslint.json
 ```
 
@@ -277,18 +260,17 @@ The updated library should look like this
 ```treeview
 happynrwl/
 ├── apps/
-├── libs/
-│   └── ui
-│       ├── src/
-│       │   ├── lib/
-│       │   │    └── greeting.element.ts
-│       │   └── index.ts
-│       ├── jest.conf.js
-│       ├── tsconfig.lib.json
-│       ├── tsconfig.json
-│       ├── tsconfig.spec.json
-│       └── tslint.json
-├── ...
+└── libs/
+    └── ui
+        ├── src/
+        │   ├── lib/
+        │   │   └── greeting.element.ts
+        │   └── index.ts
+        ├── jest.conf.js
+        ├── tsconfig.lib.json
+        ├── tsconfig.json
+        ├── tsconfig.spec.json
+        └── tslint.json
 ```
 
 ## Using the Greeting Element in our Angular App
@@ -341,6 +323,7 @@ Finally, we can update `app.component.html` to use our shared web component.
   <img
     width="300"
     src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png"
+    alt="Nx - Smart, Extensible Build Framework"
   />
 </div>
 

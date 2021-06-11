@@ -3,7 +3,7 @@
 Run ESLint on a project
 
 Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/node/getting-started/cli-overview#running-tasks.
+Read more about how to use executors and the CLI here: https://nx.dev/node/getting-started/nx-cli#running-tasks.
 
 ## Properties
 
@@ -50,6 +50,12 @@ Default: `stylish`
 Type: `string`
 
 ESLint Output formatter (https://eslint.org/docs/user-guide/formatters).
+
+### hasTypeAwareRules
+
+Type: `boolean`
+
+When set to true, the linter will invalidate its cache when any of its dependencies changes.
 
 ### ignorePath
 

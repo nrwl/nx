@@ -1,8 +1,8 @@
-# Step 6: Proxy
+# React Nx Tutorial - Step 6: Proxy
 
-## Video of this Lesson
+## Nx.dev Tutorial | React | Step 6: Proxy
 
-<iframe width="560" height="600" src="https://www.youtube.com/embed/xfvCz-yLeEw" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/xfvCz-yLeEw" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 You passed `--frontendProject=todos` when creating the node application. What did that argument do?
 
@@ -72,6 +72,13 @@ Options:
   --help                  Show available options for project target.
 ```
 
-It helps with good editor integration (see [VSCode Support](https://nx.dev/react/cli/console)).
+It helps with good editor integration (see [VSCode Support](https://nx.dev/react/getting-started/console)).
 
 But, most importantly, it provides a holistic dev experience regardless of the tools used, and enables advanced build features like distributed computation caching and distributed builds).
+
+!!!!!
+Now run both "npx nx serve todos" and "npx nx serve api" in separate terminals, open http://localhost:4200. What do you see?
+!!!!!
+Todos application is working!
+404 in the console
+Todos are displayed but the Add Todo button doesn't work

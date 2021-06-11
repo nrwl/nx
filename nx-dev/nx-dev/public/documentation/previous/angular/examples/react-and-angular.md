@@ -58,15 +58,6 @@ happynrwl/
 │   │   ├── tsconfig.spec.json
 │   │   └── tslint.json
 │   └── angularapp-e2e/
-│       ├── src/
-│       │   ├── integrations/
-│       │   │   └── app.spec.ts
-│       │   ├── fixtures/
-│       │   ├── plugins/
-│       │   └── support/
-│       ├── cypress.json
-│       ├── tsconfig.e2e.json
-│       └── tslint.json
 ├── libs/
 ├── README.md
 ├── angular.json
@@ -150,15 +141,6 @@ happynrwl/
 │   │   ├── tsconfig.spec.json
 │   │   └── tslint.json
 │   └── reactapp-e2e/
-│       ├── src/
-│       │   ├── integrations/
-│       │   │   └── app.spec.ts
-│       │   ├── fixtures/
-│       │   ├── plugins/
-│       │   └── support/
-│       ├── cypress.json
-│       ├── tsconfig.e2e.json
-│       └── tslint.json
 ├── libs/
 ├── README.md
 ├── angular.json
@@ -277,18 +259,17 @@ The updated library should look like this
 ```treeview
 happynrwl/
 ├── apps/
-├── libs/
-│   └── ui
-│       ├── src/
-│       │   ├── lib/
-│       │   │    └── greeting.element.ts
-│       │   └── index.ts
-│       ├── jest.conf.js
-│       ├── tsconfig.lib.json
-│       ├── tsconfig.json
-│       ├── tsconfig.spec.json
-│       └── tslint.json
-├── ...
+└── libs/
+    └── ui
+        ├── src/
+        │   ├── lib/
+        │   │   └── greeting.element.ts
+        │   └── index.ts
+        ├── jest.conf.js
+        ├── tsconfig.lib.json
+        ├── tsconfig.json
+        ├── tsconfig.spec.json
+        └── tslint.json
 ```
 
 ## Using the Greeting Element in our Angular App

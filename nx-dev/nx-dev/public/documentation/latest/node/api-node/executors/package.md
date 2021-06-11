@@ -3,7 +3,7 @@
 Package a Node library
 
 Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/node/getting-started/cli-overview#running-tasks.
+Read more about how to use executors and the CLI here: https://nx.dev/node/getting-started/nx-cli#running-tasks.
 
 ## Properties
 
@@ -22,6 +22,20 @@ Type: `string`
 Possible values: `dependencies`, `peerDependencies`
 
 When updateBuildableProjectDepsInPackageJson is true, this adds dependencies to either `peerDependencies` or `dependencies`
+
+### cli
+
+Type: `boolean`
+
+Adds a CLI wrapper to main entry-point file.
+
+### deleteOutputPath
+
+Default: `true`
+
+Type: `boolean`
+
+Delete the output path before building.
 
 ### main
 

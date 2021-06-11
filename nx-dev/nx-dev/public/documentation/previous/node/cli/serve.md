@@ -28,7 +28,7 @@ nx serve myapp
 
 ## Common Options
 
-The options below are common to the `serve` command used within an Nx workspace. The Web and Angular-specifc serve options are listed after these options.
+The options below are common to the `serve` command used within an Nx workspace. The Web and Angular-specific serve options are listed after these options.
 
 ### allowedHosts
 

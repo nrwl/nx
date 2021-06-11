@@ -3,7 +3,7 @@
 Package a library
 
 Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/node/getting-started/cli-overview#running-tasks.
+Read more about how to use executors and the CLI here: https://nx.dev/node/getting-started/nx-cli#running-tasks.
 
 ## Properties
 
@@ -13,11 +13,13 @@ Type: `array`
 
 List of static assets.
 
-### babelConfig
+### ~~babelConfig~~
 
 Type: `string`
 
-(deprecated) Path to a function which takes a babel config and returns an updated babel config
+**Deprecated:** Use the .babelrc file for project instead
+
+Path to a function which takes a babel config and returns an updated babel config
 
 ### buildableProjectDepsInPackageJsonType
 
@@ -89,7 +91,7 @@ The path to package.json file.
 
 ### rollupConfig
 
-Type: `string`
+Type: `array[] | string `
 
 Path to a function which takes a rollup config and returns an updated rollup config
 

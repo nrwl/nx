@@ -4,7 +4,7 @@ To be able to support the monorepo-style development, the tools must know how di
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/cMZ-ReC-jWU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-## How the Dependency Graph is Built
+## How the Project Graph is Built
 
 Nx creates a graph of all the dependencies between projects in your workspace using two sources of information:
 
@@ -18,7 +18,7 @@ Nx creates a graph of all the dependencies between projects in your workspace us
 
    Then `my-app` depends on `awesome-library`
 
-2. Manually created `implicitDependencies` in the `nx.json` file. [Full `implicitDependencies` documentation](/{{framework}}/getting-started/configuration#implicit-dependencies)
+2. Manually created `implicitDependencies` in the `nx.json` file. [Full `implicitDependencies` documentation](/{{framework}}/core-concepts/configuration#implicit-dependencies)
 
    If your `nx.json` has this content:
 

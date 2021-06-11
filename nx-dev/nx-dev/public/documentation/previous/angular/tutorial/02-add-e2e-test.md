@@ -1,10 +1,10 @@
-# Step 2: Add E2E Tests
+# Angular Nx Tutorial - Step 2: Add E2E Tests
 
-## Video of this Lesson
+## Nx.dev Tutorial | Angular | Step 2: Add E2E Test
 
-<iframe width="560" height="600" src="https://www.youtube.com/embed/owRAO75DIR4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/owRAO75DIR4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-By default, Nx uses [Cypress](/{{framework}}/plugins/cypress/overview) to run E2E tests.
+By default, Nx uses [Cypress](/{{framework}}/cypress/overview) to run E2E tests.
 
 **Open `apps/todos-e2e/src/support/app.po.ts`.** It's a page object file that contains helpers for querying the page.
 
@@ -38,3 +38,11 @@ If you have not done so already, stop the `npx nx serve` command and run `npx nx
 A UI will open. Click the button in the top right corner that says "Run all specs". Keep the E2E tests running.
 
 As you progress through the tutorial, you will work on making these E2E tests pass.
+
+!!!!!
+What assertion fails?
+!!!!!
+Expect 0 to equal 2
+Nothing fails. Everything works.
+Cannot find any elements matching 'li.todo'
+Cannot find any elements matching 'button#add-todo'

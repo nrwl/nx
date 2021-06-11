@@ -78,7 +78,7 @@ Default: `eslint`
 
 Type: `string`
 
-Possible values: `tslint`, `eslint`
+Possible values: `eslint`, `none`
 
 The tool to use for running lint checks.
 
@@ -152,21 +152,11 @@ Do not update tsconfig.json for development experience.
 
 ### strict
 
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 
 Creates a library with stricter type checking and build optimization options.
-
-### style
-
-Default: `css`
-
-Type: `string`
-
-Possible values: `css`, `scss`, `styl`, `less`
-
-The file extension to be used for style files.
 
 ### tags
 

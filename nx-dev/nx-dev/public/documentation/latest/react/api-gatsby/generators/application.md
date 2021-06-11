@@ -58,6 +58,14 @@ Generate JavaScript files rather than TypeScript files
 
 Type: `string`
 
+### setParserOptionsProject
+
+Default: `false`
+
+Type: `boolean`
+
+Whether or not to configure the ESLint "parserOptions.project" option. We do not do this by default for lint performance reasons.
+
 ### style
 
 Alias(es): s
@@ -66,7 +74,7 @@ Default: `css`
 
 Type: `string`
 
-Possible values: `css`, `scss`, `styl`, `less`, `styled-components`, `@emotion/styled`, `none`
+Possible values: `css`, `scss`, `styl`, `less`, `styled-components`, `@emotion/styled`, `styled-jsx`, `none`
 
 The file extension to be used for style files.
 

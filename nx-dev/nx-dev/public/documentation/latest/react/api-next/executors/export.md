@@ -3,9 +3,17 @@
 Export a Next.js app. The exported application is located at dist/$outputPath/exported.
 
 Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/react/getting-started/cli-overview#running-tasks.
+Read more about how to use executors and the CLI here: https://nx.dev/react/getting-started/nx-cli#running-tasks.
 
 ## Properties
+
+### buildLibsFromSource
+
+Default: `true`
+
+Type: `boolean`
+
+Read buildable libraries from source instead of building them separately.
 
 ### buildTarget
 
