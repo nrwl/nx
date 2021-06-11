@@ -3,7 +3,7 @@
  * Consider that file to be the golden source. Changes (which should be few)
  * should be copied here if necessary.
  */
-import chalk from 'chalk';
+import * as chalk from 'chalk';
 
 export interface CLIErrorMessageConfig {
   title: string;
@@ -35,7 +35,7 @@ export interface CLISuccessMessageConfig {
  * Automatically disable styling applied by chalk if CI=true
  */
 if (process.env.CI === 'true') {
-  chalk.level = 0;
+  (chalk as any).Level = 0;
 }
 
 class CLIOutput {
@@ -85,7 +85,7 @@ class CLIOutput {
       return;
     }
     this.addNewline();
-    bodyLines.forEach((bodyLine) => this.writeToStdOut('  ' + bodyLine + '\n'));
+    bodyLines.forEach((bodyLine) => this.writeToStdOut(`  ${bodyLine}\n`));
   }
 
   addNewline() {
@@ -112,10 +112,9 @@ class CLIOutput {
     if (slug && typeof slug === 'string') {
       this.addNewline();
       this.writeToStdOut(
-        chalk.grey('  ' + 'Learn more about this error: ') +
-          'https://errors.nx.dev/' +
-          slug +
-          '\n'
+        `${chalk.grey(
+          '  Learn more about this error: '
+        )}https://errors.nx.dev/${slug}\n`
       );
     }
 
@@ -138,10 +137,9 @@ class CLIOutput {
     if (slug && typeof slug === 'string') {
       this.addNewline();
       this.writeToStdOut(
-        chalk.grey('  ' + 'Learn more about this warning: ') +
-          'https://errors.nx.dev/' +
-          slug +
-          '\n'
+        `${chalk.grey(
+          '  Learn more about this warning: '
+        )}https://errors.nx.dev/${slug}\n`
       );
     }
 

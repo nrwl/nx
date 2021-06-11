@@ -1,12 +1,26 @@
 import { NormalizedSchema } from './normalized-schema';
-import { chain, Rule } from '@angular-devkit/schematics';
+import { Rule } from '@angular-devkit/schematics';
 import { updateJsonInTree, updateWorkspace } from '@nrwl/workspace';
 
 /**
  * Enable Strict Mode in the library and spec TS Config
  * */
 export function enableStrictTypeChecking(options: NormalizedSchema): Rule {
-  return () => chain([updateTsConfig(options), updateAngularWorkspace()]);
+  return () => updateTsConfig(options);
+}
+
+export function setLibraryStrictDefault(strict: boolean): Rule {
+  // set the default so future libraries use it
+  // unless the user has previously set this value
+  return updateWorkspace((workspace) => {
+    workspace.extensions.schematics = workspace.extensions.schematics || {};
+
+    workspace.extensions.schematics['@nrwl/angular:library'] =
+      workspace.extensions.schematics['@nrwl/angular:library'] || {};
+
+    workspace.extensions.schematics['@nrwl/angular:library'].strict =
+      workspace.extensions.schematics['@nrwl/angular:library'].strict ?? strict;
+  });
 }
 
 function updateTsConfig(options: NormalizedSchema): Rule {
@@ -27,24 +41,11 @@ function updateTsConfig(options: NormalizedSchema): Rule {
       json.angularCompilerOptions = {
         ...(json.angularCompilerOptions ?? {}),
         strictInjectionParameters: true,
+        strictInputAccessModifiers: true,
         strictTemplates: true,
       };
 
       return json;
     });
   };
-}
-
-function updateAngularWorkspace(): Rule {
-  // set the default so future libraries will default to strict mode
-  // unless the user has previously set this to false by default
-  return updateWorkspace((workspace) => {
-    workspace.extensions.schematics = workspace.extensions.schematics || {};
-
-    workspace.extensions.schematics['@nrwl/angular:library'] =
-      workspace.extensions.schematics['@nrwl/angular:library'] || {};
-
-    workspace.extensions.schematics['@nrwl/angular:library'].strict =
-      workspace.extensions.schematics['@nrwl/angular:library'].strict ?? true;
-  });
 }

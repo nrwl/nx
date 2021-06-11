@@ -1,27 +1,32 @@
 import * as yargs from 'yargs';
-import { generateGraph } from './dep-graph';
-import { output } from '../utils/output';
-import { parseFiles } from './shared';
-import { runCommand } from '../tasks-runner/run-command';
-import { NxArgs, splitArgsIntoNxArgsAndOverrides, RawNxArgs } from './utils';
 import { filterAffected } from '../core/affected-project-graph';
+import { calculateFileChanges, readEnvironment } from '../core/file-utils';
 import {
   createProjectGraph,
   onlyWorkspaceProjects,
+  ProjectGraph,
   ProjectGraphNode,
   ProjectType,
   withDeps,
 } from '../core/project-graph';
-import { calculateFileChanges, readEnvironment } from '../core/file-utils';
-import { printAffected } from './print-affected';
-import { projectHasTarget } from '../utils/project-graph-utils';
 import { DefaultReporter } from '../tasks-runner/default-reporter';
-import { promptForNxCloud } from './prompt-for-nx-cloud';
+import { runCommand } from '../tasks-runner/run-command';
+import { output } from '../utilities/output';
+import { projectHasTarget } from '../utilities/project-graph-utils';
+import { generateGraph } from './dep-graph';
+import { printAffected } from './print-affected';
+import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
+import { parseFiles } from './shared';
+import { NxArgs, RawNxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
+import { performance } from 'perf_hooks';
+import type { Environment } from '../core/shared-interfaces';
+import { EmptyReporter } from '../tasks-runner/empty-reporter';
 
 export async function affected(
   command: 'apps' | 'libs' | 'dep-graph' | 'print-affected' | 'affected',
   parsedArgs: yargs.Arguments & RawNxArgs
 ) {
+  performance.mark('command-execution-begins');
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     parsedArgs,
     'affected',
@@ -30,32 +35,18 @@ export async function affected(
     }
   );
 
-  await promptForNxCloud(nxArgs.scan);
+  await connectToNxCloudUsingScan(nxArgs.scan);
 
   const projectGraph = createProjectGraph();
-  let affectedGraph = nxArgs.all
-    ? projectGraph
-    : filterAffected(
-        projectGraph,
-        calculateFileChanges(parseFiles(nxArgs).files, nxArgs)
-      );
-  if (parsedArgs.withDeps) {
-    affectedGraph = onlyWorkspaceProjects(
-      withDeps(projectGraph, Object.values(affectedGraph.nodes))
-    );
-  }
-  const projects = parsedArgs.all ? projectGraph.nodes : affectedGraph.nodes;
-  const env = readEnvironment(nxArgs.target, projects);
-  const affectedProjects = Object.values(projects)
-    .filter((n) => !parsedArgs.exclude.includes(n.name))
-    .filter(
-      (n) => !parsedArgs.onlyFailed || !env.workspaceResults.getResult(n.name)
-    );
+  const projects = projectsToRun(nxArgs, projectGraph);
+  const projectsNotExcluded = applyExclude(projects, nxArgs);
+  const env = readEnvironment(nxArgs.target, projectsNotExcluded);
+  const filteredProjects = applyOnlyFailed(projectsNotExcluded, nxArgs, env);
 
   try {
     switch (command) {
       case 'apps':
-        const apps = affectedProjects
+        const apps = filteredProjects
           .filter((p) => p.type === ProjectType.app)
           .map((p) => p.name);
         if (parsedArgs.plain) {
@@ -71,7 +62,7 @@ export async function affected(
         break;
 
       case 'libs':
-        const libs = affectedProjects
+        const libs = filteredProjects
           .filter((p) => p.type === ProjectType.lib)
           .map((p) => p.name);
         if (parsedArgs.plain) {
@@ -87,31 +78,39 @@ export async function affected(
         break;
 
       case 'dep-graph':
-        const projectNames = affectedProjects.map((p) => p.name);
+        const projectNames = filteredProjects.map((p) => p.name);
         generateGraph(parsedArgs as any, projectNames);
         break;
 
       case 'print-affected':
         if (nxArgs.target) {
           const projectsWithTarget = allProjectsWithTarget(
-            affectedProjects,
+            filteredProjects,
             nxArgs
           );
           printAffected(
             projectsWithTarget,
-            affectedProjects,
+            filteredProjects,
             projectGraph,
+            env,
             nxArgs,
             overrides
           );
         } else {
-          printAffected([], affectedProjects, projectGraph, nxArgs, overrides);
+          printAffected(
+            [],
+            filteredProjects,
+            projectGraph,
+            env,
+            nxArgs,
+            overrides
+          );
         }
         break;
 
       case 'affected': {
         const projectsWithTarget = allProjectsWithTarget(
-          affectedProjects,
+          filteredProjects,
           nxArgs
         );
         runCommand(
@@ -120,7 +119,7 @@ export async function affected(
           env,
           nxArgs,
           overrides,
-          new DefaultReporter(),
+          nxArgs.hideCachedOutput ? new EmptyReporter() : new DefaultReporter(),
           null
         );
         break;
@@ -130,6 +129,45 @@ export async function affected(
     printError(e, parsedArgs.verbose);
     process.exit(1);
   }
+}
+
+function projectsToRun(nxArgs: NxArgs, projectGraph: ProjectGraph) {
+  if (nxArgs.all) return projectGraph.nodes;
+
+  let affectedGraph = nxArgs.all
+    ? projectGraph
+    : filterAffected(
+        projectGraph,
+        calculateFileChanges(parseFiles(nxArgs).files, nxArgs)
+      );
+  if (nxArgs.withDeps) {
+    affectedGraph = onlyWorkspaceProjects(
+      withDeps(projectGraph, Object.values(affectedGraph.nodes))
+    );
+  }
+  return affectedGraph.nodes;
+}
+
+function applyExclude(
+  projects: Record<string, ProjectGraphNode>,
+  nxArgs: NxArgs
+) {
+  return Object.keys(projects)
+    .filter((key) => !(nxArgs.exclude || []).includes(key))
+    .reduce((p, key) => {
+      p[key] = projects[key];
+      return p;
+    }, {} as Record<string, ProjectGraphNode>);
+}
+
+function applyOnlyFailed(
+  projectsNotExcluded: Record<string, ProjectGraphNode>,
+  nxArgs: NxArgs,
+  env: Environment
+) {
+  return Object.values(projectsNotExcluded).filter(
+    (n) => !nxArgs.onlyFailed || !env.workspaceResults.getResult(n.name)
+  );
 }
 
 function allProjectsWithTarget(projects: ProjectGraphNode[], nxArgs: NxArgs) {

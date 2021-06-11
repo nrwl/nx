@@ -1,13 +1,12 @@
 import { normalizeBuildOptions, normalizePackageOptions } from './normalize';
 import { BuildBuilderOptions, PackageBuilderOptions } from './types';
-import { Path, normalize } from '@angular-devkit/core';
 
 import * as fs from 'fs';
 
 describe('normalizeBuildOptions', () => {
   let testOptions: BuildBuilderOptions;
   let root: string;
-  let sourceRoot: Path;
+  let sourceRoot: string;
 
   beforeEach(() => {
     testOptions = {
@@ -29,7 +28,7 @@ describe('normalizeBuildOptions', () => {
       webpackConfig: 'apps/nodeapp/webpack.config',
     };
     root = '/root';
-    sourceRoot = normalize('apps/nodeapp/src');
+    sourceRoot = 'apps/nodeapp/src';
   });
 
   it('should resolve main from root', () => {
@@ -48,9 +47,9 @@ describe('normalizeBuildOptions', () => {
   });
 
   it('should normalize asset patterns', () => {
-    spyOn(fs, 'statSync').and.returnValue({
+    jest.spyOn(fs, 'statSync').mockReturnValue({
       isDirectory: () => true,
-    });
+    } as any);
     const result = normalizeBuildOptions(
       <BuildBuilderOptions>{
         ...testOptions,
@@ -117,7 +116,7 @@ describe('normalizeBuildOptions', () => {
 describe('normalizePackageOptions', () => {
   let testOptions: PackageBuilderOptions;
   let root: string;
-  let sourceRoot: Path;
+  let sourceRoot: string;
 
   beforeEach(() => {
     testOptions = {
@@ -125,41 +124,34 @@ describe('normalizePackageOptions', () => {
       project: 'apps/nodeapp/package.json',
       entryFile: 'apps/nodeapp/src/main.ts',
       tsConfig: 'apps/nodeapp/tsconfig.app.json',
-      babelConfig: 'apps/nodeapp/babel.config',
       rollupConfig: 'apps/nodeapp/rollup.config',
     };
     root = '/root';
-    sourceRoot = normalize('apps/nodeapp/src');
+    sourceRoot = 'apps/nodeapp/src';
   });
 
-  it('should resolve both node modules and relative path for babelConfig/rollupConfig', () => {
+  it('should resolve both node modules and relative path for rollupConfig', () => {
     let result = normalizePackageOptions(testOptions, root, sourceRoot);
-    expect(result.babelConfig).toEqual('/root/apps/nodeapp/babel.config');
-    expect(result.rollupConfig).toEqual('/root/apps/nodeapp/rollup.config');
+    expect(result.rollupConfig).toEqual(['/root/apps/nodeapp/rollup.config']);
 
     result = normalizePackageOptions(
       {
         ...testOptions,
         // something that exists in node_modules
         rollupConfig: 'react',
-        babelConfig: 'react',
       },
       root,
       sourceRoot
     );
-    expect(result.babelConfig).toMatch('react');
-    expect(result.babelConfig).not.toMatch(root);
-    expect(result.rollupConfig).toMatch('react');
-    expect(result.rollupConfig).not.toMatch(root);
+    expect(result.rollupConfig).toHaveLength(1);
+    expect(result.rollupConfig[0]).toMatch('react');
+    expect(result.rollupConfig[0]).not.toMatch(root);
   });
 
-  it('should handle babelConfig/rollupConfig being undefined', () => {
-    delete testOptions.babelConfig;
+  it('should handle rollupConfig being undefined', () => {
     delete testOptions.rollupConfig;
 
     const result = normalizePackageOptions(testOptions, root, sourceRoot);
-
-    expect(result.babelConfig).toEqual('');
-    expect(result.rollupConfig).toEqual('');
+    expect(result.rollupConfig).toEqual([]);
   });
 });

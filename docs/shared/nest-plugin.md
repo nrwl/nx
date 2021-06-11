@@ -36,22 +36,22 @@ This creates the following app structure:
 ```treeview
 my-org/
 ├── apps/
-    └── nest-app/
-        ├── jest.config.js
-        ├── src/
-        │   ├── app/
-        │   │   ├── app.controller.ts
-        │   │   ├── app.controller.spec.ts
-        │   │   ├── app.module.ts
-        │   │   ├── app.service.ts
-        │   │   └── app.service.spec.ts
-        │   ├── assets/
-        │   ├── environments/
-        │   └── main.ts
-        ├── tsconfig.app.json
-        ├── tsconfig.json
-        ├── tsconfig.spec.json
-        └── tslint.json
+    └── nest-app/
+        ├── jest.config.js
+        ├── src/
+        │   ├── app/
+        │   │   ├── app.controller.ts
+        │   │   ├── app.controller.spec.ts
+        │   │   ├── app.module.ts
+        │   │   ├── app.service.ts
+        │   │   └── app.service.spec.ts
+        │   ├── assets/
+        │   ├── environments/
+        │   └── main.ts
+        ├── tsconfig.app.json
+        ├── tsconfig.json
+        ├── tsconfig.spec.json
+        └── tslint.json
 ```
 
 The `main.ts` content should look similar to this:
@@ -192,8 +192,8 @@ Buildable Nest libraries use TypeScript to compile the source. The tsconfig file
 nx build <nest-lib>
 ```
 
-## Nest Schematics
+## Nest Generators
 
-The Nest plugin for Nx extends the schematics provided by Nest. Any commands that can be used with the Nest CLI can also be used with the `nx` command. The `--sourceRoot` flag should be used for all Nest schematics.
+The Nest plugin for Nx extends the generators provided by Nest. Any commands that can be used with the Nest CLI can also be used with the `nx` command. The `--sourceRoot` flag should be used for all Nest generators.
 
 > The `--sourceRoot` command should point to the source directory of a Nest library or application within an Nx workspace.

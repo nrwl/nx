@@ -1,9 +1,10 @@
 import { Rule, Tree } from '@angular-devkit/schematics';
-import { addGlobal, insert, toPropertyName } from '@nrwl/workspace';
+import { addGlobal, insert } from '@nrwl/workspace';
 import { insertImport } from '@nrwl/workspace/src/utils/ast-utils';
 import * as ts from 'typescript';
 import { addImportToModule } from '../../../utils/ast-utils';
 import { NormalizedSchema } from './normalized-schema';
+import { names } from '@nrwl/devkit';
 
 export function addRouterConfiguration(options: NormalizedSchema): Rule {
   return (host: Tree) => {
@@ -14,7 +15,7 @@ export function addRouterConfiguration(options: NormalizedSchema): Rule {
       ts.ScriptTarget.Latest,
       true
     );
-    const constName = `${toPropertyName(options.fileName)}Routes`;
+    const constName = `${names(options.fileName).propertyName}Routes`;
 
     insert(host, options.modulePath, [
       insertImport(

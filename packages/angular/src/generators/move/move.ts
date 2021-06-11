@@ -1,0 +1,19 @@
+import { convertNxGenerator, Tree } from '@nrwl/devkit';
+import { moveGenerator } from '@nrwl/workspace';
+import { updateModuleName } from './lib/update-module-name';
+import { Schema } from './schema';
+
+/**
+ * Moves an Angular lib/app to another folder (and renames it in the process)
+ *
+ * @remarks It's important to note that `updateModuleName` is done after the update
+ * to the workspace, so it can't use the same tricks as the `@nrwl/workspace` rules
+ * to get the before and after names and paths.
+ */
+
+export async function angularMoveGenerator(tree: Tree, schema: Schema) {
+  await moveGenerator(tree, schema);
+  await updateModuleName(tree, schema);
+}
+
+export const angularMoveSchematic = convertNxGenerator(angularMoveGenerator);

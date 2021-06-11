@@ -1,47 +1,67 @@
 import {
   chain,
+  noop,
   Rule,
   schematic,
   SchematicContext,
   SchematicsException,
   Tree,
-  noop,
 } from '@angular-devkit/schematics';
-import { getProjectConfig } from '@nrwl/workspace';
 import { SyntaxKind } from 'typescript';
-import { getTsSourceFile, getDecoratorMetadata } from '../../utils/ast-utils';
+import { getDecoratorMetadata, getTsSourceFile } from '../../utils/ast-utils';
 import { projectRootPath } from '@nrwl/workspace/src/utils/project-type';
+import { findNodes, getProjectConfig } from '@nrwl/workspace';
 import { CreateComponentSpecFileSchema } from '../component-cypress-spec/component-cypress-spec';
 import { CreateComponentStoriesFileSchema } from '../component-story/component-story';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { directoryExists } from '@nrwl/workspace/src/utils/fileutils';
 import { join, normalize } from '@angular-devkit/core';
-
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 export interface StorybookStoriesSchema {
   name: string;
   generateCypressSpecs: boolean;
+  cypressProject?: string;
 }
 
 export default function (schema: StorybookStoriesSchema): Rule {
-  return chain([createAllStories(schema.name, schema.generateCypressSpecs)]);
+  return chain([
+    createAllStories(
+      schema.name,
+      schema.generateCypressSpecs,
+      schema.cypressProject
+    ),
+  ]);
 }
 
 export function createAllStories(
   projectName: string,
-  generateCypressSpecs: boolean
+  generateCypressSpecs: boolean,
+  cypressProject?: string
 ): Rule {
   return (tree: Tree, context: SchematicContext) => {
-    context.logger.debug('adding .storybook folder to lib');
+    context.logger.debug('adding .storybook folder to project');
 
-    const libPath = projectRootPath(tree, projectName);
+    const projectPath = projectRootPath(tree, projectName);
 
     let moduleFilePaths = [] as string[];
-    tree.getDir(libPath).visit((filePath) => {
+    tree.getDir(projectPath).visit((filePath) => {
       if (!filePath.endsWith('.module.ts')) {
         return;
       }
       moduleFilePaths.push(filePath);
     });
+
+    /**
+     * Check if e2e project exists
+     * to catch any potential errors
+     */
+    const e2eProjectName = cypressProject || `${projectName}-e2e`;
+    let e2eProject;
+    try {
+      e2eProject = getProjectConfig(tree, e2eProjectName);
+    } catch {
+      e2eProject = undefined;
+    }
+
     return chain(
       moduleFilePaths.map((moduleFilePath) => {
         const file = getTsSourceFile(tree, moduleFilePath);
@@ -74,9 +94,37 @@ export function createAllStories(
           );
           return noop();
         }
-        const declaredComponents = declarationsPropertyAssignment
+        let declarationArray = declarationsPropertyAssignment
           .getChildren()
-          .find((node) => node.kind === SyntaxKind.ArrayLiteralExpression)
+          .find((node) => node.kind === SyntaxKind.ArrayLiteralExpression);
+        if (!declarationArray) {
+          // Attempt to follow a variable instead of the literal
+          const declarationVariable = declarationsPropertyAssignment
+            .getChildren()
+            .filter((node) => node.kind === SyntaxKind.Identifier)[1];
+          const variableName = declarationVariable.getText();
+          const variableDeclaration = findNodes(
+            file,
+            SyntaxKind.VariableDeclaration
+          ).find((variableDeclaration) => {
+            const identifier = variableDeclaration
+              .getChildren()
+              .find((node) => node.kind === SyntaxKind.Identifier);
+            return identifier.getText() === variableName;
+          });
+
+          if (variableDeclaration) {
+            declarationArray = variableDeclaration
+              .getChildren()
+              .find((node) => node.kind === SyntaxKind.ArrayLiteralExpression);
+          } else {
+            context.logger.warn(
+              stripIndents`No stories generated because the declaration in ${moduleFilePath} is not an array literal or the variable could not be found. Hint: you can always generate stories later with the 'nx generate @nrwl/angular:stories --name=${projectName}' command`
+            );
+            return noop();
+          }
+        }
+        const declaredComponents = declarationArray
           .getChildren()
           .find((node) => node.kind === SyntaxKind.SyntaxList)
           .getChildren()
@@ -179,23 +227,30 @@ export function createAllStories(
           }
         });
 
+        if (generateCypressSpecs && !e2eProject) {
+          context.logger.info(
+            `There was no e2e project "${e2eProjectName}" found, so cypress specs will not be generated. Pass "--cypressProject" to specify a different e2e project name`
+          );
+        }
+
         return chain(
           componentInfo
             .filter((info) => info !== undefined)
             .map((info) =>
               chain([
                 schematic<CreateComponentStoriesFileSchema>('component-story', {
-                  libPath: modulePath,
+                  projectPath: modulePath,
                   componentName: info.name,
                   componentPath: info.path,
                   componentFileName: info.componentFileName,
                 }),
-                generateCypressSpecs
+                generateCypressSpecs && e2eProject
                   ? schematic<CreateComponentSpecFileSchema>(
                       'component-cypress-spec',
                       {
                         projectName,
-                        libPath: modulePath,
+                        projectPath: modulePath,
+                        cypressProject,
                         componentName: info.name,
                         componentPath: info.path,
                         componentFileName: info.componentFileName,
@@ -209,3 +264,7 @@ export function createAllStories(
     );
   };
 }
+export const storiesGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/angular',
+  'stories'
+);

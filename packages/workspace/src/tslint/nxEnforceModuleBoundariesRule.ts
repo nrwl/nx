@@ -1,40 +1,40 @@
 import * as Lint from 'tslint';
 import { IOptions } from 'tslint';
 import * as ts from 'typescript';
+import type { ProjectGraph } from '@nrwl/devkit';
 import {
-  createProjectGraph,
   isNpmProject,
-  ProjectGraph,
   ProjectType,
+  readCurrentProjectGraph,
 } from '../core/project-graph';
-import { appRootPath } from '../utils/app-root';
+import { appRootPath } from '../utilities/app-root';
 import {
   DepConstraint,
   findConstraintsFor,
   findProjectUsingImport,
   findSourceProject,
   getSourceFilePath,
-  hasArchitectBuildBuilder,
+  hasBuildExecutor,
   hasNoneOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
-  checkCircularPath,
   isRelativeImportIntoAnotherProject,
+  MappedProjectGraph,
+  mapProjectGraphFiles,
   matchImportWithWildcard,
   onlyLoadChildren,
 } from '../utils/runtime-lint-utils';
-import { normalize } from '@angular-devkit/core';
-import {
-  readNxJson,
-  readWorkspaceJson,
-} from '@nrwl/workspace/src/core/file-utils';
+import { normalize } from 'path';
+import { readNxJson } from '../core/file-utils';
 import { TargetProjectLocator } from '../core/target-project-locator';
+import { checkCircularPath } from '../utils/graph-utils';
+import { isRelativePath } from '../utilities/fileutils';
 
 export class Rule extends Lint.Rules.AbstractRule {
   constructor(
     options: IOptions,
     private readonly projectPath?: string,
     private readonly npmScope?: string,
-    private readonly projectGraph?: ProjectGraph,
+    private readonly projectGraph?: MappedProjectGraph,
     private readonly targetProjectLocator?: TargetProjectLocator
   ) {
     super(options);
@@ -42,18 +42,16 @@ export class Rule extends Lint.Rules.AbstractRule {
     if (!projectPath) {
       this.projectPath = normalize(appRootPath);
       if (!(global as any).projectGraph) {
-        const workspaceJson = readWorkspaceJson();
         const nxJson = readNxJson();
         (global as any).npmScope = nxJson.npmScope;
-        (global as any).projectGraph = createProjectGraph(
-          workspaceJson,
-          nxJson
+        (global as any).projectGraph = mapProjectGraphFiles(
+          readCurrentProjectGraph()
         );
       }
       this.npmScope = (global as any).npmScope;
-      this.projectGraph = (global as any).projectGraph;
+      this.projectGraph = (global as any).projectGraph as MappedProjectGraph;
 
-      if (!(global as any).targetProjectLocator) {
+      if (!(global as any).targetProjectLocator && this.projectGraph) {
         (global as any).targetProjectLocator = new TargetProjectLocator(
           this.projectGraph.nodes
         );
@@ -63,6 +61,7 @@ export class Rule extends Lint.Rules.AbstractRule {
   }
 
   public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
+    if (!this.projectGraph) return [];
     return this.applyWithWalker(
       new EnforceModuleBoundariesWalker(
         sourceFile,
@@ -80,6 +79,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
   private readonly allow: string[];
   private readonly enforceBuildableLibDependency: boolean = false; // for backwards compat
   private readonly depConstraints: DepConstraint[];
+  private readonly allowCircularSelfDependency: boolean = false;
 
   constructor(
     sourceFile: ts.SourceFile,
@@ -101,6 +101,9 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
 
     this.enforceBuildableLibDependency =
       this.getOptions()[0].enforceBuildableLibDependency === true;
+
+    this.allowCircularSelfDependency =
+      this.getOptions()[0].allowCircularSelfDependency === true;
   }
 
   public visitImportDeclaration(node: ts.ImportDeclaration) {
@@ -114,16 +117,20 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       return;
     }
 
+    const filePath = getSourceFilePath(
+      this.getSourceFile().fileName,
+      this.projectPath
+    );
+    const sourceProject = findSourceProject(this.projectGraph, filePath);
+
     // check for relative and absolute imports
     if (
       isRelativeImportIntoAnotherProject(
         imp,
         this.projectPath,
         this.projectGraph,
-        getSourceFilePath(
-          normalize(this.getSourceFile().fileName),
-          this.projectPath
-        )
+        filePath,
+        sourceProject
       ) ||
       isAbsoluteImportIntoAnotherProject(imp)
     ) {
@@ -135,12 +142,6 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       return;
     }
 
-    const filePath = getSourceFilePath(
-      this.getSourceFile().fileName,
-      this.projectPath
-    );
-
-    const sourceProject = findSourceProject(this.projectGraph, filePath);
     const targetProject = findProjectUsingImport(
       this.projectGraph,
       this.targetProjectLocator,
@@ -157,7 +158,12 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
 
     // same project => allow
     if (sourceProject === targetProject) {
-      super.visitImportDeclaration(node);
+      if (!this.allowCircularSelfDependency && !isRelativePath(imp)) {
+        const error = `Projects should use relative imports to import from other files within the same project. Use "./path/to/file" instead of import from "${imp}"`;
+        this.addFailureAt(node.getStart(), node.getWidth(), error);
+      } else {
+        super.visitImportDeclaration(node);
+      }
       return;
     }
 
@@ -209,10 +215,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       sourceProject.type === ProjectType.lib &&
       targetProject.type === ProjectType.lib
     ) {
-      if (
-        hasArchitectBuildBuilder(sourceProject) &&
-        !hasArchitectBuildBuilder(targetProject)
-      ) {
+      if (hasBuildExecutor(sourceProject) && !hasBuildExecutor(targetProject)) {
         this.addFailureAt(
           node.getStart(),
           node.getWidth(),

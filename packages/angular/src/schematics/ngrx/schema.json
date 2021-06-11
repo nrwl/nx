@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "SchematicsNxNgrx",
+  "$id": "SchematicsNxNgrx",
   "title": "Add NgRx support to an application or library",
   "type": "object",
   "properties": {

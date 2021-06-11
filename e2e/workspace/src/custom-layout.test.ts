@@ -1,77 +1,73 @@
 import {
   checkFilesExist,
-  forEachCli,
   readFile,
   readJson,
   runCLI,
   runCLIAsync,
   runCreateWorkspace,
-  setCurrentProjName,
   uniq,
-  yarnAdd,
+  packageInstall,
+  removeProject,
+  killPorts,
 } from '@nrwl/e2e/utils';
 
-forEachCli('nx', () => {
-  describe('custom workspace layout', () => {
-    it('should work', async () => {
-      const proj = setCurrentProjName(uniq('custom-layout-proj'));
-      runCreateWorkspace(proj, { preset: 'oss' });
-      yarnAdd('@nrwl/react @nrwl/angular @nrwl/express');
+describe('custom workspace layout', () => {
+  afterEach(() => killPorts());
 
-      const nxJson = readJson('nx.json');
-      expect(nxJson.workspaceLayout).toEqual({
-        libsDir: 'packages',
-        appsDir: 'packages',
-      });
+  it('should work', async () => {
+    const proj = uniq('custom-layout-proj');
+    runCreateWorkspace(proj, { preset: 'oss' });
+    packageInstall('@nrwl/react @nrwl/angular @nrwl/express');
 
-      const reactApp = uniq('reactapp');
-      const reactLib = uniq('reactlib');
+    const nxJson = readJson('nx.json');
+    expect(nxJson.workspaceLayout).toEqual({
+      libsDir: 'packages',
+      appsDir: 'packages',
+    });
 
-      const ngApp = uniq('ngapp');
-      const ngLib = uniq('nglib');
+    const reactApp = uniq('reactapp');
+    const reactLib = uniq('reactlib');
 
-      const expressApp = uniq('expessapp');
-      const expressLib = uniq('expresslib');
+    const ngApp = uniq('ngapp');
+    const ngLib = uniq('nglib');
 
-      runCLI(`generate @nrwl/react:app ${reactApp} --no-interactive`);
-      runCLI(`generate @nrwl/react:lib ${reactLib} --no-interactive`);
+    const expressApp = uniq('expessapp');
+    const expressLib = uniq('expresslib');
 
-      runCLI(`generate @nrwl/angular:app ${ngApp} --no-interactive`);
-      runCLI(`generate @nrwl/angular:lib ${ngLib} --no-interactive`);
+    runCLI(`generate @nrwl/react:app ${reactApp} --no-interactive`);
+    runCLI(`generate @nrwl/react:lib ${reactLib} --no-interactive`);
 
-      runCLI(`generate @nrwl/express:app ${expressApp} --no-interactive`);
-      runCLI(`generate @nrwl/express:lib ${expressLib} --no-interactive`);
+    runCLI(`generate @nrwl/angular:app ${ngApp} --no-interactive`);
+    runCLI(`generate @nrwl/angular:lib ${ngLib} --no-interactive`);
 
-      checkFilesExist(
-        `packages/${reactLib}/src/index.ts`,
-        `packages/${reactApp}/src/main.tsx`,
-        `packages/${reactApp}-e2e/cypress.json`,
+    runCLI(`generate @nrwl/express:app ${expressApp} --no-interactive`);
+    runCLI(`generate @nrwl/express:lib ${expressLib} --no-interactive`);
 
-        `packages/${ngLib}/src/index.ts`,
-        `packages/${ngApp}/src/main.ts`,
-        `packages/${ngApp}-e2e/cypress.json`,
+    checkFilesExist(
+      `packages/${reactLib}/src/index.ts`,
+      `packages/${reactApp}/src/main.tsx`,
+      `packages/${reactApp}-e2e/cypress.json`,
 
-        `packages/${expressLib}/src/index.ts`,
-        `packages/${expressApp}/src/main.ts`
-      );
+      `packages/${ngLib}/src/index.ts`,
+      `packages/${ngApp}/src/main.ts`,
+      `packages/${ngApp}-e2e/cypress.json`,
 
-      const workspaceJson = readFile('workspace.json');
-      expect(workspaceJson).not.toContain('apps/');
-      expect(workspaceJson).not.toContain('libs/');
+      `packages/${expressLib}/src/index.ts`,
+      `packages/${expressApp}/src/main.ts`
+    );
 
-      const libTestResults = await runCLIAsync(`test ${expressLib}`);
-      expect(libTestResults.stdout).toContain(`nx run ${expressLib}:test`);
+    const workspaceJson = readFile('workspace.json');
+    expect(workspaceJson).not.toContain('apps/');
+    expect(workspaceJson).not.toContain('libs/');
 
-      const appBuildResults = await runCLIAsync(`build ${expressApp}`);
-      expect(appBuildResults.stdout).toContain(`nx run ${expressApp}:build`);
+    const libTestResults = await runCLIAsync(`test ${expressLib}`);
+    expect(libTestResults.stdout).toContain(`nx run ${expressLib}:test`);
 
-      checkFilesExist(`dist/packages/${expressApp}/main.js`);
-    }, 1000000);
-  });
-});
+    const appBuildResults = await runCLIAsync(`build ${expressApp}`);
+    expect(appBuildResults.stdout).toContain(`nx run ${expressApp}:build`);
 
-forEachCli('angular', () => {
-  describe('custom workspace layout', () => {
-    it('should work', () => {});
-  });
+    checkFilesExist(`dist/packages/${expressApp}/main.js`);
+
+    removeProject({ onlyOnCI: true });
+  }, 1000000);
 });

@@ -1,64 +1,43 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`app --linter eslint should add an architect target for lint 1`] = `
-Object {
-  "builder": "@nrwl/linter:eslint",
-  "options": Object {
-    "lintFilePatterns": Array [
-      "apps/my-app/src/**/*.ts",
-    ],
-  },
-}
-`;
-
-exports[`app --linter eslint should add an architect target for lint 2`] = `
-Object {
-  "builder": "@nrwl/linter:eslint",
-  "options": Object {
-    "lintFilePatterns": Array [
-      "apps/my-app-e2e/**/*.{js,ts}",
-    ],
-  },
-}
-`;
-
 exports[`app nested should update workspace.json 1`] = `
 Object {
   "architect": Object {
     "build": Object {
       "builder": "@angular-devkit/build-angular:browser",
       "configurations": Object {
+        "development": Object {
+          "buildOptimizer": false,
+          "extractLicenses": false,
+          "namedChunks": true,
+          "optimization": false,
+          "sourceMap": true,
+          "vendorChunk": true,
+        },
         "production": Object {
           "budgets": Array [
             Object {
-              "maximumError": "5mb",
-              "maximumWarning": "2mb",
+              "maximumError": "1mb",
+              "maximumWarning": "500kb",
               "type": "initial",
             },
             Object {
-              "maximumError": "10kb",
-              "maximumWarning": "6kb",
+              "maximumError": "4kb",
+              "maximumWarning": "2kb",
               "type": "anyComponentStyle",
             },
           ],
-          "buildOptimizer": true,
-          "extractCss": true,
-          "extractLicenses": true,
           "fileReplacements": Array [
             Object {
               "replace": "apps/my-dir/my-app/src/environments/environment.ts",
               "with": "apps/my-dir/my-app/src/environments/environment.prod.ts",
             },
           ],
-          "namedChunks": false,
-          "optimization": true,
           "outputHashing": "all",
-          "sourceMap": false,
-          "vendorChunk": false,
         },
       },
+      "defaultConfiguration": "production",
       "options": Object {
-        "aot": true,
         "assets": Array [
           "apps/my-dir/my-app/src/favicon.ico",
           "apps/my-dir/my-app/src/assets",
@@ -73,6 +52,9 @@ Object {
         ],
         "tsConfig": "apps/my-dir/my-app/tsconfig.app.json",
       },
+      "outputs": Array [
+        "{options.outputPath}",
+      ],
     },
     "extract-i18n": Object {
       "builder": "@angular-devkit/build-angular:extract-i18n",
@@ -81,29 +63,25 @@ Object {
       },
     },
     "lint": Object {
-      "builder": "@angular-devkit/build-angular:tslint",
+      "builder": "@nrwl/linter:eslint",
       "options": Object {
-        "exclude": Array [
-          "**/node_modules/**",
-          "!apps/my-dir/my-app/**/*",
-        ],
-        "tsConfig": Array [
-          "apps/my-dir/my-app/tsconfig.app.json",
-          "apps/my-dir/my-app/tsconfig.spec.json",
-          "apps/my-dir/my-app/tsconfig.editor.json",
+        "lintFilePatterns": Array [
+          "apps/my-dir/my-app/src/**/*.ts",
+          "apps/my-dir/my-app/src/**/*.html",
         ],
       },
     },
     "serve": Object {
       "builder": "@angular-devkit/build-angular:dev-server",
       "configurations": Object {
+        "development": Object {
+          "browserTarget": "my-dir-my-app:build:development",
+        },
         "production": Object {
           "browserTarget": "my-dir-my-app:build:production",
         },
       },
-      "options": Object {
-        "browserTarget": "my-dir-my-app:build",
-      },
+      "defaultConfiguration": "development",
     },
     "test": Object {
       "builder": "@nrwl/jest:jest",
@@ -111,12 +89,14 @@ Object {
         "jestConfig": "apps/my-dir/my-app/jest.config.js",
         "passWithNoTests": true,
       },
+      "outputs": Array [
+        "coverage/apps/my-dir/my-app",
+      ],
     },
   },
   "prefix": "proj",
   "projectType": "application",
   "root": "apps/my-dir/my-app",
-  "schematics": Object {},
   "sourceRoot": "apps/my-dir/my-app/src",
 }
 `;
@@ -133,19 +113,15 @@ Object {
       },
       "options": Object {
         "cypressConfig": "apps/my-dir/my-app-e2e/cypress.json",
-        "devServerTarget": "my-dir-my-app:serve",
+        "devServerTarget": "my-dir-my-app:serve:development",
         "tsConfig": "apps/my-dir/my-app-e2e/tsconfig.e2e.json",
       },
     },
     "lint": Object {
-      "builder": "@angular-devkit/build-angular:tslint",
+      "builder": "@nrwl/linter:eslint",
       "options": Object {
-        "exclude": Array [
-          "**/node_modules/**",
-          "!apps/my-dir/my-app-e2e/**/*",
-        ],
-        "tsConfig": Array [
-          "apps/my-dir/my-app-e2e/tsconfig.e2e.json",
+        "lintFilePatterns": Array [
+          "apps/my-dir/my-app-e2e/**/*.{js,ts}",
         ],
       },
     },
@@ -162,37 +138,38 @@ Object {
     "build": Object {
       "builder": "@angular-devkit/build-angular:browser",
       "configurations": Object {
+        "development": Object {
+          "buildOptimizer": false,
+          "extractLicenses": false,
+          "namedChunks": true,
+          "optimization": false,
+          "sourceMap": true,
+          "vendorChunk": true,
+        },
         "production": Object {
           "budgets": Array [
             Object {
-              "maximumError": "5mb",
-              "maximumWarning": "2mb",
+              "maximumError": "1mb",
+              "maximumWarning": "500kb",
               "type": "initial",
             },
             Object {
-              "maximumError": "10kb",
-              "maximumWarning": "6kb",
+              "maximumError": "4kb",
+              "maximumWarning": "2kb",
               "type": "anyComponentStyle",
             },
           ],
-          "buildOptimizer": true,
-          "extractCss": true,
-          "extractLicenses": true,
           "fileReplacements": Array [
             Object {
               "replace": "apps/my-app/src/environments/environment.ts",
               "with": "apps/my-app/src/environments/environment.prod.ts",
             },
           ],
-          "namedChunks": false,
-          "optimization": true,
           "outputHashing": "all",
-          "sourceMap": false,
-          "vendorChunk": false,
         },
       },
+      "defaultConfiguration": "production",
       "options": Object {
-        "aot": true,
         "assets": Array [
           "apps/my-app/src/favicon.ico",
           "apps/my-app/src/assets",
@@ -207,6 +184,9 @@ Object {
         ],
         "tsConfig": "apps/my-app/tsconfig.app.json",
       },
+      "outputs": Array [
+        "{options.outputPath}",
+      ],
     },
     "extract-i18n": Object {
       "builder": "@angular-devkit/build-angular:extract-i18n",
@@ -215,29 +195,25 @@ Object {
       },
     },
     "lint": Object {
-      "builder": "@angular-devkit/build-angular:tslint",
+      "builder": "@nrwl/linter:eslint",
       "options": Object {
-        "exclude": Array [
-          "**/node_modules/**",
-          "!apps/my-app/**/*",
-        ],
-        "tsConfig": Array [
-          "apps/my-app/tsconfig.app.json",
-          "apps/my-app/tsconfig.spec.json",
-          "apps/my-app/tsconfig.editor.json",
+        "lintFilePatterns": Array [
+          "apps/my-app/src/**/*.ts",
+          "apps/my-app/src/**/*.html",
         ],
       },
     },
     "serve": Object {
       "builder": "@angular-devkit/build-angular:dev-server",
       "configurations": Object {
+        "development": Object {
+          "browserTarget": "my-app:build:development",
+        },
         "production": Object {
           "browserTarget": "my-app:build:production",
         },
       },
-      "options": Object {
-        "browserTarget": "my-app:build",
-      },
+      "defaultConfiguration": "development",
     },
     "test": Object {
       "builder": "@nrwl/jest:jest",
@@ -245,12 +221,14 @@ Object {
         "jestConfig": "apps/my-app/jest.config.js",
         "passWithNoTests": true,
       },
+      "outputs": Array [
+        "coverage/apps/my-app",
+      ],
     },
   },
   "prefix": "proj",
   "projectType": "application",
   "root": "apps/my-app",
-  "schematics": Object {},
   "sourceRoot": "apps/my-app/src",
 }
 `;
@@ -267,19 +245,15 @@ Object {
       },
       "options": Object {
         "cypressConfig": "apps/my-app-e2e/cypress.json",
-        "devServerTarget": "my-app:serve",
+        "devServerTarget": "my-app:serve:development",
         "tsConfig": "apps/my-app-e2e/tsconfig.e2e.json",
       },
     },
     "lint": Object {
-      "builder": "@angular-devkit/build-angular:tslint",
+      "builder": "@nrwl/linter:eslint",
       "options": Object {
-        "exclude": Array [
-          "**/node_modules/**",
-          "!apps/my-app-e2e/**/*",
-        ],
-        "tsConfig": Array [
-          "apps/my-app-e2e/tsconfig.e2e.json",
+        "lintFilePatterns": Array [
+          "apps/my-app-e2e/**/*.{js,ts}",
         ],
       },
     },

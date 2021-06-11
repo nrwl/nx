@@ -15,8 +15,6 @@ import {
 import { Schema } from './schema';
 import * as path from 'path';
 
-import { names, toFileName } from '@nrwl/workspace';
-
 import {
   addImportsToModule,
   addNgRxToPackageJson,
@@ -24,10 +22,12 @@ import {
   RequestContext,
 } from './rules';
 import { formatFiles } from '@nrwl/workspace';
+import { names } from '@nrwl/devkit';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 /**
  * Rule to generate the Nx 'ngrx' Collection
- * Note: see https://nx.dev/angular/guides/misc-ngrx for guide to generated files
+ * Note: see https://nx.dev/latest/angular/guides/misc-ngrx for guide to generated files
  */
 export default function generateNgrxCollection(_options: Schema): Rule {
   return (host: Tree, context: SchematicContext) => {
@@ -109,6 +109,11 @@ function generateNgrxFilesFromTemplates(options: Schema) {
 function normalizeOptions(options: Schema): Schema {
   return {
     ...options,
-    directory: toFileName(options.directory),
+    directory: names(options.directory).fileName,
   };
 }
+
+export const ngrxGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/angular',
+  'ngrx'
+);

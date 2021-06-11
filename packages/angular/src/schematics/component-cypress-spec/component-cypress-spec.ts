@@ -1,7 +1,5 @@
 import {
-  apply,
   chain,
-  mergeWith,
   move,
   Rule,
   SchematicContext,
@@ -16,13 +14,14 @@ import {
   PropertyDeclaration,
   SyntaxKind,
 } from 'typescript';
-import { getTsSourceFile, getDecoratorMetadata } from '../../utils/ast-utils';
+import { getDecoratorMetadata, getTsSourceFile } from '../../utils/ast-utils';
 import {
   getInputPropertyDeclarations,
   getKnobType,
 } from '../component-story/component-story';
 import { applyWithSkipExisting } from '@nrwl/workspace/src/utils/ast-utils';
 import { join, normalize } from '@angular-devkit/core';
+import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 
 export default function (schema: CreateComponentSpecFileSchema): Rule {
   return chain([createComponentSpecFile(schema)]);
@@ -30,24 +29,28 @@ export default function (schema: CreateComponentSpecFileSchema): Rule {
 
 export interface CreateComponentSpecFileSchema {
   projectName: string;
-  libPath: string;
+  projectPath: string;
   componentName: string;
   componentPath: string;
   componentFileName: string;
+  cypressProject?: string;
 }
 
 export function createComponentSpecFile({
   projectName,
-  libPath,
+  projectPath,
   componentName,
   componentPath,
   componentFileName,
+  cypressProject,
 }: CreateComponentSpecFileSchema): Rule {
   return (tree: Tree, context: SchematicContext): Rule => {
-    const e2eLibIntegrationFolderPath =
-      getProjectConfig(tree, projectName + '-e2e').sourceRoot + '/integration';
+    const e2eProjectName = cypressProject || `${projectName}-e2e`;
+    const e2eLibIntegrationFolderPath = `${
+      getProjectConfig(tree, e2eProjectName).sourceRoot
+    }/integration`;
     const fullComponentPath = join(
-      normalize(libPath),
+      normalize(projectPath),
       componentPath,
       `${componentFileName}.ts`
     );
@@ -81,7 +84,7 @@ export function createComponentSpecFile({
         props,
         tmpl: '',
       }),
-      move(e2eLibIntegrationFolderPath + '/' + componentPath),
+      move(`${e2eLibIntegrationFolderPath}/${componentPath}`),
     ]);
   };
 }
@@ -129,3 +132,7 @@ export function getKnobDefaultValue(
       return undefined;
   }
 }
+export const componentCypressSpecGenerator = wrapAngularDevkitSchematic(
+  '@nrwl/angular',
+  'component-cypress-spec'
+);

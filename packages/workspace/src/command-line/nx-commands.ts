@@ -1,16 +1,9 @@
-#!/usr/bin/env node
 import { execSync } from 'child_process';
-import { getPackageManagerExecuteCommand } from '../utils/detect-package-manager';
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import * as yargs from 'yargs';
 import { nxVersion } from '../utils/versions';
-import { generateGraph } from './dep-graph';
-import { format } from './format';
-import { workspaceLint } from './lint';
-import { list } from './list';
-import { report } from './report';
-import { workspaceGenerators } from './workspace-generators';
-import { affected } from './affected';
-import { runMany } from './run-many';
+import { writeFileSync } from 'fs';
+import * as path from 'path';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
 
@@ -22,7 +15,10 @@ const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
  * be executed correctly.
  */
 export const commandsObject = yargs
-  .usage('Extensible Dev Tools for Monorepos')
+  .parserConfiguration({
+    'strip-dashed': true,
+  })
+  .usage('Smart, Extensible Build Framework')
   .command(
     'run [project][:target][:configuration] [options, ...]',
     `
@@ -31,6 +27,8 @@ export const commandsObject = yargs
 
     You can also use the infix notation to run a target:
     (e.g., nx serve myapp --configuration=production)
+
+    You can skip the use of Nx cache by using the --skip-nx-cache option.
     `
   )
   .command(
@@ -40,30 +38,32 @@ export const commandsObject = yargs
     (e.g., nx generate @nrwl/web:app myapp).
     `
   )
+
   .command(
     'affected',
     'Run task for affected projects',
     (yargs) => withAffectedOptions(withParallel(withTarget(yargs))),
-    (args) => affected('affected', { ...args })
+    async (args) =>
+      (await import('./affected')).affected('affected', { ...args })
   )
   .command(
     'run-many',
     'Run task for multiple projects',
     (yargs) => withRunManyOptions(withParallel(withTarget(yargs))),
-    (args) => runMany({ ...args })
+    async (args) => (await import('./run-many')).runMany({ ...args })
   )
   .command(
     'affected:apps',
     'Print applications affected by changes',
     (yargs) => withAffectedOptions(withPlainOption(yargs)),
-    (args) => affected('apps', { ...args })
+    async (args) => (await import('./affected')).affected('apps', { ...args })
   )
   .command(
     'affected:libs',
     'Print libraries affected by changes',
     (yargs) => withAffectedOptions(withPlainOption(yargs)),
-    (args) =>
-      affected('libs', {
+    async (args) =>
+      (await import('./affected')).affected('libs', {
         ...args,
       })
   )
@@ -71,8 +71,8 @@ export const commandsObject = yargs
     'affected:build',
     'Build applications and publishable libraries affected by changes',
     (yargs) => withAffectedOptions(withParallel(yargs)),
-    (args) =>
-      affected('affected', {
+    async (args) =>
+      (await import('./affected')).affected('affected', {
         ...args,
         target: 'build',
       })
@@ -81,8 +81,8 @@ export const commandsObject = yargs
     'affected:test',
     'Test projects affected by changes',
     (yargs) => withAffectedOptions(withParallel(yargs)),
-    (args) =>
-      affected('affected', {
+    async (args) =>
+      (await import('./affected')).affected('affected', {
         ...args,
         target: 'test',
       })
@@ -91,8 +91,8 @@ export const commandsObject = yargs
     'affected:e2e',
     'Run e2e tests for the applications affected by changes',
     (yargs) => withAffectedOptions(withParallel(yargs)),
-    (args) =>
-      affected('affected', {
+    async (args) =>
+      (await import('./affected')).affected('affected', {
         ...args,
         target: 'e2e',
       })
@@ -101,8 +101,8 @@ export const commandsObject = yargs
     'affected:dep-graph',
     'Graph dependencies affected by changes',
     (yargs) => withAffectedOptions(withDepGraphOptions(yargs)),
-    (args) =>
-      affected('dep-graph', {
+    async (args) =>
+      (await import('./affected')).affected('dep-graph', {
         ...args,
       })
   )
@@ -110,17 +110,17 @@ export const commandsObject = yargs
     'print-affected',
     'Graph execution plan',
     (yargs) => withAffectedOptions(withPrintAffectedOptions(yargs)),
-    (args) =>
-      affected('print-affected', {
+    async (args) =>
+      (await import('./affected')).affected('print-affected', {
         ...args,
       })
   )
   .command(
     'affected:lint',
     'Lint projects affected by changes',
-    (yargs) => withAffectedOptions(withParallel(yargs)),
-    (args) =>
-      affected('affected', {
+    async (yargs) => withAffectedOptions(withParallel(yargs)),
+    async (args) =>
+      (await import('./affected')).affected('affected', {
         ...args,
         target: 'lint',
       })
@@ -129,26 +129,28 @@ export const commandsObject = yargs
     'dep-graph',
     'Graph dependencies within workspace',
     (yargs) => withDepGraphOptions(yargs),
-    (args) => generateGraph(args as any, [])
+    async (args) => (await import('./dep-graph')).generateGraph(args as any, [])
   )
+
   .command(
     'format:check',
     'Check for un-formatted files',
     withFormatOptions,
-    (args) => format('check', args)
+    async (args) => (await import('./format')).format('check', args)
   )
   .command(
     ['format:write', 'format'],
     'Overwrite un-formatted files',
     withFormatOptions,
-    (args) => format('write', args)
+    async (args) => (await import('./format')).format('write', args)
   )
   .command(
     'workspace-lint [files..]',
     'Lint workspace or list of files.  Note: To exclude files from this lint rule, you can add them to the ".nxignore" file',
     noop,
-    (_) => workspaceLint()
+    async (_) => (await import('./lint')).workspaceLint()
   )
+
   .command(
     ['workspace-generator [name]', 'workspace-schematic [name]'],
     'Runs a workspace generator from the tools/generators directory',
@@ -169,8 +171,12 @@ export const commandsObject = yargs
       }
       return yargs;
     },
-    () => workspaceGenerators(process.argv.slice(3))
+    async () =>
+      (await import('./workspace-generators')).workspaceGenerators(
+        process.argv.slice(3)
+      )
   )
+
   .command(
     'migrate',
     `Creates a migrations file or runs migrations from the migrations file.
@@ -179,17 +185,30 @@ export const commandsObject = yargs
     `,
     (yargs) => yargs,
     () => {
-      const executable = `${getPackageManagerExecuteCommand()} tao`;
-      execSync(`${executable} migrate ${process.argv.slice(3).join(' ')}`, {
-        stdio: ['inherit', 'inherit', 'inherit'],
-      });
+      if (process.env.NX_MIGRATE_USE_LOCAL === undefined) {
+        const p = taoPath();
+        execSync(`${p} migrate ${process.argv.slice(3).join(' ')}`, {
+          stdio: ['inherit', 'inherit', 'inherit'],
+        });
+      } else {
+        const pmc = getPackageManagerCommand();
+        execSync(`${pmc.exec} tao migrate ${process.argv.slice(3).join(' ')}`, {
+          stdio: ['inherit', 'inherit', 'inherit'],
+        });
+      }
     }
   )
-  .command(report)
-  .command(list)
+  .command(require('./report').report)
+  .command(require('./list').list)
+  .command(
+    'connect-to-nx-cloud',
+    `Makes sure the workspace is connected to Nx Cloud`,
+    (yargs) => yargs,
+    async () =>
+      (await import('./connect-to-nx-cloud')).connectToNxCloudCommand()
+  )
   .help('help')
-  .version(nxVersion)
-  .option('quiet', { type: 'boolean', hidden: true });
+  .version(nxVersion);
 
 function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
   return withAffectedOptions(yargs)
@@ -339,6 +358,12 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'boolean',
       default: false,
     })
+    .option('exclude', {
+      describe: 'Exclude certain projects from being processed',
+      type: 'array',
+      coerce: parseCSV,
+      default: [],
+    })
     .option('verbose', {
       describe: 'Print additional error stack trace on failure',
     })
@@ -390,15 +415,13 @@ function parseCSV(args: string[]) {
 function withParallel(yargs: yargs.Argv): yargs.Argv {
   return yargs
     .option('parallel', {
-      describe: 'Parallelize the command',
+      describe: 'Parallelize the command (default: false)',
       type: 'boolean',
-      default: false,
     })
     .option('maxParallel', {
       describe:
-        'Max number of parallel processes. This flag is ignored if the parallel option is set to `false`.',
+        'Max number of parallel processes. This flag is ignored if the parallel option is set to `false`. (default: 3)',
       type: 'number',
-      default: 3,
     });
 }
 
@@ -410,4 +433,51 @@ function withTarget(yargs: yargs.Argv): yargs.Argv {
     demandOption: true,
     global: false,
   });
+}
+
+function taoPath() {
+  const packageManager = getPackageManagerCommand();
+
+  const { dirSync } = require('tmp');
+  const tmpDir = dirSync().name;
+  writeFileSync(
+    path.join(tmpDir, 'package.json'),
+    JSON.stringify({
+      dependencies: {
+        '@nrwl/tao': 'latest',
+
+        // these deps are required for migrations written using angular devkit
+        '@angular-devkit/architect': 'latest',
+        '@angular-devkit/schematics': 'latest',
+        '@angular-devkit/core': 'latest',
+      },
+      license: 'MIT',
+    })
+  );
+
+  execSync(packageManager.install, {
+    cwd: tmpDir,
+    stdio: ['ignore', 'ignore', 'ignore'],
+  });
+
+  // Set NODE_PATH so that these modules can be used for module resolution
+  addToNodePath(path.join(tmpDir, 'node_modules'));
+
+  return path.join(tmpDir, `node_modules`, '.bin', 'tao');
+}
+
+function addToNodePath(dir: string) {
+  // NODE_PATH is a delimited list of paths.
+  // The delimiter is different for windows.
+  const delimiter = require('os').platform === 'win32' ? ';' : ':';
+
+  const paths = process.env.NODE_PATH
+    ? process.env.NODE_PATH.split(delimiter)
+    : [];
+
+  // Add the tmp path
+  paths.push(dir);
+
+  // Update the env variable.
+  process.env.NODE_PATH = paths.join(delimiter);
 }

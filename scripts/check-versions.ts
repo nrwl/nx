@@ -14,10 +14,10 @@
 
 import { join } from 'path';
 import { gt } from 'semver';
-import chalk from 'chalk';
+import * as chalk from 'chalk';
 import { dasherize } from '../packages/workspace/src/utils/strings';
-import * as shell from 'shelljs';
 import * as glob from 'glob';
+import { execSync } from 'child_process';
 
 const excluded = ['nxVersion'];
 const scoped = [
@@ -123,7 +123,9 @@ function getVersionData(
 } {
   try {
     const latest = JSON.parse(
-      shell.exec(`npm view ${p} version --json --silent`, { silent: true })
+      execSync(`npm view ${p} version --json --silent`, {
+        stdio: ['ignore'],
+      }).toString('utf-8')
     );
     if (gt(latest, v)) {
       return { package: p, outdated: true, invalid: false, latest, prev: v };

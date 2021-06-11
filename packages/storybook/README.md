@@ -1,4 +1,4 @@
-<p align="center"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx.png" width="600"></p>
+<p style="text-align: center;"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx.png" width="600" alt="Nx - Smart, Extensible Build Framework"></p>
 
 {{links}}
 
@@ -10,7 +10,7 @@
 
 ## What is It?
 
-Builders and schematics adding Storybook support for frontend applications.
+Executors and generators adding Storybook support for frontend applications.
 
 ## How to Use
 

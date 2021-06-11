@@ -1,36 +1,34 @@
-import { tags, terminal } from '@angular-devkit/core';
-import { getLogger } from '../shared/logger';
+import * as chalk from 'chalk';
+import { logger, stripIndent } from '../shared/logger';
 
 export function help() {
-  const logger = getLogger(true);
-
-  logger.info(tags.stripIndent`
-    ${terminal.bold('Nx - Extensible Dev Tools for Monorepos.')}
+  logger.info(
+    stripIndent(`
+    ${chalk.bold('Nx - Smart, Extensible Build Framework')}
   
-    ${terminal.bold('Create a new project.')}
-     nx new ${terminal.grey(
+    ${chalk.bold('Create a new project.')}
+     nx new ${chalk.grey(
        '[project-name] [--collection=collection] [options, ...]'
      )}
     
-    ${terminal.bold('Generate code.')}
-     nx generate ${terminal.grey('[collection:][generator] [options, ...]')}
-     nx g ${terminal.grey('[collection:][generator] [options, ...]')}
+    ${chalk.bold('Generate code.')}
+     nx generate ${chalk.grey('[collection:][generator] [options, ...]')}
+     nx g ${chalk.grey('[collection:][generator] [options, ...]')}
 
-    ${terminal.bold('Run target.')}    
-     nx run ${terminal.grey(
-       '[project][:target][:configuration] [options, ...]'
-     )}
-     nx r ${terminal.grey('[project][:target][:configuration] [options, ...]')}
+    ${chalk.bold('Run target.')}    
+     nx run ${chalk.grey('[project][:target][:configuration] [options, ...]')}
+     nx r ${chalk.grey('[project][:target][:configuration] [options, ...]')}
     
     You can also use the infix notation to run a target:
      nx [target] [project] [options, ...]
 
-    ${terminal.bold('Migrate packages and create migrations.json.')}
-     nx migrate ${terminal.grey('[package-name]')}
+    ${chalk.bold('Migrate packages and create migrations.json.')}
+     nx migrate ${chalk.grey('[package-name]')}
     
-    ${terminal.bold('Run migrations.')}
-     nx migrate ${terminal.grey('--run-migrations=[filename]')}
+    ${chalk.bold('Run migrations.')}
+     nx migrate ${chalk.grey('--run-migrations=[filename]')}
 
-  `);
+  `)
+  );
   return 0;
 }

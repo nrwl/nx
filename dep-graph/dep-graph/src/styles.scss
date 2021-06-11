@@ -1,0 +1,250 @@
+@import '~tippy.js/dist/tippy.css';
+
+$color-nrwl-blue: #48c4e5 !default;
+$color-nrwl-light-blue: #96d8e9 !default;
+$color-nrwl-gray: #333333 !default;
+$color-nrwl-navy: #143055 !default;
+$color-nrwl-twilight: #086c9f !default;
+$color-nrwl-black: #231f20 !default;
+$color-nrwl-red: #f85477 !default;
+$font-family: 'Montserrat', 'Helvetica Neue', sans-serif !default;
+$color-primary: $color-nrwl-navy !default;
+$sidebar-width: 260px;
+
+* {
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+html {
+  line-height: 1.6;
+  font-size: 14px;
+  font-family: $font-family;
+}
+
+button {
+  padding: 0.5em 1em;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  font-size: 1em;
+  line-height: 1;
+  text-align: center;
+  -webkit-transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease;
+  text-decoration: none;
+  -webkit-transform: scale(1);
+  transform: scale(1);
+  display: inline-block;
+  cursor: pointer;
+
+  background-color: $color-primary;
+  color: #fff;
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  &.icon {
+    width: 1.5em;
+    height: 1.5em;
+    padding: 0;
+    text-align: center;
+    line-height: 50%;
+
+    svg {
+      width: 1.25em;
+      height: 1.25em;
+    }
+  }
+}
+
+.form-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  label {
+    flex: 1;
+  }
+}
+
+.flex {
+  display: flex;
+
+  button {
+    flex: 1;
+
+    &:not(:last-child) {
+      margin-right: 1.5em;
+    }
+  }
+}
+
+label {
+  display: inline-block;
+  margin: 0.5em 0;
+}
+
+h4,
+h5 {
+  margin-top: 0;
+  margin-bottom: 0.5em;
+}
+
+.form-group {
+  margin-bottom: 1em;
+}
+
+.sidebar {
+  min-width: $sidebar-width;
+  max-width: calc(50% - 10px);
+  z-index: 1;
+  position: relative;
+  height: 100%;
+  box-shadow: 2px 0 2px rgba(51, 51, 51, 0.1);
+  transition: margin-left 0.5s;
+
+  &.hidden {
+    .sidebar-hide-button:after {
+      content: '\00BB';
+    }
+  }
+
+  .sidebar-hide-button {
+    content: '<<';
+    background-color: white;
+    border-top: 1px solid;
+    border-right: 1px solid;
+    border-bottom: 1px solid;
+    border-color: rgba(51, 51, 51, 0.3);
+    color: rgba(51, 51, 51, 0.6);
+    position: absolute;
+    // left: 319px;
+    top: 10px;
+    text-decoration: none;
+    padding: 10px;
+    border-radius: 0 5px 5px 0;
+    box-shadow: 2px 0 2px rgba(51, 51, 51, 0.1);
+
+    &:after {
+      content: '\00AB';
+    }
+  }
+}
+
+.sidebar > .sidebar-content {
+  box-sizing: border-box;
+  height: 100%;
+  overflow-y: auto;
+  padding: 1.5em;
+  width: 100%;
+
+  > .sidebar-section {
+    margin-bottom: 1em;
+  }
+
+  h5 {
+    color: $color-nrwl-twilight;
+  }
+
+  .form-line {
+    display: flex;
+  }
+  .form-line label {
+    flex: 1;
+  }
+}
+
+#main-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+#debugger-panel {
+  display: none;
+  width: 100%;
+  background-color: $color-nrwl-light-blue;
+  padding: 1.5em;
+  align-items: baseline;
+
+  & > * {
+    margin-right: 1em;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+#apps,
+#libs,
+#e2e {
+  padding: 0;
+  list-style: none;
+}
+
+#apps,
+#libs,
+#e2e input {
+  padding-right: 8px;
+}
+
+#app,
+body,
+html {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
+  width: 100%;
+}
+
+#app {
+  display: flex;
+}
+
+.tippy-box[data-theme~='nx'] {
+  background-color: $color-nrwl-twilight;
+
+  .tippy-content {
+    padding: 1.5em;
+  }
+
+  &[data-placement^='top'] > .tippy-arrow::before {
+    border-top-color: $color-nrwl-twilight;
+  }
+  &[data-placement^='bottom'] > .tippy-arrow::before {
+    border-bottom-color: $color-nrwl-twilight;
+  }
+  &[data-placement^='left'] > .tippy-arrow::before {
+    border-left-color: $color-nrwl-twilight;
+  }
+  &[data-placement^='right'] > .tippy-arrow::before {
+    border-right-color: $color-nrwl-twilight;
+  }
+}
+
+.tag {
+  padding: 0.5rem;
+  font-size: 0.75em;
+  display: inline-block;
+  border: 1px solid $color-nrwl-light-blue;
+  text-transform: uppercase;
+  color: #fff;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  margin-right: 0.4em;
+}
+
+#no-projects-chosen {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+#graph-container {
+  width: 100%;
+  height: 100%;
+}

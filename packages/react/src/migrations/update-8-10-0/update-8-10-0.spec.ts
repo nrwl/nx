@@ -4,7 +4,7 @@ import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import * as path from 'path';
 import { createEmptyWorkspace } from '@nrwl/workspace/testing';
 import { join } from 'path';
-import { callRule } from '../../../src/utils/testing';
+import { callRule } from '../utils/testing';
 
 describe('Update 8-10-0', () => {
   let tree: Tree;

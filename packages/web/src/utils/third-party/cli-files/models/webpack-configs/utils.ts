@@ -8,7 +8,8 @@
 // tslint:disable
 // TODO: cleanup this file, it's copied as is from Angular CLI.
 
-import { basename, normalize } from '@angular-devkit/core';
+import { basename } from 'path';
+import { normalizePath } from '@nrwl/devkit';
 import { ExtraEntryPoint, ExtraEntryPointClass } from '../../../browser/schema';
 import { SourceMapDevToolPlugin } from 'webpack';
 import { ScriptTarget } from 'typescript';
@@ -66,7 +67,9 @@ export function normalizeExtraEntryPoints(
       } else if (!injectNormalized) {
         // Lazy entry points use the file name as bundle name.
         bundleName = basename(
-          normalize(entry.input.replace(/\.(js|css|scss|sass|less|styl)$/i, ''))
+          normalizePath(
+            entry.input.replace(/\.(js|css|scss|sass|less|styl)$/i, '')
+          )
         );
       } else {
         bundleName = defaultBundleName;
@@ -116,7 +119,7 @@ export function getEsVersionForFileName(
   esVersionInFileName = false
 ): string {
   return scriptTargetOverride && esVersionInFileName
-    ? '-' + ScriptTarget[scriptTargetOverride].toLowerCase()
+    ? `-${ScriptTarget[scriptTargetOverride].toLowerCase()}`
     : '';
 }
 

@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import { writeFileSync } from 'fs';
 
 if (process.env.NX_TERMINAL_OUTPUT_PATH) {
   setUpOutputWatching(
@@ -7,7 +7,7 @@ if (process.env.NX_TERMINAL_OUTPUT_PATH) {
   );
 }
 
-if (!process.env.NX_WORKSPACE_ROOT || !process.env.NX_CLI_PATH) {
+if (!process.env.NX_WORKSPACE_ROOT) {
   console.error('Invalid Nx command invocation');
   process.exit(1);
 }
@@ -16,15 +16,12 @@ requireCli();
 function requireCli() {
   process.env.NX_CLI_SET = 'true';
   try {
-    const cli = require.resolve(process.env.NX_CLI_PATH, {
+    const cli = require.resolve('@nrwl/tao/index.js', {
       paths: [process.env.NX_WORKSPACE_ROOT],
     });
     require(cli);
   } catch (e) {
-    console.error(
-      `Could not find ${process.env.NX_CLI_PATH} module in this workspace.`,
-      e
-    );
+    console.error(`Could not find @nrwl/tao module in this workspace.`, e);
     process.exit(1);
   }
 }
@@ -75,19 +72,12 @@ function setUpOutputWatching(captureStderr: boolean, forwardOutput: boolean) {
 
   process.on('exit', (code) => {
     if (code === 0) {
-      fs.writeFileSync(
+      writeFileSync(
         process.env.NX_TERMINAL_OUTPUT_PATH,
         captureStderr ? outWithErr.join('') : out.join('')
       );
     } else {
-      fs.writeFileSync(
-        process.env.NX_TERMINAL_OUTPUT_PATH,
-        outWithErr.join('')
-      );
+      writeFileSync(process.env.NX_TERMINAL_OUTPUT_PATH, outWithErr.join(''));
     }
-  });
-
-  process.on('SIGTERM', () => {
-    process.exit(15);
   });
 }

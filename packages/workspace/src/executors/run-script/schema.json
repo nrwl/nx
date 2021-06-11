@@ -1,0 +1,15 @@
+{
+  "title": "Run Script",
+  "description": "Run any script with Nx",
+  "type": "object",
+  "cli": "nx",
+  "outputCapture": "pipe",
+  "properties": {
+    "script": {
+      "type": "string",
+      "description": "Script to run in child process"
+    }
+  },
+  "additionalProperties": true,
+  "required": ["script"]
+}

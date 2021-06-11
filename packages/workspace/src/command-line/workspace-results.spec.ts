@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 
 import { WorkspaceResults } from './workspace-results';
-import { serializeJson } from '../utils/fileutils';
+import { serializeJson } from '../utilities/fileutils';
 import { ProjectType } from '../core/project-graph';
 
 describe('WorkspacesResults', () => {
@@ -35,9 +35,9 @@ describe('WorkspacesResults', () => {
     });
 
     it('should remove results from file system', () => {
-      spyOn(fs, 'writeSync');
-      spyOn(fs, 'unlinkSync');
-      spyOn(fs, 'existsSync').and.returnValue(true);
+      jest.spyOn(fs, 'writeSync');
+      jest.spyOn(fs, 'unlinkSync').mockImplementationOnce(() => {});
+      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
 
       results.setResult('proj', true);
       results.saveResults();
@@ -57,11 +57,11 @@ describe('WorkspacesResults', () => {
 
   describe('when results already exist', () => {
     beforeEach(() => {
-      spyOn(fs, 'existsSync').and.returnValue(true);
+      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
     });
 
     it('should read existing results', () => {
-      spyOn(fs, 'readFileSync').and.returnValue(
+      jest.spyOn(fs, 'readFileSync').mockReturnValue(
         serializeJson({
           command: 'test',
           results: {
@@ -84,7 +84,7 @@ describe('WorkspacesResults', () => {
     });
 
     it('should handle a corrupted results file', () => {
-      spyOn(fs, 'readFileSync').and.returnValue('invalid json');
+      jest.spyOn(fs, 'readFileSync').mockReturnValue('invalid json');
 
       const runTests = () => {
         results = new WorkspaceResults('test', {
@@ -103,7 +103,7 @@ describe('WorkspacesResults', () => {
     });
 
     it('should not read the existing results when the previous command was different', () => {
-      spyOn(fs, 'readFileSync').and.returnValue(
+      jest.spyOn(fs, 'readFileSync').mockReturnValue(
         serializeJson({
           command: 'test',
           results: {
@@ -126,7 +126,7 @@ describe('WorkspacesResults', () => {
     });
 
     it('should invalidate existing results when the project is not run', () => {
-      spyOn(fs, 'readFileSync').and.returnValue(
+      jest.spyOn(fs, 'readFileSync').mockReturnValue(
         serializeJson({
           command: 'test',
           results: {

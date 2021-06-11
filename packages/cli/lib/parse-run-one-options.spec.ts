@@ -1,11 +1,17 @@
 import { parseRunOneOptions } from './parse-run-one-options';
 
 describe('parseRunOneOptions', () => {
-  const workspaceJson = { projects: { myproj: { architect: { build: {} } } } };
+  const workspaceJson = {
+    projects: {
+      myproj: {
+        architect: { build: { defaultConfiguration: 'someDefaultConfig' } },
+      },
+    },
+  };
   const args = ['build', 'myproj', '--configuration=production', '--flag=true'];
 
   it('should work', () => {
-    expect(parseRunOneOptions(workspaceJson, args)).toEqual({
+    expect(parseRunOneOptions('root', workspaceJson, args)).toEqual({
       project: 'myproj',
       target: 'build',
       configuration: 'production',
@@ -15,7 +21,7 @@ describe('parseRunOneOptions', () => {
 
   it('should work with --prod', () => {
     expect(
-      parseRunOneOptions(workspaceJson, [
+      parseRunOneOptions('root', workspaceJson, [
         'build',
         'myproj',
         '--prod',
@@ -31,7 +37,7 @@ describe('parseRunOneOptions', () => {
 
   it('should override --prod with --configuration', () => {
     expect(
-      parseRunOneOptions(workspaceJson, [
+      parseRunOneOptions('root', workspaceJson, [
         'build',
         'myproj',
         '--prod',
@@ -49,15 +55,15 @@ describe('parseRunOneOptions', () => {
 
   it('should work with run syntax', () => {
     expect(
-      parseRunOneOptions(workspaceJson, [
+      parseRunOneOptions('root', workspaceJson, [
         'run',
-        'myproj:build:production',
+        'myproj:build:staging',
         '--flag=true',
       ])
     ).toEqual({
       project: 'myproj',
       target: 'build',
-      configuration: 'production',
+      configuration: 'staging',
       parsedArgs: { _: [], flag: 'true' },
     });
   });
@@ -65,31 +71,48 @@ describe('parseRunOneOptions', () => {
   it('should use defaultProjectName when no provided', () => {
     expect(
       parseRunOneOptions(
+        'root',
         { ...workspaceJson, cli: { defaultProjectName: 'myproj' } },
         ['build', '--flag=true']
       )
     ).toEqual({
       project: 'myproj',
       target: 'build',
+      configuration: 'someDefaultConfig',
+      parsedArgs: { _: [], flag: 'true' },
+    });
+  });
+
+  it('should use defaultConfiguration when no provided', () => {
+    expect(
+      parseRunOneOptions('root', workspaceJson, [
+        'run',
+        'myproj:build',
+        '--flag=true',
+      ])
+    ).toEqual({
+      project: 'myproj',
+      target: 'build',
+      configuration: 'someDefaultConfig',
       parsedArgs: { _: [], flag: 'true' },
     });
   });
 
   it('should return false when the task is not recognized', () => {
-    expect(parseRunOneOptions({}, args)).toBe(false);
-    expect(parseRunOneOptions({ projects: {} }, args)).toBe(false);
-    expect(parseRunOneOptions({ projects: { architect: {} } }, args)).toBe(
-      false
-    );
+    expect(parseRunOneOptions('root', {}, args)).toBe(false);
+    expect(parseRunOneOptions('root', { projects: {} }, args)).toBe(false);
+    expect(
+      parseRunOneOptions('root', { projects: { architect: {} } }, args)
+    ).toBe(false);
   });
 
   it('should return false when cannot find the right project', () => {
-    expect(parseRunOneOptions(workspaceJson, ['build', 'wrongproj'])).toBe(
-      false
-    );
+    expect(
+      parseRunOneOptions('root', workspaceJson, ['build', 'wrongproj'])
+    ).toBe(false);
   });
 
   it('should return false when no project specified', () => {
-    expect(parseRunOneOptions(workspaceJson, ['build'])).toBe(false);
+    expect(parseRunOneOptions('root', workspaceJson, ['build'])).toBe(false);
   });
 });

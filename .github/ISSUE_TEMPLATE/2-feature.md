@@ -1,11 +1,11 @@
 ---
 name: "\U0001F680 Feature Request"
-about: Request Behavior that does not currently exist in Nx
+about: Suggest a new feature.
 labels: "type: feature"
 
 ---
-
 <!-- Please do your best to fill out all of the sections below! -->
+<!-- Use this issue type for concrete suggestions, otherwise, open a discussion type issue instead. -->
 
 ## Description
 <!-- What is the behavior that you would like to see introduced? -->

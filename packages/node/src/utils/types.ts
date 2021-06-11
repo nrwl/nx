@@ -1,5 +1,3 @@
-import { Path } from '@angular-devkit/core';
-
 export interface FileReplacement {
   replace: string;
   with: string;
@@ -37,8 +35,22 @@ export interface BuildBuilderOptions {
   extractLicenses?: boolean;
   verbose?: boolean;
 
-  webpackConfig?: string;
+  webpackConfig?: string | string[];
 
   root?: string;
-  sourceRoot?: Path;
+  sourceRoot?: string;
+  projectRoot?: string;
+}
+
+export interface BuildNodeBuilderOptions extends BuildBuilderOptions {
+  optimization?: boolean;
+  sourceMap?: boolean;
+  externalDependencies: 'all' | 'none' | string[];
+  buildLibsFromSource?: boolean;
+  generatePackageJson?: boolean;
+}
+
+export interface NormalizedBuildNodeBuilderOptions
+  extends BuildNodeBuilderOptions {
+  webpackConfig: string[];
 }

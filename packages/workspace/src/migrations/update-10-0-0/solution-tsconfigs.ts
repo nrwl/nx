@@ -1,11 +1,7 @@
 import { basename, dirname, join, normalize, Path } from '@angular-devkit/core';
 import { chain, Rule, Tree } from '@angular-devkit/schematics';
-import {
-  formatFiles,
-  NxJson,
-  readJsonInTree,
-  updateJsonInTree,
-} from '@nrwl/workspace';
+import type { NxJsonConfiguration } from '@nrwl/devkit';
+import { formatFiles, readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { relative } from 'path';
 import { visitNotIgnoredFiles } from '../../utils/rules/visit-not-ignored-files';
 
@@ -51,10 +47,11 @@ function addReference(
 ): Rule {
   return updateJsonInTree(extendedTsconfigPath, (json, context) => {
     json.references = json.references || [];
-    const relativePath =
-      (relative(dirname(extendedTsconfigPath), file).startsWith('../')
+    const relativePath = `${
+      relative(dirname(extendedTsconfigPath), file).startsWith('../')
         ? ''
-        : './') + relative(dirname(extendedTsconfigPath), file);
+        : './'
+    }${relative(dirname(extendedTsconfigPath), file)}`;
     context.logger.info(`Referencing ${file} in ${extendedTsconfigPath}`);
     json.references.push({
       path: relativePath,
@@ -72,18 +69,21 @@ function updateExtend(file: Path): Rule {
 
 const originalExtendedTsconfigMap = new Map<string, any>();
 
-const changeImplicitDependency = updateJsonInTree<NxJson>('nx.json', (json) => {
-  if (
-    !json.implicitDependencies ||
-    !json.implicitDependencies['tsconfig.json']
-  ) {
+const changeImplicitDependency = updateJsonInTree<NxJsonConfiguration>(
+  'nx.json',
+  (json) => {
+    if (
+      !json.implicitDependencies ||
+      !json.implicitDependencies['tsconfig.json']
+    ) {
+      return json;
+    }
+    json.implicitDependencies['tsconfig.base.json'] =
+      json.implicitDependencies['tsconfig.json'];
+    delete json.implicitDependencies['tsconfig.json'];
     return json;
   }
-  json.implicitDependencies['tsconfig.base.json'] =
-    json.implicitDependencies['tsconfig.json'];
-  delete json.implicitDependencies['tsconfig.json'];
-  return json;
-});
+);
 
 export default function (schema: any): Rule {
   return chain([

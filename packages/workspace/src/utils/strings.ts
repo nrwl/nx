@@ -5,7 +5,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-const STRING_DASHERIZE_REGEXP = /[ _\.]/g;
+const STRING_DASHERIZE_REGEXP = /[ _.]/g;
 const STRING_DECAMELIZE_REGEXP = /([a-z\d])([A-Z])/g;
 const STRING_CAMELIZE_REGEXP = /(-|_|\.|\s)+(.)?/g;
 const STRING_UNDERSCORE_REGEXP_1 = /([a-z\d])([A-Z]+)/g;
@@ -37,7 +37,7 @@ export function decamelize(str: string): string {
  dasherize('action_name');       // 'action-name'
  dasherize('css-class-name');    // 'css-class-name'
  dasherize('my favorite items'); // 'my-favorite-items'
- dasherize('nrwl.io'); // 'nrwl-io'
+ dasherize('nrwl.io');           // 'nrwl-io'
  ```
 
  @method dasherize

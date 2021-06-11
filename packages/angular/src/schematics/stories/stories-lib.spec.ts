@@ -136,6 +136,26 @@ describe('angular:stories for libraries', () => {
           tree
         );
       });
+
+      it('should handle modules with variable declarations rather than literals', async () => {
+        const tree = await runSchematic<StorybookStoriesSchema>(
+          'stories',
+          { name: 'test-ui-lib', generateCypressSpecs: false },
+          appTree
+        );
+
+        expect(
+          tree.exists(
+            'libs/test-ui-lib/src/lib/variable-declare/variable-declare-button/variable-declare-button.component.stories.ts'
+          )
+        ).toBeTruthy();
+
+        expect(
+          tree.exists(
+            'libs/test-ui-lib/src/lib/variable-declare/variable-declare-view/variable-declare-view.component.stories.ts'
+          )
+        ).toBeTruthy();
+      });
     });
   });
 });
@@ -228,6 +248,54 @@ import { BarrelButtonComponent } from './barrel-button';
   declarations: [BarrelButtonComponent],
 })
 export class BarrelModule {}`
+  );
+
+  // create a module with components that get Angular exported and declared by variable
+  appTree = await callRule(
+    externalSchematic('@schematics/angular', 'module', {
+      name: 'variable-declare',
+      project: libName,
+    }),
+    appTree
+  );
+
+  appTree = await callRule(
+    externalSchematic('@schematics/angular', 'component', {
+      name: 'variable-declare-button',
+      project: libName,
+      path: `libs/${libName}/src/lib/variable-declare`,
+      module: 'variable-declare',
+    }),
+    appTree
+  );
+  appTree = await callRule(
+    externalSchematic('@schematics/angular', 'component', {
+      name: 'variable-declare-view',
+      project: libName,
+      path: `libs/${libName}/src/lib/variable-declare`,
+      module: 'variable-declare',
+    }),
+    appTree
+  );
+
+  appTree.overwrite(
+    `libs/${libName}/src/lib/variable-declare/variable-declare.module.ts`,
+    `import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { VariableDeclareButtonComponent } from './variable-declare-button/variable-declare-button.component';
+import { VariableDeclareViewComponent } from './variable-declare-view/variable-declare-view.component';
+
+const COMPONENTS = [
+  VariableDeclareButtonComponent,
+  VariableDeclareViewComponent
+]
+
+@NgModule({
+  imports: [CommonModule],
+  declarations: COMPONENTS,
+  exports: COMPONENTS
+})
+export class VariableDeclareModule {}`
   );
 
   // create another button in a nested subpath

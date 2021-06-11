@@ -1,12 +1,12 @@
 import { join } from 'path';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import { Rule, Tree } from '@angular-devkit/schematics';
-import { names } from './name-utils';
 import { updateWorkspace } from './workspace';
 import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 import { schema } from '@angular-devkit/core';
 import { Architect } from '@angular-devkit/architect';
 import { MockBuilderContext } from '@nrwl/workspace/testing';
+import { names } from '@nrwl/devkit';
 
 const testRunner = new SchematicTestRunner(
   '@nrwl/workspace',
@@ -44,6 +44,11 @@ testRunner.registerCollection(
 );
 
 testRunner.registerCollection(
+  '@nrwl/node',
+  join(__dirname, '../../../node/collection.json')
+);
+
+testRunner.registerCollection(
   '@nrwl/nest',
   join(__dirname, '../../../nest/collection.json')
 );
@@ -57,6 +62,17 @@ const migrationTestRunner = new SchematicTestRunner(
   '@nrwl/workspace/migrations',
   join(__dirname, '../../migrations.json')
 );
+
+export function runExternalSchematic<T = any>(
+  collectionName: string,
+  schematicName: string,
+  options: T,
+  tree: Tree
+) {
+  return testRunner
+    .runExternalSchematicAsync(collectionName, schematicName, options, tree)
+    .toPromise();
+}
 
 export function runSchematic<T = any>(
   schematicName: string,

@@ -3,13 +3,9 @@ import * as <%= className %>Actions from './<%= fileName %>.actions';
 import { State, initialState, reducer } from './<%= fileName %>.reducer';
 
 describe('<%= className %> Reducer', () => {
-  const create<%= className %>Entity = ( id: string, name = '' ) => ({
+  const create<%= className %>Entity = (id: string, name = ''): <%= className %>Entity => ({
     id,
     name: name || `name-${id}`
-  } as <%= className %>Entity);
-
-  beforeEach(() => {
- 
   });
 
   describe('valid <%= className %> actions', () => {

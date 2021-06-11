@@ -1,17 +1,18 @@
 import { vol, fs } from 'memfs';
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('../../utils/app-root', () => ({ appRootPath: '/root' }));
-
-import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+jest.mock('../../utilities/app-root', () => ({ appRootPath: '/root' }));
 import { createProjectGraph } from './project-graph';
-import { DependencyType } from './project-graph-models';
-import { NxJson } from '../shared-interfaces';
-import { defaultFileHasher } from '@nrwl/workspace/src/core/hasher/file-hasher';
+import {
+  NxJsonConfiguration,
+  stripIndents,
+  DependencyType,
+} from '@nrwl/devkit';
+import { defaultFileHasher } from '../hasher/file-hasher';
 
 describe('project graph', () => {
   let packageJson: any;
   let workspaceJson: any;
-  let nxJson: NxJson;
+  let nxJson: NxJsonConfiguration;
   let tsConfigJson: any;
   let filesJson: any;
 

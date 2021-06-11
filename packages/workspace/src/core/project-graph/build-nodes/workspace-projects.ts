@@ -1,4 +1,27 @@
 import { AddProjectNode, ProjectGraphContext } from '../project-graph-models';
+import { defaultFileRead } from '../../file-utils';
+
+function convertNpmScriptsToTargets(projectRoot: string) {
+  try {
+    const packageJsonString = defaultFileRead(
+      `${projectRoot}/package.json`
+    ).toString();
+    const parsedPackagedJson = JSON.parse(packageJsonString);
+    const res = {};
+    // handle no scripts
+    Object.keys(parsedPackagedJson.scripts || {}).forEach((script) => {
+      res[script] = {
+        executor: '@nrwl/workspace:run-script',
+        options: {
+          script,
+        },
+      };
+    });
+    return res;
+  } catch (e) {
+    return undefined;
+  }
+}
 
 export function buildWorkspaceProjectNodes(
   ctx: ProjectGraphContext,
@@ -8,6 +31,9 @@ export function buildWorkspaceProjectNodes(
 
   Object.keys(ctx.fileMap).forEach((key) => {
     const p = ctx.workspaceJson.projects[key];
+    if (!p.targets) {
+      p.targets = convertNpmScriptsToTargets(p.root);
+    }
 
     // TODO, types and projectType should allign
     const projectType =

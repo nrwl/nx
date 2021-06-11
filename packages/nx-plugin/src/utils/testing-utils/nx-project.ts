@@ -1,17 +1,18 @@
-import { appRootPath } from '@nrwl/workspace/src/utils/app-root';
-import { detectPackageManager } from '@nrwl/workspace/src/utils/detect-package-manager';
+import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
+import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { execSync } from 'child_process';
+import { dirname } from 'path';
 import { readFileSync, writeFileSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import { tmpProjPath } from './paths';
 import { cleanup } from './utils';
 
 function runNxNewCommand(args?: string, silent?: boolean) {
-  const localTmpDir = `./tmp/nx-e2e`;
+  const localTmpDir = dirname(tmpProjPath());
   return execSync(
     `node ${require.resolve(
       '@nrwl/tao'
-    )} new proj --no-interactive --skip-install --collection=@nrwl/workspace --npmScope=proj --preset=empty ${
+    )} new proj --nx-workspace-root=${localTmpDir} --no-interactive --skip-install --collection=@nrwl/workspace --npmScope=proj --preset=empty ${
       args || ''
     }`,
     {
@@ -25,7 +26,7 @@ export function patchPackageJsonForPlugin(
   npmPackageName: string,
   distPath: string
 ) {
-  const p = JSON.parse(readFileSync(tmpProjPath('package.json')).toString());
+  const p = JSON.parse(readFileSync(tmpProjPath('package.json'), 'utf-8'));
   p.devDependencies[npmPackageName] = `file:${appRootPath}/${distPath}`;
   writeFileSync(tmpProjPath('package.json'), JSON.stringify(p, null, 2));
 }
@@ -45,8 +46,8 @@ export function uniq(prefix: string) {
  * @param silent silent output from the install
  */
 export function runPackageManagerInstall(silent: boolean = true) {
-  const packageManager = detectPackageManager();
-  const install = execSync(`${packageManager} install`, {
+  const pmc = getPackageManagerCommand();
+  const install = execSync(pmc.install, {
     cwd: tmpProjPath(),
     ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
   });

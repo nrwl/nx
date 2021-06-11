@@ -8,7 +8,6 @@
 
 // TODO: cleanup this file, it's copied as is from Angular CLI.
 
-import { logging } from '@angular-devkit/core';
 import { ScriptTarget } from 'typescript';
 import {
   AssetPatternClass,
@@ -32,6 +31,7 @@ export interface BuildOptions {
   evalSourceMap?: boolean;
   vendorChunk?: boolean;
   commonChunk?: boolean;
+  runtimeChunk?: boolean;
   baseHref?: string;
   deployUrl?: string;
   verbose?: boolean;
@@ -88,7 +88,6 @@ export interface WebpackTestOptions extends BuildOptions {
 
 export interface WebpackConfigOptions<T = BuildOptions> {
   root: string;
-  logger: logging.Logger;
   projectRoot: string;
   sourceRoot?: string;
   buildOptions: T;

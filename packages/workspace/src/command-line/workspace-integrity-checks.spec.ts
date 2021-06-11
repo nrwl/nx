@@ -1,6 +1,6 @@
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
-import chalk from 'chalk';
-import { ProjectType, ProjectGraph } from '../core/project-graph';
+import * as chalk from 'chalk';
+import { ProjectType } from '../core/project-graph';
 import { extname } from 'path';
 
 describe('WorkspaceIntegrityChecks', () => {

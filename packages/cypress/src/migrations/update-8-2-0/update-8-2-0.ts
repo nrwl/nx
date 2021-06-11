@@ -56,18 +56,15 @@ async function updateCypressJson(host: Tree, context: SchematicContext) {
             if (typeof path !== 'string') {
               return path;
             }
-            return (
-              './' +
-              normalize(
+            return `./${normalize(
+              relative(
+                dirname(target.options.cypressConfig as string),
                 relative(
-                  dirname(target.options.cypressConfig as string),
-                  relative(
-                    './' + tsConfig.options.outDir,
-                    join(dirname(target.options.cypressConfig as string), path)
-                  )
+                  `./${tsConfig.options.outDir}`,
+                  join(dirname(target.options.cypressConfig as string), path)
                 )
               )
-            );
+            )}`;
           }
 
           const tsConfig = parseJsonConfigFileContent(
@@ -99,16 +96,13 @@ async function updateCypressJson(host: Tree, context: SchematicContext) {
                 if (typeof path !== 'string') {
                   return path;
                 }
-                return (
-                  './' +
+                return `./${relative(
+                  dirname(config.cypressConfig as string),
                   relative(
-                    dirname(config.cypressConfig as string),
-                    relative(
-                      './' + tsConfig.options.outDir,
-                      join(dirname(config.cypressConfig as string), path)
-                    )
+                    `./${tsConfig.options.outDir}`,
+                    join(dirname(config.cypressConfig as string), path)
                   )
-                );
+                )}`;
               }
 
               const tsConfig = parseJsonConfigFileContent(
@@ -166,7 +160,7 @@ async function updatePlugins(host: Tree, context: SchematicContext) {
 
           const pluginFile = join(
             dirname(config.cypressConfig as string),
-            cypressConfig.pluginsFile.replace(/\.js$/, '') + '.ts'
+            `${cypressConfig.pluginsFile.replace(/\.js$/, '')}.ts`
           );
           const newPluginFile = pluginFile.replace(/\.ts$/, '.js');
 

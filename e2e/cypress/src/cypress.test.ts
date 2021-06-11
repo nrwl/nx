@@ -1,15 +1,18 @@
 import {
   checkFilesExist,
+  killPorts,
   newProject,
   readFile,
   readJson,
   runCLI,
-  supportUi,
+  runCypressTests,
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
 
 describe('Cypress E2E Test runner', () => {
+  afterEach(() => killPorts());
+
   describe('project scaffolding', () => {
     it('should generate an app with the Cypress as e2e test runner', () => {
       newProject();
@@ -35,7 +38,7 @@ describe('Cypress E2E Test runner', () => {
     }, 1000000);
   });
 
-  if (supportUi()) {
+  if (runCypressTests()) {
     describe('running Cypress', () => {
       it('should execute e2e tests using Cypress', () => {
         newProject();

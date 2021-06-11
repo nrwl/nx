@@ -1,8 +1,8 @@
 import * as yargsParser from 'yargs-parser';
 import * as yargs from 'yargs';
 import * as fileUtils from '../core/file-utils';
-import { NxAffectedConfig } from '../core/shared-interfaces';
-import { output } from '../utils/output';
+import { output } from '../utilities/output';
+import { names, NxAffectedConfig } from '@nrwl/devkit';
 
 const runOne = [
   'target',
@@ -10,21 +10,17 @@ const runOne = [
   'prod',
   'runner',
   'parallel',
-  'maxParallel',
   'max-parallel',
   'exclude',
-  'onlyFailed',
   'only-failed',
   'help',
-  'version',
-  'withDeps',
   'with-deps',
-  'skipNxCache',
   'skip-nx-cache',
   'scan',
+  'hide-cached-output',
 ];
 
-const runMany = [...runOne, 'projects', 'quiet', 'all', 'verbose'];
+const runMany = [...runOne, 'projects', 'all', 'verbose'];
 
 const runAffected = [
   ...runOne,
@@ -34,7 +30,6 @@ const runAffected = [
   'base',
   'head',
   'files',
-  'quiet',
   'plain',
   'select',
   'verbose',
@@ -63,7 +58,6 @@ export interface NxArgs {
   verbose?: boolean;
   help?: boolean;
   version?: boolean;
-  quiet?: boolean;
   plain?: boolean;
   withDeps?: boolean;
   'with-deps'?: boolean;
@@ -71,6 +65,8 @@ export interface NxArgs {
   select?: string;
   skipNxCache?: boolean;
   'skip-nx-cache'?: boolean;
+  'hide-cached-output'?: boolean;
+  hideCachedOutput?: boolean;
   scan?: boolean;
 }
 
@@ -85,11 +81,16 @@ export function splitArgsIntoNxArgsAndOverrides(
     mode === 'run-one' ? runOne : mode === 'run-many' ? runMany : runAffected;
 
   const nxArgs: RawNxArgs = {};
-  const overrides = yargsParser(args._);
+  const overrides = yargsParser(args._ as string[], {
+    configuration: {
+      'strip-dashed': true,
+    },
+  });
   delete overrides._;
 
   Object.entries(args).forEach(([key, value]) => {
-    if (nxSpecific.includes(key)) {
+    const dasherized = names(key).fileName;
+    if (nxSpecific.includes(dasherized) || dasherized.startsWith('nx-')) {
       nxArgs[key] = value;
     } else if (!ignoreArgs.includes(key)) {
       overrides[key] = value;
@@ -124,8 +125,8 @@ export function splitArgsIntoNxArgsAndOverrides(
       !nxArgs.all &&
       args._.length >= 2
     ) {
-      nxArgs.base = args._[0];
-      nxArgs.head = args._[1];
+      nxArgs.base = args._[0] as string;
+      nxArgs.head = args._[1] as string;
     } else if (!nxArgs.base) {
       const affectedConfig = getAffectedConfig();
 
@@ -171,12 +172,13 @@ function printArgsWarning(options: NxArgs) {
     output.warn({
       title: `Running affected:* commands with --all can result in very slow builds.`,
       bodyLines: [
-        output.bold('--all') +
-          ' is not meant to be used for any sizable project or to be used in CI.',
+        `${output.bold(
+          '--all'
+        )} is not meant to be used for any sizable project or to be used in CI.`,
         '',
-        output.colors.gray(
+        `${output.colors.gray(
           'Learn more about checking only what is affected: '
-        ) + 'https://nx.dev/guides/monorepo-affected.',
+        )}https://nx.dev/latest/angular/cli/affected#affected.`,
       ],
     });
   }

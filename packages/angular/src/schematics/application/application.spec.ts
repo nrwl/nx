@@ -1,8 +1,10 @@
 import { Tree } from '@angular-devkit/schematics';
+import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
+import { NxJsonConfiguration, parseJson } from '@nrwl/devkit';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
-import * as stripJsonComments from 'strip-json-comments';
-import { readJsonInTree, updateJsonInTree, NxJson } from '@nrwl/workspace';
-import { runSchematic, callRule } from '../../utils/testing';
+import { callRule, runSchematic } from '../../utils/testing';
+
+const prettier = require('prettier');
 
 describe('app', () => {
   let appTree: Tree;
@@ -33,7 +35,7 @@ describe('app', () => {
         { name: 'myApp', tags: 'one,two' },
         appTree
       );
-      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
+      const nxJson = readJsonInTree<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-app': {
           tags: ['one', 'two'],
@@ -66,22 +68,20 @@ describe('app', () => {
         path: './tsconfig.editor.json',
       });
 
-      const tsconfigApp = JSON.parse(
-        stripJsonComments(getFileContent(tree, 'apps/my-app/tsconfig.app.json'))
+      const tsconfigApp = parseJson(
+        getFileContent(tree, 'apps/my-app/tsconfig.app.json')
       );
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
-      const tslintJson = JSON.parse(
-        stripJsonComments(getFileContent(tree, 'apps/my-app/tslint.json'))
+      const eslintrcJson = parseJson(
+        getFileContent(tree, 'apps/my-app/.eslintrc.json')
       );
-      expect(tslintJson.extends).toEqual('../../tslint.json');
+      expect(eslintrcJson.extends).toEqual(['../../.eslintrc.json']);
 
       expect(tree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
-      const tsconfigE2E = JSON.parse(
-        stripJsonComments(
-          getFileContent(tree, 'apps/my-app-e2e/tsconfig.e2e.json')
-        )
+      const tsconfigE2E = parseJson(
+        getFileContent(tree, 'apps/my-app-e2e/tsconfig.e2e.json')
       );
       expect(tsconfigE2E.extends).toEqual('./tsconfig.json');
     });
@@ -90,10 +90,13 @@ describe('app', () => {
       const tree = await runSchematic('app', { name: 'myApp' }, appTree);
 
       expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
-        `'jest-preset-angular/build/AngularSnapshotSerializer.js'`
+        `'jest-preset-angular/build/serializers/no-ng-attributes'`
       );
       expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
-        `'jest-preset-angular/build/HTMLCommentSerializer.js'`
+        `'jest-preset-angular/build/serializers/ng-snapshot'`
+      );
+      expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
+        `'jest-preset-angular/build/serializers/html-comment'`
       );
     });
 
@@ -103,9 +106,14 @@ describe('app', () => {
         { name: 'myApp', e2eTestRunner: 'protractor' },
         appTree
       );
+
       const withPrefix = await runSchematic(
         'app',
-        { name: 'myApp', prefix: 'custom', e2eTestRunner: 'protractor' },
+        {
+          name: 'myAppWithPrefix',
+          prefix: 'custom',
+          e2eTestRunner: 'protractor',
+        },
         appTree
       );
 
@@ -114,9 +122,7 @@ describe('app', () => {
       let appE2eSpec = noPrefix
         .read('apps/my-app-e2e/src/app.e2e-spec.ts')
         .toString();
-      let workspaceJson = JSON.parse(
-        noPrefix.read('workspace.json').toString()
-      );
+      let workspaceJson = parseJson(noPrefix.read('workspace.json').toString());
       let myAppPrefix = workspaceJson.projects['my-app'].prefix;
 
       expect(myAppPrefix).toEqual('proj');
@@ -127,13 +133,14 @@ describe('app', () => {
       appE2eSpec = withPrefix
         .read('apps/my-app-e2e/src/app.e2e-spec.ts')
         .toString();
-      workspaceJson = JSON.parse(withPrefix.read('workspace.json').toString());
-      myAppPrefix = workspaceJson.projects['my-app'].prefix;
+      workspaceJson = parseJson(withPrefix.read('workspace.json').toString());
+      myAppPrefix = workspaceJson.projects['my-app-with-prefix'].prefix;
 
       expect(myAppPrefix).toEqual('custom');
       expect(appE2eSpec).toContain('Welcome to my-app!');
     });
 
+    // TODO: this test should be fixed
     xit('should work if the new project root is changed', async () => {
       appTree = await callRule(
         updateJsonInTree('/workspace.json', (json) => ({
@@ -174,7 +181,7 @@ describe('app', () => {
         { name: 'myApp', directory: 'myDir', tags: 'one,two' },
         appTree
       );
-      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
+      const nxJson = readJsonInTree<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-dir-my-app': {
           tags: ['one', 'two'],
@@ -189,7 +196,7 @@ describe('app', () => {
     it('should generate files', async () => {
       const hasJsonValue = ({ path, expectedValue, lookupFn }) => {
         const content = getFileContent(tree, path);
-        const config = JSON.parse(stripJsonComments(content));
+        const config = parseJson(content);
 
         expect(lookupFn(config)).toEqual(expectedValue);
       };
@@ -221,9 +228,9 @@ describe('app', () => {
           expectedValue: '../../../dist/out-tsc',
         },
         {
-          path: 'apps/my-dir/my-app/tslint.json',
+          path: 'apps/my-dir/my-app/.eslintrc.json',
           lookupFn: (json) => json.extends,
-          expectedValue: '../../../tslint.json',
+          expectedValue: ['../../../.eslintrc.json'],
         },
       ].forEach(hasJsonValue);
     });
@@ -309,20 +316,27 @@ describe('app', () => {
         true
       );
     });
+  });
 
-    it('should set it as default', async () => {
-      const result = await runSchematic(
+  describe('--skipFormat', () => {
+    it('should format files by default', async () => {
+      const spy = jest.spyOn(prettier, 'getFileInfo');
+
+      appTree = await runSchematic('app', { name: 'myApp' }, appTree);
+
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('should skip format when set to true', async () => {
+      const spy = jest.spyOn(prettier, 'format');
+
+      appTree = await runSchematic(
         'app',
-        { name: 'myApp', style: 'scss' },
+        { name: 'myApp', skipFormat: true },
         appTree
       );
-      const workspaceJson = readJsonInTree(result, 'workspace.json');
 
-      expect(workspaceJson.projects['my-app'].schematics).toEqual({
-        '@schematics/angular:component': {
-          style: 'scss',
-        },
-      });
+      expect(spy).not.toHaveBeenCalled();
     });
   });
 
@@ -335,12 +349,99 @@ describe('app', () => {
           appTree
         );
         const workspaceJson = readJsonInTree(tree, 'workspace.json');
-        expect(
-          workspaceJson.projects['my-app'].architect.lint
-        ).toMatchSnapshot();
-        expect(
-          workspaceJson.projects['my-app-e2e'].architect.lint
-        ).toMatchSnapshot();
+        expect(workspaceJson.projects['my-app'].architect.lint)
+          .toMatchInlineSnapshot(`
+          Object {
+            "builder": "@nrwl/linter:eslint",
+            "options": Object {
+              "lintFilePatterns": Array [
+                "apps/my-app/src/**/*.ts",
+                "apps/my-app/src/**/*.html",
+              ],
+            },
+          }
+        `);
+        expect(workspaceJson.projects['my-app-e2e'].architect.lint)
+          .toMatchInlineSnapshot(`
+          Object {
+            "builder": "@nrwl/linter:eslint",
+            "options": Object {
+              "lintFilePatterns": Array [
+                "apps/my-app-e2e/**/*.{js,ts}",
+              ],
+            },
+          }
+        `);
+      });
+
+      it('should add valid eslint JSON configuration which extends from Nx presets', async () => {
+        const tree = await runSchematic(
+          'app',
+          { name: 'myApp', linter: 'eslint' },
+          appTree
+        );
+
+        const eslintConfig = readJsonInTree(tree, 'apps/my-app/.eslintrc.json');
+        expect(eslintConfig).toMatchInlineSnapshot(`
+          Object {
+            "extends": Array [
+              "../../.eslintrc.json",
+            ],
+            "ignorePatterns": Array [
+              "!**/*",
+            ],
+            "overrides": Array [
+              Object {
+                "extends": Array [
+                  "plugin:@nrwl/nx/angular",
+                  "plugin:@angular-eslint/template/process-inline-templates",
+                ],
+                "files": Array [
+                  "*.ts",
+                ],
+                "rules": Object {
+                  "@angular-eslint/component-selector": Array [
+                    "error",
+                    Object {
+                      "prefix": "proj",
+                      "style": "kebab-case",
+                      "type": "element",
+                    },
+                  ],
+                  "@angular-eslint/directive-selector": Array [
+                    "error",
+                    Object {
+                      "prefix": "proj",
+                      "style": "camelCase",
+                      "type": "attribute",
+                    },
+                  ],
+                },
+              },
+              Object {
+                "extends": Array [
+                  "plugin:@nrwl/nx/angular-template",
+                ],
+                "files": Array [
+                  "*.html",
+                ],
+                "rules": Object {},
+              },
+            ],
+          }
+        `);
+      });
+    });
+
+    describe('none', () => {
+      it('should not add an architect target for lint', async () => {
+        const tree = await runSchematic(
+          'app',
+          { name: 'myApp', linter: 'none' },
+          appTree
+        );
+        const workspaceJson = readJsonInTree(tree, 'workspace.json');
+        expect(workspaceJson.projects['my-app'].architect.lint).toBeUndefined();
       });
     });
   });
@@ -351,13 +452,13 @@ describe('app', () => {
         const tree = await runSchematic('app', { name: 'myApp' }, appTree);
 
         expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
-          `'jest-preset-angular/build/AngularNoNgAttributesSnapshotSerializer.js'`
+          `'jest-preset-angular/build/serializers/no-ng-attributes'`
         );
         expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
-          `'jest-preset-angular/build/AngularSnapshotSerializer.js'`
+          `'jest-preset-angular/build/serializers/ng-snapshot'`
         );
         expect(tree.readContent('apps/my-app/jest.config.js')).toContain(
-          `'jest-preset-angular/build/HTMLCommentSerializer.js'`
+          `'jest-preset-angular/build/serializers/html-comment'`
         );
       });
     });
@@ -376,13 +477,6 @@ describe('app', () => {
         expect(workspaceJson.projects['my-app'].architect.test.builder).toEqual(
           '@angular-devkit/build-angular:karma'
         );
-        expect(
-          workspaceJson.projects['my-app'].architect.lint.options.tsConfig
-        ).toEqual([
-          'apps/my-app/tsconfig.app.json',
-          'apps/my-app/tsconfig.spec.json',
-          'apps/my-app/tsconfig.editor.json',
-        ]);
         const tsconfigAppJson = readJsonInTree(
           tree,
           'apps/my-app/tsconfig.app.json'
@@ -405,14 +499,11 @@ describe('app', () => {
         expect(tree.exists('apps/my-app/tsconfig.spec.json')).toBeFalsy();
         expect(tree.exists('apps/my-app/jest.config.js')).toBeFalsy();
         expect(tree.exists('apps/my-app/karma.config.js')).toBeFalsy();
+        expect(
+          tree.exists('apps/my-app/src/app/app.component.spec.ts')
+        ).toBeFalsy();
         const workspaceJson = readJsonInTree(tree, 'workspace.json');
         expect(workspaceJson.projects['my-app'].architect.test).toBeUndefined();
-        expect(
-          workspaceJson.projects['my-app'].architect.lint.options.tsConfig
-        ).toEqual([
-          'apps/my-app/tsconfig.app.json',
-          'apps/my-app/tsconfig.editor.json',
-        ]);
       });
     });
   });
@@ -437,20 +528,22 @@ describe('app', () => {
             e2e: {
               builder: '@angular-devkit/build-angular:protractor',
               options: {
-                devServerTarget: 'my-app:serve',
                 protractorConfig: 'apps/my-app-e2e/protractor.conf.js',
               },
               configurations: {
+                development: {
+                  devServerTarget: 'my-app:serve:development',
+                },
                 production: {
                   devServerTarget: 'my-app:serve:production',
                 },
               },
+              defaultConfiguration: 'development',
             },
             lint: {
-              builder: '@angular-devkit/build-angular:tslint',
+              builder: '@nrwl/linter:eslint',
               options: {
-                tsConfig: ['apps/my-app-e2e/tsconfig.e2e.json'],
-                exclude: ['**/node_modules/**', '!apps/my-app-e2e/**/*'],
+                lintFilePatterns: ['apps/my-app-e2e/**/*.ts'],
               },
             },
           },
@@ -577,7 +670,7 @@ describe('app', () => {
       ];
 
       for (const configFile of configFiles) {
-        const { compilerOptions, angularCompilerOptions } = JSON.parse(
+        const { compilerOptions, angularCompilerOptions } = parseJson(
           tree.readContent(configFile)
         );
 
@@ -592,11 +685,25 @@ describe('app', () => {
         expect(angularCompilerOptions.strictTemplates).toBe(true);
       }
 
-      // check to see if the workspace configuration has been updated to use strict
-      // mode by default in future applications
+      // should not update workspace configuration since --strict=true is the default
+      const workspaceJson = readJsonInTree(tree, 'workspace.json');
+      expect(
+        workspaceJson.schematics['@nrwl/angular:application'].strict
+      ).not.toBeDefined();
+    });
+
+    it('should set defaults when --strict=false', async () => {
+      const tree = await runSchematic(
+        'app',
+        { name: 'my-app', strict: false },
+        appTree
+      );
+
+      // check to see if the workspace configuration has been updated to turn off
+      // strict mode by default in future applications
       const workspaceJson = readJsonInTree(tree, 'workspace.json');
       expect(workspaceJson.schematics['@nrwl/angular:application'].strict).toBe(
-        true
+        false
       );
     });
   });

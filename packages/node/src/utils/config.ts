@@ -8,7 +8,7 @@ import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import * as CopyWebpackPlugin from 'copy-webpack-plugin';
-import { readTsConfig } from '@nrwl/workspace';
+import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { BuildBuilderOptions } from './types';
 
 export const OUT_FILENAME = 'main.js';
@@ -35,7 +35,7 @@ export function getBaseWebpackPartial(
     module: {
       rules: [
         {
-          test: /\.(j|t)sx?$/,
+          test: /\.([jt])sx?$/,
           loader: require.resolve(`ts-loader`),
           exclude: /node_modules/,
           options: {
@@ -111,7 +111,7 @@ export function getBaseWebpackPartial(
               '.gitkeep',
               '**/.DS_Store',
               '**/Thumbs.db',
-              ...(asset.ignore ? asset.ignore : []),
+              ...(asset.ignore ?? []),
             ],
             dot: true,
           },

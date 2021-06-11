@@ -7,9 +7,9 @@ import { <%= className %>Entity } from './<%= fileName %>.models';
 export const <%= constantName %>_FEATURE_KEY = '<%= propertyName %>';
 
 export interface State extends EntityState<<%= className %>Entity> {
-  selectedId ?: string | number;          // which <%= className %> record has been selected
-  loaded      : boolean;                  // has the <%= className %> list been loaded
-  error      ?: string | null;            // last known error (if any)
+  selectedId?: string | number; // which <%= className %> record has been selected
+  loaded: boolean; // has the <%= className %> list been loaded
+  error?: string | null; // last known error (if any)
 }
 
 export interface <%= className %>PartialState {
@@ -20,12 +20,12 @@ export const <%= propertyName %>Adapter: EntityAdapter<<%= className %>Entity> =
 
 export const initialState: State = <%= propertyName %>Adapter.getInitialState({
   // set initial required properties
-  loaded : false
+  loaded: false
 });
 
 const <%= propertyName %>Reducer = createReducer(
   initialState,
-  on(<%= className %>Actions.load<%= className %>,
+  on(<%= className %>Actions.init,
     state => ({ ...state, loaded: false, error: null })
   ),
   on(<%= className %>Actions.load<%= className %>Success,

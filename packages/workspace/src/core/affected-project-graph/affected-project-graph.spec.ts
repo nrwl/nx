@@ -1,20 +1,20 @@
 import { extname } from 'path';
-import { jsonDiff } from '../../utils/json-diff';
+import { jsonDiff } from '../../utilities/json-diff';
 import { vol } from 'memfs';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { createProjectGraph } from '../project-graph';
 import { filterAffected } from './affected-project-graph';
 import { FileData, WholeFileChange } from '../file-utils';
-import { NxJson } from '../shared-interfaces';
+import type { NxJsonConfiguration } from '@nrwl/devkit';
 
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('../../utils/app-root', () => ({ appRootPath: '/root' }));
+jest.mock('../../utilities/app-root', () => ({ appRootPath: '/root' }));
 
 describe('project graph', () => {
   let packageJson: any;
   let workspaceJson: any;
   let tsConfigJson: any;
-  let nxJson: NxJson;
+  let nxJson: NxJsonConfiguration;
   let filesJson: any;
   let filesAtMasterJson: any;
   let files: FileData[];

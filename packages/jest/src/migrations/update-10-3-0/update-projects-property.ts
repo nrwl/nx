@@ -9,14 +9,14 @@ import {
   getWorkspace,
   insert,
   InsertChange,
-  offsetFromRoot,
   serializeJson,
 } from '@nrwl/workspace';
 import {
   addPropertyToJestConfig,
   removePropertyFromJestConfig,
-} from '../../utils/config/update-config';
-import { jestConfigObjectAst } from '../../utils/config/functions';
+} from '../utils/config/legacy/update-config';
+import { jestConfigObjectAst } from '../utils/config/legacy/functions';
+import { offsetFromRoot } from '@nrwl/devkit';
 
 function updateRootJestConfig(): Rule {
   return async (host: Tree, context: SchematicContext) => {
@@ -68,9 +68,8 @@ A new jest.preset.js file will be created that would have your existing configur
 
         let existingRootConfig = host.read('jest.config.js').toString('utf-8');
 
-        existingRootConfig =
-          "const nxPreset = require('@nrwl/jest/preset'); \n" +
-          existingRootConfig;
+        existingRootConfig = `const nxPreset = require('@nrwl/jest/preset'); 
+${existingRootConfig}`;
 
         const presetPath = 'jest.preset.js';
 

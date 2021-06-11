@@ -1,5 +1,4 @@
 import { FileReplacement } from './normalize';
-import { JsonObject } from '@angular-devkit/core';
 
 export interface OptimizationOptions {
   scripts: boolean;
@@ -25,7 +24,7 @@ export interface BuildBuilderOptions {
   maxWorkers?: number;
   poll?: number;
 
-  fileReplacements: FileReplacement[];
+  fileReplacements?: FileReplacement[];
   assets?: any[];
 
   progress?: boolean;
@@ -53,16 +52,17 @@ export interface PackageBuilderOptions {
   extractCss?: boolean;
   globals?: Globals[];
   external?: string[];
-  rollupConfig?: string;
+  rollupConfig?: string | string[];
   babelConfig?: string;
   watch?: boolean;
   assets?: any[];
   updateBuildableProjectDepsInPackageJson?: boolean;
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
   umdName?: string;
+  deleteOutputPath?: boolean;
 }
 
-export interface AssetGlobPattern extends JsonObject {
+export interface AssetGlobPattern {
   glob: string;
   input: string;
   output: string;

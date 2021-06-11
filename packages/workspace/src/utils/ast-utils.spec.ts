@@ -10,7 +10,7 @@ import {
 } from '@angular-devkit/schematics/testing';
 import { join } from 'path';
 import { Tree, SchematicContext, TaskId } from '@angular-devkit/schematics';
-import { serializeJson } from './fileutils';
+import { serializeJson } from '../utilities/fileutils';
 import { createEmptyWorkspace } from './testing-utils';
 
 describe('readJsonInTree', () => {
@@ -50,7 +50,7 @@ describe('readJsonInTree', () => {
   it('should throw an error if the file cannot be parsed', () => {
     tree.create('data.json', `{ data: 'data'`);
     expect(() => readJsonInTree(tree, 'data.json')).toThrow(
-      'Cannot parse data.json: Unexpected token d in JSON at position 2'
+      'Cannot parse data.json: InvalidSymbol in JSON at position 2'
     );
   });
 });
@@ -78,6 +78,15 @@ describe('renameSyncInTree', () => {
       expect(err).toBeFalsy();
       expect(content).toEqual(tree.readContent('/x/y/z/b'));
     });
+  });
+
+  it('should rename without corrupting binary files', () => {
+    const content = Buffer.from([0xca, 0xc5, 0x0e]);
+    tree.create('/a', content);
+    renameSyncInTree(tree, '/a', '/b', (err) => {
+      expect(err).toBeFalsy();
+    });
+    expect(Buffer.compare(content, tree.read('/b'))).toEqual(0);
   });
 });
 
@@ -150,7 +159,10 @@ describe('addDepsToPackageJson', () => {
       })
     );
 
-    const testRunner = new SchematicTestRunner('@nrwl/jest', null);
+    const testRunner = new SchematicTestRunner(
+      '@nrwl/jest',
+      join(__dirname, '../../../jest/collection.json')
+    );
 
     await testRunner
       .callRule(() => {
@@ -179,7 +191,10 @@ describe('addDepsToPackageJson', () => {
       })
     );
 
-    const testRunner = new SchematicTestRunner('@nrwl/jest', null);
+    const testRunner = new SchematicTestRunner(
+      '@nrwl/jest',
+      join(__dirname, '../../../jest/collection.json')
+    );
 
     await testRunner
       .callRule(() => {

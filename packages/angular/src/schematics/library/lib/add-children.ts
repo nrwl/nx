@@ -1,14 +1,10 @@
 import { Rule, Tree } from '@angular-devkit/schematics';
-import {
-  getNpmScope,
-  insert,
-  toFileName,
-  toPropertyName,
-} from '@nrwl/workspace';
+import { getNpmScope, insert } from '@nrwl/workspace';
 import { insertImport } from '@nrwl/workspace/src/utils/ast-utils';
 import * as ts from 'typescript';
 import { addImportToModule, addRoute } from '../../../utils/ast-utils';
 import { NormalizedSchema } from './normalized-schema';
+import { names } from '@nrwl/devkit';
 
 export function addChildren(options: NormalizedSchema): Rule {
   return (host: Tree) => {
@@ -23,7 +19,7 @@ export function addChildren(options: NormalizedSchema): Rule {
       ts.ScriptTarget.Latest,
       true
     );
-    const constName = `${toPropertyName(options.fileName)}Routes`;
+    const constName = `${names(options.fileName).propertyName}Routes`;
     const importPath = `@${npmScope}/${options.projectDirectory}`;
 
     insert(host, options.parentModule, [
@@ -41,7 +37,7 @@ export function addChildren(options: NormalizedSchema): Rule {
       ...addRoute(
         options.parentModule,
         sourceFile,
-        `{path: '${toFileName(options.fileName)}', children: ${constName}}`
+        `{path: '${names(options.fileName).fileName}', children: ${constName}}`
       ),
     ]);
     return host;

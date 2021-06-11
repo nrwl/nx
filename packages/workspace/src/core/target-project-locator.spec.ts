@@ -1,11 +1,9 @@
-import { fs, vol } from 'memfs';
-import {
-  ProjectGraphContext,
-  ProjectGraphNode,
-} from './project-graph/project-graph-models';
+import { vol } from 'memfs';
+import { ProjectGraphContext } from './project-graph';
+import type { ProjectGraphNode } from '@nrwl/devkit';
 import { TargetProjectLocator } from './target-project-locator';
 
-jest.mock('../utils/app-root', () => ({
+jest.mock('../utilities/app-root', () => ({
   appRootPath: '/root',
 }));
 jest.mock('fs', () => require('memfs').fs);

@@ -46,15 +46,19 @@ Run the target on all projects in the workspace
 
 This is the configuration to use when performing tasks on projects
 
+### exclude
+
+Default: ``
+
+Exclude certain projects from being processed
+
 ### help
 
 Show help
 
 ### maxParallel
 
-Default: `3`
-
-Max number of parallel processes. This flag is ignored if the parallel option is set to `false`.
+Max number of parallel processes. This flag is ignored if the parallel option is set to `false`. (default: 3)
 
 ### only-failed
 
@@ -64,9 +68,7 @@ Only run the target on projects which previously failed
 
 ### parallel
 
-Default: `false`
-
-Parallelize the command
+Parallelize the command (default: false)
 
 ### projects
 

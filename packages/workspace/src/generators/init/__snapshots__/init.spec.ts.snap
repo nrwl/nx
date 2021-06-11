@@ -1,0 +1,49 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`workspace move to nx layout should create nx.json 1`] = `
+Object {
+  "affected": Object {
+    "defaultBase": "master",
+  },
+  "implicitDependencies": Object {
+    ".eslintrc.json": "*",
+    "angular.json": "*",
+    "nx.json": "*",
+    "package.json": "*",
+    "tsconfig.base.json": "*",
+    "tslint.json": "*",
+  },
+  "npmScope": "my-app",
+  "projects": Object {
+    "myApp": Object {
+      "tags": Array [],
+    },
+    "myApp-e2e": Object {
+      "implicitDependencies": Array [
+        "myApp",
+      ],
+      "tags": Array [],
+    },
+  },
+}
+`;
+
+exports[`workspace move to nx layout should update tsconfig.base.json if present 1`] = `
+Object {
+  "compilerOptions": Object {
+    "baseUrl": ".",
+    "paths": Object {},
+    "rootDir": ".",
+  },
+}
+`;
+
+exports[`workspace move to nx layout should work if angular-cli workspace had tsconfig.base.json 1`] = `
+Object {
+  "compilerOptions": Object {
+    "baseUrl": ".",
+    "paths": Object {},
+    "rootDir": ".",
+  },
+}
+`;

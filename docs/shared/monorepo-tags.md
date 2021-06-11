@@ -15,7 +15,7 @@ First, use `nx.json` to annotate your projects with tags. In this example, we wi
   "npmScope": "myorg",
   "implicitDependencies": {
     "package.json": "*",
-    "tsconfig.json": "*",
+    "tsconfig.base.json": "*",
     "nx.json": "*"
   },
   "projects": {
@@ -51,14 +51,20 @@ First, use `nx.json` to annotate your projects with tags. In this example, we wi
 }
 ```
 
-Next open the top-level `.eslintrc.json` or `tslint.json` to add the constraints.
+Next you should update your root lint configuration:
 
-```json
+- If you are using **ESLint** you should look for an existing rule entry in your root `.eslintrc.json` called `"@nrwl/nx/enforce-module-boundaries"` and you should update the `"depConstraints"`:
+
+```jsonc
 {
-  "nx-enforce-module-boundaries": [
-    true,
+  // ... more ESLint config here
+
+  // @nrwl/nx/enforce-module-boundaries should already exist within an "overrides" block using `"files": ["*.ts", "*.tsx", "*.js", "*.jsx",]`
+  "@nrwl/nx/enforce-module-boundaries": [
+    "error",
     {
       "allow": [],
+      // update depConstraints based on your tags
       "depConstraints": [
         {
           "sourceTag": "scope:shared",
@@ -75,6 +81,41 @@ Next open the top-level `.eslintrc.json` or `tslint.json` to add the constraints
       ]
     }
   ]
+
+  // ... more ESLint config here
+}
+```
+
+- If you are using **TSLint** you should look for an existing rule entry in your root `tslint.json` called `"nx-enforce-module-boundaries"` and you should update the `"depConstraints"`:
+
+```jsonc
+{
+  // ... more TSLint config here
+
+  // nx-enforce-module-boundaries should already exist at the top-level of your config
+  "nx-enforce-module-boundaries": [
+    true,
+    {
+      "allow": [],
+      // update depConstraints based on your tags
+      "depConstraints": [
+        {
+          "sourceTag": "scope:shared",
+          "onlyDependOnLibsWithTags": ["scope:shared"]
+        },
+        {
+          "sourceTag": "scope:admin",
+          "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"]
+        },
+        {
+          "sourceTag": "scope:client",
+          "onlyDependOnLibsWithTags": ["scope:shared", "scope:client"]
+        }
+      ]
+    }
+  ]
+
+  // ... more TSLint config here
 }
 ```
 

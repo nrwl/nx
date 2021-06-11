@@ -4,7 +4,7 @@ import {
 } from '../core/project-graph';
 import { WorkspaceIntegrityChecks } from './workspace-integrity-checks';
 import { readWorkspaceFiles, workspaceLayout } from '../core/file-utils';
-import { output } from '../utils/output';
+import { output } from '../utilities/output';
 import * as path from 'path';
 
 export function workspaceLint() {

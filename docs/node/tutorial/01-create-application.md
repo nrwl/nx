@@ -1,8 +1,8 @@
-# Step 1: Create Application
+# Node Nx Tutorial - Step 1: Create Application
 
-## Video of this Lesson
+## Nx.dev Tutorial | Node | Step 1: Create Application
 
-<iframe width="560" height="600" src="https://www.youtube.com/embed/UcBSBQYNlhE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/UcBSBQYNlhE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 In this tutorial you will use Nx to build a server application out of common libraries using modern technologies.
 
@@ -10,9 +10,13 @@ In this tutorial you will use Nx to build a server application out of common lib
 
 **Start by creating a new workspace.**
 
-```shell script
-yarn create nx-workspace
+```bash
+npx create-nx-workspace@latest
+```
 
+You will then receive the following prompts in your command line:
+
+```
 ? Workspace name (e.g., org name)         myorg
 ? What to create in the new workspace     nest
 ? Application name                        todos
@@ -22,26 +26,26 @@ yarn create nx-workspace
 myorg/
 ├── README.md
 ├── apps/
-│   └── todos/
-│       ├── jest.config.js
-│       ├── src/
-│       │   ├── app/
-│       │   │   ├── app.controller.spec.ts
-│       │   │   ├── app.controller.ts
-│       │   │   ├── app.module.ts
-│       │   │   ├── app.service.spec.ts
-│       │   │   └── app.service.ts
-│       │   ├── assets/
-│       │   ├── environments/
-│       │   │   ├── environment.prod.ts
-│       │   │   └── environment.ts
-│       │   └── main.ts
-│       ├── tsconfig.app.json
-│       ├── tsconfig.json
-│       └── tsconfig.spec.json
+│   └── todos/
+│       ├── jest.config.js
+│       ├── src/
+│       │   ├── app/
+│       │   │   ├── app.controller.spec.ts
+│       │   │   ├── app.controller.ts
+│       │   │   ├── app.module.ts
+│       │   │   ├── app.service.spec.ts
+│       │   │   └── app.service.ts
+│       │   ├── assets/
+│       │   ├── environments/
+│       │   │   ├── environment.prod.ts
+│       │   │   └── environment.ts
+│       │   └── main.ts
+│       ├── tsconfig.app.json
+│       ├── tsconfig.json
+│       └── tsconfig.spec.json
 ├── tools/
-│   ├── schematics
-│   └── tsconfig.tools.json
+│   ├── generators
+│   └── tsconfig.tools.json
 ├── jest.config.js
 ├── libs
 ├── nx.json
@@ -107,7 +111,7 @@ Options:
   --help                  Show available options for project target.
 ```
 
-It helps with good editor integration (see [VSCode Support](https://nx.dev/node/cli/console)).
+It helps with good editor integration (see [VSCode Support](https://nx.dev/node/getting-started/console)).
 
 But, most importantly, it provides a holistic dev experience regardless of the tools used, and enables advanced build features like distributed computation caching and distributed builds).
 
@@ -118,10 +122,3 @@ Now that the application is set up, run it locally via:
 ```shell script
 nx serve todos
 ```
-
-!!!!!
-Open http://localhost:3333/api in the browser. What do you see?
-!!!!!
-Page saying "{"message":"Welcome to todos!"}"
-Page saying "This is Nest app built with Nx!"
-404

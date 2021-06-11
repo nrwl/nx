@@ -17,8 +17,8 @@
     "Unit Testing",
     "CLI"
   ],
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "./index.js",
+  "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -26,18 +26,15 @@
   },
   "homepage": "https://nx.dev",
   "schematics": "./collection.json",
-  "builders": "./builders.json",
+  "builders": "./executors.json",
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json"
   },
-  "peerDependencies": {
-    "@nrwl/workspace": "*"
-  },
   "dependencies": {
-    "@angular-devkit/architect": "~0.1001.3",
-    "@angular-devkit/core": "~10.1.3",
-    "@angular-devkit/schematics": "~10.1.3",
-    "rxjs": "^6.5.4"
+    "@nrwl/devkit": "*",
+    "jest-resolve": "^26.6.2",
+    "rxjs": "^6.5.4",
+    "tslib": "^2.0.0"
   }
 }

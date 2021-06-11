@@ -1,21 +1,30 @@
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { execSync, fork, spawn } from 'child_process';
+import { exec, execSync } from 'child_process';
 import * as http from 'http';
 import * as treeKill from 'tree-kill';
-import * as ts from 'typescript';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  createFile,
+  killPorts,
   newProject,
   readFile,
   readJson,
   runCLI,
   runCLIAsync,
+  runCommandUntil,
   tmpProjPath,
   uniq,
   updateFile,
-  workspaceConfigName,
+  updateWorkspaceConfig,
 } from '@nrwl/e2e/utils';
+import { accessSync, constants } from 'fs-extra';
+import { promisify } from 'util';
+
+const promisifiedTreeKill: (
+  pid: number,
+  signal: string
+) => Promise<void> = promisify(treeKill);
 
 function getData(): Promise<any> {
   return new Promise((resolve) => {
@@ -33,8 +42,10 @@ function getData(): Promise<any> {
 }
 
 describe('Node Applications', () => {
+  beforeEach(() => newProject());
+  afterEach(() => killPorts());
+
   it('should be able to generate an empty application', async () => {
-    newProject();
     const nodeapp = uniq('nodeapp');
 
     runCLI(`generate @nrwl/node:app ${nodeapp} --linter=eslint`);
@@ -52,8 +63,7 @@ describe('Node Applications', () => {
     expect(result).toContain('Hello World!');
   }, 60000);
 
-  it('should be able to generate an express application', async (done) => {
-    newProject();
+  xit('should be able to generate an express application', async () => {
     const nodeapp = uniq('nodeapp');
 
     runCLI(`generate @nrwl/express:app ${nodeapp} --linter=eslint`);
@@ -84,48 +94,37 @@ describe('Node Applications', () => {
       `dist/apps/${nodeapp}/main.js.map`
     );
 
-    const server = fork(`./dist/apps/${nodeapp}/main.js`, [], {
+    // checking build
+    const server = exec(`node ./dist/apps/${nodeapp}/main.js`, {
       cwd: tmpProjPath(),
-      silent: true,
     });
-    expect(server).toBeTruthy();
+
     await new Promise((resolve) => {
-      server.stdout.once('data', async (data) => {
+      server.stdout.on('data', async (data) => {
         expect(data.toString()).toContain('Listening at http://localhost:3333');
         const result = await getData();
 
         expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
-        treeKill(server.pid, 'SIGTERM', (err) => {
-          expect(err).toBeFalsy();
-          resolve();
-        });
-      });
-    });
-    const process = spawn(
-      'node',
-      ['./node_modules/.bin/nx', 'serve', nodeapp],
-      {
-        cwd: tmpProjPath(),
-      }
-    );
-    let collectedOutput = '';
-    process.stdout.on('data', async (data: Buffer) => {
-      collectedOutput += data.toString();
-      if (!data.toString().includes('Listening at http://localhost:3333')) {
-        return;
-      }
 
-      const result = await getData();
-      expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
-      treeKill(process.pid, 'SIGTERM', (err) => {
-        expect(err).toBeFalsy();
-        done();
+        console.log('kill server');
+        server.kill();
+        resolve(null);
       });
     });
+    // checking serve
+    const p = await runCommandUntil(`serve ${nodeapp}`, (output) =>
+      output.includes('Listening at http://localhost:3333')
+    );
+    const result = await getData();
+    expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
+    try {
+      promisifiedTreeKill(p.pid, 'SIGTERM');
+    } catch (err) {
+      expect(err).toBeFalsy();
+    }
   }, 120000);
 
-  it('should be able to generate a nest application', async (done) => {
-    newProject();
+  xit('should be able to generate a nest application', async () => {
     const nestapp = uniq('nestapp');
     runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
 
@@ -146,12 +145,12 @@ describe('Node Applications', () => {
       `dist/apps/${nestapp}/main.js.map`
     );
 
-    const server = fork(`./dist/apps/${nestapp}/main.js`, [], {
+    const server = exec(`node ./dist/apps/${nestapp}/main.js`, {
       cwd: tmpProjPath(),
-      silent: true,
     });
     expect(server).toBeTruthy();
 
+    // checking build
     await new Promise((resolve) => {
       server.stdout.on('data', async (data) => {
         const message = data.toString();
@@ -159,34 +158,55 @@ describe('Node Applications', () => {
           const result = await getData();
 
           expect(result.message).toEqual(`Welcome to ${nestapp}!`);
-          treeKill(server.pid, 'SIGTERM', (err) => {
-            expect(err).toBeFalsy();
-            resolve();
-          });
+          server.kill();
+          resolve(null);
         }
       });
     });
 
-    const process = spawn(
-      'node',
-      ['./node_modules/@nrwl/cli/bin/nx', 'serve', nestapp],
-      {
-        cwd: tmpProjPath(),
-      }
+    // checking serve
+    const p = await runCommandUntil(`serve ${nestapp}`, (output) =>
+      output.includes('Listening at http://localhost:3333')
     );
-
-    process.stdout.on('data', async (data: Buffer) => {
-      if (!data.toString().includes('Listening at http://localhost:3333')) {
-        return;
-      }
-      const result = await getData();
-      expect(result.message).toEqual(`Welcome to ${nestapp}!`);
-      treeKill(process.pid, 'SIGTERM', (err) => {
-        expect(err).toBeFalsy();
-        done();
-      });
-    });
+    const result = await getData();
+    expect(result.message).toEqual(`Welcome to ${nestapp}!`);
+    try {
+      promisifiedTreeKill(p.pid, 'SIGTERM');
+    } catch (err) {
+      expect(err).toBeFalsy();
+    }
   }, 120000);
+});
+
+describe('Build Node apps', () => {
+  beforeEach(() => newProject());
+
+  it('should generate a package.json with the `--generatePackageJson` flag', async () => {
+    newProject();
+    const nestapp = uniq('nestapp');
+    runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
+
+    await runCLIAsync(`build ${nestapp} --generatePackageJson`);
+
+    checkFilesExist(`dist/apps/${nestapp}/package.json`);
+    const packageJson = JSON.parse(
+      readFile(`dist/apps/${nestapp}/package.json`)
+    );
+    expect(packageJson).toEqual(
+      expect.objectContaining({
+        dependencies: {
+          '@nestjs/common': '^7.0.0',
+          '@nestjs/core': '^7.0.0',
+          '@nestjs/platform-express': '^7.0.0',
+          'reflect-metadata': '^0.1.13',
+          rxjs: '~6.6.3',
+        },
+        main: 'main.js',
+        name: expect.any(String),
+        version: '0.0.1',
+      })
+    );
+  }, 300000);
 });
 
 describe('Node Libraries', () => {
@@ -203,14 +223,16 @@ describe('Node Libraries', () => {
     expect(jestResult.combinedOutput).toContain(
       'Test Suites: 1 passed, 1 total'
     );
-  }, 60000);
+
+    checkFilesDoNotExist(`libs/${nodelib}/package.json`);
+  }, 300000);
 
   it('should be able to generate a publishable node library', async () => {
-    newProject();
+    const proj = newProject();
 
     const nodeLib = uniq('nodelib');
     runCLI(
-      `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@proj/${nodeLib}`
+      `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@${proj}/${nodeLib}`
     );
     checkFilesExist(`libs/${nodeLib}/package.json`);
     const tslibConfig = readJson(`libs/${nodeLib}/tsconfig.lib.json`);
@@ -232,50 +254,123 @@ describe('Node Libraries', () => {
       `dist/libs/${nodeLib}/package.json`
     );
 
-    const packageJson = readJson(`dist/libs/${nodeLib}/package.json`);
-    expect(packageJson).toEqual({
-      name: `@proj/${nodeLib}`,
+    expect(readJson(`dist/libs/${nodeLib}/package.json`)).toEqual({
+      name: `@${proj}/${nodeLib}`,
       version: '0.0.1',
-      main: 'src/index.js',
-      typings: 'src/index.d.ts',
+      main: './src/index.js',
+      typings: './src/index.d.ts',
     });
-  }, 60000);
+
+    // Copying package.json from assets
+    updateWorkspaceConfig((workspace) => {
+      workspace.projects[nodeLib].targets.build.options.assets.push(
+        `libs/${nodeLib}/package.json`
+      );
+      return workspace;
+    });
+    createFile(`dist/libs/${nodeLib}/_should_remove.txt`); // Output directory should be removed
+    await runCLIAsync(`build ${nodeLib}`);
+    expect(readJson(`dist/libs/${nodeLib}/package.json`)).toEqual({
+      name: `@${proj}/${nodeLib}`,
+      version: '0.0.1',
+      main: './src/index.js',
+      typings: './src/index.d.ts',
+    });
+  }, 300000);
+
+  it('should be able to generate a publishable node library with CLI wrapper', async () => {
+    const proj = newProject();
+
+    const nodeLib = uniq('nodelib');
+    runCLI(
+      `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@${proj}/${nodeLib}`
+    );
+
+    updateWorkspaceConfig((workspace) => {
+      workspace.projects[nodeLib].targets.build.options.cli = true;
+      return workspace;
+    });
+
+    await runCLIAsync(`build ${nodeLib}`);
+
+    const binFile = `dist/libs/${nodeLib}/index.bin.js`;
+    checkFilesExist(binFile);
+    expect(() =>
+      accessSync(tmpProjPath(binFile), constants.X_OK)
+    ).not.toThrow();
+
+    expect(readJson(`dist/libs/${nodeLib}/package.json`).bin).toEqual({
+      [nodeLib]: './index.bin.js',
+    });
+    checkFilesDoNotExist(`dist/libs/${nodeLib}/_should_remove.txt`);
+
+    // Support not deleting output path before build
+    createFile(`dist/libs/${nodeLib}/_should_keep.txt`);
+    await runCLIAsync(`build ${nodeLib} --delete-output-path=false`);
+    checkFilesExist(`dist/libs/${nodeLib}/_should_keep.txt`);
+  }, 300000);
+
+  it('should support --js flag', async () => {
+    const proj = newProject();
+
+    const nodeLib = uniq('nodelib');
+    runCLI(
+      `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@${proj}/${nodeLib} --js`
+    );
+    checkFilesExist(
+      `libs/${nodeLib}/package.json`,
+      `libs/${nodeLib}/src/index.js`,
+      `libs/${nodeLib}/src/lib/${nodeLib}.js`,
+      `libs/${nodeLib}/src/lib/${nodeLib}.spec.js`
+    );
+    checkFilesDoNotExist(
+      `libs/${nodeLib}/src/index.ts`,
+      `libs/${nodeLib}/src/lib/${nodeLib}.ts`,
+      `libs/${nodeLib}/src/lib/${nodeLib}.spec.ts`
+    );
+    await runCLIAsync(`build ${nodeLib}`);
+    checkFilesExist(
+      `dist/libs/${nodeLib}/src/index.js`,
+      `dist/libs/${nodeLib}/package.json`
+    );
+  }, 300000);
 
   it('should be able to copy assets', () => {
-    newProject();
+    const proj = newProject();
     const nodelib = uniq('nodelib');
     const nglib = uniq('nglib');
 
     // Generating two libraries just to have a lot of files to copy
     runCLI(
-      `generate @nrwl/node:lib ${nodelib} --publishable --importPath=@proj/${nodelib}`
+      `generate @nrwl/node:lib ${nodelib} --publishable --importPath=@${proj}/${nodelib}`
     );
     /**
      * The angular lib contains a lot sub directories that would fail without
      * `nodir: true` in the package.impl.ts
      */
     runCLI(
-      `generate @nrwl/angular:lib ${nglib} --publishable --importPath=@proj/${nglib}`
+      `generate @nrwl/angular:lib ${nglib} --publishable --importPath=@${proj}/${nglib}`
     );
-    const workspace = readJson(workspaceConfigName());
-    workspace.projects[nodelib].architect.build.options.assets.push({
-      input: `./dist/libs/${nglib}`,
-      glob: '**/*',
-      output: '.',
-    });
 
-    updateFile(workspaceConfigName(), JSON.stringify(workspace));
+    updateWorkspaceConfig((workspace) => {
+      workspace.projects[nodelib].targets.build.options.assets.push({
+        input: `./dist/libs/${nglib}`,
+        glob: '**/*',
+        output: '.',
+      });
+      return workspace;
+    });
 
     runCLI(`build ${nglib}`);
     runCLI(`build ${nodelib}`);
     checkFilesExist(`./dist/libs/${nodelib}/esm2015/index.js`);
-  }, 60000);
+  }, 300000);
 
   it('should fail when trying to compile typescript files that are invalid', () => {
-    newProject();
+    const proj = newProject();
     const nodeLib = uniq('nodelib');
     runCLI(
-      `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@proj/${nodeLib}`
+      `generate @nrwl/node:lib ${nodeLib} --publishable --importPath=@${proj}/${nodeLib}`
     );
     updateFile(
       `libs/${nodeLib}/src/index.ts`,
@@ -288,10 +383,10 @@ describe('Node Libraries', () => {
 });
 
 describe('nest libraries', function () {
-  it('should be able to generate a nest library', async () => {
-    newProject();
-    const nestlib = uniq('nestlib');
+  beforeEach(() => newProject());
 
+  it('should be able to generate a nest library', async () => {
+    const nestlib = uniq('nestlib');
     runCLI(`generate @nrwl/nest:lib ${nestlib}`);
 
     const jestConfigContent = readFile(`libs/${nestlib}/jest.config.js`);
@@ -302,7 +397,7 @@ describe('nest libraries', function () {
                 preset: '../../jest.preset.js',
                 globals: {
                   'ts-jest': {
-                  tsConfig: '<rootDir>/tsconfig.spec.json',
+                  tsconfig: '<rootDir>/tsconfig.spec.json',
                   },
                 },
                 testEnvironment: 'node',
@@ -320,7 +415,6 @@ describe('nest libraries', function () {
   }, 60000);
 
   it('should be able to generate a nest library w/ service', async () => {
-    newProject();
     const nestlib = uniq('nestlib');
 
     runCLI(`generate @nrwl/nest:lib ${nestlib} --service`);
@@ -332,10 +426,9 @@ describe('nest libraries', function () {
     expect(jestResult.combinedOutput).toContain(
       'Test Suites: 1 passed, 1 total'
     );
-  }, 60000);
+  }, 200000);
 
   it('should be able to generate a nest library w/ controller', async () => {
-    newProject();
     const nestlib = uniq('nestlib');
 
     runCLI(`generate @nrwl/nest:lib ${nestlib} --controller`);
@@ -347,10 +440,9 @@ describe('nest libraries', function () {
     expect(jestResult.combinedOutput).toContain(
       'Test Suites: 1 passed, 1 total'
     );
-  }, 60000);
+  }, 200000);
 
   it('should be able to generate a nest library w/ controller and service', async () => {
-    newProject();
     const nestlib = uniq('nestlib');
 
     runCLI(`generate @nrwl/nest:lib ${nestlib} --controller --service`);
@@ -362,7 +454,7 @@ describe('nest libraries', function () {
     expect(jestResult.combinedOutput).toContain(
       'Test Suites: 2 passed, 2 total'
     );
-  }, 60000);
+  }, 200000);
 });
 
 describe('with dependencies', () => {
@@ -381,6 +473,7 @@ describe('with dependencies', () => {
   let parentLib: string;
   let childLib: string;
   let childLib2: string;
+  let proj: string;
 
   beforeEach(() => {
     app = uniq('app');
@@ -388,7 +481,7 @@ describe('with dependencies', () => {
     childLib = uniq('childlib');
     childLib2 = uniq('childlib2');
 
-    newProject();
+    proj = newProject();
 
     runCLI(`generate @nrwl/express:app ${app}`);
     runCLI(`generate @nrwl/node:lib ${parentLib} --buildable=true`);
@@ -401,7 +494,9 @@ describe('with dependencies', () => {
         `libs/${parent}/src/lib/${parent}.ts`,
         `
                 ${children
-                  .map((entry) => `import { ${entry} } from '@proj/${entry}';`)
+                  .map(
+                    (entry) => `import { ${entry} } from '@${proj}/${entry}';`
+                  )
                   .join('\n')}
 
                 export function ${parent}(): string {
@@ -418,7 +513,7 @@ describe('with dependencies', () => {
     updateFile(
       `apps/${app}/src/main.ts`,
       `
-        import "@proj/${parentLib}";
+        import "@${proj}/${parentLib}";
         `
     );
 
@@ -447,24 +542,24 @@ describe('with dependencies', () => {
     const childLibOutput = runCLI(`build ${childLib}`);
 
     expect(childLibOutput).toContain(
-      `Done compiling TypeScript files for library ${childLib}`
+      `Done compiling TypeScript files for project "${childLib}"`
     );
   });
 
   it('should build a parent library if the dependent libraries have been built before', () => {
     const childLibOutput = runCLI(`build ${childLib}`);
     expect(childLibOutput).toContain(
-      `Done compiling TypeScript files for library ${childLib}`
+      `Done compiling TypeScript files for project "${childLib}"`
     );
 
     const childLib2Output = runCLI(`build ${childLib2}`);
     expect(childLib2Output).toContain(
-      `Done compiling TypeScript files for library ${childLib2}`
+      `Done compiling TypeScript files for project "${childLib2}"`
     );
 
     const parentLibOutput = runCLI(`build ${parentLib}`);
     expect(parentLibOutput).toContain(
-      `Done compiling TypeScript files for library ${parentLib}`
+      `Done compiling TypeScript files for project "${parentLib}"`
     );
 
     //   assert package.json deps have been set
@@ -474,7 +569,7 @@ describe('with dependencies', () => {
       version: string
     ) => {
       const jsonFile = readJson(`dist/libs/${parent}/package.json`);
-      const childDependencyVersion = jsonFile.dependencies[`@proj/${lib}`];
+      const childDependencyVersion = jsonFile.dependencies[`@${proj}/${lib}`];
       expect(childDependencyVersion).toBe(version);
     };
 
@@ -483,7 +578,9 @@ describe('with dependencies', () => {
   });
 
   it('should build an app composed out of buildable libs', () => {
-    const buildWithDeps = runCLI(`build ${app} --with-deps`);
+    const buildWithDeps = runCLI(
+      `build ${app} --with-deps --buildLibsFromSource=false`
+    );
     expect(buildWithDeps).toContain(`Running target "build" succeeded`);
     checkFilesDoNotExist(`apps/${app}/tsconfig/tsconfig.nx-tmp`);
 

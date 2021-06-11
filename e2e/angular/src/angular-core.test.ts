@@ -1,23 +1,30 @@
+import * as path from 'path';
 import {
   checkFilesExist,
   expectTestsPass,
-  forEachCli,
+  getSelectedPackageManager,
   getSize,
   newProject,
+  removeProject,
   runCLI,
   runCLIAsync,
   tmpProjPath,
   uniq,
   updateFile,
 } from '@nrwl/e2e/utils';
-import { toClassName } from '@nrwl/workspace';
 
-forEachCli(() => {
-  describe('Angular Package', () => {
-    beforeEach(() => {
-      newProject();
-    });
+import { names } from '@nrwl/devkit';
 
+describe('Angular Package', () => {
+  let proj: string;
+
+  beforeEach(() => (proj = newProject()));
+
+  afterEach(() => removeProject({ onlyOnCI: true }));
+
+  // TODO: npm build is failing for Angular because of webpack 4
+  // remove this condition once `node` is migrated to webpack 5
+  if (getSelectedPackageManager() !== 'npm') {
     it('should work', async () => {
       const myapp = uniq('myapp');
       const mylib = uniq('mylib');
@@ -33,13 +40,13 @@ forEachCli(() => {
         `
         import { NgModule } from '@angular/core';
         import { BrowserModule } from '@angular/platform-browser';
-        import { MyDir${toClassName(
-          mylib
-        )}Module } from '@proj/my-dir/${mylib}';
+        import { MyDir${
+          names(mylib).className
+        }Module } from '@${proj}/my-dir/${mylib}';
         import { AppComponent } from './app.component';
 
         @NgModule({
-          imports: [BrowserModule, MyDir${toClassName(mylib)}Module],
+          imports: [BrowserModule, MyDir${names(mylib).className}Module],
           declarations: [AppComponent],
           bootstrap: [AppComponent]
         })
@@ -83,7 +90,9 @@ forEachCli(() => {
       //   }
       // }
     }, 1000000);
+  }
 
+  if (getSelectedPackageManager() !== 'npm') {
     it('should support router config generation (lazy)', async () => {
       const myapp = uniq('myapp');
       const mylib = uniq('mylib');
@@ -95,7 +104,9 @@ forEachCli(() => {
       runCLI(`build my-dir-${myapp} --aot`);
       expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));
     }, 1000000);
+  }
 
+  if (getSelectedPackageManager() !== 'npm') {
     it('should support router config generation (eager)', async () => {
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/angular:app ${myapp} --directory=myDir --routing`);
@@ -107,7 +118,9 @@ forEachCli(() => {
       runCLI(`build my-dir-${myapp} --aot`);
       expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));
     }, 1000000);
+  }
 
+  if (getSelectedPackageManager() !== 'npm') {
     it('should support Ivy', async () => {
       const myapp = uniq('myapp');
       runCLI(
@@ -117,15 +130,75 @@ forEachCli(() => {
       runCLI(`build my-dir-${myapp} --aot`);
       expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));
     }, 1000000);
+  }
 
-    it('should support eslint', async () => {
+  if (getSelectedPackageManager() !== 'npm') {
+    it('should support building in parallel', () => {
+      if (getSelectedPackageManager() === 'pnpm') {
+        // TODO: This tests fails with pnpm but we should still enable this for other package managers
+        return;
+      }
       const myapp = uniq('myapp');
-      runCLI(`generate @nrwl/angular:app ${myapp} --linter=eslint`);
-      expect(runCLI(`lint ${myapp}`)).toContain('All files pass linting.');
+      const myapp2 = uniq('myapp');
+      runCLI(`generate @nrwl/angular:app ${myapp}`);
+      runCLI(`generate @nrwl/angular:app ${myapp2}`);
 
-      const mylib = uniq('mylib');
-      runCLI(`generate @nrwl/angular:lib ${mylib} --linter=eslint`);
-      expect(runCLI(`lint ${mylib}`)).toContain('All files pass linting.');
+      runCLI('run-many --target build --all --parallel');
     });
+  }
+
+  it('should support eslint and pass linting on the standard generated code', async () => {
+    const myapp = uniq('myapp');
+    runCLI(`generate @nrwl/angular:app ${myapp} --linter=eslint`);
+    expect(runCLI(`lint ${myapp}`)).toContain('All files pass linting.');
+
+    const mylib = uniq('mylib');
+    runCLI(`generate @nrwl/angular:lib ${mylib} --linter=eslint`);
+    expect(runCLI(`lint ${mylib}`)).toContain('All files pass linting.');
+  });
+
+  it('should support eslint and successfully lint external HTML files and inline templates', async () => {
+    const myapp = uniq('myapp');
+
+    runCLI(`generate @nrwl/angular:app ${myapp} --linter=eslint`);
+
+    const templateWhichFailsBananaInBoxLintCheck = `<div ([foo])="bar"></div>`;
+    const wrappedAsInlineTemplate = `
+        import { Component } from '@angular/core';
+
+        @Component({
+          selector: 'inline-template-component',
+          template: \`
+            ${templateWhichFailsBananaInBoxLintCheck}
+          \`,
+        })
+        export class InlineTemplateComponent {}
+      `;
+
+    // External HTML template file
+    updateFile(
+      `apps/${myapp}/src/app/app.component.html`,
+      templateWhichFailsBananaInBoxLintCheck
+    );
+
+    // Inline template within component.ts file
+    updateFile(
+      `apps/${myapp}/src/app/inline-template.component.ts`,
+      wrappedAsInlineTemplate
+    );
+
+    const appLintStdOut = runCLI(`lint ${myapp}`, { silenceError: true });
+    expect(appLintStdOut).toContain(
+      path.normalize(`apps/${myapp}/src/app/app.component.html`)
+    );
+    expect(appLintStdOut).toContain(`1:6`);
+    expect(appLintStdOut).toContain(`Invalid binding syntax`);
+    expect(appLintStdOut).toContain(
+      path.normalize(`apps/${myapp}/src/app/inline-template.component.ts`)
+    );
+    expect(appLintStdOut).toContain(
+      `The selector should be prefixed by one of the prefixes`
+    );
+    expect(appLintStdOut).toContain(`7:18`);
   });
 });

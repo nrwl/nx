@@ -1,10 +1,11 @@
 import { stripIndent } from '@angular-devkit/core/src/utils/literals';
 import { Tree } from '@angular-devkit/schematics';
 import { UnitTestTree } from '@angular-devkit/schematics/testing';
-import { NxJson, readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
+import { readJsonInTree, updateJsonInTree } from '@nrwl/workspace';
 import { createEmptyWorkspace, getFileContent } from '@nrwl/workspace/testing';
-import * as stripJsonComments from 'strip-json-comments';
+import { parseJson } from '@nrwl/devkit';
 import { createApp, runSchematic, callRule } from '../../utils/testing';
+import type { NxJsonConfiguration } from '@nrwl/devkit';
 
 describe('lib', () => {
   let appTree: Tree;
@@ -75,6 +76,24 @@ describe('lib', () => {
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
     });
 
+    it('should update tsconfig.lib.prod.json when enableIvy', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          framework: 'angular',
+          buildable: true,
+          enableIvy: true,
+        },
+        appTree
+      );
+      const tsConfig = readJsonInTree(
+        tree,
+        '/libs/my-lib/tsconfig.lib.prod.json'
+      );
+      expect(tsConfig.angularCompilerOptions['enableIvy']).toBe(true);
+    });
+
     it('should update workspace.json', async () => {
       const tree = await runSchematic(
         'lib',
@@ -90,15 +109,6 @@ describe('lib', () => {
 
       expect(workspaceJson.projects['my-lib'].root).toEqual('libs/my-lib');
       expect(workspaceJson.projects['my-lib'].architect.build).toBeDefined();
-      expect(
-        workspaceJson.projects['my-lib'].architect.lint.options.tsConfig
-      ).toEqual([
-        'libs/my-lib/tsconfig.lib.json',
-        'libs/my-lib/tsconfig.spec.json',
-      ]);
-      expect(
-        workspaceJson.projects['my-lib'].architect.lint.options.exclude
-      ).toEqual(['**/node_modules/**', '!libs/my-lib/**/*']);
     });
 
     it('should remove "build" target from workspace.json when a library is not publishable', async () => {
@@ -145,7 +155,7 @@ describe('lib', () => {
         { name: 'myLib', tags: 'one,two' },
         appTree
       );
-      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
+      const nxJson = readJsonInTree<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-lib': {
           tags: ['one', 'two'],
@@ -166,6 +176,17 @@ describe('lib', () => {
       const tsconfigJson = readJsonInTree(tree, 'libs/my-lib/tsconfig.json');
       expect(tsconfigJson).toEqual({
         extends: '../../tsconfig.base.json',
+        angularCompilerOptions: {
+          strictInjectionParameters: true,
+          strictInputAccessModifiers: true,
+          strictTemplates: true,
+        },
+        compilerOptions: {
+          forceConsistentCasingInFileNames: true,
+          noFallthroughCasesInSwitch: true,
+          noImplicitReturns: true,
+          strict: true,
+        },
         files: [],
         include: [],
         references: [
@@ -333,12 +354,12 @@ describe('lib', () => {
 
       const withPrefix = await runSchematic(
         'lib',
-        { name: 'myLib', prefix: 'custom' },
+        { name: 'myLibWithPrefix', prefix: 'custom' },
         appTree
       );
       expect(
         JSON.parse(withPrefix.read('workspace.json').toString()).projects[
-          'my-lib'
+          'my-lib-with-prefix'
         ].prefix
       ).toEqual('custom');
     });
@@ -383,7 +404,7 @@ describe('lib', () => {
         },
         appTree
       );
-      const nxJson = readJsonInTree<NxJson>(tree, '/nx.json');
+      const nxJson = readJsonInTree<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-dir-my-lib': {
           tags: ['one'],
@@ -401,7 +422,7 @@ describe('lib', () => {
         },
         tree
       );
-      const nxJson2 = readJsonInTree<NxJson>(tree2, '/nx.json');
+      const nxJson2 = readJsonInTree<NxJsonConfiguration>(tree2, '/nx.json');
       expect(nxJson2.projects).toEqual({
         'my-dir-my-lib': {
           tags: ['one'],
@@ -498,16 +519,6 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-dir-my-lib'].root).toEqual(
         'libs/my-dir/my-lib'
       );
-
-      expect(
-        workspaceJson.projects['my-dir-my-lib'].architect.lint.options.tsConfig
-      ).toEqual([
-        'libs/my-dir/my-lib/tsconfig.lib.json',
-        'libs/my-dir/my-lib/tsconfig.spec.json',
-      ]);
-      expect(
-        workspaceJson.projects['my-dir-my-lib'].architect.lint.options.exclude
-      ).toEqual(['**/node_modules/**', '!libs/my-dir/my-lib/**/*']);
     });
 
     it('should update tsconfig.json', async () => {
@@ -581,6 +592,17 @@ describe('lib', () => {
       );
       expect(tsconfigJson).toEqual({
         extends: '../../../tsconfig.base.json',
+        angularCompilerOptions: {
+          strictInjectionParameters: true,
+          strictInputAccessModifiers: true,
+          strictTemplates: true,
+        },
+        compilerOptions: {
+          forceConsistentCasingInFileNames: true,
+          noFallthroughCasesInSwitch: true,
+          noImplicitReturns: true,
+          strict: true,
+        },
         files: [],
         include: [],
         references: [
@@ -678,10 +700,8 @@ describe('lib', () => {
           ),
       }`);
 
-        const tsConfigAppJson = JSON.parse(
-          stripJsonComments(
-            getFileContent(tree, 'apps/myapp/tsconfig.app.json')
-          )
+        const tsConfigAppJson = parseJson(
+          getFileContent(tree, 'apps/myapp/tsconfig.app.json')
         );
         expect(tsConfigAppJson.include).toEqual([
           '**/*.ts',
@@ -722,10 +742,8 @@ describe('lib', () => {
           ),
       }`);
 
-        const tsConfigAppJson2 = JSON.parse(
-          stripJsonComments(
-            getFileContent(tree2, 'apps/myapp/tsconfig.app.json')
-          )
+        const tsConfigAppJson2 = parseJson(
+          getFileContent(tree2, 'apps/myapp/tsconfig.app.json')
         );
         expect(tsConfigAppJson2.include).toEqual([
           '**/*.ts',
@@ -774,10 +792,8 @@ describe('lib', () => {
           import('@proj/my-dir/my-lib3').then((module) => module.MyLib3Module),
       }`);
 
-        const tsConfigAppJson3 = JSON.parse(
-          stripJsonComments(
-            getFileContent(tree3, 'apps/myapp/tsconfig.app.json')
-          )
+        const tsConfigAppJson3 = parseJson(
+          getFileContent(tree3, 'apps/myapp/tsconfig.app.json')
         );
         expect(tsConfigAppJson3.include).toEqual([
           '**/*.ts',
@@ -1008,24 +1024,6 @@ describe('lib', () => {
     });
   });
 
-  describe('--style scss', () => {
-    it('should set it as default', async () => {
-      const result = await runSchematic(
-        'lib',
-        { name: 'myLib', style: 'scss' },
-        appTree
-      );
-
-      const workspaceJson = readJsonInTree(result, 'workspace.json');
-
-      expect(workspaceJson.projects['my-lib'].schematics).toEqual({
-        '@schematics/angular:component': {
-          style: 'scss',
-        },
-      });
-    });
-  });
-
   describe('--unit-test-runner karma', () => {
     it('should generate karma configuration', async () => {
       const resultTree = await runSchematic(
@@ -1045,15 +1043,6 @@ describe('lib', () => {
       expect(workspaceJson.projects['my-lib'].architect.test.builder).toEqual(
         '@angular-devkit/build-angular:karma'
       );
-      expect(
-        workspaceJson.projects['my-lib'].architect.lint.options.tsConfig
-      ).toEqual([
-        'libs/my-lib/tsconfig.lib.json',
-        'libs/my-lib/tsconfig.spec.json',
-      ]);
-      expect(
-        workspaceJson.projects['my-lib'].architect.lint.options.exclude
-      ).toEqual(['**/node_modules/**', '!libs/my-lib/**/*']);
     });
 
     it('should generate module spec when addModuleSpec is specified', async () => {
@@ -1086,9 +1075,6 @@ describe('lib', () => {
       expect(resultTree.exists('libs/my-lib/karma.conf.js')).toBeFalsy();
       const workspaceJson = readJsonInTree(resultTree, 'workspace.json');
       expect(workspaceJson.projects['my-lib'].architect.test).toBeUndefined();
-      expect(
-        workspaceJson.projects['my-lib'].architect.lint.options.tsConfig
-      ).toEqual(['libs/my-lib/tsconfig.lib.json']);
     });
   });
 
@@ -1179,11 +1165,128 @@ describe('lib', () => {
       expect(angularCompilerOptions.strictTemplates).toBe(true);
 
       // check to see if the workspace configuration has been updated to use strict
-      // mode by default in future applications
+      // mode by default in future libraries
+      const workspaceJson = readJsonInTree(tree, 'workspace.json');
+      expect(
+        workspaceJson.schematics['@nrwl/angular:library'].strict
+      ).not.toBeDefined();
+    });
+
+    it('should set defaults when --strict=false', async () => {
+      const tree = await runSchematic(
+        'lib',
+        {
+          name: 'myLib',
+          framework: 'angular',
+          publishable: true,
+          importPath: '@myorg/lib',
+          strict: false,
+        },
+        appTree
+      );
+
+      // check to see if the workspace configuration has been updated to turn off
+      // strict mode by default in future libraries
       const workspaceJson = readJsonInTree(tree, 'workspace.json');
       expect(workspaceJson.schematics['@nrwl/angular:library'].strict).toBe(
-        true
+        false
       );
+    });
+  });
+
+  describe('--linter', () => {
+    describe('eslint', () => {
+      it('should add an architect target for lint', async () => {
+        const tree = await runSchematic(
+          'lib',
+          { name: 'myLib', linter: 'eslint' },
+          appTree
+        );
+        expect(tree.exists('libs/my-lib/tslint.json')).toBe(false);
+        const workspaceJson = readJsonInTree(tree, 'workspace.json');
+        expect(workspaceJson.projects['my-lib'].architect.lint)
+          .toMatchInlineSnapshot(`
+          Object {
+            "builder": "@nrwl/linter:eslint",
+            "options": Object {
+              "lintFilePatterns": Array [
+                "libs/my-lib/src/**/*.ts",
+                "libs/my-lib/src/**/*.html",
+              ],
+            },
+          }
+        `);
+      });
+
+      it('should add valid eslint JSON configuration which extends from Nx presets', async () => {
+        const tree = await runSchematic(
+          'lib',
+          { name: 'myLib', linter: 'eslint' },
+          appTree
+        );
+
+        const eslintConfig = readJsonInTree(tree, 'libs/my-lib/.eslintrc.json');
+        expect(eslintConfig).toMatchInlineSnapshot(`
+          Object {
+            "extends": Array [
+              "../../.eslintrc.json",
+            ],
+            "ignorePatterns": Array [
+              "!**/*",
+            ],
+            "overrides": Array [
+              Object {
+                "extends": Array [
+                  "plugin:@nrwl/nx/angular",
+                  "plugin:@angular-eslint/template/process-inline-templates",
+                ],
+                "files": Array [
+                  "*.ts",
+                ],
+                "rules": Object {
+                  "@angular-eslint/component-selector": Array [
+                    "error",
+                    Object {
+                      "prefix": "proj",
+                      "style": "kebab-case",
+                      "type": "element",
+                    },
+                  ],
+                  "@angular-eslint/directive-selector": Array [
+                    "error",
+                    Object {
+                      "prefix": "proj",
+                      "style": "camelCase",
+                      "type": "attribute",
+                    },
+                  ],
+                },
+              },
+              Object {
+                "extends": Array [
+                  "plugin:@nrwl/nx/angular-template",
+                ],
+                "files": Array [
+                  "*.html",
+                ],
+                "rules": Object {},
+              },
+            ],
+          }
+        `);
+      });
+    });
+
+    describe('none', () => {
+      it('should not add an architect target for lint', async () => {
+        const tree = await runSchematic(
+          'lib',
+          { name: 'myLib', linter: 'none' },
+          appTree
+        );
+        const workspaceJson = readJsonInTree(tree, 'workspace.json');
+        expect(workspaceJson.projects['my-lib'].architect.lint).toBeUndefined();
+      });
     });
   });
 });

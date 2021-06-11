@@ -9,4 +9,5 @@ export interface NormalizedSchema extends Schema {
   moduleName: string;
   projectDirectory: string;
   parsedTags: string[];
+  prefix: string; // we set a default for this in normalizeOptions, so it is no longer optional
 }

@@ -2,13 +2,12 @@ import { getBaseWebpackPartial } from './config';
 
 import * as ts from 'typescript';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
+import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { ProgressPlugin } from 'webpack';
 import { BuildBuilderOptions } from './types';
-import { normalize } from '@angular-devkit/core';
+import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import CircularDependencyPlugin = require('circular-dependency-plugin');
 import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 
 jest.mock('tsconfig-paths-webpack-plugin');
 
@@ -21,11 +20,11 @@ describe('getBaseWebpackPartial', () => {
       tsConfig: 'tsconfig.json',
       fileReplacements: [],
       root: '/root',
-      sourceRoot: normalize('/root/src'),
+      sourceRoot: '/root/src',
       statsJson: false,
     };
     (<any>(
-      TsConfigPathsPlugin
+      TsconfigPathsPlugin
     )).mockImplementation(function MockPathsPlugin() {});
   });
 
@@ -92,11 +91,11 @@ describe('getBaseWebpackPartial', () => {
     });
 
     it('should include module and main in mainFields', () => {
-      spyOn(ts, 'parseJsonConfigFileContent').and.returnValue({
+      jest.spyOn(ts, 'parseJsonConfigFileContent').mockReturnValue({
         options: {
           target: 'es5',
         },
-      });
+      } as any);
 
       const result = getBaseWebpackPartial(input);
       expect(result.resolve.mainFields).toContain('module');
@@ -107,7 +106,7 @@ describe('getBaseWebpackPartial', () => {
       const result = getBaseWebpackPartial(input);
 
       expect(result.stats).toEqual(
-        jasmine.objectContaining({
+        expect.objectContaining({
           hash: true,
           timings: false,
           cached: false,
@@ -149,17 +148,17 @@ describe('getBaseWebpackPartial', () => {
     });
 
     it('should add the TsConfigPathsPlugin for resolving', () => {
-      spyOn(ts, 'parseJsonConfigFileContent').and.returnValue({
+      jest.spyOn(ts, 'parseJsonConfigFileContent').mockReturnValue({
         options: {
           paths: {
             '@npmScope/libraryName': ['libs/libraryName/src/index.ts'],
           },
         },
-      });
+      } as any);
       const result = getBaseWebpackPartial(input);
       expect(
         result.resolve.plugins.some(
-          (plugin) => plugin instanceof TsConfigPathsPlugin
+          (plugin) => plugin instanceof TsconfigPathsPlugin
         )
       ).toEqual(true);
     });
@@ -172,9 +171,9 @@ describe('getBaseWebpackPartial', () => {
 
   describe('the file replacements option', () => {
     it('should set aliases', () => {
-      spyOn(ts, 'parseJsonConfigFileContent').and.returnValue({
+      jest.spyOn(ts, 'parseJsonConfigFileContent').mockReturnValue({
         options: {},
-      });
+      } as any);
 
       const result = getBaseWebpackPartial({
         ...input,
@@ -384,7 +383,7 @@ describe('getBaseWebpackPartial', () => {
         const result = getBaseWebpackPartial(input);
 
         expect(result.stats).toEqual(
-          jasmine.objectContaining({
+          expect.objectContaining({
             colors: true,
             chunks: true,
             assets: false,
@@ -407,7 +406,7 @@ describe('getBaseWebpackPartial', () => {
         const result = getBaseWebpackPartial(input);
 
         expect(result.stats).toEqual(
-          jasmine.objectContaining({
+          expect.objectContaining({
             colors: false,
             chunks: false,
             assets: true,
@@ -443,15 +442,18 @@ describe('getBaseWebpackPartial', () => {
       });
     });
 
-    it('should support envName overrides', () => {
+    it('should set envName to production when script optimization is enabled', () => {
+      const esm = true;
+      const isScriptOptimizeOn = true;
+      const emitDecoratorMetadata = true;
       const result = getBaseWebpackPartial(
         {
           ...input,
           progress: true,
         },
-        true,
-        true,
-        'production'
+        esm,
+        isScriptOptimizeOn,
+        emitDecoratorMetadata
       );
 
       const rule = result.module.rules.find(
@@ -461,6 +463,32 @@ describe('getBaseWebpackPartial', () => {
         rootMode: 'upward',
         cwd: '/root/root/src',
         envName: 'production',
+        babelrc: true,
+      });
+    });
+
+    it('should override envName when script optimization is disabled', () => {
+      const esm = true;
+      const isScriptOptimizeOn = false;
+      const emitDecoratorMetadata = true;
+      const result = getBaseWebpackPartial(
+        {
+          ...input,
+          progress: true,
+        },
+        esm,
+        isScriptOptimizeOn,
+        emitDecoratorMetadata,
+        'staging'
+      );
+
+      const rule = result.module.rules.find(
+        (r) => typeof r.loader === 'string' && r.loader.match(/babel-loader/)
+      );
+      expect(rule.options).toMatchObject({
+        rootMode: 'upward',
+        cwd: '/root/root/src',
+        envName: 'staging',
         babelrc: true,
       });
     });

@@ -1,4 +1,9 @@
-import { chain, Rule, SchematicsException } from '@angular-devkit/schematics';
+import {
+  chain,
+  noop,
+  Rule,
+  SchematicsException,
+} from '@angular-devkit/schematics';
 import { updateJsonInTree } from '@nrwl/workspace';
 import { NormalizedSchema } from './normalized-schema';
 import { libsDir } from '@nrwl/workspace/src/utils/ast-utils';
@@ -34,6 +39,24 @@ function updateProjectConfig(options: NormalizedSchema) {
   );
 }
 
+function updateProjectProdConfig(options: NormalizedSchema) {
+  if (options.enableIvy) {
+    return updateJsonInTree(
+      `${options.projectRoot}/tsconfig.lib.prod.json`,
+      (json) => {
+        json.angularCompilerOptions['enableIvy'] = true;
+        return json;
+      }
+    );
+  }
+
+  return noop();
+}
+
 export function updateTsConfig(options: NormalizedSchema): Rule {
-  return chain([updateRootConfig(options), updateProjectConfig(options)]);
+  return chain([
+    updateRootConfig(options),
+    updateProjectConfig(options),
+    updateProjectProdConfig(options),
+  ]);
 }

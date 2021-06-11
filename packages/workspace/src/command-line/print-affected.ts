@@ -1,20 +1,23 @@
-import { ProjectGraph, ProjectGraphNode } from '../core/project-graph';
-import { Task } from '../tasks-runner/tasks-runner';
-import { createTask } from '../tasks-runner/run-command';
-import { basename } from 'path';
+import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
+import type { Environment } from '../core/shared-interfaces';
+import type { Task } from '../tasks-runner/tasks-runner';
+import { createTask, getRunner } from '../tasks-runner/run-command';
 import { getCommandAsString, getOutputs } from '../tasks-runner/utils';
 import * as yargs from 'yargs';
-import { NxArgs } from './utils';
+import type { NxArgs } from './utils';
+import { Hasher } from '../core/hasher/hasher';
+import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 
-export function printAffected(
+export async function printAffected(
   affectedProjectsWithTargetAndConfig: ProjectGraphNode[],
   affectedProjects: ProjectGraphNode[],
   projectGraph: ProjectGraph,
+  { nxJson }: Environment,
   nxArgs: NxArgs,
   overrides: yargs.Arguments
 ) {
   const projectNames = affectedProjects.map((p) => p.name);
-  const tasksJson = createTasks(
+  const tasksJson = await createTasks(
     affectedProjectsWithTargetAndConfig,
     projectGraph,
     nxArgs,
@@ -32,7 +35,7 @@ export function printAffected(
   }
 }
 
-function createTasks(
+async function createTasks(
   affectedProjectsWithTargetAndConfig: ProjectGraphNode[],
   projectGraph: ProjectGraph,
   nxArgs: NxArgs,
@@ -44,15 +47,18 @@ function createTasks(
         project: affectedProject,
         target: nxArgs.target,
         configuration: nxArgs.configuration,
-        overrides: overrides,
+        overrides,
+        errorIfCannotFindConfiguration: false,
       })
   );
-  const isYarn = basename(process.env.npm_execpath || 'npm').startsWith('yarn');
-  return tasks.map((task) => ({
+
+  const pm = detectPackageManager();
+  const isYarn = pm === 'yarn';
+  return tasks.map((task, index) => ({
     id: task.id,
-    overrides: overrides,
+    overrides,
     target: task.target,
-    command: `${isYarn ? 'yarn' : 'npm run'} ${getCommandAsString(
+    command: `${isYarn ? 'yarn' : `${pm} run`} ${getCommandAsString(
       'nx',
       isYarn,
       task

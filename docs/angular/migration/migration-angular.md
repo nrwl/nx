@@ -32,14 +32,14 @@ To transform a Angular CLI workspace to an Nx workspace, use the `ng add` comman
 ng add @nrwl/workspace
 ```
 
-This installs the `@nrwl/workspace` package into your workspace and runs a schematic to transform your workspace. The schematic applies the following changes to your workspace:
+This installs the `@nrwl/workspace` package into your workspace and runs a generator (or schematic) to transform your workspace. The generator applies the following changes to your workspace:
 
 - Installs the packages for the `Nx` plugin `@nrwl/angular` in your package.json.
 - Creates an nx.json file in the root of your workspace.
 - Creates configuration files for Prettier.
 - Creates an `apps` folder for generating applications.
 - Creates a `libs` folder for generating libraries.
-- Creates a `tools` folder that includes files for custom workspace tooling, such as workspace-specific schematics and scripts.
+- Creates a `tools` folder that includes files for custom workspace tooling, such as workspace-specific generators and scripts.
 - Moves your application into the `apps` folder, and updates the relevant file paths in your configuration files.
 - Moves your e2e suite into the `apps/{{app name}}-e2e` folder, and updates the relevant file paths in your configuration files.
 - Updates your `package.json` with scripts to run various `Nx` workspace commands.
@@ -50,32 +50,32 @@ After the changes are applied, your workspace file structure should look similar
 ```treeview
 <workspace name>/
 ├── apps/
-│   ├── <app name>/
-│   │   ├── src/
-│   │   │   ├── app/
-│   │   │   ├── assets/
-│   │   │   ├── environments/
-│   │   │   ├── favicon.ico
-│   │   │   ├── index.html
-│   │   │   ├── main.ts
-│   │   │   ├── polyfills.ts
-│   │   │   ├── styles.css
-│   │   │   └── test.ts
-│   │   ├── browserslist
-│   │   ├── karma.conf.js
-│   │   ├── tsconfig.app.json
-│   │   └── tsconfig.spec.json
-│   └── <app name>-e2e/
-│       ├── src/
-│       ├── protractor.conf.js
-│       └── tsconfig.json
+│   ├── <app name>/
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   ├── assets/
+│   │   │   ├── environments/
+│   │   │   ├── favicon.ico
+│   │   │   ├── index.html
+│   │   │   ├── main.ts
+│   │   │   ├── polyfills.ts
+│   │   │   ├── styles.css
+│   │   │   └── test.ts
+│   │   ├── browserslist
+│   │   ├── karma.conf.js
+│   │   ├── tsconfig.app.json
+│   │   └── tsconfig.spec.json
+│   └── <app name>-e2e/
+│       ├── src/
+│       ├── protractor.conf.js
+│       └── tsconfig.json
 ├── libs/
 ├── tools/
 ├── README.md
 ├── angular.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 Your workspace is now powered by Nx! You can verify out that your application still runs as intended:
@@ -90,14 +90,14 @@ Your workspace is now powered by Nx! You can verify out that your application st
 
 Learn more about the advantages of Nx in the following guides:
 
-- [Using Cypress for e2e tests](/angular/plugins/cypress/overview)
-- [Using Jest for unit tests](/angular/plugins/jest/overview)
-- [Computation Caching](/angular/workspace/computation-caching)
-- [Rebuilding and Retesting What is Affected](/angular/guides/ci/monorepo-affected)
+- [Using Cypress for e2e tests](/angular/cypress/overview)
+- [Using Jest for unit tests](/angular/jest/overview)
+- [Computation Caching](/angular/core-concepts/computation-caching)
+- [Rebuilding and Retesting What is Affected](/angular/core-concepts/affected)
 
 ## Transitioning Manually
 
-If you are unable to automatically transform your Angular CLI workspace to an Nx workspace using the [ng add](/angular/guides/transition-to-nx#using-ng-add) method, there are some manual steps you can take to move your project(s) into an Nx workspace.
+If you are unable to automatically transform your Angular CLI workspace to an Nx workspace using the [ng add](angular/migration/migration-angular#using-ng-add) method, there are some manual steps you can take to move your project(s) into an Nx workspace.
 
 ### Generating a new workspace
 
@@ -128,29 +128,29 @@ A new Nx workspace with your `org name` as the folder name, and your `applicatio
 ```treeview
 <workspace name>/
 ├── apps/
-│   ├── <app name>/
-│   │   ├── src/
-│   │   │   ├── app/
-│   │   │   ├── assets/
-│   │   │   ├── environments/
-│   │   │   ├── favicon.ico
-│   │   │   ├── index.html
-│   │   │   ├── main.ts
-│   │   │   ├── polyfills.ts
-│   │   │   ├── styles.css
-│   │   │   └── test.ts
-│   │   ├── browserslist
-│   │   ├── jest.conf.js
-│   │   ├── tsconfig.app.json
-│   │   ├── tsconfig.json
-│   │   ├── tslint.json
-│   │   └── tsconfig.spec.json
-│   └── <app name>-e2e/
-│       ├── src/
-│       ├── cypress.json
-│       ├── tsconfig.e2e.json
-│       ├── tslint.json
-│       └── tsconfig.json
+│   ├── <app name>/
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   ├── assets/
+│   │   │   ├── environments/
+│   │   │   ├── favicon.ico
+│   │   │   ├── index.html
+│   │   │   ├── main.ts
+│   │   │   ├── polyfills.ts
+│   │   │   ├── styles.css
+│   │   │   └── test.ts
+│   │   ├── browserslist
+│   │   ├── jest.conf.js
+│   │   ├── tsconfig.app.json
+│   │   ├── tsconfig.json
+│   │   ├── tslint.json
+│   │   └── tsconfig.spec.json
+│   └── <app name>-e2e/
+│       ├── src/
+│       ├── cypress.json
+│       ├── tsconfig.e2e.json
+│       ├── tslint.json
+│       └── tsconfig.json
 ├── libs/
 ├── tools/
 ├── .prettierignore
@@ -160,7 +160,7 @@ A new Nx workspace with your `org name` as the folder name, and your `applicatio
 ├── jest.config.js
 ├── nx.json
 ├── package.json
-├── tsconfig.json
+├── tsconfig.base.json
 └── tslint.json
 ```
 
@@ -197,7 +197,6 @@ If you are using `Karma` for unit testing:
 
 ```json
 {
-  "version": 1,
   "projects": {
     "<app name>": {
       "projectType": "application",
@@ -375,6 +374,6 @@ yarn lint
 
 Learn more about the advantages of Nx in the following guides:
 
-[Using Cypress for e2e tests](/angular/plugins/cypress/overview) \
-[Using Jest for unit tests](/angular/plugins/jest/overview) \
-[Rebuilding and Retesting What is Affected](/angular/guides/ci/monorepo-affected)
+[Using Cypress for e2e tests](/angular/cypress/overview) \
+[Using Jest for unit tests](/angular/jest/overview) \
+[Rebuilding and Retesting What is Affected](/angular/core-concepts/affected)

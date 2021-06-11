@@ -33,7 +33,7 @@ function relativePath(path1: Path, path2: Path) {
     resolve(normalize('/'), path2)
   );
   if (!path.startsWith('../')) {
-    path = ('./' + path) as Path;
+    path = `./${path}` as Path;
   }
   return path;
 }

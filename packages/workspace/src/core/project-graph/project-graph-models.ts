@@ -1,48 +1,42 @@
-import { FileMap } from '../file-graph';
-import { FileData } from '../file-utils';
-import { NxJson } from '../shared-interfaces';
+import type { ProjectFileMap } from '../file-graph';
+import type {
+  ProjectGraphNode,
+  DependencyType,
+  NxJsonConfiguration,
+} from '@nrwl/devkit';
+export {
+  ProjectGraph,
+  ProjectGraphDependency,
+  ProjectGraphNode,
+  DependencyType,
+} from '@nrwl/devkit';
 
-export interface ProjectGraph {
-  nodes: Record<string, ProjectGraphNode>;
-  dependencies: Record<string, ProjectGraphDependency[]>;
-}
-
-export enum DependencyType {
-  static = 'static',
-  dynamic = 'dynamic',
-  implicit = 'implicit',
-}
-
-export interface ProjectGraphNode<T extends {} = {}> {
-  type: string;
-  name: string;
-  data: T & {
-    architect?: { [k: string]: any };
-    files: FileData[];
-    [k: string]: any;
-  };
-}
-
+/**
+ * @deprecated
+ */
 export type ProjectGraphNodeRecords = Record<string, ProjectGraphNode>;
 
+/**
+ * @deprecated
+ */
 export type AddProjectNode = (node: ProjectGraphNode) => void;
 
-export interface ProjectGraphDependency {
-  type: DependencyType | string;
-  target: string;
-  source: string;
-}
-
+/**
+ * @deprecated
+ */
 export type AddProjectDependency = (
   type: DependencyType | string,
   source: string,
   target: string
 ) => void;
 
+/**
+ * @deprecated
+ */
 export interface ProjectGraphContext {
   workspaceJson: any;
-  nxJson: NxJson;
-  fileMap: FileMap;
+  nxJson: NxJsonConfiguration;
+  fileMap: ProjectFileMap;
 }
 
 export enum ProjectType {

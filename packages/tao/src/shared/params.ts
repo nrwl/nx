@@ -1,25 +1,35 @@
-import { strings } from '@angular-devkit/core';
-import { ParsedArgs } from 'minimist';
-import { TargetDefinition, WorkspaceDefinition } from './workspace';
-import * as inquirer from 'inquirer';
+import type { Arguments } from 'yargs-parser';
+import { TargetConfiguration, WorkspaceJsonConfiguration } from './workspace';
+import { logger } from './logger';
+
+type PropertyDescription = {
+  type?: string;
+  enum?: string[];
+  properties?: any;
+  oneOf?: any;
+  items?: any;
+  alias?: string;
+  description?: string;
+  format?: string;
+  visible?: boolean;
+  default?: string | number | boolean | string[];
+  $ref?: string;
+  $default?: { $source: 'argv'; index: number } | { $source: 'projectName' };
+  'x-prompt'?:
+    | string
+    | { message: string; type: string; items: any[]; multiselect?: boolean };
+  'x-deprecated'?: boolean | string;
+};
 
 type Properties = {
-  [p: string]: {
-    type?: string;
-    properties?: any;
-    oneOf?: any;
-    items?: any;
-    alias?: string;
-    description?: string;
-    default?: string | number | boolean | string[];
-    $default?: { $source: 'argv'; index: number };
-    'x-prompt'?: string | { message: string; type: string; items: any[] };
-  };
+  [p: string]: PropertyDescription;
 };
 export type Schema = {
   properties: Properties;
   required?: string[];
   description?: string;
+  definitions?: Properties;
+  additionalProperties?: boolean;
 };
 
 export type Unmatched = {
@@ -32,17 +42,13 @@ export type Options = {
   [k: string]: string | number | boolean | string[] | Unmatched[];
 };
 
-export async function handleErrors(
-  logger: Console,
-  isVerbose: boolean,
-  fn: Function
-) {
+export async function handleErrors(isVerbose: boolean, fn: Function) {
   try {
     return await fn();
   } catch (err) {
     if (err.constructor.name === 'UnsuccessfulWorkflowExecution') {
       logger.error('The generator workflow failed. See above.');
-    } else {
+    } else if (err.message) {
       logger.error(err.message);
     }
     if (isVerbose && err.stack) {
@@ -62,7 +68,7 @@ function camelCase(input: string): string {
   }
 }
 
-export function convertToCamelCase(parsed: ParsedArgs): Options {
+export function convertToCamelCase(parsed: Arguments): Options {
   return Object.keys(parsed).reduce(
     (m, c) => ({ ...m, [camelCase(c)]: parsed[c] }),
     {}
@@ -78,21 +84,35 @@ export function convertToCamelCase(parsed: ParsedArgs): Options {
  */
 export function coerceTypesInOptions(opts: Options, schema: Schema): Options {
   Object.keys(opts).forEach((k) => {
-    opts[k] = coerceType(
-      schema.properties[k] ? schema.properties[k].type : 'unknown',
-      opts[k]
-    );
+    opts[k] = coerceType(schema.properties[k], opts[k]);
   });
   return opts;
 }
 
-function coerceType(type: string, value: any) {
-  if (type == 'boolean') {
+function coerceType(prop: PropertyDescription | undefined, value: any) {
+  if (!prop) return value;
+  if (typeof value !== 'string' && value !== undefined) return value;
+
+  if (prop.oneOf) {
+    for (let i = 0; i < prop.oneOf.length; ++i) {
+      const coerced = coerceType(prop.oneOf[i], value);
+      if (coerced !== value) {
+        return coerced;
+      }
+    }
+    return value;
+  } else if (
+    normalizedPrimitiveType(prop.type) == 'boolean' &&
+    isConvertibleToBoolean(value)
+  ) {
     return value === true || value == 'true';
-  } else if (type == 'number') {
+  } else if (
+    normalizedPrimitiveType(prop.type) == 'number' &&
+    isConvertibleToNumber(value)
+  ) {
     return Number(value);
-  } else if (type == 'array') {
-    return value.toString().split(',');
+  } else if (prop.type == 'array') {
+    return value.split(',').map((v) => coerceType(prop.items, v));
   } else {
     return value;
   }
@@ -143,13 +163,21 @@ export function validateOptsAgainstSchema(
   opts: { [k: string]: any },
   schema: Schema
 ) {
-  validateObject(opts, schema.properties || {}, schema.required || []);
+  validateObject(
+    opts,
+    schema.properties || {},
+    schema.required || [],
+    schema.additionalProperties,
+    schema.definitions || {}
+  );
 }
 
 export function validateObject(
   opts: { [k: string]: any },
   properties: Properties,
-  required: string[]
+  required: string[],
+  additionalProperties: boolean | undefined,
+  definitions: Properties
 ) {
   required.forEach((p) => {
     if (opts[p] === undefined) {
@@ -157,13 +185,30 @@ export function validateObject(
     }
   });
 
+  if (additionalProperties === false) {
+    Object.keys(opts).find((p) => {
+      if (Object.keys(properties).indexOf(p) === -1) {
+        throw new SchemaError(`'${p}' is not found in schema`);
+      }
+    });
+  }
+
   Object.keys(opts).forEach((p) => {
-    validateProperty(p, opts[p], properties[p]);
+    validateProperty(p, opts[p], properties[p], definitions);
   });
 }
 
-function validateProperty(propName: string, value: any, schema: any) {
+function validateProperty(
+  propName: string,
+  value: any,
+  schema: any,
+  definitions: Properties
+) {
   if (!schema) return;
+
+  if (schema.$ref) {
+    schema = resolveDefinition(schema.$ref, definitions);
+  }
 
   if (schema.oneOf) {
     if (!Array.isArray(schema.oneOf))
@@ -172,7 +217,8 @@ function validateProperty(propName: string, value: any, schema: any) {
     let passes = false;
     schema.oneOf.forEach((r) => {
       try {
-        validateProperty(propName, value, r);
+        const rule = { type: schema.type, ...r };
+        validateProperty(propName, value, rule, definitions);
         passes = true;
       } catch (e) {}
     });
@@ -182,20 +228,43 @@ function validateProperty(propName: string, value: any, schema: any) {
 
   const isPrimitive = typeof value !== 'object';
   if (isPrimitive) {
-    if (typeof value !== schema.type) {
+    if (schema.type && typeof value !== normalizedPrimitiveType(schema.type)) {
       throw new SchemaError(
         `Property '${propName}' does not match the schema. '${value}' should be a '${schema.type}'.`
+      );
+    }
+
+    if (schema.enum && !schema.enum.includes(value)) {
+      throw new SchemaError(
+        `Property '${propName}' does not match the schema. '${value}' should be one of ${schema.enum.join(
+          ','
+        )}.`
       );
     }
   } else if (Array.isArray(value)) {
     if (schema.type !== 'array') throwInvalidSchema(propName, schema);
     value.forEach((valueInArray) =>
-      validateProperty(propName, valueInArray, schema.items || {})
+      validateProperty(propName, valueInArray, schema.items || {}, definitions)
     );
   } else {
     if (schema.type !== 'object') throwInvalidSchema(propName, schema);
-    validateObject(value, schema.properties || {}, schema.required || []);
+    validateObject(
+      value,
+      schema.properties || {},
+      schema.required || [],
+      schema.additionalProperties,
+      definitions
+    );
   }
+}
+
+/**
+ * Unfortunately, due to use supporting Angular Devkit, we have to do the following
+ * conversions.
+ */
+function normalizedPrimitiveType(type: string) {
+  if (type === 'integer') return 'number';
+  return type;
 }
 
 function throwInvalidSchema(propName: string, schema: any) {
@@ -209,24 +278,30 @@ function throwInvalidSchema(propName: string, schema: any) {
 }
 
 export function setDefaults(opts: { [k: string]: any }, schema: Schema) {
-  setDefaultsInObject(opts, schema.properties);
+  setDefaultsInObject(opts, schema.properties || {}, schema.definitions || {});
   return opts;
 }
 
 function setDefaultsInObject(
   opts: { [k: string]: any },
-  properties: Properties
+  properties: Properties,
+  definitions: Properties
 ) {
   Object.keys(properties).forEach((p) => {
-    setPropertyDefault(opts, p, properties[p]);
+    setPropertyDefault(opts, p, properties[p], definitions);
   });
 }
 
 function setPropertyDefault(
   opts: { [k: string]: any },
   propName: string,
-  schema: any
+  schema: any,
+  definitions: Properties
 ) {
+  if (schema.$ref) {
+    schema = resolveDefinition(schema.$ref, definitions);
+  }
+
   if (schema.type !== 'object' && schema.type !== 'array') {
     if (opts[propName] === undefined && schema.default !== undefined) {
       opts[propName] = schema.default;
@@ -239,35 +314,37 @@ function setPropertyDefault(
       items.type === 'object'
     ) {
       opts[propName].forEach((valueInArray) =>
-        setDefaultsInObject(valueInArray, items.properties || {})
+        setDefaultsInObject(valueInArray, items.properties || {}, definitions)
       );
+    } else if (!opts[propName] && schema.default) {
+      opts[propName] = schema.default;
     }
   } else {
-    setDefaultsInObject(opts[propName], schema.properties);
+    if (!opts[propName]) {
+      opts[propName] = {};
+    }
+    setDefaultsInObject(opts[propName], schema.properties || {}, definitions);
   }
 }
 
-export function convertPositionParamsIntoNamedParams(
-  opts: { [k: string]: any },
-  schema: Schema,
-  argv: string[]
-) {
-  Object.entries(schema.properties).forEach(([k, v]) => {
-    if (
-      opts[k] === undefined &&
-      v.$default !== undefined &&
-      argv[v.$default.index]
-    ) {
-      opts[k] = coerceType(v.type, argv[v.$default.index]);
-    }
-  });
+function resolveDefinition(ref: string, definitions: Properties) {
+  if (!ref.startsWith('#/definitions/')) {
+    throw new Error(`$ref should start with "#/definitions/"`);
+  }
+  const definition = ref.split('#/definitions/')[1];
+  if (!definitions[definition]) {
+    throw new Error(`Cannot resolve ${ref}`);
+  }
+  return definitions[definition];
 }
 
-export function combineOptionsForBuilder(
+export function combineOptionsForExecutor(
   commandLineOpts: Options,
   config: string,
-  target: TargetDefinition,
-  schema: Schema
+  target: TargetConfiguration,
+  schema: Schema,
+  defaultProjectName: string | null,
+  relativeCwd: string | null
 ) {
   const r = convertAliases(
     coerceTypesInOptions(commandLineOpts, schema),
@@ -277,11 +354,14 @@ export function combineOptionsForBuilder(
   const configOpts =
     config && target.configurations ? target.configurations[config] || {} : {};
   const combined = { ...target.options, ...configOpts, ...r };
-  convertPositionParamsIntoNamedParams(
+  convertSmartDefaultsIntoNamedParams(
     combined,
     schema,
-    (commandLineOpts['_'] as string[]) || []
+    (commandLineOpts['_'] as string[]) || [],
+    defaultProjectName,
+    relativeCwd
   );
+  warnDeprecations(combined, schema);
   setDefaults(combined, schema);
   validateOptsAgainstSchema(combined, schema);
   return combined;
@@ -291,62 +371,177 @@ export async function combineOptionsForGenerator(
   commandLineOpts: Options,
   collectionName: string,
   generatorName: string,
-  ws: WorkspaceDefinition,
+  wc: WorkspaceJsonConfiguration | null,
   schema: Schema,
-  isInteractive: boolean
+  isInteractive: boolean,
+  defaultProjectName: string | null,
+  relativeCwd: string | null
 ) {
-  const schematicDefaults =
-    ws.schematics &&
-    ws.schematics[collectionName] &&
-    ws.schematics[collectionName][generatorName]
-      ? ws.schematics[collectionName][generatorName]
-      : {};
-  const generatorDefaults =
-    ws.generators &&
-    ws.generators[collectionName] &&
-    ws.generators[collectionName][generatorName]
-      ? ws.generators[collectionName][generatorName]
-      : {};
+  const generatorDefaults = wc
+    ? getGeneratorDefaults(
+        defaultProjectName,
+        wc,
+        collectionName,
+        generatorName
+      )
+    : {};
   let combined = convertAliases(
-    coerceTypesInOptions(
-      { ...schematicDefaults, ...generatorDefaults, ...commandLineOpts },
-      schema
-    ),
+    coerceTypesInOptions({ ...generatorDefaults, ...commandLineOpts }, schema),
     schema,
     false
   );
-  convertPositionParamsIntoNamedParams(
+  convertSmartDefaultsIntoNamedParams(
     combined,
     schema,
-    (commandLineOpts['_'] as string[]) || []
+    (commandLineOpts['_'] as string[]) || [],
+    defaultProjectName,
+    relativeCwd
   );
-  if (isInteractive) {
+
+  if (isInteractive && isTTY()) {
     combined = await promptForValues(combined, schema);
   }
+
+  warnDeprecations(combined, schema);
   setDefaults(combined, schema);
+
   validateOptsAgainstSchema(combined, schema);
   return combined;
 }
 
+export function warnDeprecations(
+  opts: { [k: string]: any },
+  schema: Schema
+): void {
+  Object.keys(opts).forEach((option) => {
+    const deprecated = schema.properties[option]?.['x-deprecated'];
+    if (deprecated) {
+      logger.warn(
+        `Option "${option}" is deprecated${
+          typeof deprecated == 'string' ? ': ' + deprecated : '.'
+        }`
+      );
+    }
+  });
+}
+
+export function convertSmartDefaultsIntoNamedParams(
+  opts: { [k: string]: any },
+  schema: Schema,
+  argv: string[],
+  defaultProjectName: string | null,
+  relativeCwd: string | null
+) {
+  Object.entries(schema.properties).forEach(([k, v]) => {
+    if (
+      opts[k] === undefined &&
+      v.$default !== undefined &&
+      v.$default.$source === 'argv' &&
+      argv[v.$default.index]
+    ) {
+      opts[k] = coerceType(v, argv[v.$default.index]);
+    } else if (
+      opts[k] === undefined &&
+      v.$default !== undefined &&
+      v.$default.$source === 'projectName' &&
+      defaultProjectName
+    ) {
+      opts[k] = defaultProjectName;
+    } else if (
+      opts[k] === undefined &&
+      v.format === 'path' &&
+      v.visible === false &&
+      relativeCwd
+    ) {
+      opts[k] = relativeCwd.replace(/\\/g, '/');
+    }
+  });
+  delete opts['_'];
+}
+
+function getGeneratorDefaults(
+  projectName: string | null,
+  wc: WorkspaceJsonConfiguration,
+  collectionName: string,
+  generatorName: string
+) {
+  let defaults = {};
+  if (wc.generators) {
+    if (
+      wc.generators[collectionName] &&
+      wc.generators[collectionName][generatorName]
+    ) {
+      defaults = {
+        ...defaults,
+        ...wc.generators[collectionName][generatorName],
+      };
+    }
+    if (wc.generators[`${collectionName}:${generatorName}`]) {
+      defaults = {
+        ...defaults,
+        ...wc.generators[`${collectionName}:${generatorName}`],
+      };
+    }
+  }
+  if (
+    projectName &&
+    wc.projects[projectName] &&
+    wc.projects[projectName].generators
+  ) {
+    const g = wc.projects[projectName].generators;
+    if (g[collectionName] && g[collectionName][generatorName]) {
+      defaults = { ...defaults, ...g[collectionName][generatorName] };
+    }
+    if (g[`${collectionName}:${generatorName}`]) {
+      defaults = {
+        ...defaults,
+        ...g[`${collectionName}:${generatorName}`],
+      };
+    }
+  }
+  return defaults;
+}
+
 async function promptForValues(opts: Options, schema: Schema) {
-  const prompts = [];
+  interface Prompt {
+    name: string;
+    type: 'input' | 'select' | 'multiselect' | 'confirm' | 'numeral';
+    message: string;
+    initial?: any;
+    choices?: (string | { name: string; message: string })[];
+  }
+
+  const prompts: Prompt[] = [];
   Object.entries(schema.properties).forEach(([k, v]) => {
     if (v['x-prompt'] && opts[k] === undefined) {
-      const question = {
+      const question: Prompt = {
         name: k,
-        message: v['x-prompt'],
-        default: v.default,
       } as any;
 
+      if (v.default) {
+        question.initial = v.default;
+      }
+
       if (typeof v['x-prompt'] === 'string') {
-        question.type = v.type;
+        question.message = v['x-prompt'];
+        if (v.type === 'string' && v.enum && Array.isArray(v.enum)) {
+          question.type = 'select';
+          question.choices = v.enum;
+        } else {
+          question.type = v.type === 'boolean' ? 'confirm' : 'input';
+        }
+      } else if (v['x-prompt'].type == 'number') {
+        question.message = v['x-prompt'].message;
+        question.type = 'numeral';
       } else if (
         v['x-prompt'].type == 'confirmation' ||
         v['x-prompt'].type == 'confirm'
       ) {
+        question.message = v['x-prompt'].message;
         question.type = 'confirm';
       } else {
-        question.type = 'list';
+        question.message = v['x-prompt'].message;
+        question.type = v['x-prompt'].multiselect ? 'multiselect' : 'select';
         question.choices =
           v['x-prompt'].items &&
           v['x-prompt'].items.map((item) => {
@@ -354,8 +549,8 @@ async function promptForValues(opts: Options, schema: Schema) {
               return item;
             } else {
               return {
-                name: item.label,
-                value: item.value,
+                message: item.label,
+                name: item.value,
               };
             }
           });
@@ -364,9 +559,13 @@ async function promptForValues(opts: Options, schema: Schema) {
     }
   });
 
-  return await inquirer
+  return await (await import('enquirer'))
     .prompt(prompts)
-    .then((values) => ({ ...opts, ...values }));
+    .then((values) => ({ ...opts, ...values }))
+    .catch((e) => {
+      console.error(e);
+      process.exit(0);
+    });
 }
 
 /**
@@ -382,9 +581,73 @@ export function lookupUnmatched(opts: Options, schema: Schema): Options {
 
     opts['--'].forEach((unmatched) => {
       unmatched.possible = props.filter(
-        (p) => strings.levenshtein(p, unmatched.name) < 3
+        (p) => levenshtein(p, unmatched.name) < 3
       );
     });
   }
   return opts;
+}
+
+function levenshtein(a: string, b: string) {
+  if (a.length == 0) {
+    return b.length;
+  }
+  if (b.length == 0) {
+    return a.length;
+  }
+  const matrix = [];
+
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) == a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+  return matrix[b.length][a.length];
+}
+
+function isTTY(): boolean {
+  return !!process.stdout.isTTY && process.env['CI'] !== 'true';
+}
+
+/**
+ * Verifies whether the given value can be converted to a boolean
+ * @param value
+ */
+function isConvertibleToBoolean(value) {
+  if ('boolean' === typeof value) {
+    return true;
+  }
+
+  if ('string' === typeof value && /true|false/.test(value)) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Verifies whether the given value can be converted to a number
+ * @param value
+ */
+function isConvertibleToNumber(value) {
+  // exclude booleans explicitly
+  if ('boolean' === typeof value) {
+    return false;
+  }
+
+  return !isNaN(+value);
 }

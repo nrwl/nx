@@ -135,10 +135,40 @@
       "description": "Add an explicit dependency on @nrwl/tao",
       "factory": "./src/migrations/update-10-4-0/add-explicit-dep-on-tao"
     },
+    "update-script-to-invoke-nx-migrate": {
+      "version": "10.4.5",
+      "description": "Update the 'update' npm script to invoke nx migrate",
+      "factory": "./src/migrations/update-10-4-0/update-script-to-invoke-nx-migrate"
+    },
     "update-decorate-angular-cli": {
       "version": "11.0.0-beta.3",
       "description": "Update the decoration script when using Angular CLI",
       "factory": "./src/migrations/update-11-0-0/update-decorate-angular-cli"
+    },
+    "update-node-types": {
+      "version": "11.0.0-beta.3",
+      "description": "Update the @types/node package",
+      "factory": "./src/migrations/update-11-0-0/update-node-types"
+    },
+    "rename-workspace-schematics": {
+      "version": "11.0.0-beta.3",
+      "description": "Rename tools/schematics into tools/generators",
+      "factory": "./src/migrations/update-11-0-0/rename-workspace-schematics"
+    },
+    "add-outputs-in-workspace": {
+      "version": "11.0.0-beta.15",
+      "description": "Adds `outputs` based on builders",
+      "factory": "./src/migrations/update-11-0-0/add-outputs-in-workspace"
+    },
+    "update-command-check": {
+      "version": "11.0.0",
+      "description": "Check that the right update command is used",
+      "factory": "./src/migrations/update-11-0-0/update-command-check"
+    },
+    "rename-workspace-schematic-script": {
+      "version": "11.0.2",
+      "description": "Rename the workspace-schematic script into workspace-generator script",
+      "factory": "./src/migrations/update-11-0-0/rename-workspace-schematic-script"
     }
   },
   "packageJsonUpdates": {
@@ -798,6 +828,54 @@
       "packages": {
         "prettier": {
           "version": "2.1.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "11.0.0": {
+      "version": "11.0.0-beta.3",
+      "packages": {
+        "@types/node": {
+          "version": "12.12.38",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "11.0.9": {
+      "version": "11.0.9",
+      "packages": {
+        "tslint": {
+          "version": "~6.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ts-node": {
+          "version": "~9.1.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "11.1.2": {
+      "version": "11.1.2",
+      "packages": {
+        "prettier": {
+          "version": "2.2.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "11.6.0": {
+      "version": "11.6.0-beta.0",
+      "packages": {
+        "dotenv": {
+          "version": "8.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "typescript": {
+          "version": "4.1.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/node": {
+          "version": "14.14.33",
           "alwaysAddToPackageJson": false
         }
       }

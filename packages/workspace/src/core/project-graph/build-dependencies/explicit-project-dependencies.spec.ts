@@ -1,4 +1,4 @@
-jest.mock('../../../utils/app-root', () => ({
+jest.mock('../../../utilities/app-root', () => ({
   appRootPath: '/root',
 }));
 jest.mock('fs', () => require('memfs').fs);
@@ -11,10 +11,9 @@ import {
   DependencyType,
 } from '../project-graph-models';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
-import { createFileMap } from '../../file-graph';
+import { createProjectFileMap } from '../../file-graph';
 import { readWorkspaceFiles } from '../../file-utils';
-import { appRootPath } from '../../../utils/app-root';
-import { string } from 'prop-types';
+import { appRootPath } from '../../../utilities/app-root';
 
 describe('explicit project dependencies', () => {
   let ctx: ProjectGraphContext;
@@ -83,13 +82,39 @@ describe('explicit project dependencies', () => {
         import { a } from '@proj/proj1234-child'
       `,
       './libs/proj1234-child/index.ts': 'export const a = 7',
+      './libs/proj1234/a.b.ts': `// nx-ignore-next-line
+                                 import('@proj/proj2')
+                                 /* nx-ignore-next-line */
+                                 import {a} from '@proj/proj3a
+      `,
+      './libs/proj1234/b.c.ts': `// nx-ignore-next-line
+                                 require('@proj/proj4ab#a')
+                                 // nx-ignore-next-line
+                                 import('@proj/proj2')
+                                 /* nx-ignore-next-line */
+                                 import {a} from '@proj/proj3a
+                                 const a = { 
+                                     // nx-ignore-next-line
+                                    loadChildren: '@proj/3a'
+                                 }
+                                 const b = {
+                                    // nx-ignore-next-line
+                                    loadChildren: '@proj/3a',
+                                    children: [{
+                                      // nx-ignore-next-line
+                                      loadChildren: '@proj/proj2,
+                                      // nx-ignore-next-line
+                                      loadChildren: '@proj/proj3a'
+                                    }]
+                                 }
+      `,
     };
     vol.fromJSON(fsJson, '/root');
 
     ctx = {
       workspaceJson,
       nxJson,
-      fileMap: createFileMap(workspaceJson, readWorkspaceFiles()),
+      fileMap: createProjectFileMap(workspaceJson, readWorkspaceFiles()),
     };
 
     projects = {
@@ -171,9 +196,7 @@ describe('explicit project dependencies', () => {
         }
       );
 
-    buildExplicitTypeScriptDependencies(ctx, projects, addDependency, (s) => {
-      return fs.readFileSync(`${appRootPath}/${s}`).toString();
-    });
+    buildExplicitTypeScriptDependencies(ctx, projects, addDependency);
 
     expect(dependencyMap).toEqual({
       proj1234: [

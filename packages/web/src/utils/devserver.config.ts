@@ -1,11 +1,15 @@
+import { logger } from '@nrwl/devkit';
 import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
+
+import * as open from 'open';
+import * as url from 'url';
 import { readFileSync } from 'fs';
 import * as path from 'path';
+
 import { getWebConfig } from './web.config';
-import { Configuration } from 'webpack';
-import { LoggerApi } from '@angular-devkit/core/src/logger';
-import { WebBuildBuilderOptions } from '../builders/build/build.impl';
-import { WebDevServerOptions } from '../builders/dev-server/dev-server.impl';
+import { Configuration, HotModuleReplacementPlugin } from 'webpack';
+import { WebBuildBuilderOptions } from '../executors/build/build.impl';
+import { WebDevServerOptions } from '../executors/dev-server/dev-server.impl';
 import { buildServePath } from './serve-path';
 import { OptimizationOptions } from './types';
 
@@ -13,14 +17,12 @@ export function getDevServerConfig(
   root: string,
   sourceRoot: string,
   buildOptions: WebBuildBuilderOptions,
-  serveOptions: WebDevServerOptions,
-  logger: LoggerApi
+  serveOptions: WebDevServerOptions
 ) {
   const webpackConfig: Configuration = getWebConfig(
     root,
     sourceRoot,
     buildOptions,
-    logger,
     true, // Don't need to support legacy browsers for dev.
     false
   );
@@ -29,6 +31,10 @@ export function getDevServerConfig(
     serveOptions,
     buildOptions
   );
+  webpackConfig.plugins = [
+    ...(webpackConfig.plugins || []),
+    getHmrPlugin(serveOptions),
+  ].filter(Boolean);
 
   return webpackConfig;
 }
@@ -54,6 +60,21 @@ function getDevServerPartial(
       disableDotRule: true,
       htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
     },
+    noInfo: true,
+    onListening(server: any) {
+      // Depend on the info in the server for this function because the user might adjust the webpack config
+      const serverUrl = url.format({
+        protocol: server.options.https ? 'https' : 'http',
+        hostname: server.hostname,
+        port: server.listeningApp.address().port,
+        pathname: buildServePath(buildOptions),
+      });
+
+      logger.info(`NX Web Development Server is listening at ${serverUrl}`);
+      if (options.open) {
+        open(serverUrl);
+      }
+    },
     stats: false,
     compress: scriptsOptimization || stylesOptimization,
     https: options.ssl,
@@ -68,7 +89,8 @@ function getDevServerPartial(
     publicPath: servePath,
     contentBase: false,
     allowedHosts: [],
-    liveReload: options.liveReload,
+    liveReload: options.hmr ? false : options.liveReload, // disable liveReload if hmr is enabled
+    hot: options.hmr,
   };
 
   if (options.ssl && options.sslKey && options.sslCert) {
@@ -96,4 +118,8 @@ function getSslConfig(root: string, options: WebDevServerOptions) {
 function getProxyConfig(root: string, options: WebDevServerOptions) {
   const proxyPath = path.resolve(root, options.proxyConfig as string);
   return require(proxyPath);
+}
+
+function getHmrPlugin(options: WebDevServerOptions) {
+  return options.hmr && new HotModuleReplacementPlugin();
 }

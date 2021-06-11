@@ -1,17 +1,16 @@
-import { rmdirSync } from 'fs-extra';
 import { lstatSync, readFileSync, writeFileSync } from 'fs';
+import { removeSync, ensureDirSync } from 'fs-extra';
 import { dirSync } from 'tmp';
 import * as path from 'path';
-import { mkdirpSync } from 'fs-extra';
 import { FileChange, FsTree, flushChanges } from './tree';
 
 describe('tree', () => {
   describe('FsTree', () => {
-    let dir;
+    let dir: string;
     let tree: FsTree;
     beforeEach(() => {
       dir = dirSync().name;
-      mkdirpSync(path.join(dir, 'parent/child'));
+      ensureDirSync(path.join(dir, 'parent/child'));
       writeFileSync(path.join(dir, 'root-file.txt'), 'root content');
       writeFileSync(
         path.join(dir, 'parent', 'parent-file.txt'),
@@ -22,25 +21,51 @@ describe('tree', () => {
         'child content'
       );
 
-      tree = new FsTree(dir, false, console);
+      tree = new FsTree(dir, false);
     });
 
     afterEach(() => {
-      rmdirSync(dir, { recursive: true });
+      removeSync(dir);
     });
 
     it('should return no changes, when no changes are made', () => {
       expect(tree.listChanges()).toEqual([]);
     });
 
-    it('should be able to read and write files', () => {
-      expect(tree.read('parent/parent-file.txt').toString()).toEqual(
+    it('should be able to read and write files with Buffers', () => {
+      expect(tree.read('parent/parent-file.txt')).toEqual(
+        Buffer.from('parent content')
+      );
+
+      tree.write('parent/parent-file.txt', Buffer.from('new content'));
+
+      expect(tree.read('parent/parent-file.txt')).toEqual(
+        Buffer.from('new content')
+      );
+
+      expect(s(tree.listChanges())).toEqual([
+        {
+          path: 'parent/parent-file.txt',
+          type: 'UPDATE',
+          content: 'new content',
+        },
+      ]);
+
+      flushChanges(dir, tree.listChanges());
+
+      expect(
+        readFileSync(path.join(dir, 'parent/parent-file.txt'), 'utf-8')
+      ).toEqual('new content');
+    });
+
+    it('should be able to read and write files with encodings and strings', () => {
+      expect(tree.read('parent/parent-file.txt', 'utf-8')).toEqual(
         'parent content'
       );
 
       tree.write('parent/parent-file.txt', 'new content');
 
-      expect(tree.read('parent/parent-file.txt').toString()).toEqual(
+      expect(tree.read('parent/parent-file.txt', 'utf-8')).toEqual(
         'new content'
       );
 
@@ -55,20 +80,33 @@ describe('tree', () => {
       flushChanges(dir, tree.listChanges());
 
       expect(
-        readFileSync(path.join(dir, 'parent/parent-file.txt')).toString()
+        readFileSync(path.join(dir, 'parent/parent-file.txt'), 'utf-8')
       ).toEqual('new content');
+    });
+
+    it('should not record a change if writing the file with no changes to the content', () => {
+      tree.write('root-file.txt', 'root content');
+
+      expect(tree.listChanges().length).toEqual(0);
+    });
+
+    it('should not record a change if writing a file with changes then reverting it back to existing content', () => {
+      tree.write('root-file.txt', 'changed content');
+      tree.write('root-file.txt', 'root content');
+
+      expect(tree.listChanges()).toEqual([]);
     });
 
     it('should be able to create files', () => {
       tree.write('parent/new-parent-file.txt', 'new parent content');
       tree.write('parent/new-child/new-child-file.txt', 'new child content');
 
-      expect(tree.read('parent/new-parent-file.txt').toString()).toEqual(
+      expect(tree.read('parent/new-parent-file.txt', 'utf-8')).toEqual(
         'new parent content'
       );
-      expect(
-        tree.read('parent/new-child/new-child-file.txt').toString()
-      ).toEqual('new child content');
+      expect(tree.read('parent/new-child/new-child-file.txt', 'utf-8')).toEqual(
+        'new child content'
+      );
 
       expect(s(tree.listChanges())).toEqual([
         {
@@ -86,13 +124,50 @@ describe('tree', () => {
       flushChanges(dir, tree.listChanges());
 
       expect(
-        readFileSync(path.join(dir, 'parent/new-parent-file.txt')).toString()
+        readFileSync(path.join(dir, 'parent/new-parent-file.txt'), 'utf-8')
       ).toEqual('new parent content');
       expect(
         readFileSync(
-          path.join(dir, 'parent/new-child/new-child-file.txt')
-        ).toString()
+          path.join(dir, 'parent/new-child/new-child-file.txt'),
+          'utf-8'
+        )
       ).toEqual('new child content');
+    });
+
+    it('should normalize paths', () => {
+      tree.write('dir/file1', 'File 1 Contents');
+      tree.write('/dir/file2', 'File 2 Contents');
+      tree.write('./dir/file3', 'File 3 Contents');
+
+      expect(tree.read('dir/file1', 'utf-8')).toEqual('File 1 Contents');
+      expect(tree.read('/dir/file1', 'utf-8')).toEqual('File 1 Contents');
+      expect(tree.read('./dir/file1', 'utf-8')).toEqual('File 1 Contents');
+
+      expect(tree.read('dir/file2', 'utf-8')).toEqual('File 2 Contents');
+      expect(tree.read('/dir/file2', 'utf-8')).toEqual('File 2 Contents');
+      expect(tree.read('./dir/file2', 'utf-8')).toEqual('File 2 Contents');
+
+      expect(tree.read('dir/file3', 'utf-8')).toEqual('File 3 Contents');
+      expect(tree.read('/dir/file3', 'utf-8')).toEqual('File 3 Contents');
+      expect(tree.read('./dir/file3', 'utf-8')).toEqual('File 3 Contents');
+
+      tree.rename('dir/file1', 'dir/file-a');
+
+      expect(tree.read('dir/file-a', 'utf-8')).toEqual('File 1 Contents');
+      expect(tree.read('/dir/file-a', 'utf-8')).toEqual('File 1 Contents');
+      expect(tree.read('./dir/file-a', 'utf-8')).toEqual('File 1 Contents');
+
+      tree.rename('/dir/file2', '/dir/file-b');
+
+      expect(tree.read('dir/file-b', 'utf-8')).toEqual('File 2 Contents');
+      expect(tree.read('/dir/file-b', 'utf-8')).toEqual('File 2 Contents');
+      expect(tree.read('./dir/file-b', 'utf-8')).toEqual('File 2 Contents');
+
+      tree.rename('./dir/file3', './dir/file-c');
+
+      expect(tree.read('dir/file-c', 'utf-8')).toEqual('File 3 Contents');
+      expect(tree.read('/dir/file-c', 'utf-8')).toEqual('File 3 Contents');
+      expect(tree.read('./dir/file-c', 'utf-8')).toEqual('File 3 Contents');
     });
 
     it('should be able to delete files', () => {
@@ -112,7 +187,7 @@ describe('tree', () => {
       try {
         lstatSync(path.join(dir, 'parent/parent-file.txt')).isFile();
         fail('Should not reach');
-      } catch (e) {}
+      } catch {}
     });
 
     it('should be able to rename files', () => {
@@ -125,10 +200,10 @@ describe('tree', () => {
 
       expect(tree.read('parent/new-child/new-child-file.txt')).toEqual(null);
       expect(tree.read('root-file.txt')).toEqual(null);
-      expect(tree.read('renamed-new-child-file.txt').toString()).toEqual(
+      expect(tree.read('renamed-new-child-file.txt', 'utf-8')).toEqual(
         'new child content'
       );
-      expect(tree.read('renamed-root-file.txt').toString()).toEqual(
+      expect(tree.read('renamed-root-file.txt', 'utf-8')).toEqual(
         'root content'
       );
 
@@ -149,10 +224,10 @@ describe('tree', () => {
       flushChanges(dir, tree.listChanges());
 
       expect(
-        readFileSync(path.join(dir, 'renamed-new-child-file.txt')).toString()
+        readFileSync(path.join(dir, 'renamed-new-child-file.txt'), 'utf-8')
       ).toEqual('new child content');
       expect(
-        readFileSync(path.join(dir, 'renamed-root-file.txt')).toString()
+        readFileSync(path.join(dir, 'renamed-root-file.txt'), 'utf-8')
       ).toEqual('root content');
     });
 
@@ -180,25 +255,77 @@ describe('tree', () => {
       } catch (e) {}
     });
 
-    it('should return the list of children of a dir', () => {
-      tree.write('parent/new-child/new-child-file.txt', 'new child content');
+    describe('children', () => {
+      it('should return the list of children of a dir', () => {
+        expect(tree.children('parent')).toEqual(['child', 'parent-file.txt']);
+        expect(tree.children('parent/child')).toEqual(['child-file.txt']);
+      });
 
-      expect(tree.children('parent/child')).toEqual(['child-file.txt']);
-      expect(tree.children('parent/new-child')).toEqual(['new-child-file.txt']);
+      it('should add new children after writing new files', () => {
+        tree.write('parent/child/child-file2.txt', 'new child content');
+        tree.write('parent/new-child/new-child-file.txt', 'new child content');
 
-      tree.rename(
-        'parent/child/child-file.txt',
-        'parent/child/renamed-child-file.txt'
-      );
-      tree.rename(
-        'parent/new-child/new-child-file.txt',
-        'parent/new-child/renamed-new-child-file.txt'
-      );
+        expect(tree.children('parent')).toEqual([
+          'child',
+          'parent-file.txt',
+          'new-child',
+        ]);
+        expect(tree.children('parent/child')).toEqual([
+          'child-file.txt',
+          'child-file2.txt',
+        ]);
+        expect(tree.children('parent/new-child')).toEqual([
+          'new-child-file.txt',
+        ]);
+      });
 
-      expect(tree.children('parent/child')).toEqual(['renamed-child-file.txt']);
-      expect(tree.children('parent/new-child')).toEqual([
-        'renamed-new-child-file.txt',
-      ]);
+      it('should return the list of children after renaming', () => {
+        tree.rename(
+          'parent/child/child-file.txt',
+          'parent/child/renamed-child-file.txt'
+        );
+
+        expect(tree.children('parent/child')).toEqual([
+          'renamed-child-file.txt',
+        ]);
+
+        tree.rename(
+          'parent/child/renamed-child-file.txt',
+          'parent/renamed-child/renamed-child-file.txt'
+        );
+
+        expect(tree.children('parent')).toEqual([
+          'parent-file.txt',
+          'renamed-child',
+        ]);
+      });
+
+      describe('at the root', () => {
+        it('should return a list of children', () => {
+          expect(tree.children('')).toEqual(['parent', 'root-file.txt']);
+        });
+
+        it('should add a child after writing a file', () => {
+          tree.write('root-file2.txt', '');
+
+          expect(tree.children('')).toEqual([
+            'parent',
+            'root-file.txt',
+            'root-file2.txt',
+          ]);
+        });
+
+        it('should remove a child after deleting a file', () => {
+          tree.delete('parent/child/child-file.txt');
+          tree.delete('parent/parent-file.txt');
+
+          expect(tree.children('')).not.toContain('parent');
+
+          tree.delete('root-file.txt');
+
+          expect(tree.children('')).not.toContain('root-file.txt');
+        });
+      });
     });
 
     it('should be able to rename dirs', () => {

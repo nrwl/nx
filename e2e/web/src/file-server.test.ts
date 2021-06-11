@@ -1,4 +1,5 @@
 import {
+  killPorts,
   newProject,
   readJson,
   runCLI,
@@ -10,23 +11,23 @@ import {
 import { serializeJson } from '@nrwl/workspace';
 
 describe('file-server', () => {
-  it('should serve folder of files', async (done) => {
-    newProject();
+  afterEach(() => killPorts());
+
+  it('should serve folder of files', async () => {
+    newProject({ name: uniq('fileserver') });
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
     const workspaceJson = readJson(workspaceConfigName());
-    workspaceJson.projects[appName].architect['serve'].builder =
+    workspaceJson.projects[appName].targets['serve'].executor =
       '@nrwl/web:file-server';
     updateFile(workspaceConfigName(), serializeJson(workspaceJson));
 
-    await runCommandUntil(`serve ${appName}`, (output) => {
+    const p = await runCommandUntil(`serve ${appName}`, (output) => {
       return (
         output.indexOf('Built at') > -1 && output.indexOf('Available on') > -1
       );
     });
-
-    // success, nothing to do
-    done();
-  }, 30000);
+    p.kill();
+  }, 300000);
 });

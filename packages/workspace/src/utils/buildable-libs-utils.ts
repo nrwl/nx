@@ -1,25 +1,22 @@
-import {
-  ProjectGraph,
-  ProjectGraphNode,
-  ProjectType,
-} from '../core/project-graph';
+import { ProjectType } from '../core/project-graph';
+import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
 import { BuilderContext } from '@angular-devkit/architect';
 import { join, resolve, dirname, relative } from 'path';
 import {
   fileExists,
   readJsonFile,
   writeJsonFile,
-} from '@nrwl/workspace/src/utils/fileutils';
+} from '../utilities/fileutils';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { getOutputsForTargetAndConfiguration } from '@nrwl/workspace/src/tasks-runner/utils';
+import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
 import * as ts from 'typescript';
 import { unlinkSync } from 'fs';
 
 function isBuildable(target: string, node: ProjectGraphNode): boolean {
   return (
-    node.data.architect &&
-    node.data.architect[target] &&
-    node.data.architect[target].builder !== ''
+    node.data.targets &&
+    node.data.targets[target] &&
+    node.data.targets[target].executor !== ''
   );
 }
 
@@ -149,14 +146,6 @@ export function createTmpTsConfig(
   );
   process.on('exit', () => {
     cleanupTmpTsConfigFile(tmpTsConfigPath);
-  });
-  process.on('SIGTERM', () => {
-    cleanupTmpTsConfigFile(tmpTsConfigPath);
-    process.exit(0);
-  });
-  process.on('SIGINT', () => {
-    cleanupTmpTsConfigFile(tmpTsConfigPath);
-    process.exit(0);
   });
   writeJsonFile(tmpTsConfigPath, parsedTSConfig);
   return join(tmpTsConfigPath);
