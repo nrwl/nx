@@ -25,8 +25,30 @@ export function AngularPage() {
           content="Nx is a suite of powerful dev tools that help developers build, test, and scale full-stack Angular
           applications with integration with modern libraries like Jest, Cypress, Storybook, NgRx, ESLint, and more."
         />
+        <meta name="twitter:title" content="Nx and Modern Angular" />
+        <meta
+          name="twitter:description"
+          content="Nx is a suite of powerful dev tools that help developers build, test, and scale full-stack Angular
+          applications with integration with modern libraries like Jest, Cypress, Storybook, NgRx, ESLint, and more."
+        />
+        <meta name="twitter:image" content="/images/nx-media.jpg" />
+        <meta
+          name="twitter:image:alt"
+          content="Nx: Smart, Extensible Build Framework"
+        />
+        <meta property="og:url" content="https://nx.dev/angular" />
+        <meta
+          property="og:description"
+          content="Nx is a suite of powerful dev tools that help developers build, test, and scale full-stack Angular
+          applications with integration with modern libraries like Jest, Cypress, Storybook, NgRx, ESLint, and more."
+        />
+        <meta property="og:title" content="Nx and Modern Angular" />
+        <meta property="og:image" content="/images/nx-media.jpg" />
+        <meta property="og:image:width" content="1000" />
+        <meta property="og:image:height" content="300" />
       </Head>
       <Header
+        useDarkBackground={false}
         showSearch={false}
         flavor={{
           name: storedFlavor || 'angular',
@@ -484,7 +506,7 @@ export function AngularPage() {
           <NxUsersShowcase />
         </div>
       </main>
-      <Footer />
+      <Footer useDarkBackground={false} />
     </>
   );
 }

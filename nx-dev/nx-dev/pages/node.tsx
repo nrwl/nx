@@ -68,8 +68,28 @@ export function Node() {
           name="description"
           content="Nx is a smart and extensible build framework to help you develop, test, build, and scale Node applications."
         />
+        <meta name="twitter:title" content="Nx and Node" />
+        <meta
+          name="twitter:description"
+          content="Nx is a smart and extensible build framework to help you develop, test, build, and scale Node applications."
+        />
+        <meta name="twitter:image" content="/images/nx-media.jpg" />
+        <meta
+          name="twitter:image:alt"
+          content="Nx: Smart, Extensible Build Framework"
+        />
+        <meta property="og:url" content="https://nx.dev/node" />
+        <meta
+          property="og:description"
+          content="Nx is a smart and extensible build framework to help you develop, test, build, and scale Node applications."
+        />
+        <meta property="og:title" content="Nx and Node" />
+        <meta property="og:image" content="/images/nx-media.jpg" />
+        <meta property="og:image:width" content="1000" />
+        <meta property="og:image:height" content="300" />
       </Head>
       <Header
+        useDarkBackground={false}
         showSearch={false}
         flavor={{
           name: storedFlavor || 'node',
@@ -297,7 +317,6 @@ export function Node() {
                         Nx Node App Tutorial
                       </span>
                       <svg
-                        xmlns="http://www.w3.org/2000/svg"
                         className="ml-1 h-5 w-5 transform-gpu transition ease-out duration-200 group-hover:translate-x-2 "
                         fill="none"
                         viewBox="0 0 24 24"
@@ -552,7 +571,7 @@ export function Node() {
           <NxUsersShowcase />
         </div>
       </main>
-      <Footer />
+      <Footer useDarkBackground={false} />
     </>
   );
 }
