@@ -442,10 +442,13 @@ export function runCommand(command: string): string {
 function setMaxWorkers() {
   if (isCI) {
     const workspaceFile = workspaceConfigName();
-    const workspace = inlineProjectConfigurations(readJson(workspaceFile));
+    const workspace = readJson(workspaceFile);
 
     Object.keys(workspace.projects).forEach((appName) => {
-      const project = workspace.projects[appName];
+      let project = workspace.projects[appName];
+      if (typeof project === 'string') {
+        project = readJson(path.join(project, 'project.json'));
+      }
       const { build } = project.targets ?? project.architect;
 
       if (!build) {

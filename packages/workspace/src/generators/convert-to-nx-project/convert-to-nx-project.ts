@@ -16,6 +16,7 @@ import {
 import { Schema } from './schema';
 import { checkIfNxProjectFileExists } from './utils/check-if-nx-project-file-exists';
 import { getProjectConfigurationPath } from './utils/get-project-configuration-path';
+import { dirname } from 'path';
 
 export const SCHEMA_OPTIONS_ARE_MUTUALLY_EXCLUSIVE =
   '--project and --all are mutually exclusive';
@@ -52,7 +53,7 @@ export async function convertToNxProjectGenerator(host: Tree, schema: Schema) {
     writeJson(host, configPath, configuration);
 
     updateJson(host, getWorkspacePath(host), (value) => {
-      value.projects[project] = configPath;
+      value.projects[project] = dirname(configPath);
       return value;
     });
 

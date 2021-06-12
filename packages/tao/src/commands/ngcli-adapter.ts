@@ -202,7 +202,6 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
               switchMap((r) => {
                 try {
                   const w = parseJson(Buffer.from(r).toString());
-                  console.log('REMOVE ME: SCOPED READ - BEFORE INLINING', w);
                   return this.resolveInlineProjectConfigurations(w).pipe(
                     map((w) => {
                       const formatted = toOldFormatOrNull(w);

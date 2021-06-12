@@ -20,7 +20,7 @@ jest.mock('fs-extra', () => ({
 
 describe('convert-to-nx-project', () => {
   it('should throw if project && all are both specified', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace(2);
 
     await libraryGenerator(tree, {
       name: 'lib',
@@ -32,7 +32,7 @@ describe('convert-to-nx-project', () => {
   });
 
   it('should throw if neither project nor all are specified', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace(2);
 
     await libraryGenerator(tree, {
       name: 'lib',
@@ -44,7 +44,7 @@ describe('convert-to-nx-project', () => {
   });
 
   it('should extract single project configuration to project.json', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace(2);
 
     await libraryGenerator(tree, {
       name: 'lib',
@@ -63,7 +63,7 @@ describe('convert-to-nx-project', () => {
   });
 
   it('should extract all project configurations to project.json', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace(2);
 
     await libraryGenerator(tree, {
       name: 'lib',
@@ -91,7 +91,7 @@ describe('convert-to-nx-project', () => {
   });
 
   it('should extract tags from nx.json into project.json', async () => {
-    const tree = createTreeWithEmptyWorkspace();
+    const tree = createTreeWithEmptyWorkspace(2);
 
     await libraryGenerator(tree, {
       name: 'lib',
@@ -108,5 +108,18 @@ describe('convert-to-nx-project', () => {
       getProjectConfigurationPath(config)
     );
     expect(newConfigFile.tags).toEqual(['scope:test']);
+  });
+
+  it('should set workspace.json to point to the root directory', async () => {
+    const tree = createTreeWithEmptyWorkspace(2);
+    await libraryGenerator(tree, {
+      name: 'lib',
+      standaloneConfig: false,
+    });
+
+    const config = readProjectConfiguration(tree, 'lib');
+    await convertToNxProject(tree, { project: 'lib' });
+    const json = readJson(tree, 'workspace.json');
+    expect(json.projects.lib).toEqual(config.root);
   });
 });

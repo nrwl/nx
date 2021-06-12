@@ -200,24 +200,23 @@ export function readPackageJson(): any {
 
 export function readNxJson(): NxJsonConfiguration {
   const config = readJsonFile<NxJsonConfiguration>(`${appRootPath}/nx.json`);
-  const workspace = readWorkspaceConfig({ format: 'nx' });
-  Object.entries(workspace.projects).forEach(([project, projectConfig]) => {
-    if (typeof projectConfig === 'string') {
-      let readConfig = readJsonFile<NxJsonProjectConfiguration>(
-        join(projectConfig, 'project.json')
-      );
-      config.projects[project] ??= {};
-      config.projects[project].tags ??= [];
-      config.projects[project].implicitDependencies ??= [];
-      config.projects[project].tags.concat(readConfig.tags);
-      config.projects[project].implicitDependencies.concat(
-        readConfig.implicitDependencies
-      );
-    }
-  });
   if (!config.npmScope) {
     throw new Error(`nx.json must define the npmScope property.`);
   }
+
+  // NOTE: As we work towards removing nx.json, some settings are now found in
+  // the workspace.json file. Currently this is only supported for projects
+  // with separated configs, as they list tags / implicit deps inside the project.json file.
+  const workspace = readWorkspaceConfig({ format: 'nx', path: appRootPath });
+  Object.entries(workspace.projects).forEach(
+    ([project, projectConfig]: [string, NxJsonProjectConfiguration]) => {
+      if (!config.projects[project]) {
+        const { tags, implicitDependencies } = projectConfig;
+        config.projects[project] = { tags, implicitDependencies };
+      }
+    }
+  );
+
   return config;
 }
 
