@@ -8,6 +8,7 @@ import {
   readFile,
   removeProject,
   runCLI,
+  runCommandUntil,
   runCypressTests,
   tmpProjPath,
   uniq,
@@ -20,6 +21,25 @@ describe('Angular Package', () => {
 
     beforeEach(() => (proj = newProject()));
     afterAll(() => removeProject({ onlyOnCI: true }));
+
+    describe('serve storybook', () => {
+      it('should run an Angular based Storybook setup', async () => {
+        const angularStorybookLib = uniq('test-ui-lib');
+        createTestUILib(angularStorybookLib);
+        runCLI(
+          `generate @nrwl/angular:storybook-configuration ${angularStorybookLib} --generateStories --no-interactive`
+        );
+
+        // serve the storybook
+        const p = await runCommandUntil(
+          `run ${angularStorybookLib}:storybook`,
+          (output) => {
+            return /Storybook.*started/gi.test(output);
+          }
+        );
+        p.kill();
+      }, 1000000);
+    });
 
     it('should not overwrite global storybook config files', () => {
       const angularStorybookLib = uniq('test-ui-lib-angular');
