@@ -83,16 +83,16 @@
     },
 
     "component-cypress-spec": {
-      "factory": "./src/schematics/component-cypress-spec/component-cypress-spec",
-      "schema": "./src/schematics/component-cypress-spec/schema.json",
-      "description": "Create a cypress spec for a ui component that has a story",
+      "factory": "./src/generators/component-cypress-spec/compat",
+      "schema": "./src/generators/component-cypress-spec/schema.json",
+      "description": "Create a cypress spec for a ui component that has a story.",
       "hidden": true
     },
 
     "component-story": {
-      "factory": "./src/schematics/component-story/component-story",
-      "schema": "./src/schematics/component-story/schema.json",
-      "description": "Create a stories.ts file for a component",
+      "factory": "./src/generators/component-story/compat",
+      "schema": "./src/generators/component-story/schema.json",
+      "description": "Create a stories.ts file for a component.",
       "hidden": true
     },
 
@@ -121,6 +121,18 @@
       "factory": "./src/generators/add-linting/add-linting",
       "schema": "./src/generators/add-linting/schema.json",
       "description": "Add linting configuration to an Angular project.",
+      "hidden": true
+    },
+    "component-cypress-spec": {
+      "factory": "./src/generators/component-cypress-spec/component-cypress-spec",
+      "schema": "./src/generators/component-cypress-spec/schema.json",
+      "description": "Create a cypress spec for a ui component that has a story.",
+      "hidden": true
+    },
+    "component-story": {
+      "factory": "./src/generators/component-story/component-story",
+      "schema": "./src/generators/component-story/schema.json",
+      "description": "Create a stories.ts file for a component.",
       "hidden": true
     },
     "convert-tslint-to-eslint": {
