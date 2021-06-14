@@ -70,6 +70,7 @@ export function Sidebar({
         </div>
         <div className="px-1 py-6 sm:px-3 xl:px-5 h-1 w-full border-b border-gray-50" />
         <nav
+          id="nav"
           data-testid="navigation"
           className="px-1 pt-1 font-medium text-base sm:px-3 xl:px-5 lg:text-sm pb-10 lg:pb-14 sticky?lg:h-(screen-18)"
         >
