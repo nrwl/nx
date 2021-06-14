@@ -72,8 +72,8 @@ export function Node() {
       <Header
         showSearch={false}
         flavor={{
-          name: storedFlavor || 'react',
-          value: storedFlavor || 'react',
+          name: storedFlavor || 'node',
+          value: storedFlavor || 'node',
         }}
         version={{
           name: storedVersion || 'Latest',
@@ -554,8 +554,8 @@ export function Node() {
       </main>
       <Footer
         flavor={{
-          name: storedFlavor || 'react',
-          value: storedFlavor || 'react',
+          name: storedFlavor || 'node',
+          value: storedFlavor || 'node',
         }}
         version={{
           name: storedVersion || 'Latest',
