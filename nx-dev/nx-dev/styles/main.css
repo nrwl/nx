@@ -44,3 +44,12 @@ iframe[src*='youtube'] {
   color: inherit !important;
   border: 1px solid #e1e4e8;
 }
+
+/*
+  Headers
+ */
+
+.prose h5,
+.prose h6 {
+  font-weight: 600;
+}
