@@ -23,7 +23,7 @@ describe('Next.js Applications', () => {
 
   it('should be able to serve with a proxy configuration', async () => {
     const appName = uniq('app');
-    const port = 4202;
+    const port = 4201;
 
     runCLI(`generate @nrwl/next:app ${appName}`);
 
@@ -88,7 +88,6 @@ describe('Next.js Applications', () => {
 
   it('should be able to consume a react libs (buildable and non-buildable)', async () => {
     const appName = uniq('app');
-
     const buildableLibName = uniq('lib');
     const nonBuildableLibName = uniq('lib');
 
@@ -134,9 +133,9 @@ describe('Next.js Applications', () => {
     }).toThrow();
 
     await checkApp(appName, {
-      checkUnitTest: false,
+      checkUnitTest: true,
       checkLint: true,
-      checkE2E: false,
+      checkE2E: true,
     });
   }, 120000);
 
@@ -238,14 +237,14 @@ describe('Next.js Applications', () => {
           import { testFn } from '@${proj}/${tsLibName}';
           import { TestComponent } from '@${proj}/${tsxLibName}';\n\n
           ${content.replace(
-        `</h2>`,
-        `</h2>
+            `</h2>`,
+            `</h2>
                 <div>
                   {testFn()}
                   <TestComponent text="Hello Next.JS" />
                 </div>
               `
-      )}`
+          )}`
     );
 
     const e2eTestPath = `apps/${appName}-e2e/src/integration/app.spec.ts`;
@@ -253,13 +252,14 @@ describe('Next.js Applications', () => {
     updateFile(
       e2eTestPath,
       `
-        ${e2eContent +
-      `
+        ${
+          e2eContent +
+          `
           it('should successfully call async API route', () => {
             cy.request('/api/hello').its('body').should('include', 'hell0');
           });
           `
-      }
+        }
       `
     );
 
@@ -563,7 +563,7 @@ describe('Next.js Applications', () => {
 
   it('should allow using a custom server implementation in TypeScript', async () => {
     const appName = uniq('app');
-    const port = 4201;
+    const port = 4202;
 
     // generate next.js app
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
@@ -623,63 +623,63 @@ describe('Next.js Applications', () => {
       expect('process running').toBeFalsy();
     }
   }, 300000);
+});
 
-  function getData(port: number): Promise<any> {
-    return new Promise((resolve) => {
-      http.get(`http://localhost:${port}`, (res) => {
-        expect(res.statusCode).toEqual(200);
-        let data = '';
-        res.on('data', (chunk) => {
-          data += chunk;
-        });
-        res.once('end', () => {
-          resolve(data);
-        });
+function getData(port: number): Promise<any> {
+  return new Promise((resolve) => {
+    http.get(`http://localhost:${port}`, (res) => {
+      expect(res.statusCode).toEqual(200);
+      let data = '';
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      res.once('end', () => {
+        resolve(data);
       });
     });
+  });
+}
+
+async function checkApp(
+  appName: string,
+  opts: {
+    checkUnitTest: boolean;
+    checkLint: boolean;
+    checkE2E: boolean;
+    checkWebpack5?: boolean;
+  }
+) {
+  const buildResult = runCLI(`build ${appName} --withDeps`);
+  if (opts.checkWebpack5) {
+    expect(buildResult).toContain('Using webpack 5');
+  }
+  expect(buildResult).toContain(`Compiled successfully`);
+  checkFilesExist(`dist/apps/${appName}/.next/build-manifest.json`);
+  checkFilesExist(`dist/apps/${appName}/public/star.svg`);
+
+  const packageJson = readJson(`dist/apps/${appName}/package.json`);
+  expect(packageJson.dependencies.react).toBeDefined();
+  expect(packageJson.dependencies['react-dom']).toBeDefined();
+  expect(packageJson.dependencies.next).toBeDefined();
+
+  if (opts.checkLint) {
+    const lintResults = runCLI(`lint ${appName}`);
+    expect(lintResults).toContain('All files pass linting.');
   }
 
-  async function checkApp(
-    appName: string,
-    opts: {
-      checkUnitTest: boolean;
-      checkLint: boolean;
-      checkE2E: boolean;
-      checkWebpack5?: boolean;
-    }
-  ) {
-    const buildResult = runCLI(`build ${appName} --withDeps`);
-    if (opts.checkWebpack5) {
-      expect(buildResult).toContain('Using webpack 5');
-    }
-    expect(buildResult).toContain(`Compiled successfully`);
-    checkFilesExist(`dist/apps/${appName}/.next/build-manifest.json`);
-    checkFilesExist(`dist/apps/${appName}/public/star.svg`);
-
-    const packageJson = readJson(`dist/apps/${appName}/package.json`);
-    expect(packageJson.dependencies.react).toBeDefined();
-    expect(packageJson.dependencies['react-dom']).toBeDefined();
-    expect(packageJson.dependencies.next).toBeDefined();
-
-    if (opts.checkLint) {
-      const lintResults = runCLI(`lint ${appName}`);
-      expect(lintResults).toContain('All files pass linting.');
-    }
-
-    if (opts.checkUnitTest) {
-      const testResults = await runCLIAsync(`test ${appName}`);
-      expect(testResults.combinedOutput).toContain(
-        'Test Suites: 1 passed, 1 total'
-      );
-    }
-
-    if (opts.checkE2E) {
-      const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);
-      expect(e2eResults).toContain('All specs passed!');
-      expect(await killPorts()).toBeTruthy();
-    }
-
-    runCLI(`export ${appName}`);
-    checkFilesExist(`dist/apps/${appName}/exported/index.html`);
+  if (opts.checkUnitTest) {
+    const testResults = await runCLIAsync(`test ${appName}`);
+    expect(testResults.combinedOutput).toContain(
+      'Test Suites: 1 passed, 1 total'
+    );
   }
-});
+
+  if (opts.checkE2E) {
+    const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);
+    expect(e2eResults).toContain('All specs passed!');
+    expect(await killPorts()).toBeTruthy();
+  }
+
+  runCLI(`export ${appName}`);
+  checkFilesExist(`dist/apps/${appName}/exported/index.html`);
+}
