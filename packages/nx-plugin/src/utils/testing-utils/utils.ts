@@ -10,6 +10,8 @@ import {
 } from 'fs-extra';
 import { dirname, isAbsolute } from 'path';
 import { tmpProjPath } from './paths';
+import { parseJson } from '@nrwl/devkit';
+import type { JsonParseOptions } from '@nrwl/devkit';
 
 /**
  * Copies module folders from the working directory to the e2e directory
@@ -91,38 +93,42 @@ export function checkFilesExist(...expectedPaths: string[]) {
  * Get a list of all files within a directory.
  * @param dirName Directory name within the e2e directory.
  */
-export function listFiles(dirName: string) {
+export function listFiles(dirName: string): string[] {
   return readdirSync(tmpProjPath(dirName));
 }
 
 /**
  * Read a JSON file.
  * @param path Path to the JSON file. Absolute or relative to the e2e directory.
+ * @param options JSON parse options
  */
-export function readJson(path: string): any {
-  return JSON.parse(readFile(path));
+export function readJson<T extends object = any>(
+  path: string,
+  options?: JsonParseOptions
+): T {
+  return parseJson<T>(readFile(path), options);
 }
 
 /**
  * Read a file.
  * @param path Path to the file. Absolute or relative to the e2e directory.
  */
-export function readFile(path: string) {
+export function readFile(path: string): string {
   const filePath = isAbsolute(path) ? path : tmpProjPath(path);
-  return readFileSync(filePath).toString();
+  return readFileSync(filePath, 'utf-8');
 }
 
 /**
  * Deletes the e2e directory
  */
-export function cleanup() {
+export function cleanup(): void {
   removeSync(tmpProjPath());
 }
 
 /**
  * Remove the dist folder from the e2e directory
  */
-export function rmDist() {
+export function rmDist(): void {
   removeSync(`${tmpProjPath()}/dist`);
 }
 
@@ -140,7 +146,7 @@ export function getCwd(): string {
 export function directoryExists(directoryPath: string): boolean {
   try {
     return statSync(directoryPath).isDirectory();
-  } catch (err) {
+  } catch {
     return false;
   }
 }
@@ -152,7 +158,7 @@ export function directoryExists(directoryPath: string): boolean {
 export function fileExists(filePath: string): boolean {
   try {
     return statSync(filePath).isFile();
-  } catch (err) {
+  } catch {
     return false;
   }
 }
