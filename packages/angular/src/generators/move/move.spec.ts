@@ -1,9 +1,9 @@
 import { Tree } from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { angularMoveGenerator } from './move';
-
-const libSchematic = wrapAngularDevkitSchematic('@nrwl/angular', 'lib');
+import libraryGenerator from '../library/library';
+import { Linter } from '@nrwl/linter';
+import { UnitTestRunner } from '../../utils/test-runners';
 
 describe('@nrwl/angular:move', () => {
   let tree: Tree;
@@ -11,8 +11,15 @@ describe('@nrwl/angular:move', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace();
 
-    await libSchematic(tree, {
+    await libraryGenerator(tree, {
       name: 'mylib',
+      buildable: false,
+      enableIvy: false,
+      linter: Linter.EsLint,
+      publishable: false,
+      simpleModuleName: true,
+      skipFormat: false,
+      unitTestRunner: UnitTestRunner.Jest,
     });
   });
 

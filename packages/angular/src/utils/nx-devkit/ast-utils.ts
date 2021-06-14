@@ -133,13 +133,13 @@ function _addSymbolToNgModuleMetadata(
   ngModulePath: string,
   metadataField: string,
   expression: string
-) {
+): ts.SourceFile {
   const nodes = getDecoratorMetadata(source, 'NgModule', '@angular/core');
   let node: any = nodes[0]; // tslint:disable-line:no-any
 
   // Find the decorator declaration.
   if (!node) {
-    return;
+    return source;
   }
   // Get all the children property assignment of object literals.
   const matchingProperties: ts.ObjectLiteralElement[] = (node as ts.ObjectLiteralExpression).properties
@@ -160,7 +160,7 @@ function _addSymbolToNgModuleMetadata(
 
   // Get the last node of the array literal.
   if (!matchingProperties) {
-    return;
+    return source;
   }
   if (matchingProperties.length == 0) {
     // We haven't found the field in the metadata declaration. Insert a new field.
@@ -184,14 +184,14 @@ function _addSymbolToNgModuleMetadata(
       }
     }
 
-    insertChange(host, ngModulePath, position, toInsert);
+    return insertChange(host, source, ngModulePath, position, toInsert);
   }
 
   const assignment = matchingProperties[0] as ts.PropertyAssignment;
 
   // If it's not an array, nothing we can do really.
   if (assignment.initializer.kind !== ts.SyntaxKind.ArrayLiteralExpression) {
-    return;
+    return source;
   }
 
   const arrLiteral = assignment.initializer as ts.ArrayLiteralExpression;
@@ -207,7 +207,7 @@ function _addSymbolToNgModuleMetadata(
       'No app module found. Please add your new class to your component.'
     );
 
-    return;
+    return source;
   }
 
   const isArray = Array.isArray(node);
@@ -215,7 +215,7 @@ function _addSymbolToNgModuleMetadata(
     const nodeArray = (node as {}) as Array<ts.Node>;
     const symbolsArray = nodeArray.map((node) => node.getText());
     if (symbolsArray.includes(expression)) {
-      return;
+      return source;
     }
 
     node = node[node.length - 1];
@@ -256,7 +256,7 @@ function _addSymbolToNgModuleMetadata(
       toInsert = `, ${expression}`;
     }
   }
-  insertChange(host, ngModulePath, position, toInsert);
+  return insertChange(host, source, ngModulePath, position, toInsert);
 }
 
 export function removeFromNgModule(
@@ -264,13 +264,13 @@ export function removeFromNgModule(
   source: ts.SourceFile,
   modulePath: string,
   property: string
-) {
+): ts.SourceFile {
   const nodes = getDecoratorMetadata(source, 'NgModule', '@angular/core');
   let node: any = nodes[0]; // tslint:disable-line:no-any
 
   // Find the decorator declaration.
   if (!node) {
-    return;
+    return source;
   }
 
   // Get all the children property assignment of object literals.
@@ -281,8 +281,9 @@ export function removeFromNgModule(
     '@angular/core'
   );
   if (matchingProperty) {
-    removeChange(
+    return removeChange(
       host,
+      source,
       modulePath,
       matchingProperty.getStart(source),
       matchingProperty.getFullText(source)
@@ -295,8 +296,14 @@ export function addImportToModule(
   source: ts.SourceFile,
   modulePath: string,
   symbolName: string
-) {
-  _addSymbolToNgModuleMetadata(host, source, modulePath, 'imports', symbolName);
+): ts.SourceFile {
+  return _addSymbolToNgModuleMetadata(
+    host,
+    source,
+    modulePath,
+    'imports',
+    symbolName
+  );
 }
 
 export function addImportToTestBed(
@@ -304,7 +311,7 @@ export function addImportToTestBed(
   source: ts.SourceFile,
   specPath: string,
   symbolName: string
-) {
+): ts.SourceFile {
   const allCalls: ts.CallExpression[] = <any>(
     findNodes(source, ts.SyntaxKind.CallExpression)
   );
@@ -324,8 +331,15 @@ export function addImportToTestBed(
     const startPosition = configureTestingModuleObjectLiterals[0]
       .getFirstToken(source)
       .getEnd();
-    insertChange(host, specPath, startPosition, `imports: [${symbolName}], `);
+    return insertChange(
+      host,
+      source,
+      specPath,
+      startPosition,
+      `imports: [${symbolName}], `
+    );
   }
+  return source;
 }
 
 export function getBootstrapComponent(
@@ -372,14 +386,14 @@ export function addRoute(
   ngModulePath: string,
   source: ts.SourceFile,
   route: string
-) {
+): ts.SourceFile {
   const routes = getListOfRoutes(source);
-  if (!routes) return [];
+  if (!routes) return source;
 
   if (routes.hasTrailingComma || routes.length === 0) {
-    insertChange(host, ngModulePath, routes.end, route);
+    return insertChange(host, source, ngModulePath, routes.end, route);
   } else {
-    insertChange(host, ngModulePath, routes.end, `, ${route}`);
+    return insertChange(host, source, ngModulePath, routes.end, `, ${route}`);
   }
 }
 
@@ -436,8 +450,8 @@ export function addProviderToModule(
   source: ts.SourceFile,
   modulePath: string,
   symbolName: string
-) {
-  _addSymbolToNgModuleMetadata(
+): ts.SourceFile {
+  return _addSymbolToNgModuleMetadata(
     host,
     source,
     modulePath,
@@ -451,8 +465,8 @@ export function addDeclarationToModule(
   source: ts.SourceFile,
   modulePath: string,
   symbolName: string
-) {
-  _addSymbolToNgModuleMetadata(
+): ts.SourceFile {
+  return _addSymbolToNgModuleMetadata(
     host,
     source,
     modulePath,
@@ -466,8 +480,8 @@ export function addEntryComponents(
   source: ts.SourceFile,
   modulePath: string,
   symbolName: string
-) {
-  _addSymbolToNgModuleMetadata(
+): ts.SourceFile {
+  return _addSymbolToNgModuleMetadata(
     host,
     source,
     modulePath,

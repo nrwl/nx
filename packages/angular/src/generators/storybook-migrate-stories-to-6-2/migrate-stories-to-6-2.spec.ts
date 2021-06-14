@@ -14,8 +14,8 @@ import { getTsSourceFile } from '../../utils/nx-devkit/ast-utils';
 import { nxVersion } from '../../utils/versions';
 import { storybookConfigurationGenerator } from '../storybook-configuration/storybook-configuration';
 import { angularMigrateStoriesTo62Generator } from './migrate-stories-to-6-2';
+import libraryGenerator from '../library/library';
 
-const libSchematic = wrapAngularDevkitSchematic('@nrwl/angular', 'lib');
 const componentSchematic = wrapAngularDevkitSchematic(
   '@schematics/angular',
   'component'
@@ -35,7 +35,7 @@ describe('migrate-stories-to-6-2 schematic', () => {
 
       appTree = createTreeWithEmptyWorkspace();
 
-      await libSchematic(appTree, {
+      await libraryGenerator(appTree, {
         name: 'test-ui-lib',
       });
 

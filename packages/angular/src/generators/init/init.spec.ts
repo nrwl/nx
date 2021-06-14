@@ -1,6 +1,6 @@
 import { readJson, Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/workspace';
+import { Linter } from '@nrwl/linter';
 
 import init from './init';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';

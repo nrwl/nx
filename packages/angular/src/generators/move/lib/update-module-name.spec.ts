@@ -1,11 +1,11 @@
 import { Tree } from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { moveGenerator } from '@nrwl/workspace';
 import { Schema } from '../schema';
 import { updateModuleName } from './update-module-name';
-
-const libSchematic = wrapAngularDevkitSchematic('@nrwl/angular', 'lib');
+import libraryGenerator from '../../library/library';
+import { Linter } from '@nrwl/linter';
+import { UnitTestRunner } from '../../../utils/test-runners';
 
 describe('updateModuleName Rule', () => {
   let tree: Tree;
@@ -27,11 +27,25 @@ describe('updateModuleName Rule', () => {
     beforeEach(async () => {
       tree = createTreeWithEmptyWorkspace();
 
-      await libSchematic(tree, {
+      await libraryGenerator(tree, {
         name: 'my-first',
+        buildable: false,
+        enableIvy: false,
+        linter: Linter.EsLint,
+        publishable: false,
+        simpleModuleName: true,
+        skipFormat: false,
+        unitTestRunner: UnitTestRunner.Jest,
       });
-      await libSchematic(tree, {
+      await libraryGenerator(tree, {
         name: 'my-second',
+        buildable: false,
+        enableIvy: false,
+        linter: Linter.EsLint,
+        publishable: false,
+        simpleModuleName: true,
+        skipFormat: false,
+        unitTestRunner: UnitTestRunner.Jest,
       });
       tree.write(
         '/libs/my-first/src/lib/my-first.module.ts',
@@ -114,7 +128,6 @@ describe('updateModuleName Rule', () => {
       );
     });
   });
-
   describe('rename', () => {
     const schema: Schema = {
       projectName: 'my-source',
@@ -132,56 +145,68 @@ describe('updateModuleName Rule', () => {
       tree = createTreeWithEmptyWorkspace();
 
       // fake a mid-move tree:
-      await libSchematic(tree, {
+      await libraryGenerator(tree, {
         name: 'my-destination',
+        buildable: false,
+        enableIvy: false,
+        linter: Linter.EsLint,
+        publishable: false,
+        simpleModuleName: true,
+        skipFormat: false,
+        unitTestRunner: UnitTestRunner.Jest,
       });
 
       tree.write(
         '/libs/my-destination/src/lib/my-source.module.ts',
         `import { NgModule } from '@angular/core';
-    import { CommonModule } from '@angular/common';
-
-    @NgModule({
-      imports: [CommonModule]
-    })
-    export class MySourceModule {}`
+        import { CommonModule } from '@angular/common';
+        @NgModule({
+          imports: [CommonModule]
+        })
+        export class MySourceModule {}`
       );
 
       tree.write(
         '/libs/my-destination/src/lib/my-source.module.spec.ts',
         `import { async, TestBed } from '@angular/core/testing';
-    import { MySourceModule } from './my-source.module';
-
-    describe('MySourceModule', () => {
-      beforeEach(async(() => {
-        TestBed.configureTestingModule({
-          imports: [MySourceModule]
-        }).compileComponents();
-      }));
-
-      it('should create', () => {
-        expect(MySourceModule).toBeDefined();
-      });
-    });`
+        import { MySourceModule } from './my-source.module';
+        describe('MySourceModule', () => {
+          beforeEach(async(() => {
+            TestBed.configureTestingModule({
+              imports: [MySourceModule]
+            }).compileComponents();
+          }));
+          it('should create', () => {
+            expect(MySourceModule).toBeDefined();
+          });
+        });`
       );
 
       tree.write(
         indexPath,
         `export * from './lib/my-source.module';
-    `
+        `
       );
 
       tree.delete(modulePath);
       tree.delete(moduleSpecPath);
 
-      await libSchematic(tree, { name: 'my-importer' });
+      await libraryGenerator(tree, {
+        name: 'my-importer',
+        buildable: false,
+        enableIvy: false,
+        linter: Linter.EsLint,
+        publishable: false,
+        simpleModuleName: true,
+        skipFormat: false,
+        unitTestRunner: UnitTestRunner.Jest,
+      });
 
       tree.write(
         importerPath,
         `import { MySourceModule } from '@proj/my-destination';
-
-      export class MyExtendedSourceModule extends MySourceModule {}
-      `
+          export class MyExtendedSourceModule extends MySourceModule {}
+          `
       );
     });
 

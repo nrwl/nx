@@ -1,5 +1,5 @@
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
-import { Linter } from '@nrwl/workspace';
+import { Linter } from '@nrwl/linter';
 
 export interface Schema {
   unitTestRunner: UnitTestRunner;

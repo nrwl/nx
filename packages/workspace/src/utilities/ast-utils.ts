@@ -6,29 +6,50 @@ function nodesByPosition(first: ts.Node, second: ts.Node): number {
   return first.getStart() - second.getStart();
 }
 
+function updateTsSourceFile(
+  host: Tree,
+  sourceFile: ts.SourceFile,
+  filePath: string
+): ts.SourceFile {
+  const newFileContents = host.read(filePath).toString('utf-8');
+  return sourceFile.update(newFileContents, {
+    newLength: newFileContents.length,
+    span: {
+      length: sourceFile.text.length,
+      start: 0,
+    },
+  });
+}
+
 export function insertChange(
   host: Tree,
+  sourceFile: ts.SourceFile,
   filePath: string,
   insertPosition: number,
   contentToInsert: string
-) {
+): ts.SourceFile {
   const content = host.read(filePath).toString();
   const prefix = content.substring(0, insertPosition);
   const suffix = content.substring(insertPosition);
 
   host.write(filePath, `${prefix}${contentToInsert}${suffix}`);
+
+  return updateTsSourceFile(host, sourceFile, filePath);
 }
 
 export function removeChange(
   host: Tree,
+  sourceFile: ts.SourceFile,
   filePath: string,
   removePosition: number,
   contentToRemove: string
-) {
+): ts.SourceFile {
   const content = host.read(filePath).toString();
   const prefix = content.substring(0, removePosition);
   const suffix = content.substring(removePosition + contentToRemove.length);
   host.write(filePath, `${prefix}${suffix}`);
+
+  return updateTsSourceFile(host, sourceFile, filePath);
 }
 
 export function insertImport(
@@ -38,7 +59,7 @@ export function insertImport(
   symbolName: string,
   fileName: string,
   isDefault = false
-) {
+): ts.SourceFile {
   const rootNode = source;
   const allImports = findNodes(rootNode, ts.SyntaxKind.ImportDeclaration);
 
@@ -69,7 +90,7 @@ export function insertImport(
 
     // if imports * from fileName, don't add symbolName
     if (importsAsterisk) {
-      return;
+      return source;
     }
 
     const importTextNodes = imports.filter(
@@ -87,6 +108,7 @@ export function insertImport(
 
       return insertAfterLastOccurrence(
         host,
+        source,
         imports,
         `, ${symbolName}`,
         fileToEdit,
@@ -94,7 +116,7 @@ export function insertImport(
       );
     }
 
-    return;
+    return source;
   }
 
   // no such import declaration exists
@@ -116,6 +138,7 @@ export function insertImport(
 
   return insertAfterLastOccurrence(
     host,
+    source,
     allImports,
     toInsert,
     fileToEdit,
@@ -126,12 +149,13 @@ export function insertImport(
 
 function insertAfterLastOccurrence(
   host: Tree,
+  sourceFile: ts.SourceFile,
   nodes: ts.Node[],
   toInsert: string,
   pathToFile: string,
   fallbackPos: number,
   syntaxKind?: ts.SyntaxKind
-) {
+): ts.SourceFile {
   // sort() has a side effect, so make a copy so that we won't overwrite the parent's object.
   let lastItem = [...nodes].sort(nodesByPosition).pop();
   if (!lastItem) {
@@ -147,7 +171,7 @@ function insertAfterLastOccurrence(
   }
   const lastItemPosition: number = lastItem ? lastItem.getEnd() : fallbackPos;
 
-  insertChange(host, pathToFile, lastItemPosition, toInsert);
+  return insertChange(host, sourceFile, pathToFile, lastItemPosition, toInsert);
 }
 
 export function addGlobal(
@@ -155,13 +179,19 @@ export function addGlobal(
   source: ts.SourceFile,
   modulePath: string,
   statement: string
-) {
+): ts.SourceFile {
   const allImports = findNodes(source, ts.SyntaxKind.ImportDeclaration);
   if (allImports.length > 0) {
     const lastImport = allImports[allImports.length - 1];
-    insertChange(host, modulePath, lastImport.end + 1, `\n${statement}\n`);
+    return insertChange(
+      host,
+      source,
+      modulePath,
+      lastImport.end + 1,
+      `\n${statement}\n`
+    );
   } else {
-    insertChange(host, modulePath, 0, `${statement}\n`);
+    return insertChange(host, source, modulePath, 0, `${statement}\n`);
   }
 }
 

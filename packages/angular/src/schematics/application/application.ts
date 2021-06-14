@@ -42,6 +42,7 @@ import {
 import { names, offsetFromRoot } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { initSchematic } from '../../generators/init/init.compat';
+import { Linter as Lint } from '@nrwl/linter';
 
 interface NormalizedSchema extends Schema {
   prefix: string; // we set a default for this in normalizeOptions, so it is no longer optional
@@ -729,6 +730,7 @@ export default function (schema: Schema): Rule {
     return chain([
       initSchematic({
         ...options,
+        linter: options.linter === Linter.EsLint ? Lint.EsLint : Lint.None, // Required as there is currently an overlap between @nrwl/workspace Linter and @nrwl/linter Linter
         skipFormat: true,
       }),
       externalSchematic('@schematics/angular', 'application', {
