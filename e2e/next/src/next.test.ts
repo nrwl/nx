@@ -616,8 +616,7 @@ describe('Next.js Applications', () => {
     expect(data).toContain(`Welcome to ${appName}`);
 
     try {
-      p.kill('SIGKILL');
-      // await promisifiedTreeKill(p.pid, 'SIGKILL');
+      await promisifiedTreeKill(p.pid, 'SIGKILL');
       // expect(await killPorts(port)).toBeTruthy();
       await killPorts(port);
     } catch {

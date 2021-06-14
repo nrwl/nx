@@ -192,11 +192,15 @@ export function newProject({ name = uniq('proj') } = {}): string {
   }
 }
 
+const KILL_PORT_DELAY = 10000;
 async function killPort(port: number): Promise<boolean> {
   if (await portCheck(port)) {
     try {
       logInfo(`Attempting to close port ${port}`);
       await kill(port);
+      await new Promise<void>((resolve) =>
+        setTimeout(() => resolve(), KILL_PORT_DELAY)
+      );
       if (await portCheck(port)) {
         logError(`Port ${port} still open`);
       } else {
