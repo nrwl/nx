@@ -53,6 +53,7 @@ export async function conversionGenerator(
           appProjectRoot: projectConfig.root,
           js,
           setParserOptionsProject,
+          parsedTags: [],
         } as AddLintForApplicationSchema);
       }
 
@@ -63,6 +64,9 @@ export async function conversionGenerator(
           projectRoot: projectConfig.root,
           js,
           setParserOptionsProject,
+          projectDirectory: '',
+          fileName: '',
+          parsedTags: [],
         } as AddLintForLibrarySchema);
       }
     },
