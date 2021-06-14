@@ -553,7 +553,7 @@ export async function runMigration(
       );
     }
 
-    protected _resolveCollectionPath(name: string): string {
+    protected _resolveCollectionPath(name: string, requester: string): string {
       let collectionPath: string | undefined = undefined;
 
       if (name.startsWith('.') || name.startsWith('/')) {
@@ -577,13 +577,23 @@ export async function runMigration(
 
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const packageJson = require(packageJsonPath);
-        let pkgJsonSchematics =
-          packageJson['nx-migrations'] ?? packageJson['ng-update'];
-        if (!pkgJsonSchematics) {
-          throw new Error(`Could not find migrations in package: "${name}"`);
-        }
-        if (typeof pkgJsonSchematics != 'string') {
-          pkgJsonSchematics = pkgJsonSchematics.migrations;
+        let pkgJsonSchematics;
+        if (requester) {
+          pkgJsonSchematics = packageJson[ 'schematics' ];
+          if (!pkgJsonSchematics) {
+            throw new Error(`Could not find collection in package: "${name}"`);
+          }
+        } else {
+          pkgJsonSchematics = packageJson[ 'nx-migrations' ];
+          if (!pkgJsonSchematics) {
+            pkgJsonSchematics = packageJson['ng-update'];
+            if (!pkgJsonSchematics) {
+              throw new Error(`Could not find migrations in package: "${name}"`);
+            }
+            if (typeof pkgJsonSchematics != 'string') {
+              pkgJsonSchematics = pkgJsonSchematics.migrations;
+            }
+          }
         }
         collectionPath = require.resolve(pkgJsonSchematics, {
           paths: [dirname(packageJsonPath)],
