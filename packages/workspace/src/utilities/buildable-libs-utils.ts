@@ -1,6 +1,11 @@
 import { ProjectType } from '../core/project-graph';
 import { join, resolve, dirname, relative } from 'path';
-import { fileExists, readJsonFile, writeJsonFile } from './fileutils';
+import {
+  directoryExists,
+  fileExists,
+  readJsonFile,
+  writeJsonFile,
+} from './fileutils';
 import { stripIndents } from '@nrwl/devkit';
 import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
 import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
@@ -211,9 +216,9 @@ export function findMissingBuildDependencies(
       return;
     }
 
-    const paths = dep.outputs.map((p) => join(root, p, 'package.json'));
+    const paths = dep.outputs.map((p) => join(root, p));
 
-    if (!paths.some(fileExists)) {
+    if (!paths.some(directoryExists)) {
       depLibsToBuildFirst.push(dep);
     }
   });
