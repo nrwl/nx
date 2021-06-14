@@ -1,0 +1,12 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`componentCypressSpec generator should generate the component spec file 1`] = `
+"describe('ng-app1', () => {
+  beforeEach(() => cy.visit('/iframe.html?id=testbuttoncomponent--primary&knob-buttonType=button&knob-style=default&knob-age&knob-isOn=false'));
+
+  it('should render the component', () => {
+    cy.get('proj-test-button').should('exist');
+  });
+});
+"
+`;

@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`componentStory generator should generate the right props 1`] = `
+"import { text, number, boolean } from '@storybook/addon-knobs';
+import { TestButtonComponent } from './test-button.component';
+
+export default {
+  title: 'TestButtonComponent',
+  component: TestButtonComponent
+}
+
+export const primary = () => ({
+  moduleMetadata: {
+    imports: []
+  },
+  props: {
+    buttonType: text('buttonType', 'button'),
+    style: text('style', 'default'),
+    age: number('age', 0),
+    isOn: boolean('isOn', false),
+  }
+})"
+`;
