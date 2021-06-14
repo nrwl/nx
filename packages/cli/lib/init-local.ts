@@ -1,8 +1,8 @@
 import * as path from 'path';
-import { readFileSync } from 'fs';
 import { Workspace } from './workspace';
 import { parseRunOneOptions } from './parse-run-one-options';
 import { performance } from 'perf_hooks';
+import { readJsonFile } from '@nrwl/tao/src/utils/fileutils';
 
 /**
  * Nx is being run inside a workspace.
@@ -83,13 +83,11 @@ function runOneOptions(
   workspace: Workspace
 ): false | { project; target; configuration; parsedArgs } {
   try {
-    const workspaceConfigJson = JSON.parse(
-      readFileSync(
-        path.join(
-          workspace.dir,
-          workspace.type === 'nx' ? 'workspace.json' : 'angular.json'
-        )
-      ).toString()
+    const workspaceConfigJson = readJsonFile(
+      path.join(
+        workspace.dir,
+        workspace.type === 'nx' ? 'workspace.json' : 'angular.json'
+      )
     );
 
     return parseRunOneOptions(
@@ -97,7 +95,7 @@ function runOneOptions(
       workspaceConfigJson,
       process.argv.slice(2)
     );
-  } catch (e) {
+  } catch {
     return false;
   }
 }

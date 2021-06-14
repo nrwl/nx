@@ -33,7 +33,7 @@ try {
   localNx = require.resolve('@nrwl/cli/bin/nx.js', {
     paths: [workspace.dir],
   });
-} catch (e) {
+} catch {
   output.error({
     title: `Could not find Nx modules in this workspace.`,
     bodyLines: [`Have you run ${chalk.bold.white(`npm/yarn install`)}?`],
