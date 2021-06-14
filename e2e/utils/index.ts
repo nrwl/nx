@@ -109,6 +109,7 @@ export function runCreateWorkspace(
     cwd: e2eCwd,
     stdio: [0, 1, 2],
     env: process.env,
+    encoding: 'utf-8',
   });
   return create ? create.toString() : '';
 }
@@ -121,6 +122,7 @@ export function packageInstall(pkg: string, projName?: string) {
     // ...{ stdio: ['pipe', 'pipe', 'pipe'] },
     ...{ stdio: [0, 1, 2] },
     env: process.env,
+    encoding: 'utf-8',
   });
   return install ? install.toString() : '';
 }
@@ -132,6 +134,7 @@ export function runNgNew(projectName: string): string {
     {
       cwd: e2eCwd,
       env: process.env,
+      encoding: 'utf-8',
     }
   ).toString();
 }
@@ -254,6 +257,7 @@ export function runCommandAsync(
           FORCE_COLOR: 'false',
           NX_INVOKED_BY_RUNNER: undefined,
         },
+        encoding: 'utf-8',
       },
       (err, stdout, stderr) => {
         if (!opts.silenceError && err) {
@@ -277,6 +281,7 @@ export function runCommandUntil(
       FORCE_COLOR: 'false',
       NX_INVOKED_BY_RUNNER: undefined,
     },
+    encoding: 'utf-8',
   });
   return new Promise((res, rej) => {
     let output = '';
@@ -330,6 +335,7 @@ export function runNgAdd(
     return execSync(`./node_modules/.bin/ng add @nrwl/workspace ${command}`, {
       cwd: tmpProjPath(),
       env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
+      encoding: 'utf-8',
     })
       .toString()
       .replace(
@@ -358,7 +364,7 @@ export function runCLI(
     let r = execSync(`${pm.runNx} ${command}`, {
       cwd: opts.cwd || tmpProjPath(),
       env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
-      encoding: 'utf8',
+      encoding: 'utf-8',
       maxBuffer: 50 * 1024 * 1024,
     }).toString();
     r = r.replace(
@@ -402,6 +408,7 @@ export function runCommand(command: string): string {
         FORCE_COLOR: 'false',
         NX_INVOKED_BY_RUNNER: undefined,
       },
+      encoding: 'utf-8',
     }).toString();
     if (process.env.VERBOSE_OUTPUT) {
       console.log(r);

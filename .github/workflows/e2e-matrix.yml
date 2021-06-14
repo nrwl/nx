@@ -18,6 +18,11 @@ jobs:
         os:
           - ubuntu-latest
           # - windows-latest
+        include:
+          - os: ubuntu-latest
+            os-name: ubuntu
+          # - os: windows-latest
+          #   os-name: windows
         node_version:
           - '14'
           # - '15'
@@ -37,7 +42,7 @@ jobs:
           - e2e-angular
       fail-fast: false
 
-    name: ${{ matrix.os }}/node v${{ matrix.node_version }}/${{ matrix.package_manager }} - ${{ matrix.packages }}
+    name: ${{ matrix.os-name }}/n v${{ matrix.node_version }}/${{ matrix.package_manager }} - ${{ matrix.packages }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -60,7 +65,8 @@ jobs:
         key: ${{ matrix.os }}-node-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
         restore-keys: ${{ matrix.os }}-node-${{ matrix.node-version }}-yarn-
 
-    - run: yarn install
+    - name: Install packages
+      run: yarn install --prefer-offline --non-interactive
 
     - name: Cleanup
       if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -71,6 +77,8 @@ jobs:
         sudo rm -rf /opt/ghc
         sudo rm -rf "/usr/local/share/boost"
         sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        sudo apt-get install lsof
+        echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
 
     - name: Install PNPM
       if: ${{ matrix.package_manager == 'pnpm' }}
