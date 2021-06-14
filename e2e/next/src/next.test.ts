@@ -79,8 +79,7 @@ describe('Next.js Applications', () => {
 
     try {
       await promisifiedTreeKill(p.pid, 'SIGKILL');
-      // expect(await killPorts(port)).toBeTruthy();
-      await killPorts(port);
+      expect(await killPorts(port)).toBeTruthy();
     } catch {
       expect('process running').toBeFalsy();
     }

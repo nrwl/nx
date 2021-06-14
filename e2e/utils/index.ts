@@ -192,7 +192,7 @@ export function newProject({ name = uniq('proj') } = {}): string {
   }
 }
 
-const KILL_PORT_DELAY = 10000;
+const KILL_PORT_DELAY = 5000;
 async function killPort(port: number): Promise<boolean> {
   if (await portCheck(port)) {
     try {
