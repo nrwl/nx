@@ -61,7 +61,7 @@ describe('Nx Plugin', () => {
     runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
 
     if (runCypressTests()) {
-      const e2eResults = runCLI(`e2e ${plugin}-e2e --no-watch`);
+      const e2eResults = runCLI(`e2e ${plugin}-e2e --no-watch --headless`);
       expect(e2eResults).toContain('Running target "e2e" succeeded');
       expect(await killPorts()).toBeTruthy();
     }
