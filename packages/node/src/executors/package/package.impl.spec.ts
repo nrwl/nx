@@ -307,8 +307,8 @@ describe('NodePackageBuilder', () => {
         } as ProjectGraph;
       });
       // dist/libs/nodelib-child/package.json
-      mocked(fsUtility.fileExists).mockImplementation((arg: string) => {
-        return arg.endsWith('dist/libs/nodelib-child/package.json');
+      mocked(fsUtility.directoryExists).mockImplementation((arg: string) => {
+        return arg.endsWith('dist/libs/nodelib-child');
       });
     });
 
