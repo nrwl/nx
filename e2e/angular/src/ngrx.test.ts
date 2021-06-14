@@ -11,8 +11,7 @@ import {
 // TODO: Uncomment when the node is migrated to webpack 5
 xdescribe('ngrx', () => {
   beforeEach(() => newProject());
-
-  afterEach(() => removeProject({ onlyOnCI: true }));
+  afterAll(() => removeProject({ onlyOnCI: true }));
 
   it('should work', async () => {
     const myapp = uniq('myapp');

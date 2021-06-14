@@ -8,11 +8,10 @@ import {
   uniq,
   packageInstall,
   removeProject,
-  killPorts,
 } from '@nrwl/e2e/utils';
 
 describe('custom workspace layout', () => {
-  afterEach(() => killPorts());
+  afterAll(() => removeProject({ onlyOnCI: true }));
 
   it('should work', async () => {
     const proj = uniq('custom-layout-proj');
@@ -67,7 +66,5 @@ describe('custom workspace layout', () => {
     expect(appBuildResults.stdout).toContain(`nx run ${expressApp}:build`);
 
     checkFilesExist(`dist/packages/${expressApp}/main.js`);
-
-    removeProject({ onlyOnCI: true });
   }, 1000000);
 });

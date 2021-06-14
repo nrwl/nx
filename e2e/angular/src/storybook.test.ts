@@ -2,11 +2,11 @@ process.env.SELECTED_CLI = 'angular';
 
 import {
   checkFilesExist,
+  killPorts,
   newProject,
   readFile,
   removeProject,
   runCLI,
-  runCypressTests,
   tmpProjPath,
   uniq,
 } from '@nrwl/e2e/utils';
@@ -16,8 +16,7 @@ describe('Storybook schematics', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
-
-  afterEach(() => removeProject({ onlyOnCI: true }));
+  afterAll(() => removeProject({ onlyOnCI: true }));
 
   it('should not overwrite global storybook config files', () => {
     const angularStorybookLib = uniq('test-ui-lib-angular');
@@ -56,7 +55,7 @@ describe('Storybook schematics', () => {
   });
 
   describe('build storybook', () => {
-    it('should execute e2e tests using Cypress running against Storybook', () => {
+    it('should execute e2e tests using Cypress running against Storybook', async () => {
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
 
@@ -178,11 +177,9 @@ describe('Storybook schematics', () => {
         `
       );
 
-      if (runCypressTests()) {
-        expect(runCLI(`run ${myAngularLib}-e2e:e2e --no-watch`)).toContain(
-          'All specs passed!'
-        );
-      }
+      expect(runCLI(`run ${myAngularLib}-e2e:e2e --no-watch`)).toContain(
+        'All specs passed!'
+      );
 
       runCLI(`run ${myAngularLib}:build-storybook`);
 
@@ -190,6 +187,7 @@ describe('Storybook schematics', () => {
       expect(readFile(`dist/storybook/${myAngularLib}/index.html`)).toContain(
         `<title>Storybook</title>`
       );
+      expect(await killPorts()).toBeTruthy();
     }, 1000000);
 
     xit('should build an Angular based storybook', () => {

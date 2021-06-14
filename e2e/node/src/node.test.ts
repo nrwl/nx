@@ -1,7 +1,6 @@
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { exec, execSync } from 'child_process';
 import * as http from 'http';
-import * as treeKill from 'tree-kill';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
@@ -17,14 +16,9 @@ import {
   uniq,
   updateFile,
   updateWorkspaceConfig,
+  promisifiedTreeKill,
 } from '@nrwl/e2e/utils';
 import { accessSync, constants } from 'fs-extra';
-import { promisify } from 'util';
-
-const promisifiedTreeKill: (
-  pid: number,
-  signal: string
-) => Promise<void> = promisify(treeKill);
 
 function getData(): Promise<any> {
   return new Promise((resolve) => {

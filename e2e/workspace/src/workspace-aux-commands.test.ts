@@ -2,7 +2,6 @@ import * as path from 'path';
 import {
   checkFilesExist,
   exists,
-  killPorts,
   newProject,
   readFile,
   readJson,
@@ -25,8 +24,6 @@ beforeAll(() => {
 });
 
 describe('lint', () => {
-  afterEach(() => killPorts());
-
   it('lint should ensure module boundaries', () => {
     const myapp = uniq('myapp');
     const myapp2 = uniq('myapp2');

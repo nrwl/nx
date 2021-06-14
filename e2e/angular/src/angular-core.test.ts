@@ -19,7 +19,6 @@ describe('Angular Package', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
-
   afterEach(() => removeProject({ onlyOnCI: true }));
 
   // TODO: npm build is failing for Angular because of webpack 4
