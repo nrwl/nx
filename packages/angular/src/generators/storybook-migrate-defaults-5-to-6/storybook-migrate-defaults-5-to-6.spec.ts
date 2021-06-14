@@ -7,7 +7,7 @@ import storybookConfigurationGenerator from '../storybook-configuration/storyboo
 import { createStorybookTestWorkspaceForLib } from '../utils/testing';
 import { storybookMigrateDefaults5To6Generator } from './storybook-migrate-defaults-5-to-6';
 
-describe('migrate-defaults-5-to-6 schematic', () => {
+describe('storybookMigrateDefaults5To6 generator', () => {
   let tree: Tree;
   const libName = 'test-ui-lib';
 

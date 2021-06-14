@@ -11,6 +11,6 @@ export const primary = () => ({
     imports: []
   },
   props: {<% for (let prop of props) { %>
-    <%=prop.name%>: <%=prop.type%>('<%=prop.name%>', <%=prop.defaultValue%>),<% } %>
+    <%=prop.name%>: <%=prop.type%>('<%=prop.name%>', <%-prop.defaultValue%>),<% } %>
   }
 })

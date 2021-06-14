@@ -11,11 +11,12 @@ import { SyntaxKind } from 'typescript';
 import { getDecoratorMetadata, getTsSourceFile } from '../../utils/ast-utils';
 import { projectRootPath } from '@nrwl/workspace/src/utils/project-type';
 import { findNodes, getProjectConfig } from '@nrwl/workspace';
-import { CreateComponentSpecFileSchema } from '../component-cypress-spec/component-cypress-spec';
-import { CreateComponentStoriesFileSchema } from '../component-story/component-story';
+import { ComponentStoryGeneratorOptions } from '../../generators/component-story/schema';
+import { ComponentCypressSpecGeneratorOptions } from '../../generators/component-cypress-spec/schema';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 import { join, normalize } from '@angular-devkit/core';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+
 export interface StorybookStoriesSchema {
   name: string;
   generateCypressSpecs: boolean;
@@ -238,14 +239,14 @@ export function createAllStories(
             .filter((info) => info !== undefined)
             .map((info) =>
               chain([
-                schematic<CreateComponentStoriesFileSchema>('component-story', {
+                schematic<ComponentStoryGeneratorOptions>('component-story', {
                   projectPath: modulePath,
                   componentName: info.name,
                   componentPath: info.path,
                   componentFileName: info.componentFileName,
                 }),
                 generateCypressSpecs && e2eProject
-                  ? schematic<CreateComponentSpecFileSchema>(
+                  ? schematic<ComponentCypressSpecGeneratorOptions>(
                       'component-cypress-spec',
                       {
                         projectName,
