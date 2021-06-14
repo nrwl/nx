@@ -1,6 +1,7 @@
 import {
   checkFilesExist,
   expectTestsPass,
+  killPorts,
   newProject,
   readJson,
   runCLI,
@@ -60,9 +61,9 @@ describe('Nx Plugin', () => {
     runCLI(`generate @nrwl/nx-plugin:plugin ${plugin} --linter=eslint`);
 
     if (runCypressTests()) {
-      const results = await runCLIAsync(`e2e ${plugin}-e2e`);
-      expect(results.stdout).toContain('Compiling TypeScript files');
-      expectTestsPass(results);
+      const e2eResults = runCLI(`e2e ${plugin}-e2e --no-watch`);
+      expect(e2eResults).toContain('Running target "e2e" succeeded');
+      expect(await killPorts()).toBeTruthy();
     }
   }, 250000);
 
