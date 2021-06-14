@@ -1,5 +1,10 @@
 [
   {
+    "name": "@rxap/plugin-localazy",
+    "description": "A Nx plugin for localazy.com upload and download tasks.",
+    "url": "https://gitlab.com/rxap/plugins/-/tree/master/libs/localazy"
+  },
+  {
     "name": "nx-electron",
     "description": "An Nx plugin for developing Electron applications",
     "url": "https://github.com/bennymeg/nx-electron"
