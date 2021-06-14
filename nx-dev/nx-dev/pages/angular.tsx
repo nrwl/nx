@@ -29,8 +29,8 @@ export function AngularPage() {
       <Header
         showSearch={false}
         flavor={{
-          name: storedFlavor || 'react',
-          value: storedFlavor || 'react',
+          name: storedFlavor || 'angular',
+          value: storedFlavor || 'angular',
         }}
         version={{
           name: storedVersion || 'Latest',
@@ -486,8 +486,8 @@ export function AngularPage() {
       </main>
       <Footer
         flavor={{
-          name: storedFlavor || 'react',
-          value: storedFlavor || 'react',
+          name: storedFlavor || 'angular',
+          value: storedFlavor || 'angular',
         }}
         version={{
           name: storedVersion || 'Latest',

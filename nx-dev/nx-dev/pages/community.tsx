@@ -30,6 +30,7 @@ export async function getStaticProps(): Promise<{ props: CommunityProps }> {
 export function Community(props: CommunityProps) {
   const { value: storedFlavor } = useStorage('flavor');
   const { value: storedVersion } = useStorage('version');
+
   return (
     <>
       <Head>
