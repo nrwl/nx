@@ -105,15 +105,6 @@ export function runCreateWorkspace(
     command += ` ${extraArgs}`;
   }
 
-<<<<<<< HEAD
-  const create = execSync(command, {
-    cwd: e2eCwd,
-    stdio: [0, 1, 2],
-    env: process.env,
-    encoding: 'utf-8',
-  });
-  return create ? create.toString() : '';
-=======
   try {
     const create = execSync(command, {
       cwd: e2eCwd,
@@ -124,7 +115,6 @@ export function runCreateWorkspace(
   } catch (ex) {
     throw ex;
   }
->>>>>>> d9b51ca0 (chore(repo): more preparations for the windows nightly)
 }
 
 export function packageInstall(pkg: string, projName?: string) {
@@ -135,11 +125,7 @@ export function packageInstall(pkg: string, projName?: string) {
     // ...{ stdio: ['pipe', 'pipe', 'pipe'] },
     ...{ stdio: [0, 1, 2] },
     env: process.env,
-<<<<<<< HEAD
     encoding: 'utf-8',
-=======
-    encoding: 'utf8',
->>>>>>> d9b51ca0 (chore(repo): more preparations for the windows nightly)
   });
   return install ? install.toString() : '';
 }
@@ -151,11 +137,7 @@ export function runNgNew(projectName: string): string {
     {
       cwd: e2eCwd,
       env: process.env,
-<<<<<<< HEAD
       encoding: 'utf-8',
-=======
-      encoding: 'utf8',
->>>>>>> d9b51ca0 (chore(repo): more preparations for the windows nightly)
     }
   ).toString();
 }
@@ -356,11 +338,7 @@ export function runNgAdd(
     return execSync(`./node_modules/.bin/ng add @nrwl/workspace ${command}`, {
       cwd: tmpProjPath(),
       env: { ...(opts.env || process.env), NX_INVOKED_BY_RUNNER: undefined },
-<<<<<<< HEAD
       encoding: 'utf-8',
-=======
-      encoding: 'utf8',
->>>>>>> d9b51ca0 (chore(repo): more preparations for the windows nightly)
     })
       .toString()
       .replace(
@@ -428,7 +406,6 @@ export function runCommand(command: string): string {
     const r = execSync(command, {
       cwd: tmpProjPath(),
       stdio: ['pipe', 'pipe', 'pipe'],
-      encoding: 'utf8',
       env: {
         ...process.env,
         FORCE_COLOR: 'false',
