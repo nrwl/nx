@@ -1,10 +1,10 @@
 import { getE2eProjectName } from '@nrwl/cypress/src/utils/project-name';
 import type { Tree } from '@nrwl/devkit';
 import { readProjectConfiguration } from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import { angularStoriesGenerator } from '../../stories/stories';
 import type { StorybookConfigurationOptions } from '../schema';
 
-export async function generateStories(
+export function generateStories(
   tree: Tree,
   options: StorybookConfigurationOptions
 ) {
@@ -15,11 +15,7 @@ export async function generateStories(
     options.cypressDirectory
   );
 
-  const storiesGenerator = wrapAngularDevkitSchematic(
-    '@nrwl/angular',
-    'stories'
-  );
-  await storiesGenerator(tree, {
+  angularStoriesGenerator(tree, {
     name: options.name,
     generateCypressSpecs:
       options.configureCypress && options.generateCypressSpecs,
