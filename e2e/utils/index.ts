@@ -344,7 +344,7 @@ export function runNgAdd(
     if (opts.silenceError) {
       return e.stdout.toString();
     } else {
-      console.log(e.stdout.toString(), e.stderr.toString());
+      console.log(e.stdout?.toString(), e.stderr?.toString());
       throw e;
     }
   }
@@ -370,8 +370,7 @@ export function runCLI(
       ''
     );
     if (process.env.VERBOSE_OUTPUT) {
-      console.log('result of running:', command);
-      console.log(r);
+      logInfo(`Result of running: ${command}`, r);
     }
 
     const needsMaxWorkers = /g.*(express|nest|node|web|react):app.*/;
@@ -382,10 +381,12 @@ export function runCLI(
     return r;
   } catch (e) {
     if (opts.silenceError) {
-      return e.stdout.toString() + e.stderr?.toString();
+      return e.stdout?.toString() + e.stderr?.toString();
     } else {
-      console.log('original command', command);
-      console.log(e.stdout?.toString(), e.stderr?.toString());
+      logError(
+        `Original command: ${command}`,
+        `${e.stdout?.toString()}\n\n${e.stderr?.toString()}`
+      );
       throw e;
     }
   }
@@ -396,12 +397,10 @@ export function expectTestsPass(v: { stdout: string; stderr: string }) {
   expect(v.stderr).not.toContain('fail');
 }
 
-export function runCommand(command: string): string {
+function runCommand(command: string): string {
   try {
     const r = execSync(command, {
       cwd: tmpProjPath(),
-      // stdio: ['pipe', 'pipe', 'pipe'],
-      stdio: 'ignore',
       env: {
         ...process.env,
         FORCE_COLOR: 'false',
@@ -410,11 +409,14 @@ export function runCommand(command: string): string {
       encoding: 'utf-8',
     }).toString();
     if (process.env.VERBOSE_OUTPUT) {
-      console.log(r);
+      logInfo(`Result of: ${command}`, r);
     }
     return r;
   } catch (e) {
-    return e.stdout.toString() + e.stderr.toString();
+    logError(
+      `Command failed: ${command}`,
+      `${e.stdout?.toString()}\n\n${e.stderr?.toString()}`
+    );
   }
 }
 
@@ -566,9 +568,9 @@ export function logInfo(title: string, body?: string) {
 }
 
 export function logError(title: string, body?: string) {
-  const message = `${chalk.reset.inverse.bold.green(
-    ' ERROR '
-  )} ${chalk.bold.red(title)}`;
+  const message = `${chalk.reset.inverse.bold.red(' ERROR ')} ${chalk.bold.red(
+    title
+  )}`;
   return e2eConsoleLogger(message, body);
 }
 
