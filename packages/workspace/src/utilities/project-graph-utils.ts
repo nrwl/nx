@@ -21,6 +21,12 @@ export function getSourceDirOfDependentProjects(
   projectName: string,
   projectGraph = createProjectGraph()
 ): string[] {
+  if (!projectGraph.nodes[projectName]) {
+    throw new Error(
+      `Couldn't find project "${projectName}" in this Nx workspace`
+    );
+  }
+
   const dependencyNodeNames = findAllProjectNodeDependencies(
     projectName,
     projectGraph
