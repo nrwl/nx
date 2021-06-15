@@ -1,8 +1,9 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "$id": "SchematicsNxApp",
+  "$id": "GeneratorNxApp",
   "title": "Nx Application Options Schema",
   "type": "object",
+  "cli": "nx",
   "properties": {
     "name": {
       "description": "The name of the application.",

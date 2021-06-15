@@ -45,6 +45,8 @@ describe('preset', () => {
       name: 'proj',
       preset: 'angular',
       cli: 'nx',
+      style: 'css',
+      linter: 'eslint',
     });
     expect(tree.children('apps/proj')).toMatchSnapshot();
     expect(tree.children('apps/proj/src/')).toMatchSnapshot();
