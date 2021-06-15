@@ -105,16 +105,12 @@ export function runCreateWorkspace(
     command += ` ${extraArgs}`;
   }
 
-  try {
-    const create = execSync(command, {
-      cwd: e2eCwd,
-      env: process.env,
-      encoding: 'utf8',
-    });
-    return create ? create.toString() : '';
-  } catch (ex) {
-    throw ex;
-  }
+  const create = execSync(command, {
+    cwd: e2eCwd,
+    env: process.env,
+    encoding: 'utf8',
+  });
+  return create ? create.toString() : '';
 }
 
 export function packageInstall(pkg: string, projName?: string) {
@@ -192,8 +188,7 @@ export function newProject({ name = uniq('proj') } = {}): string {
     }
     return projScope;
   } catch (e) {
-    console.log(`Failed to set up project for e2e tests.`);
-    console.log(e.message);
+    logError(`Failed to set up project for e2e tests.`, e.message);
     throw e;
   }
 }

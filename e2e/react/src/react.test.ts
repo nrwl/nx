@@ -2,6 +2,7 @@ import { serializeJson } from '@nrwl/workspace';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
+  killPorts,
   newProject,
   readFile,
   readJson,
