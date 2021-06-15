@@ -57,7 +57,7 @@ export function updateASTTransformers(
   jestConfig: PartialJestConfig
 ) {
   const newTransformers = getNewAstTransformers(
-    jestConfig.globals?.['ts-jest'].astTransformers
+    jestConfig.globals?.['ts-jest']?.astTransformers
   );
   if (newTransformers === null) {
     removePropertyFromJestConfig(
@@ -146,7 +146,7 @@ export function transformerIsFromJestPresetAngular(
 }
 
 export function usesJestPresetAngular(jestConfig: PartialJestConfig) {
-  return jestConfig.globals['ts-jest']?.astTransformers?.before?.some?.((x) =>
+  return jestConfig.globals?.['ts-jest']?.astTransformers?.before?.some?.((x) =>
     transformerIsFromJestPresetAngular(x)
   );
 }
