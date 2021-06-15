@@ -16,7 +16,7 @@ jobs:
       run: npx audit-ci --critical --report-type summary
 
     - name: Report Status
-      if: always()
+      if: ${{ always() && github.repository_owner == 'nrwl' }}
       uses: ravsamhq/notify-slack-action@v1
       with:
         status: ${{ job.status }}
