@@ -4,21 +4,30 @@ import {
   readProjectConfiguration,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-
+import enquirer = require('enquirer');
 import { libraryGenerator } from '../library/library';
 
 import convertToNxProject, {
-  PROJECT_OR_ALL_IS_REQUIRED,
   SCHEMA_OPTIONS_ARE_MUTUALLY_EXCLUSIVE,
 } from './convert-to-nx-project';
 import { getProjectConfigurationPath } from './utils/get-project-configuration-path';
 
 jest.mock('fs-extra', () => ({
-  ...jest.requireActual('fs-extra'),
+  ...jest.requireActual<any>('fs-extra'),
   readJsonSync: () => ({}),
 }));
 
+jest.mock('enquirer', () => ({
+  prompt: () => ({
+    project: 'lib',
+  }),
+}));
+
 describe('convert-to-nx-project', () => {
+  beforeEach(() => {
+    jest.resetAllMocks();
+  });
+
   it('should throw if project && all are both specified', async () => {
     const tree = createTreeWithEmptyWorkspace(2);
 
@@ -31,7 +40,9 @@ describe('convert-to-nx-project', () => {
     await expect(p).rejects.toMatch(SCHEMA_OPTIONS_ARE_MUTUALLY_EXCLUSIVE);
   });
 
-  it('should throw if neither project nor all are specified', async () => {
+  it('should prompt for a project if neither project nor all are specified', async () => {
+    const spy = jest.spyOn(enquirer, 'prompt');
+
     const tree = createTreeWithEmptyWorkspace(2);
 
     await libraryGenerator(tree, {
@@ -39,8 +50,22 @@ describe('convert-to-nx-project', () => {
       standaloneConfig: false,
     });
 
-    const p = convertToNxProject(tree, {});
-    await expect(p).rejects.toMatch(PROJECT_OR_ALL_IS_REQUIRED);
+    const p = await convertToNxProject(tree, {});
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it('should not prompt for a project if all is specified', async () => {
+    const spy = jest.spyOn(enquirer, 'prompt');
+
+    const tree = createTreeWithEmptyWorkspace(2);
+
+    await libraryGenerator(tree, {
+      name: 'lib',
+      standaloneConfig: false,
+    });
+
+    const p = await convertToNxProject(tree, { all: true });
+    expect(spy).toHaveBeenCalledTimes(0);
   });
 
   it('should extract single project configuration to project.json', async () => {

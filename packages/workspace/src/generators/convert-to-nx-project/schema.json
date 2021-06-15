@@ -24,13 +24,5 @@
       "description": "Should every project be converted?",
       "type": "boolean"
     }
-  },
-  "oneOf": [
-    {
-      "required": ["project"]
-    },
-    {
-      "required": ["all"]
-    }
-  ]
+  }
 }

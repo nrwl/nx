@@ -1,3 +1,6 @@
+import { dirname } from 'path';
+import { prompt } from 'enquirer';
+
 import {
   convertNxGenerator,
   formatFiles,
@@ -16,25 +19,30 @@ import {
 import { Schema } from './schema';
 import { checkIfNxProjectFileExists } from './utils/check-if-nx-project-file-exists';
 import { getProjectConfigurationPath } from './utils/get-project-configuration-path';
-import { dirname } from 'path';
 
 export const SCHEMA_OPTIONS_ARE_MUTUALLY_EXCLUSIVE =
   '--project and --all are mutually exclusive';
-export const PROJECT_OR_ALL_IS_REQUIRED =
-  '--project or --all must be specified';
 
-export function validateSchema(schema: Schema) {
+export async function validateSchema(schema: Schema) {
   if (schema.project && schema.all) {
     throw SCHEMA_OPTIONS_ARE_MUTUALLY_EXCLUSIVE;
   }
 
   if (!schema.project && !schema.all) {
-    throw PROJECT_OR_ALL_IS_REQUIRED;
+    schema.project = (
+      await prompt<{ project: string }>([
+        {
+          message: 'What project should be converted?',
+          type: 'input',
+          name: 'project',
+        },
+      ])
+    ).project;
   }
 }
 
 export async function convertToNxProjectGenerator(host: Tree, schema: Schema) {
-  validateSchema(schema);
+  await validateSchema(schema);
 
   const projects = schema.all
     ? getProjects(host).entries()
