@@ -1,0 +1,34 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`angularStories generator: libraries Stories for non-empty Angular library should generate cypress spec files 1`] = `
+"describe('test-ui-lib', () => {
+  beforeEach(() => cy.visit('/iframe.html?id=testbuttoncomponent--primary&knob-buttonType=button&knob-style=default&knob-age&knob-isOn=false'));
+
+  it('should render the component', () => {
+    cy.get('proj-test-button').should('exist');
+  });
+});
+"
+`;
+
+exports[`angularStories generator: libraries Stories for non-empty Angular library should generate stories.ts files 1`] = `
+"import { text, number, boolean } from '@storybook/addon-knobs';
+import { TestButtonComponent } from './test-button.component';
+
+export default {
+  title: 'TestButtonComponent',
+  component: TestButtonComponent
+}
+
+export const primary = () => ({
+  moduleMetadata: {
+    imports: []
+  },
+  props: {
+    buttonType: text('buttonType', 'button'),
+    style: text('style', 'default'),
+    age: number('age', 0),
+    isOn: boolean('isOn', false),
+  }
+})"
+`;

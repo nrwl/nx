@@ -64,22 +64,19 @@
     "storybook-migrate-defaults-5-to-6": {
       "factory": "./src/generators/storybook-migrate-defaults-5-to-6/compat",
       "schema": "./src/generators/storybook-migrate-defaults-5-to-6/schema.json",
-      "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
-      "hidden": false
+      "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x."
     },
 
     "storybook-migrate-stories-to-6-2": {
       "factory": "./src/generators/storybook-migrate-stories-to-6-2/compat",
       "schema": "./src/generators/storybook-migrate-stories-to-6-2/schema.json",
-      "description": "Migrate stories to match the new syntax in v6.2 where the component declaration should be in the default export.",
-      "hidden": false
+      "description": "Migrate stories to match the new syntax in v6.2 where the component declaration should be in the default export."
     },
 
     "stories": {
-      "factory": "./src/schematics/stories/stories",
-      "schema": "./src/schematics/stories/schema.json",
-      "description": "Create stories/specs for all components declared in a library",
-      "hidden": false
+      "factory": "./src/generators/stories/compat",
+      "schema": "./src/generators/stories/schema.json",
+      "description": "Create stories/specs for all components declared in a project."
     },
 
     "component-cypress-spec": {
@@ -157,11 +154,22 @@
       "schema": "./src/generators/karma-project/schema.json",
       "description": "Add karma testing to a project."
     },
+    "library": {
+      "factory": "./src/generators/library/library",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "description": "Create an Angular library."
+    },
     "move": {
       "factory": "./src/generators/move/move#angularMoveGenerator",
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
-      "description": "Move an Angular application or library to another folder"
+      "description": "Move an Angular application or library to another folder."
+    },
+    "stories": {
+      "factory": "./src/generators/stories/stories",
+      "schema": "./src/generators/stories/schema.json",
+      "description": "Create stories/specs for all components declared in a project."
     },
     "storybook-configuration": {
       "factory": "./src/generators/storybook-configuration/storybook-configuration",
@@ -171,20 +179,12 @@
     "storybook-migrate-defaults-5-to-6": {
       "factory": "./src/generators/storybook-migrate-defaults-5-to-6/storybook-migrate-defaults-5-to-6",
       "schema": "./src/generators/storybook-migrate-defaults-5-to-6/schema.json",
-      "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.",
-      "hidden": false
+      "description": "Generate default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x."
     },
     "storybook-migrate-stories-to-6-2": {
       "factory": "./src/generators/storybook-migrate-stories-to-6-2/migrate-stories-to-6-2",
       "schema": "./src/generators/storybook-migrate-stories-to-6-2/schema.json",
-      "description": "Migrate stories to match the new syntax in v6.2 where the component declaration should be in the default export.",
-      "hidden": false
-    },
-    "library": {
-      "factory": "./src/generators/library/library",
-      "schema": "./src/generators/library/schema.json",
-      "aliases": ["lib"],
-      "description": "Create an Angular library"
+      "description": "Migrate stories to match the new syntax in v6.2 where the component declaration should be in the default export."
     }
   }
 }
