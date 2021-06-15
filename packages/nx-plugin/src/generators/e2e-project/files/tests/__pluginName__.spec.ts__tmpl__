@@ -13,7 +13,7 @@ describe('<%= pluginName %> e2e', () => {
 
         const result = await runNxCommandAsync(`build ${plugin}`);
         expect(result.stdout).toContain('Executor ran');
-    }, 30000)
+    }, 50000)
 
     describe('--directory', () => {
       it('should create src in the specified directory', async () => {

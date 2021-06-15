@@ -12,8 +12,7 @@ import {
   statSync,
   writeFileSync,
 } from 'fs-extra';
-// import isCI = require('is-ci');
-const isCI = true;
+import isCI = require('is-ci');
 import * as path from 'path';
 import { dirSync } from 'tmp';
 const kill = require('kill-port');
@@ -84,8 +83,9 @@ export function runCreateWorkspace(
 
   const pm = getPackageManagerCommand({ packageManager });
 
-  let command = `${pm.createWorkspace} ${name} --cli=${cli || currentCli()
-    } --preset=${preset} --no-nxCloud --no-interactive`;
+  let command = `${pm.createWorkspace} ${name} --cli=${
+    cli || currentCli()
+  } --preset=${preset} --no-nxCloud --no-interactive`;
   if (appName) {
     command += ` --appName=${appName}`;
   }
@@ -230,7 +230,7 @@ export async function removeProject({ onlyOnCI = false } = {}) {
   }
   try {
     removeSync(tmpProjPath());
-  } catch (e) { }
+  } catch (e) {}
 }
 
 export function runCypressTests() {
@@ -344,7 +344,10 @@ export function runNgAdd(
     if (opts.silenceError) {
       return e.stdout.toString();
     } else {
-      logError(`Ng Add failed: ${command}`, `${e.stdout?.toString()}\n\n${e.stderr?.toString()}`);
+      logError(
+        `Ng Add failed: ${command}`,
+        `${e.stdout?.toString()}\n\n${e.stderr?.toString()}`
+      );
       throw e;
     }
   }

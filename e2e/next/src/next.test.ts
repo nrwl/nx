@@ -236,14 +236,14 @@ describe('Next.js Applications', () => {
           import { testFn } from '@${proj}/${tsLibName}';
           import { TestComponent } from '@${proj}/${tsxLibName}';\n\n
           ${content.replace(
-            `</h2>`,
-            `</h2>
+        `</h2>`,
+        `</h2>
                 <div>
                   {testFn()}
                   <TestComponent text="Hello Next.JS" />
                 </div>
               `
-          )}`
+      )}`
     );
 
     const e2eTestPath = `apps/${appName}-e2e/src/integration/app.spec.ts`;
@@ -251,14 +251,13 @@ describe('Next.js Applications', () => {
     updateFile(
       e2eTestPath,
       `
-        ${
-          e2eContent +
-          `
+        ${e2eContent +
+      `
           it('should successfully call async API route', () => {
             cy.request('/api/hello').its('body').should('include', 'hell0');
           });
           `
-        }
+      }
       `
     );
 
@@ -350,7 +349,7 @@ describe('Next.js Applications', () => {
       `dist/apps/${appName}/public/a/b.txt`,
       `dist/apps/${appName}/public/shared/ui/hello.txt`
     );
-  }, 120000);
+  }, 300000);
 
   it('should build with a next.config.js file in the dist folder', async () => {
     const appName = uniq('app');
@@ -379,7 +378,7 @@ describe('Next.js Applications', () => {
 
     checkFilesExist(`dist/apps/${appName}/next.config.js`);
     expect(result).toContain('NODE_ENV is production');
-  }, 120000);
+  }, 300000);
 
   it('should support --js flag', async () => {
     const appName = uniq('app');
