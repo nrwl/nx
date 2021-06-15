@@ -108,7 +108,7 @@ export function runCreateWorkspace(
   const create = execSync(command, {
     cwd: e2eCwd,
     env: process.env,
-    encoding: 'utf8',
+    encoding: 'utf-8',
   });
   return create ? create.toString() : '';
 }
@@ -119,7 +119,7 @@ export function packageInstall(pkg: string, projName?: string) {
   const install = execSync(`${pm.addDev} ${pkg}`, {
     cwd,
     // ...{ stdio: ['pipe', 'pipe', 'pipe'] },
-    ...{ stdio: [0, 1, 2] },
+    stdio: 'ignore',
     env: process.env,
     encoding: 'utf-8',
   });
@@ -400,7 +400,8 @@ export function runCommand(command: string): string {
   try {
     const r = execSync(command, {
       cwd: tmpProjPath(),
-      stdio: ['pipe', 'pipe', 'pipe'],
+      // stdio: ['pipe', 'pipe', 'pipe'],
+      stdio: 'ignore',
       env: {
         ...process.env,
         FORCE_COLOR: 'false',

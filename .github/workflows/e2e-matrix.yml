@@ -23,11 +23,6 @@ jobs:
           #   os-name: ubuntu
           - os: windows-latest
             os-name: windows
-        include:
-          # - os: ubuntu-latest
-          #   os-name: ubuntu
-          - os: windows-latest
-            os-name: windows
         # exclude:
         #   - os: windows-latest
         #     package_manager: pnpm
