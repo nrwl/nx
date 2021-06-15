@@ -114,7 +114,7 @@
           {
             "name": "Nx Plugins and Devkit",
             "id": "nx-devkit",
-            "file": "shared/devkit"
+            "file": "shared/devkit-and-nx-plugins"
           }
         ]
       },
@@ -910,7 +910,7 @@
           {
             "name": "Using Executors / Builders",
             "id": "using-builders",
-            "file": "shared/using-builders"
+            "file": "shared/using-executors"
           },
           {
             "name": "Running Custom Commands",
@@ -931,7 +931,7 @@
           {
             "name": "Using Generators",
             "id": "using-schematics",
-            "file": "shared/using-schematics"
+            "file": "shared/using-generators"
           },
           {
             "name": "Workspace Generators",
@@ -1213,7 +1213,7 @@
           {
             "name": "Nx Plugins and Devkit",
             "id": "nx-devkit",
-            "file": "shared/devkit"
+            "file": "shared/devkit-and-nx-plugins"
           }
         ]
       },
@@ -2011,7 +2011,7 @@
           {
             "name": "Using Executors / Builders",
             "id": "using-builders",
-            "file": "shared/using-builders"
+            "file": "shared/using-executors"
           },
           {
             "name": "Running Custom Commands",
@@ -2032,7 +2032,7 @@
           {
             "name": "Using Generators",
             "id": "using-schematics",
-            "file": "shared/using-schematics"
+            "file": "shared/using-generators"
           },
           {
             "name": "Workspace Generators",
@@ -2271,7 +2271,7 @@
           {
             "name": "Nx Plugins and Devkit",
             "id": "nx-devkit",
-            "file": "shared/devkit"
+            "file": "shared/devkit-and-nx-plugins"
           }
         ]
       },
@@ -3058,7 +3058,7 @@
           {
             "name": "Using Executors / Builders",
             "id": "using-builders",
-            "file": "shared/using-builders"
+            "file": "shared/using-executors"
           },
           {
             "name": "Running Custom Commands",
@@ -3079,7 +3079,7 @@
           {
             "name": "Using Generators",
             "id": "using-schematics",
-            "file": "shared/using-schematics"
+            "file": "shared/using-generators"
           },
           {
             "name": "Workspace Generators",
