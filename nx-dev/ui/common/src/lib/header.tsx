@@ -66,7 +66,7 @@ export function Header({ flavor, showSearch, version }: HeaderProps) {
               </a>
             </Link>
             <Link
-              href={`/${version.value}/${flavor.value}/core-concepts/plugins`}
+              href={`/${version.value}/${flavor.value}/core-concepts/nx-devkit`}
             >
               <a className="px-3 py-2 hidden md:inline-flex text-white leading-tight">
                 Plugins
