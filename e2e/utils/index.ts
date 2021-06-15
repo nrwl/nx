@@ -12,7 +12,8 @@ import {
   statSync,
   writeFileSync,
 } from 'fs-extra';
-import isCI = require('is-ci');
+// import isCI = require('is-ci');
+const isCI = true;
 import * as path from 'path';
 import { dirSync } from 'tmp';
 const kill = require('kill-port');
@@ -83,9 +84,8 @@ export function runCreateWorkspace(
 
   const pm = getPackageManagerCommand({ packageManager });
 
-  let command = `${pm.createWorkspace} ${name} --cli=${
-    cli || currentCli()
-  } --preset=${preset} --no-nxCloud --no-interactive`;
+  let command = `${pm.createWorkspace} ${name} --cli=${cli || currentCli()
+    } --preset=${preset} --no-nxCloud --no-interactive`;
   if (appName) {
     command += ` --appName=${appName}`;
   }
@@ -107,6 +107,7 @@ export function runCreateWorkspace(
 
   const create = execSync(command, {
     cwd: e2eCwd,
+    stdio: [0, 1, 2],
     env: process.env,
     encoding: 'utf-8',
   });
@@ -118,8 +119,7 @@ export function packageInstall(pkg: string, projName?: string) {
   const pm = getPackageManagerCommand({ path: cwd });
   const install = execSync(`${pm.addDev} ${pkg}`, {
     cwd,
-    // ...{ stdio: ['pipe', 'pipe', 'pipe'] },
-    stdio: 'ignore',
+    stdio: [0, 1, 2],
     env: process.env,
     encoding: 'utf-8',
   });
@@ -230,7 +230,7 @@ export async function removeProject({ onlyOnCI = false } = {}) {
   }
   try {
     removeSync(tmpProjPath());
-  } catch (e) {}
+  } catch (e) { }
 }
 
 export function runCypressTests() {
@@ -344,7 +344,7 @@ export function runNgAdd(
     if (opts.silenceError) {
       return e.stdout.toString();
     } else {
-      console.log(e.stdout?.toString(), e.stderr?.toString());
+      logError(`Ng Add failed: ${command}`, `${e.stdout?.toString()}\n\n${e.stderr?.toString()}`);
       throw e;
     }
   }
