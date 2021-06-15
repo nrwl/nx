@@ -373,7 +373,7 @@ export function runCLI(
       ''
     );
     if (process.env.VERBOSE_OUTPUT) {
-      logInfo(`Result of running: ${command}`, r);
+      logInfo(`result of running: ${command}`, r);
     }
 
     const needsMaxWorkers = /g.*(express|nest|node|web|react):app.*/;
@@ -400,10 +400,11 @@ export function expectTestsPass(v: { stdout: string; stderr: string }) {
   expect(v.stderr).not.toContain('fail');
 }
 
-function runCommand(command: string): string {
+export function runCommand(command: string): string {
   try {
     const r = execSync(command, {
       cwd: tmpProjPath(),
+      stdio: ['pipe', 'pipe', 'pipe'],
       env: {
         ...process.env,
         FORCE_COLOR: 'false',
@@ -412,7 +413,7 @@ function runCommand(command: string): string {
       encoding: 'utf-8',
     }).toString();
     if (process.env.VERBOSE_OUTPUT) {
-      logInfo(`Result of: ${command}`, r);
+      console.log(r);
     }
     return r;
   } catch (e) {
