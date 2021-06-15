@@ -37,7 +37,7 @@ export async function createStorybookTestWorkspaceForLib(
 
   tree.write(
     `libs/${libName}/src/lib/test-button/test-button.component.ts`,
-    `import { Component, OnInit, Input } from '@angular/core';
+    `import { Component, Input } from '@angular/core';
 
 export type ButtonStyle = 'default' | 'primary' | 'accent';
 
@@ -46,17 +46,11 @@ export type ButtonStyle = 'default' | 'primary' | 'accent';
   templateUrl: './test-button.component.html',
   styleUrls: ['./test-button.component.css']
 })
-export class TestButtonComponent implements OnInit {
+export class TestButtonComponent {
   @Input('buttonType') type = 'button';
   @Input() style: ButtonStyle = 'default';
-  @Input() age: number;
+  @Input() age?: number;
   @Input() isOn = false;
-
-  constructor() { }
-
-  ngOnInit() {
-  }
-
 }`
   );
 
