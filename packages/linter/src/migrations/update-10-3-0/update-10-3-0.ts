@@ -14,7 +14,7 @@ const updatePackages = updatePackagesInPackageJson(
 const addLintRule = (host: Tree) => {
   return host.exists('.eslintrc')
     ? updateJsonInTree('.eslintrc', (json) => {
-        json.rules = json.rules || {};
+        json.rules ||= {};
         json.rules['@typescript-eslint/explicit-module-boundary-types'] = 'off';
         return json;
       })

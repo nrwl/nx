@@ -1,9 +1,5 @@
-import {
-  addDependenciesToPackageJson,
-  GeneratorCallback,
-  logger,
-  Tree,
-} from '@nrwl/devkit';
+import { addDependenciesToPackageJson, logger } from '@nrwl/devkit';
+import type { Tree, GeneratorCallback } from '@nrwl/devkit';
 import type { Linter } from 'eslint';
 import type { TSLintRuleOptions } from 'tslint-to-eslint-config';
 import { convertTslintNxRuleToEslintNxRule } from './convert-nx-enforce-module-boundaries-rule';
@@ -74,8 +70,7 @@ export async function convertTSLintConfig(
     rawTSLintJson,
     ignoreExtendsVals
   );
-  convertedProject.convertedESLintConfig.rules =
-    convertedProject.convertedESLintConfig.rules || {};
+  convertedProject.convertedESLintConfig.rules ||= {};
 
   /**
    * Apply the custom converter for the nx-module-boundaries rule if applicable

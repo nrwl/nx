@@ -1,4 +1,5 @@
-import { formatFiles, getProjects, Tree, updateJson } from '@nrwl/devkit';
+import { formatFiles, getProjects, updateJson } from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
 import type { Linter } from 'eslint';
 import { join } from 'path';
 
