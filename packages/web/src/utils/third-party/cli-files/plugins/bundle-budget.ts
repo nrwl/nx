@@ -5,7 +5,6 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-import { Compiler, compilation } from 'webpack';
 import { Budget, Type } from '../../browser/schema';
 import {
   Size,
@@ -13,6 +12,10 @@ import {
   calculateSizes,
 } from '../utilities/bundle-calculator';
 import { formatSize } from '../utilities/stats';
+
+// TODO(jack): Remove this in Nx 13 and go back to proper types
+type Compilation = any;
+type Compiler = any;
 
 interface Thresholds {
   maximumWarning?: number;
@@ -41,7 +44,7 @@ export class BundleBudgetPlugin {
 
     compiler.hooks.compilation.tap(
       'BundleBudgetPlugin',
-      (compilation: compilation.Compilation) => {
+      (compilation: Compilation) => {
         compilation.hooks.afterOptimizeChunkAssets.tap(
           'BundleBudgetPlugin',
           () => {
@@ -64,7 +67,7 @@ export class BundleBudgetPlugin {
 
     compiler.hooks.afterEmit.tap(
       'BundleBudgetPlugin',
-      (compilation: compilation.Compilation) => {
+      (compilation: Compilation) => {
         const filteredBudgets = budgets.filter(
           (budget) => budget.type !== Type.AnyComponentStyle
         );
@@ -76,16 +79,21 @@ export class BundleBudgetPlugin {
   private checkMinimum(
     threshold: number | undefined,
     size: Size,
-    messages: string[]
+    // TODO(jack): Remove this in Nx 13 and go back to proper imports
+    messages: any[] // WebpackError[]
   ) {
+    // TODO(jack): Remove this in Nx 13 and go back to proper imports
+    const { webpack } = require('../../../../webpack/entry');
     if (threshold) {
       if (threshold > size.size) {
         const sizeDifference = formatSize(threshold - size.size);
         messages.push(
-          `budgets, minimum exceeded for ${size.label}. ` +
-            `Budget ${formatSize(
-              threshold
-            )} was not reached by ${sizeDifference}.`
+          new webpack.WebpackError(
+            `budgets, minimum exceeded for ${size.label}. ` +
+              `Budget ${formatSize(
+                threshold
+              )} was not reached by ${sizeDifference}.`
+          )
         );
       }
     }
@@ -94,14 +102,22 @@ export class BundleBudgetPlugin {
   private checkMaximum(
     threshold: number | undefined,
     size: Size,
-    messages: string[]
+    // TODO(jack): Remove this in Nx 13 and go back to proper imports
+    messages: any[] // WebpackError[]
   ) {
+    // TODO(jack): Remove this in Nx 13 and go back to proper imports
+    const { webpack } = require('../../../../webpack/entry');
+
     if (threshold) {
       if (threshold < size.size) {
         const sizeDifference = formatSize(size.size - threshold);
         messages.push(
-          `budgets, maximum exceeded for ${size.label}. ` +
-            `Budget ${formatSize(threshold)} was exceeded by ${sizeDifference}.`
+          new webpack.WebpackError(
+            `budgets, maximum exceeded for ${size.label}. ` +
+              `Budget ${formatSize(
+                threshold
+              )} was exceeded by ${sizeDifference}.`
+          )
         );
       }
     }
@@ -168,7 +184,7 @@ export class BundleBudgetPlugin {
     return thresholds;
   }
 
-  private runChecks(budgets: Budget[], compilation: compilation.Compilation) {
+  private runChecks(budgets: Budget[], compilation: Compilation) {
     budgets
       .map((budget) => ({
         budget,

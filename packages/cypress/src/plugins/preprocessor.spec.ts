@@ -1,3 +1,4 @@
+import { mocked } from 'ts-jest';
 import { getWebpackConfig, preprocessTypescript } from './preprocessor';
 jest.mock('@cypress/webpack-preprocessor', () => {
   return jest.fn(
@@ -9,6 +10,8 @@ jest.mock('@cypress/webpack-preprocessor', () => {
 jest.mock('tsconfig-paths-webpack-plugin');
 import * as wp from '@cypress/webpack-preprocessor';
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
+
+const mockWp = mocked(wp);
 
 describe('getWebpackConfig', () => {
   beforeEach(() => {
@@ -82,10 +85,10 @@ describe('preprocessTypescript', () => {
         tsConfig: './tsconfig.json',
       },
     });
-    await preprocessor('arg0', 'arg1');
+    await preprocessor('arg0');
     expect(wp).toBeCalled();
     expect(
-      wp.mock.calls[wp.mock.calls.length - 1][0].webpackOptions.resolve
+      mockWp.mock.calls[mockWp.mock.calls.length - 1][0].webpackOptions.resolve
         .extensions
     ).toEqual(['.ts', '.tsx', '.mjs', '.js', '.jsx']);
   });
@@ -102,10 +105,10 @@ describe('preprocessTypescript', () => {
         return webpackConfig;
       }
     );
-    await preprocessor('arg0', 'arg1');
+    await preprocessor('arg0');
     expect(wp).toBeCalled();
     expect(
-      wp.mock.calls[wp.mock.calls.length - 1][0].webpackOptions.resolve
+      mockWp.mock.calls[mockWp.mock.calls.length - 1][0].webpackOptions.resolve
         .extensions
     ).toEqual(['.ts', '.tsx', '.mjs', '.js', '.jsx', '.mdx']);
   });

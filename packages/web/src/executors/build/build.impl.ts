@@ -1,6 +1,4 @@
 import type { ExecutorContext } from '@nrwl/devkit';
-import * as webpack from 'webpack';
-import { Stats } from 'webpack';
 
 import { from, of } from 'rxjs';
 import { bufferCount, mergeScan, switchMap, tap } from 'rxjs/operators';
@@ -30,6 +28,10 @@ import { getWebConfig } from '../../utils/web.config';
 import { BuildBuilderOptions } from '../../utils/types';
 import { deleteOutputDir } from '../../utils/delete-output-dir';
 import { ExtraEntryPoint } from '../../utils/third-party/browser/schema';
+
+// TODO(jack): Remove in Nx 13
+type Configuration = any;
+type Stats = any;
 
 export interface WebBuildBuilderOptions extends BuildBuilderOptions {
   index: string;
@@ -65,7 +67,7 @@ export interface WebBuildBuilderOptions extends BuildBuilderOptions {
 function getWebpackConfigs(
   options: WebBuildBuilderOptions,
   context: ExecutorContext
-): webpack.Configuration[] {
+): Configuration[] {
   const metadata = context.workspace.projects[context.projectName];
   const sourceRoot = metadata.sourceRoot;
   const projectRoot = metadata.root;
@@ -118,6 +120,8 @@ function getWebpackConfigs(
 }
 
 export function run(options: WebBuildBuilderOptions, context: ExecutorContext) {
+  const { webpack } = require('../../webpack/entry');
+
   // Node versions 12.2-12.8 has a bug where prod builds will hang for 2-3 minutes
   // after the program exits.
   const nodeVersion = execSync(`node --version`).toString('utf-8').trim();
@@ -169,7 +173,7 @@ export function run(options: WebBuildBuilderOptions, context: ExecutorContext) {
       mergeScan(
         (acc, config) => {
           if (!acc.hasErrors()) {
-            return runWebpack(config, webpack).pipe(
+            return runWebpack(config, webpack.webpack).pipe(
               tap((stats) => {
                 console.info(stats.toString(config.stats));
               })

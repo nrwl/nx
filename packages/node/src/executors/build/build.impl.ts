@@ -7,7 +7,6 @@ import {
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { runWebpack } from '@nrwl/workspace/src/utilities/run-webpack';
-import * as webpack from 'webpack';
 
 import { map, tap } from 'rxjs/operators';
 import { eachValueFrom } from 'rxjs-for-await';
@@ -32,6 +31,7 @@ export function buildExecutor(
   rawOptions: BuildNodeBuilderOptions,
   context: ExecutorContext
 ) {
+  const { webpack } = require('../../webpack/entry');
   const { sourceRoot, root } = context.workspace.projects[context.projectName];
 
   if (!sourceRoot) {

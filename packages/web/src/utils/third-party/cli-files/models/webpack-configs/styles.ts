@@ -7,7 +7,6 @@
  */
 
 import * as path from 'path';
-import * as webpack from 'webpack';
 import {
   PostcssCliResources,
   RawCssLoader,
@@ -18,8 +17,10 @@ import { WebpackConfigOptions } from '../build-options';
 import { getOutputHashFormat, normalizeExtraEntryPoints } from './utils';
 
 const autoprefixer = require('autoprefixer');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const postcssImports = require('postcss-import');
+
+// TODO(jack): Remove in Nx 13
+type RuleSetRule = any;
 
 /**
  * Enumerate loaders and their dependencies from this file to let the dependency validator
@@ -36,6 +37,9 @@ const postcssImports = require('postcss-import');
  */
 // tslint:disable-next-line:no-big-function
 export function getStylesConfig(wco: WebpackConfigOptions) {
+  // TODO(jack): Remove this in Nx 13 and go back to proper imports
+  const { MiniCssExtractPlugin } = require('../../../../../webpack/entry');
+
   const { root, buildOptions } = wco;
   const entryPoints: { [key: string]: string[] } = {};
   const globalStylePaths: string[] = [];
@@ -47,7 +51,7 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
   const hashFormat = getOutputHashFormat(buildOptions.outputHashing as string);
 
   const postcssOptionsCreator = (sourceMap: boolean) => {
-    return (loader: webpack.loader.LoaderContext) => ({
+    return (loader) => ({
       map: sourceMap && {
         inline: true,
         annotation: false,
@@ -146,7 +150,7 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
   }
 
   // set base rules to derive final rules from
-  const baseRules: webpack.RuleSetRule[] = [
+  const baseRules: RuleSetRule[] = [
     { test: /\.css$/, use: [] },
     {
       test: /\.scss$|\.sass$/,
@@ -204,7 +208,7 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
     !buildOptions.sourceMap.hidden
   );
 
-  const rules: webpack.RuleSetRule[] = baseRules.map(({ test, use }) => ({
+  const rules: RuleSetRule[] = baseRules.map(({ test, use }) => ({
     exclude: globalStylePaths,
     test,
     use: [
@@ -219,7 +223,7 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
           postcssOptions: postcssOptionsCreator(componentsSourceMap),
         },
       },
-      ...(use as webpack.Loader[]),
+      ...(use as any[]),
     ],
   }));
 
@@ -244,7 +248,7 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
                 postcssOptions: postcssOptionsCreator(globalSourceMap),
               },
             },
-            ...(use as webpack.Loader[]),
+            ...(use as any[]),
           ],
         };
       })
