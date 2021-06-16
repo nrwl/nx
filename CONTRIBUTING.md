@@ -154,11 +154,11 @@ body
 
 The type must be one of the following:
 
-- chore
-- feat
-- fix
-- cleanup
-- docs
+- feat - New or improved behavior being introduced (e.g. Updating to new versions of React or Jest which bring in new features)
+- fix - Fixes the current unexpected behavior to match expected behavior (e.g. Fixing the library generator to create the proper named project)
+- cleanup - Code Style changes that have little to no effect on the user (e.g. Refactoring some functions into a different file)
+- docs - Changes to the documentation (e.g. Adding more details into the getting started guide)
+- chore - Changes that have absolutely no effect on users (e.g. Updating the version of Nx used to build the repo)
 
 ##### Scope
 
