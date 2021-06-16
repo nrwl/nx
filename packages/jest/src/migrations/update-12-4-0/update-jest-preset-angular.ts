@@ -1,11 +1,4 @@
-import {
-  formatFiles,
-  logger,
-  ProjectConfiguration,
-  readProjectConfiguration,
-  stripIndents,
-  Tree,
-} from '@nrwl/devkit';
+import { formatFiles, logger, stripIndents, Tree } from '@nrwl/devkit';
 import { join } from 'path';
 
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
