@@ -1,12 +1,6 @@
 import { Tree } from '@angular-devkit/schematics';
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
-import {
-  updateJsonInTree,
-  readJsonInTree,
-  updateWorkspaceInTree,
-  readWorkspace,
-  getWorkspacePath,
-} from '@nrwl/workspace';
+import { readWorkspace, updateJsonInTree } from '@nrwl/workspace';
 
 import * as path from 'path';
 
@@ -23,25 +17,27 @@ describe('Update 8-5-0', () => {
   });
 
   it(`should remove differentialLoading as an option for build builder`, async () => {
-    tree.create(
-      'workspace.json',
-      JSON.stringify({
-        projects: {
-          demo: {
-            root: 'apps/demo',
-            sourceRoot: 'apps/demo/src',
-            architect: {
-              build: {
-                builder: '@nrwl/web:build',
-                options: {
-                  differentialLoading: true,
+    tree = await schematicRunner
+      .callRule(
+        updateJsonInTree('workspace.json', () => ({
+          projects: {
+            demo: {
+              root: 'apps/demo',
+              sourceRoot: 'apps/demo/src',
+              architect: {
+                build: {
+                  builder: '@nrwl/web:build',
+                  options: {
+                    differentialLoading: true,
+                  },
                 },
               },
             },
           },
-        },
-      })
-    );
+        })),
+        tree
+      )
+      .toPromise();
 
     tree = await schematicRunner
       .runSchematicAsync('update-builder-8.5.0', {}, tree)

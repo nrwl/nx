@@ -1,4 +1,4 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import type { ExecutorContext } from '@nrwl/devkit';
 import * as webpack from 'webpack';
 import { Stats } from 'webpack';
 
