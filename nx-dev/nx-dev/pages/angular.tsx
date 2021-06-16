@@ -484,16 +484,7 @@ export function AngularPage() {
           <NxUsersShowcase />
         </div>
       </main>
-      <Footer
-        flavor={{
-          name: storedFlavor || 'angular',
-          value: storedFlavor || 'angular',
-        }}
-        version={{
-          name: storedVersion || 'Latest',
-          value: storedVersion || 'latest',
-        }}
-      />
+      <Footer />
     </>
   );
 }

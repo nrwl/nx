@@ -297,16 +297,7 @@ export function Community(props: CommunityProps) {
           </div>
         </div>
       </main>
-      <Footer
-        flavor={{
-          name: storedFlavor || 'react',
-          value: storedFlavor || 'react',
-        }}
-        version={{
-          name: storedVersion || 'Latest',
-          value: storedVersion || 'latest',
-        }}
-      />
+      <Footer />
     </>
   );
 }

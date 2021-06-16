@@ -27,17 +27,7 @@ export function Index() {
         distributed graph-based task execution, a robust CLI, computation caching, dependency management, and more."
         />
       </Head>
-      <Header
-        showSearch={false}
-        flavor={{
-          name: storedFlavor || 'react',
-          value: storedFlavor || 'react',
-        }}
-        version={{
-          name: storedVersion || 'Latest',
-          value: storedVersion || 'latest',
-        }}
-      />
+      <Header showSearch={false} />
       <main>
         <div className="w-full">
           {/*INTRO COMPONENT*/}
@@ -54,7 +44,7 @@ export function Index() {
                   </p>
 
                   <div className="flex flex-wrap space-y-4 sm:space-y-0 sm:space-x-4 text-center">
-                    <Link href="/latest/react/getting-started/getting-started">
+                    <Link href="/getting-started/intro">
                       <a className="w-full sm:w-auto flex-none bg-purple-nx-base text-white text-lg leading-6 font-semibold py-3 px-6 border border-transparent rounded focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-purple-nx-base focus:outline-none transition-colors duration-180">
                         Get Started
                       </a>
@@ -418,16 +408,7 @@ export function Index() {
           <NxUsersShowcase />
         </div>
       </main>
-      <Footer
-        flavor={{
-          name: storedFlavor || 'react',
-          value: storedFlavor || 'react',
-        }}
-        version={{
-          name: storedVersion || 'Latest',
-          value: storedVersion || 'latest',
-        }}
-      />
+      <Footer />
     </>
   );
 }

@@ -552,16 +552,7 @@ export function Node() {
           <NxUsersShowcase />
         </div>
       </main>
-      <Footer
-        flavor={{
-          name: storedFlavor || 'node',
-          value: storedFlavor || 'node',
-        }}
-        version={{
-          name: storedVersion || 'Latest',
-          value: storedVersion || 'latest',
-        }}
-      />
+      <Footer />
     </>
   );
 }
