@@ -11,1496 +11,6 @@
     }
   },
   "projects": {
-    "nx": {
-      "root": "packages/nx",
-      "sourceRoot": "packages/nx",
-      "projectType": "library",
-      "targets": {
-        "build-base": {
-          "executor": "@nrwl/node:package",
-          "options": {
-            "outputPath": "build/packages/nx",
-            "tsConfig": "packages/nx/tsconfig.lib.json",
-            "packageJson": "packages/nx/package.json",
-            "main": "packages/nx/bin/nx.ts",
-            "updateBuildableProjectDepsInPackageJson": false,
-            "assets": [
-              {
-                "input": "packages/nx",
-                "glob": "**/files/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/nx",
-                "glob": "**/files/**/.gitkeep",
-                "output": "/"
-              },
-              {
-                "input": "packages/nx",
-                "glob": "**/*.json",
-                "output": "/"
-              },
-              {
-                "input": "packages/nx",
-                "glob": "**/*.js",
-                "output": "/"
-              },
-              {
-                "input": "packages/nx",
-                "glob": "**/*.d.ts",
-                "output": "/"
-              },
-              "LICENSE"
-            ]
-          },
-          "outputs": ["{options.outputPath}"]
-        },
-        "build": {
-          "executor": "@nrwl/workspace:run-commands",
-          "outputs": ["build/packages/nx"],
-          "options": {
-            "command": "node ./scripts/copy-readme.js nx"
-          }
-        },
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "packages/nx/**/*.ts",
-              "packages/nx/**/*.spec.ts",
-              "packages/nx/**/*_spec.ts",
-              "packages/nx/**/*.spec.tsx",
-              "packages/nx/**/*.spec.js",
-              "packages/nx/**/*.spec.jsx",
-              "packages/nx/**/*.d.ts"
-            ]
-          }
-        }
-      }
-    },
-    "tao": {
-      "root": "packages/tao",
-      "sourceRoot": "packages/tao",
-      "projectType": "library",
-      "targets": {
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "packages/tao/jest.config.js",
-            "passWithNoTests": true
-          },
-          "outputs": ["coverage/packages/tao"]
-        },
-        "build-base": {
-          "executor": "@nrwl/node:package",
-          "options": {
-            "outputPath": "build/packages/tao",
-            "tsConfig": "packages/tao/tsconfig.lib.json",
-            "packageJson": "packages/tao/package.json",
-            "main": "packages/tao/index.ts",
-            "updateBuildableProjectDepsInPackageJson": false,
-            "assets": [
-              {
-                "input": "packages/tao",
-                "glob": "**/files/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/tao",
-                "glob": "**/files/**/.gitkeep",
-                "output": "/"
-              },
-              {
-                "input": "packages/tao",
-                "glob": "**/*.json",
-                "output": "/"
-              },
-              {
-                "input": "packages/tao",
-                "glob": "**/*.js",
-                "output": "/"
-              },
-              {
-                "input": "packages/tao",
-                "glob": "**/*.d.ts",
-                "output": "/"
-              },
-              "LICENSE"
-            ]
-          },
-          "outputs": ["{options.outputPath}"]
-        },
-        "build": {
-          "executor": "@nrwl/workspace:run-commands",
-          "outputs": ["build/packages/tao"],
-          "options": {
-            "commands": [
-              {
-                "command": "node ./scripts/chmod build/packages/tao/index.js"
-              },
-              {
-                "command": "node ./scripts/copy-readme.js tao"
-              }
-            ],
-            "parallel": false
-          }
-        },
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "packages/tao/**/*.ts",
-              "packages/tao/**/*.spec.ts",
-              "packages/tao/**/*.spec.tsx",
-              "packages/tao/**/*.spec.js",
-              "packages/tao/**/*.spec.jsx",
-              "packages/tao/**/*.d.ts"
-            ]
-          }
-        }
-      }
-    },
-    "devkit": {
-      "root": "packages/devkit",
-      "sourceRoot": "packages/devkit",
-      "projectType": "library",
-      "targets": {
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "packages/devkit/jest.config.js",
-            "passWithNoTests": true
-          },
-          "outputs": ["coverage/packages/devkit"]
-        },
-        "build-base": {
-          "executor": "@nrwl/node:package",
-          "options": {
-            "outputPath": "build/packages/devkit",
-            "tsConfig": "packages/devkit/tsconfig.lib.json",
-            "packageJson": "packages/devkit/package.json",
-            "main": "packages/devkit/index.ts",
-            "updateBuildableProjectDepsInPackageJson": false,
-            "assets": [
-              {
-                "input": "packages/devkit",
-                "glob": "**/files/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/devkit",
-                "glob": "**/files/**/.gitkeep",
-                "output": "/"
-              },
-              {
-                "input": "packages/devkit",
-                "glob": "**/*.json",
-                "output": "/"
-              },
-              {
-                "input": "packages/devkit",
-                "glob": "**/*.js",
-                "output": "/"
-              },
-              {
-                "input": "packages/devkit",
-                "glob": "**/*.d.ts",
-                "output": "/"
-              },
-              "LICENSE"
-            ]
-          },
-          "outputs": ["{options.outputPath}"]
-        },
-        "build": {
-          "executor": "@nrwl/workspace:run-commands",
-          "outputs": ["build/packages/devkit"],
-          "options": {
-            "command": "node ./scripts/copy-readme.js devkit"
-          }
-        },
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "packages/devkit/**/*.ts",
-              "packages/devkit/**/*.spec.ts",
-              "packages/devkit/**/*.spec.tsx",
-              "packages/devkit/**/*.spec.js",
-              "packages/devkit/**/*.spec.jsx",
-              "packages/devkit/**/*.d.ts"
-            ]
-          }
-        }
-      }
-    },
-    "workspace": {
-      "root": "packages/workspace",
-      "sourceRoot": "packages/workspace",
-      "projectType": "library",
-      "targets": {
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "packages/workspace/jest.config.js",
-            "passWithNoTests": true
-          },
-          "outputs": ["coverage/packages/workspace"]
-        },
-        "build-base": {
-          "executor": "@nrwl/node:package",
-          "options": {
-            "outputPath": "build/packages/workspace",
-            "tsConfig": "packages/workspace/tsconfig.lib.json",
-            "packageJson": "packages/workspace/package.json",
-            "main": "packages/workspace/index.ts",
-            "updateBuildableProjectDepsInPackageJson": false,
-            "assets": [
-              {
-                "input": "packages/workspace",
-                "glob": "**/files/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/workspace",
-                "glob": "**/files/**/.gitkeep",
-                "output": "/"
-              },
-              {
-                "input": "packages/workspace",
-                "glob": "**/**/decorate-angular-cli.js__tmpl__",
-                "output": "/"
-              },
-              {
-                "input": "packages/workspace",
-                "glob": "**/*.json",
-                "output": "/"
-              },
-              {
-                "input": "packages/workspace",
-                "glob": "**/*.{js,css,html,svg}",
-                "output": "/"
-              },
-              {
-                "input": "packages/workspace",
-                "glob": "**/*.d.ts",
-                "output": "/"
-              },
-              "LICENSE"
-            ]
-          },
-          "outputs": ["{options.outputPath}"]
-        },
-        "build": {
-          "executor": "@nrwl/workspace:run-commands",
-          "outputs": ["build/packages/workspace"],
-          "options": {
-            "commands": [
-              {
-                "command": "nx build-base dep-graph-dep-graph --configuration release"
-              },
-              {
-                "command": "node ./scripts/copy-dep-graph.js"
-              },
-              {
-                "command": "node ./scripts/copy-readme.js workspace"
-              }
-            ],
-            "parallel": false
-          }
-        },
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "packages/workspace/**/*.ts",
-              "packages/workspace/**/*.spec.ts",
-              "packages/workspace/**/*.spec.tsx",
-              "packages/workspace/**/*.spec.js",
-              "packages/workspace/**/*.spec.jsx",
-              "packages/workspace/**/*.d.ts"
-            ]
-          }
-        }
-      }
-    },
-    "web": {
-      "root": "packages/web",
-      "sourceRoot": "packages/web",
-      "projectType": "library",
-      "targets": {
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "packages/web/jest.config.js",
-            "passWithNoTests": true
-          },
-          "outputs": ["coverage/packages/web"]
-        },
-        "build-base": {
-          "executor": "@nrwl/node:package",
-          "options": {
-            "outputPath": "build/packages/web",
-            "tsConfig": "packages/web/tsconfig.lib.json",
-            "packageJson": "packages/web/package.json",
-            "main": "packages/web/index.ts",
-            "updateBuildableProjectDepsInPackageJson": false,
-            "assets": [
-              {
-                "input": "packages/web",
-                "glob": "**/files/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/web",
-                "glob": "**/files/**/.gitkeep",
-                "output": "/"
-              },
-              {
-                "input": "packages/web",
-                "glob": "**/files/**/.babelrc__tmpl__",
-                "output": "/"
-              },
-              {
-                "input": "packages/web",
-                "glob": "**/*.json",
-                "output": "/"
-              },
-              {
-                "input": "packages/web",
-                "glob": "**/*.js",
-                "output": "/"
-              },
-              {
-                "input": "packages/web",
-                "glob": "**/*.d.ts",
-                "output": "/"
-              },
-              "LICENSE"
-            ]
-          },
-          "outputs": ["{options.outputPath}"]
-        },
-        "build": {
-          "executor": "@nrwl/workspace:run-commands",
-          "outputs": ["build/packages/web"],
-          "options": {
-            "command": "node ./scripts/copy-readme.js web"
-          }
-        },
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "packages/web/**/*.ts",
-              "packages/web/**/*.spec.ts",
-              "packages/web/**/*_spec.ts",
-              "packages/web/**/*.spec.tsx",
-              "packages/web/**/*.spec.js",
-              "packages/web/**/*.spec.jsx",
-              "packages/web/**/*.d.ts"
-            ]
-          }
-        }
-      }
-    },
-    "cypress": {
-      "root": "packages/cypress",
-      "sourceRoot": "packages/cypress",
-      "projectType": "library",
-      "targets": {
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "packages/cypress/jest.config.js",
-            "passWithNoTests": true
-          },
-          "outputs": ["coverage/packages/cypress"]
-        },
-        "build-base": {
-          "executor": "@nrwl/node:package",
-          "options": {
-            "outputPath": "build/packages/cypress",
-            "tsConfig": "packages/cypress/tsconfig.lib.json",
-            "packageJson": "packages/cypress/package.json",
-            "main": "packages/cypress/index.ts",
-            "updateBuildableProjectDepsInPackageJson": false,
-            "assets": [
-              {
-                "input": "packages/cypress",
-                "glob": "**/files/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/cypress",
-                "glob": "**/files/**/.gitkeep",
-                "output": "/"
-              },
-              {
-                "input": "packages/cypress",
-                "glob": "**/*.json",
-                "output": "/"
-              },
-              {
-                "input": "packages/cypress",
-                "glob": "**/*.js",
-                "output": "/"
-              },
-              {
-                "input": "packages/cypress",
-                "glob": "**/*.d.ts",
-                "output": "/"
-              },
-              "LICENSE"
-            ]
-          },
-          "outputs": ["{options.outputPath}"]
-        },
-        "build": {
-          "executor": "@nrwl/workspace:run-commands",
-          "outputs": ["build/packages/cypress"],
-          "options": {
-            "command": "node ./scripts/copy-readme.js cypress"
-          }
-        },
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "packages/cypress/**/*.ts",
-              "packages/cypress/**/*.spec.ts",
-              "packages/cypress/**/*.spec.tsx",
-              "packages/cypress/**/*.spec.js",
-              "packages/cypress/**/*.spec.jsx",
-              "packages/cypress/**/*.d.ts"
-            ]
-          }
-        }
-      }
-    },
-    "jest": {
-      "root": "packages/jest",
-      "sourceRoot": "packages/jest",
-      "projectType": "library",
-      "targets": {
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "packages/jest/jest.config.js",
-            "passWithNoTests": true
-          },
-          "outputs": ["coverage/packages/jest"]
-        },
-        "build-base": {
-          "executor": "@nrwl/node:package",
-          "options": {
-            "outputPath": "build/packages/jest",
-            "tsConfig": "packages/jest/tsconfig.lib.json",
-            "packageJson": "packages/jest/package.json",
-            "main": "packages/jest/index.ts",
-            "updateBuildableProjectDepsInPackageJson": false,
-            "assets": [
-              {
-                "input": "packages/jest",
-                "glob": "**/@(files|files-angular)/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/jest",
-                "glob": "**/files/**/.gitkeep",
-                "output": "/"
-              },
-              {
-                "input": "packages/jest",
-                "glob": "**/*.json",
-                "output": "/"
-              },
-              {
-                "input": "packages/jest",
-                "glob": "**/*.js",
-                "output": "/"
-              },
-              {
-                "input": "packages/jest",
-                "glob": "**/*.d.ts",
-                "output": "/"
-              },
-              "LICENSE"
-            ]
-          },
-          "outputs": ["{options.outputPath}"]
-        },
-        "build": {
-          "executor": "@nrwl/workspace:run-commands",
-          "outputs": ["build/packages/jest"],
-          "options": {
-            "command": "node ./scripts/copy-readme.js jest"
-          }
-        },
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "packages/jest/**/*.ts",
-              "packages/jest/**/*.spec.ts",
-              "packages/jest/**/*.spec.tsx",
-              "packages/jest/**/*.spec.js",
-              "packages/jest/**/*.spec.jsx",
-              "packages/jest/**/*.d.ts"
-            ]
-          }
-        }
-      }
-    },
-    "storybook": {
-      "root": "packages/storybook",
-      "sourceRoot": "packages/storybook",
-      "projectType": "library",
-      "targets": {
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "packages/storybook/jest.config.js",
-            "passWithNoTests": true
-          },
-          "outputs": ["coverage/packages/storybook"]
-        },
-        "build-base": {
-          "executor": "@nrwl/node:package",
-          "options": {
-            "outputPath": "build/packages/storybook",
-            "tsConfig": "packages/storybook/tsconfig.lib.json",
-            "packageJson": "packages/storybook/package.json",
-            "main": "packages/storybook/index.ts",
-            "updateBuildableProjectDepsInPackageJson": false,
-            "assets": [
-              {
-                "input": "packages/storybook",
-                "glob": "**/project-files/.storybook/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/storybook",
-                "glob": "**/root-files/.storybook/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/storybook",
-                "glob": "**/project-files-5/.storybook/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/storybook",
-                "glob": "**/root-files-5/.storybook/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/storybook",
-                "glob": "**/*.json",
-                "output": "/"
-              },
-              {
-                "input": "packages/storybook",
-                "glob": "**/*.js",
-                "output": "/"
-              },
-              {
-                "input": "packages/storybook",
-                "glob": "**/*.d.ts",
-                "output": "/"
-              },
-              "LICENSE"
-            ]
-          },
-          "outputs": ["{options.outputPath}"]
-        },
-        "build": {
-          "executor": "@nrwl/workspace:run-commands",
-          "outputs": ["build/packages/storybook"],
-          "options": {
-            "command": "node ./scripts/copy-readme.js storybook"
-          }
-        },
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "packages/storybook/**/*.ts",
-              "packages/storybook/**/*.spec.ts",
-              "packages/storybook/**/*_spec.ts",
-              "packages/storybook/**/*.spec.tsx",
-              "packages/storybook/**/*.spec.js",
-              "packages/storybook/**/*.spec.jsx",
-              "packages/storybook/**/*.d.ts"
-            ]
-          }
-        }
-      }
-    },
-    "react": {
-      "root": "packages/react",
-      "sourceRoot": "packages/react",
-      "projectType": "library",
-      "targets": {
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "packages/react/jest.config.js",
-            "passWithNoTests": true
-          },
-          "outputs": ["coverage/packages/react"]
-        },
-        "build-base": {
-          "executor": "@nrwl/node:package",
-          "options": {
-            "outputPath": "build/packages/react",
-            "tsConfig": "packages/react/tsconfig.lib.json",
-            "packageJson": "packages/react/package.json",
-            "main": "packages/react/index.ts",
-            "updateBuildableProjectDepsInPackageJson": false,
-            "assets": [
-              {
-                "input": "packages/react",
-                "glob": "**/files/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/react",
-                "glob": "**/files/**/.gitkeep",
-                "output": "/"
-              },
-              {
-                "input": "packages/react",
-                "glob": "**/files/**/.babelrc__tmpl__",
-                "output": "/"
-              },
-              {
-                "input": "packages/react",
-                "glob": "**/files/**/.browserslistrc__tmpl__",
-                "output": "/"
-              },
-              {
-                "input": "packages/react",
-                "glob": "**/*.json",
-                "output": "/"
-              },
-              {
-                "input": "packages/react",
-                "glob": "**/*.d.ts",
-                "output": "/"
-              },
-              {
-                "input": "packages/react",
-                "glob": "**/*.js",
-                "output": "/"
-              },
-              "LICENSE"
-            ]
-          },
-          "outputs": ["{options.outputPath}"]
-        },
-        "build": {
-          "executor": "@nrwl/workspace:run-commands",
-          "outputs": ["build/packages/react"],
-          "options": {
-            "command": "node ./scripts/copy-readme.js react"
-          }
-        },
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "packages/react/**/*.ts",
-              "packages/react/**/*.spec.ts",
-              "packages/react/**/*_spec.ts",
-              "packages/react/**/*.spec.tsx",
-              "packages/react/**/*.spec.js",
-              "packages/react/**/*.spec.jsx",
-              "packages/react/**/*.d.ts"
-            ]
-          }
-        }
-      }
-    },
-    "nx-plugin": {
-      "root": "packages/nx-plugin",
-      "sourceRoot": "packages/nx-plugin",
-      "projectType": "library",
-      "targets": {
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "packages/nx-plugin/jest.config.js",
-            "passWithNoTests": true
-          },
-          "outputs": ["coverage/packages/nx-plugin"]
-        },
-        "build-base": {
-          "executor": "@nrwl/node:package",
-          "options": {
-            "outputPath": "build/packages/nx-plugin",
-            "tsConfig": "packages/nx-plugin/tsconfig.lib.json",
-            "packageJson": "packages/nx-plugin/package.json",
-            "main": "packages/nx-plugin/index.ts",
-            "updateBuildableProjectDepsInPackageJson": false,
-            "assets": [
-              {
-                "input": "packages/nx-plugin",
-                "glob": "**/files/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/nx-plugin",
-                "glob": "**/files/**/.gitkeep",
-                "output": "/"
-              },
-              {
-                "input": "packages/nx-plugin",
-                "glob": "**/*.json",
-                "output": "/"
-              },
-              {
-                "input": "packages/nx-plugin",
-                "glob": "**/*.js",
-                "output": "/"
-              },
-              {
-                "input": "packages/nx-plugin",
-                "glob": "**/*.d.ts",
-                "output": "/"
-              },
-              "LICENSE"
-            ]
-          },
-          "outputs": ["{options.outputPath}"]
-        },
-        "build": {
-          "executor": "@nrwl/workspace:run-commands",
-          "outputs": ["build/packages/nx-plugin"],
-          "options": {
-            "command": "node ./scripts/copy-readme.js nx-plugin"
-          }
-        },
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "packages/nx-plugin/**/*.ts",
-              "packages/nx-plugin/**/*.spec.ts",
-              "packages/nx-plugin/**/*_spec.ts",
-              "packages/nx-plugin/**/*.spec.tsx",
-              "packages/nx-plugin/**/*.spec.js",
-              "packages/nx-plugin/**/*.spec.jsx",
-              "packages/nx-plugin/**/*.d.ts"
-            ]
-          }
-        }
-      }
-    },
-    "node": {
-      "root": "packages/node",
-      "sourceRoot": "packages/node",
-      "projectType": "library",
-      "targets": {
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "packages/node/jest.config.js",
-            "passWithNoTests": true
-          },
-          "outputs": ["coverage/packages/node"]
-        },
-        "build-base": {
-          "executor": "@nrwl/node:package",
-          "options": {
-            "outputPath": "build/packages/node",
-            "tsConfig": "packages/node/tsconfig.lib.json",
-            "packageJson": "packages/node/package.json",
-            "main": "packages/node/index.ts",
-            "updateBuildableProjectDepsInPackageJson": false,
-            "assets": [
-              {
-                "input": "packages/node",
-                "glob": "**/files/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/node",
-                "glob": "**/files/**/.gitkeep",
-                "output": "/"
-              },
-              {
-                "input": "packages/node",
-                "glob": "**/*.json",
-                "output": "/"
-              },
-              {
-                "input": "packages/node",
-                "glob": "**/*.js",
-                "output": "/"
-              },
-              {
-                "input": "packages/node",
-                "glob": "**/*.d.ts",
-                "output": "/"
-              },
-              "LICENSE"
-            ]
-          },
-          "outputs": ["{options.outputPath}"]
-        },
-        "build": {
-          "executor": "@nrwl/workspace:run-commands",
-          "outputs": ["build/packages/node"],
-          "options": {
-            "command": "node ./scripts/copy-readme.js node"
-          }
-        },
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "packages/node/**/*.ts",
-              "packages/node/**/*.spec.ts",
-              "packages/node/**/*_spec.ts",
-              "packages/node/**/*.spec.tsx",
-              "packages/node/**/*.spec.js",
-              "packages/node/**/*.spec.jsx",
-              "packages/node/**/*.d.ts"
-            ]
-          }
-        }
-      }
-    },
-    "next": {
-      "root": "packages/next",
-      "sourceRoot": "packages/next",
-      "projectType": "library",
-      "targets": {
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "packages/next/jest.config.js",
-            "passWithNoTests": true
-          },
-          "outputs": ["coverage/packages/next"]
-        },
-        "build-base": {
-          "executor": "@nrwl/node:package",
-          "options": {
-            "outputPath": "build/packages/next",
-            "tsConfig": "packages/next/tsconfig.lib.json",
-            "packageJson": "packages/next/package.json",
-            "main": "packages/next/index.ts",
-            "updateBuildableProjectDepsInPackageJson": false,
-            "assets": [
-              {
-                "input": "packages/next",
-                "glob": "**/files/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/next",
-                "glob": "**/files/**/.gitkeep",
-                "output": "/"
-              },
-              {
-                "input": "packages/next",
-                "glob": "**/files/**/.babelrc__tmpl__",
-                "output": "/"
-              },
-              {
-                "input": "packages/next",
-                "glob": "**/*.json",
-                "output": "/"
-              },
-              {
-                "input": "packages/next",
-                "glob": "**/*.js",
-                "output": "/"
-              },
-              {
-                "input": "packages/next",
-                "glob": "**/*.d.ts",
-                "output": "/"
-              },
-              "LICENSE"
-            ]
-          },
-          "outputs": ["{options.outputPath}"]
-        },
-        "build": {
-          "executor": "@nrwl/workspace:run-commands",
-          "outputs": ["build/packages/next"],
-          "options": {
-            "command": "node ./scripts/copy-readme.js next"
-          }
-        },
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "packages/next/**/*.ts",
-              "packages/next/**/*.spec.ts",
-              "packages/next/**/*_spec.ts",
-              "packages/next/**/*.spec.tsx",
-              "packages/next/**/*.spec.js",
-              "packages/next/**/*.spec.jsx",
-              "packages/next/**/*.d.ts"
-            ]
-          }
-        }
-      }
-    },
-    "nest": {
-      "root": "packages/nest",
-      "sourceRoot": "packages/nest",
-      "projectType": "library",
-      "targets": {
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "packages/nest/jest.config.js",
-            "passWithNoTests": true
-          },
-          "outputs": ["coverage/packages/nest"]
-        },
-        "build-base": {
-          "executor": "@nrwl/node:package",
-          "options": {
-            "outputPath": "build/packages/nest",
-            "tsConfig": "packages/nest/tsconfig.lib.json",
-            "packageJson": "packages/nest/package.json",
-            "main": "packages/nest/index.ts",
-            "updateBuildableProjectDepsInPackageJson": false,
-            "assets": [
-              {
-                "input": "packages/nest",
-                "glob": "**/files/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/nest",
-                "glob": "**/files/**/.gitkeep",
-                "output": "/"
-              },
-              {
-                "input": "packages/nest",
-                "glob": "**/*.json",
-                "output": "/"
-              },
-              {
-                "input": "packages/nest",
-                "glob": "**/*.js",
-                "output": "/"
-              },
-              {
-                "input": "packages/nest",
-                "glob": "**/*.d.ts",
-                "output": "/"
-              },
-              "LICENSE"
-            ]
-          },
-          "outputs": ["{options.outputPath}"]
-        },
-        "build": {
-          "executor": "@nrwl/workspace:run-commands",
-          "outputs": ["build/packages/nest"],
-          "options": {
-            "command": "node ./scripts/copy-readme.js nest"
-          }
-        },
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "packages/nest/**/*.ts",
-              "packages/nest/**/*.spec.ts",
-              "packages/nest/**/*_spec.ts",
-              "packages/nest/**/*.spec.tsx",
-              "packages/nest/**/*.spec.js",
-              "packages/nest/**/*.spec.jsx",
-              "packages/nest/**/*.d.ts"
-            ]
-          }
-        }
-      }
-    },
-    "linter": {
-      "root": "packages/linter",
-      "sourceRoot": "packages/linter",
-      "projectType": "library",
-      "targets": {
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "packages/linter/jest.config.js",
-            "passWithNoTests": true
-          },
-          "outputs": ["coverage/packages/linter"]
-        },
-        "build-base": {
-          "executor": "@nrwl/node:package",
-          "options": {
-            "outputPath": "build/packages/linter",
-            "tsConfig": "packages/linter/tsconfig.lib.json",
-            "packageJson": "packages/linter/package.json",
-            "main": "packages/linter/index.ts",
-            "updateBuildableProjectDepsInPackageJson": false,
-            "assets": [
-              {
-                "input": "packages/linter",
-                "glob": "**/files/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/linter",
-                "glob": "**/files/**/.gitkeep",
-                "output": "/"
-              },
-              {
-                "input": "packages/linter",
-                "glob": "**/*.json",
-                "output": "/"
-              },
-              {
-                "input": "packages/linter",
-                "glob": "**/*.js",
-                "output": "/"
-              },
-              {
-                "input": "packages/linter",
-                "glob": "**/*.d.ts",
-                "output": "/"
-              },
-              "LICENSE"
-            ]
-          },
-          "outputs": ["{options.outputPath}"]
-        },
-        "build": {
-          "executor": "@nrwl/workspace:run-commands",
-          "outputs": ["build/packages/linter"],
-          "options": {
-            "command": "node ./scripts/copy-readme.js linter"
-          }
-        },
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "packages/linter/**/*.ts",
-              "packages/linter/**/*.spec.ts",
-              "packages/linter/**/*_spec.ts",
-              "packages/linter/**/*.spec.tsx",
-              "packages/linter/**/*.spec.js",
-              "packages/linter/**/*.spec.jsx",
-              "packages/linter/**/*.d.ts"
-            ]
-          }
-        }
-      }
-    },
-    "express": {
-      "root": "packages/express",
-      "sourceRoot": "packages/express",
-      "projectType": "library",
-      "targets": {
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "packages/express/jest.config.js",
-            "passWithNoTests": true
-          },
-          "outputs": ["coverage/packages/express"]
-        },
-        "build-base": {
-          "executor": "@nrwl/node:package",
-          "options": {
-            "outputPath": "build/packages/express",
-            "tsConfig": "packages/express/tsconfig.lib.json",
-            "packageJson": "packages/express/package.json",
-            "main": "packages/express/index.ts",
-            "updateBuildableProjectDepsInPackageJson": false,
-            "assets": [
-              {
-                "input": "packages/express",
-                "glob": "**/files/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/express",
-                "glob": "**/files/**/.gitkeep",
-                "output": "/"
-              },
-              {
-                "input": "packages/express",
-                "glob": "**/*.json",
-                "output": "/"
-              },
-              {
-                "input": "packages/express",
-                "glob": "**/*.js",
-                "output": "/"
-              },
-              {
-                "input": "packages/express",
-                "glob": "**/*.d.ts",
-                "output": "/"
-              },
-              "LICENSE"
-            ]
-          },
-          "outputs": ["{options.outputPath}"]
-        },
-        "build": {
-          "executor": "@nrwl/workspace:run-commands",
-          "outputs": ["build/packages/express"],
-          "options": {
-            "command": "node ./scripts/copy-readme.js express"
-          }
-        },
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "packages/express/**/*.ts",
-              "packages/express/**/*.spec.ts",
-              "packages/express/**/*_spec.ts",
-              "packages/express/**/*.spec.tsx",
-              "packages/express/**/*.spec.js",
-              "packages/express/**/*.spec.jsx",
-              "packages/express/**/*.d.ts"
-            ]
-          }
-        }
-      }
-    },
-    "eslint-plugin-nx": {
-      "root": "packages/eslint-plugin-nx",
-      "sourceRoot": "packages/eslint-plugin-nx",
-      "projectType": "library",
-      "targets": {
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "packages/eslint-plugin-nx/jest.config.js",
-            "passWithNoTests": true
-          },
-          "outputs": ["coverage/packages/eslint-plugin-nx"]
-        },
-        "build-base": {
-          "executor": "@nrwl/node:package",
-          "options": {
-            "outputPath": "build/packages/eslint-plugin-nx",
-            "tsConfig": "packages/eslint-plugin-nx/tsconfig.lib.json",
-            "packageJson": "packages/eslint-plugin-nx/package.json",
-            "main": "packages/eslint-plugin-nx/src/index.ts",
-            "updateBuildableProjectDepsInPackageJson": false,
-            "assets": [
-              {
-                "input": "packages/eslint-plugin-nx",
-                "glob": "**/files/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/eslint-plugin-nx",
-                "glob": "**/files/**/.gitkeep",
-                "output": "/"
-              },
-              {
-                "input": "packages/eslint-plugin-nx",
-                "glob": "**/*.json",
-                "output": "/"
-              },
-              {
-                "input": "packages/eslint-plugin-nx",
-                "glob": "**/*.js",
-                "output": "/"
-              },
-              {
-                "input": "packages/eslint-plugin-nx",
-                "glob": "**/*.d.ts",
-                "output": "/"
-              },
-              "LICENSE"
-            ]
-          },
-          "outputs": ["{options.outputPath}"]
-        },
-        "build": {
-          "executor": "@nrwl/workspace:run-commands",
-          "outputs": ["build/packages/eslint-plugin-nx"],
-          "options": {
-            "command": "node ./scripts/copy-readme.js eslint-plugin-nx"
-          }
-        },
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "packages/eslint-plugin-nx/**/*.ts",
-              "packages/eslint-plugin-nx/**/*.spec.ts",
-              "packages/eslint-plugin-nx/**/*_spec.ts",
-              "packages/eslint-plugin-nx/**/*.spec.tsx",
-              "packages/eslint-plugin-nx/**/*.spec.js",
-              "packages/eslint-plugin-nx/**/*.spec.jsx",
-              "packages/eslint-plugin-nx/**/*.d.ts"
-            ]
-          }
-        }
-      }
-    },
-    "create-nx-workspace": {
-      "root": "packages/create-nx-workspace",
-      "sourceRoot": "packages/create-nx-workspace",
-      "projectType": "library",
-      "targets": {
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "packages/create-nx-workspace/jest.config.js",
-            "passWithNoTests": true
-          },
-          "outputs": ["coverage/packages/create-nx-workspace"]
-        },
-        "build-base": {
-          "executor": "@nrwl/node:package",
-          "options": {
-            "outputPath": "build/packages/create-nx-workspace",
-            "tsConfig": "packages/create-nx-workspace/tsconfig.lib.json",
-            "packageJson": "packages/create-nx-workspace/package.json",
-            "main": "packages/create-nx-workspace/bin/create-nx-workspace.ts",
-            "updateBuildableProjectDepsInPackageJson": false,
-            "assets": [
-              {
-                "input": "packages/create-nx-workspace",
-                "glob": "**/files/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/create-nx-workspace",
-                "glob": "**/files/**/.gitkeep",
-                "output": "/"
-              },
-              {
-                "input": "packages/create-nx-workspace",
-                "glob": "**/*.json",
-                "output": "/"
-              },
-              {
-                "input": "packages/create-nx-workspace",
-                "glob": "**/*.js",
-                "output": "/"
-              },
-              {
-                "input": "packages/create-nx-workspace",
-                "glob": "**/*.d.ts",
-                "output": "/"
-              },
-              "LICENSE"
-            ]
-          },
-          "outputs": ["{options.outputPath}"]
-        },
-        "build": {
-          "executor": "@nrwl/workspace:run-commands",
-          "outputs": ["build/packages/create-nx-workspace"],
-          "options": {
-            "commands": [
-              {
-                "command": "node ./scripts/chmod build/packages/create-nx-workspace/bin/create-nx-workspace.js"
-              },
-              {
-                "command": "node ./scripts/copy-readme.js create-nx-workspace"
-              }
-            ],
-            "parallel": false
-          }
-        },
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "packages/create-nx-workspace/**/*.ts",
-              "packages/create-nx-workspace/**/*.spec.ts",
-              "packages/create-nx-workspace/**/*_spec.ts",
-              "packages/create-nx-workspace/**/*.spec.tsx",
-              "packages/create-nx-workspace/**/*.spec.js",
-              "packages/create-nx-workspace/**/*.spec.jsx",
-              "packages/create-nx-workspace/**/*.d.ts"
-            ]
-          }
-        }
-      }
-    },
-    "create-nx-plugin": {
-      "root": "packages/create-nx-plugin",
-      "sourceRoot": "packages/create-nx-plugin",
-      "projectType": "library",
-      "targets": {
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "packages/create-nx-plugin/jest.config.js",
-            "passWithNoTests": true
-          },
-          "outputs": ["coverage/packages/create-nx-plugin"]
-        },
-        "build-base": {
-          "executor": "@nrwl/node:package",
-          "options": {
-            "outputPath": "build/packages/create-nx-plugin",
-            "tsConfig": "packages/create-nx-plugin/tsconfig.lib.json",
-            "packageJson": "packages/create-nx-plugin/package.json",
-            "main": "packages/create-nx-plugin/bin/create-nx-plugin.ts",
-            "updateBuildableProjectDepsInPackageJson": false,
-            "assets": [
-              {
-                "input": "packages/create-nx-plugin",
-                "glob": "**/files/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/create-nx-plugin",
-                "glob": "**/files/**/.gitkeep",
-                "output": "/"
-              },
-              {
-                "input": "packages/create-nx-plugin",
-                "glob": "**/*.json",
-                "output": "/"
-              },
-              {
-                "input": "packages/create-nx-plugin",
-                "glob": "**/*.js",
-                "output": "/"
-              },
-              {
-                "input": "packages/create-nx-plugin",
-                "glob": "**/*.d.ts",
-                "output": "/"
-              },
-              "LICENSE"
-            ]
-          },
-          "outputs": ["{options.outputPath}"]
-        },
-        "build": {
-          "executor": "@nrwl/workspace:run-commands",
-          "outputs": ["build/packages/create-nx-plugin"],
-          "options": {
-            "commands": [
-              {
-                "command": "node ./scripts/chmod build/packages/create-nx-plugin/bin/create-nx-plugin.js"
-              },
-              {
-                "command": "node ./scripts/copy-readme.js create-nx-plugin"
-              }
-            ],
-            "parallel": false
-          }
-        },
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "packages/create-nx-plugin/**/*.ts",
-              "packages/create-nx-plugin/**/*.spec.ts",
-              "packages/create-nx-plugin/**/*_spec.ts",
-              "packages/create-nx-plugin/**/*.spec.tsx",
-              "packages/create-nx-plugin/**/*.spec.js",
-              "packages/create-nx-plugin/**/*.spec.jsx",
-              "packages/create-nx-plugin/**/*.d.ts"
-            ]
-          }
-        }
-      }
-    },
-    "cli": {
-      "root": "packages/cli",
-      "sourceRoot": "packages/cli",
-      "projectType": "library",
-      "targets": {
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "options": {
-            "jestConfig": "packages/cli/jest.config.js",
-            "passWithNoTests": true
-          },
-          "outputs": ["coverage/packages/cli"]
-        },
-        "build-base": {
-          "executor": "@nrwl/node:package",
-          "options": {
-            "outputPath": "build/packages/cli",
-            "tsConfig": "packages/cli/tsconfig.lib.json",
-            "packageJson": "packages/cli/package.json",
-            "main": "packages/cli/bin/nx.ts",
-            "updateBuildableProjectDepsInPackageJson": false,
-            "assets": [
-              {
-                "input": "packages/cli",
-                "glob": "**/files/**",
-                "output": "/"
-              },
-              {
-                "input": "packages/cli",
-                "glob": "**/files/**/.gitkeep",
-                "output": "/"
-              },
-              {
-                "input": "packages/cli",
-                "glob": "**/*.json",
-                "output": "/"
-              },
-              {
-                "input": "packages/cli",
-                "glob": "**/*.js",
-                "output": "/"
-              },
-              {
-                "input": "packages/cli",
-                "glob": "**/*.d.ts",
-                "output": "/"
-              },
-              "LICENSE"
-            ]
-          },
-          "outputs": ["{options.outputPath}"]
-        },
-        "build": {
-          "executor": "@nrwl/workspace:run-commands",
-          "outputs": ["build/packages/cli"],
-          "options": {
-            "commands": [
-              {
-                "command": "node ./scripts/chmod build/packages/cli/bin/nx.js"
-              },
-              {
-                "command": "node ./scripts/copy-readme.js cli"
-              }
-            ],
-            "parallel": false
-          }
-        },
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "packages/cli/**/*.ts",
-              "packages/cli/**/*.spec.ts",
-              "packages/cli/**/*_spec.ts",
-              "packages/cli/**/*.spec.tsx",
-              "packages/cli/**/*.spec.js",
-              "packages/cli/**/*.spec.jsx",
-              "packages/cli/**/*.d.ts"
-            ]
-          }
-        }
-      }
-    },
     "angular": {
       "root": "packages/angular",
       "sourceRoot": "packages/angular",
@@ -1589,44 +99,509 @@
         }
       }
     },
-    "e2e-utils": {
-      "root": "e2e/utils",
-      "sourceRoot": "e2e/utils",
+    "cli": {
+      "root": "packages/cli",
+      "sourceRoot": "packages/cli",
       "projectType": "library",
-      "targets": {}
-    },
-    "e2e-cli": {
-      "root": "e2e/cli",
-      "sourceRoot": "e2e/cli",
-      "projectType": "application",
       "targets": {
-        "e2e": {
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/cli/jest.config.js",
+            "passWithNoTests": true
+          },
+          "outputs": ["coverage/packages/cli"]
+        },
+        "build-base": {
+          "executor": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/cli",
+            "tsConfig": "packages/cli/tsconfig.lib.json",
+            "packageJson": "packages/cli/package.json",
+            "main": "packages/cli/bin/nx.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/cli",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/cli",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/cli",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/cli",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/cli",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
+              "LICENSE"
+            ]
+          },
+          "outputs": ["{options.outputPath}"]
+        },
+        "build": {
           "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/cli"],
           "options": {
             "commands": [
               {
-                "command": "yarn e2e-start-local-registry"
+                "command": "node ./scripts/chmod build/packages/cli/bin/nx.js"
               },
               {
-                "command": "yarn e2e-build-package-publish"
-              },
-              {
-                "command": "nx run-e2e-tests e2e-cli"
+                "command": "node ./scripts/copy-readme.js cli"
               }
             ],
             "parallel": false
           }
         },
-        "run-e2e-tests": {
-          "executor": "@nrwl/jest:jest",
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
           "options": {
-            "jestConfig": "e2e/cli/jest.config.js",
-            "passWithNoTests": true,
-            "runInBand": true
-          },
-          "outputs": ["coverage/e2e/cli"]
+            "lintFilePatterns": [
+              "packages/cli/**/*.ts",
+              "packages/cli/**/*.spec.ts",
+              "packages/cli/**/*_spec.ts",
+              "packages/cli/**/*.spec.tsx",
+              "packages/cli/**/*.spec.js",
+              "packages/cli/**/*.spec.jsx",
+              "packages/cli/**/*.d.ts"
+            ]
+          }
         }
       }
+    },
+    "create-nx-plugin": {
+      "root": "packages/create-nx-plugin",
+      "sourceRoot": "packages/create-nx-plugin",
+      "projectType": "library",
+      "targets": {
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/create-nx-plugin/jest.config.js",
+            "passWithNoTests": true
+          },
+          "outputs": ["coverage/packages/create-nx-plugin"]
+        },
+        "build-base": {
+          "executor": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/create-nx-plugin",
+            "tsConfig": "packages/create-nx-plugin/tsconfig.lib.json",
+            "packageJson": "packages/create-nx-plugin/package.json",
+            "main": "packages/create-nx-plugin/bin/create-nx-plugin.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/create-nx-plugin",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/create-nx-plugin",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/create-nx-plugin",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/create-nx-plugin",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/create-nx-plugin",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
+              "LICENSE"
+            ]
+          },
+          "outputs": ["{options.outputPath}"]
+        },
+        "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/create-nx-plugin"],
+          "options": {
+            "commands": [
+              {
+                "command": "node ./scripts/chmod build/packages/create-nx-plugin/bin/create-nx-plugin.js"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js create-nx-plugin"
+              }
+            ],
+            "parallel": false
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/create-nx-plugin/**/*.ts",
+              "packages/create-nx-plugin/**/*.spec.ts",
+              "packages/create-nx-plugin/**/*_spec.ts",
+              "packages/create-nx-plugin/**/*.spec.tsx",
+              "packages/create-nx-plugin/**/*.spec.js",
+              "packages/create-nx-plugin/**/*.spec.jsx",
+              "packages/create-nx-plugin/**/*.d.ts"
+            ]
+          }
+        }
+      }
+    },
+    "create-nx-workspace": {
+      "root": "packages/create-nx-workspace",
+      "sourceRoot": "packages/create-nx-workspace",
+      "projectType": "library",
+      "targets": {
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/create-nx-workspace/jest.config.js",
+            "passWithNoTests": true
+          },
+          "outputs": ["coverage/packages/create-nx-workspace"]
+        },
+        "build-base": {
+          "executor": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/create-nx-workspace",
+            "tsConfig": "packages/create-nx-workspace/tsconfig.lib.json",
+            "packageJson": "packages/create-nx-workspace/package.json",
+            "main": "packages/create-nx-workspace/bin/create-nx-workspace.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/create-nx-workspace",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/create-nx-workspace",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/create-nx-workspace",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/create-nx-workspace",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/create-nx-workspace",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
+              "LICENSE"
+            ]
+          },
+          "outputs": ["{options.outputPath}"]
+        },
+        "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/create-nx-workspace"],
+          "options": {
+            "commands": [
+              {
+                "command": "node ./scripts/chmod build/packages/create-nx-workspace/bin/create-nx-workspace.js"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js create-nx-workspace"
+              }
+            ],
+            "parallel": false
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/create-nx-workspace/**/*.ts",
+              "packages/create-nx-workspace/**/*.spec.ts",
+              "packages/create-nx-workspace/**/*_spec.ts",
+              "packages/create-nx-workspace/**/*.spec.tsx",
+              "packages/create-nx-workspace/**/*.spec.js",
+              "packages/create-nx-workspace/**/*.spec.jsx",
+              "packages/create-nx-workspace/**/*.d.ts"
+            ]
+          }
+        }
+      }
+    },
+    "cypress": {
+      "root": "packages/cypress",
+      "sourceRoot": "packages/cypress",
+      "projectType": "library",
+      "targets": {
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/cypress/jest.config.js",
+            "passWithNoTests": true
+          },
+          "outputs": ["coverage/packages/cypress"]
+        },
+        "build-base": {
+          "executor": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/cypress",
+            "tsConfig": "packages/cypress/tsconfig.lib.json",
+            "packageJson": "packages/cypress/package.json",
+            "main": "packages/cypress/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/cypress",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/cypress",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/cypress",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/cypress",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/cypress",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
+              "LICENSE"
+            ]
+          },
+          "outputs": ["{options.outputPath}"]
+        },
+        "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/cypress"],
+          "options": {
+            "command": "node ./scripts/copy-readme.js cypress"
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/cypress/**/*.ts",
+              "packages/cypress/**/*.spec.ts",
+              "packages/cypress/**/*.spec.tsx",
+              "packages/cypress/**/*.spec.js",
+              "packages/cypress/**/*.spec.jsx",
+              "packages/cypress/**/*.d.ts"
+            ]
+          }
+        }
+      }
+    },
+    "dep-graph-dep-graph": {
+      "root": "dep-graph/dep-graph",
+      "sourceRoot": "dep-graph/dep-graph/src",
+      "projectType": "application",
+      "targets": {
+        "build-base": {
+          "executor": "@nrwl/web:build",
+          "options": {
+            "maxWorkers": 8,
+            "outputPath": "build/apps/dep-graph",
+            "index": "dep-graph/dep-graph/src/index.html",
+            "main": "dep-graph/dep-graph/src/main.ts",
+            "polyfills": "dep-graph/dep-graph/src/polyfills.ts",
+            "tsConfig": "dep-graph/dep-graph/tsconfig.app.json",
+            "assets": [
+              "dep-graph/dep-graph/src/favicon.ico",
+              "dep-graph/dep-graph/src/assets"
+            ],
+            "styles": ["dep-graph/dep-graph/src/styles.scss"],
+            "scripts": []
+          },
+          "configurations": {
+            "release": {
+              "fileReplacements": [
+                {
+                  "replace": "dep-graph/dep-graph/src/environments/environment.ts",
+                  "with": "dep-graph/dep-graph/src/environments/environment.release.ts"
+                }
+              ],
+              "optimization": true,
+              "outputHashing": "none",
+              "sourceMap": false,
+              "extractCss": true,
+              "namedChunks": false,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                }
+              ]
+            }
+          },
+          "outputs": ["{options.outputPath}"]
+        },
+        "serve": {
+          "executor": "@nrwl/web:dev-server",
+          "options": {
+            "buildTarget": "dep-graph-dep-graph:build-base"
+          },
+          "configurations": {
+            "release": {
+              "buildTarget": "dep-graph-dep-graph:build-base:release"
+            }
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "tsConfig": [
+              "dep-graph/dep-graph/tsconfig.app.json",
+              "dep-graph/dep-graph/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**", "!dep-graph/dep-graph/**/*"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/dep-graph/dep-graph"],
+          "options": {
+            "jestConfig": "dep-graph/dep-graph/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "dep-graph-dep-graph-e2e": {
+      "root": "dep-graph/dep-graph-e2e",
+      "sourceRoot": "dep-graph/dep-graph-e2e/src",
+      "projectType": "application",
+      "targets": {
+        "e2e-disabled": {
+          "executor": "@nrwl/cypress:cypress",
+          "options": {
+            "cypressConfig": "dep-graph/dep-graph-e2e/cypress.json",
+            "tsConfig": "dep-graph/dep-graph-e2e/tsconfig.e2e.json",
+            "devServerTarget": "dep-graph-dep-graph:serve"
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:lint",
+          "options": {
+            "linter": "eslint",
+            "tsConfig": ["dep-graph/dep-graph-e2e/tsconfig.e2e.json"],
+            "exclude": ["**/node_modules/**", "!dep-graph/dep-graph-e2e/**/*"]
+          }
+        }
+      }
+    },
+    "devkit": {
+      "root": "packages/devkit",
+      "sourceRoot": "packages/devkit",
+      "projectType": "library",
+      "targets": {
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/devkit/jest.config.js",
+            "passWithNoTests": true
+          },
+          "outputs": ["coverage/packages/devkit"]
+        },
+        "build-base": {
+          "executor": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/devkit",
+            "tsConfig": "packages/devkit/tsconfig.lib.json",
+            "packageJson": "packages/devkit/package.json",
+            "main": "packages/devkit/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/devkit",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/devkit",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/devkit",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/devkit",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/devkit",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
+              "LICENSE"
+            ]
+          },
+          "outputs": ["{options.outputPath}"]
+        },
+        "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/devkit"],
+          "options": {
+            "command": "node ./scripts/copy-readme.js devkit"
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/devkit/**/*.ts",
+              "packages/devkit/**/*.spec.ts",
+              "packages/devkit/**/*.spec.tsx",
+              "packages/devkit/**/*.spec.js",
+              "packages/devkit/**/*.spec.jsx",
+              "packages/devkit/**/*.d.ts"
+            ]
+          }
+        }
+      }
+    },
+    "docs": {
+      "root": "docs",
+      "sourceRoot": "docs",
+      "projectType": "library"
     },
     "e2e-angular": {
       "root": "e2e/angular",
@@ -1661,6 +636,39 @@
         }
       }
     },
+    "e2e-cli": {
+      "root": "e2e/cli",
+      "sourceRoot": "e2e/cli",
+      "projectType": "application",
+      "targets": {
+        "e2e": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {
+                "command": "yarn e2e-start-local-registry"
+              },
+              {
+                "command": "yarn e2e-build-package-publish"
+              },
+              {
+                "command": "nx run-e2e-tests e2e-cli"
+              }
+            ],
+            "parallel": false
+          }
+        },
+        "run-e2e-tests": {
+          "executor": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "e2e/cli/jest.config.js",
+            "passWithNoTests": true,
+            "runInBand": true
+          },
+          "outputs": ["coverage/e2e/cli"]
+        }
+      }
+    },
     "e2e-cypress": {
       "root": "e2e/cypress",
       "sourceRoot": "e2e/cypress",
@@ -1691,6 +699,39 @@
             "runInBand": true
           },
           "outputs": ["coverage/e2e/cypress"]
+        }
+      }
+    },
+    "e2e-gatsby": {
+      "root": "e2e/gatsby",
+      "sourceRoot": "e2e/gatsby",
+      "projectType": "application",
+      "targets": {
+        "e2e": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {
+                "command": "yarn e2e-start-local-registry"
+              },
+              {
+                "command": "yarn e2e-build-package-publish"
+              },
+              {
+                "command": "nx run-e2e-tests e2e-gatsby"
+              }
+            ],
+            "parallel": false
+          }
+        },
+        "run-e2e-tests": {
+          "executor": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "e2e/gatsby/jest.config.js",
+            "passWithNoTests": true,
+            "runInBand": true
+          },
+          "outputs": ["coverage/e2e/gatsby"]
         }
       }
     },
@@ -1826,6 +867,39 @@
         }
       }
     },
+    "e2e-nx-plugin": {
+      "root": "e2e/nx-plugin",
+      "sourceRoot": "e2e/nx-plugin",
+      "projectType": "application",
+      "targets": {
+        "e2e": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {
+                "command": "yarn e2e-start-local-registry"
+              },
+              {
+                "command": "yarn e2e-build-package-publish"
+              },
+              {
+                "command": "nx run-e2e-tests e2e-nx-plugin"
+              }
+            ],
+            "parallel": false
+          }
+        },
+        "run-e2e-tests": {
+          "executor": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "e2e/nx-plugin/jest.config.js",
+            "passWithNoTests": true,
+            "runInBand": true
+          },
+          "outputs": ["coverage/e2e/nx-plugin"]
+        }
+      }
+    },
     "e2e-react": {
       "root": "e2e/react",
       "sourceRoot": "e2e/react",
@@ -1891,6 +965,12 @@
           "outputs": ["coverage/e2e/storybook"]
         }
       }
+    },
+    "e2e-utils": {
+      "root": "e2e/utils",
+      "sourceRoot": "e2e/utils",
+      "projectType": "library",
+      "targets": {}
     },
     "e2e-web": {
       "root": "e2e/web",
@@ -1958,69 +1038,153 @@
         }
       }
     },
-    "e2e-nx-plugin": {
-      "root": "e2e/nx-plugin",
-      "sourceRoot": "e2e/nx-plugin",
-      "projectType": "application",
+    "eslint-plugin-nx": {
+      "root": "packages/eslint-plugin-nx",
+      "sourceRoot": "packages/eslint-plugin-nx",
+      "projectType": "library",
       "targets": {
-        "e2e": {
-          "executor": "@nrwl/workspace:run-commands",
-          "options": {
-            "commands": [
-              {
-                "command": "yarn e2e-start-local-registry"
-              },
-              {
-                "command": "yarn e2e-build-package-publish"
-              },
-              {
-                "command": "nx run-e2e-tests e2e-nx-plugin"
-              }
-            ],
-            "parallel": false
-          }
-        },
-        "run-e2e-tests": {
+        "test": {
           "executor": "@nrwl/jest:jest",
           "options": {
-            "jestConfig": "e2e/nx-plugin/jest.config.js",
-            "passWithNoTests": true,
-            "runInBand": true
+            "jestConfig": "packages/eslint-plugin-nx/jest.config.js",
+            "passWithNoTests": true
           },
-          "outputs": ["coverage/e2e/nx-plugin"]
+          "outputs": ["coverage/packages/eslint-plugin-nx"]
+        },
+        "build-base": {
+          "executor": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/eslint-plugin-nx",
+            "tsConfig": "packages/eslint-plugin-nx/tsconfig.lib.json",
+            "packageJson": "packages/eslint-plugin-nx/package.json",
+            "main": "packages/eslint-plugin-nx/src/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/eslint-plugin-nx",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/eslint-plugin-nx",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/eslint-plugin-nx",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/eslint-plugin-nx",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/eslint-plugin-nx",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
+              "LICENSE"
+            ]
+          },
+          "outputs": ["{options.outputPath}"]
+        },
+        "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/eslint-plugin-nx"],
+          "options": {
+            "command": "node ./scripts/copy-readme.js eslint-plugin-nx"
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/eslint-plugin-nx/**/*.ts",
+              "packages/eslint-plugin-nx/**/*.spec.ts",
+              "packages/eslint-plugin-nx/**/*_spec.ts",
+              "packages/eslint-plugin-nx/**/*.spec.tsx",
+              "packages/eslint-plugin-nx/**/*.spec.js",
+              "packages/eslint-plugin-nx/**/*.spec.jsx",
+              "packages/eslint-plugin-nx/**/*.d.ts"
+            ]
+          }
         }
       }
     },
-    "e2e-gatsby": {
-      "root": "e2e/gatsby",
-      "sourceRoot": "e2e/gatsby",
-      "projectType": "application",
+    "express": {
+      "root": "packages/express",
+      "sourceRoot": "packages/express",
+      "projectType": "library",
       "targets": {
-        "e2e": {
-          "executor": "@nrwl/workspace:run-commands",
-          "options": {
-            "commands": [
-              {
-                "command": "yarn e2e-start-local-registry"
-              },
-              {
-                "command": "yarn e2e-build-package-publish"
-              },
-              {
-                "command": "nx run-e2e-tests e2e-gatsby"
-              }
-            ],
-            "parallel": false
-          }
-        },
-        "run-e2e-tests": {
+        "test": {
           "executor": "@nrwl/jest:jest",
           "options": {
-            "jestConfig": "e2e/gatsby/jest.config.js",
-            "passWithNoTests": true,
-            "runInBand": true
+            "jestConfig": "packages/express/jest.config.js",
+            "passWithNoTests": true
           },
-          "outputs": ["coverage/e2e/gatsby"]
+          "outputs": ["coverage/packages/express"]
+        },
+        "build-base": {
+          "executor": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/express",
+            "tsConfig": "packages/express/tsconfig.lib.json",
+            "packageJson": "packages/express/package.json",
+            "main": "packages/express/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/express",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/express",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/express",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/express",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/express",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
+              "LICENSE"
+            ]
+          },
+          "outputs": ["{options.outputPath}"]
+        },
+        "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/express"],
+          "options": {
+            "command": "node ./scripts/copy-readme.js express"
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/express/**/*.ts",
+              "packages/express/**/*.spec.ts",
+              "packages/express/**/*_spec.ts",
+              "packages/express/**/*.spec.tsx",
+              "packages/express/**/*.spec.js",
+              "packages/express/**/*.spec.jsx",
+              "packages/express/**/*.d.ts"
+            ]
+          }
         }
       }
     },
@@ -2109,104 +1273,448 @@
         }
       }
     },
-    "dep-graph-dep-graph-e2e": {
-      "root": "dep-graph/dep-graph-e2e",
-      "sourceRoot": "dep-graph/dep-graph-e2e/src",
-      "projectType": "application",
+    "jest": {
+      "root": "packages/jest",
+      "sourceRoot": "packages/jest",
+      "projectType": "library",
       "targets": {
-        "e2e-disabled": {
-          "executor": "@nrwl/cypress:cypress",
+        "test": {
+          "executor": "@nrwl/jest:jest",
           "options": {
-            "cypressConfig": "dep-graph/dep-graph-e2e/cypress.json",
-            "tsConfig": "dep-graph/dep-graph-e2e/tsconfig.e2e.json",
-            "devServerTarget": "dep-graph-dep-graph:serve"
+            "jestConfig": "packages/jest/jest.config.js",
+            "passWithNoTests": true
+          },
+          "outputs": ["coverage/packages/jest"]
+        },
+        "build-base": {
+          "executor": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/jest",
+            "tsConfig": "packages/jest/tsconfig.lib.json",
+            "packageJson": "packages/jest/package.json",
+            "main": "packages/jest/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/jest",
+                "glob": "**/@(files|files-angular)/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/jest",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/jest",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/jest",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/jest",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
+              "LICENSE"
+            ]
+          },
+          "outputs": ["{options.outputPath}"]
+        },
+        "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/jest"],
+          "options": {
+            "command": "node ./scripts/copy-readme.js jest"
           }
         },
         "lint": {
-          "executor": "@nrwl/linter:lint",
+          "executor": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "tsConfig": ["dep-graph/dep-graph-e2e/tsconfig.e2e.json"],
-            "exclude": ["**/node_modules/**", "!dep-graph/dep-graph-e2e/**/*"]
+            "lintFilePatterns": [
+              "packages/jest/**/*.ts",
+              "packages/jest/**/*.spec.ts",
+              "packages/jest/**/*.spec.tsx",
+              "packages/jest/**/*.spec.js",
+              "packages/jest/**/*.spec.jsx",
+              "packages/jest/**/*.d.ts"
+            ]
           }
         }
       }
     },
-    "dep-graph-dep-graph": {
-      "root": "dep-graph/dep-graph",
-      "sourceRoot": "dep-graph/dep-graph/src",
-      "projectType": "application",
+    "linter": {
+      "root": "packages/linter",
+      "sourceRoot": "packages/linter",
+      "projectType": "library",
       "targets": {
-        "build-base": {
-          "executor": "@nrwl/web:build",
+        "test": {
+          "executor": "@nrwl/jest:jest",
           "options": {
-            "maxWorkers": 8,
-            "outputPath": "build/apps/dep-graph",
-            "index": "dep-graph/dep-graph/src/index.html",
-            "main": "dep-graph/dep-graph/src/main.ts",
-            "polyfills": "dep-graph/dep-graph/src/polyfills.ts",
-            "tsConfig": "dep-graph/dep-graph/tsconfig.app.json",
-            "assets": [
-              "dep-graph/dep-graph/src/favicon.ico",
-              "dep-graph/dep-graph/src/assets"
-            ],
-            "styles": ["dep-graph/dep-graph/src/styles.scss"],
-            "scripts": []
+            "jestConfig": "packages/linter/jest.config.js",
+            "passWithNoTests": true
           },
-          "configurations": {
-            "release": {
-              "fileReplacements": [
-                {
-                  "replace": "dep-graph/dep-graph/src/environments/environment.ts",
-                  "with": "dep-graph/dep-graph/src/environments/environment.release.ts"
-                }
-              ],
-              "optimization": true,
-              "outputHashing": "none",
-              "sourceMap": false,
-              "extractCss": true,
-              "namedChunks": false,
-              "extractLicenses": true,
-              "vendorChunk": false,
-              "budgets": [
-                {
-                  "type": "initial",
-                  "maximumWarning": "2mb",
-                  "maximumError": "5mb"
-                }
-              ]
-            }
+          "outputs": ["coverage/packages/linter"]
+        },
+        "build-base": {
+          "executor": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/linter",
+            "tsConfig": "packages/linter/tsconfig.lib.json",
+            "packageJson": "packages/linter/package.json",
+            "main": "packages/linter/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/linter",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/linter",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/linter",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/linter",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/linter",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
+              "LICENSE"
+            ]
           },
           "outputs": ["{options.outputPath}"]
         },
-        "serve": {
-          "executor": "@nrwl/web:dev-server",
+        "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/linter"],
           "options": {
-            "buildTarget": "dep-graph-dep-graph:build-base"
-          },
-          "configurations": {
-            "release": {
-              "buildTarget": "dep-graph-dep-graph:build-base:release"
-            }
+            "command": "node ./scripts/copy-readme.js linter"
           }
         },
         "lint": {
-          "executor": "@nrwl/linter:lint",
+          "executor": "@nrwl/linter:eslint",
           "options": {
-            "linter": "eslint",
-            "tsConfig": [
-              "dep-graph/dep-graph/tsconfig.app.json",
-              "dep-graph/dep-graph/tsconfig.spec.json"
-            ],
-            "exclude": ["**/node_modules/**", "!dep-graph/dep-graph/**/*"]
+            "lintFilePatterns": [
+              "packages/linter/**/*.ts",
+              "packages/linter/**/*.spec.ts",
+              "packages/linter/**/*_spec.ts",
+              "packages/linter/**/*.spec.tsx",
+              "packages/linter/**/*.spec.js",
+              "packages/linter/**/*.spec.jsx",
+              "packages/linter/**/*.d.ts"
+            ]
           }
-        },
+        }
+      }
+    },
+    "nest": {
+      "root": "packages/nest",
+      "sourceRoot": "packages/nest",
+      "projectType": "library",
+      "targets": {
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/dep-graph/dep-graph"],
           "options": {
-            "jestConfig": "dep-graph/dep-graph/jest.config.js",
+            "jestConfig": "packages/nest/jest.config.js",
             "passWithNoTests": true
+          },
+          "outputs": ["coverage/packages/nest"]
+        },
+        "build-base": {
+          "executor": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/nest",
+            "tsConfig": "packages/nest/tsconfig.lib.json",
+            "packageJson": "packages/nest/package.json",
+            "main": "packages/nest/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/nest",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/nest",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/nest",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/nest",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/nest",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
+              "LICENSE"
+            ]
+          },
+          "outputs": ["{options.outputPath}"]
+        },
+        "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/nest"],
+          "options": {
+            "command": "node ./scripts/copy-readme.js nest"
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/nest/**/*.ts",
+              "packages/nest/**/*.spec.ts",
+              "packages/nest/**/*_spec.ts",
+              "packages/nest/**/*.spec.tsx",
+              "packages/nest/**/*.spec.js",
+              "packages/nest/**/*.spec.jsx",
+              "packages/nest/**/*.d.ts"
+            ]
+          }
+        }
+      }
+    },
+    "next": {
+      "root": "packages/next",
+      "sourceRoot": "packages/next",
+      "projectType": "library",
+      "targets": {
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/next/jest.config.js",
+            "passWithNoTests": true
+          },
+          "outputs": ["coverage/packages/next"]
+        },
+        "build-base": {
+          "executor": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/next",
+            "tsConfig": "packages/next/tsconfig.lib.json",
+            "packageJson": "packages/next/package.json",
+            "main": "packages/next/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/next",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/next",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/next",
+                "glob": "**/files/**/.babelrc__tmpl__",
+                "output": "/"
+              },
+              {
+                "input": "packages/next",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/next",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/next",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
+              "LICENSE"
+            ]
+          },
+          "outputs": ["{options.outputPath}"]
+        },
+        "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/next"],
+          "options": {
+            "command": "node ./scripts/copy-readme.js next"
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/next/**/*.ts",
+              "packages/next/**/*.spec.ts",
+              "packages/next/**/*_spec.ts",
+              "packages/next/**/*.spec.tsx",
+              "packages/next/**/*.spec.js",
+              "packages/next/**/*.spec.jsx",
+              "packages/next/**/*.d.ts"
+            ]
+          }
+        }
+      }
+    },
+    "node": {
+      "root": "packages/node",
+      "sourceRoot": "packages/node",
+      "projectType": "library",
+      "targets": {
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/node/jest.config.js",
+            "passWithNoTests": true
+          },
+          "outputs": ["coverage/packages/node"]
+        },
+        "build-base": {
+          "executor": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/node",
+            "tsConfig": "packages/node/tsconfig.lib.json",
+            "packageJson": "packages/node/package.json",
+            "main": "packages/node/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/node",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/node",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/node",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/node",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/node",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
+              "LICENSE"
+            ]
+          },
+          "outputs": ["{options.outputPath}"]
+        },
+        "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/node"],
+          "options": {
+            "command": "node ./scripts/copy-readme.js node"
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/node/**/*.ts",
+              "packages/node/**/*.spec.ts",
+              "packages/node/**/*_spec.ts",
+              "packages/node/**/*.spec.tsx",
+              "packages/node/**/*.spec.js",
+              "packages/node/**/*.spec.jsx",
+              "packages/node/**/*.d.ts"
+            ]
+          }
+        }
+      }
+    },
+    "nx": {
+      "root": "packages/nx",
+      "sourceRoot": "packages/nx",
+      "projectType": "library",
+      "targets": {
+        "build-base": {
+          "executor": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/nx",
+            "tsConfig": "packages/nx/tsconfig.lib.json",
+            "packageJson": "packages/nx/package.json",
+            "main": "packages/nx/bin/nx.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/nx",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/nx",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/nx",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/nx",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/nx",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
+              "LICENSE"
+            ]
+          },
+          "outputs": ["{options.outputPath}"]
+        },
+        "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/nx"],
+          "options": {
+            "command": "node ./scripts/copy-readme.js nx"
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/nx/**/*.ts",
+              "packages/nx/**/*.spec.ts",
+              "packages/nx/**/*_spec.ts",
+              "packages/nx/**/*.spec.tsx",
+              "packages/nx/**/*.spec.js",
+              "packages/nx/**/*.spec.jsx",
+              "packages/nx/**/*.d.ts"
+            ]
           }
         }
       }
@@ -2274,6 +1782,27 @@
         }
       }
     },
+    "nx-dev-data-access-documents": {
+      "root": "nx-dev/data-access-documents",
+      "sourceRoot": "nx-dev/data-access-documents/src",
+      "projectType": "library",
+      "targets": {
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": ["nx-dev/data-access-documents/**/*.ts"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/nx-dev/data-access-documents"],
+          "options": {
+            "jestConfig": "nx-dev/data-access-documents/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
     "nx-dev-e2e": {
       "root": "nx-dev/nx-dev-e2e",
       "sourceRoot": "nx-dev/nx-dev-e2e/src",
@@ -2300,22 +1829,24 @@
         }
       }
     },
-    "nx-dev-ui-common": {
-      "root": "nx-dev/ui/common",
-      "sourceRoot": "nx-dev/ui/common/src",
+    "nx-dev-feature-analytics": {
+      "root": "nx-dev/feature-analytics",
+      "sourceRoot": "nx-dev/feature-analytics/src",
       "projectType": "library",
       "targets": {
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "options": {
-            "lintFilePatterns": ["nx-dev/ui/common/**/*.{ts,tsx,js,jsx}"]
+            "lintFilePatterns": [
+              "nx-dev/feature-analytics/**/*.{ts,tsx,js,jsx}"
+            ]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/nx-dev/ui/common"],
+          "outputs": ["coverage/nx-dev/feature-analytics"],
           "options": {
-            "jestConfig": "nx-dev/ui/common/jest.config.js",
+            "jestConfig": "nx-dev/feature-analytics/jest.config.js",
             "passWithNoTests": true
           }
         }
@@ -2344,27 +1875,6 @@
         }
       }
     },
-    "nx-dev-data-access-documents": {
-      "root": "nx-dev/data-access-documents",
-      "sourceRoot": "nx-dev/data-access-documents/src",
-      "projectType": "library",
-      "targets": {
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": ["nx-dev/data-access-documents/**/*.ts"]
-          }
-        },
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/nx-dev/data-access-documents"],
-          "options": {
-            "jestConfig": "nx-dev/data-access-documents/jest.config.js",
-            "passWithNoTests": true
-          }
-        }
-      }
-    },
     "nx-dev-feature-search": {
       "root": "nx-dev/feature-search",
       "sourceRoot": "nx-dev/feature-search/src",
@@ -2386,30 +1896,350 @@
         }
       }
     },
-    "docs": {
-      "root": "docs",
-      "sourceRoot": "docs",
-      "projectType": "library"
-    },
-    "nx-dev-feature-analytics": {
-      "root": "nx-dev/feature-analytics",
-      "sourceRoot": "nx-dev/feature-analytics/src",
+    "nx-dev-ui-common": {
+      "root": "nx-dev/ui/common",
+      "sourceRoot": "nx-dev/ui/common/src",
       "projectType": "library",
       "targets": {
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "options": {
-            "lintFilePatterns": [
-              "nx-dev/feature-analytics/**/*.{ts,tsx,js,jsx}"
-            ]
+            "lintFilePatterns": ["nx-dev/ui/common/**/*.{ts,tsx,js,jsx}"]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/nx-dev/feature-analytics"],
+          "outputs": ["coverage/nx-dev/ui/common"],
           "options": {
-            "jestConfig": "nx-dev/feature-analytics/jest.config.js",
+            "jestConfig": "nx-dev/ui/common/jest.config.js",
             "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "nx-plugin": {
+      "root": "packages/nx-plugin",
+      "sourceRoot": "packages/nx-plugin",
+      "projectType": "library",
+      "targets": {
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/nx-plugin/jest.config.js",
+            "passWithNoTests": true
+          },
+          "outputs": ["coverage/packages/nx-plugin"]
+        },
+        "build-base": {
+          "executor": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/nx-plugin",
+            "tsConfig": "packages/nx-plugin/tsconfig.lib.json",
+            "packageJson": "packages/nx-plugin/package.json",
+            "main": "packages/nx-plugin/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/nx-plugin",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/nx-plugin",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/nx-plugin",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/nx-plugin",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/nx-plugin",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
+              "LICENSE"
+            ]
+          },
+          "outputs": ["{options.outputPath}"]
+        },
+        "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/nx-plugin"],
+          "options": {
+            "command": "node ./scripts/copy-readme.js nx-plugin"
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/nx-plugin/**/*.ts",
+              "packages/nx-plugin/**/*.spec.ts",
+              "packages/nx-plugin/**/*_spec.ts",
+              "packages/nx-plugin/**/*.spec.tsx",
+              "packages/nx-plugin/**/*.spec.js",
+              "packages/nx-plugin/**/*.spec.jsx",
+              "packages/nx-plugin/**/*.d.ts"
+            ]
+          }
+        }
+      }
+    },
+    "react": {
+      "root": "packages/react",
+      "sourceRoot": "packages/react",
+      "projectType": "library",
+      "targets": {
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/react/jest.config.js",
+            "passWithNoTests": true
+          },
+          "outputs": ["coverage/packages/react"]
+        },
+        "build-base": {
+          "executor": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/react",
+            "tsConfig": "packages/react/tsconfig.lib.json",
+            "packageJson": "packages/react/package.json",
+            "main": "packages/react/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/react",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/react",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/react",
+                "glob": "**/files/**/.babelrc__tmpl__",
+                "output": "/"
+              },
+              {
+                "input": "packages/react",
+                "glob": "**/files/**/.browserslistrc__tmpl__",
+                "output": "/"
+              },
+              {
+                "input": "packages/react",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/react",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
+              {
+                "input": "packages/react",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              "LICENSE"
+            ]
+          },
+          "outputs": ["{options.outputPath}"]
+        },
+        "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/react"],
+          "options": {
+            "command": "node ./scripts/copy-readme.js react"
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/react/**/*.ts",
+              "packages/react/**/*.spec.ts",
+              "packages/react/**/*_spec.ts",
+              "packages/react/**/*.spec.tsx",
+              "packages/react/**/*.spec.js",
+              "packages/react/**/*.spec.jsx",
+              "packages/react/**/*.d.ts"
+            ]
+          }
+        }
+      }
+    },
+    "storybook": {
+      "root": "packages/storybook",
+      "sourceRoot": "packages/storybook",
+      "projectType": "library",
+      "targets": {
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/storybook/jest.config.js",
+            "passWithNoTests": true
+          },
+          "outputs": ["coverage/packages/storybook"]
+        },
+        "build-base": {
+          "executor": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/storybook",
+            "tsConfig": "packages/storybook/tsconfig.lib.json",
+            "packageJson": "packages/storybook/package.json",
+            "main": "packages/storybook/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/storybook",
+                "glob": "**/project-files/.storybook/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/storybook",
+                "glob": "**/root-files/.storybook/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/storybook",
+                "glob": "**/project-files-5/.storybook/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/storybook",
+                "glob": "**/root-files-5/.storybook/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/storybook",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/storybook",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/storybook",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
+              "LICENSE"
+            ]
+          },
+          "outputs": ["{options.outputPath}"]
+        },
+        "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/storybook"],
+          "options": {
+            "command": "node ./scripts/copy-readme.js storybook"
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/storybook/**/*.ts",
+              "packages/storybook/**/*.spec.ts",
+              "packages/storybook/**/*_spec.ts",
+              "packages/storybook/**/*.spec.tsx",
+              "packages/storybook/**/*.spec.js",
+              "packages/storybook/**/*.spec.jsx",
+              "packages/storybook/**/*.d.ts"
+            ]
+          }
+        }
+      }
+    },
+    "tao": {
+      "root": "packages/tao",
+      "sourceRoot": "packages/tao",
+      "projectType": "library",
+      "targets": {
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/tao/jest.config.js",
+            "passWithNoTests": true
+          },
+          "outputs": ["coverage/packages/tao"]
+        },
+        "build-base": {
+          "executor": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/tao",
+            "tsConfig": "packages/tao/tsconfig.lib.json",
+            "packageJson": "packages/tao/package.json",
+            "main": "packages/tao/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/tao",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/tao",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/tao",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/tao",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/tao",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
+              "LICENSE"
+            ]
+          },
+          "outputs": ["{options.outputPath}"]
+        },
+        "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/tao"],
+          "options": {
+            "commands": [
+              {
+                "command": "node ./scripts/chmod build/packages/tao/index.js"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js tao"
+              }
+            ],
+            "parallel": false
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/tao/**/*.ts",
+              "packages/tao/**/*.spec.ts",
+              "packages/tao/**/*.spec.tsx",
+              "packages/tao/**/*.spec.js",
+              "packages/tao/**/*.spec.jsx",
+              "packages/tao/**/*.d.ts"
+            ]
           }
         }
       }
@@ -2451,6 +2281,176 @@
           "options": {
             "jestConfig": "typedoc-theme/jest.config.js",
             "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "web": {
+      "root": "packages/web",
+      "sourceRoot": "packages/web",
+      "projectType": "library",
+      "targets": {
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/web/jest.config.js",
+            "passWithNoTests": true
+          },
+          "outputs": ["coverage/packages/web"]
+        },
+        "build-base": {
+          "executor": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/web",
+            "tsConfig": "packages/web/tsconfig.lib.json",
+            "packageJson": "packages/web/package.json",
+            "main": "packages/web/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/web",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/web",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/web",
+                "glob": "**/files/**/.babelrc__tmpl__",
+                "output": "/"
+              },
+              {
+                "input": "packages/web",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/web",
+                "glob": "**/*.js",
+                "output": "/"
+              },
+              {
+                "input": "packages/web",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
+              "LICENSE"
+            ]
+          },
+          "outputs": ["{options.outputPath}"]
+        },
+        "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/web"],
+          "options": {
+            "command": "node ./scripts/copy-readme.js web"
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/web/**/*.ts",
+              "packages/web/**/*.spec.ts",
+              "packages/web/**/*_spec.ts",
+              "packages/web/**/*.spec.tsx",
+              "packages/web/**/*.spec.js",
+              "packages/web/**/*.spec.jsx",
+              "packages/web/**/*.d.ts"
+            ]
+          }
+        }
+      }
+    },
+    "workspace": {
+      "root": "packages/workspace",
+      "sourceRoot": "packages/workspace",
+      "projectType": "library",
+      "targets": {
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "packages/workspace/jest.config.js",
+            "passWithNoTests": true
+          },
+          "outputs": ["coverage/packages/workspace"]
+        },
+        "build-base": {
+          "executor": "@nrwl/node:package",
+          "options": {
+            "outputPath": "build/packages/workspace",
+            "tsConfig": "packages/workspace/tsconfig.lib.json",
+            "packageJson": "packages/workspace/package.json",
+            "main": "packages/workspace/index.ts",
+            "updateBuildableProjectDepsInPackageJson": false,
+            "assets": [
+              {
+                "input": "packages/workspace",
+                "glob": "**/files/**",
+                "output": "/"
+              },
+              {
+                "input": "packages/workspace",
+                "glob": "**/files/**/.gitkeep",
+                "output": "/"
+              },
+              {
+                "input": "packages/workspace",
+                "glob": "**/**/decorate-angular-cli.js__tmpl__",
+                "output": "/"
+              },
+              {
+                "input": "packages/workspace",
+                "glob": "**/*.json",
+                "output": "/"
+              },
+              {
+                "input": "packages/workspace",
+                "glob": "**/*.{js,css,html,svg}",
+                "output": "/"
+              },
+              {
+                "input": "packages/workspace",
+                "glob": "**/*.d.ts",
+                "output": "/"
+              },
+              "LICENSE"
+            ]
+          },
+          "outputs": ["{options.outputPath}"]
+        },
+        "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["build/packages/workspace"],
+          "options": {
+            "commands": [
+              {
+                "command": "nx build-base dep-graph-dep-graph --configuration release"
+              },
+              {
+                "command": "node ./scripts/copy-dep-graph.js"
+              },
+              {
+                "command": "node ./scripts/copy-readme.js workspace"
+              }
+            ],
+            "parallel": false
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/workspace/**/*.ts",
+              "packages/workspace/**/*.spec.ts",
+              "packages/workspace/**/*.spec.tsx",
+              "packages/workspace/**/*.spec.js",
+              "packages/workspace/**/*.spec.jsx",
+              "packages/workspace/**/*.d.ts"
+            ]
           }
         }
       }

@@ -42,46 +42,34 @@
     "appsDir": ""
   },
   "projects": {
-    "nx": {},
-    "tao": {},
-    "devkit": {},
-    "workspace": {},
-    "web": {},
-    "cypress": {},
-    "jest": {},
-    "react": {},
-    "storybook": {},
-    "nx-plugin": {},
-    "node": {},
-    "next": {},
-    "nest": {
-      "implicitDependencies": ["node", "linter"]
+    "angular": {
+      "implicitDependencies": ["workspace", "cypress", "jest"]
     },
-    "linter": {
-      "implicitDependencies": ["eslint-plugin-nx"]
-    },
-    "express": {
-      "implicitDependencies": ["node"]
-    },
-    "eslint-plugin-nx": {},
-    "create-nx-workspace": {
+    "cli": {
       "implicitDependencies": ["workspace"]
     },
     "create-nx-plugin": {
       "implicitDependencies": ["nx-plugin"]
     },
-    "cli": {
+    "create-nx-workspace": {
       "implicitDependencies": ["workspace"]
     },
-    "angular": {
-      "implicitDependencies": ["workspace", "cypress", "jest"]
+    "cypress": {},
+    "dep-graph-dep-graph": {
+      "tags": ["core"]
     },
-    "e2e-utils": {},
-    "e2e-cli": {
-      "implicitDependencies": ["cli"]
+    "dep-graph-dep-graph-e2e": {
+      "implicitDependencies": ["dep-graph-dep-graph"]
+    },
+    "devkit": {},
+    "docs": {
+      "tags": ["scope:nx-dev"]
     },
     "e2e-angular": {
       "implicitDependencies": ["angular"]
+    },
+    "e2e-cli": {
+      "implicitDependencies": ["cli"]
     },
     "e2e-cypress": {
       "implicitDependencies": ["cypress"]
@@ -110,49 +98,61 @@
     "e2e-storybook": {
       "implicitDependencies": ["storybook"]
     },
+    "e2e-utils": {},
     "e2e-web": {
       "implicitDependencies": ["web"]
     },
     "e2e-workspace": {
       "implicitDependencies": ["create-nx-workspace"]
     },
+    "eslint-plugin-nx": {},
+    "express": {
+      "implicitDependencies": ["node"]
+    },
     "gatsby": {
       "tags": []
     },
-    "dep-graph-dep-graph-e2e": {
-      "implicitDependencies": ["dep-graph-dep-graph"]
+    "jest": {},
+    "linter": {
+      "implicitDependencies": ["eslint-plugin-nx"]
     },
-    "dep-graph-dep-graph": {
-      "tags": ["core"]
+    "nest": {
+      "implicitDependencies": ["node", "linter"]
     },
+    "next": {},
+    "node": {},
+    "nx": {},
     "nx-dev": {
       "tags": ["scope:nx-dev", "type:app"],
       "implicitDependencies": ["docs"]
+    },
+    "nx-dev-data-access-documents": {
+      "tags": ["scope:nx-dev", "type:data-access"]
     },
     "nx-dev-e2e": {
       "tags": ["scope:nx-dev", "type:e2e"],
       "implicitDependencies": ["nx-dev"]
     },
-    "nx-dev-ui-common": {
-      "tags": ["scope:nx-dev", "type:ui"]
+    "nx-dev-feature-analytics": {
+      "tags": ["scope:nx-dev", "type:feature"]
     },
     "nx-dev-feature-doc-viewer": {
       "tags": ["scope:nx-dev", "type:feature"]
     },
-    "nx-dev-data-access-documents": {
-      "tags": ["scope:nx-dev", "type:data-access"]
-    },
     "nx-dev-feature-search": {
       "tags": ["scope:nx-dev", "type:feature"]
     },
-    "docs": {
-      "tags": ["scope:nx-dev"]
+    "nx-dev-ui-common": {
+      "tags": ["scope:nx-dev", "type:ui"]
     },
-    "nx-dev-feature-analytics": {
-      "tags": ["scope:nx-dev", "type:feature"]
-    },
+    "nx-plugin": {},
+    "react": {},
+    "storybook": {},
+    "tao": {},
     "typedoc-theme": {
       "tags": []
-    }
+    },
+    "web": {},
+    "workspace": {}
   }
 }
