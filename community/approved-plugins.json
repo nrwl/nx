@@ -165,6 +165,31 @@
     "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-quarkus"
   },
   {
+    "name": "@nx-extend/gcp-secrets",
+    "description": "Nx plugin to generate and securely deploy your Google Cloud Secrets",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/gcp-secrets"
+  },
+  {
+    "name": "@nx-extend/gcp-storage",
+    "description": "Nx plugin to upload to Google Cloud Storage",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/gcp-storage"
+  },
+  {
+    "name": "@nx-extend/gcp-functions",
+    "description": "Nx plugin to generate, run, build and deploy your Google Cloud Functions",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/gcp-functions"
+  },
+  {
+    "name": "@nx-extend/gcp-deployment-manager",
+    "description": "Nx plugin to deploy your Google Cloud Deployments",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/gcp-deployment-manager"
+  },
+  {
+    "name": "@nx-extend/gcp-cloud-run",
+    "description": "Nx plugin to build and deploy your docker container to Google Cloud Run",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/gcp-cloud-run"
+  },
+  {
     "name": "@nx-extend/translations",
     "description": "Nx plugin to extract, pull, push and translate your apps translations",
     "url": "https://github.com/tripss/nx-extend/tree/master/packages/translations"
