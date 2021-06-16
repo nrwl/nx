@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import cx from 'classnames';
 import Link from 'next/link';
 import Head from 'next/head';
+import Router from 'next/router';
 import { Dialog } from '@headlessui/react';
 import type {
   DocumentData,
@@ -46,6 +47,16 @@ export function DocumentationPage({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [navIsOpen, setNavIsOpen] = useState(false);
 
+  useEffect(() => {
+    if (!navIsOpen) return;
+    function handleRouteChange() {
+      setNavIsOpen(false);
+    }
+    Router.events.on('routeChangeComplete', handleRouteChange);
+    return () => {
+      Router.events.off('routeChangeComplete', handleRouteChange);
+    };
+  }, [navIsOpen]);
   useEffect(() => {
     if (!isFallback) {
       setStoredFlavor(flavor.value);
