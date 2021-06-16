@@ -1,9 +1,9 @@
 import * as chalk from 'chalk';
 import { execSync } from 'child_process';
-import { readFileSync } from 'fs';
 import { appRootPath } from '../utilities/app-root';
 import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 import { output } from '../utilities/output';
+import { readJsonFile } from '../utilities/fileutils';
 
 export const packagesWeCareAbout = [
   'nx',
@@ -60,8 +60,7 @@ function reportHandler() {
       const packageJsonPath = require.resolve(`${p}/package.json`, {
         paths: [appRootPath],
       });
-      const packageJson = JSON.parse(readFileSync(packageJsonPath).toString());
-      status = packageJson.version;
+      status = readJsonFile(packageJsonPath).version;
     } catch {}
     bodyLines.push(`${chalk.green(p)} : ${chalk.bold(status)}`);
   });
