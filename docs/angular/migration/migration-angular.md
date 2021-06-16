@@ -86,7 +86,7 @@ Your workspace is now powered by Nx! You can verify out that your application st
 - To run e2e tests, run `ng e2e`.
 - To see your dependency graph, run `nx dep-graph`.
 
-> Your dependency graph will grow as you add, and use more applications and libraries.
+> Your dependency graph will grow as you add, and use more applications and libraries. You can add the `--watch` flag to `nx dep-graph` to see this changes in-browser as you add them.
 
 Learn more about the advantages of Nx in the following guides:
 

@@ -1,8 +1,8 @@
-import { FetchProjectGraphService } from '../app/fetch-project-graph-service';
+import { MockProjectGraphService } from '../app/mock-project-graph-service';
 import { Environment } from '../app/models';
 
 export const environment: Environment = {
-  environment: 'release',
+  environment: 'dev-watch',
   appConfig: {
     showDebugger: false,
     projectGraphs: [
@@ -13,6 +13,6 @@ export const environment: Environment = {
       },
     ],
     defaultProjectGraph: 'local',
-    projectGraphService: new FetchProjectGraphService(),
+    projectGraphService: new MockProjectGraphService(),
   },
 };

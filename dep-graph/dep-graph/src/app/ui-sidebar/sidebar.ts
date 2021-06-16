@@ -1,5 +1,5 @@
-import { BehaviorSubject, from, fromEvent, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { ProjectGraphNode } from '@nrwl/devkit';
+import { BehaviorSubject, fromEvent } from 'rxjs';
 import { DisplayOptionsPanel } from './display-options-panel';
 import { FocusedProjectPanel } from './focused-project-panel';
 import { ProjectList } from './project-list';
@@ -24,13 +24,12 @@ export class SidebarComponent {
   private groupByFolder = window.groupByFolder;
   private selectedProjects: string[] = [];
 
-  constructor(
-    private destroy$: Subject<void>,
-    private affectedProjects: string[],
-    showDebugger: boolean
-  ) {
-    this.resetSidebarVisibility();
+  set projects(projects: ProjectGraphNode[]) {
+    this.projectList.projects = projects;
+    this.focusedProjectPanel.unfocusProject();
+  }
 
+  constructor(private affectedProjects: string[]) {
     const showAffected = this.affectedProjects.length > 0;
 
     const displayOptionsPanelContainer = document.getElementById(
@@ -54,7 +53,9 @@ export class SidebarComponent {
     this.textFilterPanel = new TextFilterPanel(textFilterPanelContainer);
 
     const projectListContainer = document.getElementById('project-lists');
-    this.projectList = new ProjectList(projectListContainer, window.projects);
+    this.projectList = new ProjectList(projectListContainer);
+
+    this.projectList.projects = window.projects;
 
     if (showAffected) {
       this.selectAffectedProjects();
@@ -79,7 +80,11 @@ export class SidebarComponent {
     }
   }
 
-  private resetSidebarVisibility() {
+  selectProjects(projects: string[]) {
+    this.projectList.selectProjects(projects);
+  }
+
+  resetSidebarVisibility() {
     const sidebarElement = document.getElementById('sidebar');
 
     if (sidebarElement.classList.contains('hidden')) {
@@ -102,18 +107,16 @@ export class SidebarComponent {
     });
     resizeObserver.observe(sidebarElement);
 
-    fromEvent(sidebarToggleButton, 'click')
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((x) => {
-        sidebarElement.classList.toggle('hidden');
-        if (sidebarElement.classList.contains('hidden')) {
-          sidebarElement.style.marginLeft = `-${
-            sidebarElement.clientWidth + 1
-          }px`;
-        } else {
-          sidebarElement.style.marginLeft = `0px`;
-        }
-      });
+    fromEvent(sidebarToggleButton, 'click').subscribe((x) => {
+      sidebarElement.classList.toggle('hidden');
+      if (sidebarElement.classList.contains('hidden')) {
+        sidebarElement.style.marginLeft = `-${
+          sidebarElement.clientWidth + 1
+        }px`;
+      } else {
+        sidebarElement.style.marginLeft = `0px`;
+      }
+    });
 
     this.displayOptionsPanel.selectAll$.subscribe(() => {
       this.selectAllProjects();
@@ -208,12 +211,6 @@ export class SidebarComponent {
 
   emitSelectedProjects(selectedProjects: string[]) {
     this.selectedProjects = selectedProjects;
-
-    if (selectedProjects.length === 0) {
-      document.getElementById('no-projects-chosen').style.display = 'flex';
-    } else {
-      document.getElementById('no-projects-chosen').style.display = 'none';
-    }
 
     this.selectedProjectsChangedSubject.next(selectedProjects);
   }
