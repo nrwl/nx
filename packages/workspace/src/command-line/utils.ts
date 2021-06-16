@@ -116,6 +116,7 @@ export function splitArgsIntoNxArgsAndOverrides(
     if (options.printWarnings) {
       printArgsWarning(nxArgs);
     }
+
     if (
       !nxArgs.files &&
       !nxArgs.uncommitted &&
@@ -127,7 +128,17 @@ export function splitArgsIntoNxArgsAndOverrides(
     ) {
       nxArgs.base = args._[0] as string;
       nxArgs.head = args._[1] as string;
-    } else if (!nxArgs.base) {
+    }
+
+    // Allow setting base and head via environment variables (lower priority then direct command arguments)
+    if (!nxArgs.base && process.env.NX_BASE) {
+      nxArgs.base = process.env.NX_BASE;
+    }
+    if (!nxArgs.head && process.env.NX_HEAD) {
+      nxArgs.head = process.env.NX_HEAD;
+    }
+
+    if (!nxArgs.base) {
       const affectedConfig = getAffectedConfig();
 
       nxArgs.base = affectedConfig.defaultBase;
