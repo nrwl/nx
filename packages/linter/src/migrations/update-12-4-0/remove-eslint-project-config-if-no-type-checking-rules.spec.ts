@@ -1,4 +1,9 @@
-import { addProjectConfiguration, readJson, Tree } from '@nrwl/devkit';
+import {
+  addProjectConfiguration,
+  readJson,
+  Tree,
+  writeJson,
+} from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import remoteESLintProjectConfigIfNoTypeCheckingRules from './remove-eslint-project-config-if-no-type-checking-rules';
 
@@ -63,7 +68,7 @@ describe('Remove ESLint parserOptions.project config if no rules requiring type-
         },
       ],
     };
-    tree.write('.eslintrc.json', JSON.stringify(rootEslintConfig));
+    writeJson(tree, '.eslintrc.json', rootEslintConfig);
 
     const projectEslintConfig1 = {
       extends: '../../../.eslintrc.json',
@@ -78,10 +83,7 @@ describe('Remove ESLint parserOptions.project config if no rules requiring type-
         },
       ],
     };
-    tree.write(
-      'apps/react-app/.eslintrc.json',
-      JSON.stringify(projectEslintConfig1)
-    );
+    writeJson(tree, 'apps/react-app/.eslintrc.json', projectEslintConfig1);
 
     const projectEslintConfig2 = {
       extends: '../../../.eslintrc.json',
@@ -96,10 +98,7 @@ describe('Remove ESLint parserOptions.project config if no rules requiring type-
         },
       ],
     };
-    tree.write(
-      'libs/workspace-lib/.eslintrc.json',
-      JSON.stringify(projectEslintConfig2)
-    );
+    writeJson(tree, 'libs/workspace-lib/.eslintrc.json', projectEslintConfig2);
 
     await remoteESLintProjectConfigIfNoTypeCheckingRules(tree);
 
@@ -122,7 +121,7 @@ describe('Remove ESLint parserOptions.project config if no rules requiring type-
       plugins: ['@nrwl/nx'],
       overrides: [],
     };
-    tree.write('.eslintrc.json', JSON.stringify(rootEslintConfig));
+    writeJson(tree, '.eslintrc.json', rootEslintConfig);
 
     const projectEslintConfig1 = {
       extends: '../../../.eslintrc.json',
@@ -139,10 +138,7 @@ describe('Remove ESLint parserOptions.project config if no rules requiring type-
         },
       ],
     };
-    tree.write(
-      'apps/react-app/.eslintrc.json',
-      JSON.stringify(projectEslintConfig1)
-    );
+    writeJson(tree, 'apps/react-app/.eslintrc.json', projectEslintConfig1);
 
     const projectEslintConfig2 = {
       extends: '../../../.eslintrc.json',
@@ -159,10 +155,7 @@ describe('Remove ESLint parserOptions.project config if no rules requiring type-
         },
       ],
     };
-    tree.write(
-      'libs/workspace-lib/.eslintrc.json',
-      JSON.stringify(projectEslintConfig2)
-    );
+    writeJson(tree, 'libs/workspace-lib/.eslintrc.json', projectEslintConfig2);
 
     await remoteESLintProjectConfigIfNoTypeCheckingRules(tree);
 

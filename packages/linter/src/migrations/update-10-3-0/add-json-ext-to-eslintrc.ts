@@ -3,7 +3,6 @@ import { chain } from '@angular-devkit/schematics';
 import {
   formatFiles,
   updateBuilderConfig,
-  updateWorkspace,
   visitNotIgnoredFiles,
 } from '@nrwl/workspace';
 
