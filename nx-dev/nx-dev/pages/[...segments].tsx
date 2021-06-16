@@ -147,18 +147,7 @@ export function DocumentationPage({
           </svg>
         </button>
       </main>
-      {!navIsOpen ? (
-        <Footer
-          flavor={{
-            name: flavor.label,
-            value: flavor.value,
-          }}
-          version={{
-            name: version.name,
-            value: version.id,
-          }}
-        />
-      ) : null}
+      {!navIsOpen ? <Footer /> : null}
       <Dialog
         as="div"
         className="fixed z-50 inset-0 overflow-y-auto"

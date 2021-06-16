@@ -2,13 +2,25 @@ import React from 'react';
 import Link from 'next/link';
 import { AlgoliaSearch } from '@nrwl/nx-dev/feature-search';
 
-export interface HeaderProps {
-  showSearch: boolean;
-  flavor: { name: string; value: string } | null;
-  version: { name: string; value: string } | null;
+interface HeaderPropsWithoutFlavorAndVersion {
+  showSearch: false;
 }
 
-export function Header({ flavor, showSearch, version }: HeaderProps) {
+interface HeaderPropsWithFlavorAndVersion {
+  showSearch: boolean;
+  flavor: { name: string; value: string };
+  version: { name: string; value: string };
+}
+
+export type HeaderProps =
+  | HeaderPropsWithFlavorAndVersion
+  | HeaderPropsWithoutFlavorAndVersion;
+
+export function Header(props: HeaderProps) {
+  const showSearch = props.showSearch;
+  const version = props.showSearch ? props.version : null;
+  const flavor = props.showSearch ? props.flavor : null;
+
   return (
     <header className="h-16 px-5 py-5 flex items-center justify-between print:hidden bg-blue-nx-base">
       <div className="flex items-center justify-between w-full max-w-screen-xl mx-auto space-x-10">
@@ -59,14 +71,22 @@ export function Header({ flavor, showSearch, version }: HeaderProps) {
         <div className="text-sm flex-shrink-0">
           <nav className="flex items-justified justify-center space-x-1">
             <Link
-              href={`/${version.value}/${flavor.value}/getting-started/getting-started`}
+              href={
+                version
+                  ? `/${version.value}/${flavor.value}/getting-started/intro`
+                  : `/getting-started/intro`
+              }
             >
               <a className="font-bold px-3 py-2 text-white leading-tight">
                 Get Started
               </a>
             </Link>
             <Link
-              href={`/${version.value}/${flavor.value}/core-concepts/nx-devkit`}
+              href={
+                version
+                  ? `/${version.value}/${flavor.value}/core-concepts/nx-devkit`
+                  : `/core-concepts/nx-devkit`
+              }
             >
               <a className="px-3 py-2 hidden md:inline-flex text-white leading-tight">
                 Plugins
