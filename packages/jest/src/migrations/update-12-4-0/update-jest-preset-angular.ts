@@ -1,11 +1,4 @@
-import {
-  formatFiles,
-  logger,
-  ProjectConfiguration,
-  readProjectConfiguration,
-  stripIndents,
-  Tree,
-} from '@nrwl/devkit';
+import { formatFiles, logger, stripIndents, Tree } from '@nrwl/devkit';
 import { join } from 'path';
 
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
@@ -146,7 +139,7 @@ export function transformerIsFromJestPresetAngular(
 }
 
 export function usesJestPresetAngular(jestConfig: PartialJestConfig) {
-  return jestConfig.globals['ts-jest']?.astTransformers?.before?.some?.((x) =>
+  return jestConfig.globals?.['ts-jest']?.astTransformers?.before?.some?.((x) =>
     transformerIsFromJestPresetAngular(x)
   );
 }
