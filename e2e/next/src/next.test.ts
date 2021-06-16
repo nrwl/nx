@@ -528,7 +528,7 @@ describe('Next.js Applications', () => {
       checkE2E: true,
       checkWebpack5: true,
     });
-  }, 120000);
+  }, 180000);
 
   it('webpack5 - should build with a next.config.js file in the dist folder', async () => {
     const appName = uniq('app');
