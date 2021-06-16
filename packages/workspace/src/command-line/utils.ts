@@ -1,10 +1,11 @@
 import * as yargsParser from 'yargs-parser';
 import * as yargs from 'yargs';
-import * as fileUtils from '../core/file-utils';
+import { readNxJson } from '../core/file-utils';
 import { output } from '../utilities/output';
-import { names, NxAffectedConfig } from '@nrwl/devkit';
+import { names } from '@nrwl/devkit';
+import type { NxAffectedConfig } from '@nrwl/devkit';
 
-const runOne = [
+const runOne: string[] = [
   'target',
   'configuration',
   'prod',
@@ -20,9 +21,9 @@ const runOne = [
   'hide-cached-output',
 ];
 
-const runMany = [...runOne, 'projects', 'all', 'verbose'];
+const runMany: string[] = [...runOne, 'projects', 'all', 'verbose'];
 
-const runAffected = [
+const runAffected: string[] = [
   ...runOne,
   'untracked',
   'uncommitted',
@@ -153,18 +154,11 @@ export function splitArgsIntoNxArgsAndOverrides(
 }
 
 export function getAffectedConfig(): NxAffectedConfig {
-  const config = fileUtils.readNxJson();
-  const defaultBase = 'master';
+  const config = readNxJson();
 
-  if (config.affected) {
-    return {
-      defaultBase: config.affected.defaultBase || defaultBase,
-    };
-  } else {
-    return {
-      defaultBase,
-    };
-  }
+  return {
+    defaultBase: config.affected?.defaultBase || 'master',
+  };
 }
 
 function printArgsWarning(options: NxArgs) {

@@ -1,5 +1,6 @@
 import { runCommand } from '../tasks-runner/run-command';
-import { createProjectGraph, ProjectGraph } from '../core/project-graph';
+import { createProjectGraph } from '../core/project-graph';
+import type { ProjectGraph } from '@nrwl/devkit';
 import { readEnvironment } from '../core/file-utils';
 import { RunOneReporter } from '../tasks-runner/run-one-reporter';
 import { splitArgsIntoNxArgsAndOverrides } from './utils';
@@ -12,7 +13,7 @@ export async function runOne(opts: {
   target: string;
   configuration: string;
   parsedArgs: any;
-}) {
+}): Promise<void> {
   performance.mark('command-execution-begins');
   performance.measure(
     'code-loading-and-file-hashing',

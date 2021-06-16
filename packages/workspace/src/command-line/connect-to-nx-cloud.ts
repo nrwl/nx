@@ -3,7 +3,7 @@ import { output } from '../utilities/output';
 import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
 import { execSync } from 'child_process';
 
-export async function connectToNxCloudUsingScan(scan: boolean) {
+export async function connectToNxCloudUsingScan(scan: boolean): Promise<void> {
   if (!scan) return;
 
   const nxJson = readNxJson();
@@ -27,7 +27,7 @@ export async function connectToNxCloudUsingScan(scan: boolean) {
   }
 }
 
-export async function connectToNxCloudCommand() {
+export async function connectToNxCloudCommand(): Promise<void> {
   const nxJson = readNxJson();
   const nxCloudUsed = Object.values(nxJson.tasksRunnerOptions).find(
     (r) => r.runner == '@nrwl/nx-cloud'
