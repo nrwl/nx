@@ -1,5 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { readJson, DependencyType } from '@nrwl/devkit';
+import { readJson, writeJson, DependencyType } from '@nrwl/devkit';
 import { createBabelrcForWorkspaceLibs } from './create-babelrc-for-workspace-libs';
 import type { ProjectGraph, Tree } from '@nrwl/devkit';
 
@@ -17,47 +17,41 @@ describe('Create missing .babelrc files', () => {
   });
 
   it(`should create .babelrc files for libs that are used in '@nrwl/web:build'`, async () => {
-    tree.write(
-      'workspace.json',
-      JSON.stringify({
-        projects: {
-          webapp: {
-            root: 'apps/webapp',
-            projectType: 'application',
-            targets: {
-              build: { executor: '@nrwl/web:build' },
-            },
-          },
-          nodeapp: {
-            root: 'apps/nodeapp',
-            projectType: 'application',
-            targets: {
-              build: { executor: '@nrwl/node:build' },
-            },
-          },
-          weblib: {
-            root: 'libs/weblib',
-            projectType: 'library',
-          },
-          nodelib: {
-            root: 'libs/nodelib',
-            projectType: 'library',
+    writeJson(tree, 'workspace.json', {
+      projects: {
+        webapp: {
+          root: 'apps/webapp',
+          projectType: 'application',
+          targets: {
+            build: { executor: '@nrwl/web:build' },
           },
         },
-      })
-    );
-    tree.write(
-      'nx.json',
-      JSON.stringify({
-        npmScope: 'proj',
-        projects: {
-          webapp: {},
-          nodeapp: {},
-          weblib: {},
-          nodelib: {},
+        nodeapp: {
+          root: 'apps/nodeapp',
+          projectType: 'application',
+          targets: {
+            build: { executor: '@nrwl/node:build' },
+          },
         },
-      })
-    );
+        weblib: {
+          root: 'libs/weblib',
+          projectType: 'library',
+        },
+        nodelib: {
+          root: 'libs/nodelib',
+          projectType: 'library',
+        },
+      },
+    });
+    writeJson(tree, 'nx.json', {
+      npmScope: 'proj',
+      projects: {
+        webapp: {},
+        nodeapp: {},
+        weblib: {},
+        nodelib: {},
+      },
+    });
     tree.write('apps/webapp/index.ts', `import '@proj/weblib';`);
 
     projectGraph = {
@@ -116,47 +110,41 @@ describe('Create missing .babelrc files', () => {
   });
 
   it('should not error if there are circular dependencies', async () => {
-    tree.write(
-      'workspace.json',
-      JSON.stringify({
-        projects: {
-          webapp: {
-            root: 'apps/webapp',
-            projectType: 'application',
-            targets: {
-              build: { executor: '@nrwl/web:build' },
-            },
-          },
-          nodeapp: {
-            root: 'apps/nodeapp',
-            projectType: 'application',
-            targets: {
-              build: { executor: '@nrwl/node:build' },
-            },
-          },
-          weblib: {
-            root: 'libs/weblib',
-            projectType: 'library',
-          },
-          nodelib: {
-            root: 'libs/nodelib',
-            projectType: 'library',
+    writeJson(tree, 'workspace.json', {
+      projects: {
+        webapp: {
+          root: 'apps/webapp',
+          projectType: 'application',
+          targets: {
+            build: { executor: '@nrwl/web:build' },
           },
         },
-      })
-    );
-    tree.write(
-      'nx.json',
-      JSON.stringify({
-        npmScope: 'proj',
-        projects: {
-          webapp: {},
-          nodeapp: {},
-          weblib: {},
-          nodelib: {},
+        nodeapp: {
+          root: 'apps/nodeapp',
+          projectType: 'application',
+          targets: {
+            build: { executor: '@nrwl/node:build' },
+          },
         },
-      })
-    );
+        weblib: {
+          root: 'libs/weblib',
+          projectType: 'library',
+        },
+        nodelib: {
+          root: 'libs/nodelib',
+          projectType: 'library',
+        },
+      },
+    });
+    writeJson(tree, 'nx.json', {
+      npmScope: 'proj',
+      projects: {
+        webapp: {},
+        nodeapp: {},
+        weblib: {},
+        nodelib: {},
+      },
+    });
     tree.write('apps/webapp/index.ts', `import '@proj/weblib';`);
 
     projectGraph = {
