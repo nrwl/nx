@@ -38,6 +38,7 @@
               {
                 "input": "packages/nx",
                 "glob": "**/*.json",
+                "ignore": ["**/tsconfig*.json"],
                 "output": "/"
               },
               {
@@ -113,6 +114,7 @@
               {
                 "input": "packages/tao",
                 "glob": "**/*.json",
+                "ignore": ["**/tsconfig*.json"],
                 "output": "/"
               },
               {
@@ -195,6 +197,7 @@
               {
                 "input": "packages/devkit",
                 "glob": "**/*.json",
+                "ignore": ["**/tsconfig*.json"],
                 "output": "/"
               },
               {
@@ -274,6 +277,7 @@
               {
                 "input": "packages/workspace",
                 "glob": "**/*.json",
+                "ignore": ["**/tsconfig*.json"],
                 "output": "/"
               },
               {
@@ -364,6 +368,7 @@
               {
                 "input": "packages/web",
                 "glob": "**/*.json",
+                "ignore": ["**/tsconfig*.json"],
                 "output": "/"
               },
               {
@@ -439,6 +444,7 @@
               {
                 "input": "packages/cypress",
                 "glob": "**/*.json",
+                "ignore": ["**/tsconfig*.json"],
                 "output": "/"
               },
               {
@@ -513,6 +519,7 @@
               {
                 "input": "packages/jest",
                 "glob": "**/*.json",
+                "ignore": ["**/tsconfig*.json"],
                 "output": "/"
               },
               {
@@ -597,6 +604,7 @@
               {
                 "input": "packages/storybook",
                 "glob": "**/*.json",
+                "ignore": ["**/tsconfig*.json"],
                 "output": "/"
               },
               {
@@ -682,6 +690,7 @@
               {
                 "input": "packages/react",
                 "glob": "**/*.json",
+                "ignore": ["**/tsconfig*.json"],
                 "output": "/"
               },
               {
@@ -757,6 +766,7 @@
               {
                 "input": "packages/nx-plugin",
                 "glob": "**/*.json",
+                "ignore": ["**/tsconfig*.json"],
                 "output": "/"
               },
               {
@@ -832,6 +842,7 @@
               {
                 "input": "packages/node",
                 "glob": "**/*.json",
+                "ignore": ["**/tsconfig*.json"],
                 "output": "/"
               },
               {
@@ -912,6 +923,7 @@
               {
                 "input": "packages/next",
                 "glob": "**/*.json",
+                "ignore": ["**/tsconfig*.json"],
                 "output": "/"
               },
               {
@@ -987,6 +999,7 @@
               {
                 "input": "packages/nest",
                 "glob": "**/*.json",
+                "ignore": ["**/tsconfig*.json"],
                 "output": "/"
               },
               {
@@ -1062,6 +1075,7 @@
               {
                 "input": "packages/linter",
                 "glob": "**/*.json",
+                "ignore": ["**/tsconfig*.json"],
                 "output": "/"
               },
               {
@@ -1137,6 +1151,7 @@
               {
                 "input": "packages/express",
                 "glob": "**/*.json",
+                "ignore": ["**/tsconfig*.json"],
                 "output": "/"
               },
               {
@@ -1212,6 +1227,7 @@
               {
                 "input": "packages/eslint-plugin-nx",
                 "glob": "**/*.json",
+                "ignore": ["**/tsconfig*.json"],
                 "output": "/"
               },
               {
@@ -1287,6 +1303,7 @@
               {
                 "input": "packages/create-nx-workspace",
                 "glob": "**/*.json",
+                "ignore": ["**/tsconfig*.json"],
                 "output": "/"
               },
               {
@@ -1370,6 +1387,7 @@
               {
                 "input": "packages/create-nx-plugin",
                 "glob": "**/*.json",
+                "ignore": ["**/tsconfig*.json"],
                 "output": "/"
               },
               {
@@ -1453,6 +1471,7 @@
               {
                 "input": "packages/cli",
                 "glob": "**/*.json",
+                "ignore": ["**/tsconfig*.json"],
                 "output": "/"
               },
               {
@@ -1541,6 +1560,7 @@
               {
                 "input": "packages/angular",
                 "glob": "**/*.json",
+                "ignore": ["**/tsconfig*.json"],
                 "output": "/"
               },
               {
@@ -2064,6 +2084,7 @@
               {
                 "input": "packages/gatsby",
                 "glob": "**/*.json",
+                "ignore": ["**/tsconfig*.json"],
                 "output": "/"
               },
               {
