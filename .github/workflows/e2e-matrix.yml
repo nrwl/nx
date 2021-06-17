@@ -82,7 +82,7 @@ jobs:
 
     - name: Install PNPM
       if: ${{ matrix.package_manager == 'pnpm' }}
-      uses: pnpm/action-setup@v1.2.1
+      uses: pnpm/action-setup@v2.0.1
       with:
         version: 5.18.9
 
@@ -99,21 +99,61 @@ jobs:
         YARN_REGISTRY: http://localhost:4872
         SELECTED_CLI: ${{ matrix.packages == 'e2e-angular' && 'angular' || 'nx' }}
 
-    - name: Report Status
-      if: ${{ always() && github.repository_owner == 'nrwl' && !github.event.inputs.debug_enabled }}
-      uses: ravsamhq/notify-slack-action@v1
-      with:
-        status: ${{ job.status }}
-        message_format: '{emoji} *{workflow}* {status_message} on <{commit_url}|{commit_sha}>'
-        notification_title: '{workflow} has {status_message}'
-        footer: 'From <{repo_url}|{repo}>'
-        mention_users: 'U01UELKLYF2'
-        mention_users_when: 'failure,warnings'
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+    # - name: Report Status
+    #   if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+    #   uses: ravsamhq/notify-slack-action@v1
+    #   with:
+    #     status: ${{ job.status }}
+    #     message_format: '{emoji} *{workflow}* {status_message} on <{commit_url}|{commit_sha}>'
+    #     notification_title: '{workflow} has {status_message}'
+    #     footer: 'From <{repo_url}|{repo}>'
+    #     mention_users: 'U01UELKLYF2'
+    #     mention_users_when: 'failure,warnings'
+    #   env:
+    #     SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
 
     - name: Setup tmate session
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled && failure() }}
       uses: mxschmitt/action-tmate@v3
       with:
         sudo: ${{ matrix.os != 'windows-latest' }} # disable sudo for windows debugging
+
+  report:
+    if: ${{ always() }}
+    needs: e2e
+    runs-on: ubuntu-latest
+    name: Report status
+    steps:
+      - name: Send notification
+        uses: ravsamhq/notify-slack-action@v1
+        with:
+          status: ${{ job.status }}
+          message_format: '{emoji} *{workflow}* {status_message} (last commit <{commit_url}|{commit_sha}>)'
+          notification_title: '{workflow} has {status_message}'
+          footer: '<{run_url}|View Run>'
+          mention_users: 'U01UELKLYF2'
+          mention_users_when: 'failure,warnings'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+      # - name: Report E2E matrix success
+      #   if: ${{ needs.e2e.result == 'success' }}
+      #   uses: ravsamhq/notify-slack-action@v1
+      #   with:
+      #     status: ${{ needs.e2e.result }}
+      #     message_format: ':heavy_check_mark: All *E2E checks* passed'
+      #     notification_title: 'E2E checks have passed'
+      #     footer: '<{run_url}|View Run>'
+      #   env:
+      #     SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
+
+      # - name: Check E2E matrix check
+      #   if: ${{ needs.e2e.result != 'success' }}
+      #   uses: ravsamhq/notify-slack-action@v1
+      #   with:
+      #     status: ${{ needs.e2e.result }}
+      #     message_format: ':x: Some *E2E checks* failed'
+      #     notification_title: 'E2E checks have failed'
+      #     footer: '<{run_url}|View Run>'
+      #     mention_users: 'U01UELKLYF2'
+      #   env:
+      #     SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}
