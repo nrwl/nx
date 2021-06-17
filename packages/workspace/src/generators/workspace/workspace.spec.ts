@@ -53,6 +53,14 @@ describe('@nrwl/workspace:workspace', () => {
           },
         },
       },
+      targetDependencies: {
+        build: [
+          {
+            projects: 'dependencies',
+            target: 'build',
+          },
+        ],
+      },
       projects: {},
     });
   });

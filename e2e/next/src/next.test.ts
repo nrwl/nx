@@ -126,11 +126,6 @@ describe('Next.js Applications', () => {
         `
     );
 
-    // Building the app throws if dependencies haven't been built yet
-    expect(() => {
-      runCLI(`build ${appName} --buildLibsFromSource false`);
-    }).toThrow();
-
     await checkApp(appName, {
       checkUnitTest: true,
       checkLint: true,

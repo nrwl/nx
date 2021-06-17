@@ -51,30 +51,6 @@ export function getCommand(cliCommand: string, isYarn: boolean, task: Task) {
   }
 }
 
-export function getDefaultDependencyConfigs(
-  nxJson: NxJsonConfiguration,
-  runnerOptions?: {
-    strictlyOrderedTargets?: string[];
-  }
-): Record<string, TargetDependencyConfig[]> {
-  const defaults: Record<string, TargetDependencyConfig[]> =
-    nxJson.targetDependencies ?? {};
-
-  const strictlyOrderedTargets = runnerOptions
-    ? runnerOptions.strictlyOrderedTargets ?? ['build']
-    : [];
-  // Strictly Ordered Targets depend on their dependencies
-  for (const target of strictlyOrderedTargets) {
-    defaults[target] = defaults[target] || [];
-    defaults[target].push({
-      target,
-      projects: 'dependencies',
-    });
-  }
-
-  return defaults;
-}
-
 export function getDependencyConfigs(
   { project, target }: { project: string; target: string },
   defaultDependencyConfigs: Record<string, TargetDependencyConfig[]>,
