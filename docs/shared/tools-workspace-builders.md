@@ -109,7 +109,7 @@ This is all that’s required from the `package.json` file:
 
 After your files are created, compile your executor with `tsc` (which is available locally in any Nx workspace):
 
-```sh
+```bash
 npx tsc tools/executors/echo/impl
 ```
 
@@ -149,13 +149,13 @@ Note that the format of the `executor` string here is: `${Path to directory cont
 
 Finally, you run the executor via the CLI as follows:
 
-```sh
+```bash
 nx run platform:echo
 ```
 
 To which we'll see the console output:
 
-```sh
+```bash
 > nx run platform:echo
 Executing "echo"...
 Options: {

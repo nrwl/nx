@@ -121,7 +121,7 @@ Run:
 
 You can import the shared-components library into the Next.js application like this.
 
-```typescript jsx
+```typescript
 import { Home } from '@happynrwl/shared-components';
 import React from 'react';
 
@@ -205,7 +205,7 @@ module.exports = {
 2. Ensure the Next.js "Framework Preset" is selected
 3. Expand the "Build and Output Settings" and toggle the override switch for the build command. For our `tuskdesk` project the value will look like this:
 
-```sh
+```bash
 npx nx build tuskdesk --prod --outputPath=.
 ```
 

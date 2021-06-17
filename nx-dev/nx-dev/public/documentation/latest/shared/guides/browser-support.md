@@ -42,7 +42,7 @@ Sometimes broad configurations like `> 0.5%, not IE 11` can lead to surprising r
 
 To see what browsers your configuration is supporting, run `npx browserslist` in application directory to get an output of browsers and versions to support.
 
-```sh
+```bash
 $ npx browserslist
 and_chr 61
 chrome 83
@@ -65,6 +65,6 @@ safari 12
 
 Alternatively, if your support config is short you can just add it as a string param on the CLI:
 
-```sh
+```bash
 npx browserslist '> 0.5%, not IE 11'
 ```

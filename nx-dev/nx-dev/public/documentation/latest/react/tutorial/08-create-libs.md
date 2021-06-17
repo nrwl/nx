@@ -50,7 +50,7 @@ myorg/
 
 The `libs/ui/src/lib/ui.tsx` file looks like this:
 
-```typescript jsx
+```typescript
 import React from 'react';
 
 import './ui.css';
@@ -111,7 +111,7 @@ myorg/
 
 **Implement the Todos component.**
 
-```typescript jsx
+```typescript
 import React from 'react';
 import { Todo } from '@myorg/data';
 

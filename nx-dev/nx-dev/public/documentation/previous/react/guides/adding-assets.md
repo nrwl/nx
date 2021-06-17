@@ -2,7 +2,7 @@
 
 With Nx, you can **`import` assets directly from your TypeScript/JavaScript code**.
 
-```typescript jsx
+```typescript
 import React from 'react';
 import logo from './logo.png';
 
@@ -27,7 +27,7 @@ SVG images can be imported using the method described above.
 
 Alternatively, you can import SVG images as React components.
 
-```typescript jsx
+```typescript
 import React from 'react';
 import { ReactComponent as Logo } from './logo.svg';
 
