@@ -23,7 +23,7 @@ export function Header(props: HeaderProps) {
 
   return (
     <header className="h-16 px-5 py-5 flex items-center justify-between print:hidden bg-blue-nx-base">
-      <div className="flex items-center justify-between w-full max-w-screen-xl mx-auto space-x-10">
+      <div className="flex items-center justify-between w-full max-w-screen-xl mx-auto sm:space-x-10">
         {/*LOGO*/}
         <div className="flex items-center">
           <a href="/" className="flex items-center">
@@ -62,7 +62,7 @@ export function Header(props: HeaderProps) {
           </a>
         </div>
         {/*SEARCH*/}
-        <div className="hidden md:inline">
+        <div className="inline">
           {!!showSearch ? (
             <AlgoliaSearch flavorId={flavor.value} versionId={version.value} />
           ) : null}
