@@ -2,6 +2,7 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   createFile,
+  isNotWindows,
   killPorts,
   newProject,
   readFile,
@@ -52,7 +53,7 @@ describe('Web Components Applications', () => {
     const lintE2eResults = runCLI(`lint ${appName}-e2e`);
     expect(lintE2eResults).toContain('All files pass linting.');
 
-    if (runCypressTests()) {
+    if (isNotWindows()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);
       expect(e2eResults).toContain('All specs passed!');
       expect(await killPorts()).toBeTruthy();

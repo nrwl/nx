@@ -2,6 +2,7 @@ import * as path from 'path';
 import {
   checkFilesExist,
   exists,
+  isNotWindows,
   newProject,
   readFile,
   readJson,
@@ -116,128 +117,132 @@ describe('lint', () => {
 
 describe('format', () => {
   it('should check and reformat the code', async () => {
-    const myapp = uniq('myapp');
-    const mylib = uniq('mylib');
+    if (isNotWindows()) {
+      const myapp = uniq('myapp');
+      const mylib = uniq('mylib');
 
-    runCLI(`generate @nrwl/angular:app ${myapp}`);
-    runCLI(`generate @nrwl/angular:lib ${mylib}`);
-    updateFile(
-      `apps/${myapp}/src/main.ts`,
-      `
+      runCLI(`generate @nrwl/angular:app ${myapp}`);
+      runCLI(`generate @nrwl/angular:lib ${mylib}`);
+      updateFile(
+        `apps/${myapp}/src/main.ts`,
+        `
          const x = 1111;
     `
-    );
+      );
 
-    updateFile(
-      `apps/${myapp}/src/app/app.module.ts`,
-      `
+      updateFile(
+        `apps/${myapp}/src/app/app.module.ts`,
+        `
          const y = 1111;
     `
-    );
+      );
 
-    updateFile(
-      `apps/${myapp}/src/app/app.component.ts`,
-      `
+      updateFile(
+        `apps/${myapp}/src/app/app.component.ts`,
+        `
          const z = 1111;
     `
-    );
+      );
 
-    updateFile(
-      `libs/${mylib}/index.ts`,
-      `
+      updateFile(
+        `libs/${mylib}/index.ts`,
+        `
          const x = 1111;
     `
-    );
-    updateFile(
-      `libs/${mylib}/src/${mylib}.module.ts`,
-      `
+      );
+      updateFile(
+        `libs/${mylib}/src/${mylib}.module.ts`,
+        `
          const y = 1111;
     `
-    );
+      );
 
-    updateFile(
-      `README.md`,
-      `
+      updateFile(
+        `README.md`,
+        `
          my new readme;
     `
-    );
+      );
 
-    let stdout = runCLI(
-      `format:check --files="libs/${mylib}/index.ts,package.json" --libs-and-apps`,
-      { silenceError: true }
-    );
-    expect(stdout).toContain(path.normalize(`libs/${mylib}/index.ts`));
-    expect(stdout).toContain(
-      path.normalize(`libs/${mylib}/src/${mylib}.module.ts`)
-    );
-    expect(stdout).not.toContain(path.normalize(`README.md`)); // It will be contained only in case of exception, that we fallback to all
+      let stdout = runCLI(
+        `format:check --files="libs/${mylib}/index.ts,package.json" --libs-and-apps`,
+        { silenceError: true }
+      );
+      expect(stdout).toContain(path.normalize(`libs/${mylib}/index.ts`));
+      expect(stdout).toContain(
+        path.normalize(`libs/${mylib}/src/${mylib}.module.ts`)
+      );
+      expect(stdout).not.toContain(path.normalize(`README.md`)); // It will be contained only in case of exception, that we fallback to all
 
-    stdout = runCLI(`format:check --all`, { silenceError: true });
-    expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
-    expect(stdout).toContain(
-      path.normalize(`apps/${myapp}/src/app/app.module.ts`)
-    );
-    expect(stdout).toContain(
-      path.normalize(`apps/${myapp}/src/app/app.component.ts`)
-    );
+      stdout = runCLI(`format:check --all`, { silenceError: true });
+      expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
+      expect(stdout).toContain(
+        path.normalize(`apps/${myapp}/src/app/app.module.ts`)
+      );
+      expect(stdout).toContain(
+        path.normalize(`apps/${myapp}/src/app/app.component.ts`)
+      );
 
-    stdout = runCLI(`format:check --projects=${myapp}`, { silenceError: true });
-    expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
-    expect(stdout).toContain(
-      path.normalize(`apps/${myapp}/src/app/app.module.ts`)
-    );
-    expect(stdout).toContain(
-      path.normalize(`apps/${myapp}/src/app/app.component.ts`)
-    );
-    expect(stdout).not.toContain(path.normalize(`libs/${mylib}/index.ts`));
-    expect(stdout).not.toContain(
-      path.normalize(`libs/${mylib}/src/${mylib}.module.ts`)
-    );
-    expect(stdout).not.toContain(path.normalize(`README.md`));
-
-    stdout = runCLI(`format:check --projects=${myapp},${mylib}`, {
-      silenceError: true,
-    });
-    expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
-    expect(stdout).toContain(
-      path.normalize(`apps/${myapp}/src/app/app.module.ts`)
-    );
-    expect(stdout).toContain(
-      path.normalize(`apps/${myapp}/src/app/app.component.ts`)
-    );
-    expect(stdout).toContain(path.normalize(`libs/${mylib}/index.ts`));
-    expect(stdout).toContain(
-      path.normalize(`libs/${mylib}/src/${mylib}.module.ts`)
-    );
-    expect(stdout).not.toContain(path.normalize(`README.md`));
-
-    const { stderr } = await runCLIAsync(
-      `format:check --projects=${myapp},${mylib} --all`,
-      {
+      stdout = runCLI(`format:check --projects=${myapp}`, {
         silenceError: true,
-      }
-    );
-    expect(stderr).toContain(
-      'Arguments all and projects are mutually exclusive'
-    );
+      });
+      expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
+      expect(stdout).toContain(
+        path.normalize(`apps/${myapp}/src/app/app.module.ts`)
+      );
+      expect(stdout).toContain(
+        path.normalize(`apps/${myapp}/src/app/app.component.ts`)
+      );
+      expect(stdout).not.toContain(path.normalize(`libs/${mylib}/index.ts`));
+      expect(stdout).not.toContain(
+        path.normalize(`libs/${mylib}/src/${mylib}.module.ts`)
+      );
+      expect(stdout).not.toContain(path.normalize(`README.md`));
 
-    runCLI(
-      `format:write --files="apps/${myapp}/src/app/app.module.ts,apps/${myapp}/src/app/app.component.ts"`
-    );
+      stdout = runCLI(`format:check --projects=${myapp},${mylib}`, {
+        silenceError: true,
+      });
+      expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
+      expect(stdout).toContain(
+        path.normalize(`apps/${myapp}/src/app/app.module.ts`)
+      );
+      expect(stdout).toContain(
+        path.normalize(`apps/${myapp}/src/app/app.component.ts`)
+      );
+      expect(stdout).toContain(path.normalize(`libs/${mylib}/index.ts`));
+      expect(stdout).toContain(
+        path.normalize(`libs/${mylib}/src/${mylib}.module.ts`)
+      );
+      expect(stdout).not.toContain(path.normalize(`README.md`));
 
-    stdout = runCLI('format:check --all', { silenceError: true });
-    expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
-    expect(stdout).not.toContain(
-      path.normalize(`apps/${myapp}/src/app/app.module.ts`)
-    );
-    expect(stdout).not.toContain(
-      path.normalize(`apps/${myapp}/src/app/app.component.ts`)
-    );
+      const { stderr } = await runCLIAsync(
+        `format:check --projects=${myapp},${mylib} --all`,
+        {
+          silenceError: true,
+        }
+      );
+      expect(stderr).toContain(
+        'Arguments all and projects are mutually exclusive'
+      );
 
-    runCLI('format:write --all');
-    expect(runCLI('format:check --all')).not.toContain(
-      path.normalize(`apps/${myapp}/src/main.ts`)
-    );
+      runCLI(
+        `format:write --files="apps/${myapp}/src/app/app.module.ts,apps/${myapp}/src/app/app.component.ts"`
+      );
+
+      stdout = runCLI('format:check --all', { silenceError: true });
+      expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
+      expect(stdout).not.toContain(
+        path.normalize(`apps/${myapp}/src/app/app.module.ts`)
+      );
+      expect(stdout).not.toContain(
+        path.normalize(`apps/${myapp}/src/app/app.component.ts`)
+      );
+
+      runCLI('format:write --all');
+      expect(runCLI('format:check --all')).not.toContain(
+        path.normalize(`apps/${myapp}/src/main.ts`)
+      );
+    }
   }, 90000);
 });
 

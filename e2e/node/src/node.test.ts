@@ -54,7 +54,7 @@ describe('Node Applications', () => {
       cwd: tmpProjPath(),
     }).toString();
     expect(result).toContain('Hello World!');
-  }, 60000);
+  }, 300000);
 
   xit('should be able to generate an express application', async () => {
     const nodeapp = uniq('nodeapp');

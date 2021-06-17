@@ -16,6 +16,7 @@ import isCI = require('is-ci');
 import * as path from 'path';
 import { dirSync } from 'tmp';
 const kill = require('kill-port');
+const isWindows = require('is-windows');
 import { check as portCheck } from 'tcp-port-used';
 import { parseJson } from '@nrwl/devkit';
 import chalk = require('chalk');
@@ -236,6 +237,10 @@ export async function removeProject({ onlyOnCI = false } = {}) {
 export function runCypressTests() {
   // temporary enable
   return true;
+}
+
+export function isNotWindows() {
+  return !isWindows();
 }
 
 export function runCommandAsync(
