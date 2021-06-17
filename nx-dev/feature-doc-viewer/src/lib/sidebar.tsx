@@ -19,6 +19,16 @@ export interface SidebarProps {
   navIsOpen: boolean;
 }
 
+// Exported for testing
+export function createNextPath(
+  version: string,
+  flavor: string,
+  currentPath: string
+): string {
+  const genericPath = currentPath.split('/').slice(3).join('/');
+  return `/${version}/${flavor}/${genericPath}`;
+}
+
 export function Sidebar({
   flavor,
   flavorList,
@@ -28,11 +38,6 @@ export function Sidebar({
   navIsOpen,
 }: SidebarProps) {
   const router = useRouter();
-  const getStartedPath = (version: string, flavor: string): string =>
-    `/${version}/${flavor}/getting-started/${
-      version === 'latest' ? 'getting-started' : 'intro'
-    }`;
-
   return (
     <div
       data-testid="sidebar"
@@ -55,7 +60,9 @@ export function Sidebar({
             }))}
             selected={{ label: version.name, value: version.id }}
             onChange={(item) =>
-              router.push(getStartedPath(item.value, flavor.value))
+              router.push(
+                createNextPath(item.value, flavor.value, router.asPath)
+              )
             }
           />
         </div>
@@ -64,7 +71,7 @@ export function Sidebar({
             data={flavorList}
             selected={flavor}
             onChange={(item) =>
-              router.push(getStartedPath(version.id, item.value))
+              router.push(createNextPath(version.id, item.value, router.asPath))
             }
           />
         </div>
