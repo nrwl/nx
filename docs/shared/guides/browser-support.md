@@ -6,7 +6,7 @@ In general, the more modern your applications browser support is, the smaller th
 
 By default, applications generated from official Nx generators ship an aggressively modern browser support config, in the form of a `.browserlistrc` file in the root of the application with the following contents.
 
-```
+```text
 last 1 Chrome version
 last 1 Firefox version
 last 2 Edge major versions
@@ -24,7 +24,7 @@ Adding support for IE or any other browser is as easy as changing the `.browserl
 
 To add support for IE 11 simply change the final line in the `.browserlistrc` file to include IE:
 
-```
+```text
 last 1 Chrome version
 last 1 Firefox version
 last 2 Edge major versions
@@ -42,7 +42,7 @@ Sometimes broad configurations like `> 0.5%, not IE 11` can lead to surprising r
 
 To see what browsers your configuration is supporting, run `npx browserslist` in application directory to get an output of browsers and versions to support.
 
-```sh
+```bash
 $ npx browserslist
 and_chr 61
 chrome 83
@@ -65,6 +65,6 @@ safari 12
 
 Alternatively, if your support config is short you can just add it as a string param on the CLI:
 
-```sh
+```bash
 npx browserslist '> 0.5%, not IE 11'
 ```

@@ -134,7 +134,7 @@ describe('shared-ui', () => {
 To register an [addon](https://storybook.js.org/addons/) for all storybook instances in your workspace:
 
 1. In `/.storybook/main.js`, in the `addons` array of the `module.exports` object, add the new addon:
-   ```
+   ```typescript
    module.exports = {
    stories: [...],
    ...,
@@ -143,7 +143,7 @@ To register an [addon](https://storybook.js.org/addons/) for all storybook insta
    ```
 2. If a decorator is required, in each project's `<project-path>/.storybook/preview.js` use the `addDecorator` function.
 
-   ```
+   ```typescript
    import { configure, addDecorator } from '@storybook/angular';
    import { withKnobs } from '@storybook/addon-knobs';
 
@@ -155,7 +155,7 @@ To register an [addon](https://storybook.js.org/addons/) for all storybook insta
 To register an [addon](https://storybook.js.org/addons/) for a single storybook instance, go to that project's `.storybook` folder:
 
 1. In `main.js`, in the `addons` array of the `module.exports` object, add the new addon:
-   ```
+   ```typescript
    module.exports = {
    stories: [...],
    ...,
@@ -164,7 +164,7 @@ To register an [addon](https://storybook.js.org/addons/) for a single storybook 
    ```
 2. If a decorator is required, in `preview.js` use the `addDecorator` function.
 
-   ```
+   ```typescript
    import { configure, addDecorator } from '@storybook/angular';
    import { withKnobs } from '@storybook/addon-knobs';
 
@@ -215,7 +215,7 @@ The `@nrwl/angular:storybook-migrate-defaults-5-to-6` generator will not exactly
 
 That way, you can have working Storybook instances for all your projects just by running
 
-```
+```bash
 nx g @nrwl/angular:storybook-migrate-defaults-5-to-6
 ```
 
@@ -271,7 +271,7 @@ Check your `package.json` file for all `@storybook` packages. Install the latest
 
 For example:
 
-```
+```bash
 yarn add --dev @storybook/angular@latest
 ```
 
@@ -287,7 +287,7 @@ If you have not changed the content of the files which the `storybook-configurat
 
 - In the root `./storybook` directory, create a new file named `main.js` with the following content:
 
-```
+```typescript
 module.exports = {
   stories: [],
   addons: ['@storybook/addon-knobs/register'],
@@ -302,7 +302,7 @@ module.exports = {
 
 - In the library `./storybook` directory, create a new file named `main.js` with the following content:
 
-```
+```typescript
 const lib_main_module = require('../../.storybook/main');
 
 lib_main_module.stories.push('../src/lib/**/*.stories.mdx');
@@ -314,7 +314,7 @@ Please take extra care making sure that the path to the root `./storybook` direc
 
 - If you have any addons in the `addons.js` file, add them in the `addons` array in the `main.js` file. You can add any addons in the `addons` module array using the following syntax:
 
-```
+```typescript
 lib_main_module.addons.push('<YOUR_ADDON_HERE>');
 ```
 
@@ -322,7 +322,7 @@ After you add any addons in the `main.js` file, you can safely delete the `addon
 
 - Rename the file `config.js` to `preview.js` and remove the last line where your stories paths are configured. Now, the contents of the `preview.js` file will look like this:
 
-```
+```typescript
 import { addDecorator } from '<%= uiFramework %>';
 import { withKnobs } from '@storybook/addon-knobs';
 
@@ -331,26 +331,26 @@ addDecorator(withKnobs);
 
 - Modify the contents of `webpack.config.js`. Remove the following lines, which are the TypeScript configuration, which is not needed by Storybook any more:
 
-```
-  config.resolve.extensions.push('.ts', '.tsx');
-  config.module.rules.push({
-    test: /\.(ts|tsx)$/,
-    loader: require.resolve('babel-loader'),
-    options: {
-      presets: [
-        '@babel/preset-env',
-        '@babel/preset-react',
-        '@babel/preset-typescript'
-      ]
-    }
-  });
+```typescript
+config.resolve.extensions.push('.ts', '.tsx');
+config.module.rules.push({
+  test: /\.(ts|tsx)$/,
+  loader: require.resolve('babel-loader'),
+  options: {
+    presets: [
+      '@babel/preset-env',
+      '@babel/preset-react',
+      '@babel/preset-typescript',
+    ],
+  },
+});
 ```
 
 #### Check final folder structure
 
 Your folder structure should now look like this:
 
-```
+```treeview
 <workspace name>/
 ├── .storybook/
 │   ├── main.js
