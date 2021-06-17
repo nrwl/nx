@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import {
   ExecutorContext,
   parseTargetString,
@@ -18,10 +19,6 @@ import {
   DependentBuildableProjectNode,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
-
-try {
-  require('dotenv').config();
-} catch (e) {}
 
 export default async function exportExecutor(
   options: NextExportBuilderOptions,

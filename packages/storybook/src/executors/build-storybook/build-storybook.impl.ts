@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { basename, join, sep } from 'path';
 import { tmpdir } from 'os';
 import { constants, copyFileSync, mkdtempSync, statSync } from 'fs';
@@ -22,10 +23,6 @@ export interface StorybookBuilderOptions {
   outputPath?: string;
   docsMode?: boolean;
 }
-
-try {
-  require('dotenv').config();
-} catch (e) {}
 
 export default async function buildStorybookExecutor(
   options: StorybookBuilderOptions,

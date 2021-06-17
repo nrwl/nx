@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { ExecutorContext } from '@nrwl/devkit';
 
 import { readCachedProjectGraph } from '@nrwl/workspace/src/core/project-graph';
@@ -17,10 +18,6 @@ import { OUT_FILENAME } from '../../utils/config';
 import { BuildNodeBuilderOptions } from '../../utils/types';
 import { normalizeBuildOptions } from '../../utils/normalize';
 import { generatePackageJson } from '../../utils/generate-package-json';
-
-try {
-  require('dotenv').config();
-} catch (e) {}
 
 export type NodeBuildEvent = {
   outfile: string;

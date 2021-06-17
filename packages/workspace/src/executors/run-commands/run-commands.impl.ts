@@ -5,16 +5,16 @@ import * as yargsParser from 'yargs-parser';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 
-function loadEnvVars(path?: string) {
+async function loadEnvVars(path?: string) {
   if (path) {
-    const result = require('dotenv').config({ path });
+    const result = (await import('dotenv')).config({ path });
     if (result.error) {
       throw result.error;
     }
   } else {
     try {
-      require('dotenv').config();
-    } catch (e) {}
+      (await import('dotenv')).config();
+    } catch {}
   }
 }
 
@@ -67,7 +67,7 @@ export default async function (
   options: RunCommandsBuilderOptions,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
-  loadEnvVars(options.envFile);
+  await loadEnvVars(options.envFile);
   const normalized = normalizeOptions(options);
 
   if (options.readyWhen && !options.parallel) {

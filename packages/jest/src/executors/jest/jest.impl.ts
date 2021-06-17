@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { runCLI } from 'jest';
 import { readConfig } from 'jest-config';
 import { utils as jestReporterUtils } from '@jest/reporters';
@@ -9,15 +10,7 @@ import { ExecutorContext, TaskGraph } from '@nrwl/devkit';
 import { join } from 'path';
 import { getSummary } from './summary';
 
-try {
-  require('dotenv').config();
-} catch (e) {
-  // noop
-}
-
-if (process.env.NODE_ENV === null || process.env.NODE_ENV === undefined) {
-  (process.env as any).NODE_ENV = 'test';
-}
+process.env.NODE_ENV ??= 'test';
 
 export async function jestExecutor(
   options: JestExecutorOptions,

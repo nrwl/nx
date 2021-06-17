@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { basename, join, sep } from 'path';
 import { tmpdir } from 'os';
 import { constants, copyFileSync, mkdtempSync, statSync } from 'fs';
@@ -33,10 +34,6 @@ export interface StorybookExecutorOptions {
   watch?: boolean;
   docsMode?: boolean;
 }
-
-try {
-  require('dotenv').config();
-} catch (e) {}
 
 export default async function* storybookExecutor(
   options: StorybookExecutorOptions,
