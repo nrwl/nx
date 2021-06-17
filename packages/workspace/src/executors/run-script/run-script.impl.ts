@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
-import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
-import { ExecutorContext } from '@nrwl/devkit';
+import { getPackageManagerCommand } from '@nrwl/devkit';
+import type { ExecutorContext } from '@nrwl/devkit';
 import * as path from 'path';
 
 export interface RunScriptOptions {

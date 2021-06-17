@@ -60,9 +60,11 @@
 - [applyChangesToString](../../react/nx-devkit/index#applychangestostring)
 - [convertNxExecutor](../../react/nx-devkit/index#convertnxexecutor)
 - [convertNxGenerator](../../react/nx-devkit/index#convertnxgenerator)
+- [detectPackageManager](../../react/nx-devkit/index#detectpackagemanager)
 - [formatFiles](../../react/nx-devkit/index#formatfiles)
 - [generateFiles](../../react/nx-devkit/index#generatefiles)
 - [getPackageManagerCommand](../../react/nx-devkit/index#getpackagemanagercommand)
+- [getPackageManagerVersion](../../react/nx-devkit/index#getpackagemanagerversion)
 - [getProjects](../../react/nx-devkit/index#getprojects)
 - [getWorkspaceLayout](../../react/nx-devkit/index#getworkspacelayout)
 - [getWorkspacePath](../../react/nx-devkit/index#getworkspacepath)
@@ -578,6 +580,22 @@ Convert an Nx Generator into an Angular Devkit Schematic
 
 ---
 
+### detectPackageManager
+
+▸ **detectPackageManager**(`dir?`: _string_): [_PackageManager_](../../react/nx-devkit/index#packagemanager)
+
+Detects which package manager is used in the workspace based on the lock file.
+
+#### Parameters
+
+| Name  | Type     | Default value |
+| :---- | :------- | :------------ |
+| `dir` | _string_ | ''            |
+
+**Returns:** [_PackageManager_](../../react/nx-devkit/index#packagemanager)
+
+---
+
 ### formatFiles
 
 ▸ **formatFiles**(`host`: [_Tree_](../../react/nx-devkit/index#tree)): _Promise_<void\>
@@ -635,7 +653,7 @@ doesn't get confused about incorrect TypeScript files.
 
 ### getPackageManagerCommand
 
-▸ **getPackageManagerCommand**(`packageManager?`: [_PackageManager_](../../react/nx-devkit/index#packagemanager)): _object_
+▸ **getPackageManagerCommand**(`packageManager?`: [_PackageManager_](../../react/nx-devkit/index#packagemanager)): PackageManagerCommands
 
 Returns commands for the package manager used in the workspace.
 By default, the package manager is derived based on the lock file,
@@ -653,17 +671,25 @@ execSync(`${getPackageManagerCommand().addDev} my-dev-package`);
 | :--------------- | :------------------------------------------------------------- |
 | `packageManager` | [_PackageManager_](../../react/nx-devkit/index#packagemanager) |
 
-**Returns:** _object_
+**Returns:** PackageManagerCommands
 
-| Name      | Type                                               |
-| :-------- | :------------------------------------------------- |
-| `add`     | _string_                                           |
-| `addDev`  | _string_                                           |
-| `exec`    | _string_                                           |
-| `install` | _string_                                           |
-| `list`    | _string_                                           |
-| `rm`      | _string_                                           |
-| `run`     | (`script`: _string_, `args`: _string_) => _string_ |
+---
+
+### getPackageManagerVersion
+
+▸ **getPackageManagerVersion**(`packageManager?`: [_PackageManager_](../../react/nx-devkit/index#packagemanager)): _string_
+
+Returns the version of the package manager used in the workspace.
+By default, the package manager is derived based on the lock file,
+but it can also be passed in explicitly.
+
+#### Parameters
+
+| Name             | Type                                                           |
+| :--------------- | :------------------------------------------------------------- |
+| `packageManager` | [_PackageManager_](../../react/nx-devkit/index#packagemanager) |
+
+**Returns:** _string_
 
 ---
 

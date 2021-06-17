@@ -1,6 +1,6 @@
 import { readNxJson } from '../core/file-utils';
 import { output } from '../utilities/output';
-import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
+import { getPackageManagerCommand } from '@nrwl/devkit';
 import { execSync } from 'child_process';
 
 export async function connectToNxCloudUsingScan(scan: boolean): Promise<void> {

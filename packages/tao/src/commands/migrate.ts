@@ -6,11 +6,7 @@ import { gt, lte } from 'semver';
 import { dirSync } from 'tmp';
 import { logger } from '../shared/logger';
 import { convertToCamelCase, handleErrors } from '../shared/params';
-import {
-  detectPackageManager,
-  getPackageManagerCommand,
-  PackageManager,
-} from '../shared/package-manager';
+import { getPackageManagerCommand } from '../shared/package-manager';
 import { FsTree } from '../shared/tree';
 import { flushChanges } from './generate';
 import {
@@ -424,7 +420,7 @@ function versions(root: string, from: { [p: string]: string }) {
 }
 
 // testing-fetch-start
-function createFetcher(packageManager: PackageManager) {
+function createFetcher() {
   const cache = {};
   return async function f(
     packageName: string,
@@ -433,7 +429,7 @@ function createFetcher(packageManager: PackageManager) {
     if (!cache[`${packageName}-${packageVersion}`]) {
       const dir = dirSync().name;
       logger.info(`Fetching ${packageName}@${packageVersion}`);
-      const pmc = getPackageManagerCommand(packageManager);
+      const pmc = getPackageManagerCommand();
       execSync(`${pmc.add} ${packageName}@${packageVersion}`, {
         stdio: [],
         cwd: dir,
@@ -539,14 +535,13 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     to: { [p: string]: string };
   }
 ) {
-  const packageManager = detectPackageManager();
-  const pmc = getPackageManagerCommand(packageManager);
+  const pmc = getPackageManagerCommand();
   try {
     logger.info(`Fetching meta data about packages.`);
     logger.info(`It may take a few minutes.`);
     const migrator = new Migrator({
       versions: versions(root, opts.from),
-      fetch: createFetcher(packageManager),
+      fetch: createFetcher(),
       from: opts.from,
       to: opts.to,
     });
@@ -611,7 +606,7 @@ function installAngularDevkitIfNecessaryToExecuteLegacyMigrations(
   );
   if (!hasAngularDevkitMigrations) return false;
 
-  const pmCommands = getPackageManagerCommand(detectPackageManager());
+  const pmCommands = getPackageManagerCommand();
   const devkitInstalled =
     execSync(`${pmCommands.list} @angular-devkit/schematics`)
       .toString()
@@ -630,13 +625,13 @@ function installAngularDevkitIfNecessaryToExecuteLegacyMigrations(
 }
 
 function removeAngularDevkitMigrations() {
-  const pmCommands = getPackageManagerCommand(detectPackageManager());
+  const pmCommands = getPackageManagerCommand();
   execSync(`${pmCommands.rm} @angular-devkit/schematics`);
   execSync(`${pmCommands.rm} @angular-devkit/core`);
 }
 
 function runInstall() {
-  const pmCommands = getPackageManagerCommand(detectPackageManager());
+  const pmCommands = getPackageManagerCommand();
   logger.info(
     `NX Running '${pmCommands.install}' to make sure necessary packages are installed`
   );
