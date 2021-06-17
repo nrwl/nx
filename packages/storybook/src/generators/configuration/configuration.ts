@@ -258,13 +258,13 @@ function updateLintConfig(tree: Tree, schema: StorybookConfigureSchema) {
       }
 
       const overrides = json.overrides || [];
-      for (const override of overrides) {
-        if (typeof override.parserOptions?.project === 'string') {
-          override.parserOptions.project = [override.parserOptions.project];
+      for (const o of overrides) {
+        if (typeof o.parserOptions?.project === 'string') {
+          o.parserOptions.project = [o.parserOptions.project];
         }
-        if (Array.isArray(override.parserOptions?.project)) {
-          override.parserOptions.project = dedupe([
-            ...override.parserOptions.project,
+        if (Array.isArray(o.parserOptions?.project)) {
+          o.parserOptions.project = dedupe([
+            ...o.parserOptions.project,
             join(root, '.storybook/tsconfig.json'),
           ]);
         }

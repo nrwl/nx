@@ -561,7 +561,9 @@ async function promptForValues(opts: Options, schema: Schema) {
     }
   });
 
-  return await (await import('enquirer'))
+  return await (
+    await import('enquirer')
+  )
     .prompt(prompts)
     .then((values) => ({ ...opts, ...values }))
     .catch((e) => {

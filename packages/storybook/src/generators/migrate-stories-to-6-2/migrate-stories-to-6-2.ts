@@ -51,9 +51,7 @@ export async function migrateStoriesTo62Generator(tree: Tree) {
   await formatFiles(tree);
 }
 
-export function findAllAngularProjectsWithStorybookConfiguration(
-  tree: Tree
-): {
+export function findAllAngularProjectsWithStorybookConfiguration(tree: Tree): {
   name: string;
   configFolder: string;
   projectRoot: string;

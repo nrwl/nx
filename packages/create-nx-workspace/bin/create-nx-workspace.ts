@@ -551,8 +551,7 @@ async function askAboutNxCloud(parsedArgs: any) {
           choices: [
             {
               name: 'Yes',
-              hint:
-                'Faster builds, run details, Github integration. Learn more at https://nx.app',
+              hint: 'Faster builds, run details, Github integration. Learn more at https://nx.app',
             },
 
             {

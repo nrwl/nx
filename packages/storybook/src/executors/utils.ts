@@ -22,8 +22,10 @@ export function getStorybookFrameworkPath(uiFramework) {
 }
 
 function isStorybookV62onwards(uiFramework) {
-  const storybookPackageVersion = require(join(uiFramework, 'package.json'))
-    .version;
+  const storybookPackageVersion = require(join(
+    uiFramework,
+    'package.json'
+  )).version;
 
   return gte(storybookPackageVersion, '6.2.0-rc.4');
 }

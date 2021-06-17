@@ -67,8 +67,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.md',
           },
           {
-            file:
-              'addons/storyshots/storyshots-puppeteer/src/__tests__/url.test.ts',
+            file: 'addons/storyshots/storyshots-puppeteer/src/__tests__/url.test.ts',
             hash: 'd0f8ddbddf07c41608a5ddc686db849b6c4a9cd8',
             ext: '.ts',
           },
@@ -173,74 +172,62 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/web-components-kitchen-sink/src/demoWcCardStyle.css.js',
+            file: 'examples/web-components-kitchen-sink/src/demoWcCardStyle.css.js',
             hash: '100d02dc9d37183652e3ef0ed476212aaf415f83',
             ext: '.js',
           },
           {
-            file:
-              'examples/web-components-kitchen-sink/stories/addon-a11y.stories.js',
+            file: 'examples/web-components-kitchen-sink/stories/addon-a11y.stories.js',
             hash: '2b14aeeeea3ab0256418277e5f8242f37c74bb17',
             ext: '.js',
           },
           {
-            file:
-              'examples/web-components-kitchen-sink/stories/addon-actions.stories.js',
+            file: 'examples/web-components-kitchen-sink/stories/addon-actions.stories.js',
             hash: '019e582adcce65e5a0cac8d99e6821d0c1f0ea7e',
             ext: '.js',
           },
           {
-            file:
-              'examples/web-components-kitchen-sink/stories/addon-backgrounds.stories.js',
+            file: 'examples/web-components-kitchen-sink/stories/addon-backgrounds.stories.js',
             hash: 'dc78b4d31000831698853a53ff2746614b014095',
             ext: '.js',
           },
           {
-            file:
-              'examples/web-components-kitchen-sink/stories/addon-controls.stories.js',
+            file: 'examples/web-components-kitchen-sink/stories/addon-controls.stories.js',
             hash: '9100b7bd0f7ede892f6fb7e796f53c8629a37312',
             ext: '.js',
           },
           {
-            file:
-              'examples/web-components-kitchen-sink/stories/addon-docs.stories.mdx',
+            file: 'examples/web-components-kitchen-sink/stories/addon-docs.stories.mdx',
             hash: '1aa77fd1a35785a6d8e659d04e9d686617a40cb5',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/web-components-kitchen-sink/stories/addon-knobs.stories.js',
+            file: 'examples/web-components-kitchen-sink/stories/addon-knobs.stories.js',
             hash: 'c207e45b56f9e94472ad6109762f16994bdd5c94',
             ext: '.js',
           },
           {
-            file:
-              'examples/web-components-kitchen-sink/stories/card.stories.js',
+            file: 'examples/web-components-kitchen-sink/stories/card.stories.js',
             hash: '282bcc7ae0d8589e77fd0d558a55b71c07a6ee9d',
             ext: '.js',
           },
           {
-            file:
-              'examples/web-components-kitchen-sink/stories/issues/11831-unknown-component.stories.js',
+            file: 'examples/web-components-kitchen-sink/stories/issues/11831-unknown-component.stories.js',
             hash: 'db46cda1b866fbe0067ad90eb67229f5868a42c9',
             ext: '.js',
           },
           {
-            file:
-              'examples/web-components-kitchen-sink/stories/script.stories.js',
+            file: 'examples/web-components-kitchen-sink/stories/script.stories.js',
             hash: '168fc83e4f43e8210a78a0b2976f4a8134dbbbdd',
             ext: '.js',
           },
           {
-            file:
-              'examples/web-components-kitchen-sink/stories/welcome.stories.js',
+            file: 'examples/web-components-kitchen-sink/stories/welcome.stories.js',
             hash: '7dd8a9f1b89249c507d4ec526310eb7261796d1a',
             ext: '.js',
           },
           {
-            file:
-              'examples/web-components-kitchen-sink/web-components-storyshots.test.js',
+            file: 'examples/web-components-kitchen-sink/web-components-storyshots.test.js',
             hash: '89acc476c2ead5c19b64ec9cc3fb65e918f4a0ab',
             ext: '.js',
           },
@@ -332,8 +319,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.md',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/api/ensureOptionsDefaults.ts',
+            file: 'addons/storyshots/storyshots-core/src/api/ensureOptionsDefaults.ts',
             hash: '25adf62c8343861524469ff426cd2aa55b067879',
             ext: '.ts',
           },
@@ -343,74 +329,62 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/api/integrityTestTemplate.ts',
+            file: 'addons/storyshots/storyshots-core/src/api/integrityTestTemplate.ts',
             hash: 'f11563e7ce5d582445e71721fd2e9049776d0384',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/api/snapshotsTestsTemplate.ts',
+            file: 'addons/storyshots/storyshots-core/src/api/snapshotsTestsTemplate.ts',
             hash: 'a29238a9bd6281e01c746b9fc42447d03b4bb3d3',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/api/StoryshotsOptions.ts',
+            file: 'addons/storyshots/storyshots-core/src/api/StoryshotsOptions.ts',
             hash: 'dc5d542feb794af3a485feed164ed6075db37b6f',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/angular/loader.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/angular/loader.ts',
             hash: 'fa0b0755cc6d67f23bf47dc74781a6c765e4dcd0',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/angular/renderTree.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/angular/renderTree.ts',
             hash: '98b705ed5942b8f2992c115959c1118157ebbd96',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/angular/types.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/angular/types.ts',
             hash: '232cf18fa8cc8026b0495bf78df4a040a5bfc5c2',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/configure.test.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/configure.test.ts',
             hash: '76c88463876ac628ce609a84a7bfd5572785c775',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/configure.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/configure.ts',
             hash: 'e80b4f2d6782bcb55ec221d07f82e12abc1b8023',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/frameworkLoader.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/frameworkLoader.ts',
             hash: '0ea2ed2eaf5be34ffbb440176667d181bb0b3b99',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/hasDependency.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/hasDependency.ts',
             hash: 'c88d5347b116c3b2146ed5e8541bf5a40a2e5763',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/html/loader.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/html/loader.ts',
             hash: '9ca3cd51c88da7555bdd3d42cc0129d498933c2b',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/html/renderTree.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/html/renderTree.ts',
             hash: '380ff7c189c5a88950b11e75a77f02748c6c0ff6',
             ext: '.ts',
           },
@@ -425,116 +399,97 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/preact/loader.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/preact/loader.ts',
             hash: 'eac1ef7d64a16f183fecd81e3f74bb98cf91da6e',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/preact/renderTree.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/preact/renderTree.ts',
             hash: 'bc6daf6a9e6fda5c150eaa8a2bad180b7a6c9284',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/rax/loader.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/rax/loader.ts',
             hash: '9ea737584e50177309ac82dccb5706e9647ba97d',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/rax/renderTree.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/rax/renderTree.ts',
             hash: '6046f0f6cc60340823e68d0272fcbb7dc970502a',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/react-native/loader.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/react-native/loader.ts',
             hash: '29d89154e6132c4b8cc51fe4840a549f8139783e',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/react/loader.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/react/loader.ts',
             hash: '7d6e4388394f024a4a5aeb895cfccfb41c064f4b',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/react/renderShallowTree.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/react/renderShallowTree.ts',
             hash: 'd8ac7b865b4efb6a8311dc4b7530b4c5b495600f',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/react/renderTree.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/react/renderTree.ts',
             hash: 'd92a55710ab1cc7d53418beaed4fcdf8f1728624',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/riot/loader.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/riot/loader.ts',
             hash: 'bd2f7ce499afbc09e192abbfe1704bb15da85f6e',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/riot/renderTree.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/riot/renderTree.ts',
             hash: '4800a1c3c737cf5dccf82ee1ae9b840c2d0ec582',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/SupportedFramework.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/SupportedFramework.ts',
             hash: 'fd04db80adc9497f94c5a0ac92d62281479e38b3',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/svelte/loader.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/svelte/loader.ts',
             hash: 'b0ba7627755808896fe63fe4e372af22f4f769ec',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/svelte/renderTree.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/svelte/renderTree.ts',
             hash: 'd3a16e792a0526eb4b242a8b0b28dea7b819f574',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/vue/loader.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/vue/loader.ts',
             hash: '4ab5fad6fa365de75a10047e415ee6f3c42f27a8',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/vue/renderTree.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/vue/renderTree.ts',
             hash: 'ea3f0f8bc0aaf08672fc61e391f894e338114587',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/vue3/loader.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/vue3/loader.ts',
             hash: '3ffc0df9714acd37e0f50850ca10c0f763e69eab',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/vue3/renderTree.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/vue3/renderTree.ts',
             hash: 'c4e89908d51e2ad51a7f15e0e67b92d43cad4468',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/web-components/loader.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/web-components/loader.ts',
             hash: 'c98f34946461c9091f84a7c1bc13263e267519bc',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/frameworks/web-components/renderTree.ts',
+            file: 'addons/storyshots/storyshots-core/src/frameworks/web-components/renderTree.ts',
             hash: '8c45ea52eacaed1d4b1a17c633e4b82835c272d3',
             ext: '.ts',
           },
@@ -544,14 +499,12 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/Stories2SnapsConverter.test.ts',
+            file: 'addons/storyshots/storyshots-core/src/Stories2SnapsConverter.test.ts',
             hash: '0176f2e48b1ecad086be7169745397f0ed57bb79',
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/src/Stories2SnapsConverter.ts',
+            file: 'addons/storyshots/storyshots-core/src/Stories2SnapsConverter.ts',
             hash: '85425bae4d72eb76e0f78fda4090489c9f094bf2',
             ext: '.ts',
           },
@@ -566,206 +519,172 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/__snapshots__/storyshot.enzyme.test.js.snap',
+            file: 'addons/storyshots/storyshots-core/stories/__snapshots__/storyshot.enzyme.test.js.snap',
             hash: '2c7cbf790b6815598a9f62ca2603a4b6e641c223',
             ext: '.snap',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/__snapshots__/storyshot.metadata.test.js.snap',
+            file: 'addons/storyshots/storyshots-core/stories/__snapshots__/storyshot.metadata.test.js.snap',
             hash: 'c9965e394a4c76f6d472b4edab693329134dee5d',
             ext: '.snap',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/__snapshots__/storyshot.shallow.test.js.snap',
+            file: 'addons/storyshots/storyshots-core/stories/__snapshots__/storyshot.shallow.test.js.snap',
             hash: 'caccf51b26098e5aca995b2198f067170ce78e43',
             ext: '.snap',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/__snapshots__/storyshot.shallowWithOptions.test.js.snap',
+            file: 'addons/storyshots/storyshots-core/stories/__snapshots__/storyshot.shallowWithOptions.test.js.snap',
             hash: 'caccf51b26098e5aca995b2198f067170ce78e43',
             ext: '.snap',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/__snapshots__/storyshot.snapshotWithOptionsFunction.test.js.snap',
+            file: 'addons/storyshots/storyshots-core/stories/__snapshots__/storyshot.snapshotWithOptionsFunction.test.js.snap',
             hash: '8a70ef0ff961e6fce02e2b0caadd117903103fa6',
             ext: '.snap',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/directly_required/__snapshots__/index.foo',
+            file: 'addons/storyshots/storyshots-core/stories/directly_required/__snapshots__/index.foo',
             hash: 'b193752e2724e142eada1b7881fe581a01402d1e',
             ext: '.foo',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/directly_required/__snapshots__/index.storyshot',
+            file: 'addons/storyshots/storyshots-core/stories/directly_required/__snapshots__/index.storyshot',
             hash: 'b193752e2724e142eada1b7881fe581a01402d1e',
             ext: '.storyshot',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/directly_required/__snapshots__/index@Another-_-Button@with-_-some-_-emoji.boo',
+            file: 'addons/storyshots/storyshots-core/stories/directly_required/__snapshots__/index@Another-_-Button@with-_-some-_-emoji.boo',
             hash: '6941fa6cb16b4f079340968f2df13b45ee33545c',
             ext: '.boo',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/directly_required/__snapshots__/index@Another-_-Button@with-_-text.boo',
+            file: 'addons/storyshots/storyshots-core/stories/directly_required/__snapshots__/index@Another-_-Button@with-_-text.boo',
             hash: '9376d96fbeb4cf3ae72bd26a1274be0c3af8c053',
             ext: '.boo',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/directly_required/index.js',
+            file: 'addons/storyshots/storyshots-core/stories/directly_required/index.js',
             hash: '7bc4dc08f9d44d3fb1e6b0cf651453e0d28062df',
             ext: '.js',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/exported_metadata/main.js',
+            file: 'addons/storyshots/storyshots-core/stories/exported_metadata/main.js',
             hash: 'f6e10c62569485194ecea567f4ee2e78d7c970fc',
             ext: '.js',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/exported_metadata/preview.js',
+            file: 'addons/storyshots/storyshots-core/stories/exported_metadata/preview.js',
             hash: '724c84b9a43241946ba80672ba08774146a0ef4b',
             ext: '.js',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/exported_metadata/Text.stories.js',
+            file: 'addons/storyshots/storyshots-core/stories/exported_metadata/Text.stories.js',
             hash: 'e87143f2c7863475d2b1a6dadfd268be68a54b38',
             ext: '.js',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/required_with_context/__snapshots__/Async.stories.async.storyshot',
+            file: 'addons/storyshots/storyshots-core/stories/required_with_context/__snapshots__/Async.stories.async.storyshot',
             hash: '40cff33ed8c4920fce9d47d201a9ad709af530b2',
             ext: '.storyshot',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/required_with_context/__snapshots__/Async.stories.foo',
+            file: 'addons/storyshots/storyshots-core/stories/required_with_context/__snapshots__/Async.stories.foo',
             hash: 'd4459afef802698674082d36047f83cecb0d37bb',
             ext: '.foo',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/required_with_context/__snapshots__/Async.stories.storyshot',
+            file: 'addons/storyshots/storyshots-core/stories/required_with_context/__snapshots__/Async.stories.storyshot',
             hash: 'd4459afef802698674082d36047f83cecb0d37bb',
             ext: '.storyshot',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/required_with_context/__snapshots__/Button.stories.foo',
+            file: 'addons/storyshots/storyshots-core/stories/required_with_context/__snapshots__/Button.stories.foo',
             hash: '47dabe9763f5a8888e9a5842a91290542cb52199',
             ext: '.foo',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/required_with_context/__snapshots__/Button.stories.storyshot',
+            file: 'addons/storyshots/storyshots-core/stories/required_with_context/__snapshots__/Button.stories.storyshot',
             hash: '47dabe9763f5a8888e9a5842a91290542cb52199',
             ext: '.storyshot',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/required_with_context/__snapshots__/Welcome.stories.foo',
+            file: 'addons/storyshots/storyshots-core/stories/required_with_context/__snapshots__/Welcome.stories.foo',
             hash: '9f31125b11770e5ed8ffc3018ca0bb1afbc3329a',
             ext: '.foo',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/required_with_context/__snapshots__/Welcome.stories.storyshot',
+            file: 'addons/storyshots/storyshots-core/stories/required_with_context/__snapshots__/Welcome.stories.storyshot',
             hash: '357ca8ea27ac95766c6e29a6530102db07e51ca0',
             ext: '.storyshot',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/required_with_context/Async.stories.js',
+            file: 'addons/storyshots/storyshots-core/stories/required_with_context/Async.stories.js',
             hash: 'd6e03732318b09625d73e797126b40e728f90f01',
             ext: '.js',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/required_with_context/Button.stories.js',
+            file: 'addons/storyshots/storyshots-core/stories/required_with_context/Button.stories.js',
             hash: '23ef66e18e57194c55c4c78d9b323ac324d89c68',
             ext: '.js',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/required_with_context/Welcome.stories.js',
+            file: 'addons/storyshots/storyshots-core/stories/required_with_context/Welcome.stories.js',
             hash: 'c1ffd1fbe5c5acdba033369d0bda5712a82069d6',
             ext: '.js',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/required_with_context/Welcome.stories.mdx',
+            file: 'addons/storyshots/storyshots-core/stories/required_with_context/Welcome.stories.mdx',
             hash: '8dbf6aa34bbc2688dec2f24f73a1dceb05054101',
             ext: '.mdx',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/storyshot.async.test.js',
+            file: 'addons/storyshots/storyshots-core/stories/storyshot.async.test.js',
             hash: '59745f5282674a3cf51d507db0bc73bd3889730e',
             ext: '.js',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/storyshot.configFunc.test.js',
+            file: 'addons/storyshots/storyshots-core/stories/storyshot.configFunc.test.js',
             hash: '28a37a20acb37d1fd0f48f4ab1104a7fb7cb9068',
             ext: '.js',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/storyshot.enzyme.test.js',
+            file: 'addons/storyshots/storyshots-core/stories/storyshot.enzyme.test.js',
             hash: 'ef3fb2f198cbc38c91f23ef1e1b36629a4221fb7',
             ext: '.js',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/storyshot.metadata.test.js',
+            file: 'addons/storyshots/storyshots-core/stories/storyshot.metadata.test.js',
             hash: 'd12366fee7a9bf0393e5b01a4627b1e184007f0d',
             ext: '.js',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/storyshot.renderOnly.test.js',
+            file: 'addons/storyshots/storyshots-core/stories/storyshot.renderOnly.test.js',
             hash: '86187aef4545de09c6c5edad36b2ca92f12e21f8',
             ext: '.js',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/storyshot.renderWithOptions.test.js',
+            file: 'addons/storyshots/storyshots-core/stories/storyshot.renderWithOptions.test.js',
             hash: '7adf516b5dcea8a489a12babe98c7c7eca4292ab',
             ext: '.js',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/storyshot.shallow.test.js',
+            file: 'addons/storyshots/storyshots-core/stories/storyshot.shallow.test.js',
             hash: '17c95eb0dbb868026c084e70765f88162db9f7b3',
             ext: '.js',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/storyshot.shallowWithOptions.test.js',
+            file: 'addons/storyshots/storyshots-core/stories/storyshot.shallowWithOptions.test.js',
             hash: '54ef1612b347874565b019a7dc6f658fac5f069f',
             ext: '.js',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/storyshot.snapshotWithOptionsFunction.test.js',
+            file: 'addons/storyshots/storyshots-core/stories/storyshot.snapshotWithOptionsFunction.test.js',
             hash: 'af8fffb87bb3f84da4f82dc52843896db74070c7',
             ext: '.js',
           },
           {
-            file:
-              'addons/storyshots/storyshots-core/stories/storyshot.specificConfig.test.js',
+            file: 'addons/storyshots/storyshots-core/stories/storyshot.specificConfig.test.js',
             hash: 'ad9596cdc2451fd83228129f5ce3a7d52a610d6a',
             ext: '.js',
           },
@@ -927,14 +846,12 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'examples/aurelia-kitchen-sink/src/cool-button/cool-button.html',
+            file: 'examples/aurelia-kitchen-sink/src/cool-button/cool-button.html',
             hash: '745cac0c6a51ae8f7fb51bab0cb5ec5f28d24e5d',
             ext: '.html',
           },
           {
-            file:
-              'examples/aurelia-kitchen-sink/src/cool-button/cool-button.ts',
+            file: 'examples/aurelia-kitchen-sink/src/cool-button/cool-button.ts',
             hash: '1bc95fe746830710d6ece189d2edb4b4a7b355f5',
             ext: '.ts',
           },
@@ -959,8 +876,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'examples/aurelia-kitchen-sink/src/stories/custom-element.stories.ts',
+            file: 'examples/aurelia-kitchen-sink/src/stories/custom-element.stories.ts',
             hash: '2241978994867b6496cecd680ffa6b65ed57d439',
             ext: '.ts',
           },
@@ -1045,26 +961,22 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/mithril-kitchen-sink/src/stories/addon-actions.stories.js',
+            file: 'examples/mithril-kitchen-sink/src/stories/addon-actions.stories.js',
             hash: '32970a6e5b64596e670b0bef75fc440333af679b',
             ext: '.js',
           },
           {
-            file:
-              'examples/mithril-kitchen-sink/src/stories/addon-backgrounds.stories.js',
+            file: 'examples/mithril-kitchen-sink/src/stories/addon-backgrounds.stories.js',
             hash: 'c3266da180b5f14f8064284b2896b56d04272316',
             ext: '.js',
           },
           {
-            file:
-              'examples/mithril-kitchen-sink/src/stories/addon-knobs.stories.js',
+            file: 'examples/mithril-kitchen-sink/src/stories/addon-knobs.stories.js',
             hash: '4551f50da9732f7e0c5772d704d510165bb31a9b',
             ext: '.js',
           },
           {
-            file:
-              'examples/mithril-kitchen-sink/src/stories/addon-links.stories.js',
+            file: 'examples/mithril-kitchen-sink/src/stories/addon-links.stories.js',
             hash: 'd75aaf9773ba78ea2cb37cc705adee10191afab4',
             ext: '.js',
           },
@@ -1074,8 +986,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/mithril-kitchen-sink/src/stories/welcome.stories.js',
+            file: 'examples/mithril-kitchen-sink/src/stories/welcome.stories.js',
             hash: '2469dda9f7cba211ae2c712a67e1bd5df71baa15',
             ext: '.js',
           },
@@ -1139,14 +1050,12 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '',
           },
           {
-            file:
-              'examples/cra-ts-kitchen-sink/.storybook/localAddon/preset.ts',
+            file: 'examples/cra-ts-kitchen-sink/.storybook/localAddon/preset.ts',
             hash: '68be04174d340d3b23bc3cee79862b55b307d01a',
             ext: '.ts',
           },
           {
-            file:
-              'examples/cra-ts-kitchen-sink/.storybook/localAddon/register.tsx',
+            file: 'examples/cra-ts-kitchen-sink/.storybook/localAddon/register.tsx',
             hash: 'b8e30ec52d13690efa3983369db53cf8fdb76c7b',
             ext: '.tsx',
           },
@@ -1211,8 +1120,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.tsx',
           },
           {
-            file:
-              'examples/cra-ts-kitchen-sink/src/components/Button.stories.tsx',
+            file: 'examples/cra-ts-kitchen-sink/src/components/Button.stories.tsx',
             hash: '3db6e175ad9486a3faeae03ba40ded45c074d97b',
             ext: '.tsx',
           },
@@ -1242,20 +1150,17 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'examples/cra-ts-kitchen-sink/src/stories/0-Welcome.stories.tsx',
+            file: 'examples/cra-ts-kitchen-sink/src/stories/0-Welcome.stories.tsx',
             hash: '9920a416e1ff7db4b32a832bc3ded0e8dab38df5',
             ext: '.tsx',
           },
           {
-            file:
-              'examples/cra-ts-kitchen-sink/src/stories/1-Button.stories.tsx',
+            file: 'examples/cra-ts-kitchen-sink/src/stories/1-Button.stories.tsx',
             hash: 'f9cd3c5119d3e361cc47b0f25f9ea0fe0e45e633',
             ext: '.tsx',
           },
           {
-            file:
-              'examples/cra-ts-kitchen-sink/src/stories/anchors/anchors.stories.mdx',
+            file: 'examples/cra-ts-kitchen-sink/src/stories/anchors/anchors.stories.mdx',
             hash: 'fa27a4109c98f9b0bf31c18ab11253d6f2681621',
             ext: '.mdx',
           },
@@ -1265,86 +1170,72 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.tsx',
           },
           {
-            file:
-              'examples/cra-ts-kitchen-sink/src/stories/Classes.stories.mdx',
+            file: 'examples/cra-ts-kitchen-sink/src/stories/Classes.stories.mdx',
             hash: '80039504ba9b54bc6c7686605b1ca43057f50c00',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/docgen.stories.mdx',
+            file: 'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/docgen.stories.mdx',
             hash: '8927940597f96f7681807f5588c74cfed63fc654',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/DocgenJS.js',
+            file: 'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/DocgenJS.js',
             hash: 'ec7463c578d1617594e7f9fb55eb7204fb5391aa',
             ext: '.js',
           },
           {
-            file:
-              'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/DocgenTS.tsx',
+            file: 'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/DocgenTS.tsx',
             hash: 'ea5f10f0f108bb12e7a664c062c68a41712d91fc',
             ext: '.tsx',
           },
           {
-            file:
-              'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/jsdoc/jsdoc-perfo.js',
+            file: 'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/jsdoc/jsdoc-perfo.js',
             hash: '78665fe6c1c337769c60d3c28df0d51ccd3d2e09',
             ext: '.js',
           },
           {
-            file:
-              'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/jsdoc/jsdoc-perfo.stories.mdx',
+            file: 'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/jsdoc/jsdoc-perfo.stories.mdx',
             hash: '48323079e19ed42d9c9cdd516cc55f3d3ab9e794',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/jsdoc/jsdoc-ts.tsx',
+            file: 'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/jsdoc/jsdoc-ts.tsx',
             hash: '5045d28cd75a016c31898e64f7efaf794a334a52',
             ext: '.tsx',
           },
           {
-            file:
-              'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/jsdoc/jsdoc.js',
+            file: 'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/jsdoc/jsdoc.js',
             hash: '322a1dfe5eb82f6a672ff5898d5739ef7bd30326',
             ext: '.js',
           },
           {
-            file:
-              'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/jsdoc/jsdoc.stories.mdx',
+            file: 'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/jsdoc/jsdoc.stories.mdx',
             hash: 'a13f7245265efbb3b05ef894c35fac99ac55310e',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/types/ext.js',
+            file: 'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/types/ext.js',
             hash: '047b6b362bd319ba6306c13cd880eac119952aec',
             ext: '.js',
           },
           {
-            file:
-              'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/types/prop-types.js',
+            file: 'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/types/prop-types.js',
             hash: 'c8316e1e2a504b7fd12805dde08a77b70065f7a6',
             ext: '.js',
           },
           {
-            file:
-              'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/types/ts-types.tsx',
+            file: 'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/types/ts-types.tsx',
             hash: 'eedd0b79d6633b7c78415dea5530b65bfb778d6f',
             ext: '.tsx',
           },
           {
-            file:
-              'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/types/types.stories.mdx',
+            file: 'examples/cra-ts-kitchen-sink/src/stories/docgen-tests/types/types.stories.mdx',
             hash: 'f4800485c6396e04433216baa279b9ea37448cc4',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/cra-ts-kitchen-sink/src/stories/props-sort.stories.mdx',
+            file: 'examples/cra-ts-kitchen-sink/src/stories/props-sort.stories.mdx',
             hash: '93ff36d488bbb4102652d56a00dfe7a61ab4a684',
             ext: '.mdx',
           },
@@ -1451,62 +1342,52 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/preact-kitchen-sink/src/stories/__snapshots__/addon-actions.stories.storyshot',
+            file: 'examples/preact-kitchen-sink/src/stories/__snapshots__/addon-actions.stories.storyshot',
             hash: 'c15dfb282f781b1f1f8129a78cb11f22dc90c1c7',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/preact-kitchen-sink/src/stories/__snapshots__/addon-backgrounds.stories.storyshot',
+            file: 'examples/preact-kitchen-sink/src/stories/__snapshots__/addon-backgrounds.stories.storyshot',
             hash: '4530aab71bff4ab5bdaf80512a7fb28f03ec811d',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/preact-kitchen-sink/src/stories/__snapshots__/addon-knobs.stories.storyshot',
+            file: 'examples/preact-kitchen-sink/src/stories/__snapshots__/addon-knobs.stories.storyshot',
             hash: '6cf5d96d48f14bbc9e477b7a96d9853328410749',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/preact-kitchen-sink/src/stories/__snapshots__/addon-links.stories.storyshot',
+            file: 'examples/preact-kitchen-sink/src/stories/__snapshots__/addon-links.stories.storyshot',
             hash: '256585be5d5587eb5fc00f176057ec0885782ca2',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/preact-kitchen-sink/src/stories/__snapshots__/button.stories.storyshot',
+            file: 'examples/preact-kitchen-sink/src/stories/__snapshots__/button.stories.storyshot',
             hash: '171bfa989e674ce25e72182c97cff8e89caa0f9f',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/preact-kitchen-sink/src/stories/__snapshots__/welcome.stories.storyshot',
+            file: 'examples/preact-kitchen-sink/src/stories/__snapshots__/welcome.stories.storyshot',
             hash: '5d740bb097a34a2f4093f3a952d14a42c5c31995',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/preact-kitchen-sink/src/stories/addon-actions.stories.js',
+            file: 'examples/preact-kitchen-sink/src/stories/addon-actions.stories.js',
             hash: '0d1547737d650fc2a3997a054a1002c495f8737c',
             ext: '.js',
           },
           {
-            file:
-              'examples/preact-kitchen-sink/src/stories/addon-backgrounds.stories.js',
+            file: 'examples/preact-kitchen-sink/src/stories/addon-backgrounds.stories.js',
             hash: 'da4fa9902acd714b822d6239dd378c0d24375c0e',
             ext: '.js',
           },
           {
-            file:
-              'examples/preact-kitchen-sink/src/stories/addon-knobs.stories.js',
+            file: 'examples/preact-kitchen-sink/src/stories/addon-knobs.stories.js',
             hash: '01a976dcddae10630f6877c92081a71f8f90f9c9',
             ext: '.js',
           },
           {
-            file:
-              'examples/preact-kitchen-sink/src/stories/addon-links.stories.js',
+            file: 'examples/preact-kitchen-sink/src/stories/addon-links.stories.js',
             hash: 'a88a2e2f579805276dc3de7465a18942d4c49bdb',
             ext: '.js',
           },
@@ -1598,26 +1479,22 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/server-kitchen-sink/stories/addon-a11y.stories.json',
+            file: 'examples/server-kitchen-sink/stories/addon-a11y.stories.json',
             hash: '95db30850089d274570f3d0de5138745ebab466a',
             ext: '.json',
           },
           {
-            file:
-              'examples/server-kitchen-sink/stories/addon-actions.stories.json',
+            file: 'examples/server-kitchen-sink/stories/addon-actions.stories.json',
             hash: 'b5db602918a9739816be18c0621142131fb76291',
             ext: '.json',
           },
           {
-            file:
-              'examples/server-kitchen-sink/stories/addon-backgrounds.stories.json',
+            file: 'examples/server-kitchen-sink/stories/addon-backgrounds.stories.json',
             hash: 'f5fe3529dc23a9e8582b52f8ed6ea41534aa7078',
             ext: '.json',
           },
           {
-            file:
-              'examples/server-kitchen-sink/stories/addon-controls.stories.json',
+            file: 'examples/server-kitchen-sink/stories/addon-controls.stories.json',
             hash: '522fa1818e149745c538759fdef606d7610d27d0',
             ext: '.json',
           },
@@ -1627,8 +1504,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.json',
           },
           {
-            file:
-              'examples/server-kitchen-sink/stories/kitchen_sink.stories.json',
+            file: 'examples/server-kitchen-sink/stories/kitchen_sink.stories.json',
             hash: '87f09c3ce26c90e639b9e344a787bdace10f8e90',
             ext: '.json',
           },
@@ -1673,68 +1549,57 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.pug',
           },
           {
-            file:
-              'examples/server-kitchen-sink/views/addons/actions/button.pug',
+            file: 'examples/server-kitchen-sink/views/addons/actions/button.pug',
             hash: 'e612bbfb36f1da43d689f7965efe41544a029aeb',
             ext: '.pug',
           },
           {
-            file:
-              'examples/server-kitchen-sink/views/addons/actions/story1.pug',
+            file: 'examples/server-kitchen-sink/views/addons/actions/story1.pug',
             hash: '7894bcc0743bd803fd9b2fa0d97d8366d22f47c2',
             ext: '.pug',
           },
           {
-            file:
-              'examples/server-kitchen-sink/views/addons/actions/story2.pug',
+            file: 'examples/server-kitchen-sink/views/addons/actions/story2.pug',
             hash: '7894bcc0743bd803fd9b2fa0d97d8366d22f47c2',
             ext: '.pug',
           },
           {
-            file:
-              'examples/server-kitchen-sink/views/addons/actions/story3.pug',
+            file: 'examples/server-kitchen-sink/views/addons/actions/story3.pug',
             hash: '7894bcc0743bd803fd9b2fa0d97d8366d22f47c2',
             ext: '.pug',
           },
           {
-            file:
-              'examples/server-kitchen-sink/views/addons/actions/story4.pug',
+            file: 'examples/server-kitchen-sink/views/addons/actions/story4.pug',
             hash: '7894bcc0743bd803fd9b2fa0d97d8366d22f47c2',
             ext: '.pug',
           },
           {
-            file:
-              'examples/server-kitchen-sink/views/addons/actions/story5.pug',
+            file: 'examples/server-kitchen-sink/views/addons/actions/story5.pug',
             hash: '557c20da0e893002766f8d28306668a2ce18db2e',
             ext: '.pug',
           },
           {
-            file:
-              'examples/server-kitchen-sink/views/addons/actions/story6.pug',
+            file: 'examples/server-kitchen-sink/views/addons/actions/story6.pug',
             hash: '7894bcc0743bd803fd9b2fa0d97d8366d22f47c2',
             ext: '.pug',
           },
           {
-            file:
-              'examples/server-kitchen-sink/views/addons/actions/story7.pug',
+            file: 'examples/server-kitchen-sink/views/addons/actions/story7.pug',
             hash: '7894bcc0743bd803fd9b2fa0d97d8366d22f47c2',
             ext: '.pug',
           },
           {
-            file:
-              'examples/server-kitchen-sink/views/addons/actions/story8.pug',
+            file: 'examples/server-kitchen-sink/views/addons/actions/story8.pug',
             hash: '7894bcc0743bd803fd9b2fa0d97d8366d22f47c2',
             ext: '.pug',
           },
           {
-            file:
-              'examples/server-kitchen-sink/views/addons/backgrounds/story1.pug',
+            file: 'examples/server-kitchen-sink/views/addons/backgrounds/story1.pug',
             hash: '7d62c85d7cdfe1d828e9330a7ec7cecef32992be',
             ext: '.pug',
           },
           {
-            file:
-              'examples/server-kitchen-sink/views/addons/backgrounds/story2.pug',
+            file: 'examples/server-kitchen-sink/views/addons/backgrounds/story2.pug',
             hash: '82abc4ee834aad1ee9afb86ec953981326c62742',
             ext: '.pug',
           },
@@ -1749,14 +1614,12 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.pug',
           },
           {
-            file:
-              'examples/server-kitchen-sink/views/addons/controls/simple.pug',
+            file: 'examples/server-kitchen-sink/views/addons/controls/simple.pug',
             hash: '899a25344ca4188c655164de6fdbacda4b8fb0c1',
             ext: '.pug',
           },
           {
-            file:
-              'examples/server-kitchen-sink/views/addons/controls/xss_safety.pug',
+            file: 'examples/server-kitchen-sink/views/addons/controls/xss_safety.pug',
             hash: '6e0f1c5d2d33699aa9ad8b14cdf1c212dd28740b',
             ext: '.pug',
           },
@@ -1786,8 +1649,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.pug',
           },
           {
-            file:
-              'examples/server-kitchen-sink/views/params/story_fn_override.pug',
+            file: 'examples/server-kitchen-sink/views/params/story_fn_override.pug',
             hash: 'b60cffc6349bc98f1bb6de89a710fa62d2828780',
             ext: '.pug',
           },
@@ -1817,20 +1679,17 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.pug',
           },
           {
-            file:
-              'examples/server-kitchen-sink/views/scripts/includes/alert_script_inline.pug',
+            file: 'examples/server-kitchen-sink/views/scripts/includes/alert_script_inline.pug',
             hash: '4281d7a7b0898a682fbf163c2d6f4123d1eeb1b8',
             ext: '.pug',
           },
           {
-            file:
-              'examples/server-kitchen-sink/views/scripts/includes/alert_script_src.pug',
+            file: 'examples/server-kitchen-sink/views/scripts/includes/alert_script_src.pug',
             hash: '0808952acb782bc18065177ea91ba4f4c76b70b6',
             ext: '.pug',
           },
           {
-            file:
-              'examples/server-kitchen-sink/views/scripts/includes/button.pug',
+            file: 'examples/server-kitchen-sink/views/scripts/includes/button.pug',
             hash: 'adfbe870d1ad33fca9aa18deb470386871561479',
             ext: '.pug',
           },
@@ -1855,20 +1714,17 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.pug',
           },
           {
-            file:
-              'examples/server-kitchen-sink/views/styles/includes/button_styles_inline.pug',
+            file: 'examples/server-kitchen-sink/views/styles/includes/button_styles_inline.pug',
             hash: 'c8ea6f680a6d812ad63f5e6c078bda1a7e355a3c',
             ext: '.pug',
           },
           {
-            file:
-              'examples/server-kitchen-sink/views/styles/includes/button_styles_src.pug',
+            file: 'examples/server-kitchen-sink/views/styles/includes/button_styles_src.pug',
             hash: '83545794603619627f3ce204caef9525f9209e1a',
             ext: '.pug',
           },
           {
-            file:
-              'examples/server-kitchen-sink/views/styles/includes/button.pug',
+            file: 'examples/server-kitchen-sink/views/styles/includes/button.pug',
             hash: '69e440c555c6de377d482cf253e8b0547b2d3cee',
             ext: '.pug',
           },
@@ -1958,110 +1814,92 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.png',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/__snapshots__/addon-actions.stories.storyshot',
+            file: 'examples/svelte-kitchen-sink/src/stories/__snapshots__/addon-actions.stories.storyshot',
             hash: '9628f3d76163ffb33b144e96053cbfd533462f55',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/__snapshots__/addon-backgrounds.stories.storyshot',
+            file: 'examples/svelte-kitchen-sink/src/stories/__snapshots__/addon-backgrounds.stories.storyshot',
             hash: '7d5e0bac2e1e8d8fd1072a5d7e04b5fa7284d59b',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/__snapshots__/addon-controls.stories.storyshot',
+            file: 'examples/svelte-kitchen-sink/src/stories/__snapshots__/addon-controls.stories.storyshot',
             hash: 'a44a4cc79a6d223a104732987dfba62e39c5ef2c',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/__snapshots__/addon-docs.stories.storyshot',
+            file: 'examples/svelte-kitchen-sink/src/stories/__snapshots__/addon-docs.stories.storyshot',
             hash: '1245061655ac5df26b366574ff26b3f1e0749d3e',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/__snapshots__/addon-knobs.stories.storyshot',
+            file: 'examples/svelte-kitchen-sink/src/stories/__snapshots__/addon-knobs.stories.storyshot',
             hash: 'f50bd0d7a5bba3f7699ff5b7c8c15888034dd300',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/__snapshots__/addon-links.stories.storyshot',
+            file: 'examples/svelte-kitchen-sink/src/stories/__snapshots__/addon-links.stories.storyshot',
             hash: '677c69de4bfa12597095dc5e6eb7bd19c2921207',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/__snapshots__/argstable.stories.storyshot',
+            file: 'examples/svelte-kitchen-sink/src/stories/__snapshots__/argstable.stories.storyshot',
             hash: 'd135617e8100c266de36fdc71305543d88ca2da9',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/__snapshots__/button.stories.storyshot',
+            file: 'examples/svelte-kitchen-sink/src/stories/__snapshots__/button.stories.storyshot',
             hash: '33a9896cd07ac21884d985a03906524d30350ebd',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/__snapshots__/decorators.stories.storyshot',
+            file: 'examples/svelte-kitchen-sink/src/stories/__snapshots__/decorators.stories.storyshot',
             hash: '4ff491be39b04d69ea450c3b8d643cb5a8ce93e4',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/__snapshots__/welcome.stories.storyshot',
+            file: 'examples/svelte-kitchen-sink/src/stories/__snapshots__/welcome.stories.storyshot',
             hash: '8df9d140f482786a8c295e1afbbc83e7e21a6797',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/addon-actions.stories.js',
+            file: 'examples/svelte-kitchen-sink/src/stories/addon-actions.stories.js',
             hash: '4cb15b8a702e136b527d0bd4d647bf93fac6eead',
             ext: '.js',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/addon-backgrounds.stories.js',
+            file: 'examples/svelte-kitchen-sink/src/stories/addon-backgrounds.stories.js',
             hash: '24bf99802265b19b94e8ac7a2df61897cf53a8f7',
             ext: '.js',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/addon-controls.stories.js',
+            file: 'examples/svelte-kitchen-sink/src/stories/addon-controls.stories.js',
             hash: 'f6c7b8853928714e7649ea4aeb5dbf56ffccf4da',
             ext: '.js',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/addon-docs.stories.mdx',
+            file: 'examples/svelte-kitchen-sink/src/stories/addon-docs.stories.mdx',
             hash: '800518bbfcfac5e5ac300a4c4ced196f5776ce4f',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/addon-knobs.stories.js',
+            file: 'examples/svelte-kitchen-sink/src/stories/addon-knobs.stories.js',
             hash: 'edc36a3f3300ee7087fe88117885dec655f825d0',
             ext: '.js',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/addon-links.stories.js',
+            file: 'examples/svelte-kitchen-sink/src/stories/addon-links.stories.js',
             hash: '74ec418fe8a0303aae07fb8a7a48cb40741664fa',
             ext: '.js',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/argstable.stories.js',
+            file: 'examples/svelte-kitchen-sink/src/stories/argstable.stories.js',
             hash: 'c804e96cc10101fee8cd86cc3ef358ce189a7be7',
             ext: '.js',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/BorderDecorator.svelte',
+            file: 'examples/svelte-kitchen-sink/src/stories/BorderDecorator.svelte',
             hash: '52365b2008ba3665c51c6d2c346acede38e1f24c',
             ext: '.svelte',
           },
@@ -2071,8 +1909,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/decorators.stories.js',
+            file: 'examples/svelte-kitchen-sink/src/stories/decorators.stories.js',
             hash: '6b9a1e6993c2cd95c12b9cb41566393e8de6f902',
             ext: '.js',
           },
@@ -2082,44 +1919,37 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/views/ActionKnobView.svelte',
+            file: 'examples/svelte-kitchen-sink/src/stories/views/ActionKnobView.svelte',
             hash: 'fb37b663ce163e44d8681d784c8fdb3dd83aa0d1',
             ext: '.svelte',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/views/ActionLinkView.svelte',
+            file: 'examples/svelte-kitchen-sink/src/stories/views/ActionLinkView.svelte',
             hash: '1e4e79fdd43d99658c5a077911d6993482b8f818',
             ext: '.svelte',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/views/ArgsTableView.svelte',
+            file: 'examples/svelte-kitchen-sink/src/stories/views/ArgsTableView.svelte',
             hash: 'c81fb0578f9feb31c71b3e28335fa631e17990e8',
             ext: '.svelte',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/views/ButtonView.svelte',
+            file: 'examples/svelte-kitchen-sink/src/stories/views/ButtonView.svelte',
             hash: '7306df6a054ae7a8f792e2bf9865087b3ef4b0a1',
             ext: '.svelte',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/views/ControlShowcaseView.svelte',
+            file: 'examples/svelte-kitchen-sink/src/stories/views/ControlShowcaseView.svelte',
             hash: '9112e9204c3c999821d878482f8e78f6fc157e2a',
             ext: '.svelte',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/views/ErrorView.svelte',
+            file: 'examples/svelte-kitchen-sink/src/stories/views/ErrorView.svelte',
             hash: '50847c1e169ffa82eddf3c3668fc2789a917a341',
             ext: '.svelte',
           },
           {
-            file:
-              'examples/svelte-kitchen-sink/src/stories/views/WelcomeView.svelte',
+            file: 'examples/svelte-kitchen-sink/src/stories/views/WelcomeView.svelte',
             hash: 'f3bfc9442b3d7c7415de7782d0996933998d213c',
             ext: '.svelte',
           },
@@ -2220,26 +2050,22 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/components/addon-a11y/Form/index.js',
+            file: 'examples/official-storybook/components/addon-a11y/Form/index.js',
             hash: 'c893c0a55dd6e6b03d53cfbc44aeb4af6fa84267',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/components/addon-a11y/Form/Input.js',
+            file: 'examples/official-storybook/components/addon-a11y/Form/Input.js',
             hash: 'f5fca29664d8b11d03df01388b5afdd5f57eba6f',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/components/addon-a11y/Form/Label.js',
+            file: 'examples/official-storybook/components/addon-a11y/Form/Label.js',
             hash: '5f3799a6ac6c711dfd8c9a789179cb3077550092',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/components/addon-a11y/Form/Row.js',
+            file: 'examples/official-storybook/components/addon-a11y/Form/Row.js',
             hash: '51f87b04052935686c797a9d893951769d5f7d02',
             ext: '.js',
           },
@@ -2274,8 +2100,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/components/ImportedPropsButton.js',
+            file: 'examples/official-storybook/components/ImportedPropsButton.js',
             hash: 'b8a1e7e88cd654bb5233e5e66f5b5c6dea7b12e4',
             ext: '.js',
           },
@@ -2360,206 +2185,172 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.md',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-a11y/base-button.stories.js',
+            file: 'examples/official-storybook/stories/addon-a11y/base-button.stories.js',
             hash: 'ff3dd0145b2bb6360cdd442fdb309fb33c9435d2',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-a11y/button.stories.js',
+            file: 'examples/official-storybook/stories/addon-a11y/button.stories.js',
             hash: 'ba4521b719299edef0f8558516fb11ef1cabfa21',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-a11y/form.stories.js',
+            file: 'examples/official-storybook/stories/addon-a11y/form.stories.js',
             hash: 'a60eb6b4a6d30f229bc013e2e347e283dafb8704',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-a11y/highlight.stories.js',
+            file: 'examples/official-storybook/stories/addon-a11y/highlight.stories.js',
             hash: '88af6f4086bc1e04565626b8b697afd0a7520b8b',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-a11y/image.stories.js',
+            file: 'examples/official-storybook/stories/addon-a11y/image.stories.js',
             hash: 'f96410cbd7f10403b77b944d0e1b6033de78951b',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-a11y/typography.stories.js',
+            file: 'examples/official-storybook/stories/addon-a11y/typography.stories.js',
             hash: '1acf3b81bf23aa6c2064407232a81d9e977cacde',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-actions.stories.js',
+            file: 'examples/official-storybook/stories/addon-actions.stories.js',
             hash: 'fd4f3223570045b4335670394d2ec8d16d0fbd87',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-backgrounds.stories.js',
+            file: 'examples/official-storybook/stories/addon-backgrounds.stories.js',
             hash: '3ad15dc5a00b50ee7ede8a18e129acec05fed183',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-controls.stories.tsx',
+            file: 'examples/official-storybook/stories/addon-controls.stories.tsx',
             hash: '93040bf0a443c953fb9e99d3d3e4e99e2e510629',
             ext: '.tsx',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-cssresources.stories.js',
+            file: 'examples/official-storybook/stories/addon-cssresources.stories.js',
             hash: '92d4ef7af59503947791b467f06c41d90741cdf2',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-design-assets.stories.js',
+            file: 'examples/official-storybook/stories/addon-design-assets.stories.js',
             hash: '05361efae06b12ecd64d476860be7b209bc97646',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/addon-docs-blocks.stories.js',
+            file: 'examples/official-storybook/stories/addon-docs/addon-docs-blocks.stories.js',
             hash: 'edb017b0f237df5a26b304974b06d32da7dcbed3',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/addon-docs-mdx.stories.mdx',
+            file: 'examples/official-storybook/stories/addon-docs/addon-docs-mdx.stories.mdx',
             hash: '58fad82735405f0b29168c04a76ea4b9db3a8e2d',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/addon-docs.stories.js',
+            file: 'examples/official-storybook/stories/addon-docs/addon-docs.stories.js',
             hash: 'b559a7a94fd8b5617a57d6c6ff7514bbd0e1acd6',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/array-subcomponents.stories.js',
+            file: 'examples/official-storybook/stories/addon-docs/array-subcomponents.stories.js',
             hash: 'c42ffd6048c2552b9986a2965148507120aadb0e',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/colorpalette.stories.mdx',
+            file: 'examples/official-storybook/stories/addon-docs/colorpalette.stories.mdx',
             hash: '91537cda500f5206b7d2f94c71e531e308a4b515',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/container-override.stories.mdx',
+            file: 'examples/official-storybook/stories/addon-docs/container-override.stories.mdx',
             hash: 'ff728f5642960de53c39489d4042d7c38c1b5e1d',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/csf-with-mdx-docs.stories.js',
+            file: 'examples/official-storybook/stories/addon-docs/csf-with-mdx-docs.stories.js',
             hash: '7e88ab303f56dd2d79ee8317126e997f9e2adc03',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/csf-with-mdx-docs.stories.mdx',
+            file: 'examples/official-storybook/stories/addon-docs/csf-with-mdx-docs.stories.mdx',
             hash: 'ad7ef620f3e15137ba0fe3de98d7c11f29b53a27',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/docs-only.stories.mdx',
+            file: 'examples/official-storybook/stories/addon-docs/docs-only.stories.mdx',
             hash: '986d5445f41ddb6162878379e76ee059168ae2bc',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/dynamic-title.stories.js',
+            file: 'examples/official-storybook/stories/addon-docs/dynamic-title.stories.js',
             hash: '1ee17c07f9b286130a1412953cfdbc6fcd9b9975',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/forward-ref-inner-proptypes.stories.js',
+            file: 'examples/official-storybook/stories/addon-docs/forward-ref-inner-proptypes.stories.js',
             hash: 'fc6789af1dbbbfa169131d24376fe244b2d71314',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/forward-ref-outer-proptypes.stories.js',
+            file: 'examples/official-storybook/stories/addon-docs/forward-ref-outer-proptypes.stories.js',
             hash: '7feb23f4050d67aa592cde55f535f19adfdc1715',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/imported.stories.tsx',
+            file: 'examples/official-storybook/stories/addon-docs/imported.stories.tsx',
             hash: '122fe922ee42a99171bd39ff4558ac77fb64fa3b',
             ext: '.tsx',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/markdown.stories.mdx',
+            file: 'examples/official-storybook/stories/addon-docs/markdown.stories.mdx',
             hash: 'd89a82a9f4ec9dc92ac5888435cfff472f486a0b',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/mdx.stories.js',
+            file: 'examples/official-storybook/stories/addon-docs/mdx.stories.js',
             hash: '77bc2d757e5598b7f3a9c401816800e36b1b9bf0',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/memo.stories.js',
+            file: 'examples/official-storybook/stories/addon-docs/memo.stories.js',
             hash: '3d07ae61abc912bea09d2291b665d8d19fac76fb',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/meta-string-template.stories.mdx',
+            file: 'examples/official-storybook/stories/addon-docs/meta-string-template.stories.mdx',
             hash: '15aa10637a43523b8f1b885668aff2d231ebbbd7',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/meta-title-quotes.stories.mdx',
+            file: 'examples/official-storybook/stories/addon-docs/meta-title-quotes.stories.mdx',
             hash: 'd89cdab9ab95ebb3288abae4b7d3339cfa2715d1',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/mixed-leaves-component.stories.js',
+            file: 'examples/official-storybook/stories/addon-docs/mixed-leaves-component.stories.js',
             hash: '3d6a49874f1cd6295033be386d98269a739045ba',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/mixed-leaves-folder.stories.js',
+            file: 'examples/official-storybook/stories/addon-docs/mixed-leaves-folder.stories.js',
             hash: '2f9216606fe9568a233d1a92d99835c653533723',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/props-include-exclude.stories.mdx',
+            file: 'examples/official-storybook/stories/addon-docs/props-include-exclude.stories.mdx',
             hash: '836d4d133249fad8b018f6467fe51d4f68b6533e',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/props.stories.mdx',
+            file: 'examples/official-storybook/stories/addon-docs/props.stories.mdx',
             hash: '94bacefa5e3c37ed477cc8feea1fae617711ab78',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/source.stories.tsx',
+            file: 'examples/official-storybook/stories/addon-docs/source.stories.tsx',
             hash: '8fce2c7422f79cc428b0a04075a20dc6eb7eb15e',
             ext: '.tsx',
           },
@@ -2569,26 +2360,22 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/subcomponents.stories.js',
+            file: 'examples/official-storybook/stories/addon-docs/subcomponents.stories.js',
             hash: '2fa7db68a0b92c3783a58fa707cd7bec66803089',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/title-generators.ts',
+            file: 'examples/official-storybook/stories/addon-docs/title-generators.ts',
             hash: 'f5b0f0abce451964dbf6ddc0c5c1fcb56ef59d29',
             ext: '.ts',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/transform-source.stories.js',
+            file: 'examples/official-storybook/stories/addon-docs/transform-source.stories.js',
             hash: 'd805bc05ddf0b116b63052a309ff72ad07b6bdf8',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-docs/ts-button.stories.tsx',
+            file: 'examples/official-storybook/stories/addon-docs/ts-button.stories.tsx',
             hash: '6b8800c31864aba8e0cbb7106f7049aa20bd909e',
             ext: '.tsx',
           },
@@ -2598,8 +2385,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-graphql.stories.js',
+            file: 'examples/official-storybook/stories/addon-graphql.stories.js',
             hash: '52e7465f8c0b1f855eb6de1ce1a69153fef9275b',
             ext: '.js',
           },
@@ -2609,98 +2395,82 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-jest.testresults.json',
+            file: 'examples/official-storybook/stories/addon-jest.testresults.json',
             hash: 'd6bd6709fad77ba9266708155f979fc5ddce5227',
             ext: '.json',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-knobs/with-knobs-decorators.stories.js',
+            file: 'examples/official-storybook/stories/addon-knobs/with-knobs-decorators.stories.js',
             hash: '86bfa4c795a0e3e33df1735143b8f08e1a540376',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-knobs/with-knobs-options.stories.js',
+            file: 'examples/official-storybook/stories/addon-knobs/with-knobs-options.stories.js',
             hash: '5e14440af8266be13c34bd050d1b607ad6a1c5c3',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-knobs/with-knobs.stories.js',
+            file: 'examples/official-storybook/stories/addon-knobs/with-knobs.stories.js',
             hash: '928d8833eee82c8f5ec3da32cba0ff226c01d4f3',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-links/button.stories.tsx',
+            file: 'examples/official-storybook/stories/addon-links/button.stories.tsx',
             hash: '73b9352134cfb0d90622db3154e2ea7fa04f29b4',
             ext: '.tsx',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-links/href.stories.js',
+            file: 'examples/official-storybook/stories/addon-links/href.stories.js',
             hash: '64a912762d498eff64304622a8bcc7b1d370a68c',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-links/link.stories.js',
+            file: 'examples/official-storybook/stories/addon-links/link.stories.js',
             hash: '110ea0cb8d3b1d79dc47f8b4d6a9c5c39c6f6721',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-links/scroll.stories.js',
+            file: 'examples/official-storybook/stories/addon-links/scroll.stories.js',
             hash: '134bb026f884f0cc130f5814f37cf087b74882b5',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-links/select.stories.js',
+            file: 'examples/official-storybook/stories/addon-links/select.stories.js',
             hash: 'debbf867a3864e58af075149e098ca6123f3164f',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-options.stories.js',
+            file: 'examples/official-storybook/stories/addon-options.stories.js',
             hash: '0ee37459418ecfe15491b339f140a3efec97fbee',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-queryparams.stories.js',
+            file: 'examples/official-storybook/stories/addon-queryparams.stories.js',
             hash: 'ee32dbe82750d962dafa6f7af00e32c846c9d280',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-storyshots.stories.js',
+            file: 'examples/official-storybook/stories/addon-storyshots.stories.js',
             hash: 'eaf56417ff5a0d37f7273e34bd1cccacaa46422d',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-toolbars.stories.js',
+            file: 'examples/official-storybook/stories/addon-toolbars.stories.js',
             hash: '5a36dc1cab491367eadca67d9e7b8a084e7ece4b',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-viewport/custom-default.stories.js',
+            file: 'examples/official-storybook/stories/addon-viewport/custom-default.stories.js',
             hash: '8b6700546a2593078f6eb593d452764f8fdc6769',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/addon-viewport/default.stories.js',
+            file: 'examples/official-storybook/stories/addon-viewport/default.stories.js',
             hash: 'bdd2ee5ed7fe13bab16944b53f433d733c5c3a73',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/controls-sort.stories.tsx',
+            file: 'examples/official-storybook/stories/controls-sort.stories.tsx',
             hash: '46dc611795d130d1ff0c920072748ee0d847f556',
             ext: '.tsx',
           },
@@ -2710,14 +2480,12 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/core/async.stories.inactive.js',
+            file: 'examples/official-storybook/stories/core/async.stories.inactive.js',
             hash: 'bd6a8ad5ec5bef4ac181d0be322364fc394fbde8',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/core/decorators.stories.js',
+            file: 'examples/official-storybook/stories/core/decorators.stories.js',
             hash: '7184460ac2541793635c517ab8e4541f1777e81f',
             ext: '.js',
           },
@@ -2737,8 +2505,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/core/interleaved-exports.stories.js',
+            file: 'examples/official-storybook/stories/core/interleaved-exports.stories.js',
             hash: 'b585bfa6b3d202404960730b5a32995df351b10a',
             ext: '.js',
           },
@@ -2758,14 +2525,12 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/core/named-export-order.stories.js',
+            file: 'examples/official-storybook/stories/core/named-export-order.stories.js',
             hash: '03fda7eb5bcf881481dfcc3782967a831b94d94d',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/core/parameters.stories.js',
+            file: 'examples/official-storybook/stories/core/parameters.stories.js',
             hash: 'f98c478beae2c0d357c7e0538de19a4ef237648b',
             ext: '.js',
           },
@@ -2775,14 +2540,12 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/core/reexport-source-loader.stories.js',
+            file: 'examples/official-storybook/stories/core/reexport-source-loader.stories.js',
             hash: '8bbac6a575f4c144e33ddc6b6c689ca2aa0cf1f8',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/core/rendering.stories.js',
+            file: 'examples/official-storybook/stories/core/rendering.stories.js',
             hash: 'f446292b95ff128b28125a2f28ef2f7d332ca669',
             ext: '.js',
           },
@@ -2807,14 +2570,12 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'examples/official-storybook/stories/demo/csf-embedding.test.js',
+            file: 'examples/official-storybook/stories/demo/csf-embedding.test.js',
             hash: 'ba26d54e53d3a65ffdd2f33b96aaee91dd1e54c2',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/stories/demo/typed-button.stories.tsx',
+            file: 'examples/official-storybook/stories/demo/typed-button.stories.tsx',
             hash: 'ec57fd8146bc5b6459a700818f9006599a0b4d06',
             ext: '.tsx',
           },
@@ -2844,44 +2605,37 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'examples/official-storybook/stories/other-dirname.stories.js',
+            file: 'examples/official-storybook/stories/other-dirname.stories.js',
             hash: '734a8a8912be3a317e6585096065f9d98b3831bf',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/storyshots-puppeteer/__image_snapshots__/storyshots-image-runner-js-image-snapshots-addons-storyshots-block-story-1-snap.png',
+            file: 'examples/official-storybook/storyshots-puppeteer/__image_snapshots__/storyshots-image-runner-js-image-snapshots-addons-storyshots-block-story-1-snap.png',
             hash: '97342bef03deb8c7f7d0ddf00c7a21acbb6e44b5',
             ext: '.png',
           },
           {
-            file:
-              'examples/official-storybook/storyshots-puppeteer/axe-tests.runner.js',
+            file: 'examples/official-storybook/storyshots-puppeteer/axe-tests.runner.js',
             hash: '05dde656719d086dbe64b02232c74e241a8560bb',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/storyshots-puppeteer/getStorybookUrl.js',
+            file: 'examples/official-storybook/storyshots-puppeteer/getStorybookUrl.js',
             hash: '913acc6c592c7dcd49198c091fb92ca38cb93fd4',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/storyshots-puppeteer/jest.config.js',
+            file: 'examples/official-storybook/storyshots-puppeteer/jest.config.js',
             hash: '427991f8b937894fc1b004d8c956bbedbd61f58b',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/storyshots-puppeteer/puppeteer-tests.runner.js',
+            file: 'examples/official-storybook/storyshots-puppeteer/puppeteer-tests.runner.js',
             hash: 'df5db691816a9d9cc8d58669d48bac7cab58a603',
             ext: '.js',
           },
           {
-            file:
-              'examples/official-storybook/storyshots-puppeteer/storyshots-image.runner.js',
+            file: 'examples/official-storybook/storyshots-puppeteer/storyshots-image.runner.js',
             hash: '8f69249353ded58a35368e5d8fc5eeb4f5004e8a',
             ext: '.js',
           },
@@ -3089,8 +2843,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'examples/cra-ts-essentials/src/stories/0-Welcome.stories.tsx',
+            file: 'examples/cra-ts-essentials/src/stories/0-Welcome.stories.tsx',
             hash: '29a1920ce69df71cf2fbd2dc9ff9a457a1bc5bd0',
             ext: '.tsx',
           },
@@ -3181,74 +2934,62 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/__snapshots__/addon-a11y.stories.storyshot',
+            file: 'examples/html-kitchen-sink/stories/__snapshots__/addon-a11y.stories.storyshot',
             hash: 'd2f9a117a089d29e011b9e6e1e58434245527cee',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/__snapshots__/addon-actions.stories.storyshot',
+            file: 'examples/html-kitchen-sink/stories/__snapshots__/addon-actions.stories.storyshot',
             hash: '803a63aafdce6de2b03b1ed0593bd38d54cc1660',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/__snapshots__/addon-backgrounds.stories.storyshot',
+            file: 'examples/html-kitchen-sink/stories/__snapshots__/addon-backgrounds.stories.storyshot',
             hash: '7a5e0008d7b6da9a0c574b987311a475ab5da1fd',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/__snapshots__/addon-controls.stories.storyshot',
+            file: 'examples/html-kitchen-sink/stories/__snapshots__/addon-controls.stories.storyshot',
             hash: '67525782be1dc493e5f786c7d3c5c45714a09213',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/__snapshots__/addon-docs.stories.storyshot',
+            file: 'examples/html-kitchen-sink/stories/__snapshots__/addon-docs.stories.storyshot',
             hash: '63efe8baf0322456b50710658d19c25a08a191d6',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/__snapshots__/addon-events.stories.storyshot',
+            file: 'examples/html-kitchen-sink/stories/__snapshots__/addon-events.stories.storyshot',
             hash: 'e87017fba576b7c4e730f2c2492660c2e5660cd1',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/__snapshots__/addon-jest.stories.storyshot',
+            file: 'examples/html-kitchen-sink/stories/__snapshots__/addon-jest.stories.storyshot',
             hash: '437fd6b56c74008086ceeac69c3b9186f4db31a8',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/__snapshots__/addon-knobs.stories.storyshot',
+            file: 'examples/html-kitchen-sink/stories/__snapshots__/addon-knobs.stories.storyshot',
             hash: '3366b7f3e0bc315cde37b8cdd1e98f35bf22a9de',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/__snapshots__/button.stories.storyshot',
+            file: 'examples/html-kitchen-sink/stories/__snapshots__/button.stories.storyshot',
             hash: '8402ab0e25366c71e0e697711047c262b0b1d84e',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/__snapshots__/loaders.stories.storyshot',
+            file: 'examples/html-kitchen-sink/stories/__snapshots__/loaders.stories.storyshot',
             hash: '91af9532caf82f54b32ee44d400aa6f075b54eb5',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/__snapshots__/source-loader.stories.storyshot',
+            file: 'examples/html-kitchen-sink/stories/__snapshots__/source-loader.stories.storyshot',
             hash: '8ba05f3c3c96d693f73e360558160ada3d5a21d7',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/__snapshots__/welcome.stories.storyshot',
+            file: 'examples/html-kitchen-sink/stories/__snapshots__/welcome.stories.storyshot',
             hash: '8b68425a1eaf0f272d971d0c836b918740b9b6cf',
             ext: '.storyshot',
           },
@@ -3263,14 +3004,12 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/addon-backgrounds.stories.js',
+            file: 'examples/html-kitchen-sink/stories/addon-backgrounds.stories.js',
             hash: '91b21d9d6c16e3086eba88225c94a5ea3089bc1c',
             ext: '.js',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/addon-controls.stories.js',
+            file: 'examples/html-kitchen-sink/stories/addon-controls.stories.js',
             hash: '034e440b19dee58c1566ed4b8d0a965242677a7e',
             ext: '.js',
           },
@@ -3295,8 +3034,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/addon-jest.testresults.json',
+            file: 'examples/html-kitchen-sink/stories/addon-jest.testresults.json',
             hash: '14cb9a48d08f7befbf57845cd7e4e5e2dd8375f7',
             ext: '.json',
           },
@@ -3316,104 +3054,87 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/from-essentials/__snapshots__/Button.stories.storyshot',
+            file: 'examples/html-kitchen-sink/stories/from-essentials/__snapshots__/Button.stories.storyshot',
             hash: '91d7916acb88ef60b2134ee324b41c52a66b13ea',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/from-essentials/__snapshots__/Header.stories.storyshot',
+            file: 'examples/html-kitchen-sink/stories/from-essentials/__snapshots__/Header.stories.storyshot',
             hash: 'd43c0b2517a3c8fcd08d62d07af60ff432ffaf93',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/from-essentials/__snapshots__/Page.stories.storyshot',
+            file: 'examples/html-kitchen-sink/stories/from-essentials/__snapshots__/Page.stories.storyshot',
             hash: '6a9ca27deff4446897e50508c8469c10b6cef6cd',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/from-essentials/assets/code-brackets.svg',
+            file: 'examples/html-kitchen-sink/stories/from-essentials/assets/code-brackets.svg',
             hash: '73de9477600103d031de4114e20468832cfe0d78',
             ext: '.svg',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/from-essentials/assets/colors.svg',
+            file: 'examples/html-kitchen-sink/stories/from-essentials/assets/colors.svg',
             hash: '17d58d516e149de0fa83dc6e684ebd2901aeabf7',
             ext: '.svg',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/from-essentials/assets/comments.svg',
+            file: 'examples/html-kitchen-sink/stories/from-essentials/assets/comments.svg',
             hash: '6493a139f523ee8cceccfb242fd532c0fbfcb5c3',
             ext: '.svg',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/from-essentials/assets/direction.svg',
+            file: 'examples/html-kitchen-sink/stories/from-essentials/assets/direction.svg',
             hash: '65676ac27229460d03c6cfc929210f4773c37d45',
             ext: '.svg',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/from-essentials/assets/flow.svg',
+            file: 'examples/html-kitchen-sink/stories/from-essentials/assets/flow.svg',
             hash: '8ac27db403c236ff9f5db8bf023c396570dc8f6b',
             ext: '.svg',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/from-essentials/assets/plugin.svg',
+            file: 'examples/html-kitchen-sink/stories/from-essentials/assets/plugin.svg',
             hash: '29e5c690c0a250f78a5d6f88410fbc14a268e4c2',
             ext: '.svg',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/from-essentials/assets/repo.svg',
+            file: 'examples/html-kitchen-sink/stories/from-essentials/assets/repo.svg',
             hash: 'f386ee902c1fe318885140acebab6aa2f8549646',
             ext: '.svg',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/from-essentials/assets/stackalt.svg',
+            file: 'examples/html-kitchen-sink/stories/from-essentials/assets/stackalt.svg',
             hash: '9b7ad2743506eb0ec12daa9a11ec2321a05d6775',
             ext: '.svg',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/from-essentials/button.css',
+            file: 'examples/html-kitchen-sink/stories/from-essentials/button.css',
             hash: 'dc91dc76370b78ec277e634f8615b67ca55a5145',
             ext: '.css',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/from-essentials/Button.stories.ts',
+            file: 'examples/html-kitchen-sink/stories/from-essentials/Button.stories.ts',
             hash: '50d2aa30b17e2fea74cddca450354744080b9ada',
             ext: '.ts',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/from-essentials/Button.ts',
+            file: 'examples/html-kitchen-sink/stories/from-essentials/Button.ts',
             hash: '4da8ab88fa382109edf9fe4de38d49499a050289',
             ext: '.ts',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/from-essentials/header.css',
+            file: 'examples/html-kitchen-sink/stories/from-essentials/header.css',
             hash: 'acadc9ec8c7f4e7ed196d6901c12774a60ac30c1',
             ext: '.css',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/from-essentials/Header.stories.ts',
+            file: 'examples/html-kitchen-sink/stories/from-essentials/Header.stories.ts',
             hash: '476dfd5b89c43c37a2439772aa9bb58c1ab59ea5',
             ext: '.ts',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/from-essentials/Header.ts',
+            file: 'examples/html-kitchen-sink/stories/from-essentials/Header.ts',
             hash: '2923e721eb65c44c700469476d298733776ebe2a',
             ext: '.ts',
           },
@@ -3423,8 +3144,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.css',
           },
           {
-            file:
-              'examples/html-kitchen-sink/stories/from-essentials/Page.stories.ts',
+            file: 'examples/html-kitchen-sink/stories/from-essentials/Page.stories.ts',
             hash: '14318d63fca0572f11be3fbd85c5b18320eac52b',
             ext: '.ts',
           },
@@ -3647,68 +3367,57 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.png',
           },
           {
-            file:
-              'examples/riot-kitchen-sink/src/stories/__snapshots__/addon-actions.stories.storyshot',
+            file: 'examples/riot-kitchen-sink/src/stories/__snapshots__/addon-actions.stories.storyshot',
             hash: 'd45cb2881b25dab6699206eb2167074aad28d6f2',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/riot-kitchen-sink/src/stories/__snapshots__/addon-backgrounds.stories.storyshot',
+            file: 'examples/riot-kitchen-sink/src/stories/__snapshots__/addon-backgrounds.stories.storyshot',
             hash: 'aeea57e09afef88362ae756332a9f099015907fb',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/riot-kitchen-sink/src/stories/__snapshots__/addon-knobs.stories.storyshot',
+            file: 'examples/riot-kitchen-sink/src/stories/__snapshots__/addon-knobs.stories.storyshot',
             hash: 'b459f6778c772f8d71179b686a6f6c54dc68b958',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/riot-kitchen-sink/src/stories/__snapshots__/addon-links.stories.storyshot',
+            file: 'examples/riot-kitchen-sink/src/stories/__snapshots__/addon-links.stories.storyshot',
             hash: 'ddccd86f6bcd5cba68070649b7ca5389a71b9a99',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/riot-kitchen-sink/src/stories/__snapshots__/core.stories.storyshot',
+            file: 'examples/riot-kitchen-sink/src/stories/__snapshots__/core.stories.storyshot',
             hash: 'f273095490f2541c5afbe769aefc78f5ef6a684c',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/riot-kitchen-sink/src/stories/__snapshots__/nested-tags.stories.storyshot',
+            file: 'examples/riot-kitchen-sink/src/stories/__snapshots__/nested-tags.stories.storyshot',
             hash: 'c571daeaacd6dca4813c49db40447f5e1c94d6e5',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/riot-kitchen-sink/src/stories/__snapshots__/story-code.stories.storyshot',
+            file: 'examples/riot-kitchen-sink/src/stories/__snapshots__/story-code.stories.storyshot',
             hash: '82ab91deac809d7864f81f852db903cd34fdc2c5',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/riot-kitchen-sink/src/stories/addon-actions.stories.js',
+            file: 'examples/riot-kitchen-sink/src/stories/addon-actions.stories.js',
             hash: '0c6d41b6324273bbdb736347c97c763849e0605b',
             ext: '.js',
           },
           {
-            file:
-              'examples/riot-kitchen-sink/src/stories/addon-backgrounds.stories.js',
+            file: 'examples/riot-kitchen-sink/src/stories/addon-backgrounds.stories.js',
             hash: '8f658a0bd2199f74252b0d7b196ba459450ec70e',
             ext: '.js',
           },
           {
-            file:
-              'examples/riot-kitchen-sink/src/stories/addon-knobs.stories.js',
+            file: 'examples/riot-kitchen-sink/src/stories/addon-knobs.stories.js',
             hash: 'b2f9b65a0cbabeab7d70062aec5358b546b6244d',
             ext: '.js',
           },
           {
-            file:
-              'examples/riot-kitchen-sink/src/stories/addon-links.stories.js',
+            file: 'examples/riot-kitchen-sink/src/stories/addon-links.stories.js',
             hash: 'bf494beaa8821d03c26aa41e1bda96eeb8bb7fec',
             ext: '.js',
           },
@@ -3728,8 +3437,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/riot-kitchen-sink/src/stories/nested-tags.stories.js',
+            file: 'examples/riot-kitchen-sink/src/stories/nested-tags.stories.js',
             hash: 'cb7f0463eda24b3534014cd4f25dc83d2ffbbcf9',
             ext: '.js',
           },
@@ -3739,8 +3447,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.txt',
           },
           {
-            file:
-              'examples/riot-kitchen-sink/src/stories/story-code.stories.js',
+            file: 'examples/riot-kitchen-sink/src/stories/story-code.stories.js',
             hash: '86988519a3d3552697eb5f11d6f356de902a14a6',
             ext: '.js',
           },
@@ -3854,8 +3561,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/cra-kitchen-sink/src/components/FastRefreshExample.js',
+            file: 'examples/cra-kitchen-sink/src/components/FastRefreshExample.js',
             hash: 'd9e382ffa97cf5c4235dd859bedb6191cd0756f6',
             ext: '.js',
           },
@@ -3890,8 +3596,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/cra-kitchen-sink/src/stories/cra-dynamic-import.stories.js',
+            file: 'examples/cra-kitchen-sink/src/stories/cra-dynamic-import.stories.js',
             hash: '8e0e22e94b2fdcb7ebdf59ccd4186181ed9d507e',
             ext: '.js',
           },
@@ -3901,14 +3606,12 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/cra-kitchen-sink/src/stories/fast-refresh.stories.js',
+            file: 'examples/cra-kitchen-sink/src/stories/fast-refresh.stories.js',
             hash: 'f96f85877dcfe6d843d86d8fc8800ac5f0acf4c6',
             ext: '.js',
           },
           {
-            file:
-              'examples/cra-kitchen-sink/src/stories/force-rerender.stories.js',
+            file: 'examples/cra-kitchen-sink/src/stories/force-rerender.stories.js',
             hash: '2635e6739ffdaf3d5d7b3b03f6dcc9e3ab5387c8',
             ext: '.js',
           },
@@ -3918,8 +3621,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/cra-kitchen-sink/src/stories/long-description.stories.js',
+            file: 'examples/cra-kitchen-sink/src/stories/long-description.stories.js',
             hash: 'd456dfd3810094a1febdb56f2c7f6c19d5150ae2',
             ext: '.js',
           },
@@ -4036,14 +3738,12 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/rax-kitchen-sink/src/stories/addon-actions.stories.js',
+            file: 'examples/rax-kitchen-sink/src/stories/addon-actions.stories.js',
             hash: 'a5d6a1fc0539eb3cba715caae446ab852a1def11',
             ext: '.js',
           },
           {
-            file:
-              'examples/rax-kitchen-sink/src/stories/addon-knobs.stories.js',
+            file: 'examples/rax-kitchen-sink/src/stories/addon-knobs.stories.js',
             hash: '2777e6a6e6e0296a49103bcfcf1fe2a2105c9751',
             ext: '.js',
           },
@@ -4150,104 +3850,87 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.png',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/__snapshots__/addon-actions.stories.storyshot',
+            file: 'examples/vue-kitchen-sink/src/stories/__snapshots__/addon-actions.stories.storyshot',
             hash: '96a1f741569712925508f40253b85ea9015ded7d',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/__snapshots__/addon-backgrounds.stories.storyshot',
+            file: 'examples/vue-kitchen-sink/src/stories/__snapshots__/addon-backgrounds.stories.storyshot',
             hash: 'b13aebbc5830c353d0f9c2411070c1f87d164785',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/__snapshots__/addon-controls.stories.storyshot',
+            file: 'examples/vue-kitchen-sink/src/stories/__snapshots__/addon-controls.stories.storyshot',
             hash: '9e9705b5c650b94d3b11a2d4c2acb193cb6564b5',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/__snapshots__/addon-knobs.stories.storyshot',
+            file: 'examples/vue-kitchen-sink/src/stories/__snapshots__/addon-knobs.stories.storyshot',
             hash: 'ac001b7686ca8eb1a729d7438c41a1ba27e0c15f',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/__snapshots__/addon-links.stories.storyshot',
+            file: 'examples/vue-kitchen-sink/src/stories/__snapshots__/addon-links.stories.storyshot',
             hash: '829b529042e95a077967240ca0bcab43eac66744',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/__snapshots__/core-errors.stories.storyshot',
+            file: 'examples/vue-kitchen-sink/src/stories/__snapshots__/core-errors.stories.storyshot',
             hash: '7c1f2d2bb0b6df5e8531239c5103966aadcb4654',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/__snapshots__/core-template.stories.storyshot',
+            file: 'examples/vue-kitchen-sink/src/stories/__snapshots__/core-template.stories.storyshot',
             hash: 'd4da5fd31ce676de79d730249948f467ea5a6ea5',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/__snapshots__/core.stories.storyshot',
+            file: 'examples/vue-kitchen-sink/src/stories/__snapshots__/core.stories.storyshot',
             hash: 'a8db6fb38ee03ca156a89fd52841387482cf0743',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/__snapshots__/custom-decorators.stories.storyshot',
+            file: 'examples/vue-kitchen-sink/src/stories/__snapshots__/custom-decorators.stories.storyshot',
             hash: 'd1b0a347facd515c1c232a9069b82abf4b6fca7c',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/__snapshots__/custom-rendering.stories.storyshot',
+            file: 'examples/vue-kitchen-sink/src/stories/__snapshots__/custom-rendering.stories.storyshot',
             hash: 'cea7424ece37c9db26c2d6e98eaa18b8fbc2f33b',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/addon-actions.stories.js',
+            file: 'examples/vue-kitchen-sink/src/stories/addon-actions.stories.js',
             hash: '2e0ac18b964cbe41a796cc75b915efa5facf749a',
             ext: '.js',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/addon-backgrounds.stories.js',
+            file: 'examples/vue-kitchen-sink/src/stories/addon-backgrounds.stories.js',
             hash: '5400daf8829e10b12ae112a4df9de19194491866',
             ext: '.js',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/addon-controls.stories.js',
+            file: 'examples/vue-kitchen-sink/src/stories/addon-controls.stories.js',
             hash: '7ba2f091e1c02bc7298f87d19c26c526e779b3d6',
             ext: '.js',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/addon-controls.stories.mdx',
+            file: 'examples/vue-kitchen-sink/src/stories/addon-controls.stories.mdx',
             hash: '213be4c2aedec70db2b1b63015f9e2e40555e293',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/addon-docs.stories.mdx',
+            file: 'examples/vue-kitchen-sink/src/stories/addon-docs.stories.mdx',
             hash: '201a1e89c2c9d769d34bcd0997026b5353dd7fc0',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/addon-knobs.stories.js',
+            file: 'examples/vue-kitchen-sink/src/stories/addon-knobs.stories.js',
             hash: '36fcb6ddc51c04d020a8ac65dadb6d0e3506ba02',
             ext: '.js',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/addon-links.stories.js',
+            file: 'examples/vue-kitchen-sink/src/stories/addon-links.stories.js',
             hash: 'ff4bf352b05bbe68c0e5525006cd491425cb0f2c',
             ext: '.js',
           },
@@ -4257,86 +3940,72 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.vue',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/components/__snapshots__/app.stories.storyshot',
+            file: 'examples/vue-kitchen-sink/src/stories/components/__snapshots__/app.stories.storyshot',
             hash: '2b30c7b211467167aafdbb812bc62693a7ffb802',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/components/__snapshots__/button-ts.stories.storyshot',
+            file: 'examples/vue-kitchen-sink/src/stories/components/__snapshots__/button-ts.stories.storyshot',
             hash: '7c84cb5492f3f753e29a60e6ea437b5721595383',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/components/__snapshots__/button.stories.storyshot',
+            file: 'examples/vue-kitchen-sink/src/stories/components/__snapshots__/button.stories.storyshot',
             hash: 'e89a25c25a84fc376c706e425df280fd527ba8f5',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/components/__snapshots__/info-button.stories.storyshot',
+            file: 'examples/vue-kitchen-sink/src/stories/components/__snapshots__/info-button.stories.storyshot',
             hash: 'cb3a3a3b8f0c08c582a38fe33d7e28264b2fb711',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/components/__snapshots__/welcome.stories.storyshot',
+            file: 'examples/vue-kitchen-sink/src/stories/components/__snapshots__/welcome.stories.storyshot',
             hash: '0122e0d931430544a8ccd275626b84a3986a62f4',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/components/app.stories.js',
+            file: 'examples/vue-kitchen-sink/src/stories/components/app.stories.js',
             hash: '229c3457cfe43fafba88c119e73a713d7959c819',
             ext: '.js',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/components/button-ts.stories.js',
+            file: 'examples/vue-kitchen-sink/src/stories/components/button-ts.stories.js',
             hash: 'caab5dd3642b3cef6c4ec9cb52274c165f1ac934',
             ext: '.js',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/components/button.stories.js',
+            file: 'examples/vue-kitchen-sink/src/stories/components/button.stories.js',
             hash: '36ed1818287f61e201e1a3ca63b425cd93d7f6ae',
             ext: '.js',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/components/ButtonTs.vue',
+            file: 'examples/vue-kitchen-sink/src/stories/components/ButtonTs.vue',
             hash: 'd316faf20c8f7fc9557b2d16e02fc3418080f0b9',
             ext: '.vue',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/components/info-button.stories.js',
+            file: 'examples/vue-kitchen-sink/src/stories/components/info-button.stories.js',
             hash: 'fba6f26201ec321bc4ccd338952d9c1c03cfdbe1',
             ext: '.js',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/components/InfoButton.vue',
+            file: 'examples/vue-kitchen-sink/src/stories/components/InfoButton.vue',
             hash: '595bf40175895963558ac4093ce7ededd7175c7f',
             ext: '.vue',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/components/welcome.stories.js',
+            file: 'examples/vue-kitchen-sink/src/stories/components/welcome.stories.js',
             hash: 'b40eaf5bdecd5b3bf7cc154b463bb3ff7e630e2d',
             ext: '.js',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/core-errors.stories.js',
+            file: 'examples/vue-kitchen-sink/src/stories/core-errors.stories.js',
             hash: '3b5c1245bfe72b13fa4c7b690bfde7cb63d4df16',
             ext: '.js',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/core-template.stories.js',
+            file: 'examples/vue-kitchen-sink/src/stories/core-template.stories.js',
             hash: '2cbb8972babf7175be5149cb4d401b6f0d2b3efa',
             ext: '.js',
           },
@@ -4346,32 +4015,27 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/custom-decorators.stories.js',
+            file: 'examples/vue-kitchen-sink/src/stories/custom-decorators.stories.js',
             hash: '06b7c5dc7d411bf49fca00c72ca61366e770192e',
             ext: '.js',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/custom-rendering.stories.js',
+            file: 'examples/vue-kitchen-sink/src/stories/custom-rendering.stories.js',
             hash: '7d6d97193d73bd558d2599c0173d1143818506b8',
             ext: '.js',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/issues/11839-undefined-bolean-prop/__snapshots__/index.stories.storyshot',
+            file: 'examples/vue-kitchen-sink/src/stories/issues/11839-undefined-bolean-prop/__snapshots__/index.stories.storyshot',
             hash: 'dfc34df7a84f6a9f9c50937b27f3528d1671ec3e',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/issues/11839-undefined-bolean-prop/component.vue',
+            file: 'examples/vue-kitchen-sink/src/stories/issues/11839-undefined-bolean-prop/component.vue',
             hash: '6ca3dd05d936ba43a578007994fbca7c8b25f827',
             ext: '.vue',
           },
           {
-            file:
-              'examples/vue-kitchen-sink/src/stories/issues/11839-undefined-bolean-prop/index.stories.js',
+            file: 'examples/vue-kitchen-sink/src/stories/issues/11839-undefined-bolean-prop/index.stories.js',
             hash: 'c63b77fe2d22481329d8ecd4e0bcd099ecd7a537',
             ext: '.js',
           },
@@ -5010,230 +4674,192 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/__snapshots__/welcome-angular.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/__snapshots__/welcome-angular.stories.storyshot',
             hash: 'fab90a3835e24bd44e254578a15148fdce3966b0',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/__snapshots__/welcome-storybook.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/__snapshots__/welcome-storybook.stories.storyshot',
             hash: '13b8459513f80e76c6e06b23c98e702ed7974ef6',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/actions/__snapshots__/addon-actions.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/addons/actions/__snapshots__/addon-actions.stories.storyshot',
             hash: 'ce3a20fae52a5ceb56c562200deb88803d714327',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/actions/addon-actions.stories.ts',
+            file: 'examples/angular-cli/src/stories/addons/actions/addon-actions.stories.ts',
             hash: 'a18426f42ada9c87d39f79f11229d6deeba09296',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/backgrounds/__snapshots__/addon-background.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/addons/backgrounds/__snapshots__/addon-background.stories.storyshot',
             hash: '0eb2c97c69ea5504b5bdbf667b1aed1c922920fd',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/backgrounds/addon-background.stories.ts',
+            file: 'examples/angular-cli/src/stories/addons/backgrounds/addon-background.stories.ts',
             hash: 'cddc9d157043623b7e1a86078ae52dd7642a4783',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/controls/__snapshots__/addon-controls.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/addons/controls/__snapshots__/addon-controls.stories.storyshot',
             hash: '3799b4c64552b8884b406ec0cd4d21cc1944db6c',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/controls/addon-controls.stories.ts',
+            file: 'examples/angular-cli/src/stories/addons/controls/addon-controls.stories.ts',
             hash: '4b26dfa5722bfbb7dbf5864251f37a6147d476cf',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/docs/__snapshots__/addon-docs.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/addons/docs/__snapshots__/addon-docs.stories.storyshot',
             hash: '70939d88e5af5956e68d4e1707797e1a340d4f94',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/docs/__snapshots__/simple.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/addons/docs/__snapshots__/simple.stories.storyshot',
             hash: '2648e92aa89fdb3ac9da417227488ae92c62a5d5',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/docs/addon-docs.stories.mdx',
+            file: 'examples/angular-cli/src/stories/addons/docs/addon-docs.stories.mdx',
             hash: '909f7692fdefd7915911410bbcf3df7edb363370',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/docs/doc-button/__snapshots__/doc-button.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/addons/docs/doc-button/__snapshots__/doc-button.stories.storyshot',
             hash: '33b6ae63d795ae4b9b4eb52bfcaaad600a3a0ec8',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/docs/doc-button/doc-button.component.html',
+            file: 'examples/angular-cli/src/stories/addons/docs/doc-button/doc-button.component.html',
             hash: '7af61d6f344df7b74536bf6d01bbecef32d948f6',
             ext: '.html',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/docs/doc-button/doc-button.component.scss',
+            file: 'examples/angular-cli/src/stories/addons/docs/doc-button/doc-button.component.scss',
             hash: 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391',
             ext: '.scss',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/docs/doc-button/doc-button.component.ts',
+            file: 'examples/angular-cli/src/stories/addons/docs/doc-button/doc-button.component.ts',
             hash: '68a4815d5367fe4acbe2adecf40bf9f0bf7fb933',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/docs/doc-button/doc-button.stories.ts',
+            file: 'examples/angular-cli/src/stories/addons/docs/doc-button/doc-button.stories.ts',
             hash: 'e6666a31f3b06115992d94fb62d91e1d1362918f',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/docs/doc-directive/__snapshots__/doc-directive.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/addons/docs/doc-directive/__snapshots__/doc-directive.stories.storyshot',
             hash: 'dcd5223c795f18a02024dc3e7f0564a6d2e9640a',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/docs/doc-directive/doc-directive.directive.ts',
+            file: 'examples/angular-cli/src/stories/addons/docs/doc-directive/doc-directive.directive.ts',
             hash: 'bcb039c9d9f18c9de2dadb9569ea95970b4d1fa1',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/docs/doc-directive/doc-directive.stories.ts',
+            file: 'examples/angular-cli/src/stories/addons/docs/doc-directive/doc-directive.stories.ts',
             hash: 'fe5d8d97b236782d5cfe18c33deccf2155bd0c53',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/docs/doc-injectable/__snapshots__/doc-injectable.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/addons/docs/doc-injectable/__snapshots__/doc-injectable.stories.storyshot',
             hash: '04582c4cdaf492bcf6f685f3d9bf9d1a7c1a01c1',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/docs/doc-injectable/doc-injectable.service.ts',
+            file: 'examples/angular-cli/src/stories/addons/docs/doc-injectable/doc-injectable.service.ts',
             hash: 'b6ad136fec3308cdf221da9868e6dfdfc3d3a3a2',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/docs/doc-injectable/doc-injectable.stories.ts',
+            file: 'examples/angular-cli/src/stories/addons/docs/doc-injectable/doc-injectable.stories.ts',
             hash: 'b329ffc893675fa850f9c4ccda73c14776885cce',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/docs/doc-pipe/__snapshots__/doc-pipe.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/addons/docs/doc-pipe/__snapshots__/doc-pipe.stories.storyshot',
             hash: '50e37db418e1a0b5152b43141b671b19d6a9f636',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/docs/doc-pipe/doc-pipe.pipe.ts',
+            file: 'examples/angular-cli/src/stories/addons/docs/doc-pipe/doc-pipe.pipe.ts',
             hash: '6b7aca418a37133926ec3bc158bd5b2c11888e2a',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/docs/doc-pipe/doc-pipe.stories.ts',
+            file: 'examples/angular-cli/src/stories/addons/docs/doc-pipe/doc-pipe.stories.ts',
             hash: '07c8660958e43dc98f59362fa7391cc703683f25',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/docs/docs-only.stories.mdx',
+            file: 'examples/angular-cli/src/stories/addons/docs/docs-only.stories.mdx',
             hash: 'e699cf0f079ff1afcbf793c705e91cd4bc0d1e63',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/docs/iframe/__snapshots__/iframe.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/addons/docs/iframe/__snapshots__/iframe.stories.storyshot',
             hash: '55864ff9b1a502401bf15ccfe765695e78a453ca',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/docs/iframe/iframe.stories.ts',
+            file: 'examples/angular-cli/src/stories/addons/docs/iframe/iframe.stories.ts',
             hash: '8f5b470415c6666f3b547ad35f0833eb3c95271e',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/docs/markdown.stories.mdx',
+            file: 'examples/angular-cli/src/stories/addons/docs/markdown.stories.mdx',
             hash: '2d5ff78e99712cab93ac6d0bc77b9ffd88ae9e54',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/docs/simple.stories.mdx',
+            file: 'examples/angular-cli/src/stories/addons/docs/simple.stories.mdx',
             hash: '6c885ff13ffaddab498e7470e8d4d82acbe4842a',
             ext: '.mdx',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/jest/__snapshots__/addon-jest.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/addons/jest/__snapshots__/addon-jest.stories.storyshot',
             hash: 'af4fc50f3de4d49e116ca10f095d7015ccad62ab',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/jest/addon-jest.stories.ts',
+            file: 'examples/angular-cli/src/stories/addons/jest/addon-jest.stories.ts',
             hash: '8d1ef787c2dea5d536f121497cad43e5a00c1f68',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/knobs/__snapshots__/addon-knobs.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/addons/knobs/__snapshots__/addon-knobs.stories.storyshot',
             hash: 'e6a99e7b35591579930bb497026315203fb88c82',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/knobs/addon-knobs.stories.ts',
+            file: 'examples/angular-cli/src/stories/addons/knobs/addon-knobs.stories.ts',
             hash: 'e49aa30622b119d1821aa36d12dfec6b6c05d4c0',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/knobs/all-knobs.component.ts',
+            file: 'examples/angular-cli/src/stories/addons/knobs/all-knobs.component.ts',
             hash: '493121e46c106d0b02c25b4e9a85389f20fc051e',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/knobs/knobs.component.ts',
+            file: 'examples/angular-cli/src/stories/addons/knobs/knobs.component.ts',
             hash: '4400661fecfad31a8648c3a315bd01bb19e81cdc',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/links/__snapshots__/addon-links.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/addons/links/__snapshots__/addon-links.stories.storyshot',
             hash: '29703076aaf12d61ac79b461498cde2d3285ca60',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/addons/links/addon-links.stories.ts',
+            file: 'examples/angular-cli/src/stories/addons/links/addon-links.stories.ts',
             hash: '5fab196ef2c88e84d0e8b36af4862a90c4fdc62e',
             ext: '.ts',
           },
@@ -5243,326 +4869,272 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/angular-forms/customControlValueAccessor/__snapshots__/custom-cva-component.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/basics/angular-forms/customControlValueAccessor/__snapshots__/custom-cva-component.stories.storyshot',
             hash: '5f4b1dfb13a1b709554b0fddb95fa7d30c28e8fb',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/angular-forms/customControlValueAccessor/custom-cva-component.stories.ts',
+            file: 'examples/angular-cli/src/stories/basics/angular-forms/customControlValueAccessor/custom-cva-component.stories.ts',
             hash: '40cad770527dcca7b9442c0e53a48992656d7516',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/angular-forms/customControlValueAccessor/custom-cva.component.ts',
+            file: 'examples/angular-cli/src/stories/basics/angular-forms/customControlValueAccessor/custom-cva.component.ts',
             hash: '3806d30ac5e8160d36ccfb0f8f2dcf17953cdce1',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-complex-selectors/__snapshots__/multiple-selector.component.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/basics/component-with-complex-selectors/__snapshots__/multiple-selector.component.stories.storyshot',
             hash: 'b42e9f7f6128dd4b5bec64f55663b10a1b5e2124',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-complex-selectors/attribute-selector.component.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-with-complex-selectors/attribute-selector.component.ts',
             hash: '41cce5c36a278fea3645df9d988ea8079ae7a701',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-complex-selectors/class-selector.component.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-with-complex-selectors/class-selector.component.ts',
             hash: '4d73fb43ebe4f6b9c8e196253a0088f42b4900cb',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-complex-selectors/multiple-selector.component.stories.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-with-complex-selectors/multiple-selector.component.stories.ts',
             hash: '52633a23fe6568cc18c9dc2e879622c659b888f6',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-complex-selectors/multiple-selector.component.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-with-complex-selectors/multiple-selector.component.ts',
             hash: '8c9648efa0074fb2543995a01caff4a38b232d8c',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-enums/__snapshots__/enums.component.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/basics/component-with-enums/__snapshots__/enums.component.stories.storyshot',
             hash: 'aaf435fc730ab7a38525864f7069e17b241d8fc4',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-enums/enums.component.html',
+            file: 'examples/angular-cli/src/stories/basics/component-with-enums/enums.component.html',
             hash: '08584b9824f45c3815075cc79fb87fb744733042',
             ext: '.html',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-enums/enums.component.stories.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-with-enums/enums.component.stories.ts',
             hash: 'f0af610db3359a3df274a0c697c74a5dbb8d8237',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-enums/enums.component.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-with-enums/enums.component.ts',
             hash: '48e781942386e1d8409bdeea59f2fd83418c3706',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-inheritance/__snapshots__/inheritance.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/basics/component-with-inheritance/__snapshots__/inheritance.stories.storyshot',
             hash: '8bae8186a796e1c4488a9c756a176d2815fa33b9',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-inheritance/base-button.component.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-with-inheritance/base-button.component.ts',
             hash: '6afc2f20cce8578187c2250d4de19a7f74aea4e3',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-inheritance/icon-button.component.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-with-inheritance/icon-button.component.ts',
             hash: '82ff17cf9e96deb036991d5b08d9fed87de832fa',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-inheritance/inheritance.stories.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-with-inheritance/inheritance.stories.ts',
             hash: 'a7caf2f4e9f6d60ca48bcdb7c36d96741f4275d9',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-ng-content/__snapshots__/ng-content-about-parent.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/basics/component-with-ng-content/__snapshots__/ng-content-about-parent.stories.storyshot',
             hash: 'feff4372ed165d7cf50c9e94618ad95e16ec4647',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-ng-content/__snapshots__/ng-content-simple.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/basics/component-with-ng-content/__snapshots__/ng-content-simple.stories.storyshot',
             hash: '9ff0be60731d52597cd46dbc0dc5257b6ffcae5d',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-ng-content/ng-content-about-parent.stories.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-with-ng-content/ng-content-about-parent.stories.ts',
             hash: '27688157013c4fde170508801a92d7b630d88d39',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-ng-content/ng-content-simple.stories.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-with-ng-content/ng-content-simple.stories.ts',
             hash: 'e0660cebc33caecd76be20e5d187e18f59b38cdf',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-ng-on-destroy/component-with-on-destroy.stories.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-with-ng-on-destroy/component-with-on-destroy.stories.ts',
             hash: '3a006f838aa7e60ebee9e714f9e13237a0c6186f',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-on-push/__snapshots__/on-push.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/basics/component-with-on-push/__snapshots__/on-push.stories.storyshot',
             hash: 'f33448f92bbab867e1fc286ceb0dcd4f8e74e40d',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-on-push/on-push-box.component.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-with-on-push/on-push-box.component.ts',
             hash: 'e35ada4b1c5b45d72542c5321c2395e9b22677cc',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-on-push/on-push.stories.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-with-on-push/on-push.stories.ts',
             hash: 'e88ab5c97c2c723a10005a17ae6d500b3500ba18',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-pipe/__snapshots__/custom-pipes.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/basics/component-with-pipe/__snapshots__/custom-pipes.stories.storyshot',
             hash: '086157037ecb428fe68ad7f6980172055d94f282',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-pipe/custom-pipes.stories.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-with-pipe/custom-pipes.stories.ts',
             hash: 'cdfcff5e069470c4e00cb70bea6d324691f599d5',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-pipe/custom.pipe.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-with-pipe/custom.pipe.ts',
             hash: '0e55d112c41ef190fc218c8fd8f21ca412d786a3',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-pipe/with-pipe.component.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-with-pipe/with-pipe.component.ts',
             hash: '0ea676d121d65660217fc8fccad05c9dc9f47da2',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-provider/__snapshots__/di.component.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/basics/component-with-provider/__snapshots__/di.component.stories.storyshot',
             hash: '161e5c2edfb06140300f89fd5519fdcefdb0e2dd',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-provider/di.component.html',
+            file: 'examples/angular-cli/src/stories/basics/component-with-provider/di.component.html',
             hash: 'fc6c74c42eadefdc96e262ca2f07874c227c2766',
             ext: '.html',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-provider/di.component.stories.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-with-provider/di.component.stories.ts',
             hash: 'e0ae1cfb912e9ff06527b1c90b4b706ee2965317',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-provider/di.component.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-with-provider/di.component.ts',
             hash: '1d5bb78001598cb7d017f3343a7ad46337d6668c',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-style/__snapshots__/styled.component.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/basics/component-with-style/__snapshots__/styled.component.stories.storyshot',
             hash: '67afa3fec1e55dbd4727459d27c5aaa57b8e6071',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-style/styled.component.css',
+            file: 'examples/angular-cli/src/stories/basics/component-with-style/styled.component.css',
             hash: 'fdfe0940158f655d6855979d63e6d8aceee0e66f',
             ext: '.css',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-style/styled.component.html',
+            file: 'examples/angular-cli/src/stories/basics/component-with-style/styled.component.html',
             hash: '129e735ec5b01c5ef7daab1d091f7c6059a12d0a',
             ext: '.html',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-style/styled.component.scss',
+            file: 'examples/angular-cli/src/stories/basics/component-with-style/styled.component.scss',
             hash: '5895f510a1da61c4148aaabf787c008f8b831dcb',
             ext: '.scss',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-style/styled.component.stories.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-with-style/styled.component.stories.ts',
             hash: 'c986f00bec8846e7e4d98f097105ebc3b9dbb462',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-with-style/styled.component.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-with-style/styled.component.ts',
             hash: '6cdb0a9a627be4f1e6fe7c3c9b9100f4ba1625b1',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-without-selector/__snapshots__/without-selector-ng-component-outlet.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/basics/component-without-selector/__snapshots__/without-selector-ng-component-outlet.stories.storyshot',
             hash: '66a392f0cbb406c43516c8cdb412d4ac1cee8667',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-without-selector/__snapshots__/without-selector-ng-factory-resolver.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/basics/component-without-selector/__snapshots__/without-selector-ng-factory-resolver.stories.storyshot',
             hash: '9bd911768d2c5da7f928b3aa3ce00b5a78a43fde',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-without-selector/__snapshots__/without-selector.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/basics/component-without-selector/__snapshots__/without-selector.stories.storyshot',
             hash: 'cc9d114e8379721c4cc2ff285bf2ec7b1d9273ec',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-without-selector/without-selector-ng-component-outlet.stories.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-without-selector/without-selector-ng-component-outlet.stories.ts',
             hash: '474d50b36ff11a2239ec9235c97ed0f4dc33ae45',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-without-selector/without-selector-ng-factory-resolver.stories.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-without-selector/without-selector-ng-factory-resolver.stories.ts',
             hash: 'e583d2735651a961a6ecbe7ed5551c0e7cdb4d02',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-without-selector/without-selector.component.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-without-selector/without-selector.component.ts',
             hash: 'd644c76b69f82dd45920e8aa4969760e9f82e6cd',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/component-without-selector/without-selector.stories.ts',
+            file: 'examples/angular-cli/src/stories/basics/component-without-selector/without-selector.stories.ts',
             hash: '148920200322fe155832739bf4e99ebd78194ce8',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/ng-module/__snapshots__/import-module-for-root.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/basics/ng-module/__snapshots__/import-module-for-root.stories.storyshot',
             hash: 'afa7c25f41322538f8c98b46375428eac11628b3',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/ng-module/__snapshots__/import-module.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/basics/ng-module/__snapshots__/import-module.stories.storyshot',
             hash: 'a066165183e8e293ebf9f56b1a3a00727393bd94',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/ng-module/angular-src/chip-color.token.ts',
+            file: 'examples/angular-cli/src/stories/basics/ng-module/angular-src/chip-color.token.ts',
             hash: '5d0a1991490bb6a24e1d77289cbfae55bc704e3b',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/ng-module/angular-src/chip-text.pipe.ts',
+            file: 'examples/angular-cli/src/stories/basics/ng-module/angular-src/chip-text.pipe.ts',
             hash: 'c57cf51f87de5b7188cbf599b9d8d61d6fd949dc',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/ng-module/angular-src/chip.component.ts',
+            file: 'examples/angular-cli/src/stories/basics/ng-module/angular-src/chip.component.ts',
             hash: '18ae3440a582ee1eb883780109ec6955bc2a3508',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/ng-module/angular-src/chips-group.component.ts',
+            file: 'examples/angular-cli/src/stories/basics/ng-module/angular-src/chips-group.component.ts',
             hash: '8969e188e90cbcf99ac8fcfcdbee609507ca8b5d',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/ng-module/angular-src/chips.module.ts',
+            file: 'examples/angular-cli/src/stories/basics/ng-module/angular-src/chips.module.ts',
             hash: '9d1bc7ea9406534458b9812ea157b724f3ba942b',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/ng-module/import-module-for-root.stories.ts',
+            file: 'examples/angular-cli/src/stories/basics/ng-module/import-module-for-root.stories.ts',
             hash: 'de90f39bc4856ee931efeb5c346e2c8dce98ec4a',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/basics/ng-module/import-module.stories.ts',
+            file: 'examples/angular-cli/src/stories/basics/ng-module/import-module.stories.ts',
             hash: '7c6493e6cf9bb442cdaed9e355be26c22ba142a1',
             ext: '.ts',
           },
@@ -5572,122 +5144,102 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/core/decorators/componentWrapperDecorator/__snapshots__/decorators.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/core/decorators/componentWrapperDecorator/__snapshots__/decorators.stories.storyshot',
             hash: '3a00a0a189e06f0e94fe3f3e13be7f8ac801d18a',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/core/decorators/componentWrapperDecorator/child.component.ts',
+            file: 'examples/angular-cli/src/stories/core/decorators/componentWrapperDecorator/child.component.ts',
             hash: '4666ec952ad1c85d22344b33fc052fccb96fd94c',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/core/decorators/componentWrapperDecorator/decorators.stories.ts',
+            file: 'examples/angular-cli/src/stories/core/decorators/componentWrapperDecorator/decorators.stories.ts',
             hash: '1f4b61b9bec92dfdaa3ad9c8774d541a0ab578be',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/core/decorators/componentWrapperDecorator/parent.component.ts',
+            file: 'examples/angular-cli/src/stories/core/decorators/componentWrapperDecorator/parent.component.ts',
             hash: 'f49ce1bb18738bc0c3716b449dc71934392e5473',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/core/decorators/theme-decorator/__snapshots__/decorators.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/core/decorators/theme-decorator/__snapshots__/decorators.stories.storyshot',
             hash: '26b6592642cc7b1bfaba3945d43b173b0c09fe59',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/core/decorators/theme-decorator/decorators.stories.ts',
+            file: 'examples/angular-cli/src/stories/core/decorators/theme-decorator/decorators.stories.ts',
             hash: 'c3890ea870953e3f66ba99fcea15695a1b6df898',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/core/moduleMetadata/__snapshots__/in-export-default.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/core/moduleMetadata/__snapshots__/in-export-default.stories.storyshot',
             hash: 'cf0badba9c731418148506584ade8d99654826e9',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/core/moduleMetadata/__snapshots__/in-stories.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/core/moduleMetadata/__snapshots__/in-stories.stories.storyshot',
             hash: 'f872033bdd71ae78c55dfe3f5b2c118f22aaa76b',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/core/moduleMetadata/__snapshots__/merge-default-and-story.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/core/moduleMetadata/__snapshots__/merge-default-and-story.stories.storyshot',
             hash: 'b506f64d2bdb4004307a6e22ca77ee31173770e7',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/core/moduleMetadata/angular-src/custom.pipe.ts',
+            file: 'examples/angular-cli/src/stories/core/moduleMetadata/angular-src/custom.pipe.ts',
             hash: '0e55d112c41ef190fc218c8fd8f21ca412d786a3',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/core/moduleMetadata/angular-src/dummy.service.ts',
+            file: 'examples/angular-cli/src/stories/core/moduleMetadata/angular-src/dummy.service.ts',
             hash: 'fc3668478af3eb533f0659f5d92f3c86671ed3d6',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/core/moduleMetadata/angular-src/service.component.ts',
+            file: 'examples/angular-cli/src/stories/core/moduleMetadata/angular-src/service.component.ts',
             hash: '2d84bac39628b51a1d34429c7a3f08bc65866232',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/core/moduleMetadata/angular-src/token.component.ts',
+            file: 'examples/angular-cli/src/stories/core/moduleMetadata/angular-src/token.component.ts',
             hash: 'f2abda201863cdc44977c18b81a33c9916b8c13b',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/core/moduleMetadata/in-export-default.stories.ts',
+            file: 'examples/angular-cli/src/stories/core/moduleMetadata/in-export-default.stories.ts',
             hash: 'aa6e01e8a900030a3e197ed3caaa862b5351bb82',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/core/moduleMetadata/in-stories.stories.ts',
+            file: 'examples/angular-cli/src/stories/core/moduleMetadata/in-stories.stories.ts',
             hash: 'bfd46f2bd9a9165b0be848897c5f94a19c317ef3',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/core/moduleMetadata/merge-default-and-story.stories.ts',
+            file: 'examples/angular-cli/src/stories/core/moduleMetadata/merge-default-and-story.stories.ts',
             hash: 'b14ca16572cc570b56dcd593343e89020b064eee',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/core/parameters/__snapshots__/all-parameters.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/core/parameters/__snapshots__/all-parameters.stories.storyshot',
             hash: '69a63403adc12c7a4d7baf411c22f1f96f8981cd',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/core/parameters/__snapshots__/layout.parameters.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/core/parameters/__snapshots__/layout.parameters.stories.storyshot',
             hash: '1cbb51b7d9dea333d54349dcb459067b03395d76',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/core/parameters/all-parameters.stories.ts',
+            file: 'examples/angular-cli/src/stories/core/parameters/all-parameters.stories.ts',
             hash: 'afc67081268db850cfd2d317a202032635aa069f',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/core/parameters/layout.parameters.stories.ts',
+            file: 'examples/angular-cli/src/stories/core/parameters/layout.parameters.stories.ts',
             hash: '6af835e1891101c33c4535fce809360983f32d46',
             ext: '.ts',
           },
@@ -5697,32 +5249,27 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/core/styles/__snapshots__/story-styles.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/core/styles/__snapshots__/story-styles.stories.storyshot',
             hash: 'deef1154ad8718ca4f4a103b3be2413116b0d5ea',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/core/styles/story-styles.stories.ts',
+            file: 'examples/angular-cli/src/stories/core/styles/story-styles.stories.ts',
             hash: 'ade8aab8fb8acb9e44b9eda3fc0a1f09353554aa',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/legacy/__snapshots__/component-in-story.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/legacy/__snapshots__/component-in-story.stories.storyshot',
             hash: 'dc24c553667b5676246c10785d31d05ccdd0036d',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/legacy/__snapshots__/storiesOf.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/legacy/__snapshots__/storiesOf.stories.storyshot',
             hash: '5ed0635b6435121c93c4b2d8d86bc5e2125bb6ef',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/legacy/component-in-story.stories.ts',
+            file: 'examples/angular-cli/src/stories/legacy/component-in-story.stories.ts',
             hash: '78a750892136987415036239f74120fd256e4416',
             ext: '.ts',
           },
@@ -5732,32 +5279,27 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/legacy/storiesOf.stories.ts',
+            file: 'examples/angular-cli/src/stories/legacy/storiesOf.stories.ts',
             hash: '8b9f3854d8080ee17f318953a32776af3acb8b11',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/others/issues/__snapshots__/12009-unknown-component.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/others/issues/__snapshots__/12009-unknown-component.stories.storyshot',
             hash: '25f4de0b77c4fb5e471ce887575dcbbce1d1e9ef',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/others/issues/12009-unknown-component.stories.ts',
+            file: 'examples/angular-cli/src/stories/others/issues/12009-unknown-component.stories.ts',
             hash: '9a2c9dde535bfbb654a58b433bc0642536938742',
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/others/ngrx/__snapshots__/ngrx-store.stories.storyshot',
+            file: 'examples/angular-cli/src/stories/others/ngrx/__snapshots__/ngrx-store.stories.storyshot',
             hash: '5da2e3b813317cc15d903f5c2766991fbcd338df',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/others/ngrx/ngrx-store.stories.ts',
+            file: 'examples/angular-cli/src/stories/others/ngrx/ngrx-store.stories.ts',
             hash: '267a82785dfcf67b4f6a1a10d1830d81a17d0a37',
             ext: '.ts',
           },
@@ -5767,8 +5309,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'examples/angular-cli/src/stories/welcome-storybook.stories.ts',
+            file: 'examples/angular-cli/src/stories/welcome-storybook.stories.ts',
             hash: 'a68ba20a49a675c2244b0e91e9203b50434f2e5f',
             ext: '.ts',
           },
@@ -6001,14 +5542,12 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'lib/builder-webpack4/src/preview/virtualModuleEntry.template.js',
+            file: 'lib/builder-webpack4/src/preview/virtualModuleEntry.template.js',
             hash: '214d3fe8a16428b813174c1be469e7f3b9bcc947',
             ext: '.js',
           },
           {
-            file:
-              'lib/builder-webpack4/src/preview/virtualModuleStory.template.js',
+            file: 'lib/builder-webpack4/src/preview/virtualModuleStory.template.js',
             hash: 'db3ca75fab2c86a58bbc33b14b493bb9baedb0e0',
             ext: '.js',
           },
@@ -6097,14 +5636,12 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'lib/builder-webpack5/src/preview/virtualModuleEntry.template.js',
+            file: 'lib/builder-webpack5/src/preview/virtualModuleEntry.template.js',
             hash: '214d3fe8a16428b813174c1be469e7f3b9bcc947',
             ext: '.js',
           },
           {
-            file:
-              'lib/builder-webpack5/src/preview/virtualModuleStory.template.js',
+            file: 'lib/builder-webpack5/src/preview/virtualModuleStory.template.js',
             hash: 'db3ca75fab2c86a58bbc33b14b493bb9baedb0e0',
             ext: '.js',
           },
@@ -6534,8 +6071,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'app/web-components/src/server/framework-preset-web-components.ts',
+            file: 'app/web-components/src/server/framework-preset-web-components.ts',
             hash: '8e14b519defe61dfa8236b5e131f0410d2e3763f',
             ext: '.ts',
           },
@@ -6704,14 +6240,12 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.hbs',
           },
           {
-            file:
-              'examples/ember-cli/app/templates/components/welcome-banner.hbs',
+            file: 'examples/ember-cli/app/templates/components/welcome-banner.hbs',
             hash: '9ca8973181aa43f82952739516321f4e29a8218e',
             ext: '.hbs',
           },
           {
-            file:
-              'examples/ember-cli/app/templates/components/welcome-page.hbs',
+            file: 'examples/ember-cli/app/templates/components/welcome-page.hbs',
             hash: '3825de4af5d41d96930ed1d2c0760e45952d3419',
             ext: '.hbs',
           },
@@ -7048,20 +6582,17 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'examples/vue-3-cli/src/stories/__snapshots__/Button.stories.storyshot',
+            file: 'examples/vue-3-cli/src/stories/__snapshots__/Button.stories.storyshot',
             hash: 'e3fdcf076f2d0abec95afd3a25630cf786770b07',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/vue-3-cli/src/stories/__snapshots__/Header.stories.storyshot',
+            file: 'examples/vue-3-cli/src/stories/__snapshots__/Header.stories.storyshot',
             hash: '758dd4bd5a2fc2fa1063ba0312886bb3dacef725',
             ext: '.storyshot',
           },
           {
-            file:
-              'examples/vue-3-cli/src/stories/__snapshots__/Page.stories.storyshot',
+            file: 'examples/vue-3-cli/src/stories/__snapshots__/Page.stories.storyshot',
             hash: '3a52ab9aa4cc547ac5134c29e3007aebb5bcfe64',
             ext: '.storyshot',
           },
@@ -7514,44 +7045,37 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.md',
           },
           {
-            file:
-              'lib/source-loader/src/abstract-syntax-tree/__snapshots__/inject-decorator.csf.test.js.snap',
+            file: 'lib/source-loader/src/abstract-syntax-tree/__snapshots__/inject-decorator.csf.test.js.snap',
             hash: '43967b344215fb8ed1d388913c7a1cec45a95f1a',
             ext: '.snap',
           },
           {
-            file:
-              'lib/source-loader/src/abstract-syntax-tree/__snapshots__/inject-decorator.test.js.snap',
+            file: 'lib/source-loader/src/abstract-syntax-tree/__snapshots__/inject-decorator.test.js.snap',
             hash: '413752f99083a47955345aa0ae6cfb0a19f7b374',
             ext: '.snap',
           },
           {
-            file:
-              'lib/source-loader/src/abstract-syntax-tree/default-options.js',
+            file: 'lib/source-loader/src/abstract-syntax-tree/default-options.js',
             hash: '65ca9c768a287131433da37102ec38f4320402ab',
             ext: '.js',
           },
           {
-            file:
-              'lib/source-loader/src/abstract-syntax-tree/generate-helpers.js',
+            file: 'lib/source-loader/src/abstract-syntax-tree/generate-helpers.js',
             hash: '423c5a622b66314fd404668b80f38a6a68b3c592',
             ext: '.js',
           },
           {
-            file:
-              'lib/source-loader/src/abstract-syntax-tree/inject-decorator.csf.test.js',
+            file: 'lib/source-loader/src/abstract-syntax-tree/inject-decorator.csf.test.js',
             hash: 'c26acb5cb834d2a000176c53372e0589c3e5d34b',
             ext: '.js',
           },
           {
-            file:
-              'lib/source-loader/src/abstract-syntax-tree/inject-decorator.js',
+            file: 'lib/source-loader/src/abstract-syntax-tree/inject-decorator.js',
             hash: 'b60f858f7623a319f02122f3b225740ec9b90dc5',
             ext: '.js',
           },
           {
-            file:
-              'lib/source-loader/src/abstract-syntax-tree/inject-decorator.test.js',
+            file: 'lib/source-loader/src/abstract-syntax-tree/inject-decorator.test.js',
             hash: '755feb9117fdb9fcdd12eb55e4ae1f2ddcc95e00',
             ext: '.js',
           },
@@ -7566,26 +7090,22 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'lib/source-loader/src/abstract-syntax-tree/parsers/parser-flow.js',
+            file: 'lib/source-loader/src/abstract-syntax-tree/parsers/parser-flow.js',
             hash: '9414659af75434088826bb492bc8385fa9777ed6',
             ext: '.js',
           },
           {
-            file:
-              'lib/source-loader/src/abstract-syntax-tree/parsers/parser-js.js',
+            file: 'lib/source-loader/src/abstract-syntax-tree/parsers/parser-js.js',
             hash: '657bd8ab8ae737cd63d47b089957196d9abf50fb',
             ext: '.js',
           },
           {
-            file:
-              'lib/source-loader/src/abstract-syntax-tree/parsers/parser-ts.js',
+            file: 'lib/source-loader/src/abstract-syntax-tree/parsers/parser-ts.js',
             hash: 'ef4e369bb22ad4f3bf568a89e423385e3e1e6435',
             ext: '.js',
           },
           {
-            file:
-              'lib/source-loader/src/abstract-syntax-tree/traverse-helpers.js',
+            file: 'lib/source-loader/src/abstract-syntax-tree/traverse-helpers.js',
             hash: '0e542918f04cc1af57479d2119267445398c6388',
             ext: '.js',
           },
@@ -7736,20 +7256,17 @@ export const storybookGraph: ProjectGraphCache = {
         tags: [],
         files: [
           {
-            file:
-              'addons/controls/docs/media/addon-controls-args-annotated.png',
+            file: 'addons/controls/docs/media/addon-controls-args-annotated.png',
             hash: 'a61dd11eba0371bc2df1a4609e42c3c21890e6fe',
             ext: '.png',
           },
           {
-            file:
-              'addons/controls/docs/media/addon-controls-args-background-color.png',
+            file: 'addons/controls/docs/media/addon-controls-args-background-color.png',
             hash: 'd4e0205013a82b47c30281b67c6cbeed29c89a45',
             ext: '.png',
           },
           {
-            file:
-              'addons/controls/docs/media/addon-controls-args-background-string.png',
+            file: 'addons/controls/docs/media/addon-controls-args-background-string.png',
             hash: '61d7fe6e34d9cf36049d53d66f897e2c38a059d5',
             ext: '.png',
           },
@@ -7764,14 +7281,12 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.png',
           },
           {
-            file:
-              'addons/controls/docs/media/addon-controls-args-no-annotation.png',
+            file: 'addons/controls/docs/media/addon-controls-args-no-annotation.png',
             hash: '9f742e5571c286a8f82c5c6dd1d31440b934446f',
             ext: '.png',
           },
           {
-            file:
-              'addons/controls/docs/media/addon-controls-args-reflow-slider.png',
+            file: 'addons/controls/docs/media/addon-controls-args-reflow-slider.png',
             hash: '012a117fbe0d42328b2e52afa07c6c4a4a3bee4f',
             ext: '.png',
           },
@@ -8222,8 +7737,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'lib/core-common/src/utils/__tests__/__snapshots__/merge-webpack-config.test.ts.snap',
+            file: 'lib/core-common/src/utils/__tests__/__snapshots__/merge-webpack-config.test.ts.snap',
             hash: 'ddc929b507adb3791e852cf5bd723bd0b35e45cc',
             ext: '.snap',
           },
@@ -8233,8 +7747,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'lib/core-common/src/utils/__tests__/merge-webpack-config.test.ts',
+            file: 'lib/core-common/src/utils/__tests__/merge-webpack-config.test.ts',
             hash: '748bc4e1f2144c1d39f05a7449a2a95fb14102f4',
             ext: '.ts',
           },
@@ -8244,8 +7757,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'lib/core-common/src/utils/__tests__/to-require-context.test.ts',
+            file: 'lib/core-common/src/utils/__tests__/to-require-context.test.ts',
             hash: '21640243daa99cc953c37a97e6cbb531f14d3503',
             ext: '.ts',
           },
@@ -8438,50 +7950,42 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.md',
           },
           {
-            file:
-              'lib/core-server/src/__snapshots__/cra-ts-essentials_manager-dev',
+            file: 'lib/core-server/src/__snapshots__/cra-ts-essentials_manager-dev',
             hash: 'cf5bf2f46f79be61a9dd472e38ab8480f54746ca',
             ext: '',
           },
           {
-            file:
-              'lib/core-server/src/__snapshots__/cra-ts-essentials_manager-prod',
+            file: 'lib/core-server/src/__snapshots__/cra-ts-essentials_manager-prod',
             hash: '859cd50c56b6d20c122379417cf047a83d62a8b7',
             ext: '',
           },
           {
-            file:
-              'lib/core-server/src/__snapshots__/cra-ts-essentials_preview-dev',
+            file: 'lib/core-server/src/__snapshots__/cra-ts-essentials_preview-dev',
             hash: '10c1527074673ecbbbff22827962568d0372396f',
             ext: '',
           },
           {
-            file:
-              'lib/core-server/src/__snapshots__/cra-ts-essentials_preview-prod',
+            file: 'lib/core-server/src/__snapshots__/cra-ts-essentials_preview-prod',
             hash: '45e3985451a9e48be5fa260d74b9508dfebe5cf3',
             ext: '',
           },
           {
-            file:
-              'lib/core-server/src/__snapshots__/html-kitchen-sink_manager-dev',
+            file: 'lib/core-server/src/__snapshots__/html-kitchen-sink_manager-dev',
             hash: 'b2de2e9886f74c2fa6f25ed86bac65c5e62ad9dc',
             ext: '',
           },
           {
-            file:
-              'lib/core-server/src/__snapshots__/html-kitchen-sink_manager-prod',
+            file: 'lib/core-server/src/__snapshots__/html-kitchen-sink_manager-prod',
             hash: '6d453d4947b83fe06d6fd93661770786a87fe1c6',
             ext: '',
           },
           {
-            file:
-              'lib/core-server/src/__snapshots__/html-kitchen-sink_preview-dev',
+            file: 'lib/core-server/src/__snapshots__/html-kitchen-sink_preview-dev',
             hash: '0922eaa22744665efc29776d8773dceeddf4fa00',
             ext: '',
           },
           {
-            file:
-              'lib/core-server/src/__snapshots__/html-kitchen-sink_preview-prod',
+            file: 'lib/core-server/src/__snapshots__/html-kitchen-sink_preview-prod',
             hash: '4c89968b72e4db57edf7ffae17c3bcbb517b5b84',
             ext: '',
           },
@@ -8506,26 +8010,22 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '',
           },
           {
-            file:
-              'lib/core-server/src/__snapshots__/web-components-kitchen-sink_manager-dev',
+            file: 'lib/core-server/src/__snapshots__/web-components-kitchen-sink_manager-dev',
             hash: 'f0ad29fdbedb270cd4ae597f27314f4e93c54e1f',
             ext: '',
           },
           {
-            file:
-              'lib/core-server/src/__snapshots__/web-components-kitchen-sink_manager-prod',
+            file: 'lib/core-server/src/__snapshots__/web-components-kitchen-sink_manager-prod',
             hash: '539dcebbf28e589697a6227b55b1f23b0d661dd2',
             ext: '',
           },
           {
-            file:
-              'lib/core-server/src/__snapshots__/web-components-kitchen-sink_preview-dev',
+            file: 'lib/core-server/src/__snapshots__/web-components-kitchen-sink_preview-dev',
             hash: '6678d7fb441adf7a99bd2c2f408cd56de99e6d2a',
             ext: '',
           },
           {
-            file:
-              'lib/core-server/src/__snapshots__/web-components-kitchen-sink_preview-prod',
+            file: 'lib/core-server/src/__snapshots__/web-components-kitchen-sink_preview-prod',
             hash: 'e89fc5cfd4fad415273bbc7967e521a89b0fceaa',
             ext: '',
           },
@@ -8808,62 +8308,52 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.md',
           },
           {
-            file:
-              'lib/postinstall/src/__testfixtures__/presets-add-preset-options/basic.input.js',
+            file: 'lib/postinstall/src/__testfixtures__/presets-add-preset-options/basic.input.js',
             hash: '40a844e905a515464e7d5a13a76a3a9650ee7dc7',
             ext: '.js',
           },
           {
-            file:
-              'lib/postinstall/src/__testfixtures__/presets-add-preset-options/basic.output.snapshot',
+            file: 'lib/postinstall/src/__testfixtures__/presets-add-preset-options/basic.output.snapshot',
             hash: '4a3d8bd7e284c305696b30b77651921d841438cc',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/postinstall/src/__testfixtures__/presets-add-preset-options/empty.input.js',
+            file: 'lib/postinstall/src/__testfixtures__/presets-add-preset-options/empty.input.js',
             hash: 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391',
             ext: '.js',
           },
           {
-            file:
-              'lib/postinstall/src/__testfixtures__/presets-add-preset-options/empty.output.snapshot',
+            file: 'lib/postinstall/src/__testfixtures__/presets-add-preset-options/empty.output.snapshot',
             hash: 'a28c9e8e64197629a8de83241545d7f5020e76b5',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/postinstall/src/__testfixtures__/presets-add-preset/basic.input.js',
+            file: 'lib/postinstall/src/__testfixtures__/presets-add-preset/basic.input.js',
             hash: '40a844e905a515464e7d5a13a76a3a9650ee7dc7',
             ext: '.js',
           },
           {
-            file:
-              'lib/postinstall/src/__testfixtures__/presets-add-preset/basic.output.snapshot',
+            file: 'lib/postinstall/src/__testfixtures__/presets-add-preset/basic.output.snapshot',
             hash: 'aaf16d58b3d82bdf0f56a215d75f6eda5a878b25',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/postinstall/src/__testfixtures__/presets-add-preset/empty.input.js',
+            file: 'lib/postinstall/src/__testfixtures__/presets-add-preset/empty.input.js',
             hash: 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391',
             ext: '.js',
           },
           {
-            file:
-              'lib/postinstall/src/__testfixtures__/presets-add-preset/empty.output.snapshot',
+            file: 'lib/postinstall/src/__testfixtures__/presets-add-preset/empty.output.snapshot',
             hash: '9acaaca175c27c77b873769b7226df8cca4f02f5',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/postinstall/src/__testtransforms__/presets-add-preset-options.js',
+            file: 'lib/postinstall/src/__testtransforms__/presets-add-preset-options.js',
             hash: 'aacd83f2f86e21e384a1a32cb2833d5f800f012d',
             ext: '.js',
           },
           {
-            file:
-              'lib/postinstall/src/__testtransforms__/presets-add-preset.js',
+            file: 'lib/postinstall/src/__testtransforms__/presets-add-preset.js',
             hash: '76b5fa60fb214ced0e507879db634e51b640238d',
             ext: '.js',
           },
@@ -9037,8 +8527,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'addons/actions/src/preview/__tests__/configureActions.test.js',
+            file: 'addons/actions/src/preview/__tests__/configureActions.test.js',
             hash: '7bebbe8a252410db9abe13c2b5c7737bf06a75d1',
             ext: '.js',
           },
@@ -9579,8 +9068,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.tsx',
           },
           {
-            file:
-              'lib/components/src/blocks/ArgsTable/TabbedArgsTable.stories.tsx',
+            file: 'lib/components/src/blocks/ArgsTable/TabbedArgsTable.stories.tsx',
             hash: 'a64c3299424e18850a7753ec3c745828efd8a503',
             ext: '.tsx',
           },
@@ -9875,86 +9363,72 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.tsx',
           },
           {
-            file:
-              'lib/components/src/controls/react-editable-json-tree/components/JsonAddValue.js',
+            file: 'lib/components/src/controls/react-editable-json-tree/components/JsonAddValue.js',
             hash: '55971aafb60fb8364f2b675d6a74131e2ffdd37a',
             ext: '.js',
           },
           {
-            file:
-              'lib/components/src/controls/react-editable-json-tree/components/JsonArray.js',
+            file: 'lib/components/src/controls/react-editable-json-tree/components/JsonArray.js',
             hash: '61bf8240aa2f5c14933d7c3cf1e0d708810d6e34',
             ext: '.js',
           },
           {
-            file:
-              'lib/components/src/controls/react-editable-json-tree/components/JsonFunctionValue.js',
+            file: 'lib/components/src/controls/react-editable-json-tree/components/JsonFunctionValue.js',
             hash: 'ae205834ee736e36324b677743835eee8815878c',
             ext: '.js',
           },
           {
-            file:
-              'lib/components/src/controls/react-editable-json-tree/components/JsonNode.js',
+            file: 'lib/components/src/controls/react-editable-json-tree/components/JsonNode.js',
             hash: 'ca46745edc6ce3757d97f8090b0215922b8b8c20',
             ext: '.js',
           },
           {
-            file:
-              'lib/components/src/controls/react-editable-json-tree/components/JsonObject.js',
+            file: 'lib/components/src/controls/react-editable-json-tree/components/JsonObject.js',
             hash: '7e3c298e97d81b56193da79dbaefb78d36692fc7',
             ext: '.js',
           },
           {
-            file:
-              'lib/components/src/controls/react-editable-json-tree/components/JsonValue.js',
+            file: 'lib/components/src/controls/react-editable-json-tree/components/JsonValue.js',
             hash: 'f2bf4dcd056fd49af9a9fa7739d804194f0291d6',
             ext: '.js',
           },
           {
-            file:
-              'lib/components/src/controls/react-editable-json-tree/index.js',
+            file: 'lib/components/src/controls/react-editable-json-tree/index.js',
             hash: 'cc55b51b9ba1802617e5f6fa89d46f4e6374ccac',
             ext: '.js',
           },
           {
-            file:
-              'lib/components/src/controls/react-editable-json-tree/LICENSE.md',
+            file: 'lib/components/src/controls/react-editable-json-tree/LICENSE.md',
             hash: '387660f7f03bebb587f8cf41657a3ab728b7b2bf',
             ext: '.md',
           },
           {
-            file:
-              'lib/components/src/controls/react-editable-json-tree/types/dataTypes.js',
+            file: 'lib/components/src/controls/react-editable-json-tree/types/dataTypes.js',
             hash: 'dc68e5aa25c6c06ad534a0ee971650b9e59b2d3f',
             ext: '.js',
           },
           {
-            file:
-              'lib/components/src/controls/react-editable-json-tree/types/deltaTypes.js',
+            file: 'lib/components/src/controls/react-editable-json-tree/types/deltaTypes.js',
             hash: '5926294bc87ae72cc76327edf58500623c4a931f',
             ext: '.js',
           },
           {
-            file:
-              'lib/components/src/controls/react-editable-json-tree/types/inputUsageTypes.js',
+            file: 'lib/components/src/controls/react-editable-json-tree/types/inputUsageTypes.js',
             hash: 'db9afca8982cfb8d5e9521849b51972dbc95bbf6',
             ext: '.js',
           },
           {
-            file:
-              'lib/components/src/controls/react-editable-json-tree/utils/objectTypes.js',
+            file: 'lib/components/src/controls/react-editable-json-tree/utils/objectTypes.js',
             hash: '098f32e3b59e062df445bfb5ead90634de96995c',
             ext: '.js',
           },
           {
-            file:
-              'lib/components/src/controls/react-editable-json-tree/utils/parse.js',
+            file: 'lib/components/src/controls/react-editable-json-tree/utils/parse.js',
             hash: '75238d695707d43e41ae7025d197e66530635faa',
             ext: '.js',
           },
           {
-            file:
-              'lib/components/src/controls/react-editable-json-tree/utils/styles.js',
+            file: 'lib/components/src/controls/react-editable-json-tree/utils/styles.js',
             hash: 'b446bda82ab362ec132d088bd0abc64f787f66a5',
             ext: '.js',
           },
@@ -10089,20 +9563,17 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'lib/components/src/syntaxhighlighter/lazy-syntaxhighlighter.tsx',
+            file: 'lib/components/src/syntaxhighlighter/lazy-syntaxhighlighter.tsx',
             hash: '60d9632e582a5e672bab96fe788d0db3585046f1',
             ext: '.tsx',
           },
           {
-            file:
-              'lib/components/src/syntaxhighlighter/syntaxhighlighter-types.ts',
+            file: 'lib/components/src/syntaxhighlighter/syntaxhighlighter-types.ts',
             hash: 'e1c5cb61ec68a0cdf5183618635ffcb844c3f974',
             ext: '.ts',
           },
           {
-            file:
-              'lib/components/src/syntaxhighlighter/syntaxhighlighter.stories.tsx',
+            file: 'lib/components/src/syntaxhighlighter/syntaxhighlighter.stories.tsx',
             hash: '7ebf87a91eb27fac320ebd814611e0e7ca1861c8',
             ext: '.tsx',
           },
@@ -10395,8 +9866,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'addons/knobs/src/components/__tests__/__snapshots__/Panel.js.snap',
+            file: 'addons/knobs/src/components/__tests__/__snapshots__/Panel.js.snap',
             hash: 'df5db4b0130b95a0a378deffa0dc08f2099adaff',
             ext: '.snap',
           },
@@ -11252,38 +10722,32 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/frameworks/angular/__testfixtures__/doc-button/argtypes.snapshot',
+            file: 'addons/docs/src/frameworks/angular/__testfixtures__/doc-button/argtypes.snapshot',
             hash: 'b7dd2508926e560088ea06c3074f58940fe595d6',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/angular/__testfixtures__/doc-button/compodoc.snapshot',
+            file: 'addons/docs/src/frameworks/angular/__testfixtures__/doc-button/compodoc.snapshot',
             hash: '3a1d7700b665c2996d315a9be4a1819355d78544',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/angular/__testfixtures__/doc-button/input.ts',
+            file: 'addons/docs/src/frameworks/angular/__testfixtures__/doc-button/input.ts',
             hash: 'f23c9025e421f160b3529801a61b745d4c4bd034',
             ext: '.ts',
           },
           {
-            file:
-              'addons/docs/src/frameworks/angular/__testfixtures__/doc-button/properties.snapshot',
+            file: 'addons/docs/src/frameworks/angular/__testfixtures__/doc-button/properties.snapshot',
             hash: 'efd774f746b28af192ee6086432bb29cd1fdb1de',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/angular/__testfixtures__/doc-button/tsconfig.json',
+            file: 'addons/docs/src/frameworks/angular/__testfixtures__/doc-button/tsconfig.json',
             hash: 'ced6b7ae2f7c6bfad8ff483af89ce5bc5889d515',
             ext: '.json',
           },
           {
-            file:
-              'addons/docs/src/frameworks/angular/angular-properties.test.ts',
+            file: 'addons/docs/src/frameworks/angular/angular-properties.test.ts',
             hash: '39a1eb7478afca94587fd57775da2457141f191b',
             ext: '.ts',
           },
@@ -11373,596 +10837,497 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/10017-ts-union/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/10017-ts-union/docgen.snapshot',
             hash: 'e702b18e422045f35b8d8d6d6fe3bc82b4ccee1d',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/10017-ts-union/input.tsx',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/10017-ts-union/input.tsx',
             hash: '399f8b31a632b2ef86556309e04124c6f09df34c',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/10017-ts-union/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/10017-ts-union/properties.snapshot',
             hash: '430e864220909aea6e966e21b5cf6169c19735ff',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/10278-ts-multiple-components/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/10278-ts-multiple-components/docgen.snapshot',
             hash: '3947ed35573dce8aeebff842254fb6bdb0f453fe',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/10278-ts-multiple-components/input.tsx',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/10278-ts-multiple-components/input.tsx',
             hash: 'fea6eaea664a8b1160dd02406b8693a9b0f68ae5',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/10278-ts-multiple-components/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/10278-ts-multiple-components/properties.snapshot',
             hash: 'f9f94045bb53fd6e0216764a1611ae263c735b1d',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8140-js-prop-types-oneof/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8140-js-prop-types-oneof/docgen.snapshot',
             hash: '0f5ed90d714b38938bb01a1361cccb7f2ec077f7',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8140-js-prop-types-oneof/input.js',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8140-js-prop-types-oneof/input.js',
             hash: '1eb6b30cf299242c64e3e9c2104302108c34aadb',
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8140-js-prop-types-oneof/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8140-js-prop-types-oneof/properties.snapshot',
             hash: 'ff183b16151227121693f875a7c6bd5bdd1b296e',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8143-ts-imported-types/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8143-ts-imported-types/docgen.snapshot',
             hash: '99f9c02801e35576962b2cba3c3e0e0f03f5d0b0',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8143-ts-imported-types/input.tsx',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8143-ts-imported-types/input.tsx',
             hash: '7e30066389a2fbf23ea97cdc33ab26b2f96b7ce6',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8143-ts-imported-types/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8143-ts-imported-types/properties.snapshot',
             hash: 'e999d6a79f28564cec094ce413be44c6a480817c',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8143-ts-imported-types/types.ts',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8143-ts-imported-types/types.ts',
             hash: '156212cf95ce4bcb03619ea9a4a7b25f661c9d37',
             ext: '.ts',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8143-ts-react-fc-generics/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8143-ts-react-fc-generics/docgen.snapshot',
             hash: 'cd06005f3581fd5281ba05d7138d4fd977b5734a',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8143-ts-react-fc-generics/input.tsx',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8143-ts-react-fc-generics/input.tsx',
             hash: '9116328f193799eb9da17a826926b8d3fe384768',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8143-ts-react-fc-generics/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8143-ts-react-fc-generics/properties.snapshot',
             hash: '7e70b8104795124c36a17ff483a2a404ac0777c9',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8279-js-styled-docgen/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8279-js-styled-docgen/docgen.snapshot',
             hash: '670ab38ca25b085824c72f67be3f64643f9a72e9',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8279-js-styled-docgen/input.js',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8279-js-styled-docgen/input.js',
             hash: '95cf14f635c88b0ad2ddd12e13304f965e0b661f',
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8279-js-styled-docgen/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8279-js-styled-docgen/properties.snapshot',
             hash: 'b429f083fcc0f6c158aa13282083c3c2202de8db',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8428-js-static-prop-types/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8428-js-static-prop-types/docgen.snapshot',
             hash: '10a2a46836d40dd3dbbe2a7aa3fdcd5c2218ef7c',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8428-js-static-prop-types/input.js',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8428-js-static-prop-types/input.js',
             hash: '20094fa268dd9e72d77241bee5424a59edad6d83',
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8428-js-static-prop-types/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8428-js-static-prop-types/properties.snapshot',
             hash: '343ea89137006cd9023bf60e6c9e5f1a2503faf9',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8663-js-styled-components/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8663-js-styled-components/docgen.snapshot',
             hash: 'bf03a19e776908ebc3823ecc80a4d33f085d325a',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8663-js-styled-components/input.js',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8663-js-styled-components/input.js',
             hash: '7eb40f01b94681b17195fc77ae80bfdd699db6dc',
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8663-js-styled-components/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8663-js-styled-components/properties.snapshot',
             hash: 'e6923faff496524278e5302e6e750d3e98d74753',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8740-ts-multi-props/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8740-ts-multi-props/docgen.snapshot',
             hash: '8c8de9f930854bfe581b3d531d04d2df67c4855d',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8740-ts-multi-props/input.tsx',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8740-ts-multi-props/input.tsx',
             hash: '65aba6f76e456570ce3299528d77d528f8635211',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8740-ts-multi-props/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8740-ts-multi-props/properties.snapshot',
             hash: '9877ca576ceb53397146bfc3b5c074ee98e71a3e',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8894-9511-ts-forward-ref/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8894-9511-ts-forward-ref/docgen.snapshot',
             hash: '3f60a5fc45f8b00e75ef4a9358d1691c707606d6',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8894-9511-ts-forward-ref/input.tsx',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8894-9511-ts-forward-ref/input.tsx',
             hash: '0878c8cd8ca3b49e115183cb429f6feac5ea6b30',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/8894-9511-ts-forward-ref/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/8894-9511-ts-forward-ref/properties.snapshot',
             hash: '63a04364ae3a67269df06b2c5ba6aaf5e38f9bcf',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9023-js-hoc/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9023-js-hoc/docgen.snapshot',
             hash: '6755a05a5cfcc8cb8d63f6b0dfedb0acf455bf28',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9023-js-hoc/input.js',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9023-js-hoc/input.js',
             hash: '3c40e3472a01fd0c82c71cbe3dc25f784c1b6426',
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9023-js-hoc/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9023-js-hoc/properties.snapshot',
             hash: '7d6c8e0a2749b689abb06a2de2f9d8165d62aff1',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9399-js-proptypes-shape/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9399-js-proptypes-shape/docgen.snapshot',
             hash: '97f537acf986c28ccd660b86a94e1518ffa8c536',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9399-js-proptypes-shape/input.js',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9399-js-proptypes-shape/input.js',
             hash: 'af120524fa8f1d4277fcc3779b5e0f3111991ecd',
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9399-js-proptypes-shape/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9399-js-proptypes-shape/properties.snapshot',
             hash: 'e831f52c1ab154e5e71b52fd7e07841dc2a44e42',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9465-ts-type-props/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9465-ts-type-props/docgen.snapshot',
             hash: 'eed6ac7c10e2112a2a7b440c98e77f87aeba16a6',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9465-ts-type-props/input.tsx',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9465-ts-type-props/input.tsx',
             hash: 'e5627c8058faff21112da88647da7dbd169a55af',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9465-ts-type-props/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9465-ts-type-props/properties.snapshot',
             hash: 'e2d4df1dcc0ef81a980cff2058d8bc52ce60f343',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9493-ts-display-name/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9493-ts-display-name/docgen.snapshot',
             hash: 'c70717fe89583377bf2ee0aba5ed2446cc0f9ce8',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9493-ts-display-name/input.tsx',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9493-ts-display-name/input.tsx',
             hash: '57155c790165f16beaa41506622eccd91cd67021',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9493-ts-display-name/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9493-ts-display-name/properties.snapshot',
             hash: 'f6be2f921ecf626333d8e0516951d17d6b77c689',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9556-ts-react-default-exports/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9556-ts-react-default-exports/docgen.snapshot',
             hash: '3885b65757ac89c825afe218eb5cf38ff1cd38a5',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9556-ts-react-default-exports/input.tsx',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9556-ts-react-default-exports/input.tsx',
             hash: '3517870221b2b73e00e113d5fa8fdfee4ca091d7',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9556-ts-react-default-exports/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9556-ts-react-default-exports/properties.snapshot',
             hash: 'daa979f95c81b3cb1af6a47f9f5a3e871dba3fe2',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9575-ts-camel-case/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9575-ts-camel-case/docgen.snapshot',
             hash: '9494b9c88cd9d76d2f66fd7cb1dc85902a9bab53',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9575-ts-camel-case/input.tsx',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9575-ts-camel-case/input.tsx',
             hash: '20ddf073f781178a9adb97bf326d719903a7c3de',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9575-ts-camel-case/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9575-ts-camel-case/properties.snapshot',
             hash: '4ca7be31120de8c8eba6cd71e972b9777fc9dd50',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9586-js-react-memo/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9586-js-react-memo/docgen.snapshot',
             hash: 'e31e4ae12586d8709dddad2627a906114d3ebeb6',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9586-js-react-memo/input.js',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9586-js-react-memo/input.js',
             hash: '19f7951a337a48ae9ff86082ba2b0aef403f76dc',
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9586-js-react-memo/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9586-js-react-memo/properties.snapshot',
             hash: 'dcbf79ea55375141f72b1a1c89a5b935dc092e32',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9591-ts-import-types/Bar.tsx',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9591-ts-import-types/Bar.tsx',
             hash: '7dee0fa7f6ec8b8e362d5e4223c05e51f8f0b981',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9591-ts-import-types/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9591-ts-import-types/docgen.snapshot',
             hash: 'a059bf1880b05a51a084147d1822de8cc08d7a7e',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9591-ts-import-types/input.tsx',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9591-ts-import-types/input.tsx',
             hash: 'f1049b4e1acb6b13b3b9f0849b016805f0c5e67b',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9591-ts-import-types/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9591-ts-import-types/properties.snapshot',
             hash: 'cc8d448239d6a27d9a80027d090ad366ff4e2cc3',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9592-ts-styled-props/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9592-ts-styled-props/docgen.snapshot',
             hash: '867262a0c978e3f674082173d1330e9470d44462',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9592-ts-styled-props/input.tsx',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9592-ts-styled-props/input.tsx',
             hash: '485bad8f10b7838df21297c00511bb5a49933943',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9592-ts-styled-props/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9592-ts-styled-props/properties.snapshot',
             hash: '3298e7c6d942c9632c13e9f2f6626d6f1277bca3',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9626-js-default-values/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9626-js-default-values/docgen.snapshot',
             hash: '7b5b63c1440b01f12903dedaf6b9c87954bef9da',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9626-js-default-values/input.js',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9626-js-default-values/input.js',
             hash: '451411c1c1e4f5a97f08802ac8c8d65c5042fb98',
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9626-js-default-values/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9626-js-default-values/properties.snapshot',
             hash: 'b1043c87f41922a9b13e72c86ba98422bc23d1c5',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9668-js-proptypes-no-jsdoc/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9668-js-proptypes-no-jsdoc/docgen.snapshot',
             hash: '1d189717438ea2be3800d8db0bb027df8925c9f5',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9668-js-proptypes-no-jsdoc/input.js',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9668-js-proptypes-no-jsdoc/input.js',
             hash: '2e66bdd696d2f60870224859f0577fef295a87db',
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9668-js-proptypes-no-jsdoc/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9668-js-proptypes-no-jsdoc/properties.snapshot',
             hash: '3c8760699b960ce51f7db8b04fc2c2993e4f04be',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9721-ts-deprecated-jsdoc/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9721-ts-deprecated-jsdoc/docgen.snapshot',
             hash: '69821e3c56b5426e2c2b1bfd47e7990d310aeb47',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9721-ts-deprecated-jsdoc/input.tsx',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9721-ts-deprecated-jsdoc/input.tsx',
             hash: '1d9fa51da82590dbdab10e40e151d430a25b35c4',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9721-ts-deprecated-jsdoc/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9721-ts-deprecated-jsdoc/properties.snapshot',
             hash: 'db5588270f7c54e977c2af11f43b7c14ce58bc48',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9764-ts-extend-props/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9764-ts-extend-props/docgen.snapshot',
             hash: 'af6e21ceac748f5819467417b89a5373b1ff1241',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9764-ts-extend-props/input.tsx',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9764-ts-extend-props/input.tsx',
             hash: '2abd61eed129c2278ae4f7cfb99ef06d457c6ff2',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9764-ts-extend-props/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9764-ts-extend-props/properties.snapshot',
             hash: '3f3b110e6ddbefa01ee3da55ab1fe91bbb87d384',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9827-ts-default-values/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9827-ts-default-values/docgen.snapshot',
             hash: 'e029b62e2a1396aebfa1888787bbf3278f3442b9',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9827-ts-default-values/input.tsx',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9827-ts-default-values/input.tsx',
             hash: '373829aac3b3d64ac25d14e4c5908728eadc8793',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9827-ts-default-values/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9827-ts-default-values/properties.snapshot',
             hash: '5d944694e62b1898049c1858f4b1d924489a15e6',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9832-ts-enum-export/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9832-ts-enum-export/docgen.snapshot',
             hash: '2af0f01d294468b66256d1308dba54ba018a0789',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9832-ts-enum-export/input.tsx',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9832-ts-enum-export/input.tsx',
             hash: '3072adb5705e6e10afdb53f062d9cf1bdb8b0d5e',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9832-ts-enum-export/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9832-ts-enum-export/properties.snapshot',
             hash: '85dec505d2c504296b03b68ca1b6cd1aec8a5081',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9922-ts-component-props/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9922-ts-component-props/docgen.snapshot',
             hash: '82936b526eefb07c2c44c28fba598f213c1ffaf6',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9922-ts-component-props/input.tsx',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9922-ts-component-props/input.tsx',
             hash: '797836d2c0d5bf5f5b3b8934d0709897d83dd91f',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/9922-ts-component-props/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/9922-ts-component-props/properties.snapshot',
             hash: 'd9342f6004e250d212d523be5ade40cf21c21ec6',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/imported.js',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/imported.js',
             hash: 'bce6a5aa3d02ef313b224f1d314863d9dd69f48f',
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/js-class-component/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/js-class-component/docgen.snapshot',
             hash: '1db7dceec9b5947c0884bed4e5cf786cfa50fccf',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/js-class-component/input.js',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/js-class-component/input.js',
             hash: '2a20097cf217176a26b2755b9fc48f1b5e29cc11',
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/js-class-component/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/js-class-component/properties.snapshot',
             hash: '08fd4d37ec0008436bebbb34ec7091d7dbc0aa1f',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/js-function-component-inline-defaults-no-propTypes/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/js-function-component-inline-defaults-no-propTypes/docgen.snapshot',
             hash: '5d6d096c94d0ba0a4cc7c52ad0c25dfd3da91394',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/js-function-component-inline-defaults-no-propTypes/input.js',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/js-function-component-inline-defaults-no-propTypes/input.js',
             hash: '1785e49cb830f68aeb0e41091841ecaac0b32415',
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/js-function-component-inline-defaults-no-propTypes/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/js-function-component-inline-defaults-no-propTypes/properties.snapshot',
             hash: 'da879fbd6496a4758de8e5ad607f066bd05826c7',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/js-function-component-inline-defaults/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/js-function-component-inline-defaults/docgen.snapshot',
             hash: '7f74499f960032a22a688c9a45c1d2b44d0420de',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/js-function-component-inline-defaults/input.js',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/js-function-component-inline-defaults/input.js',
             hash: '8bc5c569444fd9532044bf7db0e8e66830626660',
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/js-function-component-inline-defaults/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/js-function-component-inline-defaults/properties.snapshot',
             hash: '82812fd3d49a8d8d935207bd92b9d56904d5982d',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/js-function-component/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/js-function-component/docgen.snapshot',
             hash: 'a650f756257740abc4773b734e05975e7f04e35a',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/js-function-component/input.js',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/js-function-component/input.js',
             hash: '42959b7b0cbd318396390af2b3f1b04e094edfd5',
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/js-function-component/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/js-function-component/properties.snapshot',
             hash: '928cb8607ea08b80e6394776e03372be8f5dc65c',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/ts-function-component-inline-defaults/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/ts-function-component-inline-defaults/docgen.snapshot',
             hash: '4b89bc19b0db0310113de8484c90239534161622',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/ts-function-component-inline-defaults/input.tsx',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/ts-function-component-inline-defaults/input.tsx',
             hash: '06b5b62edfdcdb649c1cbdaca0308a0091f3f801',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/ts-function-component-inline-defaults/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/ts-function-component-inline-defaults/properties.snapshot',
             hash: 'dd9033fac25d4d8f6728ecd25242ee2b9359b956',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/ts-function-component/docgen.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/ts-function-component/docgen.snapshot',
             hash: 'f80c3c319f3b1122d7141e1cd0e188e240d067e5',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/ts-function-component/input.tsx',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/ts-function-component/input.tsx',
             hash: '9f0c2598ff072710386bf32b37bffa3db1385aef',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/__testfixtures__/ts-function-component/properties.snapshot',
+            file: 'addons/docs/src/frameworks/react/__testfixtures__/ts-function-component/properties.snapshot',
             hash: '3597a37074634f577fe9039d44a1868cb9d2747e',
             ext: '.snapshot',
           },
@@ -12002,26 +11367,22 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/lib/defaultValues/createDefaultValue.ts',
+            file: 'addons/docs/src/frameworks/react/lib/defaultValues/createDefaultValue.ts',
             hash: 'c4cd930e101119d6243ce398c3ff7df4fa8be133',
             ext: '.ts',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/lib/defaultValues/createFromRawDefaultProp.ts',
+            file: 'addons/docs/src/frameworks/react/lib/defaultValues/createFromRawDefaultProp.ts',
             hash: '6ef614385b5fe35398ba14af453eac978499e925',
             ext: '.ts',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/lib/defaultValues/generateArray.ts',
+            file: 'addons/docs/src/frameworks/react/lib/defaultValues/generateArray.ts',
             hash: '6956b0979313aeb0f92bc1920fb83a29efa85a3e',
             ext: '.ts',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/lib/defaultValues/generateObject.ts',
+            file: 'addons/docs/src/frameworks/react/lib/defaultValues/generateObject.ts',
             hash: 'c831271d6a629bf80318b292d817ba0eb0f39151',
             ext: '.ts',
           },
@@ -12031,8 +11392,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/lib/defaultValues/prettyIdentifier.ts',
+            file: 'addons/docs/src/frameworks/react/lib/defaultValues/prettyIdentifier.ts',
             hash: '8e0275109ce5af7287474eaef8afc575605ab5aa',
             ext: '.ts',
           },
@@ -12047,14 +11407,12 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/lib/inspection/acornParser.test.ts',
+            file: 'addons/docs/src/frameworks/react/lib/inspection/acornParser.test.ts',
             hash: '9367f035b7084f6f36fbb38e0e65579c0f1228c5',
             ext: '.ts',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/lib/inspection/acornParser.ts',
+            file: 'addons/docs/src/frameworks/react/lib/inspection/acornParser.ts',
             hash: '28a5a7ad22670b45cce1b63ba8c7496004bbe227',
             ext: '.ts',
           },
@@ -12064,8 +11422,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/lib/inspection/inspectValue.ts',
+            file: 'addons/docs/src/frameworks/react/lib/inspection/inspectValue.ts',
             hash: 'e7c0046a28f954f0edc2133f72806e77ba5ceddd',
             ext: '.ts',
           },
@@ -12085,20 +11442,17 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/propTypes/generateFuncSignature.test.ts',
+            file: 'addons/docs/src/frameworks/react/propTypes/generateFuncSignature.test.ts',
             hash: '92f6575c93746f2d84c50c5fb7e63d6227d8be93',
             ext: '.ts',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/propTypes/generateFuncSignature.ts',
+            file: 'addons/docs/src/frameworks/react/propTypes/generateFuncSignature.ts',
             hash: '0d6b6c251d86eb1a9f44661754a455c7ae47cc6f',
             ext: '.ts',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/propTypes/handleProp.test.tsx',
+            file: 'addons/docs/src/frameworks/react/propTypes/handleProp.test.tsx',
             hash: 'dcbcecb5e16d2cddb9e1125abe34822b5ecbfd5f',
             ext: '.tsx',
           },
@@ -12108,8 +11462,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/propTypes/rawDefaultPropResolvers.ts',
+            file: 'addons/docs/src/frameworks/react/propTypes/rawDefaultPropResolvers.ts',
             hash: '9433159adde6dd25e682b3112b14c39d1f1e5fef',
             ext: '.ts',
           },
@@ -12129,8 +11482,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'addons/docs/src/frameworks/react/typeScript/handleProp.test.tsx',
+            file: 'addons/docs/src/frameworks/react/typeScript/handleProp.test.tsx',
             hash: '1071979909c488f16c96db4d8c5c57872a0a2b62',
             ext: '.tsx',
           },
@@ -12155,14 +11507,12 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'addons/docs/src/frameworks/svelte/extractComponentDescription.test.ts',
+            file: 'addons/docs/src/frameworks/svelte/extractComponentDescription.test.ts',
             hash: '3e6eb3e779c31aa2fd5a35a0bce6fce2c564b404',
             ext: '.ts',
           },
           {
-            file:
-              'addons/docs/src/frameworks/svelte/extractComponentDescription.ts',
+            file: 'addons/docs/src/frameworks/svelte/extractComponentDescription.ts',
             hash: '28227129941226b9367ebe1f9f8ecb0ff40e07f9',
             ext: '.ts',
           },
@@ -12252,38 +11602,32 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'addons/docs/src/frameworks/web-components/__testfixtures__/lit-element-demo-card/custom-elements.snapshot',
+            file: 'addons/docs/src/frameworks/web-components/__testfixtures__/lit-element-demo-card/custom-elements.snapshot',
             hash: 'cbf4b8fa425455baf4b143cd6c0c6891f966d470',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/web-components/__testfixtures__/lit-element-demo-card/input.js',
+            file: 'addons/docs/src/frameworks/web-components/__testfixtures__/lit-element-demo-card/input.js',
             hash: '1599966fe99ee2c434e6e2afc5cd85b19dfb0b77',
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/frameworks/web-components/__testfixtures__/lit-element-demo-card/properties.snapshot',
+            file: 'addons/docs/src/frameworks/web-components/__testfixtures__/lit-element-demo-card/properties.snapshot',
             hash: '57a2c58e8866f6b1dddaa17124cc89e5155eedc2',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/web-components/__testfixtures__/lit-html-welcome/custom-elements.snapshot',
+            file: 'addons/docs/src/frameworks/web-components/__testfixtures__/lit-html-welcome/custom-elements.snapshot',
             hash: 'c1416386b1b12d1d56061cd77a4a3737f9687d16',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/frameworks/web-components/__testfixtures__/lit-html-welcome/input.js',
+            file: 'addons/docs/src/frameworks/web-components/__testfixtures__/lit-html-welcome/input.js',
             hash: '30e6edec7cf2a2f2e1a85ec571ec6f378feed978',
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/frameworks/web-components/__testfixtures__/lit-html-welcome/properties.snapshot',
+            file: 'addons/docs/src/frameworks/web-components/__testfixtures__/lit-html-welcome/properties.snapshot',
             hash: 'a0d337eb0697f04ede61df621ee3e1ce38782d4d',
             ext: '.snapshot',
           },
@@ -12293,116 +11637,97 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/frameworks/web-components/custom-elements.ts',
+            file: 'addons/docs/src/frameworks/web-components/custom-elements.ts',
             hash: '432f08cab72cda2da12f1c33e45aa216b753179b',
             ext: '.ts',
           },
           {
-            file:
-              'addons/docs/src/frameworks/web-components/web-components-properties.test.ts',
+            file: 'addons/docs/src/frameworks/web-components/web-components-properties.test.ts',
             hash: '06d3c04f8599ddf27179370f65b6cef13322ddca',
             ext: '.ts',
           },
           {
-            file:
-              'addons/docs/src/lib/convert/__testfixtures__/proptypes/arrays.js',
+            file: 'addons/docs/src/lib/convert/__testfixtures__/proptypes/arrays.js',
             hash: '0f1ebcdae0926852eaa1594ffcd1ea7a3302f147',
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/lib/convert/__testfixtures__/proptypes/enums.js',
+            file: 'addons/docs/src/lib/convert/__testfixtures__/proptypes/enums.js',
             hash: '60f51359b6f5d9de51e4359fe3d1237f0897e91a',
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/lib/convert/__testfixtures__/proptypes/misc.js',
+            file: 'addons/docs/src/lib/convert/__testfixtures__/proptypes/misc.js',
             hash: 'e662474d1ab16d112d2dcf1ca413c161dd239f64',
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/lib/convert/__testfixtures__/proptypes/objects.js',
+            file: 'addons/docs/src/lib/convert/__testfixtures__/proptypes/objects.js',
             hash: '09036cf8808851b9cb0224d88b87984bc97d0198',
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/lib/convert/__testfixtures__/proptypes/react.js',
+            file: 'addons/docs/src/lib/convert/__testfixtures__/proptypes/react.js',
             hash: 'fd54e9307663c521a4943a47e2670e71c1be4086',
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/lib/convert/__testfixtures__/proptypes/scalars.js',
+            file: 'addons/docs/src/lib/convert/__testfixtures__/proptypes/scalars.js',
             hash: '7e74151596b03c69b8d9e544a3bd1742c5ff3548',
             ext: '.js',
           },
           {
-            file:
-              'addons/docs/src/lib/convert/__testfixtures__/typescript/aliases.tsx',
+            file: 'addons/docs/src/lib/convert/__testfixtures__/typescript/aliases.tsx',
             hash: 'a5ec67cd472400d121b2c67bc840e322124bfeb7',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/lib/convert/__testfixtures__/typescript/arrays.tsx',
+            file: 'addons/docs/src/lib/convert/__testfixtures__/typescript/arrays.tsx',
             hash: '74c8a4d56a075c3da57bf2fef9c9ad1a76158632',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/lib/convert/__testfixtures__/typescript/enums.tsx',
+            file: 'addons/docs/src/lib/convert/__testfixtures__/typescript/enums.tsx',
             hash: '9cf04170aab9860478fa37865cffa5d6bae13e48',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/lib/convert/__testfixtures__/typescript/functions.tsx',
+            file: 'addons/docs/src/lib/convert/__testfixtures__/typescript/functions.tsx',
             hash: 'cbe35a3ac0fcb7bb68c494cbdb0d2da3ba4c1ad0',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/lib/convert/__testfixtures__/typescript/interfaces.tsx',
+            file: 'addons/docs/src/lib/convert/__testfixtures__/typescript/interfaces.tsx',
             hash: '3f931b09c08786757c495964a4facb2d1347a182',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/lib/convert/__testfixtures__/typescript/intersections.tsx',
+            file: 'addons/docs/src/lib/convert/__testfixtures__/typescript/intersections.tsx',
             hash: 'a075158cd58026d27ec299d6eea9d4a1ea77462f',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/lib/convert/__testfixtures__/typescript/optionals.tsx',
+            file: 'addons/docs/src/lib/convert/__testfixtures__/typescript/optionals.tsx',
             hash: 'cced6cf2007c6c5ec380030f6aad47f0de40c40f',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/lib/convert/__testfixtures__/typescript/records.tsx',
+            file: 'addons/docs/src/lib/convert/__testfixtures__/typescript/records.tsx',
             hash: 'b8e541f35ababffc408a515ba9cc5859a406677e',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/lib/convert/__testfixtures__/typescript/scalars.tsx',
+            file: 'addons/docs/src/lib/convert/__testfixtures__/typescript/scalars.tsx',
             hash: '44f533a01b4975e25d5ca351e3394b4db40085bd',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/lib/convert/__testfixtures__/typescript/tuples.tsx',
+            file: 'addons/docs/src/lib/convert/__testfixtures__/typescript/tuples.tsx',
             hash: '490fbd61aa662e7a8a69cb90fb4dd1a034e7ba1f',
             ext: '.tsx',
           },
           {
-            file:
-              'addons/docs/src/lib/convert/__testfixtures__/typescript/unions.tsx',
+            file: 'addons/docs/src/lib/convert/__testfixtures__/typescript/unions.tsx',
             hash: 'eb8bbfc406ff7b4de9d55cac146d2f086f9bbd37',
             ext: '.tsx',
           },
@@ -12587,8 +11912,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/component-args.output.snapshot',
+            file: 'addons/docs/src/mdx/__testfixtures__/component-args.output.snapshot',
             hash: 'a8ef36b42a5f1f6835b346e056b36c48bb11dce6',
             ext: '.snapshot',
           },
@@ -12598,8 +11922,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/component-id.output.snapshot',
+            file: 'addons/docs/src/mdx/__testfixtures__/component-id.output.snapshot',
             hash: 'b4917f10b89818fcf8a9ea13c712beb7cd01720a',
             ext: '.snapshot',
           },
@@ -12609,8 +11932,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/csf-imports.output.snapshot',
+            file: 'addons/docs/src/mdx/__testfixtures__/csf-imports.output.snapshot',
             hash: '658be917d53d235252a444d6e4e61e659636fe28',
             ext: '.snapshot',
           },
@@ -12620,8 +11942,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/decorators.output.snapshot',
+            file: 'addons/docs/src/mdx/__testfixtures__/decorators.output.snapshot',
             hash: '0b1c8bc31788e4113671e6e78c42d660032710b2',
             ext: '.snapshot',
           },
@@ -12631,8 +11952,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/docs-only.output.snapshot',
+            file: 'addons/docs/src/mdx/__testfixtures__/docs-only.output.snapshot',
             hash: '5731a848de79a06f5cf7fdf3ce0352da7e2ac326',
             ext: '.snapshot',
           },
@@ -12642,20 +11962,17 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/loaders.output.snapshot',
+            file: 'addons/docs/src/mdx/__testfixtures__/loaders.output.snapshot',
             hash: 'f3ca9d474df5fd4fa6bc82ef49d1431cfc002d61',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/meta-quotes-in-title.mdx',
+            file: 'addons/docs/src/mdx/__testfixtures__/meta-quotes-in-title.mdx',
             hash: '83705fe692826da07ec9653820070614bdb75c24',
             ext: '.mdx',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/meta-quotes-in-title.output.snapshot',
+            file: 'addons/docs/src/mdx/__testfixtures__/meta-quotes-in-title.output.snapshot',
             hash: 'f2c7a837b36fc41187fb9575fabeb96267ca4cb1',
             ext: '.snapshot',
           },
@@ -12665,8 +11982,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/non-story-exports.output.snapshot',
+            file: 'addons/docs/src/mdx/__testfixtures__/non-story-exports.output.snapshot',
             hash: 'a8be405025c928708e4ea671b4688be1dcd1cb00',
             ext: '.snapshot',
           },
@@ -12676,8 +11992,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/parameters.output.snapshot',
+            file: 'addons/docs/src/mdx/__testfixtures__/parameters.output.snapshot',
             hash: '64f14f13d2eb11664295dc33504f804d855d6948',
             ext: '.snapshot',
           },
@@ -12687,8 +12002,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/previews.output.snapshot',
+            file: 'addons/docs/src/mdx/__testfixtures__/previews.output.snapshot',
             hash: 'fe9ba13496a75ab9895f97b594bb45762a322f18',
             ext: '.snapshot',
           },
@@ -12698,8 +12012,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/story-args.output.snapshot',
+            file: 'addons/docs/src/mdx/__testfixtures__/story-args.output.snapshot',
             hash: '660673694e65366189631cc8df03d8ff0ec56855',
             ext: '.snapshot',
           },
@@ -12709,20 +12022,17 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/story-current.output.snapshot',
+            file: 'addons/docs/src/mdx/__testfixtures__/story-current.output.snapshot',
             hash: 'a42af6f51baf48959978b7239c129e46c92c03ae',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/story-def-text-only.mdx',
+            file: 'addons/docs/src/mdx/__testfixtures__/story-def-text-only.mdx',
             hash: '78ebd50215ee19df2f4f2426296584a43ad2020c',
             ext: '.mdx',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/story-def-text-only.output.snapshot',
+            file: 'addons/docs/src/mdx/__testfixtures__/story-def-text-only.output.snapshot',
             hash: 'c16d04e61fdcfc14bc9d177dc09627f420500a6d',
             ext: '.snapshot',
           },
@@ -12732,8 +12042,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/story-definitions.output.snapshot',
+            file: 'addons/docs/src/mdx/__testfixtures__/story-definitions.output.snapshot',
             hash: 'db6478f54a09db5542d56af2e89cf4573ccb56e5',
             ext: '.snapshot',
           },
@@ -12743,8 +12052,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/story-function-var.output.snapshot',
+            file: 'addons/docs/src/mdx/__testfixtures__/story-function-var.output.snapshot',
             hash: '4be4c0519943756ee22bc3ad3e78593945e956b7',
             ext: '.snapshot',
           },
@@ -12754,26 +12062,22 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/story-function.output.snapshot',
+            file: 'addons/docs/src/mdx/__testfixtures__/story-function.output.snapshot',
             hash: '242d60a066d2f58982835e0354d255d126223bc4',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/story-missing-props.mdx',
+            file: 'addons/docs/src/mdx/__testfixtures__/story-missing-props.mdx',
             hash: '0eb3137a9756196d98481834d35e4dd6825fd62c',
             ext: '.mdx',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/story-multiple-children.mdx',
+            file: 'addons/docs/src/mdx/__testfixtures__/story-multiple-children.mdx',
             hash: '02e3ebed245365fe411d72c27a5ea0081eee3d9a',
             ext: '.mdx',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/story-multiple-children.output.snapshot',
+            file: 'addons/docs/src/mdx/__testfixtures__/story-multiple-children.output.snapshot',
             hash: '9371c021c9417150060b23d0cc9fb49e6f8b43f2',
             ext: '.snapshot',
           },
@@ -12783,8 +12087,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/story-object.output.snapshot',
+            file: 'addons/docs/src/mdx/__testfixtures__/story-object.output.snapshot',
             hash: '3f2306547be3956ad79db0a4ca05a3ced6e748df',
             ext: '.snapshot',
           },
@@ -12794,20 +12097,17 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/story-references.output.snapshot',
+            file: 'addons/docs/src/mdx/__testfixtures__/story-references.output.snapshot',
             hash: 'cb4e3b026260e0975cdbe17b227f0a9387adb19b',
             ext: '.snapshot',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/title-template-string.mdx',
+            file: 'addons/docs/src/mdx/__testfixtures__/title-template-string.mdx',
             hash: '3e41ab169fb555a7ba6ec626644dba2b90e5cf64',
             ext: '.mdx',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/title-template-string.output.snapshot',
+            file: 'addons/docs/src/mdx/__testfixtures__/title-template-string.output.snapshot',
             hash: '0fda2e2a98c47529709c7bfab8efe3fa503010dd',
             ext: '.snapshot',
           },
@@ -12817,8 +12117,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.mdx',
           },
           {
-            file:
-              'addons/docs/src/mdx/__testfixtures__/vanilla.output.snapshot',
+            file: 'addons/docs/src/mdx/__testfixtures__/vanilla.output.snapshot',
             hash: '1913e0b92e32d6b385922516162d4d69e75acd6d',
             ext: '.snapshot',
           },
@@ -13041,86 +12340,72 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'app/angular/src/client/preview/angular-beta/__testfixtures__/input.component.ts',
+            file: 'app/angular/src/client/preview/angular-beta/__testfixtures__/input.component.ts',
             hash: '93ea8e346f5441ed3629ab184a564cfb05dd28cd',
             ext: '.ts',
           },
           {
-            file:
-              'app/angular/src/client/preview/angular-beta/ComputesTemplateFromComponent.test.ts',
+            file: 'app/angular/src/client/preview/angular-beta/ComputesTemplateFromComponent.test.ts',
             hash: '4aaf6419a9b3a74fc01aa3f98be0a18138ea362c',
             ext: '.ts',
           },
           {
-            file:
-              'app/angular/src/client/preview/angular-beta/ComputesTemplateFromComponent.ts',
+            file: 'app/angular/src/client/preview/angular-beta/ComputesTemplateFromComponent.ts',
             hash: '1e80cbdfb4f37490564683fc436f0e33fa4a4cbd',
             ext: '.ts',
           },
           {
-            file:
-              'app/angular/src/client/preview/angular-beta/ElementRendererService.ts',
+            file: 'app/angular/src/client/preview/angular-beta/ElementRendererService.ts',
             hash: '7a79c9fd06ea25ab7efbf35349c0c3ad23f6419b',
             ext: '.ts',
           },
           {
-            file:
-              'app/angular/src/client/preview/angular-beta/RendererService.test.ts',
+            file: 'app/angular/src/client/preview/angular-beta/RendererService.test.ts',
             hash: '3f6dbb067b851bf84a0334f7701a37eeda77971b',
             ext: '.ts',
           },
           {
-            file:
-              'app/angular/src/client/preview/angular-beta/RendererService.ts',
+            file: 'app/angular/src/client/preview/angular-beta/RendererService.ts',
             hash: '16231c5f290ed446e0914d07853b571488f8b860',
             ext: '.ts',
           },
           {
-            file:
-              'app/angular/src/client/preview/angular-beta/StorybookModule.test.ts',
+            file: 'app/angular/src/client/preview/angular-beta/StorybookModule.test.ts',
             hash: 'd5bf4afad8ffb531d22e27dc8aacc7f15657cdb1',
             ext: '.ts',
           },
           {
-            file:
-              'app/angular/src/client/preview/angular-beta/StorybookModule.ts',
+            file: 'app/angular/src/client/preview/angular-beta/StorybookModule.ts',
             hash: 'dab78a579969ec9cf7cd723c3a82d599a8189d43',
             ext: '.ts',
           },
           {
-            file:
-              'app/angular/src/client/preview/angular-beta/StorybookProvider.ts',
+            file: 'app/angular/src/client/preview/angular-beta/StorybookProvider.ts',
             hash: 'fac08eeea0823f345047237de50787a7f1c0472e',
             ext: '.ts',
           },
           {
-            file:
-              'app/angular/src/client/preview/angular-beta/StorybookWrapperComponent.ts',
+            file: 'app/angular/src/client/preview/angular-beta/StorybookWrapperComponent.ts',
             hash: 'd4784a95c9016995cffa926be1bbddaec5602248',
             ext: '.ts',
           },
           {
-            file:
-              'app/angular/src/client/preview/angular-beta/utils/NgComponentAnalyzer.test.ts',
+            file: 'app/angular/src/client/preview/angular-beta/utils/NgComponentAnalyzer.test.ts',
             hash: '5c0ba24f95ff5e49aff9f379b5c9f7914864765c',
             ext: '.ts',
           },
           {
-            file:
-              'app/angular/src/client/preview/angular-beta/utils/NgComponentAnalyzer.ts',
+            file: 'app/angular/src/client/preview/angular-beta/utils/NgComponentAnalyzer.ts',
             hash: '80233b8756102cf48c7db27f63d3cb13fe20e406',
             ext: '.ts',
           },
           {
-            file:
-              'app/angular/src/client/preview/angular-beta/utils/NgModulesAnalyzer.test.ts',
+            file: 'app/angular/src/client/preview/angular-beta/utils/NgModulesAnalyzer.test.ts',
             hash: '076dff84a73035ed3ff5561cdc1ead092576b8c9',
             ext: '.ts',
           },
           {
-            file:
-              'app/angular/src/client/preview/angular-beta/utils/NgModulesAnalyzer.ts',
+            file: 'app/angular/src/client/preview/angular-beta/utils/NgModulesAnalyzer.ts',
             hash: '54e721ebea2da5204e0528ffc32608d68aa7b93b',
             ext: '.ts',
           },
@@ -13135,8 +12420,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'app/angular/src/client/preview/angular/components/app.component.ts',
+            file: 'app/angular/src/client/preview/angular/components/app.component.ts',
             hash: '57bd79442abc3b05da27b132b0d9352fd003b0e5',
             ext: '.ts',
           },
@@ -13226,8 +12510,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.json',
           },
           {
-            file:
-              'app/angular/src/server/__tests__/create-fork-ts-checker-plugin.test.ts',
+            file: 'app/angular/src/server/__tests__/create-fork-ts-checker-plugin.test.ts',
             hash: 'e77d4746097a0a727b4e22be439cd9319803ec50',
             ext: '.ts',
           },
@@ -13381,8 +12664,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'app/aurelia/src/server/__tests__/create-fork-ts-checker-plugin.test.ts',
+            file: 'app/aurelia/src/server/__tests__/create-fork-ts-checker-plugin.test.ts',
             hash: '7c49df4500e3ddb7d64f808ab0515de75fd3cb79',
             ext: '.ts',
           },
@@ -13580,536 +12862,447 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/add-component-parameters/add-component-parameters.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/add-component-parameters/add-component-parameters.input.js',
             hash: '8ec32d74ebe279a5f219bad11215f7e488b917d0',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/add-component-parameters/add-component-parameters.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/add-component-parameters/add-component-parameters.output.snapshot',
             hash: '5391358b11189a89a0839bf1a970a21e679c883a',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/csf-hoist-story-annotations/basic.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/csf-hoist-story-annotations/basic.input.js',
             hash: '7a8a3eaa0717d140a9b3b3868f21d10e6ec8225f',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/csf-hoist-story-annotations/basic.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/csf-hoist-story-annotations/basic.output.snapshot',
             hash: '3508512e0d3baaa7a4bb1b84ffcefc4715ab3053',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/csf-hoist-story-annotations/overrides.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/csf-hoist-story-annotations/overrides.input.js',
             hash: '76796d8c460fa4e2b9f82048585092655c2e71a3',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/csf-hoist-story-annotations/overrides.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/csf-hoist-story-annotations/overrides.output.snapshot',
             hash: '3ece8c67141d3bcf5e156d6437d76718cb5b541b',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/csf-hoist-story-annotations/variable.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/csf-hoist-story-annotations/variable.input.js',
             hash: '2987fde2180edacb58476353c7470218da6d3321',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/csf-hoist-story-annotations/variable.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/csf-hoist-story-annotations/variable.output.snapshot',
             hash: 'bdac64d15652fa8cb5b155929fcb13d154facc08',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/basic.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/basic.input.js',
             hash: 'd35dd99ac6011db1c350f5d3cd50dc2f126f09e1',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/basic.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/basic.output.snapshot',
             hash: 'ca833e112ac2f097bc2cf2278b2f801c596b37ca',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/component-id.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/component-id.input.js',
             hash: '7ae369e4101afd2aac2e5d8143306226b7dfbce1',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/component-id.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/component-id.output.snapshot',
             hash: 'fe3e85fb76b3a010f625e96dae407a0e6f63a83b',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/decorators.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/decorators.input.js',
             hash: '50d11fde87e63d88fc70fe927896562385d948cc',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/decorators.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/decorators.output.snapshot',
             hash: 'fde0c3de9d629f760f08952ae648933d4f17d862',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/exclude-stories.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/exclude-stories.input.js',
             hash: '32f84f07054f2ac726722463026fe5ad46b5cbdb',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/exclude-stories.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/exclude-stories.output.snapshot',
             hash: 'd5f889768bc323fb9914d36646c73fc7b0af6b67',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/parameters.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/parameters.input.js',
             hash: 'af5840e218a5a6b8ebf6101884136fc5602b34fa',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/parameters.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/parameters.output.snapshot',
             hash: '84f049d2cadb46af2863cf5746a6431d762bb02e',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/story-function.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/story-function.input.js',
             hash: 'a54471fbedb2a402dc8fc0de4e289fce99b73465',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/story-function.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/story-function.output.snapshot',
             hash: 'd12ec28e2ec455ab853a5249c3c2119b0b2a8826',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/story-parameters.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/story-parameters.input.js',
             hash: '4aceae77d1f18400237ab6349f0c5f5863766243',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/story-parameters.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/csf-to-mdx/story-parameters.output.snapshot',
             hash: '42810578a2062526fab3788bec84900c7f17ede5',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/basic.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/basic.input.js',
             hash: 'fc45a6e58507bd52349179370d01103837d1153c',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/basic.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/basic.output.snapshot',
             hash: '8f502e342d3009098a7c74b8987716027306905f',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/component-id.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/component-id.input.js',
             hash: 'b1c3d54da53164699b08d9d67695f48121274ec2',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/component-id.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/component-id.output.snapshot',
             hash: '98125c844db5d5a19ed3554b35c78e6987d48027',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/decorators.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/decorators.input.js',
             hash: '2c9bc768f8f44bcc7ad6f6d9b3fe260c04404628',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/decorators.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/decorators.output.snapshot',
             hash: '89c3d77617e211ed75ef8e5cee1225b9c7e004d6',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/exclude-stories.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/exclude-stories.input.js',
             hash: '0c8ca0c6513beab188d00849191e55cdc0709cf2',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/exclude-stories.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/exclude-stories.output.snapshot',
             hash: 'b5e3f960cb748e1ebd724079474e4f5c81a0e216',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/parameters.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/parameters.input.js',
             hash: 'bba94e8ede9adcfdd75e168c2644393481c5e623',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/parameters.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/parameters.output.snapshot',
             hash: '95b9c8814b2b901a2add5e83df05109dddf0168c',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/plaintext.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/plaintext.input.js',
             hash: '0808a95fa532cb3e99703d53965a1a107958b047',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/plaintext.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/plaintext.output.snapshot',
             hash: '58ad1ca96af812f9e0095b928a388a41d603d3e4',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/story-function.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/story-function.input.js',
             hash: '50756bdb2f1c70c56da8e1f81057bd0ea5fdda77',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/story-function.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/story-function.output.snapshot',
             hash: '41997d5facc89f74a8da91c2be551e6d328ee960',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/story-parameters.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/story-parameters.input.js',
             hash: '43e834a8f6f47f1c1d554678cf4c81855f3a72c3',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/story-parameters.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/story-parameters.output.snapshot',
             hash: 'b4e1f5c2e1912f3fc8b8fc54d3f8304b245edad6',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/story-refs.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/story-refs.input.js',
             hash: 'b9bd1b771d2b7360c7a965d8cb2619023adb9f28',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/story-refs.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/mdx-to-csf/story-refs.output.snapshot',
             hash: '230199df8b2fd7286685f08a3b755d1649749e0c',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/move-builtin-addons/default.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/move-builtin-addons/default.input.js',
             hash: '8152a70ddd94b36f29d5eb13fd427a2835135a66',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/move-builtin-addons/default.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/move-builtin-addons/default.output.snapshot',
             hash: '37a0805dcd1a4110c950d3584d385900c1f89c03',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/move-builtin-addons/with-no-change.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/move-builtin-addons/with-no-change.input.js',
             hash: 'edc6a6d2e289a0c4c25157bd9e95bcea933fe5aa',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/move-builtin-addons/with-no-change.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/move-builtin-addons/with-no-change.output.snapshot',
             hash: '3966fe70fb0db7bd86606396c824bf5a38b6257e',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/basic.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/basic.input.js',
             hash: '17c8f6abc1a17bb0bb65ae746f3de6c801ebc90a',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/basic.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/basic.output.snapshot',
             hash: '6b26bc2380447d8b3329c684a2edeb5c39c43c20',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/collision.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/collision.input.js',
             hash: 'fc9108a22d292e7b6de2fb7e5e8eb774d4b5233b',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/collision.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/collision.output.snapshot',
             hash: '1cde3dcf27ff7d7e58c6dce473c2224c7f17064c',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/const.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/const.input.js',
             hash: 'a3083631514163581d996dcbdbc700bbc339cabe',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/const.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/const.output.snapshot',
             hash: '3afdb3c66d2f913e652b6d0482680ce3938da140',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/decorators.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/decorators.input.js',
             hash: '900c47c9c05b14e25d237f8505c9e4c323258162',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/decorators.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/decorators.output.snapshot',
             hash: '5ef412be865d9077dd7e5f33334e7f7b83033609',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/default.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/default.input.js',
             hash: 'd242ed9a688c53034c723fba487dd722f0877187',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/default.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/default.output.snapshot',
             hash: '56f1d0ba1217d5ab5ac5fc95171166184fb462dc',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/digit.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/digit.input.js',
             hash: '9931f13df1f928c47854aad06756f80bbbddd772',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/digit.output.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/digit.output.js',
             hash: '0dfb48fb260d4fadd687296d1fb457ff578a15d7',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/digit.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/digit.output.snapshot',
             hash: '258a578f683202ac8848c5931708cb4931ca25f4',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/export-destructuring.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/export-destructuring.input.js',
             hash: '1c4f5faa706ea3c000f225a1e81546e17786b799',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/export-destructuring.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/export-destructuring.output.snapshot',
             hash: '5225069c4651fea6c497b5fa7e34f49585da533f',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/export-function.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/export-function.input.js',
             hash: '94149593ab9196573f45e6c7ff570eb8be8f11ad',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/export-function.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/export-function.output.snapshot',
             hash: '49096c22ffd3f68a6bfe7698eba5659abe7548f9',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/export-names.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/export-names.input.js',
             hash: 'c87d8695b8ee2d2eb1cfdb2e668854f5c24be3c5',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/export-names.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/export-names.output.snapshot',
             hash: '95ddc5056ced6836e0f297b2308f4d76dc829d2d',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/exports.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/exports.input.js',
             hash: '6096c9e0ae6ecb57569336c254e84fe43efe1bdc',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/exports.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/exports.output.snapshot',
             hash: 'eb0839d895bae934ca7ed7ccb38cbc73482c6503',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/module.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/module.input.js',
             hash: '5cc7ce8ab842cc13582f0a2486a0e11a76c53dc4',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/module.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/module.output.snapshot',
             hash: '94a2afbacb31cbeebd7ed29449042f84b5ff2151',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/multi.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/multi.input.js',
             hash: '59a06b7cd1655398d07e96c28902c04188cd08c8',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/multi.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/multi.output.snapshot',
             hash: '670e9a1784cf4b3891f76b5e80458bdb3af73d5c',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/parameters-as-var.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/parameters-as-var.input.js',
             hash: '6d8dcc4970321604b0a7b076cc4baeccd5c76c92',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/parameters-as-var.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/parameters-as-var.output.snapshot',
             hash: 'b0489d3c5f3d316c5ebaa833abdc69b03458e51b',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/parameters.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/parameters.input.js',
             hash: '07499987fc6702a4a73b772d72240af4270e43c8',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/parameters.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/parameters.output.snapshot',
             hash: '8ee0083b9d1ff51bb8704f6d6b4ded5c4b26f0ba',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/storiesof-var.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/storiesof-var.input.js',
             hash: '3a66045ea7b98108ac3ad6218e84ef7d95de25e7',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/storiesof-var.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/storiesof-var.output.snapshot',
             hash: '4c0889c9137a779cc1000129e560c7077a5fa379',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/story-decorators.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/story-decorators.input.js',
             hash: '7468df8d9e6cfcb2e6fef1b122ccb2e97318f94f',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/story-decorators.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/story-decorators.output.snapshot',
             hash: '235b5d50e9b1b9ba6ff426b37e25be143a08d81a',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/story-parameters.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/story-parameters.input.js',
             hash: '75db6673cc1ac48aa71f2a2c2fd3559c588c55a4',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/story-parameters.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/storiesof-to-csf/story-parameters.output.snapshot',
             hash: '43d24f405ce0b8978f2e8c2f411299ae63a6f5a0',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/update-addon-info/update-addon-info.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/update-addon-info/update-addon-info.input.js',
             hash: 'ee8a6806601da0215ac078d6f166964efae70722',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/update-addon-info/update-addon-info.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/update-addon-info/update-addon-info.output.snapshot',
             hash: 'd74f4053f20efd259f30ce1f842500f5719e33c6',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/update-organisation-name/update-organisation-name.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/update-organisation-name/update-organisation-name.input.js',
             hash: '9b16ff958663a2395b05df93c847165cb0ed5b16',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/update-organisation-name/update-organisation-name.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/update-organisation-name/update-organisation-name.output.snapshot',
             hash: '9b6c6005344205550422b8542d5f06a324f6b17d',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/upgrade-hierarchy-separators/csf.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/upgrade-hierarchy-separators/csf.input.js',
             hash: '91b0f7101d9e26f04c1f3064b5f6ec9013821aa3',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/upgrade-hierarchy-separators/csf.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/upgrade-hierarchy-separators/csf.output.snapshot',
             hash: 'fab15740805f45b0a8bf50f3bc53c43cbc3753d9',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/upgrade-hierarchy-separators/dynamic-storiesof.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/upgrade-hierarchy-separators/dynamic-storiesof.input.js',
             hash: 'a861d30bf8033c65dafc490b484e430e160b2124',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/upgrade-hierarchy-separators/dynamic-storiesof.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/upgrade-hierarchy-separators/dynamic-storiesof.output.snapshot',
             hash: '9b3e37c379c373cc7b1727c6fafaf4e57607467f',
             ext: '.snapshot',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/upgrade-hierarchy-separators/storiesof.input.js',
+            file: 'lib/codemod/src/transforms/__testfixtures__/upgrade-hierarchy-separators/storiesof.input.js',
             hash: 'bdf1b2ef2579375438022c9e522586a7f1829bc3',
             ext: '.js',
           },
           {
-            file:
-              'lib/codemod/src/transforms/__testfixtures__/upgrade-hierarchy-separators/storiesof.output.snapshot',
+            file: 'lib/codemod/src/transforms/__testfixtures__/upgrade-hierarchy-separators/storiesof.output.snapshot',
             hash: 'fef6c52a615af01eca5c907257f0c0d5b181f50a',
             ext: '.snapshot',
           },
@@ -14476,20 +13669,17 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.json',
           },
           {
-            file:
-              'app/server/src/lib/compiler/__testfixtures__/actions.snapshot',
+            file: 'app/server/src/lib/compiler/__testfixtures__/actions.snapshot',
             hash: 'f6631a09b3306b6b3163913fcae07bd87fcc817a',
             ext: '.snapshot',
           },
           {
-            file:
-              'app/server/src/lib/compiler/__testfixtures__/backgrounds.json',
+            file: 'app/server/src/lib/compiler/__testfixtures__/backgrounds.json',
             hash: '4c91c4f4c51ce2c15c0b4dfc5ebbca8651083ad7',
             ext: '.json',
           },
           {
-            file:
-              'app/server/src/lib/compiler/__testfixtures__/backgrounds.snapshot',
+            file: 'app/server/src/lib/compiler/__testfixtures__/backgrounds.snapshot',
             hash: '93da5a33dd0c78e23f0315547e4539a4d224c880',
             ext: '.snapshot',
           },
@@ -14499,20 +13689,17 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.json',
           },
           {
-            file:
-              'app/server/src/lib/compiler/__testfixtures__/controls.snapshot',
+            file: 'app/server/src/lib/compiler/__testfixtures__/controls.snapshot',
             hash: '1f5432ddda800c1d1afe26e15816ccabdb4deaea',
             ext: '.snapshot',
           },
           {
-            file:
-              'app/server/src/lib/compiler/__testfixtures__/kitchen_sink.json',
+            file: 'app/server/src/lib/compiler/__testfixtures__/kitchen_sink.json',
             hash: 'c7e719c6f11dce2c1ca844efec7c13a141e567b9',
             ext: '.json',
           },
           {
-            file:
-              'app/server/src/lib/compiler/__testfixtures__/kitchen_sink.snapshot',
+            file: 'app/server/src/lib/compiler/__testfixtures__/kitchen_sink.snapshot',
             hash: 'ccf29b3f4400e6e183b734a723506949d0b1e060',
             ext: '.snapshot',
           },
@@ -14527,26 +13714,22 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.snapshot',
           },
           {
-            file:
-              'app/server/src/lib/compiler/__testfixtures__/multiple_stories.json',
+            file: 'app/server/src/lib/compiler/__testfixtures__/multiple_stories.json',
             hash: '207332142d298582daa555cf66d35a0a9f00aaed',
             ext: '.json',
           },
           {
-            file:
-              'app/server/src/lib/compiler/__testfixtures__/multiple_stories.snapshot',
+            file: 'app/server/src/lib/compiler/__testfixtures__/multiple_stories.snapshot',
             hash: 'ff2cb558fb578939fa92d4f419d59f6745c9faa3',
             ext: '.snapshot',
           },
           {
-            file:
-              'app/server/src/lib/compiler/__testfixtures__/params_override.json',
+            file: 'app/server/src/lib/compiler/__testfixtures__/params_override.json',
             hash: '717be13a4ad3c3c853491177bee54a933a64812b',
             ext: '.json',
           },
           {
-            file:
-              'app/server/src/lib/compiler/__testfixtures__/params_override.snapshot',
+            file: 'app/server/src/lib/compiler/__testfixtures__/params_override.snapshot',
             hash: '81f7ea258089f792c701094150d7af04ec68c7d8',
             ext: '.snapshot',
           },
@@ -14556,8 +13739,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.json',
           },
           {
-            file:
-              'app/server/src/lib/compiler/__testfixtures__/params.snapshot',
+            file: 'app/server/src/lib/compiler/__testfixtures__/params.snapshot',
             hash: '5d6fb7dc3900ae936c20c731772fc1eba5a9e4ad',
             ext: '.snapshot',
           },
@@ -15438,8 +14620,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'app/riot/src/client/preview/__snapshots__/render-riot.test.ts.snap',
+            file: 'app/riot/src/client/preview/__snapshots__/render-riot.test.ts.snap',
             hash: 'b67db362d53c4ccb075cb601d22c6c4c04d5fac8',
             ext: '.snap',
           },
@@ -15469,8 +14650,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'app/riot/src/client/preview/rendering/compiledButUnmounted.ts',
+            file: 'app/riot/src/client/preview/rendering/compiledButUnmounted.ts',
             hash: '47d8f3ee3bc4b4e2cc94a6bc7a5f0f1e67242a8a',
             ext: '.ts',
           },
@@ -16745,14 +15925,12 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'lib/cli/src/generators/ANGULAR/template-csf/.storybook/tsconfig.json',
+            file: 'lib/cli/src/generators/ANGULAR/template-csf/.storybook/tsconfig.json',
             hash: '28aadc68fd9a81b016d346d63017cfedc5f6f5ca',
             ext: '.json',
           },
           {
-            file:
-              'lib/cli/src/generators/ANGULAR/template-csf/.storybook/typings.d.ts',
+            file: 'lib/cli/src/generators/ANGULAR/template-csf/.storybook/typings.d.ts',
             hash: 'f73d61b396c9c45ae43f02fbd587629524173156',
             ext: '.ts',
           },
@@ -16762,14 +15940,12 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'lib/cli/src/generators/AURELIA/template-csf/.storybook/tsconfig.json',
+            file: 'lib/cli/src/generators/AURELIA/template-csf/.storybook/tsconfig.json',
             hash: '28aadc68fd9a81b016d346d63017cfedc5f6f5ca',
             ext: '.json',
           },
           {
-            file:
-              'lib/cli/src/generators/AURELIA/template-csf/.storybook/typings.d.ts',
+            file: 'lib/cli/src/generators/AURELIA/template-csf/.storybook/typings.d.ts',
             hash: 'f73d61b396c9c45ae43f02fbd587629524173156',
             ext: '.ts',
           },
@@ -16829,62 +16005,52 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'lib/cli/src/generators/REACT_NATIVE/template-csf/storybook/addons.js',
+            file: 'lib/cli/src/generators/REACT_NATIVE/template-csf/storybook/addons.js',
             hash: 'bc646c943eb4a8f39b896ba98d12c9cf9fa21a03',
             ext: '.js',
           },
           {
-            file:
-              'lib/cli/src/generators/REACT_NATIVE/template-csf/storybook/index.js',
+            file: 'lib/cli/src/generators/REACT_NATIVE/template-csf/storybook/index.js',
             hash: 'f6a30232e53b8a979daad3c9abb0bb8555f56d6b',
             ext: '.js',
           },
           {
-            file:
-              'lib/cli/src/generators/REACT_NATIVE/template-csf/storybook/rn-addons.js',
+            file: 'lib/cli/src/generators/REACT_NATIVE/template-csf/storybook/rn-addons.js',
             hash: '4d30f923173b31e485e7c355ad189ac8352aad46',
             ext: '.js',
           },
           {
-            file:
-              'lib/cli/src/generators/REACT_NATIVE/template-csf/storybook/stories/Button/Button.stories.js',
+            file: 'lib/cli/src/generators/REACT_NATIVE/template-csf/storybook/stories/Button/Button.stories.js',
             hash: '8f17adc8664f909caf4f3cf16a68d4c38070a08c',
             ext: '.js',
           },
           {
-            file:
-              'lib/cli/src/generators/REACT_NATIVE/template-csf/storybook/stories/Button/index.js',
+            file: 'lib/cli/src/generators/REACT_NATIVE/template-csf/storybook/stories/Button/index.js',
             hash: '37c8437e72e41966bd3f574c61358c7fe821e3f6',
             ext: '.js',
           },
           {
-            file:
-              'lib/cli/src/generators/REACT_NATIVE/template-csf/storybook/stories/CenterView/index.js',
+            file: 'lib/cli/src/generators/REACT_NATIVE/template-csf/storybook/stories/CenterView/index.js',
             hash: '29732b27ab24ee13ed467987543908cd7f08b246',
             ext: '.js',
           },
           {
-            file:
-              'lib/cli/src/generators/REACT_NATIVE/template-csf/storybook/stories/CenterView/style.js',
+            file: 'lib/cli/src/generators/REACT_NATIVE/template-csf/storybook/stories/CenterView/style.js',
             hash: 'ff347fd9841f4c629ec2c18a71c6747ef351492d',
             ext: '.js',
           },
           {
-            file:
-              'lib/cli/src/generators/REACT_NATIVE/template-csf/storybook/stories/index.js',
+            file: 'lib/cli/src/generators/REACT_NATIVE/template-csf/storybook/stories/index.js',
             hash: '5c9079ab2b004b3d7ce6cc423dcc5a5bfacea21d',
             ext: '.js',
           },
           {
-            file:
-              'lib/cli/src/generators/REACT_NATIVE/template-csf/storybook/stories/Welcome/index.js',
+            file: 'lib/cli/src/generators/REACT_NATIVE/template-csf/storybook/stories/Welcome/index.js',
             hash: '4256f15972020b0e78ca4c90679489810db8cc9f',
             ext: '.js',
           },
           {
-            file:
-              'lib/cli/src/generators/REACT_NATIVE/template-csf/storybook/stories/Welcome/Welcome.stories.js',
+            file: 'lib/cli/src/generators/REACT_NATIVE/template-csf/storybook/stories/Welcome/Welcome.stories.js',
             hash: '98a964bc71460d73123dcd3ba7ea62e7e075ccdf',
             ext: '.js',
           },
@@ -16914,8 +16080,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'lib/cli/src/generators/UPDATE_PACKAGE_ORGANIZATIONS/index.ts',
+            file: 'lib/cli/src/generators/UPDATE_PACKAGE_ORGANIZATIONS/index.ts',
             hash: 'a78e467e8f5844262e93a062b23dfc4f910dc55b',
             ext: '.ts',
           },
@@ -16935,8 +16100,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'lib/cli/src/generators/WEB-COMPONENTS/template-csf/.storybook/preview.js',
+            file: 'lib/cli/src/generators/WEB-COMPONENTS/template-csf/.storybook/preview.js',
             hash: '08bb9bc215d98e8471a1d01d31c8c7e71695dbc4',
             ext: '.js',
           },
@@ -16971,8 +16135,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'lib/cli/src/js-package-manager/JsPackageManagerFactory.test.ts',
+            file: 'lib/cli/src/js-package-manager/JsPackageManagerFactory.test.ts',
             hash: '8bbe8481ecc76842aee3a07277588438e5623b80',
             ext: '.ts',
           },
@@ -17191,8 +16354,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.tsx',
           },
           {
-            file:
-              'lib/ui/src/components/notifications/NotificationItem.stories.js',
+            file: 'lib/ui/src/components/notifications/NotificationItem.stories.js',
             hash: '2fc9ac07bcb03d5d8bc29b3840ae02d0e00a3165',
             ext: '.js',
           },
@@ -17202,8 +16364,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.tsx',
           },
           {
-            file:
-              'lib/ui/src/components/notifications/NotificationList.stories.js',
+            file: 'lib/ui/src/components/notifications/NotificationList.stories.js',
             hash: '943ab0f985d127438a1da73ec0b5f4173002d3e9',
             ext: '.js',
           },
@@ -17278,8 +16439,7 @@ export const storybookGraph: ProjectGraphCache = {
             ext: '.ts',
           },
           {
-            file:
-              'lib/ui/src/components/preview/utils/stringifyQueryParams.tsx',
+            file: 'lib/ui/src/components/preview/utils/stringifyQueryParams.tsx',
             hash: '4175503808bb132f67e58939347692a940384b96',
             ext: '.tsx',
           },

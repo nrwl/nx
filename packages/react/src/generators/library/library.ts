@@ -315,10 +315,8 @@ function updateAppRoutes(host: Tree, options: NormalizedSchema) {
 
   // addInitialAppRoutes
   {
-    const {
-      content: componentContent,
-      source: componentSource,
-    } = readComponent(host, appComponentPath);
+    const { content: componentContent, source: componentSource } =
+      readComponent(host, appComponentPath);
     const isComponentRouterPresent = componentContent.match(/react-router-dom/);
     if (!isComponentRouterPresent) {
       const changes = applyChangesToString(
@@ -331,10 +329,8 @@ function updateAppRoutes(host: Tree, options: NormalizedSchema) {
 
   // addNewAppRoute
   {
-    const {
-      content: componentContent,
-      source: componentSource,
-    } = readComponent(host, appComponentPath);
+    const { content: componentContent, source: componentSource } =
+      readComponent(host, appComponentPath);
     const { npmScope } = getWorkspaceLayout(host);
     const changes = applyChangesToString(
       componentContent,

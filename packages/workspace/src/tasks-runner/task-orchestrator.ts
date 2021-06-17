@@ -263,9 +263,8 @@ export class TaskOrchestrator {
   }
 
   private storeEndTime(t: Task) {
-    this.timings[
-      `${t.target.project}:${t.target.target}`
-    ].end = new Date().getTime();
+    this.timings[`${t.target.project}:${t.target.target}`].end =
+      new Date().getTime();
   }
 
   private pipeOutputCapture(task: Task) {

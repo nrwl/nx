@@ -56,9 +56,9 @@ export function removeParserOptionsProjectIfNotRequired(
 function getAllRulesInConfig(json: Linter.Config): string[] {
   let allRules = json.rules ? Object.keys(json.rules) : [];
   if (json.overrides?.length > 0) {
-    for (const override of json.overrides) {
-      if (override.rules) {
-        allRules = [...allRules, ...Object.keys(override.rules)];
+    for (const o of json.overrides) {
+      if (o.rules) {
+        allRules = [...allRules, ...Object.keys(o.rules)];
       }
     }
   }

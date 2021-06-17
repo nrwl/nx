@@ -162,11 +162,8 @@ export async function taoNew(cwd: string, args: string[], isVerbose = false) {
   return handleErrors(isVerbose, async () => {
     const opts = parseGenerateOpts(args, 'new', null);
 
-    const {
-      normalizedGeneratorName,
-      schema,
-      implementationFactory,
-    } = ws.readGenerator(opts.collectionName, opts.generatorName);
+    const { normalizedGeneratorName, schema, implementationFactory } =
+      ws.readGenerator(opts.collectionName, opts.generatorName);
 
     const combinedOpts = await combineOptionsForGenerator(
       opts.generatorOptions,
@@ -223,11 +220,8 @@ export async function generate(
       readDefaultCollection(workspaceDefinition)
     );
 
-    const {
-      normalizedGeneratorName,
-      schema,
-      implementationFactory,
-    } = ws.readGenerator(opts.collectionName, opts.generatorName);
+    const { normalizedGeneratorName, schema, implementationFactory } =
+      ws.readGenerator(opts.collectionName, opts.generatorName);
 
     if (opts.help) {
       printGenHelp(opts, schema);

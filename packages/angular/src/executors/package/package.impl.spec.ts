@@ -27,12 +27,12 @@ describe('Package executor', () => {
       },
     };
     (ng.readConfiguration as jest.Mock).mockImplementation(() => tsConfig);
-    (buildableLibsUtils.calculateProjectDependencies as jest.Mock).mockImplementation(
-      () => ({
-        target: {},
-        dependencies: [],
-      })
-    );
+    (
+      buildableLibsUtils.calculateProjectDependencies as jest.Mock
+    ).mockImplementation(() => ({
+      target: {},
+      dependencies: [],
+    }));
     ngPackagrBuildMock = jest.fn(() => Promise.resolve());
     ngPackagerWatchSubject = new BehaviorSubject<void>(undefined);
     ngPackagrWatchMock = jest.fn(() => ngPackagerWatchSubject.asObservable());
@@ -56,9 +56,9 @@ describe('Package executor', () => {
   afterEach(() => jest.clearAllMocks());
 
   it('should return unsuccessful result when deps have not been built', async () => {
-    (buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock).mockReturnValue(
-      false
-    );
+    (
+      buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock
+    ).mockReturnValue(false);
 
     const result = await packageExecutor(options, context);
 
@@ -66,9 +66,9 @@ describe('Package executor', () => {
   });
 
   it('should build the library when deps have been built', async () => {
-    (buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock).mockReturnValue(
-      true
-    );
+    (
+      buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock
+    ).mockReturnValue(true);
 
     const result = await packageExecutor(options, context);
 
@@ -77,9 +77,9 @@ describe('Package executor', () => {
   });
 
   it('should process tsConfig for incremental builds when tsConfig options is set', async () => {
-    (buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock).mockReturnValue(
-      true
-    );
+    (
+      buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock
+    ).mockReturnValue(true);
     const tsConfigPath = '/root/my-lib/tsconfig.app.json';
 
     const result = await packageExecutor(
@@ -98,9 +98,9 @@ describe('Package executor', () => {
 
   describe('--watch', () => {
     it('should emit results everytime there are changes', async () => {
-      (buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock).mockReturnValue(
-        true
-      );
+      (
+        buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock
+      ).mockReturnValue(true);
 
       const results = packageExecutor(
         { ...options, watch: true },

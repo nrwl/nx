@@ -111,12 +111,8 @@ function updateTargetsConfigurations(
   configurationOptions: any
 ) {
   for (const [configurationName, options] of configurationOptions) {
-    const {
-      buildTarget,
-      tsConfig,
-      outputPath,
-      ...delegateTargetOptions
-    } = options;
+    const { buildTarget, tsConfig, outputPath, ...delegateTargetOptions } =
+      options;
 
     const configurationBuildTarget = extractConfigurationBuildTarget(
       projectName,
@@ -153,12 +149,8 @@ function updateTargetsOptions(
   buildTargetName: string
 ) {
   if (target.options) {
-    const {
-      buildTarget,
-      tsConfig,
-      outputPath,
-      ...delegateTargetOptions
-    } = target.options;
+    const { buildTarget, tsConfig, outputPath, ...delegateTargetOptions } =
+      target.options;
     // Update build target options by overwriting them
     project.targets[buildTargetName].options = {
       ...project.targets[buildTargetName].options,
