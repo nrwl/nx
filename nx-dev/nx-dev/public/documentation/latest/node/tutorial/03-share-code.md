@@ -73,10 +73,3 @@ export class TodosService {
 ```
 
 Every time you add a new library, you have to restart `nx serve`. **So restart `nx serve todos` and you should see the application running.**
-
-!!!!!
-Nx allows you to share code...
-!!!!!
-Between Nx applications and libraries
-Between Nx applications
-Between Nx libraries

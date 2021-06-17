@@ -115,6 +115,14 @@ happynrwl/
 └── tsconfig.base.json
 ```
 
+The files can use EJS syntax to substitute variables and logic. See the [EJS Docs](https://ejs.co/) to see more information about how to write these template files.
+
+Example NOTES.md:
+
+```md
+Hello, my name is <%= name %>!
+```
+
 Next, update the `index.ts` file for the generator, and generate the new files.
 
 ```typescript
@@ -172,6 +180,12 @@ CREATE libs/mylib/jest.config.js
 CREATE libs/mylib/tsconfig.spec.json
 UPDATE jest.config.js
 CREATE libs/mylib/NOTES.md
+```
+
+`libs/mylib/NOTES.md` will contain the content with substituted variables:
+
+```md
+Hello, my name is mylib!
 ```
 
 ## Customizing generator options

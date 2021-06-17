@@ -83,14 +83,9 @@
         ]
       },
       {
-        "name": "Core Concepts",
+        "name": "Using Nx",
         "id": "core-concepts",
         "itemList": [
-          {
-            "name": "Plugins",
-            "id": "plugins",
-            "file": "shared/plugins-overview"
-          },
           {
             "name": "Computation Caching",
             "id": "computation-caching",
@@ -102,7 +97,7 @@
             "file": "shared/affected"
           },
           {
-            "name": "Why Monorepos",
+            "name": "Monorepos",
             "id": "why-monorepos",
             "file": "shared/guides/why-monorepos"
           },
@@ -117,9 +112,9 @@
             "file": "angular/guides/configuration"
           },
           {
-            "name": "Nx Devkit",
+            "name": "Nx Plugins and Devkit",
             "id": "nx-devkit",
-            "file": "shared/devkit"
+            "file": "shared/devkit-and-nx-plugins"
           }
         ]
       },
@@ -438,6 +433,11 @@
             "file": "angular/api-angular/generators/storybook-migrate-defaults-5-to-6"
           },
           {
+            "name": "storybook-migrate-stories-to-6-2 generator",
+            "id": "storybook-migrate-stories-to-6-2",
+            "file": "angular/api-angular/generators/storybook-migrate-stories-to-6-2"
+          },
+          {
             "name": "upgrade-module generator",
             "id": "upgrade-module",
             "file": "angular/api-angular/generators/upgrade-module"
@@ -579,6 +579,11 @@
             "name": "migrate-defaults-5-to-6 generator",
             "id": "migrate-defaults-5-to-6",
             "file": "angular/api-storybook/generators/migrate-defaults-5-to-6"
+          },
+          {
+            "name": "migrate-stories-to-6-2 generator",
+            "id": "migrate-stories-to-6-2",
+            "file": "angular/api-storybook/generators/migrate-stories-to-6-2"
           },
           {
             "name": "cypress-project generator",
@@ -881,13 +886,31 @@
         ]
       },
       {
+        "name": "Nx Devkit",
+        "id": "nx-devkit",
+        "itemList": [
+          {
+            "id": "index",
+            "name": "index",
+            "searchResultsName": "Nx Devkit",
+            "file": "angular/api-nx-devkit/index"
+          },
+          {
+            "id": "ngcli_adapter",
+            "name": "ngcli_adapter",
+            "searchResultsName": "Ng CLI Adapter",
+            "file": "angular/api-nx-devkit/ngcli_adapter"
+          }
+        ]
+      },
+      {
         "name": "Executors / Builders",
         "id": "executors",
         "itemList": [
           {
             "name": "Using Executors / Builders",
             "id": "using-builders",
-            "file": "shared/using-builders"
+            "file": "shared/using-executors"
           },
           {
             "name": "Running Custom Commands",
@@ -908,7 +931,7 @@
           {
             "name": "Using Generators",
             "id": "using-schematics",
-            "file": "shared/using-schematics"
+            "file": "shared/using-generators"
           },
           {
             "name": "Workspace Generators",
@@ -1159,14 +1182,9 @@
         ]
       },
       {
-        "name": "Core Concepts",
+        "name": "Using Nx",
         "id": "core-concepts",
         "itemList": [
-          {
-            "name": "Plugins",
-            "id": "plugins",
-            "file": "shared/plugins-overview"
-          },
           {
             "name": "Computation Caching",
             "id": "computation-caching",
@@ -1178,7 +1196,7 @@
             "file": "shared/affected"
           },
           {
-            "name": "Why Monorepos",
+            "name": "Monorepos",
             "id": "why-monorepos",
             "file": "shared/guides/why-monorepos"
           },
@@ -1193,9 +1211,9 @@
             "file": "react/guides/configuration"
           },
           {
-            "name": "Nx Devkit",
+            "name": "Nx Plugins and Devkit",
             "id": "nx-devkit",
-            "file": "shared/devkit"
+            "file": "shared/devkit-and-nx-plugins"
           }
         ]
       },
@@ -1515,6 +1533,11 @@
             "file": "react/api-angular/generators/storybook-migrate-defaults-5-to-6"
           },
           {
+            "name": "storybook-migrate-stories-to-6-2 generator",
+            "id": "storybook-migrate-stories-to-6-2",
+            "file": "react/api-angular/generators/storybook-migrate-stories-to-6-2"
+          },
+          {
             "name": "upgrade-module generator",
             "id": "upgrade-module",
             "file": "react/api-angular/generators/upgrade-module"
@@ -1656,6 +1679,11 @@
             "name": "migrate-defaults-5-to-6 generator",
             "id": "migrate-defaults-5-to-6",
             "file": "react/api-storybook/generators/migrate-defaults-5-to-6"
+          },
+          {
+            "name": "migrate-stories-to-6-2 generator",
+            "id": "migrate-stories-to-6-2",
+            "file": "react/api-storybook/generators/migrate-stories-to-6-2"
           },
           {
             "id": "executors",
@@ -1959,13 +1987,31 @@
         ]
       },
       {
+        "name": "Nx Devkit",
+        "id": "nx-devkit",
+        "itemList": [
+          {
+            "id": "index",
+            "name": "index",
+            "searchResultsName": "Nx Devkit",
+            "file": "react/api-nx-devkit/index"
+          },
+          {
+            "id": "ngcli_adapter",
+            "name": "ngcli_adapter",
+            "searchResultsName": "Ng CLI Adapter",
+            "file": "react/api-nx-devkit/ngcli_adapter"
+          }
+        ]
+      },
+      {
         "name": "Executors / Builders",
         "id": "executors",
         "itemList": [
           {
             "name": "Using Executors / Builders",
             "id": "using-builders",
-            "file": "shared/using-builders"
+            "file": "shared/using-executors"
           },
           {
             "name": "Running Custom Commands",
@@ -1986,7 +2032,7 @@
           {
             "name": "Using Generators",
             "id": "using-schematics",
-            "file": "shared/using-schematics"
+            "file": "shared/using-generators"
           },
           {
             "name": "Workspace Generators",
@@ -2194,14 +2240,9 @@
         ]
       },
       {
-        "name": "Core Concepts",
+        "name": "Using Nx",
         "id": "core-concepts",
         "itemList": [
-          {
-            "name": "Plugins",
-            "id": "plugins",
-            "file": "shared/plugins-overview"
-          },
           {
             "name": "Computation Caching",
             "id": "computation-caching",
@@ -2213,7 +2254,7 @@
             "file": "shared/affected"
           },
           {
-            "name": "Why Monorepos",
+            "name": "Monorepos",
             "id": "why-monorepos",
             "file": "shared/guides/why-monorepos"
           },
@@ -2228,9 +2269,9 @@
             "file": "node/guides/configuration"
           },
           {
-            "name": "Nx Devkit",
+            "name": "Nx Plugins and Devkit",
             "id": "nx-devkit",
-            "file": "shared/devkit"
+            "file": "shared/devkit-and-nx-plugins"
           }
         ]
       },
@@ -2541,6 +2582,11 @@
             "file": "node/api-angular/generators/storybook-migrate-defaults-5-to-6"
           },
           {
+            "name": "storybook-migrate-stories-to-6-2 generator",
+            "id": "storybook-migrate-stories-to-6-2",
+            "file": "node/api-angular/generators/storybook-migrate-stories-to-6-2"
+          },
+          {
             "name": "upgrade-module generator",
             "id": "upgrade-module",
             "file": "node/api-angular/generators/upgrade-module"
@@ -2681,6 +2727,11 @@
             "name": "migrate-defaults-5-to-6 generator",
             "id": "migrate-defaults-5-to-6",
             "file": "node/api-storybook/generators/migrate-defaults-5-to-6"
+          },
+          {
+            "name": "migrate-stories-to-6-2 generator",
+            "id": "migrate-stories-to-6-2",
+            "file": "node/api-storybook/generators/migrate-stories-to-6-2"
           },
           {
             "name": "cypress-project generator",
@@ -2983,13 +3034,31 @@
         ]
       },
       {
+        "name": "Nx Devkit",
+        "id": "nx-devkit",
+        "itemList": [
+          {
+            "id": "index",
+            "name": "index",
+            "searchResultsName": "Nx Devkit",
+            "file": "node/api-nx-devkit/index"
+          },
+          {
+            "id": "ngcli_adapter",
+            "name": "ngcli_adapter",
+            "searchResultsName": "Ng CLI Adapter",
+            "file": "node/api-nx-devkit/ngcli_adapter"
+          }
+        ]
+      },
+      {
         "name": "Executors / Builders",
         "id": "executors",
         "itemList": [
           {
             "name": "Using Executors / Builders",
             "id": "using-builders",
-            "file": "shared/using-builders"
+            "file": "shared/using-executors"
           },
           {
             "name": "Running Custom Commands",
@@ -3010,7 +3079,7 @@
           {
             "name": "Using Generators",
             "id": "using-schematics",
-            "file": "shared/using-schematics"
+            "file": "shared/using-generators"
           },
           {
             "name": "Workspace Generators",
