@@ -24,10 +24,22 @@ nx g convert-tslint-to-eslint ... --dry-run
 
 ### Examples
 
-Convert the Angular project `myapp` from TSLint to ESLint:
+The following will first configure the project, `myapp`, the same way a _new_ project is configured i.e. It will use Nx's new recommended ESLint config. By default, this also adds the existing TSLint configuration on top of the default ESLint config from Nx to continue checking what it checks today. This is done by migrating TSLint rules to their equivalent ESLint rules to the best of its abilities. Some TSLint rules may not have ESLint equivalents and will be reported during the conversion:
 
 ```bash
 nx g convert-tslint-to-eslint myapp
+```
+
+If your TSLint config isn't extremely important to you, ignoring it makes this process more deterministic. Unlike the prior example, this will discard the existing TSLint configuration, meaning that the project will only have the Nx's latest recommended ESLint configuration which may be good enough for some workspaces:
+
+```bash
+nx g convert-tslint-to-eslint myapp --ignoreExistingTslintConfig=true
+```
+
+By default, this process removes the TSLint related dependencies and configuration once no more projects use TSLint. This can be disabled with the following flag to keep TSLint related dependencies and configuration in the repo:
+
+```bash
+nx g convert-tslint-to-eslint myapp --removeTSLintIfNoMoreTSLintTargets=false
 ```
 
 ## Options
