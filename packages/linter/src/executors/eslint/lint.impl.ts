@@ -67,7 +67,7 @@ Error: You have attempted to use a lint rule which requires the full TypeScript 
         eslintConfigPath || eslintConfigPathForError
       }
 
-Please see https://nx.dev/latest/guides/eslint for full guidance on how to resolve this issue.
+Please see https://nx.dev/guides/eslint for full guidance on how to resolve this issue.
 `);
 
       return {
