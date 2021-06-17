@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { Observable } from 'rxjs';
 
 import { EffectsModule } from '@ngrx/effects';
-import { StoreModule } from '@ngrx/store';
+import { Action, StoreModule } from '@ngrx/store';
 import { provideMockActions } from '@ngrx/effects/testing';
 
 import { NxModule<% if (useDataPersistence) { %>, DataPersistence<% } %> } from '@nrwl/angular';
@@ -13,7 +13,7 @@ import { <%= className %>Effects } from './<%= fileName %>.effects';
 import { Load<%= className %>, <%= className %>Loaded } from './<%= fileName %>.actions';
 
 describe('<%= className %>Effects', () => {
-  let actions: Observable<any>;
+  let actions: Observable<Action>;
   let effects: <%= className %>Effects;
 
   beforeEach(() => {
