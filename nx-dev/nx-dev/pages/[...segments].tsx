@@ -165,7 +165,7 @@ export function DocumentationPage({
         onClose={() => {}}
       >
         <div className="flex items-center justify-center min-h-screen">
-          <Dialog.Overlay className="fixed inset-0 backdrop-filter backdrop-blur" />
+          <Dialog.Overlay className="fixed inset-0 bg-black bg-opacity-20 backdrop-filter backdrop-blur" />
           <div className="z-50 bg-white rounded w-11/12 max-w-xl filter drop-shadow-2xl">
             <Dialog.Title
               as="h3"
