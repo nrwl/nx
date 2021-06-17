@@ -129,12 +129,13 @@ export function deduplicateOverrides(
       continue;
     }
     let mergedOverride = {};
-    for (const override of overridesArr) {
-      mergedOverride = {
-        ...mergedOverride,
-        ...(override as any),
-      };
-    }
+    overridesArr.forEach(
+      (override: any) =>
+        (mergedOverride = {
+          ...mergedOverride,
+          ...override,
+        })
+    );
     dedupedOverrides.push(mergedOverride);
   }
 

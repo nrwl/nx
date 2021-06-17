@@ -85,9 +85,9 @@ export default async function run(
     throw new Error('Invalid lint configuration. Nothing to lint.');
   }
 
-  const formatter: CLIEngine.Formatter = (projectESLint.CLIEngine as any).getFormatter(
-    options.format
-  );
+  const formatter: CLIEngine.Formatter = (
+    projectESLint.CLIEngine as any
+  ).getFormatter(options.format);
 
   const bundledReport: CLIEngine.LintReport = {
     errorCount: 0,
