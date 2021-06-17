@@ -285,11 +285,11 @@ export function Index() {
                   </div>
                 </div>
               </div>
-              {/*MODERN TOOLS*/}
+              {/*RICH PLUGIN ECOSYSTEM*/}
               <div className="my-32 flex sm:flex-row flex-col">
                 <div className="w-full sm:w-1/2 flex flex-col justify-center sm:pb-0 sm:pr-16 pb-10 mt-8 sm:mt-0">
                   <h2 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4">
-                    Support for Modern Tools
+                    Rich Plugin Ecosystem
                   </h2>
                   <p className="sm:text-lg mb-6">
                     <span className="font-bold">Nx</span> is an open platform
@@ -303,7 +303,7 @@ export function Index() {
                 <div className="w-full sm:w-1/2 flex flex-col justify-center items-center sm:pl-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
                   <Image
                     src="/images/modern-tools.svg"
-                    alt="Support for Modern Tools illustration"
+                    alt="Rich Plugin Ecosystem illustration"
                     width={388}
                     height={300}
                   />
