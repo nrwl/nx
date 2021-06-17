@@ -5,19 +5,18 @@ import { copySync, removeSync } from 'fs-extra';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
 import { appRootPath } from '../utilities/app-root';
-import {
-  detectPackageManager,
-  getPackageManagerCommand,
-} from '@nrwl/tao/src/shared/package-manager';
-import {
-  fileExists,
-  readJsonFile,
-  writeJsonFile,
-} from '../utilities/fileutils';
+import { fileExists } from '../utilities/fileutils';
 import { output } from '../utilities/output';
 import type { CompilerOptions } from 'typescript';
 import { Workspaces } from '@nrwl/tao/src/shared/workspace';
-import { logger, normalizePath } from '@nrwl/devkit';
+import {
+  logger,
+  normalizePath,
+  getPackageManagerCommand,
+  detectPackageManager,
+  readJsonFile,
+  writeJsonFile,
+} from '@nrwl/devkit';
 import { generate } from '@nrwl/tao/src/commands/generate';
 
 const rootDirectory = appRootPath;
