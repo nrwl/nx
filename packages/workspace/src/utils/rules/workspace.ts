@@ -16,8 +16,8 @@ export function setDefaultCollection(collectionName: string): Rule {
       ((workspace.extensions.cli as JsonObject).defaultCollection as string);
 
     if (!defaultCollection || defaultCollection === '@nrwl/workspace') {
-      (workspace.extensions
-        .cli as JsonObject).defaultCollection = collectionName;
+      (workspace.extensions.cli as JsonObject).defaultCollection =
+        collectionName;
     }
   });
 }

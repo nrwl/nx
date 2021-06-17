@@ -52,14 +52,13 @@
     ]
   },
   "peerDependencies": {
-    "prettier": "^2.0.4"
+    "prettier": "^2.3.0"
   },
   "dependencies": {
     "@nrwl/cli": "*",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
-    "cosmiconfig": "^4.0.0",
     "fs-extra": "^9.1.0",
     "dotenv": "8.2.0",
     "glob": "7.1.4",

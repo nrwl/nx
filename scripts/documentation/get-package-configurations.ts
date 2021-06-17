@@ -32,8 +32,9 @@ export function getPackageConfigurations(
       path.join(__dirname, '../../', documentationsDirectory)
     );
 
-    const configs = glob.sync(`${packagesDir}/*`).map(
-      (folderPath): Configuration => {
+    const configs = glob
+      .sync(`${packagesDir}/*`)
+      .map((folderPath): Configuration => {
         const folderName = folderPath.substring(packagesDir.length + 1);
         const itemList = glob
           .sync(`${folderPath}/*`)
@@ -58,8 +59,7 @@ export function getPackageConfigurations(
             itemList.includes('collection.json') ||
             itemList.includes('generators.json'),
         };
-      }
-    );
+      });
     return { framework, configs };
   });
 }

@@ -144,9 +144,9 @@ export async function convertToESLintConfig(
     },
   };
 
-  const summarizedConfiguration = await (createESLintConfiguration as typeof CreateESLintConfiguration)(
-    originalConfigurations
-  );
+  const summarizedConfiguration = await (
+    createESLintConfiguration as typeof CreateESLintConfiguration
+  )(originalConfigurations);
 
   /**
    * We are expecting it to not find a converter for nx-enforce-module-boundaries

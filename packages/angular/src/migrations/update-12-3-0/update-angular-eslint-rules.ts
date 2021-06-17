@@ -29,12 +29,12 @@ function migrateAngularEsLintRules({ overrides, rules }: Linter.Config) {
   );
   migrateToAccessibilityLabelHasAssociatedControlName(rules);
   addEqeqeqIfNeeded(rules);
-  for (const override of overrides ?? []) {
+  for (const o of overrides ?? []) {
     migrateToAccessibilityLabelHasAssociatedControlSchema(
-      override.rules?.['@angular-eslint/template/accessibility-label-for']
+      o.rules?.['@angular-eslint/template/accessibility-label-for']
     );
-    migrateToAccessibilityLabelHasAssociatedControlName(override.rules);
-    addEqeqeqIfNeeded(override.rules);
+    migrateToAccessibilityLabelHasAssociatedControlName(o.rules);
+    addEqeqeqIfNeeded(o.rules);
   }
 }
 
@@ -45,9 +45,8 @@ function migrateToAccessibilityLabelHasAssociatedControlName(
   const accessibilityLabelForRule =
     rules['@angular-eslint/template/accessibility-label-for'];
   delete rules['@angular-eslint/template/accessibility-label-for'];
-  rules[
-    '@angular-eslint/template/accessibility-label-has-associated-control'
-  ] = accessibilityLabelForRule;
+  rules['@angular-eslint/template/accessibility-label-has-associated-control'] =
+    accessibilityLabelForRule;
 }
 
 function migrateToAccessibilityLabelHasAssociatedControlSchema(

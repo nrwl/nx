@@ -11,11 +11,12 @@ export function getModuleDeclaredComponents(
   projectName: string
 ): string[] {
   const ngModuleDecorator = getNgModuleDecorator(file, moduleFilePath);
-  const declarationsPropertyAssignment = getNgModuleDeclarationsPropertyAssignment(
-    ngModuleDecorator,
-    moduleFilePath,
-    projectName
-  );
+  const declarationsPropertyAssignment =
+    getNgModuleDeclarationsPropertyAssignment(
+      ngModuleDecorator,
+      moduleFilePath,
+      projectName
+    );
 
   if (!declarationsPropertyAssignment) {
     return [];

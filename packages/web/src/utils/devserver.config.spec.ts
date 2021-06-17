@@ -61,9 +61,9 @@ describe('getDevServerConfig', () => {
       allowedHosts: null,
     };
 
-    (<any>(
-      TsConfigPathsPlugin
-    )).mockImplementation(function MockPathsPlugin() {});
+    (<any>TsConfigPathsPlugin).mockImplementation(
+      function MockPathsPlugin() {}
+    );
 
     mockCompilerOptions = {
       target: 'es2015',

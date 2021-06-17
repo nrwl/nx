@@ -13,7 +13,7 @@ import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';
 export async function formatFiles(host: Tree): Promise<void> {
   let prettier: typeof Prettier;
   try {
-    prettier = require('prettier');
+    prettier = await import('prettier');
   } catch {}
 
   updateWorkspaceJsonToMatchFormatVersion(host);
@@ -29,7 +29,7 @@ export async function formatFiles(host: Tree): Promise<void> {
   await Promise.all(
     Array.from(files).map(async (file) => {
       const systemPath = path.join(host.root, file.path);
-      let options: any = {
+      let options: Prettier.Options = {
         filepath: systemPath,
       };
 
@@ -42,7 +42,7 @@ export async function formatFiles(host: Tree): Promise<void> {
         ...resolvedOptions,
       };
 
-      const support = await prettier.getFileInfo(systemPath, options);
+      const support = await prettier.getFileInfo(systemPath);
       if (support.ignored || !support.inferredParser) {
         return;
       }

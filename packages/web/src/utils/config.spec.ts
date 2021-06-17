@@ -23,9 +23,9 @@ describe('getBaseWebpackPartial', () => {
       sourceRoot: '/root/src',
       statsJson: false,
     };
-    (<any>(
-      TsconfigPathsPlugin
-    )).mockImplementation(function MockPathsPlugin() {});
+    (<any>TsconfigPathsPlugin).mockImplementation(
+      function MockPathsPlugin() {}
+    );
   });
 
   describe('unconditional options', () => {
@@ -340,9 +340,10 @@ describe('getBaseWebpackPartial', () => {
         showCircularDependencies: true,
       });
 
-      const circularDependencyPlugin: CircularDependencyPlugin = result.plugins.find(
-        (plugin) => plugin instanceof CircularDependencyPlugin
-      );
+      const circularDependencyPlugin: CircularDependencyPlugin =
+        result.plugins.find(
+          (plugin) => plugin instanceof CircularDependencyPlugin
+        );
       expect(circularDependencyPlugin.options.exclude).toEqual(
         /[\\\/]node_modules[\\\/]/
       );

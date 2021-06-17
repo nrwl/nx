@@ -290,9 +290,8 @@ export function updateBuildableProjectPackageJsonDependencies(
 
           depVersion = entry.node.data.version;
 
-          packageJson[typeOfDependency][
-            entry.node.data.packageName
-          ] = depVersion;
+          packageJson[typeOfDependency][entry.node.data.packageName] =
+            depVersion;
         }
         updatePackageJson = true;
       } catch (e) {

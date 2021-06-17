@@ -54,8 +54,7 @@ describe('app', () => {
                 fileReplacements: [
                   {
                     replace: 'apps/my-node-app/src/environments/environment.ts',
-                    with:
-                      'apps/my-node-app/src/environments/environment.prod.ts',
+                    with: 'apps/my-node-app/src/environments/environment.prod.ts',
                   },
                 ],
               },

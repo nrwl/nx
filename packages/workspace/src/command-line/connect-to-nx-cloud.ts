@@ -49,7 +49,9 @@ export async function connectToNxCloudCommand(): Promise<void> {
 }
 
 async function connectToNxCloudPrompt() {
-  return await (await import('enquirer'))
+  return await (
+    await import('enquirer')
+  )
     .prompt([
       {
         name: 'NxCloud',
@@ -58,8 +60,7 @@ async function connectToNxCloudPrompt() {
         choices: [
           {
             name: 'Yes',
-            hint:
-              'Faster builds, run details, GitHub integration. Learn more at https://nx.app',
+            hint: 'Faster builds, run details, GitHub integration. Learn more at https://nx.app',
           },
           {
             name: 'No',

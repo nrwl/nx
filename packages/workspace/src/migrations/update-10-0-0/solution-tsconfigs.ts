@@ -103,9 +103,8 @@ export default function (schema: any): Rule {
         if (extendedTsconfigPath === normalize('tsconfig.json')) {
           return updateExtend(file);
         } else if (basename(json.extends) === 'tsconfig.json') {
-          let extendedTsconfig = originalExtendedTsconfigMap.get(
-            extendedTsconfigPath
-          );
+          let extendedTsconfig =
+            originalExtendedTsconfigMap.get(extendedTsconfigPath);
 
           if (!extendedTsconfig) {
             extendedTsconfig = readJsonInTree(host, extendedTsconfigPath);

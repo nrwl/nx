@@ -65,8 +65,9 @@ function getProjects(
 
   if (includeDeps) {
     const s = require(`../core/project-graph`);
-    const deps = s.onlyWorkspaceProjects(s.withDeps(projectGraph, projects))
-      .nodes;
+    const deps = s.onlyWorkspaceProjects(
+      s.withDeps(projectGraph, projects)
+    ).nodes;
     const projectsWithTarget = Object.values(deps).filter((p: any) =>
       projectHasTarget(p, target)
     );

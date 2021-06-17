@@ -51,10 +51,8 @@ const g: any = typeof global !== 'undefined' ? global : {};
 // tslint:disable-next-line:no-big-function
 export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
   const { root, projectRoot, buildOptions, tsConfig } = wco;
-  const {
-    styles: stylesOptimization,
-    scripts: scriptsOptimization,
-  } = buildOptions.optimization;
+  const { styles: stylesOptimization, scripts: scriptsOptimization } =
+    buildOptions.optimization;
   const {
     styles: stylesSourceMap,
     scripts: scriptsSourceMap,
@@ -88,7 +86,8 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
       tsConfig.options.target || ScriptTarget.ES5
     );
 
-    differentialLoadingNeeded = buildBrowserFeatures.isDifferentialLoadingNeeded();
+    differentialLoadingNeeded =
+      buildBrowserFeatures.isDifferentialLoadingNeeded();
 
     if (
       (buildOptions.scriptTargetOverride || tsConfig.options.target) ===

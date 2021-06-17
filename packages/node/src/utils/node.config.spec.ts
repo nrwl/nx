@@ -14,9 +14,9 @@ describe('getNodePartial', () => {
       fileReplacements: [],
       statsJson: false,
     };
-    (<any>(
-      TsConfigPathsPlugin
-    )).mockImplementation(function MockPathsPlugin() {});
+    (<any>TsConfigPathsPlugin).mockImplementation(
+      function MockPathsPlugin() {}
+    );
   });
 
   describe('unconditionally', () => {

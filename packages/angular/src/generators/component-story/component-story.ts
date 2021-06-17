@@ -8,12 +8,8 @@ export function componentStoryGenerator(
   tree: Tree,
   options: ComponentStoryGeneratorOptions
 ): void {
-  const {
-    componentFileName,
-    componentName,
-    componentPath,
-    projectPath,
-  } = options;
+  const { componentFileName, componentName, componentPath, projectPath } =
+    options;
 
   const templatesDir = joinPathFragments(__dirname, 'files');
   const destinationDir = joinPathFragments(projectPath, componentPath);

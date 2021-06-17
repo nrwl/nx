@@ -104,19 +104,17 @@ export function deduplicateOverrides(
   overrides: Linter.Config['overrides'] = []
 ) {
   const map = new Map();
-  for (const override of overrides) {
+  for (const o of overrides) {
     const mapKey: string =
-      typeof override.files === 'string'
-        ? override.files
-        : override.files.join(',');
+      typeof o.files === 'string' ? o.files : o.files.join(',');
     const existing: Set<Linter.ConfigOverride> = map.get(mapKey);
     if (existing) {
-      existing.add(override);
+      existing.add(o);
       map.set(mapKey, existing);
       continue;
     }
     const set = new Set();
-    set.add(override);
+    set.add(o);
     map.set(mapKey, set);
   }
 
@@ -129,10 +127,10 @@ export function deduplicateOverrides(
       continue;
     }
     let mergedOverride = {};
-    for (const override of overridesArr) {
+    for (const o of overridesArr) {
       mergedOverride = {
         ...mergedOverride,
-        ...(override as any),
+        ...(o as any),
       };
     }
     dedupedOverrides.push(mergedOverride);

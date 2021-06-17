@@ -43,16 +43,14 @@ export class SidebarComponent {
     );
     this.displayOptionsPanel.render(displayOptionsPanelContainer);
 
-    const focusedProjectPanelContainer = document.getElementById(
-      'focused-project'
-    );
+    const focusedProjectPanelContainer =
+      document.getElementById('focused-project');
     this.focusedProjectPanel = new FocusedProjectPanel(
       focusedProjectPanelContainer
     );
 
-    const textFilterPanelContainer = document.getElementById(
-      'text-filter-panel'
-    );
+    const textFilterPanelContainer =
+      document.getElementById('text-filter-panel');
     this.textFilterPanel = new TextFilterPanel(textFilterPanelContainer);
 
     const projectListContainer = document.getElementById('project-lists');

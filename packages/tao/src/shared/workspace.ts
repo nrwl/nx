@@ -322,11 +322,8 @@ export class Workspaces {
 
   readGenerator(collectionName: string, generatorName: string) {
     try {
-      const {
-        generatorsFilePath,
-        generatorsJson,
-        normalizedGeneratorName,
-      } = this.readGeneratorsJson(collectionName, generatorName);
+      const { generatorsFilePath, generatorsJson, normalizedGeneratorName } =
+        this.readGeneratorsJson(collectionName, generatorName);
       const generatorsDir = path.dirname(generatorsFilePath);
       const generatorConfig =
         generatorsJson.generators?.[normalizedGeneratorName] ||
@@ -338,9 +335,8 @@ export class Workspaces {
       }
       generatorConfig.implementation =
         generatorConfig.implementation || generatorConfig.factory;
-      const [modulePath, exportName] = generatorConfig.implementation.split(
-        '#'
-      );
+      const [modulePath, exportName] =
+        generatorConfig.implementation.split('#');
       const implementationFactory = () => {
         const module = require(path.join(generatorsDir, modulePath));
         return module[exportName || 'default'] as Generator;
