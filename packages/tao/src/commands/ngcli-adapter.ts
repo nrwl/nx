@@ -675,7 +675,7 @@ let mockedSchematics = null;
  *
  * Example:
  *
- * ```
+ * ```typescript
  *   overrideCollectionResolutionForTesting({
  *     '@nrwl/workspace': path.join(__dirname, '../../../../workspace/collection.json'),
  *     '@nrwl/angular': path.join(__dirname, '../../../../angular/collection.json'),
@@ -701,7 +701,7 @@ export function overrideCollectionResolutionForTesting(collections: {
  *
  * Example:
  *
- * ```
+ * ```typescript
  *   mockSchematicsForTesting({
  *     'mycollection:myschematic': (tree, params) => {
  *        tree.write('README.md');

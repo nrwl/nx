@@ -39,7 +39,7 @@ export type StringChange = StringInsertion | StringDeletion;
  *
  * For Example, to rename a property in a method's options:
  *
- * ```
+ * ```typescript
  * const code = `bootstrap({
  *   target: document.querySelector('#app')
  * })`;
