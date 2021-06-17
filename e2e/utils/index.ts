@@ -38,7 +38,7 @@ interface RunCmdOpts {
 }
 
 export function currentCli() {
-  return process.env.SELECTED_CLI ?? 'nx';
+  return process.env.SELECTED_CLI || 'nx';
 }
 
 export function isNightlyRun() {

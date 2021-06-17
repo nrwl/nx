@@ -72,30 +72,7 @@ describe('Web Components Applications', () => {
 
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
-
-    runCLI(`build ${appName}`);
-    checkFilesExist(
-      `dist/apps/${appName}/index.html`,
-      `dist/apps/${appName}/runtime.js`,
-      `dist/apps/${appName}/polyfills.js`,
-      `dist/apps/${appName}/main.js`,
-      `dist/apps/${appName}/styles.js`
-    );
-    expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
-      'class AppElement'
-    );
-    runCLI(`build ${appName} --prod --output-hashing none`);
-    checkFilesExist(
-      `dist/apps/${appName}/index.html`,
-      `dist/apps/${appName}/runtime.js`,
-      `dist/apps/${appName}/polyfills.esm.js`,
-      `dist/apps/${appName}/main.esm.js`,
-      `dist/apps/${appName}/styles.css`
-    );
-    expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
-      `<link rel="stylesheet" href="styles.css">`
-    );
-  }, 500000);
+  }, 120000);
 
   it('should remove previous output before building', async () => {
     const appName = uniq('app');

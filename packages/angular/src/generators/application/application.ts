@@ -9,6 +9,7 @@ import {
   installPackagesTask,
 } from '@nrwl/devkit';
 import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import { convertToNxProjectGenerator } from '@nrwl/workspace';
 
 import { UnitTestRunner } from '../../utils/test-runners';
 import init from '../init/init';
@@ -97,6 +98,10 @@ export async function applicationGenerator(
     enableStrictTypeChecking(host, options);
   } else {
     setApplicationStrictDefault(host, false);
+  }
+
+  if (options.standaloneConfig) {
+    await convertToNxProjectGenerator(host, {project: options.name, all: false});
   }
 
   if (!options.skipFormat) {
