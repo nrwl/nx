@@ -1,6 +1,7 @@
 import {
   checkFilesExist,
   newProject,
+  readJson,
   removeProject,
   runCLI,
   runCLIAsync,
@@ -117,5 +118,9 @@ describe('@nrwl/workspace:library', () => {
     );
     expect(result).toContain('Copying asset files...');
     expect(result).toContain('Done copying asset files.');
+
+    const json = readJson(`dist/libs/${buildableLib}/package.json`);
+    expect(json.main).toEqual('./src/index.js');
+    expect(json.typings).toEqual('./src/index.d.ts');
   });
 });

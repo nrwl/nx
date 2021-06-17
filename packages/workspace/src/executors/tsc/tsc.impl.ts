@@ -12,6 +12,14 @@ export async function tscExecutor(
   const normalizedOptions = normalizeOptions(options, context);
   const projectRoot = context.workspace.projects[context.projectName].root;
 
+  // this has to happen first so the folder is created where the assets are copied into
+  const result = compileTypeScript({
+    outputPath: normalizedOptions.outputPath,
+    projectName: context.projectName,
+    projectRoot,
+    tsConfig: normalizedOptions.tsConfig,
+  });
+
   await copyAssets(
     normalizedOptions.assets,
     context.root,
@@ -19,12 +27,7 @@ export async function tscExecutor(
   );
   updatePackageJson(normalizedOptions, projectRoot);
 
-  return compileTypeScript({
-    outputPath: normalizedOptions.outputPath,
-    projectName: context.projectName,
-    projectRoot,
-    tsConfig: normalizedOptions.tsConfig,
-  });
+  return result;
 }
 
 function getMainFileDirRelativeToProjectRoot(

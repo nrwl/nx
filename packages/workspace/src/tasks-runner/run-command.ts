@@ -17,7 +17,7 @@ import {
   projectHasTargetAndConfiguration,
 } from '../utilities/project-graph-utils';
 import { output } from '../utilities/output';
-import { getDefaultDependencyConfigs, getDependencyConfigs } from './utils';
+import { getDependencyConfigs } from './utils';
 import { Hasher } from '../core/hasher/hasher';
 
 type RunArgs = yargs.Arguments & ReporterArgs;
@@ -33,7 +33,7 @@ export async function runCommand<T extends RunArgs>(
 ) {
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
-  const defaultDependencyConfigs = getDefaultDependencyConfigs(nxJson);
+  const defaultDependencyConfigs = nxJson.targetDependencies ?? {};
   const tasks = createTasksForProjectToRun(
     projectsToRun,
     {
