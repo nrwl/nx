@@ -3,14 +3,13 @@ import type { Target } from '@nrwl/tao/src/commands/run';
 /**
  * Parses a target string into {project, target, configuration}
  *
- * @param targetString - target reference
- *
  * Examples:
- *
  * ```typescript
  * parseTargetString("proj:test") // returns { project: "proj", target: "test" }
  * parseTargetString("proj:test:production") // returns { project: "proj", target: "test", configuration: "production" }
  * ```
+ *
+ * @param targetString - target reference
  */
 export function parseTargetString(targetString: string): Target {
   const [project, target, configuration] = targetString.split(':');

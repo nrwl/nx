@@ -34,13 +34,12 @@ In this case, you can mock it up.
 
 Example:
 
-```
-  mockSchematicsForTesting({
-    'mycollection:myschematic': (tree, params) => {
-       tree.write('README.md');
-    }
-  });
-
+```typescript
+mockSchematicsForTesting({
+  'mycollection:myschematic': (tree, params) => {
+    tree.write('README.md');
+  },
+});
 ```
 
 #### Parameters
@@ -65,13 +64,15 @@ This function can can be used to override the resolution behaviour.
 
 Example:
 
-```
-  overrideCollectionResolutionForTesting({
-    '@nrwl/workspace': path.join(__dirname, '../../../../workspace/collection.json'),
-    '@nrwl/angular': path.join(__dirname, '../../../../angular/collection.json'),
-    '@nrwl/linter': path.join(__dirname, '../../../../linter/collection.json')
-  });
-
+```typescript
+overrideCollectionResolutionForTesting({
+  '@nrwl/workspace': path.join(
+    __dirname,
+    '../../../../workspace/collection.json'
+  ),
+  '@nrwl/angular': path.join(__dirname, '../../../../angular/collection.json'),
+  '@nrwl/linter': path.join(__dirname, '../../../../linter/collection.json'),
+});
 ```
 
 #### Parameters
