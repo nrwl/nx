@@ -41,15 +41,6 @@ nx workspace-generator my-generator
 
 [The first command](/{{framework}}/cli/generate) scaffolds a new customizable workspace generator named `my-generator` and [the second command](/{{framework}}/cli/workspace-generator) invokes it.
 
-**Update plugins:**
-
-```bash
-nx migrate latest
-nx migrate --run-migrations=migrations.json
-```
-
-[The first command](/{{framework}}/cli/migrate) updates the installed Nx plugin versions and creates a list of generators to keep configuration files up to date. [The second command](/{{framework}}/cli/migrate) invokes those generators.
-
 **Run an executor on one project:**
 
 ```bash
@@ -57,7 +48,15 @@ nx run my-app:build
 nx build my-app
 ```
 
-Both of [these commands](/{{framework}}/cli/run) build the `my-app` application. Custom executors need to use the more verbose `nx run project:target` syntax. See the [workspace.json documentation](/{{framework}}/core-concepts/configuration) for information on configuring executor options.
+Both of [these commands](/{{framework}}/cli/run) build the `my-app` application. See the [workspace.json documentation](/{{framework}}/core-concepts/configuration) for information on configuring executor options.
+
+**Run an executor for many projects:**
+
+```bash
+nx run-many --target=build --projects=app1,app2
+```
+
+[This command](/{{framework}}/cli/run-many) builds `app1` and `app2`.
 
 **Run an executor for all affected projects:**
 
@@ -83,6 +82,20 @@ nx list
 ```
 
 [This command](/{{framework}}/cli/list) lists the currently installed Nx plugins and shows other plugins that are available.
+
+**Update plugins:**
+
+```bash
+nx migrate latest
+nx migrate --run-migrations=migrations.json
+```
+
+[The first command](/{{framework}}/cli/migrate) updates the installed Nx plugin versions and creates a list of generators to keep configuration files up to date. [The second command](/{{framework}}/cli/migrate) invokes those generators.
+
+## Common Env Variables
+
+- Setting **NX_VERBOSE_LOGGING=true** will print debug information useful for troubleshooting.
+- Setting **NX_PERF_LOGGING=true** will print debug information useful for profiling executors and Nx itself.
 
 ## Nx and Angular CLI
 
