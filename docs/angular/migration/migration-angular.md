@@ -12,7 +12,7 @@ using a monorepo approach. If you are currently using an Angular CLI workspace, 
 
 To add Nx to an existing Angular CLI workspace to an Nx workspace, with keeping your existing file structure in place, use the `ng add` command with the `--preserveAngularCLILayout` option:
 
-```
+```bash
 ng add @nrwl/workspace --preserveAngularCLILayout
 ```
 
@@ -28,7 +28,7 @@ After the process completes, you continue using the same serve/build/lint/test c
 
 To transform a Angular CLI workspace to an Nx workspace, use the `ng add` command:
 
-```
+```bash
 ng add @nrwl/workspace
 ```
 
@@ -174,7 +174,7 @@ Your application code is self-contained within the `src` folder of your Angular 
 
 Verify your app runs correctly by running:
 
-```sh
+```bash
 ng serve <app name>
 ```
 
@@ -184,7 +184,7 @@ Nx uses Jest by default. If you have any custom Jest configuration, you need to 
 
 Verify your tests run correctly by running:
 
-```sh
+```bash
 ng test <app name>
 ```
 
@@ -258,7 +258,7 @@ If you are using `Karma` for unit testing:
 
 Verify your tests run correctly by running:
 
-```sh
+```bash
 ng test <app name>
 ```
 
@@ -266,7 +266,7 @@ ng test <app name>
 
 Nx uses Cypress by default. If you are already using Cypress, copy your E2E setup files into the `apps/<app name>-e2e` folder and verify your tests still run correctly by running:
 
-```sh
+```bash
 ng e2e <app name>-e2e
 ```
 
@@ -350,7 +350,7 @@ Update the `apps/<app name>/tsconfig.json` to extend the root `tsconfig.json`:
 
 Verify your E2E tests run correctly by running:
 
-```sh
+```bash
 ng e2e <app name>-e2e
 ```
 
@@ -362,13 +362,13 @@ For lint rules, migrate your existing rules into the root `tslint.json` file.
 
 Verify your lint checks run correctly by running:
 
-```sh
+```bash
 npm run lint
 ```
 
 OR
 
-```sh
+```bash
 yarn lint
 ```
 

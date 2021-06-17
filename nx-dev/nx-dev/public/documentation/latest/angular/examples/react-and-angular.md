@@ -165,7 +165,7 @@ ReactDOM.render(<App />, document.querySelector('happynrwl-root'));
 
 and `app.tsx` contains the following component:
 
-```typescript jsx
+```typescript
 import * as React from 'react';
 import { Component } from 'react';
 
@@ -338,7 +338,7 @@ Using Greeting in the react app requires similar steps.
 
 Next, let's include the new library in `main.ts`.
 
-```typescript jsx
+```typescript
 import '@happynrwl/ui';
 
 import * as React from 'react';
@@ -365,7 +365,7 @@ declare namespace JSX {
 
 Finally, we can update `app.tsx` to use our shared web component.
 
-```typescript jsx
+```typescript
 import * as React from 'react';
 import { Component } from 'react';
 
