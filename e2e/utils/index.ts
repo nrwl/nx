@@ -417,10 +417,9 @@ export function runCommand(command: string): string {
     }
     return r;
   } catch (e) {
-    logError(
-      `Command failed: ${command}`,
-      `${e.stdout?.toString()}\n\n${e.stderr?.toString()}`
-    );
+    // this is intentional
+    // npm ls fails if package is not found
+    return e.stdout.toString() + e.stderr.toString();
   }
 }
 
