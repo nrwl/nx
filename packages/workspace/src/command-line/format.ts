@@ -26,7 +26,7 @@ export function format(
   args: yargs.Arguments
 ): void {
   const { nxArgs } = splitArgsIntoNxArgsAndOverrides(args, 'affected');
-
+  const workspaceJsonPath = workspaceConfigName(appRootPath);
   const patterns = getPatterns({ ...args, ...nxArgs } as any).map(
     (p) => `"${p}"`
   );
@@ -40,6 +40,7 @@ export function format(
       sortWorkspaceJson();
       sortNxJson();
       sortTsConfig();
+      chunkList.push([workspaceJsonPath, 'nx.json', 'tsconfig.base.json']);
       chunkList.forEach((chunk) => write(chunk));
       break;
     case 'check':
