@@ -20,7 +20,11 @@ export type {
 } from '@nrwl/tao/src/shared/nx';
 export { logger } from '@nrwl/tao/src/shared/logger';
 export type { PackageManager } from '@nrwl/tao/src/shared/package-manager';
-export { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
+export {
+  getPackageManagerCommand,
+  detectPackageManager,
+  getPackageManagerVersion,
+} from '@nrwl/tao/src/shared/package-manager';
 export type { Target } from '@nrwl/tao/src/commands/run';
 export { runExecutor } from '@nrwl/tao/src/commands/run';
 

@@ -22,7 +22,7 @@ import {
   toNewFormatOrNull,
   toOldFormatOrNull,
   workspaceConfigName,
-} from '@nrwl/tao/src/shared/workspace';
+} from '../shared/workspace';
 import { dirname, extname, resolve, join } from 'path';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 import { EMPTY, Observable, of, concat } from 'rxjs';

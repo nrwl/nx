@@ -1,9 +1,11 @@
 import * as chalk from 'chalk';
-import { execSync } from 'child_process';
 import { appRootPath } from '../utilities/app-root';
-import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
+import {
+  detectPackageManager,
+  getPackageManagerVersion,
+  readJsonFile,
+} from '@nrwl/devkit';
 import { output } from '../utilities/output';
-import { readJsonFile } from '../utilities/fileutils';
 
 export const packagesWeCareAbout = [
   'nx',
@@ -45,7 +47,7 @@ export const report = {
  */
 function reportHandler() {
   const pm = detectPackageManager();
-  const pmVersion = execSync(`${pm} --version`).toString('utf-8').trim();
+  const pmVersion = getPackageManagerVersion(pm);
 
   const bodyLines = [
     `Node : ${process.versions.node}`,
