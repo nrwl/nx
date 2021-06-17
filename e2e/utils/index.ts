@@ -614,7 +614,7 @@ export function getPackageManagerCommand({
       list: 'npm ls --depth 10',
     },
     pnpm: {
-      createWorkspace: `pnpx create-nx-workspace@${publishedVersion}`,
+      createWorkspace: `pnpx --yes create-nx-workspace@${publishedVersion}`,
       runNx: `pnpm run nx --`,
       runNxSilent: `pnpm run nx --silent --`,
       addDev: `pnpm add -D`,
