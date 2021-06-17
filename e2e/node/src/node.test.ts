@@ -154,7 +154,7 @@ describe('Node Applications', () => {
       server.stdout.on('data', async (data) => {
         const message = data.toString();
         if (message.includes(`Listening at http://localhost:${port}`)) {
-          const result = await getData();
+          const result = await getData(port);
 
           expect(result.message).toEqual(`Welcome to ${nestapp}!`);
           server.kill();
