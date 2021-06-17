@@ -20,9 +20,9 @@ import {
 } from '@nrwl/e2e/utils';
 import { accessSync, constants } from 'fs-extra';
 
-function getData(): Promise<any> {
+function getData(port): Promise<any> {
   return new Promise((resolve) => {
-    http.get('http://localhost:3333/api', (res) => {
+    http.get(`http://localhost:${port}/api`, (res) => {
       expect(res.statusCode).toEqual(200);
       let data = '';
       res.on('data', (chunk) => {
@@ -37,7 +37,6 @@ function getData(): Promise<any> {
 
 describe('Node Applications', () => {
   beforeEach(() => newProject());
-  afterEach(() => killPorts());
 
   it('should be able to generate an empty application', async () => {
     const nodeapp = uniq('nodeapp');
@@ -59,6 +58,7 @@ describe('Node Applications', () => {
 
   xit('should be able to generate an express application', async () => {
     const nodeapp = uniq('nodeapp');
+    const port = 3334;
 
     runCLI(`generate @nrwl/express:app ${nodeapp} --linter=eslint`);
     const lintResults = runCLI(`lint ${nodeapp}`);
@@ -95,8 +95,10 @@ describe('Node Applications', () => {
 
     await new Promise((resolve) => {
       server.stdout.on('data', async (data) => {
-        expect(data.toString()).toContain('Listening at http://localhost:3333');
-        const result = await getData();
+        expect(data.toString()).toContain(
+          `Listening at http://localhost:${port}`
+        );
+        const result = await getData(port);
 
         expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
 
@@ -106,13 +108,15 @@ describe('Node Applications', () => {
       });
     });
     // checking serve
-    const p = await runCommandUntil(`serve ${nodeapp}`, (output) =>
-      output.includes('Listening at http://localhost:3333')
+    const p = await runCommandUntil(
+      `serve ${nodeapp} --port=${port}`,
+      (output) => output.includes(`Listening at http://localhost:${port}`)
     );
-    const result = await getData();
+    const result = await getData(port);
     expect(result.message).toEqual(`Welcome to ${nodeapp}!`);
     try {
-      promisifiedTreeKill(p.pid, 'SIGTERM');
+      await promisifiedTreeKill(p.pid, 'SIGKILL');
+      expect(await killPorts(port)).toBeTruthy();
     } catch (err) {
       expect(err).toBeFalsy();
     }
@@ -120,6 +124,7 @@ describe('Node Applications', () => {
 
   xit('should be able to generate a nest application', async () => {
     const nestapp = uniq('nestapp');
+    const port = 3335;
     runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
 
     const lintResults = runCLI(`lint ${nestapp}`);
@@ -148,7 +153,7 @@ describe('Node Applications', () => {
     await new Promise((resolve) => {
       server.stdout.on('data', async (data) => {
         const message = data.toString();
-        if (message.includes('Listening at http://localhost:3333')) {
+        if (message.includes(`Listening at http://localhost:${port}`)) {
           const result = await getData();
 
           expect(result.message).toEqual(`Welcome to ${nestapp}!`);
@@ -159,13 +164,18 @@ describe('Node Applications', () => {
     });
 
     // checking serve
-    const p = await runCommandUntil(`serve ${nestapp}`, (output) =>
-      output.includes('Listening at http://localhost:3333')
+    const p = await runCommandUntil(
+      `serve ${nestapp} --port=${port}`,
+      (output) => {
+        process.stdout.write(output);
+        return output.includes(`Listening at http://localhost:${port}`);
+      }
     );
-    const result = await getData();
+    const result = await getData(port);
     expect(result.message).toEqual(`Welcome to ${nestapp}!`);
     try {
-      promisifiedTreeKill(p.pid, 'SIGTERM');
+      await promisifiedTreeKill(p.pid, 'SIGKILL');
+      expect(await killPorts(port)).toBeTruthy();
     } catch (err) {
       expect(err).toBeFalsy();
     }
