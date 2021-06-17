@@ -1,7 +1,8 @@
 {
   "implicitDependencies": {
     "package.json": "*",
-    ".eslintrc.json": "*"
+    ".eslintrc.json": "*",
+    "scripts/vercel/*": ["nx-dev"]
   },
   "affected": {
     "defaultBase": "master"
