@@ -136,7 +136,7 @@ describe('Next.js Applications', () => {
       checkLint: true,
       checkE2E: true,
     });
-  }, 120000);
+  }, 300000);
 
   it('should be able to dynamically load a lib', async () => {
     const appName = uniq('app');
@@ -163,7 +163,7 @@ describe('Next.js Applications', () => {
       checkLint: false,
       checkE2E: true,
     });
-  }, 120000);
+  }, 300000);
 
   it('should compile when using a workspace and react lib written in TypeScript', async () => {
     const appName = uniq('app');
@@ -267,7 +267,7 @@ describe('Next.js Applications', () => {
       checkLint: true,
       checkE2E: true,
     });
-  }, 120000);
+  }, 300000);
 
   it('should support Less', async () => {
     const appName = uniq('app');
@@ -393,7 +393,7 @@ describe('Next.js Applications', () => {
       checkLint: true,
       checkE2E: true,
     });
-  }, 180000);
+  }, 300000);
 
   it('should fail the build when TS errors are present', async () => {
     const appName = uniq('app');
@@ -528,7 +528,7 @@ describe('Next.js Applications', () => {
       checkE2E: true,
       checkWebpack5: true,
     });
-  }, 180000);
+  }, 300000);
 
   it('webpack5 - should build with a next.config.js file in the dist folder', async () => {
     const appName = uniq('app');
