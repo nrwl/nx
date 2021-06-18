@@ -173,7 +173,8 @@
     "add-target-dependencies": {
       "version": "12.5.0-beta.1",
       "description": "Rename the workspace-schematic script into workspace-generator script",
-      "factory": "./src/migrations/update-12-5-0/add-target-dependencies"
+      "factory": "./src/migrations/update-12-5-0/add-target-dependencies",
+      "cli": "nx"
     }
   },
   "packageJsonUpdates": {
