@@ -96,13 +96,13 @@ function SidebarSection({ section }: { section: MenuSection }) {
       {section.hideSectionHeader ? null : (
         <h4
           data-testid={`section-h4:${section.id}`}
-          className="mt-6 mb-4 text-m border-b border-gray-50 border-solid"
+          className="mt-8 text-lg font-bold border-b border-gray-50 border-solid"
         >
           {section.name}
         </h4>
       )}
       <ul>
-        <li className="mt-8">
+        <li className="mt-2">
           {section.itemList.map((item) => (
             <SidebarSectionItems key={item.id} item={item} />
           ))}
@@ -127,7 +127,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }) {
       <h5
         data-testid={`section-h5:${item.id}`}
         className={cx(
-          'flex my-2 py-2',
+          'flex py-2',
           'uppercase tracking-wide font-semibold text-sm lg:text-xs text-gray-900',
           item.disableCollapsible ? 'cursor-text' : 'cursor-pointer'
         )}
@@ -138,7 +138,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }) {
           <CollapsibleIcon isCollapsed={collapsed} />
         )}
       </h5>
-      <ul className={collapsed ? 'hidden' : ''}>
+      <ul className={cx('mb-6', collapsed ? 'hidden' : '')}>
         {item.itemList.map((item) => {
           const isActiveLink = item.path === router?.asPath;
           return (

@@ -57,17 +57,26 @@ export function getDeepDiveSection(items: MenuItem[]): MenuSection {
   return {
     id: 'deep-dive',
     name: 'Deep Dive',
-    itemList: items.filter(
-      (m) =>
-        m.id === 'workspace-concepts' ||
-        m.id === 'structure' ||
-        m.id === 'generators' ||
-        m.id === 'executors' ||
-        m.id === 'ci' ||
-        m.id === 'modern-angular' ||
-        m.id === 'guides' ||
-        m.id === 'examples'
-    ),
+    itemList: items
+      .filter(
+        (m) =>
+          m.id === 'workspace-concepts' ||
+          m.id === 'structure' ||
+          m.id === 'generators' ||
+          m.id === 'executors' ||
+          m.id === 'ci' ||
+          m.id === 'modern-angular' ||
+          m.id === 'guides' ||
+          m.id === 'examples'
+      )
+      .map((m) => ({
+        ...m,
+        disableCollapsible: true,
+        itemList: m.itemList.map((item) => ({
+          ...item,
+          disableCollapsible: true,
+        })),
+      })),
   };
 }
 
