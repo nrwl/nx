@@ -2146,6 +2146,11 @@
             "name": "Next.js projects with Nx",
             "id": "nextjs",
             "file": "react/guides/nextjs"
+          },
+          {
+            "name": "Enable Webpack 5 for Next.js",
+            "id": "nextjs-webpack5",
+            "file": "react/guides/nextjs-webpack5"
           }
         ]
       },
