@@ -1,6 +1,6 @@
 # React Nx Tutorial - Step 3: Display Todos
 
-## VNx.dev Tutorial | React | Step 3: Display Todos
+## Nx.dev Tutorial | React | Step 3: Display Todos
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/fNehP0WX__c" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
