@@ -486,7 +486,7 @@ describe('affected (with git)', () => {
     runCommand(`git config user.email "test@test.com"`);
     runCommand(`git config user.name "Test"`);
     runCommand(
-      `git add . && git commit -am "initial commit" && git checkout -b master`
+      `git add -A && git commit -am "initial commit" && git checkout -b master`
     );
   });
   afterAll(() => removeProject({ onlyOnCI: true }));
@@ -495,18 +495,18 @@ describe('affected (with git)', () => {
     runCLI(`generate @nrwl/angular:app ${myapp}`);
     runCLI(`generate @nrwl/angular:app ${myapp2}`);
     runCLI(`generate @nrwl/angular:lib ${mylib}`);
-    runCommand(`git add . && git commit -am "add all"`);
+    runCommand(`git add -A && git commit -am "add all"`);
   }
 
   it('should not affect other projects by generating a new project', () => {
     runCLI(`generate @nrwl/angular:app ${myapp}`);
     expect(runCLI('affected:apps')).toContain(myapp);
-    runCommand(`git add . && git commit -am "add ${myapp}"`);
+    runCommand(`git add -A && git commit -am "add ${myapp}"`);
 
     runCLI(`generate @nrwl/angular:app ${myapp2}`);
     expect(runCLI('affected:apps')).not.toContain(myapp);
     expect(runCLI('affected:apps')).toContain(myapp2);
-    runCommand(`git add . && git commit -am "add ${myapp2}"`);
+    runCommand(`git add -A && git commit -am "add ${myapp2}"`);
 
     runCLI(`generate @nrwl/angular:lib ${mylib}`);
     expect(runCLI('affected:apps')).not.toContain(myapp);
