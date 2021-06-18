@@ -468,11 +468,16 @@ describe('affected:*', () => {
 });
 
 describe('affected (with git)', () => {
-  let myapp = uniq('myapp');
-  let myapp2 = uniq('myapp');
-  let mylib = uniq('mylib');
+  let myapp;
+  let myapp2;
+  let mylib;
 
-  beforeAll(() => newProject());
+  beforeEach(() => {
+    myapp = uniq('myapp');
+    myapp2 = uniq('myapp');
+    mylib = uniq('mylib');
+    newProject();
+  });
   afterAll(() => removeProject({ onlyOnCI: true }));
 
   it('should not affect other projects by generating a new project', () => {
