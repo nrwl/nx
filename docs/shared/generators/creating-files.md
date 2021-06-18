@@ -105,42 +105,42 @@ The EJS syntax can do much more than replace variable names with values. Here ar
 
 1. Pass a function into the template:
 
-   ```
-   // template file
-   This is my <%= uppercase(name) %>
-   ```
+```
+// template file
+This is my <%= uppercase(name) %>
+```
 
-   ```ts
-   // typescript file
-   function uppercase(val) {
-     val.toUppercase();
-   }
+```ts
+// typescript file
+function uppercase(val) {
+  val.toUppercase();
+}
 
-   // later
+// later
 
-   generateFiles(tree, joinPathFragments(__dirname, './files'), libraryRoot, {
-     uppercase,
-     name: schema.name,
-   });
-   ```
+generateFiles(tree, joinPathFragments(__dirname, './files'), libraryRoot, {
+  uppercase,
+  name: schema.name,
+});
+```
 
 2. Use javascript for control flow in the template:
 
-   ```
-   <% if(shortVersion) { %>
-   This is the short version.
-   <% } else {
-     for(let x=0; x<numRepetitions; x++) {
-     %>
-     This text will be repeated <%= numRepetitions %> times.
-   <% } // end for loop
-   } // end else block %>
-   ```
+```
+<% if(shortVersion) { %>
+This is the short version.
+<% } else {
+  for(let x=0; x<numRepetitions; x++) {
+  %>
+  This text will be repeated <%= numRepetitions %> times.
+<% } // end for loop
+} // end else block %>
+```
 
-   ```ts
-   // typescript file
-   generateFiles(tree, joinPathFragments(__dirname, './files'), libraryRoot, {
-     shortVerstion: false,
-     numRepetitions: 3,
-   });
-   ```
+```ts
+// typescript file
+generateFiles(tree, joinPathFragments(__dirname, './files'), libraryRoot, {
+  shortVerstion: false,
+  numRepetitions: 3,
+});
+```

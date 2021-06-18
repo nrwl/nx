@@ -71,7 +71,7 @@ const arr: string[] = [];
 
 Make sure the parser is set to `typescript`. When you place the cursor on the `Array` text, the right hand panel highlights the corresponding node of the AST. The AST node we're looking for looks like this:
 
-```
+```ts
 { // TypeReference
   typeName: { // Identifier
     escapedText: "Array"
