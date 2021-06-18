@@ -2,6 +2,7 @@ import { stringUtils } from '@nrwl/workspace';
 import {
   checkFilesExist,
   createFile,
+  isNotWindows,
   killPorts,
   newProject,
   promisifiedTreeKill,
@@ -345,7 +346,7 @@ describe('Next.js Applications', () => {
       `dist/apps/${appName}/public/a/b.txt`,
       `dist/apps/${appName}/public/shared/ui/hello.txt`
     );
-  }, 120000);
+  }, 300000);
 
   it('should build with a next.config.js file in the dist folder', async () => {
     const appName = uniq('app');
@@ -374,7 +375,7 @@ describe('Next.js Applications', () => {
 
     checkFilesExist(`dist/apps/${appName}/next.config.js`);
     expect(result).toContain('NODE_ENV is production');
-  }, 120000);
+  }, 300000);
 
   it('should support --js flag', async () => {
     const appName = uniq('app');
@@ -458,31 +459,32 @@ describe('Next.js Applications', () => {
   }, 120000);
 
   it('webpack5 - should be able to consume a react libs (buildable and non-buildable)', async () => {
-    const appName = uniq('app');
-    const buildableLibName = uniq('lib');
-    const nonBuildableLibName = uniq('lib');
+    if (isNotWindows()) {
+      const appName = uniq('app');
+      const buildableLibName = uniq('lib');
+      const nonBuildableLibName = uniq('lib');
 
-    runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
-    runCLI(
-      `generate @nrwl/react:lib ${nonBuildableLibName} --no-interactive --style=none`
-    );
-    runCLI(
-      `generate @nrwl/react:lib ${buildableLibName} --no-interactive --style=none --buildable`
-    );
+      runCLI(`generate @nrwl/next:app ${appName} --no-interactive`);
+      runCLI(
+        `generate @nrwl/react:lib ${nonBuildableLibName} --no-interactive --style=none`
+      );
+      runCLI(
+        `generate @nrwl/react:lib ${buildableLibName} --no-interactive --style=none --buildable`
+      );
 
-    const mainPath = `apps/${appName}/pages/index.tsx`;
-    updateFile(
-      mainPath,
-      `
+      const mainPath = `apps/${appName}/pages/index.tsx`;
+      updateFile(
+        mainPath,
+        `
     import '@${proj}/${nonBuildableLibName}';
     import '@${proj}/${buildableLibName}';
     ${readFile(mainPath)}
     `
-    );
-    // enable webpack 5
-    updateFile(
-      `apps/${appName}/next.config.js`,
-      `
+      );
+      // enable webpack 5
+      updateFile(
+        `apps/${appName}/next.config.js`,
+        `
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const withNx = require('@nrwl/next/plugins/with-nx');
 
@@ -497,32 +499,33 @@ describe('Next.js Applications', () => {
           }
         });
       `
-    );
+      );
 
-    // Update non-buildable lib to use css modules to test that next.js can compile it
-    updateFile(
-      `libs/${nonBuildableLibName}/src/lib/${nonBuildableLibName}.tsx`,
-      `
+      // Update non-buildable lib to use css modules to test that next.js can compile it
+      updateFile(
+        `libs/${nonBuildableLibName}/src/lib/${nonBuildableLibName}.tsx`,
+        `
             import styles from './style.module.css';
             export function Test() {
               return <div className={styles.container}>Hello</div>;
             }
             export default Test;
           `
-    );
-    updateFile(
-      `libs/${nonBuildableLibName}/src/lib/style.module.css`,
-      `
+      );
+      updateFile(
+        `libs/${nonBuildableLibName}/src/lib/style.module.css`,
+        `
             .container {}
           `
-    );
+      );
 
-    await checkApp(appName, {
-      checkUnitTest: true,
-      checkLint: true,
-      checkE2E: true,
-      checkWebpack5: true,
-    });
+      await checkApp(appName, {
+        checkUnitTest: true,
+        checkLint: true,
+        checkE2E: true,
+        checkWebpack5: true,
+      });
+    }
   }, 300000);
 
   it('webpack5 - should build with a next.config.js file in the dist folder', async () => {
@@ -566,29 +569,29 @@ describe('Next.js Applications', () => {
     createFile(
       'tools/custom-next-server.ts',
       `
-        const express = require('express');
-        const path = require('path');
+      const express = require('express');
+      const path = require('path');
 
-        export default async function nextCustomServer(app, settings, proxyConfig) {
-          const handle = app.getRequestHandler();
-          await app.prepare();
+      export default async function nextCustomServer(app, settings, proxyConfig) {
+        const handle = app.getRequestHandler();
+        await app.prepare();
 
-          const x: string = 'custom typescript server running';
-          console.log(x);
+        const x: string = 'custom typescript server running';
+        console.log(x);
 
-          const server = express();
-          server.disable('x-powered-by');
+        const server = express();
+        server.disable('x-powered-by');
 
-          server.use(
-            express.static(path.resolve(settings.dir, settings.conf.outdir, 'public'))
-          );
+        server.use(
+          express.static(path.resolve(settings.dir, settings.conf.outdir, 'public'))
+        );
 
-          // Default catch-all handler to allow Next.js to handle all other routes
-          server.all('*', (req, res) => handle(req, res));
+        // Default catch-all handler to allow Next.js to handle all other routes
+        server.all('*', (req, res) => handle(req, res));
 
-          server.listen(settings.port, settings.hostname);
-        }
-      `
+        server.listen(settings.port, settings.hostname);
+      }
+    `
     );
 
     updateWorkspaceConfig((workspace) => {

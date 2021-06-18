@@ -16,6 +16,7 @@ import isCI = require('is-ci');
 import * as path from 'path';
 import { dirSync } from 'tmp';
 const kill = require('kill-port');
+const isWindows = require('is-windows');
 import { check as portCheck } from 'tcp-port-used';
 import { parseJson } from '@nrwl/devkit';
 import chalk = require('chalk');
@@ -119,8 +120,7 @@ export function packageInstall(pkg: string, projName?: string) {
   const pm = getPackageManagerCommand({ path: cwd });
   const install = execSync(`${pm.addDev} ${pkg}`, {
     cwd,
-    // ...{ stdio: ['pipe', 'pipe', 'pipe'] },
-    ...{ stdio: [0, 1, 2] },
+    stdio: [0, 1, 2],
     env: process.env,
     encoding: 'utf-8',
   });
@@ -189,8 +189,7 @@ export function newProject({ name = uniq('proj') } = {}): string {
     }
     return projScope;
   } catch (e) {
-    console.log(`Failed to set up project for e2e tests.`);
-    console.log(e.message);
+    logError(`Failed to set up project for e2e tests.`, e.message);
     throw e;
   }
 }
@@ -238,6 +237,10 @@ export async function removeProject({ onlyOnCI = false } = {}) {
 export function runCypressTests() {
   // temporary enable
   return true;
+}
+
+export function isNotWindows() {
+  return !isWindows();
 }
 
 export function runCommandAsync(
@@ -346,7 +349,10 @@ export function runNgAdd(
     if (opts.silenceError) {
       return e.stdout.toString();
     } else {
-      console.log(e.stdout.toString(), e.stderr.toString());
+      logError(
+        `Ng Add failed: ${command}`,
+        `${e.stdout?.toString()}\n\n${e.stderr?.toString()}`
+      );
       throw e;
     }
   }
@@ -372,8 +378,7 @@ export function runCLI(
       ''
     );
     if (process.env.VERBOSE_OUTPUT) {
-      console.log('result of running:', command);
-      console.log(r);
+      logInfo(`result of running: ${command}`, r);
     }
 
     const needsMaxWorkers = /g.*(express|nest|node|web|react):app.*/;
@@ -384,10 +389,12 @@ export function runCLI(
     return r;
   } catch (e) {
     if (opts.silenceError) {
-      return e.stdout.toString() + e.stderr?.toString();
+      return e.stdout?.toString() + e.stderr?.toString();
     } else {
-      console.log('original command', command);
-      console.log(e.stdout?.toString(), e.stderr?.toString());
+      logError(
+        `Original command: ${command}`,
+        `${e.stdout?.toString()}\n\n${e.stderr?.toString()}`
+      );
       throw e;
     }
   }
@@ -415,6 +422,8 @@ export function runCommand(command: string): string {
     }
     return r;
   } catch (e) {
+    // this is intentional
+    // npm ls fails if package is not found
     return e.stdout.toString() + e.stderr.toString();
   }
 }
@@ -567,9 +576,9 @@ export function logInfo(title: string, body?: string) {
 }
 
 export function logError(title: string, body?: string) {
-  const message = `${chalk.reset.inverse.bold.green(
-    ' ERROR '
-  )} ${chalk.bold.red(title)}`;
+  const message = `${chalk.reset.inverse.bold.red(' ERROR ')} ${chalk.bold.red(
+    title
+  )}`;
   return e2eConsoleLogger(message, body);
 }
 

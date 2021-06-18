@@ -48,7 +48,7 @@ export async function conversionGenerator(
 
       if (projectConfig.projectType === 'application') {
         await addLintingToApplication(host, {
-          linter: 'eslint' as any,
+          linter: 'eslint',
           name: projectName,
           appProjectRoot: projectConfig.root,
           js,
