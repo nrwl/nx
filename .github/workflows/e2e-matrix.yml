@@ -16,18 +16,18 @@ jobs:
     strategy:
       matrix:
         os:
-          # - ubuntu-latest
+          - ubuntu-latest
           - windows-latest
         include:
-          # - os: ubuntu-latest
-          #   os-name: ubuntu
+          - os: ubuntu-latest
+            os-name: ubuntu
           - os: windows-latest
             os-name: windows
-        # exclude:
-        #   - os: windows-latest
-        #     package_manager: pnpm
-        #   - os: windows-latest
-        #     package_manager: yarn
+        exclude:
+          - os: windows-latest
+            package_manager: npm
+          - os: windows-latest
+            package_manager: yarn
         node_version:
           - '14'
           # - '15'
