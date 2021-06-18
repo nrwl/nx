@@ -215,7 +215,7 @@ npx nx build tuskdesk --prod --outputPath=.
 
 Therefore, our full configuration (based on a repo called "nx-workspace" and a project called "tuskdesk") will look like this:
 
-![image](https://user-images.githubusercontent.com/900523/104120015-1253c880-534d-11eb-860f-17e756904448.png)
+![image](./next-deploy-vercel-1.png)
 
 #### Existing Vercel project
 
@@ -223,6 +223,6 @@ If you have an existing project on Vercel then the exact same guidance applies a
 
 When everything is updated appropriately, for our `tuskdesk` example we would see the following in our "General" settings UI:
 
-![image](https://user-images.githubusercontent.com/900523/104119928-72963a80-534c-11eb-9f0d-e7b4311a22e5.png)
+![image](./next-deploy-vercel-2.png)
 
 Naturally, you can continue on and set any additional Environment Variables etc that may be appropriate for your projects, but we have now covered the key points needed to deploy Next.js projects from Nx workspaces on Vercel!
