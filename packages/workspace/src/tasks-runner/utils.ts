@@ -1,5 +1,4 @@
 import {
-  NxJsonConfiguration,
   ProjectGraph,
   ProjectGraphNode,
   TargetDependencyConfig,
