@@ -178,9 +178,8 @@ function interpolateOutputs(template: string, data: any): string {
 }
 
 export function getExecutorForTask(task: Task, workspace: Workspaces) {
-  const project = workspace.readWorkspaceConfiguration().projects[
-    task.target.project
-  ];
+  const project =
+    workspace.readWorkspaceConfiguration().projects[task.target.project];
   const executor = project.targets[task.target.target].executor;
   const [nodeModule, executorName] = executor.split(':');
 

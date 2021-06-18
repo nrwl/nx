@@ -31,7 +31,7 @@ describe('StorybookConfiguration generator', () => {
         '../../../../storybook/collection.json'
       ),
     });
-    jest.resetModuleRegistry();
+    jest.resetModules();
     jest.doMock('@storybook/angular/package.json', () => ({
       version: '6.2.0',
     }));
