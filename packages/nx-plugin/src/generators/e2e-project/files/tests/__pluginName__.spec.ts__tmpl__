@@ -13,7 +13,7 @@ describe('<%= pluginName %> e2e', () => {
 
         const result = await runNxCommandAsync(`build ${plugin}`);
         expect(result.stdout).toContain('Executor ran');
-    }, 30000)
+    }, 120000)
 
     describe('--directory', () => {
       it('should create src in the specified directory', async () => {
@@ -23,7 +23,7 @@ describe('<%= pluginName %> e2e', () => {
           `generate <%=npmPackageName%>:<%= pluginName %> ${plugin} --directory subdir`
         );
         expect(() => checkFilesExist(`libs/subdir/${plugin}/src/index.ts`)).not.toThrow();
-      }, 30000);
+      }, 120000);
     });
 
     describe('--tags', () => {
@@ -35,6 +35,6 @@ describe('<%= pluginName %> e2e', () => {
         );
         const nxJson = readJson('nx.json');
         expect(nxJson.projects[plugin].tags).toEqual(['e2etag', 'e2ePackage']);
-      }, 30000);
+      }, 120000);
     });
 })
