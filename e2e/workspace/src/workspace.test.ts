@@ -477,10 +477,6 @@ describe('affected (with git)', () => {
     myapp2 = uniq('myapp');
     mylib = uniq('mylib');
     newProject();
-  });
-  afterAll(() => removeProject({ onlyOnCI: true }));
-
-  it('should not affect other projects by generating a new project', () => {
     const nxJson: NxJsonConfiguration = readJson('nx.json');
 
     delete nxJson.implicitDependencies;
@@ -492,6 +488,17 @@ describe('affected (with git)', () => {
     runCommand(
       `git add . && git commit -am "initial commit" && git checkout -b master`
     );
+  });
+  afterAll(() => removeProject({ onlyOnCI: true }));
+
+  function generateAll() {
+    runCLI(`generate @nrwl/angular:app ${myapp}`);
+    runCLI(`generate @nrwl/angular:app ${myapp2}`);
+    runCLI(`generate @nrwl/angular:lib ${mylib}`);
+    runCommand(`git add . && git commit -am "add all"`);
+  }
+
+  it('should not affect other projects by generating a new project', () => {
     runCLI(`generate @nrwl/angular:app ${myapp}`);
     expect(runCLI('affected:apps')).toContain(myapp);
     runCommand(`git add . && git commit -am "add ${myapp}"`);
@@ -505,44 +512,45 @@ describe('affected (with git)', () => {
     expect(runCLI('affected:apps')).not.toContain(myapp);
     expect(runCLI('affected:apps')).not.toContain(myapp2);
     expect(runCLI('affected:libs')).toContain(mylib);
-    runCommand(`git add . && git commit -am "add ${mylib}"`);
   }, 1000000);
 
   it('should detect changes to projects based on the nx.json', () => {
+    generateAll();
     const nxJson: NxJsonConfiguration = readJson('nx.json');
 
     nxJson.projects[myapp].tags = ['tag'];
     updateFile('nx.json', JSON.stringify(nxJson));
+
     expect(runCLI('affected:apps')).toContain(myapp);
     expect(runCLI('affected:apps')).not.toContain(myapp2);
     expect(runCLI('affected:libs')).not.toContain(mylib);
-    runCommand(`git add . && git commit -am "add tag to ${myapp}"`);
   });
 
   it('should detect changes to projects based on the workspace.json', () => {
+    generateAll();
     const workspaceJson = readJson(workspaceConfigName());
 
     workspaceJson.projects[myapp].prefix = 'my-app';
     updateFile(workspaceConfigName(), JSON.stringify(workspaceJson));
+
     expect(runCLI('affected:apps')).toContain(myapp);
     expect(runCLI('affected:apps')).not.toContain(myapp2);
     expect(runCLI('affected:libs')).not.toContain(mylib);
-    runCommand(`git add . && git commit -am "change prefix for ${myapp}"`);
   });
 
   it('should affect all projects by removing projects', () => {
+    generateAll();
     const workspaceJson = readJson(workspaceConfigName());
+    const nxJson = readJson('nx.json');
+
     delete workspaceJson.projects[mylib];
     updateFile(workspaceConfigName(), JSON.stringify(workspaceJson));
-
-    const nxJson = readJson('nx.json');
     delete nxJson.projects[mylib];
     updateFile('nx.json', JSON.stringify(nxJson));
 
     expect(runCLI('affected:apps')).toContain(myapp);
     expect(runCLI('affected:apps')).toContain(myapp2);
     expect(runCLI('affected:libs')).not.toContain(mylib);
-    runCommand(`git add . && git commit -am "remove ${mylib}"`);
   });
 });
 

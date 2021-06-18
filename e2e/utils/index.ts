@@ -611,7 +611,7 @@ export function getPackageManagerCommand({
       createWorkspace: `npx create-nx-workspace@${publishedVersion}`,
       runNx: `npm run nx${scriptsPrependNodePathFlag} --`,
       runNxSilent: `npm run nx --silent${scriptsPrependNodePathFlag} --`,
-      addDev: `npm install -D`,
+      addDev: `npm install --legacy-peer-deps -D`,
       list: 'npm ls --depth 10',
     },
     yarn: {
