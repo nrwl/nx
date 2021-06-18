@@ -12,7 +12,7 @@ JSON files are fairly simple to modify, given their predictable structure.
 
 The following example adds a `package.json` script that issues a friendly greeting.
 
-```ts
+```typescript
 import { updateJson } from '@nrwl/devkit';
 
 export default async function (tree: Tree, schema: any) {
@@ -33,7 +33,7 @@ For files that are not as predictable as JSON files (like `.ts`, `.md` or `.css`
 
 Let's say we want to replace any instance of `thomasEdison` with `nikolaTesla` in the `index.ts` file.
 
-```ts
+```typescript
 export default async function (tree: Tree, schema: any) {
   const filePath = `path/to/index.ts`;
   const contents = tree.read(filePath);
@@ -44,7 +44,7 @@ export default async function (tree: Tree, schema: any) {
 
 This works, but only replaces the first instance of `thomasEdison`. To replace them all, you need to use regular expressions. (Regular expressions also give you a lot more flexibility in how you search for a string.)
 
-```ts
+```typescript
 export default async function (tree: Tree, schema: any) {
   const filePath = `path/to/index.ts`;
   const contents = tree.read(filePath);
@@ -61,7 +61,7 @@ We'll write a generator that replaces all instances of the type `Array<something
 
 First, go to [AST Explorer](https://astexplorer.net) and paste in a snippet of code that contains the input and desired output of our generator.
 
-```ts
+```typescript
 // input
 const arr: Array<string> = [];
 
@@ -71,7 +71,7 @@ const arr: string[] = [];
 
 Make sure the parser is set to `typescript`. When you place the cursor on the `Array` text, the right hand panel highlights the corresponding node of the AST. The AST node we're looking for looks like this:
 
-```ts
+```typescript
 { // TypeReference
   typeName: { // Identifier
     escapedText: "Array"
@@ -84,7 +84,7 @@ Second, we need to choose a selector to target this node. Just like with CSS sel
 
 The finished code looks like this:
 
-```ts
+```typescript
 import { readProjectConfiguration, Tree } from '@nrwl/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { TypeReferenceNode } from 'typescript';

@@ -26,7 +26,7 @@ The files can use EJS syntax to substitute variables and logic. See the [EJS Doc
 
 Example NOTES.md:
 
-```md
+```markdown
 Hello, my name is <%= name %>!
 ```
 
@@ -91,7 +91,7 @@ CREATE libs/mylib/NOTES.md
 
 `libs/mylib/NOTES.md` will contain the content with substituted variables:
 
-```md
+```markdown
 Hello, my name is mylib!
 ```
 
@@ -105,12 +105,12 @@ The EJS syntax can do much more than replace variable names with values. Here ar
 
 1. Pass a function into the template:
 
-```
+```typescript
 // template file
 This is my <%= uppercase(name) %>
 ```
 
-```ts
+```typescript
 // typescript file
 function uppercase(val) {
   val.toUppercase();
@@ -126,7 +126,7 @@ generateFiles(tree, joinPathFragments(__dirname, './files'), libraryRoot, {
 
 2. Use javascript for control flow in the template:
 
-```
+```typescript
 <% if(shortVersion) { %>
 This is the short version.
 <% } else {
@@ -137,7 +137,7 @@ This is the short version.
 } // end else block %>
 ```
 
-```ts
+```typescript
 // typescript file
 generateFiles(tree, joinPathFragments(__dirname, './files'), libraryRoot, {
   shortVerstion: false,
