@@ -931,12 +931,32 @@
           {
             "name": "Using Generators",
             "id": "using-schematics",
-            "file": "shared/using-generators"
+            "file": "shared/generators/using-generators"
           },
           {
             "name": "Workspace Generators",
             "id": "workspace-generators",
-            "file": "shared/tools-workspace-generators"
+            "file": "shared/generators/workspace-generators"
+          },
+          {
+            "name": "Composing Generators",
+            "id": "composing-generators",
+            "file": "shared/generators/composing-generators"
+          },
+          {
+            "name": "Generator Options",
+            "id": "generator-options",
+            "file": "shared/generators/generator-options"
+          },
+          {
+            "name": "Creating Files",
+            "id": "creating-files",
+            "file": "shared/generators/creating-files"
+          },
+          {
+            "name": "Modifying Files",
+            "id": "modifying-files",
+            "file": "shared/generators/modifying-files"
           }
         ]
       },
@@ -2032,12 +2052,32 @@
           {
             "name": "Using Generators",
             "id": "using-schematics",
-            "file": "shared/using-generators"
+            "file": "shared/generators/using-generators"
           },
           {
             "name": "Workspace Generators",
             "id": "workspace-generators",
-            "file": "shared/tools-workspace-generators"
+            "file": "shared/generators/workspace-generators"
+          },
+          {
+            "name": "Composing Generators",
+            "id": "composing-generators",
+            "file": "shared/generators/composing-generators"
+          },
+          {
+            "name": "Generator Options",
+            "id": "generator-options",
+            "file": "shared/generators/generator-options"
+          },
+          {
+            "name": "Creating Files",
+            "id": "creating-files",
+            "file": "shared/generators/creating-files"
+          },
+          {
+            "name": "Modifying Files",
+            "id": "modifying-files",
+            "file": "shared/generators/modifying-files"
           }
         ]
       },
@@ -3079,12 +3119,32 @@
           {
             "name": "Using Generators",
             "id": "using-schematics",
-            "file": "shared/using-generators"
+            "file": "shared/generators/using-generators"
           },
           {
             "name": "Workspace Generators",
             "id": "workspace-generators",
-            "file": "shared/tools-workspace-generators"
+            "file": "shared/generators/workspace-generators"
+          },
+          {
+            "name": "Composing Generators",
+            "id": "composing-generators",
+            "file": "shared/generators/composing-generators"
+          },
+          {
+            "name": "Generator Options",
+            "id": "generator-options",
+            "file": "shared/generators/generator-options"
+          },
+          {
+            "name": "Creating Files",
+            "id": "creating-files",
+            "file": "shared/generators/creating-files"
+          },
+          {
+            "name": "Modifying Files",
+            "id": "modifying-files",
+            "file": "shared/generators/modifying-files"
           }
         ]
       },
