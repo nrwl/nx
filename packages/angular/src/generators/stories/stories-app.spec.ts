@@ -1,6 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { applicationGenerator } from '../../schematics/application/application';
+import { applicationGenerator } from '../application/application';
 import { angularStoriesGenerator } from './stories';
 
 describe('angularStories generator: applications', () => {

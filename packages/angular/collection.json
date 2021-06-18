@@ -12,8 +12,8 @@
     },
 
     "application": {
-      "factory": "./src/schematics/application/application",
-      "schema": "./src/schematics/application/schema.json",
+      "factory": "./src/generators/application/application.compat#applicationSchematic",
+      "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "description": "Create an Angular application"
     },
@@ -185,6 +185,12 @@
       "factory": "./src/generators/storybook-migrate-stories-to-6-2/migrate-stories-to-6-2",
       "schema": "./src/generators/storybook-migrate-stories-to-6-2/schema.json",
       "description": "Migrate stories to match the new syntax in v6.2 where the component declaration should be in the default export."
+    },
+    "application": {
+      "factory": "./src/generators/application/application",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "description": "Create an Angular application"
     }
   }
 }

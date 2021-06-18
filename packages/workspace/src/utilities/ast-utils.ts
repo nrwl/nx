@@ -37,6 +37,31 @@ export function insertChange(
   return updateTsSourceFile(host, sourceFile, filePath);
 }
 
+export function replaceChange(
+  host: Tree,
+  sourceFile: ts.SourceFile,
+  filePath: string,
+  insertPosition: number,
+  contentToInsert: string,
+  oldContent: string
+) {
+  const content = host.read(filePath, 'utf-8');
+
+  const prefix = content.substring(0, insertPosition);
+  const suffix = content.substring(insertPosition + oldContent.length);
+  const text = content.substring(
+    insertPosition,
+    insertPosition + oldContent.length
+  );
+  if (text !== oldContent) {
+    throw new Error(`Invalid replace: "${text}" != "${oldContent}".`);
+  }
+
+  host.write(filePath, `${prefix}${contentToInsert}${suffix}`);
+
+  return updateTsSourceFile(host, sourceFile, filePath);
+}
+
 export function removeChange(
   host: Tree,
   sourceFile: ts.SourceFile,
@@ -216,4 +241,21 @@ export function getImport(
       .map((q) => q.trim());
     return { moduleSpec, bindings };
   });
+}
+
+export function replaceNodeValue(
+  host: Tree,
+  sourceFile: ts.SourceFile,
+  modulePath: string,
+  node: ts.Node,
+  content: string
+) {
+  return replaceChange(
+    host,
+    sourceFile,
+    modulePath,
+    node.getStart(node.getSourceFile()),
+    content,
+    node.getText()
+  );
 }
