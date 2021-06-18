@@ -35,7 +35,7 @@ async function createPreset(tree: Tree, options: Schema) {
   } else if (options.preset === 'angular') {
     const {
       applicationGenerator: angularApplicationGenerator,
-    } = require('@nrwl' + '/angular/src/schematics/application/application');
+    } = require('@nrwl' + '/angular/src/generators/application/application');
 
     await angularApplicationGenerator(tree, {
       name: options.name,
@@ -89,7 +89,7 @@ async function createPreset(tree: Tree, options: Schema) {
   } else if (options.preset === 'angular-nest') {
     const {
       applicationGenerator: angularApplicationGenerator,
-    } = require('@nrwl' + '/angular/src/schematics/application/application');
+    } = require('@nrwl' + '/angular/src/generators/application/application');
     const { applicationGenerator: nestApplicationGenerator } = require('@nrwl' +
       '/nest');
 

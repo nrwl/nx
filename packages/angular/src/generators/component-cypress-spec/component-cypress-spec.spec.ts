@@ -4,6 +4,7 @@ import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import * as storybookUtils from '../utils/storybook';
 import { componentCypressSpecGenerator } from './component-cypress-spec';
+import { applicationGenerator } from '../application/application';
 
 describe('componentCypressSpec generator', () => {
   let tree: Tree;
@@ -13,16 +14,12 @@ describe('componentCypressSpec generator', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace();
 
-    const appGenerator = wrapAngularDevkitSchematic(
-      '@nrwl/angular',
-      'application'
-    );
     const componentGenerator = wrapAngularDevkitSchematic(
       '@schematics/angular',
       'component'
     );
 
-    await appGenerator(tree, { name: appName });
+    await applicationGenerator(tree, { name: appName });
     await componentGenerator(tree, {
       name: 'test-button',
       project: appName,
