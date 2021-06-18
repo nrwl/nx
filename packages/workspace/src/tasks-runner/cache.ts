@@ -22,30 +22,11 @@ export type CachedResult = {
 };
 export type TaskWithCachedResult = { task: Task; cachedResult: CachedResult };
 
-class CacheConfig {
-  constructor(private readonly options: DefaultTasksRunnerOptions) {}
-
-  isCacheableTask(task: Task) {
-    const cacheable =
-      this.options.cacheableOperations || this.options.cacheableTargets;
-    return (
-      cacheable &&
-      cacheable.indexOf(task.target.target) > -1 &&
-      !this.longRunningTask(task)
-    );
-  }
-
-  private longRunningTask(task: Task) {
-    return !!task.overrides['watch'];
-  }
-}
-
 export class Cache {
   root = appRootPath;
   cachePath = this.createCacheDir();
   terminalOutputsDir = this.createTerminalOutputsDir();
   latestOutputsHashesDir = this.ensureLatestOutputsHashesDir();
-  cacheConfig = new CacheConfig(this.options);
 
   constructor(private readonly options: DefaultTasksRunnerOptions) {}
 
@@ -75,8 +56,6 @@ export class Cache {
   }
 
   async get(task: Task): Promise<CachedResult> {
-    if (!this.cacheConfig.isCacheableTask(task)) return null;
-
     const res = this.getFromLocalDir(task);
 
     // didn't find it locally but we have a remote cache
@@ -157,11 +136,7 @@ export class Cache {
   }
 
   temporaryOutputPath(task: Task) {
-    if (this.cacheConfig.isCacheableTask(task)) {
-      return join(this.terminalOutputsDir, task.hash);
-    } else {
-      return null;
-    }
+    return join(this.terminalOutputsDir, task.hash);
   }
 
   removeRecordedOutputsHashes(outputs: string[]): void {
