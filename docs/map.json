@@ -558,6 +558,11 @@
             "name": "storybook-migrate-defaults-5-to-6 generator",
             "id": "storybook-migrate-defaults-5-to-6",
             "file": "angular/api-react/generators/storybook-migrate-defaults-5-to-6"
+          },
+          {
+            "name": "hook generator",
+            "id": "hook",
+            "file": "angular/api-react/generators/hook"
           }
         ]
       },
@@ -1749,6 +1754,11 @@
             "name": "storybook-migrate-defaults-5-to-6 generator",
             "id": "storybook-migrate-defaults-5-to-6",
             "file": "react/api-react/generators/storybook-migrate-defaults-5-to-6"
+          },
+          {
+            "name": "hook generator",
+            "id": "hook",
+            "file": "react/api-react/generators/hook"
           }
         ]
       },
@@ -2909,6 +2919,11 @@
             "name": "storybook-migrate-defaults-5-to-6 generator",
             "id": "storybook-migrate-defaults-5-to-6",
             "file": "node/api-react/generators/storybook-migrate-defaults-5-to-6"
+          },
+          {
+            "name": "hook generator",
+            "id": "hook",
+            "file": "node/api-react/generators/hook"
           }
         ]
       },

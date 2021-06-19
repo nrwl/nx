@@ -20,6 +20,7 @@ import {
   testingLibraryReactVersion,
   typesReactDomVersion,
   typesReactVersion,
+  testingLibraryReactHooksVersion,
 } from '../../utils/versions';
 
 function setDefault(host: Tree) {
@@ -64,6 +65,7 @@ function updateDependencies(host: Tree) {
       '@types/react': typesReactVersion,
       '@types/react-dom': typesReactDomVersion,
       '@testing-library/react': testingLibraryReactVersion,
+      '@testing-library/react-hooks': testingLibraryReactHooksVersion,
     }
   );
 }

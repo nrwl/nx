@@ -136,6 +136,27 @@ describe('component', () => {
     });
   });
 
+  describe('--pascalCaseDirectory', () => {
+    it('should generate component files with pascal case directories', async () => {
+      await componentGenerator(appTree, {
+        name: 'hello-world',
+        style: 'css',
+        project: projectName,
+        pascalCaseFiles: true,
+        pascalCaseDirectory: true,
+      });
+      expect(
+        appTree.exists('libs/my-lib/src/lib/HelloWorld/HelloWorld.tsx')
+      ).toBeTruthy();
+      expect(
+        appTree.exists('libs/my-lib/src/lib/HelloWorld/HelloWorld.spec.tsx')
+      ).toBeTruthy();
+      expect(
+        appTree.exists('libs/my-lib/src/lib/HelloWorld/HelloWorld.module.css')
+      ).toBeTruthy();
+    });
+  });
+
   describe('--style none', () => {
     it('should generate component files without styles', async () => {
       await componentGenerator(appTree, {
