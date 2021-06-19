@@ -4,6 +4,5 @@ import <%= hookName %> from './<%= fileName %>';
 describe('<%= hookName %>', () => {
   it('should render successfully', () => {
     const { result } = renderHook(() => <%= hookName %>());
-    expect(result.error).toBeInstanceOf(Error);
   });
 });
