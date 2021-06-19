@@ -7,6 +7,7 @@ export { assertValidStyle } from './src/utils/assertion';
 export { reactDomVersion, reactVersion } from './src/utils/versions';
 export { applicationGenerator } from './src/generators/application/application';
 export { componentGenerator } from './src/generators/component/component';
+export { hookGenerator } from './src/generators/hook/hook';
 export { componentCypressGenerator } from './src/generators/component-cypress-spec/component-cypress-spec';
 export { componentStoryGenerator } from './src/generators/component-story/component-story';
 export { libraryGenerator } from './src/generators/library/library';

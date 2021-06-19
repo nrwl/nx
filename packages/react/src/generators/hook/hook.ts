@@ -1,18 +1,11 @@
 import * as ts from 'typescript';
 import { Schema } from './schema';
+
 import {
-  reactRouterDomVersion,
-  typesReactRouterDomVersion,
-} from '../../utils/versions';
-import { assertValidStyle } from '../../utils/assertion';
-import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
-import {
-  addDependenciesToPackageJson,
   applyChangesToString,
   convertNxGenerator,
   formatFiles,
   generateFiles,
-  GeneratorCallback,
   getProjects,
   joinPathFragments,
   logger,
@@ -20,40 +13,22 @@ import {
   toJS,
   Tree,
 } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import { addImport } from '../../utils/ast-utils';
 
 interface NormalizedSchema extends Schema {
   projectSourceRoot: string;
+  hookName: string;
+  hookTypeName: string;
   fileName: string;
-  className: string;
-  styledModule: null | string;
-  hasStyles: boolean;
 }
 
-export async function componentGenerator(host: Tree, schema: Schema) {
+export async function hookGenerator(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
+
   createComponentFiles(host, options);
-
-  const tasks: GeneratorCallback[] = [];
-
-  const styledTask = addStyledModuleDependencies(host, options.styledModule);
-  tasks.push(styledTask);
-
   addExportsToBarrel(host, options);
 
-  if (options.routing) {
-    const routingTask = addDependenciesToPackageJson(
-      host,
-      { 'react-router-dom': reactRouterDomVersion },
-      { '@types/react-router-dom': typesReactRouterDomVersion }
-    );
-    tasks.push(routingTask);
-  }
-
-  await formatFiles(host);
-
-  return runTasksInSerial(...tasks);
+  return await formatFiles(host);
 }
 
 function createComponentFiles(host: Tree, options: NormalizedSchema) {
@@ -70,25 +45,7 @@ function createComponentFiles(host: Tree, options: NormalizedSchema) {
   for (const c of host.listChanges()) {
     let deleteFile = false;
 
-    if (options.skipTests && /.*spec.tsx/.test(c.path)) {
-      deleteFile = true;
-    }
-
-    if (
-      (options.styledModule || !options.hasStyles) &&
-      c.path.endsWith(`.${options.style}`)
-    ) {
-      deleteFile = true;
-    }
-
-    if (options.globalCss && c.path.endsWith(`.module.${options.style}`)) {
-      deleteFile = true;
-    }
-
-    if (
-      !options.globalCss &&
-      c.path.endsWith(`${options.fileName}.${options.style}`)
-    ) {
+    if (options.skipTests && /.*spec.ts/.test(c.path)) {
       deleteFile = true;
     }
 
@@ -137,8 +94,19 @@ async function normalizeOptions(
 ): Promise<NormalizedSchema> {
   assertValidOptions(options);
 
-  const { className, fileName } = names(options.name);
-  const componentFileName = options.pascalCaseFiles ? className : fileName;
+  let base = options.name;
+  if (base.startsWith('use-')) {
+    base = base.substring(4);
+  } else if (base.startsWith('use')) {
+    base = base.substring(3);
+  }
+
+  const { className, fileName } = names(base);
+  const hookFilename = options.pascalCaseFiles
+    ? 'use'.concat(className)
+    : 'use-'.concat(fileName);
+  const hookName = 'use'.concat(className);
+  const hookTypeName = 'Use'.concat(className);
   const project = getProjects(host).get(options.project);
 
   if (!project) {
@@ -150,11 +118,7 @@ async function normalizeOptions(
 
   const { sourceRoot: projectSourceRoot, projectType } = project;
 
-  const directory = await getDirectory(host, options);
-
-  const styledModule = /^(css|scss|less|styl|none)$/.test(options.style)
-    ? null
-    : options.style;
+  const directory = await getDirectory(host, options, base);
 
   if (options.export && projectType === 'application') {
     logger.warn(
@@ -162,25 +126,22 @@ async function normalizeOptions(
     );
   }
 
-  options.classComponent = options.classComponent ?? false;
-  options.routing = options.routing ?? false;
-  options.globalCss = options.globalCss ?? false;
-
   return {
     ...options,
     directory,
-    styledModule,
-    hasStyles: options.style !== 'none',
-    className,
-    fileName: componentFileName,
+    hookName,
+    hookTypeName,
+    fileName: hookFilename,
     projectSourceRoot,
   };
 }
 
-async function getDirectory(host: Tree, options: Schema) {
-  const genNames = names(options.name);
-  const fileName =
-    options.pascalCaseDirs === true ? genNames.className : genNames.fileName;
+async function getDirectory(host: Tree, options: Schema, baseHookName) {
+  const { className, fileName } = names(baseHookName);
+  const hookFileName =
+    options.pascalCaseDirs === true
+      ? 'use'.concat(className)
+      : 'use-'.concat(fileName);
   const workspace = getProjects(host);
   let baseDir: string;
   if (options.directory) {
@@ -191,12 +152,11 @@ async function getDirectory(host: Tree, options: Schema) {
         ? 'app'
         : 'lib';
   }
-  return options.flat ? baseDir : joinPathFragments(baseDir, fileName);
+  return options.flat ? baseDir : joinPathFragments(baseDir, hookFileName);
+  return baseDir;
 }
 
 function assertValidOptions(options: Schema) {
-  assertValidStyle(options.style);
-
   const slashes = ['/', '\\'];
   slashes.forEach((s) => {
     if (options.name.indexOf(s) !== -1) {
@@ -212,6 +172,6 @@ function assertValidOptions(options: Schema) {
   });
 }
 
-export default componentGenerator;
+export default hookGenerator;
 
-export const componentSchematic = convertNxGenerator(componentGenerator);
+export const hookSchematic = convertNxGenerator(hookGenerator);
