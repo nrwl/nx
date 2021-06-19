@@ -100,6 +100,16 @@ Type: `string`
 
 The name of the component.
 
+### pascalCaseDirs
+
+Alias(es): R
+
+Default: `false`
+
+Type: `boolean`
+
+Use pascal case component directory name (e.g. SomeComponent/SomeCompoennt.tsx).
+
 ### pascalCaseFiles
 
 Alias(es): P

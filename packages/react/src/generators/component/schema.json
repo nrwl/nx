@@ -107,6 +107,12 @@
       "alias": "P",
       "default": false
     },
+    "pascalCaseDirs": {
+      "type": "boolean",
+      "description": "Use pascal case component directory name (e.g. SomeComponent/SomeCompoennt.tsx).",
+      "alias": "R",
+      "default": false
+    },
     "classComponent": {
       "type": "boolean",
       "alias": "C",

@@ -1,0 +1,9 @@
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface <%= hookTypeName %> {
+}
+
+export function <%= hookName %>(): <%= hookTypeName %> {
+	throw new Error('<%= hookName %> is not implemented');
+};
+
+export default <%= hookName %>;
