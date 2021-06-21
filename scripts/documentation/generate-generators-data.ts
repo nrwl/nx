@@ -8,6 +8,7 @@ import {
   pathFormat,
 } from '@angular-devkit/schematics/src/formats';
 import {
+  formatDeprecated,
   generateJsonFile,
   generateMarkdownFile,
   sortAlphabeticallyFunction,
@@ -136,9 +137,9 @@ function generateTemplate(
             : ``;
 
         template += dedent`
-          ### ${option.name} ${option.required ? '(*__required__*)' : ''} ${
-          option.hidden ? '(__hidden__)' : ''
-        }
+          ### ${option.deprecated ? `~~${option.name}~~` : option.name} ${
+          option.required ? '(*__required__*)' : ''
+        } ${option.hidden ? '(__hidden__)' : ''}
           
           ${
             !!option.aliases.length
@@ -151,11 +152,13 @@ function generateTemplate(
               : `Default: \`${option.default}\`\n`
           }
           Type: \`${option.type}\`
-
-          ${enumStr}
-          
-          ${option.description}
         `;
+
+        template += dedent`  
+            ${enumStr}
+
+            ${formatDeprecated(option.description, option.deprecated)}
+          `;
       });
   }
 

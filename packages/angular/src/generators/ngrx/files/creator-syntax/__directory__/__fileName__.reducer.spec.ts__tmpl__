@@ -1,0 +1,37 @@
+import { Action } from '@ngrx/store';
+
+import * as <%= className %>Actions from './<%= fileName %>.actions';
+import { <%= className %>Entity } from './<%= fileName %>.models';
+import { State, initialState, reducer } from './<%= fileName %>.reducer';
+
+describe('<%= className %> Reducer', () => {
+  const create<%= className %>Entity = (id: string, name = ''): <%= className %>Entity => ({
+    id,
+    name: name || `name-${id}`
+  });
+
+  describe('valid <%= className %> actions', () => {
+    it('load<%= className %>Success should return the list of known <%= className %>', () => {
+      const <%= propertyName %> = [
+        create<%= className %>Entity('PRODUCT-AAA'),
+        create<%= className %>Entity('PRODUCT-zzz')
+      ];
+      const action = <%= className %>Actions.load<%= className %>Success({ <%= propertyName %> });
+
+      const result: State = reducer(initialState, action);
+
+      expect(result.loaded).toBe(true);
+      expect(result.ids.length).toBe(2);
+    });
+  });
+
+  describe('unknown action', () => {
+    it('should return the previous state', () => {
+      const action = {} as Action;
+
+      const result = reducer(initialState, action);
+
+      expect(result).toBe(initialState);
+    });
+  });
+});

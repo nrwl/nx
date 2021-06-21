@@ -38,9 +38,9 @@
     },
 
     "ngrx": {
-      "factory": "./src/schematics/ngrx/ngrx",
-      "schema": "./src/schematics/ngrx/schema.json",
-      "description": "Add an ngrx config to a project"
+      "factory": "./src/generators/ngrx/compat",
+      "schema": "./src/generators/ngrx/schema.json",
+      "description": "Add NgRx support to an application or library."
     },
 
     "downgrade-module": {
@@ -165,6 +165,11 @@
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
       "description": "Move an Angular application or library to another folder."
+    },
+    "ngrx": {
+      "factory": "./src/generators/ngrx/ngrx",
+      "schema": "./src/generators/ngrx/schema.json",
+      "description": "Add NgRx support to an application or library."
     },
     "stories": {
       "factory": "./src/generators/stories/stories",
