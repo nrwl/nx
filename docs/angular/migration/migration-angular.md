@@ -92,8 +92,8 @@ Learn more about the advantages of Nx in the following guides:
 
 - [Using Cypress for e2e tests](/angular/cypress/overview)
 - [Using Jest for unit tests](/angular/jest/overview)
-- [Computation Caching](/angular/core-concepts/computation-caching)
-- [Rebuilding and Retesting What is Affected](/angular/core-concepts/affected)
+- [Computation Caching](/angular/core-extended/computation-caching)
+- [Rebuilding and Retesting What is Affected](/angular/core-extended/affected)
 
 ## Transitioning Manually
 
@@ -376,4 +376,4 @@ Learn more about the advantages of Nx in the following guides:
 
 [Using Cypress for e2e tests](/angular/cypress/overview) \
 [Using Jest for unit tests](/angular/jest/overview) \
-[Rebuilding and Retesting What is Affected](/angular/core-concepts/affected)
+[Rebuilding and Retesting What is Affected](/angular/core-extended/affected)
