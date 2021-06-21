@@ -4,6 +4,7 @@ import {
   expectTestsPass,
   getSelectedPackageManager,
   getSize,
+  killPorts,
   newProject,
   removeProject,
   runCLI,
@@ -11,6 +12,7 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
+  runCypressTests,
 } from '@nrwl/e2e/utils';
 
 import { names } from '@nrwl/devkit';
@@ -21,10 +23,10 @@ describe('Angular Package', () => {
   beforeEach(() => (proj = newProject()));
   afterEach(() => removeProject({ onlyOnCI: true }));
 
-  // TODO: npm build is failing for Angular because of webpack 4
-  // remove this condition once `node` is migrated to webpack 5
-  if (getSelectedPackageManager() !== 'npm') {
-    it('should work', async () => {
+  it('should work', async () => {
+    // TODO: npm build is failing for Angular because of webpack 4
+    // remove this condition once `node` is migrated to webpack 5
+    if (getSelectedPackageManager() !== 'npm') {
       const myapp = uniq('myapp');
       const mylib = uniq('mylib');
       runCLI(
@@ -72,27 +74,18 @@ describe('Angular Package', () => {
       // running tests for the lib
       expectTestsPass(await runCLIAsync(`test my-dir-${mylib} --no-watch`));
 
-      // if (supportUi()) {
-      //   try {
-      //     const r = runCLI(`e2e my-dir-${myapp}-e2e --headless --no-watch`);
-      //     console.log(r);
-      //     expect(r).toContain('All specs passed!');
-      //   } catch (e) {
-      //     console.log(e);
-      //     if (e.stdout) {
-      //       console.log(e.stdout.toString());
-      //     }
-      //     if (e.stderr) {
-      //       console.log(e.stdout.toString());
-      //     }
-      //     throw e;
-      //   }
-      // }
-    }, 1000000);
-  }
+      if (runCypressTests()) {
+        const e2eResults = runCLI(
+          `e2e my-dir-${myapp}-e2e --headless --no-watch`
+        );
+        expect(e2eResults).toContain('All specs passed!');
+        expect(await killPorts()).toBeTruthy();
+      }
+    }
+  }, 1000000);
 
-  if (getSelectedPackageManager() !== 'npm') {
-    it('should support router config generation (lazy)', async () => {
+  it('should support router config generation (lazy)', async () => {
+    if (getSelectedPackageManager() !== 'npm') {
       const myapp = uniq('myapp');
       const mylib = uniq('mylib');
       runCLI(`generate @nrwl/angular:app ${myapp} --directory=myDir --routing`);
@@ -102,11 +95,13 @@ describe('Angular Package', () => {
 
       runCLI(`build my-dir-${myapp} --aot`);
       expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));
-    }, 1000000);
-  }
+    }
+  }, 1000000);
 
-  if (getSelectedPackageManager() !== 'npm') {
-    it('should support router config generation (eager)', async () => {
+  it('should support router config generation (eager)', async () => {
+    // TODO: npm build is failing for Angular because of webpack 4
+    // remove this condition once `node` is migrated to webpack 5
+    if (getSelectedPackageManager() !== 'npm') {
       const myapp = uniq('myapp');
       runCLI(`generate @nrwl/angular:app ${myapp} --directory=myDir --routing`);
       const mylib = uniq('mylib');
@@ -116,11 +111,13 @@ describe('Angular Package', () => {
 
       runCLI(`build my-dir-${myapp} --aot`);
       expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));
-    }, 1000000);
-  }
+    }
+  }, 1000000);
 
-  if (getSelectedPackageManager() !== 'npm') {
-    it('should support Ivy', async () => {
+  it('should support Ivy', async () => {
+    // TODO: npm build is failing for Angular because of webpack 4
+    // remove this condition once `node` is migrated to webpack 5
+    if (getSelectedPackageManager() !== 'npm') {
       const myapp = uniq('myapp');
       runCLI(
         `generate @nrwl/angular:app ${myapp} --directory=myDir --routing --enable-ivy`
@@ -128,11 +125,13 @@ describe('Angular Package', () => {
 
       runCLI(`build my-dir-${myapp} --aot`);
       expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));
-    }, 1000000);
-  }
+    }
+  }, 1000000);
 
-  if (getSelectedPackageManager() !== 'npm') {
-    it('should support building in parallel', () => {
+  it('should support building in parallel', () => {
+    // TODO: npm build is failing for Angular because of webpack 4
+    // remove this condition once `node` is migrated to webpack 5
+    if (getSelectedPackageManager() !== 'npm') {
       if (getSelectedPackageManager() === 'pnpm') {
         // TODO: This tests fails with pnpm but we should still enable this for other package managers
         return;
@@ -143,8 +142,8 @@ describe('Angular Package', () => {
       runCLI(`generate @nrwl/angular:app ${myapp2}`);
 
       runCLI('run-many --target build --all --parallel');
-    });
-  }
+    }
+  });
 
   it('should support eslint and pass linting on the standard generated code', async () => {
     const myapp = uniq('myapp');
