@@ -173,7 +173,7 @@ Your use-case may also be covered by one of our community plugins. Plugin author
 
 [Learn more about the `run-commands` builder](/{{framework}}/workspace/run-commands-executor)
 
-[Learn more about caching](/{{framework}}/core-concepts/computation-caching)
+[Learn more about caching](/{{framework}}/core-extended/computation-caching)
 
 [Learn more about community plugins](/nx-community)
 
