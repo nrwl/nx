@@ -1,0 +1,39 @@
+import { Injectable } from '@angular/core';
+import { Effect, Actions<% if (!useDataPersistence) { %>, ofType<% }%> } from '@ngrx/effects';
+import { <% if (useDataPersistence) { %>DataPersistence<% } else { %>fetch<% } %> } from '@nrwl/angular';
+
+import { Load<%= className %>, <%= className %>Loaded, <%= className %>LoadError, <%= className %>ActionTypes } from './<%= fileName %>.actions';
+import { <%= className %>PartialState } from './<%= fileName %>.reducer';
+
+@Injectable()
+export class <%= className %>Effects {
+  @Effect() load<%= className %>$ = <% if (useDataPersistence) { %>this.dataPersistence.fetch(<%= className %>ActionTypes.Load<%= className %>, {
+    run: (action: Load<%= className %>, state: <%= className %>PartialState) => {
+      // Your custom REST 'load' logic goes here. For now just return an empty list...
+      return new <%= className %>Loaded([]);
+    },
+
+    onError: (action: Load<%= className %>, error) => {
+      console.error('Error', error);
+      return new <%= className %>LoadError(error);
+    }
+  }); <% } else { %> this.actions$.pipe(
+    ofType(<%= className %>ActionTypes.Load<%= className %>),
+    fetch({
+      run: (action: Load<%= className %>, state: <%= className %>PartialState) => {
+        // Your custom REST 'load' logic goes here. For now just return an empty list...
+        return new <%= className %>Loaded([]);
+      },
+
+      onError: (action: Load<%= className %>, error) => {
+        console.error('Error', error);
+        return new <%= className %>LoadError(error);
+      }
+    })
+  );<% } %>
+
+  constructor(
+    private readonly actions$: Actions<% if (useDataPersistence) { %>,
+    private readonly dataPersistence: DataPersistence<<%= className %>PartialState><% } %>
+  ) {}
+}
