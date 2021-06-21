@@ -16,7 +16,7 @@ export function getComponentSelector(tree: Tree, path: string): string {
     '@angular/core'
   );
   if (componentDecorators.length === 0) {
-    throw new Error(`No @NgModule decorator in ${path}.`);
+    throw new Error(`No @Component decorator in ${path}.`);
   }
   const componentDecorator = componentDecorators[0];
   const selectorNode = <PropertyAssignment>(
