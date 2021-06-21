@@ -100,6 +100,7 @@ jobs:
         GIT_COMMITTER_EMAIL: test@test.com
         GIT_COMMITTER_NAME: Test
         NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
+        NX_E2E_CI_NIGHTLY: ${{ 'true' }}
         NODE_OPTIONS: --max_old_space_size=8192
         SELECTED_PM: ${{ matrix.package_manager }}
         YARN_REGISTRY: http://localhost:4872
