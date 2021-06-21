@@ -207,7 +207,7 @@ describe('run-many', () => {
           `run-many --target=build --projects="${libC},${libB}"`
         );
         expect(buildParallel).toContain(
-          `Running target build for 2 project(s)`
+          `Running target build for 2 project(s):`
         );
         expect(buildParallel).not.toContain(`- ${libA}`);
         expect(buildParallel).toContain(`- ${libB}`);
@@ -232,7 +232,7 @@ describe('run-many', () => {
           `run-many --target=build --projects="${libA}" --with-deps`
         );
         expect(buildWithDeps).toContain(
-          `Running target build for 2 project(s)`
+          `Running target build for 2 project(s):`
         );
         expect(buildWithDeps).toContain(`- ${libA}`);
         expect(buildWithDeps).toContain(`- ${libC}`);
@@ -244,9 +244,12 @@ describe('run-many', () => {
         const buildConfig = runCLI(
           `run-many --target=build --projects="${appA},${libA}" --prod`
         );
-        expect(buildConfig).toContain(`Running target build for 2 project(s)`);
+        expect(buildConfig).toContain(
+          `Running target build for 2 project(s) and 1 task(s) they depend on:`
+        );
         expect(buildConfig).toContain(`run ${appA}:build:production`);
         expect(buildConfig).toContain(`run ${libA}:build:production`);
+        expect(buildConfig).toContain(`run ${libC}:build:production`);
         expect(buildConfig).toContain('Running target "build" succeeded');
       }, 1000000);
     }
