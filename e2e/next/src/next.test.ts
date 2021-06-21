@@ -11,6 +11,7 @@ import {
   runCLI,
   runCLIAsync,
   runCommandUntil,
+  runCypressTests,
   uniq,
   updateFile,
   updateWorkspaceConfig,
@@ -671,7 +672,7 @@ async function checkApp(
     );
   }
 
-  if (opts.checkE2E) {
+  if (opts.checkE2E && runCypressTests()) {
     const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);
     expect(e2eResults).toContain('All specs passed!');
     expect(await killPorts()).toBeTruthy();
