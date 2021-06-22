@@ -1,12 +1,13 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "$id": "SchematicsNxUpgradeModule",
-  "title": "Generates UpgradeModule setup",
+  "$id": "NxUpgradeModuleGenerator",
+  "title": "Generates UpgradeModule setup.",
+  "cli": "nx",
   "type": "object",
   "properties": {
     "project": {
       "type": "string",
-      "description": "The name of the project"
+      "description": "The name of the project."
     },
     "name": {
       "type": "string",
@@ -22,23 +23,24 @@
     },
     "angularJsCmpSelector": {
       "type": "string",
-      "description": "The selector of an AngularJS component (e.g., --angularJsCmpSelector=myComponent)"
+      "description": "The selector of an AngularJS component (e.g., --angularJsCmpSelector=myComponent)."
     },
     "skipFormat": {
-      "description": "Skip formatting files",
       "type": "boolean",
+      "description": "Skip formatting files.",
       "default": false
     },
     "skipPackageJson": {
       "type": "boolean",
-      "default": false,
-      "description": "Do not add @angular/upgrade to package.json (e.g., --skipPackageJson)"
+      "description": "Do not add @angular/upgrade to package.json (e.g., --skipPackageJson).",
+      "default": false
     },
     "router": {
       "type": "boolean",
-      "default": false,
-      "description": "Sets up router synchronization (e.g., --router)"
+      "description": "Sets up router synchronization (e.g., --router).",
+      "default": false
     }
   },
-  "required": ["project"]
+  "additionalProperties": false,
+  "required": ["name", "project"]
 }

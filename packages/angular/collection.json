@@ -44,15 +44,15 @@
     },
 
     "downgrade-module": {
-      "factory": "./src/schematics/downgrade-module/downgrade-module",
-      "schema": "./src/schematics/downgrade-module/schema.json",
-      "description": "Setup Downgrade Module"
+      "factory": "./src/generators/downgrade-module/compat",
+      "schema": "./src/generators/downgrade-module/schema.json",
+      "description": "Setup Downgrade Module."
     },
 
     "upgrade-module": {
-      "factory": "./src/schematics/upgrade-module/upgrade-module",
-      "schema": "./src/schematics/upgrade-module/schema.json",
-      "description": "Add an upgrade module"
+      "factory": "./src/generators/upgrade-module/compat",
+      "schema": "./src/generators/upgrade-module/schema.json",
+      "description": "Add an upgrade module."
     },
 
     "storybook-configuration": {
@@ -120,6 +120,12 @@
       "description": "Add linting configuration to an Angular project.",
       "hidden": true
     },
+    "application": {
+      "factory": "./src/generators/application/application",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "description": "Create an Angular application"
+    },
     "component-cypress-spec": {
       "factory": "./src/generators/component-cypress-spec/component-cypress-spec",
       "schema": "./src/generators/component-cypress-spec/schema.json",
@@ -136,6 +142,11 @@
       "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionGenerator",
       "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
       "description": "Convert a project from TSLint to ESLint"
+    },
+    "downgrade-module": {
+      "factory": "./src/generators/downgrade-module/downgrade-module",
+      "schema": "./src/generators/downgrade-module/schema.json",
+      "description": "Setup Downgrade Module."
     },
     "init": {
       "factory": "./src/generators/init/init",
@@ -191,11 +202,10 @@
       "schema": "./src/generators/storybook-migrate-stories-to-6-2/schema.json",
       "description": "Migrate stories to match the new syntax in v6.2 where the component declaration should be in the default export."
     },
-    "application": {
-      "factory": "./src/generators/application/application",
-      "schema": "./src/generators/application/schema.json",
-      "aliases": ["app"],
-      "description": "Create an Angular application"
+    "upgrade-module": {
+      "factory": "./src/generators/upgrade-module/upgrade-module",
+      "schema": "./src/generators/upgrade-module/schema.json",
+      "description": "Add an upgrade module."
     }
   }
 }
