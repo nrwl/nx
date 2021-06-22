@@ -285,6 +285,10 @@ const examples = {
       description:
         'Show the graph where every node is either an ancestor or a descendant of todos-feature-main, but exclude project-one and project-two',
     },
+    {
+      command: 'dep-graph --watch',
+      description: 'Watch for changes to dep graph and update in-browser',
+    },
   ],
   'affected:dep-graph': [
     {

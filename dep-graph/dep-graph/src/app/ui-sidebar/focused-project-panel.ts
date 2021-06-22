@@ -14,6 +14,10 @@ export class FocusedProjectPanel {
     this.render();
   }
 
+  unfocusProject() {
+    this.render();
+  }
+
   private render(projectName?: string) {
     removeChildrenFromContainer(this.container);
 

@@ -70,10 +70,11 @@ nx affected --target=build
 
 ```bash
 nx dep-graph
+nx dep-graph --watch
 nx affected:dep-graph
 ```
 
-[The first command](/{{framework}}/cli/dep-graph) launches a web browser with repository's dependency graph rendered visually. [The second command](/{{framework}}/cli/affected-dep-graph) renders the same graph with projects affected by the current code change highlighted.
+[The first command](/{{framework}}/cli/dep-graph) launches a web browser with repository's dependency graph rendered visually. You can add the `--watch` flag to watch for changes to the dep grpah and update the view in-browser. [The second command](/{{framework}}/cli/affected-dep-graph) renders the same graph with projects affected by the current code change highlighted.
 
 **List installed plugins:**
 

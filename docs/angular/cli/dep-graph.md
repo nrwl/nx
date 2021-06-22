@@ -54,6 +54,12 @@ Show the graph where every node is either an ancestor or a descendant of todos-f
 nx dep-graph --focus=todos-feature-main --exclude=project-one,project-two
 ```
 
+Watch for changes to dep graph and update in-browser:
+
+```bash
+nx dep-graph --watch
+```
+
 ## Options
 
 ### exclude
