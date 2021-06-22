@@ -1,5 +1,6 @@
-import { getWorkspaceLayout, Tree } from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
 import * as ts from 'typescript';
+import { getSourceNodes } from './typescript';
 import { findNodes } from './typescript/find-nodes';
 
 function nodesByPosition(first: ts.Node, second: ts.Node): number {
@@ -258,4 +259,65 @@ export function replaceNodeValue(
     content,
     node.getText()
   );
+}
+
+export function addParameterToConstructor(
+  tree: Tree,
+  source: ts.SourceFile,
+  modulePath: string,
+  opts: { className: string; param: string }
+): ts.SourceFile {
+  const clazz = findClass(source, opts.className);
+  const constructor = clazz.members.filter(
+    (m) => m.kind === ts.SyntaxKind.Constructor
+  )[0];
+
+  if (constructor) {
+    throw new Error('Should be tested'); // TODO: check this
+  }
+
+  return addMethod(tree, source, modulePath, {
+    className: opts.className,
+    methodHeader: `constructor(${opts.param})`,
+  });
+}
+
+export function addMethod(
+  tree: Tree,
+  source: ts.SourceFile,
+  modulePath: string,
+  opts: { className: string; methodHeader: string; body?: string }
+): ts.SourceFile {
+  const clazz = findClass(source, opts.className);
+  const body = opts.body
+    ? `
+${opts.methodHeader} {
+${opts.body}
+}
+`
+    : `
+${opts.methodHeader} {}
+`;
+
+  return insertChange(tree, source, modulePath, clazz.end - 1, body);
+}
+
+export function findClass(
+  source: ts.SourceFile,
+  className: string,
+  silent: boolean = false
+): ts.ClassDeclaration {
+  const nodes = getSourceNodes(source);
+
+  const clazz = nodes.filter(
+    (n) =>
+      n.kind === ts.SyntaxKind.ClassDeclaration &&
+      (<any>n).name.text === className
+  )[0] as ts.ClassDeclaration;
+
+  if (!clazz && !silent) {
+    throw new Error(`Cannot find class '${className}'.`);
+  }
+
+  return clazz;
 }

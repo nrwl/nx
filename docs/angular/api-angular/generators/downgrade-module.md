@@ -1,6 +1,6 @@
 # downgrade-module
 
-Setup Downgrade Module
+Setup Downgrade Module.
 
 ## Usage
 
@@ -40,7 +40,7 @@ The name of the main AngularJS module.
 
 Type: `string`
 
-The name of the project
+The name of the project.
 
 ### skipFormat
 
@@ -48,7 +48,7 @@ Default: `false`
 
 Type: `boolean`
 
-Skip formatting files
+Skip formatting files.
 
 ### skipPackageJson
 
@@ -56,4 +56,4 @@ Default: `false`
 
 Type: `boolean`
 
-Do not add @angular/upgrade to package.json (e.g., --skipPackageJson)
+Do not add @angular/upgrade to package.json (e.g., --skipPackageJson).
