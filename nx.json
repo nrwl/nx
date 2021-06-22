@@ -115,7 +115,7 @@
       "implicitDependencies": ["web"]
     },
     "e2e-workspace": {
-      "implicitDependencies": ["create-nx-workspace"]
+      "implicitDependencies": ["create-nx-workspace", "angular", "react"]
     },
     "gatsby": {
       "tags": []
