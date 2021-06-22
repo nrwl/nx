@@ -19,5 +19,6 @@
     "jasmine-marbles",
     "rxjs-for-await",
     "webpack-merge"
-  ]
+  ],
+  "keepLifecycleScripts": true
 }
