@@ -26,7 +26,7 @@ describe('karmaProject', () => {
 
     await applicationGenerator(tree, {
       name: 'app1',
-      unitTestRunner: 'none',
+      unitTestRunner: UnitTestRunner.None,
     });
   });
 

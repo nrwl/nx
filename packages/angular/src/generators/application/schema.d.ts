@@ -1,6 +1,6 @@
-import { E2eTestRunner } from '../../utils/test-runners';
-import { UnitTestRunner } from '../../utils/UnitTestRunner';
 import { Linter } from '@nrwl/linter';
+import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
+import type { Styles } from '../utils/types';
 
 export interface Schema {
   name: string;
@@ -10,7 +10,7 @@ export interface Schema {
   viewEncapsulation?: 'Emulated' | 'Native' | 'None';
   routing?: boolean;
   prefix?: string;
-  style?: string;
+  style?: Styles;
   skipTests?: boolean;
   directory?: string;
   tags?: string;
