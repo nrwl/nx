@@ -15,7 +15,6 @@ export function updateComponentStyles(host: Tree, options: NormalizedSchema) {
       css: `${options.appProjectRoot}/src/app/app.component.css`,
       scss: `${options.appProjectRoot}/src/app/app.component.scss`,
       less: `${options.appProjectRoot}/src/app/app.component.less`,
-      styl: `${options.appProjectRoot}/src/app/app.component.styl`,
     };
     host.write(filesMap[options.style], content);
 
