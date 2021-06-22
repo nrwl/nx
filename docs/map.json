@@ -931,7 +931,7 @@
           {
             "name": "Using Generators",
             "id": "using-schematics",
-            "file": "shared/generators/using-generators"
+            "file": "angular/generators/using-generators"
           },
           {
             "name": "Workspace Generators",
