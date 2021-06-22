@@ -17,12 +17,12 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          # - windows-latest
+          - windows-latest
         include:
           - os: ubuntu-latest
             os-name: ubuntu
-          # - os: windows-latest
-          #   os-name: windows
+          - os: windows-latest
+            os-name: windows
         exclude:
           - os: windows-latest
             package_manager: npm
@@ -32,18 +32,18 @@ jobs:
           - '14'
           # - '15'
         package_manager:
-          # - npm
+          - npm
           - yarn
-          # - pnpm
+          - pnpm
         packages:
-          # - e2e-angular
-          # - e2e-cli,e2e-nx-plugin,e2e-jest,e2e-linter,e2e-cypress
-          # - e2e-cypress
-          # - e2e-gatsby,e2e-react
-          # - e2e-next
-          # - e2e-node
-          # - e2e-web
-          # - e2e-storybook
+          - e2e-angular
+          - e2e-cli,e2e-nx-plugin,e2e-jest,e2e-linter,e2e-cypress
+          - e2e-cypress
+          - e2e-gatsby,e2e-react
+          - e2e-next
+          - e2e-node
+          - e2e-web
+          - e2e-storybook
           - e2e-workspace
       fail-fast: false
 
@@ -113,8 +113,7 @@ jobs:
         sudo: ${{ matrix.os != 'windows-latest' }} # disable sudo for windows debugging
 
   report:
-    # if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
-    if: ${{ always() }}
+    if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
     needs: e2e
     runs-on: ubuntu-latest
     name: Report status
@@ -122,7 +121,7 @@ jobs:
       - name: Send notification
         uses: ravsamhq/notify-slack-action@v1
         with:
-          status: ${{ needs.e2e.status }}
+          status: ${{ needs.e2e.result }}
           message_format: '{emoji} *{workflow}* {status_message} (last commit <{commit_url}|{commit_sha}>)'
           notification_title: '{workflow} has {status_message}'
           footer: '<{run_url}|View Run>'
