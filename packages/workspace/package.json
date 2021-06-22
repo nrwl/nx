@@ -59,6 +59,8 @@
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
+    "chokidar": "^3.5.1",
+    "cosmiconfig": "^4.0.0",
     "fs-extra": "^9.1.0",
     "dotenv": "8.2.0",
     "glob": "7.1.4",

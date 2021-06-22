@@ -2182,6 +2182,7 @@
                   "with": "dep-graph/dep-graph/src/environments/environment.release.ts"
                 }
               ],
+              "assets": [],
               "optimization": true,
               "outputHashing": "none",
               "sourceMap": false,
@@ -2189,6 +2190,29 @@
               "namedChunks": false,
               "extractLicenses": true,
               "vendorChunk": false,
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                }
+              ]
+            },
+            "watch": {
+              "fileReplacements": [
+                {
+                  "replace": "dep-graph/dep-graph/src/environments/environment.ts",
+                  "with": "dep-graph/dep-graph/src/environments/environment.watch.ts"
+                }
+              ],
+              "assets": [],
+              "optimization": false,
+              "outputHashing": "none",
+              "sourceMap": true,
+              "extractCss": true,
+              "namedChunks": false,
+              "extractLicenses": false,
+              "vendorChunk": true,
               "budgets": [
                 {
                   "type": "initial",
@@ -2208,6 +2232,9 @@
           "configurations": {
             "release": {
               "buildTarget": "dep-graph-dep-graph:build-base:release"
+            },
+            "watch": {
+              "buildTarget": "dep-graph-dep-graph:build-base:watch"
             }
           }
         },

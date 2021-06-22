@@ -1,9 +1,14 @@
 import { WorkspaceConfiguration } from '@nrwl/devkit';
-import { ProjectGraph, ProjectGraphNode } from '@nrwl/workspace';
+import {
+  DepGraphClientResponse,
+  ProjectGraph,
+  ProjectGraphNode,
+} from '@nrwl/workspace';
 import { ProjectGraphList } from './graphs';
 
 export declare global {
   export interface Window {
+    watch: boolean;
     projects: ProjectGraphNode[];
     graph: ProjectGraph;
     filteredProjects: ProjectGraphNode[];
@@ -19,6 +24,8 @@ export declare global {
       libsDir: string;
       appsDir: string;
     };
+    projectGraphResponse: DepGraphClientResponse;
+    localMode: 'serve' | 'build';
   }
 }
 

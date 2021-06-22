@@ -401,6 +401,11 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
     .option('port', {
       describe: 'Bind the dep graph server to a specific port.',
       type: 'number',
+    })
+    .option('watch', {
+      describe: 'Watch for changes to dep graph and update in-browser',
+      type: 'boolean',
+      default: false,
     });
 }
 

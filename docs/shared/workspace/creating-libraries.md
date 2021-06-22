@@ -12,7 +12,7 @@ The more granular your libraries are, the more effective `nx affected` and Nx's 
 
 ### 2. Visualizing Architecture
 
-The `nx dep-graph` command generates a graph of how apps and libraries depend on each other. If most of your code lives in a few giant libraries, this visualization doesn't provide much value.
+The `nx dep-graph` command generates a graph of how apps and libraries depend on each other. If most of your code lives in a few giant libraries, this visualization doesn't provide much value. Adding the `--watch` flag to the command will update the visualization in-browser as you make changes.
 
 ### 3. Enforcing Constraints
 
