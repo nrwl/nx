@@ -936,12 +936,12 @@
           {
             "name": "Workspace Generators",
             "id": "workspace-generators",
-            "file": "shared/generators/workspace-generators"
+            "file": "angular/generators/workspace-generators"
           },
           {
             "name": "Composing Generators",
             "id": "composing-generators",
-            "file": "shared/generators/composing-generators"
+            "file": "angular/generators/composing-generators"
           },
           {
             "name": "Generator Options",

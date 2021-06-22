@@ -16,24 +16,3 @@ export default async function (tree: Tree, schema: any) {
   );
 }
 ```
-
-## Using Angular Devkit Schematics
-
-If you need to use a generator written with the Angular devkit (also known as a schematic) inside of an Nx devkit generator, you need to wrap the schematic inside the `wrapAngularDevkitSchematic` function.
-
-Note: All Nrwl maintained schematics have been migrated over to the Nx Devkit, so this should only be necessary for third party schematics.
-
-```typescript
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-
-export default async function (tree: Tree, schema: any) {
-  const libraryGenerator = wrapAngularDevkitSchematic(
-    '@nrwl/angular', // plugin name
-    'lib' // schematic name
-  );
-  await libraryGenerator(
-    tree, // virtual file system tree
-    { name: schema.name } // options for the generator
-  );
-}
-```

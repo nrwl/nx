@@ -77,6 +77,20 @@ To run a generator, invoke the `nx workspace-generator` command with the name of
 nx workspace-generator my-generator mylib
 ```
 
+## Running a workspace schematic created with @angular-devkit
+
+Generators that are created using the `@angular-devkit` are called schematics. Workspace schematics that have been created with the `@angular-devkit` will omit the `"cli": "nx"` property in `schema.json`. Nx will recognize this and correctly run the schematic using the same command as an `@nrwl/devkit` generator.
+
+```bash
+nx workspace-generator my-schematic mylib
+```
+
+The command is also aliased to the previous `workspace-schematic` command, so this still works:
+
+```bash
+nx workspace-schematic my-schematic mylib
+```
+
 ## Debugging Workspace generators
 
 ### With Visual Studio Code

@@ -5,7 +5,7 @@
 To create a TypeScript schema to use in your generator function, define a TypeScript file next to your schema.json named `schema.ts`. Inside the `schema.ts`, define an interface to match the properties in your schema.json file, and whether they are required.
 
 ```typescript
-export interface SchematicOptions {
+export interface GeneratorOptions {
   name: string;
   type?: string;
 }
@@ -17,7 +17,7 @@ Import the TypeScript schema into your generator file and replace the any in you
 import { Tree, formatFiles, installPackagesTask } from '@nrwl/devkit';
 import { libraryGenerator } from '@nrwl/workspace';
 
-export default async function (tree: Tree, schema: SchematicOptions) {
+export default async function (tree: Tree, schema: GeneratorOptions) {
   await libraryGenerator(tree, { name: `${schema.name}-${schema.type || ''}` });
   await formatFiles(tree);
   return () => {
