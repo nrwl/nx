@@ -28,6 +28,7 @@ export type WorkspaceConfiguration = Omit<
  * @param host - the file system tree
  * @param projectName - unique name. Often directories are part of the name (e.g., mydir-mylib)
  * @param projectConfiguration - project configuration
+ * @param standalone - should the project use package.json? If false, the project config is inside workspace.json
  */
 export function addProjectConfiguration(
   host: Tree,

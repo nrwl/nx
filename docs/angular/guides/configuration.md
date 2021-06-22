@@ -94,6 +94,8 @@ For instance, the following configures `mylib`.
 
 > Nx uses the architect library built by the Angular team at Google. The naming reflects that. Important to note: it's a general purpose library that **does not** have any dependency on Angular.
 
+> Projects utilizing `project.json` files will not be present in `angular.json`.
+
 ### Targets
 
 Let's look at the simple architect target:
@@ -268,6 +270,33 @@ The following command will generate a new library: `nx g @nrwl/angular:lib mylib
 
 Your `angular.json` file can be renamed to `workspace.json` and Nx will process it in the same way. The `workspace.json` has one additional top level property `version`. Setting `version` to 1 means the `workspace.json` file syntax is identical to `angular.json` When the `version` of `workspace.json` is set to 2, `targets`, `generators` and `executor` properties are used instead of the version 1 properties `architect`, `schematics` and `builder`.
 
+## project.json
+
+Project configurations can also be independent files, referenced by `angular.json`. For instance, an `angular.json` may contain projects configured as below.
+
+```json
+{
+  "projects": {
+    "mylib": "libs/mylib"
+  }
+}
+```
+
+This tells Nx that all configuration for that project is found in the `libs/mylib/project.json` file. This file contains a combination of the project's configuration from both `angular.json` and `nx.json`.
+
+```json
+{
+  "mylib": {
+    "root": "libs/mylib/",
+    "sourceRoot": "libs/mylib/src",
+    "projectType": "library",
+    "targets": {},
+    "tags": [],
+    "implicitDependencies": []
+  }
+}
+```
+
 ## nx.json
 
 The `nx.json` file contains extra configuration options mostly related to the project graph.
@@ -317,6 +346,8 @@ The `nx.json` file contains extra configuration options mostly related to the pr
   }
 }
 ```
+
+> Projects utilizing `project.json` files will not be present in `nx.json`.
 
 **NPM Scope**
 
