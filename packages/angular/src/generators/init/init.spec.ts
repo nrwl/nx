@@ -4,6 +4,7 @@ import { Linter } from '@nrwl/linter';
 
 import init from './init';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
+import { Styles } from '../utils/types';
 
 describe('init', () => {
   let host: Tree;
@@ -302,9 +303,9 @@ describe('init', () => {
       expect(workspaceJson.cli.defaultCollection).toEqual('@nrwl/angular');
     });
 
-    it.each(['css', 'scss', 'styl', 'less'])(
+    it.each(['css', 'scss', 'less'])(
       'should set "%s" as default style extension for components',
-      async (style) => {
+      async (style: Styles) => {
         // ACT
         await init(host, {
           unitTestRunner: UnitTestRunner.Jest,

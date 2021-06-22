@@ -15,8 +15,6 @@ import { applicationGenerator } from './application';
 
 import * as devkit from '@nrwl/devkit';
 
-const prettier = require('prettier');
-
 describe('app', () => {
   let appTree: Tree;
 
@@ -452,7 +450,9 @@ describe('app', () => {
 
     describe('karma', () => {
       it('should generate a karma config', async () => {
-        await generateApp(appTree, 'myApp', { unitTestRunner: 'karma' });
+        await generateApp(appTree, 'myApp', {
+          unitTestRunner: UnitTestRunner.Karma,
+        });
 
         expect(appTree.exists('apps/my-app/tsconfig.spec.json')).toBeTruthy();
         expect(appTree.exists('apps/my-app/karma.conf.js')).toBeTruthy();
