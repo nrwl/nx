@@ -58,8 +58,14 @@ export async function conversionGenerator(
   /**
    * Convert the root tslint.json and apply the converted rules to the root .eslintrc.json
    */
-  const rootConfigInstallTask = await convertRootTSLintConfig(
-    projectConverter,
+  const rootConfigInstallTask = await projectConverter.convertRootTSLintConfig(
+    (json) => {
+      json.overrides = [
+        { files: ['*.ts'], rules: {} },
+        { files: ['*.html'], rules: {} },
+      ];
+      return applyAngularRulesToCorrectOverrides(json);
+    },
     rootEslintConfigExists
   );
 
@@ -128,34 +134,6 @@ export async function conversionGenerator(
 }
 
 export const conversionSchematic = convertNxGenerator(conversionGenerator);
-
-/**
- * If root eslint already exists, we will not override it with converted tslint
- * as this might break existing configuration in place. This is the common scenario
- * when large projects are migrating one project at a time and apply custom
- * changes to root config in the meantime.
- *
- * We warn user of this action in case .eslintrc.json was created accidentally
- */
-async function convertRootTSLintConfig(
-  projectConverter: ProjectConverter,
-  rootEslintConfigExists?: boolean
-): Promise<GeneratorCallback> {
-  if (rootEslintConfigExists) {
-    logger.warn(
-      `Root '.eslintrc.json' found. Assuming conversion was already run for other projects.`
-    );
-    return Promise.resolve(() => {});
-  } else {
-    return await projectConverter.convertRootTSLintConfig((json) => {
-      json.overrides = [
-        { files: ['*.ts'], rules: {} },
-        { files: ['*.html'], rules: {} },
-      ];
-      return applyAngularRulesToCorrectOverrides(json);
-    });
-  }
-}
 
 /**
  * In the case of Angular lint rules, we need to apply them to correct override depending upon whether
