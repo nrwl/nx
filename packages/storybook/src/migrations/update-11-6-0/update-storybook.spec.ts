@@ -21,7 +21,7 @@ describe('Update 11-6-0/12-3-0', () => {
     await updateStorybook(tree);
     expect(
       readJson(tree, 'package.json').devDependencies['@storybook/angular']
-    ).toBe('6.2.9');
+    ).toBe('^6.2.7');
   });
 
   it('should not update storybook versions if storybook is already above 6.2.7', async () => {
