@@ -26,7 +26,6 @@ import {
   deduplicateOverrides,
   ensureESLintPluginsAreInstalled,
 } from './utils';
-import chalk = require('chalk');
 
 /**
  * Common schema used by all implementations of convert-tslint-to-eslint generators
@@ -156,13 +155,6 @@ export class ProjectConverter {
     if (this.ignoreExistingTslintConfig) {
       return Promise.resolve(() => {});
     }
-
-    // if (this.host.exists('.eslintrc.json')) {
-    //   logger.info(
-    //     `Root ${chalk.bold('.eslintrc.json')} found. Assuming conversion was already run for other projects.`
-    //   );
-    //   return Promise.resolve(() => { });
-    // }
 
     const convertedRoot = await convertTSLintConfig(
       this.rootTSLintJson,
