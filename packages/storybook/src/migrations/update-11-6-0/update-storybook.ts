@@ -21,6 +21,16 @@ function maybeUpdateVersion(tree: Tree) {
       '@storybook/addon-knobs',
     ];
     storybookPackages.forEach((storybookPackageName) => {
+      if (json.dependencies[storybookPackageName]) {
+        const version = checkAndCleanWithSemver(
+          storybookPackageName,
+          json.dependencies[storybookPackageName]
+        );
+        if (gte(version, '6.0.0') && lt(version, '6.2.7')) {
+          json.dependencies[storybookPackageName] = '^6.2.7';
+          needsInstall = true;
+        }
+      }
       if (json.devDependencies[storybookPackageName]) {
         const version = checkAndCleanWithSemver(
           storybookPackageName,
