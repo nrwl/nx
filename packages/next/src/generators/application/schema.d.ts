@@ -14,4 +14,5 @@ export interface Schema {
   skipWorkspaceJson?: boolean;
   js?: boolean;
   setParserOptionsProject?: boolean;
+  standaloneConfig?: boolean;
 }

@@ -25,6 +25,7 @@ describe('updateProjectRootFiles', () => {
 
     await libraryGenerator(tree, {
       name: 'my-source',
+      standaloneConfig: false,
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(testFilePath, testFile);

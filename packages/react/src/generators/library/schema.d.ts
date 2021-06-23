@@ -21,4 +21,5 @@ export interface Schema {
   globalCss?: boolean;
   strict?: boolean;
   setParserOptionsProject?: boolean;
+  standaloneConfig?: boolean;
 }

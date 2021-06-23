@@ -22,10 +22,15 @@ export function addProject(host, options: NormalizedSchema) {
     },
   };
 
-  addProjectConfiguration(host, options.projectName, {
-    ...project,
-    ...nxConfig,
-  });
+  addProjectConfiguration(
+    host,
+    options.projectName,
+    {
+      ...project,
+      ...nxConfig,
+    },
+    options.standaloneConfig
+  );
 }
 
 function maybeJs(options: NormalizedSchema, path: string): string {

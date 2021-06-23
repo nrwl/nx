@@ -21,6 +21,8 @@ describe('Web Components Applications', () => {
     const appName = uniq('app');
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
 
+    checkFilesDoNotExist(`apps/${appName}/project.json`);
+
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
 
@@ -59,6 +61,18 @@ describe('Web Components Applications', () => {
       expect(await killPorts()).toBeTruthy();
     }
   }, 500000);
+
+  it('should be able to generate a web app with standaloneConfig', async () => {
+    const appName = uniq('app');
+    runCLI(
+      `generate @nrwl/web:app ${appName} --no-interactive --standalone-config`
+    );
+
+    checkFilesExist(`apps/${appName}/project.json`);
+
+    const lintResults = runCLI(`lint ${appName}`);
+    expect(lintResults).toContain('All files pass linting.');
+  }, 120000);
 
   it('should remove previous output before building', async () => {
     const appName = uniq('app');

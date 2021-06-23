@@ -102,6 +102,7 @@ export async function createTestUIApp(
     unitTestRunner: 'none',
     name: libName,
     js: plainJS,
+    standaloneConfig: false,
   });
   return appTree;
 }

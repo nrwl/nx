@@ -117,6 +117,11 @@
       "type": "boolean",
       "description": "Creates an application with stricter type checking and build optimization options.",
       "default": true
+    },
+    "standaloneConfig": {
+      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
+      "type": "boolean",
+      "default": false
     }
   },
   "required": []

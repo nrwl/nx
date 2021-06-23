@@ -23,9 +23,11 @@ describe('updateRootJestConfig', () => {
 
     await libraryGenerator(tree, {
       name: 'my-lib',
+      standaloneConfig: false,
     });
     await libraryGenerator(tree, {
       name: 'my-other-lib',
+      standaloneConfig: false,
     });
 
     tree.write(

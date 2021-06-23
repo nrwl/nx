@@ -27,6 +27,7 @@ describe('updateEslint', () => {
     await libraryGenerator(tree, {
       name: 'my-lib',
       linter: Linter.TsLint,
+      standaloneConfig: false,
     });
 
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
@@ -40,6 +41,7 @@ describe('updateEslint', () => {
     await libraryGenerator(tree, {
       name: 'my-lib',
       linter: Linter.EsLint,
+      standaloneConfig: false,
     });
 
     // This step is usually handled elsewhere
@@ -66,6 +68,7 @@ describe('updateEslint', () => {
       name: 'my-lib',
       linter: Linter.EsLint,
       setParserOptionsProject: true,
+      standaloneConfig: false,
     });
 
     // This step is usually handled elsewhere

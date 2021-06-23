@@ -594,8 +594,11 @@ export function updatePackageJsonDependencies(
 export function getProjectConfig(host: Tree, name: string): any {
   const workspaceJson = readJsonInTree(host, getWorkspacePath(host));
   const projectConfig = workspaceJson.projects[name];
+
   if (!projectConfig) {
     throw new Error(`Cannot find project '${name}'`);
+  } else if (typeof projectConfig === 'string') {
+    return readJsonInTree(host, projectConfig);
   } else {
     return projectConfig;
   }

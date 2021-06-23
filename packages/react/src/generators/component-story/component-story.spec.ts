@@ -426,6 +426,7 @@ export async function createTestUILib(
     skipTsConfig: false,
     style: 'css',
     unitTestRunner: 'jest',
+    standaloneConfig: false,
   });
 
   if (useEsLint) {

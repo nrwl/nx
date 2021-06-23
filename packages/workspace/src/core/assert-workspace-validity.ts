@@ -12,20 +12,6 @@ export function assertWorkspaceValidity(
   const workspaceJsonProjects = Object.keys(workspaceJson.projects);
   const nxJsonProjects = Object.keys(nxJson.projects);
 
-  if (minus(workspaceJsonProjects, nxJsonProjects).length > 0) {
-    output.error({
-      title: 'Configuration Error',
-      bodyLines: [
-        `${workspaceFileName()} and nx.json are out of sync. The following projects are missing in nx.json: ${minus(
-          workspaceJsonProjects,
-          nxJsonProjects
-        ).join(', ')}`,
-      ],
-    });
-
-    process.exit(1);
-  }
-
   if (minus(nxJsonProjects, workspaceJsonProjects).length > 0) {
     output.error({
       title: 'Configuration Error',

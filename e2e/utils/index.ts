@@ -1,4 +1,5 @@
 import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
+import { inlineProjectConfigurations } from '@nrwl/tao/src/shared/workspace';
 import { ChildProcess, exec, execSync } from 'child_process';
 import {
   copySync,
@@ -19,6 +20,7 @@ const kill = require('kill-port');
 const isWindows = require('is-windows');
 import { check as portCheck } from 'tcp-port-used';
 import { parseJson } from '@nrwl/devkit';
+
 import chalk = require('chalk');
 import treeKill = require('tree-kill');
 import { promisify } from 'util';
@@ -36,7 +38,7 @@ interface RunCmdOpts {
 }
 
 export function currentCli() {
-  return process.env.SELECTED_CLI ?? 'nx';
+  return process.env.SELECTED_CLI || 'nx';
 }
 
 export function isNightlyRun() {
@@ -443,7 +445,10 @@ function setMaxWorkers() {
     const workspace = readJson(workspaceFile);
 
     Object.keys(workspace.projects).forEach((appName) => {
-      const project = workspace.projects[appName];
+      let project = workspace.projects[appName];
+      if (typeof project === 'string') {
+        project = readJson(path.join(project, 'project.json'));
+      }
       const { build } = project.targets ?? project.architect;
 
       if (!build) {

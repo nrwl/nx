@@ -31,7 +31,10 @@ describe('app', () => {
 
   describe('not nested', () => {
     it('should update workspace.json', async () => {
-      await applicationGenerator(tree, { name: 'myNodeApp' });
+      await applicationGenerator(tree, {
+        name: 'myNodeApp',
+        standaloneConfig: false,
+      });
       const workspaceJson = readJson(tree, '/workspace.json');
       const project = workspaceJson.projects['my-node-app'];
       expect(project.root).toEqual('apps/my-node-app');
@@ -79,7 +82,11 @@ describe('app', () => {
     });
 
     it('should update nx.json', async () => {
-      await applicationGenerator(tree, { name: 'myNodeApp', tags: 'one,two' });
+      await applicationGenerator(tree, {
+        name: 'myNodeApp',
+        tags: 'one,two',
+        standaloneConfig: false,
+      });
       const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-node-app': {
@@ -89,7 +96,10 @@ describe('app', () => {
     });
 
     it('should generate files', async () => {
-      await applicationGenerator(tree, { name: 'myNodeApp' });
+      await applicationGenerator(tree, {
+        name: 'myNodeApp',
+        standaloneConfig: false,
+      });
       expect(tree.exists(`apps/my-node-app/jest.config.js`)).toBeTruthy();
       expect(tree.exists('apps/my-node-app/src/main.ts')).toBeTruthy();
 
@@ -158,6 +168,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         directory: 'myDir',
+        standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, '/workspace.json');
 
@@ -183,6 +194,7 @@ describe('app', () => {
         name: 'myNodeApp',
         directory: 'myDir',
         tags: 'one,two',
+        standaloneConfig: false,
       });
       const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
@@ -201,6 +213,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         directory: 'myDir',
+        standaloneConfig: false,
       });
 
       // Make sure these exist
@@ -237,6 +250,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         unitTestRunner: 'none',
+        standaloneConfig: false,
       });
       expect(tree.exists('jest.config.js')).toBeFalsy();
       expect(tree.exists('apps/my-node-app/src/test-setup.ts')).toBeFalsy();
@@ -268,6 +282,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         frontendProject: 'my-frontend',
+        standaloneConfig: false,
       });
 
       expect(tree.exists('apps/my-frontend/proxy.conf.json')).toBeTruthy();
@@ -284,11 +299,13 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'cart',
         frontendProject: 'my-frontend',
+        standaloneConfig: false,
       });
 
       await applicationGenerator(tree, {
         name: 'billing',
         frontendProject: 'my-frontend',
+        standaloneConfig: false,
       });
 
       expect(tree.exists('apps/my-frontend/proxy.conf.json')).toBeTruthy();
@@ -305,6 +322,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         frontendProject: 'myFrontend',
+        standaloneConfig: false,
       });
 
       expect(tree.exists('apps/my-frontend/proxy.conf.json')).toBeTruthy();

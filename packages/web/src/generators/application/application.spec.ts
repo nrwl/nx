@@ -14,7 +14,10 @@ describe('app', () => {
 
   describe('not nested', () => {
     it('should update workspace.json', async () => {
-      await applicationGenerator(tree, { name: 'myApp' });
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        standaloneConfig: false,
+      });
       const workspaceJson = readJson(tree, '/workspace.json');
 
       expect(workspaceJson.projects['my-app'].root).toEqual('apps/my-app');
@@ -25,7 +28,11 @@ describe('app', () => {
     });
 
     it('should update nx.json', async () => {
-      await applicationGenerator(tree, { name: 'myApp', tags: 'one,two' });
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        tags: 'one,two',
+        standaloneConfig: false,
+      });
       const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
         'my-app': {
@@ -39,7 +46,10 @@ describe('app', () => {
     });
 
     it('should generate files', async () => {
-      await applicationGenerator(tree, { name: 'myApp' });
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        standaloneConfig: false,
+      });
       expect(tree.exists('apps/my-app/src/main.ts')).toBeTruthy();
       expect(tree.exists('apps/my-app/src/app/app.element.ts')).toBeTruthy();
       expect(
@@ -110,6 +120,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         directory: 'myDir',
+        standaloneConfig: false,
       });
       const workspaceJson = readJson(tree, '/workspace.json');
 
@@ -126,6 +137,7 @@ describe('app', () => {
         name: 'myApp',
         directory: 'myDir',
         tags: 'one,two',
+        standaloneConfig: false,
       });
       const nxJson = readJson<NxJsonConfiguration>(tree, '/nx.json');
       expect(nxJson.projects).toEqual({
@@ -148,6 +160,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         directory: 'myDir',
+        standaloneConfig: false,
       });
 
       // Make sure these exist
@@ -184,6 +197,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         directory: 'myDir',
+        standaloneConfig: false,
       });
       expect(
         tree.read('apps/my-dir/my-app/src/app/app.element.ts', 'utf-8')
@@ -199,6 +213,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         style: 'scss',
+        standaloneConfig: false,
       });
       expect(tree.exists('apps/my-app/src/app/app.element.scss')).toEqual(true);
     });
@@ -207,6 +222,7 @@ describe('app', () => {
   it('should setup jest without serializers', async () => {
     await applicationGenerator(tree, {
       name: 'my-App',
+      standaloneConfig: false,
     });
 
     expect(tree.read('apps/my-app/jest.config.js', 'utf-8')).not.toContain(
@@ -217,6 +233,7 @@ describe('app', () => {
   it('should setup the nrwl web build builder', async () => {
     await applicationGenerator(tree, {
       name: 'my-App',
+      standaloneConfig: false,
     });
     const workspaceJson = readJson(tree, 'workspace.json');
     const architectConfig = workspaceJson.projects['my-app'].architect;
@@ -259,6 +276,7 @@ describe('app', () => {
   it('should setup the nrwl web dev server builder', async () => {
     await applicationGenerator(tree, {
       name: 'my-App',
+      standaloneConfig: false,
     });
     const workspaceJson = readJson(tree, 'workspace.json');
     const architectConfig = workspaceJson.projects['my-app'].architect;
@@ -274,6 +292,7 @@ describe('app', () => {
   it('should setup the eslint builder', async () => {
     await applicationGenerator(tree, {
       name: 'my-App',
+      standaloneConfig: false,
     });
     const workspaceJson = readJson(tree, 'workspace.json');
 
@@ -287,7 +306,11 @@ describe('app', () => {
 
   describe('--prefix', () => {
     it('should use the prefix in the index.html', async () => {
-      await applicationGenerator(tree, { name: 'myApp', prefix: 'prefix' });
+      await applicationGenerator(tree, {
+        name: 'myApp',
+        prefix: 'prefix',
+        standaloneConfig: false,
+      });
 
       expect(tree.read('apps/my-app/src/index.html', 'utf-8')).toContain(
         '<prefix-root></prefix-root>'
@@ -300,6 +323,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         unitTestRunner: 'none',
+        standaloneConfig: false,
       });
       expect(tree.exists('jest.config.js')).toBeFalsy();
       expect(
@@ -328,6 +352,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myApp',
         e2eTestRunner: 'none',
+        standaloneConfig: false,
       });
       expect(tree.exists('apps/my-app-e2e')).toBeFalsy();
       const workspaceJson = readJson(tree, 'workspace.json');

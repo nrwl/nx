@@ -56,23 +56,28 @@ function addFiles(host: Tree, options: NormalizedSchema) {
 }
 
 function updateWorkspaceConfiguration(host: Tree, options: NormalizedSchema) {
-  addProjectConfiguration(host, options.projectName, {
-    root: options.projectRoot,
-    projectType: 'application',
-    sourceRoot: `${options.projectRoot}/src`,
-    targets: {
-      e2e: {
-        executor: '@nrwl/nx-plugin:e2e',
-        options: {
-          target: `${options.pluginName}:build`,
-          npmPackageName: options.npmPackageName,
-          pluginOutputPath: options.pluginOutputPath,
+  addProjectConfiguration(
+    host,
+    options.projectName,
+    {
+      root: options.projectRoot,
+      projectType: 'application',
+      sourceRoot: `${options.projectRoot}/src`,
+      targets: {
+        e2e: {
+          executor: '@nrwl/nx-plugin:e2e',
+          options: {
+            target: `${options.pluginName}:build`,
+            npmPackageName: options.npmPackageName,
+            pluginOutputPath: options.pluginOutputPath,
+          },
         },
       },
+      tags: [],
+      implicitDependencies: [options.pluginName],
     },
-    tags: [],
-    implicitDependencies: [options.pluginName],
-  });
+    options.standaloneConfig
+  );
 }
 
 async function addJest(host: Tree, options: NormalizedSchema) {
