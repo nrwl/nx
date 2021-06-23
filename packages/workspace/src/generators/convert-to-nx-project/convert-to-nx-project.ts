@@ -17,7 +17,6 @@ import {
 } from '@nrwl/devkit';
 
 import { Schema } from './schema';
-import { checkIfNxProjectFileExists } from './utils/check-if-nx-project-file-exists';
 import { getProjectConfigurationPath } from './utils/get-project-configuration-path';
 
 export const SCHEMA_OPTIONS_ARE_MUTUALLY_EXCLUSIVE =
@@ -52,11 +51,11 @@ export async function convertToNxProjectGenerator(host: Tree, schema: Schema) {
       ][]);
 
   for (const [project, configuration] of projects) {
-    if (checkIfNxProjectFileExists(host, configuration)) {
-      logger.warn(`Skipping ${project} since ${configuration}`);
+    const configPath = getProjectConfigurationPath(configuration);
+    if (host.exists(configPath)) {
+      logger.warn(`Skipping ${project} since ${configPath} already exists.`);
       continue;
     }
-    const configPath = getProjectConfigurationPath(configuration);
 
     writeJson(host, configPath, configuration);
 
