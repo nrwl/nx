@@ -56,6 +56,24 @@ describe('Node Applications', () => {
     expect(result).toContain('Hello World!');
   }, 300000);
 
+  // TODO: This test fails in CI, but succeeds locally. It should be re-enabled once the reasoning is understood.
+  xit('should be able to generate an empty application with standalone configuration', async () => {
+    const nodeapp = uniq('nodeapp');
+
+    runCLI(
+      `generate @nrwl/node:app ${nodeapp} --linter=eslint --standaloneConfig`
+    );
+
+    updateFile(`apps/${nodeapp}/src/main.ts`, `console.log('Hello World!');`);
+    await runCLIAsync(`build ${nodeapp}`);
+
+    checkFilesExist(`dist/apps/${nodeapp}/main.js`);
+    const result = execSync(`node dist/apps/${nodeapp}/main.js`, {
+      cwd: tmpProjPath(),
+    }).toString();
+    expect(result).toContain('Hello World!');
+  }, 300000);
+
   xit('should be able to generate an express application', async () => {
     const nodeapp = uniq('nodeapp');
     const port = 3334;

@@ -14,6 +14,7 @@ describe('updateStorybookConfig', () => {
   it('should handle storybook config not existing', async () => {
     await libraryGenerator(tree, {
       name: 'my-source',
+      standaloneConfig: false,
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
 
@@ -38,6 +39,7 @@ describe('updateStorybookConfig', () => {
 
     await libraryGenerator(tree, {
       name: 'my-source',
+      standaloneConfig: false,
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(storybookMainPath, storybookMain);
@@ -67,6 +69,7 @@ describe('updateStorybookConfig', () => {
 
     await libraryGenerator(tree, {
       name: 'my-source',
+      standaloneConfig: false,
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(storybookWebpackConfigPath, storybookWebpackConfig);

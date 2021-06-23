@@ -17,6 +17,7 @@ describe('lib', () => {
     js: false,
     pascalCaseFiles: false,
     strict: false,
+    standaloneConfig: false,
   };
 
   beforeEach(() => {

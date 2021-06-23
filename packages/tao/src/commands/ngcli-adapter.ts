@@ -17,14 +17,16 @@ import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 import { GenerateOptions } from './generate';
 import { Tree } from '../shared/tree';
 import {
+  inlineProjectConfigurations,
+  toNewFormat,
   toNewFormatOrNull,
   toOldFormatOrNull,
   workspaceConfigName,
 } from '@nrwl/tao/src/shared/workspace';
 import { dirname, extname, resolve, join } from 'path';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
-import { Observable, of } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { EMPTY, Observable, of, concat } from 'rxjs';
+import { catchError, map, switchMap, tap, toArray } from 'rxjs/operators';
 import { NX_ERROR, NX_PREFIX } from '../shared/logger';
 import { readJsonFile } from '../utils/fileutils';
 import { parseJson, serializeJson } from '../utils/json';
@@ -197,18 +199,31 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
         if (r.isWorkspaceConfig) {
           if (r.isNewFormat) {
             return super.read(r.actualConfigFileName).pipe(
-              map((r) => {
+              switchMap((r) => {
                 try {
                   const w = parseJson(Buffer.from(r).toString());
-                  const formatted = toOldFormatOrNull(w);
-                  return formatted ? Buffer.from(serializeJson(formatted)) : r;
-                } catch {
-                  return r;
+                  return this.resolveInlineProjectConfigurations(w).pipe(
+                    map((w) => {
+                      const formatted = toOldFormatOrNull(w);
+                      return formatted
+                        ? Buffer.from(serializeJson(formatted))
+                        : Buffer.from(serializeJson(w));
+                    })
+                  );
+                } catch (ex) {
+                  return of(r);
                 }
               })
             );
           } else {
-            return super.read(r.actualConfigFileName);
+            return super.read(r.actualConfigFileName).pipe(
+              map((r) => {
+                const w = parseJson(Buffer.from(r).toString());
+                return Buffer.from(
+                  serializeJson(inlineProjectConfigurations(w))
+                );
+              })
+            );
           }
         } else {
           return super.read(path);
@@ -221,24 +236,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     return this.context(path).pipe(
       switchMap((r) => {
         if (r.isWorkspaceConfig) {
-          if (r.isNewFormat) {
-            try {
-              const w = parseJson(Buffer.from(content).toString());
-              const formatted = toNewFormatOrNull(w);
-              if (formatted) {
-                return super.write(
-                  r.actualConfigFileName,
-                  Buffer.from(serializeJson(formatted))
-                );
-              } else {
-                return super.write(r.actualConfigFileName, content);
-              }
-            } catch (e) {
-              return super.write(r.actualConfigFileName, content);
-            }
-          } else {
-            return super.write(r.actualConfigFileName, content);
-          }
+          return this.writeWorkspaceConfiguration(r, content);
         } else {
           return super.write(path, content);
         }
@@ -320,6 +318,84 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
       });
     }
   }
+
+  private writeWorkspaceConfiguration(context, content): Observable<void> {
+    const config = parseJson(Buffer.from(content).toString());
+    if (context.isNewFormat) {
+      try {
+        const w = parseJson(Buffer.from(content).toString());
+        const formatted = toNewFormatOrNull(w);
+        if (formatted) {
+          return this.writeWorkspaceConfigFiles(
+            context.actualConfigFileName,
+            formatted
+          );
+        } else {
+          return this.writeWorkspaceConfigFiles(
+            context.actualConfigFileName,
+            config
+          );
+        }
+      } catch (e) {
+        return this.writeWorkspaceConfigFiles(
+          context.actualConfigFileName,
+          config
+        );
+      }
+    } else {
+      return this.writeWorkspaceConfigFiles(
+        context.actualConfigFileName,
+        config
+      );
+    }
+  }
+
+  private writeWorkspaceConfigFiles(workspaceFileName, config) {
+    Object.entries(config.projects as Record<string, any>).forEach(
+      ([project, config]) => {
+        if (config.configFilePath) {
+          const configPath = config.configFilePath;
+          const fileConfigObject = { ...config };
+          delete fileConfigObject.configFilePath;
+          super.write(configPath, Buffer.from(serializeJson(fileConfigObject)));
+          config.projects[project] = dirname(configPath);
+        }
+      }
+    );
+    return super.write(workspaceFileName, Buffer.from(serializeJson(config)));
+  }
+
+  protected resolveInlineProjectConfigurations(config: {
+    projects: Record<string, any>;
+  }): Observable<Object> {
+    let observable: Observable<any> = EMPTY;
+    Object.entries((config.projects as Record<string, any>) ?? {}).forEach(
+      ([project, projectConfig]) => {
+        if (typeof projectConfig === 'string') {
+          const configFilePath = `${projectConfig}/project.json`;
+          const next = super.read(configFilePath as Path).pipe(
+            map((x) => ({
+              project,
+              projectConfig: {
+                ...parseJson(Buffer.from(x).toString()),
+                configFilePath,
+              },
+            }))
+          );
+          observable = observable ? concat(observable, next) : next;
+        }
+      }
+    );
+    return observable.pipe(
+      toArray(),
+      map((x: any[]) => {
+        x.forEach(({ project, projectConfig }) => {
+          config.projects[project] = projectConfig;
+        });
+        return config;
+      })
+    );
+  }
 }
 
 /**
@@ -363,11 +439,13 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
       // we try to format it, if it changes, return it, otherwise return the original change
       try {
         const w = parseJson(Buffer.from(match.content).toString());
-        const formatted = toOldFormatOrNull(w);
-        return of(
-          formatted
-            ? Buffer.from(serializeJson(formatted))
-            : Buffer.from(match.content)
+        return this.resolveInlineProjectConfigurations(w).pipe(
+          map((x) => {
+            const formatted = toOldFormatOrNull(w);
+            return formatted
+              ? Buffer.from(serializeJson(formatted))
+              : Buffer.from(serializeJson(x));
+          })
         );
       } catch (e) {
         return super.read(path);
@@ -646,7 +724,7 @@ function convertEventTypeToHandleMultipleConfigNames(
     } catch (e) {}
 
     if (content && isNewFormat) {
-      const formatted = toNewFormatOrNull(parseJson(content.toString()));
+      const formatted = toNewFormat(parseJson(content.toString()));
       if (formatted) {
         return {
           eventPath: actualConfigName,

@@ -473,7 +473,7 @@ Callback to install dependencies only if necessary. undefined is returned if cha
 
 ### addProjectConfiguration
 
-▸ **addProjectConfiguration**(`host`: [_Tree_](../../react/nx-devkit/index#tree), `projectName`: _string_, `projectConfiguration`: [_ProjectConfiguration_](../../react/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../react/nx-devkit/index#nxjsonprojectconfiguration)): _void_
+▸ **addProjectConfiguration**(`host`: [_Tree_](../../react/nx-devkit/index#tree), `projectName`: _string_, `projectConfiguration`: [_ProjectConfiguration_](../../react/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../react/nx-devkit/index#nxjsonprojectconfiguration), `standalone?`: _boolean_): _void_
 
 Adds project configuration to the Nx workspace.
 
@@ -482,11 +482,12 @@ both files.
 
 #### Parameters
 
-| Name                   | Type                                                                                                                                                                | Description                                                             |
-| :--------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :---------------------------------------------------------------------- |
-| `host`                 | [_Tree_](../../react/nx-devkit/index#tree)                                                                                                                          | the file system tree                                                    |
-| `projectName`          | _string_                                                                                                                                                            | unique name. Often directories are part of the name (e.g., mydir-mylib) |
-| `projectConfiguration` | [_ProjectConfiguration_](../../react/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../react/nx-devkit/index#nxjsonprojectconfiguration) | project configuration                                                   |
+| Name                   | Type                                                                                                                                                                | Default value | Description                                                             |
+| :--------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :------------ | :---------------------------------------------------------------------- |
+| `host`                 | [_Tree_](../../react/nx-devkit/index#tree)                                                                                                                          | -             | the file system tree                                                    |
+| `projectName`          | _string_                                                                                                                                                            | -             | unique name. Often directories are part of the name (e.g., mydir-mylib) |
+| `projectConfiguration` | [_ProjectConfiguration_](../../react/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../react/nx-devkit/index#nxjsonprojectconfiguration) | -             | project configuration                                                   |
+| `standalone`           | _boolean_                                                                                                                                                           | false         | -                                                                       |
 
 **Returns:** _void_
 

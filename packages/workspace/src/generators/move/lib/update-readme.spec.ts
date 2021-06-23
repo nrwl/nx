@@ -25,6 +25,7 @@ describe('updateReadme', () => {
   it('should handle README.md not existing', async () => {
     await libraryGenerator(tree, {
       name: 'my-lib',
+      standaloneConfig: false,
     });
 
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
@@ -40,6 +41,7 @@ describe('updateReadme', () => {
   it('should update README.md contents', async () => {
     await libraryGenerator(tree, {
       name: 'my-lib',
+      standaloneConfig: false,
     });
 
     // This step is usually handled elsewhere

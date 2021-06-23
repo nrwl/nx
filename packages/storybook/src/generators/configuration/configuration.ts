@@ -61,6 +61,7 @@ export async function configurationGenerator(
         js: schema.js,
         linter: schema.linter,
         directory: schema.cypressDirectory,
+        standaloneConfig: schema.standaloneConfig,
       });
       tasks.push(cypressTask);
     } else {

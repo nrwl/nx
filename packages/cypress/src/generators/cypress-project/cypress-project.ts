@@ -51,28 +51,39 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
         : devServerTarget;
   }
 
-  addProjectConfiguration(tree, options.projectName, {
-    root: options.projectRoot,
-    sourceRoot: joinPathFragments(options.projectRoot, 'src'),
-    projectType: 'application',
-    targets: {
-      e2e: {
-        executor: '@nrwl/cypress:cypress',
-        options: {
-          cypressConfig: joinPathFragments(options.projectRoot, 'cypress.json'),
-          tsConfig: joinPathFragments(options.projectRoot, 'tsconfig.e2e.json'),
-          devServerTarget,
-        },
-        configurations: {
-          production: {
-            devServerTarget: `${options.project}:serve:production`,
+  addProjectConfiguration(
+    tree,
+    options.projectName,
+    {
+      root: options.projectRoot,
+      sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+      projectType: 'application',
+      targets: {
+        e2e: {
+          executor: '@nrwl/cypress:cypress',
+          options: {
+            cypressConfig: joinPathFragments(
+              options.projectRoot,
+              'cypress.json'
+            ),
+            tsConfig: joinPathFragments(
+              options.projectRoot,
+              'tsconfig.e2e.json'
+            ),
+            devServerTarget,
+          },
+          configurations: {
+            production: {
+              devServerTarget: `${options.project}:serve:production`,
+            },
           },
         },
       },
+      tags: [],
+      implicitDependencies: options.project ? [options.project] : undefined,
     },
-    tags: [],
-    implicitDependencies: options.project ? [options.project] : undefined,
-  });
+    options.standaloneConfig
+  );
 }
 
 export async function addLinter(host: Tree, options: CypressProjectSchema) {

@@ -38,5 +38,5 @@ describe('file-server', () => {
     } catch {
       expect('process running').toBeFalsy();
     }
-  }, 300000);
+  }, 150000);
 });

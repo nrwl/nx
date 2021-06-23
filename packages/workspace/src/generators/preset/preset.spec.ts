@@ -47,6 +47,7 @@ describe('preset', () => {
       cli: 'nx',
       style: 'css',
       linter: 'eslint',
+      standaloneConfig: false,
     });
     expect(tree.children('apps/proj')).toMatchSnapshot();
     expect(tree.children('apps/proj/src/')).toMatchSnapshot();
@@ -62,6 +63,7 @@ describe('preset', () => {
       name: 'proj',
       preset: 'web-components',
       cli: 'nx',
+      standaloneConfig: false,
     });
     expect(tree.exists('/apps/proj/src/main.ts')).toBe(true);
     expect(readJson(tree, '/workspace.json').cli.defaultCollection).toBe(
@@ -76,6 +78,7 @@ describe('preset', () => {
       style: 'css',
       linter: 'eslint',
       cli: 'nx',
+      standaloneConfig: false,
     });
     expect(tree.exists('/apps/proj/src/main.tsx')).toBe(true);
     expect(readJson(tree, '/workspace.json').cli.defaultCollection).toBe(
@@ -90,6 +93,7 @@ describe('preset', () => {
       style: 'css',
       linter: 'eslint',
       cli: 'nx',
+      standaloneConfig: false,
     });
     expect(tree.exists('/apps/proj/pages/index.tsx')).toBe(true);
     expect(readJson(tree, '/workspace.json').cli.defaultCollection).toBe(
@@ -104,6 +108,7 @@ describe('preset', () => {
       style: 'css',
       linter: 'eslint',
       cli: 'nx',
+      standaloneConfig: false,
     });
 
     expect(tree.exists('/apps/proj/src/app/app.component.ts')).toBe(true);
@@ -120,6 +125,7 @@ describe('preset', () => {
       style: 'css',
       linter: 'eslint',
       cli: 'nx',
+      standaloneConfig: false,
     });
 
     expect(tree.exists('/apps/proj/src/app/app.tsx')).toBe(true);
@@ -137,6 +143,7 @@ describe('preset', () => {
       preset: 'express',
       linter: 'eslint',
       cli: 'nx',
+      standaloneConfig: false,
     });
 
     expect(tree.exists('apps/proj/src/main.ts')).toBe(true);
@@ -150,6 +157,7 @@ describe('preset', () => {
       style: 'css',
       linter: 'eslint',
       cli: 'nx',
+      standaloneConfig: false,
     });
 
     expect(tree.exists('/apps/proj/src/pages/index.tsx')).toBe(true);

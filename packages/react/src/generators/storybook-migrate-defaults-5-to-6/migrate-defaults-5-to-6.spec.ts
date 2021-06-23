@@ -28,6 +28,7 @@ describe('migrate-defaults-5-to-6 schematic', () => {
       configureCypress: false,
       generateCypressSpecs: false,
       generateStories: false,
+      standaloneConfig: false,
     });
 
     jest.spyOn(logger, 'warn').mockImplementation(() => {});

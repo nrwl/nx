@@ -10,8 +10,8 @@ describe('component', () => {
   beforeEach(async () => {
     projectName = 'my-lib';
     appTree = createTreeWithEmptyWorkspace();
-    await createApp(appTree, 'my-app');
-    await createLib(appTree, projectName);
+    await createApp(appTree, 'my-app', false);
+    await createLib(appTree, projectName, false);
     jest.spyOn(logger, 'warn').mockImplementation(() => {});
     jest.spyOn(logger, 'debug').mockImplementation(() => {});
   });

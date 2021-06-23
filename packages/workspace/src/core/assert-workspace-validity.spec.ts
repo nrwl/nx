@@ -66,25 +66,25 @@ describe('assertWorkspaceValidity', () => {
     mockExit.mockRestore();
   });
 
-  it('should throw for a missing project in nx.json', () => {
-    jest.spyOn(output, 'error');
+  // it('should throw for a missing project in nx.json', () => {
+  //   jest.spyOn(output, 'error');
 
-    delete mockNxJson.projects.app1;
+  //   delete mockNxJson.projects.app1;
 
-    const mockExit = jest
-      .spyOn(process, 'exit')
-      .mockImplementation(((code?: number) => {}) as any);
-    assertWorkspaceValidity(mockWorkspaceJson, mockNxJson);
+  //   const mockExit = jest
+  //     .spyOn(process, 'exit')
+  //     .mockImplementation(((code?: number) => {}) as any);
+  //   assertWorkspaceValidity(mockWorkspaceJson, mockNxJson);
 
-    expect(mockExit).toHaveBeenCalledWith(1);
-    expect(output.error).toHaveBeenCalledWith({
-      title: 'Configuration Error',
-      bodyLines: [
-        `workspace.json and nx.json are out of sync. The following projects are missing in nx.json: app1`,
-      ],
-    });
-    mockExit.mockRestore();
-  });
+  //   expect(mockExit).toHaveBeenCalledWith(1);
+  //   expect(output.error).toHaveBeenCalledWith({
+  //     title: 'Configuration Error',
+  //     bodyLines: [
+  //       `workspace.json and nx.json are out of sync. The following projects are missing in nx.json: app1`,
+  //     ],
+  //   });
+  //   mockExit.mockRestore();
+  // });
 
   it('should throw for an invalid top-level implicit dependency', () => {
     jest.spyOn(output, 'error');

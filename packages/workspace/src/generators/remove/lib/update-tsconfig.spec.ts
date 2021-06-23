@@ -21,6 +21,7 @@ describe('updateTsconfig', () => {
   it('should delete project ref from the tsconfig', async () => {
     await libraryGenerator(tree, {
       name: 'my-lib',
+      standaloneConfig: false,
     });
     const project = readProjectConfiguration(tree, 'my-lib');
 

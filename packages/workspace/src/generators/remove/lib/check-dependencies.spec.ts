@@ -29,9 +29,11 @@ describe('checkDependencies', () => {
 
     await libraryGenerator(tree, {
       name: 'my-dependent',
+      standaloneConfig: false,
     });
     await libraryGenerator(tree, {
       name: 'my-source',
+      standaloneConfig: false,
     });
 
     projectGraph = {

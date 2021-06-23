@@ -29,6 +29,11 @@
       "type": "string",
       "description": "Spec tsconfig file",
       "x-deprecated": true
+    },
+    "standaloneConfig": {
+      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
+      "type": "boolean",
+      "default": false
     }
   },
   "required": ["pluginName", "npmPackageName"],
