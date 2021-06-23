@@ -1,4 +1,11 @@
-import { formatFiles, logger, stripIndents, Tree } from '@nrwl/devkit';
+import {
+  formatFiles,
+  logger,
+  ProjectConfiguration,
+  readProjectConfiguration,
+  stripIndents,
+  Tree,
+} from '@nrwl/devkit';
 import { join } from 'path';
 
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
@@ -23,7 +30,9 @@ function updateJestConfig(tree: Tree) {
         join(tree.root, jestConfigPath)
       ) as PartialJestConfig;
 
-      if (!usesJestPresetAngular(jestConfig)) {
+      const projectConfig = readProjectConfiguration(tree, project);
+
+      if (!usesJestPresetAngular(tree, projectConfig)) {
         return;
       }
 
@@ -138,8 +147,13 @@ export function transformerIsFromJestPresetAngular(
     : transformer.path.startsWith('jest-preset-angular');
 }
 
-export function usesJestPresetAngular(jestConfig: PartialJestConfig) {
-  return jestConfig.globals?.['ts-jest']?.astTransformers?.before?.some?.((x) =>
-    transformerIsFromJestPresetAngular(x)
+export function usesJestPresetAngular(
+  tree: Tree,
+  projectConfig: ProjectConfiguration
+) {
+  const path = `${projectConfig.root}/src/test-setup.ts`;
+  return (
+    tree.exists(path) &&
+    tree.read(path).toString().includes('jest-preset-angular')
   );
 }

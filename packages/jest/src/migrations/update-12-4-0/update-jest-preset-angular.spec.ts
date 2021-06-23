@@ -22,8 +22,16 @@ const jestObject = {
 
 describe('update 12.4.0', () => {
   let tree: Tree;
-  const jestConfig = String.raw`
+  const jestConfigAngular = String.raw`
     module.exports = ${JSON.stringify(jestObject, null, 2)}
+  `;
+
+  const jestConfigNode = String.raw`
+    module.exports = ${JSON.stringify(
+      { ...jestObject, globals: undefined },
+      null,
+      2
+    )}
   `;
 
   beforeEach(() => {
@@ -33,8 +41,12 @@ describe('update 12.4.0', () => {
 
     tree = createTreeWithEmptyWorkspace();
 
-    tree.write('apps/products/jest.config.js', jestConfig);
-    tree.write('apps/products-2/jest.config.js', jestConfig);
+    tree.write('apps/products-ng/jest.config.js', jestConfigAngular);
+    tree.write('apps/products/jest.config.js', jestConfigNode);
+    tree.write(
+      'apps/products-ng/src/test-setup.ts',
+      `import 'jest-preset-angular';`
+    );
 
     addProjectConfiguration(tree, 'products', {
       root: 'apps/products',
@@ -53,9 +65,9 @@ describe('update 12.4.0', () => {
       },
     });
 
-    addProjectConfiguration(tree, 'products-2', {
-      root: 'apps/products-2',
-      sourceRoot: 'apps/products-2/src',
+    addProjectConfiguration(tree, 'products-ng', {
+      root: 'apps/products-ng',
+      sourceRoot: 'apps/products-ng/src',
       targets: {
         build: {
           executor: '@nrwl/angular:build',
@@ -63,7 +75,7 @@ describe('update 12.4.0', () => {
         test: {
           executor: '@nrwl/jest:jest',
           options: {
-            jestConfig: 'apps/products-2/jest.config.js',
+            jestConfig: 'apps/products-ng/jest.config.js',
             passWithNoTests: true,
           },
         },
@@ -74,7 +86,10 @@ describe('update 12.4.0', () => {
   it('should update the jest.config files by removing astTransformers if using only jest-preset-angular', async () => {
     await update(tree);
 
-    const jestObject = jestConfigObject(tree, 'apps/products/jest.config.js');
+    const jestObject = jestConfigObject(
+      tree,
+      'apps/products-ng/jest.config.js'
+    );
 
     expect(
       (jestObject.globals['ts-jest'] as { astTransformers: unknown })
@@ -85,7 +100,10 @@ describe('update 12.4.0', () => {
   it('should add transform if angular app', async () => {
     await update(tree);
 
-    const jestObject = jestConfigObject(tree, 'apps/products-2/jest.config.js');
+    const jestObject = jestConfigObject(
+      tree,
+      'apps/products-ng/jest.config.js'
+    );
 
     expect(jestObject.transform).toEqual({
       '^.+\\.(ts|js|html)$': 'jest-preset-angular',
