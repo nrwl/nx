@@ -153,6 +153,9 @@ export class ProjectConverter {
     applyPackageSpecificModifications: (json: Linter.Config) => Linter.Config,
     rootEslintConfigExists?: boolean
   ): Promise<Exclude<GeneratorCallback, void>> {
+    if (this.ignoreExistingTslintConfig) {
+      return Promise.resolve(() => {});
+    }
     /**
      * If root eslint already exists, we will not override it with converted tslint
      * as this might break existing configuration in place. This is the common scenario
@@ -165,9 +168,6 @@ export class ProjectConverter {
       logger.warn(
         `Root '.eslintrc.json' found. Assuming conversion was already run for other projects.`
       );
-      return Promise.resolve(() => {});
-    }
-    if (this.ignoreExistingTslintConfig) {
       return Promise.resolve(() => {});
     }
 
