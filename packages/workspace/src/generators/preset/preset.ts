@@ -183,7 +183,7 @@ async function createPreset(tree: Tree, options: Schema) {
 
 function connectAngularAndNest(host: Tree, options: Schema) {
   const { insertNgModuleImport } = require('@nrwl' +
-    '/angular/src/schematics/utils/insert-ngmodule-import');
+    '/angular/src/generators/utils/insert-ngmodule-import');
   host.write(
     'libs/api-interfaces/src/lib/api-interfaces.ts',
     `export interface Message { message: string }`

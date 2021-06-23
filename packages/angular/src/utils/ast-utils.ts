@@ -12,58 +12,9 @@ import { SchematicsException, Tree } from '@angular-devkit/schematics';
 import * as path from 'path';
 import { names } from '@nrwl/devkit';
 
-function _angularImportsFromNode(
-  node: ts.ImportDeclaration,
-  _sourceFile: ts.SourceFile
-): { [name: string]: string } {
-  const ms = node.moduleSpecifier;
-  let modulePath: string;
-  switch (ms.kind) {
-    case ts.SyntaxKind.StringLiteral:
-      modulePath = (ms as ts.StringLiteral).text;
-      break;
-    default:
-      return {};
-  }
-
-  if (!modulePath.startsWith('@angular/')) {
-    return {};
-  }
-
-  if (node.importClause) {
-    if (node.importClause.name) {
-      // This is of the form `import Name from 'path'`. Ignore.
-      return {};
-    } else if (node.importClause.namedBindings) {
-      const nb = node.importClause.namedBindings;
-      if (nb.kind == ts.SyntaxKind.NamespaceImport) {
-        // This is of the form `import * as name from 'path'`. Return `name.`.
-        return {
-          [`${(nb as ts.NamespaceImport).name.text}.`]: modulePath,
-        };
-      } else {
-        // This is of the form `import {a,b,c} from 'path'`
-        const namedImports = nb as ts.NamedImports;
-
-        return namedImports.elements
-          .map((is: ts.ImportSpecifier) =>
-            is.propertyName ? is.propertyName.text : is.name.text
-          )
-          .reduce((acc: { [name: string]: string }, curr: string) => {
-            acc[curr] = modulePath;
-
-            return acc;
-          }, {});
-      }
-    }
-
-    return {};
-  } else {
-    // This is of the form `import 'path';`. Nothing to do.
-    return {};
-  }
-}
-
+/**
+ * @deprecated will be removed in v13.
+ */
 export function getDecoratorMetadata(
   source: ts.SourceFile,
   identifier: string,
@@ -128,6 +79,374 @@ export function getDecoratorMetadata(
         expr.arguments[0].kind == ts.SyntaxKind.ObjectLiteralExpression
     )
     .map((expr) => expr.arguments[0] as ts.ObjectLiteralExpression);
+}
+
+/**
+ * @deprecated will be removed in v13.
+ */
+export function removeFromNgModule(
+  source: ts.SourceFile,
+  modulePath: string,
+  property: string
+): Change[] {
+  const nodes = getDecoratorMetadata(source, 'NgModule', '@angular/core');
+  let node: any = nodes[0]; // tslint:disable-line:no-any
+
+  // Find the decorator declaration.
+  if (!node) {
+    return [];
+  }
+
+  // Get all the children property assignment of object literals.
+  const matchingProperty = getMatchingProperty(
+    source,
+    property,
+    'NgModule',
+    '@angular/core'
+  );
+  if (matchingProperty) {
+    return [
+      new RemoveChange(
+        modulePath,
+        matchingProperty.getStart(source),
+        matchingProperty.getFullText(source)
+      ),
+    ];
+  } else {
+    return [];
+  }
+}
+
+/**
+ * @deprecated will be removed in v13.
+ */
+export function addImportToModule(
+  source: ts.SourceFile,
+  modulePath: string,
+  symbolName: string
+): Change[] {
+  return _addSymbolToNgModuleMetadata(
+    source,
+    modulePath,
+    'imports',
+    symbolName
+  );
+}
+
+/**
+ * @deprecated will be removed in v13.
+ */
+export function addImportToTestBed(
+  source: ts.SourceFile,
+  specPath: string,
+  symbolName: string
+): Change[] {
+  const allCalls: ts.CallExpression[] = <any>(
+    findNodes(source, ts.SyntaxKind.CallExpression)
+  );
+
+  const configureTestingModuleObjectLiterals = allCalls
+    .filter((c) => c.expression.kind === ts.SyntaxKind.PropertyAccessExpression)
+    .filter(
+      (c: any) => c.expression.name.getText(source) === 'configureTestingModule'
+    )
+    .map((c) =>
+      c.arguments[0].kind === ts.SyntaxKind.ObjectLiteralExpression
+        ? c.arguments[0]
+        : null
+    );
+
+  if (configureTestingModuleObjectLiterals.length > 0) {
+    const startPosition = configureTestingModuleObjectLiterals[0]
+      .getFirstToken(source)
+      .getEnd();
+    return [
+      new InsertChange(specPath, startPosition, `imports: [${symbolName}], `),
+    ];
+  } else {
+    return [];
+  }
+}
+
+/**
+ * @deprecated will be removed in v13.
+ */
+export function getBootstrapComponent(
+  source: ts.SourceFile,
+  moduleClassName: string
+): string {
+  const bootstrap = getMatchingProperty(
+    source,
+    'bootstrap',
+    'NgModule',
+    '@angular/core'
+  );
+  if (!bootstrap) {
+    throw new Error(`Cannot find bootstrap components in '${moduleClassName}'`);
+  }
+  const c = bootstrap.getChildren();
+  const nodes = c[c.length - 1].getChildren();
+
+  const bootstrapComponent = nodes.slice(1, nodes.length - 1)[0];
+  if (!bootstrapComponent) {
+    throw new Error(`Cannot find bootstrap components in '${moduleClassName}'`);
+  }
+
+  return bootstrapComponent.getText();
+}
+
+/**
+ * @deprecated will be removed in v13.
+ */
+export function addRoute(
+  ngModulePath: string,
+  source: ts.SourceFile,
+  route: string
+): Change[] {
+  const routes = getListOfRoutes(source);
+  if (!routes) return [];
+
+  if (routes.hasTrailingComma || routes.length === 0) {
+    return [new InsertChange(ngModulePath, routes.end, route)];
+  } else {
+    return [new InsertChange(ngModulePath, routes.end, `, ${route}`)];
+  }
+}
+
+/**
+ * @deprecated will be removed in v13.
+ */
+export function addProviderToModule(
+  source: ts.SourceFile,
+  modulePath: string,
+  symbolName: string
+): Change[] {
+  return _addSymbolToNgModuleMetadata(
+    source,
+    modulePath,
+    'providers',
+    symbolName
+  );
+}
+
+/**
+ * @deprecated will be removed in v13.
+ */
+export function addDeclarationToModule(
+  source: ts.SourceFile,
+  modulePath: string,
+  symbolName: string
+): Change[] {
+  return _addSymbolToNgModuleMetadata(
+    source,
+    modulePath,
+    'declarations',
+    symbolName
+  );
+}
+
+/**
+ * @deprecated will be removed in v13.
+ */
+export function addEntryComponents(
+  source: ts.SourceFile,
+  modulePath: string,
+  symbolName: string
+): Change[] {
+  return _addSymbolToNgModuleMetadata(
+    source,
+    modulePath,
+    'entryComponents',
+    symbolName
+  );
+}
+
+/**
+ * @deprecated will be removed in v13.
+ */
+export function readBootstrapInfo(
+  host: Tree,
+  app: string
+): {
+  moduleSpec: string;
+  modulePath: string;
+  mainPath: string;
+  moduleClassName: string;
+  moduleSource: ts.SourceFile;
+  bootstrapComponentClassName: string;
+  bootstrapComponentFileName: string;
+} {
+  const config = getProjectConfig(host, app);
+
+  let mainPath;
+  try {
+    mainPath = config.architect.build.options.main;
+  } catch (e) {
+    throw new Error('Main file cannot be located');
+  }
+
+  if (!host.exists(mainPath)) {
+    throw new Error('Main file cannot be located');
+  }
+
+  const mainSource = host.read(mainPath)!.toString('utf-8');
+  const main = ts.createSourceFile(
+    mainPath,
+    mainSource,
+    ts.ScriptTarget.Latest,
+    true
+  );
+  const moduleImports = getImport(
+    main,
+    (s: string) => s.indexOf('.module') > -1
+  );
+  if (moduleImports.length !== 1) {
+    throw new Error(`main.ts can only import a single module`);
+  }
+  const moduleImport = moduleImports[0];
+  const moduleClassName = moduleImport.bindings.filter((b) =>
+    b.endsWith('Module')
+  )[0];
+
+  const modulePath = `${path.join(
+    path.dirname(mainPath),
+    moduleImport.moduleSpec
+  )}.ts`;
+  if (!host.exists(modulePath)) {
+    throw new Error(`Cannot find '${modulePath}'`);
+  }
+
+  const moduleSourceText = host.read(modulePath)!.toString('utf-8');
+  const moduleSource = ts.createSourceFile(
+    modulePath,
+    moduleSourceText,
+    ts.ScriptTarget.Latest,
+    true
+  );
+
+  const bootstrapComponentClassName = getBootstrapComponent(
+    moduleSource,
+    moduleClassName
+  );
+  const bootstrapComponentFileName = `./${path.join(
+    path.dirname(moduleImport.moduleSpec),
+    `${
+      names(
+        bootstrapComponentClassName.substring(
+          0,
+          bootstrapComponentClassName.length - 9
+        )
+      ).fileName
+    }.component`
+  )}`;
+
+  return {
+    moduleSpec: moduleImport.moduleSpec,
+    mainPath,
+    modulePath,
+    moduleSource,
+    moduleClassName,
+    bootstrapComponentClassName,
+    bootstrapComponentFileName,
+  };
+}
+
+/**
+ * @deprecated will be removed in v13.
+ */
+export function getDecoratorPropertyValueNode(
+  host: Tree,
+  modulePath: string,
+  identifier: string,
+  property: string,
+  module: string
+) {
+  const moduleSourceText = host.read(modulePath)!.toString('utf-8');
+  const moduleSource = ts.createSourceFile(
+    modulePath,
+    moduleSourceText,
+    ts.ScriptTarget.Latest,
+    true
+  );
+  const templateNode = getMatchingProperty(
+    moduleSource,
+    property,
+    identifier,
+    module
+  );
+
+  return templateNode.getChildAt(templateNode.getChildCount() - 1);
+}
+
+/**
+ * @deprecated will be removed in v13.
+ */
+export function getTsSourceFile(host: Tree, path: string): ts.SourceFile {
+  const buffer = host.read(path);
+  if (!buffer) {
+    throw new SchematicsException(`Could not read TS file (${path}).`);
+  }
+  const content = buffer.toString();
+  const source = ts.createSourceFile(
+    path,
+    content,
+    ts.ScriptTarget.Latest,
+    true
+  );
+
+  return source;
+}
+
+function _angularImportsFromNode(
+  node: ts.ImportDeclaration,
+  _sourceFile: ts.SourceFile
+): { [name: string]: string } {
+  const ms = node.moduleSpecifier;
+  let modulePath: string;
+  switch (ms.kind) {
+    case ts.SyntaxKind.StringLiteral:
+      modulePath = (ms as ts.StringLiteral).text;
+      break;
+    default:
+      return {};
+  }
+
+  if (!modulePath.startsWith('@angular/')) {
+    return {};
+  }
+
+  if (node.importClause) {
+    if (node.importClause.name) {
+      // This is of the form `import Name from 'path'`. Ignore.
+      return {};
+    } else if (node.importClause.namedBindings) {
+      const nb = node.importClause.namedBindings;
+      if (nb.kind == ts.SyntaxKind.NamespaceImport) {
+        // This is of the form `import * as name from 'path'`. Return `name.`.
+        return {
+          [`${(nb as ts.NamespaceImport).name.text}.`]: modulePath,
+        };
+      } else {
+        // This is of the form `import {a,b,c} from 'path'`
+        const namedImports = nb as ts.NamedImports;
+
+        return namedImports.elements
+          .map((is: ts.ImportSpecifier) =>
+            is.propertyName ? is.propertyName.text : is.name.text
+          )
+          .reduce((acc: { [name: string]: string }, curr: string) => {
+            acc[curr] = modulePath;
+
+            return acc;
+          }, {});
+      }
+    }
+
+    return {};
+  } else {
+    // This is of the form `import 'path';`. Nothing to do.
+    return {};
+  }
 }
 
 function _addSymbolToNgModuleMetadata(
@@ -268,108 +587,6 @@ function _addSymbolToNgModuleMetadata(
   return [insert];
 }
 
-export function removeFromNgModule(
-  source: ts.SourceFile,
-  modulePath: string,
-  property: string
-): Change[] {
-  const nodes = getDecoratorMetadata(source, 'NgModule', '@angular/core');
-  let node: any = nodes[0]; // tslint:disable-line:no-any
-
-  // Find the decorator declaration.
-  if (!node) {
-    return [];
-  }
-
-  // Get all the children property assignment of object literals.
-  const matchingProperty = getMatchingProperty(
-    source,
-    property,
-    'NgModule',
-    '@angular/core'
-  );
-  if (matchingProperty) {
-    return [
-      new RemoveChange(
-        modulePath,
-        matchingProperty.getStart(source),
-        matchingProperty.getFullText(source)
-      ),
-    ];
-  } else {
-    return [];
-  }
-}
-
-export function addImportToModule(
-  source: ts.SourceFile,
-  modulePath: string,
-  symbolName: string
-): Change[] {
-  return _addSymbolToNgModuleMetadata(
-    source,
-    modulePath,
-    'imports',
-    symbolName
-  );
-}
-
-export function addImportToTestBed(
-  source: ts.SourceFile,
-  specPath: string,
-  symbolName: string
-): Change[] {
-  const allCalls: ts.CallExpression[] = <any>(
-    findNodes(source, ts.SyntaxKind.CallExpression)
-  );
-
-  const configureTestingModuleObjectLiterals = allCalls
-    .filter((c) => c.expression.kind === ts.SyntaxKind.PropertyAccessExpression)
-    .filter(
-      (c: any) => c.expression.name.getText(source) === 'configureTestingModule'
-    )
-    .map((c) =>
-      c.arguments[0].kind === ts.SyntaxKind.ObjectLiteralExpression
-        ? c.arguments[0]
-        : null
-    );
-
-  if (configureTestingModuleObjectLiterals.length > 0) {
-    const startPosition = configureTestingModuleObjectLiterals[0]
-      .getFirstToken(source)
-      .getEnd();
-    return [
-      new InsertChange(specPath, startPosition, `imports: [${symbolName}], `),
-    ];
-  } else {
-    return [];
-  }
-}
-
-export function getBootstrapComponent(
-  source: ts.SourceFile,
-  moduleClassName: string
-): string {
-  const bootstrap = getMatchingProperty(
-    source,
-    'bootstrap',
-    'NgModule',
-    '@angular/core'
-  );
-  if (!bootstrap) {
-    throw new Error(`Cannot find bootstrap components in '${moduleClassName}'`);
-  }
-  const c = bootstrap.getChildren();
-  const nodes = c[c.length - 1].getChildren();
-
-  const bootstrapComponent = nodes.slice(1, nodes.length - 1)[0];
-  if (!bootstrapComponent) {
-    throw new Error(`Cannot find bootstrap components in '${moduleClassName}'`);
-  }
-
-  return bootstrapComponent.getText();
-}
-
 function getMatchingProperty(
   source: ts.SourceFile,
   property: string,
@@ -383,21 +600,6 @@ function getMatchingProperty(
 
   // Get all the children property assignment of object literals.
   return getMatchingObjectLiteralElement(node, source, property);
-}
-
-export function addRoute(
-  ngModulePath: string,
-  source: ts.SourceFile,
-  route: string
-): Change[] {
-  const routes = getListOfRoutes(source);
-  if (!routes) return [];
-
-  if (routes.hasTrailingComma || routes.length === 0) {
-    return [new InsertChange(ngModulePath, routes.end, route)];
-  } else {
-    return [new InsertChange(ngModulePath, routes.end, `, ${route}`)];
-  }
 }
 
 function getListOfRoutes(
@@ -449,156 +651,6 @@ function getListOfRoutes(
   return null;
 }
 
-export function addProviderToModule(
-  source: ts.SourceFile,
-  modulePath: string,
-  symbolName: string
-): Change[] {
-  return _addSymbolToNgModuleMetadata(
-    source,
-    modulePath,
-    'providers',
-    symbolName
-  );
-}
-
-export function addDeclarationToModule(
-  source: ts.SourceFile,
-  modulePath: string,
-  symbolName: string
-): Change[] {
-  return _addSymbolToNgModuleMetadata(
-    source,
-    modulePath,
-    'declarations',
-    symbolName
-  );
-}
-
-export function addEntryComponents(
-  source: ts.SourceFile,
-  modulePath: string,
-  symbolName: string
-): Change[] {
-  return _addSymbolToNgModuleMetadata(
-    source,
-    modulePath,
-    'entryComponents',
-    symbolName
-  );
-}
-
-export function readBootstrapInfo(
-  host: Tree,
-  app: string
-): {
-  moduleSpec: string;
-  modulePath: string;
-  mainPath: string;
-  moduleClassName: string;
-  moduleSource: ts.SourceFile;
-  bootstrapComponentClassName: string;
-  bootstrapComponentFileName: string;
-} {
-  const config = getProjectConfig(host, app);
-
-  let mainPath;
-  try {
-    mainPath = config.architect.build.options.main;
-  } catch (e) {
-    throw new Error('Main file cannot be located');
-  }
-
-  if (!host.exists(mainPath)) {
-    throw new Error('Main file cannot be located');
-  }
-
-  const mainSource = host.read(mainPath)!.toString('utf-8');
-  const main = ts.createSourceFile(
-    mainPath,
-    mainSource,
-    ts.ScriptTarget.Latest,
-    true
-  );
-  const moduleImports = getImport(
-    main,
-    (s: string) => s.indexOf('.module') > -1
-  );
-  if (moduleImports.length !== 1) {
-    throw new Error(`main.ts can only import a single module`);
-  }
-  const moduleImport = moduleImports[0];
-  const moduleClassName = moduleImport.bindings.filter((b) =>
-    b.endsWith('Module')
-  )[0];
-
-  const modulePath = `${path.join(
-    path.dirname(mainPath),
-    moduleImport.moduleSpec
-  )}.ts`;
-  if (!host.exists(modulePath)) {
-    throw new Error(`Cannot find '${modulePath}'`);
-  }
-
-  const moduleSourceText = host.read(modulePath)!.toString('utf-8');
-  const moduleSource = ts.createSourceFile(
-    modulePath,
-    moduleSourceText,
-    ts.ScriptTarget.Latest,
-    true
-  );
-
-  const bootstrapComponentClassName = getBootstrapComponent(
-    moduleSource,
-    moduleClassName
-  );
-  const bootstrapComponentFileName = `./${path.join(
-    path.dirname(moduleImport.moduleSpec),
-    `${
-      names(
-        bootstrapComponentClassName.substring(
-          0,
-          bootstrapComponentClassName.length - 9
-        )
-      ).fileName
-    }.component`
-  )}`;
-
-  return {
-    moduleSpec: moduleImport.moduleSpec,
-    mainPath,
-    modulePath,
-    moduleSource,
-    moduleClassName,
-    bootstrapComponentClassName,
-    bootstrapComponentFileName,
-  };
-}
-
-export function getDecoratorPropertyValueNode(
-  host: Tree,
-  modulePath: string,
-  identifier: string,
-  property: string,
-  module: string
-) {
-  const moduleSourceText = host.read(modulePath)!.toString('utf-8');
-  const moduleSource = ts.createSourceFile(
-    modulePath,
-    moduleSourceText,
-    ts.ScriptTarget.Latest,
-    true
-  );
-  const templateNode = getMatchingProperty(
-    moduleSource,
-    property,
-    identifier,
-    module
-  );
-
-  return templateNode.getChildAt(templateNode.getChildCount() - 1);
-}
-
 function getMatchingObjectLiteralElement(
   node: any,
   source: ts.SourceFile,
@@ -620,20 +672,4 @@ function getMatchingObjectLiteralElement(
         return false;
       })[0]
   );
-}
-
-export function getTsSourceFile(host: Tree, path: string): ts.SourceFile {
-  const buffer = host.read(path);
-  if (!buffer) {
-    throw new SchematicsException(`Could not read TS file (${path}).`);
-  }
-  const content = buffer.toString();
-  const source = ts.createSourceFile(
-    path,
-    content,
-    ts.ScriptTarget.Latest,
-    true
-  );
-
-  return source;
 }

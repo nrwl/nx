@@ -32,6 +32,9 @@ const migrationTestRunner = new SchematicTestRunner(
   join(__dirname, '../../migrations.json')
 );
 
+/**
+ * @deprecated will be removed in v13.
+ */
 export function runSchematic<SchemaOptions = any>(
   schematicName: string,
   options: SchemaOptions,
@@ -50,6 +53,9 @@ export function runMigration<SchemaOptions = any>(
     .toPromise();
 }
 
+/**
+ * @deprecated will be removed in v13.
+ */
 export function runExternalSchematic<SchemaOptions = any>(
   collectionName: string,
   schematicName: string,

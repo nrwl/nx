@@ -75,8 +75,7 @@ describe('Hasher', () => {
 
     expect(hash.details.command).toEqual('proj|build||{"prop":"prop-value"}');
     expect(hash.details.nodes).toEqual({
-      proj:
-        '/file|file.hash|{"root":"proj-from-workspace.json"}|"proj-from-nx.json"',
+      proj: '/file|file.hash|{"root":"proj-from-workspace.json"}|"proj-from-nx.json"',
     });
     expect(hash.details.implicitDeps).toEqual({
       'yarn.lock': 'yarn.lock.hash',
