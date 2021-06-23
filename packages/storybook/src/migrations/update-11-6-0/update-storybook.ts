@@ -27,7 +27,7 @@ function maybeUpdateVersion(tree: Tree) {
           json.dependencies[storybookPackageName]
         );
         if (gte(version, '6.0.0') && lt(version, '6.2.7')) {
-          json.dependencies[storybookPackageName] = '^6.2.7';
+          json.dependencies[storybookPackageName] = '6.2.9';
           needsInstall = true;
         }
       }
@@ -37,7 +37,7 @@ function maybeUpdateVersion(tree: Tree) {
           json.devDependencies[storybookPackageName]
         );
         if (gte(version, '6.0.0') && lt(version, '6.2.7')) {
-          json.devDependencies[storybookPackageName] = '^6.2.7';
+          json.devDependencies[storybookPackageName] = '6.2.9';
           needsInstall = true;
         }
       }
