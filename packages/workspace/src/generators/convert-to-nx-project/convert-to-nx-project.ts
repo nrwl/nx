@@ -11,6 +11,7 @@ import {
   NxJsonProjectConfiguration,
   ProjectConfiguration,
   readProjectConfiguration,
+  readWorkspaceConfiguration,
   Tree,
   updateJson,
   writeJson,
@@ -41,6 +42,14 @@ export async function validateSchema(schema: Schema) {
 }
 
 export async function convertToNxProjectGenerator(host: Tree, schema: Schema) {
+  const workspace = readWorkspaceConfiguration(host);
+  if (workspace.version < 2) {
+    logger.error(
+      `NX Only workspace's with version 2+ support project.json files.`
+    );
+    return;
+  }
+
   await validateSchema(schema);
 
   const projects = schema.all
