@@ -8,6 +8,7 @@ import { E2eTestRunner } from '../../../utils/test-runners';
 import { addProtractor } from './add-protractor';
 import { removeScaffoldedE2e } from './remove-scaffolded-e2e';
 import { updateE2eProject } from './update-e2e-project';
+import { convertToNxProjectGenerator } from '@nrwl/workspace';
 
 /**
  * Add E2E Config
@@ -36,10 +37,16 @@ export async function addE2e(
       project: options.name,
       linter: options.linter,
       skipFormat: options.skipFormat,
+      standaloneConfig: options.standaloneConfig,
     });
   }
 
   if (options.e2eTestRunner === E2eTestRunner.Protractor) {
     updateE2eProject(host, options);
+    if (options.standaloneConfig) {
+      convertToNxProjectGenerator(host, {
+        project: `${options.e2eProjectName}`,
+      });
+    }
   }
 }
