@@ -101,7 +101,10 @@ export async function applicationGenerator(
   }
 
   if (options.standaloneConfig) {
-    await convertToNxProjectGenerator(host, {project: options.name, all: false});
+    await convertToNxProjectGenerator(host, {
+      project: options.name,
+      all: false,
+    });
   }
 
   if (!options.skipFormat) {
