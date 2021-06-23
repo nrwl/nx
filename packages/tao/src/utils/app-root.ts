@@ -1,9 +1,6 @@
-import { fileExists } from './fileutils';
 import * as path from 'path';
+import { statSync } from 'fs';
 
-/**
- * @deprecated Use appRootPath in tao instead!
- */
 export const appRootPath = pathInner(__dirname);
 
 function pathInner(dir: string): string {
@@ -17,5 +14,13 @@ function pathInner(dir: string): string {
     return dir;
   } else {
     return pathInner(path.dirname(dir));
+  }
+}
+
+export function fileExists(filePath: string): boolean {
+  try {
+    return statSync(filePath).isFile();
+  } catch (err) {
+    return false;
   }
 }

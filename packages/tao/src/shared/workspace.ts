@@ -1,5 +1,6 @@
 import { existsSync } from 'fs';
 import * as path from 'path';
+import { appRootPath } from '../utils/app-root';
 import { readJsonFile } from '../utils/fileutils';
 import type { NxJsonConfiguration, NxJsonProjectConfiguration } from './nx';
 import type { PackageManager } from './package-manager';
@@ -269,7 +270,7 @@ export class Workspaces {
     const w = readJsonFile(
       path.join(this.root, workspaceConfigName(this.root))
     );
-    return resolveNewFormatWithInlineProjects(w);
+    return resolveNewFormatWithInlineProjects(w, this.root);
   }
 
   isNxExecutor(nodeModule: string, executor: string) {
@@ -526,19 +527,28 @@ export function toOldFormatOrNull(w: any) {
   return formatted ? w : null;
 }
 
-export function resolveOldFormatWithInlineProjects(w: any) {
-  return toOldFormatOrNull(inlineProjectConfigurations(w));
+export function resolveOldFormatWithInlineProjects(
+  w: any,
+  root: string = appRootPath
+) {
+  return toOldFormatOrNull(inlineProjectConfigurations(w, root));
 }
 
-export function resolveNewFormatWithInlineProjects(w: any) {
-  return toNewFormat(inlineProjectConfigurations(w));
+export function resolveNewFormatWithInlineProjects(
+  w: any,
+  root: string = appRootPath
+) {
+  return toNewFormat(inlineProjectConfigurations(w, root));
 }
 
-export function inlineProjectConfigurations(w: any) {
+export function inlineProjectConfigurations(
+  w: any,
+  root: string = appRootPath
+) {
   Object.entries(w.projects || {}).forEach(
     ([project, config]: [string, any]) => {
       if (typeof config === 'string') {
-        const configFilePath = path.join(config, 'project.json');
+        const configFilePath = path.join(root, config, 'project.json');
         const fileConfig = readJsonFile(configFilePath);
         w.projects[project] = { ...fileConfig, configFilePath };
       }
