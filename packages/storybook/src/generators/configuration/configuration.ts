@@ -24,6 +24,8 @@ import { cypressProjectGenerator } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';
 import { storybookVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
+import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
+import { gte } from 'semver';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -353,8 +355,10 @@ function readCurrentWorkspaceStorybookVersion(tree: Tree): string {
     }
   }
   if (
-    workspaceStorybookVersion.startsWith('6') ||
-    workspaceStorybookVersion.startsWith('^6')
+    gte(
+      checkAndCleanWithSemver('@storybook/core', workspaceStorybookVersion),
+      '6.0.0'
+    )
   ) {
     workspaceStorybookVersion = '6';
   }

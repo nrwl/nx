@@ -57,6 +57,13 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
     }
 
     if (
+      !packageJson.dependencies['@storybook/manager-webpack5'] &&
+      !packageJson.devDependencies['@storybook/manager-webpack5']
+    ) {
+      devDependencies['@storybook/manager-webpack5'] = storybookVersion;
+    }
+
+    if (
       !packageJson.dependencies['@angular/forms'] &&
       !packageJson.devDependencies['@angular/forms']
     ) {
