@@ -1234,7 +1234,7 @@
           {
             "name": "Updating Nx",
             "id": "updating-nx",
-            "file": "angular/guides/update"
+            "file": "shared/update"
           },
           {
             "name": "Configuration",
