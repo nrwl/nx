@@ -4,9 +4,6 @@
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "parserOptions": {
-        "project": ["nx-dev/feature-analytics/tsconfig.*?.json"]
-      },
       "rules": {}
     },
     {

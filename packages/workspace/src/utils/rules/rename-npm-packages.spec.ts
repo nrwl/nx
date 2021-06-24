@@ -174,7 +174,7 @@ describe('renameNpmPackages Rule', () => {
     expect(tree.read(appImportFile).toString()).toContain(
       `import { something } from '@package/renamed'`
     );
-  });
+  }, 60000);
 
   it('should only update libs / apps that import the npm package as a dep', async () => {
     tree.overwrite(
