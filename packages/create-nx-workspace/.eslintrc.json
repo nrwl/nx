@@ -13,9 +13,6 @@
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "parserOptions": {
-        "project": ["packages/create-nx-workspace/tsconfig.*?.json"]
-      },
       "rules": {}
     },
     {
