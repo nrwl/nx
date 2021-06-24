@@ -13,8 +13,8 @@ describe('workspace', () => {
   it('should be able to inline project configurations', () => {
     const standaloneConfig = libConfig('lib1');
 
-    (readJsonFile as jest.Mock).mockImplementation((path) => {
-      if (path === 'libs/lib1/project.json') {
+    (readJsonFile as jest.Mock).mockImplementation((path: string) => {
+      if (path.endsWith('libs/lib1/project.json')) {
         return standaloneConfig;
       }
       throw `${path} not in mock!`;
@@ -29,11 +29,12 @@ describe('workspace', () => {
     };
 
     const resolved = inlineProjectConfigurations(inlineConfig);
+    delete resolved.projects.lib1.configFilePath;
     expect(resolved).toEqual({
       ...inlineConfig,
       projects: {
         ...inlineConfig.projects,
-        lib1: { ...standaloneConfig, configFilePath: 'libs/lib1/project.json' },
+        lib1: { ...standaloneConfig },
       },
     });
   });

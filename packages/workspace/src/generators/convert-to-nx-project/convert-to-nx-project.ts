@@ -11,13 +11,13 @@ import {
   NxJsonProjectConfiguration,
   ProjectConfiguration,
   readProjectConfiguration,
+  readWorkspaceConfiguration,
   Tree,
   updateJson,
   writeJson,
 } from '@nrwl/devkit';
 
 import { Schema } from './schema';
-import { checkIfNxProjectFileExists } from './utils/check-if-nx-project-file-exists';
 import { getProjectConfigurationPath } from './utils/get-project-configuration-path';
 
 export const SCHEMA_OPTIONS_ARE_MUTUALLY_EXCLUSIVE =
@@ -42,6 +42,14 @@ export async function validateSchema(schema: Schema) {
 }
 
 export async function convertToNxProjectGenerator(host: Tree, schema: Schema) {
+  const workspace = readWorkspaceConfiguration(host);
+  if (workspace.version < 2) {
+    logger.error(
+      `NX Only workspace's with version 2+ support project.json files.`
+    );
+    return;
+  }
+
   await validateSchema(schema);
 
   const projects = schema.all
@@ -52,11 +60,11 @@ export async function convertToNxProjectGenerator(host: Tree, schema: Schema) {
       ][]);
 
   for (const [project, configuration] of projects) {
-    if (checkIfNxProjectFileExists(host, configuration)) {
-      logger.warn(`Skipping ${project} since ${configuration}`);
+    const configPath = getProjectConfigurationPath(configuration);
+    if (host.exists(configPath)) {
+      logger.warn(`Skipping ${project} since ${configPath} already exists.`);
       continue;
     }
-    const configPath = getProjectConfigurationPath(configuration);
 
     writeJson(host, configPath, configuration);
 
