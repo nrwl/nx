@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "NxAngularWebWorkerGenerator",
+  "title": "Angular Web Worker Options Schema",
+  "description": "Creates a new, generic web worker definition in the given or default project.",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "format": "path",
+      "description": "The path at which to create the worker file, relative to the current workspace."
+    },
+    "project": {
+      "type": "string",
+      "description": "The name of the project.",
+      "$default": {
+        "$source": "projectName"
+      }
+    },
+    "name": {
+      "type": "string",
+      "description": "The name of the worker.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What name would you like to use for the worker?"
+    },
+    "snippet": {
+      "type": "boolean",
+      "default": true,
+      "description": "Add a worker creation snippet in a sibling file of the same name."
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "additionalProperties": false,
+  "required": ["name", "project"]
+}

@@ -111,6 +111,11 @@
       "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionSchematic",
       "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
       "description": "Convert a project from TSLint to ESLint"
+    },
+    "web-worker": {
+      "factory": "./src/generators/web-worker/compat",
+      "schema": "./src/generators/web-worker/schema.json",
+      "description": "Create a Web Worker."
     }
   },
   "generators": {
@@ -206,6 +211,11 @@
       "factory": "./src/generators/upgrade-module/upgrade-module",
       "schema": "./src/generators/upgrade-module/schema.json",
       "description": "Add an upgrade module."
+    },
+    "web-worker": {
+      "factory": "./src/generators/web-worker/web-worker",
+      "schema": "./src/generators/web-worker/schema.json",
+      "description": "Create a Web Worker."
     }
   }
 }
