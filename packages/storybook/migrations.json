@@ -48,6 +48,12 @@
       "cli": "nx",
       "description": "Update storybook if installed and above 6 but below 6.2.7",
       "factory": "./src/migrations/update-11-6-0/update-storybook"
+    },
+    "update-12-5-0": {
+      "version": "12.5.0-beta.5",
+      "cli": "nx",
+      "description": "Upgrade Storybook to v6.3",
+      "factory": "./src/migrations/update-12-5-0/migrate-storybook-6-3"
     }
   },
   "packageJsonUpdates": {
