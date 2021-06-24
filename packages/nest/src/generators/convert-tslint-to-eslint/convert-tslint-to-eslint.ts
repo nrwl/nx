@@ -73,6 +73,13 @@ export async function conversionGenerator(
   });
 
   /**
+   * If root eslint configuration already exists it will not be recreated
+   * but we also don't want to re-run the tslint config conversion
+   * as it was likely already done
+   */
+  const rootEslintConfigExists = host.exists('.eslintrc.json');
+
+  /**
    * Create the standard (which is applicable to the current package) ESLint setup
    * for converting the project.
    */
@@ -82,7 +89,8 @@ export async function conversionGenerator(
    * Convert the root tslint.json and apply the converted rules to the root .eslintrc.json.
    */
   const rootConfigInstallTask = await projectConverter.convertRootTSLintConfig(
-    (json) => removeCodelyzerRelatedRules(json)
+    (json) => removeCodelyzerRelatedRules(json),
+    rootEslintConfigExists
   );
 
   /**

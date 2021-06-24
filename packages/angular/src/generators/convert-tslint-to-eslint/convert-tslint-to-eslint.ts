@@ -44,6 +44,12 @@ export async function conversionGenerator(
   });
 
   /**
+   * If root eslint configuration already exists it will not be recreated
+   * but we also don't want to re-run the tslint config conversion
+   * as it was likely already done
+   */
+  const rootEslintConfigExists = host.exists('.eslintrc.json');
+  /**
    * Create the standard (which is applicable to the current package) ESLint setup
    * for converting the project.
    */
@@ -59,8 +65,10 @@ export async function conversionGenerator(
         { files: ['*.html'], rules: {} },
       ];
       return applyAngularRulesToCorrectOverrides(json);
-    }
+    },
+    rootEslintConfigExists
   );
+
   /**
    * Convert the project's tslint.json to an equivalent ESLint config.
    */
