@@ -6,4 +6,5 @@ module.exports = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   globals: { 'ts-jest': { tsconfig: '<rootDir>/tsconfig.spec.json' } },
   displayName: 'react',
+  testEnvironment: 'node',
 };

@@ -47,7 +47,7 @@ describe('removeProjectConfig', () => {
     });
   });
 
-  describe('delete project', async () => {
+  describe('delete project', () => {
     beforeEach(async () => {
       schema = {
         projectName: 'ng-app',

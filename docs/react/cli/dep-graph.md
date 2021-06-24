@@ -93,3 +93,9 @@ Bind the dep graph server to a specific port.
 ### version
 
 Show version number
+
+### watch
+
+Default: `false`
+
+Watch for changes to dep graph and update in-browser
