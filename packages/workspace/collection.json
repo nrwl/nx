@@ -31,7 +31,7 @@
     },
 
     "remove": {
-      "factory": "./src/generators/remove/remove#moveSchematic",
+      "factory": "./src/generators/remove/remove#removeSchematic",
       "schema": "./src/generators/remove/schema.json",
       "aliases": ["rm"],
       "description": "Remove an application or library"
