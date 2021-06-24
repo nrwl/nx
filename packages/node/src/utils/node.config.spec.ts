@@ -1,7 +1,15 @@
-import { getNodeWebpackConfig } from './node.config';
 jest.mock('tsconfig-paths-webpack-plugin');
+
+import { getNodeWebpackConfig } from './node.config';
 import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import { BuildNodeBuilderOptions } from './types';
+import { join } from 'path';
+
+jest.mock('@nrwl/tao/src/utils/app-root', () => ({
+  get appRootPath() {
+    return join(__dirname, '../../../..');
+  },
+}));
 
 describe('getNodePartial', () => {
   let input: BuildNodeBuilderOptions;
