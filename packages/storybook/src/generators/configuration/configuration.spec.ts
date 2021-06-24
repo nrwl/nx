@@ -86,7 +86,7 @@ describe('@nrwl/storybook:configuration', () => {
 
     const newContents = `module.exports = {
   stories: [],
-  addons: ['@storybook/addon-knobs/register', 'new-addon'],
+  addons: ['@storybook/addon-knobs', 'new-addon'],
 };
 `;
     // Setup a new lib
