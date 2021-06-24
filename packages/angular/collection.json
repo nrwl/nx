@@ -96,6 +96,13 @@
       "schema": "./src/generators/upgrade-module/schema.json",
       "description": "Sets up an Upgrade Module."
     },
+
+    "setup-mfe": {
+      "factory": "./src/generators/setup-mfe/compat",
+      "schema": "./src/generators/setup-mfe/schema.json",
+      "description": "Generate a Module Federation configuration for a given Angular application."
+    },
+
     "web-worker": {
       "factory": "./src/generators/web-worker/compat",
       "schema": "./src/generators/web-worker/schema.json",
@@ -114,6 +121,11 @@
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "description": "Creates an Angular application."
+    },
+    "setup-mfe": {
+      "factory": "./src/generators/setup-mfe/setup-mfe",
+      "schema": "./src/generators/setup-mfe/schema.json",
+      "description": "Generate a Module Federation configuration for a given Angular application."
     },
     "component-cypress-spec": {
       "factory": "./src/generators/component-cypress-spec/component-cypress-spec",

@@ -151,6 +151,7 @@ export function updateWorkspaceConfiguration(
  *
  * @param host - the file system tree
  * @param projectName - unique name. Often directories are part of the name (e.g., mydir-mylib)
+ * @throws If supplied projectName cannot be found
  */
 export function readProjectConfiguration(
   host: Tree,

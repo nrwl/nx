@@ -423,6 +423,11 @@
             "file": "angular/api-angular/generators/ngrx"
           },
           {
+            "name": "setup-mfe generator",
+            "id": "setup-mfe",
+            "file": "angular/api-angular/generators/setup-mfe"
+          },
+          {
             "name": "stories generator",
             "id": "stories",
             "file": "angular/api-angular/generators/stories"
@@ -1559,6 +1564,11 @@
             "file": "react/api-angular/generators/ngrx"
           },
           {
+            "name": "setup-mfe generator",
+            "id": "setup-mfe",
+            "file": "react/api-angular/generators/setup-mfe"
+          },
+          {
             "name": "stories generator",
             "id": "stories",
             "file": "react/api-angular/generators/stories"
@@ -2657,6 +2667,11 @@
             "name": "ngrx generator",
             "id": "ngrx",
             "file": "node/api-angular/generators/ngrx"
+          },
+          {
+            "name": "setup-mfe generator",
+            "id": "setup-mfe",
+            "file": "node/api-angular/generators/setup-mfe"
           },
           {
             "name": "stories generator",

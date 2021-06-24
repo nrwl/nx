@@ -122,6 +122,7 @@ myorg/
 - [library](/{{framework}}/angular/library) - Creates an Angular library.
 - [move](/{{framework}}/angular/move) - Moves an Angular application or library to another folder within the workspace and updates the project configuration.
 - [ngrx](/{{framework}}/angular/ngrx) - Adds NgRx support to an application or library.
+- [setup-mfe](/{{framework}}/angular/setup-mfe) - Generate a Module Federation configuration for a given Angular application.
 - [stories](/{{framework}}/angular/stories) - Creates stories/specs for all components declared in a project.
 - [storybook-configuration](/{{framework}}/angular/storybook-configuration) - Adds Storybook configuration to a project.
 - [storybook-migrate-defaults-5-to-6](/{{framework}}/angular/storybook-migrate-defaults-5-to-6) - Generates default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.

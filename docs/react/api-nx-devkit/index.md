@@ -1031,6 +1031,8 @@ Reads a project configuration.
 The project configuration is stored in workspace.json and nx.json. The utility will read
 both files.
 
+**`throws`** If supplied projectName cannot be found
+
 #### Parameters
 
 | Name          | Type                                       | Description                                                             |

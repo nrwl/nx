@@ -84,7 +84,6 @@
     "@storybook/angular": "~6.3.0",
     "@storybook/core": "~6.3.0",
     "@storybook/react": "~6.3.0",
-    "@svgr/webpack": "^5.4.0",
     "@svgr/webpack": "5.5.0",
     "@tailwindcss/typography": "^0.4.0",
     "@testing-library/react": "11.2.5",
