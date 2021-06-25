@@ -33,7 +33,7 @@
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",
     "@nrwl/node": "*",
-    "fs-extra": "^9.1.0",
+    "fs-extra": "^10.0.0",
     "rxjs": "^6.5.4",
     "tslib": "^2.0.0",
     "yargs": "15.4.1"
