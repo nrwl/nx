@@ -8,6 +8,7 @@ import {
   readFile,
   removeProject,
   runCLI,
+  runCypressTests,
   tmpProjPath,
   uniq,
 } from '@nrwl/e2e/utils';
@@ -179,11 +180,13 @@ describe('Storybook schematics', () => {
         `
         );
 
-        const e2eResults = runCLI(
-          `e2e ${myAngularLib}-e2e --headless --no-watch`
-        );
-        expect(e2eResults).toContain('All specs passed!');
-        expect(await killPorts()).toBeTruthy();
+        if (runCypressTests()) {
+          const e2eResults = runCLI(
+            `e2e ${myAngularLib}-e2e --headless --no-watch`
+          );
+          expect(e2eResults).toContain('All specs passed!');
+          expect(await killPorts()).toBeTruthy();
+        }
 
         runCLI(`run ${myAngularLib}:build-storybook`);
 
