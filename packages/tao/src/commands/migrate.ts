@@ -73,17 +73,20 @@ function slash(packageName) {
 }
 
 export class Migrator {
+  private readonly packageJson: any;
   private readonly versions: (p: string) => string;
   private readonly fetch: (p: string, v: string) => Promise<MigrationsJson>;
   private readonly from: { [p: string]: string };
   private readonly to: { [p: string]: string };
 
   constructor(opts: {
+    packageJson: any;
     versions: (p: string) => string;
     fetch: (p: string, v: string) => Promise<MigrationsJson>;
     from: { [p: string]: string };
     to: { [p: string]: string };
   }) {
+    this.packageJson = opts.packageJson;
     this.versions = opts.versions;
     this.fetch = opts.fetch;
     this.from = opts.from;
@@ -234,16 +237,21 @@ export class Migrator {
           '@nrwl/storybook',
           '@nrwl/tao',
           '@nrwl/web',
-        ].reduce(
-          (m, c) => ({
-            ...m,
-            [c]: {
-              version: c === '@nrwl/nx-cloud' ? 'latest' : targetVersion,
-              alwaysAddToPackageJson: false,
-            },
-          }),
-          {}
-        ),
+        ]
+          .filter((pkg) => {
+            const { dependencies, devDependencies } = this.packageJson;
+            return !!dependencies?.[pkg] || !!devDependencies?.[pkg];
+          })
+          .reduce(
+            (m, c) => ({
+              ...m,
+              [c]: {
+                version: c === '@nrwl/nx-cloud' ? 'latest' : targetVersion,
+                alwaysAddToPackageJson: false,
+              },
+            }),
+            {}
+          ),
       };
     }
     if (!m.packageJsonUpdates || !this.versions(packageName)) return {};
@@ -539,7 +547,9 @@ async function generateMigrationsJsonAndUpdatePackageJson(
   try {
     logger.info(`Fetching meta data about packages.`);
     logger.info(`It may take a few minutes.`);
+    const originalPackageJson = readJsonFile(join(root, 'package.json'));
     const migrator = new Migrator({
+      packageJson: originalPackageJson,
       versions: versions(root, opts.from),
       fetch: createFetcher(),
       from: opts.from,
