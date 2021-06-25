@@ -68,6 +68,8 @@ export function AlgoliaSearch({ flavorId, versionId }: AlgoliaSearchProps) {
   return (
     <>
       <Head>
+        <meta name="docsearch:version" content={versionId} />
+        <meta name="docsearch:framework" content={flavorId} />
         <link
           rel="preconnect"
           href="https://BH4D9OD16A-dsn.algolia.net"
