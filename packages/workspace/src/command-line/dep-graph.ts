@@ -364,8 +364,7 @@ function startServer(
 
   const app = http.createServer((req, res) => {
     // parse URL
-    const parsedUrl = new URL(req.url);
-
+    const parsedUrl = new URL(req.url, `http://${host}:${port}`);
     // extract URL path
     // Avoid https://en.wikipedia.org/wiki/Directory_traversal_attack
     // e.g curl --path-as-is http://localhost:9000/../fileInDanger.txt
