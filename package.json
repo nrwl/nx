@@ -80,6 +80,7 @@
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "7.1.1",
     "@schematics/angular": "^12.0.0",
+    "@storybook/addon-essentials": "~6.3.0",
     "@storybook/addon-knobs": "~6.3.0",
     "@storybook/angular": "~6.3.0",
     "@storybook/core": "~6.3.0",

@@ -6,7 +6,7 @@ import {
 } from '@nrwl/devkit';
 import { getComponentProps } from '../utils/storybook';
 import { getComponentSelector } from './lib/get-component-selector';
-import { getKnobDefaultValue } from './lib/get-knob-default-value';
+import { getArgsDefaultValue } from './lib/get-args-default-value';
 import type { ComponentCypressSpecGeneratorOptions } from './schema';
 
 export function componentCypressSpecGenerator(
@@ -50,7 +50,7 @@ export function componentCypressSpecGenerator(
     componentPath,
     `${componentFileName}.ts`
   );
-  const props = getComponentProps(tree, fullComponentPath, getKnobDefaultValue);
+  const props = getComponentProps(tree, fullComponentPath, getArgsDefaultValue);
   const componentSelector = getComponentSelector(tree, fullComponentPath);
 
   generateFiles(tree, templatesDir, destinationDir, {

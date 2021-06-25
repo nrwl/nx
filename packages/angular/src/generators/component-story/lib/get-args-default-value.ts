@@ -1,6 +1,6 @@
 import type { PropertyDeclaration } from 'typescript';
 
-export function getKnobDefaultValue(property: PropertyDeclaration): string {
+export function getArgsDefaultValue(property: PropertyDeclaration): string {
   const typeNameToDefault = {
     string: "''",
     number: '0',

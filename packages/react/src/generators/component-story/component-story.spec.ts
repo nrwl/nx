@@ -52,20 +52,18 @@ describe('react:component-story', () => {
       it('should properly set up the story', () => {
         expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
           .toContain(formatFile`
-            import React from 'react';
-            import { TestUiLib, TestUiLibProps } from './test-ui-lib';
-            
-            export default {
-              component: TestUiLib,
-              title: 'TestUiLib',
-            };
-            
-            export const primary = () => {
-              /* eslint-disable-next-line */
-              const props: TestUiLibProps = {};
-            
-              return <TestUiLib />;
-            };
+          import { Story, Meta } from '@storybook/react';
+          import { TestUiLib, TestUiLibProps } from './test-ui-lib';
+          
+          export default {
+            component: TestUiLib,
+            title: 'TestUiLib',
+          } as Meta;
+          
+          const Template: Story<TestUiLibProps> = (args) => <TestUiLib {...args} />;
+          
+          export const Primary = Template.bind({});
+          Primary.args = {};
           `);
       });
     });
@@ -106,20 +104,17 @@ describe('react:component-story', () => {
       it('should properly set up the story', () => {
         expect(formatFile`${appTree.read(storyFilePathPlain, 'utf-8')}`)
           .toContain(formatFile`
-            import React from 'react';
-            import { Test } from './test-ui-libplain';
-            
-            export default {
-              component: Test,
-              title: 'Test',
-            };
-            
-            export const primary = () => {
-              /* eslint-disable-next-line */
-              const props = {};
-            
-              return <Test />;
-            };
+          import Test from './test-ui-libplain';
+          
+          export default {
+            component: Test,
+            title: 'Test',
+          };
+          
+          const Template = (args) => <Test {...args} />;
+          
+          export const Primary = Template.bind({});
+          Primary.args = {};
           `);
       });
     });
@@ -150,20 +145,21 @@ describe('react:component-story', () => {
         });
       });
 
-      it('should create a story without knobs', () => {
+      it('should create a story without controls', () => {
         expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
           .toContain(formatFile`
-            import React from 'react';
-            import { Test } from './test-ui-lib';
-            
-            export default {
-              component: Test,
-              title: 'Test',
-            };
-            
-            export const primary = () => {
-              return <Test />;
-            }
+          import { Story, Meta } from '@storybook/react';
+          import { Test } from './test-ui-lib';
+          
+          export default {
+            component: Test,
+            title: 'Test',
+          } as Meta;
+          
+          const Template: Story<> = (args) => <Test {...args} />;
+          
+          export const Primary = Template.bind({});
+          Primary.args = {};
           `);
       });
     });
@@ -199,25 +195,23 @@ describe('react:component-story', () => {
         });
       });
 
-      it('should setup knobs based on the component props', () => {
+      it('should setup controls based on the component props', () => {
         expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
           .toContain(formatFile`
-            import { text, boolean } from '@storybook/addon-knobs';
-            import React from 'react';
+            import { Story, Meta } from '@storybook/react';
             import { Test, TestProps } from './test-ui-lib';
-            
+
             export default {
               component: Test,
               title: 'Test',
-            };
-            
-            export const primary = () => {
-              const props: TestProps = {
-                name: text('name', ''),
-                displayAge: boolean('displayAge', false),
-              };
-            
-              return <Test name={props.name} displayAge={props.displayAge} />;
+            } as Meta;
+
+            const Template: Story<TestProps> = (args) => <Test {...args} />;
+
+            export const Primary = Template.bind({});
+            Primary.args = {
+              name: '',
+              displayAge: false,
             };
           `);
       });
@@ -356,25 +350,23 @@ describe('react:component-story', () => {
           });
         });
 
-        it('should properly setup the knobs based on the component props', () => {
+        it('should properly setup the controls based on the component props', () => {
           expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
             .toContain(formatFile`
-            import { text, boolean } from '@storybook/addon-knobs';
-            import React from 'react';
+            import { Story, Meta } from '@storybook/react';
             import { Test, TestProps } from './test-ui-lib';
-            
+
             export default {
               component: Test,
               title: 'Test',
-            };
-            
-            export const primary = () => {
-              const props: TestProps = {
-                name: text('name', ''),
-                displayAge: boolean('displayAge', false),
-              };
-            
-              return <Test name={props.name} displayAge={props.displayAge} />;
+            } as Meta;
+
+            const Template: Story<TestProps> = (args) => <Test {...args} />;
+
+            export const Primary = Template.bind({});
+            Primary.args = {
+              name: '',
+              displayAge: false,
             };
           `);
         });
@@ -394,20 +386,18 @@ describe('react:component-story', () => {
     it('should properly set up the story', () => {
       expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
         .toContain(formatFile`
-          import React from 'react';
-          import { TestUiLib, TestUiLibProps } from './test-ui-lib';
-          
-          export default {
-            component: TestUiLib,
-            title: 'TestUiLib',
-          };
-          
-          export const primary = () => {
-            /* eslint-disable-next-line */
-            const props: TestUiLibProps = {};
-          
-            return <TestUiLib />;
-          };
+        import { Story, Meta } from '@storybook/react';
+        import { TestUiLib, TestUiLibProps } from './test-ui-lib';
+        
+        export default {
+          component: TestUiLib,
+          title: 'TestUiLib',
+        } as Meta;
+        
+        const Template: Story<TestUiLibProps> = (args) => <TestUiLib {...args} />;
+        
+        export const Primary = Template.bind({});
+        Primary.args = {};
         `);
     });
   });

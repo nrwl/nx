@@ -19,8 +19,8 @@ describe('@nrwl/storybook:storybook', () => {
   beforeEach(() => {
     jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
       devDependencies: {
-        '@storybook/addon-essentials': '^6.2.7',
-        '@storybook/angular': '^6.2.7',
+        '@storybook/addon-essentials': '~6.2.9',
+        '@storybook/angular': '~6.2.9',
       },
     });
 

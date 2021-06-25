@@ -1,7 +1,7 @@
 import type { PropertyDeclaration } from 'typescript';
 import { SyntaxKind } from 'typescript';
 
-export function getKnobDefaultValue(
+export function getArgsDefaultValue(
   property: PropertyDeclaration
 ): string | undefined {
   if (!property.initializer) {
@@ -9,7 +9,8 @@ export function getKnobDefaultValue(
   }
   switch (property.initializer.kind) {
     case SyntaxKind.StringLiteral:
-      return property.initializer.getText().slice(1, -1);
+      const returnString = property.initializer.getText().slice(1, -1);
+      return returnString.replace(/\s/g, '+');
     case SyntaxKind.NumericLiteral:
     case SyntaxKind.TrueKeyword:
     case SyntaxKind.FalseKeyword:
