@@ -4,10 +4,14 @@ It's costly to rebuild and retest the same code over and over again. Nx uses a c
 
 **In order not to recompute something twice, we need two things:**
 
-**1. We need to store the results of the computation.**
-**2. We need to know when we are about to compute something we already computed before.**
+1. We need to store the results of the computation.
+2. We need to know when we are about to compute something we already computed before.
 
 There are three things that tell Nx if something has been computed before:
+
+- [Source Code Cache Inputs](#source-code-cache-inputs)
+- [Runtime Cache Inputs](#runtime-cache-inputs)
+- [Args Cache Inputs](#args-cache-inputs)
 
 ## Source Code Cache Inputs
 
