@@ -33,7 +33,7 @@ describe('@nrwl/storybook:init', () => {
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
-        packageJson.devDependencies['@storybook/addon-knobs']
+        packageJson.devDependencies['@storybook/addon-essentials']
       ).toBeDefined();
 
       // angular specific
@@ -68,7 +68,7 @@ describe('@nrwl/storybook:init', () => {
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
-        packageJson.devDependencies['@storybook/addon-knobs']
+        packageJson.devDependencies['@storybook/addon-essentials']
       ).toBeDefined();
 
       // react specific
@@ -105,7 +105,9 @@ describe('@nrwl/storybook:init', () => {
     expect(packageJson.dependencies['@nrwl/storybook']).toBeUndefined();
     expect(packageJson.dependencies[existing]).toBeDefined();
     expect(packageJson.devDependencies[existing]).toBeDefined();
-    expect(packageJson.devDependencies['@storybook/addon-knobs']).toBeDefined();
+    expect(
+      packageJson.devDependencies['@storybook/addon-essentials']
+    ).toBeDefined();
 
     // react specific
     expect(packageJson.devDependencies['@storybook/react']).not.toBeDefined();

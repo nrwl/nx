@@ -18,10 +18,8 @@ export interface CreateComponentStoriesFileSchema {
   componentPath: string;
 }
 
-export type KnobType = 'text' | 'boolean' | 'number' | 'select';
-
 // TODO: candidate to refactor with the angular component story
-export function getKnobDefaultValue(property: ts.SyntaxKind): string {
+export function getArgsDefaultValue(property: ts.SyntaxKind): string {
   const typeNameToDefault: Record<number, any> = {
     [ts.SyntaxKind.StringKeyword]: "''",
     [ts.SyntaxKind.NumberKeyword]: 0,
@@ -56,7 +54,8 @@ export function createComponentStoriesFile(
     ''
   );
 
-  const isPlainJs = componentFilePath.endsWith('.jsx');
+  const isPlainJs =
+    componentFilePath.endsWith('.jsx') || componentFilePath.endsWith('.js');
   let fileExt = 'tsx';
   if (componentFilePath.endsWith('.jsx')) {
     fileExt = 'jsx';
@@ -97,7 +96,6 @@ export function createComponentStoriesFile(
   let propsTypeName: string = null;
   let props: {
     name: string;
-    type: KnobType;
     defaultValue: any;
   }[] = [];
 
@@ -105,16 +103,9 @@ export function createComponentStoriesFile(
     propsTypeName = propsInterface.name.text;
 
     props = propsInterface.members.map((member: ts.PropertySignature) => {
-      const initializerKindToKnobType: Record<number, KnobType> = {
-        [ts.SyntaxKind.StringKeyword]: 'text',
-        [ts.SyntaxKind.NumberKeyword]: 'number',
-        [ts.SyntaxKind.BooleanKeyword]: 'boolean',
-      };
-
       return {
         name: (member.name as ts.Identifier).text,
-        type: initializerKindToKnobType[member.type.kind],
-        defaultValue: getKnobDefaultValue(member.type.kind),
+        defaultValue: getArgsDefaultValue(member.type.kind),
       };
     });
   }
@@ -127,7 +118,6 @@ export function createComponentStoriesFile(
       componentFileName: name,
       propsTypeName,
       props,
-      usedKnobs: props.map((x) => x.type).join(', '),
       componentName: (cmpDeclaration as any).name.text,
       isPlainJs,
       fileExt,

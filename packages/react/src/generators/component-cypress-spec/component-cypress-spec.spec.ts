@@ -105,7 +105,7 @@ describe('react:component-cypress-spec', () => {
               formatFile`${appTree.read(cypressStorySpecFilePath, 'utf-8')}`
             )
               .toContain(formatFile`describe('test-ui-lib: Test component', () => {
-        beforeEach(() => cy.visit('/iframe.html?id=test--primary&knob-name=&knob-displayAge=false'));
+        beforeEach(() => cy.visit('/iframe.html?id=test--primary&args=name;displayAge:false;'));
         
         it('should render the component', () => {
           cy.get('h1').should('contain', 'Welcome to test-ui-lib!');

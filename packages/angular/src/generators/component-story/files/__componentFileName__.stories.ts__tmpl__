@@ -1,16 +1,23 @@
-<% if(props.length > 0) { %>import { text, number, boolean } from '@storybook/addon-knobs';<% } %>
+import { moduleMetadata, Story, Meta } from '@storybook/angular';
 import { <%=componentName%> } from './<%=componentFileName%>';
 
 export default {
   title: '<%=componentName%>',
-  component: <%=componentName%>
-}
+  component: <%=componentName%>,
+  decorators: [
+    moduleMetadata({
+      imports: [],
+    })
+  ],
+} as Meta<<%=componentName%>>;
 
-export const primary = () => ({
-  moduleMetadata: {
-    imports: []
-  },
-  props: {<% for (let prop of props) { %>
-    <%=prop.name%>: <%=prop.type%>('<%=prop.name%>', <%-prop.defaultValue%>),<% } %>
-  }
-})
+const Template: Story<<%=componentName%>> = (args: <%=componentName%>) => ({
+  component: <%=componentName%>,
+  props: args,
+});
+
+
+export const Primary = Template.bind({});
+Primary.args = {<% for (let prop of props) { %>
+    <%= prop.name %>:  <%- prop.defaultValue %>,<% } %>
+}

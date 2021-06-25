@@ -2,11 +2,9 @@
 
 exports[`componentCypressSpec generator should generate the component spec file 1`] = `
 "describe('ng-app1', () => {
-  beforeEach(() => cy.visit('/iframe.html?id=testbuttoncomponent--primary&knob-buttonType=button&knob-style=default&knob-age&knob-isOn=false'));
-
+  beforeEach(() => cy.visit('/iframe.html?id=testbuttoncomponent--primary&args=buttonType:button;style:default;age;isOn:false;'));
   it('should render the component', () => {
     cy.get('proj-test-button').should('exist');
   });
-});
-"
+});"
 `;

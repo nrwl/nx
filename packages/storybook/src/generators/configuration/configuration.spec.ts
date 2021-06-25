@@ -24,8 +24,8 @@ describe('@nrwl/storybook:configuration', () => {
     });
     writeJson(tree, 'package.json', {
       devDependencies: {
-        '@storybook/addon-knobs': '^6.0.21',
-        '@storybook/react': '^6.0.21',
+        '@storybook/addon-essentials': '~6.2.9',
+        '@storybook/react': '~6.2.9',
       },
     });
   });
@@ -86,7 +86,7 @@ describe('@nrwl/storybook:configuration', () => {
 
     const newContents = `module.exports = {
   stories: [],
-  addons: ['@storybook/addon-knobs', 'new-addon'],
+  addons: ['@storybook/addon-essentials', 'new-addon'],
 };
 `;
     // Setup a new lib

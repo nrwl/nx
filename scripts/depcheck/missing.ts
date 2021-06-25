@@ -63,6 +63,7 @@ const IGNORE_MATCHES = {
     '@angular-devkit/core',
     '@angular-devkit/schematics',
     '@storybook/addon-knobs',
+    '@storybook/addon-essentials',
     '@storybook/core',
     'rxjs',
   ],
