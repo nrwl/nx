@@ -15,7 +15,9 @@ const nextConfig = {
   },
   // Set this to true if you use CSS modules.
   // See: https://github.com/css-modules/css-modules
-  cssModules: false
+  cssModules: false,
+  // @zeit/next-less does not support webpack 5
+  webpack5: false,
 };
 
 module.exports = withLess(withNx(nextConfig));
@@ -33,7 +35,9 @@ const nextConfig = {
   },
   // Set this to true if you use CSS modules.
   // See: https://github.com/css-modules/css-modules
-  cssModules: false
+  cssModules: false,
+  // @zeit/next-stylus does not support webpack 5
+  webpack5: false,
 };
 
 module.exports = withStylus(withNx(nextConfig));

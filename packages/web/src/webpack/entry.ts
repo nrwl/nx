@@ -1,7 +1,8 @@
 import { logger } from '@nrwl/devkit';
 import { requireShim } from './require-shim';
 
-const { version } = requireShim('webpack/package.json');
+const result = requireShim('webpack/package.json');
+const version = result?.version;
 
 exports.default = undefined;
 
