@@ -395,7 +395,7 @@ describe('React Applications', () => {
     );
 
     if (opts.checkE2E && runCypressTests()) {
-      const e2eResults = runCLI(`e2e ${appName}-e2e`);
+      const e2eResults = runCLI(`e2e ${appName}-e2e --headless --no-watch`);
       expect(e2eResults).toContain('All specs passed!');
       expect(await killPorts()).toBeTruthy();
     }

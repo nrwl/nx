@@ -179,9 +179,11 @@ describe('Storybook schematics', () => {
         `
         );
 
-        expect(runCLI(`run ${myAngularLib}-e2e:e2e --no-watch`)).toContain(
-          'All specs passed!'
+        const e2eResults = runCLI(
+          `e2e ${myAngularLib}-e2e --headless --no-watch`
         );
+        expect(e2eResults).toContain('All specs passed!');
+        expect(await killPorts()).toBeTruthy();
 
         runCLI(`run ${myAngularLib}:build-storybook`);
 
@@ -189,7 +191,6 @@ describe('Storybook schematics', () => {
         expect(readFile(`dist/storybook/${myAngularLib}/index.html`)).toContain(
           `<title>Storybook</title>`
         );
-        expect(await killPorts()).toBeTruthy();
       }
     }, 1000000);
 
