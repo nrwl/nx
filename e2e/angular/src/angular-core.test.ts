@@ -66,7 +66,7 @@ describe('Angular Package', () => {
       console.log(
         `The current es2015 bundle size is ${es2015BundleSize / 1000} KB`
       );
-      expect(es2015BundleSize).toBeLessThanOrEqual(125000);
+      expect(es2015BundleSize).toBeLessThanOrEqual(160000);
 
       // running tests for the app
       expectTestsPass(await runCLIAsync(`test my-dir-${myapp} --no-watch`));
