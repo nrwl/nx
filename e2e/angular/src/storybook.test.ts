@@ -35,8 +35,8 @@ describe('Storybook schematics', () => {
       `
         module.exports = {
           stories: [],
-          addons: ['@storybook/addon-knobs'],
-        };
+          addons: ['@storybook/addon-essentials'],
+        };      
 
         console.log('hi there');
       `
@@ -99,22 +99,22 @@ describe('Storybook schematics', () => {
         writeFileSync(
           tmpProjPath(`libs/${myReactLib}/src/lib/button.stories.tsx`),
           `
-            import React from 'react';
-            import { Button, ButtonStyle } from './button';
-            import { text, number } from '@storybook/addon-knobs';
-
-            export default { title: 'Button' };
-
-            export const primary = () => (
-              <Button
-                padding={number('Padding', 0)}
-                style={text('Style', 'default') as ButtonStyle}
-                text={text('Text', 'Click me')}
-                // padding='0'
-                // style='default'
-                // text='Click me'
-              />
-            );
+          import { Story, Meta } from '@storybook/react';
+          import { Button, ButtonProps } from './button';
+          
+          export default {
+            component: Button,
+            title: 'Button',
+          } as Meta;
+          
+          const Template: Story<ButtonProps> = (args) => <Button {...args} />;
+          
+          export const Primary = Template.bind({});
+          Primary.args = {
+            text: 'Click me',
+            padding: 0,
+            style: 'default',
+          };          
             `
         );
 
@@ -133,14 +133,14 @@ describe('Storybook schematics', () => {
             describe('${myAngularLib}', () => {
 
           it('should render the component', () => {
-            cy.visit('/iframe.html?id=testbuttoncomponent--primary&knob-buttonType=button&knob-style=default&knob-age&knob-isDisabled=false');
+            cy.visit('/iframe.html?id=testbuttoncomponent--primary&args=buttonType:button;style:default;age;isDisabled:false');
             cy.get('proj-test-button').should('exist');
             cy.get('button').should('not.be.disabled');
             cy.get('button').should('have.class', 'default');
             cy.contains('You are 0 years old.');
           });
-          it('should adjust the knobs', () => {
-            cy.visit('/iframe.html?id=testbuttoncomponent--primary&knob-buttonType=button&knob-style=primary&knob-age=10&knob-isDisabled=true');
+          it('should adjust the controls', () => {
+            cy.visit('/iframe.html?id=testbuttoncomponent--primary&args=buttonType:button;style:primary;age:10;isDisabled:true');
             cy.get('button').should('be.disabled');
             cy.get('button').should('have.class', 'primary');
             cy.contains('You are 10 years old.');
@@ -165,14 +165,14 @@ describe('Storybook schematics', () => {
         describe('react-ui', () => {
           it('should render the component', () => {
             cy.visit(
-              '/iframe.html?id=button--primary&knob-Style=default&knob-Padding&knob-Text=Click%20me'
+              '/iframe.html?id=button--primary&args=style:default;padding;text:Click%20me'
             );
             cy.get('button').should('exist');
             cy.get('button').should('have.class', 'default');
           });
-          it('should adjust the knobs', () => {
+          it('should adjust the controls', () => {
             cy.visit(
-              '/iframe.html?id=button--primary&knob-Style=primary&knob-Padding=10&knob-Text=Other'
+              '/iframe.html?id=button--primary&args=style:primary;padding:10;text:Other'
             );
             cy.get('button').should('have.class', 'primary');
           });
@@ -240,21 +240,28 @@ describe('Storybook schematics', () => {
           `libs/${angularStorybookLib}/src/lib/myteststory.stories.ts`
         ),
         `
+            import { moduleMetadata, Story, Meta } from '@storybook/angular';
             import { MyTestCmpComponent } from '@${proj}/${anotherTestLib}';
 
             export default {
               title: 'My Test Cmp',
               component: MyTestCmpComponent,
-            };
+              decorators: [
+                moduleMetadata({
+                  imports: [],
+                })
+              ],
+            } as Meta<MyTestCmpComponent>;
 
-            let x = 'hi';
-
-            export const primary = () => ({
-              moduleMetadata: {
-                imports: [],
-              },
-              props: {},
+            const Template: Story<MyTestCmpComponent> = (args: MyTestCmpComponent) => ({
+              component: MyTestCmpComponent,
+              props: args,
             });
+
+
+            export const Primary = Template.bind({});
+            Primary.args = {
+            }
         `
       );
 
@@ -289,7 +296,7 @@ export function createTestUILib(libName: string): void {
         styleUrls: ['./test-button.component.css']
       })
       export class TestButtonComponent implements OnInit {
-        @Input('buttonType') type = 'button';
+        @Input('buttonType') buttonType = 'button';
         @Input() style: ButtonStyle = 'default';
         @Input() age!: number;
         @Input() isDisabled = false;

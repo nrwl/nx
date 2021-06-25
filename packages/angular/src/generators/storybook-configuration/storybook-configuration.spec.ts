@@ -37,8 +37,8 @@ describe('StorybookConfiguration generator', () => {
     }));
     jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
       devDependencies: {
-        '@storybook/addon-essentials': '^6.0.21',
-        '@storybook/react': '^6.0.21',
+        '@storybook/addon-essentials': '~6.2.9',
+        '@storybook/react': '~6.2.9',
       },
     });
   });
