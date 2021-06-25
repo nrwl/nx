@@ -459,7 +459,12 @@ function createFetcher(packageManager: PackageManager) {
           version: resolvedVersion,
         };
       }
-      removeSync(dir);
+
+      try {
+        removeSync(dir);
+      } catch {
+        // It's okay if this fails, the OS will clean it up eventually
+      }
     }
     return cache[`${packageName}-${packageVersion}`];
   };
