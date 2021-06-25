@@ -1,5 +1,8 @@
 import { ProjectGraph } from '@nrwl/devkit';
-import { getSourceDirOfDependentProjects } from './project-graph-utils';
+import {
+  getProjectNameFromDirPath,
+  getSourceDirOfDependentProjects,
+} from './project-graph-utils';
 
 describe('project graph utils', () => {
   describe('getSourceDirOfDependentProjects', () => {
@@ -10,9 +13,6 @@ describe('project graph utils', () => {
           type: 'app',
           data: {
             root: 'apps/demo-app',
-            sourceRoot: 'apps/demo-app/src',
-            projectType: 'application',
-            targets: {},
           },
         },
         ui: {
@@ -68,6 +68,26 @@ describe('project graph utils', () => {
       expect(() =>
         getSourceDirOfDependentProjects('non-existent-app', projGraph)
       ).toThrowError();
+    });
+
+    it('should find the project given a file within its src root', () => {
+      expect(getProjectNameFromDirPath('apps/demo-app', projGraph)).toEqual(
+        'demo-app'
+      );
+
+      expect(getProjectNameFromDirPath('apps/demo-app/src', projGraph)).toEqual(
+        'demo-app'
+      );
+
+      expect(
+        getProjectNameFromDirPath('apps/demo-app/src/subdir/bla', projGraph)
+      ).toEqual('demo-app');
+    });
+
+    it('should throw an error if the project name has not been found', () => {
+      expect(() => {
+        getProjectNameFromDirPath('apps/demo-app-unknown');
+      }).toThrowError();
     });
   });
 });
