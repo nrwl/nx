@@ -139,7 +139,11 @@ export function transformerIsFromJestPresetAngular(
 }
 
 export function usesJestPresetAngular(jestConfig: PartialJestConfig) {
-  return jestConfig.globals?.['ts-jest']?.astTransformers?.before?.some?.((x) =>
-    transformerIsFromJestPresetAngular(x)
-  );
+  const transformers = Array.isArray(
+    jestConfig.globals?.['ts-jest']?.astTransformers
+  )
+    ? jestConfig.globals?.['ts-jest']?.astTransformers || []
+    : jestConfig.globals?.['ts-jest']?.astTransformers?.before || [];
+
+  return transformers.some((x) => transformerIsFromJestPresetAngular(x));
 }
