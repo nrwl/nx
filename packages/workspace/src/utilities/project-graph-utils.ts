@@ -1,4 +1,5 @@
 import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
+import { isAbsolute, relative } from 'path';
 import { createProjectGraph } from '../core/project-graph';
 
 export function projectHasTarget(project: ProjectGraphNode, target: string) {
@@ -27,14 +28,39 @@ export function getSourceDirOfDependentProjects(
     );
   }
 
-  const dependencyNodeNames = findAllProjectNodeDependencies(
-    projectName,
-    projectGraph
-  );
-
-  return dependencyNodeNames.map(
+  const nodeNames = findAllProjectNodeDependencies(projectName, projectGraph);
+  return nodeNames.map(
     (nodeName) => projectGraph.nodes[nodeName].data.sourceRoot
   );
+}
+
+/**
+ * Finds the project node name by a file that lives within it's src root
+ * @param projRelativeDirPath directory path relative to the workspace root
+ * @param projectGraph
+ */
+export function getProjectNameFromDirPath(
+  projRelativeDirPath: string,
+  projectGraph = createProjectGraph()
+) {
+  let parentNodeName = null;
+  for (const [nodeName, node] of Object.entries(projectGraph.nodes)) {
+    const relativePath = relative(node.data.root, projRelativeDirPath);
+    const isMatch = relativePath && !relativePath.startsWith('..');
+
+    if (isMatch || node.data.root === projRelativeDirPath) {
+      parentNodeName = nodeName;
+      break;
+    }
+  }
+
+  if (!parentNodeName) {
+    throw new Error(
+      `Could not find any project containing the file "${projRelativeDirPath}" among it's project files`
+    );
+  }
+
+  return parentNodeName;
 }
 
 /**
