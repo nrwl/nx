@@ -54,6 +54,6 @@ export default async function update(tree: Tree) {
 
 function checkIfNodeProject(config: ProjectConfiguration) {
   return Object.entries(config.targets).some(([targetName, targetConfig]) =>
-    targetConfig.executor.includes('node')
+    targetConfig.executor?.includes?.('node')
   );
 }
