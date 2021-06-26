@@ -17,17 +17,17 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          - windows-latest
+          # - windows-latest
         include:
           - os: ubuntu-latest
             os-name: ubuntu
-          - os: windows-latest
-            os-name: windows
-        exclude:
-          - os: windows-latest
-            package_manager: npm
-          - os: windows-latest
-            package_manager: yarn
+          # - os: windows-latest
+          #  os-name: windows
+        # exclude:
+        #   - os: windows-latest
+        #     package_manager: npm
+        #   - os: windows-latest
+        #     package_manager: yarn
         node_version:
           - '14'
           # - '15'
