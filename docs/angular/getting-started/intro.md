@@ -20,7 +20,7 @@ Nx works especially well for [monorepos](/{{framework}}/core-concepts/why-monore
 - [Cache](/{{framework}}/core-extended/computation-caching) command output locally so that future runs on the same code happen in seconds. The paid [Nx Cloud](https://nx.app) offering allows this cache to be shared across every developer in your organization.
 - Provide a consistent syntax for [executing commands](/{{framework}}/executors/using-builders). `nx build my-app` works no matter what framework `my-app` uses.
 - Automate code modification tasks with [generators](/{{framework}}/cli/affected).
-- Access a thriving ecosystem of [plugins](/{{framework}}/generators/using-schematics) from Nrwl and the [community](/nx-community).
+- Access a thriving ecosystem of [plugins](/{{framework}}/generators/using-schematics) from Nrwl and the [community](/community).
 
 ## Learn Nx Fundamentals
 

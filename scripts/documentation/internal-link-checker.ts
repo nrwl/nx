@@ -53,7 +53,7 @@ function isNotImage(linkPath: string): boolean {
 }
 
 function isNotNxCommunityLink(linkPath: string): boolean {
-  return linkPath !== '/nx-community';
+  return linkPath !== '/community';
 }
 
 function removeAnchors(linkPath: string): string {

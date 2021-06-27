@@ -14,6 +14,6 @@ It's a command to create an Nx workspace to develop an Nx plugin.
 
 ## How to Use
 
-- Check out the list of community plugins and the documentation on how to create one using `create-nx-plugin` here: [https://nx.dev/nx-community](https://nx.dev/nx-community)
+- Check out the list of community plugins and the documentation on how to create one using `create-nx-plugin` here: [https://nx.dev/community](https://nx.dev/community)
 
 {{resources}}

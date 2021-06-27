@@ -175,7 +175,7 @@ Your use-case may also be covered by one of our community plugins. Plugin author
 
 [Learn more about caching](/{{framework}}/core-extended/computation-caching)
 
-[Learn more about community plugins](/nx-community)
+[Learn more about community plugins](/community)
 
 ## Migrating libraries
 
