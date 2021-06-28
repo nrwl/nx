@@ -12,7 +12,7 @@ The best way to create an executor is to use the `@nrwl/nx-plugin` package.
 nx g @nrwl/nx-plugin:plugin local
 ```
 
-This creates a plugin for you named `local`. If you already have a plugin in your workspace, you can use the `@nrwl/nx-plugin:executor` generator to add a new executor to it.
+This creates a plugin for you named `local`. If you already have a plugin in your workspace, use the `@nrwl/nx-plugin:executor` generator to add a new executor to it.
 
 Your file system should look like this now:
 
