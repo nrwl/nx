@@ -1,6 +1,6 @@
 # interface
 
-Run the 'interface' NestJs generator with Nx project support
+Run the `interface` NestJS generator with Nx project support.
 
 ## Usage
 
@@ -30,11 +30,11 @@ Alias(es): d,path
 
 Type: `string`
 
-Directory where the generated files are placed
+Directory where the generated files are placed.
 
 ### flat
 
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 
@@ -44,7 +44,7 @@ Flag to indicate if a directory is created.
 
 Type: `string`
 
-The name of generated generator
+The name of the interface.
 
 ### project
 
@@ -52,14 +52,12 @@ Alias(es): p
 
 Type: `string`
 
-The nest project to target
+The Nest project to target.
 
-### unitTestRunner
+### skipFormat
 
-Default: `jest`
+Default: `false`
 
-Type: `string`
+Type: `boolean`
 
-Possible values: `jest`, `none`
-
-Test runner to use for unit tests
+Skip formatting files.

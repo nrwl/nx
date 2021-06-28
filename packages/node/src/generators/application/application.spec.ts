@@ -1,4 +1,5 @@
 import { NxJsonConfiguration, readJson, Tree } from '@nrwl/devkit';
+import * as devkit from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 
 // nx-ignore-next-line
@@ -23,6 +24,7 @@ describe('app', () => {
       ),
       '@nrwl/angular': join(__dirname, '../../../../angular/collection.json'),
     });
+    jest.clearAllMocks();
   });
 
   afterEach(() => {
@@ -418,6 +420,24 @@ describe('app', () => {
 
       // @TODO how to spy on context ?
       // expect(contextLoggerSpy).toHaveBeenCalledWith('NOTE: --pascalCaseFiles is a noop')
+    });
+  });
+
+  describe('--skipFormat', () => {
+    it('should format files by default', async () => {
+      jest.spyOn(devkit, 'formatFiles');
+
+      await applicationGenerator(tree, { name: 'myNodeApp' });
+
+      expect(devkit.formatFiles).toHaveBeenCalled();
+    });
+
+    it('should not format files when --skipFormat=true', async () => {
+      jest.spyOn(devkit, 'formatFiles');
+
+      await applicationGenerator(tree, { name: 'myNodeApp', skipFormat: true });
+
+      expect(devkit.formatFiles).not.toHaveBeenCalled();
     });
   });
 });

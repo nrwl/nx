@@ -199,7 +199,10 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
   addProject(tree, options);
 
   if (options.linter !== Linter.None) {
-    const lintTask = await addLintingToApplication(tree, options);
+    const lintTask = await addLintingToApplication(tree, {
+      ...options,
+      skipFormat: true,
+    });
     tasks.push(lintTask);
   }
 
@@ -211,6 +214,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       supportTsx: options.js,
       babelJest: options.babelJest,
       testEnvironment: 'node',
+      skipFormat: true,
     });
     tasks.push(jestTask);
   }
