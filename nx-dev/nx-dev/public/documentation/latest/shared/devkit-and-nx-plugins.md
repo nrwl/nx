@@ -46,4 +46,4 @@ As with most things in Nx, the core of Nx Devkit is very simple. It only uses la
 
 - [Workspace generators](/{{framework}}/generators/workspace-generators)
 - [Workspace executors](/{{framework}}/executors/creating-custom-builders)
-- [Nx Community Plugins](/nx-community)
+- [Nx Community Plugins](/community)

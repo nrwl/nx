@@ -12,6 +12,6 @@
 
 It's an Nx plugin used to build other Nx plugins.
 
-Check out the list of community plugins and the documentation on how to create one using `create-nx-plugin` here: [https://nx.dev/nx-community](https://nx.dev/nx-community)
+Check out the list of community plugins and the documentation on how to create one using `create-nx-plugin` here: [https://nx.dev/community](https://nx.dev/community)
 
 {{resources}}

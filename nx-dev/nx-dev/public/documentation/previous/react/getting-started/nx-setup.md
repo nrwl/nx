@@ -26,7 +26,7 @@ For more information on adding Nx to an existing repository see the [migration g
 
 ## Configuration
 
-Nrwl maintains plugins for [Jest](/{{framework}}/jest/overview), [Cypress](/{{framework}}/cypress/overview), [ESLint](/{{framework}}/linter/eslint) and [Storybook](/{{framework}}/storybook/overview), so these tools can be easily added to your repo without the initial cost of setting up configuration files. As new versions of these tools are released, [`nx migrate latest`](/{{framework}}/core-concepts/updating-nx) automatically updates your configuration files to work with the next version. There is a growing list of [community plugins](/nx-community) that support other tools.
+Nrwl maintains plugins for [Jest](/{{framework}}/jest/overview), [Cypress](/{{framework}}/cypress/overview), [ESLint](/{{framework}}/linter/eslint) and [Storybook](/{{framework}}/storybook/overview), so these tools can be easily added to your repo without the initial cost of setting up configuration files. As new versions of these tools are released, [`nx migrate latest`](/{{framework}}/core-concepts/updating-nx) automatically updates your configuration files to work with the next version. There is a growing list of [community plugins](/community) that support other tools.
 
 Need to customize your configuration somehow? Configuration files can be modified for the whole repository or at an individual project level. For instance, `libA` has a `tsconfig.json` file that extends the global `tsconfig.base.json` file:
 
