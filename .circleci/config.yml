@@ -177,6 +177,12 @@ jobs:
       - run:
           name: Stop All Running Agents for This CI Run
           command: npx nx-cloud stop-all-agents
+      - run:
+          when: on_success
+          shell: '/bin/bash'
+          name: Save successful tag
+          command: |
+            ./scripts/circleci/tag-successful-build.sh nx_successful_ci_run__${CIRCLE_WORKFLOW_ID}
 workflows:
   build:
     jobs:
