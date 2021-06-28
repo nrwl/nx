@@ -154,7 +154,11 @@ describe('convert-to-nx-project', () => {
       name: 'lib',
       standaloneConfig: false,
     });
-    const promise = convertToNxProject(tree, { project: 'lib' });
-    expect(promise).rejects.toHaveBeenCalled();
+    try {
+      await convertToNxProject(tree, { project: 'lib' });
+    } catch (ex) {
+      expect(ex).toBeDefined();
+    }
+    expect.assertions(1);
   });
 });

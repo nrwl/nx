@@ -320,14 +320,12 @@ This tells Nx that all configuration for that project is found in the `libs/myli
 
 ```json
 {
-  "mylib": {
-    "root": "libs/mylib/",
-    "sourceRoot": "libs/mylib/src",
-    "projectType": "library",
-    "targets": {},
-    "tags": [],
-    "implicitDependencies": []
-  }
+  "root": "libs/mylib/",
+  "sourceRoot": "libs/mylib/src",
+  "projectType": "library",
+  "targets": {},
+  "tags": [],
+  "implicitDependencies": []
 }
 ```
 

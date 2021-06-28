@@ -51,7 +51,7 @@ To upgrade change the version number at the top of ${workspaceConfigName(
       host.root
     )} and run 'nx format'.
 `);
-    return;
+    throw new Error('v2+ Required');
   }
 
   await validateSchema(schema);
