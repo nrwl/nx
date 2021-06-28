@@ -6,19 +6,30 @@ This guide shows you how to create, run, and customize executors within your Nx 
 
 ## Creating an executor
 
-Your executor should be created within the `tools` directory of your Nx workspace like so:
+The best way to create an executor is to use the `@nrwl/nx-plugin` package.
+
+```bash
+nx g @nrwl/nx-plugin:plugin local
+```
+
+This creates a plugin for you named `local`. If you already have a plugin in your workspace, you can use the `@nrwl/nx-plugin:executor` generator to add a new executor to it.
+
+Your file system should look like this now:
 
 ```treeview
 happynrwl/
 ├── apps/
 ├── libs/
+│   ├── local/
+│   │   └── src/
+│   │       └── executors/
+│   │           └── build/
+│   │               ├── executor.spec.ts
+│   │               ├── executor.ts
+│   │               ├── schema.d.ts
+│   │               └── schema.json
+│   └── executors.json
 ├── tools/
-│   └── executors/
-│       └── echo/
-│           ├── executor.json
-│           ├── impl.ts
-│           ├── package.json
-│           └── schema.json
 ├── nx.json
 ├── package.json
 └── tsconfig.base.json
@@ -44,11 +55,11 @@ This file describes the options being sent to the executor (very similar to the 
 
 This example describes a single option for the executor that is a `string` called `textToEcho`. When using this executor, specify a `textToEcho` property inside the options.
 
-In our `impl.ts` file, we're creating an `Options` interface that matches the json object being described here.
+In our `executor.ts` file, we're creating an `Options` interface that matches the json object being described here.
 
-### impl.ts
+### executor.ts
 
-The `impl.ts` contains the actual code for your executor. Your executor's implementation must export a function that takes an options object and returns a `Promise<{ success: boolean }>`.
+The `executor.ts` contains the actual code for your executor. Your executor's implementation must export a function that takes an options object and returns a `Promise<{ success: boolean }>`.
 
 ```typescript
 import { ExecutorContext } from '@nrwl/devkit';
@@ -77,43 +88,33 @@ export default async function echoExecutor(
 }
 ```
 
-### executor.json
+### executors.json
 
-The `executor.json` file provides the description of your executor to the CLI.
+The `executors.json` file provides the description of your executor to the CLI.
 
 ```json
 {
   "executors": {
-    "echo": {
-      "implementation": "./impl",
-      "schema": "./schema.json",
+    "build": {
+      "implementation": "./src/executors/build/executor",
+      "schema": "./src/executors/build/schema.json",
       "description": "Runs `echo` (to test executors out)."
     }
   }
 }
 ```
 
-Note that this `executor.json` file is naming our executor 'echo' for the CLI's purposes, and mapping that name to the given implementation file and schema.
-
-### package.json
-
-This is all that’s required from the `package.json` file:
-
-```json
-{
-  "executors": "./executor.json"
-}
-```
+Note that this `executors.json` file is naming our executor 'echo' for the CLI's purposes, and mapping that name to the given implementation file and schema.
 
 ## Compiling and Running your Executor
 
-After your files are created, compile your executor with `tsc` (which is available locally in any Nx workspace):
+After your files are created, build your plugin:
 
 ```bash
-npx tsc tools/executors/echo/impl
+nx build local
 ```
 
-This will create the `impl.js` file in your file directory, which will serve as the artifact used by the CLI.
+This will compile your plugin to the `dist` folder, so that it can be used by the cli.
 
 Our last step is to add this executor to a given project’s `targets` object in your project's `workspace.json` or `angular.json` file. The example below adds this executor to a project named 'platform':
 
@@ -134,7 +135,7 @@ Our last step is to add this executor to a given project’s `targets` object in
           // ,,,
         },
         "echo": {
-          "executor": "./tools/executors/echo:echo",
+          "executor": "./dist/libs/local:build",
           "options": {
             "textToEcho": "Hello World"
           }
@@ -157,12 +158,26 @@ To which we'll see the console output:
 
 ```bash
 > nx run platform:echo
-Executing "echo"...
+Executing "build"...
 Options: {
   "textToEcho": "Hello World"
 }
 Hello World
 ```
+
+## Adding a Postinstall Hook
+
+In order to make the experience seamless for other developers, we need to add a postinstall hook to automatically build the plugin so that it can be used.
+
+```json
+{
+  "scripts": {
+    "postinstall": "nx build local"
+  }
+}
+```
+
+This will automatically build the `local` plugin when a developer installs `node_modules`.
 
 ## Debugging Executors
 
@@ -173,7 +188,7 @@ As part of Nx's computation cache process, Nx forks the node process, which can 
 3. Run the executor in the debug terminal
 
 ```bash
-nx run platform:echo
+nx run platform:build
 ```
 
 ## Using Node Child Process
