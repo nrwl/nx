@@ -8,6 +8,14 @@ This guide shows you how to create, run, and customize executors within your Nx 
 
 The best way to create an executor is to use the `@nrwl/nx-plugin` package.
 
+If you don't have the `@nrwl/nx-plugin` package installed already, install it:
+
+```bash
+npm install @nrwl/nx-plugin
+```
+
+Then create a plugin:
+
 ```bash
 nx g @nrwl/nx-plugin:plugin local
 ```
@@ -34,6 +42,8 @@ happynrwl/
 ├── package.json
 └── tsconfig.base.json
 ```
+
+Rename the `libs/local/src/executors/build` folder to `echo`.
 
 ### schema.json
 
@@ -95,9 +105,9 @@ The `executors.json` file provides the description of your executor to the CLI.
 ```json
 {
   "executors": {
-    "build": {
-      "implementation": "./src/executors/build/executor",
-      "schema": "./src/executors/build/schema.json",
+    "echo": {
+      "implementation": "./src/executors/echo/executor",
+      "schema": "./src/executors/echo/schema.json",
       "description": "Runs `echo` (to test executors out)."
     }
   }
@@ -135,7 +145,7 @@ Our last step is to add this executor to a given project’s `targets` object in
           // ,,,
         },
         "echo": {
-          "executor": "./dist/libs/local:build",
+          "executor": "./dist/libs/local:echo",
           "options": {
             "textToEcho": "Hello World"
           }
@@ -158,7 +168,7 @@ To which we'll see the console output:
 
 ```bash
 > nx run platform:echo
-Executing "build"...
+Executing "echo"...
 Options: {
   "textToEcho": "Hello World"
 }
@@ -188,7 +198,7 @@ As part of Nx's computation cache process, Nx forks the node process, which can 
 3. Run the executor in the debug terminal
 
 ```bash
-nx run platform:build
+nx run platform:echo
 ```
 
 ## Using Node Child Process
