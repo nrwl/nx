@@ -130,7 +130,11 @@ jobs:
           name: Get Last Sucessful Tag
           shell: '/bin/bash'
           command: |
+<<<<<<< HEAD
             source ./scripts/get-last-successful-tag.sh $CIRCLE_BRANCH master nx_successful_ci_run__* false
+=======
+            source ./scripts/get-last-successful-tag.sh $CIRCLE_BRANCH main nx_successful_ci_run__* false
+>>>>>>> 81f776fb (feat(repo): add tag generation and search to runs)
             echo "export BASE_SHA=\"$BASE_SHA\";" >> $BASH_ENV
       - run:
           name: Run Builds
