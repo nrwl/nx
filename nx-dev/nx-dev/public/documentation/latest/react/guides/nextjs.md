@@ -157,7 +157,12 @@ Let's continue to use our `tuskdesk` example from above, and so we need to check
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const withNx = require('@nrwl/next/plugins/with-nx');
 
-module.exports = withNx({});
+/**
+ * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}
+ **/
+const nextConfig = {};
+
+module.exports = withNx(nextConfig);
 ```
 
 If you have a config which looks like that (leveraging the `withNx()` config plugin) **AND** the version of Nx you are using is `11.1.0` or later, **no further action is needed** in your config.
@@ -180,10 +185,15 @@ E.g.
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const withNx = require('@nrwl/next/plugins/with-nx');
 
-module.exports = withNx({
+/**
+ * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}
+ **/
+const nextConfig = {
   target: 'experimental-serverless-trace',
   // ...You can of course have other Next.js config options specified here too, but the "target" is critical for Vercel deployments...
-});
+};
+
+module.exports = withNx(nextConfig);
 ```
 
 OR

@@ -40,7 +40,7 @@ The Nx Devkit is the underlying technology used to customize Nx to support diffe
 
 ### Pay as you go
 
-As with most things in Nx, the core of Nx Devkit is very simple. It only uses language primitives and immutable objects (the tree being the only exception). See [Simplest Generator](/{{framework}}/generators/using-schematics#simplest-generator) and [Simplest Executor](/{{framework}}/executors/using-builders#simplest-executor) for examples on creating generators and executors. The [Using Executors](/{{framework}}/executors/using-builders) and [Using Generators](/{{framework}}/generators/using-schematics) guides also have additional information on executors and generators.
+As with most things in Nx, the core of Nx Devkit is very simple. It only uses language primitives and immutable objects (the tree being the only exception). See [Simplest Generator](/{{framework}}/generators/creating-files) and [Simplest Executor](/{{framework}}/executors/using-builders#simplest-executor) for examples on creating generators and executors. The [Using Executors](/{{framework}}/executors/using-builders) and [Using Generators](/{{framework}}/generators/using-schematics) guides also have additional information on executors and generators.
 
 ## Learn more
 

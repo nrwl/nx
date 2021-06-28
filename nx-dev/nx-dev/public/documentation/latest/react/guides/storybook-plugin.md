@@ -374,13 +374,3 @@ Your folder structure should now look like this:
 ├── README.md
 └── etc...
 ```
-
-### Storybook v6 args and controls
-
-Storybook v6 moves from "knobs" to args and controls when it comes to defining and manipulating your storybook
-component properties. Feel free to use the new args way of defining stories. More can be found
-[on the official Storybook docs](https://storybook.js.org/docs/react/writing-stories/args).
-
-> **Note:** Nx does not yet automatically generate stories that use the args syntax. The main reason is that args don't
-> yet support being loaded via the iframe URL which is used in Nx to setup your Storybook based e2e tests. Once support
-> is present in Storybook v6, we will provide a way to generate args & controls based stories. More on the progress [here](https://github.com/storybookjs/storybook/issues/12291).
