@@ -35,10 +35,10 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
    */
 
   if (
-    !packageJson.dependencies['@storybook/addon-knobs'] &&
-    !packageJson.devDependencies['@storybook/addon-knobs']
+    !packageJson.dependencies['@storybook/addon-essentials'] &&
+    !packageJson.devDependencies['@storybook/addon-essentials']
   ) {
-    devDependencies['@storybook/addon-knobs'] = storybookVersion;
+    devDependencies['@storybook/addon-essentials'] = storybookVersion;
   }
 
   if (isFramework('angular', schema)) {
@@ -54,6 +54,13 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
       !packageJson.devDependencies['@storybook/builder-webpack5']
     ) {
       devDependencies['@storybook/builder-webpack5'] = storybookVersion;
+    }
+
+    if (
+      !packageJson.dependencies['@storybook/manager-webpack5'] &&
+      !packageJson.devDependencies['@storybook/manager-webpack5']
+    ) {
+      devDependencies['@storybook/manager-webpack5'] = storybookVersion;
     }
 
     if (

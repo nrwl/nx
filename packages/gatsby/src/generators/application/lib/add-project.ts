@@ -46,8 +46,13 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     targets,
   };
 
-  addProjectConfiguration(host, options.projectName, {
-    ...project,
-    ...nxConfig,
-  });
+  addProjectConfiguration(
+    host,
+    options.projectName,
+    {
+      ...project,
+      ...nxConfig,
+    },
+    options.standaloneConfig
+  );
 }

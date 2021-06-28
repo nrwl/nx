@@ -2,6 +2,7 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   createFile,
+  isNotWindows,
   killPorts,
   newProject,
   readFile,
@@ -19,6 +20,8 @@ describe('Web Components Applications', () => {
   it('should be able to generate a web app', async () => {
     const appName = uniq('app');
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+
+    checkFilesDoNotExist(`apps/${appName}/project.json`);
 
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -52,12 +55,24 @@ describe('Web Components Applications', () => {
     const lintE2eResults = runCLI(`lint ${appName}-e2e`);
     expect(lintE2eResults).toContain('All files pass linting.');
 
-    if (runCypressTests()) {
-      const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);
+    if (isNotWindows() && runCypressTests()) {
+      const e2eResults = runCLI(`e2e ${appName}-e2e --headless --no-watch`);
       expect(e2eResults).toContain('All specs passed!');
       expect(await killPorts()).toBeTruthy();
     }
   }, 500000);
+
+  it('should be able to generate a web app with standaloneConfig', async () => {
+    const appName = uniq('app');
+    runCLI(
+      `generate @nrwl/web:app ${appName} --no-interactive --standalone-config`
+    );
+
+    checkFilesExist(`apps/${appName}/project.json`);
+
+    const lintResults = runCLI(`lint ${appName}`);
+    expect(lintResults).toContain('All files pass linting.');
+  }, 120000);
 
   it('should remove previous output before building', async () => {
     const appName = uniq('app');

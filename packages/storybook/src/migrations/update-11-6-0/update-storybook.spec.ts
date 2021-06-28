@@ -10,7 +10,7 @@ describe('Update 11-6-0/12-3-0', () => {
     tree = createTree();
   });
 
-  it('should update storybook versions if storybook is already above 6 but below 6.2.7', async () => {
+  it('should update storybook versions if storybook is already above 6 but below 6.2.9', async () => {
     writeJson(tree, 'package.json', {
       devDependencies: {
         '@storybook/angular': '^6.0.0',
@@ -21,21 +21,21 @@ describe('Update 11-6-0/12-3-0', () => {
     await updateStorybook(tree);
     expect(
       readJson(tree, 'package.json').devDependencies['@storybook/angular']
-    ).toBe('^6.2.7');
+    ).toBe('~6.2.9');
   });
 
-  it('should not update storybook versions if storybook is already above 6.2.7', async () => {
+  it('should not update storybook versions if storybook is already above 6.2.9', async () => {
     writeJson(tree, 'package.json', {
       devDependencies: {
-        '@storybook/angular': '6.2.8',
-        '@storybook/react': '6.2.8',
-        '@storybook/addon-knobs': '6.2.8',
+        '@storybook/angular': '~6.2.9',
+        '@storybook/react': '~6.2.9',
+        '@storybook/addon-knobs': '~6.2.9',
       },
     });
     await updateStorybook(tree);
     expect(
       readJson(tree, 'package.json').devDependencies['@storybook/angular']
-    ).toBe('6.2.8');
+    ).toBe('~6.2.9');
   });
 
   it('should not update storybook versions if storybook is below 6', async () => {

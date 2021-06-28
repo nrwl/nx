@@ -202,13 +202,18 @@ function addProject(host: Tree, options: NormalizedSchema) {
     };
   }
 
-  addProjectConfiguration(host, options.name, {
-    root: options.projectRoot,
-    sourceRoot: joinPathFragments(options.projectRoot, 'src'),
-    projectType: 'library',
-    tags: options.parsedTags,
-    targets,
-  });
+  addProjectConfiguration(
+    host,
+    options.name,
+    {
+      root: options.projectRoot,
+      sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+      projectType: 'library',
+      tags: options.parsedTags,
+      targets,
+    },
+    options.standaloneConfig
+  );
 }
 
 function updateTsConfig(tree: Tree, options: NormalizedSchema) {
@@ -315,10 +320,8 @@ function updateAppRoutes(host: Tree, options: NormalizedSchema) {
 
   // addInitialAppRoutes
   {
-    const {
-      content: componentContent,
-      source: componentSource,
-    } = readComponent(host, appComponentPath);
+    const { content: componentContent, source: componentSource } =
+      readComponent(host, appComponentPath);
     const isComponentRouterPresent = componentContent.match(/react-router-dom/);
     if (!isComponentRouterPresent) {
       const changes = applyChangesToString(
@@ -331,10 +334,8 @@ function updateAppRoutes(host: Tree, options: NormalizedSchema) {
 
   // addNewAppRoute
   {
-    const {
-      content: componentContent,
-      source: componentSource,
-    } = readComponent(host, appComponentPath);
+    const { content: componentContent, source: componentSource } =
+      readComponent(host, appComponentPath);
     const { npmScope } = getWorkspaceLayout(host);
     const changes = applyChangesToString(
       componentContent,

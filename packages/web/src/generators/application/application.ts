@@ -149,7 +149,12 @@ function addProject(tree: Tree, options: NormalizedSchema) {
   project = addBuildTarget(project, options);
   project = addServeTarget(project, options);
 
-  addProjectConfiguration(tree, options.projectName, project);
+  addProjectConfiguration(
+    tree,
+    options.projectName,
+    project,
+    options.standaloneConfig
+  );
 
   const workspace = readWorkspaceConfiguration(tree);
 

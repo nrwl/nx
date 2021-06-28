@@ -1,4 +1,3 @@
-import React from 'react';
 <% if (styledModule && styledModule !== 'styled-jsx') {
   var wrapper = 'StyledPage';
 %>import styled from '<%= styledModule %>';<% } else {

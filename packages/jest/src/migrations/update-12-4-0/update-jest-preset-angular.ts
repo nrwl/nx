@@ -1,11 +1,4 @@
-import {
-  formatFiles,
-  logger,
-  ProjectConfiguration,
-  readProjectConfiguration,
-  stripIndents,
-  Tree,
-} from '@nrwl/devkit';
+import { formatFiles, logger, stripIndents, Tree } from '@nrwl/devkit';
 import { join } from 'path';
 
 import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
@@ -57,7 +50,7 @@ export function updateASTTransformers(
   jestConfig: PartialJestConfig
 ) {
   const newTransformers = getNewAstTransformers(
-    jestConfig.globals?.['ts-jest'].astTransformers
+    jestConfig.globals?.['ts-jest']?.astTransformers
   );
   if (newTransformers === null) {
     removePropertyFromJestConfig(
@@ -146,7 +139,11 @@ export function transformerIsFromJestPresetAngular(
 }
 
 export function usesJestPresetAngular(jestConfig: PartialJestConfig) {
-  return jestConfig.globals['ts-jest']?.astTransformers?.before?.some?.((x) =>
-    transformerIsFromJestPresetAngular(x)
-  );
+  const transformers = Array.isArray(
+    jestConfig.globals?.['ts-jest']?.astTransformers
+  )
+    ? jestConfig.globals?.['ts-jest']?.astTransformers || []
+    : jestConfig.globals?.['ts-jest']?.astTransformers?.before || [];
+
+  return transformers.some((x) => transformerIsFromJestPresetAngular(x));
 }

@@ -1,12 +1,11 @@
 import {
-  ProjectConfiguration,
-  Tree,
   writeJson,
   updateProjectConfiguration,
   offsetFromRoot,
   readProjectConfiguration,
   formatFiles,
 } from '@nrwl/devkit';
+import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
 import { join } from 'path';
 import { Linter } from '../utils/linter';
 import { lintInitGenerator } from '../init/init';

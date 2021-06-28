@@ -32,6 +32,7 @@ describe('react:storybook-configuration', () => {
     await storybookConfigurationGenerator(appTree, {
       name: 'test-ui-lib',
       configureCypress: true,
+      standaloneConfig: false,
     });
 
     expect(appTree.exists('libs/test-ui-lib/.storybook/main.js')).toBeTruthy();
@@ -47,6 +48,7 @@ describe('react:storybook-configuration', () => {
       name: 'test-ui-lib',
       generateStories: true,
       configureCypress: false,
+      standaloneConfig: false,
     });
 
     expect(
@@ -80,6 +82,7 @@ describe('react:storybook-configuration', () => {
       generateStories: true,
       configureCypress: false,
       js: true,
+      standaloneConfig: false,
     });
 
     expect(
@@ -92,6 +95,7 @@ describe('react:storybook-configuration', () => {
     await storybookConfigurationGenerator(appTree, {
       name: 'test-ui-app',
       configureCypress: true,
+      standaloneConfig: false,
     });
 
     expect(appTree.exists('apps/test-ui-app/.storybook/main.js')).toBeTruthy();
@@ -115,6 +119,7 @@ describe('react:storybook-configuration', () => {
       name: 'test-ui-app',
       generateStories: true,
       configureCypress: false,
+      standaloneConfig: false,
     });
 
     // Currently the auto-generate stories feature only picks up components under the 'lib' directory.
@@ -140,6 +145,7 @@ describe('react:storybook-configuration', () => {
       configureCypress: true,
       generateCypressSpecs: true,
       cypressDirectory: 'one/two',
+      standaloneConfig: false,
     });
     [
       'apps/one/two/test-ui-lib-e2e/cypress.json',
@@ -172,6 +178,7 @@ export async function createTestUILib(
     style: 'css',
     unitTestRunner: 'none',
     name: libName,
+    standaloneConfig: false,
   });
   return appTree;
 }
@@ -191,6 +198,7 @@ export async function createTestAppLib(
     unitTestRunner: 'none',
     name: libName,
     js: plainJS,
+    standaloneConfig: false,
   });
 
   await componentGenerator(appTree, {

@@ -2,7 +2,6 @@ import { Observable } from 'rxjs';
 import { Task, TaskCompleteEvent, TasksRunner } from './tasks-runner';
 import type { ProjectGraph, NxJsonConfiguration } from '@nrwl/devkit';
 import { TaskOrchestrator } from './task-orchestrator';
-import { getDefaultDependencyConfigs } from './utils';
 import { performance } from 'perf_hooks';
 import { TaskGraphCreator } from './task-graph-creator';
 import { Hasher } from '../core/hasher/hasher';
@@ -34,7 +33,6 @@ export interface DefaultTasksRunnerOptions {
   cacheableOperations?: string[];
   cacheableTargets?: string[];
   runtimeCacheInputs?: string[];
-  strictlyOrderedTargets?: string[];
   cacheDirectory?: string;
   remoteCache?: RemoteCache;
   lifeCycle?: LifeCycle;
@@ -95,10 +93,7 @@ async function runAllTasks(
     hideCachedOutput?: boolean;
   }
 ): Promise<Array<{ task: Task; type: any; success: boolean }>> {
-  const defaultTargetDependencies = getDefaultDependencyConfigs(
-    context.nxJson,
-    options
-  );
+  const defaultTargetDependencies = context.nxJson.targetDependencies ?? {};
 
   const taskGraph = new TaskGraphCreator(
     context.projectGraph,

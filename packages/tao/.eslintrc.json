@@ -13,9 +13,6 @@
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "parserOptions": {
-        "project": ["packages/tao/tsconfig.*?.json"]
-      },
       "rules": {}
     },
     {

@@ -26,11 +26,16 @@ describe('dep-graph-client', () => {
     getSelectProjectsMessage().should('be.visible');
   });
 
+  it('should hide select projects message when a project is selected', () => {
+    cy.contains('nx-docs-site').siblings('button').click();
+    getSelectProjectsMessage().should('not.be.visible');
+  });
+
   describe('selecting a different project', () => {
     it('should change the available projects', () => {
-      getProjectCheckboxes().should('have.length', 133);
+      getProjectCheckboxes().should('have.length', 135);
       cy.get('[data-cy=project-select]').select('Nx');
-      getProjectCheckboxes().should('have.length', 42);
+      getProjectCheckboxes().should('have.length', 45);
     });
 
     it("should restore sidebar if it's been hidden", () => {
@@ -53,6 +58,7 @@ describe('dep-graph-client', () => {
     it('should uncheck all project checkboxes', () => {
       getDeselectAllButton().click();
       getProjectCheckboxes().should('not.be.checked');
+      getSelectProjectsMessage().should('be.visible');
     });
   });
 

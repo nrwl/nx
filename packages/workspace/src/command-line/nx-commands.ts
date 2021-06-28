@@ -1,8 +1,7 @@
 import { execSync } from 'child_process';
-import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
+import { getPackageManagerCommand, writeJsonFile } from '@nrwl/devkit';
 import * as yargs from 'yargs';
 import { nxVersion } from '../utils/versions';
-import { writeFileSync } from 'fs';
 import * as path from 'path';
 
 const noop = (yargs: yargs.Argv): yargs.Argv => yargs;
@@ -401,6 +400,11 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
     .option('port', {
       describe: 'Bind the dep graph server to a specific port.',
       type: 'number',
+    })
+    .option('watch', {
+      describe: 'Watch for changes to dep graph and update in-browser',
+      type: 'boolean',
+      default: false,
     });
 }
 
@@ -440,20 +444,17 @@ function taoPath() {
 
   const { dirSync } = require('tmp');
   const tmpDir = dirSync().name;
-  writeFileSync(
-    path.join(tmpDir, 'package.json'),
-    JSON.stringify({
-      dependencies: {
-        '@nrwl/tao': 'latest',
+  writeJsonFile(path.join(tmpDir, 'package.json'), {
+    dependencies: {
+      '@nrwl/tao': 'latest',
 
-        // these deps are required for migrations written using angular devkit
-        '@angular-devkit/architect': 'latest',
-        '@angular-devkit/schematics': 'latest',
-        '@angular-devkit/core': 'latest',
-      },
-      license: 'MIT',
-    })
-  );
+      // these deps are required for migrations written using angular devkit
+      '@angular-devkit/architect': 'latest',
+      '@angular-devkit/schematics': 'latest',
+      '@angular-devkit/core': 'latest',
+    },
+    license: 'MIT',
+  });
 
   execSync(packageManager.install, {
     cwd: tmpDir,

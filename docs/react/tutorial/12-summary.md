@@ -14,5 +14,5 @@ In this tutorial you:
 **Dive Deep:**
 
 - [Nx CLI](/{{framework}}/getting-started/nx-cli)
-- [Computation Caching](/{{framework}}/core-concepts/computation-caching)
-- [Rebuilding What is Affected](/{{framework}}/core-concepts/affected)
+- [Computation Caching](/{{framework}}/core-extended/computation-caching)
+- [Rebuilding What is Affected](/{{framework}}/core-extended/affected)

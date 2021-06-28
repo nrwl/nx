@@ -1,12 +1,12 @@
+import type { NextConfig } from 'next/dist/next-server/server/config';
 import { WebpackConfigOptions } from '../src/utils/types';
 
 const { join } = require('path');
 const { appRootPath } = require('@nrwl/workspace/src/utilities/app-root');
 const { workspaceLayout } = require('@nrwl/workspace/src/core/file-utils');
 
-export interface WithNxOptions {
+export interface WithNxOptions extends NextConfig {
   nx?: WebpackConfigOptions;
-  [key: string]: any;
 }
 
 function regexEqual(x, y) {

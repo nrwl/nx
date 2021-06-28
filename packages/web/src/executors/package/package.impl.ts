@@ -1,4 +1,5 @@
-import { ExecutorContext, logger, names } from '@nrwl/devkit';
+import { readJsonFile, writeJsonFile, logger, names } from '@nrwl/devkit';
+import type { ExecutorContext, ProjectGraphNode } from '@nrwl/devkit';
 
 import * as rollup from 'rollup';
 import * as peerDepsExternal from 'rollup-plugin-peer-deps-external';
@@ -21,14 +22,7 @@ import { catchError, concatMap, last, tap } from 'rxjs/operators';
 import { eachValueFrom } from 'rxjs-for-await';
 import * as autoprefixer from 'autoprefixer';
 
-import {
-  readJsonFile,
-  writeJsonFile,
-} from '@nrwl/workspace/src/utilities/fileutils';
-import {
-  createProjectGraph,
-  ProjectGraphNode,
-} from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,

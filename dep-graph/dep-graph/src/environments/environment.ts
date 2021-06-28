@@ -1,11 +1,13 @@
-// This file can be replaced during build by using the `fileReplacements` array.
-// When building for production, this file is replaced with `environment.prod.ts`.
+import { FetchProjectGraphService } from '../app/fetch-project-graph-service';
+import { Environment } from '../app/models';
+import { projectGraphs } from '../graphs';
 
-import { AppConfig } from '../app/app';
-
-export const environment: { release: boolean; appConfig: AppConfig } = {
-  release: false,
+export const environment: Environment = {
+  environment: 'dev',
   appConfig: {
     showDebugger: true,
+    projectGraphs,
+    defaultProjectGraph: 'nx',
+    projectGraphService: new FetchProjectGraphService(),
   },
 };

@@ -1,5 +1,5 @@
 import type { Tree } from '@nrwl/devkit';
-import { names } from '@nrwl/devkit';
+import { names, updateJson } from '@nrwl/devkit';
 
 export interface AppConfig {
   appName: string; // name of app
@@ -101,6 +101,13 @@ export function createApp(
       },
     })
   );
+  updateJson(tree, './nx.json', (json) => ({
+    ...json,
+    projects: {
+      ...json.projects,
+      [appName]: { tags: [] },
+    },
+  }));
 }
 
 export function createLib(tree: Tree, libName: string) {

@@ -11,6 +11,7 @@ import {
   ProjectGraph,
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
+import { resolveNewFormatWithInlineProjects } from '@nrwl/tao/src/shared/workspace';
 
 export interface Hash {
   value: string;
@@ -273,8 +274,8 @@ class ProjectHasher {
     private readonly projectGraph: ProjectGraph,
     private readonly hashing: HashingImpl
   ) {
-    this.workspaceJson = this.readConfigFile(workspaceFileName());
-    this.nxJson = this.readConfigFile('nx.json');
+    this.workspaceJson = this.readWorkspaceConfigFile(workspaceFileName());
+    this.nxJson = this.readNxJsonConfigFile('nx.json');
   }
 
   async hashProject(
@@ -335,13 +336,23 @@ class ProjectHasher {
     return this.sourceHashes[projectName];
   }
 
-  private readConfigFile(path: string) {
+  private readWorkspaceConfigFile(path: string): WorkspaceJsonConfiguration {
+    try {
+      const res = readJsonFile(path);
+      res.projects ??= {};
+      return resolveNewFormatWithInlineProjects(res);
+    } catch {
+      return { projects: {}, version: 2 };
+    }
+  }
+
+  private readNxJsonConfigFile(path: string): NxJsonConfiguration {
     try {
       const res = readJsonFile(path);
       res.projects ??= {};
       return res;
     } catch {
-      return { projects: {} };
+      return { projects: {}, npmScope: '' };
     }
   }
 }

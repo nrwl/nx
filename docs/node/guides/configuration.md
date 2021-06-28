@@ -18,6 +18,12 @@ The `workspace.json` configuration file contains information about the targets a
         "build": {
           "executor": "@nrwl/node:build",
           "outputs": ["dist/apps/myapp"],
+          "dependsOn": [
+            {
+              "target": "build",
+              "projects": "dependencies"
+            }
+          ],
           "options": {
             "outputPath": "dist/packages/myapp",
             "main": "packages/myapp/src/main.ts",
@@ -99,7 +105,7 @@ For instance, the following configures `mylib`.
 
 - `root` tells Nx the location of the library including its sources and configuration files.
 - `sourceRoot` tells Nx the location of the library's source files.
-- `projectType` is either 'application' or 'library'.
+- `projectType` is either 'application' or 'library'. The project type is used in dep graph viz and in a few aux commands.
 - `targets` configures all the targets which define what tasks you can run against the library.
 
 ### Targets
@@ -119,7 +125,7 @@ Let's look at the simple target:
 
 **Target Name**
 
-The name of the target `test` means that you can invoke it as follows: `nx test mylib` or `nx run mylib:test`. The name isn't significant in any other way. If you rename it to, for example, `mytest`, you will be able to run as follows: `nx run mylib:mytest`.
+The name of the target `test` means that you can invoke it as follows: `nx test mylib` or `nx run mylib:test`. The name isn't significant in any other way. If you rename it to, for example, `mytest`, you will be able to run as follows: `nx mytest mylib` or `nx run mylib:mytest`.
 
 **Executor**
 
@@ -187,6 +193,66 @@ require(`@nrwl/jest`).executors['jest']({...options, ...selectedConfiguration, .
 ```
 
 The selected configuration adds/overrides the default options, and the provided command line args add/override the configuration options.
+
+**Target Dependencies**
+
+Targets can depend on other targets. A common scenario is having to build dependencies of a project first before building the project. You can specify this using the `dependsOn`.
+
+```json
+{
+  "build": {
+    "executor": "@nrwl/node:build",
+    "outputs": ["dist/apps/myapp"],
+    "options": {
+      "index": "apps/myapp/src/app.html",
+      "main": "apps/myapp/src/main.ts"
+    },
+    "dependsOn": [
+      {
+        "target": "build",
+        "projects": "dependencies"
+      }
+    ]
+  }
+}
+```
+
+In this case, running `nx build myapp` will build all the buildable libraries `myapp` depends on first. In other words, `nx build myapp` will result in multiple tasks executing. The `--parallel`, and `--max-parallel` flags will have the same effect as they would with `run-many` or `affected`.
+
+It is also possible to define dependencies between the targets of the same project.
+
+In the following example invoking `nx build myapp` will build all the libraries first, then `nx build-base myapp` will be executed and only then `nx build myapp` will be executed.
+
+```json
+{
+  "build-base": {
+    "executor": "@nrwl/node:build",
+    "outputs": ["dist/apps/myapp"],
+    "options": {
+      "index": "apps/myapp/src/app.html",
+      "main": "apps/myapp/src/main.ts"
+    }
+  },
+  "build": {
+    "executor": "@nrwl/workspace:run-commands",
+    "dependsOn": [
+      {
+        "target": "build",
+        "projects": "dependencies"
+      },
+      {
+        "target": "build-base",
+        "projects": "self"
+      }
+    ],
+    "options": {
+      "command": "./copy-readme-and-license.sh"
+    }
+  }
+}
+```
+
+Often the same `dependsOn` configuration has to be defined for every project in the repo. You can define it once in `nx.json` (see below).
 
 ### Generators
 
@@ -297,7 +363,6 @@ Tasks runners are invoked when you run `nx test`, `nx build`, `nx run-many`, `nx
 Tasks runners can accept different options. The following are the options supported by `"@nrwl/workspace/tasks-runners/default"` and `"@nrwl/nx-cloud"`.
 
 - `cacheableOperations` defines the list of targets/operations that will be cached by Nx.
-- `strictlyOrderedTargets` defines the list of targets that need to be executed in the order defined by the dependency graph. Defaults to `['build']`
 - `parallel` defines whether to run targets in parallel
 - `maxParallel` defines the max number of processes used.
 - `captureStderr` defines whether the cache will capture stderr or just stdout
@@ -371,3 +436,37 @@ You can also add dependencies between projects. For instance, the example below 
   }
 }
 ```
+
+### Target Dependencies
+
+Targets can depend on other targets. A common scenario is having to build dependencies of a project first before building the project. The `dependsOn` property in `workspace.json` can be used to define the list of dependencies of an individual target.
+
+Often the same `dependsOn` configuration has to be defined for every project in the repo, and that's when defining `targetDependencies` in `nx.json` is helpful.
+
+```json
+{
+  "targetDependencies": {
+    "build": [
+      {
+        "target": "build",
+        "projects": "dependencies"
+      }
+    ]
+  }
+}
+```
+
+The configuration above is identical to adding `{"dependsOn": [{"target": "build", "projects": "dependencies"]}` to every build target in `workspace.json`.
+
+The `dependsOn` property in `workspace.json` takes precedence over the `targetDependencies` in `nx.json`.
+
+## .nxignore
+
+You may optionally add an `.nxignore` file to the root. This file is used to specify files in your workspace that should be completely ignored by Nx.
+
+The syntax is the same as a [`.gitignore` file](https://git-scm.com/book/en/v2/Git-Basics-Recording-Changes-to-the-Repository#_ignoring).
+
+**When a file is specified in the `.nxignore` file:**
+
+1. Changes to that file will not be taken into account in the `affected` calculations.
+2. Even if the file is outside an app or library, `nx workspace-lint` will not warn about it.

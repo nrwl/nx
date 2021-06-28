@@ -60,9 +60,11 @@
 - [applyChangesToString](../../react/nx-devkit/index#applychangestostring)
 - [convertNxExecutor](../../react/nx-devkit/index#convertnxexecutor)
 - [convertNxGenerator](../../react/nx-devkit/index#convertnxgenerator)
+- [detectPackageManager](../../react/nx-devkit/index#detectpackagemanager)
 - [formatFiles](../../react/nx-devkit/index#formatfiles)
 - [generateFiles](../../react/nx-devkit/index#generatefiles)
 - [getPackageManagerCommand](../../react/nx-devkit/index#getpackagemanagercommand)
+- [getPackageManagerVersion](../../react/nx-devkit/index#getpackagemanagerversion)
 - [getProjects](../../react/nx-devkit/index#getprojects)
 - [getWorkspaceLayout](../../react/nx-devkit/index#getworkspacelayout)
 - [getWorkspacePath](../../react/nx-devkit/index#getworkspacepath)
@@ -448,8 +450,13 @@ A change to be made to a string
 
 Add Dependencies and Dev Dependencies to package.json
 
-For example, `addDependenciesToPackageJson(host, { react: 'latest' }, { jest: 'latest' })`
-will add `react` and `jest` to the dependencies and devDependencies sections of package.json respectively
+For example:
+
+```typescript
+addDependenciesToPackageJson(host, { react: 'latest' }, { jest: 'latest' });
+```
+
+This will **add** `react` and `jest` to the dependencies and devDependencies sections of package.json respectively.
 
 #### Parameters
 
@@ -468,7 +475,7 @@ Callback to install dependencies only if necessary. undefined is returned if cha
 
 ### addProjectConfiguration
 
-▸ **addProjectConfiguration**(`host`: [_Tree_](../../react/nx-devkit/index#tree), `projectName`: _string_, `projectConfiguration`: [_ProjectConfiguration_](../../react/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../react/nx-devkit/index#nxjsonprojectconfiguration)): _void_
+▸ **addProjectConfiguration**(`host`: [_Tree_](../../react/nx-devkit/index#tree), `projectName`: _string_, `projectConfiguration`: [_ProjectConfiguration_](../../react/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../react/nx-devkit/index#nxjsonprojectconfiguration), `standalone?`: _boolean_): _void_
 
 Adds project configuration to the Nx workspace.
 
@@ -477,11 +484,12 @@ both files.
 
 #### Parameters
 
-| Name                   | Type                                                                                                                                                                | Description                                                             |
-| :--------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :---------------------------------------------------------------------- |
-| `host`                 | [_Tree_](../../react/nx-devkit/index#tree)                                                                                                                          | the file system tree                                                    |
-| `projectName`          | _string_                                                                                                                                                            | unique name. Often directories are part of the name (e.g., mydir-mylib) |
-| `projectConfiguration` | [_ProjectConfiguration_](../../react/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../react/nx-devkit/index#nxjsonprojectconfiguration) | project configuration                                                   |
+| Name                   | Type                                                                                                                                                                | Default value | Description                                                             |
+| :--------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :------------ | :---------------------------------------------------------------------- |
+| `host`                 | [_Tree_](../../react/nx-devkit/index#tree)                                                                                                                          | -             | the file system tree                                                    |
+| `projectName`          | _string_                                                                                                                                                            | -             | unique name. Often directories are part of the name (e.g., mydir-mylib) |
+| `projectConfiguration` | [_ProjectConfiguration_](../../react/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../react/nx-devkit/index#nxjsonprojectconfiguration) | -             | project configuration                                                   |
+| `standalone`           | _boolean_                                                                                                                                                           | false         | -                                                                       |
 
 **Returns:** _void_
 
@@ -497,7 +505,7 @@ This is useful when working with ASTs.
 
 For Example, to rename a property in a method's options:
 
-```
+```typescript
 const code = `bootstrap({
   target: document.querySelector('#app')
 })`;
@@ -507,17 +515,17 @@ const updatedCode = applyChangesToString(code, [
   {
     type: ChangeType.Insert,
     index: indexOfPropertyName,
-    text: 'element'
+    text: 'element',
   },
   {
     type: ChangeType.Delete,
     start: indexOfPropertyName,
-    length: 6
+    length: 6,
   },
 ]);
 
 bootstrap({
-  element: document.querySelector('#app')
+  element: document.querySelector('#app'),
 });
 ```
 
@@ -572,6 +580,22 @@ Convert an Nx Generator into an Angular Devkit Schematic
 
 ---
 
+### detectPackageManager
+
+▸ **detectPackageManager**(`dir?`: _string_): [_PackageManager_](../../react/nx-devkit/index#packagemanager)
+
+Detects which package manager is used in the workspace based on the lock file.
+
+#### Parameters
+
+| Name  | Type     | Default value |
+| :---- | :------- | :------------ |
+| `dir` | _string_ | ''            |
+
+**Returns:** [_PackageManager_](../../react/nx-devkit/index#packagemanager)
+
+---
+
 ### formatFiles
 
 ▸ **formatFiles**(`host`: [_Tree_](../../react/nx-devkit/index#tree)): _Promise_<void\>
@@ -599,14 +623,29 @@ While doing so it performs two substitutions:
 - Substitutes segments of file names surrounded by \_\_
 - Uses ejs to substitute values in templates
 
+Examples:
+
+```typescript
+generateFiles(host, path.join(__dirname, 'files'), './tools/scripts', {
+  tmpl: '',
+  name: 'myscript',
+});
+```
+
+This command will take all the files from the `files` directory next to the place where the command is invoked from.
+It will replace all `__tmpl__` with '' and all `__name__` with 'myscript' in the file names, and will replace all
+`<%= name %>` with `myscript` in the files themselves.
+`tmpl: ''` is a common pattern. With it you can name files like this: `index.ts__tmpl__`, so your editor
+doesn't get confused about incorrect TypeScript files.
+
 #### Parameters
 
-| Name            | Type                                       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| :-------------- | :----------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `host`          | [_Tree_](../../react/nx-devkit/index#tree) | the file system tree                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `srcFolder`     | _string_                                   | the source folder of files (absolute path)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `target`        | _string_                                   | the target folder (relative to the host root)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `substitutions` | _object_                                   | an object of key-value pairs Examples: `typescript generateFiles(host, path.join(__dirname , 'files'), './tools/scripts', {tmpl: '', name: 'myscript'}) ` This command will take all the files from the `files` directory next to the place where the command is invoked from. It will replace all `__tmpl__` with '' and all `__name__` with 'myscript' in the file names, and will replace all `<%= name %>` with `myscript` in the files themselves. `tmpl: ''` is a common pattern. With it you can name files like this: `index.ts__tmpl__`, so your editor doesn't get confused about incorrect TypeScript files. |
+| Name            | Type                                       | Description                                   |
+| :-------------- | :----------------------------------------- | :-------------------------------------------- |
+| `host`          | [_Tree_](../../react/nx-devkit/index#tree) | the file system tree                          |
+| `srcFolder`     | _string_                                   | the source folder of files (absolute path)    |
+| `target`        | _string_                                   | the target folder (relative to the host root) |
+| `substitutions` | _object_                                   | an object of key-value pairs                  |
 
 **Returns:** _void_
 
@@ -614,7 +653,7 @@ While doing so it performs two substitutions:
 
 ### getPackageManagerCommand
 
-▸ **getPackageManagerCommand**(`packageManager?`: [_PackageManager_](../../react/nx-devkit/index#packagemanager)): _object_
+▸ **getPackageManagerCommand**(`packageManager?`: [_PackageManager_](../../react/nx-devkit/index#packagemanager)): PackageManagerCommands
 
 Returns commands for the package manager used in the workspace.
 By default, the package manager is derived based on the lock file,
@@ -632,17 +671,25 @@ execSync(`${getPackageManagerCommand().addDev} my-dev-package`);
 | :--------------- | :------------------------------------------------------------- |
 | `packageManager` | [_PackageManager_](../../react/nx-devkit/index#packagemanager) |
 
-**Returns:** _object_
+**Returns:** PackageManagerCommands
 
-| Name      | Type                                               |
-| :-------- | :------------------------------------------------- |
-| `add`     | _string_                                           |
-| `addDev`  | _string_                                           |
-| `exec`    | _string_                                           |
-| `install` | _string_                                           |
-| `list`    | _string_                                           |
-| `rm`      | _string_                                           |
-| `run`     | (`script`: _string_, `args`: _string_) => _string_ |
+---
+
+### getPackageManagerVersion
+
+▸ **getPackageManagerVersion**(`packageManager?`: [_PackageManager_](../../react/nx-devkit/index#packagemanager)): _string_
+
+Returns the version of the package manager used in the workspace.
+By default, the package manager is derived based on the lock file,
+but it can also be passed in explicitly.
+
+#### Parameters
+
+| Name             | Type                                                           |
+| :--------------- | :------------------------------------------------------------- |
+| `packageManager` | [_PackageManager_](../../react/nx-devkit/index#packagemanager) |
+
+**Returns:** _string_
 
 ---
 
@@ -673,7 +720,9 @@ and the default scope.
 
 Example:
 
-`{ appsDir: 'apps', libsDir: 'libs', npmScope: 'myorg' }`
+```typescript
+{ appsDir: 'apps', libsDir: 'libs', npmScope: 'myorg' }
+```
 
 #### Parameters
 
@@ -859,11 +908,18 @@ Object the JSON content represents
 
 Parses a target string into {project, target, configuration}
 
+Examples:
+
+```typescript
+parseTargetString('proj:test'); // returns { project: "proj", target: "test" }
+parseTargetString('proj:test:production'); // returns { project: "proj", target: "test", configuration: "production" }
+```
+
 #### Parameters
 
-| Name           | Type     | Description                                                                                                                                                                                                                                  |
-| :------------- | :------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `targetString` | _string_ | target reference Examples: `typescript parseTargetString("proj:test") // returns { project: "proj", target: "test" } parseTargetString("proj:test:production") // returns { project: "proj", target: "test", configuration: "production" } ` |
+| Name           | Type     | Description      |
+| :------------- | :------- | :--------------- |
+| `targetString` | _string_ | target reference |
 
 **Returns:** [_Target_](../../react/nx-devkit/index#target)
 
@@ -987,8 +1043,13 @@ This does _not_ provide projects configuration, use [readProjectConfiguration](.
 
 Remove Dependencies and Dev Dependencies from package.json
 
-For example, `removeDependenciesFromPackageJson(host, ['react'], ['jest'])`
-will remove `react` and `jest` from the dependencies and devDependencies sections of package.json respectively
+For example:
+
+```typescript
+removeDependenciesFromPackageJson(host, ['react'], ['jest']);
+```
+
+This will **remove** `react` and `jest` from the dependencies and devDependencies sections of package.json respectively.
 
 #### Parameters
 

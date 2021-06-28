@@ -57,6 +57,7 @@ export function replaceAppNameWithPath(
     const forbiddenPropertyList: string[] = [
       'prefix',
       'builder',
+      'executor',
       'browserTarget',
     ]; // Some of the properties should not be renamed
     return Object.keys(node).reduce(

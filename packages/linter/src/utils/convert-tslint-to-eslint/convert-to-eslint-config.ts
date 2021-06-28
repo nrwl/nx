@@ -1,13 +1,12 @@
 import {
   readProjectConfiguration,
-  Tree,
   visitNotIgnoredFiles,
+  writeJsonFile,
+  getPackageManagerCommand,
 } from '@nrwl/devkit';
-import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
+import type { Tree } from '@nrwl/devkit';
 import { execSync } from 'child_process';
 import type { Linter as ESLintLinter } from 'eslint';
-import { mkdirSync, writeFileSync } from 'fs';
-import { dirname } from 'path';
 import { dirSync } from 'tmp';
 import type {
   createESLintConfiguration as CreateESLintConfiguration,
@@ -24,7 +23,7 @@ function getConvertToEslintConfig() {
   try {
     // This is usually not possible during runtime but makes it easy to mock in tests
     return require('tslint-to-eslint-config');
-  } catch (e) {}
+  } catch {}
 
   /**
    * In order to avoid all users of Nx needing to have tslint-to-eslint-config (and therefore tslint)
@@ -102,8 +101,7 @@ export async function convertToESLintConfig(
      * point (1) above - we need to strip the relevant extends and commit that
      * change to disk before the tslint CLI reads the config file.
      */
-    mkdirSync(dirname(pathToTslintJson), { recursive: true });
-    writeFileSync(pathToTslintJson, JSON.stringify(updatedTSLintJson));
+    writeJsonFile(pathToTslintJson, updatedTSLintJson);
   }
   const reportedConfiguration = await findReportedConfiguration(
     'npx tslint --print-config',
@@ -146,9 +144,9 @@ export async function convertToESLintConfig(
     },
   };
 
-  const summarizedConfiguration = await (createESLintConfiguration as typeof CreateESLintConfiguration)(
-    originalConfigurations
-  );
+  const summarizedConfiguration = await (
+    createESLintConfiguration as typeof CreateESLintConfiguration
+  )(originalConfigurations);
 
   /**
    * We are expecting it to not find a converter for nx-enforce-module-boundaries

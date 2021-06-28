@@ -1,3 +1,4 @@
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { Configuration } from 'webpack';
 import * as mergeWebpack from 'webpack-merge';
 import * as nodeExternals from 'webpack-node-externals';
@@ -22,7 +23,8 @@ function getNodePartial(options: BuildNodeBuilderOptions) {
   }
 
   if (options.externalDependencies === 'all') {
-    webpackConfig.externals = [nodeExternals()];
+    const modulesDir = `${appRootPath}/node_modules`;
+    webpackConfig.externals = [nodeExternals({ modulesDir })];
   } else if (Array.isArray(options.externalDependencies)) {
     webpackConfig.externals = [
       function (context, request, callback: Function) {

@@ -36,11 +36,8 @@ export const nxCompileNgcTransformFactory = (
       // Compile TypeScript sources
       const { esm2015, declarations } = entryPoint.data.destinationFiles;
       const { moduleResolutionCache } = entryPoint.cache;
-      const {
-        basePath,
-        cssUrl,
-        styleIncludePaths,
-      } = entryPoint.data.entryPoint;
+      const { basePath, cssUrl, styleIncludePaths } =
+        entryPoint.data.entryPoint;
       const stylesheetProcessor = new StylesheetProcessor(
         basePath,
         cssUrl,

@@ -1,5 +1,4 @@
 import {
-  NxJsonConfiguration,
   ProjectGraph,
   ProjectGraphNode,
   TargetDependencyConfig,
@@ -7,6 +6,7 @@ import {
 import { Task } from './tasks-runner';
 import { flatten } from 'flat';
 import { output } from '../utilities/output';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
 
 const commonCommands = ['build', 'test', 'lint', 'e2e', 'deploy'];
 
@@ -49,30 +49,6 @@ export function getCommand(cliCommand: string, isYarn: boolean, task: Task) {
       ...args,
     ];
   }
-}
-
-export function getDefaultDependencyConfigs(
-  nxJson: NxJsonConfiguration,
-  runnerOptions?: {
-    strictlyOrderedTargets?: string[];
-  }
-): Record<string, TargetDependencyConfig[]> {
-  const defaults: Record<string, TargetDependencyConfig[]> =
-    nxJson.targetDependencies ?? {};
-
-  const strictlyOrderedTargets = runnerOptions
-    ? runnerOptions.strictlyOrderedTargets ?? ['build']
-    : [];
-  // Strictly Ordered Targets depend on their dependencies
-  for (const target of strictlyOrderedTargets) {
-    defaults[target] = defaults[target] || [];
-    defaults[target].push({
-      target,
-      projects: 'dependencies',
-    });
-  }
-
-  return defaults;
 }
 
 export function getDependencyConfigs(
@@ -198,4 +174,34 @@ function interpolateOutputs(template: string, data: any): string {
 
     return value;
   });
+}
+
+export function getExecutorForTask(task: Task, workspace: Workspaces) {
+  const project =
+    workspace.readWorkspaceConfiguration().projects[task.target.project];
+  const executor = project.targets[task.target.target].executor;
+  const [nodeModule, executorName] = executor.split(':');
+
+  return workspace.readExecutor(nodeModule, executorName);
+}
+
+export function getCliPath(workspaceRoot: string) {
+  const cli = require.resolve(`@nrwl/cli/lib/run-cli.js`, {
+    paths: [workspaceRoot],
+  });
+  return `${cli}`;
+}
+
+export function getCommandArgsForTask(task: Task) {
+  const args: string[] = unparse(task.overrides || {});
+
+  const config = task.target.configuration
+    ? `:${task.target.configuration}`
+    : '';
+
+  return [
+    'run',
+    `${task.target.project}:${task.target.target}${config}`,
+    ...args,
+  ];
 }

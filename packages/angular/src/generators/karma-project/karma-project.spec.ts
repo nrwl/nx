@@ -1,11 +1,11 @@
 import type { Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import { karmaProjectGenerator } from './karma-project';
 import libraryGenerator from '../library/library';
 import { Linter } from '@nrwl/linter';
 import { UnitTestRunner } from '../../utils/test-runners';
+import applicationGenerator from '../application/application';
 
 describe('karmaProject', () => {
   let tree: Tree;
@@ -24,10 +24,9 @@ describe('karmaProject', () => {
       unitTestRunner: UnitTestRunner.None,
     });
 
-    const appGenerator = wrapAngularDevkitSchematic('@nrwl/angular', 'app');
-    await appGenerator(tree, {
+    await applicationGenerator(tree, {
       name: 'app1',
-      unitTestRunner: 'none',
+      unitTestRunner: UnitTestRunner.None,
     });
   });
 

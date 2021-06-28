@@ -66,6 +66,14 @@ Type: `boolean`
 
 Whether or not to configure the ESLint "parserOptions.project" option. We do not do this by default for lint performance reasons.
 
+### standaloneConfig
+
+Default: `false`
+
+Type: `boolean`
+
+Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json
+
 ### style
 
 Alias(es): s

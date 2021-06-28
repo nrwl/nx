@@ -178,9 +178,9 @@ function updateAngularCLIJson(host: Tree, options: Schema) {
   if (defaultProject.targets.server) {
     const serverOptions = defaultProject.targets.server.options;
     convertServerOptions(serverOptions);
-    Object.values(
-      defaultProject.targets.server.configurations
-    ).forEach((config) => convertServerOptions(config));
+    Object.values(defaultProject.targets.server.configurations).forEach(
+      (config) => convertServerOptions(config)
+    );
   }
 
   if (defaultProject.targets.e2e) {
@@ -634,15 +634,7 @@ function renameSyncInTree(
 
 function renameDirSyncInTree(tree: Tree, from: string, to: string) {
   visitNotIgnoredFiles(tree, from, (file) => {
-    try {
-      tree.rename(file, file.replace(from, to));
-    } catch (e) {
-      if (!tree.exists(from)) {
-        console.warn(`Path: ${from} does not exist`);
-      } else if (tree.exists(to)) {
-        console.warn(`Path: ${to} already exists`);
-      }
-    }
+    renameSyncInTree(tree, file, file.replace(from, to), true);
   });
 }
 

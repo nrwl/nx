@@ -29,8 +29,8 @@ export function AngularPage() {
       <Header
         showSearch={false}
         flavor={{
-          name: storedFlavor || 'react',
-          value: storedFlavor || 'react',
+          name: storedFlavor || 'angular',
+          value: storedFlavor || 'angular',
         }}
         version={{
           name: storedVersion || 'Latest',
@@ -484,16 +484,7 @@ export function AngularPage() {
           <NxUsersShowcase />
         </div>
       </main>
-      <Footer
-        flavor={{
-          name: storedFlavor || 'react',
-          value: storedFlavor || 'react',
-        }}
-        version={{
-          name: storedVersion || 'Latest',
-          value: storedVersion || 'latest',
-        }}
-      />
+      <Footer />
     </>
   );
 }

@@ -6,11 +6,7 @@ import { gt, lte } from 'semver';
 import { dirSync } from 'tmp';
 import { logger } from '../shared/logger';
 import { convertToCamelCase, handleErrors } from '../shared/params';
-import {
-  detectPackageManager,
-  getPackageManagerCommand,
-  PackageManager,
-} from '../shared/package-manager';
+import { getPackageManagerCommand } from '../shared/package-manager';
 import { FsTree } from '../shared/tree';
 import { flushChanges } from './generate';
 import {
@@ -77,17 +73,20 @@ function slash(packageName) {
 }
 
 export class Migrator {
+  private readonly packageJson: any;
   private readonly versions: (p: string) => string;
   private readonly fetch: (p: string, v: string) => Promise<MigrationsJson>;
   private readonly from: { [p: string]: string };
   private readonly to: { [p: string]: string };
 
   constructor(opts: {
+    packageJson: any;
     versions: (p: string) => string;
     fetch: (p: string, v: string) => Promise<MigrationsJson>;
     from: { [p: string]: string };
     to: { [p: string]: string };
   }) {
+    this.packageJson = opts.packageJson;
     this.versions = opts.versions;
     this.fetch = opts.fetch;
     this.from = opts.from;
@@ -238,16 +237,21 @@ export class Migrator {
           '@nrwl/storybook',
           '@nrwl/tao',
           '@nrwl/web',
-        ].reduce(
-          (m, c) => ({
-            ...m,
-            [c]: {
-              version: c === '@nrwl/nx-cloud' ? 'latest' : targetVersion,
-              alwaysAddToPackageJson: false,
-            },
-          }),
-          {}
-        ),
+        ]
+          .filter((pkg) => {
+            const { dependencies, devDependencies } = this.packageJson;
+            return !!dependencies?.[pkg] || !!devDependencies?.[pkg];
+          })
+          .reduce(
+            (m, c) => ({
+              ...m,
+              [c]: {
+                version: c === '@nrwl/nx-cloud' ? 'latest' : targetVersion,
+                alwaysAddToPackageJson: false,
+              },
+            }),
+            {}
+          ),
       };
     }
     if (!m.packageJsonUpdates || !this.versions(packageName)) return {};
@@ -424,7 +428,7 @@ function versions(root: string, from: { [p: string]: string }) {
 }
 
 // testing-fetch-start
-function createFetcher(packageManager: PackageManager) {
+function createFetcher() {
   const cache = {};
   return async function f(
     packageName: string,
@@ -433,7 +437,7 @@ function createFetcher(packageManager: PackageManager) {
     if (!cache[`${packageName}-${packageVersion}`]) {
       const dir = dirSync().name;
       logger.info(`Fetching ${packageName}@${packageVersion}`);
-      const pmc = getPackageManagerCommand(packageManager);
+      const pmc = getPackageManagerCommand();
       execSync(`${pmc.add} ${packageName}@${packageVersion}`, {
         stdio: [],
         cwd: dir,
@@ -459,7 +463,12 @@ function createFetcher(packageManager: PackageManager) {
           version: resolvedVersion,
         };
       }
-      removeSync(dir);
+
+      try {
+        removeSync(dir);
+      } catch {
+        // It's okay if this fails, the OS will clean it up eventually
+      }
     }
     return cache[`${packageName}-${packageVersion}`];
   };
@@ -534,14 +543,15 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     to: { [p: string]: string };
   }
 ) {
-  const packageManager = detectPackageManager();
-  const pmc = getPackageManagerCommand(packageManager);
+  const pmc = getPackageManagerCommand();
   try {
     logger.info(`Fetching meta data about packages.`);
     logger.info(`It may take a few minutes.`);
+    const originalPackageJson = readJsonFile(join(root, 'package.json'));
     const migrator = new Migrator({
+      packageJson: originalPackageJson,
       versions: versions(root, opts.from),
-      fetch: createFetcher(packageManager),
+      fetch: createFetcher(),
       from: opts.from,
       to: opts.to,
     });
@@ -606,7 +616,7 @@ function installAngularDevkitIfNecessaryToExecuteLegacyMigrations(
   );
   if (!hasAngularDevkitMigrations) return false;
 
-  const pmCommands = getPackageManagerCommand(detectPackageManager());
+  const pmCommands = getPackageManagerCommand();
   const devkitInstalled =
     execSync(`${pmCommands.list} @angular-devkit/schematics`)
       .toString()
@@ -625,13 +635,13 @@ function installAngularDevkitIfNecessaryToExecuteLegacyMigrations(
 }
 
 function removeAngularDevkitMigrations() {
-  const pmCommands = getPackageManagerCommand(detectPackageManager());
+  const pmCommands = getPackageManagerCommand();
   execSync(`${pmCommands.rm} @angular-devkit/schematics`);
   execSync(`${pmCommands.rm} @angular-devkit/core`);
 }
 
 function runInstall() {
-  const pmCommands = getPackageManagerCommand(detectPackageManager());
+  const pmCommands = getPackageManagerCommand();
   logger.info(
     `NX Running '${pmCommands.install}' to make sure necessary packages are installed`
   );
@@ -666,12 +676,9 @@ async function runMigrations(
       if (m.cli === 'nx') {
         await runNxMigration(root, m.package, m.name);
       } else {
-        await (await import('./ngcli-adapter')).runMigration(
-          root,
-          m.package,
-          m.name,
-          isVerbose
-        );
+        await (
+          await import('./ngcli-adapter')
+        ).runMigration(root, m.package, m.name, isVerbose);
       }
       logger.info(`Successfully finished ${m.name}`);
       logger.info(`---------------------------------------------------------`);

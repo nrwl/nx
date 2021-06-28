@@ -2,6 +2,11 @@ import { dirname } from 'path';
 import type * as ts from 'typescript';
 import { appRootPath } from './app-root';
 
+export type { TypeScriptCompilationOptions } from './typescript/compilation';
+export { compileTypeScript } from './typescript/compilation';
+export { findNodes } from './typescript/find-nodes';
+export { getSourceNodes } from './typescript/get-source-nodes';
+
 const normalizedAppRoot = appRootPath.replace(/\\/g, '/');
 
 let tsModule: any;

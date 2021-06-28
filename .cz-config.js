@@ -5,8 +5,7 @@ module.exports = {
     { value: 'docs', name: 'docs:     Documentation only changes' },
     {
       value: 'cleanup',
-      name:
-        'cleanup:  A code change that neither fixes a bug nor adds a feature',
+      name: 'cleanup:  A code change that neither fixes a bug nor adds a feature',
     },
     {
       value: 'chore',
@@ -64,8 +63,7 @@ module.exports = {
     customScope: 'Denote the SCOPE of this change:',
     subject:
       'Write a SHORT, IMPERATIVE (lowercase) description of the change:\n',
-    body:
-      'Provide a LONGER description of the change (optional). Use "|" to break new line:\n',
+    body: 'Provide a LONGER description of the change (optional). Use "|" to break new line:\n',
     breaking: 'List any BREAKING CHANGES (optional):\n',
     footer:
       'List any ISSUES CLOSED by this change (optional). E.g.: #31, #34:\n',

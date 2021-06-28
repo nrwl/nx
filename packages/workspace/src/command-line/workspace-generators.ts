@@ -1,32 +1,28 @@
 import * as chalk from 'chalk';
 import { execSync } from 'child_process';
-import {
-  writeFileSync,
-  readdirSync,
-  readFileSync,
-  statSync,
-  unlinkSync,
-} from 'fs';
+import { readdirSync, existsSync } from 'fs';
 import { copySync, removeSync } from 'fs-extra';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
 import { appRootPath } from '../utilities/app-root';
-import {
-  detectPackageManager,
-  getPackageManagerCommand,
-} from '@nrwl/tao/src/shared/package-manager';
-import {
-  fileExists,
-  readJsonFile,
-  writeJsonFile,
-} from '../utilities/fileutils';
+import { fileExists } from '../utilities/fileutils';
 import { output } from '../utilities/output';
 import type { CompilerOptions } from 'typescript';
 import { Workspaces } from '@nrwl/tao/src/shared/workspace';
-import { logger, normalizePath } from '@nrwl/devkit';
+import {
+  logger,
+  normalizePath,
+  getPackageManagerCommand,
+  detectPackageManager,
+  readJsonFile,
+  writeJsonFile,
+} from '@nrwl/devkit';
 import { generate } from '@nrwl/tao/src/commands/generate';
 
 const rootDirectory = appRootPath;
+const toolsDir = path.join(rootDirectory, 'tools');
+const generatorsDir = path.join(toolsDir, 'generators');
+const toolsTsConfigPath = path.join(toolsDir, 'tsconfig.tools.json');
 
 type TsConfig = {
   extends: string;
@@ -70,7 +66,7 @@ export async function workspaceGenerators(args: string[]) {
         outDir,
         logger
       );
-    } catch (e) {
+    } catch {
       process.exit(1);
     }
   }
@@ -84,19 +80,22 @@ function compileTools() {
 
   const generatorsOutDir = path.join(toolsOutDir, 'generators');
   const collectionData = constructCollection();
-  saveCollection(generatorsOutDir, collectionData);
+  writeJsonFile(
+    path.join(generatorsOutDir, 'workspace-generators.json'),
+    collectionData
+  );
   return generatorsOutDir;
 }
 
 function getToolsOutDir() {
-  return path.resolve(toolsDir(), toolsTsConfig().compilerOptions.outDir);
+  return path.resolve(toolsDir, toolsTsConfig().compilerOptions.outDir);
 }
 
 function compileToolsDir(outDir: string) {
-  copySync(generatorsDir(), path.join(outDir, 'generators'));
+  copySync(generatorsDir, path.join(outDir, 'generators'));
 
-  const tmpTsConfigPath = createTmpTsConfig(toolsTsConfigPath(), {
-    include: [path.join(generatorsDir(), '**/*.ts')],
+  const tmpTsConfigPath = createTmpTsConfig(toolsTsConfigPath, {
+    include: [path.join(generatorsDir, '**/*.ts')],
   });
 
   const pmc = getPackageManagerCommand();
@@ -106,16 +105,16 @@ function compileToolsDir(outDir: string) {
       stdio: 'inherit',
       cwd: rootDirectory,
     });
-  } catch (e) {
+  } catch {
     process.exit(1);
   }
 }
 
 function constructCollection() {
   const generators = {};
-  readdirSync(generatorsDir()).forEach((c) => {
-    const childDir = path.join(generatorsDir(), c);
-    if (exists(path.join(childDir, 'schema.json'))) {
+  readdirSync(generatorsDir).forEach((c) => {
+    const childDir = path.join(generatorsDir, c);
+    if (existsSync(path.join(childDir, 'schema.json'))) {
       generators[c] = {
         factory: `./${c}`,
         schema: `./${normalizePath(path.join(c, 'schema.json'))}`,
@@ -131,27 +130,8 @@ function constructCollection() {
   };
 }
 
-function saveCollection(dir: string, collection: any) {
-  writeFileSync(
-    path.join(dir, 'workspace-generators.json'),
-    JSON.stringify(collection)
-  );
-}
-
-function generatorsDir() {
-  return path.join(rootDirectory, 'tools', 'generators');
-}
-
-function toolsDir() {
-  return path.join(rootDirectory, 'tools');
-}
-
-function toolsTsConfigPath() {
-  return path.join(toolsDir(), 'tsconfig.tools.json');
-}
-
-function toolsTsConfig() {
-  return readJsonFile<TsConfig>(toolsTsConfigPath());
+function toolsTsConfig(): TsConfig {
+  return readJsonFile<TsConfig>(toolsTsConfigPath);
 }
 
 function createWorkflow(workspace: Workspaces, dryRun: boolean) {
@@ -180,7 +160,7 @@ function listGenerators(collectionFile: string) {
   try {
     const bodyLines: string[] = [];
 
-    const collection = JSON.parse(readFileSync(collectionFile).toString());
+    const collection = readJsonFile(collectionFile);
 
     bodyLines.push(chalk.bold(chalk.green('WORKSPACE GENERATORS')));
     bodyLines.push('');
@@ -423,14 +403,6 @@ function parseOptions(args: string[], outDir: string): { [k: string]: any } {
   });
 }
 
-function exists(file: string): boolean {
-  try {
-    return !!statSync(file);
-  } catch (e) {
-    return false;
-  }
-}
-
 function createTmpTsConfig(
   tsconfigPath: string,
   updateConfig: Partial<TsConfig>
@@ -450,10 +422,8 @@ function createTmpTsConfig(
   return tmpTsConfigPath;
 }
 
-function cleanupTmpTsConfigFile(tmpTsConfigPath) {
-  try {
-    if (tmpTsConfigPath) {
-      unlinkSync(tmpTsConfigPath);
-    }
-  } catch (e) {}
+function cleanupTmpTsConfigFile(tmpTsConfigPath: string) {
+  if (tmpTsConfigPath) {
+    removeSync(tmpTsConfigPath);
+  }
 }

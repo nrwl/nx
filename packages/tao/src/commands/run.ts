@@ -55,11 +55,8 @@ function parseRunOpts(
     throwInvalidInvocation();
   }
   // eslint-disable-next-line prefer-const
-  let [project, target, configuration]: [
-    string,
-    string,
-    string
-  ] = runOptions._[0].split(':');
+  let [project, target, configuration]: [string, string, string] =
+    runOptions._[0].split(':');
   if (!project && defaultProjectName) {
     logger.debug(
       `No project name specified. Using default project : ${chalk.bold(
@@ -245,13 +242,16 @@ async function runExecutorInternal<T extends { success: boolean }>(
     }
   } else {
     require('../compat/compat');
-    const observable = await (await import('./ngcli-adapter')).scheduleTarget(
+    const observable = await (
+      await import('./ngcli-adapter')
+    ).scheduleTarget(
       root,
       {
         project,
         target,
         configuration,
         runOptions: combinedOptions,
+        executor: targetConfig.executor,
       },
       isVerbose
     );

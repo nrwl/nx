@@ -1,39 +1,29 @@
 import { ProjectGraphList } from '../app/models';
-import { oceanGraph, oceanWorkspaceLayout } from './ocean';
-import { nxGraph, nxWorkspaceLayout } from './nx';
-import { storybookGraph, storybookWorkspaceLayout } from './storybook';
-import { subAppsGraph, subAppsWorkspaceLayout } from './sub-apps';
-import { nxExamplesGraph, nxExamplesWorkspaceLayout } from './nx-examples';
 
 export const projectGraphs: ProjectGraphList[] = [
   {
     id: 'nx',
     label: 'Nx',
-    graph: nxGraph,
-    workspaceLayout: nxWorkspaceLayout,
+    url: 'assets/graphs/nx.json',
   },
   {
     id: 'ocean',
     label: 'Ocean',
-    graph: oceanGraph,
-    workspaceLayout: oceanWorkspaceLayout,
+    url: 'assets/graphs/ocean.json',
   },
   {
     id: 'nx-examples',
     label: 'Nx Examples',
-    graph: nxExamplesGraph,
-    workspaceLayout: nxExamplesWorkspaceLayout,
+    url: 'assets/graphs/nx-examples.json',
   },
   {
     id: 'sub-apps',
     label: 'Sub Apps',
-    graph: subAppsGraph,
-    workspaceLayout: subAppsWorkspaceLayout,
+    url: 'assets/graphs/sub-apps.json',
   },
   {
     id: 'storybook',
     label: 'Storybook',
-    graph: storybookGraph,
-    workspaceLayout: storybookWorkspaceLayout,
+    url: 'assets/graphs/storybook.json',
   },
 ];

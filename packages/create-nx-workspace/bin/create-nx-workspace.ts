@@ -177,8 +177,8 @@ function showHelp() {
 
     cli                       CLI to power the Nx workspace (options: "nx", "angular")
     
-    style                     Default style option to be used when a non-empty preset is selected 
-                              options: ("css", "scss", "styl", "less") for React/Next.js also ("styled-components", "@emotion/styled")    
+    style                     Default style option to be used when a non-empty preset is selected
+                              options: ("css", "scss", "less") plus ("styl") for all non-Angular and ("styled-components", "@emotion/styled", "styled-jsx") for React, Next.js, Gatsby
 
     interactive               Enable interactive mode when using presets (boolean)
 
@@ -344,17 +344,20 @@ function determineStyle(preset: Preset, parsedArgs: any) {
     },
     {
       name: 'scss',
-      message: 'SASS(.scss)  [ http://sass-lang.com   ]',
-    },
-    {
-      name: 'styl',
-      message: 'Stylus(.styl)[ http://stylus-lang.com ]',
+      message: 'SASS(.scss)       [ http://sass-lang.com   ]',
     },
     {
       name: 'less',
-      message: 'LESS         [ http://lesscss.org     ]',
+      message: 'LESS              [ http://lesscss.org     ]',
     },
   ];
+
+  if (![Preset.Angular, Preset.AngularWithNest].includes(preset)) {
+    choices.push({
+      name: 'styl',
+      message: 'Stylus(.styl)     [ http://stylus-lang.com ]',
+    });
+  }
 
   if (
     [
@@ -551,8 +554,7 @@ async function askAboutNxCloud(parsedArgs: any) {
           choices: [
             {
               name: 'Yes',
-              hint:
-                'Faster builds, run details, Github integration. Learn more at https://nx.app',
+              hint: 'Faster builds, run details, Github integration. Learn more at https://nx.app',
             },
 
             {

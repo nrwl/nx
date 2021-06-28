@@ -104,9 +104,10 @@ describe('createTasksForProjectToRun', () => {
   });
 
   it('should create the tasks for multiple projects passed with configuration', () => {
-    projectGraph.nodes.app1.data.targets.build.configurations = projectGraph.nodes.lib1.data.targets.build.configurations = {
-      production: {},
-    };
+    projectGraph.nodes.app1.data.targets.build.configurations =
+      projectGraph.nodes.lib1.data.targets.build.configurations = {
+        production: {},
+      };
     const tasks = createTasksForProjectToRun(
       [projectGraph.nodes.app1, projectGraph.nodes.lib1],
       {

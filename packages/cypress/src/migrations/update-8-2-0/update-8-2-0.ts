@@ -202,12 +202,14 @@ async function updatePlugins(host: Tree, context: SchematicContext) {
               statement.expression.right.parameters.length >= 2
             ) {
               if (isBlock(statement.expression.right.body)) {
-                const onParamName = statement.expression.right.parameters[0].name.getText(
-                  sourceFile
-                );
-                const configParamName = statement.expression.right.parameters[1].name.getText(
-                  sourceFile
-                );
+                const onParamName =
+                  statement.expression.right.parameters[0].name.getText(
+                    sourceFile
+                  );
+                const configParamName =
+                  statement.expression.right.parameters[1].name.getText(
+                    sourceFile
+                  );
 
                 recorder.insertLeft(
                   statement.expression.right.body.statements.end,

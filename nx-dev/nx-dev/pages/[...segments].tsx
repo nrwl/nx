@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import cx from 'classnames';
 import Link from 'next/link';
 import Head from 'next/head';
+import Router from 'next/router';
 import { Dialog } from '@headlessui/react';
 import type {
   DocumentData,
@@ -39,13 +40,22 @@ export function DocumentationPage({
   isFallback,
 }: DocumentationPageProps) {
   const router = useRouter();
-  const { value: storedFlavor, setValue: setStoredFlavor } = useStorage(
-    'flavor'
-  );
+  const { value: storedFlavor, setValue: setStoredFlavor } =
+    useStorage('flavor');
   const { setValue: setStoredVersion } = useStorage('version');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [navIsOpen, setNavIsOpen] = useState(false);
 
+  useEffect(() => {
+    if (!navIsOpen) return;
+    function handleRouteChange() {
+      setNavIsOpen(false);
+    }
+    Router.events.on('routeChangeComplete', handleRouteChange);
+    return () => {
+      Router.events.off('routeChangeComplete', handleRouteChange);
+    };
+  }, [navIsOpen]);
   useEffect(() => {
     if (!isFallback) {
       setStoredFlavor(flavor.value);
@@ -147,18 +157,7 @@ export function DocumentationPage({
           </svg>
         </button>
       </main>
-      {!navIsOpen ? (
-        <Footer
-          flavor={{
-            name: flavor.label,
-            value: flavor.value,
-          }}
-          version={{
-            name: version.name,
-            value: version.id,
-          }}
-        />
-      ) : null}
+      {!navIsOpen ? <Footer /> : null}
       <Dialog
         as="div"
         className="fixed z-50 inset-0 overflow-y-auto"
@@ -166,7 +165,7 @@ export function DocumentationPage({
         onClose={() => {}}
       >
         <div className="flex items-center justify-center min-h-screen">
-          <Dialog.Overlay className="fixed inset-0 backdrop-filter backdrop-blur" />
+          <Dialog.Overlay className="fixed inset-0 bg-black bg-opacity-20 backdrop-filter backdrop-blur" />
           <div className="z-50 bg-white rounded w-11/12 max-w-xl filter drop-shadow-2xl">
             <Dialog.Title
               as="h3"

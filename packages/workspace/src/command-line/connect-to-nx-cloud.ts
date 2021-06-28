@@ -1,9 +1,9 @@
 import { readNxJson } from '../core/file-utils';
 import { output } from '../utilities/output';
-import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
+import { getPackageManagerCommand } from '@nrwl/devkit';
 import { execSync } from 'child_process';
 
-export async function connectToNxCloudUsingScan(scan: boolean) {
+export async function connectToNxCloudUsingScan(scan: boolean): Promise<void> {
   if (!scan) return;
 
   const nxJson = readNxJson();
@@ -27,7 +27,7 @@ export async function connectToNxCloudUsingScan(scan: boolean) {
   }
 }
 
-export async function connectToNxCloudCommand() {
+export async function connectToNxCloudCommand(): Promise<void> {
   const nxJson = readNxJson();
   const nxCloudUsed = Object.values(nxJson.tasksRunnerOptions).find(
     (r) => r.runner == '@nrwl/nx-cloud'
@@ -49,7 +49,9 @@ export async function connectToNxCloudCommand() {
 }
 
 async function connectToNxCloudPrompt() {
-  return await (await import('enquirer'))
+  return await (
+    await import('enquirer')
+  )
     .prompt([
       {
         name: 'NxCloud',
@@ -58,8 +60,7 @@ async function connectToNxCloudPrompt() {
         choices: [
           {
             name: 'Yes',
-            hint:
-              'Faster builds, run details, GitHub integration. Learn more at https://nx.app',
+            hint: 'Faster builds, run details, GitHub integration. Learn more at https://nx.app',
           },
           {
             name: 'No',

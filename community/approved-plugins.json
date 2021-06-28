@@ -1,5 +1,10 @@
 [
   {
+    "name": "@rxap/plugin-localazy",
+    "description": "An Nx plugin for localazy.com upload and download tasks.",
+    "url": "https://gitlab.com/rxap/plugins/-/tree/master/libs/localazy"
+  },
+  {
     "name": "nx-electron",
     "description": "An Nx plugin for developing Electron applications",
     "url": "https://github.com/bennymeg/nx-electron"
@@ -163,6 +168,31 @@
     "name": "@nxrocks/nx-quarkus",
     "description": "Nx plugin to generate, run, package, build (and more) Quarkus projects inside your Nx workspace",
     "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-quarkus"
+  },
+  {
+    "name": "@nx-extend/gcp-secrets",
+    "description": "Nx plugin to generate and securely deploy your Google Cloud Secrets",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/gcp-secrets"
+  },
+  {
+    "name": "@nx-extend/gcp-storage",
+    "description": "Nx plugin to upload to Google Cloud Storage",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/gcp-storage"
+  },
+  {
+    "name": "@nx-extend/gcp-functions",
+    "description": "Nx plugin to generate, run, build and deploy your Google Cloud Functions",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/gcp-functions"
+  },
+  {
+    "name": "@nx-extend/gcp-deployment-manager",
+    "description": "Nx plugin to deploy your Google Cloud Deployments",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/gcp-deployment-manager"
+  },
+  {
+    "name": "@nx-extend/gcp-cloud-run",
+    "description": "Nx plugin to build and deploy your docker container to Google Cloud Run",
+    "url": "https://github.com/tripss/nx-extend/tree/master/packages/gcp-cloud-run"
   },
   {
     "name": "@nx-extend/translations",

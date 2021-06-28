@@ -20,6 +20,7 @@ describe('app', () => {
     linter: Linter.EsLint,
     style: 'css',
     strict: false,
+    standaloneConfig: false,
   };
 
   beforeEach(() => {

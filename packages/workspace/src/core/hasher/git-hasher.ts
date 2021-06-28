@@ -94,9 +94,10 @@ function gitLsTree(path: string): Map<string, string> {
   );
 }
 
-function gitStatus(
-  path: string
-): { status: Map<string, string>; deletedFiles: string[] } {
+function gitStatus(path: string): {
+  status: Map<string, string>;
+  deletedFiles: string[];
+} {
   const deletedFiles: string[] = [];
   const filesToHash: string[] = [];
   parseGitStatus(path).forEach((changeType: string, filename: string) => {

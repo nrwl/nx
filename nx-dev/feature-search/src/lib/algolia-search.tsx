@@ -68,6 +68,8 @@ export function AlgoliaSearch({ flavorId, versionId }: AlgoliaSearchProps) {
   return (
     <>
       <Head>
+        <meta name="docsearch:version" content={versionId} />
+        <meta name="docsearch:framework" content={flavorId} />
         <link
           rel="preconnect"
           href="https://BH4D9OD16A-dsn.algolia.net"
@@ -89,7 +91,9 @@ export function AlgoliaSearch({ flavorId, versionId }: AlgoliaSearchProps) {
             strokeLinejoin="round"
           />
         </svg>
-        <span>Quick search</span>
+        <span>
+          <span className="hidden sm:inline">Quick </span>search
+        </span>
         <span
           style={{ opacity: browserDetected ? '1' : '0' }}
           className="hidden sm:block text-sm leading-5 py-0.5 px-1.5 border border-white rounded-md"

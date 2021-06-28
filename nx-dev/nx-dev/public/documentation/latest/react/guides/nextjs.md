@@ -121,7 +121,7 @@ Run:
 
 You can import the shared-components library into the Next.js application like this.
 
-```typescript jsx
+```typescript
 import { Home } from '@happynrwl/shared-components';
 import React from 'react';
 
@@ -205,17 +205,19 @@ module.exports = {
 2. Ensure the Next.js "Framework Preset" is selected
 3. Expand the "Build and Output Settings" and toggle the override switch for the build command. For our `tuskdesk` project the value will look like this:
 
-```sh
-npx nx build tuskdesk --prod --outputPath=.
+```bash
+npx nx build tuskdesk --prod
 ```
 
-4. Leave the "Output Directory" option untouched (i.e. do not toggle the override)
+4. Toggle the override switch for the output directory. Point it to the `.next` directory inside the built app:
 
-> You may be thinking, why don't we just override the Output Directory on Vercel and not set the custom `--outputPath` on the build command? At the time of writing these two things are not equivalent to the Vercel build executor that runs behind the scenes, so setting the `--outputPath` is the most appropriate option.
+```bash
+dist/apps/tuskdesk/.next
+```
 
 Therefore, our full configuration (based on a repo called "nx-workspace" and a project called "tuskdesk") will look like this:
 
-![image](https://user-images.githubusercontent.com/900523/104120015-1253c880-534d-11eb-860f-17e756904448.png)
+![image](./next-deploy-vercel-1.png)
 
 #### Existing Vercel project
 
@@ -223,6 +225,6 @@ If you have an existing project on Vercel then the exact same guidance applies a
 
 When everything is updated appropriately, for our `tuskdesk` example we would see the following in our "General" settings UI:
 
-![image](https://user-images.githubusercontent.com/900523/104119928-72963a80-534c-11eb-9f0d-e7b4311a22e5.png)
+![image](./next-deploy-vercel-2.png)
 
 Naturally, you can continue on and set any additional Environment Variables etc that may be appropriate for your projects, but we have now covered the key points needed to deploy Next.js projects from Nx workspaces on Vercel!

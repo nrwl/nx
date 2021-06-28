@@ -71,28 +71,35 @@ nx run project-name-e2e:e2e
 
 The url that Cypress points to should look like this:
 
-`'/iframe.html?id=buttoncomponent--primary&knob-text=Click me!&knob-padding&knob-style=default'`
+`'/iframe.html?id=buttoncomponent--primary&args=text:Click+me!;padding;style:default'`
 
 - `buttoncomponent` is a lowercase version of the `Title` in the `*.stories.ts` file.
 - `primary` is the name of an individual story.
-- `knob-style=default` sets the `style` knob to a value of `default`.
+- `style=default` sets the `style` arg to a value of `default`.
 
-Changing knobs in the url query parameters allows your Cypress tests to test different configurations of your component.
+Changing args in the url query parameters allows your Cypress tests to test different configurations of your component. You can [read the documentation](https://storybook.js.org/docs/react/writing-stories/args#setting-args-through-the-url) for more information.
 
 ### Example Files
 
 **\*.stories.tsx file**
 
 ```typescript
-import React from 'react';
-import { text, number } from '@storybook/addon-knobs';
-import { Button } from './button';
+import { Story, Meta } from '@storybook/react';
+import { Button, ButtonProps } from './button';
 
-export default { title: 'Button' };
+export default {
+  component: Button,
+  title: 'Button',
+} as Meta;
 
-export const primary = () => (
-  <Button padding={number('Padding', 0)} text={text('Text', 'Click me')} />
-);
+const Template: Story<ButtonProps> = (args) => <Button {...args} />;
+
+export const Primary = Template.bind({});
+Primary.args = {
+  text: 'Click me!',
+  padding: 0,
+  style: 'default',
+};
 ```
 
 **Cypress \*.spec.ts file**
@@ -101,7 +108,7 @@ export const primary = () => (
 describe('shared-ui', () => {
   beforeEach(() =>
     cy.visit(
-      '/iframe.html?id=buttoncomponent--primary&knob-text=Click me!&knob-padding&knob-style=default'
+      '/iframe.html?id=buttoncomponent--primary&args=text:Click+me!;padding;style:default'
     )
   );
 
@@ -116,20 +123,18 @@ describe('shared-ui', () => {
 To register an [addon](https://storybook.js.org/addons/) for all storybook instances in your workspace:
 
 1. In `/.storybook/main.js`, in the `addons` array of the `module.exports` object, add the new addon:
-   ```
+   ```typescript
    module.exports = {
    stories: [...],
    ...,
-   addons: [..., '@storybook/addon-knobs/register'],
+   addons: [..., '@storybook/addon-essentials'],
    };
    ```
-2. If a decorator is required, in each project's `<project-path>/.storybook/preview.js` use the `addDecorator` function.
+2. If a decorator is required, in each project's `<project-path>/.storybook/preview.js`, you can export an array called `decorators`.
 
-   ```
-   import { configure, addDecorator } from '@storybook/react';
-   import { withKnobs } from '@storybook/addon-knobs';
-
-   addDecorator(withKnobs);
+   ```typescript
+   import someDecorator from 'some-storybook-addon';
+   export const decorators = [someDecorator];
    ```
 
 **-- OR --**
@@ -137,25 +142,43 @@ To register an [addon](https://storybook.js.org/addons/) for all storybook insta
 To register an [addon](https://storybook.js.org/addons/) for a single storybook instance, go to that project's `.storybook` folder:
 
 1. In `main.js`, in the `addons` array of the `module.exports` object, add the new addon:
-   ```
+   ```typescript
    module.exports = {
    stories: [...],
    ...,
-   addons: [..., '@storybook/addon-knobs/register'],
+   addons: [..., '@storybook/addon-essentials'],
    };
    ```
-2. If a decorator is required, in `preview.js` use the `addDecorator` function.
+2. If a decorator is required, in `preview.js` you can export an array called `decorators`.
 
-   ```
-   import { configure, addDecorator } from '@storybook/react';
-   import { withKnobs } from '@storybook/addon-knobs';
-
-   addDecorator(withKnobs);
+   ```typescript
+   import someDecorator from 'some-storybook-addon';
+   export const decorators = [someDecorator];
    ```
 
 ### More Information
 
 For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/basics/introduction/).
+
+## From knobs to controls
+
+Storybook v6 moves from "knobs" to args and controls when it comes to defining and manipulating your storybook
+component properties. More can be found [on the official Storybook docs](https://storybook.js.org/docs/react/writing-stories/args).
+
+From **Nx v12.5** and on, the `@nrwl/storybook` package will be using `@storybook/addon-controls` instead of `@storybook/addon-knobs` to generate stories.
+
+### For new Nx workspaces
+
+- Generators will generate your Storybook configuration files and your Stories using Controls/args instead of knobs
+- The `storybook-configuration` generator will install the [`@storybook/addon-essentials`](https://storybook.js.org/docs/riot/essentials/introduction) package, part of which is `@storybook/addon-controls`. This includes some more "essential" Storybook features (eg. `docs`). You can [disable features you do not need](https://storybook.js.org/docs/riot/essentials/introduction#disabling-addons) anytime in your `main.js`.
+- Cypress e2e tests will be generated, [using the args URL](https://storybook.js.org/docs/react/writing-stories/args#setting-args-through-the-url) to set args in the controls.
+
+### For existing Nx workspaces
+
+- If you `nx migrate` to the latest version, your `package.json` will be updated to include the `@storybook/addon-essentials` package. The `@storybook/addon-essentials` addon will be added in your `addons` array in your root `main.js` file. You will need to run `npm/yarn install` to have it installed.
+- If you install manually the latest version of `@nrwl/storybook`, `@nrwl/workspace` and `@nrwl/angular` or `@nrwl/react`, you will need to manually do `yarn add -D @storybook/addon-essentials`. You will also need to add the addon manually in your `addons` array in your root `main.js` file.
+- All the stories you generate from that moment on will be using controls/args
+- Your existing stories will not be touched and will still work
 
 ## Upgrading to Storybook 6 (and Nx versions >10.1.x)
 
@@ -251,7 +274,7 @@ Check your `package.json` file for all `@storybook` packages. Install the latest
 
 For example:
 
-```
+```bash
 yarn add --dev @storybook/react@latest
 ```
 
@@ -267,14 +290,14 @@ If you have not changed the content of the files which the `storybook-configurat
 
 - In the root `./storybook` directory, create a new file named `main.js` with the following content:
 
-```
+```typescript
 module.exports = {
   stories: [],
-  addons: ['@storybook/addon-knobs/register'],
+  addons: ['@storybook/addon-essentials'],
 };
 ```
 
-- If you have any addons in the `addons.js` file, add them in the `addons` array in the `main.js` file. If you are using the default generated files without any changes, you should only have the `@storybook/addon-knobs/register` addon, which we already put in the array. You can now delete the `addons.js` file.
+- If you have any addons in the `addons.js` file, add them in the `addons` array in the `main.js` file. If you are using the default generated files without any changes, you should not have any addons. You can now delete the `addons.js` file.
 
 - The other two files remain unchanged.
 
@@ -282,7 +305,7 @@ module.exports = {
 
 - In the library `./storybook` directory, create a new file named `main.js` with the following content:
 
-```
+```typescript
 const lib_main_module = require('../../.storybook/main');
 
 lib_main_module.stories.push('../src/lib/**/*.stories.mdx');
@@ -294,7 +317,7 @@ Please take extra care making sure that the path to the root `./storybook` direc
 
 - If you have any addons in the `addons.js` file, add them in the `addons` array in the `main.js` file. You can add any addons in the `addons` module array using the following syntax:
 
-```
+```typescript
 lib_main_module.addons.push('<YOUR_ADDON_HERE>');
 ```
 
@@ -302,35 +325,34 @@ After you add any addons in the `main.js` file, you can safely delete the `addon
 
 - Rename the file `config.js` to `preview.js` and remove the last line where your stories paths are configured. Now, the contents of the `preview.js` file will look like this:
 
-```
-import { addDecorator } from '<%= uiFramework %>';
-import { withKnobs } from '@storybook/addon-knobs';
+```typescript
+import { addDecorator } from '@storybook/react';
 
-addDecorator(withKnobs);
+addDecorator(<YourDecorator>);
 ```
 
 - Modify the contents of `webpack.config.js`. Remove the following lines, which are the TypeScript configuration, which is not needed by Storybook any more:
 
-```
-  config.resolve.extensions.push('.ts', '.tsx');
-  config.module.rules.push({
-    test: /\.(ts|tsx)$/,
-    loader: require.resolve('babel-loader'),
-    options: {
-      presets: [
-        '@babel/preset-env',
-        '@babel/preset-react',
-        '@babel/preset-typescript'
-      ]
-    }
-  });
+```typescript
+config.resolve.extensions.push('.ts', '.tsx');
+config.module.rules.push({
+  test: /\.(ts|tsx)$/,
+  loader: require.resolve('babel-loader'),
+  options: {
+    presets: [
+      '@babel/preset-env',
+      '@babel/preset-react',
+      '@babel/preset-typescript',
+    ],
+  },
+});
 ```
 
 #### Check final folder structure
 
 Your folder structure should now look like this:
 
-```
+```treeview
 <workspace name>/
 ├── .storybook/
 │   ├── main.js
@@ -352,13 +374,3 @@ Your folder structure should now look like this:
 ├── README.md
 └── etc...
 ```
-
-### Storybook v6 args and controls
-
-Storybook v6 moves from "knobs" to args and controls when it comes to defining and manipulating your storybook
-component properties. Feel free to use the new args way of defining stories. More can be found
-[on the official Storybook docs](https://storybook.js.org/docs/react/writing-stories/args).
-
-> **Note:** Nx does not yet automatically generate stories that use the args syntax. The main reason is that args don't
-> yet support being loaded via the iframe URL which is used in Nx to setup your Storybook based e2e tests. Once support
-> is present in Storybook v6, we will provide a way to generate args & controls based stories. More on the progress [here](https://github.com/storybookjs/storybook/issues/12291).

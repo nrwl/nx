@@ -14,7 +14,7 @@ With Nx, we have the ability to scaffold out new code for our application. Let's
 
 **Run `nx generate @nrwl/nest:service todo --project todos --directory app` to generate our new service**
 
-```shell script
+```bash
 $ nx generate @nrwl/nest:service todo --project todos --directory app
 CREATE apps/todos/src/app/todo/todo.service.spec.ts (453 bytes)
 CREATE apps/todos/src/app/todo/todo.service.ts (89 bytes)
@@ -54,13 +54,13 @@ We now have our Todos service ready!
 
 In order to render some views, we'll need to install a template engine:
 
-```shell script
+```bash
 yarn add hbs
 ```
 
 or
 
-```shell script
+```bash
 npm install --save hbs
 ```
 
@@ -147,10 +147,3 @@ We changed the `@Get` decorator for the `getData` function to point to the `api`
 Then we added the `root` function which renders the `index` file from our `views` directory.
 
 > The serve process should still be running. If it isn't, restart the process with `nx serve todos`
-
-!!!!!
-Open http://localhost:3333 in the browser. What do you see?
-!!!!!
-Page saying "Welcome to todos!"
-Page saying "{"message":"Welcome to todos!"}"
-404

@@ -50,7 +50,7 @@ myorg/
 
 The `libs/ui/src/lib/ui.tsx` file looks like this:
 
-```typescript jsx
+```typescript
 import React from 'react';
 
 import './ui.css';
@@ -111,7 +111,7 @@ myorg/
 
 **Implement the Todos component.**
 
-```typescript jsx
+```typescript
 import React from 'react';
 import { Todo } from '@myorg/data';
 
@@ -174,9 +174,3 @@ export default App;
 **Restart both `npx nx serve api` and `npx nx serve todos` and you should see the application running.**
 
 > Nx helps you explore code generation options. Run `npx nx g @nrwl/react:component --help` to see all options available. Pass `--dry-run` to the command to see what would be generated without actually changing anything, like this: `npx nx g @nrwl/react:component mycmp --project=ui --dry-run`.
-
-!!!!!
-Libraries' public API is defined in...
-!!!!!
-index.ts
-workspace.json and tsconfig.base.json files

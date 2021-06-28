@@ -4,11 +4,10 @@ import { calculateFileChanges, readEnvironment } from '../core/file-utils';
 import {
   createProjectGraph,
   onlyWorkspaceProjects,
-  ProjectGraph,
-  ProjectGraphNode,
   ProjectType,
   withDeps,
 } from '../core/project-graph';
+import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
 import { DefaultReporter } from '../tasks-runner/default-reporter';
 import { runCommand } from '../tasks-runner/run-command';
 import { output } from '../utilities/output';
@@ -17,7 +16,8 @@ import { generateGraph } from './dep-graph';
 import { printAffected } from './print-affected';
 import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
 import { parseFiles } from './shared';
-import { NxArgs, RawNxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
+import { splitArgsIntoNxArgsAndOverrides } from './utils';
+import type { NxArgs, RawNxArgs } from './utils';
 import { performance } from 'perf_hooks';
 import type { Environment } from '../core/shared-interfaces';
 import { EmptyReporter } from '../tasks-runner/empty-reporter';
@@ -25,7 +25,7 @@ import { EmptyReporter } from '../tasks-runner/empty-reporter';
 export async function affected(
   command: 'apps' | 'libs' | 'dep-graph' | 'print-affected' | 'affected',
   parsedArgs: yargs.Arguments & RawNxArgs
-) {
+): Promise<void> {
   performance.mark('command-execution-begins');
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     parsedArgs,

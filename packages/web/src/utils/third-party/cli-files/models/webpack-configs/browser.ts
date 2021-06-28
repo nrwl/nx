@@ -23,10 +23,8 @@ export function getBrowserConfig(
   const extraPlugins = [];
 
   let isEval = false;
-  const {
-    styles: stylesOptimization,
-    scripts: scriptsOptimization,
-  } = buildOptions.optimization;
+  const { styles: stylesOptimization, scripts: scriptsOptimization } =
+    buildOptions.optimization;
   const {
     styles: stylesSourceMap,
     scripts: scriptsSourceMap,

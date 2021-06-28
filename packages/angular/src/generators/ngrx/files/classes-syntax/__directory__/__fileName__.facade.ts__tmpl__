@@ -1,0 +1,19 @@
+import { Injectable } from '@angular/core';
+import { select, Store } from '@ngrx/store';
+
+import { <%= className %>PartialState } from './<%= fileName %>.reducer';
+import { <%= propertyName %>Query } from './<%= fileName %>.selectors';
+import { Load<%= className %> } from './<%= fileName %>.actions';
+
+@Injectable()
+export class <%= className %>Facade {
+  loaded$ = this.store.pipe(select(<%= propertyName %>Query.getLoaded));
+  all<%= className %>$ = this.store.pipe(select(<%= propertyName %>Query.getAll<%= className %>));
+  selected<%= className %>$ = this.store.pipe(select(<%= propertyName %>Query.getSelected<%= className %>));
+  
+  constructor(private readonly store: Store<<%= className %>PartialState>) {}
+ 
+  loadAll() {
+    this.store.dispatch(new Load<%= className %>());
+  }  
+}

@@ -1,3 +1,4 @@
 {
-  "presets": ["@nrwl/web/babel"]
+  "presets": ["next/babel"],
+  "plugins": []
 }

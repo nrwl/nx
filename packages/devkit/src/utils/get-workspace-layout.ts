@@ -8,12 +8,16 @@ import type { NxJsonConfiguration } from '@nrwl/tao/src/shared/nx';
  *
  * Example:
  *
- * `{ appsDir: 'apps', libsDir: 'libs', npmScope: 'myorg' }`
+ * ```typescript
+ * { appsDir: 'apps', libsDir: 'libs', npmScope: 'myorg' }
+ * ```
  * @param host - file system tree
  */
-export function getWorkspaceLayout(
-  host: Tree
-): { appsDir: string; libsDir: string; npmScope: string } {
+export function getWorkspaceLayout(host: Tree): {
+  appsDir: string;
+  libsDir: string;
+  npmScope: string;
+} {
   const nxJson = readJson<NxJsonConfiguration>(host, 'nx.json');
   return {
     appsDir: nxJson.workspaceLayout?.appsDir ?? 'apps',

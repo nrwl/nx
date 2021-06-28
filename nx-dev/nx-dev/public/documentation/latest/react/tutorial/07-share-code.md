@@ -74,7 +74,7 @@ export function addTodoRoutes(app: Express) {
 
 **Next import the interface in `apps/todos/src/app/app.tsx`:**
 
-```typescript jsx
+```typescript
 import React, { useEffect, useState } from 'react';
 import { Todo } from '@myorg/data';
 
@@ -86,10 +86,3 @@ export default App;
 ```
 
 Every time you add a new library, you have to restart `npx nx serve`. **So restart both `npx nx serve api` and `npx nx serve todos` and you should see the application running.**
-
-!!!!!
-Nx allows you to share code...
-!!!!!
-Between frontend and backend apps
-Between different frontend apps
-Between different node apps

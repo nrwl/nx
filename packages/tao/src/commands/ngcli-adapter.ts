@@ -17,14 +17,16 @@ import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 import { GenerateOptions } from './generate';
 import { Tree } from '../shared/tree';
 import {
+  inlineProjectConfigurations,
+  toNewFormat,
   toNewFormatOrNull,
   toOldFormatOrNull,
   workspaceConfigName,
-} from '@nrwl/tao/src/shared/workspace';
+} from '../shared/workspace';
 import { dirname, extname, resolve, join } from 'path';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
-import { Observable, of } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { EMPTY, Observable, of, concat } from 'rxjs';
+import { catchError, map, switchMap, tap, toArray } from 'rxjs/operators';
 import { NX_ERROR, NX_PREFIX } from '../shared/logger';
 import { readJsonFile } from '../utils/fileutils';
 import { parseJson, serializeJson } from '../utils/json';
@@ -36,6 +38,7 @@ export async function scheduleTarget(
     target: string;
     configuration: string;
     runOptions: any;
+    executor: string;
   },
   verbose: boolean
 ): Promise<Observable<import('@angular-devkit/architect').BuilderOutput>> {
@@ -44,7 +47,7 @@ export async function scheduleTarget(
     WorkspaceNodeModulesArchitectHost,
   } = require('@angular-devkit/architect/node');
 
-  const logger = getLogger(verbose);
+  const logger = getTargetLogger(opts.executor, verbose);
   const fsHost = new NxScopedHost(normalize(root));
   const { workspace } = await workspaces.readWorkspace(
     workspaceConfigName(root),
@@ -196,18 +199,31 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
         if (r.isWorkspaceConfig) {
           if (r.isNewFormat) {
             return super.read(r.actualConfigFileName).pipe(
-              map((r) => {
+              switchMap((r) => {
                 try {
                   const w = parseJson(Buffer.from(r).toString());
-                  const formatted = toOldFormatOrNull(w);
-                  return formatted ? Buffer.from(serializeJson(formatted)) : r;
-                } catch {
-                  return r;
+                  return this.resolveInlineProjectConfigurations(w).pipe(
+                    map((w) => {
+                      const formatted = toOldFormatOrNull(w);
+                      return formatted
+                        ? Buffer.from(serializeJson(formatted))
+                        : Buffer.from(serializeJson(w));
+                    })
+                  );
+                } catch (ex) {
+                  return of(r);
                 }
               })
             );
           } else {
-            return super.read(r.actualConfigFileName);
+            return super.read(r.actualConfigFileName).pipe(
+              map((r) => {
+                const w = parseJson(Buffer.from(r).toString());
+                return Buffer.from(
+                  serializeJson(inlineProjectConfigurations(w))
+                );
+              })
+            );
           }
         } else {
           return super.read(path);
@@ -220,24 +236,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     return this.context(path).pipe(
       switchMap((r) => {
         if (r.isWorkspaceConfig) {
-          if (r.isNewFormat) {
-            try {
-              const w = parseJson(Buffer.from(content).toString());
-              const formatted = toNewFormatOrNull(w);
-              if (formatted) {
-                return super.write(
-                  r.actualConfigFileName,
-                  Buffer.from(serializeJson(formatted))
-                );
-              } else {
-                return super.write(r.actualConfigFileName, content);
-              }
-            } catch (e) {
-              return super.write(r.actualConfigFileName, content);
-            }
-          } else {
-            return super.write(r.actualConfigFileName, content);
-          }
+          return this.writeWorkspaceConfiguration(r, content);
         } else {
           return super.write(path, content);
         }
@@ -280,9 +279,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
       .toPromise();
   }
 
-  protected context(
-    path: string
-  ): Observable<{
+  protected context(path: string): Observable<{
     isWorkspaceConfig: boolean;
     actualConfigFileName: any;
     isNewFormat: boolean;
@@ -320,6 +317,84 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
         isNewFormat: false,
       });
     }
+  }
+
+  private writeWorkspaceConfiguration(context, content): Observable<void> {
+    const config = parseJson(Buffer.from(content).toString());
+    if (context.isNewFormat) {
+      try {
+        const w = parseJson(Buffer.from(content).toString());
+        const formatted = toNewFormatOrNull(w);
+        if (formatted) {
+          return this.writeWorkspaceConfigFiles(
+            context.actualConfigFileName,
+            formatted
+          );
+        } else {
+          return this.writeWorkspaceConfigFiles(
+            context.actualConfigFileName,
+            config
+          );
+        }
+      } catch (e) {
+        return this.writeWorkspaceConfigFiles(
+          context.actualConfigFileName,
+          config
+        );
+      }
+    } else {
+      return this.writeWorkspaceConfigFiles(
+        context.actualConfigFileName,
+        config
+      );
+    }
+  }
+
+  private writeWorkspaceConfigFiles(workspaceFileName, config) {
+    Object.entries(config.projects as Record<string, any>).forEach(
+      ([project, config]) => {
+        if (config.configFilePath) {
+          const configPath = config.configFilePath;
+          const fileConfigObject = { ...config };
+          delete fileConfigObject.configFilePath;
+          super.write(configPath, Buffer.from(serializeJson(fileConfigObject)));
+          config.projects[project] = dirname(configPath);
+        }
+      }
+    );
+    return super.write(workspaceFileName, Buffer.from(serializeJson(config)));
+  }
+
+  protected resolveInlineProjectConfigurations(config: {
+    projects: Record<string, any>;
+  }): Observable<Object> {
+    let observable: Observable<any> = EMPTY;
+    Object.entries((config.projects as Record<string, any>) ?? {}).forEach(
+      ([project, projectConfig]) => {
+        if (typeof projectConfig === 'string') {
+          const configFilePath = `${projectConfig}/project.json`;
+          const next = super.read(configFilePath as Path).pipe(
+            map((x) => ({
+              project,
+              projectConfig: {
+                ...parseJson(Buffer.from(x).toString()),
+                configFilePath,
+              },
+            }))
+          );
+          observable = observable ? concat(observable, next) : next;
+        }
+      }
+    );
+    return observable.pipe(
+      toArray(),
+      map((x: any[]) => {
+        x.forEach(({ project, projectConfig }) => {
+          config.projects[project] = projectConfig;
+        });
+        return config;
+      })
+    );
   }
 }
 
@@ -364,11 +439,13 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
       // we try to format it, if it changes, return it, otherwise return the original change
       try {
         const w = parseJson(Buffer.from(match.content).toString());
-        const formatted = toOldFormatOrNull(w);
-        return of(
-          formatted
-            ? Buffer.from(serializeJson(formatted))
-            : Buffer.from(match.content)
+        return this.resolveInlineProjectConfigurations(w).pipe(
+          map((x) => {
+            const formatted = toOldFormatOrNull(w);
+            return formatted
+              ? Buffer.from(serializeJson(formatted))
+              : Buffer.from(serializeJson(x));
+          })
         );
       } catch (e) {
         return super.read(path);
@@ -515,8 +592,8 @@ export async function runMigration(
   schematic: string,
   isVerbose: boolean
 ) {
-  const NodeModulesEngineHost = require('@angular-devkit/schematics/tools')
-    .NodeModulesEngineHost;
+  const NodeModulesEngineHost =
+    require('@angular-devkit/schematics/tools').NodeModulesEngineHost;
 
   class MigrationEngineHost extends NodeModulesEngineHost {
     private nodeInstallLogPrinted = false;
@@ -657,7 +734,7 @@ function convertEventTypeToHandleMultipleConfigNames(
     } catch (e) {}
 
     if (content && isNewFormat) {
-      const formatted = toNewFormatOrNull(parseJson(content.toString()));
+      const formatted = toNewFormat(parseJson(content.toString()));
       if (formatted) {
         return {
           eventPath: actualConfigName,
@@ -686,7 +763,7 @@ let mockedSchematics = null;
  *
  * Example:
  *
- * ```
+ * ```typescript
  *   overrideCollectionResolutionForTesting({
  *     '@nrwl/workspace': path.join(__dirname, '../../../../workspace/collection.json'),
  *     '@nrwl/angular': path.join(__dirname, '../../../../angular/collection.json'),
@@ -712,7 +789,7 @@ export function overrideCollectionResolutionForTesting(collections: {
  *
  * Example:
  *
- * ```
+ * ```typescript
  *   mockSchematicsForTesting({
  *     'mycollection:myschematic': (tree, params) => {
  *        tree.write('README.md');
@@ -852,25 +929,66 @@ export async function invokeNew(
 }
 
 let logger: logging.Logger;
-export const getLogger = (isVerbose = false): any => {
+
+const loggerColors: Partial<Record<logging.LogLevel, (s: string) => string>> = {
+  warn: (s) => chalk.bold(chalk.yellow(s)),
+  error: (s) => {
+    if (s.startsWith('NX ')) {
+      return `\n${NX_ERROR} ${chalk.bold(chalk.red(s.substr(3)))}\n`;
+    }
+
+    return chalk.bold(chalk.red(s));
+  },
+  info: (s) => {
+    if (s.startsWith('NX ')) {
+      return `\n${NX_PREFIX} ${chalk.bold(s.substr(3))}\n`;
+    }
+
+    return chalk.white(s);
+  },
+};
+
+export const getLogger = (isVerbose = false): logging.Logger => {
   if (!logger) {
-    logger = createConsoleLogger(isVerbose, process.stdout, process.stderr, {
-      warn: (s) => chalk.bold(chalk.yellow(s)),
-      error: (s) => {
-        if (s.startsWith('NX ')) {
-          return `\n${NX_ERROR} ${chalk.bold(chalk.red(s.substr(3)))}\n`;
-        }
-
-        return chalk.bold(chalk.red(s));
-      },
-      info: (s) => {
-        if (s.startsWith('NX ')) {
-          return `\n${NX_PREFIX} ${chalk.bold(s.substr(3))}\n`;
-        }
-
-        return chalk.white(s);
-      },
-    });
+    logger = createConsoleLogger(
+      isVerbose,
+      process.stdout,
+      process.stderr,
+      loggerColors
+    );
   }
   return logger;
+};
+
+const getTargetLogger = (
+  executor: string,
+  isVerbose = false
+): logging.Logger => {
+  if (executor !== '@angular-devkit/build-angular:tslint') {
+    return getLogger(isVerbose);
+  }
+
+  const tslintExecutorLogger = createConsoleLogger(
+    isVerbose,
+    process.stdout,
+    process.stderr,
+    {
+      ...loggerColors,
+      warn: (s) => {
+        if (
+          s.startsWith(
+            `TSLint's support is discontinued and we're deprecating its support in Angular CLI.`
+          )
+        ) {
+          s =
+            `TSLint's support is discontinued and the @angular-devkit/build-angular:tslint executor is deprecated.\n` +
+            'To start using a modern linter tool, please consider replacing TSLint with ESLint. ' +
+            'You can use the "@nrwl/angular:convert-tslint-to-eslint" generator to automatically convert your projects.\n' +
+            'For more info, visit https://nx.dev/latest/angular/angular/convert-tslint-to-eslint.';
+        }
+        return chalk.bold(chalk.yellow(s));
+      },
+    }
+  );
+  return tslintExecutorLogger;
 };

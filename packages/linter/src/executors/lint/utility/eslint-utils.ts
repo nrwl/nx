@@ -1,5 +1,5 @@
 import { getFilesToLint } from './file-utils';
-import { Schema } from '../schema';
+import type { Schema } from '../schema';
 import { CLIEngine } from 'eslint';
 
 /**

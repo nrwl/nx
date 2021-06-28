@@ -53,7 +53,7 @@ export function CodeBlock({
         </button>
       </CopyToClipboard>
       <SyntaxHighlighter
-        showLineNumbers={language !== 'bash' && language !== 'treeview'}
+        showLineNumbers={!['bash', 'text', 'treeview'].includes(language)}
         useInlineStyles={false}
         language={language}
         children={text}

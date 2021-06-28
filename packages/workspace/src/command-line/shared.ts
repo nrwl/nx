@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 import { readWorkspaceJson, TEN_MEGABYTES } from '../core/file-utils';
-import { NxArgs } from './utils';
+import type { NxArgs } from './utils';
 
 export function parseFiles(options: NxArgs): { files: string[] } {
   const { files, uncommitted, untracked, base, head } = options;
@@ -43,7 +43,7 @@ function getUntrackedFiles(): string[] {
 }
 
 function getFilesUsingBaseAndHead(base: string, head: string): string[] {
-  let mergeBase;
+  let mergeBase: string;
   try {
     mergeBase = execSync(`git merge-base "${base}" "${head}"`, {
       maxBuffer: TEN_MEGABYTES,

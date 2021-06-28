@@ -87,7 +87,8 @@ export function addOrUpdateProperty(
       propertyAssignment.initializer.kind ===
       ts.SyntaxKind.ArrayLiteralExpression
     ) {
-      const arrayLiteral = propertyAssignment.initializer as ts.ArrayLiteralExpression;
+      const arrayLiteral =
+        propertyAssignment.initializer as ts.ArrayLiteralExpression;
 
       if (
         arrayLiteral.elements.some((element) => {

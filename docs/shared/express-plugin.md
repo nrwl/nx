@@ -6,12 +6,12 @@ The Express plugin contains generators to add a new Express application to an Nx
 
 Adding the Express plugin to a workspace can be done with the following:
 
-```shell script
+```bash
 #yarn
 yarn add -D @nrwl/express
 ```
 
-```shell script
+```bash
 #npm
 npm install -D @nrwl/express
 ```
@@ -22,7 +22,7 @@ npm install -D @nrwl/express
 
 Generating new applications can be done with the following:
 
-```shell script
+```bash
 nx generate @nrwl/express:application <express-app>
 ```
 
@@ -68,7 +68,7 @@ server.on('error', console.error);
 
 Generating Express applications has an option to configure other projects in the workspace to proxy API requests. This can be done by passing the `--frontendProject` with the project name you wish to enable proxy support for.
 
-```shell script
+```bash
 nx generate @nrwl/express:application <express-app> --frontendProject my-react-app
 ```
 
@@ -78,13 +78,13 @@ When a Express application is added to the workspace.json (or angular.json), the
 
 #### build
 
-```shell script
+```bash
 nx build <express-app>
 ```
 
 The build command will compile the application using Webpack. It supports a production configuration by building with the following command:
 
-```shell script
+```bash
 nx build <express-app> --configuration=production
 ```
 
@@ -92,7 +92,7 @@ Additional configurations can be added in the workspace.json. Changing the `--co
 
 #### serve
 
-```shell script
+```bash
 nx serve <express-app>
 ```
 
@@ -115,7 +115,7 @@ Setting the `waitUntilTargets` option with an array of projects (with the follow
 
 The lint command will run linting within the scope of the Express app.
 
-```shell script
+```bash
 nx lint <express-app>
 ```
 
@@ -123,6 +123,6 @@ nx lint <express-app>
 
 Test will execute Jest tests within the scope of the Express app.
 
-```shell script
+```bash
 nx test <express-app>
 ```

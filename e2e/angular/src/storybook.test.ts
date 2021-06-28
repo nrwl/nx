@@ -2,11 +2,13 @@ process.env.SELECTED_CLI = 'angular';
 
 import {
   checkFilesExist,
+  isNotWindows,
   killPorts,
   newProject,
   readFile,
   removeProject,
   runCLI,
+  runCypressTests,
   tmpProjPath,
   uniq,
 } from '@nrwl/e2e/utils';
@@ -33,8 +35,8 @@ describe('Storybook schematics', () => {
       `
         module.exports = {
           stories: [],
-          addons: ['@storybook/addon-knobs/register'],
-        };
+          addons: ['@storybook/addon-essentials'],
+        };      
 
         console.log('hi there');
       `
@@ -56,19 +58,20 @@ describe('Storybook schematics', () => {
 
   describe('build storybook', () => {
     it('should execute e2e tests using Cypress running against Storybook', async () => {
-      const myapp = uniq('myapp');
-      runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
+      if (isNotWindows()) {
+        const myapp = uniq('myapp');
+        runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
 
-      const myAngularLib = uniq('test-ui-lib');
-      createTestUILib(myAngularLib);
-      const myReactLib = uniq('test-ui-lib-react');
-      runCLI(`generate @nrwl/react:lib ${myReactLib} --no-interactive`);
-      runCLI(
-        `generate @nrwl/react:component Button --project=${myReactLib} --no-interactive`
-      );
-      writeFileSync(
-        tmpProjPath(`libs/${myReactLib}/src/lib/button.tsx`),
-        `
+        const myAngularLib = uniq('test-ui-lib');
+        createTestUILib(myAngularLib);
+        const myReactLib = uniq('test-ui-lib-react');
+        runCLI(`generate @nrwl/react:lib ${myReactLib} --no-interactive`);
+        runCLI(
+          `generate @nrwl/react:component Button --project=${myReactLib} --no-interactive`
+        );
+        writeFileSync(
+          tmpProjPath(`libs/${myReactLib}/src/lib/button.tsx`),
+          `
           import React from 'react';
 
             import './button.css';
@@ -92,102 +95,106 @@ describe('Storybook schematics', () => {
 
             export default Button;
             `
-      );
-      writeFileSync(
-        tmpProjPath(`libs/${myReactLib}/src/lib/button.stories.tsx`),
-        `
-            import React from 'react';
-            import { Button, ButtonStyle } from './button';
-            import { text, number } from '@storybook/addon-knobs';
-
-            export default { title: 'Button' };
-
-            export const primary = () => (
-              <Button
-                padding={number('Padding', 0)}
-                style={text('Style', 'default') as ButtonStyle}
-                text={text('Text', 'Click me')}
-                // padding='0'
-                // style='default'
-                // text='Click me'
-              />
-            );
+        );
+        writeFileSync(
+          tmpProjPath(`libs/${myReactLib}/src/lib/button.stories.tsx`),
+          `
+          import { Story, Meta } from '@storybook/react';
+          import { Button, ButtonProps } from './button';
+          
+          export default {
+            component: Button,
+            title: 'Button',
+          } as Meta;
+          
+          const Template: Story<ButtonProps> = (args) => <Button {...args} />;
+          
+          export const Primary = Template.bind({});
+          Primary.args = {
+            text: 'Click me',
+            padding: 0,
+            style: 'default',
+          };          
             `
-      );
+        );
 
-      runCLI(
-        `generate @nrwl/angular:storybook-configuration ${myAngularLib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
-      );
-      runCLI(
-        `generate @nrwl/angular:stories ${myAngularLib} --generateCypressSpecs --no-interactive`
-      );
+        runCLI(
+          `generate @nrwl/angular:storybook-configuration ${myAngularLib} --configureCypress --generateStories --generateCypressSpecs --no-interactive`
+        );
+        runCLI(
+          `generate @nrwl/angular:stories ${myAngularLib} --generateCypressSpecs --no-interactive`
+        );
 
-      writeFileSync(
-        tmpProjPath(
-          `apps/${myAngularLib}-e2e/src/integration/test-button/test-button.component.spec.ts`
-        ),
-        `
+        writeFileSync(
+          tmpProjPath(
+            `apps/${myAngularLib}-e2e/src/integration/test-button/test-button.component.spec.ts`
+          ),
+          `
             describe('${myAngularLib}', () => {
 
           it('should render the component', () => {
-            cy.visit('/iframe.html?id=testbuttoncomponent--primary&knob-buttonType=button&knob-style=default&knob-age&knob-isDisabled=false');
+            cy.visit('/iframe.html?id=testbuttoncomponent--primary&args=buttonType:button;style:default;age;isDisabled:false');
             cy.get('proj-test-button').should('exist');
             cy.get('button').should('not.be.disabled');
             cy.get('button').should('have.class', 'default');
             cy.contains('You are 0 years old.');
           });
-          it('should adjust the knobs', () => {
-            cy.visit('/iframe.html?id=testbuttoncomponent--primary&knob-buttonType=button&knob-style=primary&knob-age=10&knob-isDisabled=true');
+          it('should adjust the controls', () => {
+            cy.visit('/iframe.html?id=testbuttoncomponent--primary&args=buttonType:button;style:primary;age:10;isDisabled:true');
             cy.get('button').should('be.disabled');
             cy.get('button').should('have.class', 'primary');
             cy.contains('You are 10 years old.');
           });
         });
         `
-      );
+        );
 
-      runCLI(
-        `generate @nrwl/react:storybook-configuration ${myReactLib} --configureCypress --no-interactive`
-      );
+        runCLI(
+          `generate @nrwl/react:storybook-configuration ${myReactLib} --configureCypress --no-interactive`
+        );
 
-      // The following line (mkdirSync...) is not needed,
-      // since the above schematic creates this directory.
-      // So, if we leave it there, there's an error saying the directory exists.
-      // I am not sure how it worked as it was :/
+        // The following line (mkdirSync...) is not needed,
+        // since the above schematic creates this directory.
+        // So, if we leave it there, there's an error saying the directory exists.
+        // I am not sure how it worked as it was :/
 
-      // mkdirSync(tmpProjPath(`apps/${myReactLib}-e2e/src/integration`));
-      writeFileSync(
-        tmpProjPath(`apps/${myReactLib}-e2e/src/integration/button.spec.ts`),
-        `
+        // mkdirSync(tmpProjPath(`apps/${myReactLib}-e2e/src/integration`));
+        writeFileSync(
+          tmpProjPath(`apps/${myReactLib}-e2e/src/integration/button.spec.ts`),
+          `
         describe('react-ui', () => {
           it('should render the component', () => {
             cy.visit(
-              '/iframe.html?id=button--primary&knob-Style=default&knob-Padding&knob-Text=Click%20me'
+              '/iframe.html?id=button--primary&args=style:default;padding;text:Click%20me'
             );
             cy.get('button').should('exist');
             cy.get('button').should('have.class', 'default');
           });
-          it('should adjust the knobs', () => {
+          it('should adjust the controls', () => {
             cy.visit(
-              '/iframe.html?id=button--primary&knob-Style=primary&knob-Padding=10&knob-Text=Other'
+              '/iframe.html?id=button--primary&args=style:primary;padding:10;text:Other'
             );
             cy.get('button').should('have.class', 'primary');
           });
         });
         `
-      );
+        );
 
-      expect(runCLI(`run ${myAngularLib}-e2e:e2e --no-watch`)).toContain(
-        'All specs passed!'
-      );
+        if (runCypressTests()) {
+          const e2eResults = runCLI(
+            `e2e ${myAngularLib}-e2e --headless --no-watch`
+          );
+          expect(e2eResults).toContain('All specs passed!');
+          expect(await killPorts()).toBeTruthy();
+        }
 
-      runCLI(`run ${myAngularLib}:build-storybook`);
+        runCLI(`run ${myAngularLib}:build-storybook`);
 
-      checkFilesExist(`dist/storybook/${myAngularLib}/index.html`);
-      expect(readFile(`dist/storybook/${myAngularLib}/index.html`)).toContain(
-        `<title>Storybook</title>`
-      );
-      expect(await killPorts()).toBeTruthy();
+        checkFilesExist(`dist/storybook/${myAngularLib}/index.html`);
+        expect(readFile(`dist/storybook/${myAngularLib}/index.html`)).toContain(
+          `<title>Storybook</title>`
+        );
+      }
     }, 1000000);
 
     xit('should build an Angular based storybook', () => {
@@ -233,21 +240,28 @@ describe('Storybook schematics', () => {
           `libs/${angularStorybookLib}/src/lib/myteststory.stories.ts`
         ),
         `
+            import { moduleMetadata, Story, Meta } from '@storybook/angular';
             import { MyTestCmpComponent } from '@${proj}/${anotherTestLib}';
 
             export default {
               title: 'My Test Cmp',
               component: MyTestCmpComponent,
-            };
+              decorators: [
+                moduleMetadata({
+                  imports: [],
+                })
+              ],
+            } as Meta<MyTestCmpComponent>;
 
-            let x = 'hi';
-
-            export const primary = () => ({
-              moduleMetadata: {
-                imports: [],
-              },
-              props: {},
+            const Template: Story<MyTestCmpComponent> = (args: MyTestCmpComponent) => ({
+              component: MyTestCmpComponent,
+              props: args,
             });
+
+
+            export const Primary = Template.bind({});
+            Primary.args = {
+            }
         `
       );
 
@@ -282,7 +296,7 @@ export function createTestUILib(libName: string): void {
         styleUrls: ['./test-button.component.css']
       })
       export class TestButtonComponent implements OnInit {
-        @Input('buttonType') type = 'button';
+        @Input('buttonType') buttonType = 'button';
         @Input() style: ButtonStyle = 'default';
         @Input() age!: number;
         @Input() isDisabled = false;

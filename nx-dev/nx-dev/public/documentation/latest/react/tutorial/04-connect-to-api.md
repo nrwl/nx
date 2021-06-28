@@ -8,7 +8,7 @@ Real-world applications do not live in isolation — they need APIs to talk 
 
 **Let's change our application to fetch the data from the API.**
 
-```typescript jsx
+```typescript
 import React, { useEffect, useState } from 'react';
 
 interface Todo {
@@ -52,10 +52,3 @@ const App = () => {
 
 export default App;
 ```
-
-!!!!!
-Run `npx nx serve todos` and open http://localhost:4200. What do you see?
-!!!!!
-"the server responded with a status of 404 (Not Found)" in Console.
-Blank screen.
-Exception rendered on the screen.

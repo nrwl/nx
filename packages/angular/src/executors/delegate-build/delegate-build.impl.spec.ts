@@ -15,12 +15,12 @@ describe('DelegateBuild executor', () => {
   let delegateTarget: Target;
 
   beforeEach(async () => {
-    (buildableLibsUtils.calculateProjectDependencies as jest.Mock).mockImplementation(
-      () => ({
-        target: { data: { root: '/root' } },
-        dependencies: [],
-      })
-    );
+    (
+      buildableLibsUtils.calculateProjectDependencies as jest.Mock
+    ).mockImplementation(() => ({
+      target: { data: { root: '/root' } },
+      dependencies: [],
+    }));
     (buildableLibsUtils.createTmpTsConfig as jest.Mock).mockImplementation(
       () => '/my-app/tsconfig.app.generated.json'
     );
@@ -52,9 +52,9 @@ describe('DelegateBuild executor', () => {
   afterEach(() => jest.clearAllMocks());
 
   it('should return unsuccessful result when deps have not been built', async () => {
-    (buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock).mockReturnValue(
-      false
-    );
+    (
+      buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock
+    ).mockReturnValue(false);
 
     const result = await delegateBuildExecutor(options, context).next();
 
@@ -64,9 +64,9 @@ describe('DelegateBuild executor', () => {
   });
 
   it('should build the app when deps have been built', async () => {
-    (buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock).mockReturnValue(
-      true
-    );
+    (
+      buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock
+    ).mockReturnValue(true);
     (devkit.runExecutor as any).mockImplementation(function* () {
       yield { success: true };
     });
@@ -82,9 +82,9 @@ describe('DelegateBuild executor', () => {
   });
 
   it('should return unsuccessful result when build fails', async () => {
-    (buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock).mockReturnValue(
-      true
-    );
+    (
+      buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock
+    ).mockReturnValue(true);
     (devkit.runExecutor as any).mockImplementation(function* () {
       yield { success: false };
     });
@@ -100,9 +100,9 @@ describe('DelegateBuild executor', () => {
   });
 
   it('should support watch mode builds', async () => {
-    (buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock).mockReturnValue(
-      true
-    );
+    (
+      buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock
+    ).mockReturnValue(true);
     (devkit.runExecutor as any).mockImplementation(function* () {
       yield { success: true };
       yield { success: true };

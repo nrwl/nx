@@ -1,7 +1,6 @@
 import {
   BuilderContext,
   BuilderOutput,
-  BuilderRun,
   createBuilder,
 } from '@angular-devkit/architect';
 import { executeBrowserBuilder } from '@angular-devkit/build-angular';
@@ -19,7 +18,6 @@ import { Schema } from '@angular-devkit/build-angular/src/browser/schema';
 import { switchMap } from 'rxjs/operators';
 import { existsSync } from 'fs';
 import { merge } from 'webpack-merge';
-import { SchematicsException } from '@angular-devkit/schematics';
 
 type BrowserBuilderSchema = Schema & {
   customWebpackConfig?: {
@@ -47,7 +45,7 @@ function buildApp(
         pathToWebpackConfig
       );
     } else {
-      throw new SchematicsException(
+      throw new Error(
         `Custom Webpack Config File Not Found!\nTo use a custom webpack config, please ensure the path to the custom webpack file is correct: \n${pathToWebpackConfig}`
       );
     }

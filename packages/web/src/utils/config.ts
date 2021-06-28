@@ -119,13 +119,13 @@ export function getBaseWebpackPartial(
 
   if (options.extractLicenses) {
     extraPlugins.push(
-      (new LicenseWebpackPlugin({
+      new LicenseWebpackPlugin({
         stats: {
           errors: false,
         },
         perChunkOutput: false,
         outputFilename: `3rdpartylicenses.txt`,
-      }) as unknown) as webpack.Plugin
+      }) as unknown as webpack.Plugin
     );
   }
 

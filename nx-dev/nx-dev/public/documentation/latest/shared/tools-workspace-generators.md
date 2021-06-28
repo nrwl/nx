@@ -6,7 +6,7 @@ Workspace generators provide a way to automate many tasks you regularly perform 
 
 Use the Nx CLI to generate the initial files needed for your workspace generator.
 
-```sh
+```bash
 nx generate @nrwl/workspace:workspace-generator my-generator
 ```
 
@@ -73,7 +73,7 @@ The `$default` object is used to read arguments from the command-line that are p
 
 To run a generator, invoke the `nx workspace-generator` command with the name of the generator.
 
-```sh
+```bash
 nx workspace-generator my-generator mylib
 ```
 
@@ -81,13 +81,13 @@ nx workspace-generator my-generator mylib
 
 Generators that are created using the `@angular-devkit` are called schematics. Workspace schematics that have been created with the `@angular-devkit` will omit the `"cli": "nx"` property in `schema.json`. Nx will recognize this and correctly run the schematic using the same command as an `@nrwl/devkit` generator.
 
-```sh
+```bash
 nx workspace-generator my-schematic mylib
 ```
 
 The command is also aliased to the previous `workspace-schematic` command, so this still works:
 
-```sh
+```bash
 nx workspace-schematic my-schematic mylib
 ```
 
@@ -113,6 +113,14 @@ happynrwl/
 ├── nx.json
 ├── package.json
 └── tsconfig.base.json
+```
+
+The files can use EJS syntax to substitute variables and logic. See the [EJS Docs](https://ejs.co/) to see more information about how to write these template files.
+
+Example NOTES.md:
+
+```md
+Hello, my name is <%= name %>!
 ```
 
 Next, update the `index.ts` file for the generator, and generate the new files.
@@ -150,13 +158,13 @@ Next, run the generator:
 
 > Use the `-d` or `--dry-run` flag to see your changes without applying them.
 
-```sh
+```bash
 nx workspace-generator my-generator mylib
 ```
 
 The following information will be displayed.
 
-```sh
+```bash
 CREATE libs/mylib/README.md
 CREATE libs/mylib/.babelrc
 CREATE libs/mylib/src/index.ts
@@ -172,6 +180,12 @@ CREATE libs/mylib/jest.config.js
 CREATE libs/mylib/tsconfig.spec.json
 UPDATE jest.config.js
 CREATE libs/mylib/NOTES.md
+```
+
+`libs/mylib/NOTES.md` will contain the content with substituted variables:
+
+```md
+Hello, my name is mylib!
 ```
 
 ## Customizing generator options

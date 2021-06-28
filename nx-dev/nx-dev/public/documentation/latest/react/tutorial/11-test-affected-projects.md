@@ -16,7 +16,7 @@ git checkout -b testbranch
 
 **Open `libs/ui/src/lib/todos/todos.tsx` and change the component:**
 
-```typescript jsx
+```typescript
 import React from 'react';
 import { Todo } from '@myorg/data';
 
@@ -70,9 +70,3 @@ You can run any target against the affected projects in the graph like this:
 npx nx affected --target=build
 npx nx affected:build
 ```
-
-!!!!!
-Run "npx nx affected --target=invalid --base=master". What do you see?
-!!!!!
-No projects with "invalid" were run
-An error message saying that the "invalid" target is invalid

@@ -36,6 +36,7 @@ export async function storybookConfigurationGenerator(
     js: schema.js,
     linter: schema.linter,
     cypressDirectory: schema.cypressDirectory,
+    standaloneConfig: schema.standaloneConfig,
   });
 
   if (schema.generateStories) {

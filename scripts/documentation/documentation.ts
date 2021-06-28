@@ -1,5 +1,6 @@
 import * as chalk from 'chalk';
 import { execSync, exec } from 'child_process';
+import { join } from 'path';
 import { Frameworks } from './frameworks';
 
 import { generateCLIDocumentation } from './generate-cli-data';
@@ -17,7 +18,14 @@ async function generate() {
     execSync(
       `rm -rf docs/${framework}/api-nx-devkit/modules.md docs/${framework}/api-nx-devkit/README.md`
     );
-    execSync(`nx format`);
+    execSync(
+      `npx prettier docs/${framework}/api-nx-devkit --write --config ${join(
+        __dirname,
+        '..',
+        '..',
+        '.prettierrc'
+      )}`
+    );
   });
   await generateGeneratorsDocumentation();
   await generateExecutorsDocumentation();

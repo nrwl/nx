@@ -1,7 +1,6 @@
 import * as chalk from 'chalk';
-import { getPackageManagerCommand } from '@nrwl/tao/src/shared/package-manager';
+import { getPackageManagerCommand, readJsonFile } from '@nrwl/devkit';
 import { appRootPath } from '../app-root';
-import { readJsonFile } from '../fileutils';
 import { output } from '../output';
 import type { PluginCapabilities } from './models';
 import { hasElements } from './shared';

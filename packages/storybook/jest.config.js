@@ -8,4 +8,5 @@ module.exports = {
     'ts-jest': { tsconfig: '<rootDir>/tsconfig.spec.json' },
   },
   displayName: 'storybook',
+  testEnvironment: 'node',
 };

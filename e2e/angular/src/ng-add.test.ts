@@ -46,11 +46,10 @@ xdescribe('Nrwl Convert to Nx Workspace', () => {
 
     // update angular-cli.json
     const angularCLIJson = readJson('angular.json');
-    angularCLIJson.projects[
-      proj
-    ].architect.build.options.scripts = angularCLIJson.projects[
-      proj
-    ].architect.test.options.scripts = ['src/scripts.ts'];
+    angularCLIJson.projects[proj].architect.build.options.scripts =
+      angularCLIJson.projects[proj].architect.test.options.scripts = [
+        'src/scripts.ts',
+      ];
     angularCLIJson.projects[proj].architect.test.options.styles = [
       'src/styles.css',
     ];

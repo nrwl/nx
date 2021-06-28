@@ -27,17 +27,7 @@ export function Index() {
         distributed graph-based task execution, a robust CLI, computation caching, dependency management, and more."
         />
       </Head>
-      <Header
-        showSearch={false}
-        flavor={{
-          name: storedFlavor || 'react',
-          value: storedFlavor || 'react',
-        }}
-        version={{
-          name: storedVersion || 'Latest',
-          value: storedVersion || 'latest',
-        }}
-      />
+      <Header showSearch={false} />
       <main>
         <div className="w-full">
           {/*INTRO COMPONENT*/}
@@ -54,7 +44,7 @@ export function Index() {
                   </p>
 
                   <div className="flex flex-wrap space-y-4 sm:space-y-0 sm:space-x-4 text-center">
-                    <Link href="/latest/react/getting-started/getting-started">
+                    <Link href="/getting-started/intro">
                       <a className="w-full sm:w-auto flex-none bg-purple-nx-base text-white text-lg leading-6 font-semibold py-3 px-6 border border-transparent rounded focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-purple-nx-base focus:outline-none transition-colors duration-180">
                         Get Started
                       </a>
@@ -295,11 +285,11 @@ export function Index() {
                   </div>
                 </div>
               </div>
-              {/*MODERN TOOLS*/}
+              {/*RICH PLUGIN ECOSYSTEM*/}
               <div className="my-32 flex sm:flex-row flex-col">
                 <div className="w-full sm:w-1/2 flex flex-col justify-center sm:pb-0 sm:pr-16 pb-10 mt-8 sm:mt-0">
                   <h2 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4">
-                    Support for Modern Tools
+                    Rich Plugin Ecosystem
                   </h2>
                   <p className="sm:text-lg mb-6">
                     <span className="font-bold">Nx</span> is an open platform
@@ -313,7 +303,7 @@ export function Index() {
                 <div className="w-full sm:w-1/2 flex flex-col justify-center items-center sm:pl-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
                   <Image
                     src="/images/modern-tools.svg"
-                    alt="Support for Modern Tools illustration"
+                    alt="Rich Plugin Ecosystem illustration"
                     width={388}
                     height={300}
                   />
@@ -418,16 +408,7 @@ export function Index() {
           <NxUsersShowcase />
         </div>
       </main>
-      <Footer
-        flavor={{
-          name: storedFlavor || 'react',
-          value: storedFlavor || 'react',
-        }}
-        version={{
-          name: storedVersion || 'Latest',
-          value: storedVersion || 'latest',
-        }}
-      />
+      <Footer />
     </>
   );
 }

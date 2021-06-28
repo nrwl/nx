@@ -18,6 +18,16 @@ jobs:
         os:
           - ubuntu-latest
           # - windows-latest
+        include:
+          - os: ubuntu-latest
+            os-name: ubuntu
+          # - os: windows-latest
+          #  os-name: windows
+        # exclude:
+        #   - os: windows-latest
+        #     package_manager: npm
+        #   - os: windows-latest
+        #     package_manager: yarn
         node_version:
           - '14'
           # - '15'
@@ -26,18 +36,18 @@ jobs:
           - yarn
           - pnpm
         packages:
-          - e2e-workspace
-          - e2e-cli,e2e-nx-plugin,dep-graph-dep-graph-e2e
-          - e2e-cypress,e2e-jest
-          - e2e-react
-          - e2e-next
-          - e2e-gatsby
-          - e2e-node
-          - e2e-web,e2e-linter,e2e-storybook
           - e2e-angular
+          - e2e-cli,e2e-nx-plugin,e2e-jest,e2e-linter,e2e-cypress
+          - e2e-cypress
+          - e2e-gatsby,e2e-react
+          - e2e-next
+          - e2e-node
+          - e2e-web
+          - e2e-storybook
+          - e2e-workspace
       fail-fast: false
 
-    name: ${{ matrix.os }}/node v${{ matrix.node_version }}/${{ matrix.package_manager }} - ${{ matrix.packages }}
+    name: ${{ matrix.os-name }}/n v${{ matrix.node_version }}/${{ matrix.package_manager }} - ${{ matrix.packages }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -58,9 +68,11 @@ jobs:
       with:
         path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
         key: ${{ matrix.os }}-node-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
-        restore-keys: ${{ matrix.os }}-node-${{ matrix.node-version }}-yarn-
+        restore-keys: |
+          ${{ matrix.os }}-node-${{ matrix.node-version }}-yarn-
 
-    - run: yarn install
+    - name: Install packages
+      run: yarn install --prefer-offline --non-interactive
 
     - name: Cleanup
       if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -71,12 +83,14 @@ jobs:
         sudo rm -rf /opt/ghc
         sudo rm -rf "/usr/local/share/boost"
         sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        sudo apt-get install lsof
+        echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
 
     - name: Install PNPM
       if: ${{ matrix.package_manager == 'pnpm' }}
-      uses: pnpm/action-setup@v1.2.1
+      uses: pnpm/action-setup@v2.0.1
       with:
-        version: 5.18.9
+        version: 6.7.6
 
     - name: Run e2e tests
       run: yarn nx run-many --target=e2e --projects="${{ join(matrix.packages) }}"
@@ -86,6 +100,7 @@ jobs:
         GIT_COMMITTER_EMAIL: test@test.com
         GIT_COMMITTER_NAME: Test
         NX_E2E_CI_CACHE_KEY: e2e-gha-${{ matrix.os }}-${{ matrix.node_version }}-${{ matrix.package_manager }}
+        NX_E2E_CI_NIGHTLY: ${{ 'true' }}
         NODE_OPTIONS: --max_old_space_size=8192
         SELECTED_PM: ${{ matrix.package_manager }}
         YARN_REGISTRY: http://localhost:4872
@@ -96,3 +111,21 @@ jobs:
       uses: mxschmitt/action-tmate@v3
       with:
         sudo: ${{ matrix.os != 'windows-latest' }} # disable sudo for windows debugging
+
+  report:
+    if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+    needs: e2e
+    runs-on: ubuntu-latest
+    name: Report status
+    steps:
+      - name: Send notification
+        uses: ravsamhq/notify-slack-action@v1
+        with:
+          status: ${{ needs.e2e.result }}
+          message_format: '{emoji} *{workflow}* {status_message} (last commit <{commit_url}|{commit_sha}>)'
+          notification_title: '{workflow} has {status_message}'
+          footer: '<{run_url}|View Run>'
+          mention_users: 'U01UELKLYF2'
+          mention_users_when: 'failure,warnings'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}

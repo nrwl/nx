@@ -13,4 +13,5 @@ export interface Schema {
   babelJest?: boolean;
   js: boolean;
   pascalCaseFiles: boolean;
+  standaloneConfig?: boolean;
 }

@@ -1,6 +1,6 @@
 # React Nx Tutorial - Step 3: Display Todos
 
-## VNx.dev Tutorial | React | Step 3: Display Todos
+## Nx.dev Tutorial | React | Step 3: Display Todos
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/fNehP0WX__c" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
@@ -14,7 +14,7 @@ The best way to work with Cypress is to keep the failing E2E test running while 
 
 To make the first assertion of the e2e test pass, update `apps/todos/src/app/app.tsx`:
 
-```typescript jsx
+```typescript
 import React, { useState } from 'react';
 
 interface Todo {
@@ -48,7 +48,7 @@ export default App;
 
 **Add the `add-todo` button with the corresponding click handler.**
 
-```typescript jsx
+```typescript
 import React, { useState } from 'react';
 
 interface Todo {
@@ -89,9 +89,3 @@ export default App;
 ```
 
 The tests should pass now.
-
-!!!!!
-What will you see if you run: `npx nx e2e todos-e2e --headless`
-!!!!!
-Cypress will run in the headless mode, and the test will pass.
-Cypress will run in the headless mode, and the test will fail.

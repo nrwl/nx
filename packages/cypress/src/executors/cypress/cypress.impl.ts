@@ -121,9 +121,8 @@ async function* startDevServer(
     { project, target, configuration },
     context
   );
-  const targetSupportsWatchOpt = Object.keys(devServerTargetOpts).includes(
-    'watch'
-  );
+  const targetSupportsWatchOpt =
+    Object.keys(devServerTargetOpts).includes('watch');
 
   for await (const output of await runExecutor<{
     success: boolean;
