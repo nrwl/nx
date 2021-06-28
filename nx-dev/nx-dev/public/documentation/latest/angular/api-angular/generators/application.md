@@ -128,6 +128,14 @@ Type: `boolean`
 
 Skip creating spec files.
 
+### standaloneConfig
+
+Default: `false`
+
+Type: `boolean`
+
+Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json
+
 ### strict
 
 Default: `true`
@@ -142,7 +150,7 @@ Default: `css`
 
 Type: `string`
 
-Possible values: `css`, `scss`, `styl`, `less`
+Possible values: `css`, `scss`, `less`
 
 The file extension to be used for style files.
 

@@ -87,19 +87,14 @@
         "id": "core-concepts",
         "itemList": [
           {
-            "name": "Computation Caching",
-            "id": "computation-caching",
-            "file": "shared/computation-caching"
-          },
-          {
-            "name": "Rebuild Only What is Affected",
-            "id": "affected",
-            "file": "shared/affected"
-          },
-          {
             "name": "Monorepos",
             "id": "why-monorepos",
             "file": "shared/guides/why-monorepos"
+          },
+          {
+            "name": "Mental Model",
+            "id": "mental-model",
+            "file": "shared/mental-model"
           },
           {
             "name": "Updating Nx",
@@ -319,6 +314,11 @@
             "file": "angular/api-workspace/generators/workspace-generator"
           },
           {
+            "name": "convert-to-nx-project generator",
+            "id": "convert-to-nx-project-generator",
+            "file": "angular/api-workspace/generators/convert-to-nx-project"
+          },
+          {
             "name": "run-commands executor",
             "id": "run-commands-executor",
             "file": "angular/api-workspace/executors/run-commands"
@@ -388,19 +388,24 @@
             "file": "angular/api-angular/generators/application"
           },
           {
+            "name": "convert-tslint-to-eslint",
+            "id": "convert-tslint-to-eslint",
+            "file": "angular/api-angular/generators/convert-tslint-to-eslint"
+          },
+          {
             "name": "downgrade-module generator",
             "id": "downgrade-module",
             "file": "angular/api-angular/generators/downgrade-module"
           },
           {
-            "name": "karma-project generator",
-            "id": "karma-project",
-            "file": "angular/api-angular/generators/karma-project"
-          },
-          {
             "name": "karma generator",
             "id": "karma",
             "file": "angular/api-angular/generators/karma"
+          },
+          {
+            "name": "karma-project generator",
+            "id": "karma-project",
+            "file": "angular/api-angular/generators/karma-project"
           },
           {
             "name": "library generator",
@@ -443,14 +448,14 @@
             "file": "angular/api-angular/generators/upgrade-module"
           },
           {
-            "name": "convert-tslint-to-eslint",
-            "id": "convert-tslint-to-eslint",
-            "file": "angular/api-angular/generators/convert-tslint-to-eslint"
+            "name": "web-worker generator",
+            "id": "web-worker",
+            "file": "angular/api-angular/generators/web-worker"
           },
           {
-            "name": "package executor",
-            "id": "package",
-            "file": "angular/api-angular/executors/package"
+            "name": "delegate-build executor",
+            "id": "delegate-build",
+            "file": "angular/api-angular/executors/delegate-build"
           },
           {
             "name": "ng packagr lite executor",
@@ -458,14 +463,14 @@
             "file": "angular/api-angular/executors/ng-packagr-lite"
           },
           {
+            "name": "package executor",
+            "id": "package",
+            "file": "angular/api-angular/executors/package"
+          },
+          {
             "name": "webpack-browser executor",
             "id": "webpack-browser",
             "file": "angular/api-angular/executors/webpack-browser"
-          },
-          {
-            "name": "delegate-build executor",
-            "id": "delegate-build",
-            "file": "angular/api-angular/executors/delegate-build"
           }
         ]
       },
@@ -904,6 +909,22 @@
         ]
       },
       {
+        "name": "Core",
+        "id": "core-extended",
+        "itemList": [
+          {
+            "name": "Computation Caching",
+            "id": "computation-caching",
+            "file": "shared/computation-caching"
+          },
+          {
+            "name": "Rebuild Only What is Affected",
+            "id": "affected",
+            "file": "shared/affected"
+          }
+        ]
+      },
+      {
         "name": "Executors / Builders",
         "id": "executors",
         "itemList": [
@@ -931,12 +952,32 @@
           {
             "name": "Using Generators",
             "id": "using-schematics",
-            "file": "shared/using-generators"
+            "file": "angular/generators/using-generators"
           },
           {
             "name": "Workspace Generators",
             "id": "workspace-generators",
-            "file": "shared/tools-workspace-generators"
+            "file": "angular/generators/workspace-generators"
+          },
+          {
+            "name": "Composing Generators",
+            "id": "composing-generators",
+            "file": "angular/generators/composing-generators"
+          },
+          {
+            "name": "Generator Options",
+            "id": "generator-options",
+            "file": "shared/generators/generator-options"
+          },
+          {
+            "name": "Creating Files",
+            "id": "creating-files",
+            "file": "shared/generators/creating-files"
+          },
+          {
+            "name": "Modifying Files",
+            "id": "modifying-files",
+            "file": "shared/generators/modifying-files"
           }
         ]
       },
@@ -1186,19 +1227,14 @@
         "id": "core-concepts",
         "itemList": [
           {
-            "name": "Computation Caching",
-            "id": "computation-caching",
-            "file": "shared/computation-caching"
-          },
-          {
-            "name": "Rebuild Only What is Affected",
-            "id": "affected",
-            "file": "shared/affected"
-          },
-          {
             "name": "Monorepos",
             "id": "why-monorepos",
             "file": "shared/guides/why-monorepos"
+          },
+          {
+            "name": "Mental Model",
+            "id": "mental-model",
+            "file": "shared/mental-model"
           },
           {
             "name": "Updating Nx",
@@ -1414,6 +1450,11 @@
             "file": "react/api-workspace/generators/workspace-generator"
           },
           {
+            "name": "convert-to-nx-project generator",
+            "id": "convert-to-nx-project-generator",
+            "file": "react/api-workspace/generators/convert-to-nx-project"
+          },
+          {
             "name": "run-commands executor",
             "id": "run-commands-executor",
             "file": "react/api-workspace/executors/run-commands"
@@ -1483,19 +1524,24 @@
             "file": "react/api-angular/generators/application"
           },
           {
+            "name": "convert-tslint-to-eslint",
+            "id": "convert-tslint-to-eslint",
+            "file": "react/api-angular/generators/convert-tslint-to-eslint"
+          },
+          {
             "name": "downgrade-module generator",
             "id": "downgrade-module",
             "file": "react/api-angular/generators/downgrade-module"
           },
           {
-            "name": "karma-project generator",
-            "id": "karma-project",
-            "file": "react/api-angular/generators/karma-project"
-          },
-          {
             "name": "karma generator",
             "id": "karma",
             "file": "react/api-angular/generators/karma"
+          },
+          {
+            "name": "karma-project generator",
+            "id": "karma-project",
+            "file": "react/api-angular/generators/karma-project"
           },
           {
             "name": "library generator",
@@ -1511,11 +1557,6 @@
             "name": "ngrx generator",
             "id": "ngrx",
             "file": "react/api-angular/generators/ngrx"
-          },
-          {
-            "name": "convert-tslint-to-eslint",
-            "id": "convert-tslint-to-eslint",
-            "file": "react/api-angular/generators/convert-tslint-to-eslint"
           },
           {
             "name": "stories generator",
@@ -1543,9 +1584,14 @@
             "file": "react/api-angular/generators/upgrade-module"
           },
           {
-            "name": "package executor",
-            "id": "package",
-            "file": "react/api-angular/executors/package"
+            "name": "web-worker generator",
+            "id": "web-worker",
+            "file": "react/api-angular/generators/web-worker"
+          },
+          {
+            "name": "delegate-build executor",
+            "id": "delegate-build",
+            "file": "react/api-angular/executors/delegate-build"
           },
           {
             "name": "ng packagr lite executor",
@@ -1553,14 +1599,14 @@
             "file": "react/api-angular/executors/ng-packagr-lite"
           },
           {
+            "name": "package executor",
+            "id": "package",
+            "file": "react/api-angular/executors/package"
+          },
+          {
             "name": "webpack-browser executor",
             "id": "webpack-browser",
             "file": "react/api-angular/executors/webpack-browser"
-          },
-          {
-            "name": "delegate-build executor",
-            "id": "delegate-build",
-            "file": "react/api-angular/executors/delegate-build"
           }
         ]
       },
@@ -2005,6 +2051,22 @@
         ]
       },
       {
+        "name": "Core",
+        "id": "core-extended",
+        "itemList": [
+          {
+            "name": "Computation Caching",
+            "id": "computation-caching",
+            "file": "shared/computation-caching"
+          },
+          {
+            "name": "Rebuild Only What is Affected",
+            "id": "affected",
+            "file": "shared/affected"
+          }
+        ]
+      },
+      {
         "name": "Executors / Builders",
         "id": "executors",
         "itemList": [
@@ -2032,12 +2094,32 @@
           {
             "name": "Using Generators",
             "id": "using-schematics",
-            "file": "shared/using-generators"
+            "file": "shared/generators/using-generators"
           },
           {
             "name": "Workspace Generators",
             "id": "workspace-generators",
-            "file": "shared/tools-workspace-generators"
+            "file": "shared/generators/workspace-generators"
+          },
+          {
+            "name": "Composing Generators",
+            "id": "composing-generators",
+            "file": "shared/generators/composing-generators"
+          },
+          {
+            "name": "Generator Options",
+            "id": "generator-options",
+            "file": "shared/generators/generator-options"
+          },
+          {
+            "name": "Creating Files",
+            "id": "creating-files",
+            "file": "shared/generators/creating-files"
+          },
+          {
+            "name": "Modifying Files",
+            "id": "modifying-files",
+            "file": "shared/generators/modifying-files"
           }
         ]
       },
@@ -2249,19 +2331,14 @@
         "id": "core-concepts",
         "itemList": [
           {
-            "name": "Computation Caching",
-            "id": "computation-caching",
-            "file": "shared/computation-caching"
-          },
-          {
-            "name": "Rebuild Only What is Affected",
-            "id": "affected",
-            "file": "shared/affected"
-          },
-          {
             "name": "Monorepos",
             "id": "why-monorepos",
             "file": "shared/guides/why-monorepos"
+          },
+          {
+            "name": "Mental Model",
+            "id": "mental-model",
+            "file": "shared/mental-model"
           },
           {
             "name": "Updating Nx",
@@ -2473,6 +2550,11 @@
             "file": "node/api-workspace/generators/workspace-generator"
           },
           {
+            "name": "convert-to-nx-project generator",
+            "id": "convert-to-nx-project-generator",
+            "file": "node/api-workspace/generators/convert-to-nx-project"
+          },
+          {
             "name": "run-commands executor",
             "id": "run-commands-executor",
             "file": "node/api-workspace/executors/run-commands"
@@ -2542,19 +2624,24 @@
             "file": "node/api-angular/generators/application"
           },
           {
+            "name": "convert-tslint-to-eslint",
+            "id": "convert-tslint-to-eslint",
+            "file": "node/api-angular/generators/convert-tslint-to-eslint"
+          },
+          {
             "name": "downgrade-module generator",
             "id": "downgrade-module",
             "file": "node/api-angular/generators/downgrade-module"
           },
           {
-            "name": "karma-project generator",
-            "id": "karma-project",
-            "file": "node/api-angular/generators/karma-project"
-          },
-          {
             "name": "karma generator",
             "id": "karma",
             "file": "node/api-angular/generators/karma"
+          },
+          {
+            "name": "karma-project generator",
+            "id": "karma-project",
+            "file": "node/api-angular/generators/karma-project"
           },
           {
             "name": "library generator",
@@ -2597,14 +2684,14 @@
             "file": "node/api-angular/generators/upgrade-module"
           },
           {
-            "name": "convert-tslint-to-eslint",
-            "id": "convert-tslint-to-eslint",
-            "file": "node/api-angular/generators/convert-tslint-to-eslint"
+            "name": "web-worker generator",
+            "id": "web-worker",
+            "file": "node/api-angular/generators/web-worker"
           },
           {
-            "name": "package executor",
-            "id": "package",
-            "file": "node/api-angular/executors/package"
+            "name": "delegate-build executor",
+            "id": "delegate-build",
+            "file": "node/api-angular/executors/delegate-build"
           },
           {
             "name": "ng packagr lite executor",
@@ -2612,14 +2699,14 @@
             "file": "node/api-angular/executors/ng-packagr-lite"
           },
           {
+            "name": "package executor",
+            "id": "package",
+            "file": "node/api-angular/executors/package"
+          },
+          {
             "name": "webpack-browser executor",
             "id": "webpack-browser",
             "file": "node/api-angular/executors/webpack-browser"
-          },
-          {
-            "name": "delegate-build executor",
-            "id": "delegate-build",
-            "file": "node/api-angular/executors/delegate-build"
           }
         ]
       },
@@ -3057,6 +3144,22 @@
         ]
       },
       {
+        "name": "Core",
+        "id": "core-extended",
+        "itemList": [
+          {
+            "name": "Computation Caching",
+            "id": "computation-caching",
+            "file": "shared/computation-caching"
+          },
+          {
+            "name": "Rebuild Only What is Affected",
+            "id": "affected",
+            "file": "shared/affected"
+          }
+        ]
+      },
+      {
         "name": "Executors / Builders",
         "id": "executors",
         "itemList": [
@@ -3084,12 +3187,32 @@
           {
             "name": "Using Generators",
             "id": "using-schematics",
-            "file": "shared/using-generators"
+            "file": "shared/generators/using-generators"
           },
           {
             "name": "Workspace Generators",
             "id": "workspace-generators",
-            "file": "shared/tools-workspace-generators"
+            "file": "shared/generators/workspace-generators"
+          },
+          {
+            "name": "Composing Generators",
+            "id": "composing-generators",
+            "file": "shared/generators/composing-generators"
+          },
+          {
+            "name": "Generator Options",
+            "id": "generator-options",
+            "file": "shared/generators/generator-options"
+          },
+          {
+            "name": "Creating Files",
+            "id": "creating-files",
+            "file": "shared/generators/creating-files"
+          },
+          {
+            "name": "Modifying Files",
+            "id": "modifying-files",
+            "file": "shared/generators/modifying-files"
           }
         ]
       },

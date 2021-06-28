@@ -8,9 +8,14 @@ Next.js applications within an Nx workspace are generated with a `next.config.js
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const withNx = require('@nrwl/next/plugins/with-nx');
 
-module.exports = withNx({
+/**
+ * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}
+ **/
+const nextConfig = {
   future: {
     webpack5: true,
   },
-});
+};
+
+module.exports = withNx(nextConfig);
 ```

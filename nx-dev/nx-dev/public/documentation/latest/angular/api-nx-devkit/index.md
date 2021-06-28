@@ -60,9 +60,11 @@
 - [applyChangesToString](../../angular/nx-devkit/index#applychangestostring)
 - [convertNxExecutor](../../angular/nx-devkit/index#convertnxexecutor)
 - [convertNxGenerator](../../angular/nx-devkit/index#convertnxgenerator)
+- [detectPackageManager](../../angular/nx-devkit/index#detectpackagemanager)
 - [formatFiles](../../angular/nx-devkit/index#formatfiles)
 - [generateFiles](../../angular/nx-devkit/index#generatefiles)
 - [getPackageManagerCommand](../../angular/nx-devkit/index#getpackagemanagercommand)
+- [getPackageManagerVersion](../../angular/nx-devkit/index#getpackagemanagerversion)
 - [getProjects](../../angular/nx-devkit/index#getprojects)
 - [getWorkspaceLayout](../../angular/nx-devkit/index#getworkspacelayout)
 - [getWorkspacePath](../../angular/nx-devkit/index#getworkspacepath)
@@ -473,7 +475,7 @@ Callback to install dependencies only if necessary. undefined is returned if cha
 
 ### addProjectConfiguration
 
-▸ **addProjectConfiguration**(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `projectName`: _string_, `projectConfiguration`: [_ProjectConfiguration_](../../angular/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../angular/nx-devkit/index#nxjsonprojectconfiguration)): _void_
+▸ **addProjectConfiguration**(`host`: [_Tree_](../../angular/nx-devkit/index#tree), `projectName`: _string_, `projectConfiguration`: [_ProjectConfiguration_](../../angular/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../angular/nx-devkit/index#nxjsonprojectconfiguration), `standalone?`: _boolean_): _void_
 
 Adds project configuration to the Nx workspace.
 
@@ -482,11 +484,12 @@ both files.
 
 #### Parameters
 
-| Name                   | Type                                                                                                                                                                    | Description                                                             |
-| :--------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------- |
-| `host`                 | [_Tree_](../../angular/nx-devkit/index#tree)                                                                                                                            | the file system tree                                                    |
-| `projectName`          | _string_                                                                                                                                                                | unique name. Often directories are part of the name (e.g., mydir-mylib) |
-| `projectConfiguration` | [_ProjectConfiguration_](../../angular/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../angular/nx-devkit/index#nxjsonprojectconfiguration) | project configuration                                                   |
+| Name                   | Type                                                                                                                                                                    | Default value | Description                                                                                |
+| :--------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------ | :----------------------------------------------------------------------------------------- |
+| `host`                 | [_Tree_](../../angular/nx-devkit/index#tree)                                                                                                                            | -             | the file system tree                                                                       |
+| `projectName`          | _string_                                                                                                                                                                | -             | unique name. Often directories are part of the name (e.g., mydir-mylib)                    |
+| `projectConfiguration` | [_ProjectConfiguration_](../../angular/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../angular/nx-devkit/index#nxjsonprojectconfiguration) | -             | project configuration                                                                      |
+| `standalone`           | _boolean_                                                                                                                                                               | false         | should the project use package.json? If false, the project config is inside workspace.json |
 
 **Returns:** _void_
 
@@ -577,6 +580,22 @@ Convert an Nx Generator into an Angular Devkit Schematic
 
 ---
 
+### detectPackageManager
+
+▸ **detectPackageManager**(`dir?`: _string_): [_PackageManager_](../../angular/nx-devkit/index#packagemanager)
+
+Detects which package manager is used in the workspace based on the lock file.
+
+#### Parameters
+
+| Name  | Type     | Default value |
+| :---- | :------- | :------------ |
+| `dir` | _string_ | ''            |
+
+**Returns:** [_PackageManager_](../../angular/nx-devkit/index#packagemanager)
+
+---
+
 ### formatFiles
 
 ▸ **formatFiles**(`host`: [_Tree_](../../angular/nx-devkit/index#tree)): _Promise_<void\>
@@ -634,7 +653,7 @@ doesn't get confused about incorrect TypeScript files.
 
 ### getPackageManagerCommand
 
-▸ **getPackageManagerCommand**(`packageManager?`: [_PackageManager_](../../angular/nx-devkit/index#packagemanager)): _object_
+▸ **getPackageManagerCommand**(`packageManager?`: [_PackageManager_](../../angular/nx-devkit/index#packagemanager)): PackageManagerCommands
 
 Returns commands for the package manager used in the workspace.
 By default, the package manager is derived based on the lock file,
@@ -652,17 +671,25 @@ execSync(`${getPackageManagerCommand().addDev} my-dev-package`);
 | :--------------- | :--------------------------------------------------------------- |
 | `packageManager` | [_PackageManager_](../../angular/nx-devkit/index#packagemanager) |
 
-**Returns:** _object_
+**Returns:** PackageManagerCommands
 
-| Name      | Type                                               |
-| :-------- | :------------------------------------------------- |
-| `add`     | _string_                                           |
-| `addDev`  | _string_                                           |
-| `exec`    | _string_                                           |
-| `install` | _string_                                           |
-| `list`    | _string_                                           |
-| `rm`      | _string_                                           |
-| `run`     | (`script`: _string_, `args`: _string_) => _string_ |
+---
+
+### getPackageManagerVersion
+
+▸ **getPackageManagerVersion**(`packageManager?`: [_PackageManager_](../../angular/nx-devkit/index#packagemanager)): _string_
+
+Returns the version of the package manager used in the workspace.
+By default, the package manager is derived based on the lock file,
+but it can also be passed in explicitly.
+
+#### Parameters
+
+| Name             | Type                                                             |
+| :--------------- | :--------------------------------------------------------------- |
+| `packageManager` | [_PackageManager_](../../angular/nx-devkit/index#packagemanager) |
+
+**Returns:** _string_
 
 ---
 

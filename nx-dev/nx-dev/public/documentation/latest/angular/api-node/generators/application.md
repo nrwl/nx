@@ -106,6 +106,14 @@ Type: `boolean`
 
 Do not add dependencies to package.json.
 
+### standaloneConfig
+
+Default: `false`
+
+Type: `boolean`
+
+Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json
+
 ### tags
 
 Type: `string`

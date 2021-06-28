@@ -17,6 +17,12 @@ The `angular.json` configuration file contains information about the targets and
         "build": {
           "builder": "@nrwl/web:build",
           "outputs": ["dist/apps/myapp"],
+          "dependsOn": [
+            {
+              "target": "build",
+              "projects": "dependencies"
+            }
+          ],
           "options": {
             "index": "apps/myapp/src/app.html",
             "main": "apps/myapp/src/main.ts"
@@ -88,6 +94,8 @@ For instance, the following configures `mylib`.
 
 > Nx uses the architect library built by the Angular team at Google. The naming reflects that. Important to note: it's a general purpose library that **does not** have any dependency on Angular.
 
+> Projects utilizing `project.json` files will not be present in `angular.json`.
+
 ### Targets
 
 Let's look at the simple architect target:
@@ -106,7 +114,7 @@ Let's look at the simple architect target:
 
 **Target Name**
 
-The name of the target `test` means that you can invoke it as follows: `nx test mylib` or `nx run mylib:test`. The name isn't significant in any other way. If you rename it to, for example, `mytest`, you will be able to run as follows: `nx run mylib:mytest`.
+The name of the target `test` means that you can invoke it as follows: `nx test mylib` or `nx run mylib:test`. The name isn't significant in any other way. If you rename it to, for example, `mytest`, you will be able to run as follows: `nx mytest mylib` or `nx run mylib:mytest`.
 
 **Builder**
 
@@ -172,6 +180,66 @@ require(`@nrwl/jest`).builders['jest']({...options, ...selectedConfiguration, ..
 
 The selected configuration adds/overrides the default options, and the provided command line args add/override the configuration options.
 
+**Target Dependencies**
+
+Targets can depend on other targets. A common scenario is having to build dependencies of a project first before building the project. You can specify this using the `dependsOn`.
+
+```json
+{
+  "build": {
+    "executor": "@nrwl/web:build",
+    "outputs": ["dist/apps/myapp"],
+    "options": {
+      "index": "apps/myapp/src/app.html",
+      "main": "apps/myapp/src/main.ts"
+    },
+    "dependsOn": [
+      {
+        "target": "build",
+        "projects": "dependencies"
+      }
+    ]
+  }
+}
+```
+
+In this case, running `nx build myapp` will build all the buildable libraries `myapp` depends on first. In other words, `nx build myapp` will result in multiple tasks executing. The `--parallel`, and `--max-parallel` flags will have the same effect as they would with `run-many` or `affected`.
+
+It is also possible to define dependencies between the targets of the same project.
+
+In the following example invoking `nx build myapp` will build all the libraries first, then `nx build-base myapp` will be executed and only then `nx build myapp` will be executed.
+
+```json
+{
+  "build-base": {
+    "executor": "@nrwl/web:build",
+    "outputs": ["dist/apps/myapp"],
+    "options": {
+      "index": "apps/myapp/src/app.html",
+      "main": "apps/myapp/src/main.ts"
+    }
+  },
+  "build": {
+    "executor": "@nrwl/workspace:run-commands",
+    "dependsOn": [
+      {
+        "target": "build",
+        "projects": "dependencies"
+      },
+      {
+        "target": "build-base",
+        "projects": "self"
+      }
+    ],
+    "options": {
+      "command": "./copy-readme-and-license.sh"
+    }
+  }
+}
+```
+
+Often the same `dependsOn` configuration has to be defined for every project in the repo. You can define it once in `nx.json` (see below).
+
 ### Generators
 
 Generators that are created using `@angular-devkit` are called schematics. You can configure default generator options in `angular.json` as well. For instance, the following will tell Nx to always pass `--style=scss` when creating new libraries.
@@ -202,6 +270,33 @@ The following command will generate a new library: `nx g @nrwl/angular:lib mylib
 
 Your `angular.json` file can be renamed to `workspace.json` and Nx will process it in the same way. The `workspace.json` has one additional top level property `version`. Setting `version` to 1 means the `workspace.json` file syntax is identical to `angular.json` When the `version` of `workspace.json` is set to 2, `targets`, `generators` and `executor` properties are used instead of the version 1 properties `architect`, `schematics` and `builder`.
 
+## project.json
+
+Project configurations can also be independent files, referenced by `angular.json`. For instance, an `angular.json` may contain projects configured as below.
+
+```json
+{
+  "projects": {
+    "mylib": "libs/mylib"
+  }
+}
+```
+
+This tells Nx that all configuration for that project is found in the `libs/mylib/project.json` file. This file contains a combination of the project's configuration from both `angular.json` and `nx.json`.
+
+```json
+{
+  "mylib": {
+    "root": "libs/mylib/",
+    "sourceRoot": "libs/mylib/src",
+    "projectType": "library",
+    "targets": {},
+    "tags": [],
+    "implicitDependencies": []
+  }
+}
+```
+
 ## nx.json
 
 The `nx.json` file contains extra configuration options mostly related to the project graph.
@@ -229,6 +324,14 @@ The `nx.json` file contains extra configuration options mostly related to the pr
     "tsconfig.base.json": "*",
     "nx.json": "*"
   },
+  "targetDependencies": {
+    "build": [
+      {
+        "target": "build",
+        "projects": "dependencies"
+      }
+    ]
+  },
   "projects": {
     "myapp": {
       "tags": []
@@ -243,6 +346,8 @@ The `nx.json` file contains extra configuration options mostly related to the pr
   }
 }
 ```
+
+> Projects utilizing `project.json` files will not be present in `nx.json`.
 
 **NPM Scope**
 
@@ -352,9 +457,32 @@ You can also add dependencies between projects. For instance, the example below 
 }
 ```
 
+### Target Dependencies
+
+Targets can depend on other targets. A common scenario is having to build dependencies of a project first before building the project. The `dependsOn` property in `workspace.json` can be used to define the list of dependencies of an individual target.
+
+Often the same `dependsOn` configuration has to be defined for every project in the repo, and that's when defining `targetDependencies` in `nx.json` is helpful.
+
+```json
+{
+  "targetDependencies": {
+    "build": [
+      {
+        "target": "build",
+        "projects": "dependencies"
+      }
+    ]
+  }
+}
+```
+
+The configuration above is identical to adding `{"dependsOn": [{"target": "build", "projects": "dependencies"]}` to every build target in `workspace.json`.
+
+The `dependsOn` property in `workspace.json` takes precedence over the `targetDependencies` in `nx.json`.
+
 ## .nxignore
 
-You may optionally add an `.nxignore` file to the root. This file is used to specify files in your workspace that should be completely ignored by nx.
+You may optionally add an `.nxignore` file to the root. This file is used to specify files in your workspace that should be completely ignored by Nx.
 
 The syntax is the same as a [`.gitignore` file](https://git-scm.com/book/en/v2/Git-Basics-Recording-Changes-to-the-Repository#_ignoring).
 
