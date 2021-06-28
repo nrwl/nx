@@ -1,5 +1,13 @@
-import { formatFiles, Tree, logger, updateJson } from '@nrwl/devkit';
-import { join } from 'path';
+import {
+  formatFiles,
+  Tree,
+  logger,
+  updateJson,
+  applyChangesToString,
+  ChangeType,
+} from '@nrwl/devkit';
+import { findNodes } from '@nrwl/workspace/src/utilities/typescript/find-nodes';
+import ts = require('typescript');
 
 let needsInstall = false;
 const targetStorybookVersion = '6.3.0';
@@ -14,8 +22,9 @@ function installAddonEssentials(tree: Tree) {
       !json.devDependencies['@storybook/addon-essentials']
     ) {
       needsInstall = true;
-      json.devDependencies['@storybook/addon-essentials'] =
-        targetStorybookVersion;
+      json.devDependencies[
+        '@storybook/addon-essentials'
+      ] = `~${targetStorybookVersion}`;
     }
 
     return json;
@@ -23,31 +32,122 @@ function installAddonEssentials(tree: Tree) {
 }
 
 function editRootMainJs(tree: Tree) {
-  let newContent: string;
+  let newContents: string;
+  let moduleExportsIsEmptyOrNonExistent = false;
+  let alreadyHasAddonEssentials: any;
   const rootMainJsExists = tree.exists(`.storybook/main.js`);
   if (rootMainJsExists) {
-    const rootMainJs = require(join(tree.root, '.storybook/main.js'));
-    const addonsArray: string[] = rootMainJs?.addons;
-    if (addonsArray) {
-      if (!addonsArray.includes('@storybook/addon-essentials')) {
-        addonsArray.push('@storybook/addon-essentials');
-        rootMainJs.addons = addonsArray;
+    const file = getTsSourceFile(tree, '.storybook/main.js');
+    const appFileContent = tree.read('.storybook/main.js', 'utf-8');
+    newContents = appFileContent;
+    const moduleExportsFull = findNodes(file, [
+      ts.SyntaxKind.ExpressionStatement,
+    ]);
+
+    if (moduleExportsFull && moduleExportsFull[0]) {
+      const moduleExports = moduleExportsFull[0];
+      const listOfStatements = findNodes(moduleExports, [
+        ts.SyntaxKind.SyntaxList,
+      ]);
+
+      let indexOfFirstNode = -1;
+
+      const hasAddonsArray = listOfStatements[0]
+        ?.getChildren()
+        ?.find((node) => {
+          if (node && node.getText().length > 0 && indexOfFirstNode < 0) {
+            indexOfFirstNode = node.getStart();
+          }
+          return (
+            node.kind === ts.SyntaxKind.PropertyAssignment &&
+            node.getText().startsWith('addons')
+          );
+        });
+
+      if (hasAddonsArray) {
+        const listOfAllTSSyntaxElements = hasAddonsArray
+          .getChildren()
+          .find((node) => {
+            return node.kind === ts.SyntaxKind.ArrayLiteralExpression;
+          });
+
+        const listIndex = listOfAllTSSyntaxElements.getStart();
+
+        const theActualAddonsList = listOfAllTSSyntaxElements
+          .getChildren()
+          .find((node) => {
+            return node.kind === ts.SyntaxKind.SyntaxList;
+          });
+
+        alreadyHasAddonEssentials = theActualAddonsList
+          .getChildren()
+          .find((node) => {
+            return node.getText() === "'@storybook/addon-essentials'";
+          });
+
+        newContents = applyChangesToString(newContents, [
+          {
+            type: ChangeType.Insert,
+            index: listIndex + 1,
+            text: "'@storybook/addon-essentials', ",
+          },
+        ]);
+      } else if (indexOfFirstNode >= 0) {
+        /**
+         * Does not have addos array,
+         * so just write one, at the start.
+         */
+        newContents = applyChangesToString(newContents, [
+          {
+            type: ChangeType.Insert,
+            index: indexOfFirstNode,
+            text: "addons: ['@storybook/addon-essentials'], ",
+          },
+        ]);
+      } else {
+        /**
+         * Module exports is empty, so write all a-new
+         */
+        moduleExportsIsEmptyOrNonExistent = true;
       }
     } else {
-      rootMainJs.addons = ['@storybook/addon-essentials'];
+      /**
+       * module.exports does not exist, so write all a-new
+       */
+      moduleExportsIsEmptyOrNonExistent = true;
     }
-    newContent = `
-    module.exports = ${JSON.stringify(rootMainJs)}
-    `;
   } else {
-    newContent = `
+    moduleExportsIsEmptyOrNonExistent = true;
+  }
+
+  if (moduleExportsIsEmptyOrNonExistent) {
+    newContents = `
     module.exports = {
       stories: [],
       addons: ['@storybook/addon-essentials'],
     };
     `;
   }
-  tree.write(`.storybook/main.js`, newContent);
+
+  if (!alreadyHasAddonEssentials) {
+    tree.write(`.storybook/main.js`, newContents);
+  }
+}
+
+function getTsSourceFile(host: Tree, path: string): ts.SourceFile {
+  const buffer = host.read(path);
+  if (!buffer) {
+    throw new Error(`Could not read TS file (${path}).`);
+  }
+  const content = buffer.toString();
+  const source = ts.createSourceFile(
+    path,
+    content,
+    ts.ScriptTarget.Latest,
+    true
+  );
+
+  return source;
 }
 
 export default async function (tree: Tree) {
