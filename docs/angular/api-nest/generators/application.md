@@ -1,6 +1,6 @@
 # application
 
-Create a nest application
+Create a NestJS application.
 
 ## Usage
 
@@ -46,7 +46,7 @@ Default: `eslint`
 
 Type: `string`
 
-Possible values: `eslint`, `tslint`
+Possible values: `eslint`, `none`
 
 The tool to use for running lint checks.
 
@@ -62,7 +62,7 @@ Default: `false`
 
 Type: `boolean`
 
-Skip formatting files
+Skip formatting files.
 
 ### skipPackageJson
 
@@ -78,13 +78,13 @@ Default: `false`
 
 Type: `boolean`
 
-Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json
+Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json.
 
 ### tags
 
 Type: `string`
 
-Add tags to the application (used for linting)
+Add tags to the application (used for linting).
 
 ### unitTestRunner
 
@@ -94,4 +94,4 @@ Type: `string`
 
 Possible values: `jest`, `none`
 
-Test runner to use for unit tests
+Test runner to use for unit tests.

@@ -14,6 +14,19 @@
     {
       "files": ["*.js", "*.jsx"],
       "rules": {}
+    },
+    {
+      "files": ["**/*.ts"],
+      "excludedFiles": ["./src/migrations/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          "@angular-devkit/architect",
+          "@angular-devkit/core",
+          "@angular-devkit/schematics",
+          "@nrwl/workspace"
+        ]
+      }
     }
   ]
 }

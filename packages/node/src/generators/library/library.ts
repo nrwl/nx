@@ -39,6 +39,7 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
     ...schema,
     importPath: options.importPath,
     testEnvironment: 'node',
+    skipFormat: true,
   });
   createFiles(tree, options);
 
@@ -46,7 +47,10 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
     updateTsConfigsToJs(tree, options);
   }
   updateProject(tree, options);
-  await formatFiles(tree);
+
+  if (!schema.skipFormat) {
+    await formatFiles(tree);
+  }
 
   return libraryInstall;
 }

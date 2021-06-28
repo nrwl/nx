@@ -1,6 +1,6 @@
 # convert-tslint-to-eslint
 
-Convert a project from TSLint to ESLint
+Convert a project from TSLint to ESLint.
 
 ## Usage
 
@@ -38,7 +38,7 @@ Default: `false`
 
 Type: `boolean`
 
-If true we will not use existing TSLint config as a reference, we will just reset the project with the latest recommended ESLint config
+If true we will not use existing TSLint config as a reference, we will just reset the project with the latest recommended ESLint config.
 
 ### project
 
@@ -52,4 +52,4 @@ Default: `true`
 
 Type: `boolean`
 
-If this conversion leaves no more TSLint usage in the workspace, it will remove TSLint and related dependencies and configuration
+If this conversion leaves no more TSLint usage in the workspace, it will remove TSLint and related dependencies and configuration.
