@@ -114,7 +114,7 @@ The `executors.json` file provides the description of your executor to the CLI.
 }
 ```
 
-Note that this `executors.json` file is naming our executor 'echo' for the CLI's purposes, and mapping that name to the given implementation file and schema.
+Note that this `executors.json` file is naming the executor 'echo' for the CLI's purposes, and mapping that name to the given implementation file and schema.
 
 ## Compiling and Running your Executor
 
