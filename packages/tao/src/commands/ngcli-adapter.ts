@@ -351,27 +351,44 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
   }
 
   private writeWorkspaceConfigFiles(workspaceFileName, config) {
-    Object.entries(config.projects as Record<string, any>).forEach(
-      ([project, config]) => {
-        if (config.configFilePath) {
-          const configPath = config.configFilePath;
-          const fileConfigObject = { ...config };
-          delete fileConfigObject.configFilePath;
-          super.write(configPath, Buffer.from(serializeJson(fileConfigObject)));
-          config.projects[project] = dirname(configPath);
+    // copy to avoid removing inlined config files.
+    const configToWrite = {
+      ...config,
+      projects: { ...config.projects },
+    };
+
+    Object.entries(configToWrite.projects as Record<string, any>).forEach(
+      ([project, projectConfig]) => {
+        if (projectConfig.configFilePath) {
+          // project was read from a project.json file
+          const configPath = projectConfig.configFilePath;
+          const fileConfigObject = { ...projectConfig };
+          delete fileConfigObject.configFilePath; // remove the configFilePath before writing
+          super.write(configPath, Buffer.from(serializeJson(fileConfigObject))); // write back to the project.json file
+          configToWrite.projects[project] = dirname(configPath); // update the config object to point to the written file.
         }
       }
     );
-    return super.write(workspaceFileName, Buffer.from(serializeJson(config)));
+    return super.write(
+      workspaceFileName,
+      Buffer.from(serializeJson(configToWrite))
+    );
   }
 
   protected resolveInlineProjectConfigurations(config: {
     projects: Record<string, any>;
   }): Observable<Object> {
+    // Creates an observable where each emission is a project configuration
+    // that is not listed inside workspace.json. Each time it encounters a
+    // standalone config, observable is updated by concatenating the new
+    // config read operation.
     let observable: Observable<any> = EMPTY;
     Object.entries((config.projects as Record<string, any>) ?? {}).forEach(
       ([project, projectConfig]) => {
         if (typeof projectConfig === 'string') {
+          // configFilePath is not written to files, but is stored on the config object
+          // so that we know where to save the project's configuration if it was updated
+          // by another angular schematic.
           const configFilePath = `${projectConfig}/project.json`;
           const next = super.read(configFilePath as Path).pipe(
             map((x) => ({
@@ -386,8 +403,12 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
         }
       }
     );
+
     return observable.pipe(
+      // Collect all values from the project.json read operations
       toArray(),
+
+      // Use these collected values to update the inline configurations
       map((x: any[]) => {
         x.forEach(({ project, projectConfig }) => {
           config.projects[project] = projectConfig;

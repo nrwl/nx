@@ -108,6 +108,8 @@ For instance, the following configures `mylib`.
 - `projectType` is either 'application' or 'library'. The project type is used in dep graph viz and in a few aux commands.
 - `targets` configures all the targets which define what tasks you can run against the library.
 
+> Projects utilizing `project.json` files will not be present in `workspace.json`.
+
 ### Targets
 
 Let's look at the simple target:
@@ -302,6 +304,33 @@ The following command will generate a new library: `nx g @nrwl/node:lib mylib`. 
 
 When the `version` of `workspace.json` is set to 2, `targets`, `generators` and `executor` properties are used instead of the version 1 properties `architect`, `schematics` and `builder`.
 
+## project.json
+
+Project configurations can also be independent files, referenced by `workspace.json`. For instance, a `workspace.json` may contain projects configured as below.
+
+```json
+{
+  "projects": {
+    "mylib": "libs/mylib"
+  }
+}
+```
+
+This tells Nx that all configuration for that project is found in the `libs/mylib/project.json` file. This file contains a combination of the project's configuration from both `workspace.json` and `nx.json`.
+
+```json
+{
+  "mylib": {
+    "root": "libs/mylib/",
+    "sourceRoot": "libs/mylib/src",
+    "projectType": "library",
+    "targets": {},
+    "tags": [],
+    "implicitDependencies": []
+  }
+}
+```
+
 ## nx.json
 
 The `nx.json` file contains extra configuration options mostly related to the project graph.
@@ -436,6 +465,8 @@ You can also add dependencies between projects. For instance, the example below 
   }
 }
 ```
+
+> Projects utilizing `project.json` files will not be present in `nx.json`.
 
 ### Target Dependencies
 

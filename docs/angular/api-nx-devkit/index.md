@@ -484,12 +484,12 @@ both files.
 
 #### Parameters
 
-| Name                   | Type                                                                                                                                                                    | Default value | Description                                                             |
-| :--------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------ | :---------------------------------------------------------------------- |
-| `host`                 | [_Tree_](../../angular/nx-devkit/index#tree)                                                                                                                            | -             | the file system tree                                                    |
-| `projectName`          | _string_                                                                                                                                                                | -             | unique name. Often directories are part of the name (e.g., mydir-mylib) |
-| `projectConfiguration` | [_ProjectConfiguration_](../../angular/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../angular/nx-devkit/index#nxjsonprojectconfiguration) | -             | project configuration                                                   |
-| `standalone`           | _boolean_                                                                                                                                                               | false         | -                                                                       |
+| Name                   | Type                                                                                                                                                                    | Default value | Description                                                                                |
+| :--------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------ | :----------------------------------------------------------------------------------------- |
+| `host`                 | [_Tree_](../../angular/nx-devkit/index#tree)                                                                                                                            | -             | the file system tree                                                                       |
+| `projectName`          | _string_                                                                                                                                                                | -             | unique name. Often directories are part of the name (e.g., mydir-mylib)                    |
+| `projectConfiguration` | [_ProjectConfiguration_](../../angular/nx-devkit/index#projectconfiguration) & [_NxJsonProjectConfiguration_](../../angular/nx-devkit/index#nxjsonprojectconfiguration) | -             | project configuration                                                                      |
+| `standalone`           | _boolean_                                                                                                                                                               | false         | should the project use package.json? If false, the project config is inside workspace.json |
 
 **Returns:** _void_
 
