@@ -19,6 +19,7 @@ import {
 
 import { Schema } from './schema';
 import { getProjectConfigurationPath } from './utils/get-project-configuration-path';
+import { workspaceConfigName } from '@nrwl/tao/src/shared/workspace';
 
 export const SCHEMA_OPTIONS_ARE_MUTUALLY_EXCLUSIVE =
   '--project and --all are mutually exclusive';
@@ -44,9 +45,12 @@ export async function validateSchema(schema: Schema) {
 export async function convertToNxProjectGenerator(host: Tree, schema: Schema) {
   const workspace = readWorkspaceConfiguration(host);
   if (workspace.version < 2) {
-    logger.error(
-      `NX Only workspace's with version 2+ support project.json files.`
-    );
+    logger.error(`
+NX Only workspaces with version 2+ support project.json files.
+To upgrade change the version number at the top of ${workspaceConfigName(
+      host.root
+    )} and run 'nx format'.
+`);
     return;
   }
 
