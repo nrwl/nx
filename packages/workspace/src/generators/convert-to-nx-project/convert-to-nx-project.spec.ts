@@ -147,4 +147,18 @@ describe('convert-to-nx-project', () => {
     const json = readJson(tree, 'workspace.json');
     expect(json.projects.lib).toEqual(config.root);
   });
+
+  it('should error in v1 schema with workspace.json', async () => {
+    const tree = createTreeWithEmptyWorkspace(1);
+    await libraryGenerator(tree, {
+      name: 'lib',
+      standaloneConfig: false,
+    });
+    try {
+      await convertToNxProject(tree, { project: 'lib' });
+    } catch (ex) {
+      expect(ex).toBeDefined();
+    }
+    expect.assertions(1);
+  });
 });
