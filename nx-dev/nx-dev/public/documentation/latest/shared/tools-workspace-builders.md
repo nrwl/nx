@@ -55,7 +55,7 @@ This file describes the options being sent to the executor (very similar to the 
 
 This example describes a single option for the executor that is a `string` called `textToEcho`. When using this executor, specify a `textToEcho` property inside the options.
 
-In our `executor.ts` file, we're creating an `Options` interface that matches the json object being described here.
+In the `executor.ts` file, you create an `Options` interface that matches the JSON object described here.
 
 ### executor.ts
 
