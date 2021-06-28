@@ -1,5 +1,6 @@
 import type { Tree } from '@nrwl/devkit';
 import { joinPathFragments, logger } from '@nrwl/devkit';
+import { basename, dirname } from 'path';
 import type { Statement } from 'typescript';
 import { SyntaxKind } from 'typescript';
 import { getTsSourceFile } from '../../../utils/nx-devkit/ast-utils';
@@ -32,10 +33,8 @@ export function getComponentsInfo(
     const imports = file.statements.filter(
       (statement) => statement.kind === SyntaxKind.ImportDeclaration
     );
-    const moduleFolderPath = moduleFilePath.substr(
-      0,
-      moduleFilePath.lastIndexOf('/')
-    );
+
+    const moduleFolderPath = dirname(moduleFilePath);
 
     const componentsInfo = declaredComponents.map((componentName) =>
       getComponentInfo(tree, imports, moduleFolderPath, componentName)
@@ -102,11 +101,10 @@ function getComponentInfo(
       );
     }
 
-    return getComponentInfoFromFile(
-      moduleFolderPath,
-      componentName,
-      componentFilePathRelativeToModule
-    );
+    const path = dirname(componentFilePathRelativeToModule);
+    const componentFileName = basename(componentFilePathRelativeToModule);
+
+    return { componentFileName, moduleFolderPath, name: componentName, path };
   } catch (ex) {
     logger.warn(
       `Could not generate a story for ${componentName}. Error: ${ex}`
@@ -145,22 +143,6 @@ function getComponentInfoFromDir(
       `Path to component ${componentName} couldn't be found. Please open an issue on https://github.com/nrwl/nx/issues.`
     );
   }
-
-  return { componentFileName, moduleFolderPath, name: componentName, path };
-}
-
-function getComponentInfoFromFile(
-  moduleFolderPath: string,
-  componentName: string,
-  componentFilePathRelativeToModule: string
-): ComponentInfo {
-  const path = componentFilePathRelativeToModule.slice(
-    0,
-    componentFilePathRelativeToModule.lastIndexOf('/')
-  );
-  const componentFileName = componentFilePathRelativeToModule.slice(
-    componentFilePathRelativeToModule.lastIndexOf('/') + 1
-  );
 
   return { componentFileName, moduleFolderPath, name: componentName, path };
 }
