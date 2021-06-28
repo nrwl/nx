@@ -6,7 +6,7 @@ In general, the more modern your applications browser support is, the smaller th
 
 By default, applications generated from official Nx generators ship an aggressively modern browser support config, in the form of a `.browserlistrc` file in the root of the application with the following contents.
 
-```
+```text
 last 1 Chrome version
 last 1 Firefox version
 last 2 Edge major versions
@@ -24,7 +24,7 @@ Adding support for IE or any other browser is as easy as changing the `.browserl
 
 To add support for IE 11 simply change the final line in the `.browserlistrc` file to include IE:
 
-```
+```text
 last 1 Chrome version
 last 1 Firefox version
 last 2 Edge major versions

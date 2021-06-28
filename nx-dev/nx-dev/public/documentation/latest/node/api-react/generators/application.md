@@ -150,6 +150,14 @@ Type: `boolean`
 
 Skip updating workspace.json with default options based on values provided to this app (e.g. babel, style).
 
+### standaloneConfig
+
+Default: `false`
+
+Type: `boolean`
+
+Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json
+
 ### strict
 
 Default: `true`

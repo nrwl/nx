@@ -1,6 +1,6 @@
 # ngrx
 
-Add an ngrx config to a project
+Add NgRx support to an application or library.
 
 ## Usage
 
@@ -66,23 +66,27 @@ The path to NgModule where the feature state will be registered. The host direct
 
 Type: `string`
 
-Name of the NgRx feature state, such as "products" or "users"). Recommended to use the plural form of the name.
+Name of the NgRx feature state, such as `products` or `users`. Recommended to use the plural form of the name.
 
-### onlyAddFiles
-
-Default: `false`
-
-Type: `boolean`
-
-**Deprecated**, use `skipImport`. Only add new NgRx files, without changing the module file (e.g., --onlyAddFiles).
-
-### onlyEmptyRoot
+### ~~onlyAddFiles~~
 
 Default: `false`
 
 Type: `boolean`
 
-**Deprecated**, use `minimal`. Do not generate any files. Only generate StoreModule.forRoot and EffectsModule.forRoot (e.g., --onlyEmptyRoot).
+**Deprecated:** Use the `skipImport` option instead.
+
+Only add new NgRx files, without changing the module file (e.g., --onlyAddFiles).
+
+### ~~onlyEmptyRoot~~
+
+Default: `false`
+
+Type: `boolean`
+
+**Deprecated:** Use the `minimal` option instead.
+
+Do not generate any files. Only generate StoreModule.forRoot and EffectsModule.forRoot (e.g., --onlyEmptyRoot).
 
 ### root
 

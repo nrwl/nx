@@ -17,7 +17,7 @@ Nx works especially well for [monorepos](/{{framework}}/core-concepts/why-monore
 ## Features
 
 - Test (or builds or lints) only the projects [affected](/{{framework}}/cli/affected) by a code change.
-- [Cache](/{{framework}}/core-concepts/computation-caching) command output locally so that future runs on the same code happen in seconds. The paid [Nx Cloud](https://nx.app) offering allows this cache to be shared across every developer in your organization.
+- [Cache](/{{framework}}/core-extended/computation-caching) command output locally so that future runs on the same code happen in seconds. The paid [Nx Cloud](https://nx.app) offering allows this cache to be shared across every developer in your organization.
 - Provide a consistent syntax for [executing commands](/{{framework}}/executors/using-builders). `nx build my-app` works no matter what framework `my-app` uses.
 - Automate code modification tasks with [generators](/{{framework}}/cli/affected).
 - Access a thriving ecosystem of [plugins](/{{framework}}/generators/using-schematics) from Nrwl and the [community](/community).
@@ -31,5 +31,5 @@ Nx works especially well for [monorepos](/{{framework}}/core-concepts/why-monore
 
 - [Nx CLI](/{{framework}}/getting-started/nx-cli)
 - [Configuration Files](/{{framework}}/core-concepts/configuration)
-- [Computation Caching](/{{framework}}/core-concepts/computation-caching)
-- [Rebuilding What is Affected](/{{framework}}/core-concepts/affected)
+- [Computation Caching](/{{framework}}/core-extended/computation-caching)
+- [Rebuilding What is Affected](/{{framework}}/core-extended/affected)
