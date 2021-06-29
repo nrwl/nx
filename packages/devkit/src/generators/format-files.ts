@@ -26,6 +26,13 @@ export async function formatFiles(host: Tree): Promise<void> {
   const files = new Set(
     host.listChanges().filter((file) => file.type !== 'DELETE')
   );
+  // console.log(files);
+  Array.from(files)
+    .filter((x) => x.path === 'jest.config.js')
+    .map((x) => {
+      console.log(x.content.toString());
+      return x;
+    });
   await Promise.all(
     Array.from(files).map(async (file) => {
       const systemPath = path.join(host.root, file.path);
@@ -48,6 +55,8 @@ export async function formatFiles(host: Tree): Promise<void> {
       }
 
       try {
+        console.log(file.content.toString());
+        console.log(prettier.format(file.content.toString('utf-8'), options));
         host.write(
           file.path,
           prettier.format(file.content.toString('utf-8'), options)

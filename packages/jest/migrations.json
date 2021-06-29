@@ -83,6 +83,12 @@
       "cli": "nx",
       "description": "Support for Jest 27 via updating ts-jest + jest-preset-angular",
       "factory": "./src/migrations/update-12-4-0/update-jest-preset-angular"
+    },
+    "update-jest-config-to-use-util": {
+      "version": "12.6.0-beta.0",
+      "cli": "nx",
+      "description": "Uses `getJestProjects()` to populate projects array in root level `jest.config.js` file.",
+      "factory": "./src/migrations/update-12-5-0/update-base-jest-config"
     }
   },
   "packageJsonUpdates": {
