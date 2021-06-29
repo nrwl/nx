@@ -1,12 +1,11 @@
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { Configuration } from 'webpack';
-import * as mergeWebpack from 'webpack-merge';
-import * as nodeExternals from 'webpack-node-externals';
 
 import { getBaseWebpackPartial } from './config';
 import { BuildNodeBuilderOptions } from './types';
 
 function getNodePartial(options: BuildNodeBuilderOptions) {
+  const { nodeExternals } = require('../webpack/entry');
   const webpackConfig: Configuration = {
     output: {
       libraryTarget: 'commonjs',
@@ -41,7 +40,8 @@ function getNodePartial(options: BuildNodeBuilderOptions) {
 }
 
 export function getNodeWebpackConfig(options: BuildNodeBuilderOptions) {
-  return mergeWebpack([
+  const { webpackMerge } = require('../webpack/entry');
+  return webpackMerge([
     getBaseWebpackPartial(options),
     getNodePartial(options),
   ]);

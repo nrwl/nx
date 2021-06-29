@@ -113,16 +113,12 @@ describe('Web Components Applications', () => {
 
     updateFile(`apps/${appName}/browserslist`, `IE 9-11`);
 
-    const output = runCLI(`build ${appName} --prod --outputHashing=none`);
+    runCLI(`build ${appName} --prod --outputHashing=none`);
+
     checkFilesExist(
       `dist/apps/${appName}/main.esm.js`,
       `dist/apps/${appName}/main.es5.js`
     );
-
-    // Do not run type checking for legacy build
-    expect(
-      output.match(/Starting type checking service.../g) || []
-    ).toHaveLength(1);
   }, 120000);
 
   it('should emit decorator metadata when it is enabled in tsconfig', async () => {

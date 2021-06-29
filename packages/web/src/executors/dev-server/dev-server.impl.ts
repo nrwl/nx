@@ -4,11 +4,9 @@ import {
   readTargetOptions,
   joinPathFragments,
 } from '@nrwl/devkit';
-import { Configuration } from 'webpack';
 
 import { eachValueFrom } from 'rxjs-for-await';
 import { map, tap } from 'rxjs/operators';
-import * as webpack from 'webpack';
 import * as WebpackDevServer from 'webpack-dev-server';
 import {
   getEmittedFiles,
@@ -47,18 +45,20 @@ export default function devServerExecutor(
   serveOptions: WebDevServerOptions,
   context: ExecutorContext
 ) {
+  const { webpack } = require('../../webpack/entry');
   const sourceRoot = context.workspace.projects[context.projectName].sourceRoot;
   const buildOptions = normalizeWebBuildOptions(
     getBuildOptions(serveOptions, context),
     context.root,
     sourceRoot
   );
-  let webpackConfig: Configuration = getDevServerConfig(
+  let webpackConfig = getDevServerConfig(
     context.root,
     sourceRoot,
     buildOptions,
     serveOptions
   );
+
   if (buildOptions.webpackConfig) {
     webpackConfig = require(buildOptions.webpackConfig)(webpackConfig, {
       buildOptions,

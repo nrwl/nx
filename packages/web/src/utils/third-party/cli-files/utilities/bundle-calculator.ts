@@ -7,17 +7,13 @@
  */
 import { Budget } from '../../browser/schema';
 
-export interface Compilation {
-  assets: { [name: string]: { size: () => number } };
-  chunks: { name: string; files: string[]; isOnlyInitial: () => boolean }[];
-  warnings: string[];
-  errors: string[];
-}
-
 export interface Size {
   size: number;
   label?: string;
 }
+
+// TODO(jack): Remove this in Nx 13 and go back to proper types
+type Compilation = any;
 
 export function calculateSizes(
   budget: Budget,
@@ -50,7 +46,9 @@ export abstract class Calculator {
  */
 class BundleCalculator extends Calculator {
   calculate() {
-    const size: number = this.compilation.chunks
+    // TODO(jack): properly type this in Nx 13
+    const xs: any = Array.from(this.compilation.chunks.values());
+    const size: number = xs
       .filter((chunk) => chunk.name === this.budget.name)
       .reduce((files, chunk) => [...files, ...chunk.files], [])
       .filter((file: string) => !file.endsWith('.map'))
@@ -66,9 +64,14 @@ class BundleCalculator extends Calculator {
  */
 class InitialCalculator extends Calculator {
   calculate() {
-    const initialChunks = this.compilation.chunks.filter((chunk) =>
-      chunk.isOnlyInitial()
-    );
+    // TODO(jack): properly type this in Nx 13
+    const { isWebpack5 } = require('../../../../webpack/entry');
+
+    const initialChunks = isWebpack5
+      ? Array.from(this.compilation.chunks.values()).filter((chunk: any) =>
+          chunk.isOnlyInitial()
+        )
+      : this.compilation.chunks.filter((chunk) => chunk.isOnlyInitial());
     const size: number = initialChunks
       .reduce((files, chunk) => [...files, ...chunk.files], [])
       .filter((file: string) => !file.endsWith('.map'))

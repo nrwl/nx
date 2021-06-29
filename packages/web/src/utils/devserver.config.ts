@@ -3,15 +3,14 @@ import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-serv
 
 import * as open from 'open';
 import * as url from 'url';
-import { readFileSync } from 'fs';
 import * as path from 'path';
 
 import { getWebConfig } from './web.config';
-import { Configuration, HotModuleReplacementPlugin } from 'webpack';
 import { WebBuildBuilderOptions } from '../executors/build/build.impl';
 import { WebDevServerOptions } from '../executors/dev-server/dev-server.impl';
 import { buildServePath } from './serve-path';
 import { OptimizationOptions } from './types';
+import { readFileSync } from 'fs-extra';
 
 export function getDevServerConfig(
   root: string,
@@ -19,13 +18,14 @@ export function getDevServerConfig(
   buildOptions: WebBuildBuilderOptions,
   serveOptions: WebDevServerOptions
 ) {
-  const webpackConfig: Configuration = getWebConfig(
+  const webpackConfig = getWebConfig(
     root,
     sourceRoot,
     buildOptions,
     true, // Don't need to support legacy browsers for dev.
     false
   );
+
   (webpackConfig as any).devServer = getDevServerPartial(
     root,
     serveOptions,
@@ -119,5 +119,9 @@ function getProxyConfig(root: string, options: WebDevServerOptions) {
 }
 
 function getHmrPlugin(options: WebDevServerOptions) {
+  // TODO(jack): Remove in Nx 13
+  const {
+    webpack: { HotModuleReplacementPlugin },
+  } = require('../webpack/entry');
   return options.hmr && new HotModuleReplacementPlugin();
 }
