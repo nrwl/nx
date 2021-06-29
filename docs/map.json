@@ -2265,9 +2265,14 @@
             "file": "react/guides/nextjs"
           },
           {
-            "name": "Webpack 5 Migration",
-            "id": "webpack-5",
-            "file": "shared/guides/webpack-5"
+            "name": "Enable Webpack 5 for Next.js",
+            "id": "nextjs-webpack5",
+            "file": "react/guides/nextjs-webpack5"
+          },
+          {
+            "name": "Installing TailwindCss in Web/React/Next.js Apps",
+            "id": "installing-tailwindcss-in-web-react-nextjs-apps",
+            "file": "react/guides/installing-tailwindcss-in-web-react-nextjs-apps"
           }
         ]
       },
