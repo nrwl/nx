@@ -17,8 +17,7 @@
   "properties": {
     "project": {
       "description": "Project name",
-      "type": "string",
-      "x-prompt": "Which project should be converted?"
+      "type": "string"
     },
     "all": {
       "description": "Should every project be converted?",
