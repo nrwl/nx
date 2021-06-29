@@ -17,6 +17,23 @@ svg {
   text-rendering: optimizeLegibility;
 }
 
+@font-face {
+  src: url('../public/fonts/InputMono-Regular.woff2') format('woff2'),
+    url('../public/fonts/InputMono-Regular.woff') format('woff');
+  font-family: 'InputMono';
+  font-style: normal;
+  font-weight: normal;
+}
+.font-input-mono {
+  font-family: 'InputMono', monospace;
+}
+code,
+pre,
+.prose code,
+.prose pre {
+  font-family: 'InputMono', monospace;
+}
+
 /*
   General CSS rules for markdown iframes and img
  */

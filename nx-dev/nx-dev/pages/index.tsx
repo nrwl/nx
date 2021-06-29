@@ -10,12 +10,9 @@ import {
   NxUsersShowcase,
 } from '@nrwl/nx-dev/ui/common';
 import { sendCustomEvent } from '@nrwl/nx-dev/feature-analytics';
-import { useStorage } from '../lib/use-storage';
 
 export function Index() {
   const router = useRouter();
-  const { value: storedFlavor } = useStorage('flavor');
-  const { value: storedVersion } = useStorage('version');
   return (
     <>
       <Head>
@@ -26,8 +23,37 @@ export function Index() {
         and build at any scale — integrating seamlessly with modern technologies and libraries while providing a
         distributed graph-based task execution, a robust CLI, computation caching, dependency management, and more."
         />
+        <meta
+          name="twitter:title"
+          content="Nx: Smart, Extensible Build Framework"
+        />
+        <meta
+          name="twitter:description"
+          content="Nx is a smart and extensible build framework to help you architect, test,
+        and build at any scale — integrating seamlessly with modern technologies and libraries while providing a
+        distributed graph-based task execution, a robust CLI, computation caching, dependency management, and more."
+        />
+        <meta name="twitter:image" content="/images/nx-media.jpg" />
+        <meta
+          name="twitter:image:alt"
+          content="Nx: Smart, Extensible Build Framework"
+        />
+        <meta property="og:url" content="https://nx.dev" />
+        <meta
+          property="og:description"
+          content="Nx is a smart and extensible build framework to help you architect, test,
+        and build at any scale — integrating seamlessly with modern technologies and libraries while providing a
+        distributed graph-based task execution, a robust CLI, computation caching, dependency management, and more."
+        />
+        <meta
+          property="og:title"
+          content="Nx: Smart, Extensible Build Framework"
+        />
+        <meta property="og:image" content="/images/nx-media.jpg" />
+        <meta property="og:image:width" content="1000" />
+        <meta property="og:image:height" content="300" />
       </Head>
-      <Header showSearch={false} />
+      <Header showSearch={false} useDarkBackground={false} />
       <main>
         <div className="w-full">
           {/*INTRO COMPONENT*/}
@@ -101,15 +127,43 @@ export function Index() {
                       fill="#022f56"
                     />
                   </svg>
-                  {/*<iframe*/}
-                  {/*  width="560"*/}
-                  {/*  height="315"*/}
-                  {/*  src="https://www.youtube.com/embed/TXySu4dZLp0"*/}
-                  {/*  frameBorder="0"*/}
-                  {/*  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"*/}
-                  {/*  allowFullScreen*/}
-                  {/*  className="w-full"*/}
-                  {/*/>*/}
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* BANNER */}
+          <div className="bg-green-nx-base">
+            <div className="max-w-7xl mx-auto py-3 px-3 sm:px-6 lg:px-8">
+              <div className="flex items-center flex-col sm:flex-row justify-between flex-wrap">
+                <div className="flex-1 flex flex-row items-center">
+                  <span className="flex p-2 rounded-lg bg-white">
+                    <svg
+                      className="h-6 w-6 text-green-nx-base"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"
+                      />
+                    </svg>
+                  </span>
+                  <p className="ml-3 font-medium text-white">
+                    Big news! We're excited to announce the first ever Nx Conf -
+                    September 16th-17th
+                  </p>
+                </div>
+                <div className="mt-2 w-full sm:w-auto">
+                  <Link href="/conf">
+                    <a className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-blue-nx-base bg-white">
+                      Learn more
+                    </a>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -408,7 +462,7 @@ export function Index() {
           <NxUsersShowcase />
         </div>
       </main>
-      <Footer />
+      <Footer useDarkBackground={false} />
     </>
   );
 }
