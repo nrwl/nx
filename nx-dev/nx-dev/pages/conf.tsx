@@ -207,7 +207,7 @@ export function ConfPage() {
                   scalable, and more collaborative.
                 </p>
                 <ul className="sm:text-lg list-disc list-inside mb-6">
-                  This year Nx Conf will feature talks from…
+                  Here are just a few of our confirmed speakers…
                   <li className="mt-4">
                     <a
                       href="https://twitter.com/jeffbcross"
@@ -251,6 +251,17 @@ export function ConfPage() {
                       Nathan Walker
                     </a>
                     , Angular advocate and expert
+                  </li>
+                  <li className="mt-4">
+                    <a
+                      href="https://twitter.com/yallen011"
+                      target="_blank"
+                      rel="nofollow"
+                      className="underline pointer"
+                    >
+                      Yvonne Allen
+                    </a>
+                    , Angular GDE
                   </li>
                   <li className="mt-4">Lightning talks from the community</li>
                 </ul>
