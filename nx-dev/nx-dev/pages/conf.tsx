@@ -263,6 +263,18 @@ export function ConfPage() {
                     </a>
                     , Angular GDE
                   </li>
+                  <li className="mt-4">
+                    <a
+                      href="https://twitter.com/MrJamesHenry"
+                      target="_blank"
+                      rel="nofollow"
+                      className="underline pointer"
+                    >
+                      James Henry
+                    </a>
+                    , 4x MVP @Microsoft, ESLint Team Alum, creator of @TSESLint
+                    , Babel + Prettier Teams.
+                  </li>
                   <li className="mt-4">Lightning talks from the community</li>
                 </ul>
                 <p className="sm:text-lg mb-6">
