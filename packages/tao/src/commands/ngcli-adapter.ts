@@ -732,9 +732,9 @@ function convertEventTypeToHandleMultipleConfigNames(
   eventPath: string,
   content: Buffer | never
 ) {
-  const actualConfigName = host.exists('/workspace.json')
-    ? 'workspace.json'
-    : 'angular.json';
+  const actualConfigName = host.exists('/angular.json')
+    ? 'angular.json'
+    : 'workspace.json';
   const isWorkspaceConfig =
     eventPath === 'angular.json' || eventPath === 'workspace.json';
   if (isWorkspaceConfig) {
