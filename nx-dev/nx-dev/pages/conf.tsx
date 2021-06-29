@@ -273,7 +273,19 @@ export function ConfPage() {
                       James Henry
                     </a>
                     , 4x MVP @Microsoft, ESLint Team Alum, creator of @TSESLint
-                    , Babel + Prettier Teams.
+                    , Babel + Prettier Teams
+                  </li>
+                  <li className="mt-4">
+                    <a
+                      href="https://twitter.com/cotufa82"
+                      target="_blank"
+                      rel="nofollow"
+                      className="underline pointer"
+                    >
+                      Diana Rodriguez
+                    </a>
+                    , GDE, Microsoft MVP, Women Techmaker Ambassador and Auth0
+                    Ambassador
                   </li>
                   <li className="mt-4">Lightning talks from the community</li>
                 </ul>
