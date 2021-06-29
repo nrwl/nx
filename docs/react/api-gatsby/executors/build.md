@@ -3,7 +3,7 @@
 Build a Gatsby app
 
 Properties can be configured in workspace.json when defining the executor, or when invoking it.
-Read more about how to use executors and the CLI here: https://nx.dev/react/getting-started/nx-cli#running-tasks.
+Read more about how to use executors and the CLI here: https://nx.dev/latest/react/getting-started/nx-cli#acting-on-code-using-executors.
 
 ## Properties
 
