@@ -201,10 +201,10 @@ export function ConfPage() {
                   </div>
                 </h2>
                 <p className="sm:text-lg mb-6">
-                  Nx Conf is a new, free-to-attend, 2-day conference featuring
-                  members of the Nx team and community. Join us as we share our
-                  ideas and expertise about making development faster, more
-                  scalable, and more collaborative.
+                  Nx Conf is a new, online & free-to-attend, 2-day conference
+                  featuring members of the Nx team and community. Join us as we
+                  share our ideas and expertise about making development faster,
+                  more scalable, and more collaborative.
                 </p>
                 <ul className="sm:text-lg list-disc list-inside mb-6">
                   Here are just a few of our confirmed speakers…
