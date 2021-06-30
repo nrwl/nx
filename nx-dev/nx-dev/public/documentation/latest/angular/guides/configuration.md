@@ -272,7 +272,7 @@ Your `angular.json` file can be renamed to `workspace.json` and Nx will process 
 
 ## project.json
 
-Project configurations can also be independent files, referenced by `angular.json`. For instance, an `angular.json` may contain projects configured as below.
+In version 2 workspaces, project configurations can also be independent files, referenced by `angular.json`. For instance, an `angular.json` may contain projects configured as below.
 
 ```json
 {
@@ -286,14 +286,12 @@ This tells Nx that all configuration for that project is found in the `libs/myli
 
 ```json
 {
-  "mylib": {
-    "root": "libs/mylib/",
-    "sourceRoot": "libs/mylib/src",
-    "projectType": "library",
-    "targets": {},
-    "tags": [],
-    "implicitDependencies": []
-  }
+  "root": "libs/mylib/",
+  "sourceRoot": "libs/mylib/src",
+  "projectType": "library",
+  "targets": {},
+  "tags": [],
+  "implicitDependencies": []
 }
 ```
 
