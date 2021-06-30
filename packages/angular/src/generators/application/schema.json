@@ -44,7 +44,7 @@
     },
     "routing": {
       "type": "boolean",
-      "description": "Generates a routing module.",
+      "description": "Generate a routing module.",
       "default": false,
       "x-prompt": "Would you like to configure routing for this application?"
     },
@@ -78,30 +78,30 @@
       "alias": "S"
     },
     "skipFormat": {
-      "description": "Skip formatting files",
+      "description": "Skip formatting files.",
       "type": "boolean",
       "default": false
     },
     "skipPackageJson": {
       "type": "boolean",
       "default": false,
-      "description": "Do not add dependencies to package.json."
+      "description": "Do not add dependencies to `package.json`."
     },
     "unitTestRunner": {
       "type": "string",
       "enum": ["karma", "jest", "none"],
-      "description": "Test runner to use for unit tests",
+      "description": "Test runner to use for unit tests.",
       "default": "jest"
     },
     "e2eTestRunner": {
       "type": "string",
       "enum": ["protractor", "cypress", "none"],
-      "description": "Test runner to use for end to end (e2e) tests",
+      "description": "Test runner to use for end to end (e2e) tests.",
       "default": "cypress"
     },
     "tags": {
       "type": "string",
-      "description": "Add tags to the application (used for linting)"
+      "description": "Add tags to the application (used for linting)."
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
@@ -111,15 +111,15 @@
     },
     "backendProject": {
       "type": "string",
-      "description": "Backend project that provides data to this application. This sets up proxy.config.json."
+      "description": "Backend project that provides data to this application. This sets up `proxy.config.json`."
     },
     "strict": {
       "type": "boolean",
-      "description": "Creates an application with stricter type checking and build optimization options.",
+      "description": "Create an application with stricter type checking and build optimization options.",
       "default": true
     },
     "standaloneConfig": {
-      "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
+      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
       "type": "boolean",
       "default": false
     }

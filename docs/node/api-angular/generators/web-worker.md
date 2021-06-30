@@ -1,6 +1,6 @@
 # web-worker
 
-Create a Web Worker.
+Creates a Web Worker.
 
 ## Usage
 

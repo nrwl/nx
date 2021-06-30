@@ -16,7 +16,7 @@
     },
     "module": {
       "type": "string",
-      "description": "The path to NgModule where the feature state will be registered. The host directory will create/use the new state directory.",
+      "description": "The path to the `NgModule` where the feature state will be registered. The host directory will create/use the new state directory.",
       "x-prompt": "What is the path to the module where this NgRx state should be registered?"
     },
     "directory": {
@@ -33,7 +33,7 @@
     "facade": {
       "type": "boolean",
       "default": false,
-      "description": "Create a Facade class for the the Feature.",
+      "description": "Create a Facade class for the the feature.",
       "x-prompt": "Would you like to use a Facade with your NgRx state?"
     },
     "skipImport": {
@@ -44,7 +44,7 @@
     "onlyAddFiles": {
       "type": "boolean",
       "default": false,
-      "description": "Only add new NgRx files, without changing the module file (e.g., --onlyAddFiles).",
+      "description": "Only add new NgRx files, without changing the module file (e.g., `--onlyAddFiles`).",
       "x-deprecated": "Use the `skipImport` option instead."
     },
     "minimal": {
@@ -55,18 +55,18 @@
     "onlyEmptyRoot": {
       "type": "boolean",
       "default": false,
-      "description": "Do not generate any files. Only generate StoreModule.forRoot and EffectsModule.forRoot (e.g., --onlyEmptyRoot).",
+      "description": "Do not generate any files. Only generate `StoreModule.forRoot` and `EffectsModule.forRoot` (e.g., `--onlyEmptyRoot`).",
       "x-deprecated": "Use the `minimal` option instead."
     },
     "skipFormat": {
-      "description": "Skip formatting of generated files.",
+      "description": "Skip formatting files.",
       "type": "boolean",
       "default": false
     },
     "skipPackageJson": {
       "type": "boolean",
       "default": false,
-      "description": "Do not update the package.json with NgRx dependencies."
+      "description": "Do not update the `package.json` with NgRx dependencies."
     },
     "syntax": {
       "type": "string",
@@ -77,12 +77,12 @@
     "useDataPersistence": {
       "type": "boolean",
       "default": false,
-      "description": "Generate NgRx Effects with the DataPersistence helper service. Set to false to use plain effects data persistence operators."
+      "description": "Generate NgRx Effects with the `DataPersistence` helper service. Set to false to use plain effects data persistence operators."
     },
     "barrels": {
       "type": "boolean",
       "default": false,
-      "description": "Use barrels to re-export actions, state, and selectors."
+      "description": "Use barrels to re-export actions, state and selectors."
     }
   },
   "additionalProperties": false,

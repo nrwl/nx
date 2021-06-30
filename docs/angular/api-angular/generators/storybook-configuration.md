@@ -1,6 +1,6 @@
 # storybook-configuration
 
-Create stories/specs for all components declared in a library.
+Adds Storybook configuration to a project.
 
 ## Usage
 
@@ -44,7 +44,7 @@ Default: `true`
 
 Type: `boolean`
 
-Specifies whether to automatically generate \*.spec.ts files in the generated cypress e2e app.
+Specifies whether to automatically generate `*.spec.ts` files in the generated Cypress e2e app.
 
 ### generateStories
 
@@ -52,7 +52,7 @@ Default: `true`
 
 Type: `boolean`
 
-Specifies whether to automatically generate \*.stories.ts files for components declared in this project or not.
+Specifies whether to automatically generate `*.stories.ts` files for components declared in this project or not.
 
 ### linter
 
@@ -68,4 +68,4 @@ The tool to use for running lint checks.
 
 Type: `string`
 
-Project name.
+The name of the project.

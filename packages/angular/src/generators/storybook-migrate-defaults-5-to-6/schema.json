@@ -6,17 +6,17 @@
   "properties": {
     "all": {
       "type": "boolean",
-      "description": "Generate new Storybook configurations for all Storybook instances across all apps and libs.",
+      "description": "Generate new Storybook configurations for all Storybook instances across all applications and libraries.",
       "default": true
     },
     "keepOld": {
       "type": "boolean",
-      "description": "Keep the old configuration files - put them in a folder called .old_storybook.",
+      "description": "Keep the old configuration files by placing them in a folder called `.old_storybook`.",
       "default": true
     },
     "name": {
       "type": "string",
-      "description": "Leave empty to upgrade all Storybook instances. Only use this if you want to do a gradual migration. Library or application name for which you want to generate the new Storybook configuration.",
+      "description": "Library or application name for which you want to generate the new Storybook configuration. Leave empty to upgrade all Storybook instances. Only use this if you want to do a gradual migration.",
       "$default": {
         "$source": "argv",
         "index": 0

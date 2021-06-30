@@ -6,7 +6,7 @@
   "properties": {
     "projectName": {
       "type": "string",
-      "description": "Name of the project from angular.json.",
+      "description": "The name of the project.",
       "examples": ["ui-samples"]
     },
     "projectPath": {
@@ -26,12 +26,12 @@
     },
     "componentFileName": {
       "type": "string",
-      "description": "Component file name without the .ts extension.",
+      "description": "Component file name without the `.ts` extension.",
       "examples": ["awesome.component"]
     },
     "cypressProject": {
       "type": "string",
-      "description": "The Cypress project to generate the stories under. By default, inferred from 'projectName'."
+      "description": "The Cypress project to generate the stories under. By default, inferred from `projectName`."
     }
   },
   "additionalProperties": false,

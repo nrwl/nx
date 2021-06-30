@@ -12,7 +12,7 @@
     },
     "projectName": {
       "type": "string",
-      "description": "The name of the selected project."
+      "description": "The name of the project."
     },
     "projectRoot": {
       "type": "string",
@@ -20,7 +20,7 @@
     },
     "setParserOptionsProject": {
       "type": "boolean",
-      "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
+      "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
       "default": false
     }
   },

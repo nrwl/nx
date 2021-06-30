@@ -1,6 +1,6 @@
 # move
 
-Move an Angular application or library to another folder
+Moves an Angular application or library to another folder within the workspace and updates the project configuration.
 
 ## Usage
 
@@ -40,13 +40,13 @@ nx g @nrwl/angular:move --project my-feature-lib shared/my-feature-lib
 
 Type: `string`
 
-The folder to move the Angular project into
+The folder to move the Angular project into.
 
 ### importPath
 
 Type: `string`
 
-The new import path to use in the tsconfig.base.json
+The new import path to use in the `tsconfig.base.json`.
 
 ### projectName
 
@@ -54,7 +54,7 @@ Alias(es): project
 
 Type: `string`
 
-The name of the Angular project to move
+The name of the Angular project to move.
 
 ### updateImportPath
 
@@ -62,4 +62,4 @@ Default: `true`
 
 Type: `boolean`
 
-Should the generator update the import path to reflect the new location?
+Update the import path to reflect the new location.
