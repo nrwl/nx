@@ -1,6 +1,6 @@
 # Configuration
 
-There are three top-level configuration files every Nx workspace has: `workspace.json`, `nx.json`, and `tsconfig.base.json`. Many Nx plugins will modify these files when generating new code, but you can also modify them manually.
+There are three top-level configuration files every Nx workspace has: `workspace.json`, `nx.json`, and `tsconfig.base.json`. Many Nx plugins modify these files when generating new code, but you can also modify them manually.
 
 ## workspace.json
 
@@ -108,7 +108,7 @@ For instance, the following configures `mylib`.
 - `projectType` is either 'application' or 'library'. The project type is used in dep graph viz and in a few aux commands.
 - `targets` configures all the targets which define what tasks you can run against the library.
 
-> Projects utilizing `project.json` files will not be present in `workspace.json`.
+> Projects utilizing `project.json` files are not present in `workspace.json`.
 
 ### Targets
 
@@ -127,7 +127,7 @@ Let's look at the simple target:
 
 **Target Name**
 
-The name of the target `test` means that you can invoke it as follows: `nx test mylib` or `nx run mylib:test`. The name isn't significant in any other way. If you rename it to, for example, `mytest`, you will be able to run as follows: `nx mytest mylib` or `nx run mylib:mytest`.
+The name of the target `test` means that you can invoke it as follows: `nx test mylib` or `nx run mylib:test`. The name isn't significant in any other way. If you rename it to, for example, `mytest`, you run as follows: `nx mytest mylib` or `nx run mylib:mytest`.
 
 **Executor**
 
@@ -135,7 +135,7 @@ The `executor` property tells Nx what function to invoke when you run the target
 
 **Options**
 
-The `options` provides a map of values that will be passed to the executor. The provided command line args will be merged into this map. I.e., `nx test mylib --jestConfig=libs/mylib/another-jest.config.js` will pass the following to the executor:
+The `options` provides a map of values that are passed to the executor. The provided command line args are merged into this map. For example, `nx test mylib --jestConfig=libs/mylib/another-jest.config.js` passes the following to the executor:
 
 ```json
 {
@@ -145,7 +145,7 @@ The `options` provides a map of values that will be passed to the executor. The 
 
 **Outputs**
 
-The `outputs` property lists the folders the executor will create files in. The property is optional. If not provided, Nx will assume it is `dist/libs/mylib`.
+The `outputs` property lists the folders the executor creates files in. The property is optional. If not provided, Nx assumes it is `dist/libs/mylib`.
 
 ```json
 {
@@ -164,7 +164,7 @@ The `outputs` property lists the folders the executor will create files in. The 
 
 **Configurations**
 
-The `configurations` property provides extra sets of values that will be merged into the options map.
+The `configurations` property provides extra sets of values that are merged into the options map.
 
 ```json
 {
@@ -219,11 +219,11 @@ Targets can depend on other targets. A common scenario is having to build depend
 }
 ```
 
-In this case, running `nx build myapp` will build all the buildable libraries `myapp` depends on first. In other words, `nx build myapp` will result in multiple tasks executing. The `--parallel`, and `--max-parallel` flags will have the same effect as they would with `run-many` or `affected`.
+In this case, running `nx build myapp` builds all the buildable libraries `myapp` depends on first. In other words, `nx build myapp` results in multiple tasks executing. The `--parallel`, and `--max-parallel` flags have the same effect as they would with `run-many` or `affected`.
 
 It is also possible to define dependencies between the targets of the same project.
 
-In the following example invoking `nx build myapp` will build all the libraries first, then `nx build-base myapp` will be executed and only then `nx build myapp` will be executed.
+In the following example invoking `nx build myapp` builds all the libraries first, then `nx build-base myapp` is executed and only then `nx build myapp` is executed.
 
 ```json
 {
@@ -258,7 +258,7 @@ Often the same `dependsOn` configuration has to be defined for every project in 
 
 ### Generators
 
-You can configure default generator options in `workspace.json` as well. For instance, the following will tell Nx to always pass `--js` when creating new libraries.
+Default generator options are configured in `workspace.json` as well. For instance, the following tells Nx to always pass `--js` when creating new libraries.
 
 ```json
 {
@@ -290,7 +290,7 @@ You can also do it on the project level:
 
 ### CLI Options
 
-The following command will generate a new library: `nx g @nrwl/node:lib mylib`. If you set the `defaultCollection` property, you can generate the lib without mentioning the collection name: `nx g lib mylib`.
+The following command generates a new library: `nx g @nrwl/node:lib mylib`. After setting the `defaultCollection` property, the lib is generated without mentioning the collection name: `nx g lib mylib`.
 
 ```json
 {
@@ -383,22 +383,22 @@ Tells Nx which branch and HEAD to use when calculating affected projects.
 
 ### Tasks Runner Options
 
-Tasks runners are invoked when you run `nx test`, `nx build`, `nx run-many`, `nx affected`, etc.. The tasks runner named "default" will be, unsurprisingly, used by default. But you can specify a different one by passing `--runner`.
+Tasks runners are invoked when you run `nx test`, `nx build`, `nx run-many`, `nx affected`, and so on. The tasks runner named "default" is used by default. Specify a different one by passing `--runner`.
 
 > A task is an invocation of a target.
 
 Tasks runners can accept different options. The following are the options supported by `"@nrwl/workspace/tasks-runners/default"` and `"@nrwl/nx-cloud"`.
 
-- `cacheableOperations` defines the list of targets/operations that will be cached by Nx.
+- `cacheableOperations` defines the list of targets/operations that are cached by Nx.
 - `parallel` defines whether to run targets in parallel
 - `maxParallel` defines the max number of processes used.
-- `captureStderr` defines whether the cache will capture stderr or just stdout
+- `captureStderr` defines whether the cache captures stderr or just stdout
 - `skipNxCache` defines whether the Nx Cache should be skipped. Defaults to `false`
 - `cacheDirectory` defines where the local cache is stored, which is `node_modules/.cache/nx` by default.
-- `encryptionKey` (when using `"@nrwl/nx-cloud"` only) defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key `NX_CLOUD_ENCRYPTION_KEY` that contains an encryption key as its value. The Nx Cloud task runner will normalize the key length, so any length of key is acceptable.
-- `runtimeCacheInputs` defines the list of commands that will be run by the runner to include into the computation hash value.
+- `encryptionKey` (when using `"@nrwl/nx-cloud"` only) defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key `NX_CLOUD_ENCRYPTION_KEY` that contains an encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable.
+- `runtimeCacheInputs` defines the list of commands that are run by the runner to include into the computation hash value.
 
-`runtimeCacheInputs` can be set as follows:
+`runtimeCacheInputs` are set as follows:
 
 ```json
 {
@@ -441,12 +441,12 @@ Nx performs advanced source-code analysis to figure out the project graph of the
 
 In the example above:
 
-- Changing `workspace.json` will affect every project.
-- Changing the `dependencies` property in `package.json` will affect every project.
-- Changing the `devDependencies` property in `package.json` will only affect `mylib`.
-- Changing any of the custom check `scripts` in `package.json` will affect every project.
-- Changing `globalFile` will only affect `myapp`.
-- Changing any CSS file inside the `styles` directory will only affect `myapp`.
+- Changing `workspace.json` affects every project.
+- Changing the `dependencies` property in `package.json` affects every project.
+- Changing the `devDependencies` property in `package.json` only affects `mylib`.
+- Changing any of the custom check `scripts` in `package.json` affects every project.
+- Changing `globalFile` only affects `myapp`.
+- Changing any CSS file inside the `styles` directory only affects `myapp`.
 
 You can also add dependencies between projects. For instance, the example below defines a dependency from `myapp-e2e` to `myapp`, such that every time `myapp` is affected, `myapp-e2e` is affected as well.
 
@@ -464,7 +464,7 @@ You can also add dependencies between projects. For instance, the example below 
 }
 ```
 
-> Projects utilizing `project.json` files will not be present in `nx.json`.
+> Projects utilizing `project.json` files are not present in `nx.json`.
 
 ### Target Dependencies
 
@@ -497,5 +497,5 @@ The syntax is the same as a [`.gitignore` file](https://git-scm.com/book/en/v2/G
 
 **When a file is specified in the `.nxignore` file:**
 
-1. Changes to that file will not be taken into account in the `affected` calculations.
-2. Even if the file is outside an app or library, `nx workspace-lint` will not warn about it.
+1. Changes to that file are not taken into account in the `affected` calculations.
+2. Even if the file is outside an app or library, `nx workspace-lint` won't warn about it.
