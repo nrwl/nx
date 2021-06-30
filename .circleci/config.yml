@@ -58,14 +58,14 @@ commands:
           steps:
             - run:
                 name: Install PNPM
-                command: npm install --prefix=$HOME/.local -g pnpm@6.7.6
+                command: npm install --prefix=$HOME/.local -g pnpm@6.9.1
       - when:
           condition:
             equal: [<< parameters.os >>, windows]
           steps:
             - run:
                 name: Install PNPM
-                command: npm install -g pnpm@6.7.6
+                command: npm install -g pnpm@6.9.1
 
 jobs:
   agent:
