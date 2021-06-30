@@ -137,7 +137,7 @@
     },
     "outputPath": {
       "type": "string",
-      "description": "The full path for the new output directory, relative to the current workspace.\n\nBy default, writes output to a folder named dist/ in the current project."
+      "description": "The full path for the new output directory, relative to the current workspace. By default, writes output to a folder named dist/ in the current project."
     },
     "resourcesOutputPath": {
       "type": "string",
@@ -361,11 +361,11 @@
       "default": []
     },
     "customWebpackConfig": {
-      "description": "Options for additional webpack configurations",
+      "description": "Options for additional webpack configurations.",
       "type": "object",
       "properties": {
         "path": {
-          "description": "Path to additional webpack configuration. Paths will be resolved to workspace root.",
+          "description": "Path to additional webpack configuration, relative to the workspace root.",
           "type": "string"
         }
       },

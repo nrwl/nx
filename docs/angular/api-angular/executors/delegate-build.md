@@ -10,7 +10,7 @@ Properties can be configured in angular.json when defining the executor, or when
 
 Type: `string`
 
-Build target used for building the app after its dependencies have been built.
+Build target used for building the application after its dependencies have been built.
 
 ### outputPath
 
@@ -30,4 +30,4 @@ Default: `false`
 
 Type: `boolean`
 
-Run build when files change.
+Whether to run a build when any file changes.

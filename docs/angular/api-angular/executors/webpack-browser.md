@@ -1,6 +1,6 @@
 # webpack-browser
 
-Angular browser builder that supports incremental builds.
+Builds a browser application with support for incremental builds and custom webpack configuration.
 
 Properties can be configured in angular.json when defining the executor, or when invoking it.
 
@@ -176,9 +176,7 @@ Define the output filename cache-busting hashing mode.
 
 Type: `string`
 
-            The full path for the new output directory, relative to the current workspace.
-
-By default, writes output to a folder named dist/ in the current project.
+The full path for the new output directory, relative to the current workspace. By default, writes output to a folder named dist/ in the current project.
 
 ### poll
 
