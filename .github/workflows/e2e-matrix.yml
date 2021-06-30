@@ -37,7 +37,7 @@ jobs:
           - pnpm
         packages:
           - e2e-angular
-          - e2e-cli,e2e-nx-plugin,e2e-jest,e2e-linter,e2e-cypress
+          - e2e-cli,e2e-nx-plugin,e2e-jest,e2e-linter
           - e2e-cypress
           - e2e-gatsby,e2e-react
           - e2e-next
@@ -90,7 +90,7 @@ jobs:
       if: ${{ matrix.package_manager == 'pnpm' }}
       uses: pnpm/action-setup@v2.0.1
       with:
-        version: 6.7.6
+        version: 6.9.1
 
     - name: Run e2e tests
       run: yarn nx run-many --target=e2e --projects="${{ join(matrix.packages) }}"
