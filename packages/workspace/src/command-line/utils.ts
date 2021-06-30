@@ -114,8 +114,19 @@ export function splitArgsIntoNxArgsAndOverrides(
   }
 
   if (mode === 'affected') {
-    if (options.printWarnings) {
-      printArgsWarning(nxArgs);
+    if (options.printWarnings && nxArgs.all) {
+      output.warn({
+        title: `Running affected:* commands with --all can result in very slow builds.`,
+        bodyLines: [
+          `${output.bold(
+            '--all'
+          )} is not meant to be used for any sizable project or to be used in CI.`,
+          '',
+          `${output.colors.gray(
+            'Learn more about checking only what is affected: '
+          )}https://nx.dev/latest/angular/cli/affected#affected.`,
+        ],
+      });
     }
 
     if (
@@ -134,15 +145,44 @@ export function splitArgsIntoNxArgsAndOverrides(
     // Allow setting base and head via environment variables (lower priority then direct command arguments)
     if (!nxArgs.base && process.env.NX_BASE) {
       nxArgs.base = process.env.NX_BASE;
+      if (options.printWarnings) {
+        output.note({
+          title: `No explicit --base argument provided, but found environment variable NX_BASE so using its value as the affected base: ${output.bold(
+            `${nxArgs.base}`
+          )}`,
+        });
+      }
     }
     if (!nxArgs.head && process.env.NX_HEAD) {
       nxArgs.head = process.env.NX_HEAD;
+      if (options.printWarnings) {
+        output.note({
+          title: `No explicit --head argument provided, but found environment variable NX_HEAD so using its value as the affected head: ${output.bold(
+            `${nxArgs.head}`
+          )}`,
+        });
+      }
     }
 
     if (!nxArgs.base) {
       const affectedConfig = getAffectedConfig();
-
       nxArgs.base = affectedConfig.defaultBase;
+
+      // No user-provided arguments to set the affected criteria, so inform the user of the defaults being used
+      if (
+        options.printWarnings &&
+        !nxArgs.head &&
+        !nxArgs.files &&
+        !nxArgs.uncommitted &&
+        !nxArgs.untracked &&
+        !nxArgs.all
+      ) {
+        output.note({
+          title: `Affected criteria defaulted to --base=${output.bold(
+            `${nxArgs.base}`
+          )} --head=${output.bold('HEAD')}`,
+        });
+      }
     }
   }
 
@@ -159,32 +199,4 @@ export function getAffectedConfig(): NxAffectedConfig {
   return {
     defaultBase: config.affected?.defaultBase || 'master',
   };
-}
-
-function printArgsWarning(options: NxArgs) {
-  const { files, uncommitted, untracked, base, head, all } = options;
-  const affectedConfig = getAffectedConfig();
-
-  if (!files && !uncommitted && !untracked && !base && !head && !all) {
-    output.note({
-      title: `Affected criteria defaulted to --base=${output.bold(
-        `${affectedConfig.defaultBase}`
-      )} --head=${output.bold('HEAD')}`,
-    });
-  }
-
-  if (all) {
-    output.warn({
-      title: `Running affected:* commands with --all can result in very slow builds.`,
-      bodyLines: [
-        `${output.bold(
-          '--all'
-        )} is not meant to be used for any sizable project or to be used in CI.`,
-        '',
-        `${output.colors.gray(
-          'Learn more about checking only what is affected: '
-        )}https://nx.dev/latest/angular/cli/affected#affected.`,
-      ],
-    });
-  }
 }
