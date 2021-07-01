@@ -14,8 +14,10 @@ describe('jest', () => {
 
     expect(tree.exists('jest.config.js')).toBeTruthy();
     expect(tree.read('jest.config.js', 'utf-8')).toMatchInlineSnapshot(`
-      "module.exports = {
-      projects: []
+      "const { getJestProjects } = require('@nrwl/jest');
+      
+      module.exports = {
+      projects: getJestProjects()
       };"
     `);
   });
