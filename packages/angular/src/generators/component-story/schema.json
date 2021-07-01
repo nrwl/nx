@@ -21,7 +21,7 @@
     },
     "componentFileName": {
       "type": "string",
-      "description": "Component file name without the .ts extension.",
+      "description": "Component file name without the `.ts` extension.",
       "examples": ["awesome.component"]
     }
   },
