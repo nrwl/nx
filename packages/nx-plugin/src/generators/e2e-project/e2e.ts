@@ -66,11 +66,7 @@ function updateWorkspaceConfiguration(host: Tree, options: NormalizedSchema) {
       targets: {
         e2e: {
           executor: '@nrwl/nx-plugin:e2e',
-          options: {
-            target: `${options.pluginName}:build`,
-            npmPackageName: options.npmPackageName,
-            pluginOutputPath: options.pluginOutputPath,
-          },
+          options: { target: `${options.pluginName}:build` },
         },
       },
       tags: [],

@@ -1,9 +1,0 @@
-{
-  "builders": {
-    "e2e": {
-      "implementation": "./src/executors/e2e/e2e.impl",
-      "schema": "./src/executors/e2e/schema.json",
-      "description": "Creates and runs an e2e for a Nx Plugin"
-    }
-  }
-}
