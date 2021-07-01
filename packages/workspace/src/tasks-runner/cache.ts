@@ -8,7 +8,7 @@ import {
   lstatSync,
   unlinkSync,
 } from 'fs';
-import { removeSync, ensureDirSync, copySync } from 'fs-extra';
+import { removeSync, ensureDirSync, copySync, readdirSync } from 'fs-extra';
 import { join, resolve, sep } from 'path';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { spawn } from 'child_process';
@@ -190,11 +190,21 @@ export class Cache {
     cachedResult: CachedResult,
     outputs: string[]
   ): boolean {
-    return outputs.some(
-      (output) =>
-        existsSync(join(cachedResult.outputsPath, output)) &&
-        !existsSync(join(this.root, output))
-    );
+    return outputs.some((output) => {
+      const cacheOutputPath = join(cachedResult.outputsPath, output);
+      const rootOutputPath = join(this.root, output);
+
+      const haveDifferentAmountOfFiles =
+        existsSync(cacheOutputPath) &&
+        existsSync(rootOutputPath) &&
+        readdirSync(cacheOutputPath).length !==
+          readdirSync(rootOutputPath).length;
+
+      return (
+        (existsSync(cacheOutputPath) && !existsSync(rootOutputPath)) ||
+        haveDifferentAmountOfFiles
+      );
+    });
   }
 
   private getFileNameWithLatestRecordedHashForOutput(output: string): string {
