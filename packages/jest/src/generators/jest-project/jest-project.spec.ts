@@ -83,16 +83,6 @@ describe('jestProject', () => {
     expect(tree.read('libs/lib1/jest.config.js', 'utf-8')).toMatchSnapshot();
   });
 
-  it('should add a project reference in the root jest.config.js', async () => {
-    await jestProjectGenerator(tree, {
-      ...defaultOptions,
-      project: 'lib1',
-    } as JestProjectSchema);
-    const jestConfig = jestConfigObject(tree, 'jest.config.js');
-
-    expect(jestConfig.projects).toEqual(['<rootDir>/libs/lib1']);
-  });
-
   it('should add a reference to solution tsconfig.json', async () => {
     await jestProjectGenerator(tree, {
       ...defaultOptions,
