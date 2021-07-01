@@ -17,7 +17,7 @@ Some things, however, are much more important for large companies:
 ### Apps and Libs
 
 - Apps configure dependency injection and wire up libraries. They should not contain any components, services, or business logic.
-- Libs contain services, components, utilities, etc.. They have well-defined public API.
+- Libs contain services, components, utilities, etc. They have well-defined public API.
 
 A typical Nx workspace has many more libs than apps, so pay especially careful attention to the organization of the libs directory.
 
@@ -144,10 +144,10 @@ It's crucial for a large company with multiple teams contributing to the same re
 
 Since Nx allows us to group apps and libs in directories, those directories can become code-ownership boundaries. That's why the structure of an Nx workspace often reflects the structure of an organization. GitHub users can use the `CODEOWNERS` file for that.
 
-```
-/libs/happynrwlapp  julie-happynrwlapp-lead
-/apps/happynrwlapp  julie-happynrwlapp-lead
-/libs/shared/ui  hank-the-ui-guy
+```bash
+/libs/happynrwlapp          julie-happynrwlapp-lead
+/apps/happynrwlapp          julie-happynrwlapp-lead
+/libs/shared/ui             hank-the-ui-guy
 /libs/shared/utils-testing  julie,hank
 ```
 
