@@ -15,6 +15,15 @@ function determineUncoveredJestProjects(existingProjects: string[]) {
   return existingProjects.filter((project) => !coveredJestProjects[project]);
 }
 
+function determineProjectsValue(uncoveredJestProjects: string[]): string {
+  if (!uncoveredJestProjects.length) {
+    return `getJestProjects()`;
+  }
+  return `[...getJestProjects(), ${uncoveredJestProjects.map(
+    (projectName) => `'${projectName}', `
+  )}]`;
+}
+
 function updateBaseJestConfig(
   tree: Tree,
   baseJestConfigPath = 'jest.config.js'
@@ -28,18 +37,10 @@ function updateBaseJestConfig(
 
 module.exports = ${JSON.stringify(currentConfig, null, 2)};
 `;
-  const fullContents = contentsWithReplaceToken
-    .replace('"projects"', 'projects')
-    // ^ appears to be needed as formatting does not seem to "take" at least in unit tests?
-    .replace(
-      `"${REPLACE_TOKEN}"`,
-      uncoveredJestProjects.length
-        ? `[...getJestProjects(), ${uncoveredJestProjects.map(
-            (x, i) =>
-              `'${x}'${i === uncoveredJestProjects.length - 1 ? '' : ','}`
-          )}]`
-        : `getJestProjects()`
-    );
+  const fullContents = contentsWithReplaceToken.replace(
+    `"${REPLACE_TOKEN}"`,
+    determineProjectsValue(uncoveredJestProjects)
+  );
   tree.write(baseJestConfigPath, fullContents);
   return;
 }
