@@ -11,7 +11,7 @@ Read more about how to use executors and the CLI here: https://nx.dev/react/gett
 
 Type: `string`
 
-Build target used for building the app after its dependencies have been built.
+Build target used for building the application after its dependencies have been built.
 
 ### outputPath
 
@@ -31,4 +31,4 @@ Default: `false`
 
 Type: `boolean`
 
-Run build when files change.
+Whether to run a build when any file changes.

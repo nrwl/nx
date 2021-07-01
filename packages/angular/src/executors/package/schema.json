@@ -7,20 +7,20 @@
   "properties": {
     "project": {
       "type": "string",
-      "description": "The file path for the ng-packagr configuration file, relative to the current workspace."
+      "description": "The file path for the ng-packagr configuration file, relative to the workspace root."
     },
     "tsConfig": {
       "type": "string",
-      "description": "The full path for the TypeScript configuration file, relative to the current workspace."
+      "description": "The full path for the TypeScript configuration file, relative to the workspace root."
     },
     "watch": {
       "type": "boolean",
-      "description": "Run build when files change.",
+      "description": "Whether to run a build when any file changes.",
       "default": false
     },
     "updateBuildableProjectDepsInPackageJson": {
       "type": "boolean",
-      "description": "Update buildable project dependencies in package.json.",
+      "description": "Whether to update the buildable project dependencies in package.json.",
       "default": true
     },
     "buildableProjectDepsInPackageJsonType": {

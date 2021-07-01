@@ -6,7 +6,7 @@
   "type": "object",
   "properties": {
     "buildTarget": {
-      "description": "Build target used for building the app after its dependencies have been built.",
+      "description": "Build target used for building the application after its dependencies have been built.",
       "type": "string"
     },
     "outputPath": {
@@ -19,7 +19,7 @@
     },
     "watch": {
       "type": "boolean",
-      "description": "Run build when files change.",
+      "description": "Whether to run a build when any file changes.",
       "default": false
     }
   },

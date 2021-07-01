@@ -1,6 +1,6 @@
 # webpack-browser
 
-Angular browser builder that supports incremental builds.
+Builds a browser application with support for incremental builds and custom webpack configuration.
 
 Properties can be configured in workspace.json when defining the executor, or when invoking it.
 Read more about how to use executors and the CLI here: https://nx.dev/react/getting-started/nx-cli#running-tasks.
@@ -177,9 +177,7 @@ Define the output filename cache-busting hashing mode.
 
 Type: `string`
 
-            The full path for the new output directory, relative to the current workspace.
-
-By default, writes output to a folder named dist/ in the current project.
+The full path for the new output directory, relative to the current workspace. By default, writes output to a folder named dist/ in the current project.
 
 ### poll
 

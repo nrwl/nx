@@ -8,12 +8,12 @@
     "ng-packagr-lite": {
       "implementation": "./src/executors/ng-packagr-lite/ng-packagr-lite.impl",
       "schema": "./src/executors/ng-packagr-lite/schema.json",
-      "description": "Build an Angular library for incremental building."
+      "description": "Builds a library with support for incremental builds."
     },
     "package": {
       "implementation": "./src/executors/package/package.impl",
       "schema": "./src/executors/package/schema.json",
-      "description": "Build and package an Angular library for publishing."
+      "description": "Builds and packages an Angular library to be distributed as an NPM package. It supports incremental builds."
     }
   },
   "builders": {
@@ -25,17 +25,17 @@
     "ng-packagr-lite": {
       "implementation": "./src/executors/ng-packagr-lite/compat",
       "schema": "./src/executors/ng-packagr-lite/schema.json",
-      "description": "Build an Angular library for incremental building."
+      "description": "Builds a library with support for incremental builds."
     },
     "package": {
       "implementation": "./src/executors/package/compat",
       "schema": "./src/executors/package/schema.json",
-      "description": "Build and package an Angular library for publishing."
+      "description": "Builds and packages an Angular library to be distributed as an NPM package. It supports incremental builds."
     },
     "webpack-browser": {
       "implementation": "./src/builders/webpack-browser/webpack-browser.impl",
       "schema": "./src/builders/webpack-browser/schema.json",
-      "description": "Angular browser builder that supports incremental builds."
+      "description": "Builds a browser application with support for incremental builds and custom webpack configuration."
     }
   }
 }
