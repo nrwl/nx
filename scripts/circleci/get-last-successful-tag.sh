@@ -5,8 +5,11 @@ INPUTS_MAIN_BRANCH_NAME=$2
 INPUTS_TAG_MATCH_PATTERN=$3
 INPUTS_ERROR_ON_NO_MATCHING_TAGS=$4
 
-if [ "$BRANCH_NAME" = $INPUTS_MAIN_BRANCH_NAME ]; then
+if [ "$BRANCH_NAME" != $INPUTS_MAIN_BRANCH_NAME ]; then
     BASE_SHA=$(echo $(git merge-base origin/$INPUTS_MAIN_BRANCH_NAME HEAD))
+    echo ""
+    echo "Branch found. Using base from 'origin/$INPUTS_MAIN_BRANCH_NAME': $BASE_SHA"
+    echo ""
 else
     # For the base SHA for main builds we use the latest matching tag as a marker for the last commit which was successfully built.
     # We use 2> /dev/null to swallow any direct errors from the command itself so we can provide more useful messaging
