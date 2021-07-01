@@ -20,15 +20,12 @@
   },
   "homepage": "https://nx.dev",
   "schematics": "./collection.json",
-  "builders": "./builders.json",
+  "builders": "./executors.json",
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@angular-devkit/architect": "^0.1200.0",
-    "@angular-devkit/core": "^12.0.0",
-    "@angular-devkit/schematics": "^12.0.0",
     "@nrwl/devkit": "*",
     "@nrwl/jest": "*",
     "@nrwl/linter": "*",

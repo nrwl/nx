@@ -1,6 +1,4 @@
-import { JsonObject } from '@angular-devkit/core';
-
-export interface Schema extends JsonObject {
+export interface NxPluginE2EExecutorOptions {
   target: string;
   jestConfig: string;
 }
