@@ -66,7 +66,6 @@ describe('updateJestConfig', () => {
       `coverageDirectory: '../../coverage/libs/my-destination'`
     );
 
-    expect(rootJestConfigAfter).not.toContain('<rootDir>/libs/my-source');
-    expect(rootJestConfigAfter).toContain('<rootDir>/libs/my-destination');
+    expect(rootJestConfigAfter).toContain('getJestProjects()');
   });
 });

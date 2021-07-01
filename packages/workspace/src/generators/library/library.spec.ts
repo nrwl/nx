@@ -143,22 +143,25 @@ describe('lib', () => {
         ...defaultOptions,
         name: 'myLib',
       });
+      const expectedRootJestConfig = `
+        "const { getJestProjects } = require('@nrwl/jest');
 
-      expect(tree.read('jest.config.js', 'utf-8')).toMatchInlineSnapshot(`
-        "module.exports = {
-        projects: [\\"<rootDir>/libs/my-lib\\"]
+        module.exports = {
+        projects: getJestProjects()
         };"
-      `);
+      `;
+
+      expect(tree.read('jest.config.js', 'utf-8')).toMatchInlineSnapshot(
+        expectedRootJestConfig
+      );
       await libraryGenerator(tree, {
         ...defaultOptions,
         name: 'myLib2',
       });
 
-      expect(tree.read('jest.config.js', 'utf-8')).toMatchInlineSnapshot(`
-        "module.exports = {
-        projects: [\\"<rootDir>/libs/my-lib\\",\\"<rootDir>/libs/my-lib2\\"]
-        };"
-      `);
+      expect(tree.read('jest.config.js', 'utf-8')).toMatchInlineSnapshot(
+        expectedRootJestConfig
+      );
     });
   });
 
