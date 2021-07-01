@@ -18,7 +18,7 @@ npx create-nx-workspace@latest
 
 You will then receive the following prompts in your command line:
 
-```
+```bash
 ? Workspace name (e.g., org name)     myorg
 ? What to create in the new workspace react
 ? Application name                    todos

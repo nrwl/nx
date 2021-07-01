@@ -85,4 +85,6 @@ export const App = () => {
 export default App;
 ```
 
-Every time you add a new library, you have to restart `npx nx serve`. **So restart both `npx nx serve api` and `npx nx serve todos` and you should see the application running.**
+Every time you add a new library, you have to restart `npx nx serve`.
+
+**So restart both `npx nx serve api` and `npx nx serve todos` and you should see the application running.**
