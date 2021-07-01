@@ -134,16 +134,16 @@ jobs:
             echo "export BASE_SHA=\"$BASE_SHA\";" >> $BASH_ENV
       - run:
           name: Run Builds
-          command: npx nx affected --target=build --base=$BASE_SHA --parallel --max-parallel=3
+          command: npx nx affected --target=build --parallel --max-parallel=3
       - run:
           name: Run Unit Tests
-          command: npx nx affected --target=test --base=$BASE_SHA --parallel --max-parallel=2
+          command: npx nx affected --target=test --parallel --max-parallel=2
       - run:
           name: Run Linting
-          command: npx nx affected --target=lint --base=$BASE_SHA --parallel --max-parallel=4
+          command: npx nx affected --target=lint --parallel --max-parallel=4
       - run:
           name: Run E2E Tests
-          command: npx nx affected --target=e2e --base=$BASE_SHA
+          command: npx nx affected --target=e2e
           no_output_timeout: 45m
       - run:
           name: Stop All Running Agents for This CI Run
@@ -175,16 +175,16 @@ jobs:
             echo "export BASE_SHA=\"$BASE_SHA\";" >> $BASH_ENV
       - run:
           name: Run Builds
-          command: npx nx affected --target=build --base=$BASE_SHA --parallel --max-parallel=3
+          command: npx nx affected --target=build --base=HEAD~1 --parallel --max-parallel=3
       - run:
           name: Run Unit Tests
-          command: npx nx affected --target=test --base=$BASE_SHA --parallel --max-parallel=2
+          command: npx nx affected --target=test --base=HEAD~1 --parallel --max-parallel=2
       - run:
           name: Run Linting
-          command: npx nx affected --target=lint --base=$BASE_SHA --parallel --max-parallel=4
+          command: npx nx affected --target=lint --base=HEAD~1 --parallel --max-parallel=4
       - run:
           name: Run E2E Tests
-          command: npx nx affected --target=e2e --base=$BASE_SHA
+          command: npx nx affected --target=e2e --base=HEAD~1
           no_output_timeout: 45m
       - run:
           name: Stop All Running Agents for This CI Run
