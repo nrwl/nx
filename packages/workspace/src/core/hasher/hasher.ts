@@ -1,10 +1,12 @@
 import { workspaceFileName } from '../file-utils';
+import { normalizeNxJson } from '../normalize-nx-json';
 import { exec } from 'child_process';
 import { defaultFileHasher, FileHasher } from './file-hasher';
 import { defaultHashing, HashingImpl } from './hashing-impl';
 import * as minimatch from 'minimatch';
 import { performance } from 'perf_hooks';
 import { parseJson, readJsonFile } from '@nrwl/devkit';
+import type { ImplicitDependencyEntry } from '@nrwl/devkit';
 import {
   NxJsonConfiguration,
   ProjectGraph,
@@ -71,7 +73,10 @@ export class Hasher {
       this.projectHashes.hashProject(task.target.project, [
         task.target.project,
       ]),
-      this.implicitDepsHash(),
+      this.implicitDepsHash(
+        task.target.project,
+        normalizeNxJson(this.nxJson).implicitDependencies
+      ),
       this.runtimeInputsHash(),
     ])) as [
       ProjectHashResult,
@@ -184,13 +189,38 @@ export class Hasher {
     return this.runtimeInputs;
   }
 
-  private async implicitDepsHash(): Promise<ImplicitHashResult> {
+  private async implicitDepsHash(
+    project?: string,
+    nxJsonImplicitDependencies?: ImplicitDependencyEntry<string[] | '*'>
+  ): Promise<ImplicitHashResult> {
     if (this.implicitDependencies) return this.implicitDependencies;
 
     performance.mark('hasher:implicit deps hash:start');
 
     this.implicitDependencies = new Promise((res) => {
-      const implicitDeps = Object.keys(this.nxJson.implicitDependencies ?? {});
+      if (project && nxJsonImplicitDependencies) {
+        function filterDeps(deps) {
+          return Object.entries(deps).reduce((acc, [key, val]) => {
+            if (Array.isArray(val)) {
+              // keep the global file dependency only if it is needed by the built project
+              if (val.includes(project)) {
+                acc[key] = val;
+              }
+            } else {
+              // filter compounds
+              val = filterDeps(val);
+              if (Object.keys(val).length > 0) {
+                acc[key] = val;
+              }
+            }
+            return acc;
+          }, {});
+        }
+        nxJsonImplicitDependencies = filterDeps(nxJsonImplicitDependencies);
+      } else {
+        nxJsonImplicitDependencies = this.nxJson.implicitDependencies;
+      }
+      const implicitDeps = Object.keys(nxJsonImplicitDependencies ?? {});
       const filesWithoutPatterns = implicitDeps.filter(
         (p) => p.indexOf('*') === -1
       );
