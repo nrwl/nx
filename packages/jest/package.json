@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@nrwl/devkit": "*",
+    "identity-obj-proxy": "3.0.0",
     "jest-resolve": "^26.6.2",
     "rxjs": "^6.5.4",
     "tslib": "^2.0.0"
