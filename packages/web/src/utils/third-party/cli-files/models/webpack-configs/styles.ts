@@ -15,6 +15,7 @@ import {
 } from '../../plugins/webpack';
 import { WebpackConfigOptions } from '../build-options';
 import { getOutputHashFormat, normalizeExtraEntryPoints } from './utils';
+import { RemoveEmptyScriptsPlugin } from '../../plugins/remove-empty-scripts-plugin';
 
 const autoprefixer = require('autoprefixer');
 const postcssImports = require('postcss-import');
@@ -38,7 +39,10 @@ type RuleSetRule = any;
 // tslint:disable-next-line:no-big-function
 export function getStylesConfig(wco: WebpackConfigOptions) {
   // TODO(jack): Remove this in Nx 13 and go back to proper imports
-  const { MiniCssExtractPlugin } = require('../../../../../webpack/entry');
+  const {
+    isWebpack5,
+    MiniCssExtractPlugin,
+  } = require('../../../../../webpack/entry');
 
   const { root, buildOptions } = wco;
   const entryPoints: { [key: string]: string[] } = {};
@@ -238,7 +242,10 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
           test,
           use: [
             buildOptions.extractCss
-              ? MiniCssExtractPlugin.loader
+              ? {
+                  loader: MiniCssExtractPlugin.loader,
+                  options: { esModule: true },
+                }
               : require.resolve('style-loader'),
             RawCssLoader,
             {
@@ -260,7 +267,9 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
       // extract global css from js files into own css file
       new MiniCssExtractPlugin({ filename: `[name]${hashFormat.extract}.css` }),
       // suppress empty .js files in css only entry points
-      new SuppressExtractedTextChunksWebpackPlugin()
+      isWebpack5
+        ? new RemoveEmptyScriptsPlugin()
+        : new SuppressExtractedTextChunksWebpackPlugin()
     );
   }
 

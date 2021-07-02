@@ -14,7 +14,7 @@ let hasLogged = false;
 if (exports.isWebpack5) {
   if (!hasLogged) {
     logger.info(
-      `NX Using webpack 5. Reason: detected in node_modules/webpack/package.json`
+      `NX Using webpack 5. Reason: detected version 5 in node_modules/webpack/package.json`
     );
     hasLogged = true;
   }
@@ -26,13 +26,6 @@ if (exports.isWebpack5) {
   );
 } else {
   if (!hasLogged) {
-    logger.info(
-      `NX Using webpack 4. Reason: ${
-        forceWebpack4
-          ? 'NX_FORCE_WEBPACK_4 was set'
-          : 'detected in node_modules/webpack/package.json'
-      }`
-    );
     hasLogged = true;
   }
   Object.assign(exports, require('./bundle4')());

@@ -13,7 +13,7 @@ export interface CleanCssWebpackPluginOptions {
   test: (file: string) => boolean;
 }
 
-// TODO(jack): Remove this in Nx 13 and go back to proper types
+// TODO(jack): Remove this entire plugin in Nx 13 (once we deprecate webpack 4)
 type Compiler = any;
 type Compilation = any;
 type Chunk = any;
@@ -33,8 +33,6 @@ function hook(
   );
 }
 
-// TODO This plugin probably doesn't work the same at all in Webpack 5.
-//  What in the world does it even do?
 export class CleanCssWebpackPlugin {
   private readonly _options: CleanCssWebpackPluginOptions;
 

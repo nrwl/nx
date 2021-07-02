@@ -297,7 +297,7 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
   } catch {}
 
   const extraMinimizers = [];
-  if (stylesOptimization) {
+  if (!isWebpack5 && stylesOptimization) {
     extraMinimizers.push(
       new CleanCssWebpackPlugin({
         sourceMap: stylesSourceMap,
@@ -427,7 +427,6 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
       ...(isWebpack5 ? {} : { futureEmitAssets: true }),
       path: path.resolve(root, buildOptions.outputPath as string),
       publicPath: buildOptions.deployUrl,
-      filename: `[name]${targetInFileName}${hashFormat.chunk}.js`,
     },
     watch: buildOptions.watch,
     watchOptions: {
@@ -469,17 +468,24 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
       ],
     },
     optimization: {
-      // TODO(jack): Enable for webpack 4
-      noEmitOnErrors: isWebpack5,
-      moduleIds: isWebpack5 ? 'deterministic' : undefined,
-      minimizer: [
-        isWebpack5 ? null : new webpack.HashedModuleIdsPlugin(),
-        // TODO(jack): Enable for webpack 5
-        isWebpack5
-          ? null
-          : new BundleBudgetPlugin({ budgets: buildOptions.budgets }),
-        ...extraMinimizers,
-      ].filter(Boolean),
+      ...(isWebpack5
+        ? {
+            emitOnErrors: false,
+            moduleIds: 'deterministic',
+            minimizer: [
+              new webpack.ids.HashedModuleIdsPlugin(),
+              ...extraMinimizers,
+            ],
+          }
+        : {
+            noEmitOnErrors: true,
+            minimizer: [
+              // TODO(jack): Enable these for webpack 5
+              new webpack.HashedModuleIdsPlugin(),
+              new BundleBudgetPlugin({ budgets: buildOptions.budgets }),
+              ...extraMinimizers,
+            ],
+          }),
     },
     plugins: [
       // Always replace the context for the System.import in angular/core to prevent warnings.

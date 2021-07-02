@@ -40,7 +40,7 @@ describe('Web Components Applications', () => {
     runCLI(`build ${appName} --prod --output-hashing none`);
     checkFilesExist(
       `dist/apps/${appName}/index.html`,
-      `dist/apps/${appName}/runtime.js`,
+      `dist/apps/${appName}/runtime.esm.js`,
       `dist/apps/${appName}/polyfills.esm.js`,
       `dist/apps/${appName}/main.esm.js`,
       `dist/apps/${appName}/styles.css`
