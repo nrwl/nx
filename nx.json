@@ -2,7 +2,8 @@
   "implicitDependencies": {
     "package.json": "*",
     ".eslintrc.json": "*",
-    "scripts/vercel/*": ["nx-dev"]
+    "scripts/vercel/*": ["nx-dev"],
+    ".circleci/config.yml": "*"
   },
   "affected": {
     "defaultBase": "master"
