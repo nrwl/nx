@@ -36,6 +36,11 @@
     "identity-obj-proxy": "3.0.0",
     "jest-resolve": "^26.6.2",
     "rxjs": "^6.5.4",
-    "tslib": "^2.0.0"
+    "tslib": "^2.0.0",
+    "@jest/reporters": "27.0.5",
+    "@jest/test-result": "27.0.2",
+    "chalk": "4.1.0",
+    "jest-config": "27.0.5",
+    "jest-util": "27.0.2"
   }
 }
