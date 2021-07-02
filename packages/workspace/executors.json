@@ -13,8 +13,7 @@
     "run-script": {
       "implementation": "./src/executors/run-script/compat",
       "schema": "./src/executors/run-script/schema.json",
-      "description": "Run an npm script using Nx",
-      "hidden": true
+      "description": "Run an npm script using Nx"
     }
   },
   "executors": {
@@ -38,8 +37,7 @@
     "run-script": {
       "implementation": "./src/executors/run-script/run-script.impl",
       "schema": "./src/executors/run-script/schema.json",
-      "description": "Run an npm script using Nx",
-      "hidden": true
+      "description": "Run an npm script using Nx"
     }
   }
 }

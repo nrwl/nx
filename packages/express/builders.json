@@ -1,4 +1,0 @@
-{
-  "$schema": "@angular-devkit/architect/src/builders-schema.json",
-  "builders": {}
-}
