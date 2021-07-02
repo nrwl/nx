@@ -292,4 +292,76 @@ describe('Hasher', () => {
     expect(tasksHash.value).toContain('global1.hash');
     expect(tasksHash.value).toContain('global2.hash');
   });
+
+  it('should exclude unlisted implicit deps from hashing', async () => {
+    hashes['/filea'] = 'a.hash';
+    hashes['/fileb'] = 'b.hash';
+    hashes['global'] = 'global.hash';
+    hashes['globalB'] = 'globalB.hash';
+    const hasher = new Hasher(
+      {
+        nodes: {
+          proja: {
+            name: 'proja',
+            type: 'lib',
+            data: {
+              root: '',
+              files: [{ file: '/filea', ext: '.ts', hash: 'a.hash' }],
+            },
+          },
+          projb: {
+            name: 'projb',
+            type: 'lib',
+            data: {
+              root: '',
+              files: [{ file: '/fileb', ext: '.ts', hash: 'b.hash' }],
+            },
+          },
+        },
+        dependencies: {},
+        allWorkspaceFiles: [
+          {
+            file: 'global',
+            hash: 'global.hash',
+            ext: '',
+          },
+          {
+            file: 'globalB',
+            hash: 'globalB.hash',
+            ext: '',
+          },
+        ],
+      },
+      {
+        projects: {
+          proja: {},
+          projb: {},
+        },
+        implicitDependencies: {
+          global: '*',
+          globalB: ['projb'],
+        },
+      } as any,
+      {},
+      createHashing()
+    );
+
+    const hasha = await hasher.hashTaskWithDepsAndContext({
+      target: { project: 'proja', target: 'build' },
+      id: 'proja-build',
+      overrides: { prop: 'prop-value' },
+    });
+
+    expect(hasha.value).toContain('global.hash');
+    expect(hasha.value).not.toContain('globalB.hash');
+
+    const hashb = await hasher.hashTaskWithDepsAndContext({
+      target: { project: 'projb', target: 'build' },
+      id: 'projb-build',
+      overrides: { prop: 'prop-value' },
+    });
+
+    expect(hashb.value).toContain('global.hash');
+    expect(hashb.value).toContain('globalB.hash');
+  });
 });
