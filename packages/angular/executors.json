@@ -14,6 +14,11 @@
       "implementation": "./src/executors/package/package.impl",
       "schema": "./src/executors/package/schema.json",
       "description": "Builds and packages an Angular library to be distributed as an NPM package. It supports incremental builds."
+    },
+    "webpack-browser": {
+      "implementation": "./src/builders/webpack-browser/webpack-browser.impl",
+      "schema": "./src/builders/webpack-browser/schema.json",
+      "description": "Builds a browser application with support for incremental builds and custom webpack configuration."
     }
   },
   "builders": {

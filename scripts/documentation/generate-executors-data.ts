@@ -32,11 +32,7 @@ import { createSchemaFlattener, SchemaFlattener } from './schema-flattener';
 const flattener = createSchemaFlattener([pathFormat, htmlSelectorFormat]);
 
 function readExecutorsJson(root: string) {
-  try {
-    return readJsonSync(join(root, 'builders.json')).builders;
-  } catch (e) {
-    return readJsonSync(join(root, 'executors.json')).executors;
-  }
+  return readJsonSync(join(root, 'executors.json')).executors;
 }
 
 function generateSchematicList(
@@ -173,9 +169,9 @@ export async function generateExecutorsDocumentation() {
               generateSchematicList(config, flattener)
             );
 
-            const markdownList = buildersList.map((b) =>
-              generateTemplate(framework, b)
-            );
+            const markdownList = buildersList
+              .filter((b) => b != null && !b['hidden'])
+              .map((b) => generateTemplate(framework, b));
 
             await Promise.all(
               markdownList.map((template) =>
