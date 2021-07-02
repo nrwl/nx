@@ -37,12 +37,6 @@ export function updateJsonFile(path: string, callback: (a: any) => any) {
   writeJsonFile(path, json);
 }
 
-export function parseJsonWithComments<T extends object = any>(
-  content: string
-): T {
-  return parseJson(content);
-}
-
 export function copyFile(file: string, target: string) {
   const f = basename(file);
   const source = createReadStream(file);

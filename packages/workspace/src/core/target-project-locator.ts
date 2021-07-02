@@ -1,15 +1,15 @@
 import { resolveModuleByImport } from '../utilities/typescript';
 import { normalizedProjectRoot, readFileIfExisting } from './file-utils';
 import type { ProjectGraphNode } from '@nrwl/devkit';
+import { parseJson } from '@nrwl/devkit';
 import {
   getSortedProjectNodes,
   isNpmProject,
   isWorkspaceProject,
-  ProjectGraphNodeRecords,
 } from './project-graph';
-import { isRelativePath, parseJsonWithComments } from '../utilities/fileutils';
+import { isRelativePath } from '../utilities/fileutils';
 import { dirname, join, posix } from 'path';
-import { appRootPath } from '../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 
 export class TargetProjectLocator {
   private sortedProjects = getSortedProjectNodes(this.nodes);
@@ -148,6 +148,6 @@ export class TargetProjectLocator {
       absolutePath = join(appRootPath, path);
       content = readFileIfExisting(absolutePath);
     }
-    return { path, absolutePath, config: parseJsonWithComments(content) };
+    return { path, absolutePath, config: parseJson(content) };
   }
 }
