@@ -275,6 +275,9 @@ describe('Hasher', () => {
         ],
       },
       {
+        projects: {
+          proja: {},
+        },
         implicitDependencies: {
           'global*': '*',
         },
