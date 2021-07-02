@@ -42,7 +42,6 @@ interface RuntimeHashResult {
 
 export class Hasher {
   static version = '2.0';
-  private implicitDependencies: Promise<ImplicitHashResult>;
   private runtimeInputs: Promise<RuntimeHashResult>;
   private fileHasher: FileHasher;
   private projectHashes: ProjectHasher;
@@ -193,11 +192,9 @@ export class Hasher {
     project?: string,
     nxJsonImplicitDependencies?: ImplicitDependencyEntry<string[] | '*'>
   ): Promise<ImplicitHashResult> {
-    if (this.implicitDependencies) return this.implicitDependencies;
-
     performance.mark('hasher:implicit deps hash:start');
 
-    this.implicitDependencies = new Promise((res) => {
+    return new Promise((res) => {
       if (project && nxJsonImplicitDependencies) {
         function filterDeps(deps) {
           return Object.entries(deps).reduce((acc, [key, val]) => {
@@ -273,8 +270,6 @@ export class Hasher {
         files: fileHashes.reduce((m, c) => ((m[c.file] = c.hash), m), {}),
       });
     });
-
-    return this.implicitDependencies;
   }
 
   private hashGlobalConfig() {
