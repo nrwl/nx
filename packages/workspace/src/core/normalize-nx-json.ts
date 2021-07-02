@@ -1,4 +1,5 @@
 import { NxJsonConfiguration } from '@nrwl/devkit';
+import * as minimatch from 'minimatch';
 
 export function normalizeNxJson(
   nxJson: NxJsonConfiguration
@@ -13,8 +14,10 @@ export function normalizeNxJson(
           return acc;
 
           function recur(v: '*' | string[] | {}): string[] | {} {
-            if (v === '*') {
-              return Object.keys(nxJson.projects);
+            if (typeof v === 'string') {
+              return Object.keys(nxJson.projects).filter((project) =>
+                minimatch(project, v)
+              );
             } else if (Array.isArray(v)) {
               return v;
             } else {

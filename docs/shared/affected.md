@@ -149,7 +149,7 @@ Nx uses its advanced code analysis to construct a dependency graph of all applic
 }
 ```
 
-The `implicitDependencies` map is used to define what projects are affected by global files. In this example, any change to `package.json` will affect all the projects in the workspace, so all of them will have to be rebuilt and retested. You can replace `*` with an explicit list of projects.
+The `implicitDependencies` map is used to define what projects are affected by global files. In this example, any change to `package.json` will affect all the projects in the workspace, so all of them will have to be rebuilt and retested. You can replace `*` with any glob pattern or with an explicit list of projects.
 
 ```json
 {

@@ -38,20 +38,9 @@ export function assertWorkspaceValidity(
   )
     .reduce((acc, entry) => {
       function recur(value, acc = [], path: string[]) {
-        if (value === '*') {
-          // do nothing since '*' is calculated and always valid.
-        } else if (typeof value === 'string') {
-          // This is invalid because the only valid string is '*'
-
-          output.error({
-            title: 'Configuration Error',
-            bodyLines: [
-              `nx.json is not configured properly. "${path.join(
-                ' > '
-              )}" is improperly configured to implicitly depend on "${value}" but should be an array of project names or "*".`,
-            ],
-          });
-          process.exit(1);
+        if (typeof value === 'string') {
+          // assume the string is a glob pattern that will be matched against project identifiers
+          // do nothing since matching against glob pattern is always valid.
         } else if (Array.isArray(value)) {
           acc.push([entry[0], value]);
         } else {
