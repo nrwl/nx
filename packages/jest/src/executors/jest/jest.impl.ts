@@ -1,8 +1,14 @@
 import { runCLI } from 'jest';
+import { readConfigs } from 'jest-config';
+import { utils as jestReporterUtils } from '@jest/reporters';
+import { makeEmptyAggregatedTestResult, addResult } from '@jest/test-result';
 import * as path from 'path';
 import { JestExecutorOptions } from './schema';
 import { Config } from '@jest/types';
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext, TaskGraph } from '@nrwl/devkit';
+import { join } from 'path';
+import { performance } from 'perf_hooks';
+import { getSummary } from './summary';
 
 try {
   require('dotenv').config();
@@ -115,3 +121,54 @@ export function jestConfigParser(
 }
 
 export default jestExecutor;
+
+export async function batchJest(
+  taskGraph: TaskGraph,
+  inputs: Record<string, JestExecutorOptions>,
+  overrides: JestExecutorOptions,
+  context: ExecutorContext
+) {
+  const configPaths = taskGraph.roots.reduce<string[]>((acc, root) => {
+    acc.push(path.resolve(context.root, inputs[root].jestConfig));
+    return acc;
+  }, []);
+
+  const startTime = performance.now();
+  const { globalConfig, results } = await runCLI(
+    {
+      $0: '',
+      _: undefined,
+    },
+    [...configPaths]
+  );
+
+  return taskGraph.roots.reduce(async (jestTaskExecutionResults, root) => {
+    const aggregatedResults = makeEmptyAggregatedTestResult();
+    aggregatedResults.startTime = startTime;
+
+    const projectRoot = join(context.root, taskGraph.tasks[root].projectRoot);
+
+    const config = await readConfigs({ $0: '', _: undefined }, [projectRoot]);
+
+    let resultOutput = '';
+    for (const testResult of results.testResults) {
+      if (testResult.testFilePath.startsWith(projectRoot)) {
+        addResult(aggregatedResults, testResult);
+        resultOutput +=
+          '\n\r' +
+          jestReporterUtils.getResultHeader(
+            testResult,
+            globalConfig,
+            config.configs[0]
+          );
+      }
+    }
+    aggregatedResults.numTotalTestSuites = aggregatedResults.testResults.length;
+
+    jestTaskExecutionResults[root] = {
+      success: aggregatedResults.numFailedTests === 0,
+      terminalOutput: resultOutput + '\n\r\n\r' + getSummary(aggregatedResults),
+    };
+    return jestTaskExecutionResults;
+  }, {});
+}
