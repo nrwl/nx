@@ -292,4 +292,95 @@ describe('Hasher', () => {
     expect(tasksHash.value).toContain('global1.hash');
     expect(tasksHash.value).toContain('global2.hash');
   });
+
+  it('should accept glob patterns in implicitDependencies', async () => {
+    hashes['/filea'] = 'a.hash';
+    hashes['/fileb'] = 'b.hash';
+    hashes['/filec'] = 'c.hash';
+    hashes['global1'] = 'global1.hash';
+    hashes['global2'] = 'global2.hash';
+    const hasher = new Hasher(
+      {
+        nodes: {
+          proja: {
+            name: 'proja',
+            type: 'lib',
+            data: {
+              root: '',
+              files: [{ file: '/filea', ext: '.ts', hash: 'a.hash' }],
+            },
+          },
+          projb: {
+            name: 'projb',
+            type: 'lib',
+            data: {
+              root: '',
+              files: [{ file: '/fileb', ext: '.ts', hash: 'b.hash' }],
+            },
+          },
+          projc: {
+            name: 'projc',
+            type: 'lib',
+            data: {
+              root: '',
+              files: [{ file: '/filec', ext: '.ts', hash: 'c.hash' }],
+            },
+          },
+        },
+        dependencies: {},
+        allWorkspaceFiles: [
+          {
+            file: 'global1',
+            hash: 'global2.hash',
+            ext: '',
+          },
+          {
+            file: 'global1',
+            hash: 'global2.hash',
+            ext: '',
+          },
+        ],
+      },
+      {
+        projects: {
+          proja: {},
+          projb: {},
+          projc: {},
+        },
+        implicitDependencies: {
+          global1: '!proja',
+          global2: '*c',
+        },
+      } as any,
+      {},
+      createHashing()
+    );
+
+    const hasha = await hasher.hashTaskWithDepsAndContext({
+      target: { project: 'proja', target: 'build' },
+      id: 'proja-build',
+      overrides: { prop: 'prop-value' },
+    });
+
+    expect(hasha.value).not.toContain('global1.hash');
+    expect(hasha.value).not.toContain('global2.hash');
+
+    const hashb = await hasher.hashTaskWithDepsAndContext({
+      target: { project: 'projb', target: 'build' },
+      id: 'projb-build',
+      overrides: { prop: 'prop-value' },
+    });
+
+    expect(hashb.value).toContain('global1.hash');
+    expect(hashb.value).not.toContain('global2.hash');
+
+    const hashc = await hasher.hashTaskWithDepsAndContext({
+      target: { project: 'projc', target: 'build' },
+      id: 'projc-build',
+      overrides: { prop: 'prop-value' },
+    });
+
+    expect(hashc.value).toContain('global1.hash');
+    expect(hashc.value).toContain('global2.hash');
+  });
 });
