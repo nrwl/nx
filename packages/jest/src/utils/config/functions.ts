@@ -6,8 +6,12 @@ import {
   isExpressionStatement,
   SyntaxKind,
 } from 'typescript';
-import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
-import * as stripJsonComments from 'strip-json-comments';
+import {
+  applyChangesToString,
+  ChangeType,
+  Tree,
+  stripJsonComments,
+} from '@nrwl/devkit';
 import { Config } from '@jest/types';
 
 function makeTextToInsert(
@@ -53,7 +57,7 @@ export function addOrUpdateProperty(
   const propertyName = properties.shift();
   const propertyAssignment = findPropertyAssignment(object, propertyName);
 
-  const originalContents = tree.read(path).toString();
+  const originalContents = tree.read(path, 'utf-8');
 
   if (propertyAssignment) {
     if (
@@ -83,7 +87,8 @@ export function addOrUpdateProperty(
       propertyAssignment.initializer.kind ===
       ts.SyntaxKind.ArrayLiteralExpression
     ) {
-      const arrayLiteral = propertyAssignment.initializer as ts.ArrayLiteralExpression;
+      const arrayLiteral =
+        propertyAssignment.initializer as ts.ArrayLiteralExpression;
 
       if (
         arrayLiteral.elements.some((element) => {
@@ -230,6 +235,6 @@ export function jestConfigObject(
   host: Tree,
   path: string
 ): Partial<Config.InitialOptions> & { [index: string]: any } {
-  const jestConfigAst = jestConfigObjectAst(host.read(path).toString('utf-8'));
+  const jestConfigAst = jestConfigObjectAst(host.read(path, 'utf-8'));
   return getJsonObject(jestConfigAst.getText());
 }

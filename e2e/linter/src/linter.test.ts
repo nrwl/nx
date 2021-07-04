@@ -1,7 +1,6 @@
 import * as path from 'path';
 import {
   checkFilesExist,
-  killPorts,
   newProject,
   readFile,
   readJson,
@@ -11,8 +10,6 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Linter', () => {
-  afterEach(() => killPorts());
-
   it('linting should error when rules are not followed', () => {
     newProject();
     const myapp = uniq('myapp');
@@ -181,10 +178,9 @@ describe('Linter', () => {
     expect(stdout).not.toContain('Unexpected console statement');
     expect(() => checkFilesExist(outputFile)).not.toThrow();
     const outputContents = JSON.parse(readFile(outputFile));
-    const outputForApp: any = Object.values(
-      outputContents
-    ).filter((result: any) =>
-      result.filePath.includes(path.normalize(`${myapp}/src/main.ts`))
+    const outputForApp: any = Object.values(outputContents).filter(
+      (result: any) =>
+        result.filePath.includes(path.normalize(`${myapp}/src/main.ts`))
     )[0];
     expect(outputForApp.errorCount).toBe(1);
     expect(outputForApp.messages[0].ruleId).toBe('no-console');

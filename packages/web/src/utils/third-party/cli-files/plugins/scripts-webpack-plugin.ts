@@ -15,19 +15,15 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-import { Compiler, loader } from 'webpack';
-import {
-  CachedSource,
-  ConcatSource,
-  OriginalSource,
-  RawSource,
-  Source,
-} from 'webpack-sources';
 import { interpolateName } from 'loader-utils';
 import * as path from 'path';
 
 const Chunk = require('webpack/lib/Chunk');
 const EntryPoint = require('webpack/lib/Entrypoint');
+
+// TODO(jack): Remove this in Nx 13 and go back to proper types
+type Compiler = any;
+type Source = any;
 
 export interface ScriptsWebpackPluginOptions {
   name: string;
@@ -39,7 +35,9 @@ export interface ScriptsWebpackPluginOptions {
 
 interface ScriptOutput {
   filename: string;
-  source: CachedSource;
+
+  // TODO(jack): This should be CachedSource from 'webpack-sources' fix in Nx 13
+  source: any;
 }
 
 function addDependencies(compilation: any, scripts: string[]): void {
@@ -106,6 +104,9 @@ export class ScriptsWebpackPlugin {
   }
 
   apply(compiler: Compiler): void {
+    // TODO(jack): Remove this in Nx 13 and go back to proper types
+    const { webpackSources } = require('../../../../webpack/entry');
+
     if (!this.options.scripts || this.options.scripts.length === 0) {
       return;
     }
@@ -146,9 +147,12 @@ export class ScriptsWebpackPlugin {
                 if (this.options.basePath) {
                   adjustedPath = path.relative(this.options.basePath, fullPath);
                 }
-                source = new OriginalSource(content, adjustedPath);
+                source = new webpackSources.OriginalSource(
+                  content,
+                  adjustedPath
+                );
               } else {
-                source = new RawSource(content);
+                source = new webpackSources.RawSource(content);
               }
 
               resolve(source);
@@ -159,15 +163,15 @@ export class ScriptsWebpackPlugin {
 
       Promise.all(sourceGetters)
         .then((sources) => {
-          const concatSource = new ConcatSource();
+          const concatSource = new webpackSources.ConcatSource();
           sources.forEach((source) => {
             concatSource.add(source);
             concatSource.add('\n;');
           });
 
-          const combinedSource = new CachedSource(concatSource);
+          const combinedSource = new webpackSources.CachedSource(concatSource);
           const filename = interpolateName(
-            { resourcePath: 'scripts.js' } as loader.LoaderContext,
+            { resourcePath: 'scripts.js' },
             this.options.filename as string,
             { content: combinedSource.source() }
           );

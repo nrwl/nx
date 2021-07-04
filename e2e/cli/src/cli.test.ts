@@ -1,7 +1,6 @@
 import { packagesWeCareAbout } from '@nrwl/workspace/src/command-line/report';
 import { renameSync } from 'fs';
 import {
-  killPorts,
   newProject,
   readFile,
   readJson,
@@ -14,10 +13,9 @@ import {
 } from '@nrwl/e2e/utils';
 
 describe('Cli', () => {
-  afterEach(() => killPorts());
+  beforeEach(() => newProject());
 
   it('should execute long running tasks', () => {
-    newProject();
     const myapp = uniq('myapp');
     runCLI(`generate @nrwl/web:app ${myapp}`);
 
@@ -40,7 +38,6 @@ describe('Cli', () => {
   });
 
   it('should run npm scripts', async () => {
-    newProject();
     const mylib = uniq('mylib');
     runCLI(`generate @nrwl/node:lib ${mylib}`);
 
@@ -65,7 +62,6 @@ describe('Cli', () => {
   }, 1000000);
 
   it('should show help', async () => {
-    newProject();
     const myapp = uniq('myapp');
     runCLI(`generate @nrwl/web:app ${myapp}`);
 
@@ -94,8 +90,9 @@ describe('Cli', () => {
 });
 
 describe('report', () => {
+  beforeEach(() => newProject());
+
   it(`should report package versions`, async () => {
-    newProject();
     const reportOutput = runCLI('report');
 
     packagesWeCareAbout.forEach((p) => {
@@ -105,9 +102,7 @@ describe('report', () => {
 });
 
 describe('list', () => {
-  beforeEach(() => {
-    newProject();
-  });
+  beforeEach(() => newProject());
 
   it(`should work`, async () => {
     let listOutput = runCLI('list');
@@ -162,9 +157,9 @@ describe('list', () => {
 });
 
 describe('migrate', () => {
-  it('should run migrations', () => {
-    newProject();
+  beforeEach(() => newProject());
 
+  it('should run migrations', () => {
     updateFile(
       `./node_modules/migrate-parent-package/package.json`,
       JSON.stringify({
@@ -270,7 +265,9 @@ describe('migrate', () => {
     // updates package.json
     const packageJson = readJson(`package.json`);
     expect(packageJson.dependencies['migrate-child-package']).toEqual('9.0.0');
-    expect(readFile(`package.json`).endsWith(`}\n`)).toEqual(true);
+    // should keep new line on package
+    const packageContent = readFile('package.json');
+    expect(packageContent.charCodeAt(packageContent.length - 1)).toEqual(10);
 
     // creates migrations.json
     const migrationsJson = readJson(`migrations.json`);

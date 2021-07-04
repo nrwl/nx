@@ -1,19 +1,19 @@
 import { execSync } from 'child_process';
-import { readFileSync, writeFileSync, removeSync } from 'fs-extra';
+import { removeSync } from 'fs-extra';
 import * as yargsParser from 'yargs-parser';
 import { dirname, join } from 'path';
 import { gt, lte } from 'semver';
-import * as stripJsonComments from 'strip-json-comments';
 import { dirSync } from 'tmp';
 import { logger } from '../shared/logger';
 import { convertToCamelCase, handleErrors } from '../shared/params';
-import {
-  detectPackageManager,
-  getPackageManagerCommand,
-  PackageManager,
-} from '../shared/package-manager';
+import { getPackageManagerCommand } from '../shared/package-manager';
 import { FsTree } from '../shared/tree';
 import { flushChanges } from './generate';
+import {
+  JsonReadOptions,
+  readJsonFile,
+  writeJsonFile,
+} from '../utils/fileutils';
 
 export type MigrationsJson = {
   version: string;
@@ -73,17 +73,20 @@ function slash(packageName) {
 }
 
 export class Migrator {
+  private readonly packageJson: any;
   private readonly versions: (p: string) => string;
   private readonly fetch: (p: string, v: string) => Promise<MigrationsJson>;
   private readonly from: { [p: string]: string };
   private readonly to: { [p: string]: string };
 
   constructor(opts: {
+    packageJson: any;
     versions: (p: string) => string;
     fetch: (p: string, v: string) => Promise<MigrationsJson>;
     from: { [p: string]: string };
     to: { [p: string]: string };
   }) {
+    this.packageJson = opts.packageJson;
     this.versions = opts.versions;
     this.fetch = opts.fetch;
     this.from = opts.from;
@@ -234,16 +237,21 @@ export class Migrator {
           '@nrwl/storybook',
           '@nrwl/tao',
           '@nrwl/web',
-        ].reduce(
-          (m, c) => ({
-            ...m,
-            [c]: {
-              version: c === '@nrwl/nx-cloud' ? 'latest' : targetVersion,
-              alwaysAddToPackageJson: false,
-            },
-          }),
-          {}
-        ),
+        ]
+          .filter((pkg) => {
+            const { dependencies, devDependencies } = this.packageJson;
+            return !!dependencies?.[pkg] || !!devDependencies?.[pkg];
+          })
+          .reduce(
+            (m, c) => ({
+              ...m,
+              [c]: {
+                version: c === '@nrwl/nx-cloud' ? 'latest' : targetVersion,
+                alwaysAddToPackageJson: false,
+              },
+            }),
+            {}
+          ),
       };
     }
     if (!m.packageJsonUpdates || !this.versions(packageName)) return {};
@@ -412,17 +420,15 @@ function versions(root: string, from: { [p: string]: string }) {
       const packageJsonPath = require.resolve(`${packageName}/package.json`, {
         paths: [root],
       });
-      return JSON.parse(
-        stripJsonComments(readFileSync(packageJsonPath, 'utf-8'))
-      )['version'];
-    } catch (e) {
+      return readJsonFile(packageJsonPath).version;
+    } catch {
       return null;
     }
   };
 }
 
 // testing-fetch-start
-function createFetcher(packageManager: PackageManager) {
+function createFetcher() {
   const cache = {};
   return async function f(
     packageName: string,
@@ -431,7 +437,7 @@ function createFetcher(packageManager: PackageManager) {
     if (!cache[`${packageName}-${packageVersion}`]) {
       const dir = dirSync().name;
       logger.info(`Fetching ${packageName}@${packageVersion}`);
-      const pmc = getPackageManagerCommand(packageManager);
+      const pmc = getPackageManagerCommand();
       execSync(`${pmc.add} ${packageName}@${packageVersion}`, {
         stdio: [],
         cwd: dir,
@@ -441,16 +447,12 @@ function createFetcher(packageManager: PackageManager) {
       const packageJsonPath = require.resolve(`${packageName}/package.json`, {
         paths: [dir],
       });
-      const json = JSON.parse(
-        stripJsonComments(readFileSync(packageJsonPath, 'utf-8'))
-      );
+      const json = readJsonFile(packageJsonPath);
       // packageVersion can be a tag, resolvedVersion works with semver
       const resolvedVersion = json.version;
 
       if (migrationsFilePath) {
-        const json = JSON.parse(
-          stripJsonComments(readFileSync(migrationsFilePath, 'utf-8'))
-        );
+        const json = readJsonFile(migrationsFilePath);
         cache[`${packageName}-${packageVersion}`] = {
           version: resolvedVersion,
           generators: json.generators || json.schematics,
@@ -460,6 +462,12 @@ function createFetcher(packageManager: PackageManager) {
         cache[`${packageName}-${packageVersion}`] = {
           version: resolvedVersion,
         };
+      }
+
+      try {
+        removeSync(dir);
+      } catch {
+        // It's okay if this fails, the OS will clean it up eventually
       }
     }
     return cache[`${packageName}-${packageVersion}`];
@@ -472,9 +480,7 @@ function packageToMigrationsFilePath(packageName: string, dir: string) {
   const packageJsonPath = require.resolve(`${packageName}/package.json`, {
     paths: [dir],
   });
-  const json = JSON.parse(
-    stripJsonComments(readFileSync(packageJsonPath, 'utf-8'))
-  );
+  const json = readJsonFile(packageJsonPath);
   let migrationsFile = json['nx-migrations'] || json['ng-update'];
 
   // migrationsFile is an object
@@ -489,7 +495,7 @@ function packageToMigrationsFilePath(packageName: string, dir: string) {
     } else {
       return null;
     }
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -501,10 +507,7 @@ function createMigrationsFile(
     name: string;
   }[]
 ) {
-  writeFileSync(
-    join(root, 'migrations.json'),
-    JSON.stringify({ migrations }, null, 2)
-  );
+  writeJsonFile(join(root, 'migrations.json'), { migrations });
 }
 
 function updatePackageJson(
@@ -514,12 +517,8 @@ function updatePackageJson(
   }
 ) {
   const packageJsonPath = join(root, 'package.json');
-  const packageJsonContent = readFileSync(packageJsonPath, 'utf-8');
-  const endOfFile = packageJsonContent.substring(
-    packageJsonContent.lastIndexOf('}') + 1,
-    packageJsonContent.length
-  );
-  const json = JSON.parse(stripJsonComments(packageJsonContent));
+  const parseOptions: JsonReadOptions = {};
+  const json = readJsonFile(packageJsonPath, parseOptions);
   Object.keys(updatedPackages).forEach((p) => {
     if (json.devDependencies && json.devDependencies[p]) {
       json.devDependencies[p] = updatedPackages[p].version;
@@ -530,7 +529,9 @@ function updatePackageJson(
       json.dependencies[p] = updatedPackages[p].version;
     }
   });
-  writeFileSync(packageJsonPath, JSON.stringify(json, null, 2) + endOfFile);
+  writeJsonFile(packageJsonPath, json, {
+    appendNewLine: parseOptions.endsWithNewline,
+  });
 }
 
 async function generateMigrationsJsonAndUpdatePackageJson(
@@ -542,14 +543,15 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     to: { [p: string]: string };
   }
 ) {
-  const packageManager = detectPackageManager();
-  const pmc = getPackageManagerCommand(packageManager);
+  const pmc = getPackageManagerCommand();
   try {
     logger.info(`Fetching meta data about packages.`);
     logger.info(`It may take a few minutes.`);
+    const originalPackageJson = readJsonFile(join(root, 'package.json'));
     const migrator = new Migrator({
+      packageJson: originalPackageJson,
       versions: versions(root, opts.from),
-      fetch: createFetcher(packageManager),
+      fetch: createFetcher(),
       from: opts.from,
       to: opts.to,
     });
@@ -596,14 +598,12 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 
 function showConnectToCloudMessage() {
   try {
-    const nxJson = JSON.parse(
-      stripJsonComments(readFileSync('nx.json', 'utf-8'))
-    );
+    const nxJson = readJsonFile('nx.json');
     const defaultRunnerIsUsed = Object.values(nxJson.tasksRunnerOptions).find(
       (r: any) => r.runner == '@nrwl/workspace/tasks-runners/default'
     );
     return !!defaultRunnerIsUsed;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -616,7 +616,7 @@ function installAngularDevkitIfNecessaryToExecuteLegacyMigrations(
   );
   if (!hasAngularDevkitMigrations) return false;
 
-  const pmCommands = getPackageManagerCommand(detectPackageManager());
+  const pmCommands = getPackageManagerCommand();
   const devkitInstalled =
     execSync(`${pmCommands.list} @angular-devkit/schematics`)
       .toString()
@@ -635,13 +635,13 @@ function installAngularDevkitIfNecessaryToExecuteLegacyMigrations(
 }
 
 function removeAngularDevkitMigrations() {
-  const pmCommands = getPackageManagerCommand(detectPackageManager());
+  const pmCommands = getPackageManagerCommand();
   execSync(`${pmCommands.rm} @angular-devkit/schematics`);
   execSync(`${pmCommands.rm} @angular-devkit/core`);
 }
 
 function runInstall() {
-  const pmCommands = getPackageManagerCommand(detectPackageManager());
+  const pmCommands = getPackageManagerCommand();
   logger.info(
     `NX Running '${pmCommands.install}' to make sure necessary packages are installed`
   );
@@ -664,9 +664,7 @@ async function runMigrations(
     name: string;
     version: string;
     cli?: 'nx' | 'angular';
-  }[] = JSON.parse(
-    stripJsonComments(readFileSync(join(root, opts.runMigrations), 'utf-8'))
-  ).migrations;
+  }[] = readJsonFile(join(root, opts.runMigrations)).migrations;
 
   // TODO: reenable after removing devkit
   // const installed = installAngularDevkitIfNecessaryToExecuteLegacyMigrations(
@@ -678,12 +676,9 @@ async function runMigrations(
       if (m.cli === 'nx') {
         await runNxMigration(root, m.package, m.name);
       } else {
-        await (await import('./ngcli-adapter')).runMigration(
-          root,
-          m.package,
-          m.name,
-          isVerbose
-        );
+        await (
+          await import('./ngcli-adapter')
+        ).runMigration(root, m.package, m.name, isVerbose);
       }
       logger.info(`Successfully finished ${m.name}`);
       logger.info(`---------------------------------------------------------`);
@@ -701,7 +696,7 @@ async function runMigrations(
 
 async function runNxMigration(root: string, packageName: string, name: string) {
   const collectionPath = packageToMigrationsFilePath(packageName, root);
-  const collection = JSON.parse(readFileSync(collectionPath, 'utf-8'));
+  const collection = readJsonFile(collectionPath);
   const g = collection.generators || collection.schematics;
   const implRelativePath = g[name].implementation || g[name].factory;
 

@@ -12,7 +12,10 @@ import { createPackageJson } from './lib/create-package-json';
 import { createNextConfigFile } from './lib/create-next-config-file';
 import { directoryExists } from '@nrwl/workspace/src/utilities/fileutils';
 import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
-import { calculateProjectDependencies } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import {
+  calculateProjectDependencies,
+  DependentBuildableProjectNode,
+} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { assertDependentProjectsHaveBeenBuilt } from '../../utils/buildable-libs';
 
 try {
@@ -23,20 +26,24 @@ export default async function buildExecutor(
   options: NextBuildBuilderOptions,
   context: ExecutorContext
 ) {
+  let dependencies: DependentBuildableProjectNode[] = [];
   process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
   const root = resolve(context.root, options.root);
 
-  const projGraph = createProjectGraph();
-  const { dependencies } = calculateProjectDependencies(
-    projGraph,
-    context.root,
-    context.projectName,
-    context.targetName,
-    context.configurationName
-  );
+  if (!options.buildLibsFromSource && context.targetName) {
+    const projGraph = createProjectGraph();
+    const result = calculateProjectDependencies(
+      projGraph,
+      context.root,
+      context.projectName,
+      context.targetName,
+      context.configurationName
+    );
+    dependencies = result.dependencies;
 
-  assertDependentProjectsHaveBeenBuilt(dependencies, context);
+    assertDependentProjectsHaveBeenBuilt(dependencies, context);
+  }
 
   const config = await prepareConfig(
     PHASE_PRODUCTION_BUILD,

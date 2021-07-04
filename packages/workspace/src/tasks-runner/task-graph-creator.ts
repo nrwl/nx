@@ -1,13 +1,10 @@
-import { ProjectGraph } from '../core/project-graph';
-import { Task } from './tasks-runner';
+import type {
+  ProjectGraph,
+  TargetDependencyConfig,
+  Task,
+  TaskGraph,
+} from '@nrwl/devkit';
 import { getDependencyConfigs } from './utils';
-import { TargetDependencyConfig } from '@nrwl/tao/src/shared/workspace';
-
-export interface TaskGraph {
-  roots: string[];
-  tasks: Record<string, Task>;
-  dependencies: Record<string, string[]>;
-}
 
 export class TaskGraphCreator {
   constructor(

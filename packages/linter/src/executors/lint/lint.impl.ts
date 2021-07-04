@@ -1,11 +1,11 @@
 import { CLIEngine } from 'eslint';
 import { writeFileSync } from 'fs';
 import * as path from 'path';
-import { Schema } from './schema';
+import type { Schema } from './schema';
 import { createProgram } from './utility/ts-utils';
 import { lint, loadESLint } from './utility/eslint-utils';
 import { createDirectory } from '../eslint/utility/create-directory';
-import { ExecutorContext } from '@nrwl/devkit';
+import type { ExecutorContext } from '@nrwl/devkit';
 
 /**
  * Adapted from @angular-eslint/builder source
@@ -85,9 +85,9 @@ export default async function run(
     throw new Error('Invalid lint configuration. Nothing to lint.');
   }
 
-  const formatter: CLIEngine.Formatter = (projectESLint.CLIEngine as any).getFormatter(
-    options.format
-  );
+  const formatter: CLIEngine.Formatter = (
+    projectESLint.CLIEngine as any
+  ).getFormatter(options.format);
 
   const bundledReport: CLIEngine.LintReport = {
     errorCount: 0,

@@ -15,6 +15,10 @@
     "@angular-devkit",
     "@angular-eslint/",
     "@schematics",
-    "jasmine-marbles"
-  ]
+    "ignore",
+    "jasmine-marbles",
+    "rxjs-for-await",
+    "webpack-merge"
+  ],
+  "keepLifecycleScripts": true
 }

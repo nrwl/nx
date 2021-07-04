@@ -26,5 +26,7 @@ module.exports = {
     '<rootDir>/nx-dev/data-access-documents',
     '<rootDir>/nx-dev/data-access-menu',
     '<rootDir>/nx-dev/feature-search',
+    '<rootDir>/nx-dev/feature-analytics',
+    '<rootDir>/typedoc-theme',
   ],
 };

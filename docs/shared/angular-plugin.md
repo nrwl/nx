@@ -1,5 +1,7 @@
 # Angular Plugin
 
+![Angular logo](/shared/angular-logo.png)
+
 The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications, and libraries within an Nx workspace. It provides:
 
 - Integration with libraries such as Jest, Cypress, Karma, Protractor, and Storybook.
@@ -12,12 +14,12 @@ The Nx Plugin for Angular contains executors, generators, and utilities for mana
 
 Adding the Angular plugin to a workspace can be done with the following:
 
-```shell script
+```bash
 #yarn
 yarn add -D @nrwl/angular
 ```
 
-```shell script
+```bash
 #npm
 npm install -D @nrwl/angular
 ```
@@ -26,7 +28,8 @@ npm install -D @nrwl/angular
 
 Building Angular applications within an Nx workspace is similar to building within a vanilla Angular CLI workspace, with a few differences.
 
-- Jest is used as the default unit test runner, configurable in the generators section of the workspace configuration file.
+- ESLint is used as the default linter, configurable in the generators section of the workspace configuration.
+- Jest is used as the default unit test runner, configurable in the generators section of the workspace configuration.
 - Cypress is used as the default E2E test runner, configurable in the generators section of the workspace configuration.
 - E2E tests are included in a separate project from the Angular application itself.
 - The Nx CLI delegates common commands such as build, serve, test, lint, and e2e to the Angular CLI.
@@ -39,20 +42,28 @@ myorg/
 │   ├── myapp/
 │   │   ├── src/
 │   │   │   ├── app/
+│   │   │   │   ├── app.component.html
+│   │   │   │   ├── app.component.scss
+│   │   │   │   ├── app.component.spec.ts
+│   │   │   │   ├── app.component.ts
+│   │   │   │   └── app.module.ts
 │   │   │   ├── assets/
 │   │   │   ├── environments/
+│   │   │   │   ├── environment.prod.ts
+│   │   │   │   └── environment.ts
 │   │   │   ├── favicon.ico
 │   │   │   ├── index.html
 │   │   │   ├── main.ts
 │   │   │   ├── polyfills.ts
 │   │   │   ├── styles.scss
-│   │   │   └── test.ts
-│   │   ├── browserslist
-│   │   ├── jest.conf.js
+│   │   │   └── test-setup.ts
+│   │   ├── .browserslistrc
+│   │   ├── .eslintrc.json
+│   │   ├── jest.config.js
 │   │   ├── tsconfig.app.json
+│   │   ├── tsconfig.editor.json
 │   │   ├── tsconfig.json
-│   │   ├── tsconfig.spec.json
-│   │   └── tslint.json
+│   │   └── tsconfig.spec.json
 │   └── myapp-e2e/
 │       ├── src/
 │       │   ├── fixtures/
@@ -65,48 +76,65 @@ myorg/
 │       │       ├── app.po.ts
 │       │       ├── commands.ts
 │       │       └── index.ts
+│       ├── .eslintrc.json
 │       ├── cypress.json
 │       ├── tsconfig.e2e.json
-│       ├── tsconfig.json
-│       └── tslint.json
+│       └── tsconfig.json
 ├── libs/
 ├── tools/
+│   ├── generators/
+│   └── tsconfig.tools.json
+├── .editorconfig
+├── .eslintrc.json
+├── .gitignore
+├── .prettierignore
+├── .prettierrc
 ├── angular.json
+├── decorate-angular-cli.js
+├── jest.config.js
+├── jest.preset.js
 ├── nx.json
 ├── package.json
-├── tsconfig.json
-├── tslint.json
-└── README.md
+├── README.md
+└── tsconfig.base.json
 ```
 
 ## See Also
 
-- [Using DataPersistence](/angular/guides/misc-data-persistence)
-- [Using NgRx](/angular/guides/misc-ngrx)
-- [Upgrading an AngularJS application to Angular](/angular/guides/misc-upgrade)
+- [Using DataPersistence](/{{version}}/angular/guides/misc-data-persistence)
+- [Using NgRx](/{{version}}/angular/guides/misc-ngrx)
+- [Upgrading an AngularJS application to Angular](/{{version}}/angular/guides/misc-upgrade)
 
 ## Executors / Builders
 
-- [package](/{{framework}}/angular/package) - Bundles artifacts for a buildable library that can be distributed as an NPM package.
+- [delegate-build](/{{framework}}/angular/delegate-build) - Delegates the build to a different target while supporting incremental builds.
+- [ng-packagr-lite](/{{framework}}/angular/ng-packagr-lite) - Builds a library with support for incremental builds.
+- [package](/{{framework}}/angular/package) - Builds and packages an Angular library to be distributed as an NPM package. It supports incremental builds.
+- [webpack-browser](/{{framework}}/angular/webpack-browser) - Builds a browser application with support for incremental builds and custom webpack configuration.
 
 ## Generators
 
-- [application](/{{framework}}/angular/application) - Create an Angular application
-- [downgrade-module](/{{framework}}/angular/downgrade-module) - Setup Downgrade Module
-- [karma](/{{framework}}/angular/karma) - Add karma configuration to a workspace
-- [karma-project](/{{framework}}/angular/karma-project) - Add karma testing to a project
-- [library](/{{framework}}/angular/library) - Create an Angular library
-- [move](/{{framework}}/angular/move) - Move an Angular application or library to another folder within the workspace
-- [ngrx](/{{framework}}/angular/ngrx) - Add and use NgRx for state management
-- [stories](/{{framework}}/angular/stories) - Create stories/specs for all components declared in a library
-- [storybook-configuration](/{{framework}}/angular/storybook-configuration) - Setup configuration for Storybook
-- [upgrade-module](/{{framework}}/angular/upgrade-module) - Add an upgrade module
+- [application](/{{framework}}/angular/application) - Creates an Angular application.
+- [convert-tslint-to-eslint](/{{framework}}/angular/convert-tslint-to-eslint) - Converts a project from TSLint to ESLint.
+- [downgrade-module](/{{framework}}/angular/downgrade-module) - Sets up a Downgrade Module.
+- [karma](/{{framework}}/angular/karma) - Adds Karma configuration to a workspace.
+- [karma-project](/{{framework}}/angular/karma-project) - Adds Karma configuration to a project.
+- [library](/{{framework}}/angular/library) - Creates an Angular library.
+- [move](/{{framework}}/angular/move) - Moves an Angular application or library to another folder within the workspace and updates the project configuration.
+- [ngrx](/{{framework}}/angular/ngrx) - Adds NgRx support to an application or library.
+- [setup-mfe](/{{framework}}/angular/setup-mfe) - Generate a Module Federation configuration for a given Angular application.
+- [stories](/{{framework}}/angular/stories) - Creates stories/specs for all components declared in a project.
+- [storybook-configuration](/{{framework}}/angular/storybook-configuration) - Adds Storybook configuration to a project.
+- [storybook-migrate-defaults-5-to-6](/{{framework}}/angular/storybook-migrate-defaults-5-to-6) - Generates default Storybook configuration files using Storybook version >=6.x specs, for projects that already have Storybook instances and configurations of versions <6.x.
+- [storybook-migrate-stories-to-6-2](/{{framework}}/angular/storybook-migrate-stories-to-6-2) - Migrates stories to match the new syntax in v6.2 where the component declaration should be in the default export.
+- [upgrade-module](/{{framework}}/angular/upgrade-module) - Sets up an Upgrade Module.
+- [web-worker](/{{framework}}/angular/web-worker) - Creates a Web Worker.
 
 ## Public API
 
-- DataPersistence - Angular Service that provides convenience methods for common operations of persisting data.
-- fetch - Handles data fetching, and correct ordering of fetching using NgRx Effects
-- navigation - Handles data fetching based on navigating to a certain component using NgRx Effects
-- optimisticUpdate - Handles optimistic updates (updating the client first) using NgRx Effects.
-- pessimisticUpdate - Handles pessimistic updates (updating the server first) fetching using NgRx Effects.
-  NxModule - An NgModule used to register the Angular providers, including DataPersistence.
+- `DataPersistence` - Angular Service that provides convenience methods for common operations of persisting data.
+- `fetch` - Handles data fetching, and correct ordering of fetching using NgRx Effects.
+- `navigation` - Handles data fetching based on navigating to a certain component using NgRx Effects.
+- `optimisticUpdate` - Handles optimistic updates (updating the client first) using NgRx Effects.
+- `pessimisticUpdate` - Handles pessimistic updates (updating the server first) using NgRx Effects.
+- `NxModule` - An NgModule used to register the Angular providers, including DataPersistence.

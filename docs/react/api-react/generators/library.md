@@ -134,6 +134,14 @@ Type: `boolean`
 
 Generate library with routes.
 
+### setParserOptionsProject
+
+Default: `false`
+
+Type: `boolean`
+
+Whether or not to configure the ESLint "parserOptions.project" option. We do not do this by default for lint performance reasons.
+
 ### skipFormat
 
 Default: `false`
@@ -150,9 +158,17 @@ Type: `boolean`
 
 Do not update tsconfig.json for development experience.
 
-### strict
+### standaloneConfig
 
 Default: `false`
+
+Type: `boolean`
+
+Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json
+
+### strict
+
+Default: `true`
 
 Type: `boolean`
 

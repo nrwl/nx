@@ -1,11 +1,13 @@
 import type {
   FileData,
+  NxJsonConfiguration,
   NxJsonProjectConfiguration,
   ProjectConfiguration,
   ProjectFileMap,
   WorkspaceJsonConfiguration,
   ProjectGraphProcessorContext,
   NxPlugin,
+  ProjectGraph,
 } from '@nrwl/devkit';
 
 import { ProjectGraphBuilder } from '@nrwl/devkit';
@@ -32,13 +34,11 @@ import {
   buildNpmPackageNodes,
   buildWorkspaceProjectNodes,
 } from './build-nodes';
-import { ProjectGraph } from './project-graph-models';
 import {
   differentFromCache,
   readCache,
   writeCache,
 } from '../nx-deps/nx-deps-cache';
-import { NxJson } from '../shared-interfaces';
 import { performance } from 'perf_hooks';
 
 export function createProjectGraph(
@@ -104,7 +104,7 @@ function addWorkspaceFiles(
 
 function buildProjectGraph(
   ctx: {
-    nxJson: NxJson<string[]>;
+    nxJson: NxJsonConfiguration<string[]>;
     workspaceJson: WorkspaceJsonConfiguration;
     fileMap: ProjectFileMap;
   },

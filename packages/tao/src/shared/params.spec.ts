@@ -1,4 +1,5 @@
 import * as yargsParser from 'yargs-parser';
+import { logger } from './logger';
 import {
   coerceTypesInOptions,
   convertAliases,
@@ -8,6 +9,7 @@ import {
   Schema,
   setDefaults,
   validateOptsAgainstSchema,
+  warnDeprecations,
 } from './params';
 
 describe('params', () => {
@@ -182,6 +184,20 @@ describe('params', () => {
           { d: 'test' },
           {
             properties: { directory: { type: 'string', alias: 'd' } },
+            required: [],
+            description: '',
+          },
+          true
+        )
+      ).toEqual({ directory: 'test' });
+    });
+
+    it('should replace aliases defined in aliases with actual keys', () => {
+      expect(
+        convertAliases(
+          { d: 'test' },
+          {
+            properties: { directory: { type: 'string', aliases: ['d'] } },
             required: [],
             description: '',
           },
@@ -698,6 +714,66 @@ describe('params', () => {
         )
       ).toThrow(
         "Property 'key' does not match the schema. 'string' should be a 'boolean'."
+      );
+    });
+  });
+
+  describe('warnDeprecations', () => {
+    beforeEach(() => {
+      jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    });
+
+    it('should not log a warning when an option marked as deprecated is not specified', () => {
+      warnDeprecations(
+        { b: true },
+        {
+          properties: {
+            a: {
+              type: 'boolean',
+              'x-deprecated': true,
+            },
+            b: {
+              type: 'boolean',
+            },
+          },
+        }
+      );
+
+      expect(logger.warn).not.toHaveBeenCalled();
+    });
+
+    it('should log a warning when an option marked as deprecated is specified', () => {
+      warnDeprecations(
+        { a: true },
+        {
+          properties: {
+            a: {
+              type: 'boolean',
+              'x-deprecated': true,
+            },
+          },
+        }
+      );
+
+      expect(logger.warn).toHaveBeenCalledWith('Option "a" is deprecated.');
+    });
+
+    it('should log a warning with the deprecation notice when x-deprecated is a string', () => {
+      warnDeprecations(
+        { a: true },
+        {
+          properties: {
+            a: {
+              type: 'boolean',
+              'x-deprecated':
+                'Deprecated since version x.x.x. Use "b" instead.',
+            },
+          },
+        }
+      );
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Option "a" is deprecated: Deprecated since version x.x.x. Use "b" instead.'
       );
     });
   });

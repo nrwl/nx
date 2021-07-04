@@ -1,8 +1,8 @@
 import { TasksRunner } from './tasks-runner';
 import defaultTaskRunner from './default-tasks-runner';
 import { createTasksForProjectToRun, getRunner } from './run-command';
-import { NxJson } from '../core/shared-interfaces';
-import { DependencyType, ProjectGraph } from '@nrwl/devkit';
+import { DependencyType } from '@nrwl/devkit';
+import type { ProjectGraph, NxJsonConfiguration } from '@nrwl/devkit';
 
 describe('createTasksForProjectToRun', () => {
   let projectGraph: ProjectGraph;
@@ -104,9 +104,10 @@ describe('createTasksForProjectToRun', () => {
   });
 
   it('should create the tasks for multiple projects passed with configuration', () => {
-    projectGraph.nodes.app1.data.targets.build.configurations = projectGraph.nodes.lib1.data.targets.build.configurations = {
-      production: {},
-    };
+    projectGraph.nodes.app1.data.targets.build.configurations =
+      projectGraph.nodes.lib1.data.targets.build.configurations = {
+        production: {},
+      };
     const tasks = createTasksForProjectToRun(
       [projectGraph.nodes.app1, projectGraph.nodes.lib1],
       {
@@ -477,7 +478,7 @@ describe('createTasksForProjectToRun', () => {
 });
 
 describe('getRunner', () => {
-  let nxJson: NxJson;
+  let nxJson: NxJsonConfiguration;
   let mockRunner: TasksRunner;
   let overrides: any;
 

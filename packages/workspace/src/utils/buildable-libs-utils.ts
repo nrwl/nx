@@ -1,17 +1,14 @@
-import {
-  ProjectGraph,
-  ProjectGraphNode,
-  ProjectType,
-} from '../core/project-graph';
+import { ProjectType } from '../core/project-graph';
+import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
 import { BuilderContext } from '@angular-devkit/architect';
 import { join, resolve, dirname, relative } from 'path';
 import {
   fileExists,
   readJsonFile,
   writeJsonFile,
-} from '@nrwl/workspace/src/utilities/fileutils';
+} from '../utilities/fileutils';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { getOutputsForTargetAndConfiguration } from '@nrwl/workspace/src/tasks-runner/utils';
+import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
 import * as ts from 'typescript';
 import { unlinkSync } from 'fs';
 
@@ -293,9 +290,8 @@ export function updateBuildableProjectPackageJsonDependencies(
 
           depVersion = entry.node.data.version;
 
-          packageJson[typeOfDependency][
-            entry.node.data.packageName
-          ] = depVersion;
+          packageJson[typeOfDependency][entry.node.data.packageName] =
+            depVersion;
         }
         updatePackageJson = true;
       } catch (e) {

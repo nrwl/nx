@@ -21,7 +21,7 @@ function _getEnumFromValue<E, T extends E[keyof E]>(
   if (Object.values(enumeration).indexOf(value) !== -1) {
     // TODO: this should be unknown
     // tslint:disable-next-line:no-any
-    return (value as any) as T;
+    return value as any as T;
   }
 
   return defaultValue;

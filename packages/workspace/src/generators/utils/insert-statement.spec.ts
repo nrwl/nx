@@ -14,7 +14,7 @@ describe('insertStatement', () => {
 
     insertStatement(tree, 'index.ts', 'const b = 0;');
 
-    expect(tree.read('index.ts').toString()).toMatchInlineSnapshot(`
+    expect(tree.read('index.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { a } from 'a';
       const b = 0;"
     `);
@@ -25,7 +25,7 @@ describe('insertStatement', () => {
 
     insertStatement(tree, 'index.ts', 'const b = 0;\n');
 
-    expect(tree.read('index.ts').toString()).toMatchInlineSnapshot(`
+    expect(tree.read('index.ts', 'utf-8')).toMatchInlineSnapshot(`
       "const b = 0;
       const a = 0;"
     `);

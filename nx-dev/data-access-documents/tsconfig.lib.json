@@ -5,7 +5,7 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "outDir": "../../dist/out-tsc",
-    "types": []
+    "types": ["node"]
   },
   "include": ["**/*.ts"],
   "exclude": ["**/*.spec.ts"]

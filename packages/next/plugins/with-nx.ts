@@ -1,12 +1,12 @@
+import type { NextConfig } from 'next/dist/next-server/server/config';
 import { WebpackConfigOptions } from '../src/utils/types';
 
 const { join } = require('path');
 const { appRootPath } = require('@nrwl/workspace/src/utilities/app-root');
 const { workspaceLayout } = require('@nrwl/workspace/src/core/file-utils');
 
-export interface WithNxOptions {
+export interface WithNxOptions extends NextConfig {
   nx?: WebpackConfigOptions;
-  [key: string]: any;
 }
 
 function regexEqual(x, y) {
@@ -30,12 +30,6 @@ function withNx(nextConfig = {} as WithNxOptions) {
       'withNx() plugin: Detected Vercel build environment, applying "experimental-serverless-trace" target'
     );
     nextConfig.target = 'experimental-serverless-trace';
-  }
-
-  if (nextConfig.future?.webpack5) {
-    throw new Error(
-      'withNx() plugin: using the "webpack5" option with Nx is not supported yet'
-    );
   }
 
   const userWebpack = nextConfig.webpack || ((x) => x);

@@ -1,0 +1,46 @@
+{
+  "builders": {
+    "build": {
+      "implementation": "./src/executors/build/compat",
+      "schema": "./src/executors/build/schema.json",
+      "description": "Build a application"
+    },
+    "package": {
+      "implementation": "./src/executors/package/compat",
+      "schema": "./src/executors/package/schema.json",
+      "description": "Package a library"
+    },
+    "dev-server": {
+      "implementation": "./src/executors/dev-server/compat",
+      "schema": "./src/executors/dev-server/schema.json",
+      "description": "Serve a web application"
+    },
+    "file-server": {
+      "implementation": "./src/executors/file-server/compat",
+      "schema": "./src/executors/file-server/schema.json",
+      "description": "Serve a web application from a folder"
+    }
+  },
+  "executors": {
+    "build": {
+      "implementation": "./src/executors/build/build.impl",
+      "schema": "./src/executors/build/schema.json",
+      "description": "Build a application"
+    },
+    "package": {
+      "implementation": "./src/executors/package/package.impl",
+      "schema": "./src/executors/package/schema.json",
+      "description": "Package a library"
+    },
+    "dev-server": {
+      "implementation": "./src/executors/dev-server/dev-server.impl",
+      "schema": "./src/executors/dev-server/schema.json",
+      "description": "Serve a web application"
+    },
+    "file-server": {
+      "implementation": "./src/executors/file-server/file-server.impl",
+      "schema": "./src/executors/file-server/schema.json",
+      "description": "Serve a web application from a folder"
+    }
+  }
+}

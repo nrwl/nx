@@ -7,15 +7,7 @@
  */
 import * as path from 'path';
 import { ScriptTarget } from 'typescript';
-import {
-  compilation,
-  Compiler,
-  Configuration,
-  ContextReplacementPlugin,
-  debug,
-  HashedModuleIdsPlugin,
-} from 'webpack';
-import { RawSource } from 'webpack-sources';
+
 import { ExtraEntryPoint } from '../../../browser/schema';
 import { BuildBrowserFeatures, fullDifferential } from '../../../utils';
 import { manglingDisabled } from '../../../utils/mangle-options';
@@ -48,13 +40,23 @@ const TerserPlugin = require('terser-webpack-plugin');
 // tslint:disable-next-line:no-any
 const g: any = typeof global !== 'undefined' ? global : {};
 
+// TODO(jack): Remove this in Nx 13 and go back to proper types
+type Configuration = any;
+type Compiler = any;
+
 // tslint:disable-next-line:no-big-function
 export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
-  const { root, projectRoot, buildOptions, tsConfig } = wco;
+  // TODO(jack): Remove this in Nx 13 and go back to proper types
   const {
-    styles: stylesOptimization,
-    scripts: scriptsOptimization,
-  } = buildOptions.optimization;
+    webpack,
+    webpackSources,
+    isWebpack5,
+  } = require('../../../../../webpack/entry');
+  const { ContextReplacementPlugin, debug } = webpack;
+
+  const { root, projectRoot, buildOptions, tsConfig } = wco;
+  const { styles: stylesOptimization, scripts: scriptsOptimization } =
+    buildOptions.optimization;
   const {
     styles: stylesSourceMap,
     scripts: scriptsSourceMap,
@@ -88,7 +90,8 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
       tsConfig.options.target || ScriptTarget.ES5
     );
 
-    differentialLoadingNeeded = buildBrowserFeatures.isDifferentialLoadingNeeded();
+    differentialLoadingNeeded =
+      buildBrowserFeatures.isDifferentialLoadingNeeded();
 
     if (
       (buildOptions.scriptTargetOverride || tsConfig.options.target) ===
@@ -241,6 +244,7 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
     );
   }
 
+  // TODO Needs source exported from webpack
   if (buildOptions.statsJson) {
     extraPlugins.push(
       new (class {
@@ -249,16 +253,16 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
             const data = JSON.stringify(
               compilation.getStats().toJson('verbose')
             );
-            compilation.assets[`stats${targetInFileName}.json`] = new RawSource(
-              data
-            );
+            compilation.assets[`stats${targetInFileName}.json`] =
+              new webpackSources.RawSource(data);
           });
         }
       })()
     );
   }
 
-  if (buildOptions.namedChunks) {
+  //TODO(jack): Enable for webpack 5
+  if (!isWebpack5 && buildOptions.namedChunks) {
     extraPlugins.push(new NamedLazyChunksPlugin());
   }
 
@@ -365,8 +369,13 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
         sourceMap: scriptsSourceMap,
         parallel: true,
         cache: true,
-        chunkFilter: (chunk: compilation.Chunk) =>
-          !globalScriptsByBundleName.some((s) => s.bundleName === chunk.name),
+        // TODO(jack): This is probably a breaking change. There are no more chunkFilters in TerserPlugin
+        chunkFilter: isWebpack5
+          ? undefined
+          : (chunk: any) =>
+              !globalScriptsByBundleName.some(
+                (s) => s.bundleName === chunk.name
+              ),
         terserOptions,
       }),
       // Script bundles are fully optimized here in one step since they are never downleveled.
@@ -375,8 +384,13 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
         sourceMap: scriptsSourceMap,
         parallel: true,
         cache: true,
-        chunkFilter: (chunk: compilation.Chunk) =>
-          globalScriptsByBundleName.some((s) => s.bundleName === chunk.name),
+        // TODO(jack): This is probably a breaking change. There are no more chunkFilters in TerserPlugin
+        chunkFilter: isWebpack5
+          ? undefined
+          : (chunk: any) =>
+              globalScriptsByBundleName.some(
+                (s) => s.bundleName === chunk.name
+              ),
         terserOptions: {
           ...terserOptions,
           compress: {
@@ -410,7 +424,7 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
     context: projectRoot,
     entry: entryPoints,
     output: {
-      futureEmitAssets: true,
+      ...(isWebpack5 ? {} : { futureEmitAssets: true }),
       path: path.resolve(root, buildOptions.outputPath as string),
       publicPath: buildOptions.deployUrl,
       filename: `[name]${targetInFileName}${hashFormat.chunk}.js`,
@@ -455,13 +469,17 @@ export function getCommonConfig(wco: WebpackConfigOptions): Configuration {
       ],
     },
     optimization: {
-      noEmitOnErrors: true,
+      // TODO(jack): Enable for webpack 4
+      noEmitOnErrors: isWebpack5,
+      moduleIds: isWebpack5 ? 'deterministic' : undefined,
       minimizer: [
-        new HashedModuleIdsPlugin(),
-        // TODO: check with Mike what this feature needs.
-        new BundleBudgetPlugin({ budgets: buildOptions.budgets }),
+        isWebpack5 ? null : new webpack.HashedModuleIdsPlugin(),
+        // TODO(jack): Enable for webpack 5
+        isWebpack5
+          ? null
+          : new BundleBudgetPlugin({ budgets: buildOptions.budgets }),
         ...extraMinimizers,
-      ],
+      ].filter(Boolean),
     },
     plugins: [
       // Always replace the context for the System.import in angular/core to prevent warnings.

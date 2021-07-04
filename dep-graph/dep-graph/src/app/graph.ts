@@ -1,9 +1,9 @@
-import { ProjectGraph, ProjectGraphNode } from '@nrwl/workspace';
+import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
 import * as cy from 'cytoscape';
 import cytoscapeDagre from 'cytoscape-dagre';
 import popper from 'cytoscape-popper';
 import { Subject } from 'rxjs';
-import { Instance } from 'tippy.js';
+import type { Instance } from 'tippy.js';
 import { ProjectNodeToolTip } from './project-node-tooltip';
 import { edgeStyles, nodeStyles } from './styles-graph';
 import { GraphTooltipService } from './tooltip-service';
@@ -13,7 +13,7 @@ import {
   ProjectEdge,
   ProjectNode,
 } from './util-cytoscape';
-import { VirtualElement } from '@popperjs/core';
+import type { VirtualElement } from '@popperjs/core';
 
 export interface GraphPerfReport {
   renderTime: number;

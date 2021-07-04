@@ -1,10 +1,14 @@
 import React, { useCallback, useState } from 'react';
 import cx from 'classnames';
 import Link from 'next/link';
-import { Menu, MenuItem, MenuSection } from '@nrwl/nx-dev/data-access-menu';
+import {
+  Menu,
+  MenuItem,
+  MenuSection,
+  VersionMetadata,
+} from '@nrwl/nx-dev/data-access-documents';
 import { useRouter } from 'next/router';
 import { Selector } from '@nrwl/nx-dev/ui/common';
-import { VersionMetadata } from '@nrwl/nx-dev/data-access-documents';
 
 export interface SidebarProps {
   menu: Menu;
@@ -12,6 +16,17 @@ export interface SidebarProps {
   versionList: VersionMetadata[];
   flavorList: any[];
   flavor: any;
+  navIsOpen: boolean;
+}
+
+// Exported for testing
+export function createNextPath(
+  version: string,
+  flavor: string,
+  currentPath: string
+): string {
+  const genericPath = currentPath.split('/').slice(3).join('/');
+  return `/${version}/${flavor}/${genericPath}`;
 }
 
 export function Sidebar({
@@ -20,21 +35,21 @@ export function Sidebar({
   version,
   versionList,
   menu,
+  navIsOpen,
 }: SidebarProps) {
   const router = useRouter();
-  const getStartedPath = (version: string, flavor: string): string =>
-    `/${version}/${flavor}/getting-started/${
-      version === 'latest' ? 'getting-started' : 'intro'
-    }`;
-
   return (
     <div
       data-testid="sidebar"
-      className="fixed z-40 inset-0 flex-none h-full bg-black bg-opacity-25 w-full lg:bg-white lg:static lg:h-auto lg:overflow-y-visible lg:pt-o lg:w-60 xl:w-72 lg:block hidden"
+      className={cx(
+        'fixed z-40 inset-0 flex-none h-full bg-black bg-opacity-25 w-full lg:bg-white lg:static lg:h-auto lg:overflow-y-visible lg:pt-o lg:w-64 lg:block border-r border-gray-50',
+        !navIsOpen && 'hidden',
+        navIsOpen && 'block'
+      )}
     >
       <div
         data-testid="navigation-wrapper"
-        className="h-full overflow-y-auto scrolling-touch lg:h-auto lg:block lg:relative lg:sticky lg:bg-transparent overflow-hidden lg:top-18 bg-white mr-24 lg:mr-0"
+        className="h-full overflow-y-auto scrolling-touch lg:h-auto lg:block lg:relative lg:sticky lg:bg-transparent overflow-auto lg:top-18 bg-white mr-24 lg:mr-0 px-2 sm:pr-4 xl:pr-6"
       >
         <div className="hidden lg:block h-12 pointer-events-none absolute inset-x-0 z-10 bg-gradient-to-b from-white" />
         <div className="px-1 pt-6 sm:px-3 xl:px-5 lg:pt-10">
@@ -45,7 +60,9 @@ export function Sidebar({
             }))}
             selected={{ label: version.name, value: version.id }}
             onChange={(item) =>
-              router.push(getStartedPath(item.value, flavor.value))
+              router.push(
+                createNextPath(item.value, flavor.value, router.asPath)
+              )
             }
           />
         </div>
@@ -54,13 +71,15 @@ export function Sidebar({
             data={flavorList}
             selected={flavor}
             onChange={(item) =>
-              router.push(getStartedPath(version.id, item.value))
+              router.push(createNextPath(version.id, item.value, router.asPath))
             }
           />
         </div>
+        <div className="px-1 py-6 sm:px-3 xl:px-5 h-1 w-full border-b border-gray-50" />
         <nav
+          id="nav"
           data-testid="navigation"
-          className="px-1 pt-6 overflow-y-auto font-medium text-base sm:px-3 xl:px-5 lg:text-sm pb-10 lg:pt-8 lg:pb-14 sticky?lg:h-(screen-18)"
+          className="px-1 pt-1 font-medium text-base sm:px-3 xl:px-5 lg:text-sm pb-10 lg:pb-14 sticky?lg:h-(screen-18)"
         >
           {menu.sections.map((section) => (
             <SidebarSection key={section.id} section={section} />
@@ -77,13 +96,13 @@ function SidebarSection({ section }: { section: MenuSection }) {
       {section.hideSectionHeader ? null : (
         <h4
           data-testid={`section-h4:${section.id}`}
-          className="mt-6 mb-4 pb-2 text-m border-b border-gray-50 border-solid"
+          className="mt-8 text-lg font-bold border-b border-gray-50 border-solid"
         >
           {section.name}
         </h4>
       )}
       <ul>
-        <li className="mt-8">
+        <li className="mt-2">
           {section.itemList.map((item) => (
             <SidebarSectionItems key={item.id} item={item} />
           ))}
@@ -108,7 +127,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }) {
       <h5
         data-testid={`section-h5:${item.id}`}
         className={cx(
-          'flex my-2 py-1',
+          'flex py-2',
           'uppercase tracking-wide font-semibold text-sm lg:text-xs text-gray-900',
           item.disableCollapsible ? 'cursor-text' : 'cursor-pointer'
         )}
@@ -119,7 +138,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }) {
           <CollapsibleIcon isCollapsed={collapsed} />
         )}
       </h5>
-      <ul className={collapsed ? 'hidden' : ''}>
+      <ul className={cx('mb-6', collapsed ? 'hidden' : '')}>
         {item.itemList.map((item) => {
           const isActiveLink = item.path === router?.asPath;
           return (
@@ -127,16 +146,19 @@ function SidebarSectionItems({ item }: { item: MenuItem }) {
               <Link href={item.path}>
                 <a
                   className={cx(
-                    'p-2 transition-colors duration-200 relative block',
-                    isActiveLink
-                      ? 'hover:text-blue-900 text-blue-500'
-                      : 'hover:text-gray-900 text-gray-500'
+                    'py-1 transition-colors duration-200 relative block text-gray-500 hover:text-gray-900'
                   )}
                 >
                   {isActiveLink ? (
-                    <span className="rounded-md absolute inset-0 bg-blue-50" />
+                    <span className="rounded-md absolute h-full w-1 -right-2 sm:-right-4 top-0 bg-green-nx-base" />
                   ) : null}
-                  <span className="relative">{item.name}</span>
+                  <span
+                    className={cx('relative', {
+                      'text-gray-900': isActiveLink,
+                    })}
+                  >
+                    {item.name}
+                  </span>
                 </a>
               </Link>
             </li>

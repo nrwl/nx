@@ -1,16 +1,14 @@
-import {
-  ProjectGraph,
-  ProjectGraphNode,
-  ProjectType,
-} from '../core/project-graph';
+import { ProjectType } from '../core/project-graph';
 import { join, resolve, dirname, relative } from 'path';
 import {
+  directoryExists,
   fileExists,
   readJsonFile,
   writeJsonFile,
-} from '@nrwl/workspace/src/utilities/fileutils';
+} from './fileutils';
 import { stripIndents } from '@nrwl/devkit';
-import { getOutputsForTargetAndConfiguration } from '@nrwl/workspace/src/tasks-runner/utils';
+import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
+import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
 import * as ts from 'typescript';
 import { unlinkSync } from 'fs';
 import { output } from './output';
@@ -218,9 +216,9 @@ export function findMissingBuildDependencies(
       return;
     }
 
-    const paths = dep.outputs.map((p) => join(root, p, 'package.json'));
+    const paths = dep.outputs.map((p) => join(root, p));
 
-    if (!paths.some(fileExists)) {
+    if (!paths.some(directoryExists)) {
       depLibsToBuildFirst.push(dep);
     }
   });
@@ -327,9 +325,8 @@ export function updateBuildableProjectPackageJsonDependencies(
 
           depVersion = entry.node.data.version;
 
-          packageJson[typeOfDependency][
-            entry.node.data.packageName
-          ] = depVersion;
+          packageJson[typeOfDependency][entry.node.data.packageName] =
+            depVersion;
         }
         updatePackageJson = true;
       } catch (e) {

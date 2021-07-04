@@ -121,19 +121,6 @@ describe('Build React libraries and apps', () => {
   afterEach(() => killPorts());
 
   describe('Publishable libraries', () => {
-    it('should throw an error if the dependent library has not been built before building the parent lib', () => {
-      expect.assertions(2);
-
-      try {
-        runCLI(`build ${parentLib}`);
-      } catch (e) {
-        expect(e.stderr.toString()).toContain(
-          `Some of the project ${parentLib}'s dependencies have not been built yet. Please build these libraries before:`
-        );
-        expect(e.stderr.toString()).toContain(`${childLib}`);
-      }
-    });
-
     it('should preserve the tsconfig target set by user', () => {
       // Setup
       const myLib = uniq('my-lib');
@@ -220,7 +207,6 @@ describe('Build React libraries and apps', () => {
         expect.objectContaining({
           [`@${proj}/${childLib}`]: '0.0.1',
           [`@${proj}/${childLib2}`]: '0.0.1',
-          react: expect.anything(),
         })
       );
     });

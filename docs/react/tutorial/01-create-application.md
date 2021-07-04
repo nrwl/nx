@@ -18,7 +18,7 @@ npx create-nx-workspace@latest
 
 You will then receive the following prompts in your command line:
 
-```
+```bash
 ? Workspace name (e.g., org name)     myorg
 ? What to create in the new workspace react
 ? Application name                    todos
@@ -66,7 +66,7 @@ myorg/
 ├── workspace.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 The generate command added two projects to our workspace:
@@ -115,10 +115,3 @@ or
 ```bash
 yarn nx serve todos
 ```
-
-!!!!!
-Open http://localhost:4200 in the browser. What do you see?
-!!!!!
-Page saying "Welcome to Todos!"
-Page saying "This is an React app built with Create React App"
-404

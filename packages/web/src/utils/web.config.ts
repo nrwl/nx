@@ -1,11 +1,9 @@
-import * as mergeWebpack from 'webpack-merge';
 // TODO @FrozenPandaz we should remove the following imports
 import { getBrowserConfig } from './third-party/cli-files/models/webpack-configs/browser';
 import { getCommonConfig } from './third-party/cli-files/models/webpack-configs/common';
 import { getStylesConfig } from './third-party/cli-files/models/webpack-configs/styles';
-import { Configuration } from 'webpack';
 import { basename, resolve, posix } from 'path';
-import { WebBuildBuilderOptions } from '../builders/build/build.impl';
+import { WebBuildBuilderOptions } from '../executors/build/build.impl';
 import { convertBuildOptions } from './normalize';
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { getBaseWebpackPartial } from './config';
@@ -14,7 +12,8 @@ import { generateEntryPoints } from './third-party/cli-files/utilities/package-c
 import { ScriptTarget } from 'typescript';
 import { getHashDigest, interpolateName } from 'loader-utils';
 
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+// TODO(jack): Remove this in Nx 13
+type Configuration = any;
 
 export function getWebConfig(
   root,
@@ -24,6 +23,9 @@ export function getWebConfig(
   isScriptOptimizeOn?: boolean,
   configuration?: string
 ) {
+  // TODO(jack): Remove this in Nx 13 and go back to proper import
+  const { webpackMerge } = require('../webpack/entry');
+
   const tsConfig = readTsConfig(options.tsConfig);
 
   if (isScriptOptimizeOn) {
@@ -33,7 +35,6 @@ export function getWebConfig(
     // We want to force the target if overridden
     tsConfig.options.target = ScriptTarget.ES5;
   }
-
   const wco: any = {
     root,
     projectRoot: resolve(root, sourceRoot),
@@ -43,7 +44,7 @@ export function getWebConfig(
     tsConfig,
     tsConfigPath: options.tsConfig,
   };
-  return mergeWebpack([
+  return webpackMerge([
     _getBaseWebpackPartial(
       options,
       esm,
@@ -123,6 +124,9 @@ function getStylesPartial(
   wco: any,
   options: WebBuildBuilderOptions
 ): Configuration {
+  // TODO(jack): Remove this in Nx 13 and go back to proper imports
+  const { MiniCssExtractPlugin } = require('../webpack/entry');
+
   const partial = getStylesConfig(wco);
   const rules = partial.module.rules.map((rule) => {
     if (!Array.isArray(rule.use)) {

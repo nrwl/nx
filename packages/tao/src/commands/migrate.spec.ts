@@ -4,6 +4,7 @@ describe('Migration', () => {
   describe('packageJson patch', () => {
     it('should throw an error when the target package is not available', async () => {
       const migrator = new Migrator({
+        packageJson: {},
         versions: () => '1.0',
         fetch: (_p, _v) => {
           throw new Error('cannot fetch');
@@ -22,6 +23,7 @@ describe('Migration', () => {
 
     it('should return a patch to the new version', async () => {
       const migrator = new Migrator({
+        packageJson: {},
         versions: () => '1.0.0',
         fetch: (_p, _v) => Promise.resolve({ version: '2.0.0' }),
         from: {},
@@ -38,6 +40,7 @@ describe('Migration', () => {
 
     it('should collect the information recursively from upserts', async () => {
       const migrator = new Migrator({
+        packageJson: {},
         versions: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
@@ -81,6 +84,7 @@ describe('Migration', () => {
 
     it('should stop recursive calls when exact version', async () => {
       const migrator = new Migrator({
+        packageJson: {},
         versions: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
@@ -128,6 +132,7 @@ describe('Migration', () => {
 
     it('should set the version of a dependency to the newest', async () => {
       const migrator = new Migrator({
+        packageJson: {},
         versions: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
@@ -191,6 +196,7 @@ describe('Migration', () => {
 
     it('should skip the versions <= currently installed', async () => {
       const migrator = new Migrator({
+        packageJson: {},
         versions: () => '1.0.0',
         fetch: (p, _v) => {
           if (p === 'parent') {
@@ -238,6 +244,7 @@ describe('Migration', () => {
 
     it('should conditionally process packages if they are installed', async () => {
       const migrator = new Migrator({
+        packageJson: {},
         versions: (p) => (p !== 'not-installed' ? '1.0.0' : null),
         fetch: (p, _v) => {
           if (p === 'parent') {
@@ -282,6 +289,29 @@ describe('Migration', () => {
     // we will extract the special casing
     it('should special case @nrwl/workspace', async () => {
       const migrator = new Migrator({
+        packageJson: {
+          devDependencies: {
+            '@nrwl/workspace': '0.9.0',
+            '@nrwl/cli': '0.9.0',
+            '@nrwl/angular': '0.9.0',
+            '@nrwl/cypress': '0.9.0',
+            '@nrwl/devkit': '0.9.0',
+            '@nrwl/eslint-plugin-nx': '0.9.0',
+            '@nrwl/express': '0.9.0',
+            '@nrwl/gatsby': '0.9.0',
+            '@nrwl/jest': '0.9.0',
+            '@nrwl/linter': '0.9.0',
+            '@nrwl/nest': '0.9.0',
+            '@nrwl/next': '0.9.0',
+            '@nrwl/node': '0.9.0',
+            '@nrwl/nx-cloud': '0.9.0',
+            '@nrwl/nx-plugin': '0.9.0',
+            '@nrwl/react': '0.9.0',
+            '@nrwl/storybook': '0.9.0',
+            '@nrwl/tao': '0.9.0',
+            '@nrwl/web': '0.9.0',
+          },
+        },
         versions: () => '1.0.0',
         fetch: (_p, _v) => Promise.resolve({ version: '2.0.0' }),
         from: {},
@@ -339,6 +369,7 @@ describe('Migration', () => {
 
     it('should not throw when packages are missing', async () => {
       const migrator = new Migrator({
+        packageJson: {},
         versions: (p) => (p === '@nrwl/nest' ? null : '1.0.0'),
         fetch: (_p, _v) =>
           Promise.resolve({
@@ -353,6 +384,7 @@ describe('Migration', () => {
 
     it('should only fetch packages that are installed', async () => {
       const migrator = new Migrator({
+        packageJson: {},
         versions: (p) => (p === '@nrwl/nest' ? null : '1.0.0'),
         fetch: (p, _v) => {
           if (p === '@nrwl/nest') {
@@ -373,6 +405,7 @@ describe('Migration', () => {
   describe('migrations', () => {
     it('should create a list of migrations to run', async () => {
       const migrator = new Migrator({
+        packageJson: {},
         versions: (p) => {
           if (p === 'parent') return '1.0.0';
           if (p === 'child') return '1.0.0';

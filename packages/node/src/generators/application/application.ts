@@ -93,7 +93,12 @@ function addProject(tree: Tree, options: NormalizedSchema) {
   project.targets.build = getBuildConfig(project, options);
   project.targets.serve = getServeConfig(options);
 
-  addProjectConfiguration(tree, options.name, project);
+  addProjectConfiguration(
+    tree,
+    options.name,
+    project,
+    options.standaloneConfig
+  );
 
   const workspace = readWorkspaceConfiguration(tree);
 
@@ -174,6 +179,7 @@ export async function addLintingToApplication(
       `${options.appProjectRoot}/**/*.${options.js ? 'js' : 'ts'}`,
     ],
     skipFormat: true,
+    setParserOptionsProject: options.setParserOptionsProject,
   });
 
   return lintTask;
@@ -193,7 +199,10 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
   addProject(tree, options);
 
   if (options.linter !== Linter.None) {
-    const lintTask = await addLintingToApplication(tree, options);
+    const lintTask = await addLintingToApplication(tree, {
+      ...options,
+      skipFormat: true,
+    });
     tasks.push(lintTask);
   }
 
@@ -204,6 +213,8 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       skipSerializers: true,
       supportTsx: options.js,
       babelJest: options.babelJest,
+      testEnvironment: 'node',
+      skipFormat: true,
     });
     tasks.push(jestTask);
   }

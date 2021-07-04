@@ -36,7 +36,7 @@ affected than other tools because it looks not just at the changed files but als
 ### Workspace Visualization
 
 Run `npx nx dep-graph` to see a visualization of your workspace. `npx nx affected:dep-graph` will show what is affected
-by your commit.
+by your commit. `npx nx dep-graph --watch` will watch your workspace for changes and update the the visualization.
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/cMZ-ReC-jWU" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
@@ -86,7 +86,7 @@ For instance, you can add/remove/update projects in `workspace.json`.
 }
 ```
 
-Nx will a root tsconfig with something like this:
+Nx will add a root tsconfig to your repo with something like this:
 
 ```json
 {
@@ -101,7 +101,7 @@ Nx will a root tsconfig with something like this:
 }
 ```
 
-This tsconfig isn't used for building or testing. It's only used to teach Nx how to resolve imports, so Nx can do its import source code analysis. If the path mappings are deduced incorrectly, feel free to chang them.
+This tsconfig isn't used for building or testing. It's only used to teach Nx how to resolve imports, so Nx can do its import source code analysis. If the path mappings are deduced incorrectly, feel free to change them.
 
 ## Real world examples of using add-nx-to-monorepo
 

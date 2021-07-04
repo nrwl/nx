@@ -1,6 +1,6 @@
 # webpack-browser
 
-Angular browser builder that supports incremental builds
+Builds a browser application with support for incremental builds and custom webpack configuration.
 
 Properties can be configured in workspace.json when defining the executor, or when invoking it.
 Read more about how to use executors and the CLI here: https://nx.dev/node/getting-started/nx-cli#running-tasks.
@@ -46,12 +46,6 @@ Default: `true`
 Type: `boolean`
 
 Enables '@angular-devkit/build-optimizer' optimizations when using the 'aot' option.
-
-### buildTarget
-
-Type: `string`
-
-Build target used for building the app after its dependencies have been built. If no target is configured, @angular-devkit/build-angular:browser is sheduled directly.
 
 ### commonChunk
 
@@ -183,9 +177,7 @@ Define the output filename cache-busting hashing mode.
 
 Type: `string`
 
-            The full path for the new output directory, relative to the current workspace.
-
-By default, writes output to a folder named dist/ in the current project.
+The full path for the new output directory, relative to the current workspace. By default, writes output to a folder named dist/ in the current project.
 
 ### poll
 
@@ -272,14 +264,6 @@ Default: `false`
 Type: `boolean`
 
 Enables the use of subresource integrity validation.
-
-### targetBuilder
-
-Default: `@angular-devkit/build-angular:browser`
-
-Type: `string`
-
-Override default Angular browser builder
 
 ### tsConfig
 

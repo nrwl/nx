@@ -22,7 +22,7 @@ export function addPropertyToJestConfig(
     throw new Error(`Cannot find '${path}' in your workspace.`);
   }
   try {
-    const configObject = jestConfigObjectAst(host.read(path).toString('utf-8'));
+    const configObject = jestConfigObjectAst(host.read(path, 'utf-8'));
     const properties = propertyName.split('.');
     addOrUpdateProperty(
       host,
@@ -56,14 +56,14 @@ export function removePropertyFromJestConfig(
     throw new Error(`Cannot find '${path}' in your workspace.`);
   }
   try {
-    const configObject = jestConfigObjectAst(host.read(path).toString('utf-8'));
+    const configObject = jestConfigObjectAst(host.read(path, 'utf-8'));
     const propertyAssignment = removeProperty(
       configObject,
       propertyName.split('.')
     );
 
     if (propertyAssignment) {
-      const file = host.read(path).toString('utf-8');
+      const file = host.read(path, 'utf-8');
       const commaNeeded = file[propertyAssignment.end] === ',';
       const updatedFile = applyChangesToString(file, [
         {

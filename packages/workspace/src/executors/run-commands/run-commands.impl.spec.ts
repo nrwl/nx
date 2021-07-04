@@ -165,8 +165,8 @@ describe('Command Runner Builder', () => {
     );
     expect(result).toEqual(expect.objectContaining({ success: true }));
     const contents = readFile(f);
-    expect(contents).toContain(1);
-    expect(contents).toContain(2);
+    expect(contents).toContain('1');
+    expect(contents).toContain('2');
   });
 
   describe('readyWhen', () => {

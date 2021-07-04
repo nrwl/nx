@@ -3,11 +3,19 @@ version: 2.1
 # Variables
 var_1: &working_directory ~/repo
 
+machine:
+  pre:
+    - mkdir ~/.cache/yarn
+
+dependencies:
+  cache_directories:
+    - ~/.cache/yarn
+
 executors:
   linux:
     working_directory: *working_directory
     docker:
-      - image: cimg/node:12.20-browsers
+      - image: cimg/node:14.17-browsers
 
   windows:
     working_directory: *working_directory
@@ -27,16 +35,16 @@ commands:
           condition:
             equal: [<< parameters.os >>, windows]
           steps:
-            - run: nvm install 12.20
-            - run: nvm use 12.20
-            - run: npm install -g yarn@1.19.0
+            - run: nvm install 14.17
+            - run: nvm use 14.17
+            - run: npm install -g yarn@1.22.10
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
             - nrwl-nx-yarn-packages-<< parameters.os >>-{{ checksum "yarn.lock" }}
       - run:
           name: Install dependencies
-          command: yarn install --frozen-lockfile --non-interactive --cache-folder ~/.cache/yarn
+          command: yarn install --prefer-offline --frozen-lockfile --non-interactive --cache-folder ~/.cache/yarn
       - save_cache:
           name: Save Yarn Package Cache
           # Windows needs its own cache key because binaries in node_modules are different.
@@ -50,14 +58,14 @@ commands:
           steps:
             - run:
                 name: Install PNPM
-                command: npm install --prefix=$HOME/.local -g pnpm@5.18.9
+                command: npm install --prefix=$HOME/.local -g pnpm@6.9.1
       - when:
           condition:
             equal: [<< parameters.os >>, windows]
           steps:
             - run:
                 name: Install PNPM
-                command: npm install -g pnpm@5.18.9
+                command: npm install -g pnpm@6.9.1
 
 jobs:
   agent:
@@ -119,17 +127,27 @@ jobs:
           name: Check Package dependencies
           command: yarn depcheck
       - run:
+          name: Get Last Sucessful Tag
+          shell: '/bin/bash'
+          command: |
+            source ./scripts/circleci/get-last-successful-tag.sh $CIRCLE_BRANCH master nx_successful_ci_run__* false
+            echo "export BASE_SHA=\"$BASE_SHA\";" >> $BASH_ENV
+      - run:
           name: Run Builds
-          command: npx nx affected --target=build --parallel --max-parallel=3
+          command: |
+            npx nx affected --target=build --base=$BASE_SHA --parallel --max-parallel=3
       - run:
           name: Run Unit Tests
-          command: npx nx affected --target=test --parallel --max-parallel=2
+          command: |
+            npx nx affected --target=test --base=$BASE_SHA --parallel --max-parallel=2
       - run:
           name: Run Linting
-          command: npx nx affected --target=lint --parallel --max-parallel=4
+          command: |
+            npx nx affected --target=lint --base=$BASE_SHA --parallel --max-parallel=4
       - run:
           name: Run E2E Tests
-          command: npx nx affected --target=e2e
+          command: |
+            npx nx affected --target=e2e --base=$BASE_SHA
           no_output_timeout: 45m
       - run:
           name: Stop All Running Agents for This CI Run
@@ -154,21 +172,32 @@ jobs:
       - setup:
           os: << parameters.os >>
       - run:
+          name: Get Last Sucessful Tag
+          shell: '/bin/bash'
+          command: |
+            source ./scripts/circleci/get-last-successful-tag.sh $CIRCLE_BRANCH master nx_successful_ci_run__* false
+            echo "export BASE_SHA=\"$BASE_SHA\";" >> $BASH_ENV
+      - run:
           name: Run Builds
-          command: npx nx affected --target=build --base=HEAD~1 --parallel --max-parallel=3
+          command: npx nx affected --target=build --base=$BASE_SHA --parallel --max-parallel=3
       - run:
           name: Run Unit Tests
-          command: npx nx affected --target=test --base=HEAD~1 --parallel --max-parallel=2
+          command: npx nx affected --target=test --base=$BASE_SHA --parallel --max-parallel=2
       - run:
           name: Run Linting
-          command: npx nx affected --target=lint --base=HEAD~1 --parallel --max-parallel=4
+          command: npx nx affected --target=lint --base=$BASE_SHA --parallel --max-parallel=4
       - run:
           name: Run E2E Tests
-          command: npx nx affected --target=e2e --base=HEAD~1
+          command: npx nx affected --target=e2e --base=$BASE_SHA
           no_output_timeout: 45m
       - run:
           name: Stop All Running Agents for This CI Run
           command: npx nx-cloud stop-all-agents
+      - run:
+          when: on_success
+          name: Save successful tag
+          command: |
+            ./scripts/circleci/tag-successful-build.sh nx_successful_ci_run__${CIRCLE_WORKFLOW_ID}
 workflows:
   build:
     jobs:

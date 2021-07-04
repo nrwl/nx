@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# Ignore all production deployments since this should be a manual promotion
-if [ $VERCEL_GIT_COMMIT_REF == "master" ]; then
-  echo "🛑 - Build cancelled"
-  exit 0
-fi
-
 # This script is used in Vercel to determine whether to continue the build or not for nx-dev.
 # Exits with 0 if the build should be skipped, and exits with 1 to continue.
 

@@ -1,10 +1,10 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import type { ExecutorContext } from '@nrwl/devkit';
 import { ESLint } from 'eslint';
 
 import { writeFileSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 
-import { Schema } from './schema';
+import type { Schema } from './schema';
 import { lint, loadESLint } from './utility/eslint-utils';
 import { createDirectory } from './utility/create-directory';
 
@@ -46,7 +46,37 @@ export default async function run(
     ? resolve(systemRoot, options.eslintConfig)
     : undefined;
 
-  let lintResults: ESLint.LintResult[] = await lint(eslintConfigPath, options);
+  let lintResults: ESLint.LintResult[] = [];
+
+  try {
+    lintResults = await lint(eslintConfigPath, options);
+  } catch (err) {
+    if (
+      err.message.includes(
+        'You must therefore provide a value for the "parserOptions.project" property for @typescript-eslint/parser'
+      )
+    ) {
+      let eslintConfigPathForError = `for ${projectName}`;
+      if (context.workspace?.projects?.[projectName]?.root) {
+        const { root } = context.workspace.projects[projectName];
+        eslintConfigPathForError = `\`${root}/.eslintrc.json\``;
+      }
+
+      console.error(`
+Error: You have attempted to use a lint rule which requires the full TypeScript type-checker to be available, but you do not have \`parserOptions.project\` configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your project ESLint config ${
+        eslintConfigPath || eslintConfigPathForError
+      }
+
+Please see https://nx.dev/guides/eslint for full guidance on how to resolve this issue.
+`);
+
+      return {
+        success: false,
+      };
+    }
+    // If some unexpected error, rethrow
+    throw err;
+  }
 
   if (lintResults.length === 0) {
     throw new Error('Invalid lint configuration. Nothing to lint.');

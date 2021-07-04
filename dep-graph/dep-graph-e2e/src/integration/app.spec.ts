@@ -1,13 +1,13 @@
 import {
-  getDeselectAllButton,
-  getUnfocusProjectButton,
-  getProjectCheckboxes,
   getCheckedProjectCheckboxes,
+  getDeselectAllButton,
+  getIncludeProjectsInPathButton,
+  getProjectCheckboxes,
   getSelectAllButton,
   getSelectProjectsMessage,
-  getTextFilterInput,
   getTextFilterButton,
-  getIncludeProjectsInPathButton,
+  getTextFilterInput,
+  getUnfocusProjectButton,
 } from '../support/app.po';
 
 describe('dep-graph-client', () => {
@@ -16,8 +16,35 @@ describe('dep-graph-client', () => {
     cy.get('[data-cy=project-select]').select('Ocean');
   });
 
+  it('should toggle the sidebar', () => {
+    cy.get('#sidebar').should('be.visible');
+    cy.get('#sidebar-toggle-button').click();
+    cy.get('#sidebar').should('not.be.visible');
+  });
+
   it('should display message to select projects', () => {
     getSelectProjectsMessage().should('be.visible');
+  });
+
+  it('should hide select projects message when a project is selected', () => {
+    cy.contains('nx-docs-site').siblings('button').click();
+    getSelectProjectsMessage().should('not.be.visible');
+  });
+
+  describe('selecting a different project', () => {
+    it('should change the available projects', () => {
+      getProjectCheckboxes().should('have.length', 135);
+      cy.get('[data-cy=project-select]').select('Nx');
+      getProjectCheckboxes().should('have.length', 45);
+    });
+
+    it("should restore sidebar if it's been hidden", () => {
+      cy.get('#sidebar').should('be.visible');
+      cy.get('#sidebar-toggle-button').click();
+      cy.get('#sidebar').should('not.be.visible');
+      cy.get('[data-cy=project-select]').select('Nx');
+      cy.get('#sidebar').should('be.visible');
+    });
   });
 
   describe('select all button', () => {
@@ -31,6 +58,7 @@ describe('dep-graph-client', () => {
     it('should uncheck all project checkboxes', () => {
       getDeselectAllButton().click();
       getProjectCheckboxes().should('not.be.checked');
+      getSelectProjectsMessage().should('be.visible');
     });
   });
 

@@ -1,4 +1,4 @@
-import { Subject } from 'rxjs';
+import { fromEvent, Subject } from 'rxjs';
 import { removeChildrenFromContainer } from '../util';
 
 export class DisplayOptionsPanel {

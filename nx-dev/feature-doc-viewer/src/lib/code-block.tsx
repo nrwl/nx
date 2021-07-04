@@ -5,11 +5,13 @@ import { CopyToClipboard } from 'react-copy-to-clipboard';
 export function CodeBlock({
   text,
   language,
+  callback,
   ...rest
 }: {
   text: string;
   language: string;
   [key: string]: any;
+  callback: (text: string) => void;
 }) {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
@@ -25,7 +27,13 @@ export function CodeBlock({
   }, [copied]);
   return (
     <div className="relative group">
-      <CopyToClipboard text={text} onCopy={() => setCopied(true)}>
+      <CopyToClipboard
+        text={text}
+        onCopy={() => {
+          setCopied(true);
+          callback(text);
+        }}
+      >
         <button className="flex absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -45,7 +53,7 @@ export function CodeBlock({
         </button>
       </CopyToClipboard>
       <SyntaxHighlighter
-        showLineNumbers={language !== 'bash' && language !== 'treeview'}
+        showLineNumbers={!['bash', 'text', 'treeview'].includes(language)}
         useInlineStyles={false}
         language={language}
         children={text}

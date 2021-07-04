@@ -1,12 +1,12 @@
 import React from 'react';
-import Content from './content';
+import cx from 'classnames';
 import Head from 'next/head';
-import { Menu } from '@nrwl/nx-dev/data-access-menu';
 import {
   DocumentData,
+  Menu,
   VersionMetadata,
 } from '@nrwl/nx-dev/data-access-documents';
-
+import Content from './content';
 import Sidebar from './sidebar';
 
 export interface DocumentationFeatureDocViewerProps {
@@ -17,6 +17,7 @@ export interface DocumentationFeatureDocViewerProps {
   menu: Menu;
   document: DocumentData;
   toc: any;
+  navIsOpen: boolean;
 }
 
 export function DocViewer({
@@ -26,6 +27,7 @@ export function DocViewer({
   menu,
   flavor,
   flavorList,
+  navIsOpen,
 }: DocumentationFeatureDocViewerProps) {
   return (
     <>
@@ -33,8 +35,32 @@ export function DocViewer({
         <title>
           {document.data.title} | Nx {flavor.label} documentation
         </title>
+        <meta
+          name="twitter:title"
+          content={document.data.title ?? `Nx {flavor.label} documentation`}
+        />
+        <meta
+          name="twitter:description"
+          content="With Nx, you can develop multiple full-stack applications holistically and share code between them all in the same workspace. Add Cypress, Jest, Prettier, and Storybook into your dev workflow."
+        />
+        <meta name="twitter:image" content="/images/nx-media.jpg" />
+        <meta
+          name="twitter:image:alt"
+          content="Nx: Smart, Extensible Build Framework"
+        />
+        <meta
+          property="og:description"
+          content="With Nx, you can develop multiple full-stack applications holistically and share code between them all in the same workspace. Add Cypress, Jest, Prettier, and Storybook into your dev workflow."
+        />
+        <meta
+          property="og:title"
+          content={document.data.title ?? `Nx {flavor.label} documentation`}
+        />
+        <meta property="og:image" content="/images/nx-media.jpg" />
+        <meta property="og:image:width" content="1000" />
+        <meta property="og:image:height" content="300" />
       </Head>
-      <div className="w-full max-w-screen-xl max-w-8xl mx-auto">
+      <div className="w-full max-w-screen-lg mx-auto">
         <div className="lg:flex">
           <Sidebar
             menu={menu}
@@ -42,10 +68,14 @@ export function DocViewer({
             flavor={flavor}
             flavorList={flavorList}
             versionList={versionList}
+            navIsOpen={navIsOpen}
           />
           <div
             id="content-wrapper"
-            className="min-w-0 w-full flex-auto lg:static lg:max-h-full lg:overflow-visible"
+            className={cx(
+              'min-w-0 w-full flex-auto lg:static lg:max-h-full lg:overflow-visible pt-16 md:pl-4',
+              navIsOpen && 'overflow-hidden max-h-screen fixed'
+            )}
           >
             <Content
               document={document}

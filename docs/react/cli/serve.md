@@ -34,6 +34,10 @@ The options below are common to the `serve` command used within an Nx workspace.
 
 This option allows you to whitelist services that are allowed to access the dev server.
 
+### hmr
+
+Enable hot module replacement.
+
 ### host
 
 Host to listen on.
@@ -139,10 +143,6 @@ Don't verify connected clients are part of allowed hosts.
 ### eval-source-map
 
 Output in-file eval sourcemaps.
-
-### hmr
-
-Enable hot module replacement.
 
 ### hmr-warning
 

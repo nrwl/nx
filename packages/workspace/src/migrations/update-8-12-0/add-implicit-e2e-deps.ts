@@ -7,10 +7,10 @@ import {
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
 
 import { updateJsonInTree } from '../../utils/ast-utils';
-import { NxJson } from '../../core/shared-interfaces';
+import type { NxJsonConfiguration } from '@nrwl/devkit';
 import { formatFiles } from '@nrwl/workspace/src/utils/rules/format-files';
 
-const addE2eImplicitDependencies = updateJsonInTree<NxJson>(
+const addE2eImplicitDependencies = updateJsonInTree<NxJsonConfiguration>(
   'nx.json',
   (json) => {
     Object.keys(json.projects).forEach((proj) => {

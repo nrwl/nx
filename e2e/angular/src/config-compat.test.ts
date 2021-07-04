@@ -13,7 +13,6 @@ import {
 
 describe('new config format', () => {
   beforeEach(() => newProject());
-
   afterEach(() => removeProject({ onlyOnCI: true }));
 
   it('should work', async () => {

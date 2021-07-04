@@ -1,4 +1,4 @@
-module.exports = require('babel-loader').custom((babel) => {
+module.exports = require('babel-loader').custom(() => {
   return {
     customOptions({ isModern, emitDecoratorMetadata, ...loader }) {
       return {

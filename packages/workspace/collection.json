@@ -31,7 +31,7 @@
     },
 
     "remove": {
-      "factory": "./src/generators/remove/remove#moveSchematic",
+      "factory": "./src/generators/remove/remove#removeSchematic",
       "schema": "./src/generators/remove/schema.json",
       "aliases": ["rm"],
       "description": "Remove an application or library"
@@ -63,6 +63,12 @@
       "schema": "./src/generators/run-commands/schema.json",
       "aliases": ["run-command", "target"],
       "description": "Generates a target to run any command in the terminal"
+    },
+
+    "convert-to-nx-project": {
+      "factory": "./src/generators/convert-to-nx-project/convert-to-nx-project#convertToNxProjectSchematic",
+      "schema": "./src/generators/convert-to-nx-project/schema.json",
+      "description": "Moves a project's configuration outside of workspace.json"
     }
   },
   "generators": {
@@ -127,6 +133,12 @@
       "schema": "./src/generators/run-commands/schema.json",
       "aliases": ["run-command", "target"],
       "description": "Generates a target to run any command in the terminal"
+    },
+
+    "convert-to-nx-project": {
+      "factory": "./src/generators/convert-to-nx-project/convert-to-nx-project#convertToNxProjectGenerator",
+      "schema": "./src/generators/convert-to-nx-project/schema.json",
+      "description": "Moves a project's configuration outside of workspace.json"
     }
   }
 }

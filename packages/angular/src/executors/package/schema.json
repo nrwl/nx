@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "title": "ng-packagr Target",
+  "description": "ng-packagr target options for Build Architect. Use to build and package library projects for publishing.",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The file path for the ng-packagr configuration file, relative to the workspace root."
+    },
+    "tsConfig": {
+      "type": "string",
+      "description": "The full path for the TypeScript configuration file, relative to the workspace root."
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Whether to run a build when any file changes.",
+      "default": false
+    },
+    "updateBuildableProjectDepsInPackageJson": {
+      "type": "boolean",
+      "description": "Whether to update the buildable project dependencies in package.json.",
+      "default": true
+    },
+    "buildableProjectDepsInPackageJsonType": {
+      "type": "string",
+      "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
+      "enum": ["dependencies", "peerDependencies"],
+      "default": "peerDependencies"
+    }
+  },
+  "additionalProperties": false,
+  "required": ["project"]
+}

@@ -1,22 +1,25 @@
 import {
-  GeneratorCallback,
   getProjects,
   installPackagesTask,
   joinPathFragments,
   logger,
-  NxJsonProjectConfiguration,
   offsetFromRoot,
-  ProjectConfiguration,
   readJson,
   readProjectConfiguration,
   readWorkspaceConfiguration,
   removeDependenciesFromPackageJson,
-  Tree,
   updateJson,
   updateProjectConfiguration,
   updateWorkspaceConfiguration,
 } from '@nrwl/devkit';
+import type {
+  Tree,
+  GeneratorCallback,
+  NxJsonProjectConfiguration,
+  ProjectConfiguration,
+} from '@nrwl/devkit';
 import type { Linter } from 'eslint';
+import { removeParserOptionsProjectIfNotRequired } from '../rules-requiring-type-checking';
 import { convertTSLintDisableCommentsForProject } from './convert-to-eslint-config';
 import {
   convertTSLintConfig,
@@ -147,9 +150,24 @@ export class ProjectConverter {
    * focus on the project-level config conversion.
    */
   async convertRootTSLintConfig(
-    applyPackageSpecificModifications: (json: Linter.Config) => Linter.Config
+    applyPackageSpecificModifications: (json: Linter.Config) => Linter.Config,
+    rootEslintConfigExists?: boolean
   ): Promise<Exclude<GeneratorCallback, void>> {
     if (this.ignoreExistingTslintConfig) {
+      return Promise.resolve(() => {});
+    }
+    /**
+     * If root eslint already exists, we will not override it with converted tslint
+     * as this might break existing configuration in place. This is the common scenario
+     * when large projects are migrating one project at a time and apply custom
+     * changes to root config in the meantime.
+     *
+     * We warn user of this action in case .eslintrc.json was created accidentally
+     */
+    if (rootEslintConfigExists) {
+      logger.warn(
+        `Root '.eslintrc.json' found. Assuming conversion was already run for other projects.`
+      );
       return Promise.resolve(() => {});
     }
 
@@ -167,9 +185,10 @@ export class ProjectConverter {
     delete convertedRootESLintConfig.parser;
     delete convertedRootESLintConfig.parserOptions;
     if (convertedRootESLintConfig.plugins) {
-      convertedRootESLintConfig.plugins = convertedRootESLintConfig.plugins.filter(
-        (p) => p !== '@typescript-eslint/tslint'
-      );
+      convertedRootESLintConfig.plugins =
+        convertedRootESLintConfig.plugins.filter(
+          (p) => p !== '@typescript-eslint/tslint'
+        );
     }
 
     /**
@@ -185,14 +204,14 @@ export class ProjectConverter {
         if (!json.overrides) {
           return json;
         }
-        for (const override of json.overrides) {
-          if (!override.rules) {
+        for (const o of json.overrides) {
+          if (!o.rules) {
             continue;
           }
-          if (!override.rules[nxRuleName]) {
+          if (!o.rules[nxRuleName]) {
             continue;
           }
-          override.rules[nxRuleName] = nxEnforceModuleBoundariesRule;
+          o.rules[nxRuleName] = nxEnforceModuleBoundariesRule;
         }
         return json;
       });
@@ -210,7 +229,7 @@ export class ProjectConverter {
       convertedRootESLintConfig
     );
     updateJson(this.host, '.eslintrc.json', (json) => {
-      json.overrides = json.overrides || [];
+      json.overrides ||= [];
       if (
         finalConvertedRootESLintConfig.overrides &&
         finalConvertedRootESLintConfig.overrides.length
@@ -226,7 +245,11 @@ export class ProjectConverter {
         });
       }
       json.overrides = deduplicateOverrides(json.overrides);
-      return json;
+      /**
+       * Remove the parserOptions.project config if it is not required for the final config,
+       * so that lint runs can be as fast and efficient as possible.
+       */
+      return removeParserOptionsProjectIfNotRequired(json);
     });
 
     /**
@@ -266,9 +289,10 @@ export class ProjectConverter {
     delete convertedProjectESLintConfig.parser;
     delete convertedProjectESLintConfig.parserOptions;
     if (convertedProjectESLintConfig.plugins) {
-      convertedProjectESLintConfig.plugins = convertedProjectESLintConfig.plugins.filter(
-        (p) => p !== '@typescript-eslint/tslint'
-      );
+      convertedProjectESLintConfig.plugins =
+        convertedProjectESLintConfig.plugins.filter(
+          (p) => p !== '@typescript-eslint/tslint'
+        );
     }
 
     const projectESLintConfigPath = joinPathFragments(
@@ -313,7 +337,7 @@ export class ProjectConverter {
        * by using eslint-plugin-tslint. We instead explicitly warn the user about this missing converter,
        * and therefore at this point we strip out any rules which start with @typescript-eslint/tslint/config
        */
-      json.rules = json.rules || {};
+      json.rules ||= {};
       if (
         convertedProjectESLintConfig.rules &&
         Object.keys(convertedProjectESLintConfig.rules).length
@@ -332,7 +356,11 @@ export class ProjectConverter {
        * updating the config file.
        */
       const finalJson = applyPackageSpecificModifications(json);
-      return finalJson;
+      /**
+       * Remove the parserOptions.project config if it is not required for the final config,
+       * so that lint runs can be as fast and efficient as possible.
+       */
+      return removeParserOptionsProjectIfNotRequired(finalJson);
     });
 
     /**
@@ -511,9 +539,8 @@ export class ProjectConverter {
   ) {
     const workspace = readWorkspaceConfiguration(this.host);
 
-    workspace.generators = workspace.generators || {};
-    workspace.generators[collectionName] =
-      workspace.generators[collectionName] || {};
+    workspace.generators ||= {};
+    workspace.generators[collectionName] ||= {};
     const prev = workspace.generators[collectionName];
 
     workspace.generators = {

@@ -3,7 +3,6 @@ import {
   checkFilesExist,
   e2eCwd,
   expectNoAngularDevkit,
-  killPorts,
   readJson,
   removeProject,
   runCreateWorkspace,
@@ -13,8 +12,7 @@ import { existsSync, mkdirSync } from 'fs-extra';
 import { execSync } from 'child_process';
 
 describe('create-nx-workspace', () => {
-  afterEach(() => removeProject({ onlyOnCI: true }));
-  afterEach(() => killPorts());
+  afterAll(() => removeProject({ onlyOnCI: true }));
 
   it('should be able to create an empty workspace', () => {
     const wsName = uniq('empty');
@@ -164,9 +162,9 @@ describe('create-nx-workspace', () => {
   it('should handle spaces in workspace path', () => {
     const wsName = uniq('empty');
 
-    const tmpDir = `${e2eCwd}/with space`;
+    const tmpDir = `${e2eCwd}/${uniq('with space')}`;
 
-    mkdirSync(tmpDir);
+    mkdirSync(tmpDir, { recursive: true });
 
     const command = `npx create-nx-workspace@${'9999.0.2'} ${wsName} --cli=nx --preset=empty --no-nxCloud --no-interactive`;
     execSync(command, {
@@ -178,10 +176,11 @@ describe('create-nx-workspace', () => {
     expect(existsSync(`${tmpDir}/${wsName}/package.json`)).toBeTruthy();
   });
 
-  // temporary disable this
-  xit('should respect package manager preference', () => {
+  it('should respect package manager preference', () => {
     const wsName = uniq('pm');
     const appName = uniq('app');
+
+    process.env.YARN_REGISTRY = `http://localhost:4872`;
 
     runCreateWorkspace(wsName, {
       preset: 'react',
@@ -194,10 +193,12 @@ describe('create-nx-workspace', () => {
     checkFilesDoNotExist('package-lock.json');
   });
 
-  // temporary disable this
-  xit('should store package manager preference for angular cli', () => {
+  it('should store package manager preference for angular cli', () => {
     const wsName = uniq('pm');
     const appName = uniq('app');
+
+    process.env.YARN_REGISTRY = `http://localhost:4872`;
+
     runCreateWorkspace(wsName, {
       preset: 'angular',
       appName,

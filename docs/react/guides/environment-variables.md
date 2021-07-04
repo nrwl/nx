@@ -4,7 +4,10 @@ Environment variables are global system variables accessible by all the processe
 
 ## How to Use
 
-It's important to note that NX will only include in the process default and NX prefixed env vars such as: `NODE_ENV` or `NX_CUSTOM_VAR`.
+It's important to note that NX will only include in the process:
+
+- default env vars such as: `NODE_ENV`
+- any environment variable prefixed with `NX_` such as: `NX_CUSTOM_VAR`
 
 Defining environment variables can vary between OSes. It’s also important to know that this is temporary for the life of the shell session.
 
@@ -58,7 +61,7 @@ For example:
 2. `workspaceRoot/apps/my-app/.env` contains `AUTH_URL=https://prod-url.com/auth`
 3. Nx will first load the variables from `apps/my-app/.env.local` into the process. When it tries to load the variables from `apps/my-app/.env`, it will notice that `AUTH_URL` already exists, so it will ignore it.
 
-We recommend nesting your **app** specific `env` files in `apps/your-app`, and creating workspace/root level `env` files for workspace-specific settings (like the [Nx Cloud token](/{{framework}}/core-concepts/computation-caching#nx-cloud-and-distributed-computation-memoization)).
+We recommend nesting your **app** specific `env` files in `apps/your-app`, and creating workspace/root level `env` files for workspace-specific settings (like the [Nx Cloud token](/{{framework}}/core-extended/computation-caching#nx-cloud-and-distributed-computation-caching)).
 
 ### Pointing to custom env files
 
@@ -66,3 +69,17 @@ If you want to load variables from `env` files other than the ones listed above:
 
 1. Use the [env-cmd](https://www.npmjs.com/package/env-cmd) package: `env-cmd -f .qa.env nx serve`
 2. Use the `envFile` option of the [run-commands](/{{framework}}/workspace/run-commands-executor#envfile) builder and execute your command inside of the builder
+
+## Using Environment Variables in index.html
+
+Nx supports interpolating environment variables into your `index.html` file for React and Web applications.
+
+To interpolate an environment variable named `NX_DOMAIN_NAME` into your `index.html`, surround it with `%` symbols like so:
+
+```html
+<html>
+  <body>
+    <p>The domain name is %NX_DOMAIN_NAME%.</p>
+  </body>
+</html>
+```

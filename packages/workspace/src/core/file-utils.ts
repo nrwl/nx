@@ -1,17 +1,21 @@
 import { toOldFormatOrNull, Workspaces } from '@nrwl/tao/src/shared/workspace';
-import { FileData, NxJsonConfiguration } from '@nrwl/devkit';
+import type {
+  FileData,
+  NxJsonConfiguration,
+  NxJsonProjectConfiguration,
+  ProjectGraphNode,
+} from '@nrwl/devkit';
 import { execSync } from 'child_process';
 import { readFileSync, readdirSync, existsSync, statSync } from 'fs';
 import { extname, join, relative, sep } from 'path';
 import { performance } from 'perf_hooks';
-import { NxArgs } from '../command-line/utils';
+import type { NxArgs } from '../command-line/utils';
 import { WorkspaceResults } from '../command-line/workspace-results';
 import { appRootPath } from '../utilities/app-root';
 import { fileExists, readJsonFile } from '../utilities/fileutils';
 import { jsonDiff } from '../utilities/json-diff';
 import { defaultFileHasher } from './hasher/file-hasher';
-import { ProjectGraphNode } from './project-graph';
-import { Environment } from './shared-interfaces';
+import type { Environment } from './shared-interfaces';
 
 const ignore = require('ignore');
 
@@ -151,7 +155,7 @@ function getIgnoredGlobs() {
   return ig;
 }
 
-function readFileIfExisting(path: string) {
+export function readFileIfExisting(path: string) {
   return existsSync(path) ? readFileSync(path, 'utf-8') : '';
 }
 
@@ -199,6 +203,20 @@ export function readNxJson(): NxJsonConfiguration {
   if (!config.npmScope) {
     throw new Error(`nx.json must define the npmScope property.`);
   }
+
+  // NOTE: As we work towards removing nx.json, some settings are now found in
+  // the workspace.json file. Currently this is only supported for projects
+  // with separated configs, as they list tags / implicit deps inside the project.json file.
+  const workspace = readWorkspaceConfig({ format: 'nx', path: appRootPath });
+  Object.entries(workspace.projects).forEach(
+    ([project, projectConfig]: [string, NxJsonProjectConfiguration]) => {
+      if (!config.projects[project]) {
+        const { tags, implicitDependencies } = projectConfig;
+        config.projects[project] = { tags, implicitDependencies };
+      }
+    }
+  );
+
   return config;
 }
 

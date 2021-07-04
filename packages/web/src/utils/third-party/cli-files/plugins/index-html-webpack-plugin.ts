@@ -6,8 +6,6 @@
  * found in the LICENSE file at https://angular.io/license
  */
 import * as path from 'path';
-import { Compiler, compilation } from 'webpack';
-import { RawSource } from 'webpack-sources';
 import {
   CrossOriginValue,
   FileInfo,
@@ -15,6 +13,11 @@ import {
 } from '../utilities/index-file/augment-index-html';
 import { IndexHtmlTransform } from '../utilities/index-file/write-index-html';
 import { stripBom } from '../utilities/strip-bom';
+import { interpolateEnvironmentVariablesToIndex } from '../../../interpolate-env-variables-to-index';
+
+// TODO(jack): Remove this in Nx 13 and go back to proper types
+type Compiler = any;
+type Compilation = any;
 
 export interface IndexHtmlWebpackPluginOptions {
   input: string;
@@ -29,10 +32,7 @@ export interface IndexHtmlWebpackPluginOptions {
   crossOrigin?: CrossOriginValue;
 }
 
-function readFile(
-  filename: string,
-  compilation: compilation.Compilation
-): Promise<string> {
+function readFile(filename: string, compilation: Compilation): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     compilation.inputFileSystem.readFile(
       filename,
@@ -65,6 +65,9 @@ export class IndexHtmlWebpackPlugin {
   }
 
   apply(compiler: Compiler) {
+    // TODO(jack): Remove this in Nx 13 and go back to proper types
+    const { webpackSources, webpack } = require('../../../../webpack/entry');
+
     compiler.hooks.emit.tapPromise(
       'index-html-webpack-plugin',
       async (compilation) => {
@@ -98,11 +101,17 @@ export class IndexHtmlWebpackPlugin {
           }
         }
 
+        // TODO:  the source() method can return a Buffer.
+        //  This fails to handle that case
         const loadOutputFile = (name: string) =>
-          compilation.assets[name].source();
+          compilation.assets[name].source() as string; // This will break if Buffer  _generateSriAttributes  in augment-index.html.ts
+
         let indexSource = await augmentIndexHtml({
           input: this._options.input,
-          inputContent,
+          inputContent: interpolateEnvironmentVariablesToIndex(
+            inputContent,
+            this._options.deployUrl
+          ),
           baseHref: this._options.baseHref,
           deployUrl: this._options.deployUrl,
           sri: this._options.sri,
@@ -119,7 +128,9 @@ export class IndexHtmlWebpackPlugin {
         }
 
         // Add to compilation assets
-        compilation.assets[this._options.output] = new RawSource(indexSource);
+        compilation.assets[this._options.output] = new webpackSources.RawSource(
+          indexSource
+        ) as never; //TODO This is a hack as RawSource lacks Buffer, which is now in the webpack Source object
       }
     );
   }

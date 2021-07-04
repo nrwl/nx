@@ -32,17 +32,19 @@
     "migrations": "./migrations.json"
   },
   "peerDependencies": {
-    "cypress": ">= 3 < 7"
+    "cypress": ">= 3 < 8"
   },
   "dependencies": {
     "@nrwl/devkit": "*",
     "@nrwl/linter": "*",
     "@nrwl/workspace": "*",
-    "@cypress/webpack-preprocessor": "~4.1.2",
+    "@cypress/webpack-preprocessor": "4.1.5",
+    "chalk": "4.1.0",
     "ts-loader": "5.4.5",
-    "tsconfig-paths-webpack-plugin": "3.2.0",
+    "tsconfig-paths-webpack-plugin": "3.4.1",
+    "webpack": "4.46.0",
     "webpack-node-externals": "1.7.2",
-    "fork-ts-checker-webpack-plugin": "^3.1.1",
+    "fork-ts-checker-webpack-plugin": "6.2.10",
     "rxjs": "^6.5.4",
     "tslib": "^2.0.0",
     "yargs-parser": "20.0.0"

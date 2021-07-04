@@ -25,11 +25,15 @@ export async function addLinting(
   });
 
   if (options.linter === Linter.EsLint) {
-    const reactEslintJson = createReactEslintJson(options.appProjectRoot);
+    const reactEslintJson = createReactEslintJson(
+      options.appProjectRoot,
+      options.setParserOptionsProject
+    );
     updateJson(
       host,
       joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
       () => {
+        // Only set parserOptions.project if it already exists (defined by options.setParserOptionsProject)
         if (reactEslintJson.overrides?.[0].parserOptions?.project) {
           reactEslintJson.overrides[0].parserOptions.project = [
             `${options.appProjectRoot}/tsconfig(.*)?.json`,

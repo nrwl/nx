@@ -13,14 +13,13 @@
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
-      "parserOptions": {
-        "project": ["packages/devkit/tsconfig.*?.json"]
-      },
       "rules": {}
     },
     {
       "files": ["*.ts", "*.tsx"],
-      "rules": {}
+      "rules": {
+        "@typescript-eslint/explicit-module-boundary-types": ["error"]
+      }
     },
     {
       "files": ["*.js", "*.jsx"],

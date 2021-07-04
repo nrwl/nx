@@ -24,6 +24,8 @@ import { cypressProjectGenerator } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';
 import { storybookVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
+import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
+import { gte } from 'semver';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -54,16 +56,19 @@ export async function configurationGenerator(
   configureTsSolutionConfig(tree, schema);
   updateLintConfig(tree, schema);
   addStorybookTask(tree, schema.name, schema.uiFramework);
-  if (schema.configureCypress && projectType !== 'application') {
-    const cypressTask = await cypressProjectGenerator(tree, {
-      name: schema.name,
-      js: schema.js,
-      linter: schema.linter,
-      directory: schema.cypressDirectory,
-    });
-    tasks.push(cypressTask);
-  } else {
-    logger.warn('There is already an e2e project setup');
+  if (schema.configureCypress) {
+    if (projectType !== 'application') {
+      const cypressTask = await cypressProjectGenerator(tree, {
+        name: schema.name,
+        js: schema.js,
+        linter: schema.linter,
+        directory: schema.cypressDirectory,
+        standaloneConfig: schema.standaloneConfig,
+      });
+      tasks.push(cypressTask);
+    } else {
+      logger.warn('There is already an e2e project setup');
+    }
   }
 
   await formatFiles(tree);
@@ -256,13 +261,13 @@ function updateLintConfig(tree: Tree, schema: StorybookConfigureSchema) {
       }
 
       const overrides = json.overrides || [];
-      for (const override of overrides) {
-        if (typeof override.parserOptions?.project === 'string') {
-          override.parserOptions.project = [override.parserOptions.project];
+      for (const o of overrides) {
+        if (typeof o.parserOptions?.project === 'string') {
+          o.parserOptions.project = [o.parserOptions.project];
         }
-        if (Array.isArray(override.parserOptions?.project)) {
-          override.parserOptions.project = dedupe([
-            ...override.parserOptions.project,
+        if (Array.isArray(o.parserOptions?.project)) {
+          o.parserOptions.project = dedupe([
+            ...o.parserOptions.project,
             join(root, '.storybook/tsconfig.json'),
           ]);
         }
@@ -350,8 +355,10 @@ function readCurrentWorkspaceStorybookVersion(tree: Tree): string {
     }
   }
   if (
-    workspaceStorybookVersion.startsWith('6') ||
-    workspaceStorybookVersion.startsWith('^6')
+    gte(
+      checkAndCleanWithSemver('@storybook/core', workspaceStorybookVersion),
+      '6.0.0'
+    )
   ) {
     workspaceStorybookVersion = '6';
   }

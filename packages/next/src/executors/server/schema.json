@@ -39,6 +39,11 @@
     "proxyConfig": {
       "type": "string",
       "description": "Path to the proxy configuration file."
+    },
+    "buildLibsFromSource": {
+      "type": "boolean",
+      "description": "Read buildable libraries from source instead of building them separately.",
+      "default": true
     }
   },
   "required": []

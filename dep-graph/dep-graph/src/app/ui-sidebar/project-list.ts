@@ -1,4 +1,4 @@
-import { ProjectGraphNode } from '@nrwl/workspace';
+import type { ProjectGraphNode } from '@nrwl/devkit';
 import { Subject } from 'rxjs';
 import {
   parseParentDirectoriesFromPilePath,
@@ -12,18 +12,39 @@ export class ProjectList {
   checkedProjectsChange$ = this.checkedProjectsChangeSubject.asObservable();
   focusProject$ = this.focusProjectSubject.asObservable();
 
-  constructor(
-    private container: HTMLElement,
-    private projects: ProjectGraphNode[]
-  ) {
+  private _projects: ProjectGraphNode[] = [];
+
+  set projects(projects: ProjectGraphNode[]) {
+    this._projects = projects;
+
+    const previouslyCheckedProjects = Object.values(this.checkboxes)
+      .filter((checkbox) => checkbox.checked)
+      .map((checkbox) => checkbox.value);
     this.render();
+    this.selectProjects(previouslyCheckedProjects);
+  }
+
+  get projects(): ProjectGraphNode[] {
+    return this._projects;
+  }
+
+  constructor(private container: HTMLElement) {
+    this.render();
+  }
+
+  selectProjects(projects: string[]) {
+    projects.forEach((projectName) => {
+      if (!!this.checkboxes[projectName]) {
+        this.checkboxes[projectName].checked = true;
+      }
+    });
+    this.emitChanges();
   }
 
   setCheckedProjects(selectedProjects: string[]) {
     Object.keys(this.checkboxes).forEach((projectName) => {
-      this.checkboxes[projectName].checked = selectedProjects.includes(
-        projectName
-      );
+      this.checkboxes[projectName].checked =
+        selectedProjects.includes(projectName);
     });
   }
 

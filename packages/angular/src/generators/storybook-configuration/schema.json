@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxAngularStorybookConfigurationGenerator",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name of the project.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
+    },
+    "configureCypress": {
+      "type": "boolean",
+      "description": "Specifies whether to configure Cypress or not.",
+      "x-prompt": "Configure a Cypress e2e app to run against the storybook instance?",
+      "default": true
+    },
+    "generateStories": {
+      "type": "boolean",
+      "description": "Specifies whether to automatically generate `*.stories.ts` files for components declared in this project or not.",
+      "x-prompt": "Automatically generate *.stories.ts files for components declared in this project?",
+      "default": true
+    },
+    "generateCypressSpecs": {
+      "type": "boolean",
+      "description": "Specifies whether to automatically generate `*.spec.ts` files in the generated Cypress e2e app.",
+      "x-prompt": "Automatically generate *.spec.ts files in the generated Cypress e2e app?",
+      "default": true
+    },
+    "cypressDirectory": {
+      "type": "string",
+      "description": "A directory where the Cypress project will be placed. Placed at the root by default."
+    },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["eslint", "none"],
+      "default": "eslint"
+    }
+  },
+  "additionalProperties": false,
+  "required": ["name"]
+}

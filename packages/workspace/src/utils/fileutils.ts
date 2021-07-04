@@ -1,9 +1,7 @@
-import * as stripJsonComments from 'strip-json-comments';
 import {
   createReadStream,
   createWriteStream,
   existsSync,
-  readFileSync,
   writeFileSync,
   mkdirSync,
   renameSync as fsRenameSync,
@@ -11,6 +9,14 @@ import {
 } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import { basename, dirname, resolve } from 'path';
+import {
+  parseJson,
+  serializeJson,
+  readJsonFile,
+  writeJsonFile,
+} from '@nrwl/devkit';
+
+export { serializeJson, readJsonFile, writeJsonFile };
 
 export function writeToFile(filePath: string, str: string) {
   ensureDirSync(dirname(filePath));
@@ -29,29 +35,6 @@ export function updateJsonFile(path: string, callback: (a: any) => any) {
   const json = readJsonFile(path);
   callback(json);
   writeJsonFile(path, json);
-}
-
-export function serializeJson(json: any): string {
-  return `${JSON.stringify(json, null, 2)}\n`;
-}
-
-/**
- * This method is specifically for reading a JSON file from the filesystem
- *
- * @remarks
- * If you are looking to read a JSON file in a Tree, use ./ast-utils#readJsonInTree
- * @param path Path of the JSON file on the filesystem
- */
-export function readJsonFile<T = any>(path: string): T {
-  return parseJsonWithComments<T>(readFileSync(path, 'utf-8'));
-}
-
-export function parseJsonWithComments<T = any>(content: string): T {
-  return JSON.parse(stripJsonComments(content));
-}
-
-export function writeJsonFile(path: string, json: any) {
-  writeToFile(path, serializeJson(json));
 }
 
 export function copyFile(file: string, target: string) {

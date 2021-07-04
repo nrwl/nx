@@ -9,9 +9,7 @@
  * ```
  * @param name
  */
-export function names(
-  name: string
-): {
+export function names(name: string): {
   name: string;
   className: string;
   propertyName: string;

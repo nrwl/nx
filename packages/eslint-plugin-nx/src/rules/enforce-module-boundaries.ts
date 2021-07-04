@@ -9,8 +9,10 @@ import {
   hasNoneOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
   isRelativeImportIntoAnotherProject,
+  mapProjectGraphFiles,
   matchImportWithWildcard,
   onlyLoadChildren,
+  MappedProjectGraph,
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import {
   AST_NODE_TYPES,
@@ -18,15 +20,15 @@ import {
 } from '@typescript-eslint/experimental-utils';
 import { createESLintRule } from '../utils/create-eslint-rule';
 import { normalizePath } from '@nrwl/devkit';
+import type { ProjectGraph } from '@nrwl/devkit';
 import {
   isNpmProject,
-  ProjectGraph,
   ProjectType,
+  readCurrentProjectGraph,
 } from '@nrwl/workspace/src/core/project-graph';
 import { readNxJson } from '@nrwl/workspace/src/core/file-utils';
 import { TargetProjectLocator } from '@nrwl/workspace/src/core/target-project-locator';
 import { checkCircularPath } from '@nrwl/workspace/src/utils/graph-utils';
-import { readCurrentProjectGraph } from '@nrwl/workspace/src/core/project-graph/project-graph';
 import { isRelativePath } from '@nrwl/workspace/src/utilities/fileutils';
 
 type Options = [
@@ -83,7 +85,7 @@ export default createESLintRule<Options, MessageIds>({
     messages: {
       noRelativeOrAbsoluteImportsAcrossLibraries: `Libraries cannot be imported by a relative or absolute path, and must begin with a npm scope`,
       noCircularDependencies: `Circular dependency between "{{sourceProjectName}}" and "{{targetProjectName}}" detected: {{path}}`,
-      noSelfCircularDependencies: `Only relative imports are allowed within the project. Absolute import found: {{imp}}`,
+      noSelfCircularDependencies: `Projects should use relative imports to import from other files within the same project. Use "./path/to/file" instead of import from "{{imp}}"`,
       noImportsOfApps: 'Imports of apps are forbidden',
       noImportsOfE2e: 'Imports of e2e projects are forbidden',
       noImportOfNonBuildableLibraries:
@@ -121,7 +123,9 @@ export default createESLintRule<Options, MessageIds>({
     if (!(global as any).projectGraph) {
       const nxJson = readNxJson();
       (global as any).npmScope = nxJson.npmScope;
-      (global as any).projectGraph = readCurrentProjectGraph();
+      (global as any).projectGraph = mapProjectGraphFiles(
+        readCurrentProjectGraph()
+      );
     }
 
     if (!(global as any).projectGraph) {
@@ -129,7 +133,7 @@ export default createESLintRule<Options, MessageIds>({
     }
 
     const npmScope = (global as any).npmScope;
-    const projectGraph = (global as any).projectGraph as ProjectGraph;
+    const projectGraph = (global as any).projectGraph as MappedProjectGraph;
 
     if (!(global as any).targetProjectLocator) {
       (global as any).targetProjectLocator = new TargetProjectLocator(
@@ -159,23 +163,25 @@ export default createESLintRule<Options, MessageIds>({
 
       const imp = node.source.value as string;
 
-      const sourceFilePath = getSourceFilePath(
-        normalizePath(context.getFilename()),
-        projectPath
-      );
-
       // whitelisted import
       if (allow.some((a) => matchImportWithWildcard(a, imp))) {
         return;
       }
 
+      const sourceFilePath = getSourceFilePath(
+        context.getFilename(),
+        projectPath
+      );
+
       // check for relative and absolute imports
+      const sourceProject = findSourceProject(projectGraph, sourceFilePath);
       if (
         isRelativeImportIntoAnotherProject(
           imp,
           projectPath,
           projectGraph,
-          sourceFilePath
+          sourceFilePath,
+          sourceProject
         ) ||
         isAbsoluteImportIntoAnotherProject(imp)
       ) {
@@ -189,7 +195,6 @@ export default createESLintRule<Options, MessageIds>({
         return;
       }
 
-      const sourceProject = findSourceProject(projectGraph, sourceFilePath);
       const targetProject = findProjectUsingImport(
         projectGraph,
         targetProjectLocator,

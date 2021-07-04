@@ -1,4 +1,4 @@
-export const supportedNxCommands = [
+export const supportedNxCommands: string[] = [
   'affected',
   'affected:apps',
   'affected:libs',

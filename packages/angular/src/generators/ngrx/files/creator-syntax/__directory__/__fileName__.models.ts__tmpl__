@@ -1,0 +1,7 @@
+/**
+ * Interface for the '<%= className %>' data
+ */
+export interface <%= className %>Entity {
+  id: string | number; // Primary ID
+  name: string;
+};

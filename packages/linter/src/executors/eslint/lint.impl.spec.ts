@@ -1,6 +1,6 @@
 import * as fs from 'fs';
-import { Schema } from './schema';
-import { ExecutorContext } from '@nrwl/devkit';
+import type { Schema } from './schema';
+import type { ExecutorContext } from '@nrwl/devkit';
 
 jest.spyOn(fs, 'writeFileSync').mockImplementation();
 let mockCreateDirectory = jest.fn();
@@ -42,7 +42,7 @@ function createValidRunBuilderOptions(
 ): Schema {
   return {
     lintFilePatterns: [],
-    eslintConfig: './.eslintrc.json',
+    eslintConfig: null,
     fix: true,
     cache: true,
     cacheLocation: 'cacheLocation1',
@@ -73,16 +73,24 @@ describe('Linter Builder', () => {
   beforeEach(() => {
     MockESLint.version = VALID_ESLINT_VERSION;
     mockReports = [{ results: [], usedDeprecatedRules: [] }];
+    const projectName = 'proj';
     mockContext = {
-      projectName: 'proj',
+      projectName,
       root: '/root',
       cwd: '/root',
       workspace: {
         version: 2,
-        projects: {},
+        projects: {
+          [projectName]: {
+            root: `apps/${projectName}`,
+            sourceRoot: `apps/${projectName}/src`,
+            targets: {},
+          },
+        },
       },
       isVerbose: false,
     };
+    mockLint.mockImplementation(() => mockReports);
   });
 
   afterAll(() => {
@@ -221,6 +229,32 @@ describe('Linter Builder', () => {
       );
       expect(console.warn).toHaveBeenCalledWith(
         'Lint warnings found in the listed files.\n'
+      );
+    });
+
+    it('should intercept the error from `@typescript-eslint` regarding missing parserServices and provide a more detailed user-facing message', async () => {
+      setupMocks();
+
+      mockLint.mockImplementation(() => {
+        throw new Error(
+          `Error while loading rule '@typescript-eslint/await-thenable': You have used a rule which requires parserServices to be generated. You must therefore provide a value for the "parserOptions.project" property for @typescript-eslint/parser.`
+        );
+      });
+
+      await lintExecutor(
+        createValidRunBuilderOptions({
+          lintFilePatterns: ['includedFile1'],
+          format: 'json',
+          silent: false,
+        }),
+        mockContext
+      );
+      expect(console.error).toHaveBeenCalledWith(
+        `
+Error: You have attempted to use a lint rule which requires the full TypeScript type-checker to be available, but you do not have \`parserOptions.project\` configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your project ESLint config \`apps/proj/.eslintrc.json\`
+
+Please see https://nx.dev/guides/eslint for full guidance on how to resolve this issue.
+`
       );
     });
 

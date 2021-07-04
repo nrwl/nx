@@ -1,13 +1,28 @@
 import * as path from 'path';
 import { FileData } from '../core/file-utils';
-import {
-  DependencyType,
+import type {
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphNode,
-} from '../core/project-graph';
+  TargetConfiguration,
+} from '@nrwl/devkit';
 import { TargetProjectLocator } from '../core/target-project-locator';
-import { normalizePath } from '@nrwl/devkit';
+import { normalizePath, DependencyType } from '@nrwl/devkit';
+
+export interface MappedProjectGraphNode<T = any> {
+  type: string;
+  name: string;
+  data: T & {
+    root?: string;
+    targets?: { [targetName: string]: TargetConfiguration };
+    files: Record<string, FileData>;
+  };
+}
+export interface MappedProjectGraph<T = any> {
+  nodes: Record<string, MappedProjectGraphNode<T>>;
+  dependencies: Record<string, ProjectGraphDependency[]>;
+  allWorkspaceFiles?: FileData[];
+}
 
 export type Deps = { [projectName: string]: ProjectGraphDependency[] };
 export type DepConstraint = {
@@ -15,21 +30,15 @@ export type DepConstraint = {
   onlyDependOnLibsWithTags: string[];
 };
 
-export function hasNoneOfTheseTags(proj: ProjectGraphNode, tags: string[]) {
+export function hasNoneOfTheseTags(
+  proj: ProjectGraphNode<any>,
+  tags: string[]
+) {
   return tags.filter((allowedTag) => hasTag(proj, allowedTag)).length === 0;
 }
 
 function hasTag(proj: ProjectGraphNode, tag: string) {
   return (proj.data.tags || []).indexOf(tag) > -1 || tag === '*';
-}
-
-function containsFile(
-  files: FileData[],
-  targetFileWithoutExtension: string
-): boolean {
-  return !!files.filter(
-    (f) => removeExt(f.file) === targetFileWithoutExtension
-  )[0];
 }
 
 function removeExt(file: string): string {
@@ -66,7 +75,8 @@ export function isRelativeImportIntoAnotherProject(
   imp: string,
   projectPath: string,
   projectGraph: ProjectGraph,
-  sourceFilePath: string
+  sourceFilePath: string,
+  sourceProject: ProjectGraphNode
 ): boolean {
   if (!isRelative(imp)) return false;
 
@@ -74,19 +84,19 @@ export function isRelativeImportIntoAnotherProject(
     path.resolve(path.join(projectPath, path.dirname(sourceFilePath)), imp)
   ).substring(projectPath.length + 1);
 
-  const sourceProject = findSourceProject(projectGraph, sourceFilePath);
   const targetProject = findTargetProject(projectGraph, targetFile);
   return sourceProject && targetProject && sourceProject !== targetProject;
 }
 
-export function findProjectUsingFile(projectGraph: ProjectGraph, file: string) {
-  return Object.values(projectGraph.nodes).filter((n) =>
-    containsFile(n.data.files, file)
-  )[0];
+export function findProjectUsingFile<T>(
+  projectGraph: MappedProjectGraph<T>,
+  file: string
+): MappedProjectGraphNode {
+  return Object.values(projectGraph.nodes).find((n) => n.data.files[file]);
 }
 
 export function findSourceProject(
-  projectGraph: ProjectGraph,
+  projectGraph: MappedProjectGraph,
   sourceFilePath: string
 ) {
   const targetFile = removeExt(sourceFilePath);
@@ -179,4 +189,27 @@ export function hasBuildExecutor(projectGraph: ProjectGraphNode): boolean {
     projectGraph.data.targets.build &&
     projectGraph.data.targets.build.executor !== ''
   );
+}
+
+export function mapProjectGraphFiles<T>(
+  projectGraph: ProjectGraph<T>
+): MappedProjectGraph | null {
+  if (!projectGraph) {
+    return null;
+  }
+  const nodes: Record<string, MappedProjectGraphNode> = {};
+  Object.entries(projectGraph.nodes).forEach(([name, node]) => {
+    const files: Record<string, FileData> = {};
+    node.data.files.forEach(({ file, hash, ext }) => {
+      files[file.slice(0, -ext.length)] = { file, hash, ext };
+    });
+    const data = { ...node.data, files };
+
+    nodes[name] = { ...node, data };
+  });
+
+  return {
+    ...projectGraph,
+    nodes,
+  };
 }

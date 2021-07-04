@@ -62,7 +62,7 @@ const argv = require('yargs')
           : [];
 
         const discrepancies = argv.discrepancies
-          ? getDiscrepancies(dependencies, devDependencies)
+          ? getDiscrepancies(project.name, dependencies, devDependencies)
           : [];
 
         return { ...project, missing, discrepancies };

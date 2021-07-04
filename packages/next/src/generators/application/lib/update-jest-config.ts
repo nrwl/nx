@@ -7,7 +7,7 @@ export function updateJestConfig(host: Tree, options: NormalizedSchema) {
   }
 
   const configPath = `${options.appProjectRoot}/jest.config.js`;
-  const originalContent = host.read(configPath).toString();
+  const originalContent = host.read(configPath, 'utf-8');
   const content = originalContent.replace(
     'transform: {',
     "transform: {\n    '^(?!.*\\\\.(js|jsx|ts|tsx|css|json)$)': '@nrwl/react/plugins/jest',"

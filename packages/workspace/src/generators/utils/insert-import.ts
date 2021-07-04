@@ -15,7 +15,7 @@ export function insertImport(
   name: string,
   modulePath: string
 ) {
-  const contents = tree.read(path).toString();
+  const contents = tree.read(path, 'utf-8');
 
   const sourceFile = createSourceFile(path, contents, ScriptTarget.ESNext);
 

@@ -34,7 +34,7 @@
     "update-11-6-0": {
       "version": "11.6.4",
       "cli": "nx",
-      "description": "Update storybook if installed and above 6 but below 6.2.7",
+      "description": "Update storybook if installed and above 6 but below 6.2.9",
       "factory": "./src/migrations/update-11-6-0/update-storybook"
     },
     "update-12-1-0": {
@@ -46,8 +46,20 @@
     "update-12-3-0": {
       "version": "12.3.0-rc.1",
       "cli": "nx",
-      "description": "Update storybook if installed and above 6 but below 6.2.7",
+      "description": "Update storybook if installed and above 6 but below 6.2.9",
       "factory": "./src/migrations/update-11-6-0/update-storybook"
+    },
+    "update-12-5-0": {
+      "version": "12.5.0-beta.5",
+      "cli": "nx",
+      "description": "Upgrade Storybook to v6.3",
+      "factory": "./src/migrations/update-12-5-0/migrate-storybook-6-3"
+    },
+    "install-addon-essentials": {
+      "version": "12.5.0-beta.5",
+      "cli": "nx",
+      "description": "Install the @storybook/addon-essentials package",
+      "factory": "./src/migrations/update-12-5-0/install-addon-essentials"
     }
   },
   "packageJsonUpdates": {

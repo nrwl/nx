@@ -15,6 +15,7 @@ describe('updateJestConfig', () => {
   it('should handle jest config not existing', async () => {
     await libraryGenerator(tree, {
       name: 'my-source',
+      standaloneConfig: false,
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
 
@@ -44,6 +45,7 @@ describe('updateJestConfig', () => {
 
     await libraryGenerator(tree, {
       name: 'my-source',
+      standaloneConfig: false,
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(jestConfigPath, jestConfig);
@@ -57,8 +59,8 @@ describe('updateJestConfig', () => {
 
     updateJestConfig(tree, schema, projectConfig);
 
-    const jestConfigAfter = tree.read(jestConfigPath).toString();
-    const rootJestConfigAfter = tree.read(rootJestConfigPath).toString();
+    const jestConfigAfter = tree.read(jestConfigPath, 'utf-8');
+    const rootJestConfigAfter = tree.read(rootJestConfigPath, 'utf-8');
     expect(jestConfigAfter).toContain(`name: 'my-destination'`);
     expect(jestConfigAfter).toContain(
       `coverageDirectory: '../../coverage/libs/my-destination'`

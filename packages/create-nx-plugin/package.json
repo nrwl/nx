@@ -1,7 +1,7 @@
 {
   "name": "create-nx-plugin",
   "version": "0.0.1",
-  "description": "Powerful, Extensible Dev Tools",
+  "description": "Smart, Extensible Build Framework",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nrwl/nx.git"

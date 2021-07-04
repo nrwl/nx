@@ -1,0 +1,212 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`convertWebpackBrowserBuildTargetToDelegateBuild should update the configuration correctly 1`] = `
+Object {
+  "projects": Object {
+    "ng-app1": Object {
+      "architect": Object {
+        "build": Object {
+          "builder": "@nrwl/angular:delegate-build",
+          "configurations": Object {
+            "development": Object {
+              "buildTarget": "ng-app1:customBuild:development",
+            },
+            "production": Object {
+              "buildTarget": "ng-app1:customBuild:production",
+            },
+          },
+          "defaultConfiguration": "production",
+          "options": Object {
+            "buildTarget": "ng-app:customBuild",
+            "outputPath": "dist/apps/ng-app1",
+            "tsConfig": "apps/ng-app1/tsconfig.app.json",
+          },
+        },
+        "customBuild": Object {
+          "builder": "@angular-devkit/build-angular:browser",
+          "configurations": Object {
+            "development": Object {
+              "buildOptimizer": false,
+              "extractLicenses": false,
+              "namedChunks": true,
+              "optimization": false,
+              "sourceMap": true,
+              "vendorChunk": true,
+            },
+            "production": Object {
+              "budgets": Array [
+                Object {
+                  "maximumError": "1mb",
+                  "maximumWarning": "500kb",
+                  "type": "initial",
+                },
+                Object {
+                  "maximumError": "4kb",
+                  "maximumWarning": "2kb",
+                  "type": "anyComponentStyle",
+                },
+              ],
+              "fileReplacements": Array [
+                Object {
+                  "replace": "apps/ng-app1/src/environments/environment.ts",
+                  "with": "apps/ng-app1/src/environments/environment.prod.ts",
+                },
+              ],
+              "outputHashing": "all",
+            },
+          },
+          "options": Object {
+            "assets": Array [
+              "apps/ng-app1/src/favicon.ico",
+              "apps/ng-app1/src/assets",
+            ],
+            "index": "apps/ng-app1/src/index.html",
+            "inlineStyleLanguage": "scss",
+            "main": "apps/ng-app1/src/main.ts",
+            "polyfills": "apps/ng-app1/src/polyfills.ts",
+            "scripts": Array [],
+            "styles": Array [
+              "apps/ng-app1/src/styles.scss",
+            ],
+          },
+        },
+      },
+      "projectType": "application",
+      "root": "",
+      "sourceRoot": "src",
+    },
+    "ng-app2": Object {
+      "architect": Object {
+        "build": Object {
+          "builder": "@nrwl/angular:delegate-build",
+          "configurations": Object {
+            "development": Object {
+              "buildTarget": "ng-app:customBuild:development",
+            },
+            "production": Object {
+              "buildTarget": "ng-app:customBuild:production",
+            },
+          },
+          "defaultConfiguration": "production",
+          "options": Object {
+            "outputPath": "dist/apps/ng-app2",
+            "tsConfig": "apps/ng-app2/tsconfig.app.json",
+          },
+        },
+        "customBuild": Object {
+          "builder": "@angular-devkit/build-angular:browser",
+          "configurations": Object {
+            "development": Object {
+              "buildOptimizer": false,
+              "extractLicenses": false,
+              "namedChunks": true,
+              "optimization": false,
+              "sourceMap": true,
+              "vendorChunk": true,
+            },
+            "production": Object {
+              "additionalProperty": "bar",
+              "budgets": Array [
+                Object {
+                  "maximumError": "1mb",
+                  "maximumWarning": "500kb",
+                  "type": "initial",
+                },
+                Object {
+                  "maximumError": "4kb",
+                  "maximumWarning": "2kb",
+                  "type": "anyComponentStyle",
+                },
+              ],
+              "fileReplacements": Array [
+                Object {
+                  "replace": "apps/ng-app2/src/environments/environment.ts",
+                  "with": "apps/ng-app2/src/environments/environment.prod.ts",
+                },
+              ],
+              "outputHashing": "all",
+            },
+          },
+          "options": Object {
+            "additionalProperty": "foo",
+            "assets": Array [
+              "apps/ng-app2/src/favicon.ico",
+              "apps/ng-app2/src/assets",
+            ],
+            "index": "apps/ng-app2/src/index.html",
+            "inlineStyleLanguage": "scss",
+            "main": "apps/ng-app2/src/main.ts",
+            "polyfills": "apps/ng-app2/src/polyfills.ts",
+            "scripts": Array [],
+            "styles": Array [
+              "apps/ng-app2/src/styles.scss",
+            ],
+          },
+        },
+      },
+      "projectType": "application",
+      "root": "",
+      "sourceRoot": "src",
+    },
+    "ng-app3": Object {
+      "architect": Object {
+        "build": Object {
+          "builder": "@nrwl/angular:webpack-browser",
+          "configurations": Object {
+            "development": Object {
+              "buildOptimizer": false,
+              "extractLicenses": false,
+              "namedChunks": true,
+              "optimization": false,
+              "sourceMap": true,
+              "vendorChunk": true,
+            },
+            "production": Object {
+              "budgets": Array [
+                Object {
+                  "maximumError": "1mb",
+                  "maximumWarning": "500kb",
+                  "type": "initial",
+                },
+                Object {
+                  "maximumError": "4kb",
+                  "maximumWarning": "2kb",
+                  "type": "anyComponentStyle",
+                },
+              ],
+              "fileReplacements": Array [
+                Object {
+                  "replace": "apps/ng-app3/src/environments/environment.ts",
+                  "with": "apps/ng-app3/src/environments/environment.prod.ts",
+                },
+              ],
+              "outputHashing": "all",
+            },
+          },
+          "defaultConfiguration": "production",
+          "options": Object {
+            "assets": Array [
+              "apps/ng-app3/src/favicon.ico",
+              "apps/ng-app3/src/assets",
+            ],
+            "index": "apps/ng-app3/src/index.html",
+            "inlineStyleLanguage": "scss",
+            "main": "apps/ng-app3/src/main.ts",
+            "outputPath": "dist/apps/ng-app3",
+            "polyfills": "apps/ng-app3/src/polyfills.ts",
+            "scripts": Array [],
+            "styles": Array [
+              "apps/ng-app3/src/styles.scss",
+            ],
+            "tsConfig": "apps/ng-app3/tsconfig.app.json",
+          },
+        },
+      },
+      "projectType": "application",
+      "root": "",
+      "sourceRoot": "src",
+    },
+  },
+  "version": 1,
+}
+`;

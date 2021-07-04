@@ -4,14 +4,11 @@ import {
   updateFile,
   readJson,
   runCLI,
-  killPorts,
 } from '@nrwl/e2e/utils';
 
 describe('Nx Plugins', () => {
   beforeAll(() => newProject());
-
   afterAll(() => removeProject({ onlyOnCI: true }));
-  afterEach(() => killPorts());
 
   it('should use plugins defined in nx.json', () => {
     const nxJson = readJson('nx.json');
@@ -41,7 +38,7 @@ describe('Nx Plugins', () => {
           builder.addDependency(
             require('@nrwl/devkit').DependencyType.static,
             'plugin-node',
-            'plugin-node2' 
+            'plugin-node2'
           );
           return builder.getProjectGraph();
         }

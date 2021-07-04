@@ -13,7 +13,7 @@ describe('jest', () => {
     jestInitGenerator(tree, {});
 
     expect(tree.exists('jest.config.js')).toBeTruthy();
-    expect(tree.read('jest.config.js').toString()).toMatchInlineSnapshot(`
+    expect(tree.read('jest.config.js', 'utf-8')).toMatchInlineSnapshot(`
       "module.exports = {
       projects: []
       };"
@@ -23,7 +23,7 @@ describe('jest', () => {
   it('should not override existing files', async () => {
     tree.write('jest.config.js', `test`);
     jestInitGenerator(tree, {});
-    expect(tree.read('jest.config.js').toString()).toEqual('test');
+    expect(tree.read('jest.config.js', 'utf-8')).toEqual('test');
   });
 
   it('should add dependencies', async () => {

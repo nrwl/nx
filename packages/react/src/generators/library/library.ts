@@ -150,7 +150,10 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     return;
   }
 
-  const reactEslintJson = createReactEslintJson(options.projectRoot);
+  const reactEslintJson = createReactEslintJson(
+    options.projectRoot,
+    options.setParserOptionsProject
+  );
 
   updateJson(
     host,
@@ -172,20 +175,12 @@ function addProject(host: Tree, options: NormalizedSchema) {
 
   if (options.publishable || options.buildable) {
     const { libsDir } = getWorkspaceLayout(host);
+    const external = ['react/jsx-runtime'];
 
-    const external = ['react', 'react-dom'];
-    // Also exclude CSS-in-JS packages from build
-    if (
-      options.style !== 'css' &&
-      options.style !== 'scss' &&
-      options.style !== 'styl' &&
-      options.style !== 'less' &&
-      options.style !== 'none'
-    ) {
-      external.push(
-        ...Object.keys(CSS_IN_JS_DEPENDENCIES[options.style].dependencies)
-      );
+    if (options.style === '@emotion/styled') {
+      external.push('@emotion/styled/base');
     }
+
     targets.build = {
       builder: '@nrwl/web:package',
       outputs: ['{options.outputPath}'],
@@ -207,13 +202,18 @@ function addProject(host: Tree, options: NormalizedSchema) {
     };
   }
 
-  addProjectConfiguration(host, options.name, {
-    root: options.projectRoot,
-    sourceRoot: joinPathFragments(options.projectRoot, 'src'),
-    projectType: 'library',
-    tags: options.parsedTags,
-    targets,
-  });
+  addProjectConfiguration(
+    host,
+    options.name,
+    {
+      root: options.projectRoot,
+      sourceRoot: joinPathFragments(options.projectRoot, 'src'),
+      projectType: 'library',
+      tags: options.parsedTags,
+      targets,
+    },
+    options.standaloneConfig
+  );
 }
 
 function updateTsConfig(tree: Tree, options: NormalizedSchema) {
@@ -320,10 +320,8 @@ function updateAppRoutes(host: Tree, options: NormalizedSchema) {
 
   // addInitialAppRoutes
   {
-    const {
-      content: componentContent,
-      source: componentSource,
-    } = readComponent(host, appComponentPath);
+    const { content: componentContent, source: componentSource } =
+      readComponent(host, appComponentPath);
     const isComponentRouterPresent = componentContent.match(/react-router-dom/);
     if (!isComponentRouterPresent) {
       const changes = applyChangesToString(
@@ -336,10 +334,8 @@ function updateAppRoutes(host: Tree, options: NormalizedSchema) {
 
   // addNewAppRoute
   {
-    const {
-      content: componentContent,
-      source: componentSource,
-    } = readComponent(host, appComponentPath);
+    const { content: componentContent, source: componentSource } =
+      readComponent(host, appComponentPath);
     const { npmScope } = getWorkspaceLayout(host);
     const changes = applyChangesToString(
       componentContent,
@@ -363,7 +359,7 @@ function readComponent(
     throw new Error(`Cannot find ${path}`);
   }
 
-  const content = host.read(path).toString('utf-8');
+  const content = host.read(path, 'utf-8');
 
   const source = ts.createSourceFile(
     path,

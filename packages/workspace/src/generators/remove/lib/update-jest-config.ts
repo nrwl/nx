@@ -36,7 +36,7 @@ export function updateJestConfig(
     return;
   }
 
-  const contents = tree.read('jest.config.js').toString();
+  const contents = tree.read('jest.config.js', 'utf-8');
   const sourceFile = createSourceFile(
     'jest.config.js',
     contents,
@@ -57,7 +57,8 @@ export function updateJestConfig(
       `Could not remove ${projectToRemove} from projects in /jest.config.js. Please remove ${projectToRemove} from your projects.`
     );
   }
-  const projectsArray = projectsAssignment.initializer as ArrayLiteralExpression;
+  const projectsArray =
+    projectsAssignment.initializer as ArrayLiteralExpression;
 
   const project = projectsArray.elements.find(
     (item) =>

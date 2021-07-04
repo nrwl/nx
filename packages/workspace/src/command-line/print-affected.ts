@@ -1,11 +1,9 @@
-import { ProjectGraph, ProjectGraphNode } from '../core/project-graph';
-import { Environment } from '../core/shared-interfaces';
-import { Task } from '../tasks-runner/tasks-runner';
-import { createTask, getRunner } from '../tasks-runner/run-command';
+import type { ProjectGraph, ProjectGraphNode, Task } from '@nrwl/devkit';
+import type { Environment } from '../core/shared-interfaces';
+import { createTask } from '../tasks-runner/run-command';
 import { getCommandAsString, getOutputs } from '../tasks-runner/utils';
 import * as yargs from 'yargs';
-import { NxArgs } from './utils';
-import { Hasher } from '../core/hasher/hasher';
+import type { NxArgs } from './utils';
 import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
 
 export async function printAffected(

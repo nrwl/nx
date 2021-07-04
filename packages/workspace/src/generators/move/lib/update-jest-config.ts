@@ -27,7 +27,7 @@ export function updateJestConfig(
     return;
   }
 
-  const oldContent = tree.read(jestConfigPath).toString('utf-8');
+  const oldContent = tree.read(jestConfigPath, 'utf-8');
 
   const findName = new RegExp(`'${schema.projectName}'`, 'g');
   const findDir = new RegExp(project.root, 'g');
@@ -50,9 +50,7 @@ export function updateJestConfig(
     'g'
   );
 
-  const oldRootJestConfigContent = tree
-    .read(rootJestConfigPath)
-    .toString('utf-8');
+  const oldRootJestConfigContent = tree.read(rootJestConfigPath, 'utf-8');
 
   const newRootJestConfigContent = oldRootJestConfigContent.replace(
     findProject,

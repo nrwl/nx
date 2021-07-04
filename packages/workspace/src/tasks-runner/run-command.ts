@@ -1,14 +1,16 @@
-import { AffectedEventType, Task, TasksRunner } from './tasks-runner';
+import { AffectedEventType, TasksRunner } from './tasks-runner';
 import { join } from 'path';
 import { appRootPath } from '../utilities/app-root';
 import { Reporter, ReporterArgs } from './reporter';
 import * as yargs from 'yargs';
-import {
+import type {
   ProjectGraph,
   ProjectGraphNode,
   TargetDependencyConfig,
+  NxJsonConfiguration,
+  Task,
 } from '@nrwl/devkit';
-import { Environment, NxJson } from '../core/shared-interfaces';
+import { Environment } from '../core/shared-interfaces';
 import { NxArgs } from '@nrwl/workspace/src/command-line/utils';
 import { isRelativePath } from '../utilities/fileutils';
 import {
@@ -16,7 +18,7 @@ import {
   projectHasTargetAndConfiguration,
 } from '../utilities/project-graph-utils';
 import { output } from '../utilities/output';
-import { getDefaultDependencyConfigs, getDependencyConfigs } from './utils';
+import { getDependencyConfigs } from './utils';
 import { Hasher } from '../core/hasher/hasher';
 
 type RunArgs = yargs.Arguments & ReporterArgs;
@@ -32,7 +34,7 @@ export async function runCommand<T extends RunArgs>(
 ) {
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
-  const defaultDependencyConfigs = getDefaultDependencyConfigs(nxJson);
+  const defaultDependencyConfigs = nxJson.targetDependencies ?? {};
   const tasks = createTasksForProjectToRun(
     projectsToRun,
     {
@@ -340,7 +342,7 @@ function getId({
 
 export function getRunner(
   nxArgs: NxArgs,
-  nxJson: NxJson
+  nxJson: NxJsonConfiguration
 ): {
   tasksRunner: TasksRunner;
   runnerOptions: unknown;

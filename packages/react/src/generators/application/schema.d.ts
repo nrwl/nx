@@ -18,6 +18,8 @@ export interface Schema {
   js?: boolean;
   globalCss?: boolean;
   strict?: boolean;
+  setParserOptionsProject?: boolean;
+  standaloneConfig?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {

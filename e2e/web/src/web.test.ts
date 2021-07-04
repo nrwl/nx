@@ -2,6 +2,7 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   createFile,
+  isNotWindows,
   killPorts,
   newProject,
   readFile,
@@ -15,11 +16,12 @@ import {
 
 describe('Web Components Applications', () => {
   beforeEach(() => newProject());
-  afterEach(() => killPorts());
 
-  it('aaashould be able to generate a web app', async () => {
+  it('should be able to generate a web app', async () => {
     const appName = uniq('app');
     runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+
+    checkFilesDoNotExist(`apps/${appName}/project.json`);
 
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -53,11 +55,24 @@ describe('Web Components Applications', () => {
     const lintE2eResults = runCLI(`lint ${appName}-e2e`);
     expect(lintE2eResults).toContain('All files pass linting.');
 
-    if (runCypressTests()) {
-      const e2eResults = runCLI(`e2e ${appName}-e2e --headless`);
+    if (isNotWindows() && runCypressTests()) {
+      const e2eResults = runCLI(`e2e ${appName}-e2e --headless --no-watch`);
       expect(e2eResults).toContain('All specs passed!');
+      expect(await killPorts()).toBeTruthy();
     }
   }, 500000);
+
+  it('should be able to generate a web app with standaloneConfig', async () => {
+    const appName = uniq('app');
+    runCLI(
+      `generate @nrwl/web:app ${appName} --no-interactive --standalone-config`
+    );
+
+    checkFilesExist(`apps/${appName}/project.json`);
+
+    const lintResults = runCLI(`lint ${appName}`);
+    expect(lintResults).toContain('All files pass linting.');
+  }, 120000);
 
   it('should remove previous output before building', async () => {
     const appName = uniq('app');
@@ -98,16 +113,12 @@ describe('Web Components Applications', () => {
 
     updateFile(`apps/${appName}/browserslist`, `IE 9-11`);
 
-    const output = runCLI(`build ${appName} --prod --outputHashing=none`);
+    runCLI(`build ${appName} --prod --outputHashing=none`);
+
     checkFilesExist(
       `dist/apps/${appName}/main.esm.js`,
       `dist/apps/${appName}/main.es5.js`
     );
-
-    // Do not run type checking for legacy build
-    expect(
-      output.match(/Starting type checking service.../g) || []
-    ).toHaveLength(1);
   }, 120000);
 
   it('should emit decorator metadata when it is enabled in tsconfig', async () => {
@@ -332,5 +343,80 @@ describe('Build Options', () => {
     expect(styles).toContain(fooCssContent);
     expect(styles).not.toContain(barCssContent);
     expect(barStyles).toContain(barCssContent);
+  });
+});
+
+describe('index.html interpolation', () => {
+  test('should interpolate environment variables', () => {
+    const appName = uniq('app');
+
+    runCLI(`generate @nrwl/web:app ${appName} --no-interactive`);
+
+    const srcPath = `apps/${appName}/src`;
+    const indexPath = `${srcPath}/index.html`;
+    const indexContent = `<!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <title>BestReactApp</title>
+        <base href="/" />
+
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" type="image/x-icon" href="favicon.ico" />
+      </head>
+      <body>
+        <div id="root"></div>
+        <div>Nx Variable: %NX_VARIABLE%</div>
+        <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
+        <div>Deploy Url: %DEPLOY_URL%</div>
+      </body>
+    </html>
+`;
+    const envFilePath = `apps/${appName}/.env`;
+    const envFileContents = `
+      NX_VARIABLE=foo
+      SOME_OTHER_VARIABLE=bar
+    }`;
+
+    const expectedBuiltIndex = `<!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <title>BestReactApp</title>
+        <base href="/">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" type="image/x-icon" href="favicon.ico" />
+      </head>
+      <body>
+        <div id="root"></div>
+        <div>Nx Variable: foo</div>
+        <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
+        <div>Deploy Url: baz</div>
+      <script src="bazruntime.js" defer></script><script src="bazpolyfills.js" defer></script><script src="bazstyles.js" defer></script><script src="bazmain.js" defer></script></body>
+    </html>
+`;
+
+    createFile(envFilePath);
+
+    // createFile could not create a file with content
+    updateFile(envFilePath, envFileContents);
+    updateFile(indexPath, indexContent);
+
+    const workspacePath = `workspace.json`;
+    const workspaceConfig = readJson(workspacePath);
+    const buildOptions =
+      workspaceConfig.projects[appName].targets.build.options;
+    buildOptions.deployUrl = 'baz';
+
+    updateFile(workspacePath, JSON.stringify(workspaceConfig));
+
+    runCLI(`build ${appName}`);
+
+    const distPath = `dist/apps/${appName}`;
+    const resultIndexContents = readFile(`${distPath}/index.html`);
+
+    expect(resultIndexContents).toMatch(/<div>Nx Variable: foo<\/div>/);
+    expect(resultIndexContents).toMatch(/<div>Nx Variable: foo<\/div>/);
+    expect(resultIndexContents).toMatch(/ <div>Nx Variable: foo<\/div>/);
   });
 });

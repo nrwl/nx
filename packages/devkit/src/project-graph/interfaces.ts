@@ -1,4 +1,7 @@
-import { TargetConfiguration, Workspace } from '@nrwl/tao/src/shared/workspace';
+import type {
+  TargetConfiguration,
+  Workspace,
+} from '@nrwl/tao/src/shared/workspace';
 
 /**
  * Some metadata about a file
@@ -19,8 +22,8 @@ export interface ProjectFileMap {
 /**
  * A Graph of projects in the workspace and dependencies between them
  */
-export interface ProjectGraph {
-  nodes: Record<string, ProjectGraphNode>;
+export interface ProjectGraph<T = any> {
+  nodes: Record<string, ProjectGraphNode<T>>;
   dependencies: Record<string, ProjectGraphDependency[]>;
 
   // this is optional otherwise it might break folks who use project graph creation

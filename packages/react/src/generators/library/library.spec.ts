@@ -16,7 +16,8 @@ describe('lib', () => {
     unitTestRunner: 'jest',
     style: 'css',
     component: true,
-    strict: false,
+    strict: true,
+    standaloneConfig: false,
   };
 
   beforeEach(() => {
@@ -92,14 +93,14 @@ describe('lib', () => {
           path: './tsconfig.spec.json',
         },
       ]);
-      expect(tsconfigJson.compilerOptions.strict).not.toBeDefined();
       expect(
         tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
-      ).not.toBeDefined();
-      expect(tsconfigJson.compilerOptions.noImplicitReturns).not.toBeDefined();
-      expect(
-        tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
-      ).not.toBeDefined();
+      ).toEqual(true);
+      expect(tsconfigJson.compilerOptions.strict).toEqual(true);
+      expect(tsconfigJson.compilerOptions.noImplicitReturns).toEqual(true);
+      expect(tsconfigJson.compilerOptions.noFallthroughCasesInSwitch).toEqual(
+        true
+      );
     });
 
     it('should extend the local tsconfig.json with tsconfig.spec.json', async () => {
@@ -145,11 +146,6 @@ describe('lib', () => {
                 "*.js",
                 "*.jsx",
               ],
-              "parserOptions": Object {
-                "project": Array [
-                  "libs/my-lib/tsconfig.*?.json",
-                ],
-              },
               "rules": Object {},
             },
             Object {
@@ -237,9 +233,9 @@ describe('lib', () => {
     it('should update tsconfig.base.json', async () => {
       await libraryGenerator(appTree, { ...defaultSchema, directory: 'myDir' });
       const tsconfigJson = readJson(appTree, '/tsconfig.base.json');
-      expect(
-        tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']
-      ).toEqual(['libs/my-dir/my-lib/src/index.ts']);
+      expect(tsconfigJson.compilerOptions.paths['@proj/my-dir/my-lib']).toEqual(
+        ['libs/my-dir/my-lib/src/index.ts']
+      );
       expect(
         tsconfigJson.compilerOptions.paths['my-dir-my-lib/*']
       ).toBeUndefined();
@@ -294,7 +290,7 @@ describe('lib', () => {
         appTree.exists('libs/my-lib/src/lib/my-lib.module.styl')
       ).toBeFalsy();
 
-      const content = appTree.read('libs/my-lib/src/lib/my-lib.tsx').toString();
+      const content = appTree.read('libs/my-lib/src/lib/my-lib.tsx', 'utf-8');
       expect(content).not.toContain('styled-components');
       expect(content).not.toContain('<StyledApp>');
       expect(content).not.toContain('@emotion/styled');
@@ -354,6 +350,7 @@ describe('lib', () => {
         name: 'myApp',
         routing: true,
         style: 'css',
+        standaloneConfig: false,
       });
 
       await libraryGenerator(appTree, {
@@ -361,8 +358,8 @@ describe('lib', () => {
         appProject: 'my-app',
       });
 
-      const appSource = appTree.read('apps/my-app/src/app/app.tsx').toString();
-      const mainSource = appTree.read('apps/my-app/src/main.tsx').toString();
+      const appSource = appTree.read('apps/my-app/src/app/app.tsx', 'utf-8');
+      const mainSource = appTree.read('apps/my-app/src/main.tsx', 'utf-8');
 
       expect(mainSource).toContain('react-router-dom');
       expect(mainSource).toContain('<BrowserRouter>');
@@ -380,6 +377,7 @@ describe('lib', () => {
         unitTestRunner: 'jest',
         name: 'myApp',
         style: 'css',
+        standaloneConfig: false,
       });
 
       await libraryGenerator(appTree, {
@@ -387,8 +385,8 @@ describe('lib', () => {
         appProject: 'my-app',
       });
 
-      const appSource = appTree.read('apps/my-app/src/app/app.tsx').toString();
-      const mainSource = appTree.read('apps/my-app/src/main.tsx').toString();
+      const appSource = appTree.read('apps/my-app/src/app/app.tsx', 'utf-8');
+      const mainSource = appTree.read('apps/my-app/src/main.tsx', 'utf-8');
 
       expect(mainSource).toContain('react-router-dom');
       expect(mainSource).toContain('<BrowserRouter>');
@@ -425,7 +423,7 @@ describe('lib', () => {
         executor: '@nrwl/web:package',
         outputs: ['{options.outputPath}'],
         options: {
-          external: ['react', 'react-dom'],
+          external: ['react/jsx-runtime'],
           entryFile: 'libs/my-lib/src/index.ts',
           outputPath: 'dist/libs/my-lib',
           project: 'libs/my-lib/package.json',
@@ -460,12 +458,16 @@ describe('lib', () => {
       });
 
       const workspaceJson = readJson(appTree, '/workspace.json');
+      const babelrc = readJson(appTree, 'libs/my-lib/.babelrc');
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
-          external: ['react', 'react-dom', 'react-is', 'styled-components'],
+          external: ['react/jsx-runtime'],
         },
       });
+      expect(babelrc.plugins).toEqual([
+        ['styled-components', { pure: true, ssr: true }],
+      ]);
     });
 
     it('should support @emotion/styled', async () => {
@@ -477,12 +479,14 @@ describe('lib', () => {
       });
 
       const workspaceJson = readJson(appTree, '/workspace.json');
+      const babelrc = readJson(appTree, 'libs/my-lib/.babelrc');
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
-          external: ['react', 'react-dom', '@emotion/styled', '@emotion/react'],
+          external: ['react/jsx-runtime', '@emotion/styled/base'],
         },
       });
+      expect(babelrc.plugins).toEqual(['@emotion/babel-plugin']);
     });
 
     it('should support styled-jsx', async () => {
@@ -498,10 +502,10 @@ describe('lib', () => {
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
-          external: ['react', 'react-dom', 'styled-jsx'],
+          external: ['react/jsx-runtime'],
         },
       });
-      expect(babelrc.plugins).toContain('styled-jsx/babel');
+      expect(babelrc.plugins).toEqual(['styled-jsx/babel']);
     });
 
     it('should support style none', async () => {
@@ -516,7 +520,7 @@ describe('lib', () => {
 
       expect(workspaceJson.projects['my-lib'].architect.build).toMatchObject({
         options: {
-          external: ['react', 'react-dom'],
+          external: ['react/jsx-runtime'],
         },
       });
     });
@@ -587,22 +591,22 @@ describe('lib', () => {
     });
   });
 
-  describe('--strict', () => {
-    it('should update tsconfig.json', async () => {
+  describe('--no-strict', () => {
+    it('should not add options for strict mode', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
-        strict: true,
+        strict: false,
       });
       const tsconfigJson = readJson(appTree, '/libs/my-lib/tsconfig.json');
 
-      expect(tsconfigJson.compilerOptions.strict).toBeTruthy();
       expect(
         tsconfigJson.compilerOptions.forceConsistentCasingInFileNames
-      ).toBeTruthy();
-      expect(tsconfigJson.compilerOptions.noImplicitReturns).toBeTruthy();
+      ).not.toBeDefined();
+      expect(tsconfigJson.compilerOptions.strict).not.toBeDefined();
+      expect(tsconfigJson.compilerOptions.noImplicitReturns).not.toBeDefined();
       expect(
         tsconfigJson.compilerOptions.noFallthroughCasesInSwitch
-      ).toBeTruthy();
+      ).not.toBeDefined();
     });
   });
 
@@ -621,7 +625,7 @@ describe('lib', () => {
       });
 
       expect(() => {
-        JSON.parse(appTree.read(`libs/my-lib/.babelrc`).toString());
+        readJson(appTree, `libs/my-lib/.babelrc`);
       }).not.toThrow();
     }
   );

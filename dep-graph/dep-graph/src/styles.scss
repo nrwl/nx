@@ -9,6 +9,7 @@ $color-nrwl-black: #231f20 !default;
 $color-nrwl-red: #f85477 !default;
 $font-family: 'Montserrat', 'Helvetica Neue', sans-serif !default;
 $color-primary: $color-nrwl-navy !default;
+$sidebar-width: 260px;
 
 * {
   -webkit-box-sizing: border-box;
@@ -95,12 +96,40 @@ h5 {
 }
 
 .sidebar {
-  min-width: 260px;
+  min-width: $sidebar-width;
   max-width: calc(50% - 10px);
   z-index: 1;
   position: relative;
   height: 100%;
   box-shadow: 2px 0 2px rgba(51, 51, 51, 0.1);
+  transition: margin-left 0.5s;
+
+  &.hidden {
+    .sidebar-hide-button:after {
+      content: '\00BB';
+    }
+  }
+
+  .sidebar-hide-button {
+    content: '<<';
+    background-color: white;
+    border-top: 1px solid;
+    border-right: 1px solid;
+    border-bottom: 1px solid;
+    border-color: rgba(51, 51, 51, 0.3);
+    color: rgba(51, 51, 51, 0.6);
+    position: absolute;
+    // left: 319px;
+    top: 10px;
+    text-decoration: none;
+    padding: 10px;
+    border-radius: 0 5px 5px 0;
+    box-shadow: 2px 0 2px rgba(51, 51, 51, 0.1);
+
+    &:after {
+      content: '\00AB';
+    }
+  }
 }
 
 .sidebar > .sidebar-content {

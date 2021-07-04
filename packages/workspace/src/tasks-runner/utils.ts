@@ -1,12 +1,14 @@
 import {
-  NxJsonConfiguration,
   ProjectGraph,
   ProjectGraphNode,
   TargetDependencyConfig,
+  Task,
+  TaskGraph,
 } from '@nrwl/devkit';
-import { Task } from './tasks-runner';
 import { flatten } from 'flat';
 import { output } from '../utilities/output';
+import { Workspaces } from '@nrwl/tao/src/shared/workspace';
+import { convertNpmScriptsToTargets } from '@nrwl/workspace/src/core/project-graph/build-nodes';
 
 const commonCommands = ['build', 'test', 'lint', 'e2e', 'deploy'];
 
@@ -49,30 +51,6 @@ export function getCommand(cliCommand: string, isYarn: boolean, task: Task) {
       ...args,
     ];
   }
-}
-
-export function getDefaultDependencyConfigs(
-  nxJson: NxJsonConfiguration,
-  runnerOptions?: {
-    strictlyOrderedTargets?: string[];
-  }
-): Record<string, TargetDependencyConfig[]> {
-  const defaults: Record<string, TargetDependencyConfig[]> =
-    nxJson.targetDependencies ?? {};
-
-  const strictlyOrderedTargets = runnerOptions
-    ? runnerOptions.strictlyOrderedTargets ?? ['build']
-    : [];
-  // Strictly Ordered Targets depend on their dependencies
-  for (const target of strictlyOrderedTargets) {
-    defaults[target] = defaults[target] || [];
-    defaults[target].push({
-      target,
-      projects: 'dependencies',
-    });
-  }
-
-  return defaults;
 }
 
 export function getDependencyConfigs(
@@ -170,11 +148,19 @@ function unparseOption(key: string, value: any, unparsed: string[]) {
         unparsed
       );
     }
-  } else if (typeof value === 'string' && value.includes(' ')) {
-    unparsed.push(`--${key}="${value}"`);
+  } else if (
+    typeof value === 'string' &&
+    stringShouldBeWrappedIntoQuotes(value)
+  ) {
+    const sanitized = value.replace(/"/g, String.raw`\"`);
+    unparsed.push(`--${key}="${sanitized}"`);
   } else if (value != null) {
     unparsed.push(`--${key}=${value}`);
   }
+}
+
+function stringShouldBeWrappedIntoQuotes(str: string) {
+  return str.includes(' ') || str.includes('{') || str.includes('"');
 }
 
 function interpolateOutputs(template: string, data: any): string {
@@ -190,4 +176,100 @@ function interpolateOutputs(template: string, data: any): string {
 
     return value;
   });
+}
+
+export function getExecutorNameForTask(task: Task, workspace: Workspaces) {
+  const project =
+    workspace.readWorkspaceConfiguration().projects[task.target.project];
+
+  if (!project.targets) {
+    project.targets = convertNpmScriptsToTargets(project.root);
+  }
+
+  if (!project.targets[task.target.target]) {
+    throw new Error(
+      `Cannot find configuration for task ${task.target.project}:${task.target.target}`
+    );
+  }
+
+  return project.targets[task.target.target].executor;
+}
+
+export function getExecutorForTask(task: Task, workspace: Workspaces) {
+  const executor = getExecutorNameForTask(task, workspace);
+  const [nodeModule, executorName] = executor.split(':');
+
+  return workspace.readExecutor(nodeModule, executorName);
+}
+
+export function getCustomHasher(task: Task, workspace: Workspaces) {
+  try {
+    const factory = getExecutorForTask(task, workspace).hasherFactory;
+    return factory ? factory() : null;
+  } catch (e) {
+    console.error(e);
+    throw new Error(`Unable to load hasher for task "${task.id}"`);
+  }
+}
+
+export function removeTasksFromTaskGraph(
+  graph: TaskGraph,
+  ids: string[]
+): TaskGraph {
+  const tasks = {};
+  const dependencies = {};
+  const removedSet = new Set(ids);
+  for (let taskId of Object.keys(graph.tasks)) {
+    if (!removedSet.has(taskId)) {
+      tasks[taskId] = graph.tasks[taskId];
+      dependencies[taskId] = graph.dependencies[taskId].filter(
+        (depTaskId) => !removedSet.has(depTaskId)
+      );
+    }
+  }
+  return {
+    tasks,
+    dependencies: dependencies,
+    roots: Object.keys(dependencies).filter(
+      (k) => dependencies[k].length === 0
+    ),
+  };
+}
+
+export function calculateReverseDeps(
+  taskGraph: TaskGraph
+): Record<string, string[]> {
+  const reverseTaskDeps: Record<string, string[]> = {};
+  Object.keys(taskGraph.tasks).forEach((t) => {
+    reverseTaskDeps[t] = [];
+  });
+
+  Object.keys(taskGraph.dependencies).forEach((taskId) => {
+    taskGraph.dependencies[taskId].forEach((d) => {
+      reverseTaskDeps[d].push(taskId);
+    });
+  });
+
+  return reverseTaskDeps;
+}
+
+export function getCliPath(workspaceRoot: string) {
+  const cli = require.resolve(`@nrwl/cli/lib/run-cli.js`, {
+    paths: [workspaceRoot],
+  });
+  return `${cli}`;
+}
+
+export function getCommandArgsForTask(task: Task) {
+  const args: string[] = unparse(task.overrides || {});
+
+  const config = task.target.configuration
+    ? `:${task.target.configuration}`
+    : '';
+
+  return [
+    'run',
+    `${task.target.project}:${task.target.target}${config}`,
+    ...args,
+  ];
 }

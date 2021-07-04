@@ -22,10 +22,15 @@ export function addProject(host, options: NormalizedSchema) {
     },
   };
 
-  addProjectConfiguration(host, options.projectName, {
-    ...project,
-    ...nxConfig,
-  });
+  addProjectConfiguration(
+    host,
+    options.projectName,
+    {
+      ...project,
+      ...nxConfig,
+    },
+    options.standaloneConfig
+  );
 }
 
 function maybeJs(options: NormalizedSchema, path: string): string {
@@ -112,10 +117,12 @@ function createServeTarget(options: NormalizedSchema): TargetConfiguration {
     executor: '@nrwl/web:dev-server',
     options: {
       buildTarget: `${options.projectName}:build`,
+      hmr: true,
     },
     configurations: {
       production: {
         buildTarget: `${options.projectName}:build:production`,
+        hmr: false,
       },
     },
   };

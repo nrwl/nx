@@ -24,7 +24,7 @@ import { cypressProjectGenerator } from '@nrwl/cypress';
 import { Linter, lintProjectGenerator } from '@nrwl/linter';
 import { jestProjectGenerator } from '@nrwl/jest';
 
-import { WebBuildBuilderOptions } from '../../builders/build/build.impl';
+import { WebBuildBuilderOptions } from '../../executors/build/build.impl';
 import { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {
@@ -149,7 +149,12 @@ function addProject(tree: Tree, options: NormalizedSchema) {
   project = addBuildTarget(project, options);
   project = addServeTarget(project, options);
 
-  addProjectConfiguration(tree, options.projectName, project);
+  addProjectConfiguration(
+    tree,
+    options.projectName,
+    project,
+    options.standaloneConfig
+  );
 
   const workspace = readWorkspaceConfiguration(tree);
 

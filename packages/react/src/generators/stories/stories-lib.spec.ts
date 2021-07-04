@@ -70,7 +70,7 @@ describe('react:stories for libraries', () => {
     ).toBeTruthy();
   });
 
-  xit('should not overwrite existing stories', () => {});
+  it('should not overwrite existing stories', () => {});
 
   it('should ignore files that do not contain components', async () => {
     // create another component
@@ -106,6 +106,7 @@ export async function createTestUILib(
     style: 'css',
     unitTestRunner: 'none',
     name: libName,
+    standaloneConfig: false,
   });
 
   // create some Nx app that we'll use to generate the cypress
@@ -120,6 +121,7 @@ export async function createTestUILib(
     unitTestRunner: 'none',
     name: `${libName}-e2e`,
     js: plainJS,
+    standaloneConfig: false,
   });
   return appTree;
 }

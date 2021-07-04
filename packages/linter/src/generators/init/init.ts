@@ -1,10 +1,9 @@
 import {
   addDependenciesToPackageJson,
-  GeneratorCallback,
-  Tree,
   updateJson,
   writeJson,
 } from '@nrwl/devkit';
+import type { GeneratorCallback, Tree } from '@nrwl/devkit';
 import {
   buildAngularVersion,
   eslintConfigPrettierVersion,
@@ -153,7 +152,6 @@ function initTsLint(tree: Tree): GeneratorCallback {
 
   return addDependenciesToPackageJson(
     tree,
-
     {},
     {
       tslint: tslintVersion,
@@ -168,7 +166,7 @@ function initEsLint(tree: Tree): GeneratorCallback {
   }
 
   updateJson(tree, 'package.json', (json) => {
-    json.dependencies = json.dependencies || {};
+    json.dependencies ||= {};
 
     delete json.dependencies['@nrwl/linter'];
 
@@ -179,7 +177,7 @@ function initEsLint(tree: Tree): GeneratorCallback {
 
   if (tree.exists('.vscode/extensions.json')) {
     updateJson(tree, '.vscode/extensions.json', (json) => {
-      json.recommendations = json.recommendations || [];
+      json.recommendations ||= [];
       const extension = 'dbaeumer.vscode-eslint';
       if (!json.recommendations.includes(extension)) {
         json.recommendations.push(extension);
@@ -190,7 +188,6 @@ function initEsLint(tree: Tree): GeneratorCallback {
 
   return addDependenciesToPackageJson(
     tree,
-
     {},
     {
       '@nrwl/linter': nxVersion,

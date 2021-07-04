@@ -1,13 +1,13 @@
 import * as yargs from 'yargs';
 import { runCommand } from '../tasks-runner/run-command';
-import { NxArgs, RawNxArgs, splitArgsIntoNxArgsAndOverrides } from './utils';
+import { splitArgsIntoNxArgsAndOverrides } from './utils';
+import type { NxArgs, RawNxArgs } from './utils';
 import {
   createProjectGraph,
   isWorkspaceProject,
-  ProjectGraph,
-  ProjectGraphNode,
   withDeps,
 } from '../core/project-graph';
+import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
 import { readEnvironment } from '../core/file-utils';
 import { DefaultReporter } from '../tasks-runner/default-reporter';
 import { EmptyReporter } from '../tasks-runner/empty-reporter';
@@ -15,7 +15,7 @@ import { projectHasTarget } from '../utilities/project-graph-utils';
 import { output } from '../utilities/output';
 import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
 import { performance } from 'perf_hooks';
-import { Environment } from '../core/shared-interfaces';
+import type { Environment } from '../core/shared-interfaces';
 
 export async function runMany(parsedArgs: yargs.Arguments & RawNxArgs) {
   performance.mark('command-execution-begins');
@@ -80,7 +80,7 @@ function applyExclude(
 }
 
 function applyOnlyFailed(
-  projectsNotExcluded: Record<string, ProjectGraphNode<any>>,
+  projectsNotExcluded: Record<string, ProjectGraphNode>,
   nxArgs: NxArgs,
   env: Environment
 ) {

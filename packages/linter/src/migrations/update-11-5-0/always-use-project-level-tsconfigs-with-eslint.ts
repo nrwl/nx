@@ -1,4 +1,5 @@
-import { formatFiles, getProjects, Tree, updateJson } from '@nrwl/devkit';
+import { formatFiles, getProjects, updateJson } from '@nrwl/devkit';
+import type { Tree } from '@nrwl/devkit';
 import type { Linter } from 'eslint';
 import { join } from 'path';
 
@@ -16,15 +17,15 @@ function updateRootESLintConfig(host: Tree) {
      * configuration (instead of there being a silent, much slower fallback).
      */
     if (json.overrides) {
-      json.overrides = json.overrides.map((override) => {
-        if (override.parserOptions && override.parserOptions.project) {
-          delete override.parserOptions.project;
+      json.overrides = json.overrides.map((o) => {
+        if (o.parserOptions && o.parserOptions.project) {
+          delete o.parserOptions.project;
           // If the parserOptions object is now empty as a result, delete it too
-          if (Object.keys(override.parserOptions).length === 0) {
-            delete override.parserOptions;
+          if (Object.keys(o.parserOptions).length === 0) {
+            delete o.parserOptions;
           }
         }
-        return override;
+        return o;
       });
     }
     return json;
@@ -72,8 +73,7 @@ function updateProjectESLintConfigs(host: Tree) {
       } else {
         if (
           !json.overrides.some(
-            (override) =>
-              override.parserOptions && override.parserOptions.project
+            (o) => o.parserOptions && o.parserOptions.project
           )
         ) {
           json.overrides.unshift({

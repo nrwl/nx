@@ -1,10 +1,10 @@
-import { Tree } from '@nrwl/tao/src/shared/tree';
+import type { Tree } from '@nrwl/tao/src/shared/tree';
 import { updateJson } from '../utils/json';
 
 export function updateTsConfigsToJs(
   host: Tree,
   options: { projectRoot: string }
-) {
+): void {
   let updateConfigPath: string;
 
   const paths = {

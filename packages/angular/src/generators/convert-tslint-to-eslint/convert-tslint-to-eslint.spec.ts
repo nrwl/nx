@@ -79,7 +79,20 @@ function mockFindReportedConfiguration(_, pathToTslintJson) {
     case 'tslint.json':
       return exampleRootTslintJson.tslintPrintConfigResult;
     case appProjectTSLintJsonPath:
-      return projectTslintJsonData.tslintPrintConfigResult;
+      return {
+        /**
+         * Add in an example of rule which requires type-checking so we can test
+         * that parserOptions.project is appropriately preserved in the final
+         * config in this case.
+         */
+        rules: {
+          ...projectTslintJsonData.tslintPrintConfigResult.rules,
+          'await-promise': {
+            ruleArguments: [],
+            ruleSeverity: 'error',
+          },
+        },
+      };
     case libProjectTSLintJsonPath:
       return projectTslintJsonData.tslintPrintConfigResult;
     default:
@@ -167,11 +180,18 @@ describe('convert-tslint-to-eslint', () => {
     /**
      * Existing tslint.json file for the app project
      */
-    writeJson(
-      host,
-      'apps/angular-app-1/tslint.json',
-      projectTslintJsonData.raw
-    );
+    writeJson(host, 'apps/angular-app-1/tslint.json', {
+      ...projectTslintJsonData.raw,
+      rules: {
+        ...projectTslintJsonData.raw.rules,
+        /**
+         * Add in an example of rule which requires type-checking so we can test
+         * that parserOptions.project is appropriately preserved in the final
+         * config in this case.
+         */
+        'await-promise': true,
+      },
+    });
     /**
      * Existing tslint.json file for the lib project
      */
@@ -262,5 +282,59 @@ describe('convert-tslint-to-eslint', () => {
      * The project's TSLint file should have been deleted
      */
     expect(host.exists(libProjectTSLintJsonPath)).toEqual(false);
+  });
+
+  it('should not override .eslint config if migration in progress', async () => {
+    /**
+     * First we convert app
+     */
+    await conversionGenerator(host, {
+      project: appProjectName,
+      ignoreExistingTslintConfig: false,
+      removeTSLintIfNoMoreTSLintTargets: true,
+    });
+
+    /**
+     * The root level .eslintrc.json should now have been generated
+     */
+    const eslintContent = readJson(host, '.eslintrc.json');
+    expect(eslintContent).toMatchSnapshot();
+
+    /**
+     * We will make a change to the eslint config before the next step
+     */
+    eslintContent.overrides[0].rules[
+      '@nrwl/nx/enforce-module-boundaries'
+    ][1].enforceBuildableLibDependency = false;
+    writeJson(host, '.eslintrc.json', eslintContent);
+
+    /**
+     * Convert the lib
+     */
+    await conversionGenerator(host, {
+      project: libProjectName,
+      ignoreExistingTslintConfig: false,
+      removeTSLintIfNoMoreTSLintTargets: true,
+    });
+
+    /**
+     * The project level .eslintrc.json should now have been generated
+     * and extend from the root, as well as applying any customizations
+     * which are specific to this projectType.
+     */
+    expect(
+      readJson(host, joinPathFragments(libProjectRoot, '.eslintrc.json'))
+    ).toMatchSnapshot();
+
+    /**
+     * The root level .eslintrc.json should not be re-created
+     * if it already existed
+     */
+    expect(readJson(host, '.eslintrc.json')).toMatchSnapshot();
+
+    /**
+     * The root TSLint file should have been deleted
+     */
+    expect(host.exists('tslint.json')).toEqual(false);
   });
 });

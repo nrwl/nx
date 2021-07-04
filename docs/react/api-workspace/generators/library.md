@@ -98,6 +98,14 @@ Type: `boolean`
 
 Use pascal case file names.
 
+### setParserOptionsProject
+
+Default: `false`
+
+Type: `boolean`
+
+Whether or not to configure the ESLint "parserOptions.project" option. We do not do this by default for lint performance reasons.
+
 ### skipBabelrc
 
 Default: `false`
@@ -121,6 +129,14 @@ Default: `false`
 Type: `boolean`
 
 Do not update tsconfig.json for development experience.
+
+### standaloneConfig
+
+Default: `false`
+
+Type: `boolean`
+
+Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json
 
 ### strict
 

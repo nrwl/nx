@@ -12,6 +12,7 @@ export async function tscExecutor(
   const normalizedOptions = normalizeOptions(options, context);
   const projectRoot = context.workspace.projects[context.projectName].root;
 
+  // this has to happen first so the folder is created where the assets are copied into
   const result = compileTypeScript({
     outputPath: normalizedOptions.outputPath,
     projectName: context.projectName,
@@ -19,14 +20,12 @@ export async function tscExecutor(
     tsConfig: normalizedOptions.tsConfig,
   });
 
-  if (result.success) {
-    await copyAssets(
-      normalizedOptions.assets,
-      context.root,
-      normalizedOptions.outputPath
-    );
-    updatePackageJson(normalizedOptions, projectRoot);
-  }
+  await copyAssets(
+    normalizedOptions.assets,
+    context.root,
+    normalizedOptions.outputPath
+  );
+  updatePackageJson(normalizedOptions, projectRoot);
 
   return result;
 }

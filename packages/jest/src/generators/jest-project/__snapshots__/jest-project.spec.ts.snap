@@ -35,15 +35,12 @@ exports[`jestProject --setup-file should have setupFilesAfterEnv and globals.ts-
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',
       stringifyContentPathRegex: '\\\\\\\\.(html|svg)$',
-      astTransformers: {
-        before: [
-          'jest-preset-angular/build/InlineFilesTransformer',
-          'jest-preset-angular/build/StripStylesTransformer'
-        ]
-      },
     }
   },
   coverageDirectory: '../../coverage/libs/lib1',
+  transform: {
+    '^.+\\\\\\\\.(ts|js|html)$': 'jest-preset-angular'
+  },
   snapshotSerializers: [
     'jest-preset-angular/build/serializers/no-ng-attributes',
     'jest-preset-angular/build/serializers/ng-snapshot',
@@ -62,12 +59,7 @@ exports[`jestProject should create a jest.config.js 1`] = `
       tsconfig: '<rootDir>/tsconfig.spec.json',
     }
   },
-  coverageDirectory: '../../coverage/libs/lib1',
-  snapshotSerializers: [
-    'jest-preset-angular/build/serializers/no-ng-attributes',
-    'jest-preset-angular/build/serializers/ng-snapshot',
-    'jest-preset-angular/build/serializers/html-comment',
-  ]
+  coverageDirectory: '../../coverage/libs/lib1'
 };
 "
 `;

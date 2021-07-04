@@ -33,7 +33,7 @@ myorg/
 ├── tools/
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 **Copy the interface into `libs/data/src/lib/data.ts`.**
@@ -74,7 +74,7 @@ export function addTodoRoutes(app: Express) {
 
 **Next import the interface in `apps/todos/src/app/app.tsx`:**
 
-```typescript jsx
+```typescript
 import React, { useEffect, useState } from 'react';
 import { Todo } from '@myorg/data';
 
@@ -85,11 +85,6 @@ export const App = () => {
 export default App;
 ```
 
-Every time you add a new library, you have to restart `npx nx serve`. **So restart both `npx nx serve api` and `npx nx serve todos` and you should see the application running.**
+Every time you add a new library, you have to restart `npx nx serve`.
 
-!!!!!
-Nx allows you to share code...
-!!!!!
-Between frontend and backend apps
-Between different frontend apps
-Between different node apps
+**So restart both `npx nx serve api` and `npx nx serve todos` and you should see the application running.**

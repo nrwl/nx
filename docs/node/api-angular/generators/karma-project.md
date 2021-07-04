@@ -1,6 +1,6 @@
 # karma-project
 
-Add karma testing to a project
+Adds Karma configuration to a project.
 
 ## Usage
 

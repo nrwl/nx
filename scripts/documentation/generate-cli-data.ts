@@ -285,6 +285,10 @@ const examples = {
       description:
         'Show the graph where every node is either an ancestor or a descendant of todos-feature-main, but exclude project-one and project-two',
     },
+    {
+      command: 'dep-graph --watch',
+      description: 'Watch for changes to dep graph and update in-browser',
+    },
   ],
   'affected:dep-graph': [
     {
@@ -450,15 +454,17 @@ export async function generateCLIDocumentation() {
       }
       function generateMarkdown(command) {
         let template = dedent`
-      # ${command.command}
-      ${command.description}
+# ${command.command}
+      
+${command.description}
 
-      ## Usage
-      \`\`\`bash
-      nx ${command.command}
-      \`\`\`
+## Usage
 
-      Install \`nx\` globally to invoke the command directly using \`nx\`, or use \`npm run nx\` or \`yarn nx\`.\n`;
+\`\`\`bash
+nx ${command.command}
+\`\`\`
+
+Install \`nx\` globally to invoke the command directly using \`nx\`, or use \`npm run nx\` or \`yarn nx\`.\n`;
 
         if (examples[command.command] && examples[command.command].length > 0) {
           template += `### Examples`;

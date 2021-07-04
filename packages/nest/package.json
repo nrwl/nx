@@ -23,7 +23,6 @@
   },
   "homepage": "https://nx.dev",
   "schematics": "./collection.json",
-  "builders": "./builders.json",
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json"
@@ -33,8 +32,6 @@
     "@nrwl/linter": "*",
     "@nrwl/node": "*",
     "@nrwl/jest": "*",
-    "@angular-devkit/core": "~12.0.0",
-    "@angular-devkit/schematics": "~12.0.0",
     "@nestjs/schematics": "^7.0.0"
   }
 }

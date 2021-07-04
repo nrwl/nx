@@ -56,7 +56,12 @@ function addProject(tree: Tree, options: NormalizedSchema) {
     };
   }
 
-  addProjectConfiguration(tree, options.name, projectConfiguration);
+  addProjectConfiguration(
+    tree,
+    options.name,
+    projectConfiguration,
+    options.standaloneConfig
+  );
 }
 
 export function addLint(
@@ -73,6 +78,7 @@ export function addLint(
     eslintFilePatterns: [
       `${options.projectRoot}/**/*.${options.js ? 'js' : 'ts'}`,
     ],
+    setParserOptionsProject: options.setParserOptionsProject,
   });
 }
 

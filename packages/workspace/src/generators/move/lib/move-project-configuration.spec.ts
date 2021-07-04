@@ -2,13 +2,12 @@ import {
   addProjectConfiguration,
   readJson,
   readProjectConfiguration,
-  Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { NxJson } from '../../../core/shared-interfaces';
-import { Schema } from '../schema';
+import type { Tree, NxJsonConfiguration } from '@nrwl/devkit';
+import type { Schema } from '../schema';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { moveProjectConfiguration } from '@nrwl/workspace/src/generators/move/lib/move-project-configuration';
+import { moveProjectConfiguration } from './move-project-configuration';
 
 describe('moveProjectConfiguration', () => {
   let tree: Tree;
@@ -176,7 +175,7 @@ describe('moveProjectConfiguration', () => {
   });
 
   it('honor custom workspace layouts', async () => {
-    updateJson<NxJson>(tree, 'nx.json', (json) => {
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
       json.workspaceLayout = { appsDir: 'e2e', libsDir: 'packages' };
       return json;
     });

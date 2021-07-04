@@ -1,6 +1,6 @@
 # ngrx
 
-Add an ngrx config to a project
+Adds NgRx support to an application or library.
 
 ## Usage
 
@@ -30,7 +30,7 @@ Default: `false`
 
 Type: `boolean`
 
-Use barrels to re-export actions, state, and selectors.
+Use barrels to re-export actions, state and selectors.
 
 ### directory
 
@@ -46,7 +46,7 @@ Default: `false`
 
 Type: `boolean`
 
-Create a Facade class for the the Feature.
+Create a Facade class for the the feature.
 
 ### minimal
 
@@ -60,29 +60,33 @@ Only register the root state management setup or feature state.
 
 Type: `string`
 
-The path to NgModule where the feature state will be registered. The host directory will create/use the new state directory.
+The path to the `NgModule` where the feature state will be registered. The host directory will create/use the new state directory.
 
 ### name
 
 Type: `string`
 
-Name of the NgRx feature state, such as "products" or "users"). Recommended to use the plural form of the name.
+Name of the NgRx feature state, such as `products` or `users`. Recommended to use the plural form of the name.
 
-### onlyAddFiles
-
-Default: `false`
-
-Type: `boolean`
-
-**Deprecated**, use `skipImport`. Only add new NgRx files, without changing the module file (e.g., --onlyAddFiles).
-
-### onlyEmptyRoot
+### ~~onlyAddFiles~~
 
 Default: `false`
 
 Type: `boolean`
 
-**Deprecated**, use `minimal`. Do not generate any files. Only generate StoreModule.forRoot and EffectsModule.forRoot (e.g., --onlyEmptyRoot).
+**Deprecated:** Use the `skipImport` option instead.
+
+Only add new NgRx files, without changing the module file (e.g., `--onlyAddFiles`).
+
+### ~~onlyEmptyRoot~~
+
+Default: `false`
+
+Type: `boolean`
+
+**Deprecated:** Use the `minimal` option instead.
+
+Do not generate any files. Only generate `StoreModule.forRoot` and `EffectsModule.forRoot` (e.g., `--onlyEmptyRoot`).
 
 ### root
 
@@ -98,7 +102,7 @@ Default: `false`
 
 Type: `boolean`
 
-Skip formatting of generated files.
+Skip formatting files.
 
 ### skipImport
 
@@ -114,7 +118,7 @@ Default: `false`
 
 Type: `boolean`
 
-Do not update the package.json with NgRx dependencies.
+Do not update the `package.json` with NgRx dependencies.
 
 ### syntax
 
@@ -132,4 +136,4 @@ Default: `false`
 
 Type: `boolean`
 
-Generate NgRx Effects with the DataPersistence helper service. Set to false to use plain effects data persistence operators.
+Generate NgRx Effects with the `DataPersistence` helper service. Set to false to use plain effects data persistence operators.

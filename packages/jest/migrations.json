@@ -71,6 +71,18 @@
       "cli": "nx",
       "description": "Replace tsConfig with tsconfig for ts-jest in jest.config.js",
       "factory": "./src/migrations/update-12-1-2/update-ts-jest"
+    },
+    "support-jest-27": {
+      "version": "12.4.0-beta.1",
+      "cli": "nx",
+      "description": "Add testEnvironment: 'jsdom' in web apps + libraries",
+      "factory": "./src/migrations/update-12-4-0/add-test-environment-for-node"
+    },
+    "update-ts-jest-and-jest-preset-angular": {
+      "version": "12.4.0-beta.1",
+      "cli": "nx",
+      "description": "Support for Jest 27 via updating ts-jest + jest-preset-angular",
+      "factory": "./src/migrations/update-12-4-0/update-jest-preset-angular"
     }
   },
   "packageJsonUpdates": {
@@ -147,6 +159,23 @@
         },
         "ts-jest": {
           "version": "26.5.5",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "12.4.0": {
+      "version": "12.4.0-beta.1",
+      "packages": {
+        "jest": {
+          "version": "27.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "ts-jest": {
+          "version": "27.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-preset-angular": {
+          "version": "9.0.3",
           "alwaysAddToPackageJson": false
         }
       }

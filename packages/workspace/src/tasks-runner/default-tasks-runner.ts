@@ -1,17 +1,10 @@
 import { Observable } from 'rxjs';
-import {
-  AffectedEventType,
-  Task,
-  TaskCompleteEvent,
-  TasksRunner,
-} from './tasks-runner';
-import { ProjectGraph } from '../core/project-graph';
-import { NxJson } from '../core/shared-interfaces';
+import { TaskCompleteEvent, TasksRunner } from './tasks-runner';
+import type { ProjectGraph, NxJsonConfiguration, Task } from '@nrwl/devkit';
 import { TaskOrchestrator } from './task-orchestrator';
-import { getDefaultDependencyConfigs } from './utils';
 import { performance } from 'perf_hooks';
 import { TaskGraphCreator } from './task-graph-creator';
-import { Hasher } from '@nrwl/workspace/src/core/hasher/hasher';
+import { Hasher } from '../core/hasher/hasher';
 
 export interface RemoteCache {
   retrieve: (hash: string, cacheDirectory: string) => Promise<boolean>;
@@ -24,6 +17,10 @@ export interface LifeCycle {
   startTask(task: Task): void;
 
   endTask(task: Task, code: number): void;
+
+  startTasks?(task: Task[]): void;
+
+  endTasks?(taskResults: Array<{ task: Task; code: number }>): void;
 }
 
 class NoopLifeCycle implements LifeCycle {
@@ -32,6 +29,10 @@ class NoopLifeCycle implements LifeCycle {
   startTask(task: Task): void {}
 
   endTask(task: Task, code: number): void {}
+
+  startTasks(task: Task[]): void {}
+
+  endTasks(taskResults: Array<{ task: Task; code: number }>): void {}
 }
 
 export interface DefaultTasksRunnerOptions {
@@ -40,7 +41,6 @@ export interface DefaultTasksRunnerOptions {
   cacheableOperations?: string[];
   cacheableTargets?: string[];
   runtimeCacheInputs?: string[];
-  strictlyOrderedTargets?: string[];
   cacheDirectory?: string;
   remoteCache?: RemoteCache;
   lifeCycle?: LifeCycle;
@@ -55,7 +55,7 @@ export const defaultTasksRunner: TasksRunner<DefaultTasksRunnerOptions> = (
     target: string;
     initiatingProject?: string;
     projectGraph: ProjectGraph;
-    nxJson: NxJson;
+    nxJson: NxJsonConfiguration;
     hideCachedOutput?: boolean;
   }
 ): Observable<TaskCompleteEvent> => {
@@ -97,19 +97,18 @@ async function runAllTasks(
   context: {
     initiatingProject?: string;
     projectGraph: ProjectGraph;
-    nxJson: NxJson;
+    nxJson: NxJsonConfiguration;
     hideCachedOutput?: boolean;
   }
 ): Promise<Array<{ task: Task; type: any; success: boolean }>> {
-  const defaultTargetDependencies = getDefaultDependencyConfigs(
-    context.nxJson,
-    options
-  );
+  const defaultTargetDependencies = context.nxJson.targetDependencies ?? {};
 
-  const taskGraph = new TaskGraphCreator(
+  const taskGraphCreator = new TaskGraphCreator(
     context.projectGraph,
     defaultTargetDependencies
-  ).createTaskGraph(tasks);
+  );
+
+  const taskGraph = taskGraphCreator.createTaskGraph(tasks);
 
   performance.mark('task-graph-created');
 

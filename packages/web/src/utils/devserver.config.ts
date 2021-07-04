@@ -3,15 +3,14 @@ import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-serv
 
 import * as open from 'open';
 import * as url from 'url';
-import { readFileSync } from 'fs';
 import * as path from 'path';
 
 import { getWebConfig } from './web.config';
-import { Configuration } from 'webpack';
-import { WebBuildBuilderOptions } from '../builders/build/build.impl';
-import { WebDevServerOptions } from '../builders/dev-server/dev-server.impl';
+import { WebBuildBuilderOptions } from '../executors/build/build.impl';
+import { WebDevServerOptions } from '../executors/dev-server/dev-server.impl';
 import { buildServePath } from './serve-path';
 import { OptimizationOptions } from './types';
+import { readFileSync } from 'fs-extra';
 
 export function getDevServerConfig(
   root: string,
@@ -19,18 +18,23 @@ export function getDevServerConfig(
   buildOptions: WebBuildBuilderOptions,
   serveOptions: WebDevServerOptions
 ) {
-  const webpackConfig: Configuration = getWebConfig(
+  const webpackConfig = getWebConfig(
     root,
     sourceRoot,
     buildOptions,
     true, // Don't need to support legacy browsers for dev.
     false
   );
+
   (webpackConfig as any).devServer = getDevServerPartial(
     root,
     serveOptions,
     buildOptions
   );
+  webpackConfig.plugins = [
+    ...(webpackConfig.plugins || []),
+    getHmrPlugin(serveOptions),
+  ].filter(Boolean);
 
   return webpackConfig;
 }
@@ -42,10 +46,8 @@ function getDevServerPartial(
 ): WebpackDevServerConfiguration {
   const servePath = buildServePath(buildOptions);
 
-  const {
-    scripts: scriptsOptimization,
-    styles: stylesOptimization,
-  } = buildOptions.optimization as OptimizationOptions;
+  const { scripts: scriptsOptimization, styles: stylesOptimization } =
+    buildOptions.optimization as OptimizationOptions;
 
   const config: WebpackDevServerConfiguration = {
     host: options.host,
@@ -85,7 +87,8 @@ function getDevServerPartial(
     publicPath: servePath,
     contentBase: false,
     allowedHosts: [],
-    liveReload: options.liveReload,
+    liveReload: options.hmr ? false : options.liveReload, // disable liveReload if hmr is enabled
+    hot: options.hmr,
   };
 
   if (options.ssl && options.sslKey && options.sslCert) {
@@ -113,4 +116,12 @@ function getSslConfig(root: string, options: WebDevServerOptions) {
 function getProxyConfig(root: string, options: WebDevServerOptions) {
   const proxyPath = path.resolve(root, options.proxyConfig as string);
   return require(proxyPath);
+}
+
+function getHmrPlugin(options: WebDevServerOptions) {
+  // TODO(jack): Remove in Nx 13
+  const {
+    webpack: { HotModuleReplacementPlugin },
+  } = require('../webpack/entry');
+  return options.hmr && new HotModuleReplacementPlugin();
 }

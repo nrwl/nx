@@ -19,7 +19,6 @@ describe('React Applications', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
-  afterEach(() => killPorts());
 
   it('should be able to generate a react app + lib', async () => {
     const appName = uniq('app');
@@ -396,8 +395,9 @@ describe('React Applications', () => {
     );
 
     if (opts.checkE2E && runCypressTests()) {
-      const e2eResults = runCLI(`e2e ${appName}-e2e`);
+      const e2eResults = runCLI(`e2e ${appName}-e2e --headless --no-watch`);
       expect(e2eResults).toContain('All specs passed!');
+      expect(await killPorts()).toBeTruthy();
     }
   }
 });

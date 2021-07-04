@@ -26,7 +26,7 @@
     "requirements": {},
     "migrations": "./migrations.json"
   },
-  "builders": "./builders.json",
+  "builders": "./executors.json",
   "dependencies": {
     "@nrwl/devkit": "*",
     "glob": "7.1.4",

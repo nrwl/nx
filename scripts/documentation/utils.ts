@@ -51,9 +51,11 @@ export async function formatWithPrettier(filePath: string, content: string) {
   return format(content, options);
 }
 
-export function getNxPackageDependencies(
-  packageJsonPath: string
-): { name: string; dependencies: string[]; peerDependencies: string[] } {
+export function getNxPackageDependencies(packageJsonPath: string): {
+  name: string;
+  dependencies: string[];
+  peerDependencies: string[];
+} {
   const packageJson = readJsonSync(packageJsonPath);
   if (!packageJson) {
     console.log(`No package.json found at: ${packageJsonPath}`);

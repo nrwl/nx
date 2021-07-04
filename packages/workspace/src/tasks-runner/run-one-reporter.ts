@@ -1,9 +1,8 @@
 import { output } from '../utilities/output';
 import { Reporter, ReporterArgs } from './reporter';
-import { Task } from './tasks-runner';
+import type { Task } from '@nrwl/devkit';
 
 export class RunOneReporter implements Reporter {
-  private projectNames: string[];
   constructor(private readonly initiatingProject: string) {}
 
   beforeRun(
@@ -15,7 +14,6 @@ export class RunOneReporter implements Reporter {
     if (process.env.NX_INVOKED_BY_RUNNER) {
       return;
     }
-    this.projectNames = projectNames;
     const numberOfDeps = tasks.length - 1;
 
     if (numberOfDeps > 0) {
@@ -80,6 +78,10 @@ export class RunOneReporter implements Reporter {
         output.colors.gray('Failed tasks:'),
         '',
         ...failedTasks.map((task) => `${output.colors.gray('-')} ${task.id}`),
+        '',
+        `${output.colors.gray(
+          'Hint: run the command with'
+        )} --verbose ${output.colors.gray('for more details.')}`,
       ];
       output.error({
         title: `Running target "${this.initiatingProject}:${args.target}" failed`,

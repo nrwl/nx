@@ -1,4 +1,4 @@
-import { ProjectFileMap } from '../file-graph';
+import type { ProjectFileMap } from '../file-graph';
 import type {
   ProjectGraphNode,
   DependencyType,

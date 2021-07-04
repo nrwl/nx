@@ -1,21 +1,8 @@
 import type { Observable } from 'rxjs';
+import type { NxJsonConfiguration, ProjectGraph, Task } from '@nrwl/devkit';
 
-import { ProjectGraph } from '../core/project-graph';
-import { NxJson } from '../core/shared-interfaces';
-
-export interface Task {
-  id: string;
-  target: { target: string; project: string; configuration?: string };
-  overrides: any;
-  hash?: string;
-  projectRoot?: string;
-  hashDetails?: {
-    command: string;
-    sources: { [projectName: string]: string };
-    implicitDeps: { [key: string]: string };
-    runtime: { [input: string]: string };
-  };
-}
+// Exported for backwards compatibility
+export type { Task } from '@nrwl/devkit';
 
 export enum AffectedEventType {
   TaskComplete = '[Task] Complete',
@@ -40,7 +27,7 @@ export type TasksRunner<T = unknown> = (
     target?: string;
     initiatingProject?: string | null;
     projectGraph: ProjectGraph;
-    nxJson: NxJson;
+    nxJson: NxJsonConfiguration;
     hideCachedOutput?: boolean;
   }
 ) => Observable<AffectedEvent>;

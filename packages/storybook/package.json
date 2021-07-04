@@ -22,7 +22,7 @@
   },
   "homepage": "https://nx.dev",
   "schematics": "./collection.json",
-  "builders": "./builders.json",
+  "builders": "./executors.json",
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json"
@@ -35,6 +35,6 @@
     "core-js": "^3.6.5",
     "semver": "7.3.4",
     "ts-loader": "5.4.5",
-    "tsconfig-paths-webpack-plugin": "3.2.0"
+    "tsconfig-paths-webpack-plugin": "3.4.1"
   }
 }

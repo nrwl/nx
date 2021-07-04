@@ -27,7 +27,7 @@ export function componentCypressGenerator(
 }
 
 // TODO: candidate to refactor with the angular component story
-export function getKnobDefaultValue(property: ts.SyntaxKind): string {
+export function getArgsDefaultValue(property: ts.SyntaxKind): string {
   const typeNameToDefault: Record<number, any> = {
     [ts.SyntaxKind.StringKeyword]: '',
     [ts.SyntaxKind.NumberKeyword]: 0,
@@ -37,6 +37,8 @@ export function getKnobDefaultValue(property: ts.SyntaxKind): string {
   const resolvedValue = typeNameToDefault[property];
   if (typeof resolvedValue === undefined) {
     return '';
+  } else if (typeof resolvedValue === 'string') {
+    return resolvedValue.replace(/\s/g, '+');
   } else {
     return resolvedValue;
   }
@@ -60,14 +62,14 @@ export function createComponentSpecFile(
     .replace('.jsx', '')
     .replace('.js', '');
 
-  const contents = tree.read(componentFilePath);
-  if (!contents) {
+  const contents = tree.read(componentFilePath, 'utf-8');
+  if (contents === null) {
     throw new Error(`Failed to read ${componentFilePath}`);
   }
 
   const sourceFile = ts.createSourceFile(
     componentFilePath,
-    contents.toString(),
+    contents,
     ts.ScriptTarget.Latest,
     true
   );
@@ -90,7 +92,7 @@ export function createComponentSpecFile(
     props = propsInterface.members.map((member: ts.PropertySignature) => {
       return {
         name: (member.name as ts.Identifier).text,
-        defaultValue: getKnobDefaultValue(member.type.kind),
+        defaultValue: getArgsDefaultValue(member.type.kind),
       };
     });
   }

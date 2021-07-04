@@ -4,10 +4,6 @@
   "description": "Browser target options",
   "type": "object",
   "properties": {
-    "buildTarget": {
-      "description": "Build target used for building the app after its dependencies have been built. If no target is configured, @angular-devkit/build-angular:browser is sheduled directly.",
-      "type": "string"
-    },
     "assets": {
       "type": "array",
       "description": "List of static application assets.",
@@ -141,7 +137,7 @@
     },
     "outputPath": {
       "type": "string",
-      "description": "The full path for the new output directory, relative to the current workspace.\n\nBy default, writes output to a folder named dist/ in the current project."
+      "description": "The full path for the new output directory, relative to the current workspace. By default, writes output to a folder named dist/ in the current project."
     },
     "resourcesOutputPath": {
       "type": "string",
@@ -364,13 +360,19 @@
       },
       "default": []
     },
-    "targetBuilder": {
-      "description": "Override default Angular browser builder",
-      "type": "string",
-      "default": "@angular-devkit/build-angular:browser"
+    "customWebpackConfig": {
+      "description": "Options for additional webpack configurations.",
+      "type": "object",
+      "properties": {
+        "path": {
+          "description": "Path to additional webpack configuration, relative to the workspace root.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
     }
   },
-  "additionalProperties": true,
+  "additionalProperties": false,
   "required": ["outputPath", "index", "main", "tsConfig"],
   "definitions": {
     "assetPattern": {

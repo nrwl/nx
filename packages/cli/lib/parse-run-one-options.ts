@@ -1,4 +1,5 @@
-import * as yargsParser from 'yargs-parser';
+import yargsParser = require('yargs-parser');
+import * as fs from 'fs';
 
 function calculateDefaultProjectName(cwd: string, root: string, wc: any) {
   let relativeCwd = cwd.replace(/\\/g, '/').split(root.replace(/\\/g, '/'))[1];
@@ -111,7 +112,15 @@ export function parseRunOneOptions(
     workspaceConfigJson.projects && workspaceConfigJson.projects[project];
   if (!p) return false;
 
-  const targets = p.architect ?? p.targets;
+  let targets;
+  if (typeof p === 'string') {
+    targets = JSON.parse(
+      fs.readFileSync(`${p}/project.json`).toString()
+    ).targets;
+  } else {
+    targets = p.architect ?? p.targets;
+  }
+
   // for backwards compat we require targets to be set when use defaultProjectName
   if ((!targets || !targets[target]) && projectIsNotSetExplicitly) return false;
   if (invalidTargetNames.indexOf(target) > -1) return false;
@@ -120,7 +129,12 @@ export function parseRunOneOptions(
     configuration = parsedArgs.configuration;
   } else if (parsedArgs.prod) {
     configuration = 'production';
-  } else if (targets[target].defaultConfiguration) {
+  } else if (
+    !configuration &&
+    targets &&
+    targets[target] &&
+    targets[target].defaultConfiguration
+  ) {
     configuration = targets[target].defaultConfiguration;
   }
 

@@ -10,7 +10,7 @@ export async function updateExistingBabelrcFiles(host: Tree) {
     // This is needed because we removed it from the root.
     if (host.exists(babelrcPath)) {
       updateJson(host, babelrcPath, (json) => {
-        json.presets = json.presets || [];
+        json.presets ||= [];
         if (
           -1 ===
           json.presets.findIndex(

@@ -66,7 +66,7 @@ export function updateImports(
       }
 
       visitNotIgnoredFiles(tree, definition.root, (file) => {
-        const contents = tree.read(file).toString('utf-8');
+        const contents = tree.read(file, 'utf-8');
         if (!replaceProjectRef.test(contents)) {
           return;
         }
@@ -110,7 +110,7 @@ export function updateImports(
  * Changes imports in a file from one import to another
  */
 function updateImportPaths(tree: Tree, path: string, from: string, to: string) {
-  const contents = tree.read(path).toString('utf-8');
+  const contents = tree.read(path, 'utf-8');
   const sourceFile = ts.createSourceFile(
     path,
     contents,

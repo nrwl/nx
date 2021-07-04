@@ -9,6 +9,7 @@ import {
 } from '../core/project-graph';
 import { Rule } from './nxEnforceModuleBoundariesRule';
 import { TargetProjectLocator } from '../core/target-project-locator';
+import { mapProjectGraphFiles } from '../utils/runtime-lint-utils';
 
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('../utilities/app-root', () => ({ appRootPath: '/root' }));
@@ -69,7 +70,7 @@ const fileSys = {
   './tsconfig.base.json': JSON.stringify(tsconfig),
 };
 
-describe('Enforce Module Boundaries', () => {
+describe('Enforce Module Boundaries (tslint)', () => {
   beforeEach(() => {
     vol.fromJSON(fileSys, '/root');
   });
@@ -778,7 +779,7 @@ describe('Enforce Module Boundaries', () => {
       }
     );
     const message =
-      'Only relative imports are allowed within the project. Absolute import found: @mycompany/mylib';
+      'Projects should use relative imports to import from other files within the same project. Use "./path/to/file" instead of import from "@mycompany/mylib"';
     expect(failures.length).toEqual(1);
     expect(failures[0].getFailure()).toEqual(message);
   });
@@ -1177,12 +1178,14 @@ function runRule(
     true
   );
 
+  const mappedProjectGraph = mapProjectGraphFiles(projectGraph);
+
   const rule = new Rule(
     options,
     `${process.cwd()}/proj`,
     'mycompany',
-    projectGraph,
-    new TargetProjectLocator(projectGraph.nodes)
+    mappedProjectGraph,
+    new TargetProjectLocator(mappedProjectGraph.nodes)
   );
   return rule.apply(sourceFile);
 }

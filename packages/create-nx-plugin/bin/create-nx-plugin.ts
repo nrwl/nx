@@ -5,10 +5,12 @@ import {
   getPackageManagerCommand,
   PackageManager,
 } from '@nrwl/tao/src/shared/package-manager';
+import type { NxJsonConfiguration } from '@nrwl/tao/src/shared/nx';
+import { readJsonFile, writeJsonFile } from '@nrwl/tao/src/utils/fileutils';
 import { output } from '@nrwl/workspace/src/utilities/output';
 import { execSync } from 'child_process';
-import { readFileSync, removeSync, writeFileSync } from 'fs-extra';
-import * as enquirer from 'enquirer';
+import { removeSync } from 'fs-extra';
+import enquirer = require('enquirer');
 import * as path from 'path';
 import { dirSync } from 'tmp';
 import { showNxWarning } from './shared';
@@ -32,18 +34,15 @@ const parsedArgs = yargsParser(process.argv, {
 function createSandbox(packageManager: string) {
   console.log(`Creating a sandbox with Nx...`);
   const tmpDir = dirSync().name;
-  writeFileSync(
-    path.join(tmpDir, 'package.json'),
-    JSON.stringify({
-      dependencies: {
-        '@nrwl/workspace': nxVersion,
-        '@nrwl/tao': cliVersion,
-        typescript: tsVersion,
-        prettier: prettierVersion,
-      },
-      license: 'MIT',
-    })
-  );
+  writeJsonFile(path.join(tmpDir, 'package.json'), {
+    dependencies: {
+      '@nrwl/workspace': nxVersion,
+      '@nrwl/tao': cliVersion,
+      typescript: tsVersion,
+      prettier: prettierVersion,
+    },
+    license: 'MIT',
+  });
 
   execSync(`${packageManager} install --silent`, {
     cwd: tmpDir,
@@ -102,15 +101,14 @@ function createNxPlugin(
 
 function updateWorkspace(workspaceName: string) {
   const nxJsonPath = path.join(workspaceName, 'nx.json');
+  const nxJson = readJsonFile<NxJsonConfiguration>(nxJsonPath);
 
-  const nxJson = JSON.parse(readFileSync(nxJsonPath, 'utf-8'));
-
-  nxJson['workspaceLayout'] = {
+  nxJson.workspaceLayout = {
     appsDir: 'e2e',
     libsDir: 'packages',
   };
 
-  writeFileSync(nxJsonPath, JSON.stringify(nxJson, undefined, 2));
+  writeJsonFile(nxJsonPath, nxJson);
 
   removeSync(path.join(workspaceName, 'apps'));
   removeSync(path.join(workspaceName, 'libs'));

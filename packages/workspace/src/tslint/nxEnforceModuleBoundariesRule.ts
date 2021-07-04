@@ -1,7 +1,12 @@
 import * as Lint from 'tslint';
 import { IOptions } from 'tslint';
 import * as ts from 'typescript';
-import { isNpmProject, ProjectGraph, ProjectType } from '../core/project-graph';
+import type { ProjectGraph } from '@nrwl/devkit';
+import {
+  isNpmProject,
+  ProjectType,
+  readCurrentProjectGraph,
+} from '../core/project-graph';
 import { appRootPath } from '../utilities/app-root';
 import {
   DepConstraint,
@@ -13,14 +18,15 @@ import {
   hasNoneOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
   isRelativeImportIntoAnotherProject,
+  MappedProjectGraph,
+  mapProjectGraphFiles,
   matchImportWithWildcard,
   onlyLoadChildren,
 } from '../utils/runtime-lint-utils';
 import { normalize } from 'path';
-import { readNxJson } from '@nrwl/workspace/src/core/file-utils';
+import { readNxJson } from '../core/file-utils';
 import { TargetProjectLocator } from '../core/target-project-locator';
-import { checkCircularPath } from '@nrwl/workspace/src/utils/graph-utils';
-import { readCurrentProjectGraph } from '@nrwl/workspace/src/core/project-graph/project-graph';
+import { checkCircularPath } from '../utils/graph-utils';
 import { isRelativePath } from '../utilities/fileutils';
 
 export class Rule extends Lint.Rules.AbstractRule {
@@ -28,7 +34,7 @@ export class Rule extends Lint.Rules.AbstractRule {
     options: IOptions,
     private readonly projectPath?: string,
     private readonly npmScope?: string,
-    private readonly projectGraph?: ProjectGraph,
+    private readonly projectGraph?: MappedProjectGraph,
     private readonly targetProjectLocator?: TargetProjectLocator
   ) {
     super(options);
@@ -38,10 +44,12 @@ export class Rule extends Lint.Rules.AbstractRule {
       if (!(global as any).projectGraph) {
         const nxJson = readNxJson();
         (global as any).npmScope = nxJson.npmScope;
-        (global as any).projectGraph = readCurrentProjectGraph();
+        (global as any).projectGraph = mapProjectGraphFiles(
+          readCurrentProjectGraph()
+        );
       }
       this.npmScope = (global as any).npmScope;
-      this.projectGraph = (global as any).projectGraph;
+      this.projectGraph = (global as any).projectGraph as MappedProjectGraph;
 
       if (!(global as any).targetProjectLocator && this.projectGraph) {
         (global as any).targetProjectLocator = new TargetProjectLocator(
@@ -109,16 +117,20 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       return;
     }
 
+    const filePath = getSourceFilePath(
+      this.getSourceFile().fileName,
+      this.projectPath
+    );
+    const sourceProject = findSourceProject(this.projectGraph, filePath);
+
     // check for relative and absolute imports
     if (
       isRelativeImportIntoAnotherProject(
         imp,
         this.projectPath,
         this.projectGraph,
-        getSourceFilePath(
-          normalize(this.getSourceFile().fileName),
-          this.projectPath
-        )
+        filePath,
+        sourceProject
       ) ||
       isAbsoluteImportIntoAnotherProject(imp)
     ) {
@@ -130,12 +142,6 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
       return;
     }
 
-    const filePath = getSourceFilePath(
-      this.getSourceFile().fileName,
-      this.projectPath
-    );
-
-    const sourceProject = findSourceProject(this.projectGraph, filePath);
     const targetProject = findProjectUsingImport(
       this.projectGraph,
       this.targetProjectLocator,
@@ -153,7 +159,7 @@ class EnforceModuleBoundariesWalker extends Lint.RuleWalker {
     // same project => allow
     if (sourceProject === targetProject) {
       if (!this.allowCircularSelfDependency && !isRelativePath(imp)) {
-        const error = `Only relative imports are allowed within the project. Absolute import found: ${imp}`;
+        const error = `Projects should use relative imports to import from other files within the same project. Use "./path/to/file" instead of import from "${imp}"`;
         this.addFailureAt(node.getStart(), node.getWidth(), error);
       } else {
         super.visitImportDeclaration(node);

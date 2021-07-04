@@ -12,7 +12,7 @@ using a monorepo approach. If you are currently using an Angular CLI workspace, 
 
 To add Nx to an existing Angular CLI workspace to an Nx workspace, with keeping your existing file structure in place, use the `ng add` command with the `--preserveAngularCLILayout` option:
 
-```
+```bash
 ng add @nrwl/workspace --preserveAngularCLILayout
 ```
 
@@ -28,7 +28,7 @@ After the process completes, you continue using the same serve/build/lint/test c
 
 To transform a Angular CLI workspace to an Nx workspace, use the `ng add` command:
 
-```
+```bash
 ng add @nrwl/workspace
 ```
 
@@ -75,7 +75,7 @@ After the changes are applied, your workspace file structure should look similar
 ├── angular.json
 ├── nx.json
 ├── package.json
-└── tsconfig.json
+└── tsconfig.base.json
 ```
 
 Your workspace is now powered by Nx! You can verify out that your application still runs as intended:
@@ -86,18 +86,18 @@ Your workspace is now powered by Nx! You can verify out that your application st
 - To run e2e tests, run `ng e2e`.
 - To see your dependency graph, run `nx dep-graph`.
 
-> Your dependency graph will grow as you add, and use more applications and libraries.
+> Your dependency graph will grow as you add, and use more applications and libraries. You can add the `--watch` flag to `nx dep-graph` to see this changes in-browser as you add them.
 
 Learn more about the advantages of Nx in the following guides:
 
-- [Using Cypress for e2e tests](/angular/cypress/overview)
-- [Using Jest for unit tests](/angular/jest/overview)
-- [Computation Caching](/angular/core-concepts/computation-caching)
-- [Rebuilding and Retesting What is Affected](/angular/core-concepts/affected)
+- [Using Cypress for e2e tests](/{{framework}}/cypress/overview)
+- [Using Jest for unit tests](/{{framework}}/jest/overview)
+- [Computation Caching](/{{framework}}/core-extended/computation-caching)
+- [Rebuilding and Retesting What is Affected](/{{framework}}/core-extended/affected)
 
 ## Transitioning Manually
 
-If you are unable to automatically transform your Angular CLI workspace to an Nx workspace using the [ng add](angular/migration/migration-angular#using-ng-add) method, there are some manual steps you can take to move your project(s) into an Nx workspace.
+If you are unable to automatically transform your Angular CLI workspace to an Nx workspace using the [ng add]({{framework}}/migration/migration-angular#using-ng-add-preserving-your-existing-structure) method, there are some manual steps you can take to move your project(s) into an Nx workspace.
 
 ### Generating a new workspace
 
@@ -160,7 +160,7 @@ A new Nx workspace with your `org name` as the folder name, and your `applicatio
 ├── jest.config.js
 ├── nx.json
 ├── package.json
-├── tsconfig.json
+├── tsconfig.base.json
 └── tslint.json
 ```
 
@@ -174,7 +174,7 @@ Your application code is self-contained within the `src` folder of your Angular 
 
 Verify your app runs correctly by running:
 
-```sh
+```bash
 ng serve <app name>
 ```
 
@@ -184,7 +184,7 @@ Nx uses Jest by default. If you have any custom Jest configuration, you need to 
 
 Verify your tests run correctly by running:
 
-```sh
+```bash
 ng test <app name>
 ```
 
@@ -258,7 +258,7 @@ If you are using `Karma` for unit testing:
 
 Verify your tests run correctly by running:
 
-```sh
+```bash
 ng test <app name>
 ```
 
@@ -266,7 +266,7 @@ ng test <app name>
 
 Nx uses Cypress by default. If you are already using Cypress, copy your E2E setup files into the `apps/<app name>-e2e` folder and verify your tests still run correctly by running:
 
-```sh
+```bash
 ng e2e <app name>-e2e
 ```
 
@@ -350,7 +350,7 @@ Update the `apps/<app name>/tsconfig.json` to extend the root `tsconfig.json`:
 
 Verify your E2E tests run correctly by running:
 
-```sh
+```bash
 ng e2e <app name>-e2e
 ```
 
@@ -362,18 +362,18 @@ For lint rules, migrate your existing rules into the root `tslint.json` file.
 
 Verify your lint checks run correctly by running:
 
-```sh
+```bash
 npm run lint
 ```
 
 OR
 
-```sh
+```bash
 yarn lint
 ```
 
 Learn more about the advantages of Nx in the following guides:
 
-[Using Cypress for e2e tests](/angular/cypress/overview) \
-[Using Jest for unit tests](/angular/jest/overview) \
-[Rebuilding and Retesting What is Affected](/angular/core-concepts/affected)
+[Using Cypress for e2e tests](/{{framework}}/cypress/overview) \
+[Using Jest for unit tests](/{{framework}}/jest/overview) \
+[Rebuilding and Retesting What is Affected](/{{framework}}/core-extended/affected)

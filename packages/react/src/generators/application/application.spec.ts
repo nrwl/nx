@@ -1,4 +1,3 @@
-import * as stripJsonComments from 'strip-json-comments';
 import {
   getProjects,
   readJson,
@@ -21,6 +20,7 @@ describe('app', () => {
     linter: Linter.EsLint,
     style: 'css',
     strict: false,
+    standaloneConfig: false,
   };
 
   beforeEach(() => {
@@ -85,27 +85,20 @@ describe('app', () => {
         tsconfig.compilerOptions.noFallthroughCasesInSwitch
       ).not.toBeDefined();
 
-      const tsconfigApp = JSON.parse(
-        stripJsonComments(
-          appTree.read('apps/my-app/tsconfig.app.json').toString()
-        )
-      );
+      const tsconfigApp = readJson(appTree, 'apps/my-app/tsconfig.app.json');
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
 
-      const eslintJson = JSON.parse(
-        stripJsonComments(appTree.read('apps/my-app/.eslintrc.json').toString())
-      );
+      const eslintJson = readJson(appTree, 'apps/my-app/.eslintrc.json');
       expect(eslintJson.extends).toEqual([
         'plugin:@nrwl/nx/react',
         '../../.eslintrc.json',
       ]);
 
       expect(appTree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
-      const tsconfigE2E = JSON.parse(
-        stripJsonComments(
-          appTree.read('apps/my-app-e2e/tsconfig.e2e.json').toString()
-        )
+      const tsconfigE2E = readJson(
+        appTree,
+        'apps/my-app-e2e/tsconfig.e2e.json'
       );
       expect(tsconfigE2E.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigE2E.extends).toEqual('./tsconfig.json');
@@ -147,8 +140,7 @@ describe('app', () => {
 
     it('should generate files', async () => {
       const hasJsonValue = ({ path, expectedValue, lookupFn }) => {
-        const content = appTree.read(path).toString();
-        const config = JSON.parse(stripJsonComments(content));
+        const config = readJson(appTree, path);
 
         expect(lookupFn(config)).toEqual(expectedValue);
       };
@@ -207,7 +199,7 @@ describe('app', () => {
       });
 
       expect(() => {
-        JSON.parse(appTree.read(`apps/my-app/.babelrc`).toString());
+        readJson(appTree, `apps/my-app/.babelrc`);
       }).not.toThrow();
     }
   );
@@ -287,9 +279,11 @@ describe('app', () => {
     expect(targetConfig.serve.executor).toEqual('@nrwl/web:dev-server');
     expect(targetConfig.serve.options).toEqual({
       buildTarget: 'my-app:build',
+      hmr: true,
     });
     expect(targetConfig.serve.configurations.production).toEqual({
       buildTarget: 'my-app:build:production',
+      hmr: false,
     });
   });
 
@@ -397,11 +391,6 @@ describe('app', () => {
               "*.js",
               "*.jsx",
             ],
-            "parserOptions": Object {
-              "project": Array [
-                "apps/my-app/tsconfig.*?.json",
-              ],
-            },
             "rules": Object {},
           },
           Object {
@@ -712,29 +701,6 @@ describe('app', () => {
           maximumError: '1mb',
         },
       ]);
-    });
-
-    it('should default strict to true in workspace.json', async () => {
-      await applicationGenerator(appTree, {
-        ...schema,
-        strict: true,
-      });
-      const workspaceJson = readWorkspaceConfiguration(appTree);
-
-      expect(workspaceJson.generators['@nrwl/react']).toMatchObject({
-        application: {
-          babel: true,
-          style: schema.style,
-          strict: true,
-        },
-        component: {
-          style: schema.style,
-        },
-        library: {
-          style: schema.style,
-          strict: true,
-        },
-      });
     });
   });
 });

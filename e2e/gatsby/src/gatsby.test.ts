@@ -1,6 +1,5 @@
 import {
   checkFilesExist,
-  killPorts,
   newProject,
   runCLI,
   runCLIAsync,
@@ -12,7 +11,6 @@ describe('Gatsby Applications', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
-  afterEach(() => killPorts());
 
   it('should generate a valid gatsby application', async () => {
     const appName = uniq('app');
@@ -57,7 +55,7 @@ describe('Gatsby Applications', () => {
     expect(result).not.toMatch('Lint errors found in the listed files');
 
     await expect(runCLIAsync(`test ${appName}`)).resolves.toBeTruthy();
-  }, 120000);
+  }, 300000);
 
   it('should support --js option', async () => {
     const app = uniq('app');
