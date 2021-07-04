@@ -7,6 +7,7 @@ import { Task } from './tasks-runner';
 import { flatten } from 'flat';
 import { output } from '../utilities/output';
 import { Workspaces } from '@nrwl/tao/src/shared/workspace';
+import { convertNpmScriptsToTargets } from '@nrwl/workspace/src/core/project-graph/build-nodes';
 
 const commonCommands = ['build', 'test', 'lint', 'e2e', 'deploy'];
 
@@ -179,6 +180,17 @@ function interpolateOutputs(template: string, data: any): string {
 export function getExecutorForTask(task: Task, workspace: Workspaces) {
   const project =
     workspace.readWorkspaceConfiguration().projects[task.target.project];
+
+  if (!project.targets) {
+    project.targets = convertNpmScriptsToTargets(project.root);
+  }
+
+  if (!project.targets[task.target.target]) {
+    throw new Error(
+      `Cannot find configuration for task ${task.target.project}:${task.target.target}`
+    );
+  }
+
   const executor = project.targets[task.target.target].executor;
   const [nodeModule, executorName] = executor.split(':');
 
