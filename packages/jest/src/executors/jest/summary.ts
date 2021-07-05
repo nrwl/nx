@@ -3,7 +3,7 @@ import { pluralize, formatTime } from 'jest-util';
 import * as chalk from 'chalk';
 
 /**
- * Copied from the jest repo because this utility functions are not exposed through the package
+ * Copied from the jest repo because these utility functions are not exposed through the package
  * https://github.com/facebook/jest/blob/7a64ede2163eba4ecc725f448cd92102cd8c14aa/packages/jest-reporters/src/utils.ts
  */
 
