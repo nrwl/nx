@@ -32,7 +32,7 @@ The name of the application to generate the Module Federation configuration for.
 
 ### mfeType
 
-Default: `shell`
+Default: `remote`
 
 Type: `string`
 

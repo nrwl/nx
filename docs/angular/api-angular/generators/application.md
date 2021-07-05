@@ -80,11 +80,35 @@ Possible values: `eslint`, `none`
 
 The tool to use for running lint checks.
 
+### mfe
+
+Default: `false`
+
+Type: `boolean`
+
+Generate a Module Federation configuration for the application
+
+### mfeType
+
+Default: `remote`
+
+Type: `string`
+
+Possible values: `shell`, `remote`
+
+Type of application to generate the Module Federation configuration for.
+
 ### name
 
 Type: `string`
 
 The name of the application.
+
+### port
+
+Type: `number`
+
+The port at which the remote application should be served.
 
 ### prefix
 
@@ -93,6 +117,12 @@ Alias(es): p
 Type: `string`
 
 The prefix to apply to generated selectors.
+
+### remotes
+
+Type: `array`
+
+A list of remote application names that the shell application should consume.
 
 ### routing
 

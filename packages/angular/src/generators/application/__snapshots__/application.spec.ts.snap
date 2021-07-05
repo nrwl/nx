@@ -1,5 +1,93 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`app --mfe should generate a Module Federation correctly for a each app 1`] = `
+"const ModuleFederationPlugin = require(\\"webpack/lib/container/ModuleFederationPlugin\\");
+const mf = require(\\"@angular-architects/module-federation/webpack\\");
+const path = require(\\"path\\");
+
+const sharedMappings = new mf.SharedMappings();
+sharedMappings.register(path.join(__dirname, \\"../../tsconfig.base.json\\"), [
+  /* mapped paths to share */
+]);
+
+module.exports = {
+  output: {
+    uniqueName: \\"my-app\\",
+    publicPath: \\"auto\\",
+  },
+  optimization: {
+    runtimeChunk: false,
+    minimize: false,
+  },
+  resolve: {
+    alias: {
+      ...sharedMappings.getAliases(),
+    },
+  },
+  plugins: [
+    new ModuleFederationPlugin({
+      remotes: {
+      
+      },
+      shared: {
+        \\"@angular/core\\": { singleton: true, strictVersion: true },
+        \\"@angular/common\\": { singleton: true, strictVersion: true },
+        \\"@angular/common/http\\": { singleton: true, strictVersion: true },
+        \\"@angular/router\\": { singleton: true, strictVersion: true },
+        ...sharedMappings.getDescriptors(),
+      },
+    }),
+    sharedMappings.getPlugin(),
+  ],
+};
+"
+`;
+
+exports[`app --mfe should generate a Module Federation correctly for a each app 2`] = `
+"const ModuleFederationPlugin = require(\\"webpack/lib/container/ModuleFederationPlugin\\");
+const mf = require(\\"@angular-architects/module-federation/webpack\\");
+const path = require(\\"path\\");
+
+const sharedMappings = new mf.SharedMappings();
+sharedMappings.register(path.join(__dirname, \\"../../tsconfig.base.json\\"), [
+  /* mapped paths to share */
+]);
+
+module.exports = {
+  output: {
+    uniqueName: \\"my-app\\",
+    publicPath: \\"auto\\",
+  },
+  optimization: {
+    runtimeChunk: false,
+    minimize: false,
+  },
+  resolve: {
+    alias: {
+      ...sharedMappings.getAliases(),
+    },
+  },
+  plugins: [
+    new ModuleFederationPlugin({
+      name: \\"my-app\\",
+      filename: \\"remoteEntry.js\\",
+      exposes: {
+        './Component': 'apps/my-app/src/app/app.component.ts',
+      },
+      shared: {
+        \\"@angular/core\\": { singleton: true, strictVersion: true },
+        \\"@angular/common\\": { singleton: true, strictVersion: true },
+        \\"@angular/common/http\\": { singleton: true, strictVersion: true },
+        \\"@angular/router\\": { singleton: true, strictVersion: true },
+        ...sharedMappings.getDescriptors(),
+      },
+    }),
+    sharedMappings.getPlugin(),
+  ],
+};
+"
+`;
+
 exports[`app nested should update workspace.json 1`] = `
 Object {
   "architect": Object {

@@ -5,6 +5,7 @@ import {
   readJson,
   updateJson,
   NxJsonConfiguration,
+  readProjectConfiguration,
   parseJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
@@ -648,6 +649,36 @@ describe('app', () => {
         false
       );
     });
+  });
+
+  describe('--mfe', () => {
+    test.each(['shell', 'remote'])(
+      'should generate a Module Federation correctly for a each app',
+      async (type: 'shell' | 'remote') => {
+        await generateApp(appTree, 'my-app', { mfe: true, mfeType: type });
+
+        expect(appTree.exists(`apps/my-app/webpack.config.js`)).toBeTruthy();
+        expect(
+          appTree.exists(`apps/my-app/webpack.prod.config.js`)
+        ).toBeTruthy();
+        expect(
+          appTree.read(`apps/my-app/webpack.config.js`, 'utf-8')
+        ).toMatchSnapshot();
+      }
+    );
+
+    test.each(['shell', 'remote'])(
+      'should update the builder to use webpack-browser',
+      async (type: 'shell' | 'remote') => {
+        await generateApp(appTree, 'my-app', { mfe: true, mfeType: type });
+
+        const projectConfig = readProjectConfiguration(appTree, 'my-app');
+
+        expect(projectConfig.targets.build.executor).toEqual(
+          '@nrwl/angular:webpack-browser'
+        );
+      }
+    );
   });
 });
 

@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import { logger, Tree } from '@nrwl/devkit';
 import type { Schema } from './schema';
 
 import {
@@ -28,6 +28,7 @@ import {
   enableStrictTypeChecking,
   setApplicationStrictDefault,
   addLinting,
+  addMfe,
 } from './lib';
 import { addUnitTestRunner } from './lib/add-unit-test-runner';
 
@@ -105,6 +106,10 @@ export async function applicationGenerator(
       project: options.name,
       all: false,
     });
+  }
+
+  if (options.mfe) {
+    await addMfe(host, options);
   }
 
   if (!options.skipFormat) {

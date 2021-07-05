@@ -19,7 +19,7 @@
       "type": "string",
       "enum": ["shell", "remote"],
       "description": "Type of application to generate the Module Federation configuration for.",
-      "default": "shell"
+      "default": "remote"
     },
     "port": {
       "type": "number",
