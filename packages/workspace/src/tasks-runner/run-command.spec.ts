@@ -1,8 +1,8 @@
 import { TasksRunner } from './tasks-runner';
 import defaultTaskRunner from './default-tasks-runner';
 import { createTasksForProjectToRun, getRunner } from './run-command';
+import type { NxJsonConfiguration, ProjectGraph } from '@nrwl/devkit';
 import { DependencyType } from '@nrwl/devkit';
-import type { ProjectGraph, NxJsonConfiguration } from '@nrwl/devkit';
 
 describe('createTasksForProjectToRun', () => {
   let projectGraph: ProjectGraph;
@@ -327,6 +327,71 @@ describe('createTasksForProjectToRun', () => {
           project: 'app1',
           target: 'build',
         },
+      },
+    ]);
+  });
+
+  it('should include dependencies of projects without the same target', () => {
+    // App 1 depends on builds of its dependencies
+    projectGraph.nodes.app1.data.targets.build.dependsOn = [
+      {
+        target: 'build',
+        projects: 'dependencies',
+      },
+    ];
+
+    // App 1 depends on Lib 1
+    projectGraph.dependencies.app1.push({
+      type: DependencyType.static,
+      source: 'app1',
+      target: 'lib1',
+    });
+
+    // Lib 1 does not have build but depends on Lib 2
+    delete projectGraph.nodes.lib1.data.targets.build;
+    projectGraph.dependencies.lib1.push({
+      type: DependencyType.static,
+      source: 'lib1',
+      target: 'lib2',
+    });
+
+    // Lib 2 has a build
+    projectGraph.nodes.lib2 = {
+      name: 'lib2',
+      type: 'lib',
+      data: {
+        root: 'lib2-root',
+        files: [],
+        targets: {
+          build: {},
+        },
+      },
+    };
+    projectGraph.dependencies.lib2 = [];
+
+    const tasks = createTasksForProjectToRun(
+      [projectGraph.nodes.app1],
+      {
+        target: 'build',
+        configuration: undefined,
+        overrides: {},
+      },
+      projectGraph,
+      projectGraph.nodes.app1.name
+    );
+
+    expect(tasks).toEqual([
+      {
+        id: 'lib2:build',
+        target: { project: 'lib2', target: 'build' },
+        projectRoot: 'lib2-root',
+        overrides: {},
+      },
+      {
+        id: 'app1:build',
+        target: { project: 'app1', target: 'build' },
+        projectRoot: 'app1-root',
+        overrides: {},
       },
     ]);
   });

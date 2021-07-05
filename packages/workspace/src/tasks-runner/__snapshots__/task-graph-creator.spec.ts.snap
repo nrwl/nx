@@ -1,5 +1,41 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`TaskGraphCreator (tasks with dependency configurations) should create a task graph (builds depend on builds of dependencies even with intermediate projects) 1`] = `
+Object {
+  "dependencies": Object {
+    "app1:build": Array [
+      "common2:build",
+    ],
+    "common2:build": Array [],
+  },
+  "roots": Array [
+    "common2:build",
+  ],
+  "tasks": Object {
+    "app1:build": Object {
+      "id": "app1:build",
+      "overrides": Object {},
+      "projectRoot": "app1-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "app1",
+        "target": "build",
+      },
+    },
+    "common2:build": Object {
+      "id": "common2:build",
+      "overrides": Object {},
+      "projectRoot": "common2-root",
+      "target": Object {
+        "configuration": undefined,
+        "project": "common2",
+        "target": "build",
+      },
+    },
+  },
+}
+`;
+
 exports[`TaskGraphCreator (tasks with dependency configurations) should create task graph (builds depend on build of dependencies and prebuild of self) 1`] = `
 Object {
   "dependencies": Object {
