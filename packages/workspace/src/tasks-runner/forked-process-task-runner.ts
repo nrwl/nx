@@ -36,7 +36,7 @@ export class ForkedProcessTaskRunner {
         const count = Object.keys(taskGraph.tasks).length;
         if (count > 1) {
           output.logSingleLine(
-            `Running ${output.bold()} ${output.bold(
+            `Running ${output.bold(count)} ${output.bold(
               'tasks'
             )} with ${output.bold(executorName)}`
           );
