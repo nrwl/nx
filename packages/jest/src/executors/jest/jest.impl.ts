@@ -133,10 +133,9 @@ export async function batchJest(
   overrides: JestExecutorOptions,
   context: ExecutorContext
 ): Promise<Record<string, { success: boolean; terminalOutput: string }>> {
-  const configPaths = taskGraph.roots.reduce<string[]>((acc, root) => {
-    acc.push(path.resolve(context.root, inputs[root].jestConfig));
-    return acc;
-  }, []);
+  const configPaths = taskGraph.roots.map((root) =>
+    path.resolve(context.root, inputs[root].jestConfig)
+  );
 
   const { globalConfig, results } = await runCLI(
     jestConfigParser(overrides, context, true),
@@ -148,13 +147,18 @@ export async function batchJest(
     { success: boolean; terminalOutput: string }
   > = {};
 
+  const { configs } = await readConfigs({ $0: '', _: undefined }, [
+    ...configPaths,
+  ]);
+
   for (let root of taskGraph.roots) {
     const aggregatedResults = makeEmptyAggregatedTestResult();
     aggregatedResults.startTime = results.startTime;
 
     const projectRoot = join(context.root, taskGraph.tasks[root].projectRoot);
-
-    const config = await readConfigs({ $0: '', _: undefined }, [projectRoot]);
+    const projectConfig = configs.find((config) =>
+      config.rootDir.startsWith(projectRoot)
+    );
 
     let resultOutput = '';
     for (const testResult of results.testResults) {
@@ -165,7 +169,7 @@ export async function batchJest(
           jestReporterUtils.getResultHeader(
             testResult,
             globalConfig,
-            config.configs[0]
+            projectConfig
           );
       }
     }
