@@ -1,5 +1,5 @@
 import { runCLI } from 'jest';
-import { readConfigs } from 'jest-config';
+import { readConfig } from 'jest-config';
 import { utils as jestReporterUtils } from '@jest/reporters';
 import { makeEmptyAggregatedTestResult, addResult } from '@jest/test-result';
 import * as path from 'path';
@@ -147,18 +147,16 @@ export async function batchJest(
     { success: boolean; terminalOutput: string }
   > = {};
 
-  const { configs } = await readConfigs({ $0: '', _: undefined }, [
-    ...configPaths,
-  ]);
+  const configs = await Promise.all(
+    configPaths.map(async (path) => readConfig({ $0: '', _: undefined }, path))
+  );
 
-  for (let root of taskGraph.roots) {
+  for (let i = 0; i < taskGraph.roots.length; i++) {
+    let root = taskGraph.roots[i];
     const aggregatedResults = makeEmptyAggregatedTestResult();
     aggregatedResults.startTime = results.startTime;
 
     const projectRoot = join(context.root, taskGraph.tasks[root].projectRoot);
-    const projectConfig = configs.find((config) =>
-      config.rootDir.startsWith(projectRoot)
-    );
 
     let resultOutput = '';
     for (const testResult of results.testResults) {
@@ -169,7 +167,7 @@ export async function batchJest(
           jestReporterUtils.getResultHeader(
             testResult,
             globalConfig,
-            projectConfig
+            configs[i].projectConfig
           );
       }
     }
