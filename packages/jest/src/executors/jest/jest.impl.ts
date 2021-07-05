@@ -32,16 +32,22 @@ export async function jestExecutor(
 
 export function jestConfigParser(
   options: JestExecutorOptions,
-  context: ExecutorContext
+  context: ExecutorContext,
+  multiProjects = false
 ): Config.Argv {
-  options.jestConfig = path.resolve(context.root, options.jestConfig);
+  let jestConfig:
+    | {
+        transform: any;
+        globals: any;
+        setupFilesAfterEnv: any;
+      }
+    | undefined;
 
-  const jestConfig: {
-    transform: any;
-    globals: any;
-    setupFilesAfterEnv: any;
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-  } = require(options.jestConfig);
+  if (!multiProjects) {
+    options.jestConfig = path.resolve(context.root, options.jestConfig);
+
+    jestConfig = require(options.jestConfig);
+  }
 
   const config: Config.Argv = {
     $0: undefined,
@@ -74,7 +80,7 @@ export function jestConfigParser(
   };
 
   // for backwards compatibility
-  if (options.setupFile) {
+  if (options.setupFile && !multiProjects) {
     const setupFilesAfterEnvSet = new Set([
       ...(jestConfig.setupFilesAfterEnv ?? []),
       path.resolve(context.root, options.setupFile),
@@ -133,10 +139,7 @@ export async function batchJest(
   }, []);
 
   const { globalConfig, results } = await runCLI(
-    {
-      $0: '',
-      _: undefined,
-    },
+    jestConfigParser(overrides, context, true),
     [...configPaths]
   );
 
