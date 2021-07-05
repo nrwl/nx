@@ -75,9 +75,13 @@ export function DocumentationPage({
     if (flavor.value !== storedFlavor) {
       router.push(`/${version.id}/${storedFlavor}${router.asPath}`);
     } else if (!router.asPath.startsWith(`/${version.id}`)) {
-      router.push(`/${version.id}/${storedFlavor}${router.asPath}`, undefined, {
-        shallow: true,
-      });
+      router.replace(
+        `/${version.id}/${storedFlavor}${router.asPath}`,
+        undefined,
+        {
+          shallow: true,
+        }
+      );
     }
   }, [router, version, flavor, storedFlavor, isFallback]);
 
@@ -278,8 +282,23 @@ function findDocumentAndMenu(
   flavor: { label: string; value: string },
   segments: string[]
 ): { menu?: Menu; document?: DocumentData; isFallback?: boolean } {
-  const isFallback = segments[0] !== version.id;
-  const path = isFallback ? segments : segments.slice(2);
+  const segmentsIncludeVersion = segments[0] === version.id;
+  const segmentsIncludeFlavor = segmentsIncludeVersion
+    ? segments[1] === flavor.value
+    : segments[0] === flavor.value;
+  const isFallback = !segmentsIncludeVersion && !segmentsIncludeFlavor;
+
+  let path: string[];
+
+  if (!isFallback) {
+    path = segments.slice(2);
+  } else if (!segmentsIncludeVersion && !segmentsIncludeFlavor) {
+    path = segments;
+  } else if (segmentsIncludeVersion && !segmentsIncludeFlavor) {
+    path = segments.slice(1);
+  } else {
+    throw new Error('Unsupported URL');
+  }
 
   let menu: Menu;
   let document: DocumentData;
