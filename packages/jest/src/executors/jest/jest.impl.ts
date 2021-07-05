@@ -7,7 +7,6 @@ import { JestExecutorOptions } from './schema';
 import { Config } from '@jest/types';
 import { ExecutorContext, TaskGraph } from '@nrwl/devkit';
 import { join } from 'path';
-import { performance } from 'perf_hooks';
 import { getSummary } from './summary';
 
 try {
@@ -133,7 +132,6 @@ export async function batchJest(
     return acc;
   }, []);
 
-  const startTime = performance.now();
   const { globalConfig, results } = await runCLI(
     {
       $0: '',
@@ -149,7 +147,7 @@ export async function batchJest(
 
   for (let root of taskGraph.roots) {
     const aggregatedResults = makeEmptyAggregatedTestResult();
-    aggregatedResults.startTime = startTime;
+    aggregatedResults.startTime = results.startTime;
 
     const projectRoot = join(context.root, taskGraph.tasks[root].projectRoot);
 
