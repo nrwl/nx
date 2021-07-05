@@ -507,6 +507,7 @@ function createFileWatcher(root: string, changeHandler: () => void) {
 function createDepGraphClientResponse(): DepGraphClientResponse {
   performance.mark('dep graph watch calculation:start');
   defaultFileHasher.clear();
+  defaultFileHasher.init();
 
   let graph = onlyWorkspaceProjects(createProjectGraph());
   performance.mark('dep graph watch calculation:end');
