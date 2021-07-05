@@ -12,4 +12,5 @@ export interface Schema {
   linter?: Linter;
   babelJest?: boolean;
   standaloneConfig?: boolean;
+  setParserOptionsProject?: boolean;
 }

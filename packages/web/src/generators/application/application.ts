@@ -206,6 +206,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     ],
     eslintFilePatterns: [`${options.appProjectRoot}/**/*.ts`],
     skipFormat: true,
+    setParserOptionsProject: options.setParserOptionsProject,
   });
   tasks.push(lintTask);
 
