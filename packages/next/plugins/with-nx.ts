@@ -2,7 +2,7 @@ import type { NextConfig } from 'next/dist/next-server/server/config';
 import { WebpackConfigOptions } from '../src/utils/types';
 
 const { join } = require('path');
-const { appRootPath } = require('@nrwl/workspace/src/utilities/app-root');
+const { appRootPath } = require('@nrwl/tao/src/utils/app-root');
 const { workspaceLayout } = require('@nrwl/workspace/src/core/file-utils');
 
 export interface WithNxOptions extends NextConfig {

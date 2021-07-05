@@ -1,7 +1,7 @@
 import { AddProjectNode, ProjectGraphContext } from '../project-graph-models';
 import { readJsonFile } from '@nrwl/devkit';
 import { join } from 'path';
-import { appRootPath } from '../../../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 
 export function buildNpmPackageNodes(
   ctx: ProjectGraphContext,

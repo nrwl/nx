@@ -16,7 +16,7 @@ import {
 } from '../utils/config/legacy/update-config';
 import { getJestObject } from '../update-10-0-0/require-jest-config';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 
 function updateAstTransformers(): Rule {
   return async (host: Tree, context: SchematicContext) => {

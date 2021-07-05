@@ -1,1 +1,1 @@
-export { appRootPath } from '../utilities/app-root';
+export { appRootPath } from '@nrwl/tao/src/utils/app-root';

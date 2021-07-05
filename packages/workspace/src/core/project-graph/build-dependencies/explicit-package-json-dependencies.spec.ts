@@ -9,10 +9,10 @@ import {
 import { createProjectFileMap } from '../../file-graph';
 import { readWorkspaceFiles } from '../../file-utils';
 
-jest.mock('../../../utilities/app-root', () => ({
+jest.mock('fs', () => require('memfs').fs);
+jest.mock('@nrwl/tao/src/utils/app-root', () => ({
   appRootPath: '/root',
 }));
-jest.mock('fs', () => require('memfs').fs);
 
 describe('explicit package json dependencies', () => {
   let ctx: ProjectGraphContext;

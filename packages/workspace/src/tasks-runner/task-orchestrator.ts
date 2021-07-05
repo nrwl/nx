@@ -4,7 +4,7 @@ import { performance } from 'perf_hooks';
 import { writeFileSync } from 'fs';
 import { Hasher } from '../core/hasher/hasher';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
-import { appRootPath } from '../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { output, TaskCacheStatus } from '../utilities/output';
 import { Cache, TaskWithCachedResult } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';

@@ -1,4 +1,4 @@
-import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import {
   DepConstraint,
   findConstraintsFor,
@@ -20,7 +20,6 @@ import {
 } from '@typescript-eslint/experimental-utils';
 import { createESLintRule } from '../utils/create-eslint-rule';
 import { normalizePath } from '@nrwl/devkit';
-import type { ProjectGraph } from '@nrwl/devkit';
 import {
   isNpmProject,
   ProjectType,

@@ -9,7 +9,7 @@ import {
 } from './project-graph';
 import { isRelativePath } from '../utilities/fileutils';
 import { dirname, join, posix } from 'path';
-import { appRootPath } from '../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 
 export class TargetProjectLocator {
   private sortedProjects = getSortedProjectNodes(this.nodes);

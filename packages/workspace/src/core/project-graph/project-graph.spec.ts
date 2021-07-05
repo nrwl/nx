@@ -1,6 +1,8 @@
 import { vol, fs } from 'memfs';
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('../../utilities/app-root', () => ({ appRootPath: '/root' }));
+jest.mock('@nrwl/tao/src/utils/app-root', () => ({
+  appRootPath: '/root',
+}));
 import { createProjectGraph } from './project-graph';
 import {
   NxJsonConfiguration,

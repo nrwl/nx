@@ -9,7 +9,7 @@ import {
 import { from } from 'rxjs';
 import { filter, map, mergeMap } from 'rxjs/operators';
 import * as path from 'path';
-import { appRootPath } from '../../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { reformattedWorkspaceJsonOrNull } from '@nrwl/tao/src/shared/workspace';
 import { parseJson, serializeJson } from '@nrwl/devkit';
 

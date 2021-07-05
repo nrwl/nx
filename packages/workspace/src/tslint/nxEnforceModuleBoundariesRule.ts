@@ -7,7 +7,7 @@ import {
   ProjectType,
   readCurrentProjectGraph,
 } from '../core/project-graph';
-import { appRootPath } from '../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import {
   DepConstraint,
   findConstraintsFor,

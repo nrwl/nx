@@ -1,7 +1,7 @@
 import { getFileHashes } from './git-hasher';
 import { readFileSync } from 'fs';
 import { defaultHashing, HashingImpl } from './hashing-impl';
-import { appRootPath } from '../../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { performance } from 'perf_hooks';
 
 export class FileHasher {
