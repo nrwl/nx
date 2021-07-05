@@ -127,7 +127,7 @@ export async function batchJest(
   inputs: Record<string, JestExecutorOptions>,
   overrides: JestExecutorOptions,
   context: ExecutorContext
-) {
+): Promise<Record<string, { success: boolean; terminalOutput: string }>> {
   const configPaths = taskGraph.roots.reduce<string[]>((acc, root) => {
     acc.push(path.resolve(context.root, inputs[root].jestConfig));
     return acc;
@@ -142,7 +142,12 @@ export async function batchJest(
     [...configPaths]
   );
 
-  return taskGraph.roots.reduce(async (jestTaskExecutionResults, root) => {
+  const jestTaskExecutionResults: Record<
+    string,
+    { success: boolean; terminalOutput: string }
+  > = {};
+
+  for (let root of taskGraph.roots) {
     const aggregatedResults = makeEmptyAggregatedTestResult();
     aggregatedResults.startTime = startTime;
 
@@ -169,6 +174,7 @@ export async function batchJest(
       success: aggregatedResults.numFailedTests === 0,
       terminalOutput: resultOutput + '\n\r\n\r' + getSummary(aggregatedResults),
     };
-    return jestTaskExecutionResults;
-  }, {});
+  }
+
+  return jestTaskExecutionResults;
 }
