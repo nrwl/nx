@@ -106,6 +106,7 @@ describe('Hasher', () => {
         '/file|file.hash|{"root":"libs/parent"}|{"implicitDependencies":[],"tags":[]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"],"@nrwl/child":["libs/child/src/index.ts"]}}}',
     });
     expect(hash.details.implicitDeps).toEqual({
+      'nx.json': '{"npmScope":"nrwl"}',
       'yarn.lock': 'yarn.lock.hash',
       'package-lock.json': 'package-lock.json.hash',
       'pnpm-lock.yaml': 'pnpm-lock.yaml.hash',
@@ -137,7 +138,7 @@ describe('Hasher', () => {
       {} as any,
       {
         runtimeCacheInputs: ['echo runtime123', 'echo runtime456'],
-        cacheTsConfig: true,
+        selectivelyCacheTsConfig: true,
       },
       createHashing()
     );
@@ -162,6 +163,7 @@ describe('Hasher', () => {
         '/file|file.hash|{"root":"libs/parent"}|{"implicitDependencies":[],"tags":[]}|{"compilerOptions":{"paths":{"@nrwl/parent":["libs/parent/src/index.ts"]}}}',
     });
     expect(hash.details.implicitDeps).toEqual({
+      'nx.json': '{"npmScope":"nrwl"}',
       'yarn.lock': 'yarn.lock.hash',
       'package-lock.json': 'package-lock.json.hash',
       'pnpm-lock.yaml': 'pnpm-lock.yaml.hash',

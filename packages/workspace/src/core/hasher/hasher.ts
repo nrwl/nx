@@ -12,7 +12,6 @@ import {
   WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
 import { resolveNewFormatWithInlineProjects } from '@nrwl/tao/src/shared/workspace';
-import { TsconfigJsonConfiguration } from '@nrwl/tao/src/shared/tsconfig';
 
 export interface Hash {
   value: string;
@@ -39,6 +38,14 @@ interface RuntimeHashResult {
   runtime: { [input: string]: string };
 }
 
+interface CompilerOptions {
+  paths: Record<string, string[]>;
+}
+
+interface TsconfigJsonConfiguration {
+  compilerOptions: CompilerOptions;
+}
+
 export class Hasher {
   static version = '2.0';
   private implicitDependencies: Promise<ImplicitHashResult>;
@@ -63,7 +70,7 @@ export class Hasher {
       this.fileHasher.clear();
     }
     this.projectHashes = new ProjectHasher(this.projectGraph, this.hashing, {
-      cacheTsConfig: this.options.cacheTsConfig ?? false,
+      selectivelyCacheTsConfig: this.options.selectivelyCacheTsConfig ?? false,
     });
   }
 
@@ -222,10 +229,13 @@ export class Hasher {
         '.nxignore',
       ];
 
-      const fileHashes = fileNames.map((file) => {
-        const hash = this.fileHasher.hashFile(file);
-        return { file, hash };
-      });
+      const fileHashes = [
+        ...fileNames.map((file) => {
+          const hash = this.fileHasher.hashFile(file);
+          return { file, hash };
+        }),
+        ...this.hashGlobalConfig(),
+      ];
 
       const combinedHash = this.hashing.hashArray(
         fileHashes.map((v) => v.hash)
@@ -274,7 +284,7 @@ class ProjectHasher {
   constructor(
     private readonly projectGraph: ProjectGraph,
     private readonly hashing: HashingImpl,
-    private readonly options: { cacheTsConfig: boolean }
+    private readonly options: { selectivelyCacheTsConfig: boolean }
   ) {
     this.workspaceJson = this.readWorkspaceConfigFile(workspaceFileName());
     this.nxJson = this.readNxJsonConfigFile('nx.json');
@@ -328,26 +338,8 @@ class ProjectHasher {
 
         let tsConfig: string;
 
-        if (this.options.cacheTsConfig) {
-          const {
-            paths,
-            ...compilerOptions
-          } = this.tsConfigJson.compilerOptions;
-
-          const rootPath = this.workspaceJson.projects[projectName].root.split(
-            '/'
-          );
-          rootPath.shift();
-          const pathAlias = `@${this.nxJson.npmScope}/${rootPath.join('/')}`;
-
-          tsConfig = JSON.stringify({
-            compilerOptions: {
-              ...compilerOptions,
-              paths: {
-                [pathAlias]: paths[pathAlias] ?? [],
-              },
-            },
-          });
+        if (this.options.selectivelyCacheTsConfig) {
+          tsConfig = this.removeOtherProjectsPathRecords(projectName);
         } else {
           tsConfig = JSON.stringify(this.tsConfigJson);
         }
@@ -364,6 +356,23 @@ class ProjectHasher {
       });
     }
     return this.sourceHashes[projectName];
+  }
+
+  private removeOtherProjectsPathRecords(projectName: string) {
+    const { paths, ...compilerOptions } = this.tsConfigJson.compilerOptions;
+
+    const rootPath = this.workspaceJson.projects[projectName].root.split('/');
+    rootPath.shift();
+    const pathAlias = `@${this.nxJson.npmScope}/${rootPath.join('/')}`;
+
+    return JSON.stringify({
+      compilerOptions: {
+        ...compilerOptions,
+        paths: {
+          [pathAlias]: paths[pathAlias] ?? [],
+        },
+      },
+    });
   }
 
   private readTsConfig() {
