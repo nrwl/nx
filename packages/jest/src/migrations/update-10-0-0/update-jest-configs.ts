@@ -13,7 +13,7 @@ import {
 } from '@nrwl/workspace';
 import { addPropertyToJestConfig } from '../utils/config/legacy/update-config';
 import { getJestObject } from './require-jest-config';
-import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
 
 function checkJestPropertyObject(object: unknown): object is object {
   return object !== null && object !== undefined;
