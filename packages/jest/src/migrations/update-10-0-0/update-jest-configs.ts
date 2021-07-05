@@ -104,12 +104,12 @@ function modifyJestConfig(
     }
   } catch {
     context.logger.warn(`
-    Cannot update jest config for the ${project} project. 
+    Cannot update jest config for the ${project} project.
     This is most likely caused because the jest config at ${jestConfig} it not in a expected configuration format (ie. module.exports = {}).
-    
+
     Since this migration could not be ran on this project, please make sure to modify the Jest config file to have the following configured:
     * setupFilesAfterEnv with: "${setupFile}"
-    * globals.ts-jest with: 
+    * globals.ts-jest with:
     "${serializeJson(globalTsJest)}"
   `);
   }

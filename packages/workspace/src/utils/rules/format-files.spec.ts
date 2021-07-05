@@ -4,7 +4,7 @@ import { Tree } from '@angular-devkit/schematics';
 import * as prettier from 'prettier';
 import * as path from 'path';
 import { formatFiles } from './format-files';
-import { appRootPath } from '../../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 
 describe('formatFiles', () => {
   let tree: Tree;

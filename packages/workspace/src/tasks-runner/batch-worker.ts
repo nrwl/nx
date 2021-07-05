@@ -6,7 +6,7 @@ import {
 } from './batch-messages';
 import { TaskGraph } from '@nrwl/devkit';
 import { ExecutorContext, Workspaces } from '@nrwl/tao/src/shared/workspace';
-import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { combineOptionsForExecutor } from '@nrwl/tao/src/shared/params';
 import { output } from '../utilities/output';
 

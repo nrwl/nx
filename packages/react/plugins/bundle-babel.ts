@@ -1,6 +1,6 @@
 import { join } from 'path';
 import { readJsonFile } from '@nrwl/workspace/src/utilities/fileutils';
-import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 
 // TODO(jack): Remove this in Nx 13 since it is no longer needed with `.babelrc` changes
 function getRollupBabelOptions(babelOptions: any) {

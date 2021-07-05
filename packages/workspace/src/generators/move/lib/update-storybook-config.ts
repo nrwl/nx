@@ -2,7 +2,7 @@ import { ProjectConfiguration, Tree } from '@nrwl/devkit';
 
 import * as path from 'path';
 
-import { appRootPath } from '../../../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { Schema } from '../schema';
 import { getDestination } from './utils';
 import { join } from 'path';

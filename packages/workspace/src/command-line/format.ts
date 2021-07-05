@@ -14,7 +14,7 @@ import {
   reformattedWorkspaceJsonOrNull,
   workspaceConfigName,
 } from '@nrwl/tao/src/shared/workspace';
-import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import * as prettier from 'prettier';
 import { readJsonFile, writeJsonFile } from '@nrwl/devkit';
 import { sortObjectByKeys } from '@nrwl/tao/src/utils/object-sort';

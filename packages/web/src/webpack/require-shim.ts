@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 
 export function requireShim(path: string) {
   try {

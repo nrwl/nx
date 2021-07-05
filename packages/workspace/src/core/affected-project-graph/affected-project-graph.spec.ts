@@ -8,7 +8,9 @@ import { FileData, WholeFileChange } from '../file-utils';
 import type { NxJsonConfiguration } from '@nrwl/devkit';
 
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('../../utilities/app-root', () => ({ appRootPath: '/root' }));
+jest.mock('@nrwl/tao/src/utils/app-root', () => ({
+  appRootPath: '/root',
+}));
 
 describe('project graph', () => {
   let packageJson: any;

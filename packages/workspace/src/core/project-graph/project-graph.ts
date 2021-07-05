@@ -12,7 +12,7 @@ import type {
 
 import { ProjectGraphBuilder } from '@nrwl/devkit';
 
-import { appRootPath } from '../../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { assertWorkspaceValidity } from '../assert-workspace-validity';
 import { createProjectFileMap } from '../file-graph';
 import {

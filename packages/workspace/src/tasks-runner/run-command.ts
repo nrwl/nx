@@ -1,6 +1,6 @@
 import { AffectedEventType, TasksRunner } from './tasks-runner';
 import { join } from 'path';
-import { appRootPath } from '../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { Reporter, ReporterArgs } from './reporter';
 import * as yargs from 'yargs';
 import type {

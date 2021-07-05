@@ -3,7 +3,7 @@ import { existsSync, unlinkSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import type { ProjectGraphNode } from '@nrwl/devkit';
 import { join } from 'path';
-import { appRootPath } from '../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import {
   cacheDirectory,
   readCacheDirectoryProperty,

@@ -1,4 +1,4 @@
-import { appRootPath } from '../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { Task } from '@nrwl/devkit';
 import {
   existsSync,

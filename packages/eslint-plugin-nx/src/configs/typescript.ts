@@ -1,4 +1,4 @@
-import { appRootPath } from '@nrwl/workspace/src/utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 
 /**
  * This configuration is intended to be applied to ALL .ts and .tsx files

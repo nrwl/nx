@@ -4,7 +4,7 @@ import { readdirSync, existsSync } from 'fs';
 import { copySync, removeSync } from 'fs-extra';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
-import { appRootPath } from '../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { fileExists } from '../utilities/fileutils';
 import { output } from '../utilities/output';
 import type { CompilerOptions } from 'typescript';

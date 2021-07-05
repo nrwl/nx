@@ -12,7 +12,7 @@ import { TargetProjectLocator } from '../core/target-project-locator';
 import { mapProjectGraphFiles } from '../utils/runtime-lint-utils';
 
 jest.mock('fs', () => require('memfs').fs);
-jest.mock('../utilities/app-root', () => ({ appRootPath: '/root' }));
+jest.mock('@nrwl/tao/src/utils/app-root', () => ({ appRootPath: '/root' }));
 
 const tsconfig = {
   compilerOptions: {

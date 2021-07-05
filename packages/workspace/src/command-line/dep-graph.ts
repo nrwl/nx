@@ -18,7 +18,7 @@ import {
   ProjectGraphDependency,
   ProjectGraphNode,
 } from '../core/project-graph';
-import { appRootPath } from '../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import {
   cacheDirectory,
   readCacheDirectoryProperty,

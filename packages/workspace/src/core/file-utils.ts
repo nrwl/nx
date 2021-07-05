@@ -11,7 +11,7 @@ import { extname, join, relative, sep } from 'path';
 import { performance } from 'perf_hooks';
 import type { NxArgs } from '../command-line/utils';
 import { WorkspaceResults } from '../command-line/workspace-results';
-import { appRootPath } from '../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { fileExists, readJsonFile } from '../utilities/fileutils';
 import { jsonDiff } from '../utilities/json-diff';
 import { defaultFileHasher } from './hasher/file-hasher';

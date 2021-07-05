@@ -1,5 +1,5 @@
 import * as yargs from 'yargs';
-import { appRootPath } from '../utilities/app-root';
+import { appRootPath } from '@nrwl/tao/src/utils/app-root';
 import { output } from '../utilities/output';
 import {
   fetchCommunityPlugins,
