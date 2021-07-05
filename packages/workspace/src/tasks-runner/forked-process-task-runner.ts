@@ -6,15 +6,15 @@ import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { Task } from './tasks-runner';
 import { output } from '../utilities/output';
 import { getCliPath, getCommandArgsForTask } from './utils';
-import { Batch } from '@nrwl/workspace/src/tasks-runner/tasks-schedule';
+import { Batch } from './tasks-schedule';
 import { join } from 'path';
 import {
   BatchMessage,
   BatchMessageType,
   BatchResults,
-} from '@nrwl/workspace/src/tasks-runner/batch-messages';
+} from './batch/batch-messages';
 
-const workerPath = join(__dirname, './batch-worker.js');
+const workerPath = join(__dirname, './batch/run-batch.js');
 export class ForkedProcessTaskRunner {
   workspaceRoot = appRootPath;
   cliPath = getCliPath(this.workspaceRoot);
@@ -48,16 +48,10 @@ export class ForkedProcessTaskRunner {
         }
 
         const p = fork(workerPath, {
-          stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+          stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
           env,
         });
         this.processes.add(p);
-        p.stdout.on('data', (chunk) => {
-          process.stdout.write(chunk);
-        });
-        p.stderr.on('data', (chunk) => {
-          process.stderr.write(chunk);
-        });
 
         p.once('exit', (code, signal) => {
           if (code === null) code = this.signalToCode(signal);
