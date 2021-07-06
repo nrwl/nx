@@ -24,6 +24,18 @@ nx g upgrade-module ... --dry-run
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+The name of the main AngularJS module.
+
+### project (_**required**_)
+
+Type: `string`
+
+The name of the project.
+
 ### angularJsCmpSelector
 
 Type: `string`
@@ -35,18 +47,6 @@ The selector of an AngularJS component (e.g., `--angularJsCmpSelector=myComponen
 Type: `string`
 
 Import expression of the AngularJS application (e.g., `--angularJsImport=some_node_module/my_app`).
-
-### name
-
-Type: `string`
-
-The name of the main AngularJS module.
-
-### project
-
-Type: `string`
-
-The name of the project.
 
 ### router
 

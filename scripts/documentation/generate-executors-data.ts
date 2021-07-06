@@ -13,6 +13,7 @@ import {
   generateJsonFile,
   generateMarkdownFile,
   sortAlphabeticallyFunction,
+  sortByBooleanFunction,
 } from './utils';
 import {
   Configuration,
@@ -76,7 +77,7 @@ function generateTemplate(
     # ${builder.name}
     ${builder.description}
 
-    Properties can be configured in ${filename} when defining the executor, or when invoking it.
+    Options can be configured in \`${filename}\` when defining the executor, or when invoking it.
     ${
       framework != 'angular'
         ? `Read more about how to use executors and the CLI here: https://nx.dev/${framework}/getting-started/nx-cli#running-tasks.`
@@ -93,10 +94,11 @@ function generateTemplate(
   }
 
   if (Array.isArray(builder.options) && !!builder.options.length) {
-    template += '## Properties';
+    template += '## Options';
 
     builder.options
       .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
+      .sort((a, b) => sortByBooleanFunction(a.required, b.required))
       .forEach((option) => {
         const enumStr = option.enum
           ? `Possible values: ${option.enum

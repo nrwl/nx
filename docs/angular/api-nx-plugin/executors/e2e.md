@@ -2,17 +2,17 @@
 
 Creates and runs the e2e tests for an Nx Plugin.
 
-Properties can be configured in angular.json when defining the executor, or when invoking it.
+Options can be configured in `angular.json` when defining the executor, or when invoking it.
 
-## Properties
+## Options
 
-### jestConfig
+### jestConfig (_**required**_)
 
 Type: `string`
 
 Jest config file.
 
-### target
+### target (_**required**_)
 
 Type: `string`
 

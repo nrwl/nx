@@ -2,9 +2,21 @@
 
 Build a Node application
 
-Properties can be configured in angular.json when defining the executor, or when invoking it.
+Options can be configured in `angular.json` when defining the executor, or when invoking it.
 
-## Properties
+## Options
+
+### main (_**required**_)
+
+Type: `string`
+
+The name of the main entry-point file.
+
+### tsConfig (_**required**_)
+
+Type: `string`
+
+The name of the Typescript configuration file.
 
 ### assets
 
@@ -61,12 +73,6 @@ Default: `false`
 Type: `boolean`
 
 Generates a package.json file with the project's node_module dependencies populated for installing in a container. If a package.json exists in the project's directory, it will be reused with dependencies populated.
-
-### main
-
-Type: `string`
-
-The name of the main entry-point file.
 
 ### maxWorkers
 
@@ -133,12 +139,6 @@ Default: `false`
 Type: `boolean`
 
 Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or <https://webpack.github.io/analyse>.
-
-### tsConfig
-
-Type: `string`
-
-The name of the Typescript configuration file.
 
 ### verbose
 

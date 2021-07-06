@@ -24,6 +24,20 @@ nx g controller ... --dry-run
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+The name of the controller.
+
+### project (_**required**_)
+
+Alias(es): p
+
+Type: `string`
+
+The Nest project to target.
+
 ### directory
 
 Alias(es): d,path
@@ -53,20 +67,6 @@ Nest controller language.
 Type: `string`
 
 Allows specification of the declaring module.
-
-### name
-
-Type: `string`
-
-The name of the controller.
-
-### project
-
-Alias(es): p
-
-Type: `string`
-
-The Nest project to target.
 
 ### skipFormat
 

@@ -24,6 +24,20 @@ nx g module ... --dry-run
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+The name of the module.
+
+### project (_**required**_)
+
+Alias(es): p
+
+Type: `string`
+
+The Nest project to target.
+
 ### directory
 
 Alias(es): d,path
@@ -53,20 +67,6 @@ Nest module language.
 Type: `string`
 
 The path to import the module.
-
-### name
-
-Type: `string`
-
-The name of the module.
-
-### project
-
-Alias(es): p
-
-Type: `string`
-
-The Nest project to target.
 
 ### skipFormat
 

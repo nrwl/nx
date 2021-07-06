@@ -135,9 +135,10 @@ export async function parseJsonSchemaToOptions(
     const positional: number | undefined =
       typeof $defaultIndex == 'number' ? $defaultIndex : undefined;
 
-    const required = json.isJsonArray(current.required)
-      ? current.required.indexOf(name) != -1
-      : false;
+    const required =
+      json.isJsonObject(parentSchema) && json.isJsonArray(parentSchema.required)
+        ? parentSchema.required.indexOf(name) != -1
+        : false;
     const aliases = json.isJsonArray(current.aliases)
       ? [...current.aliases].map((x) => `${x}`)
       : current.alias

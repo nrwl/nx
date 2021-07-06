@@ -2,10 +2,20 @@
 
 Serve Storybook
 
-Properties can be configured in workspace.json when defining the executor, or when invoking it.
+Options can be configured in `workspace.json` when defining the executor, or when invoking it.
 Read more about how to use executors and the CLI here: https://nx.dev/react/getting-started/nx-cli#running-tasks.
 
-## Properties
+## Options
+
+### uiFramework (_**required**_) (**hidden**)
+
+Default: `@storybook/angular`
+
+Type: `string`
+
+Possible values: `@storybook/angular`, `@storybook/react`, `@storybook/html`
+
+Storybook framework npm package
 
 ### docsMode
 
@@ -70,16 +80,6 @@ SSL key to use for serving HTTPS.
 Type: `array`
 
 Directory where to load static files from, array of strings
-
-### uiFramework (**hidden**)
-
-Default: `@storybook/angular`
-
-Type: `string`
-
-Possible values: `@storybook/angular`, `@storybook/react`, `@storybook/html`
-
-Storybook framework npm package
 
 ### watch
 

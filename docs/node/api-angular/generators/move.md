@@ -36,25 +36,25 @@ nx g @nrwl/angular:move --project my-feature-lib shared/my-feature-lib
 
 ## Options
 
-### destination
+### destination (_**required**_)
 
 Type: `string`
 
 The folder to move the Angular project into.
 
-### importPath
-
-Type: `string`
-
-The new import path to use in the `tsconfig.base.json`.
-
-### projectName
+### projectName (_**required**_)
 
 Alias(es): project
 
 Type: `string`
 
 The name of the Angular project to move.
+
+### importPath
+
+Type: `string`
+
+The new import path to use in the `tsconfig.base.json`.
 
 ### updateImportPath
 

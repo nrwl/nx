@@ -12,6 +12,7 @@ import {
   generateJsonFile,
   generateMarkdownFile,
   sortAlphabeticallyFunction,
+  sortByBooleanFunction,
 } from './utils';
 import {
   Configuration,
@@ -116,6 +117,7 @@ function generateTemplate(
 
     schematic.options
       .sort((a, b) => sortAlphabeticallyFunction(a.name, b.name))
+      .sort((a, b) => sortByBooleanFunction(a.required, b.required))
       .forEach((option) => {
         let enumValues = [];
         const rawSchemaProp = schematic.rawSchema.properties[option.name];

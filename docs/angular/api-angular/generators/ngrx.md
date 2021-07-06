@@ -24,6 +24,18 @@ nx g ngrx ... --dry-run
 
 ## Options
 
+### module (_**required**_)
+
+Type: `string`
+
+The path to the `NgModule` where the feature state will be registered. The host directory will create/use the new state directory.
+
+### name (_**required**_)
+
+Type: `string`
+
+Name of the NgRx feature state, such as `products` or `users`. Recommended to use the plural form of the name.
+
 ### barrels
 
 Default: `false`
@@ -55,18 +67,6 @@ Default: `true`
 Type: `boolean`
 
 Only register the root state management setup or feature state.
-
-### module
-
-Type: `string`
-
-The path to the `NgModule` where the feature state will be registered. The host directory will create/use the new state directory.
-
-### name
-
-Type: `string`
-
-Name of the NgRx feature state, such as `products` or `users`. Recommended to use the plural form of the name.
 
 ### ~~onlyAddFiles~~
 

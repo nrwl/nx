@@ -24,6 +24,20 @@ nx g interface ... --dry-run
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+The name of the interface.
+
+### project (_**required**_)
+
+Alias(es): p
+
+Type: `string`
+
+The Nest project to target.
+
 ### directory
 
 Alias(es): d,path
@@ -39,20 +53,6 @@ Default: `true`
 Type: `boolean`
 
 Flag to indicate if a directory is created.
-
-### name
-
-Type: `string`
-
-The name of the interface.
-
-### project
-
-Alias(es): p
-
-Type: `string`
-
-The Nest project to target.
 
 ### skipFormat
 

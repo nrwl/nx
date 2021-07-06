@@ -2,10 +2,34 @@
 
 Builds a browser application with support for incremental builds and custom webpack configuration.
 
-Properties can be configured in workspace.json when defining the executor, or when invoking it.
+Options can be configured in `workspace.json` when defining the executor, or when invoking it.
 Read more about how to use executors and the CLI here: https://nx.dev/react/getting-started/nx-cli#running-tasks.
 
-## Properties
+## Options
+
+### index (_**required**_)
+
+Type: `string`
+
+Configures the generation of the application's HTML index.
+
+### main (_**required**_)
+
+Type: `string`
+
+The full path for the main entry point to the app, relative to the current workspace.
+
+### outputPath (_**required**_)
+
+Type: `string`
+
+The full path for the new output directory, relative to the current workspace. By default, writes output to a folder named dist/ in the current project.
+
+### tsConfig (_**required**_)
+
+Type: `string`
+
+The full path for the TypeScript configuration file, relative to the current workspace.
 
 ### allowedCommonJsDependencies
 
@@ -113,12 +137,6 @@ Possible values: `warning`, `error`, `ignore`
 
 How to handle missing translations for i18n.
 
-### index
-
-Type: `string`
-
-Configures the generation of the application's HTML index.
-
 ### inlineStyleLanguage
 
 Default: `css`
@@ -134,12 +152,6 @@ The stylesheet language to use for the application's inline component styles.
 Type: `boolean | boolean[] `
 
 Translate the bundles in one or more locales.
-
-### main
-
-Type: `string`
-
-The full path for the main entry point to the app, relative to the current workspace.
 
 ### namedChunks
 
@@ -172,12 +184,6 @@ Type: `string`
 Possible values: `none`, `all`, `media`, `bundles`
 
 Define the output filename cache-busting hashing mode.
-
-### outputPath
-
-Type: `string`
-
-The full path for the new output directory, relative to the current workspace. By default, writes output to a folder named dist/ in the current project.
 
 ### poll
 
@@ -264,12 +270,6 @@ Default: `false`
 Type: `boolean`
 
 Enables the use of subresource integrity validation.
-
-### tsConfig
-
-Type: `string`
-
-The full path for the TypeScript configuration file, relative to the current workspace.
 
 ### vendorChunk
 
