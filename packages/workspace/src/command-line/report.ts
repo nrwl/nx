@@ -20,6 +20,7 @@ export const packagesWeCareAbout = [
   '@nrwl/nest',
   '@nrwl/next',
   '@nrwl/node',
+  '@nrwl/nx-cloud',
   '@nrwl/react',
   '@nrwl/schematics',
   '@nrwl/tao',
