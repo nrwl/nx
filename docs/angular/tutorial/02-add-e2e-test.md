@@ -29,7 +29,7 @@ describe('TodoApps', () => {
 });
 ```
 
-This i a simple example of an E2E test, but it suffices for the purposes of this tutorial.
+This is a simple example of an E2E test, but it suffices for the purposes of this tutorial.
 
 If you have not done so already, stop the `npx nx serve` command and run `npx nx e2e todos-e2e --watch`.
 
