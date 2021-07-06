@@ -31,7 +31,10 @@ export function AngularPage() {
           content="Nx is a suite of powerful dev tools that help developers build, test, and scale full-stack Angular
           applications with integration with modern libraries like Jest, Cypress, Storybook, NgRx, ESLint, and more."
         />
-        <meta name="twitter:image" content="/images/nx-media.jpg" />
+        <meta
+          name="twitter:image"
+          content="https://nx.dev/images/nx-media.jpg"
+        />
         <meta
           name="twitter:image:alt"
           content="Nx: Smart, Extensible Build Framework"
@@ -43,9 +46,12 @@ export function AngularPage() {
           applications with integration with modern libraries like Jest, Cypress, Storybook, NgRx, ESLint, and more."
         />
         <meta property="og:title" content="Nx and Modern Angular" />
-        <meta property="og:image" content="/images/nx-media.jpg" />
-        <meta property="og:image:width" content="1000" />
-        <meta property="og:image:height" content="300" />
+        <meta
+          property="og:image"
+          content="https://nx.dev/images/nx-media.jpg"
+        />
+        <meta property="og:image:width" content="800" />
+        <meta property="og:image:height" content="400" />
       </Head>
       <Header
         useDarkBackground={false}

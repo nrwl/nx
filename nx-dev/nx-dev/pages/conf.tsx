@@ -22,7 +22,10 @@ export function ConfPage() {
           name="twitter:description"
           content="Nx Conf is a new, free-to-attend, 2-day conference featuring members of the Nx team and community. Join us as we share our ideas and expertise about making development faster, more scalable, and more collaborative."
         />
-        <meta name="twitter:image" content="/images/nx-conf-media.jpg" />
+        <meta
+          name="twitter:image"
+          content="https://nx.dev/images/nx-conf-media.jpg"
+        />
         <meta
           name="twitter:image:alt"
           content="Nx Conf - Nx: Smart, Extensible Build Framework"
@@ -36,7 +39,10 @@ export function ConfPage() {
           property="og:title"
           content="Announcing the first ever Nx Conf - September 16th-17th"
         />
-        <meta property="og:image" content="/images/nx-conf-media.jpg" />
+        <meta
+          property="og:image"
+          content="https://nx.dev/images/nx-conf-media.jpg"
+        />
         <meta property="og:image:width" content="1000" />
         <meta property="og:image:height" content="500" />
       </Head>

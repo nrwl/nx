@@ -73,7 +73,10 @@ export function Node() {
           name="twitter:description"
           content="Nx is a smart and extensible build framework to help you develop, test, build, and scale Node applications."
         />
-        <meta name="twitter:image" content="/images/nx-media.jpg" />
+        <meta
+          name="twitter:image"
+          content="https://nx.dev/images/nx-media.jpg"
+        />
         <meta
           name="twitter:image:alt"
           content="Nx: Smart, Extensible Build Framework"
@@ -84,9 +87,12 @@ export function Node() {
           content="Nx is a smart and extensible build framework to help you develop, test, build, and scale Node applications."
         />
         <meta property="og:title" content="Nx and Node" />
-        <meta property="og:image" content="/images/nx-media.jpg" />
-        <meta property="og:image:width" content="1000" />
-        <meta property="og:image:height" content="300" />
+        <meta
+          property="og:image"
+          content="https://nx.dev/images/nx-media.jpg"
+        />
+        <meta property="og:image:width" content="800" />
+        <meta property="og:image:height" content="400" />
       </Head>
       <Header
         useDarkBackground={false}

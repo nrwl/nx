@@ -33,7 +33,10 @@ export function Index() {
         and build at any scale — integrating seamlessly with modern technologies and libraries while providing a
         distributed graph-based task execution, a robust CLI, computation caching, dependency management, and more."
         />
-        <meta name="twitter:image" content="/images/nx-media.jpg" />
+        <meta
+          name="twitter:image"
+          content="https://nx.dev/images/nx-media.jpg"
+        />
         <meta
           name="twitter:image:alt"
           content="Nx: Smart, Extensible Build Framework"
@@ -49,9 +52,12 @@ export function Index() {
           property="og:title"
           content="Nx: Smart, Extensible Build Framework"
         />
-        <meta property="og:image" content="/images/nx-media.jpg" />
-        <meta property="og:image:width" content="1000" />
-        <meta property="og:image:height" content="300" />
+        <meta
+          property="og:image"
+          content="https://nx.dev/images/nx-media.jpg"
+        />
+        <meta property="og:image:width" content="800" />
+        <meta property="og:image:height" content="400" />
       </Head>
       <Header showSearch={false} useDarkBackground={false} />
       <main>
