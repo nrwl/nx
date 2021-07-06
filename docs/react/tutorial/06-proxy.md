@@ -1,7 +1,5 @@
 # React Nx Tutorial - Step 6: Proxy
 
-## Nx.dev Tutorial | React | Step 6: Proxy
-
 <iframe width="560" height="315" src="https://www.youtube.com/embed/xfvCz-yLeEw" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 You passed `--frontendProject=todos` when creating the node application. What did that argument do?
@@ -40,7 +38,7 @@ It created a proxy configuration that allows the React application to talk to th
 }
 ```
 
-This configuration tells `npx nx serve` to forward all requests starting with `/api` to the process listening on port 3333.
+This configuration tells `npx nx serve` to forward all requests starting with `/api` to the process listening on port `3333`.
 
 ## Workspace.json, Targets, Builders
 
