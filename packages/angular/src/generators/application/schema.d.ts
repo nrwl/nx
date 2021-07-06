@@ -20,4 +20,8 @@ export interface Schema {
   backendProject?: string;
   strict?: boolean;
   standaloneConfig?: boolean;
+  mfe?: boolean;
+  mfeType?: 'shell' | 'remote';
+  remotes?: string[];
+  port?: number;
 }

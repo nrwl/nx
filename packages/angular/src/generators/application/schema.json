@@ -122,6 +122,25 @@
       "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
       "type": "boolean",
       "default": false
+    },
+    "mfe": {
+      "description": "Generate a Module Federation configuration for the application",
+      "type": "boolean",
+      "default": false
+    },
+    "mfeType": {
+      "type": "string",
+      "enum": ["shell", "remote"],
+      "description": "Type of application to generate the Module Federation configuration for.",
+      "default": "remote"
+    },
+    "port": {
+      "type": "number",
+      "description": "The port at which the remote application should be served."
+    },
+    "remotes": {
+      "type": "array",
+      "description": "A list of remote application names that the shell application should consume."
     }
   },
   "required": []
