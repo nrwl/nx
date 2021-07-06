@@ -90,53 +90,65 @@ describe('TasksSchedule', () => {
     });
   });
 
-  it('should begin with no scheduled tasks', () => {
-    expect(taskSchedule.nextBatch()).toBeNull();
-    expect(taskSchedule.nextTask()).toBeNull();
-  });
+  describe('Without Batch Mode', () => {
+    let original;
+    beforeEach(() => {
+      original = process.env['NX_BATCH_MODE'];
+      process.env['NX_BATCH_MODE'] = 'false';
+    });
 
-  it('should schedule root tasks first', () => {
-    taskSchedule.scheduleNextTasks();
-    expect(taskSchedule.nextTask()).toEqual(lib1Build);
-    expect(taskSchedule.nextTask()).toEqual(app2Build);
-  });
+    afterEach(() => {
+      process.env['NX_BATCH_MODE'] = original;
+    });
 
-  it('should not schedule any tasks that still have uncompleted dependencies', () => {
-    taskSchedule.scheduleNextTasks();
-    taskSchedule.nextTask();
-    taskSchedule.nextTask();
-    expect(taskSchedule.nextTask()).toBeNull();
+    it('should begin with no scheduled tasks', () => {
+      expect(taskSchedule.nextBatch()).toBeNull();
+      expect(taskSchedule.nextTask()).toBeNull();
+    });
 
-    taskSchedule.complete([app2Build.id]);
+    it('should schedule root tasks first', () => {
+      taskSchedule.scheduleNextTasks();
+      expect(taskSchedule.nextTask()).toEqual(lib1Build);
+      expect(taskSchedule.nextTask()).toEqual(app2Build);
+    });
 
-    expect(taskSchedule.nextTask()).toBeNull();
-  });
+    it('should not schedule any tasks that still have uncompleted dependencies', () => {
+      taskSchedule.scheduleNextTasks();
+      taskSchedule.nextTask();
+      taskSchedule.nextTask();
+      expect(taskSchedule.nextTask()).toBeNull();
 
-  it('should continue to schedule tasks that have completed dependencies', () => {
-    taskSchedule.scheduleNextTasks();
-    taskSchedule.nextTask();
-    taskSchedule.nextTask();
-    taskSchedule.complete([lib1Build.id]);
+      taskSchedule.complete([app2Build.id]);
 
-    taskSchedule.scheduleNextTasks();
-    expect(taskSchedule.nextTask()).toEqual(app1Build);
-  });
+      expect(taskSchedule.nextTask()).toBeNull();
+    });
 
-  it('should run out of tasks when they are all complete', () => {
-    taskSchedule.scheduleNextTasks();
-    taskSchedule.nextTask();
-    taskSchedule.nextTask();
-    taskSchedule.complete([lib1Build.id, app1Build.id, app2Build.id]);
+    it('should continue to schedule tasks that have completed dependencies', () => {
+      taskSchedule.scheduleNextTasks();
+      taskSchedule.nextTask();
+      taskSchedule.nextTask();
+      taskSchedule.complete([lib1Build.id]);
 
-    expect(taskSchedule.hasTasks()).toEqual(false);
-  });
+      taskSchedule.scheduleNextTasks();
+      expect(taskSchedule.nextTask()).toEqual(app1Build);
+    });
 
-  it('should not schedule batches', () => {
-    taskSchedule.scheduleNextTasks();
+    it('should run out of tasks when they are all complete', () => {
+      taskSchedule.scheduleNextTasks();
+      taskSchedule.nextTask();
+      taskSchedule.nextTask();
+      taskSchedule.complete([lib1Build.id, app1Build.id, app2Build.id]);
 
-    expect(taskSchedule.nextTask()).not.toBeNull();
+      expect(taskSchedule.hasTasks()).toEqual(false);
+    });
 
-    expect(taskSchedule.nextBatch()).toBeNull();
+    it('should not schedule batches', () => {
+      taskSchedule.scheduleNextTasks();
+
+      expect(taskSchedule.nextTask()).not.toBeNull();
+
+      expect(taskSchedule.nextBatch()).toBeNull();
+    });
   });
 
   describe('With Batch Mode', () => {

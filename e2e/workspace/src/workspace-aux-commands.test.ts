@@ -583,7 +583,7 @@ describe('dep-graph', () => {
 
     expect(() => checkFilesExist('project-graph.html')).not.toThrow();
     expect(() => checkFilesExist('static/styles.css')).not.toThrow();
-    expect(() => checkFilesExist('static/runtime.js')).not.toThrow();
+    expect(() => checkFilesExist('static/runtime.esm.js')).not.toThrow();
     expect(() => checkFilesExist('static/polyfills.esm.js')).not.toThrow();
     expect(() => checkFilesExist('static/main.esm.js')).not.toThrow();
   });
