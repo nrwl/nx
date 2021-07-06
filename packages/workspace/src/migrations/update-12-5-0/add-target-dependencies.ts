@@ -8,9 +8,10 @@ import { output } from '../../utilities/output';
 
 export async function setTargetDependencies(host: Tree) {
   const config = readWorkspaceConfiguration(host);
-  const strictlyOrderedTargets = config.tasksRunnerOptions['default'].options
-    .strictlyOrderedTargets || ['build'];
-  delete config.tasksRunnerOptions['default'].options.strictlyOrderedTargets;
+  const strictlyOrderedTargets = config.tasksRunnerOptions?.['default']?.options
+    ?.strictlyOrderedTargets || ['build'];
+  delete config.tasksRunnerOptions?.['default']?.options
+    ?.strictlyOrderedTargets;
   config.targetDependencies = config.targetDependencies ?? {};
 
   const updatedStrictlyOrderedTargets = [];
