@@ -305,18 +305,6 @@ function addTasksForProjectDependencyConfig(
           tasksMap,
           [...path, targetIdentifier]
         );
-      } else {
-        for (const dep of dependencies) {
-          addTasksForProjectDependencyConfig(
-            projectGraph.nodes[dep.target],
-            { target, configuration },
-            dependencyConfig,
-            defaultDependencyConfigs,
-            projectGraph,
-            tasksMap,
-            path
-          );
-        }
       }
     }
   } else {
