@@ -53,7 +53,7 @@ export interface WebBuildBuilderOptions extends BuildBuilderOptions {
 
   namedChunks?: boolean;
 
-  stylePreprocessingOptions?: any;
+  stylePreprocessorOptions?: any;
   subresourceIntegrity?: boolean;
 
   verbose?: boolean;

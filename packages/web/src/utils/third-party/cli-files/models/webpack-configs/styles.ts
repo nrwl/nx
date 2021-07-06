@@ -16,6 +16,7 @@ import {
 import { WebpackConfigOptions } from '../build-options';
 import { getOutputHashFormat, normalizeExtraEntryPoints } from './utils';
 import { RemoveEmptyScriptsPlugin } from '../../plugins/remove-empty-scripts-plugin';
+import { sassImplementation } from '../../../../sass';
 
 const autoprefixer = require('autoprefixer');
 const postcssImports = require('postcss-import');
@@ -37,7 +38,10 @@ type RuleSetRule = any;
  * require('sass-loader')
  */
 // tslint:disable-next-line:no-big-function
-export function getStylesConfig(wco: WebpackConfigOptions) {
+export function getStylesConfig(
+  wco: WebpackConfigOptions,
+  includePaths: string[]
+) {
   // TODO(jack): Remove this in Nx 13 and go back to proper imports
   const {
     isWebpack5,
@@ -62,6 +66,7 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
       },
       plugins: [
         postcssImports({
+          addModulesDirectories: includePaths,
           resolve: (url: string) => (url.startsWith('~') ? url.substr(1) : url),
           load: (filename: string) => {
             return new Promise<string>((resolve, reject) => {
@@ -83,7 +88,6 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
           deployUrl: buildOptions.deployUrl,
           resourcesOutputPath: buildOptions.resourcesOutputPath,
           loader,
-          rebaseRootRelative: buildOptions.rebaseRootRelativeCssUrls,
           filename: `[name]${hashFormat.file}.[ext]`,
         }),
         autoprefixer(),
@@ -91,19 +95,9 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
     });
   };
 
-  // use includePaths from appConfig
-  const includePaths: string[] = [];
   let lessPathOptions: { paths?: string[] } = {};
 
-  if (
-    buildOptions.stylePreprocessorOptions &&
-    buildOptions.stylePreprocessorOptions.includePaths &&
-    buildOptions.stylePreprocessorOptions.includePaths.length > 0
-  ) {
-    buildOptions.stylePreprocessorOptions.includePaths.forEach(
-      (includePath: string) =>
-        includePaths.push(path.resolve(root, includePath))
-    );
+  if (includePaths.length > 0) {
     lessPathOptions = {
       paths: includePaths,
     };
@@ -139,20 +133,6 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
     }
   }
 
-  let sassImplementation: {} | undefined;
-  let fiber: {} | undefined;
-  try {
-    // tslint:disable-next-line:no-implicit-dependencies
-    sassImplementation = require('node-sass');
-  } catch {
-    sassImplementation = require('sass');
-
-    try {
-      // tslint:disable-next-line:no-implicit-dependencies
-      fiber = require('fibers');
-    } catch {}
-  }
-
   // set base rules to derive final rules from
   const baseRules: RuleSetRule[] = [
     { test: /\.css$/, use: [] },
@@ -165,7 +145,7 @@ export function getStylesConfig(wco: WebpackConfigOptions) {
             implementation: sassImplementation,
             sourceMap: cssSourceMap,
             sassOptions: {
-              fiber,
+              fiber: false,
               // bootstrap-sass requires a minimum precision of 8
               precision: 8,
               includePaths,
