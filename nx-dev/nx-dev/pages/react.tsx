@@ -29,7 +29,10 @@ export function ReactPage() {
           name="twitter:description"
           content="Nx dev tools help developers build, test, and scale full-stack React, Next.js, Gatsby, React Native projects and monorepos."
         />
-        <meta name="twitter:image" content="/images/nx-media.jpg" />
+        <meta
+          name="twitter:image"
+          content="https://nx.dev/images/nx-media.jpg"
+        />
         <meta
           name="twitter:image:alt"
           content="Nx: Smart, Extensible Build Framework"
@@ -40,9 +43,12 @@ export function ReactPage() {
           content="Nx dev tools help developers build, test, and scale full-stack React, Next.js, Gatsby, React Native projects and monorepos."
         />
         <meta property="og:title" content="Nx and React" />
-        <meta property="og:image" content="/images/nx-media.jpg" />
-        <meta property="og:image:width" content="1000" />
-        <meta property="og:image:height" content="300" />
+        <meta
+          property="og:image"
+          content="https://nx.dev/images/nx-media.jpg"
+        />
+        <meta property="og:image:width" content="800" />
+        <meta property="og:image:height" content="400" />
       </Head>
       <Header
         useDarkBackground={false}
