@@ -63,5 +63,3 @@ async function runTests(
 }
 
 export default nxPluginE2EExecutor;
-
-export const nxPluginE2EBuilder = convertNxExecutor(nxPluginE2EExecutor);
