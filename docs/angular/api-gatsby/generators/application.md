@@ -28,6 +28,10 @@ nx g application ... --dry-run
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
 ### directory
 
 Alias(es): d
@@ -53,10 +57,6 @@ Default: `false`
 Type: `boolean`
 
 Generate JavaScript files rather than TypeScript files
-
-### name
-
-Type: `string`
 
 ### setParserOptionsProject
 

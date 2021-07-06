@@ -24,13 +24,13 @@ nx g setup-mfe ... --dry-run
 
 ## Options
 
-### appName
+### appName (_**required**_)
 
 Type: `string`
 
 The name of the application to generate the Module Federation configuration for.
 
-### mfeType
+### mfeType (_**required**_)
 
 Default: `remote`
 

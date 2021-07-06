@@ -2,9 +2,15 @@
 
 Run Jest unit tests
 
-Properties can be configured in angular.json when defining the executor, or when invoking it.
+Options can be configured in `angular.json` when defining the executor, or when invoking it.
 
-## Properties
+## Options
+
+### jestConfig (_**required**_)
+
+Type: `string`
+
+The path of the Jest configuration. (https://jestjs.io/docs/en/configuration)
 
 ### bail
 
@@ -77,12 +83,6 @@ Attempt to collect and print open handles preventing Jest from exiting cleanly (
 Type: `string`
 
 Find and run the tests that cover a comma separated list of source files that were passed in as arguments. (https://jestjs.io/docs/cli#--findrelatedtests-spaceseparatedlistofsourcefiles)
-
-### jestConfig
-
-Type: `string`
-
-The path of the Jest configuration. (https://jestjs.io/docs/en/configuration)
 
 ### json
 

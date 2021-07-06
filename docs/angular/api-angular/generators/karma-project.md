@@ -24,7 +24,7 @@ nx g karma-project ... --dry-run
 
 ## Options
 
-### project
+### project (_**required**_)
 
 Type: `string`
 

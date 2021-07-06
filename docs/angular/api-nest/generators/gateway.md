@@ -24,6 +24,20 @@ nx g gateway ... --dry-run
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+The name of the gateway.
+
+### project (_**required**_)
+
+Alias(es): p
+
+Type: `string`
+
+The Nest project to target.
+
 ### directory
 
 Alias(es): d,path
@@ -47,20 +61,6 @@ Type: `string`
 Possible values: `js`, `ts`
 
 Nest gateway language.
-
-### name
-
-Type: `string`
-
-The name of the gateway.
-
-### project
-
-Alias(es): p
-
-Type: `string`
-
-The Nest project to target.
 
 ### skipFormat
 

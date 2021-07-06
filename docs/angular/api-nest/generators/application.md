@@ -28,6 +28,12 @@ nx g application ... --dry-run
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+The name of the application.
+
 ### directory
 
 Type: `string`
@@ -49,12 +55,6 @@ Type: `string`
 Possible values: `eslint`, `none`
 
 The tool to use for running lint checks.
-
-### name
-
-Type: `string`
-
-The name of the application.
 
 ### skipFormat
 

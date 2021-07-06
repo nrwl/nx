@@ -24,23 +24,23 @@ nx g downgrade-module ... --dry-run
 
 ## Options
 
-### angularJsImport
-
-Type: `string`
-
-Import expression of the AngularJS application (e.g., `--angularJsImport=some_node_module/my_app`).
-
-### name
+### name (_**required**_)
 
 Type: `string`
 
 The name of the main AngularJS module.
 
-### project
+### project (_**required**_)
 
 Type: `string`
 
 The name of the project.
+
+### angularJsImport
+
+Type: `string`
+
+Import expression of the AngularJS application (e.g., `--angularJsImport=some_node_module/my_app`).
 
 ### skipFormat
 

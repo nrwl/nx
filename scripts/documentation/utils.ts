@@ -15,6 +15,16 @@ export function sortAlphabeticallyFunction(a: string, b: string): number {
   return 0;
 }
 
+export function sortByBooleanFunction(a: boolean, b: boolean): number {
+  if (a && !b) {
+    return -1;
+  }
+  if (!a && b) {
+    return 1;
+  }
+  return 0;
+}
+
 export async function generateMarkdownFile(
   outputDirectory: string,
   templateObject: { name: string; template: string }

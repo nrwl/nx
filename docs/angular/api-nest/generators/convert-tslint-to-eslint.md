@@ -32,6 +32,12 @@ nx g convert-tslint-to-eslint myapp
 
 ## Options
 
+### project (_**required**_)
+
+Type: `string`
+
+The name of the NestJS project to convert.
+
 ### ignoreExistingTslintConfig
 
 Default: `false`
@@ -39,12 +45,6 @@ Default: `false`
 Type: `boolean`
 
 If true we will not use existing TSLint config as a reference, we will just reset the project with the latest recommended ESLint config.
-
-### project
-
-Type: `string`
-
-The name of the NestJS project to convert.
 
 ### removeTSLintIfNoMoreTSLintTargets
 

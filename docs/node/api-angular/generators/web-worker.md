@@ -24,23 +24,23 @@ nx g web-worker ... --dry-run
 
 ## Options
 
-### name
+### name (_**required**_)
 
 Type: `string`
 
 The name of the worker.
+
+### project (_**required**_)
+
+Type: `string`
+
+The name of the project.
 
 ### path
 
 Type: `string`
 
 The path at which to create the worker file, relative to the current workspace.
-
-### project
-
-Type: `string`
-
-The name of the project.
 
 ### skipFormat
 

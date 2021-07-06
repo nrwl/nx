@@ -2,10 +2,16 @@
 
 Builds a library with support for incremental builds.
 
-Properties can be configured in workspace.json when defining the executor, or when invoking it.
+Options can be configured in `workspace.json` when defining the executor, or when invoking it.
 Read more about how to use executors and the CLI here: https://nx.dev/react/getting-started/nx-cli#running-tasks.
 
-## Properties
+## Options
+
+### project (_**required**_)
+
+Type: `string`
+
+The file path for the ng-packagr configuration file, relative to the workspace root.
 
 ### buildableProjectDepsInPackageJsonType
 
@@ -16,12 +22,6 @@ Type: `string`
 Possible values: `dependencies`, `peerDependencies`
 
 When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.
-
-### project
-
-Type: `string`
-
-The file path for the ng-packagr configuration file, relative to the workspace root.
 
 ### tsConfig
 
