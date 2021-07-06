@@ -373,7 +373,7 @@ describe('React Applications', () => {
       );
       filesToCheck = [
         `${prodOutputPath}/index.html`,
-        `${prodOutputPath}/runtime.js`,
+        `${prodOutputPath}/runtime.esm.js`,
         `${prodOutputPath}/polyfills.esm.js`,
         `${prodOutputPath}/main.esm.js`,
       ];

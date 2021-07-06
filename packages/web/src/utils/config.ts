@@ -185,6 +185,7 @@ export function createTerserPlugin(esm: boolean, sourceMap: boolean) {
 // The StatsOptions type needs to be exported from webpack
 // PR: https://github.com/webpack/webpack/pull/12875
 function getStatsConfig(options: BuildBuilderOptions): any {
+  const { isWebpack5 } = require('../webpack/entry');
   return {
     hash: true,
     timings: false,

@@ -7,6 +7,7 @@ import { WebBuildBuilderOptions } from '../executors/build/build.impl';
 import { convertBuildOptions } from './normalize';
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import { getBaseWebpackPartial } from './config';
+import { LegacyIndexHtmlWebpackPlugin } from './third-party/cli-files/plugins/legacy-index-html-webpack-plugin';
 import { IndexHtmlWebpackPlugin } from './third-party/cli-files/plugins/index-html-webpack-plugin';
 import { generateEntryPoints } from './third-party/cli-files/utilities/package-chunk-sort';
 import { ScriptTarget } from 'typescript';
@@ -65,6 +66,7 @@ function getBrowserPartial(
   isScriptOptimizeOn: boolean
 ) {
   const config = getBrowserConfig(wco);
+  const { isWebpack5 } = require('../webpack/entry');
 
   if (!isScriptOptimizeOn) {
     const {
@@ -77,15 +79,26 @@ function getBrowserPartial(
     } = options;
 
     config.plugins.push(
-      new IndexHtmlWebpackPlugin({
-        input: resolve(wco.root, index),
-        output: basename(index),
-        baseHref,
-        entrypoints: generateEntryPoints({ scripts, styles }),
-        deployUrl,
-        sri: subresourceIntegrity,
-        noModuleEntrypoints: ['polyfills-es5'],
-      })
+      isWebpack5
+        ? new IndexHtmlWebpackPlugin({
+            indexPath: resolve(wco.root, index),
+            outputPath: basename(index),
+            baseHref,
+            entrypoints: generateEntryPoints({ scripts, styles }),
+            deployUrl,
+            sri: subresourceIntegrity,
+            moduleEntrypoints: [],
+            noModuleEntrypoints: ['polyfills-es5'],
+          })
+        : new LegacyIndexHtmlWebpackPlugin({
+            input: resolve(wco.root, index),
+            output: basename(index),
+            baseHref,
+            entrypoints: generateEntryPoints({ scripts, styles }),
+            deployUrl,
+            sri: subresourceIntegrity,
+            noModuleEntrypoints: ['polyfills-es5'],
+          })
     );
   }
 

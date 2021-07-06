@@ -1,137 +1,142 @@
 /**
  * @license
- * Copyright Google Inc. All Rights Reserved.
+ * Copyright Google LLC All Rights Reserved.
  *
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.io/license
  */
-import * as path from 'path';
+
+import { basename, dirname, extname } from 'path';
+import { FileInfo } from '../utils/index-file/augment-index-html';
 import {
-  CrossOriginValue,
-  FileInfo,
-  augmentIndexHtml,
-} from '../utilities/index-file/augment-index-html';
-import { IndexHtmlTransform } from '../utilities/index-file/write-index-html';
-import { stripBom } from '../utilities/strip-bom';
-import { interpolateEnvironmentVariablesToIndex } from '../../../interpolate-env-variables-to-index';
+  IndexHtmlGenerator,
+  IndexHtmlGeneratorOptions,
+  IndexHtmlGeneratorProcessOptions,
+} from '../utils/index-file/index-html-generator';
 
-// TODO(jack): Remove this in Nx 13 and go back to proper types
-type Compiler = any;
-type Compilation = any;
-
-export interface IndexHtmlWebpackPluginOptions {
-  input: string;
-  output: string;
-  baseHref?: string;
-  entrypoints: string[];
-  deployUrl?: string;
-  sri: boolean;
+export interface IndexHtmlWebpackPluginOptions
+  extends IndexHtmlGeneratorOptions,
+    Omit<
+      IndexHtmlGeneratorProcessOptions,
+      'files' | 'noModuleFiles' | 'moduleFiles'
+    > {
   noModuleEntrypoints: string[];
   moduleEntrypoints: string[];
-  postTransform?: IndexHtmlTransform;
-  crossOrigin?: CrossOriginValue;
 }
 
-function readFile(filename: string, compilation: Compilation): Promise<string> {
-  return new Promise<string>((resolve, reject) => {
-    compilation.inputFileSystem.readFile(
-      filename,
-      (err: Error, data: Buffer) => {
-        if (err) {
-          reject(err);
+type Compiler = any;
 
-          return;
-        }
+const PLUGIN_NAME = 'index-html-webpack-plugin';
+export class IndexHtmlWebpackPlugin extends IndexHtmlGenerator {
+  webpack: any;
 
-        resolve(stripBom(data.toString()));
-      }
-    );
-  });
-}
+  private _compilation: any | undefined;
 
-export class IndexHtmlWebpackPlugin {
-  private _options: IndexHtmlWebpackPluginOptions;
+  get compilation(): any {
+    if (this._compilation) {
+      return this._compilation;
+    }
 
-  constructor(options?: Partial<IndexHtmlWebpackPluginOptions>) {
-    this._options = {
-      input: 'index.html',
-      output: 'index.html',
-      entrypoints: ['polyfills', 'main'],
-      noModuleEntrypoints: [],
-      moduleEntrypoints: [],
-      sri: false,
-      ...options,
-    };
+    throw new Error('compilation is undefined.');
+  }
+
+  constructor(readonly options: IndexHtmlWebpackPluginOptions) {
+    super(options);
+    const { webpack } = require('../../../../webpack/entry');
+    this.webpack = webpack;
   }
 
   apply(compiler: Compiler) {
-    // TODO(jack): Remove this in Nx 13 and go back to proper types
-    const { webpackSources, webpack } = require('../../../../webpack/entry');
+    compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation) => {
+      this._compilation = compilation;
+      compilation.hooks.processAssets.tapPromise(
+        {
+          name: PLUGIN_NAME,
+          stage: this.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE + 1,
+        },
+        callback
+      );
+    });
 
-    compiler.hooks.emit.tapPromise(
-      'index-html-webpack-plugin',
-      async (compilation) => {
-        // Get input html file
-        const inputContent = await readFile(this._options.input, compilation);
-        compilation.fileDependencies.add(this._options.input);
+    function addWarning(compilation: any, message: string): void {
+      compilation.warnings.push(new this.webpack.WebpackError(message));
+    }
 
-        // Get all files for selected entrypoints
-        const files: FileInfo[] = [];
-        const noModuleFiles: FileInfo[] = [];
-        const moduleFiles: FileInfo[] = [];
+    function addError(compilation: any, message: string): void {
+      compilation.errors.push(new this.webpack.WebpackError(message));
+    }
 
-        for (const [entryName, entrypoint] of compilation.entrypoints) {
-          const entryFiles: FileInfo[] = (
-            (entrypoint && entrypoint.getFiles()) ||
-            []
-          ).map(
+    const callback = async (assets: Record<string, unknown>) => {
+      // Get all files for selected entrypoints
+      const files: FileInfo[] = [];
+      const noModuleFiles: FileInfo[] = [];
+      const moduleFiles: FileInfo[] = [];
+
+      try {
+        for (const [entryName, entrypoint] of this.compilation.entrypoints) {
+          const entryFiles: FileInfo[] = entrypoint?.getFiles()?.map(
             (f: string): FileInfo => ({
               name: entryName,
               file: f,
-              extension: path.extname(f),
+              extension: extname(f),
             })
           );
 
-          if (this._options.noModuleEntrypoints.includes(entryName)) {
+          if (!entryFiles) {
+            continue;
+          }
+
+          if (this.options.noModuleEntrypoints.includes(entryName)) {
             noModuleFiles.push(...entryFiles);
-          } else if (this._options.moduleEntrypoints.includes(entryName)) {
+          } else if (this.options.moduleEntrypoints.includes(entryName)) {
             moduleFiles.push(...entryFiles);
           } else {
             files.push(...entryFiles);
           }
         }
 
-        // TODO:  the source() method can return a Buffer.
-        //  This fails to handle that case
-        const loadOutputFile = (name: string) =>
-          compilation.assets[name].source() as string; // This will break if Buffer  _generateSriAttributes  in augment-index.html.ts
-
-        let indexSource = await augmentIndexHtml({
-          input: this._options.input,
-          inputContent: interpolateEnvironmentVariablesToIndex(
-            inputContent,
-            this._options.deployUrl
-          ),
-          baseHref: this._options.baseHref,
-          deployUrl: this._options.deployUrl,
-          sri: this._options.sri,
-          crossOrigin: this._options.crossOrigin,
+        const { content, warnings, errors } = await this.process({
           files,
           noModuleFiles,
-          loadOutputFile,
           moduleFiles,
-          entrypoints: this._options.entrypoints,
+          outputPath: dirname(this.options.outputPath),
+          baseHref: this.options.baseHref,
+          lang: this.options.lang,
         });
 
-        if (this._options.postTransform) {
-          indexSource = await this._options.postTransform(indexSource);
-        }
+        assets[this.options.outputPath] = new this.webpack.sources.RawSource(
+          content
+        );
 
-        // Add to compilation assets
-        compilation.assets[this._options.output] = new webpackSources.RawSource(
-          indexSource
-        ) as never; //TODO This is a hack as RawSource lacks Buffer, which is now in the webpack Source object
+        warnings.forEach((msg) => addWarning(this.compilation, msg));
+        errors.forEach((msg) => addError(this.compilation, msg));
+      } catch (error) {
+        addError(this.compilation, error.message);
       }
-    );
+    };
+  }
+
+  async readAsset(path: string): Promise<string> {
+    const data = this.compilation.assets[basename(path)].source();
+
+    return typeof data === 'string' ? data : data.toString();
+  }
+
+  protected async readIndex(path: string): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      this.compilation.inputFileSystem.readFile(
+        path,
+        (err?: Error, data?: string | Buffer) => {
+          if (err) {
+            reject(err);
+
+            return;
+          }
+
+          this.compilation.fileDependencies.add(path);
+          resolve(data?.toString() ?? '');
+        }
+      );
+    });
   }
 }
