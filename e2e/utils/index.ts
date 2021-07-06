@@ -1,5 +1,4 @@
 import { detectPackageManager } from '@nrwl/tao/src/shared/package-manager';
-import { inlineProjectConfigurations } from '@nrwl/tao/src/shared/workspace';
 import { ChildProcess, exec, execSync } from 'child_process';
 import {
   copySync,
@@ -39,10 +38,6 @@ interface RunCmdOpts {
 
 export function currentCli() {
   return process.env.SELECTED_CLI || 'nx';
-}
-
-export function isNightlyRun() {
-  return process.env.NX_E2E_CI_NIGHTLY === 'true';
 }
 
 export const e2eRoot = isCI ? dirSync({ prefix: 'nx-e2e-' }).name : `./tmp`;
@@ -241,7 +236,7 @@ export async function removeProject({ onlyOnCI = false } = {}) {
 }
 
 export function runCypressTests() {
-  return isNightlyRun();
+  return process.env.NX_E2E_RUN_CYPRESS === 'true';
 }
 
 export function isNotWindows() {

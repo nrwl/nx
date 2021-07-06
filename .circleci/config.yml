@@ -168,6 +168,7 @@ jobs:
       NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
       SELECTED_CLI: << parameters.cli >>
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>-<< parameters.pm >>
+      NX_E2E_RUN_CYPRESS: 'true'
     steps:
       - setup:
           os: << parameters.os >>
@@ -213,11 +214,11 @@ workflows:
           name: 'agent5'
       - agent:
           name: 'agent6'
-      - trunk-main:
-          filters:
-            branches:
-              only: master
       - pr-main:
           filters:
             branches:
               ignore: master
+      - trunk-main:
+          filters:
+            branches:
+              only: master
