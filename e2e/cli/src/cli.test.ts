@@ -237,7 +237,13 @@ describe('migrate', () => {
                       }
                     },
                     packageJsonUpdates: {
-                      'run-11': {version: '1.1.0', packages: {'migrate-child-package': {version: '9.0.0', alwaysAddToPackageJson: true}}},
+                      'run-11': {version: '1.1.0', packages: {
+                        'migrate-child-package': {version: '9.0.0', alwaysAddToPackageJson: true},
+                        'migrate-child-package-2': {version: '9.0.0', alwaysAddToPackageJson: false},
+                        'migrate-child-package-3': {version: '9.0.0', addToPackageJson: false},
+                        'migrate-child-package-4': {version: '9.0.0', addToPackageJson: 'dependencies'},
+                        'migrate-child-package-5': {version: '9.0.0', addToPackageJson: 'devDependencies'},
+                      }},
                     }
                   });
                 } else {
@@ -265,6 +271,18 @@ describe('migrate', () => {
     // updates package.json
     const packageJson = readJson(`package.json`);
     expect(packageJson.dependencies['migrate-child-package']).toEqual('9.0.0');
+    expect(
+      packageJson.dependencies['migrate-child-package-2']
+    ).not.toBeDefined();
+    expect(
+      packageJson.dependencies['migrate-child-package-3']
+    ).not.toBeDefined();
+    expect(packageJson.dependencies['migrate-child-package-4']).toEqual(
+      '9.0.0'
+    );
+    expect(packageJson.devDependencies['migrate-child-package-5']).toEqual(
+      '9.0.0'
+    );
     // should keep new line on package
     const packageContent = readFile('package.json');
     expect(packageContent.charCodeAt(packageContent.length - 1)).toEqual(10);

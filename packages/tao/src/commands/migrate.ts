@@ -15,6 +15,8 @@ import {
   writeJsonFile,
 } from '../utils/fileutils';
 
+type Dependencies = 'dependencies' | 'devDependencies';
+
 export type MigrationsJson = {
   version: string;
   collection?: string;
@@ -29,6 +31,7 @@ export type MigrationsJson = {
           version: string;
           ifPackageInstalled?: string;
           alwaysAddToPackageJson?: boolean;
+          addToPackageJson?: Dependencies;
         };
       };
     };
@@ -96,7 +99,7 @@ export class Migrator {
   async updatePackageJson(targetPackage: string, targetVersion: string) {
     const packageJson = await this._updatePackageJson(
       targetPackage,
-      { version: targetVersion, alwaysAddToPackageJson: false },
+      { version: targetVersion, addToPackageJson: false },
       {}
     );
     const migrations = await this._createMigrateJson(packageJson);
@@ -104,7 +107,7 @@ export class Migrator {
   }
 
   private async _createMigrateJson(versions: {
-    [k: string]: { version: string; alwaysAddToPackageJson: boolean };
+    [k: string]: { version: string; addToPackageJson: Dependencies | false };
   }) {
     const migrations = await Promise.all(
       Object.keys(versions).map(async (c) => {
@@ -135,9 +138,9 @@ export class Migrator {
 
   private async _updatePackageJson(
     targetPackage: string,
-    target: { version: string; alwaysAddToPackageJson: boolean },
+    target: { version: string; addToPackageJson: Dependencies | false },
     collectedVersions: {
-      [k: string]: { version: string; alwaysAddToPackageJson: boolean };
+      [k: string]: { version: string; addToPackageJson: Dependencies | false };
     }
   ) {
     let targetVersion = target.version;
@@ -149,7 +152,7 @@ export class Migrator {
       return {
         [targetPackage]: {
           version: target.version,
-          alwaysAddToPackageJson: !!target.alwaysAddToPackageJson,
+          addToPackageJson: target.addToPackageJson || false,
         },
       };
     }
@@ -200,7 +203,7 @@ export class Migrator {
       {
         [targetPackage]: {
           version: migrationsJson.version,
-          alwaysAddToPackageJson: target.alwaysAddToPackageJson || false,
+          addToPackageJson: target.addToPackageJson || false,
         },
       }
     );
@@ -280,7 +283,9 @@ export class Migrator {
               ...m,
               [c]: {
                 version: packages[c].version,
-                alwaysAddToPackageJson: packages[c].alwaysAddToPackageJson,
+                addToPackageJson: packages[c].alwaysAddToPackageJson
+                  ? 'dependencies'
+                  : packages[c].addToPackageJson || false,
               },
             }),
             {}
@@ -513,7 +518,7 @@ function createMigrationsFile(
 function updatePackageJson(
   root: string,
   updatedPackages: {
-    [p: string]: { version: string; alwaysAddToPackageJson: boolean };
+    [p: string]: { version: string; addToPackageJson: Dependencies | false };
   }
 ) {
   const packageJsonPath = join(root, 'package.json');
@@ -524,9 +529,14 @@ function updatePackageJson(
       json.devDependencies[p] = updatedPackages[p].version;
     } else if (json.dependencies && json.dependencies[p]) {
       json.dependencies[p] = updatedPackages[p].version;
-    } else if (updatedPackages[p].alwaysAddToPackageJson) {
-      if (!json.dependencies) json.dependencies = {};
-      json.dependencies[p] = updatedPackages[p].version;
+    } else if (updatedPackages[p].addToPackageJson) {
+      if (updatedPackages[p].addToPackageJson === 'dependencies') {
+        if (!json.dependencies) json.dependencies = {};
+        json.dependencies[p] = updatedPackages[p].version;
+      } else if (updatedPackages[p].addToPackageJson === 'devDependencies') {
+        if (!json.devDependencies) json.devDependencies = {};
+        json.devDependencies[p] = updatedPackages[p].version;
+      }
     }
   });
   writeJsonFile(packageJsonPath, json, {
