@@ -1,8 +1,8 @@
 import { TasksRunner } from './tasks-runner';
 import defaultTaskRunner from './default-tasks-runner';
 import { createTasksForProjectToRun, getRunner } from './run-command';
+import type { NxJsonConfiguration, ProjectGraph } from '@nrwl/devkit';
 import { DependencyType } from '@nrwl/devkit';
-import type { ProjectGraph, NxJsonConfiguration } from '@nrwl/devkit';
 
 describe('createTasksForProjectToRun', () => {
   let projectGraph: ProjectGraph;
@@ -329,6 +329,279 @@ describe('createTasksForProjectToRun', () => {
         },
       },
     ]);
+  });
+
+  it('should create tasks for multiple sets of dependencies for multiple targets', () => {
+    projectGraph.nodes.app1.data.targets.build.dependsOn = [
+      {
+        target: 'prebuild',
+        projects: 'dependencies',
+      },
+      {
+        target: 'build',
+        projects: 'dependencies',
+      },
+    ];
+    projectGraph.dependencies.app1.push({
+      type: DependencyType.static,
+      source: 'app1',
+      target: 'lib1',
+    });
+
+    projectGraph.nodes.lib1.data.targets.prebuild = {};
+
+    const tasks = createTasksForProjectToRun(
+      [projectGraph.nodes.app1],
+      {
+        target: 'build',
+        configuration: undefined,
+        overrides: {},
+      },
+      projectGraph,
+      projectGraph.nodes.app1.name
+    );
+
+    expect(tasks).toEqual([
+      {
+        id: 'lib1:prebuild',
+        overrides: {},
+        projectRoot: 'lib1-root',
+        target: {
+          configuration: undefined,
+          project: 'lib1',
+          target: 'prebuild',
+        },
+      },
+      {
+        id: 'lib1:build',
+        overrides: {},
+        projectRoot: 'lib1-root',
+        target: {
+          configuration: undefined,
+          project: 'lib1',
+          target: 'build',
+        },
+      },
+      {
+        id: 'app1:build',
+        overrides: {},
+        projectRoot: 'app1-root',
+        target: {
+          configuration: undefined,
+          project: 'app1',
+          target: 'build',
+        },
+      },
+    ]);
+  });
+
+  it('should include dependencies of projects without the same target', () => {
+    // App 1 depends on builds of its dependencies
+    projectGraph.nodes.app1.data.targets.build.dependsOn = [
+      {
+        target: 'build',
+        projects: 'dependencies',
+      },
+    ];
+
+    // App 1 depends on Lib 1
+    projectGraph.dependencies.app1.push({
+      type: DependencyType.static,
+      source: 'app1',
+      target: 'lib1',
+    });
+
+    // Lib 1 does not have build but depends on Lib 2
+    delete projectGraph.nodes.lib1.data.targets.build;
+    projectGraph.dependencies.lib1.push({
+      type: DependencyType.static,
+      source: 'lib1',
+      target: 'lib2',
+    });
+
+    // Lib 2 has a build
+    projectGraph.nodes.lib2 = {
+      name: 'lib2',
+      type: 'lib',
+      data: {
+        root: 'lib2-root',
+        files: [],
+        targets: {
+          build: {},
+        },
+      },
+    };
+    projectGraph.dependencies.lib2 = [];
+
+    const tasks = createTasksForProjectToRun(
+      [projectGraph.nodes.app1],
+      {
+        target: 'build',
+        configuration: undefined,
+        overrides: {},
+      },
+      projectGraph,
+      projectGraph.nodes.app1.name
+    );
+
+    expect(tasks).toContainEqual({
+      id: 'app1:build',
+      target: { project: 'app1', target: 'build' },
+      projectRoot: 'app1-root',
+      overrides: {},
+    });
+    expect(tasks).toContainEqual({
+      id: 'lib2:build',
+      target: { project: 'lib2', target: 'build' },
+      projectRoot: 'lib2-root',
+      overrides: {},
+    });
+  });
+
+  it('should handle circular dependencies between projects', () => {
+    // App 1 depends on builds of its dependencies
+    projectGraph.nodes.app1.data.targets.build.dependsOn = [
+      {
+        target: 'build',
+        projects: 'dependencies',
+      },
+    ];
+
+    // App 1 depends on Lib 1
+    projectGraph.dependencies.app1.push({
+      type: DependencyType.static,
+      source: 'app1',
+      target: 'lib1',
+    });
+
+    // Lib 1 does not have build but depends on Lib 2
+    delete projectGraph.nodes.lib1.data.targets.build;
+    projectGraph.dependencies.lib1.push(
+      {
+        type: DependencyType.static,
+        source: 'lib1',
+        target: 'app1',
+      },
+      {
+        type: DependencyType.static,
+        source: 'lib1',
+        target: 'lib2',
+      }
+    );
+
+    // Lib 2 has a build
+    projectGraph.nodes.lib2 = {
+      name: 'lib2',
+      type: 'lib',
+      data: {
+        root: 'lib2-root',
+        files: [],
+        targets: {
+          build: {},
+        },
+      },
+    };
+    projectGraph.dependencies.lib2 = [
+      {
+        type: DependencyType.static,
+        source: 'lib2',
+        target: 'lib1',
+      },
+    ];
+
+    const tasks = createTasksForProjectToRun(
+      [projectGraph.nodes.app1],
+      {
+        target: 'build',
+        configuration: undefined,
+        overrides: {},
+      },
+      projectGraph,
+      projectGraph.nodes.app1.name
+    );
+
+    expect(tasks).toContainEqual({
+      id: 'app1:build',
+      target: { project: 'app1', target: 'build' },
+      projectRoot: 'app1-root',
+      overrides: {},
+    });
+    expect(tasks).toContainEqual({
+      id: 'lib2:build',
+      target: { project: 'lib2', target: 'build' },
+      projectRoot: 'lib2-root',
+      overrides: {},
+    });
+  });
+
+  it('should handle circular dependencies between projects with no tasks', () => {
+    // App 1 depends on builds of its dependencies
+    projectGraph.nodes.app1.data.targets.build.dependsOn = [
+      {
+        target: 'build',
+        projects: 'dependencies',
+      },
+    ];
+
+    // App 1 depends on Lib 1
+    projectGraph.dependencies.app1.push({
+      type: DependencyType.static,
+      source: 'app1',
+      target: 'lib1',
+    });
+
+    // Lib 1 does not have build but depends on Lib 2
+    delete projectGraph.nodes.lib1.data.targets.build;
+    projectGraph.dependencies.lib1.push(
+      {
+        type: DependencyType.static,
+        source: 'lib1',
+        target: 'app1',
+      },
+      {
+        type: DependencyType.static,
+        source: 'lib1',
+        target: 'lib2',
+      }
+    );
+
+    // Lib 2 has a build
+    projectGraph.nodes.lib2 = {
+      name: 'lib2',
+      type: 'lib',
+      data: {
+        root: 'lib2-root',
+        files: [],
+        targets: {
+          build: {},
+        },
+      },
+    };
+    projectGraph.dependencies.lib2 = [];
+
+    const tasks = createTasksForProjectToRun(
+      [projectGraph.nodes.app1],
+      {
+        target: 'build',
+        configuration: undefined,
+        overrides: {},
+      },
+      projectGraph,
+      projectGraph.nodes.app1.name
+    );
+
+    expect(tasks).toContainEqual({
+      id: 'app1:build',
+      target: { project: 'app1', target: 'build' },
+      projectRoot: 'app1-root',
+      overrides: {},
+    });
+    expect(tasks).toContainEqual({
+      id: 'lib2:build',
+      target: { project: 'lib2', target: 'build' },
+      projectRoot: 'lib2-root',
+      overrides: {},
+    });
   });
 
   it('should throw an error for an invalid target', () => {
