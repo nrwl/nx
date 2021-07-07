@@ -12,6 +12,7 @@ import {
   runCypressTests,
   uniq,
   updateFile,
+  updateWorkspaceConfig,
   workspaceConfigName,
 } from '@nrwl/e2e/utils';
 
@@ -400,4 +401,53 @@ describe('React Applications', () => {
       expect(await killPorts()).toBeTruthy();
     }
   }
+});
+
+describe('--style option', () => {
+  beforeAll(() => newProject());
+
+  it.each`
+    style
+    ${'css'}
+    ${'scss'}
+    ${'less'}
+    ${'styl'}
+  `('should support global and css modules', ({ style }) => {
+    const appName = uniq('app');
+    runCLI(
+      `generate @nrwl/react:app ${appName} --style=${style} --no-interactive`
+    );
+
+    // make sure stylePreprocessorOptions works
+    updateWorkspaceConfig((workspace) => {
+      workspace.projects[
+        appName
+      ].targets.build.options.stylePreprocessorOptions = {
+        includePaths: ['libs/shared/lib'],
+      };
+      return workspace;
+    });
+    updateFile(
+      `apps/${appName}/src/styles.${style}`,
+      `@import 'base.${style}';`
+    );
+    updateFile(
+      `apps/${appName}/src/app/app.module.${style}`,
+      (s) => `@import 'base.${style}';\n${s}`
+    );
+    updateFile(
+      `libs/shared/lib/base.${style}`,
+      `body { font-family: "Comic Sans MS"; }`
+    );
+
+    runCLI(`build ${appName}`);
+
+    expect(readFile(`dist/apps/${appName}/styles.js`)).toMatch(/Comic Sans MS/);
+
+    runCLI(`build ${appName} --prod --output-hashing none`);
+
+    expect(readFile(`dist/apps/${appName}/styles.css`)).toMatch(
+      /Comic Sans MS/
+    );
+  });
 });

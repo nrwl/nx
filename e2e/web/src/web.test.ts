@@ -12,6 +12,7 @@ import {
   runCypressTests,
   uniq,
   updateFile,
+  updateWorkspaceConfig,
 } from '@nrwl/e2e/utils';
 
 describe('Web Components Applications', () => {
@@ -34,9 +35,11 @@ describe('Web Components Applications', () => {
       `dist/apps/${appName}/main.js`,
       `dist/apps/${appName}/styles.js`
     );
+
     expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
       'class AppElement'
     );
+
     runCLI(`build ${appName} --prod --output-hashing none`);
     checkFilesExist(
       `dist/apps/${appName}/index.html`,
@@ -45,14 +48,19 @@ describe('Web Components Applications', () => {
       `dist/apps/${appName}/main.esm.js`,
       `dist/apps/${appName}/styles.css`
     );
+
     expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
       `<link rel="stylesheet" href="styles.css">`
     );
+
     const testResults = await runCLIAsync(`test ${appName}`);
+
     expect(testResults.combinedOutput).toContain(
       'Test Suites: 1 passed, 1 total'
     );
+
     const lintE2eResults = runCLI(`lint ${appName}-e2e`);
+
     expect(lintE2eResults).toContain('All files pass linting.');
 
     if (isNotWindows() && runCypressTests()) {
@@ -381,24 +389,6 @@ describe('index.html interpolation', () => {
       NX_VARIABLE=foo
       SOME_OTHER_VARIABLE=bar
     }`;
-
-    const expectedBuiltIndex = `<!DOCTYPE html>
-    <html lang="en">
-      <head>
-        <meta charset="utf-8" />
-        <title>BestReactApp</title>
-        <base href="/">
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" type="image/x-icon" href="favicon.ico" />
-      </head>
-      <body>
-        <div id="root"></div>
-        <div>Nx Variable: foo</div>
-        <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
-        <div>Deploy Url: baz</div>
-      <script src="bazruntime.js" defer></script><script src="bazpolyfills.js" defer></script><script src="bazstyles.js" defer></script><script src="bazmain.js" defer></script></body>
-    </html>
-`;
 
     createFile(envFilePath);
 

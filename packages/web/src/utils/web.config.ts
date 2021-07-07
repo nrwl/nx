@@ -13,6 +13,9 @@ import { IndexHtmlWebpackPlugin } from './third-party/cli-files/plugins/index-ht
 import { generateEntryPoints } from './third-party/cli-files/utilities/package-chunk-sort';
 import { ScriptTarget } from 'typescript';
 import { getHashDigest, interpolateName } from 'loader-utils';
+import postcssImports = require('postcss-import');
+import * as path from 'path';
+import { sassImplementation } from './sass';
 
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
@@ -123,7 +126,17 @@ function getStylesPartial(
   wco: any,
   options: WebBuildBuilderOptions
 ): Configuration {
-  const partial = getStylesConfig(wco);
+  const includePaths: string[] = [];
+
+  if (options?.stylePreprocessorOptions?.includePaths?.length > 0) {
+    options.stylePreprocessorOptions.includePaths.forEach(
+      (includePath: string) =>
+        includePaths.push(path.resolve(wco.root, includePath))
+    );
+  }
+
+  const partial = getStylesConfig(wco, includePaths);
+
   const rules = partial.module.rules.map((rule) => {
     if (!Array.isArray(rule.use)) {
       return rule;
@@ -166,6 +179,38 @@ function getStylesPartial(
               loader: require.resolve('css-loader'),
               options: loaderModulesOptions,
             },
+            {
+              loader: require.resolve('postcss-loader'),
+              options: {
+                implementation: require('postcss'),
+                postcssOptions: (loader) => ({
+                  plugins: [
+                    postcssImports({
+                      addModulesDirectories: includePaths,
+                      resolve: (url: string) =>
+                        url.startsWith('~') ? url.substr(1) : url,
+                      load: (filename: string) => {
+                        return new Promise<string>((resolve, reject) => {
+                          loader.fs.readFile(
+                            filename,
+                            (err: Error, data: Buffer) => {
+                              if (err) {
+                                reject(err);
+
+                                return;
+                              }
+
+                              const content = data.toString();
+                              resolve(content);
+                            }
+                          );
+                        });
+                      },
+                    }),
+                  ],
+                }),
+              },
+            },
           ],
         },
         {
@@ -180,7 +225,17 @@ function getStylesPartial(
               loader: require.resolve('css-loader'),
               options: loaderModulesOptions,
             },
-            { loader: require.resolve('sass-loader') },
+            {
+              loader: require.resolve('sass-loader'),
+              options: {
+                implementation: sassImplementation,
+                sassOptions: {
+                  fiber: false,
+                  precision: 8,
+                  includePaths,
+                },
+              },
+            },
           ],
         },
         {
@@ -195,7 +250,12 @@ function getStylesPartial(
               loader: require.resolve('css-loader'),
               options: loaderModulesOptions,
             },
-            { loader: require.resolve('less-loader') },
+            {
+              loader: require.resolve('less-loader'),
+              options: {
+                paths: includePaths,
+              },
+            },
           ],
         },
         {
@@ -210,7 +270,12 @@ function getStylesPartial(
               loader: require.resolve('css-loader'),
               options: loaderModulesOptions,
             },
-            { loader: require.resolve('stylus-loader') },
+            {
+              loader: require.resolve('stylus-loader'),
+              options: {
+                paths: includePaths,
+              },
+            },
           ],
         },
         ...rules,
