@@ -23,7 +23,7 @@ import {
   toOldFormatOrNull,
   workspaceConfigName,
 } from '../shared/workspace';
-import { dirname, extname, resolve, join } from 'path';
+import { dirname, extname, resolve, join, relative } from 'path';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 import { EMPTY, Observable, of, concat } from 'rxjs';
 import { catchError, map, switchMap, tap, toArray } from 'rxjs/operators';
@@ -389,7 +389,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
           // configFilePath is not written to files, but is stored on the config object
           // so that we know where to save the project's configuration if it was updated
           // by another angular schematic.
-          const configFilePath = `${projectConfig}/project.json`;
+          const configFilePath = join(projectConfig, 'project.json');
           const next = super.read(configFilePath as Path).pipe(
             map((x) => ({
               project,
@@ -858,6 +858,12 @@ export function wrapAngularDevkitSchematic(
 
       if (event.kind === 'error') {
       } else if (event.kind === 'update') {
+        if (
+          r.eventPath === 'angular.json' ||
+          r.eventPath === 'workspace.json'
+        ) {
+          splitProjectFileUpdatesFromWorkspaceUpdate(host, r);
+        }
         host.write(r.eventPath, r.content);
       } else if (event.kind === 'create') {
         host.write(r.eventPath, r.content);
@@ -1003,3 +1009,23 @@ const getTargetLogger = (
   );
   return tslintExecutorLogger;
 };
+
+function splitProjectFileUpdatesFromWorkspaceUpdate(
+  host: Tree,
+  r: { eventPath: string; content: Buffer }
+) {
+  const workspace: {
+    projects: { [key: string]: string | { configFilePath?: string } };
+  } = parseJson(r.content.toString());
+  for (const [project, config] of Object.entries(workspace.projects)) {
+    if (typeof config === 'object' && config.configFilePath) {
+      const path = config.configFilePath;
+      workspace.projects[project] = normalize(
+        relative(host.root, dirname(path))
+      );
+      delete config.configFilePath;
+      host.write(path, serializeJson(config));
+      r.content = Buffer.from(serializeJson(workspace));
+    }
+  }
+}
