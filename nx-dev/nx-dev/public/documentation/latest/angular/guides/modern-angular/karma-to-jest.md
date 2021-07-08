@@ -79,7 +79,7 @@ This step is very manual and varies widely based on the usage of features from v
     ```
   - Jest
     ```typescript
-    jest.spyOn(foo, ‘setBar’);
+    jest.spyOn(foo, 'setBar');
     ```
 
 It’s a good practice to avoid relying on `spyOn` being global and instead using `jest.spyOn`. The behavior of the Jest spies is different from the Jasmine spies in the following ways:
