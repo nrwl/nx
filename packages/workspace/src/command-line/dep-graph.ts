@@ -6,7 +6,7 @@ import { copySync, ensureDirSync } from 'fs-extra';
 import * as http from 'http';
 import ignore from 'ignore';
 import * as open from 'open';
-import { dirname, join, normalize, parse, basename } from 'path';
+import { dirname, join, parse, basename } from 'path';
 import { performance } from 'perf_hooks';
 import { URL } from 'url';
 import { workspaceLayout } from '../core/file-utils';
