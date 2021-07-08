@@ -64,7 +64,7 @@ You may also find it useful to use the [Nx Console](/{{framework}}/getting-start
 
 ### Configuration files
 
-Your workspace contains different configuration files for the tools you’ll need to develop, such as linters, bundlers, and builders. There are two sources of configuration files for your workspace: at the root of the workspace and at the root of your application. The configuration files at the root of your application extend the configuration files found at the root of your workspace. If you need to make global adjustments to these configurations, you should do so at the root of the workspace. If you have multiple applications that need different configurations, you should manage this using the configuration files in the root of each application.
+Your workspace contains different configuration files for the tools you’ll need to develop, such as linters, bundlers, and executors. There are two sources of configuration files for your workspace: at the root of the workspace and at the root of your application. The configuration files at the root of your application extend the configuration files found at the root of your workspace. If you need to make global adjustments to these configurations, you should do so at the root of the workspace. If you have multiple applications that need different configurations, you should manage this using the configuration files in the root of each application.
 
 In general, you should not replace the configuration files provided for you. You should add to or modify the configurations that are there. This will help ensure that your configuration files are set up for Nx to work at its best.
 
@@ -86,7 +86,7 @@ There are two major steps to migrating your application: migrating your dependen
 
 If you’re already using npm for package management, this is as easy as copying your dependencies from your old `package.json` file to your workspace’s `package.json`. Make sure you don’t add any duplicate dependencies during this step.
 
-If you’re using other package managers such as Bower, you’ll need to take an intermediary step of moving your dependencies from there to NPM. For Bower, [migration information is available](https://bower.io/blog/2017/how-to-migrate-away-from-bower/)
+If you’re using other package managers such as Bower, you’ll need to take an intermediary step of moving your dependencies from there to NPM. For Bower, [migration information is available](https://bower.io/blog/2017/how-to-migrate-away-from-bower/).
 
 ### Code
 
@@ -96,7 +96,8 @@ If your code is all in a single app, you can copy it into the application’s fo
 
 Now that your code is present, it’s time to tackle building and testing it.
 
-Local build and serve
+### Local build and serve
+
 Each generated application has a build process defined by Nx. This uses the Angular CLI for Angular, and webpack is used for all other projects. See if this build process works out of the box for you by running
 
 ```bash
@@ -135,7 +136,7 @@ All of the configuration for your e2e tests should be in this directory.
 
 ### Linting
 
-Nx uses either tslint or eslint for linting, based on your application’s configuration. Nx also has its own lint process to make sure your Nx configuration is valid.
+Nx uses ESLint for linting. Nx also has its own lint process to make sure your Nx configuration is valid.
 
 To run the `lint` task for your workspace
 
@@ -195,7 +196,8 @@ nx generate @nrwl/react:library
 
 It’s important to remember: don’t just drop your code anywhere! Always generate an app or a library for that code before migration. Without the project configuration, you’ll miss out on key functionalities of Nx provided by the dependency graph generation and affected code detection.
 
-Establishing code boundaries
+### Establishing code boundaries
+
 If you’re consolidating multiple repositories or libraries into a single Nx workspace, you may have concerns about code boundaries. Previously, you may have had well-established boundaries by separating code into different repositories or having a public API for a library. Nx features a tagging system that allows you to enforce these code boundaries in a granular way. Each project can be tagged, and you can constrain dependencies based on these tags.
 
 [Learn more about tags and dependency constraints](/{{framework}}/structure/monorepo-tags)
