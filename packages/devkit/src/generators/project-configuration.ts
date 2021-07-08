@@ -10,8 +10,11 @@ import type {
   NxJsonConfiguration,
   NxJsonProjectConfiguration,
 } from '@nrwl/tao/src/shared/nx';
-import { getWorkspacePath } from '../utils/get-workspace-layout';
-import { join } from 'path';
+import {
+  getWorkspaceLayout,
+  getWorkspacePath,
+} from '../utils/get-workspace-layout';
+import { joinPathFragments } from '../utils/path';
 
 export type WorkspaceConfiguration = Omit<
   WorkspaceJsonConfiguration,
@@ -255,7 +258,7 @@ function addProjectToWorkspaceJson(
 
   const configFile =
     mode === 'create' && standalone
-      ? join(project.root, 'project.json')
+      ? joinPathFragments(project.root, 'project.json')
       : getProjectFileLocation(host, projectName);
 
   if (configFile) {
@@ -327,7 +330,7 @@ function inlineProjectConfigurationsWithTree(
   const workspaceJson = readJson<RawWorkspaceJsonConfiguration>(host, path);
   Object.entries(workspaceJson.projects || {}).forEach(([project, config]) => {
     if (typeof config === 'string') {
-      const configFileLocation = join(config, 'project.json');
+      const configFileLocation = joinPathFragments(config, 'project.json');
       workspaceJson.projects[project] = readJson<
         ProjectConfiguration & NxJsonProjectConfiguration
       >(host, configFileLocation);
@@ -347,7 +350,7 @@ function getProjectFileLocation(host: Tree, project: string): string | null {
   );
   const projectConfig = rawWorkspace.projects?.[project];
   return typeof projectConfig === 'string'
-    ? join(projectConfig, 'project.json')
+    ? joinPathFragments(projectConfig, 'project.json')
     : null;
 }
 
