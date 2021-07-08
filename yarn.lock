@@ -15111,6 +15111,31 @@ jest-changed-files@^27.0.2:
     execa "^5.0.0"
     throat "^6.0.1"
 
+jest-circus@27.0.6:
+  version "27.0.6"
+  resolved "https://registry.yarnpkg.com/jest-circus/-/jest-circus-27.0.6.tgz#dd4df17c4697db6a2c232aaad4e9cec666926668"
+  integrity sha512-OJlsz6BBeX9qR+7O9lXefWoc2m9ZqcZ5Ohlzz0pTEAG4xMiZUJoacY8f4YDHxgk0oKYxj277AfOk9w6hZYvi1Q==
+  dependencies:
+    "@jest/environment" "^27.0.6"
+    "@jest/test-result" "^27.0.6"
+    "@jest/types" "^27.0.6"
+    "@types/node" "*"
+    chalk "^4.0.0"
+    co "^4.6.0"
+    dedent "^0.7.0"
+    expect "^27.0.6"
+    is-generator-fn "^2.0.0"
+    jest-each "^27.0.6"
+    jest-matcher-utils "^27.0.6"
+    jest-message-util "^27.0.6"
+    jest-runtime "^27.0.6"
+    jest-snapshot "^27.0.6"
+    jest-util "^27.0.6"
+    pretty-format "^27.0.6"
+    slash "^3.0.0"
+    stack-utils "^2.0.3"
+    throat "^6.0.1"
+
 jest-circus@^27.0.5:
   version "27.0.5"
   resolved "https://registry.yarnpkg.com/jest-circus/-/jest-circus-27.0.5.tgz#b5e327f1d6857c8485126f8e364aefa4378debaa"
@@ -15132,31 +15157,6 @@ jest-circus@^27.0.5:
     jest-snapshot "^27.0.5"
     jest-util "^27.0.2"
     pretty-format "^27.0.2"
-    slash "^3.0.0"
-    stack-utils "^2.0.3"
-    throat "^6.0.1"
-
-jest-circus@^27.0.6:
-  version "27.0.6"
-  resolved "https://registry.yarnpkg.com/jest-circus/-/jest-circus-27.0.6.tgz#dd4df17c4697db6a2c232aaad4e9cec666926668"
-  integrity sha512-OJlsz6BBeX9qR+7O9lXefWoc2m9ZqcZ5Ohlzz0pTEAG4xMiZUJoacY8f4YDHxgk0oKYxj277AfOk9w6hZYvi1Q==
-  dependencies:
-    "@jest/environment" "^27.0.6"
-    "@jest/test-result" "^27.0.6"
-    "@jest/types" "^27.0.6"
-    "@types/node" "*"
-    chalk "^4.0.0"
-    co "^4.6.0"
-    dedent "^0.7.0"
-    expect "^27.0.6"
-    is-generator-fn "^2.0.0"
-    jest-each "^27.0.6"
-    jest-matcher-utils "^27.0.6"
-    jest-message-util "^27.0.6"
-    jest-runtime "^27.0.6"
-    jest-snapshot "^27.0.6"
-    jest-util "^27.0.6"
-    pretty-format "^27.0.6"
     slash "^3.0.0"
     stack-utils "^2.0.3"
     throat "^6.0.1"
