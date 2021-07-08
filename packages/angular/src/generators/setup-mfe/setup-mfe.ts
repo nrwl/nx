@@ -9,12 +9,13 @@ import {
 
 import {
   addImplicitDeps,
-  changeBuildTarget,
+  changeWorkspaceTargets,
   fixBootstrap,
   generateWebpackConfig,
   getRemotesWithPorts,
   setupServeTarget,
 } from './lib';
+import { nxVersion } from '../../utils/versions';
 
 export async function setupMfe(host: Tree, options: Schema) {
   const projectConfig = readProjectConfiguration(host, options.appName);
@@ -24,7 +25,7 @@ export async function setupMfe(host: Tree, options: Schema) {
   generateWebpackConfig(host, options, projectConfig.root, remotesWithPorts);
 
   addImplicitDeps(host, options);
-  changeBuildTarget(host, options);
+  changeWorkspaceTargets(host, options);
   setupServeTarget(host, options);
 
   fixBootstrap(host, projectConfig.root);
@@ -32,7 +33,10 @@ export async function setupMfe(host: Tree, options: Schema) {
   // add package to install
   const installPackages = addDependenciesToPackageJson(
     host,
-    { '@angular-architects/module-federation': '^12.2.0' },
+    {
+      '@angular-architects/module-federation': '^12.2.0',
+      '@nrwl/web': nxVersion,
+    },
     {}
   );
 

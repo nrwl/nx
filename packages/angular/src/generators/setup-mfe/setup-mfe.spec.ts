@@ -119,6 +119,31 @@ describe('Init MFE', () => {
     ['app1', 'shell'],
     ['remote1', 'remote'],
   ])(
+    'should change the serve target to nrwl/web:file-server',
+    async (app, type: 'shell' | 'remote') => {
+      // ACT
+      await setupMfe(host, {
+        appName: app,
+        mfeType: type,
+      });
+
+      // ASSERT
+      const { serve } = readProjectConfiguration(host, app).targets;
+
+      expect(serve.executor).toEqual('@nrwl/web:file-server');
+      expect(serve.configurations.development.buildTarget).toEqual(
+        `${app}:build:development`
+      );
+      expect(serve.configurations.production.buildTarget).toEqual(
+        `${app}:build:production`
+      );
+    }
+  );
+
+  test.each([
+    ['app1', 'shell'],
+    ['remote1', 'remote'],
+  ])(
     'should install @angular-architects/module-federation in the monorepo',
     async (app, type: 'shell' | 'remote') => {
       // ACT

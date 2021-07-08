@@ -6,7 +6,7 @@ import {
   updateProjectConfiguration,
 } from '@nrwl/devkit';
 
-export function changeBuildTarget(host: Tree, options: Schema) {
+export function changeWorkspaceTargets(host: Tree, options: Schema) {
   const appConfig = readProjectConfiguration(host, options.appName);
 
   appConfig.targets.build.executor = '@nrwl/angular:webpack-browser';
@@ -21,6 +21,18 @@ export function changeBuildTarget(host: Tree, options: Schema) {
     ...appConfig.targets.build.configurations.production,
     customWebpackConfig: {
       path: `${appConfig.root}/webpack.prod.config.js`,
+    },
+  };
+
+  appConfig.targets.serve.executor = '@nrwl/web:file-server';
+  appConfig.targets.serve.configurations = {
+    production: {
+      buildTarget:
+        appConfig.targets.serve.configurations.production.browserTarget,
+    },
+    development: {
+      buildTarget:
+        appConfig.targets.serve.configurations.development.browserTarget,
     },
   };
 
