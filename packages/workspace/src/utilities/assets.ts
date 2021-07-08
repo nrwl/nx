@@ -10,6 +10,7 @@ export type FileInputOutput = {
 export type AssetGlob = FileInputOutput & {
   glob: string;
   ignore: string[];
+  dot?: boolean;
 };
 
 export function assetGlobsToFiles(
@@ -19,10 +20,16 @@ export function assetGlobsToFiles(
 ): FileInputOutput[] {
   const files: FileInputOutput[] = [];
 
-  const globbedFiles = (pattern: string, input = '', ignore: string[] = []) => {
+  const globbedFiles = (
+    pattern: string,
+    input = '',
+    ignore: string[] = [],
+    dot: boolean = false
+  ) => {
     return glob.sync(pattern, {
       cwd: input,
       nodir: true,
+      dot,
       ignore,
     });
   };
@@ -39,7 +46,8 @@ export function assetGlobsToFiles(
       globbedFiles(
         asset.glob,
         join(rootDir, asset.input),
-        asset.ignore
+        asset.ignore,
+        asset.dot ?? false
       ).forEach((globbedFile) => {
         files.push({
           input: join(rootDir, asset.input, globbedFile),
