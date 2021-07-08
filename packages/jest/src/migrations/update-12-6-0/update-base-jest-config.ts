@@ -1,5 +1,5 @@
 import { formatFiles, Tree } from '@nrwl/devkit';
-import { jestConfigObject } from 'packages/jest/src/utils/config/functions';
+import { jestConfigObject } from '../../utils/config/functions';
 import { getJestProjects } from '../../utils/config/get-jest-projects';
 
 const REPLACE_TOKEN = `$$REPLACE__ME$$`;
