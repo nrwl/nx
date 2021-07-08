@@ -6,7 +6,7 @@ import { copySync, ensureDirSync } from 'fs-extra';
 import * as http from 'http';
 import ignore from 'ignore';
 import * as open from 'open';
-import { dirname, join, normalize, parse } from 'path';
+import { dirname, join, normalize, parse, basename } from 'path';
 import { performance } from 'perf_hooks';
 import { URL } from 'url';
 import { workspaceLayout } from '../core/file-utils';
@@ -369,10 +369,8 @@ function startServer(
     // Avoid https://en.wikipedia.org/wiki/Directory_traversal_attack
     // e.g curl --path-as-is http://localhost:9000/../fileInDanger.txt
     // by limiting the path to current directory only
-    const sanitizePath = normalize(parsedUrl.pathname).replace(
-      /^(\.{0,2}[\/\\])+/,
-      ''
-    );
+
+    const sanitizePath = basename(parsedUrl.pathname);
 
     if (sanitizePath === 'projectGraph.json') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
