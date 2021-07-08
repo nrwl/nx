@@ -370,17 +370,17 @@ function startServer(
     // e.g curl --path-as-is http://localhost:9000/../fileInDanger.txt
     // by limiting the path to current directory only
     const sanitizePath = normalize(parsedUrl.pathname).replace(
-      /^(\.\.[\/\\])+/,
+      /^(\.{0,2}[\/\\])+/,
       ''
     );
 
-    if (sanitizePath === '/projectGraph.json') {
+    if (sanitizePath === 'projectGraph.json') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(currentDepGraphClientResponse));
       return;
     }
 
-    if (sanitizePath === '/currentHash') {
+    if (sanitizePath === 'currentHash') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ hash: currentDepGraphClientResponse.hash }));
       return;
