@@ -39,6 +39,7 @@ export function addProjectConfiguration(
   projectConfiguration: ProjectConfiguration & NxJsonProjectConfiguration,
   standalone: boolean = false
 ): void {
+  standalone = standalone || getWorkspaceLayout(host).standaloneAsDefault;
   setProjectConfiguration(
     host,
     projectName,

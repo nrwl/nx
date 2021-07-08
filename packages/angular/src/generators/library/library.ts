@@ -1,5 +1,6 @@
 import {
   formatFiles,
+  getWorkspaceLayout,
   installPackagesTask,
   moveFilesToNewDirectory,
   Tree,
@@ -23,6 +24,7 @@ import {
 } from './lib/enable-strict-type-checking';
 import { NormalizedSchema } from './lib/normalized-schema';
 import { Schema } from './schema';
+import { convertToNxProjectGenerator } from '@nrwl/workspace';
 
 export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
   // Do some validation checks
@@ -66,6 +68,16 @@ export async function libraryGenerator(host: Tree, schema: Partial<Schema>) {
   addModule(host, options);
   setStrictMode(host, options);
   await addLinting(host, options);
+
+  if (
+    options.standaloneConfig ||
+    getWorkspaceLayout(host).standaloneAsDefault
+  ) {
+    await convertToNxProjectGenerator(host, {
+      project: options.name,
+      all: false,
+    });
+  }
 
   if (!options.skipFormat) {
     await formatFiles(host);

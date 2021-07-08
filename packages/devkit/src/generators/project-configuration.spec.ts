@@ -29,6 +29,41 @@ describe('project configuration', () => {
     expect(tree.exists('libs/test/project.json')).toBeTruthy();
   });
 
+  it('should create project.json file if all other apps in the workspace use project.json', () => {
+    addProjectConfiguration(
+      tree,
+      'project-a',
+      {
+        root: 'apps/project-a',
+        targets: {},
+      },
+      true
+    );
+    addProjectConfiguration(
+      tree,
+      'project-b',
+      {
+        root: 'apps/project-b',
+        targets: {},
+      },
+      true
+    );
+    expect(tree.exists('apps/project-b/project.json')).toBeTruthy();
+  });
+
+  it("should not create project.json file if any other app in the workspace doesn't use project.json", () => {
+    addProjectConfiguration(tree, 'project-a', {
+      root: 'apps/project-a',
+      targets: {},
+    });
+    addProjectConfiguration(tree, 'project-b', {
+      root: 'apps/project-b',
+      targets: {},
+    });
+    expect(tree.exists('apps/project-a/project.json')).toBeFalsy();
+    expect(tree.exists('apps/project-b/project.json')).toBeFalsy();
+  });
+
   it('should not create project.json file when adding a project if standalone is false', () => {
     addProjectConfiguration(tree, 'test', baseTestProjectConfig, false);
 
