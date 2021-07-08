@@ -114,7 +114,6 @@ export class TaskOrchestrator {
       if (!this.isCacheableTask(task)) {
         continue;
       }
-      await this.hashTask(task);
       const cachedResult = await this.cache.get(task);
       if (cachedResult && cachedResult.code === 0) {
         await this.applyCachedResult({
@@ -169,7 +168,7 @@ export class TaskOrchestrator {
     const taskEntries = Object.entries(batch.taskGraph.tasks);
     const tasks = taskEntries.map(([, task]) => task);
 
-    this.preRunSteps(tasks);
+    await this.preRunSteps(tasks);
 
     let results: {
       task: Task;
@@ -247,7 +246,7 @@ export class TaskOrchestrator {
 
   // region Single Task
   private async applyFromCacheOrRunTask(doNotSkipCache: boolean, task: Task) {
-    this.preRunSteps([task]);
+    await this.preRunSteps([task]);
 
     // hash the task here
     let results: {
@@ -309,7 +308,10 @@ export class TaskOrchestrator {
   // endregion Single Task
 
   // region Lifecycle
-  private preRunSteps(tasks: Task[]) {
+  private async preRunSteps(tasks: Task[]) {
+    // Hash the task before it is run
+    await Promise.all(tasks.map((task) => this.hashTask(task)));
+
     // timings
     for (const task of tasks) {
       this.storeStartTime(task);
