@@ -11,7 +11,11 @@ import { jestInitGenerator } from '@nrwl/jest';
 import { cypressInitGenerator } from '@nrwl/cypress';
 import { reactDomVersion, reactInitGenerator, reactVersion } from '@nrwl/react';
 
-import { nextVersion, nxVersion } from '../../utils/versions';
+import {
+  eslintConfigNextVersion,
+  nextVersion,
+  nxVersion,
+} from '../../utils/versions';
 import { InitSchema } from './schema';
 
 function updateDependencies(host: Tree) {
@@ -31,7 +35,9 @@ function updateDependencies(host: Tree) {
       'react-dom': reactDomVersion,
       tslib: '^2.0.0',
     },
-    {}
+    {
+      'eslint-config-next': eslintConfigNextVersion,
+    }
   );
 }
 

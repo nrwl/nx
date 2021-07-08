@@ -146,6 +146,7 @@ describe('Next.js Applications', () => {
     updateFile(
       mainPath,
       `
+          /* eslint-disable */
           import dynamic from 'next/dynamic';
           const DynamicComponent = dynamic(
               () => import('@${proj}/${libName}').then(d => d.${stringUtils.capitalize(
@@ -358,9 +359,6 @@ describe('Next.js Applications', () => {
       `apps/${appName}/next.config.js`,
       `
       module.exports = {
-        future: {
-          webpack5: false,
-        },
         webpack: (c) => {
           console.log('NODE_ENV is', process.env.NODE_ENV);
           return c;
@@ -459,7 +457,7 @@ describe('Next.js Applications', () => {
     });
   }, 120000);
 
-  it('webpack5 - should be able to consume a react libs (buildable and non-buildable)', async () => {
+  it('webpack4 - should be able to consume a react libs (buildable and non-buildable)', async () => {
     if (isNotWindows()) {
       const appName = uniq('app');
       const buildableLibName = uniq('lib');
@@ -488,16 +486,13 @@ describe('Next.js Applications', () => {
         `
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const withNx = require('@nrwl/next/plugins/with-nx');
-
         module.exports = withNx({
           nx: {
             // Set this to false if you do not want to use SVGR
             // See: https://github.com/gregberge/svgr
             svgr: true,
           },
-          future: {
-            webpack5: true
-          }
+          webpack5: false
         });
       `
       );
@@ -524,12 +519,12 @@ describe('Next.js Applications', () => {
         checkUnitTest: true,
         checkLint: true,
         checkE2E: true,
-        checkWebpack5: true,
+        checkWebpack4: true,
       });
     }
   }, 300000);
 
-  it('webpack5 - should build with a next.config.js file in the dist folder', async () => {
+  it('webpack4 - should build with a next.config.js file in the dist folder', async () => {
     const appName = uniq('app');
 
     runCLI(`generate @nrwl/next:app ${appName} --no-interactive --style=css`);
@@ -538,9 +533,7 @@ describe('Next.js Applications', () => {
       `apps/${appName}/next.config.js`,
       `
         module.exports = {
-          future: {
-            webpack5: true,
-          },
+          webpack5: false,
           webpack: (c) => {
             console.log('NODE_ENV is', process.env.NODE_ENV);
             return c;
@@ -556,7 +549,6 @@ describe('Next.js Applications', () => {
 
     checkFilesExist(`dist/apps/${appName}/next.config.js`);
     expect(result).toContain('NODE_ENV is production');
-    expect(result).toContain('Using webpack 5');
   }, 120000);
 
   it('should allow using a custom server implementation in TypeScript', async () => {
@@ -644,12 +636,12 @@ async function checkApp(
     checkUnitTest: boolean;
     checkLint: boolean;
     checkE2E: boolean;
-    checkWebpack5?: boolean;
+    checkWebpack4?: boolean;
   }
 ) {
   const buildResult = runCLI(`build ${appName} --withDeps`);
-  if (opts.checkWebpack5) {
-    expect(buildResult).toContain('Using webpack 5');
+  if (opts.checkWebpack4) {
+    expect(buildResult).toContain('Using webpack 4');
   }
   expect(buildResult).toContain(`Compiled successfully`);
   checkFilesExist(`dist/apps/${appName}/.next/build-manifest.json`);

@@ -42,6 +42,12 @@
       "version": "11.6.0-beta.0",
       "description": "Add js patterns to tsconfig.json",
       "factory": "./src/migrations/update-11-6-0/add-js-include-11-6-0"
+    },
+    "add-next-eslint-12.6.0": {
+      "cli": "nx",
+      "version": "12.6.0-beta.0",
+      "description": "Add 'next' eslint config",
+      "factory": "./src/migrations/update-12-6-0/add-next-eslint"
     }
   },
   "packageJsonUpdates": {
@@ -116,6 +122,15 @@
       "packages": {
         "next": {
           "version": "10.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "12.6.0": {
+      "version": "12.6.0-beta.0",
+      "packages": {
+        "next": {
+          "version": "11.0.1",
           "alwaysAddToPackageJson": false
         }
       }

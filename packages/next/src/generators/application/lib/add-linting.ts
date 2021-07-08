@@ -39,6 +39,23 @@ export async function addLinting(
             `${options.appProjectRoot}/tsconfig(.*)?.json`,
           ];
         }
+        if (!reactEslintJson.extends) {
+          reactEslintJson.extends = [];
+        }
+        if (typeof reactEslintJson.extends === 'string') {
+          reactEslintJson.extends = [reactEslintJson.extends];
+        }
+        // add next.js configuration
+        reactEslintJson.extends.push(...['next', 'next/core-web-vitals']);
+        // remove nx/react plugin, as it conflicts with the next.js one
+        reactEslintJson.extends = reactEslintJson.extends.filter(
+          (name) => name !== 'plugin:@nrwl/nx/react'
+        );
+        reactEslintJson.extends.unshift('plugin:@nrwl/nx/react-typescript');
+        if (!reactEslintJson.env) {
+          reactEslintJson.env = {};
+        }
+        reactEslintJson.env.jest = true;
         return reactEslintJson;
       }
     );
