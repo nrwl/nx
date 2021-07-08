@@ -197,7 +197,7 @@ jobs:
           when: on_success
           name: Save successful tag
           command: |
-            ./scripts/circleci/tag-successful-build.sh nx_successful_ci_run__${CIRCLE_WORKFLOW_ID}
+            ./scripts/circleci/tag-successful-build.sh nx_successful_ci_run__${CIRCLE_WORKFLOW_ID} nx_successful_ci_run__*
 workflows:
   build:
     jobs:
