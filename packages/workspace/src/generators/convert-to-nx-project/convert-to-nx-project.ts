@@ -47,8 +47,8 @@ export async function convertToNxProjectGenerator(host: Tree, schema: Schema) {
   if (workspace.version < 2) {
     logger.error(`
 NX Only workspaces with version 2+ support project.json files.
-To upgrade change the version number at the top of ${workspaceConfigName(
-      host.root
+To upgrade change the version number at the top of ${getWorkspacePath(
+      host
     )} and run 'nx format'.
 `);
     throw new Error('v2+ Required');

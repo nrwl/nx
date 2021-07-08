@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import { getWorkspaceLayout, Tree } from '@nrwl/devkit';
 import type { Schema } from './schema';
 
 import {
@@ -100,7 +100,10 @@ export async function applicationGenerator(
     setApplicationStrictDefault(host, false);
   }
 
-  if (options.standaloneConfig) {
+  if (
+    options.standaloneConfig ||
+    getWorkspaceLayout(host).standaloneAsDefault
+  ) {
     await convertToNxProjectGenerator(host, {
       project: options.name,
       all: false,
