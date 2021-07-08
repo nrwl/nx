@@ -40,12 +40,35 @@ export async function packageExecutor(
     normalizedOptions,
     context,
     libRoot,
-    dependencies
+    dependencies,
+    async () =>
+      await updatePackageAndCopyAssets(
+        normalizedOptions,
+        context,
+        target,
+        dependencies
+      )
   );
 
-  await copyAssetFiles(normalizedOptions.files);
+  if (options.cli) {
+    addCliWrapper(normalizedOptions, context);
+  }
 
-  updatePackageJson(normalizedOptions, context);
+  return {
+    ...(result as { success: boolean }),
+    outputPath: normalizedOptions.outputPath,
+  };
+}
+
+async function updatePackageAndCopyAssets(
+  options,
+  context,
+  target,
+  dependencies
+) {
+  await copyAssetFiles(options.files);
+
+  updatePackageJson(options, context);
   if (
     dependencies.length > 0 &&
     options.updateBuildableProjectDepsInPackageJson
@@ -57,18 +80,9 @@ export async function packageExecutor(
       context.configurationName,
       target,
       dependencies,
-      normalizedOptions.buildableProjectDepsInPackageJsonType
+      options.buildableProjectDepsInPackageJsonType
     );
   }
-
-  if (options.cli) {
-    addCliWrapper(normalizedOptions, context);
-  }
-
-  return {
-    ...result,
-    outputPath: normalizedOptions.outputPath,
-  };
 }
 
 export default packageExecutor;
