@@ -2265,9 +2265,9 @@
             "file": "react/guides/nextjs"
           },
           {
-            "name": "Enable Webpack 5 for Next.js",
-            "id": "nextjs-webpack5",
-            "file": "react/guides/nextjs-webpack5"
+            "name": "Webpack 5 Migration",
+            "id": "webpack-5",
+            "file": "shared/guides/webpack-5"
           },
           {
             "name": "Using Tailwind CSS in React",
