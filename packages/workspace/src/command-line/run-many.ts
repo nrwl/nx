@@ -3,7 +3,7 @@ import { runCommand } from '../tasks-runner/run-command';
 import { splitArgsIntoNxArgsAndOverrides } from './utils';
 import type { NxArgs, RawNxArgs } from './utils';
 import {
-  createProjectGraph,
+  createProjectGraphAsync,
   isWorkspaceProject,
   withDeps,
 } from '../core/project-graph';
@@ -26,7 +26,7 @@ export async function runMany(parsedArgs: yargs.Arguments & RawNxArgs) {
 
   await connectToNxCloudUsingScan(nxArgs.scan);
 
-  const projectGraph = createProjectGraph();
+  const projectGraph = await createProjectGraphAsync();
   const projects = projectsToRun(nxArgs, projectGraph);
   const projectsNotExcluded = applyExclude(projects, nxArgs);
   const env = readEnvironment(nxArgs.target, projectsNotExcluded);

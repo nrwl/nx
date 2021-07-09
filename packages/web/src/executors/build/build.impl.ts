@@ -7,7 +7,7 @@ import { execSync } from 'child_process';
 import { Range, satisfies } from 'semver';
 import { basename, join } from 'path';
 
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
@@ -119,7 +119,10 @@ function getWebpackConfigs(
     );
 }
 
-export function run(options: WebBuildBuilderOptions, context: ExecutorContext) {
+export async function* run(
+  options: WebBuildBuilderOptions,
+  context: ExecutorContext
+) {
   const { webpack } = require('../../webpack/entry');
 
   // Node versions 12.2-12.8 has a bug where prod builds will hang for 2-3 minutes
@@ -134,7 +137,7 @@ export function run(options: WebBuildBuilderOptions, context: ExecutorContext) {
   const metadata = context.workspace.projects[context.projectName];
 
   if (!options.buildLibsFromSource && context.targetName) {
-    const projGraph = createProjectGraph();
+    const projGraph = await createProjectGraphAsync();
     const { dependencies } = calculateProjectDependencies(
       projGraph,
       context.root,
@@ -167,7 +170,7 @@ export function run(options: WebBuildBuilderOptions, context: ExecutorContext) {
   }
 
   const configs = getWebpackConfigs(options, context);
-  return eachValueFrom(
+  return yield* eachValueFrom(
     from(configs).pipe(
       // Run build sequentially and bail when first one fails.
       mergeScan(

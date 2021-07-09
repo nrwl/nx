@@ -1,5 +1,5 @@
 import {
-  createProjectGraph,
+  createProjectGraphAsync,
   onlyWorkspaceProjects,
   reverse,
 } from '../../../core/project-graph';
@@ -11,16 +11,12 @@ import { Schema } from '../schema';
  *
  * Throws an error if the project is in use, unless the `--forceRemove` option is used.
  */
-export function checkDependencies(_, schema: Schema) {
+export async function checkDependencies(_, schema: Schema): Promise<void> {
   if (schema.forceRemove) {
     return;
   }
 
-  const graph: ProjectGraph = createProjectGraph(
-    undefined,
-    undefined,
-    undefined
-  );
+  const graph: ProjectGraph = await createProjectGraphAsync();
 
   const reverseGraph = onlyWorkspaceProjects(reverse(graph));
 

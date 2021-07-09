@@ -68,9 +68,10 @@ describe('NgPackagrLite executor', () => {
       buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock
     ).mockReturnValue(false);
 
-    const result = await ngPackagrLiteExecutor(options, context);
+    const result = await ngPackagrLiteExecutor(options, context).next();
 
-    expect(result).toEqual({ success: false });
+    expect(result.value).toEqual({ success: false });
+    expect(result.done).toBe(true);
   });
 
   it('should build the library when deps have been built', async () => {
@@ -78,10 +79,11 @@ describe('NgPackagrLite executor', () => {
       buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock
     ).mockReturnValue(true);
 
-    const result = await ngPackagrLiteExecutor(options, context);
+    const result = await ngPackagrLiteExecutor(options, context).next();
 
     expect(ngPackagrBuildMock).toHaveBeenCalled();
-    expect(result).toEqual({ success: true });
+    expect(result.value).toEqual({ success: true });
+    expect(result.done).toBe(true);
   });
 
   it('should instantiate NgPackager with the right providers and set to use the right build transformation provider', async () => {
@@ -89,7 +91,7 @@ describe('NgPackagrLite executor', () => {
       buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock
     ).mockReturnValue(true);
 
-    const result = await ngPackagrLiteExecutor(options, context);
+    const result = await ngPackagrLiteExecutor(options, context).next();
 
     expect(ngPackagr.NgPackagr).toHaveBeenCalledWith([
       ...NX_PACKAGE_PROVIDERS,
@@ -98,7 +100,8 @@ describe('NgPackagrLite executor', () => {
     expect(ngPackagrWithBuildTransformMock).toHaveBeenCalledWith(
       NX_PACKAGE_TRANSFORM.provide
     );
-    expect(result).toEqual({ success: true });
+    expect(result.value).toEqual({ success: true });
+    expect(result.done).toBe(true);
   });
 
   it('should process tsConfig for incremental builds when tsConfig options is set', async () => {
@@ -110,7 +113,7 @@ describe('NgPackagrLite executor', () => {
     const result = await ngPackagrLiteExecutor(
       { ...options, tsConfig: tsConfigPath },
       context
-    );
+    ).next();
 
     expect(buildableLibsUtils.updatePaths).toHaveBeenCalledWith(
       expect.any(Array),
@@ -118,7 +121,8 @@ describe('NgPackagrLite executor', () => {
     );
     expect(ngPackagrWithTsConfigMock).toHaveBeenCalledWith(tsConfig);
     expect(ngPackagrBuildMock).toHaveBeenCalled();
-    expect(result).toEqual({ success: true });
+    expect(result.value).toEqual({ success: true });
+    expect(result.done).toBe(true);
   });
 
   describe('--watch', () => {
@@ -130,7 +134,7 @@ describe('NgPackagrLite executor', () => {
       const results = ngPackagrLiteExecutor(
         { ...options, watch: true },
         context
-      ) as AsyncIterableIterator<{ success: boolean }>;
+      );
 
       ngPackagerWatchSubject.next();
       let changes = 0;

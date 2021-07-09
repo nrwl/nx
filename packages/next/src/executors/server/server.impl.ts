@@ -23,7 +23,7 @@ import {
 } from '../../utils/types';
 import { customServer } from './lib/custom-server';
 import { defaultServer } from './lib/default-server';
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   DependentBuildableProjectNode,
@@ -56,7 +56,7 @@ export default async function* serveExecutor(
 
   const root = resolve(context.root, buildOptions.root);
   if (!options.buildLibsFromSource) {
-    const projGraph = createProjectGraph();
+    const projGraph = await createProjectGraphAsync();
     const result = calculateProjectDependencies(
       projGraph,
       context.root,

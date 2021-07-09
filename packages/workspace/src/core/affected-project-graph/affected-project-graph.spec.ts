@@ -2,7 +2,7 @@ import { extname } from 'path';
 import { jsonDiff } from '../../utilities/json-diff';
 import { vol } from 'memfs';
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { createProjectGraph } from '../project-graph';
+import { createProjectGraphAsync } from '../project-graph';
 import { filterAffected } from './affected-project-graph';
 import { FileData, WholeFileChange } from '../file-utils';
 import type { NxJsonConfiguration } from '@nrwl/devkit';
@@ -135,8 +135,8 @@ describe('project graph', () => {
     vol.fromJSON(filesJson, '/root');
   });
 
-  it('should create nodes and dependencies with workspace projects', () => {
-    const graph = createProjectGraph();
+  it('should create nodes and dependencies with workspace projects', async () => {
+    const graph = await createProjectGraphAsync();
     const affected = filterAffected(graph, [
       {
         file: 'something-for-api.txt',
@@ -200,8 +200,8 @@ describe('project graph', () => {
     });
   });
 
-  it('should create nodes and dependencies with npm packages', () => {
-    const graph = createProjectGraph();
+  it('should create nodes and dependencies with npm packages', async () => {
+    const graph = await createProjectGraphAsync();
     const updatedPackageJson = {
       ...packageJson,
       dependencies: {
@@ -268,8 +268,8 @@ describe('project graph', () => {
     });
   });
 
-  it('should support implicit JSON file dependencies (some projects)', () => {
-    const graph = createProjectGraph();
+  it('should support implicit JSON file dependencies (some projects)', async () => {
+    const graph = await createProjectGraphAsync();
     const updatedPackageJson = {
       ...packageJson,
       scripts: {
@@ -289,8 +289,8 @@ describe('project graph', () => {
     expect(Object.keys(affected.nodes)).toEqual(['demo', 'demo-e2e', 'api']);
   });
 
-  it('should support implicit JSON file dependencies (all projects)', () => {
-    const graph = createProjectGraph();
+  it('should support implicit JSON file dependencies (all projects)', async () => {
+    const graph = await createProjectGraphAsync();
     const updatedPackageJson = {
       ...packageJson,
       devDependencies: {

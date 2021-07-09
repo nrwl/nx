@@ -6,7 +6,9 @@ import type { ProjectGraph, Tree } from '@nrwl/devkit';
 let projectGraph: ProjectGraph;
 jest.mock('@nrwl/workspace/src/core/project-graph', () => ({
   ...jest.requireActual('@nrwl/workspace/src/core/project-graph'),
-  createProjectGraph: jest.fn().mockImplementation(() => projectGraph),
+  createProjectGraphAsync: jest
+    .fn()
+    .mockImplementation(async () => projectGraph),
 }));
 
 describe('Create missing .babelrc files', () => {

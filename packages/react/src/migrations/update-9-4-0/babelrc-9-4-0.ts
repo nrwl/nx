@@ -10,7 +10,7 @@ import {
 } from '@angular-devkit/core/src/utils/literals';
 import { initRootBabelConfig } from '../utils/rules';
 import { addDepsToPackageJson, formatFiles } from '@nrwl/workspace';
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
 
 let addedEmotionPreset = false;
 
@@ -22,10 +22,10 @@ let addedEmotionPreset = false;
  * - For any projects that are not migrated, display a message so users are not surprised.
  */
 export default function update(): Rule {
-  return (host: Tree, context: SchematicContext) => {
+  return async (host: Tree, context: SchematicContext) => {
     const updates = [];
     const conflicts: Array<[string, string]> = [];
-    const projectGraph = createProjectGraph(undefined, undefined, undefined);
+    const projectGraph = await createProjectGraphAsync();
     if (host.exists('/babel.config.json')) {
       context.logger.info(
         `

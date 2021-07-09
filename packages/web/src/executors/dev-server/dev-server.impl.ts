@@ -20,7 +20,7 @@ import {
   calculateProjectDependencies,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
 
 export interface WebDevServerOptions {
   host: string;
@@ -41,7 +41,7 @@ export interface WebDevServerOptions {
   baseHref?: string;
 }
 
-export default function devServerExecutor(
+export default async function* devServerExecutor(
   serveOptions: WebDevServerOptions,
   context: ExecutorContext
 ) {
@@ -67,7 +67,7 @@ export default function devServerExecutor(
   }
 
   if (!buildOptions.buildLibsFromSource) {
-    const projGraph = createProjectGraph();
+    const projGraph = await createProjectGraphAsync();
     const { target, dependencies } = calculateProjectDependencies(
       projGraph,
       context.root,
@@ -83,7 +83,7 @@ export default function devServerExecutor(
     );
   }
 
-  return eachValueFrom(
+  return yield* eachValueFrom(
     runWebpackDevServer(webpackConfig, webpack, WebpackDevServer).pipe(
       tap(({ stats }) => {
         console.info(stats.toString(webpackConfig.stats));

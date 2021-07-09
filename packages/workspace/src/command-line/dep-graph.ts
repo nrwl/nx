@@ -12,7 +12,7 @@ import { URL } from 'url';
 import { workspaceLayout } from '../core/file-utils';
 import { defaultFileHasher } from '../core/hasher/file-hasher';
 import {
-  createProjectGraph,
+  createProjectGraphAsync,
   onlyWorkspaceProjects,
   ProjectGraph,
   ProjectGraphDependency,
@@ -71,7 +71,7 @@ const nxDepsDir = cacheDirectory(
   readCacheDirectoryProperty(appRootPath)
 );
 
-function projectsToHtml(
+async function projectsToHtml(
   projects: ProjectGraphNode[],
   graph: ProjectGraph,
   affected: string[],
@@ -122,7 +122,7 @@ function projectsToHtml(
   }
 
   if (localMode === 'build') {
-    currentDepGraphClientResponse = createDepGraphClientResponse();
+    currentDepGraphClientResponse = await createDepGraphClientResponse();
     f = f.replace(
       `window.projectGraphResponse = null`,
       `window.projectGraphResponse = ${JSON.stringify(
@@ -200,7 +200,7 @@ function filterGraph(
   return filteredGraph;
 }
 
-export function generateGraph(
+export async function generateGraph(
   args: {
     file?: string;
     host?: string;
@@ -211,8 +211,8 @@ export function generateGraph(
     watch?: boolean;
   },
   affectedProjects: string[]
-): void {
-  let graph = onlyWorkspaceProjects(createProjectGraph());
+): Promise<void> {
+  let graph = onlyWorkspaceProjects(await createProjectGraphAsync());
   const layout = workspaceLayout();
 
   const projects = Object.values(graph.nodes) as ProjectGraphNode[];
@@ -251,7 +251,7 @@ export function generateGraph(
   let html: string;
 
   if (!args.file || args.file.endsWith('html')) {
-    html = projectsToHtml(
+    html = await projectsToHtml(
       projects,
       graph,
       affectedProjects,
@@ -293,7 +293,7 @@ export function generateGraph(
         },
       });
 
-      currentDepGraphClientResponse = createDepGraphClientResponse();
+      currentDepGraphClientResponse = await createDepGraphClientResponse();
 
       html = html.replace(/src="/g, 'src="static/');
       html = html.replace(/href="styles/g, 'href="static/styles');
@@ -329,7 +329,7 @@ export function generateGraph(
       process.exit(1);
     }
   } else {
-    startServer(
+    await startServer(
       html,
       args.host || '127.0.0.1',
       args.port || 4211,
@@ -342,7 +342,7 @@ export function generateGraph(
   }
 }
 
-function startServer(
+async function startServer(
   html: string,
   host: string,
   port = 4211,
@@ -356,7 +356,7 @@ function startServer(
     startWatcher();
   }
 
-  currentDepGraphClientResponse = createDepGraphClientResponse();
+  currentDepGraphClientResponse = await createDepGraphClientResponse();
   currentDepGraphClientResponse.affected = affected;
   currentDepGraphClientResponse.focus = focus;
   currentDepGraphClientResponse.groupByFolder = groupByFolder;
@@ -453,10 +453,10 @@ function getIgnoredGlobs(root: string) {
 }
 
 function startWatcher() {
-  createFileWatcher(appRootPath, () => {
+  createFileWatcher(appRootPath, async () => {
     output.note({ title: 'Recalculating dependency graph...' });
 
-    const newGraphClientResponse = createDepGraphClientResponse();
+    const newGraphClientResponse = await createDepGraphClientResponse();
 
     if (newGraphClientResponse.hash !== currentDepGraphClientResponse.hash) {
       output.note({ title: 'Graph changes updated.' });
@@ -480,7 +480,7 @@ function debounce(fn: (...args) => void, time: number) {
   };
 }
 
-function createFileWatcher(root: string, changeHandler: () => void) {
+function createFileWatcher(root: string, changeHandler: () => Promise<void>) {
   const ignoredGlobs = getIgnoredGlobs(root);
   const layout = workspaceLayout();
 
@@ -496,20 +496,20 @@ function createFileWatcher(root: string, changeHandler: () => void) {
   );
   watcher.on(
     'all',
-    debounce((event: string, path: string) => {
+    debounce(async (event: string, path: string) => {
       if (ignoredGlobs.ignores(path)) return;
-      changeHandler();
+      await changeHandler();
     }, 500)
   );
   return { close: () => watcher.close() };
 }
 
-function createDepGraphClientResponse(): DepGraphClientResponse {
+async function createDepGraphClientResponse(): Promise<DepGraphClientResponse> {
   performance.mark('dep graph watch calculation:start');
   defaultFileHasher.clear();
   defaultFileHasher.init();
 
-  let graph = onlyWorkspaceProjects(createProjectGraph());
+  let graph = onlyWorkspaceProjects(await createProjectGraphAsync());
   performance.mark('dep graph watch calculation:end');
   performance.mark('dep graph response generation:start');
 
