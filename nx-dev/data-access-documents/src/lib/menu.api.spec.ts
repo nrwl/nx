@@ -1,27 +1,9 @@
 import { MenuApi } from './menu.api';
-import {
-  DocumentMetadata,
-  DocumentsApi,
-} from '@nrwl/nx-dev/data-access-documents';
-import { join } from 'path';
-import * as fs from 'fs';
-
-const archiveRootPath = join(
-  process.env.WORKSPACE_ROOT,
-  'nx-dev/nx-dev/public/documentation'
-);
-const documentsCache = new Map<string, DocumentMetadata[]>([
-  ['latest', readJsonFile(join(archiveRootPath, 'latest', 'map.json'))],
-  ['previous', readJsonFile(join(archiveRootPath, 'previous', 'map.json'))],
-]);
-const versionsData = readJsonFile(join(archiveRootPath, 'versions.json'));
-
-function readJsonFile(f) {
-  return JSON.parse(fs.readFileSync(f).toString());
-}
+import { DocumentsApi } from '@nrwl/nx-dev/data-access-documents';
+import { createDocumentApiOptions } from './test-utils';
 
 describe('MenuApi', () => {
-  const docsApi = new DocumentsApi(versionsData, documentsCache);
+  const docsApi = new DocumentsApi(createDocumentApiOptions());
   const api = new MenuApi(docsApi);
 
   describe('getMenu', () => {

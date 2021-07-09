@@ -6,6 +6,52 @@
     "build": {
       "dependsOn": [
         {
+          "target": "build-base",
+          "projects": "self"
+        },
+        {
+          "target": "copy-preview",
+          "projects": "self"
+        },
+        {
+          "target": "sitemap",
+          "projects": "self"
+        }
+      ],
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "echo Build complete!"
+      }
+    },
+    "sitemap": {
+      "dependsOn": [
+        {
+          "target": "copy-preview",
+          "projects": "self"
+        }
+      ],
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["dist/nx-dev/nx-dev/public"],
+      "options": {
+        "command": "npx next-sitemap --config ./nx-dev/nx-dev/next-sitemap.js"
+      }
+    },
+    "copy-preview": {
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "projects": "self"
+        }
+      ],
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["dist/nx-dev/nx-dev/public"],
+      "options": {
+        "command": "rm -rf dist/nx-dev/nx-dev/public/documentation/preview && cp -r docs dist/nx-dev/nx-dev/public/documentation/preview"
+      }
+    },
+    "build-base": {
+      "dependsOn": [
+        {
           "target": "build",
           "projects": "dependencies"
         }
@@ -51,12 +97,6 @@
       "options": {
         "jestConfig": "nx-dev/nx-dev/jest.config.js",
         "passWithNoTests": true
-      }
-    },
-    "sitemap": {
-      "executor": "@nrwl/workspace:run-commands",
-      "options": {
-        "command": "./node_modules/.bin/next-sitemap --config ./nx-dev/nx-dev/next-sitemap.js"
       }
     }
   },

@@ -11,7 +11,7 @@ export function transformImagePath({
 }): (src: string) => string {
   return (src) => {
     if (/\.(gif|jpe?g|tiff?|png|webp|bmp)$/i.test(src)) {
-      if (version === 'preview') {
+      if (!process.env.VERCEL && version === 'preview') {
         src = `/api/preview-asset?uri=${encodeURIComponent(
           src
         )}&document=${encodeURIComponent(document.filePath)}`;

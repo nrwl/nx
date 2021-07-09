@@ -1,10 +1,10 @@
-const { join } = require('path');
 // nx-ignore-next-line
 const withNx = require('@nrwl/next/plugins/with-nx');
 
 module.exports = withNx({
+  // For both client and server
   env: {
-    WORKSPACE_ROOT: join(__dirname, '../..'),
+    VERCEL: process.env.VERCEL,
   },
   async redirects() {
     // TODO(jack): Remove in Nx 13
