@@ -19,6 +19,10 @@ import {
 } from 'typescript';
 import { join } from 'path';
 
+function isUsingUtilityFunction(host: Tree) {
+  return host.read('jest.config.js').toString().includes('getJestProjects()');
+}
+
 /**
  * Updates the root jest config projects array and removes the project.
  */
@@ -31,7 +35,8 @@ export function updateJestConfig(
 
   if (
     !tree.exists('jest.config.js') ||
-    !tree.exists(join(projectConfig.root, 'jest.config.js'))
+    !tree.exists(join(projectConfig.root, 'jest.config.js')) ||
+    isUsingUtilityFunction(tree)
   ) {
     return;
   }

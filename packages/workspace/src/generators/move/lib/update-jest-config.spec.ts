@@ -66,8 +66,7 @@ describe('updateJestConfig', () => {
       `coverageDirectory: '../../coverage/libs/my-destination'`
     );
 
-    expect(rootJestConfigAfter).not.toContain('<rootDir>/libs/my-source');
-    expect(rootJestConfigAfter).toContain('<rootDir>/libs/my-destination');
+    expect(rootJestConfigAfter).toContain('getJestProjects()');
   });
 
   it('should update jest configs properly even if project is in many layers of subfolders', async () => {
