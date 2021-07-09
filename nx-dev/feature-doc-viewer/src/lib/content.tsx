@@ -13,7 +13,9 @@ import { CodeBlock } from './code-block';
 export interface ContentProps {
   document: DocumentData;
   flavor: string;
+  flavorList: string[];
   version: string;
+  versionList: string[];
 }
 
 interface ComponentsConfig {
@@ -58,8 +60,10 @@ export function Content(props: ContentProps) {
         ]}
         children={props.document.content}
         transformLinkUri={transformLinkPath({
-          flavor: props.flavor,
+          framework: props.flavor,
+          frameworkList: props.flavorList,
           version: props.version,
+          versionList: props.versionList,
         })}
         transformImageUri={transformImagePath({
           version: props.version,
