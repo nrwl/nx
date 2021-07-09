@@ -10,7 +10,7 @@ import { Tree } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from 'packages/devkit/src/tests/create-tree-with-empty-workspace';
 import update from './update-base-jest-config';
 
-describe('update 12.5.0', () => {
+describe('update 12.6.0', () => {
   let tree: Tree;
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
