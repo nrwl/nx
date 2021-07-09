@@ -2270,9 +2270,9 @@
             "file": "react/guides/nextjs-webpack5"
           },
           {
-            "name": "Installing TailwindCss in Web/React/Next.js Apps",
-            "id": "installing-tailwindcss-in-web-react-nextjs-apps",
-            "file": "react/guides/installing-tailwindcss-in-web-react-nextjs-apps"
+            "name": "Using Tailwind CSS in React",
+            "id": "using-tailwind-css-in-react",
+            "file": "react/guides/using-tailwind-css-in-react"
           }
         ]
       },
