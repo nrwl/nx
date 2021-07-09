@@ -1,6 +1,6 @@
 import { ExecutorContext } from '@nrwl/devkit';
 
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
@@ -27,7 +27,7 @@ export type NodeBuildEvent = {
   success: boolean;
 };
 
-export function buildExecutor(
+export async function* buildExecutor(
   rawOptions: BuildNodeBuilderOptions,
   context: ExecutorContext
 ) {
@@ -48,7 +48,7 @@ export function buildExecutor(
     sourceRoot,
     root
   );
-  const projGraph = createProjectGraph();
+  const projGraph = await createProjectGraphAsync();
   if (!options.buildLibsFromSource) {
     const { target, dependencies } = calculateProjectDependencies(
       projGraph,
@@ -86,7 +86,7 @@ export function buildExecutor(
     });
   }, getNodeWebpackConfig(options));
 
-  return eachValueFrom(
+  return yield* eachValueFrom(
     runWebpack(config, webpack).pipe(
       tap((stats) => {
         console.info(stats.toString(config.stats));

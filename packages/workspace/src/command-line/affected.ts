@@ -2,7 +2,7 @@ import * as yargs from 'yargs';
 import { filterAffected } from '../core/affected-project-graph';
 import { calculateFileChanges, readEnvironment } from '../core/file-utils';
 import {
-  createProjectGraph,
+  createProjectGraphAsync,
   onlyWorkspaceProjects,
   ProjectType,
   withDeps,
@@ -37,7 +37,7 @@ export async function affected(
 
   await connectToNxCloudUsingScan(nxArgs.scan);
 
-  const projectGraph = createProjectGraph();
+  const projectGraph = await createProjectGraphAsync();
   const projects = projectsToRun(nxArgs, projectGraph);
   const projectsNotExcluded = applyExclude(projects, nxArgs);
   const env = readEnvironment(nxArgs.target, projectsNotExcluded);
@@ -79,7 +79,7 @@ export async function affected(
 
       case 'dep-graph':
         const projectNames = filteredProjects.map((p) => p.name);
-        generateGraph(parsedArgs as any, projectNames);
+        await generateGraph(parsedArgs as any, projectNames);
         break;
 
       case 'print-affected':

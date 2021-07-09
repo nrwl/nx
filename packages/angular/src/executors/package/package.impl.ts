@@ -1,6 +1,6 @@
 import * as ng from '@angular/compiler-cli';
 import type { ExecutorContext } from '@nrwl/devkit';
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
 import type { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import {
   calculateProjectDependencies,
@@ -46,11 +46,11 @@ export function createLibraryExecutor(
     projectDependencies: DependentBuildableProjectNode[]
   ) => Promise<NgPackagr>
 ) {
-  return function (
+  return async function* (
     options: BuildAngularLibraryExecutorOptions,
     context: ExecutorContext
   ) {
-    const projGraph = createProjectGraph();
+    const projGraph = await createProjectGraphAsync();
     const { target, dependencies } = calculateProjectDependencies(
       projGraph,
       context.root,
@@ -87,7 +87,7 @@ export function createLibraryExecutor(
     }
 
     if (options.watch) {
-      return eachValueFrom(
+      return yield* eachValueFrom(
         from(initializeNgPackagr(options, context, dependencies)).pipe(
           switchMap((packagr) => packagr.watch()),
           tap(() => updatePackageJson()),

@@ -60,9 +60,10 @@ describe('Package executor', () => {
       buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock
     ).mockReturnValue(false);
 
-    const result = await packageExecutor(options, context);
+    const result = await packageExecutor(options, context).next();
 
-    expect(result).toEqual({ success: false });
+    expect(result.value).toEqual({ success: false });
+    expect(result.done).toBe(true);
   });
 
   it('should build the library when deps have been built', async () => {
@@ -70,10 +71,11 @@ describe('Package executor', () => {
       buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock
     ).mockReturnValue(true);
 
-    const result = await packageExecutor(options, context);
+    const result = await packageExecutor(options, context).next();
 
     expect(ngPackagrBuildMock).toHaveBeenCalled();
-    expect(result).toEqual({ success: true });
+    expect(result.value).toEqual({ success: true });
+    expect(result.done).toBe(true);
   });
 
   it('should process tsConfig for incremental builds when tsConfig options is set', async () => {
@@ -85,7 +87,7 @@ describe('Package executor', () => {
     const result = await packageExecutor(
       { ...options, tsConfig: tsConfigPath },
       context
-    );
+    ).next();
 
     expect(buildableLibsUtils.updatePaths).toHaveBeenCalledWith(
       expect.any(Array),
@@ -93,7 +95,8 @@ describe('Package executor', () => {
     );
     expect(ngPackagrWithTsConfigMock).toHaveBeenCalledWith(tsConfig);
     expect(ngPackagrBuildMock).toHaveBeenCalled();
-    expect(result).toEqual({ success: true });
+    expect(result.value).toEqual({ success: true });
+    expect(result.done).toBe(true);
   });
 
   describe('--watch', () => {
@@ -102,10 +105,7 @@ describe('Package executor', () => {
         buildableLibsUtils.checkDependentProjectsHaveBeenBuilt as jest.Mock
       ).mockReturnValue(true);
 
-      const results = packageExecutor(
-        { ...options, watch: true },
-        context
-      ) as AsyncIterableIterator<{ success: boolean }>;
+      const results = packageExecutor({ ...options, watch: true }, context);
 
       ngPackagerWatchSubject.next();
       let changes = 0;

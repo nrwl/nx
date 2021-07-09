@@ -4,7 +4,7 @@ import {
   parseTargetString,
   runExecutor,
 } from '@nrwl/devkit';
-import { createProjectGraph } from '@nrwl/workspace/src/core/project-graph';
+import { createProjectGraphAsync } from '@nrwl/workspace/src/core/project-graph';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
@@ -16,7 +16,7 @@ export async function* delegateBuildExecutor(
   options: DelegateBuildExecutorSchema,
   context: ExecutorContext
 ) {
-  const projGraph = createProjectGraph();
+  const projGraph = await createProjectGraphAsync();
 
   const { target, dependencies } = calculateProjectDependencies(
     projGraph,
