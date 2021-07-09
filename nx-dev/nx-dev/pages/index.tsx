@@ -19,9 +19,7 @@ export function Index() {
         <title>Nx: Smart, Extensible Build Framework</title>
         <meta
           name="description"
-          content="Nx is a smart and extensible build framework to help you architect, test,
-        and build at any scale — integrating seamlessly with modern technologies and libraries while providing a
-        distributed graph-based task execution, a robust CLI, computation caching, dependency management, and more."
+          content="Nx is a smart and extensible build framework for monorepos to help you architect, test, and build at any scale — integrating seamlessly with modern technologies and frameworks while providing a distributed graph-based task execution, computation caching, an advanced CLI, editor support, GitHub integration, and more. "
         />
         <meta
           name="twitter:title"
@@ -29,9 +27,7 @@ export function Index() {
         />
         <meta
           name="twitter:description"
-          content="Nx is a smart and extensible build framework to help you architect, test,
-        and build at any scale — integrating seamlessly with modern technologies and libraries while providing a
-        distributed graph-based task execution, a robust CLI, computation caching, dependency management, and more."
+          content="Nx is a smart and extensible build framework for monorepos to help you architect, test, and build at any scale — integrating seamlessly with modern technologies and frameworks while providing a distributed graph-based task execution, computation caching, an advanced CLI, editor support, GitHub integration, and more. "
         />
         <meta name="twitter:image" content="/images/nx-media.jpg" />
         <meta
@@ -41,9 +37,7 @@ export function Index() {
         <meta property="og:url" content="https://nx.dev" />
         <meta
           property="og:description"
-          content="Nx is a smart and extensible build framework to help you architect, test,
-        and build at any scale — integrating seamlessly with modern technologies and libraries while providing a
-        distributed graph-based task execution, a robust CLI, computation caching, dependency management, and more."
+          content="Nx is a smart and extensible build framework for monorepos to help you architect, test, and build at any scale — integrating seamlessly with modern technologies and frameworks while providing a distributed graph-based task execution, computation caching, an advanced CLI, editor support, GitHub integration, and more. "
         />
         <meta
           property="og:title"
@@ -254,9 +248,12 @@ export function Index() {
                 </div>
                 <div className="w-full sm:w-1/2 flex flex-col justify-center sm:pl-16 sm:pb-0 pb-10 mt-8 sm:mt-0">
                   <h2 className="text-xl sm:text-2xl lg:text-2xl leading-none font-extrabold tracking-tight mb-4">
-                    Distributed Graph-Based Task Execution and Computation
-                    Caching
+                    Best-in-Class Support for Monorepos
                   </h2>
+                  <p className="sm:text-lg mb-6">
+                    <span className="font-bold">Nx</span> provides distributed
+                    graph-based task execution and computation caching.
+                  </p>
                   <p className="sm:text-lg mb-6">
                     <span className="font-bold">Nx</span> is smart. It analyzes
                     your workspace and figures out what can be affected by every
