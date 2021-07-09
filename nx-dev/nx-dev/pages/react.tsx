@@ -249,7 +249,7 @@ export function ReactPage() {
                   <p className="sm:text-lg mb-6">
                     <span className="font-bold">Nx</span> partitions commands
                     into a graph of smaller tasks. Nx then runs those tasks in
-                    parallel, and
+                    parallel, and{' '}
                     <span className="font-bold">
                       it can even distribute them across many machines without
                       any configuration
