@@ -154,6 +154,7 @@ export function createTasksForProjectToRun(
   defaultDependencyConfigs: Record<string, TargetDependencyConfig[]> = {}
 ) {
   const tasksMap: Map<string, Task> = new Map<string, Task>();
+  const seenSet = new Set<string>();
 
   for (const project of projectsToRun) {
     addTasksForProjectTarget(
@@ -165,7 +166,8 @@ export function createTasksForProjectToRun(
       defaultDependencyConfigs,
       projectGraph,
       tasksMap,
-      []
+      [],
+      seenSet
     );
   }
   return Array.from(tasksMap.values());
@@ -182,7 +184,8 @@ function addTasksForProjectTarget(
   defaultDependencyConfigs: Record<string, TargetDependencyConfig[]> = {},
   projectGraph: ProjectGraph,
   tasksMap: Map<string, Task>,
-  path: string[]
+  path: string[],
+  seenSet: Set<string>
 ) {
   const task = createTask({
     project,
@@ -210,7 +213,8 @@ function addTasksForProjectTarget(
         defaultDependencyConfigs,
         projectGraph,
         tasksMap,
-        path
+        path,
+        seenSet
       );
     }
   }
@@ -266,13 +270,15 @@ function addTasksForProjectDependencyConfig(
   defaultDependencyConfigs: Record<string, TargetDependencyConfig[]>,
   projectGraph: ProjectGraph,
   tasksMap: Map<string, Task>,
-  path: string[]
+  path: string[],
+  seenSet: Set<string>
 ) {
   const targetIdentifier = getId({
     project: project.name,
     target,
     configuration,
   });
+  seenSet.add(project.name);
 
   if (path.includes(targetIdentifier)) {
     output.error({
@@ -302,7 +308,23 @@ function addTasksForProjectDependencyConfig(
           defaultDependencyConfigs,
           projectGraph,
           tasksMap,
-          [...path, targetIdentifier]
+          [...path, targetIdentifier],
+          seenSet
+        );
+      } else {
+        if (seenSet.has(dep.target)) {
+          continue;
+        }
+
+        addTasksForProjectDependencyConfig(
+          projectGraph.nodes[dep.target],
+          { target, configuration },
+          dependencyConfig,
+          defaultDependencyConfigs,
+          projectGraph,
+          tasksMap,
+          path,
+          seenSet
         );
       }
     }
@@ -318,7 +340,8 @@ function addTasksForProjectDependencyConfig(
       defaultDependencyConfigs,
       projectGraph,
       tasksMap,
-      [...path, targetIdentifier]
+      [...path, targetIdentifier],
+      seenSet
     );
   }
 }

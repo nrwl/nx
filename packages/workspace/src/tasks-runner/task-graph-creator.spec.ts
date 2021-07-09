@@ -294,6 +294,109 @@ describe('TaskGraphCreator', () => {
       expect(taskGraph).toMatchSnapshot();
     });
 
+    it('should create a task graph (builds depend on builds of dependencies even with intermediate projects)', () => {
+      delete projectGraph.nodes.common1.data.targets.build;
+      projectGraph.dependencies.common1.push({
+        type: DependencyType.static,
+        source: 'common1',
+        target: 'common2',
+      });
+
+      const tasks = createTasksForProjectToRun(
+        [projectGraph.nodes.app1],
+        {
+          target: 'build',
+          configuration: undefined,
+          overrides: {},
+        },
+        projectGraph,
+        null
+      );
+
+      const taskGraph = new TaskGraphCreator(projectGraph, {}).createTaskGraph(
+        tasks
+      );
+
+      expect(taskGraph).toMatchSnapshot();
+    });
+
+    it('should create a task graph (builds depend on builds of dependencies with intermediate projects and circular dependencies between projects)', () => {
+      delete projectGraph.nodes.common1.data.targets.build;
+      projectGraph.dependencies.common1.push({
+        type: DependencyType.static,
+        source: 'common1',
+        target: 'common2',
+      });
+
+      projectGraph.dependencies.common2.push({
+        type: DependencyType.static,
+        source: 'common2',
+        target: 'common1',
+      });
+
+      const tasks = createTasksForProjectToRun(
+        [projectGraph.nodes.app1],
+        {
+          target: 'build',
+          configuration: undefined,
+          overrides: {},
+        },
+        projectGraph,
+        null
+      );
+
+      const taskGraph = new TaskGraphCreator(projectGraph, {}).createTaskGraph(
+        tasks
+      );
+
+      expect(taskGraph).toMatchSnapshot();
+    });
+
+    it('should create a task graph (builds depend on builds of dependencies with intermediate projects and circular dependencies between projects) 2', () => {
+      delete projectGraph.nodes.common1.data.targets.build;
+      projectGraph.dependencies.common1.push({
+        type: DependencyType.static,
+        source: 'common1',
+        target: 'common2',
+      });
+
+      delete projectGraph.nodes.common2.data.targets.build;
+      projectGraph.dependencies.common2.push({
+        type: DependencyType.static,
+        source: 'common2',
+        target: 'common3',
+      });
+
+      projectGraph.nodes.common3 = {
+        name: 'common3',
+        type: 'lib',
+        data: {
+          root: 'common3',
+          targets: {
+            build: {},
+          },
+        },
+      };
+      projectGraph.dependencies.common3 = [];
+
+      const tasks = createTasksForProjectToRun(
+        [projectGraph.nodes.app1],
+        {
+          target: 'build',
+          configuration: undefined,
+          overrides: {},
+        },
+        projectGraph,
+        null
+      );
+
+      const taskGraph = new TaskGraphCreator(projectGraph, {}).createTaskGraph(
+        tasks
+      );
+
+      expect(taskGraph).toMatchSnapshot();
+    });
+
     it('should create task graph (builds depend on build of dependencies and prebuild of self)', () => {
       projectGraph.nodes.app1.data.targets.prebuild = {};
       projectGraph.nodes.app2.data.targets.prebuild = {};
