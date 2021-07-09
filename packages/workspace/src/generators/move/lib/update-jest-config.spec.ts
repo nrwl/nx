@@ -69,4 +69,52 @@ describe('updateJestConfig', () => {
     expect(rootJestConfigAfter).not.toContain('<rootDir>/libs/my-source');
     expect(rootJestConfigAfter).toContain('<rootDir>/libs/my-destination');
   });
+
+  it('should update jest configs properly even if project is in many layers of subfolders', async () => {
+    const jestConfig = `module.exports = {
+      name: 'some-test-dir-my-source',
+      preset: '../../jest.config.js',
+      coverageDirectory: '../../coverage/libs/some/test/dir/my-source',
+      snapshotSerializers: [
+        'jest-preset-angular/AngularSnapshotSerializer.js',
+        'jest-preset-angular/HTMLCommentSerializer.js'
+      ]
+    };`;
+    const jestConfigPath = '/libs/other/test/dir/my-destination/jest.config.js';
+
+    const rootJestConfigPath = '/jest.config.js';
+
+    await libraryGenerator(tree, {
+      name: 'some/test/dir/my-source',
+      standaloneConfig: false,
+    });
+    const projectConfig = readProjectConfiguration(
+      tree,
+      'some-test-dir-my-source'
+    );
+    tree.write(jestConfigPath, jestConfig);
+
+    const schema: Schema = {
+      projectName: 'some-test-dir-my-source',
+      destination: 'other/test/dir/my-destination',
+      importPath: undefined,
+      updateImportPath: true,
+    };
+
+    updateJestConfig(tree, schema, projectConfig);
+
+    const jestConfigAfter = tree.read(jestConfigPath, 'utf-8');
+    const rootJestConfigAfter = tree.read(rootJestConfigPath, 'utf-8');
+    expect(jestConfigAfter).toContain(`name: 'other-test-dir-my-destination'`);
+    expect(jestConfigAfter).toContain(
+      `coverageDirectory: '../../coverage/libs/other/test/dir/my-destination'`
+    );
+
+    expect(rootJestConfigAfter).not.toContain(
+      '<rootDir>/libs/some/test/dir/my-source'
+    );
+    expect(rootJestConfigAfter).toContain(
+      '<rootDir>/libs/other/test/dir/my-destination'
+    );
+  });
 });

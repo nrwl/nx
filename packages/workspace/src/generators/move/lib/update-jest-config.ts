@@ -1,4 +1,4 @@
-import { Tree, ProjectConfiguration, getWorkspaceLayout } from '@nrwl/devkit';
+import { Tree, ProjectConfiguration } from '@nrwl/devkit';
 
 import * as path from 'path';
 
@@ -44,11 +44,7 @@ export function updateJestConfig(
     return;
   }
 
-  const { libsDir, appsDir } = getWorkspaceLayout(tree);
-  const findProject = new RegExp(
-    `<rootDir>\/(${libsDir}|${appsDir})\/${schema.projectName}`,
-    'g'
-  );
+  const findProject = new RegExp(`<rootDir>\/${project.root}`, 'g');
 
   const oldRootJestConfigContent = tree.read(rootJestConfigPath, 'utf-8');
 
