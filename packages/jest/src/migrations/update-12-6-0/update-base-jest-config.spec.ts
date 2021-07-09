@@ -31,27 +31,19 @@ describe('update 12.5.0', () => {
     mockGetJestProjects.mockImplementation(() => ['<rootDir>/test-1']);
     await update(tree);
     const result = tree.read('jest.config.js').toString();
-    expect(result).toEqual(
-      `const { getJestProjects } = require('@nrwl/jest');
-
-module.exports = {
-  projects: getJestProjects(),
-};
-`
-    );
+    expect(result).toMatchInlineSnapshot(`
+      "module.exports = { projects: 'getJestProjects()' };
+      "
+    `);
   });
 
   test('some jest projects uncovered', async () => {
     mockGetJestProjects.mockImplementation(() => ['<rootDir>/test-2']);
     await update(tree);
     const result = tree.read('jest.config.js').toString();
-    expect(result).toBe(
-      `const { getJestProjects } = require('@nrwl/jest');
-
-module.exports = {
-  projects: [...getJestProjects(), '<rootDir>/test-1'],
-};
-`
-    );
+    expect(result).toMatchInlineSnapshot(`
+      "module.exports = { projects: \\"[...getJestProjects(), '<rootDir>/test-1', ]\\" };
+      "
+    `);
   });
 });

@@ -1,8 +1,10 @@
 import { formatFiles, Tree } from '@nrwl/devkit';
 import { jestConfigObject } from '../../utils/config/functions';
 import { getJestProjects } from '../../utils/config/get-jest-projects';
-
-const REPLACE_TOKEN = `$$REPLACE__ME$$`;
+import {
+  addPropertyToJestConfig,
+  removePropertyFromJestConfig,
+} from '../../utils/config/update-config';
 
 function determineUncoveredJestProjects(existingProjects: string[]) {
   const coveredJestProjects = (getJestProjects() as string[]).reduce(
@@ -32,16 +34,14 @@ function updateBaseJestConfig(
   const uncoveredJestProjects = determineUncoveredJestProjects(
     currentConfig.projects as string[]
   );
-  currentConfig.projects = REPLACE_TOKEN as any;
-  const contentsWithReplaceToken = `const { getJestProjects } = require('@nrwl/jest');
-
-module.exports = ${JSON.stringify(currentConfig, null, 2)};
-`;
-  const fullContents = contentsWithReplaceToken.replace(
-    `"${REPLACE_TOKEN}"`,
-    determineProjectsValue(uncoveredJestProjects)
+  removePropertyFromJestConfig(tree, baseJestConfigPath, 'projects');
+  addPropertyToJestConfig(
+    tree,
+    baseJestConfigPath,
+    'projects',
+    determineProjectsValue(uncoveredJestProjects),
+    { valueAsString: true }
   );
-  tree.write(baseJestConfigPath, fullContents);
   return;
 }
 
