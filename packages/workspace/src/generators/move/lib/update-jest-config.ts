@@ -1,4 +1,4 @@
-import { Tree, ProjectConfiguration } from '@nrwl/devkit';
+import { Tree, ProjectConfiguration, formatFiles } from '@nrwl/devkit';
 
 import * as path from 'path';
 
@@ -22,20 +22,19 @@ export function updateJestConfig(
 
   const jestConfigPath = path.join(destination, 'jest.config.js');
 
-  if (!tree.exists(jestConfigPath)) {
-    // nothing to do
-    return;
+  if (tree.exists(jestConfigPath)) {
+    console.log('config exists');
+    const oldContent = tree.read(jestConfigPath, 'utf-8');
+    console.log('oldContent', oldContent);
+
+    const findName = new RegExp(`'${schema.projectName}'`, 'g');
+    const findDir = new RegExp(project.root, 'g');
+
+    const newContent = oldContent
+      .replace(findName, `'${newProjectName}'`)
+      .replace(findDir, destination);
+    tree.write(jestConfigPath, newContent);
   }
-
-  const oldContent = tree.read(jestConfigPath, 'utf-8');
-
-  const findName = new RegExp(`'${schema.projectName}'`, 'g');
-  const findDir = new RegExp(project.root, 'g');
-
-  const newContent = oldContent
-    .replace(findName, `'${newProjectName}'`)
-    .replace(findDir, destination);
-  tree.write(jestConfigPath, newContent);
 
   // update root jest.config.js
   const rootJestConfigPath = '/jest.config.js';
@@ -44,13 +43,17 @@ export function updateJestConfig(
     return;
   }
 
-  const findProject = new RegExp(`<rootDir>\/${project.root}`, 'g');
+  console.log(project.root);
+  const findProject = `'<rootDir>/${project.root}'`;
 
   const oldRootJestConfigContent = tree.read(rootJestConfigPath, 'utf-8');
+  const usingJestProjects =
+    oldRootJestConfigContent.includes('getJestProjects()');
+  console.log(usingJestProjects);
 
   const newRootJestConfigContent = oldRootJestConfigContent.replace(
     findProject,
-    `<rootDir>/${destination}`
+    usingJestProjects ? `` : `'<rootDir>/${destination}'`
   );
 
   tree.write(rootJestConfigPath, newRootJestConfigContent);
