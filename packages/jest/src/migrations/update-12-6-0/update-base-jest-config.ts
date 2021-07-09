@@ -31,6 +31,9 @@ function updateBaseJestConfig(
   tree: Tree,
   baseJestConfigPath = 'jest.config.js'
 ) {
+  if (tree.read('/jest.config.js', 'utf-8').includes('getJestProjects()')) {
+    return;
+  }
   const currentConfig = jestConfigObject(tree, baseJestConfigPath);
   const uncoveredJestProjects = determineUncoveredJestProjects(
     currentConfig.projects as string[]
