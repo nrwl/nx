@@ -36,11 +36,7 @@ export function getArgsDefaultValue(property: ts.SyntaxKind): string {
 
 export function createComponentStoriesFile(
   host: Tree,
-  {
-    // name,
-    project,
-    componentPath,
-  }: CreateComponentStoriesFileSchema
+  { project, componentPath }: CreateComponentStoriesFileSchema
 ) {
   const proj = getProjects(host).get(project);
   const sourceRoot = proj.sourceRoot;
@@ -98,16 +94,29 @@ export function createComponentStoriesFile(
     name: string;
     defaultValue: any;
   }[] = [];
+  let argTypes: {
+    name: string;
+    type: string;
+    actionText: string;
+  }[] = [];
 
   if (propsInterface) {
     propsTypeName = propsInterface.name.text;
-
     props = propsInterface.members.map((member: ts.PropertySignature) => {
-      return {
-        name: (member.name as ts.Identifier).text,
-        defaultValue: getArgsDefaultValue(member.type.kind),
-      };
+      if (member.type.kind === ts.SyntaxKind.FunctionType) {
+        argTypes.push({
+          name: (member.name as ts.Identifier).text,
+          type: 'action',
+          actionText: `${(member.name as ts.Identifier).text} executed!`,
+        });
+      } else {
+        return {
+          name: (member.name as ts.Identifier).text,
+          defaultValue: getArgsDefaultValue(member.type.kind),
+        };
+      }
     });
+    props = props.filter((p) => p && p.defaultValue !== undefined);
   }
 
   generateFiles(
@@ -118,6 +127,7 @@ export function createComponentStoriesFile(
       componentFileName: name,
       propsTypeName,
       props,
+      argTypes,
       componentName: (cmpDeclaration as any).name.text,
       isPlainJs,
       fileExt,

@@ -217,6 +217,67 @@ describe('react:component-story', () => {
       });
     });
 
+    describe('component with props and actions', () => {
+      beforeEach(async () => {
+        appTree.write(
+          cmpPath,
+          `import React from 'react';
+  
+          import './test.scss';
+
+          export type ButtonStyle = 'default' | 'primary' | 'warning';
+          
+          export interface TestProps {
+            name: string;
+            displayAge: boolean;
+            someAction: (e: unknown) => void;
+            style: ButtonStyle;
+          }
+          
+          export const Test = (props: TestProps) => {
+            return (
+              <div>
+                <h1>Welcome to test component, {props.name}</h1>
+                <button onClick={props.someAction}>Click me!</button>
+              </div>
+            );
+          };
+          
+          export default Test;        
+          `
+        );
+
+        await componentStoryGenerator(appTree, {
+          componentPath: 'lib/test-ui-lib.tsx',
+          project: 'test-ui-lib',
+        });
+      });
+
+      it('should setup controls based on the component props', () => {
+        expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
+          .toContain(formatFile`
+            import { Story, Meta } from '@storybook/react';
+            import { Test, TestProps } from './test-ui-lib';
+
+            export default {
+              component: Test,
+              title: 'Test',
+              argTypes: {
+                someAction: { action: 'someAction executed!' },
+              },
+            } as Meta;
+
+            const Template: Story<TestProps> = (args) => <Test {...args} />;
+
+            export const Primary = Template.bind({});
+            Primary.args = {
+              name: '',
+              displayAge: false,
+            };
+          `);
+      });
+    });
+
     [
       {
         name: 'default export function',

@@ -3,7 +3,11 @@ import<% if ( !isPlainJs ) { %> { <% } %> <%= componentName %><% if ( propsTypeN
 
 export default {
   component: <%= componentName %>,
-  title: '<%= componentName %>'
+  title: '<%= componentName %>',<% if ( argTypes && argTypes.length > 0 ) { %> 
+  argTypes: {<% for (let argType of argTypes) { %>
+    <%= argType.name %>: { <%- argType.type %> : "<%- argType.actionText %>" },<% } %>
+}
+   <% } %> 
 }<% if ( !isPlainJs ) { %> as Meta <% } %>;
 
 const Template<% if ( !isPlainJs ) { %>: Story<<%= propsTypeName %>><% } %> = (args) => <<%= componentName %> {...args} />;
