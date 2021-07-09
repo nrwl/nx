@@ -32,7 +32,7 @@ describe('update 12.5.0', () => {
     await update(tree);
     const result = tree.read('jest.config.js').toString();
     expect(result).toMatchInlineSnapshot(`
-      "module.exports = { projects: 'getJestProjects()' };
+      "module.exports = { projects: getJestProjects() };
       "
     `);
   });
@@ -42,7 +42,7 @@ describe('update 12.5.0', () => {
     await update(tree);
     const result = tree.read('jest.config.js').toString();
     expect(result).toMatchInlineSnapshot(`
-      "module.exports = { projects: \\"[...getJestProjects(), '<rootDir>/test-1', ]\\" };
+      "module.exports = { projects: [...getJestProjects(), '<rootDir>/test-1'] };
       "
     `);
   });
