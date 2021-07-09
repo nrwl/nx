@@ -1,5 +1,4 @@
 import { formatFiles, getProjects, Tree, updateJson } from '@nrwl/devkit';
-import { eslintConfigNextVersion } from '../../utils/versions';
 
 export async function addNextEslint(host: Tree) {
   const projects = getProjects(host);
@@ -30,15 +29,6 @@ export async function addNextEslint(host: Tree) {
       eslintConfig.env.jest = true;
       return eslintConfig;
     });
-  });
-
-  updateJson(host, 'package.json', (packageJsonContents) => {
-    if (!packageJsonContents.devDependencies) {
-      packageJsonContents.devDependencies = {};
-    }
-    packageJsonContents.devDependencies['eslint-config-next'] =
-      eslintConfigNextVersion;
-    return packageJsonContents;
   });
 
   await formatFiles(host);

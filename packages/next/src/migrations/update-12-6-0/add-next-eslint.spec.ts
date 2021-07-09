@@ -203,12 +203,4 @@ describe('Add next eslint 12.6.0', () => {
       'plugin:@nrwl/nx/react'
     );
   });
-
-  it('should add eslint-config-next to dev dependencies', async () => {
-    await addNextEslint(tree);
-
-    expect(
-      readJson(tree, 'package.json').devDependencies['eslint-config-next']
-    ).toBeTruthy();
-  });
 });

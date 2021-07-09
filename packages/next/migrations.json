@@ -132,6 +132,10 @@
         "next": {
           "version": "11.0.1",
           "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "11.0.1",
+          "addToPackageJson": "devDependencies"
         }
       }
     }
