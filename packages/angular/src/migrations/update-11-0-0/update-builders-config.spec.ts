@@ -72,25 +72,32 @@ describe('11.0.0 Migration: Update Builders Config', () => {
 
     const workspace = await getWorkspace(result);
 
-    expect(workspace.projects.get('app1').targets.get('build').options).toEqual(
-      {
-        main: 'main.ts',
-        scripts: [
-          'scripts.ts',
-          {
-            input: 'more-scripts.ts',
-            inject: false,
-          },
-        ],
-        styles: [
-          'styles.scss',
-          {
-            input: 'more-styles.scss',
-            inject: false,
-          },
-        ],
-      }
-    );
+    const proxyOptions = workspace.projects
+      .get('app1')
+      .targets.get('build').options;
+    const options = {
+      ...proxyOptions,
+      styles: [...(proxyOptions.styles as any[])],
+      scripts: [...(proxyOptions.scripts as any[])],
+    };
+    const expected = {
+      main: 'main.ts',
+      styles: [
+        'styles.scss',
+        {
+          input: 'more-styles.scss',
+          inject: false,
+        },
+      ],
+      scripts: [
+        'scripts.ts',
+        {
+          input: 'more-scripts.ts',
+          inject: false,
+        },
+      ],
+    };
+    expect(options).toEqual(expected);
   });
 
   it('should update the library build configuration', async () => {
