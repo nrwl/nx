@@ -1,4 +1,4 @@
-import { Tree, ProjectConfiguration, formatFiles } from '@nrwl/devkit';
+import { Tree, ProjectConfiguration } from '@nrwl/devkit';
 
 import * as path from 'path';
 
