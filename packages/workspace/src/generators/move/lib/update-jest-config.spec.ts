@@ -137,11 +137,7 @@ describe('updateJestConfig', () => {
       updateImportPath: true,
     };
 
-    console.log(tree.read(rootJestConfigPath, 'utf-8'));
-
     updateJestConfig(tree, schema, projectConfig);
-
-    console.log('after', tree.read(rootJestConfigPath, 'utf-8'));
 
     const rootJestConfigAfter = tree.read(rootJestConfigPath, 'utf-8');
     expect(rootJestConfigAfter).not.toContain(
