@@ -85,3 +85,15 @@ export function removePropertyFromJestConfig(
     console.log(`Please manually update ${path}`);
   }
 }
+
+export function addImportStatementToJestConfig(
+  host: Tree,
+  path: string,
+  importStatement: string
+) {
+  const currentContents = host.read(path, 'utf-8');
+  const newContents = `${importStatement}
+  
+${currentContents}`;
+  host.write(path, newContents);
+}

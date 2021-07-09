@@ -2,6 +2,7 @@ import { formatFiles, Tree } from '@nrwl/devkit';
 import { jestConfigObject } from '../../utils/config/functions';
 import { getJestProjects } from '../../utils/config/get-jest-projects';
 import {
+  addImportStatementToJestConfig,
   addPropertyToJestConfig,
   removePropertyFromJestConfig,
 } from '../../utils/config/update-config';
@@ -41,6 +42,11 @@ function updateBaseJestConfig(
     'projects',
     determineProjectsValue(uncoveredJestProjects),
     { valueAsString: true }
+  );
+  addImportStatementToJestConfig(
+    tree,
+    baseJestConfigPath,
+    `const { getJestProjects } = require('@nrwl/jest');`
   );
   return;
 }
