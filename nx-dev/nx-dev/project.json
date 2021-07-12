@@ -20,6 +20,8 @@
       ],
       "executor": "@nrwl/workspace:run-commands",
       "options": {
+        "root": "nx-dev/nx-dev",
+        "outputPath": "dist/nx-dev/nx-dev",
         "command": "echo Build complete!"
       }
     },
