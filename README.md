@@ -19,7 +19,7 @@ width="100%" alt="Nx - Smart, Extensible Build Framework"></p>
 
 🔎 **Smart, Extensible Build Framework**
 
-Nx is a smart and extensible build framework to help you architect, test, and build at any scale — integrating seamlessly with modern technologies and frameworks while providing a distributed graph-based task execution, computation caching, an advanced CLI, editor support, GitHub integration, and more.
+Nx is a smart and extensible build framework to help you architect, test, and build at any scale — integrating seamlessly with modern technologies and frameworks while providing a distributed graph-based task execution, computation caching, smart rebuilds of affected projects, powerful code generators, editor support, GitHub apps, and more.
 
 ### Best-in-Class Support for Monorepos
 
