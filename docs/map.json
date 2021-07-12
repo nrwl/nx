@@ -2268,6 +2268,11 @@
             "name": "Webpack 5 Migration",
             "id": "webpack-5",
             "file": "shared/guides/webpack-5"
+          },
+          {
+            "name": "Using Tailwind CSS in React",
+            "id": "using-tailwind-css-in-react",
+            "file": "react/guides/using-tailwind-css-in-react"
           }
         ]
       },
