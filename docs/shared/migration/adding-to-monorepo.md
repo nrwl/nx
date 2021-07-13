@@ -1,4 +1,4 @@
-# Next Steps After Adding Nx to Monorepo
+# Adding Nx to Lerna/Yarn/PNPM Workspace
 
 If you have a monorepo that is powered by Lerna, Yarn, PNPM, or NPM, you can transform it into an Nx workspace by
 running this command: `npx add-nx-to-monorepo`.
@@ -13,6 +13,8 @@ See it in action (3-minute video):
 2. Create `workspace.json` and `nx.json` listing all the projects in the workspace
 3. Set up a `tsconfig` file mapping all projects in there
 4. Set up Nx Cloud (if you say "yes")
+
+> If you are familiar with Lerna or Yarn workspaces, check out [this guide](/{{framework}}/guides/lerna-and-nx) (with a 10-min video) showing how to add Nx to a Lerna/Yarn workspace, what the difference is, when to use both and when to use just Nx
 
 ## What You Get Right Away
 
@@ -56,7 +58,7 @@ happens in your PRs.
 All this works without your having to change your repo in any way. Whatever setup you have still works the same way but
 faster and with better dev ergonomics. But Nx enables much more than that.
 
-Nx is like a VS Code of build tools. It has a very powerful core but it's really the plugins and extra capabilities that
+Nx is like a VS Code of build tools. It has a very powerful core, but it's really the plugins and extra capabilities that
 really transform how you develop.
 
 Nx has first class support for React, Next.js, Gatsby, React Native, Angular, Node, NestJS, Jest, Cypress, Storybook and

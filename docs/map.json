@@ -131,7 +131,7 @@
             "id": "migration-angularjs"
           },
           {
-            "name": "Adding to Monorepo",
+            "name": "Lerna/Yarn/PNPM",
             "id": "adding-to-monorepo",
             "file": "shared/migration/adding-to-monorepo"
           },
@@ -1292,7 +1292,7 @@
             "id": "migration-cra"
           },
           {
-            "name": "Adding to Monorepo",
+            "name": "Lerna/Yarn/PNPM",
             "id": "adding-to-monorepo",
             "file": "shared/migration/adding-to-monorepo"
           },
@@ -2417,7 +2417,7 @@
             "file": "shared/migration/overview"
           },
           {
-            "name": "Adding to Monorepo",
+            "name": "Lerna/Yarn/PNPM",
             "id": "adding-to-monorepo",
             "file": "shared/migration/adding-to-monorepo"
           },
