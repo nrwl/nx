@@ -1089,6 +1089,11 @@
         "id": "guides",
         "itemList": [
           {
+            "name": "Lerna/Yarn and Nx",
+            "id": "lerna-and-nx",
+            "file": "shared/guides/lerna-and-nx"
+          },
+          {
             "name": "Using NgRx",
             "id": "misc-ngrx"
           },
@@ -2230,6 +2235,11 @@
         "id": "guides",
         "itemList": [
           {
+            "name": "Lerna/Yarn and Nx",
+            "id": "lerna-and-nx",
+            "file": "shared/guides/lerna-and-nx"
+          },
+          {
             "name": "Adding Images, Fonts, and Files",
             "id": "adding-assets-react",
             "file": "react/guides/adding-assets"
@@ -3342,6 +3352,11 @@
         "name": "Guides",
         "id": "guides",
         "itemList": [
+          {
+            "name": "Lerna/Yarn and Nx",
+            "id": "lerna-and-nx",
+            "file": "shared/guides/lerna-and-nx"
+          },
           {
             "name": "Using Nx at Enterprises",
             "id": "monorepo-nx-enterprise",
