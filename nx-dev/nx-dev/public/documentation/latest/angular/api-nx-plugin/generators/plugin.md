@@ -32,6 +32,12 @@ nx g plugin my-plugin --directory=plugins --importPath=@myorg/my-plugin
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+Plugin name
+
 ### directory
 
 Alias(es): d
@@ -55,12 +61,6 @@ Type: `string`
 Possible values: `eslint`, `tslint`
 
 The tool to use for running lint checks.
-
-### name
-
-Type: `string`
-
-Plugin name
 
 ### skipFormat
 

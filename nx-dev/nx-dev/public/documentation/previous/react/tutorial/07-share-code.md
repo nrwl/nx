@@ -74,7 +74,7 @@ export function addTodoRoutes(app: Express) {
 
 **Next import the interface in `apps/todos/src/app/app.tsx`:**
 
-```typescript
+```typescript jsx
 import React, { useEffect, useState } from 'react';
 import { Todo } from '@myorg/data';
 

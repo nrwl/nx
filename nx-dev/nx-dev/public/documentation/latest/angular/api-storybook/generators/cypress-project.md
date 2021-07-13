@@ -24,6 +24,12 @@ nx g cypress-project ... --dry-run
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+Library or application name
+
 ### directory
 
 Type: `string`
@@ -47,12 +53,6 @@ Type: `string`
 Possible values: `eslint`, `tslint`, `none`
 
 The tool to use for running lint checks.
-
-### name
-
-Type: `string`
-
-Library or application name
 
 ### standaloneConfig
 

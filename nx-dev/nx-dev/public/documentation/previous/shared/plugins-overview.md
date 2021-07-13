@@ -39,4 +39,4 @@ Use the `nx list` command to see installed and available plugins. Both Nrwl main
 
 ## See Also
 
-[Nx Community Plugins](/community)
+[Nx Community Plugins](/nx-community)

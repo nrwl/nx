@@ -24,6 +24,12 @@ nx g stories ... --dry-run
 
 ## Options
 
+### project (_**required**_)
+
+Type: `string`
+
+Library or application name
+
 ### cypressProject
 
 Type: `string`
@@ -43,9 +49,3 @@ Default: `false`
 Type: `boolean`
 
 Generate JavaScript files rather than TypeScript files.
-
-### project
-
-Type: `string`
-
-Library or application name

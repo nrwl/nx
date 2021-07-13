@@ -1,14 +1,12 @@
-# Angular Nx Tutorial - Step 5: Add Node Application Implementing API
-
-## Nx.dev Tutorial | Angular | Step 5: Add Node Application Implementing API
+# Angular Nx Tutorial - Step 5: Add Node Application Implementing an API
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/SsCx2WErVTI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 The requests fail because the API has not been created yet. Using Nx you can develop node applications next to your Angular applications. You can use same commands to run and test them. You can share code between the backend and the frontend. Use this capability to implement the API service.
 
-## Add NestJS Plugin to Your Workspace
+## Add NestJS plugin to your workspace
 
-Nx is an open platform with plugins for many modern tools and frameworks. **To see some plugins, run `nx list`:**
+Nx is an extensible framework with plugins for many modern tools and frameworks. **To see some plugins, run `nx list`:**
 
 ```bash
 >  NX  Installed plugins:
@@ -61,7 +59,7 @@ yarn add --dev @nrwl/nest
 
 > `@nrwl/nest` also added `@nrwl/node`. Run `nx list @nrwl/nest` and `nx list @nrwl/node` to see what those plugins provide.
 
-## Create a NestJS Application
+## Create a NestJS application
 
 **Run the following to generate a new Nest application:**
 
@@ -69,7 +67,7 @@ yarn add --dev @nrwl/nest
 npx nx g @nrwl/nest:app api --frontendProject=todos
 ```
 
-Nx will ask you a few questions, and, as with the Angular application, the defaults will work well here.
+Nx asks you a few questions, and, as with the Angular application, the defaults work well here.
 
 After this is done, you should see something like this:
 

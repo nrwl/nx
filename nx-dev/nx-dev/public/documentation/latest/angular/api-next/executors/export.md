@@ -2,9 +2,9 @@
 
 Export a Next.js app. The exported application is located at dist/$outputPath/exported.
 
-Properties can be configured in angular.json when defining the executor, or when invoking it.
+Options can be configured in `angular.json` when defining the executor, or when invoking it.
 
-## Properties
+## Options
 
 ### buildLibsFromSource
 

@@ -2,6 +2,8 @@
 
 A monorepo is a single git repository that holds the source code for multiple applications and libraries, along with the tooling for them.
 
+> If you are familiar with Lerna or Yarn workspaces, check out [this guide](/{{framework}}/guides/lerna-and-nx) (with a quick video) showing how to add Nx to a Lerna/Yarn workspace, what the difference is, when to use both and when to use just Nx.
+
 ## What are the benefits of a monorepo?
 
 - **Shared code and visibility** - Keeps your code DRY across your entire organization. Reuse validation code, UI components, and types across the codebase. Reuse code between the backend, the frontend, and utility libraries.
