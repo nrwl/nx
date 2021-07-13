@@ -2,8 +2,6 @@
 
 Executors perform actions on your code. This can include building, linting, testing, serving and many other actions.
 
-Executors are written using `@nrwl/devkit` or `@angular-devkit`. Executors written with the `@angular-devkit` are called Builders.
-
 There are two main differences between an executor and a shell script or an npm script:
 
 1. Executors encourage a consistent methodology for performing similar actions on unrelated projects. i.e. A developer switching between teams can be confident that `nx build project2` will build `project2` with the default settings, just like `nx build project1` built `project1`.
