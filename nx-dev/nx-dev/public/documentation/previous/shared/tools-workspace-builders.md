@@ -201,7 +201,7 @@ export default async function (
 
 After your files are created, you can compile your builder with `tsc` (which should be available as long as you've installed Typescript globally: `npm i -g typescript`):
 
-```bash
+```sh
 tsc tools/builders/echo/impl
 ```
 
@@ -241,13 +241,13 @@ Note that the format of the `executor` string here is: `${Path to directory cont
 
 Finally, we may run our builder via the CLI as follows:
 
-```bash
+```sh
 nx run platform:echo
 ```
 
 To which we'll see the console output:
 
-```bash
+```sh
 > ng run platform:echo
 Executing "echo"...
 Hello World

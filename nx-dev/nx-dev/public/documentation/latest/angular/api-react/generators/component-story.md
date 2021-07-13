@@ -24,13 +24,13 @@ nx g component-story ... --dry-run
 
 ## Options
 
-### componentPath
+### componentPath (_**required**_)
 
 Type: `string`
 
 Relative path to the component file from the library root
 
-### project
+### project (_**required**_)
 
 Type: `string`
 

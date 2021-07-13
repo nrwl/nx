@@ -2,12 +2,12 @@
 
 Run an npm script using Nx
 
-Properties can be configured in workspace.json when defining the executor, or when invoking it.
+Options can be configured in `workspace.json` when defining the executor, or when invoking it.
 Read more about how to use executors and the CLI here: https://nx.dev/react/getting-started/nx-cli#running-tasks.
 
-## Properties
+## Options
 
-### script
+### script (_**required**_)
 
 Type: `string`
 

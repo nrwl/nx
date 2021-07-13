@@ -1,12 +1,10 @@
 # React Nx Tutorial - Step 5: Add Node Application Implementing API
 
-## Nx.dev Tutorial | React | Step 5: Add Node Application Implementing API
-
 <iframe width="560" height="315" src="https://www.youtube.com/embed/XgfknOqgxQ0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-The requests fail because the API has not been created yet. Using Nx you can develop node applications next to your React applications. You can use same commands to run and test them. You can share code between the backend and the frontend. Use this capability to implement the API service.
+The requests fail because the API has not been created yet. Using Nx you develop node applications next to your React applications. You can use same commands to run and test them. You share code between the backend and the frontend. Use this capability to implement the API service.
 
-## Add Express Plugin to Your Workspace
+## Add Express plugin to your workspace
 
 Nx is an open platform with plugins for many modern tools and frameworks. **To see some plugins, run `npx nx list`:**
 
@@ -39,7 +37,7 @@ Nx is an open platform with plugins for many modern tools and frameworks. **To s
   ...
 ```
 
-**Now run `npx nx list @nrwl/express`, and you will see:**
+**Now run `npx nx list @nrwl/express`, and you see:**
 
 ```bash
 >  NX   NOTE  @nrwl/express is not currently installed
@@ -61,7 +59,7 @@ yarn add --dev @nrwl/express
 
 > `@nrwl/express` also added `@nrwl/node`. Run `npx nx list @nrwl/express` and `npx nx list @nrwl/node` to see what those plugins provide.
 
-## Generate an Express Application
+## Generate an Express application
 
 **Run the following to generate a new Express application:**
 

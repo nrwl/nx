@@ -64,13 +64,13 @@ Depending on how your dev env is set up, the command above might result in `Comm
 
 To fix it, you can either install the `nx` cli globally by running:
 
-```bash
+```shell script
 npm install -g nx
 ```
 
 or
 
-```bash
+```shell script
 yarn global add nx
 ```
 
@@ -96,7 +96,7 @@ Every target uses a builder which actually runs this target. So targets are anal
 
 There are a lot of advantages to providing additional metadata to the build tool. For instance, you can introspect targets. `nx serve todos --help` results in:
 
-```bash
+```shell script
 nx run todos:serve [options,...]
 
 Options:
@@ -119,7 +119,7 @@ But, most importantly, it provides a holistic dev experience regardless of the t
 
 Now that the application is set up, run it locally via:
 
-```bash
+```shell script
 nx serve todos
 ```
 
