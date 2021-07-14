@@ -42,14 +42,6 @@ nx g @nrwl/workspace:remove my-feature-lib --forceRemove
 
 ## Options
 
-### projectName (_**required**_)
-
-Alias(es): project
-
-Type: `string`
-
-The name of the project to remove
-
 ### forceRemove
 
 Alias(es): force-remove
@@ -59,6 +51,14 @@ Default: `false`
 Type: `boolean`
 
 When true, forces removal even if the project is still in use.
+
+### projectName
+
+Alias(es): project
+
+Type: `string`
+
+The name of the project to remove
 
 ### skipFormat
 

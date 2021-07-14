@@ -14,7 +14,7 @@ Just `cd` into your Create-React-App (CRA) project and run the following command
 npx cra-to-nx
 ```
 
-Then just sit back and wait. After a while, take advantage of the [full magic of Nx](https://nx.dev/latest/react/getting-started/intro). Start from [the commands mentioned in this article](https://nx.dev/latest/react/migration/migration-cra#try-nx).
+Then just sit back and wait. After a while you will be able to take advantage of the [full magic of Nx](https://nx.dev/latest/react/getting-started/getting-started). You can start from [the commands mentioned in this article](https://nx.dev/latest/react/migration/migration-cra#try-nx).
 
 **Note:** The command will fail if you try execute it and you have uncommitted changes in your repository. Commit any local changes, and then try to run the command.
 
@@ -103,7 +103,7 @@ Open your `workspace.json` file and add the following things:
 
 1. In `projects.webapp.targets.build.options` add a new entry called `outputPath` with the value `dist/apps/webapp`:
 
-```json
+```
 // workspace.json
 {
   ...
@@ -122,7 +122,7 @@ Open your `workspace.json` file and add the following things:
 
 2. In the `projects.webapp.targets.build.outputs` array add the value `"{options.outputPath}"`:
 
-```json
+```
 // workspace.json
 {
   ...

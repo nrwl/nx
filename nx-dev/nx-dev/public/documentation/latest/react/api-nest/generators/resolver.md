@@ -1,6 +1,6 @@
 # resolver
 
-Run the `resolver` NestJS generator with Nx project support.
+Run the 'resolver' NestJs generator with Nx project support
 
 ## Usage
 
@@ -24,27 +24,13 @@ nx g resolver ... --dry-run
 
 ## Options
 
-### name (_**required**_)
-
-Type: `string`
-
-The name of the resolver.
-
-### project (_**required**_)
-
-Alias(es): p
-
-Type: `string`
-
-The Nest project to target.
-
 ### directory
 
 Alias(es): d,path
 
 Type: `string`
 
-Directory where the generated files are placed.
+Directory where the generated files are placed
 
 ### flat
 
@@ -54,21 +40,19 @@ Type: `boolean`
 
 Flag to indicate if a directory is created.
 
-### language
+### name
 
 Type: `string`
 
-Possible values: `js`, `ts`
+The name of generated generator
 
-Nest resolver language.
+### project
 
-### skipFormat
+Alias(es): p
 
-Default: `false`
+Type: `string`
 
-Type: `boolean`
-
-Skip formatting files.
+The nest project to target
 
 ### unitTestRunner
 
@@ -78,4 +62,4 @@ Type: `string`
 
 Possible values: `jest`, `none`
 
-Test runner to use for unit tests.
+Test runner to use for unit tests

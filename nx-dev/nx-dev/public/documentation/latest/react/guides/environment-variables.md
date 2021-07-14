@@ -4,10 +4,7 @@ Environment variables are global system variables accessible by all the processe
 
 ## How to Use
 
-It's important to note that NX will only include in the process:
-
-- default env vars such as: `NODE_ENV`
-- any environment variable prefixed with `NX_` such as: `NX_CUSTOM_VAR`
+It's important to note that NX will only include in the process default and NX prefixed env vars such as: `NODE_ENV` or `NX_CUSTOM_VAR`.
 
 Defining environment variables can vary between OSes. It’s also important to know that this is temporary for the life of the shell session.
 
@@ -69,17 +66,3 @@ If you want to load variables from `env` files other than the ones listed above:
 
 1. Use the [env-cmd](https://www.npmjs.com/package/env-cmd) package: `env-cmd -f .qa.env nx serve`
 2. Use the `envFile` option of the [run-commands](/{{framework}}/workspace/run-commands-executor#envfile) builder and execute your command inside of the builder
-
-## Using Environment Variables in index.html
-
-Nx supports interpolating environment variables into your `index.html` file for React and Web applications.
-
-To interpolate an environment variable named `NX_DOMAIN_NAME` into your `index.html`, surround it with `%` symbols like so:
-
-```html
-<html>
-  <body>
-    <p>The domain name is %NX_DOMAIN_NAME%.</p>
-  </body>
-</html>
-```

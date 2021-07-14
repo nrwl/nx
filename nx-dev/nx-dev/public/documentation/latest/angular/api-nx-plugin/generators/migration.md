@@ -32,22 +32,6 @@ nx g migration my-migration --project=my-plugin --version=1.0.0
 
 ## Options
 
-### project (_**required**_)
-
-Alias(es): p
-
-Type: `string`
-
-The name of the project.
-
-### version (_**required**_)
-
-Alias(es): v
-
-Type: `string`
-
-Version to use for the migration
-
 ### description
 
 Alias(es): d
@@ -71,3 +55,19 @@ Default: `false`
 Type: `boolean`
 
 Whether or not to include package.json updates
+
+### project
+
+Alias(es): p
+
+Type: `string`
+
+The name of the project.
+
+### version
+
+Alias(es): v
+
+Type: `string`
+
+Version to use for the migration

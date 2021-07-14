@@ -1,14 +1,16 @@
 # Node Nx Tutorial - Step 2: Display todos
 
+## Nx.dev Tutorial | Node | Step 2: Display Todos
+
 <iframe width="560" height="315" src="https://www.youtube.com/embed/I4-sO2LeVbU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-Great! you now have a server application set up to show some data when going to the `/api` route.
+Great! We now have a server application set up to show some data when going to the `/api` route.
 
-Next, you're going to add a new service, and set up some server side templates.
+Next, we're going to add a new service, and set up some server side templates.
 
 ## Creating a todos service
 
-With Nx, you have the ability to scaffold out new code for your application. Create a Todos service and populate some todos!
+With Nx, we have the ability to scaffold out new code for our application. Let's create a Todos service and populate some todos!
 
 **Run `nx generate @nrwl/nest:service todo --project todos --directory app` to generate our new service**
 
@@ -44,13 +46,13 @@ export class TodosService {
 }
 ```
 
-> Usually services should call some kind of data source (like a database or even a file) but for this tutorial, just populate todos manually.
+> Usually services should call some kind of data source (like a database or even a file) but for our tutorial, we'll just populate todos manually.
 
-You now have your Todos service ready!
+We now have our Todos service ready!
 
 ## Install template engine
 
-In order to render some views, you need to install a template engine:
+In order to render some views, we'll need to install a template engine:
 
 ```bash
 yarn add hbs
@@ -62,7 +64,7 @@ or
 npm install --save hbs
 ```
 
-Once the installation process is complete, you need to configure the `main.ts` file with the following code:
+Once the installation process is complete, we need to configure the `main.ts` file with the following code:
 
 ```typescript
 import { Logger } from '@nestjs/common';
@@ -87,11 +89,11 @@ async function bootstrap() {
 bootstrap();
 ```
 
-You added configuration for setting up the view engine, and removed the `globalPrefix` option.
+We added configuration for setting up the view engine, and removed the `globalPrefix` option.
 
 ## Template rendering
 
-Under the `assets` directory of the todo's project, you create a `views` directory with an `index.hbs` file inside with the following content:
+Under the `assets` directory of the todo's project, we'll create a `views` directory with an `index.hbs` file inside with the following content:
 
 ```handlebars
 <!DOCTYPE html>
@@ -111,7 +113,7 @@ Under the `assets` directory of the todo's project, you create a `views` directo
 </html>
 ```
 
-Next, update the `app.controller.ts` file with the following:
+Next, we'll update the `app.controller.ts` file with the following:
 
 ```typescript
 import { Controller, Get, Render } from '@nestjs/common';
@@ -141,7 +143,7 @@ export class AppController {
 }
 ```
 
-You changed the `@Get` decorator for the `getData` function to point to the `api` route. You also changed this to call the `todosService.getTodos()` method. \
-Then you added the `root` function which renders the `index` file from our `views` directory.
+We changed the `@Get` decorator for the `getData` function to point to the `api` route. We also changed this to call the `todosService.getTodos()` method. \
+Then we added the `root` function which renders the `index` file from our `views` directory.
 
 > The serve process should still be running. If it isn't, restart the process with `nx serve todos`

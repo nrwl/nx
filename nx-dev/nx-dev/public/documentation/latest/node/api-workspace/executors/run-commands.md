@@ -2,7 +2,7 @@
 
 Run any custom commands with Nx
 
-Options can be configured in `workspace.json` when defining the executor, or when invoking it.
+Properties can be configured in workspace.json when defining the executor, or when invoking it.
 Read more about how to use executors and the CLI here: https://nx.dev/node/getting-started/nx-cli#running-tasks.
 
 ## Examples
@@ -161,7 +161,7 @@ nx affected --target=generate-docs
 }
 ```
 
-## Options
+## Properties
 
 ### args
 

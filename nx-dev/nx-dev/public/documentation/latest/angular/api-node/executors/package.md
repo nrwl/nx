@@ -2,21 +2,9 @@
 
 Package a Node library
 
-Options can be configured in `angular.json` when defining the executor, or when invoking it.
+Properties can be configured in angular.json when defining the executor, or when invoking it.
 
-## Options
-
-### main (_**required**_)
-
-Type: `string`
-
-The name of the main entry-point file.
-
-### tsConfig (_**required**_)
-
-Type: `string`
-
-The name of the Typescript configuration file.
+## Properties
 
 ### assets
 
@@ -48,6 +36,12 @@ Type: `boolean`
 
 Delete the output path before building.
 
+### main
+
+Type: `string`
+
+The name of the main entry-point file.
+
 ### outputPath
 
 Type: `string`
@@ -73,6 +67,12 @@ Output sourcemaps.
 Type: `string`
 
 Sets the rootDir for TypeScript compilation. When not defined, it uses the project's root property
+
+### tsConfig
+
+Type: `string`
+
+The name of the Typescript configuration file.
 
 ### updateBuildableProjectDepsInPackageJson
 

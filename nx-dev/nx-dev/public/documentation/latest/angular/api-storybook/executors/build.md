@@ -2,17 +2,9 @@
 
 Build Storybook
 
-Options can be configured in `angular.json` when defining the executor, or when invoking it.
+Properties can be configured in angular.json when defining the executor, or when invoking it.
 
-## Options
-
-### uiFramework (_**required**_) (**hidden**)
-
-Default: `@storybook/angular`
-
-Type: `string`
-
-Storybook framework npm package
+## Properties
 
 ### docsMode
 
@@ -41,3 +33,11 @@ Default: `true`
 Type: `boolean`
 
 Suppress verbose build output.
+
+### uiFramework (**hidden**)
+
+Default: `@storybook/angular`
+
+Type: `string`
+
+Storybook framework npm package

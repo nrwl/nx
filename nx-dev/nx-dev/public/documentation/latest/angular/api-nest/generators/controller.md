@@ -1,6 +1,6 @@
 # controller
 
-Run the `controller` NestJS generator with Nx project support.
+Run the 'controller' NestJs generator with Nx project support
 
 ## Usage
 
@@ -24,27 +24,13 @@ nx g controller ... --dry-run
 
 ## Options
 
-### name (_**required**_)
-
-Type: `string`
-
-The name of the controller.
-
-### project (_**required**_)
-
-Alias(es): p
-
-Type: `string`
-
-The Nest project to target.
-
 ### directory
 
 Alias(es): d,path
 
 Type: `string`
 
-Directory where the generated files are placed.
+Directory where the generated files are placed
 
 ### flat
 
@@ -54,35 +40,19 @@ Type: `boolean`
 
 Flag to indicate if a directory is created.
 
-### language
+### name
 
 Type: `string`
 
-Possible values: `js`, `ts`
+The name of generated generator
 
-Nest controller language.
+### project
 
-### module
+Alias(es): p
 
 Type: `string`
 
-Allows specification of the declaring module.
-
-### skipFormat
-
-Default: `false`
-
-Type: `boolean`
-
-Skip formatting files.
-
-### skipImport
-
-Default: `false`
-
-Type: `boolean`
-
-Flag to skip the module import.
+The nest project to target
 
 ### unitTestRunner
 
@@ -92,4 +62,4 @@ Type: `string`
 
 Possible values: `jest`, `none`
 
-Test runner to use for unit tests.
+Test runner to use for unit tests

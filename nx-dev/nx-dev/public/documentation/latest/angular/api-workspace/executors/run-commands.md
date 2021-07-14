@@ -2,7 +2,7 @@
 
 Run any custom commands with Nx
 
-Options can be configured in `angular.json` when defining the executor, or when invoking it.
+Properties can be configured in angular.json when defining the executor, or when invoking it.
 
 ## Examples
 
@@ -160,7 +160,7 @@ nx affected --target=generate-docs
 }
 ```
 
-## Options
+## Properties
 
 ### args
 

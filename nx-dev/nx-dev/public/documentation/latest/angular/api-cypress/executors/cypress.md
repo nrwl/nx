@@ -2,21 +2,9 @@
 
 Run Cypress e2e tests
 
-Options can be configured in `angular.json` when defining the executor, or when invoking it.
+Properties can be configured in angular.json when defining the executor, or when invoking it.
 
-## Options
-
-### cypressConfig (_**required**_)
-
-Type: `string`
-
-The path of the Cypress configuration json file.
-
-### tsConfig (_**required**_)
-
-Type: `string`
-
-The path of the Cypress tsconfig configuration json file.
+## Properties
 
 ### baseUrl
 
@@ -41,6 +29,12 @@ A unique identifier for a run to enable grouping or parallelization.
 Type: `string`
 
 **Deprecated:** A regex string that is used to choose what additional integration files to copy to the dist folder
+
+### cypressConfig
+
+Type: `string`
+
+The path of the Cypress configuration json file.
 
 ### devServerTarget
 
@@ -133,6 +127,12 @@ Type: `string`
 Possible values: `component`, `e2e`
 
 Specify the type of tests to execute
+
+### tsConfig
+
+Type: `string`
+
+The path of the Cypress tsconfig configuration json file.
 
 ### watch
 

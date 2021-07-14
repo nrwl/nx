@@ -2,15 +2,9 @@
 
 Run ESLint on a project
 
-Options can be configured in `angular.json` when defining the executor, or when invoking it.
+Properties can be configured in angular.json when defining the executor, or when invoking it.
 
-## Options
-
-### lintFilePatterns (_**required**_)
-
-Type: `array`
-
-One or more files/dirs/globs to pass directly to ESLint's lintFiles() method.
+## Properties
 
 ### cache
 
@@ -67,6 +61,12 @@ When set to true, the linter will invalidate its cache when any of its dependenc
 Type: `string`
 
 The path of the .eslintignore file.
+
+### lintFilePatterns
+
+Type: `array`
+
+One or more files/dirs/globs to pass directly to ESLint's lintFiles() method.
 
 ### maxWarnings
 

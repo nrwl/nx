@@ -1,6 +1,6 @@
 # library
 
-Create a new NestJS library.
+Create a new nest library
 
 ## Usage
 
@@ -36,12 +36,6 @@ nx g lib mylib --directory=myapp
 
 ## Options
 
-### name (_**required**_)
-
-Type: `string`
-
-Library name.
-
 ### buildable
 
 Default: `false`
@@ -56,7 +50,7 @@ Default: `false`
 
 Type: `boolean`
 
-Include a controller with the library.
+Include a controller with the library
 
 ### directory
 
@@ -64,7 +58,7 @@ Alias(es): d
 
 Type: `string`
 
-A directory where the library is placed.
+A directory where the app is placed
 
 ### global
 
@@ -86,9 +80,15 @@ Default: `eslint`
 
 Type: `string`
 
-Possible values: `eslint`, `none`
+Possible values: `eslint`, `tslint`
 
 The tool to use for running lint checks.
+
+### name
+
+Type: `string`
+
+Library name
 
 ### publishable
 
@@ -110,7 +110,7 @@ Default: `false`
 
 Type: `boolean`
 
-Skip formatting files.
+Skip formatting files
 
 ### skipTsConfig
 
@@ -134,7 +134,7 @@ Alias(es): t
 
 Type: `string`
 
-Add tags to the library (used for linting).
+Add tags to the library (used for linting)
 
 ### target
 
@@ -144,7 +144,7 @@ Type: `string`
 
 Possible values: `es5`, `es6`, `esnext`, `es2015`, `es2016`, `es2017`, `es2018`, `es2019`, `es2020`
 
-The ES target, Nest suggest using es6 or higher.
+The es target, Nest suggest using es6 or higher.
 
 ### testEnvironment
 
@@ -164,4 +164,4 @@ Type: `string`
 
 Possible values: `jest`, `none`
 
-Test runner to use for unit tests.
+Test runner to use for unit tests

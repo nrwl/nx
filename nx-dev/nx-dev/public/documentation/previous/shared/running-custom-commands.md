@@ -14,7 +14,7 @@ make hello
 
 With this `Makefile` in the root of the project:
 
-```shell script
+```bash
 hello:
   echo "Hello, world!"
 ```

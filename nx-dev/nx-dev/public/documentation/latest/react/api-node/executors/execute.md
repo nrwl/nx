@@ -2,22 +2,22 @@
 
 Execute a Node application
 
-Options can be configured in `workspace.json` when defining the executor, or when invoking it.
+Properties can be configured in workspace.json when defining the executor, or when invoking it.
 Read more about how to use executors and the CLI here: https://nx.dev/react/getting-started/nx-cli#running-tasks.
 
-## Options
-
-### buildTarget (_**required**_)
-
-Type: `string`
-
-The target to run to build you the app
+## Properties
 
 ### args
 
 Type: `array`
 
 Extra args when starting the app
+
+### buildTarget
+
+Type: `string`
+
+The target to run to build you the app
 
 ### host
 

@@ -32,20 +32,6 @@ nx g generator my-generator --project=my-plugin
 
 ## Options
 
-### name (_**required**_)
-
-Type: `string`
-
-Generator name
-
-### project (_**required**_)
-
-Alias(es): p
-
-Type: `string`
-
-The name of the project.
-
 ### description
 
 Alias(es): d
@@ -53,6 +39,20 @@ Alias(es): d
 Type: `string`
 
 Generator description
+
+### name
+
+Type: `string`
+
+Generator name
+
+### project
+
+Alias(es): p
+
+Type: `string`
+
+The name of the project.
 
 ### unitTestRunner
 

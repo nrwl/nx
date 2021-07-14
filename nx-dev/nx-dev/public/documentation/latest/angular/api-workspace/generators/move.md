@@ -36,25 +36,25 @@ nx g @nrwl/workspace:move --project my-feature-lib shared/my-feature-lib
 
 ## Options
 
-### destination (_**required**_)
+### destination
 
 Type: `string`
 
 The folder to move the project into
-
-### projectName (_**required**_)
-
-Alias(es): project
-
-Type: `string`
-
-The name of the project to move
 
 ### importPath
 
 Type: `string`
 
 The new import path to use in the tsconfig.base.json
+
+### projectName
+
+Alias(es): project
+
+Type: `string`
+
+The name of the project to move
 
 ### skipFormat
 

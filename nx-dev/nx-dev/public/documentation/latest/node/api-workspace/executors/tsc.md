@@ -2,31 +2,31 @@
 
 Build a project using TypeScript.
 
-Options can be configured in `workspace.json` when defining the executor, or when invoking it.
+Properties can be configured in workspace.json when defining the executor, or when invoking it.
 Read more about how to use executors and the CLI here: https://nx.dev/node/getting-started/nx-cli#running-tasks.
 
-## Options
-
-### main (_**required**_)
-
-Type: `string`
-
-The name of the main entry-point file.
-
-### outputPath (_**required**_)
-
-Type: `string`
-
-The output path of the generated files.
-
-### tsConfig (_**required**_)
-
-Type: `string`
-
-The path to the Typescript configuration file.
+## Properties
 
 ### assets
 
 Type: `array`
 
 List of static assets.
+
+### main
+
+Type: `string`
+
+The name of the main entry-point file.
+
+### outputPath
+
+Type: `string`
+
+The output path of the generated files.
+
+### tsConfig
+
+Type: `string`
+
+The path to the Typescript configuration file.
