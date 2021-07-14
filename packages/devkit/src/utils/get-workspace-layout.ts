@@ -34,8 +34,10 @@ export function getWorkspaceLayout(host: Tree): {
     libsDir: nxJson.workspaceLayout?.libsDir ?? 'libs',
     npmScope: nxJson.npmScope,
     standaloneAsDefault: Object.values(rawWorkspace.projects).reduce(
-      //default for second, third... projects should be based on all projects being defined as a path
-      (allStandalone, next) => allStandalone && typeof next === 'string',
+      // default for second, third... projects should be based on all projects being defined as a path
+      // for configuration read from ng schematics, this is determined by configFilePath's presence
+      (allStandalone, next) =>
+        allStandalone && (typeof next === 'string' || 'configFilePath' in next),
 
       // default for first project should be false
       Object.values(rawWorkspace.projects).length > 0
