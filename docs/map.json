@@ -481,6 +481,11 @@
             "name": "webpack-browser executor",
             "id": "webpack-browser",
             "file": "angular/api-angular/executors/webpack-browser"
+          },
+          {
+            "name": "webpack-server executor",
+            "id": "webpack-server",
+            "file": "angular/api-angular/executors/webpack-server"
           }
         ]
       },
@@ -1642,6 +1647,11 @@
             "name": "webpack-browser executor",
             "id": "webpack-browser",
             "file": "react/api-angular/executors/webpack-browser"
+          },
+          {
+            "name": "webpack-server executor",
+            "id": "webpack-server",
+            "file": "react/api-angular/executors/webpack-server"
           }
         ]
       },
@@ -2767,6 +2777,11 @@
             "name": "webpack-browser executor",
             "id": "webpack-browser",
             "file": "node/api-angular/executors/webpack-browser"
+          },
+          {
+            "name": "webpack-server executor",
+            "id": "webpack-server",
+            "file": "node/api-angular/executors/webpack-server"
           }
         ]
       },
