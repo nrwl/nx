@@ -652,9 +652,9 @@ describe('app', () => {
   });
 
   describe('--mfe', () => {
-    test.each(['shell', 'remote'])(
+    test.each(['host', 'remote'])(
       'should generate a Module Federation correctly for a each app',
-      async (type: 'shell' | 'remote') => {
+      async (type: 'host' | 'remote') => {
         await generateApp(appTree, 'my-app', { mfe: true, mfeType: type });
 
         expect(appTree.exists(`apps/my-app/webpack.config.js`)).toBeTruthy();
@@ -667,9 +667,9 @@ describe('app', () => {
       }
     );
 
-    test.each(['shell', 'remote'])(
+    test.each(['host', 'remote'])(
       'should update the builder to use webpack-browser',
-      async (type: 'shell' | 'remote') => {
+      async (type: 'host' | 'remote') => {
         await generateApp(appTree, 'my-app', { mfe: true, mfeType: type });
 
         const projectConfig = readProjectConfiguration(appTree, 'my-app');
