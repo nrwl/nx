@@ -189,7 +189,7 @@ export function AngularPage() {
                   dependency graphs, and much, much more.
                 </p>
                 <div className="inline-flex">
-                  <Link href="/latest/anguar/tutorial/01-create-application">
+                  <Link href="/latest/angular/tutorial/01-create-application">
                     <a className="inline-flex items-center font-bold group">
                       <span className="group-hover:underline">
                         Nx Angular App Tutorial
@@ -429,7 +429,7 @@ export function AngularPage() {
               </h2>
               <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
                 <div className="inline-flex rounded-md shadow">
-                  <Link href="/latest/angular/getting-started/getting-started">
+                  <Link href="/latest/angular/getting-started/intro">
                     <a className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-gray-700 bg-white">
                       Get started with Angular
                     </a>

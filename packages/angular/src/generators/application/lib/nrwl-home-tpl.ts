@@ -32,7 +32,7 @@ export const nrwlHomeTemplate = {
           <li class="col-span-2">
               <a
                       class="resource flex"
-                      href="https://nx.dev/latest/angular/getting-started/getting-started"
+                      href="https://nx.dev/latest/angular/getting-started/intro"
               >
                   Nx video tutorial
               </a>

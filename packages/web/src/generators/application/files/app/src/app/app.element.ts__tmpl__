@@ -39,7 +39,7 @@ export class AppElement extends HTMLElement {
           <li class="col-span-2">
             <a
               class="resource flex"
-              href="https://nx.dev/latest/react/getting-started/getting-started">
+              href="https://nx.dev/latest/react/getting-started/intro">
                 Nx video tutorial
             </a>
           </li>
