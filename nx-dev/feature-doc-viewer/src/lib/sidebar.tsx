@@ -123,7 +123,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }) {
   }, [collapsed, setCollapsed, item]);
 
   function withoutAnchors(linkText: string): string {
-    return linkText.includes('#')
+    return linkText?.includes('#')
       ? linkText.substring(0, linkText.indexOf('#'))
       : linkText;
   }
