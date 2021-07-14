@@ -164,4 +164,54 @@ describe('Init MFE', () => {
 
     expect(nxJson.projects['app1'].implicitDependencies).toContain('remote1');
   });
+
+  it('should add a remote application and add it to a specified host applications webpack config when no other remote has been added to it', async () => {
+    // ARRANGE
+    await setupMfe(host, {
+      appName: 'app1',
+      mfeType: 'host',
+    });
+
+    // ACT
+    await setupMfe(host, {
+      appName: 'remote1',
+      mfeType: 'remote',
+      host: 'app1',
+    });
+
+    // ASSERT
+    const hostWebpackConfig = host.read('apps/app1/webpack.config.js', 'utf-8');
+    expect(hostWebpackConfig).toMatchSnapshot();
+  });
+
+  it('should add a remote application and add it to a specified host applications webpack config that contains a remote application already', async () => {
+    // ARRANGE
+    await applicationGenerator(host, {
+      name: 'remote2',
+    });
+
+    await setupMfe(host, {
+      appName: 'app1',
+      mfeType: 'host',
+    });
+
+    await setupMfe(host, {
+      appName: 'remote1',
+      mfeType: 'remote',
+      host: 'app1',
+      port: 4201,
+    });
+
+    // ACT
+    await setupMfe(host, {
+      appName: 'remote2',
+      mfeType: 'remote',
+      host: 'app1',
+      port: 4202,
+    });
+
+    // ASSERT
+    const hostWebpackConfig = host.read('apps/app1/webpack.config.js', 'utf-8');
+    expect(hostWebpackConfig).toMatchSnapshot();
+  });
 });

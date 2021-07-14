@@ -24,4 +24,5 @@ export interface Schema {
   mfeType?: 'host' | 'remote';
   remotes?: string[];
   port?: number;
+  host?: string;
 }

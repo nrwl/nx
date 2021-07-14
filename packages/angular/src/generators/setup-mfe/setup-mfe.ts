@@ -9,6 +9,7 @@ import {
 
 import {
   addImplicitDeps,
+  addRemoteToHost,
   changeBuildTarget,
   fixBootstrap,
   generateWebpackConfig,
@@ -20,6 +21,7 @@ export async function setupMfe(host: Tree, options: Schema) {
   const projectConfig = readProjectConfiguration(host, options.appName);
 
   const remotesWithPorts = getRemotesWithPorts(host, options);
+  addRemoteToHost(host, options);
 
   generateWebpackConfig(host, options, projectConfig.root, remotesWithPorts);
 

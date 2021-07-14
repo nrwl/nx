@@ -29,6 +29,10 @@
       "type": "array",
       "description": "A list of remote application names that the host application should consume."
     },
+    "host": {
+      "type": "string",
+      "description": "The name of the host application that the remote application will be consumed by."
+    },
     "skipFormat": {
       "type": "boolean",
       "description": "Skip formatting the workspace after the generator completes."

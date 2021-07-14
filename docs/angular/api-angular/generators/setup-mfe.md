@@ -40,6 +40,12 @@ Possible values: `host`, `remote`
 
 Type of application to generate the Module Federation configuration for.
 
+### host
+
+Type: `string`
+
+The name of the host application that the remote application will be consumed by.
+
 ### port
 
 Type: `number`

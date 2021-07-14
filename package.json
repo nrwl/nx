@@ -71,6 +71,7 @@
     "@nrwl/tao": "12.6.0-beta.2",
     "@nrwl/web": "12.6.0-beta.2",
     "@nrwl/workspace": "12.6.0-beta.2",
+    "@phenomnomnominal/tsquery": "4.1.1",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.4.3",
     "@popperjs/core": "^2.9.2",
     "@reduxjs/toolkit": "1.5.0",

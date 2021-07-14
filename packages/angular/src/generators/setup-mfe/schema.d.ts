@@ -3,5 +3,6 @@ export interface Schema {
   mfeType: 'host' | 'remote';
   port?: number;
   remotes?: string[];
+  host?: string;
   skipFormat?: boolean;
 }

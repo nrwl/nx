@@ -4,7 +4,7 @@ import { satisfies } from 'semver';
 // Ignore packages that are defined here per package
 const IGNORE_MATCHES = {
   '*': [],
-  angular: ['webpack-merge'],
+  angular: ['webpack-merge', '@phenomnomnominal/tsquery'],
 };
 
 export default function getDiscrepancies(
