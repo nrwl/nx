@@ -42,12 +42,6 @@ nx g lib mylib --appProject=myapp
 
 ## Options
 
-### name (_**required**_)
-
-Type: `string`
-
-Library name
-
 ### appProject
 
 Alias(es): a
@@ -111,6 +105,12 @@ Type: `string`
 Possible values: `eslint`, `tslint`
 
 The tool to use for running lint checks.
+
+### name
+
+Type: `string`
+
+Library name
 
 ### pascalCaseFiles
 

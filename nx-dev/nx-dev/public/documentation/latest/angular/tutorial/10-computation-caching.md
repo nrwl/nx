@@ -1,5 +1,7 @@
 # Angular Nx Tutorial - Step 10: Computation Caching
 
+## Nx.dev Tutorial | Angular | Step 10: Use Computation Caching
+
 <iframe width="560" height="315" src="https://www.youtube.com/embed/HX3--ilBhBs" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Nx has built-in computation caching, which helps drastically improve the performance of the commands.
@@ -47,9 +49,9 @@ chunk {runtime} runtime-es5.js, runtime-es5.js.map (runtime) 6.16 kB [entry] [re
 
 Based on the state of the source code and the environment, Nx was able to figure out that it had already run this exact command. Nx found the artifact in the local cache and replayed the output and restored the necessary files.
 
-> Caching only works with the Nx CLI. Running `ng build todos` runs the command every single time.
+> Caching only works with the Nx CLI. Running `ng build todos` will run the command every single time.
 
-## Building multiple projects
+## Building Multiple Projects
 
 **Now, run `npx nx run-many --target=build --projects=todos,api` to rebuild the two applications:**
 
@@ -96,4 +98,4 @@ All files pass linting.
 >  NX   SUCCESS  Running target "lint" succeeded
 ```
 
-> Add --parallel to any command, and Nx does most of the work in parallel.
+> Add --parallel to any command, and Nx will do most of the work in parallel.

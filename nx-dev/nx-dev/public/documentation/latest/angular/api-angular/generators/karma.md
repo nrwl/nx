@@ -1,6 +1,6 @@
 # karma
 
-Adds Karma configuration to a workspace.
+Add karma configuration to a workspace.
 
 ## Usage
 

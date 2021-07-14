@@ -90,14 +90,14 @@ Your workspace is now powered by Nx! You can verify out that your application st
 
 Learn more about the advantages of Nx in the following guides:
 
-- [Using Cypress for e2e tests](/{{framework}}/cypress/overview)
-- [Using Jest for unit tests](/{{framework}}/jest/overview)
-- [Computation Caching](/{{framework}}/core-extended/computation-caching)
-- [Rebuilding and Retesting What is Affected](/{{framework}}/core-extended/affected)
+- [Using Cypress for e2e tests](/angular/cypress/overview)
+- [Using Jest for unit tests](/angular/jest/overview)
+- [Computation Caching](/angular/core-extended/computation-caching)
+- [Rebuilding and Retesting What is Affected](/angular/core-extended/affected)
 
 ## Transitioning Manually
 
-If you are unable to automatically transform your Angular CLI workspace to an Nx workspace using the [ng add]({{framework}}/migration/migration-angular#using-ng-add-preserving-your-existing-structure) method, there are some manual steps you can take to move your project(s) into an Nx workspace.
+If you are unable to automatically transform your Angular CLI workspace to an Nx workspace using the [ng add](angular/migration/migration-angular#using-ng-add) method, there are some manual steps you can take to move your project(s) into an Nx workspace.
 
 ### Generating a new workspace
 
@@ -374,6 +374,6 @@ yarn lint
 
 Learn more about the advantages of Nx in the following guides:
 
-[Using Cypress for e2e tests](/{{framework}}/cypress/overview) \
-[Using Jest for unit tests](/{{framework}}/jest/overview) \
-[Rebuilding and Retesting What is Affected](/{{framework}}/core-extended/affected)
+[Using Cypress for e2e tests](/angular/cypress/overview) \
+[Using Jest for unit tests](/angular/jest/overview) \
+[Rebuilding and Retesting What is Affected](/angular/core-extended/affected)

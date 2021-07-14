@@ -24,12 +24,6 @@ nx g storybook-configuration ... --dry-run
 
 ## Options
 
-### name (_**required**_)
-
-Type: `string`
-
-Project name
-
 ### configureCypress
 
 Default: `true`
@@ -77,6 +71,12 @@ Type: `string`
 Possible values: `eslint`, `tslint`
 
 The tool to use for running lint checks.
+
+### name
+
+Type: `string`
+
+Project name
 
 ### standaloneConfig
 

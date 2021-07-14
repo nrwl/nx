@@ -1,5 +1,7 @@
 # React Nx Tutorial - Step 10: Computation Caching
 
+## Nx.dev Tutorial | React | step 10: Computation Caching
+
 <iframe width="560" height="315" src="https://www.youtube.com/embed/aNjvT3VX1Ts" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Nx has built-in computation caching, which helps drastically improve the performance of the commands.
@@ -22,7 +24,7 @@ chunk    {2} polyfills.55535a35b1529d884ca3.esm.js (polyfills) 239 KiB ={0}= [in
 chunk    {3} styles.3ff695c00d717f2d2a11.css (styles) 147 bytes ={0}= [initial] [rendered]
 ```
 
-**Now, run `npx nx build todos` again, and you see the results appearing instantly:**
+**Now, run `npx nx build todos` again, and you will see the results appearing instantly:**
 
 ```bash
 > npx nx run todos:build
@@ -42,9 +44,9 @@ chunk    {2} polyfills.55535a35b1529d884ca3.esm.js (polyfills) 239 KiB ={0}= [in
 chunk    {3} styles.3ff695c00d717f2d2a11.css (styles) 147 bytes ={0}= [initial] [rendered]
 ```
 
-Based on the state of the source code and the environment, Nx figured out that it had already run this exact command. Nx found the artifact in the local cache and replayed the output and restored the necessary files.
+Based on the state of the source code and the environment, Nx was able to figure out that it had already run this exact command. Nx found the artifact in the local cache and replayed the output and restored the necessary files.
 
-## Building multiple projects
+## Building Multiple Projects
 
 **Now, run `npx nx run-many --target=build --projects=todos,api` to rebuild the two applications:**
 
@@ -91,4 +93,4 @@ All files pass linting.
 >  NX   SUCCESS  Running target "lint" succeeded
 ```
 
-> Add --parallel to any command, and Nx does most of the work in parallel.
+> Add --parallel to any command, and Nx will do most of the work in parallel.

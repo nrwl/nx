@@ -1,17 +1,11 @@
 # ng-packagr-lite
 
-Builds a library with support for incremental builds.
+Build an Angular library for incremental building.
 
-Options can be configured in `workspace.json` when defining the executor, or when invoking it.
+Properties can be configured in workspace.json when defining the executor, or when invoking it.
 Read more about how to use executors and the CLI here: https://nx.dev/react/getting-started/nx-cli#running-tasks.
 
-## Options
-
-### project (_**required**_)
-
-Type: `string`
-
-The file path for the ng-packagr configuration file, relative to the workspace root.
+## Properties
 
 ### buildableProjectDepsInPackageJsonType
 
@@ -23,11 +17,17 @@ Possible values: `dependencies`, `peerDependencies`
 
 When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.
 
+### project
+
+Type: `string`
+
+The file path for the ng-packagr configuration file, relative to the current workspace.
+
 ### tsConfig
 
 Type: `string`
 
-The full path for the TypeScript configuration file, relative to the workspace root.
+The full path for the TypeScript configuration file, relative to the current workspace.
 
 ### updateBuildableProjectDepsInPackageJson
 
@@ -35,7 +35,7 @@ Default: `true`
 
 Type: `boolean`
 
-Whether to update the buildable project dependencies in package.json.
+Update buildable project dependencies in package.json.
 
 ### watch
 
@@ -43,4 +43,4 @@ Default: `false`
 
 Type: `boolean`
 
-Whether to run a build when any file changes.
+Run build when files change.

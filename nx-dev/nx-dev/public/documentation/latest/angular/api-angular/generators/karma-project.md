@@ -1,6 +1,6 @@
 # karma-project
 
-Adds Karma configuration to a project.
+Add karma testing to a project.
 
 ## Usage
 
@@ -24,7 +24,7 @@ nx g karma-project ... --dry-run
 
 ## Options
 
-### project (_**required**_)
+### project
 
 Type: `string`
 

@@ -40,7 +40,7 @@ For additional information regarding the format and rule options, please see: ht
 
 Sometimes broad configurations like `> 0.5%, not IE 11` can lead to surprising results, due to supporting browsers like Opera Mini or Android UC browser.
 
-To see what browsers your configuration is supporting, run `npx browserslist` in the application's directory to get an output of browsers and versions to support.
+To see what browsers your configuration is supporting, run `npx browserslist` in application directory to get an output of browsers and versions to support.
 
 ```bash
 $ npx browserslist

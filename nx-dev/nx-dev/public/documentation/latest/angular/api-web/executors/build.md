@@ -2,27 +2,9 @@
 
 Build a application
 
-Options can be configured in `angular.json` when defining the executor, or when invoking it.
+Properties can be configured in angular.json when defining the executor, or when invoking it.
 
-## Options
-
-### index (_**required**_)
-
-Type: `string`
-
-HTML File which will be contain the application
-
-### main (_**required**_)
-
-Type: `string`
-
-The name of the main entry-point file.
-
-### tsConfig (_**required**_)
-
-Type: `string`
-
-The name of the Typescript configuration file.
+## Properties
 
 ### assets
 
@@ -127,6 +109,18 @@ Default: `true`
 Type: `boolean`
 
 Generates `index.html` file to the output path. This can be turned off if using a webpack plugin to generate HTML such as `html-webpack-plugin`
+
+### index
+
+Type: `string`
+
+HTML File which will be contain the application
+
+### main
+
+Type: `string`
+
+The name of the main entry-point file.
 
 ### maxWorkers
 
@@ -237,6 +231,12 @@ Default: `false`
 Type: `boolean`
 
 Enables the use of subresource integrity validation.
+
+### tsConfig
+
+Type: `string`
+
+The name of the Typescript configuration file.
 
 ### vendorChunk
 

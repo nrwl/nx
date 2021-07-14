@@ -1,6 +1,6 @@
 # downgrade-module
 
-Sets up a Downgrade Module.
+Setup Downgrade Module.
 
 ## Usage
 
@@ -24,23 +24,23 @@ nx g downgrade-module ... --dry-run
 
 ## Options
 
-### name (_**required**_)
+### angularJsImport
+
+Type: `string`
+
+Import expression of the AngularJS application (e.g., --angularJsImport=some_node_module/my_app).
+
+### name
 
 Type: `string`
 
 The name of the main AngularJS module.
 
-### project (_**required**_)
+### project
 
 Type: `string`
 
 The name of the project.
-
-### angularJsImport
-
-Type: `string`
-
-Import expression of the AngularJS application (e.g., `--angularJsImport=some_node_module/my_app`).
 
 ### skipFormat
 
@@ -56,4 +56,4 @@ Default: `false`
 
 Type: `boolean`
 
-Do not add `@angular/upgrade` to `package.json` (e.g., `--skipPackageJson`).
+Do not add @angular/upgrade to package.json (e.g., --skipPackageJson).

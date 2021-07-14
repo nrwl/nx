@@ -2,11 +2,11 @@
 
 Serve a web application from a folder
 
-Options can be configured in `angular.json` when defining the executor, or when invoking it.
+Properties can be configured in angular.json when defining the executor, or when invoking it.
 
-## Options
+## Properties
 
-### buildTarget (_**required**_)
+### buildTarget
 
 Type: `string`
 

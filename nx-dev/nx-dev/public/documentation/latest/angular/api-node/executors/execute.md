@@ -2,21 +2,21 @@
 
 Execute a Node application
 
-Options can be configured in `angular.json` when defining the executor, or when invoking it.
+Properties can be configured in angular.json when defining the executor, or when invoking it.
 
-## Options
-
-### buildTarget (_**required**_)
-
-Type: `string`
-
-The target to run to build you the app
+## Properties
 
 ### args
 
 Type: `array`
 
 Extra args when starting the app
+
+### buildTarget
+
+Type: `string`
+
+The target to run to build you the app
 
 ### host
 

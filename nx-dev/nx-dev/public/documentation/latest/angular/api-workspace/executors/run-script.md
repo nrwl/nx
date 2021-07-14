@@ -2,11 +2,11 @@
 
 Run an npm script using Nx
 
-Options can be configured in `angular.json` when defining the executor, or when invoking it.
+Properties can be configured in angular.json when defining the executor, or when invoking it.
 
-## Options
+## Properties
 
-### script (_**required**_)
+### script
 
 Type: `string`
 

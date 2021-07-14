@@ -24,17 +24,11 @@ nx g component-cypress-spec ... --dry-run
 
 ## Options
 
-### componentPath (_**required**_)
+### componentPath
 
 Type: `string`
 
 Relative path to the component file from the library root?
-
-### project (_**required**_)
-
-Type: `string`
-
-The project name for which to generate tests.
 
 ### cypressProject
 
@@ -49,3 +43,9 @@ Default: `false`
 Type: `boolean`
 
 Generate JavaScript files rather than TypeScript files.
+
+### project
+
+Type: `string`
+
+The project name for which to generate tests.

@@ -1,6 +1,6 @@
 # application
 
-Create a NestJS application.
+Create a nest application
 
 ## Usage
 
@@ -28,12 +28,6 @@ nx g application ... --dry-run
 
 ## Options
 
-### name (_**required**_)
-
-Type: `string`
-
-The name of the application.
-
 ### directory
 
 Type: `string`
@@ -52,9 +46,15 @@ Default: `eslint`
 
 Type: `string`
 
-Possible values: `eslint`, `none`
+Possible values: `eslint`, `tslint`
 
 The tool to use for running lint checks.
+
+### name
+
+Type: `string`
+
+The name of the application.
 
 ### skipFormat
 
@@ -62,7 +62,7 @@ Default: `false`
 
 Type: `boolean`
 
-Skip formatting files.
+Skip formatting files
 
 ### skipPackageJson
 
@@ -78,13 +78,13 @@ Default: `false`
 
 Type: `boolean`
 
-Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json.
+Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json
 
 ### tags
 
 Type: `string`
 
-Add tags to the application (used for linting).
+Add tags to the application (used for linting)
 
 ### unitTestRunner
 
@@ -94,4 +94,4 @@ Type: `string`
 
 Possible values: `jest`, `none`
 
-Test runner to use for unit tests.
+Test runner to use for unit tests

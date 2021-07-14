@@ -38,20 +38,6 @@ nx g component my-component --project=mylib --classComponent
 
 ## Options
 
-### name (_**required**_)
-
-Type: `string`
-
-The name of the component.
-
-### project (_**required**_)
-
-Alias(es): p
-
-Type: `string`
-
-The name of the project.
-
 ### directory
 
 Alias(es): d
@@ -85,6 +71,20 @@ Default: `false`
 Type: `boolean`
 
 Generate JavaScript files rather than TypeScript files.
+
+### name
+
+Type: `string`
+
+The name of the component.
+
+### project
+
+Alias(es): p
+
+Type: `string`
+
+The name of the project.
 
 ### skipTests
 

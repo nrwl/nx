@@ -32,20 +32,6 @@ nx g executor my-executor --project=my-plugin
 
 ## Options
 
-### name (_**required**_)
-
-Type: `string`
-
-Executor name
-
-### project (_**required**_)
-
-Alias(es): p
-
-Type: `string`
-
-The name of the project.
-
 ### description
 
 Alias(es): d
@@ -53,6 +39,20 @@ Alias(es): d
 Type: `string`
 
 Executor description
+
+### name
+
+Type: `string`
+
+Executor name
+
+### project
+
+Alias(es): p
+
+Type: `string`
+
+The name of the project.
 
 ### unitTestRunner
 

@@ -2,19 +2,9 @@
 
 **[DEPRECATED]**: Please use the eslint builder instead, an automated migration was provided in v10.3.0
 
-Options can be configured in `angular.json` when defining the executor, or when invoking it.
+Properties can be configured in angular.json when defining the executor, or when invoking it.
 
-## Options
-
-### linter (_**required**_)
-
-Default: `eslint`
-
-Type: `string`
-
-Possible values: `eslint`, `tslint`
-
-The tool to use for running lint checks.
+## Properties
 
 ### cache
 
@@ -71,6 +61,16 @@ Default: `stylish`
 Type: `string`
 
 ESLint Output formatter (https://eslint.org/docs/user-guide/formatters).
+
+### linter
+
+Default: `eslint`
+
+Type: `string`
+
+Possible values: `eslint`, `tslint`
+
+The tool to use for running lint checks.
 
 ### maxWarnings
 

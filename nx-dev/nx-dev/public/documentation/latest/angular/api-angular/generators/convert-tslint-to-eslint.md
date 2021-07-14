@@ -1,6 +1,6 @@
 # convert-tslint-to-eslint
 
-Converts a project from TSLint to ESLint.
+Convert a project from TSLint to ESLint
 
 ## Usage
 
@@ -44,19 +44,19 @@ nx g convert-tslint-to-eslint myapp --removeTSLintIfNoMoreTSLintTargets=false
 
 ## Options
 
-### project (_**required**_)
-
-Type: `string`
-
-The name of the Angular project to convert. Please note, if the project is an Angular app with an associated Cypress e2e project, it will also attempt to convert that.
-
 ### ignoreExistingTslintConfig
 
 Default: `false`
 
 Type: `boolean`
 
-If true, it will not use existing TSLint config as a reference, it will just reset the project with the latest recommended ESLint config.
+If true we will not use existing TSLint config as a reference, we will just reset the project with the latest recommended ESLint config
+
+### project
+
+Type: `string`
+
+The name of the Angular project to convert. Please note, if the project is an Angular app with an associated Cypress e2e project, we will also attempt to convert that.
 
 ### removeTSLintIfNoMoreTSLintTargets
 
@@ -64,4 +64,4 @@ Default: `true`
 
 Type: `boolean`
 
-If this conversion leaves no more TSLint usage in the workspace, it will remove TSLint and related dependencies and configuration.
+If this conversion leaves no more TSLint usage in the workspace, it will remove TSLint and related dependencies and configuration
