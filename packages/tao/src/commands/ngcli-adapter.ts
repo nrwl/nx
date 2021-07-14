@@ -365,7 +365,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
           const fileConfigObject = { ...projectConfig };
           delete fileConfigObject.configFilePath; // remove the configFilePath before writing
           super.write(configPath, Buffer.from(serializeJson(fileConfigObject))); // write back to the project.json file
-          configToWrite.projects[project] = dirname(configPath); // update the config object to point to the written file.
+          configToWrite.projects[project] = normalize(dirname(configPath)); // update the config object to point to the written file.
         }
       }
     );
