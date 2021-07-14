@@ -16,7 +16,7 @@ git checkout -b testbranch
 
 **Open `libs/ui/src/lib/todos/todos.tsx` and change the component:**
 
-```typescript
+```typescript jsx
 import React from 'react';
 import { Todo } from '@myorg/data';
 

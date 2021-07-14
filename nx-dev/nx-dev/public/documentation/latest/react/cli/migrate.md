@@ -1,9 +1,6 @@
 # migrate
 
-Creates a migrations file or runs migrations from the migrations file.
-
-- Migrate packages and create migrations.json (e.g., nx migrate @nrwl/workspace@latest)
-- Run migrations (e.g., nx migrate --run-migrations=migrations.json)
+Creates a migrations file or runs migrations from the migrations file. - Migrate packages and create migrations.json (e.g., nx migrate @nrwl/workspace@latest) - Run migrations (e.g., nx migrate --run-migrations=migrations.json)
 
 ## Usage
 

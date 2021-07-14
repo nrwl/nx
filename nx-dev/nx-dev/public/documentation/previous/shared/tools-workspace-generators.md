@@ -6,7 +6,7 @@ Workspace generators provide a way to automate many tasks you regularly perform 
 
 Use the Nx CLI to generate the initial files needed for your workspace generator.
 
-```bash
+```sh
 nx generate @nrwl/workspace:workspace-generator my-generator
 ```
 
@@ -73,7 +73,7 @@ The `$default` object is used to read arguments from the command-line that are p
 
 To run a generator, invoke the `nx workspace-generator` command with the name of the generator.
 
-```bash
+```sh
 nx workspace-generator my-generator mylib
 ```
 
@@ -81,13 +81,13 @@ nx workspace-generator my-generator mylib
 
 Generators that are created using the `@angular-devkit` are called schematics. Workspace schematics that have been created with the `@angular-devkit` will omit the `"cli": "nx"` property in `schema.json`. Nx will recognize this and correctly run the schematic using the same command as an `@nrwl/devkit` generator.
 
-```bash
+```sh
 nx workspace-generator my-schematic mylib
 ```
 
 The command is also aliased to the previous `workspace-schematic` command, so this still works:
 
-```bash
+```sh
 nx workspace-schematic my-schematic mylib
 ```
 
@@ -165,13 +165,13 @@ Next, run the schematic:
 
 > Use the `-d` or `--dry-run` flag to see your changes without applying them.
 
-```bash
+```sh
 nx workspace-generator my-schematic mylib
 ```
 
 The following information will be displayed.
 
-```bash
+```sh
 >  NX  Executing your local schematic: my-schematic
 
 CREATE libs/mylib/tslint.json (48 bytes)

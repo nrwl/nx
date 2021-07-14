@@ -1,6 +1,6 @@
 # application
 
-Create an Angular application
+Creates an Angular application.
 
 ## Usage
 
@@ -32,7 +32,7 @@ nx g application ... --dry-run
 
 Type: `string`
 
-Backend project that provides data to this application. This sets up proxy.config.json.
+Backend project that provides data to this application. This sets up `proxy.config.json`.
 
 ### directory
 
@@ -48,7 +48,7 @@ Type: `string`
 
 Possible values: `protractor`, `cypress`, `none`
 
-Test runner to use for end to end (e2e) tests
+Test runner to use for end to end (e2e) tests.
 
 ### inlineStyle
 
@@ -80,11 +80,35 @@ Possible values: `eslint`, `none`
 
 The tool to use for running lint checks.
 
+### mfe
+
+Default: `false`
+
+Type: `boolean`
+
+Generate a Module Federation configuration for the application
+
+### mfeType
+
+Default: `remote`
+
+Type: `string`
+
+Possible values: `shell`, `remote`
+
+Type of application to generate the Module Federation configuration for.
+
 ### name
 
 Type: `string`
 
 The name of the application.
+
+### port
+
+Type: `number`
+
+The port at which the remote application should be served.
 
 ### prefix
 
@@ -94,13 +118,19 @@ Type: `string`
 
 The prefix to apply to generated selectors.
 
+### remotes
+
+Type: `array`
+
+A list of remote application names that the shell application should consume.
+
 ### routing
 
 Default: `false`
 
 Type: `boolean`
 
-Generates a routing module.
+Generate a routing module.
 
 ### skipFormat
 
@@ -108,7 +138,7 @@ Default: `false`
 
 Type: `boolean`
 
-Skip formatting files
+Skip formatting files.
 
 ### skipPackageJson
 
@@ -116,7 +146,7 @@ Default: `false`
 
 Type: `boolean`
 
-Do not add dependencies to package.json.
+Do not add dependencies to `package.json`.
 
 ### skipTests
 
@@ -134,7 +164,7 @@ Default: `false`
 
 Type: `boolean`
 
-Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json
+Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.
 
 ### strict
 
@@ -142,7 +172,7 @@ Default: `true`
 
 Type: `boolean`
 
-Creates an application with stricter type checking and build optimization options.
+Create an application with stricter type checking and build optimization options.
 
 ### style
 
@@ -158,7 +188,7 @@ The file extension to be used for style files.
 
 Type: `string`
 
-Add tags to the application (used for linting)
+Add tags to the application (used for linting).
 
 ### unitTestRunner
 
@@ -168,7 +198,7 @@ Type: `string`
 
 Possible values: `karma`, `jest`, `none`
 
-Test runner to use for unit tests
+Test runner to use for unit tests.
 
 ### viewEncapsulation
 

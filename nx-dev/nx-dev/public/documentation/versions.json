@@ -1,8 +1,8 @@
 [
   {
-    "name": "Latest (v12.5.8)",
+    "name": "Latest (v12.6.0-beta.6)",
     "id": "latest",
-    "release": "12.5.8",
+    "release": "12.6.0-beta.6",
     "path": "latest",
     "default": true
   },

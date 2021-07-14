@@ -1,6 +1,6 @@
 # guard
 
-Run the 'guard' NestJs generator with Nx project support
+Run the `guard` NestJS generator with Nx project support.
 
 ## Usage
 
@@ -24,35 +24,51 @@ nx g guard ... --dry-run
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+The name of the guard.
+
+### project (_**required**_)
+
+Alias(es): p
+
+Type: `string`
+
+The Nest project to target.
+
 ### directory
 
 Alias(es): d,path
 
 Type: `string`
 
-Directory where the generated files are placed
+Directory where the generated files are placed.
 
 ### flat
 
-Default: `false`
+Default: `true`
 
 Type: `boolean`
 
 Flag to indicate if a directory is created.
 
-### name
+### language
 
 Type: `string`
 
-The name of generated generator
+Possible values: `js`, `ts`
 
-### project
+Nest guard language.
 
-Alias(es): p
+### skipFormat
 
-Type: `string`
+Default: `false`
 
-The nest project to target
+Type: `boolean`
+
+Skip formatting files.
 
 ### unitTestRunner
 
@@ -62,4 +78,4 @@ Type: `string`
 
 Possible values: `jest`, `none`
 
-Test runner to use for unit tests
+Test runner to use for unit tests.

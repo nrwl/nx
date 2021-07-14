@@ -1,10 +1,8 @@
 # Node Nx Tutorial - Step 1: Create Application
 
-## Nx.dev Tutorial | Node | Step 1: Create Application
-
 <iframe width="560" height="315" src="https://www.youtube.com/embed/UcBSBQYNlhE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-In this tutorial you will use Nx to build a server application out of common libraries using modern technologies.
+In this tutorial you use Nx to build a server application out of common libraries using modern technologies.
 
 ## Create a New Workspace
 
@@ -14,13 +12,15 @@ In this tutorial you will use Nx to build a server application out of common lib
 npx create-nx-workspace@latest
 ```
 
-You will then receive the following prompts in your command line:
+You then receive the following prompts in your command line:
 
+```bash
+Workspace name (e.g., org name)         myorg
+What to create in the new workspace     nest
+Application name                        todos
 ```
-? Workspace name (e.g., org name)         myorg
-? What to create in the new workspace     nest
-? Application name                        todos
-```
+
+> You can also choose to add [Nx Cloud](https://nx.app), but its not required for the tutorial.
 
 ```treeview
 myorg/
@@ -43,13 +43,15 @@ myorg/
 │       ├── tsconfig.app.json
 │       ├── tsconfig.json
 │       └── tsconfig.spec.json
+├── libs/
 ├── tools/
-│   ├── generators
-│   └── tsconfig.tools.json
+├── .eslintrc.json
+├── .prettierrc
 ├── jest.config.js
-├── libs
+├── jest.preset.js
 ├── nx.json
 ├── package.json
+├── README.md
 ├── tsconfig.base.json
 └── workspace.json
 ```
@@ -86,11 +88,11 @@ or
 yarn nx serve todos
 ```
 
-## Workspace.json, Targets, Builders
+## Workspace.json, Targets, Executors
 
 You configure your workspaces in `workspace.json`. This file contains the workspace projects with their architect targets. For instance, `todos` has the `build`, `serve`, `lint`, and `test` targets. This means that you can run `nx build todos`, `nx serve todos`, etc..
 
-Every target uses a builder which actually runs this target. So targets are analogous to typed npm scripts, and builders are analogous to typed shell scripts.
+Every target uses an executor which actually runs this target. So targets are analogous to typed npm scripts, and executors are analogous to typed shell scripts.
 
 **Why not use shell scripts and npm scripts directly?**
 

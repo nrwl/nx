@@ -28,6 +28,12 @@ nx g redux ... --dry-run
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+Redux slice name.
+
 ### appProject
 
 Alias(es): a
@@ -51,12 +57,6 @@ Default: `false`
 Type: `boolean`
 
 Generate JavaScript files rather than TypeScript files.
-
-### name
-
-Type: `string`
-
-Redux slice name.
 
 ### project
 

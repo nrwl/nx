@@ -86,7 +86,7 @@ For instance, you can add/remove/update projects in `workspace.json`.
 }
 ```
 
-Nx will a root tsconfig with something like this:
+Nx will add a root tsconfig to your repo with something like this:
 
 ```json
 {
@@ -101,7 +101,7 @@ Nx will a root tsconfig with something like this:
 }
 ```
 
-This tsconfig isn't used for building or testing. It's only used to teach Nx how to resolve imports, so Nx can do its import source code analysis. If the path mappings are deduced incorrectly, feel free to chang them.
+This tsconfig isn't used for building or testing. It's only used to teach Nx how to resolve imports, so Nx can do its import source code analysis. If the path mappings are deduced incorrectly, feel free to change them.
 
 ## Real world examples of using add-nx-to-monorepo
 

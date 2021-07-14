@@ -34,6 +34,8 @@
 - [Target](../../react/nx-devkit/index#target)
 - [TargetConfiguration](../../react/nx-devkit/index#targetconfiguration)
 - [TargetDependencyConfig](../../react/nx-devkit/index#targetdependencyconfig)
+- [Task](../../react/nx-devkit/index#task)
+- [TaskGraph](../../react/nx-devkit/index#taskgraph)
 - [Tree](../../react/nx-devkit/index#tree)
 - [Workspace](../../react/nx-devkit/index#workspace)
 - [WorkspaceJsonConfiguration](../../react/nx-devkit/index#workspacejsonconfiguration)
@@ -47,6 +49,7 @@
 - [PackageManager](../../react/nx-devkit/index#packagemanager)
 - [ProjectType](../../react/nx-devkit/index#projecttype)
 - [StringChange](../../react/nx-devkit/index#stringchange)
+- [TaskGraphExecutor](../../react/nx-devkit/index#taskgraphexecutor)
 - [WorkspaceConfiguration](../../react/nx-devkit/index#workspaceconfiguration)
 
 ### Variables
@@ -295,6 +298,22 @@ Target's configuration
 
 ---
 
+### Task
+
+• **Task**: _object_
+
+A representation of the invocation of an Executor
+
+---
+
+### TaskGraph
+
+• **TaskGraph**: _object_
+
+Graph of Tasks to be executed
+
+---
+
 ### Tree
 
 • **Tree**: _object_
@@ -418,6 +437,35 @@ Type of project supported
 Ƭ **StringChange**: [_StringInsertion_](../../react/nx-devkit/index#stringinsertion) \| [_StringDeletion_](../../react/nx-devkit/index#stringdeletion)
 
 A change to be made to a string
+
+---
+
+### TaskGraphExecutor
+
+Ƭ **TaskGraphExecutor**<T\>: (`taskGraph`: [_TaskGraph_](../../react/nx-devkit/index#taskgraph), `options`: _Record_<string, T\>, `overrides`: T, `context`: [_ExecutorContext_](../../react/nx-devkit/index#executorcontext)) => _Promise_<Record<string, { `success`: _boolean_ ; `terminalOutput`: _string_ }\>\>
+
+Implementation of a target of a project that handles multiple projects to be batched
+
+#### Type parameters
+
+| Name | Default |
+| :--- | :------ |
+| `T`  | _any_   |
+
+#### Type declaration
+
+▸ (`taskGraph`: [_TaskGraph_](../../react/nx-devkit/index#taskgraph), `options`: _Record_<string, T\>, `overrides`: T, `context`: [_ExecutorContext_](../../react/nx-devkit/index#executorcontext)): _Promise_<Record<string, { `success`: _boolean_ ; `terminalOutput`: _string_ }\>\>
+
+#### Parameters
+
+| Name        | Type                                                             |
+| :---------- | :--------------------------------------------------------------- |
+| `taskGraph` | [_TaskGraph_](../../react/nx-devkit/index#taskgraph)             |
+| `options`   | _Record_<string, T\>                                             |
+| `overrides` | T                                                                |
+| `context`   | [_ExecutorContext_](../../react/nx-devkit/index#executorcontext) |
+
+**Returns:** _Promise_<Record<string, { `success`: _boolean_ ; `terminalOutput`: _string_ }\>\>
 
 ---
 
@@ -983,6 +1031,8 @@ Reads a project configuration.
 
 The project configuration is stored in workspace.json and nx.json. The utility will read
 both files.
+
+**`throws`** If supplied projectName cannot be found
 
 #### Parameters
 

@@ -36,6 +36,12 @@ nx g lib mylib --directory=myapp
 
 ## Options
 
+### name (_**required**_)
+
+Type: `string`
+
+Library name
+
 ### babelJest
 
 Default: `false`
@@ -83,12 +89,6 @@ Type: `string`
 Possible values: `eslint`, `tslint`
 
 The tool to use for running lint checks.
-
-### name
-
-Type: `string`
-
-Library name
 
 ### pascalCaseFiles
 
