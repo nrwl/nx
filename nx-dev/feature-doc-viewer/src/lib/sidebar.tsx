@@ -122,6 +122,12 @@ function SidebarSectionItems({ item }: { item: MenuItem }) {
     }
   }, [collapsed, setCollapsed, item]);
 
+  function withoutAnchors(linkText: string): string {
+    return linkText?.includes('#')
+      ? linkText.substring(0, linkText.indexOf('#'))
+      : linkText;
+  }
+
   return (
     <>
       <h5
@@ -140,7 +146,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }) {
       </h5>
       <ul className={cx('mb-6', collapsed ? 'hidden' : '')}>
         {item.itemList.map((item) => {
-          const isActiveLink = item.path === router?.asPath;
+          const isActiveLink = item.path === withoutAnchors(router?.asPath);
           return (
             <li key={item.id} data-testid={`section-li:${item.id}`}>
               <Link href={item.path}>
