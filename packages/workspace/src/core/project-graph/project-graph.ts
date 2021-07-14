@@ -2,27 +2,31 @@ import type {
   FileData,
   NxJsonConfiguration,
   NxJsonProjectConfiguration,
+  NxPlugin,
   ProjectConfiguration,
   ProjectFileMap,
-  WorkspaceJsonConfiguration,
-  ProjectGraphProcessorContext,
-  NxPlugin,
   ProjectGraph,
+  ProjectGraphProcessorContext,
+  WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
-
-import { ProjectGraphBuilder } from '@nrwl/devkit';
-
+import { ProjectGraphBuilder, readJsonFile } from '@nrwl/devkit';
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { join } from 'path';
+import { performance } from 'perf_hooks';
 import { assertWorkspaceValidity } from '../assert-workspace-validity';
 import { createProjectFileMap } from '../file-graph';
 import {
-  filesChanged,
   readNxJson,
   readWorkspaceFiles,
   readWorkspaceJson,
-  rootWorkspaceFileData,
 } from '../file-utils';
 import { normalizeNxJson } from '../normalize-nx-json';
+import {
+  extractCachedPartOfProjectGraph,
+  readCache,
+  shouldRecomputeWholeGraph,
+  writeCache,
+} from '../nx-deps/nx-deps-cache';
 import {
   BuildDependencies,
   buildExplicitPackageJsonDependencies,
@@ -34,15 +38,14 @@ import {
   buildNpmPackageNodes,
   buildWorkspaceProjectNodes,
 } from './build-nodes';
-import {
-  differentFromCache,
-  readCache,
-  writeCache,
-} from '../nx-deps/nx-deps-cache';
-import { performance } from 'perf_hooks';
 
 export async function createProjectGraphAsync(): Promise<ProjectGraph> {
   return createProjectGraph();
+}
+
+function readCombinedDeps() {
+  const json = readJsonFile(join(appRootPath, 'package.json'));
+  return { ...json.dependencies, ...json.devDependencies };
 }
 
 // TODO(v13): remove this deprecated function
@@ -58,30 +61,29 @@ export function createProjectGraph(
   let cache = cacheEnabled ? readCache() : false;
   assertWorkspaceValidity(workspaceJson, nxJson);
   const normalizedNxJson = normalizeNxJson(nxJson);
-
-  const rootFiles = rootWorkspaceFileData();
   const projectFileMap = createProjectFileMap(workspaceJson, workspaceFiles);
-
-  if (cache && !filesChanged(rootFiles, cache.rootFiles)) {
-    const diff = differentFromCache(projectFileMap, cache);
-    if (diff.noDifference) {
-      return addWorkspaceFiles(
-        diff.partiallyConstructedProjectGraph,
-        workspaceFiles
-      );
-    }
-
+  const packageJsonDeps = readCombinedDeps();
+  const rootTsConfig = readRootTsConfig();
+  if (
+    cache &&
+    cache.version === '3.0' &&
+    !shouldRecomputeWholeGraph(
+      cache,
+      packageJsonDeps,
+      workspaceJson,
+      normalizedNxJson,
+      rootTsConfig
+    )
+  ) {
+    const diff = extractCachedPartOfProjectGraph(projectFileMap, nxJson, cache);
     const ctx = {
       workspaceJson,
       nxJson: normalizedNxJson,
       fileMap: diff.filesDifferentFromCache,
     };
-    const projectGraph = buildProjectGraph(
-      ctx,
-      diff.partiallyConstructedProjectGraph
-    );
+    const projectGraph = buildProjectGraph(ctx, diff.cachedPartOfProjectGraph);
     if (cacheEnabled) {
-      writeCache(rootFiles, projectGraph);
+      writeCache(packageJsonDeps, nxJson, rootTsConfig, projectGraph);
     }
     return addWorkspaceFiles(projectGraph, workspaceFiles);
   } else {
@@ -92,7 +94,7 @@ export function createProjectGraph(
     };
     const projectGraph = buildProjectGraph(ctx, null);
     if (cacheEnabled) {
-      writeCache(rootFiles, projectGraph);
+      writeCache(packageJsonDeps, nxJson, rootTsConfig, projectGraph);
     }
     return addWorkspaceFiles(projectGraph, workspaceFiles);
   }
@@ -110,31 +112,41 @@ function addWorkspaceFiles(
   return { ...projectGraph, allWorkspaceFiles };
 }
 
-function buildProjectGraph(
-  ctx: {
-    nxJson: NxJsonConfiguration<string[]>;
-    workspaceJson: WorkspaceJsonConfiguration;
-    fileMap: ProjectFileMap;
-  },
-  projectGraph: ProjectGraph
-) {
-  performance.mark('build project graph:start');
-  const builder = new ProjectGraphBuilder(projectGraph);
-  const buildNodesFns: BuildNodes[] = [
-    buildWorkspaceProjectNodes,
-    buildNpmPackageNodes,
-  ];
-  const buildDependenciesFns: BuildDependencies[] = [
-    buildExplicitTypeScriptDependencies,
-    buildImplicitProjectDependencies,
-    buildExplicitPackageJsonDependencies,
-  ];
-  buildNodesFns.forEach((f) => f(ctx, builder.addNode.bind(builder)));
-  buildDependenciesFns.forEach((f) =>
-    f(ctx, builder.nodes, builder.addDependency.bind(builder))
-  );
-  const r = builder.getProjectGraph();
+type BuilderContext = {
+  nxJson: NxJsonConfiguration<string[]>;
+  workspaceJson: WorkspaceJsonConfiguration;
+  fileMap: ProjectFileMap;
+};
 
+function buildProjectGraph(ctx: BuilderContext, projectGraph: ProjectGraph) {
+  performance.mark('build project graph:start');
+
+  const builder = new ProjectGraphBuilder(projectGraph);
+  const addNode = builder.addNode.bind(builder);
+  const addDependency = builder.addDependency.bind(builder);
+  buildWorkspaceProjectNodes(ctx, addNode);
+  buildNpmPackageNodes(ctx, addNode);
+  buildExplicitTypeScriptDependencies(ctx, builder.nodes, addDependency);
+  buildExplicitPackageJsonDependencies(ctx, builder.nodes, addDependency);
+  buildImplicitProjectDependencies(ctx, builder.nodes, addDependency);
+  const initProjectGraph = builder.getProjectGraph();
+
+  const r = updateProjectGraphWithPlugins(ctx, initProjectGraph);
+
+  performance.mark('build project graph:end');
+  performance.measure(
+    'build project graph',
+    'build project graph:start',
+    'build project graph:end'
+  );
+
+  return r;
+}
+
+function updateProjectGraphWithPlugins(
+  ctx: BuilderContext,
+  initProjectGraph: ProjectGraph
+) {
   const plugins = (ctx.nxJson.plugins || []).map((path) => {
     const pluginPath = require.resolve(path, {
       paths: [appRootPath],
@@ -161,19 +173,18 @@ function buildProjectGraph(
     fileMap: ctx.fileMap,
   };
 
-  const result = plugins.reduce((graph, plugin) => {
+  return plugins.reduce((graph, plugin) => {
     if (!plugin.processProjectGraph) {
       return graph;
     }
-
     return plugin.processProjectGraph(graph, context);
-  }, r);
+  }, initProjectGraph);
+}
 
-  performance.mark('build project graph:end');
-  performance.measure(
-    'build project graph',
-    'build project graph:start',
-    'build project graph:end'
-  );
-  return result;
+function readRootTsConfig() {
+  try {
+    return readJsonFile(join(appRootPath, 'tsconfig.base.json'));
+  } catch (e) {
+    return readJsonFile(join(appRootPath, 'tsconfig.json'));
+  }
 }

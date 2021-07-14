@@ -162,9 +162,7 @@ describe('project graph', () => {
       api: [
         { type: DependencyType.static, source: 'api', target: 'npm:express' },
       ],
-      'demo-e2e': [
-        { type: DependencyType.implicit, source: 'demo-e2e', target: 'demo' },
-      ],
+      'demo-e2e': [],
       demo: [
         { type: DependencyType.static, source: 'demo', target: 'ui' },
         {
@@ -193,21 +191,19 @@ describe('project graph', () => {
     });
   });
 
-  it('should update the graph if the workspace file changes ', async () => {
+  it('should update the graph if a project got renamed', async () => {
     let graph = await createProjectGraphAsync();
     expect(graph.nodes).toMatchObject({
       demo: { name: 'demo', type: 'app' },
     });
-    workspaceJson.projects.demo.projectType = 'library';
-    //wait a tick to ensure the modified time of workspace.json will be after the creation of the project graph file
-    await new Promise((resolve) => setTimeout(resolve, 1));
+    workspaceJson.projects.renamed = workspaceJson.projects.demo;
     fs.writeFileSync('/root/workspace.json', JSON.stringify(workspaceJson));
 
     defaultFileHasher.init();
 
     graph = await createProjectGraphAsync();
     expect(graph.nodes).toMatchObject({
-      demo: { name: 'demo', type: 'lib' },
+      renamed: { name: 'renamed', type: 'app' },
     });
   });
 
