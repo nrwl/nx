@@ -11,28 +11,16 @@ export {
   DependencyType,
 } from '@nrwl/devkit';
 
-/**
- * @deprecated
- */
 export type ProjectGraphNodeRecords = Record<string, ProjectGraphNode>;
 
-/**
- * @deprecated
- */
 export type AddProjectNode = (node: ProjectGraphNode) => void;
 
-/**
- * @deprecated
- */
 export type AddProjectDependency = (
   type: DependencyType | string,
   source: string,
   target: string
 ) => void;
 
-/**
- * @deprecated
- */
 export interface ProjectGraphContext {
   workspaceJson: any;
   nxJson: NxJsonConfiguration;
