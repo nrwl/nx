@@ -130,7 +130,7 @@
     },
     "mfeType": {
       "type": "string",
-      "enum": ["shell", "remote"],
+      "enum": ["host", "remote"],
       "description": "Type of application to generate the Module Federation configuration for.",
       "default": "remote"
     },
@@ -140,7 +140,7 @@
     },
     "remotes": {
       "type": "array",
-      "description": "A list of remote application names that the shell application should consume."
+      "description": "A list of remote application names that the host application should consume."
     }
   },
   "required": []

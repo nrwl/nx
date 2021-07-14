@@ -18,11 +18,11 @@ describe('Init MFE', () => {
   });
 
   test.each([
-    ['app1', 'shell'],
+    ['app1', 'host'],
     ['remote1', 'remote'],
   ])(
     'should create webpack configs correctly',
-    async (app, type: 'shell' | 'remote') => {
+    async (app, type: 'host' | 'remote') => {
       // ACT
       await setupMfe(host, {
         appName: app,
@@ -42,11 +42,11 @@ describe('Init MFE', () => {
   );
 
   test.each([
-    ['app1', 'shell'],
+    ['app1', 'host'],
     ['remote1', 'remote'],
   ])(
     'create bootstrap file with the contents of main.ts',
-    async (app, type: 'shell' | 'remote') => {
+    async (app, type: 'host' | 'remote') => {
       // ARRANGE
       const mainContents = host.read(`apps/${app}/src/main.ts`, 'utf-8');
 
@@ -69,11 +69,11 @@ describe('Init MFE', () => {
   );
 
   test.each([
-    ['app1', 'shell'],
+    ['app1', 'host'],
     ['remote1', 'remote'],
   ])(
     'should alter main.ts to import the bootstrap file dynamically',
-    async (app, type: 'shell' | 'remote') => {
+    async (app, type: 'host' | 'remote') => {
       // ARRANGE
       const mainContents = host.read(`apps/${app}/src/main.ts`, 'utf-8');
 
@@ -94,11 +94,11 @@ describe('Init MFE', () => {
   );
 
   test.each([
-    ['app1', 'shell'],
+    ['app1', 'host'],
     ['remote1', 'remote'],
   ])(
     'should change the build target and set correct path to webpack config',
-    async (app, type: 'shell' | 'remote') => {
+    async (app, type: 'host' | 'remote') => {
       // ACT
       await setupMfe(host, {
         appName: app,
@@ -116,11 +116,11 @@ describe('Init MFE', () => {
   );
 
   test.each([
-    ['app1', 'shell'],
+    ['app1', 'host'],
     ['remote1', 'remote'],
   ])(
     'should install @angular-architects/module-federation in the monorepo',
-    async (app, type: 'shell' | 'remote') => {
+    async (app, type: 'host' | 'remote') => {
       // ACT
       await setupMfe(host, {
         appName: app,
@@ -136,11 +136,11 @@ describe('Init MFE', () => {
     }
   );
 
-  it('should add the remote config to the shell when --remotes flag supplied', async () => {
+  it('should add the remote config to the host when --remotes flag supplied', async () => {
     // ACT
     await setupMfe(host, {
       appName: 'app1',
-      mfeType: 'shell',
+      mfeType: 'host',
       remotes: ['remote1'],
     });
 
@@ -151,11 +151,11 @@ describe('Init MFE', () => {
       '"remote1": "remote1@http://localhost:4200/remoteEntry.js"'
     );
   });
-  it('should update the implicit dependencies of the shell when --remotes flag supplied', async () => {
+  it('should update the implicit dependencies of the host when --remotes flag supplied', async () => {
     // ACT
     await setupMfe(host, {
       appName: 'app1',
-      mfeType: 'shell',
+      mfeType: 'host',
       remotes: ['remote1'],
     });
 

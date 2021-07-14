@@ -8,7 +8,7 @@ import {
 
 export function addImplicitDeps(host: Tree, options: Schema) {
   if (
-    options.mfeType === 'shell' &&
+    options.mfeType === 'host' &&
     Array.isArray(options.remotes) &&
     options.remotes.length > 0
   ) {
