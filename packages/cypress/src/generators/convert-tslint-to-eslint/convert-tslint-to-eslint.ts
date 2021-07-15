@@ -40,6 +40,7 @@ export async function conversionGenerator(
          * does and remove the config again if it doesn't, so that it is most efficient.
          */
         setParserOptionsProject: true,
+        skipFormat: options.skipFormat,
       } as CypressProjectSchema);
     },
   });
@@ -96,7 +97,9 @@ export async function conversionGenerator(
     uninstallTSLintTask = projectConverter.removeTSLintFromWorkspace();
   }
 
-  await formatFiles(host);
+  if (!options.skipFormat) {
+    await formatFiles(host);
+  }
 
   return async () => {
     await eslintInitInstallTask();
