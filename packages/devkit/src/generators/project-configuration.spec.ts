@@ -119,10 +119,11 @@ describe('project configuration', () => {
     );
   });
 
-  it('should remove project.json file when removing projct configuration', () => {
+  it('should remove project.json file when removing project configuration', () => {
     addProjectConfiguration(tree, 'test', baseTestProjectConfig, true);
     removeProjectConfiguration(tree, 'test');
 
+    expect(readJson(tree, 'workspace.json').projects.test).toBeUndefined();
     expect(tree.exists('test/project.json')).toBeFalsy();
   });
 

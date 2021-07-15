@@ -18,8 +18,8 @@ export async function removeGenerator(tree: Tree, schema: Schema) {
   checkDependencies(tree, schema);
   checkTargets(tree, schema, project);
   updateJestConfig(tree, schema, project);
-  removeProject(tree, project);
   removeProjectConfig(tree, schema);
+  removeProject(tree, project);
   updateTsconfig(tree, schema, project);
   if (!schema.skipFormat) {
     await formatFiles(tree);

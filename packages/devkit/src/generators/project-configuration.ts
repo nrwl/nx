@@ -264,13 +264,12 @@ function addProjectToWorkspaceJson(
   if (configFile) {
     if (mode === 'delete') {
       host.delete(configFile);
+      delete workspaceJson.projects[projectName];
     } else {
       writeJson(host, configFile, project);
     }
-
     if (mode === 'create') {
       workspaceJson.projects[projectName] = project.root;
-      writeJson(host, path, workspaceJson);
     }
   } else {
     let workspaceConfiguration: ProjectConfiguration;
@@ -278,10 +277,9 @@ function addProjectToWorkspaceJson(
       const { tags, implicitDependencies, ...c } = project;
       workspaceConfiguration = c;
     }
-
     workspaceJson.projects[projectName] = workspaceConfiguration;
-    writeJson(host, path, workspaceJson);
   }
+  writeJson(host, path, workspaceJson);
 }
 
 function addProjectToNxJson(
