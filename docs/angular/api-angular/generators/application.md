@@ -50,6 +50,12 @@ Possible values: `protractor`, `cypress`, `none`
 
 Test runner to use for end to end (e2e) tests.
 
+### host
+
+Type: `string`
+
+The name of the host application that the remote application will be consumed by.
+
 ### inlineStyle
 
 Alias(es): s
