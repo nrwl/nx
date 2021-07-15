@@ -1,24 +1,24 @@
-import { ProjectGraphBuilder } from './project-graph-builder';
-import type { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
+import { ProjectGraph, ProjectGraphNode } from '@nrwl/devkit';
 
 const reverseMemo = new Map<ProjectGraph, ProjectGraph>();
 
 export function reverse(graph: ProjectGraph): ProjectGraph {
-  let result = reverseMemo.get(graph);
-  if (!result) {
-    const builder = new ProjectGraphBuilder();
-    Object.values(graph.nodes).forEach((n) => {
-      builder.addNode(n);
-    });
-    Object.values(graph.dependencies).forEach((byProject) => {
-      byProject.forEach((dep) => {
-        builder.addDependency(dep.type, dep.target, dep.source);
+  const resultFromMemo = reverseMemo.get(graph);
+  if (resultFromMemo) return resultFromMemo;
+
+  const result = { nodes: graph.nodes, dependencies: {} } as ProjectGraph;
+  Object.keys(graph.nodes).forEach((n) => (result.dependencies[n] = []));
+  Object.values(graph.dependencies).forEach((byProject) => {
+    byProject.forEach((dep) => {
+      result.dependencies[dep.target].push({
+        type: dep.type,
+        source: dep.target,
+        target: dep.source,
       });
     });
-    result = builder.build();
-    reverseMemo.set(graph, result);
-    reverseMemo.set(result, graph);
-  }
+  });
+  reverseMemo.set(graph, result);
+  reverseMemo.set(result, graph);
   return result;
 }
 
@@ -26,22 +26,23 @@ export function filterNodes(
   predicate: (n: ProjectGraphNode) => boolean
 ): (p: ProjectGraph) => ProjectGraph {
   return (original) => {
-    const builder = new ProjectGraphBuilder();
+    const graph = { nodes: {}, dependencies: {} } as ProjectGraph;
     const added = new Set<string>();
     Object.values(original.nodes).forEach((n) => {
       if (predicate(n)) {
-        builder.addNode(n);
+        graph.nodes[n.name] = n;
+        graph.dependencies[n.name] = [];
         added.add(n.name);
       }
     });
     Object.values(original.dependencies).forEach((ds) => {
       ds.forEach((d) => {
         if (added.has(d.source) && added.has(d.target)) {
-          builder.addDependency(d.type, d.source, d.target);
+          graph.dependencies[d.source].push(d);
         }
       });
     });
-    return builder.build();
+    return graph;
   };
 }
 
@@ -81,18 +82,21 @@ export function withDeps(
   original: ProjectGraph,
   subsetNodes: ProjectGraphNode[]
 ): ProjectGraph {
-  const builder = new ProjectGraphBuilder();
+  const res = { nodes: {}, dependencies: {} } as ProjectGraph;
   const visitedNodes = [];
   const visitedEdges = [];
   Object.values(subsetNodes).forEach(recurNodes);
   Object.values(subsetNodes).forEach(recurEdges);
-  return builder.build();
+  return res;
 
   // ---------------------------------------------------------------------------
 
   function recurNodes(node) {
     if (visitedNodes.indexOf(node.name) > -1) return;
-    builder.addNode(node);
+    res.nodes[node.name] = node;
+    if (!res.dependencies[node.name]) {
+      res.dependencies[node.name] = [];
+    }
     visitedNodes.push(node.name);
 
     original.dependencies[node.name].forEach((n) => {
@@ -106,7 +110,10 @@ export function withDeps(
 
     const ds = original.dependencies[node.name];
     ds.forEach((n) => {
-      builder.addDependency(n.type, n.source, n.target);
+      if (!res.dependencies[n.source]) {
+        res.dependencies[n.source] = [];
+      }
+      res.dependencies[n.source].push(n);
     });
 
     ds.forEach((n) => {

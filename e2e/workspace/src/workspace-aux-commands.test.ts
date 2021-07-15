@@ -83,7 +83,7 @@ describe('lint', () => {
     expect(out).toContain(
       'Libraries cannot be imported by a relative or absolute path, and must begin with a npm scope'
     );
-    expect(out).toContain('Imports of lazy-loaded libraries are forbidden');
+    // expect(out).toContain('Imports of lazy-loaded libraries are forbidden');
     expect(out).toContain('Imports of apps are forbidden');
     expect(out).toContain(
       'A project tagged with "validtag" can only depend on libs tagged with "validtag"'
@@ -490,7 +490,7 @@ describe('dep-graph', () => {
             target: mylib,
             type: 'static',
           },
-          { source: myapp, target: mylib2, type: 'dynamic' },
+          { source: myapp, target: mylib2, type: 'static' },
         ],
         [myappE2e]: [
           {

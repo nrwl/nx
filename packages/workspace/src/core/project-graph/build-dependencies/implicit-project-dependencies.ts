@@ -1,20 +1,17 @@
 import {
-  AddProjectDependency,
-  DependencyType,
-  ProjectGraphContext,
-  ProjectGraphNodeRecords,
-} from '../project-graph-models';
+  ProjectGraphBuilder,
+  ProjectGraphProcessorContext,
+} from '@nrwl/devkit';
 
 export function buildImplicitProjectDependencies(
-  ctx: ProjectGraphContext,
-  nodes: ProjectGraphNodeRecords,
-  addDependency: AddProjectDependency
+  ctx: ProjectGraphProcessorContext,
+  builder: ProjectGraphBuilder
 ) {
-  Object.keys(ctx.nxJson.projects).forEach((source) => {
-    const p = ctx.nxJson.projects[source];
+  Object.keys(ctx.workspace.projects).forEach((source) => {
+    const p = ctx.workspace.projects[source];
     if (p.implicitDependencies && p.implicitDependencies.length > 0) {
       p.implicitDependencies.forEach((target) => {
-        addDependency(DependencyType.implicit, source, target);
+        builder.addImplicitDependency(source, target);
       });
     }
   });

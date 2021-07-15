@@ -1,5 +1,5 @@
-import { FileData, filesChanged } from '../file-utils';
 import type {
+  FileData,
   NxJsonConfiguration,
   ProjectGraph,
   ProjectGraphDependency,
@@ -29,6 +29,9 @@ export interface ProjectGraphCache {
   pathMappings: Record<string, any>;
   nxJsonPlugins: { name: string; version: string }[];
   nodes: Record<string, ProjectGraphNode>;
+
+  // this is only used by scripts that read dependency from the file
+  // in the sync fashion.
   dependencies: Record<string, ProjectGraphDependency[]>;
 }
 
@@ -116,8 +119,7 @@ export function shouldRecomputeWholeGraph(
   if (
     Object.keys(cache.nodes).some(
       (p) =>
-        cache.nodes[p].type != 'app' &&
-        cache.nodes[p].type != 'lib' &&
+        (cache.nodes[p].type === 'app' || cache.nodes[p].type === 'lib') &&
         !workspaceJson.projects[p]
     )
   ) {
@@ -157,46 +159,58 @@ This can only be invoked when the list of projects is either the same
 or new projects have been added, so every project in the cache has a corresponding
 project in fileMap
 */
-export function extractCachedPartOfProjectGraph(
+export function extractCachedFileData(
   fileMap: ProjectFileMap,
-  nxJson: NxJsonConfiguration,
   c: ProjectGraphCache
 ): {
-  filesDifferentFromCache: ProjectFileMap;
-  cachedPartOfProjectGraph: ProjectGraph;
+  filesToProcess: ProjectFileMap;
+  cachedFileData: { [project: string]: { [file: string]: FileData } };
 } {
+  const filesToProcess: ProjectFileMap = {};
   const currentProjects = Object.keys(fileMap).filter(
     (name) => fileMap[name].length > 0
   );
-
-  const filesDifferentFromCache: ProjectFileMap = {};
-  // Re-compute nodes and dependencies for projects whose files changed
+  const cachedFileData = {};
   currentProjects.forEach((p) => {
-    if (!c.nodes[p] || filesChanged(c.nodes[p].data.files, fileMap[p])) {
-      filesDifferentFromCache[p] = fileMap[p];
-      delete c.dependencies[p];
-      delete c.nodes[p];
-    }
-  });
-
-  // Re-compute nodes and dependencies for projects whose implicit deps changed
-  Object.keys(nxJson.projects || {}).forEach((p) => {
-    if (
-      nxJson.projects[p]?.implicitDependencies &&
-      JSON.stringify(c.nodes[p].data.implicitDependencies) !==
-        JSON.stringify(nxJson.projects[p].implicitDependencies)
-    ) {
-      filesDifferentFromCache[p] = fileMap[p];
-      delete c.dependencies[p];
-      delete c.nodes[p];
-    }
+    processProjectNode(p, c.nodes[p], cachedFileData, filesToProcess, fileMap);
   });
 
   return {
-    filesDifferentFromCache,
-    cachedPartOfProjectGraph: {
-      nodes: c.nodes,
-      dependencies: c.dependencies,
-    },
+    filesToProcess,
+    cachedFileData,
   };
+}
+
+function processProjectNode(
+  name: string,
+  cachedNode: ProjectGraphNode,
+  cachedFileData: { [project: string]: { [file: string]: FileData } },
+  filesToProcess: ProjectFileMap,
+  fileMap: ProjectFileMap
+) {
+  if (!cachedNode) {
+    filesToProcess[name] = fileMap[name];
+    return;
+  }
+
+  const fileDataFromCache = {} as any;
+  for (let f of cachedNode.data.files) {
+    fileDataFromCache[f.file] = f;
+  }
+
+  if (!cachedFileData[name]) {
+    cachedFileData[name] = {};
+  }
+
+  for (let f of fileMap[name]) {
+    const fromCache = fileDataFromCache[f.file];
+    if (fromCache && fromCache.hash == f.hash) {
+      cachedFileData[name][f.file] = fromCache;
+    } else {
+      if (!filesToProcess[cachedNode.name]) {
+        filesToProcess[cachedNode.name] = [];
+      }
+      filesToProcess[cachedNode.name].push(f);
+    }
+  }
 }

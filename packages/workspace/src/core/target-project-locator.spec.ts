@@ -1,6 +1,8 @@
 import { vol } from 'memfs';
-import { ProjectGraphContext } from './project-graph';
-import type { ProjectGraphNode } from '@nrwl/devkit';
+import type {
+  ProjectGraphNode,
+  ProjectGraphProcessorContext,
+} from '@nrwl/devkit';
 import { TargetProjectLocator } from './target-project-locator';
 
 jest.mock('@nrwl/tao/src/utils/app-root', () => ({
@@ -9,7 +11,7 @@ jest.mock('@nrwl/tao/src/utils/app-root', () => ({
 jest.mock('fs', () => require('memfs').fs);
 
 describe('findTargetProjectWithImport', () => {
-  let ctx: ProjectGraphContext;
+  let ctx: ProjectGraphProcessorContext;
   let projects: Record<string, ProjectGraphNode>;
   let fsJson;
   let targetProjectLocator: TargetProjectLocator;
@@ -56,8 +58,10 @@ describe('findTargetProjectWithImport', () => {
     vol.fromJSON(fsJson, '/root');
 
     ctx = {
-      workspaceJson,
-      nxJson,
+      workspace: {
+        ...workspaceJson,
+        ...nxJson,
+      } as any,
       fileMap: {
         proj: [
           {
@@ -109,7 +113,7 @@ describe('findTargetProjectWithImport', () => {
           },
         ],
       },
-    };
+    } as any;
 
     projects = {
       proj3a: {
@@ -209,22 +213,22 @@ describe('findTargetProjectWithImport', () => {
     const res1 = targetProjectLocator.findProjectWithImport(
       './class.ts',
       'libs/proj/index.ts',
-      ctx.nxJson.npmScope
+      ctx.workspace.npmScope
     );
     const res2 = targetProjectLocator.findProjectWithImport(
       '../index.ts',
       'libs/proj/src/index.ts',
-      ctx.nxJson.npmScope
+      ctx.workspace.npmScope
     );
     const res3 = targetProjectLocator.findProjectWithImport(
       '../proj/../proj2/index.ts',
       'libs/proj/index.ts',
-      ctx.nxJson.npmScope
+      ctx.workspace.npmScope
     );
     const res4 = targetProjectLocator.findProjectWithImport(
       '../proj/../index.ts',
       'libs/proj/src/index.ts',
-      ctx.nxJson.npmScope
+      ctx.workspace.npmScope
     );
 
     expect(res1).toEqual('proj');
@@ -237,12 +241,12 @@ describe('findTargetProjectWithImport', () => {
     const proj2 = targetProjectLocator.findProjectWithImport(
       '@proj/my-second-proj',
       'libs/proj1/index.ts',
-      ctx.nxJson.npmScope
+      ctx.workspace.npmScope
     );
     const proj3a = targetProjectLocator.findProjectWithImport(
       '@proj/project-3',
       'libs/proj1/index.ts',
-      ctx.nxJson.npmScope
+      ctx.workspace.npmScope
     );
 
     expect(proj2).toEqual('proj2');
@@ -253,12 +257,12 @@ describe('findTargetProjectWithImport', () => {
     const result1 = targetProjectLocator.findProjectWithImport(
       '@ng/core',
       'libs/proj1/index.ts',
-      ctx.nxJson.npmScope
+      ctx.workspace.npmScope
     );
     const result2 = targetProjectLocator.findProjectWithImport(
       'npm-package',
       'libs/proj1/index.ts',
-      ctx.nxJson.npmScope
+      ctx.workspace.npmScope
     );
 
     expect(result1).toEqual('npm:@ng/core');
@@ -269,7 +273,7 @@ describe('findTargetProjectWithImport', () => {
     const proj4ab = targetProjectLocator.findProjectWithImport(
       '@proj/proj4ab',
       'libs/proj1/index.ts',
-      ctx.nxJson.npmScope
+      ctx.workspace.npmScope
     );
 
     expect(proj4ab).toEqual('proj4ab');
@@ -278,21 +282,21 @@ describe('findTargetProjectWithImport', () => {
     const proj = targetProjectLocator.findProjectWithImport(
       '@proj/proj123',
       '',
-      ctx.nxJson.npmScope
+      ctx.workspace.npmScope
     );
     expect(proj).toEqual('proj123');
 
     const childProj = targetProjectLocator.findProjectWithImport(
       '@proj/proj1234-child',
       '',
-      ctx.nxJson.npmScope
+      ctx.workspace.npmScope
     );
     expect(childProj).toEqual('proj1234-child');
 
     const parentProj = targetProjectLocator.findProjectWithImport(
       '@proj/proj1234',
       '',
-      ctx.nxJson.npmScope
+      ctx.workspace.npmScope
     );
     expect(parentProj).toEqual('proj1234');
   });
@@ -301,14 +305,14 @@ describe('findTargetProjectWithImport', () => {
     const similarImportFromNpm = targetProjectLocator.findProjectWithImport(
       '@proj/proj123-base',
       'libs/proj/index.ts',
-      ctx.nxJson.npmScope
+      ctx.workspace.npmScope
     );
     expect(similarImportFromNpm).toEqual('npm:@proj/proj123-base');
 
     const similarDeepImportFromNpm = targetProjectLocator.findProjectWithImport(
       '@proj/proj123-base/deep',
       'libs/proj/index.ts',
-      ctx.nxJson.npmScope
+      ctx.workspace.npmScope
     );
     expect(similarDeepImportFromNpm).toEqual('npm:@proj/proj123-base');
   });

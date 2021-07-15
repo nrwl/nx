@@ -302,15 +302,5 @@ export function normalizedProjectRoot(p: ProjectGraphNode): string {
   }
 }
 
-export function filesChanged(a: FileData[], b: FileData[]) {
-  if (a.length !== b.length) return true;
-
-  for (let i = 0; i < a.length; ++i) {
-    if (a[i].file !== b[i].file) return true;
-    if (a[i].hash !== b[i].hash) return true;
-  }
-  return false;
-}
-
 // Original Exports
 export { FileData };
