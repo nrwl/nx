@@ -165,17 +165,18 @@ export function newProject({ name = uniq('proj') } = {}): string {
 
       const packages = [
         `@nrwl/angular`,
+        `@nrwl/cypress`,
+        `@nrwl/eslint-plugin-nx`,
         `@nrwl/express`,
+        `@nrwl/gatsby`,
         `@nrwl/jest`,
         `@nrwl/linter`,
         `@nrwl/nest`,
         `@nrwl/next`,
-        `@nrwl/gatsby`,
         `@nrwl/node`,
+        `@nrwl/nx-plugin`,
         `@nrwl/react`,
         `@nrwl/storybook`,
-        `@nrwl/nx-plugin`,
-        `@nrwl/eslint-plugin-nx`,
         `@nrwl/web`,
       ];
       packageInstall(packages.join(` `), projScope);
@@ -634,6 +635,12 @@ export function getPackageManagerCommand({
     },
   }[packageManager];
 }
+
+export const packageManagerLockFile = {
+  npm: 'package-lock.json',
+  yarn: 'yarn.lock',
+  pnpm: 'pnpm-lock.yaml',
+};
 
 export function expectNoAngularDevkit() {
   const { list } = getPackageManagerCommand();

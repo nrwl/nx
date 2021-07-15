@@ -8,6 +8,7 @@ import {
   uniq,
   packageInstall,
   removeProject,
+  getSelectedPackageManager,
 } from '@nrwl/e2e/utils';
 
 describe('custom workspace layout', () => {
@@ -15,7 +16,8 @@ describe('custom workspace layout', () => {
 
   it('should work', async () => {
     const proj = uniq('custom-layout-proj');
-    runCreateWorkspace(proj, { preset: 'oss' });
+    const packageManager = getSelectedPackageManager();
+    runCreateWorkspace(proj, { preset: 'oss', packageManager });
     packageInstall('@nrwl/react @nrwl/angular @nrwl/express');
 
     const nxJson = readJson('nx.json');

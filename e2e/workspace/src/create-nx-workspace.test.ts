@@ -3,6 +3,9 @@ import {
   checkFilesExist,
   e2eCwd,
   expectNoAngularDevkit,
+  getPackageManagerCommand,
+  getSelectedPackageManager,
+  packageManagerLockFile,
   readJson,
   removeProject,
   runCreateWorkspace,
@@ -12,22 +15,30 @@ import { existsSync, mkdirSync } from 'fs-extra';
 import { execSync } from 'child_process';
 
 describe('create-nx-workspace', () => {
+  let packageManager;
+
+  beforeEach(() => (packageManager = getSelectedPackageManager() || 'npm'));
   afterAll(() => removeProject({ onlyOnCI: true }));
 
   it('should be able to create an empty workspace', () => {
     const wsName = uniq('empty');
     runCreateWorkspace(wsName, {
       preset: 'empty',
+      packageManager,
     });
 
     checkFilesExist(
       'workspace.json',
       'package.json',
-      'package-lock.json',
+      packageManagerLockFile[packageManager],
       'apps/.gitkeep',
       'libs/.gitkeep'
     );
-    checkFilesDoNotExist('yarn.lock');
+    const foreignLockFiles = Object.keys(packageManagerLockFile)
+      .filter((pm) => pm !== packageManager)
+      .map((pm) => packageManagerLockFile[pm]);
+
+    checkFilesDoNotExist(...foreignLockFiles);
 
     expectNoAngularDevkit();
   });
@@ -36,6 +47,7 @@ describe('create-nx-workspace', () => {
     const wsName = uniq('oss');
     runCreateWorkspace(wsName, {
       preset: 'oss',
+      packageManager,
     });
 
     expectNoAngularDevkit();
@@ -48,6 +60,7 @@ describe('create-nx-workspace', () => {
       preset: 'angular',
       style: 'css',
       appName,
+      packageManager,
     });
   });
 
@@ -58,6 +71,7 @@ describe('create-nx-workspace', () => {
       preset: 'react',
       style: 'css',
       appName,
+      packageManager,
     });
 
     expectNoAngularDevkit();
@@ -70,6 +84,7 @@ describe('create-nx-workspace', () => {
       preset: 'next',
       style: 'css',
       appName,
+      packageManager,
     });
 
     expectNoAngularDevkit();
@@ -82,6 +97,7 @@ describe('create-nx-workspace', () => {
       preset: 'next',
       style: 'css',
       appName,
+      packageManager,
     });
 
     expectNoAngularDevkit();
@@ -94,6 +110,7 @@ describe('create-nx-workspace', () => {
       preset: 'web-components',
       style: 'css',
       appName,
+      packageManager,
     });
 
     expectNoAngularDevkit();
@@ -106,6 +123,7 @@ describe('create-nx-workspace', () => {
       preset: 'angular-nest',
       style: 'css',
       appName,
+      packageManager,
     });
   });
 
@@ -116,6 +134,7 @@ describe('create-nx-workspace', () => {
       preset: 'react-express',
       style: 'css',
       appName,
+      packageManager,
     });
 
     expectNoAngularDevkit();
@@ -128,6 +147,7 @@ describe('create-nx-workspace', () => {
       preset: 'express',
       style: 'css',
       appName,
+      packageManager,
     });
 
     expectNoAngularDevkit();
@@ -138,6 +158,7 @@ describe('create-nx-workspace', () => {
     runCreateWorkspace(wsName, {
       preset: 'empty',
       base: 'main',
+      packageManager,
     });
   });
 
@@ -147,6 +168,7 @@ describe('create-nx-workspace', () => {
       preset: 'empty',
       extraArgs:
         '--commit.name="John Doe" --commit.email="myemail@test.com" --commit.message="Custom commit message!"',
+      packageManager,
     });
   });
 
@@ -156,6 +178,7 @@ describe('create-nx-workspace', () => {
     runCreateWorkspace(wsName, {
       preset: 'nest',
       appName,
+      packageManager,
     });
   });
 
@@ -166,8 +189,11 @@ describe('create-nx-workspace', () => {
 
     mkdirSync(tmpDir, { recursive: true });
 
-    const command = `npx create-nx-workspace@${'9999.0.2'} ${wsName} --cli=nx --preset=empty --no-nxCloud --no-interactive`;
-    execSync(command, {
+    const createCommand = getPackageManagerCommand({
+      packageManager,
+    }).createWorkspace;
+    const fullCommand = `${createCommand} ${wsName} --cli=nx --preset=empty --no-nxCloud --no-interactive`;
+    execSync(fullCommand, {
       cwd: tmpDir,
       stdio: [0, 1, 2],
       env: process.env,
@@ -181,6 +207,7 @@ describe('create-nx-workspace', () => {
     const appName = uniq('app');
 
     process.env.YARN_REGISTRY = `http://localhost:4872`;
+    process.env.SELECTED_PM = 'yarn';
 
     runCreateWorkspace(wsName, {
       preset: 'react',
@@ -191,6 +218,7 @@ describe('create-nx-workspace', () => {
 
     checkFilesExist('yarn.lock');
     checkFilesDoNotExist('package-lock.json');
+    process.env.SELECTED_PM = packageManager;
   });
 
   it('should store package manager preference for angular cli', () => {
@@ -198,6 +226,7 @@ describe('create-nx-workspace', () => {
     const appName = uniq('app');
 
     process.env.YARN_REGISTRY = `http://localhost:4872`;
+    process.env.SELECTED_PM = 'yarn';
 
     runCreateWorkspace(wsName, {
       preset: 'angular',
@@ -211,5 +240,6 @@ describe('create-nx-workspace', () => {
     expect(workspaceJson.cli.packageManager).toEqual('yarn');
     checkFilesExist('yarn.lock');
     checkFilesDoNotExist('package-lock.json');
+    process.env.SELECTED_PM = packageManager;
   });
 });
