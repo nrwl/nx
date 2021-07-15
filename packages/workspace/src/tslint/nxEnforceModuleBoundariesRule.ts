@@ -47,7 +47,7 @@ export class Rule extends Lint.Rules.AbstractRule {
 
         /**
          * Because there are a number of ways in which the rule can be invoked (executor vs TSLint CLI vs IDE Plugin),
-         * the ProjectGraph may or may not exist by the time the line rule is invoked for the first time.
+         * the ProjectGraph may or may not exist by the time the lint rule is invoked for the first time.
          */
         try {
           (global as any).projectGraph = mapProjectGraphFiles(
