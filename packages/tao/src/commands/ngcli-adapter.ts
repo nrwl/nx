@@ -484,7 +484,7 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
         return of(this.host.read(path));
       } else {
         // found neither, use default read method
-        super.read(path);
+        return super.read(path);
       }
     }
   }
