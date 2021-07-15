@@ -97,7 +97,7 @@ describe('Init MFE', () => {
     ['app1', 'host'],
     ['remote1', 'remote'],
   ])(
-    'should change the build target and set correct path to webpack config',
+    'should change the build and serve target and set correct path to webpack config',
     async (app, type: 'host' | 'remote') => {
       // ACT
       await setupMfe(host, {
@@ -106,8 +106,9 @@ describe('Init MFE', () => {
       });
 
       // ASSERT
-      const { build } = readProjectConfiguration(host, app).targets;
+      const { build, serve } = readProjectConfiguration(host, app).targets;
 
+      expect(serve.executor).toEqual('@nrwl/angular:webpack-server');
       expect(build.executor).toEqual('@nrwl/angular:webpack-browser');
       expect(build.options.customWebpackConfig.path).toEqual(
         `apps/${app}/webpack.config.js`
