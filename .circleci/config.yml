@@ -127,10 +127,9 @@ jobs:
           name: Check Package dependencies
           command: yarn depcheck
       - run:
-          name: Get Last Sucessful Tag
-          shell: '/bin/bash'
+          name: Get Last Sucessful Workflow Run
           command: |
-            source ./scripts/circleci/get-last-successful-tag.sh $CIRCLE_BRANCH master nx_successful_ci_run__* false
+            source ./scripts/circleci/get-successful-run.sh << pipeline.project.type >> $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME $CIRCLE_BRANCH master false
             echo "export BASE_SHA=\"$BASE_SHA\";" >> $BASH_ENV
       - run:
           name: Run Builds
@@ -173,10 +172,9 @@ jobs:
       - setup:
           os: << parameters.os >>
       - run:
-          name: Get Last Sucessful Tag
-          shell: '/bin/bash'
+          name: Get Last Sucessful Workflow Run
           command: |
-            source ./scripts/circleci/get-last-successful-tag.sh $CIRCLE_BRANCH master nx_successful_ci_run__* false
+            source ./scripts/circleci/get-successful-run.sh << pipeline.project.type >> $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME $CIRCLE_BRANCH master false
             echo "export BASE_SHA=\"$BASE_SHA\";" >> $BASH_ENV
       - run:
           name: Run Builds
@@ -194,11 +192,6 @@ jobs:
       - run:
           name: Stop All Running Agents for This CI Run
           command: npx nx-cloud stop-all-agents
-      - run:
-          when: on_success
-          name: Save successful tag
-          command: |
-            ./scripts/circleci/tag-successful-build.sh nx_successful_ci_run__${CIRCLE_WORKFLOW_ID} nx_successful_ci_run__*
 workflows:
   build:
     jobs:
