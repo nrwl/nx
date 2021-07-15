@@ -2,17 +2,16 @@ import type {
   FileData,
   NxJsonConfiguration,
   NxJsonProjectConfiguration,
+  NxPlugin,
   ProjectConfiguration,
   ProjectFileMap,
-  WorkspaceJsonConfiguration,
-  ProjectGraphProcessorContext,
-  NxPlugin,
   ProjectGraph,
+  ProjectGraphProcessorContext,
+  WorkspaceJsonConfiguration,
 } from '@nrwl/devkit';
-
 import { ProjectGraphBuilder } from '@nrwl/devkit';
-
 import { appRootPath } from '@nrwl/tao/src/utils/app-root';
+import { performance } from 'perf_hooks';
 import { assertWorkspaceValidity } from '../assert-workspace-validity';
 import { createProjectFileMap } from '../file-graph';
 import {
@@ -24,6 +23,12 @@ import {
 } from '../file-utils';
 import { normalizeNxJson } from '../normalize-nx-json';
 import {
+  differentFromCache,
+  ProjectGraphCache,
+  readCache,
+  writeCache,
+} from '../nx-deps/nx-deps-cache';
+import {
   BuildDependencies,
   buildExplicitPackageJsonDependencies,
   buildExplicitTypeScriptDependencies,
@@ -34,12 +39,25 @@ import {
   buildNpmPackageNodes,
   buildWorkspaceProjectNodes,
 } from './build-nodes';
-import {
-  differentFromCache,
-  readCache,
-  writeCache,
-} from '../nx-deps/nx-deps-cache';
-import { performance } from 'perf_hooks';
+
+/**
+ * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
+ * @throws {Error} if there is no cached ProjectGraph to read from
+ */
+export function readCachedProjectGraph(): ProjectGraphCache {
+  const cachedProjectGraph = readCache();
+  if (!cachedProjectGraph) {
+    throw new Error(`
+      [readCachedProjectGraph] ERROR: No cached ProjectGraph is available.
+      
+      If you are leveraging \`readCachedProjectGraph()\` directly then you will need to refactor your usage to first ensure that
+      the ProjectGraph is created by calling \`await createProjectGraphAsync()\` somewhere before attempting to read the data.
+
+      If you encounter this error as part of running standard \`nx\` commands then please open an issue on https://github.com/nrwl/nx
+    `);
+  }
+  return cachedProjectGraph;
+}
 
 export async function createProjectGraphAsync(): Promise<ProjectGraph> {
   return createProjectGraph();
@@ -98,6 +116,10 @@ export function createProjectGraph(
   }
 }
 
+// TODO(v13): remove this deprecated function
+/**
+ * @deprecated This function is deprecated in favor of {@link readCachedProjectGraph}
+ */
 export function readCurrentProjectGraph(): ProjectGraph | null {
   const cache = readCache();
   return cache === false ? null : cache;

@@ -2,6 +2,7 @@ export {
   createProjectGraph,
   createProjectGraphAsync,
   readCurrentProjectGraph,
+  readCachedProjectGraph,
 } from './project-graph';
 export { BuildDependencies } from './build-dependencies';
 export { BuildNodes } from './build-nodes';
