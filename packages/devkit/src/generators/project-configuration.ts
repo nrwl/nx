@@ -126,13 +126,36 @@ export function updateWorkspaceConfiguration(
   host: Tree,
   workspaceConfig: WorkspaceConfiguration
 ): void {
-  const { version, cli, defaultProject, generators, ...nxJson } =
-    workspaceConfig;
+  const {
+    // Angular Json Properties
+    version,
+    cli,
+    defaultProject,
+    generators,
+
+    // Nx Json Properties
+    implicitDependencies,
+    plugins,
+    npmScope,
+    targetDependencies,
+    workspaceLayout,
+    tasksRunnerOptions,
+    affected,
+  } = workspaceConfig;
   const workspace: Omit<Required<WorkspaceJsonConfiguration>, 'projects'> = {
     version,
     cli,
     defaultProject,
     generators,
+  };
+  const nxJson: Omit<Required<NxJsonConfiguration>, 'projects'> = {
+    implicitDependencies,
+    plugins,
+    npmScope,
+    targetDependencies,
+    workspaceLayout,
+    tasksRunnerOptions,
+    affected,
   };
 
   updateJson<WorkspaceJsonConfiguration>(
