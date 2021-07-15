@@ -275,6 +275,11 @@
             "name": "connect-to-nx-cloud",
             "id": "connect-to-nx-cloud",
             "file": "angular/cli/connect-to-nx-cloud"
+          },
+          {
+            "name": "clear-cache",
+            "id": "clear-cache",
+            "file": "angular/cli/clear-cache"
           }
         ]
       },
@@ -1441,6 +1446,11 @@
             "name": "connect-to-nx-cloud",
             "id": "connect-to-nx-cloud",
             "file": "react/cli/connect-to-nx-cloud"
+          },
+          {
+            "name": "clear-cache",
+            "id": "clear-cache",
+            "file": "react/cli/clear-cache"
           }
         ]
       },
@@ -2571,6 +2581,11 @@
             "name": "connect-to-nx-cloud",
             "id": "connect-to-nx-cloud",
             "file": "node/cli/connect-to-nx-cloud"
+          },
+          {
+            "name": "clear-cache",
+            "id": "clear-cache",
+            "file": "node/cli/clear-cache"
           }
         ]
       },

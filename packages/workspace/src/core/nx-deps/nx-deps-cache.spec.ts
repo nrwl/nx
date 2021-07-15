@@ -1,6 +1,6 @@
 import { NxJsonConfiguration, WorkspaceJsonConfiguration } from '@nrwl/devkit';
 import {
-  extractCachedPartOfProjectGraph,
+  extractCachedFileData,
   ProjectGraphCache,
   shouldRecomputeWholeGraph,
 } from './nx-deps-cache';
@@ -41,7 +41,7 @@ describe('nx deps utils', () => {
         shouldRecomputeWholeGraph(
           createCache({
             nodes: {
-              'renamed-mylib': {} as any,
+              'renamed-mylib': { type: 'lib' } as any,
             },
           }),
           createPackageJsonDeps({}),
@@ -111,7 +111,7 @@ describe('nx deps utils', () => {
         },
         dependencies: { mylib: [] },
       } as any;
-      const r = extractCachedPartOfProjectGraph(
+      const r = extractCachedFileData(
         {
           mylib: [
             {
@@ -121,17 +121,24 @@ describe('nx deps utils', () => {
             },
           ],
         },
-        createNxJson({}),
         createCache({
           nodes: { ...cached.nodes },
           dependencies: { ...cached.dependencies },
         })
       );
-      expect(r.filesDifferentFromCache).toEqual({});
-      expect(r.cachedPartOfProjectGraph).toEqual(cached);
+      expect(r.filesToProcess).toEqual({});
+      expect(r.cachedFileData).toEqual({
+        mylib: {
+          'index.ts': {
+            file: 'index.ts',
+            ext: 'ts',
+            hash: 'hash1',
+          },
+        },
+      });
     });
 
-    it('should handle cases when no projects are added', () => {
+    it('should handle cases when new projects are added', () => {
       const cached = {
         nodes: {
           mylib: {
@@ -150,7 +157,7 @@ describe('nx deps utils', () => {
         },
         dependencies: { mylib: [] },
       } as any;
-      const r = extractCachedPartOfProjectGraph(
+      const r = extractCachedFileData(
         {
           mylib: [
             {
@@ -167,13 +174,12 @@ describe('nx deps utils', () => {
             },
           ],
         },
-        createNxJson({}),
         createCache({
           nodes: { ...cached.nodes },
           dependencies: { ...cached.dependencies },
         })
       );
-      expect(r.filesDifferentFromCache).toEqual({
+      expect(r.filesToProcess).toEqual({
         secondlib: [
           {
             file: 'index.ts',
@@ -182,7 +188,18 @@ describe('nx deps utils', () => {
           },
         ],
       });
-      expect(r.cachedPartOfProjectGraph).toEqual(cached);
+      expect(r.cachedFileData).toEqual({
+        mylib: {
+          'index.ts': {
+            file: 'index.ts',
+            ext: 'ts',
+            hash: 'hash1',
+          },
+        },
+      });
+      expect(r.filesToProcess).toEqual({
+        secondlib: [{ ext: 'ts', file: 'index.ts', hash: 'hash2' }],
+      });
     });
 
     it('should handle cases when files change', () => {
@@ -194,9 +211,19 @@ describe('nx deps utils', () => {
             data: {
               files: [
                 {
-                  file: 'index.ts',
+                  file: 'index1.ts',
                   ext: 'ts',
                   hash: 'hash1',
+                },
+                {
+                  file: 'index2.ts',
+                  ext: 'ts',
+                  hash: 'hash2',
+                },
+                {
+                  file: 'index3.ts',
+                  ext: 'ts',
+                  hash: 'hash3',
                 },
               ],
             },
@@ -204,93 +231,53 @@ describe('nx deps utils', () => {
         },
         dependencies: { mylib: [] },
       } as any;
-      const r = extractCachedPartOfProjectGraph(
+      const r = extractCachedFileData(
         {
           mylib: [
             {
-              file: 'index.ts',
-              ext: 'ts',
-              hash: 'hash2',
-            },
-          ],
-        },
-        createNxJson({}),
-        createCache({
-          nodes: { ...cached.nodes },
-          dependencies: { ...cached.dependencies },
-        })
-      );
-      expect(r.filesDifferentFromCache).toEqual({
-        mylib: [
-          {
-            file: 'index.ts',
-            ext: 'ts',
-            hash: 'hash2',
-          },
-        ],
-      });
-      expect(r.cachedPartOfProjectGraph).toEqual({
-        nodes: {},
-        dependencies: {},
-      });
-    });
-
-    it('should handle cases when implicits change', () => {
-      const cached = {
-        nodes: {
-          mylib: {
-            name: 'mylib',
-            type: 'lib',
-            data: {
-              files: [
-                {
-                  file: 'index.ts',
-                  ext: 'ts',
-                  hash: 'hash1',
-                },
-              ],
-              implicitDependencies: ['otherlib'],
-            },
-          },
-        },
-        dependencies: {
-          mylib: [{ type: 'static', source: 'mylib', target: 'otherlib' }],
-        },
-      } as any;
-      const r = extractCachedPartOfProjectGraph(
-        {
-          mylib: [
-            {
-              file: 'index.ts',
+              file: 'index1.ts',
               ext: 'ts',
               hash: 'hash1',
             },
+            {
+              file: 'index2.ts',
+              ext: 'ts',
+              hash: 'hash2b',
+            },
+            {
+              file: 'index4.ts',
+              ext: 'ts',
+              hash: 'hash4',
+            },
           ],
         },
-        createNxJson({
-          projects: {
-            mylib: {
-              implicitDependencies: [],
-            },
-          },
-        }),
         createCache({
           nodes: { ...cached.nodes },
           dependencies: { ...cached.dependencies },
         })
       );
-      expect(r.filesDifferentFromCache).toEqual({
+      expect(r.filesToProcess).toEqual({
         mylib: [
           {
-            file: 'index.ts',
+            file: 'index2.ts',
             ext: 'ts',
-            hash: 'hash1',
+            hash: 'hash2b',
+          },
+          {
+            file: 'index4.ts',
+            ext: 'ts',
+            hash: 'hash4',
           },
         ],
       });
-      expect(r.cachedPartOfProjectGraph).toEqual({
-        nodes: {},
-        dependencies: {},
+      expect(r.cachedFileData).toEqual({
+        mylib: {
+          'index1.ts': {
+            file: 'index1.ts',
+            ext: 'ts',
+            hash: 'hash1',
+          },
+        },
       });
     });
   });
@@ -307,7 +294,7 @@ describe('nx deps utils', () => {
       },
       nxJsonPlugins: [{ name: 'plugin', version: '1.0.0' }],
       nodes: {
-        mylib: {} as any,
+        mylib: { type: 'lib' } as any,
       },
       dependencies: { mylib: [] },
     };

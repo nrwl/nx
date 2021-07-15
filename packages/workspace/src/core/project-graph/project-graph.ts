@@ -22,19 +22,17 @@ import {
 } from '../file-utils';
 import { normalizeNxJson } from '../normalize-nx-json';
 import {
-  extractCachedPartOfProjectGraph,
+  extractCachedFileData,
   readCache,
   shouldRecomputeWholeGraph,
   writeCache,
 } from '../nx-deps/nx-deps-cache';
 import {
-  BuildDependencies,
   buildExplicitPackageJsonDependencies,
   buildExplicitTypeScriptDependencies,
   buildImplicitProjectDependencies,
 } from './build-dependencies';
 import {
-  BuildNodes,
   buildNpmPackageNodes,
   buildWorkspaceProjectNodes,
 } from './build-nodes';
@@ -64,6 +62,9 @@ export function createProjectGraph(
   const projectFileMap = createProjectFileMap(workspaceJson, workspaceFiles);
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
+
+  let filesToProcess = projectFileMap;
+  let cachedFileData = {};
   if (
     cache &&
     cache.version === '3.0' &&
@@ -73,31 +74,24 @@ export function createProjectGraph(
       workspaceJson,
       normalizedNxJson,
       rootTsConfig
-    )
+    ) &&
+    cacheEnabled
   ) {
-    const diff = extractCachedPartOfProjectGraph(projectFileMap, nxJson, cache);
-    const ctx = {
-      workspaceJson,
-      nxJson: normalizedNxJson,
-      fileMap: diff.filesDifferentFromCache,
-    };
-    const projectGraph = buildProjectGraph(ctx, diff.cachedPartOfProjectGraph);
-    if (cacheEnabled) {
-      writeCache(packageJsonDeps, nxJson, rootTsConfig, projectGraph);
-    }
-    return addWorkspaceFiles(projectGraph, workspaceFiles);
-  } else {
-    const ctx = {
-      workspaceJson,
-      nxJson: normalizedNxJson,
-      fileMap: projectFileMap,
-    };
-    const projectGraph = buildProjectGraph(ctx, null);
-    if (cacheEnabled) {
-      writeCache(packageJsonDeps, nxJson, rootTsConfig, projectGraph);
-    }
-    return addWorkspaceFiles(projectGraph, workspaceFiles);
+    const fromCache = extractCachedFileData(projectFileMap, cache);
+    filesToProcess = fromCache.filesToProcess;
+    cachedFileData = fromCache.cachedFileData;
   }
+  const context = createContext(
+    workspaceJson,
+    normalizedNxJson,
+    projectFileMap,
+    filesToProcess
+  );
+  const projectGraph = buildProjectGraph(context, cachedFileData);
+  if (cacheEnabled) {
+    writeCache(packageJsonDeps, nxJson, rootTsConfig, projectGraph);
+  }
+  return addWorkspaceFiles(projectGraph, workspaceFiles);
 }
 
 export function readCurrentProjectGraph(): ProjectGraph | null {
@@ -112,24 +106,29 @@ function addWorkspaceFiles(
   return { ...projectGraph, allWorkspaceFiles };
 }
 
-type BuilderContext = {
-  nxJson: NxJsonConfiguration<string[]>;
-  workspaceJson: WorkspaceJsonConfiguration;
-  fileMap: ProjectFileMap;
-};
-
-function buildProjectGraph(ctx: BuilderContext, projectGraph: ProjectGraph) {
+function buildProjectGraph(
+  ctx: ProjectGraphProcessorContext,
+  cachedFileData: { [project: string]: { [file: string]: FileData } }
+) {
   performance.mark('build project graph:start');
 
-  const builder = new ProjectGraphBuilder(projectGraph);
-  const addNode = builder.addNode.bind(builder);
-  const addDependency = builder.addDependency.bind(builder);
-  buildWorkspaceProjectNodes(ctx, addNode);
-  buildNpmPackageNodes(ctx, addNode);
-  buildExplicitTypeScriptDependencies(ctx, builder.nodes, addDependency);
-  buildExplicitPackageJsonDependencies(ctx, builder.nodes, addDependency);
-  buildImplicitProjectDependencies(ctx, builder.nodes, addDependency);
-  const initProjectGraph = builder.getProjectGraph();
+  const builder = new ProjectGraphBuilder();
+
+  buildWorkspaceProjectNodes(ctx, builder);
+  buildNpmPackageNodes(builder);
+  for (const proj of Object.keys(cachedFileData)) {
+    for (const f of builder.graph.nodes[proj].data.files) {
+      const cached = cachedFileData[proj][f.file];
+      if (cached) {
+        f.deps = cached.deps;
+      }
+    }
+  }
+
+  buildExplicitTypeScriptDependencies(ctx, builder);
+  buildExplicitPackageJsonDependencies(ctx, builder);
+  buildImplicitProjectDependencies(ctx, builder);
+  const initProjectGraph = builder.getUpdatedProjectGraph();
 
   const r = updateProjectGraphWithPlugins(ctx, initProjectGraph);
 
@@ -143,35 +142,43 @@ function buildProjectGraph(ctx: BuilderContext, projectGraph: ProjectGraph) {
   return r;
 }
 
-function updateProjectGraphWithPlugins(
-  ctx: BuilderContext,
-  initProjectGraph: ProjectGraph
-) {
-  const plugins = (ctx.nxJson.plugins || []).map((path) => {
-    const pluginPath = require.resolve(path, {
-      paths: [appRootPath],
-    });
-    return require(pluginPath) as NxPlugin;
-  });
-
-  const projects = Object.keys(ctx.workspaceJson.projects).reduce(
+function createContext(
+  workspaceJson: WorkspaceJsonConfiguration,
+  nxJson: NxJsonConfiguration,
+  fileMap: ProjectFileMap,
+  filesToProcess: ProjectFileMap
+): ProjectGraphProcessorContext {
+  const projects = Object.keys(workspaceJson.projects).reduce(
     (map, projectName) => {
       map[projectName] = {
-        ...ctx.workspaceJson.projects[projectName],
-        ...ctx.nxJson.projects[projectName],
+        ...workspaceJson.projects[projectName],
+        ...nxJson.projects[projectName],
       };
       return map;
     },
     {} as Record<string, ProjectConfiguration & NxJsonProjectConfiguration>
   );
-  const context: ProjectGraphProcessorContext = {
+  return {
     workspace: {
-      ...ctx.workspaceJson,
-      ...ctx.nxJson,
+      ...workspaceJson,
+      ...nxJson,
       projects,
     },
-    fileMap: ctx.fileMap,
+    fileMap,
+    filesToProcess,
   };
+}
+
+function updateProjectGraphWithPlugins(
+  context: ProjectGraphProcessorContext,
+  initProjectGraph: ProjectGraph
+) {
+  const plugins = (context.workspace.plugins || []).map((path) => {
+    const pluginPath = require.resolve(path, {
+      paths: [appRootPath],
+    });
+    return require(pluginPath) as NxPlugin;
+  });
 
   return plugins.reduce((graph, plugin) => {
     if (!plugin.processProjectGraph) {

@@ -10,7 +10,7 @@ describe('Nx Plugins', () => {
   beforeAll(() => newProject());
   afterAll(() => removeProject({ onlyOnCI: true }));
 
-  it('should use plugins defined in nx.json', () => {
+  it('vvvshould use plugins defined in nx.json', () => {
     const nxJson = readJson('nx.json');
     nxJson.plugins = ['./tools/plugin'];
     updateFile('nx.json', JSON.stringify(nxJson));
@@ -35,12 +35,11 @@ describe('Nx Plugins', () => {
               root: 'test2'
             }
           });
-          builder.addDependency(
-            require('@nrwl/devkit').DependencyType.static,
+          builder.addImplicitDependency(
             'plugin-node',
             'plugin-node2'
           );
-          return builder.getProjectGraph();
+          return builder.getUpdatedProjectGraph();
         }
       };
     `
@@ -51,7 +50,7 @@ describe('Nx Plugins', () => {
     expect(projectGraphJson.graph.nodes['plugin-node']).toBeDefined();
     expect(projectGraphJson.graph.nodes['plugin-node2']).toBeDefined();
     expect(projectGraphJson.graph.dependencies['plugin-node']).toContainEqual({
-      type: 'static',
+      type: 'implicit',
       source: 'plugin-node',
       target: 'plugin-node2',
     });

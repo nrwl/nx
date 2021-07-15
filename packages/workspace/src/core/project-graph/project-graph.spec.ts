@@ -1,4 +1,5 @@
 import { vol, fs } from 'memfs';
+
 jest.mock('fs', () => require('memfs').fs);
 jest.mock('@nrwl/tao/src/utils/app-root', () => ({
   appRootPath: '/root',
@@ -158,34 +159,37 @@ describe('project graph', () => {
         },
       },
     });
-    expect(graph.dependencies).toMatchObject({
-      api: [
-        { type: DependencyType.static, source: 'api', target: 'npm:express' },
-      ],
-      'demo-e2e': [],
+    expect(graph.dependencies).toEqual({
+      api: [{ source: 'api', target: 'npm:express', type: 'static' }],
       demo: [
-        { type: DependencyType.static, source: 'demo', target: 'ui' },
+        { source: 'demo', target: 'api', type: 'implicit' },
         {
-          type: DependencyType.static,
           source: 'demo',
-          target: 'shared-util-data',
+          target: 'ui',
+          type: 'static',
         },
+        { source: 'demo', target: 'shared-util-data', type: 'static' },
         {
-          type: DependencyType.dynamic,
           source: 'demo',
           target: 'lazy-lib',
+          type: 'static',
         },
-        { type: DependencyType.implicit, source: 'demo', target: 'api' },
       ],
-      ui: [
-        { type: DependencyType.static, source: 'ui', target: 'shared-util' },
-        { type: DependencyType.dynamic, source: 'ui', target: 'lazy-lib' },
-      ],
+      'demo-e2e': [],
+      'lazy-lib': [],
+      'npm:@nrwl/workspace': [],
+      'npm:express': [],
+      'npm:happy-nrwl': [],
       'shared-util': [
+        { source: 'shared-util', target: 'npm:happy-nrwl', type: 'static' },
+      ],
+      'shared-util-data': [],
+      ui: [
+        { source: 'ui', target: 'shared-util', type: 'static' },
         {
-          type: DependencyType.static,
-          source: 'shared-util',
-          target: 'npm:happy-nrwl',
+          source: 'ui',
+          target: 'lazy-lib',
+          type: 'static',
         },
       ],
     });
@@ -229,7 +233,7 @@ describe('project graph', () => {
         target: 'shared-util',
       },
       {
-        type: DependencyType.dynamic,
+        type: DependencyType.static,
         source: 'ui',
         target: 'lazy-lib',
       },
