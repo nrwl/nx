@@ -163,11 +163,6 @@ describe('project graph', () => {
           type: 'app',
           data: expect.anything(),
         },
-        'demo-e2e': {
-          name: 'demo-e2e',
-          type: 'e2e',
-          data: expect.anything(),
-        },
         ui: {
           name: 'ui',
           type: 'lib',
@@ -175,13 +170,6 @@ describe('project graph', () => {
         },
       },
       dependencies: {
-        'demo-e2e': [
-          {
-            type: 'implicit',
-            source: 'demo-e2e',
-            target: 'demo',
-          },
-        ],
         demo: [
           {
             type: 'static',
@@ -240,21 +228,9 @@ describe('project graph', () => {
           type: 'app',
           data: expect.anything(),
         },
-        'demo-e2e': {
-          name: 'demo-e2e',
-          type: 'e2e',
-          data: expect.anything(),
-        },
       },
       dependencies: {
         'npm:happy-nrwl': [],
-        'demo-e2e': [
-          {
-            type: 'implicit',
-            source: 'demo-e2e',
-            target: 'demo',
-          },
-        ],
         demo: [
           {
             type: 'static',
@@ -286,7 +262,7 @@ describe('project graph', () => {
       },
     ]);
 
-    expect(Object.keys(affected.nodes)).toEqual(['demo', 'demo-e2e', 'api']);
+    expect(Object.keys(affected.nodes)).toEqual(['demo', 'api']);
   });
 
   it('should support implicit JSON file dependencies (all projects)', async () => {

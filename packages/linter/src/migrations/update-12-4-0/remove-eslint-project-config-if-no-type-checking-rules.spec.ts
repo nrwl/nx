@@ -5,7 +5,7 @@ import {
   writeJson,
 } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import remoteESLintProjectConfigIfNoTypeCheckingRules from './remove-eslint-project-config-if-no-type-checking-rules';
+import removeESLintProjectConfigIfNoTypeCheckingRules from './remove-eslint-project-config-if-no-type-checking-rules';
 
 const KNOWN_RULE_REQUIRING_TYPE_CHECKING = '@typescript-eslint/await-thenable';
 
@@ -100,7 +100,7 @@ describe('Remove ESLint parserOptions.project config if no rules requiring type-
     };
     writeJson(tree, 'libs/workspace-lib/.eslintrc.json', projectEslintConfig2);
 
-    await remoteESLintProjectConfigIfNoTypeCheckingRules(tree);
+    await removeESLintProjectConfigIfNoTypeCheckingRules(tree);
 
     // No change
     expect(readJson(tree, 'apps/react-app/.eslintrc.json')).toEqual(
@@ -157,7 +157,7 @@ describe('Remove ESLint parserOptions.project config if no rules requiring type-
     };
     writeJson(tree, 'libs/workspace-lib/.eslintrc.json', projectEslintConfig2);
 
-    await remoteESLintProjectConfigIfNoTypeCheckingRules(tree);
+    await removeESLintProjectConfigIfNoTypeCheckingRules(tree);
 
     // No change - uses rule requiring type-checking
     expect(readJson(tree, 'apps/react-app/.eslintrc.json')).toEqual(
@@ -183,5 +183,9 @@ describe('Remove ESLint parserOptions.project config if no rules requiring type-
         ],
       }
     `);
+  });
+
+  it('should not error if .eslintrc.json does not exist', async () => {
+    await removeESLintProjectConfigIfNoTypeCheckingRules(tree);
   });
 });

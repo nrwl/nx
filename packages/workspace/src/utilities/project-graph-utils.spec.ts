@@ -1,4 +1,4 @@
-import { ProjectGraphCache } from '../core/nx-deps/nx-deps-cache';
+import { ProjectGraph } from '../core/project-graph';
 import {
   getProjectNameFromDirPath,
   getSourceDirOfDependentProjects,
@@ -6,9 +6,7 @@ import {
 
 describe('project graph utils', () => {
   describe('getSourceDirOfDependentProjects', () => {
-    const projGraph: ProjectGraphCache = {
-      rootFiles: [],
-      version: '1',
+    const projGraph: ProjectGraph = {
       nodes: {
         'demo-app': {
           name: 'demo-app',

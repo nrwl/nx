@@ -7,9 +7,14 @@ import {
 } from '@nrwl/devkit';
 
 export function setupServeTarget(host: Tree, options: Schema) {
-  if (options.mfeType === 'remote') {
-    const appConfig = readProjectConfiguration(host, options.appName);
+  const appConfig = readProjectConfiguration(host, options.appName);
 
+  appConfig.targets['serve'] = {
+    ...appConfig.targets['serve'],
+    executor: '@nrwl/angular:webpack-server',
+  };
+
+  if (options.mfeType === 'remote') {
     const port = options.port ?? 4200;
 
     appConfig.targets['mfe-serve'] = {
@@ -19,7 +24,6 @@ export function setupServeTarget(host: Tree, options: Schema) {
         port,
       },
     };
-
-    updateProjectConfiguration(host, options.appName, appConfig);
   }
+  updateProjectConfiguration(host, options.appName, appConfig);
 }

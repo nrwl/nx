@@ -23,7 +23,7 @@ import {
   toOldFormatOrNull,
   workspaceConfigName,
 } from '../shared/workspace';
-import { dirname, extname, resolve, join, relative } from 'path';
+import { dirname, extname, resolve, join, relative, basename } from 'path';
 import { FileBuffer } from '@angular-devkit/core/src/virtual-fs/host/interface';
 import { EMPTY, Observable, of, concat } from 'rxjs';
 import { catchError, map, switchMap, tap, toArray } from 'rxjs/operators';
@@ -365,7 +365,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
           const fileConfigObject = { ...projectConfig };
           delete fileConfigObject.configFilePath; // remove the configFilePath before writing
           super.write(configPath, Buffer.from(serializeJson(fileConfigObject))); // write back to the project.json file
-          configToWrite.projects[project] = dirname(configPath); // update the config object to point to the written file.
+          configToWrite.projects[project] = normalize(dirname(configPath)); // update the config object to point to the written file.
         }
       }
     );
@@ -390,7 +390,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
           // so that we know where to save the project's configuration if it was updated
           // by another angular schematic.
           const configFilePath = join(projectConfig, 'project.json');
-          const next = super.read(configFilePath as Path).pipe(
+          const next = this.read(configFilePath as Path).pipe(
             map((x) => ({
               project,
               projectConfig: {
@@ -472,9 +472,20 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
         return super.read(path);
       }
     } else {
-      // found a matching change in the host
       const match = findMatchingFileChange(this.host, path);
-      return match ? of(Buffer.from(match.content)) : super.read(path);
+      if (match) {
+        // found a matching change in the host
+        return of(Buffer.from(match.content));
+      } else if (
+        // found a change to workspace config, and reading a project config file
+        basename(path) === 'project.json' &&
+        findWorkspaceConfigFileChange(this.host)
+      ) {
+        return of(this.host.read(path));
+      } else {
+        // found neither, use default read method
+        return super.read(path);
+      }
     }
   }
 
