@@ -348,24 +348,6 @@ export class TaskOrchestrator {
       this.storeEndTime(task);
     }
 
-    if ('endTasks' in this.options.lifeCycle) {
-      this.options.lifeCycle.endTasks(
-        results.map((result) => {
-          const code =
-            result.status === 'success' || result.status === 'cache' ? 0 : 1;
-          return {
-            task: result.task,
-            code,
-          };
-        })
-      );
-    } else {
-      for (const { task, status } of results) {
-        const code = status === 'success' || status === 'cache' ? 0 : 1;
-        this.options.lifeCycle.endTask(task, code);
-      }
-    }
-
     // cache the results
     await Promise.all(
       results
@@ -389,6 +371,24 @@ export class TaskOrchestrator {
           }
         })
     );
+
+    if ('endTasks' in this.options.lifeCycle) {
+      this.options.lifeCycle.endTasks(
+        results.map((result) => {
+          const code =
+            result.status === 'success' || result.status === 'cache' ? 0 : 1;
+          return {
+            task: result.task,
+            code,
+          };
+        })
+      );
+    } else {
+      for (const { task, status } of results) {
+        const code = status === 'success' || status === 'cache' ? 0 : 1;
+        this.options.lifeCycle.endTask(task, code);
+      }
+    }
 
     this.complete(
       results.map(({ task, status }) => {
