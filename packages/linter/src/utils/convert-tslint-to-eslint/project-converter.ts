@@ -35,6 +35,7 @@ export interface ConvertTSLintToESLintSchema {
   // If true, we are effectively just "resetting" to ESLint, rather than converting from TSLint
   ignoreExistingTslintConfig: boolean;
   removeTSLintIfNoMoreTSLintTargets: boolean;
+  skipFormat?: boolean;
 }
 
 /**

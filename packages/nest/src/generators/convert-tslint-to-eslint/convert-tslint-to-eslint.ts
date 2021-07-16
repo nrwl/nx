@@ -54,6 +54,7 @@ export async function conversionGenerator(
           js,
           setParserOptionsProject,
           parsedTags: [],
+          skipFormat: options.skipFormat,
         } as AddLintForApplicationSchema);
       }
 
@@ -67,6 +68,7 @@ export async function conversionGenerator(
           projectDirectory: '',
           fileName: '',
           parsedTags: [],
+          skipFormat: options.skipFormat,
         } as AddLintForLibrarySchema);
       }
     },
@@ -124,7 +126,9 @@ export async function conversionGenerator(
     uninstallTSLintTask = projectConverter.removeTSLintFromWorkspace();
   }
 
-  await formatFiles(host);
+  if (!options.skipFormat) {
+    await formatFiles(host);
+  }
 
   return async () => {
     await eslintInitInstallTask();
