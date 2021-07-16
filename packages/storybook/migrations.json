@@ -60,6 +60,12 @@
       "cli": "nx",
       "description": "Install the @storybook/addon-essentials package",
       "factory": "./src/migrations/update-12-5-0/install-addon-essentials"
+    },
+    "update-12-5-9-beta.1": {
+      "version": "12.5.9-beta.1",
+      "cli": "nx",
+      "description": "Update Storybook React typings in tsconfig files",
+      "factory": "./src/migrations/update-12-5-9/update-storybook-react-typings"
     }
   },
   "packageJsonUpdates": {
